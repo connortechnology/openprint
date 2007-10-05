@@ -1,0 +1,118 @@
+function FoldType_onChange( select ) {
+	var foldtype = get_ddm_value( select );
+	var image = document.images['FoldType'];
+	if ( image ) {
+		if ( foldtype != '' ) {
+			image.style.display = 'inline';
+			image.src = '/images/templates/' + foldtype +  '.gif';
+		} else {
+			image.style.display = 'none';
+		} // end if
+	} // end if
+	remove_div('OrderButton');
+} // end function
+
+function cbFoldType_onChange( results ) {
+	//var select = jsrs_cbFillDDM( results, 'Custom' );
+	//Dimensions_onChange( select );
+}
+
+function calc( formName ) {
+	var form = getFormObj(formName);
+
+	if ( form.HoleDrilling && ( get_rdb_value( form.HoleDrilling ) == 'Y' ) ) {
+		if ( form.txtHoleQty.value == '' ) {
+			form.txtHoleQty.value = '1';
+		} // end if
+	} // end if
+
+	if ( ! form.txtQuantity1 )
+		return;
+	form.txtQuantity1.value = parseInt(1*form.txtQuantity1.value);
+
+	var div = document.getElementById('AlertDiv');
+
+	if ( ! ( form.txtQuantity1.value > 0 ) ) {
+		div.innerHTML = "Please enter a quantity";
+		div.style.display = 'block';
+	} // end if
+	if ( form.txtTotalPageQuantity ) {
+		form.txtTotalPageQuantity.value = parseInt(1*form.txtTotalPageQuantity.value);
+		if ( ! ( form.txtTotalPageQuantity.value > 0 ) ) {
+			div.innerHTML = "Please enter the number of pages";
+			div.style.display = 'block';
+		} // end if
+	} // end if
+	div.style.display = 'none';
+
+	if ( gettingNewPrice ) {
+		setTimeout("calc('"+formName+"');", 1000 );
+		return;
+	} // end if
+	jsrsExecute( '/jsrs.htm', cbCalc, 'openprint::print_project::calc', get_variables( formName ) );
+	remove_div('Buttons');
+	add_div('Processing');
+}
+
+function cbCalc( results ) {
+	cbFillResults(results);
+	var form = getFormObj('f1');
+	add_div('Buttons');
+	remove_div('Processing');
+	
+	if ( form.Status.value == 'uncalculated' ) {
+		remove_div('OrderButton');
+	} else {
+		add_div('OrderButton');
+	} // end if
+
+	if ( form.Scoring ) {
+		if ( 'Y' == get_rdb_value( form.Scoring ) ) {
+			add_div('ScoringDiv');
+		} else {
+			remove_div('ScoringDiv');
+		} // end if
+	} // end if
+	if ( form.rdbCover ) {
+		if ( get_value(form.rdbCover)=='Self' ) {
+			remove_div('CoverStocks');
+		} else if ( get_value(form.rdbCover)=='Different') {
+			add_div('CoverStocks');
+		} // end if
+	} // end if
+}
+
+
+function Dimensions_onchange( select ) {
+	//var value = get_ddm_value( select );
+	//if ( value == 'Custom' ) {
+	//add_div('CustomDimensions');
+	//} else {
+	//remove_div('CustomDimensions');
+	//} // end if
+	remove_div('OrderButton');
+	calc( select.form.name );
+} // end if
+
+var contentWin;
+function breakdown_window(project_id) {
+	if (contentWin != null) {
+		Dialog.alert("Close the window 'Test' before opening it again!",{width:200, height:130});
+	} else {
+		contentWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
+				className:"alphacube", width:640, height:480
+				} );
+		contentWin.setAjaxContent('/content/prin/_breakdown.html', {parameters:'project_id='+project_id}, true);
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+onDestroy: function(eventName, win) {
+			   if (win == contentWin) {
+				   contentWin = null;
+				   Windows.removeObserver(this);
+			   }
+		   }
+		}
+		Windows.addObserver(myObserver);
+	}
+} // end function breakdown_window
+

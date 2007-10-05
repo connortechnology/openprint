@@ -1,0 +1,117 @@
+<? eval (
+	$$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+	if ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) {
+		$$variable{'FoldType'} = '2PanelFold';
+		$$variable{'DimensionsDisplay'} = 'Finished';
+	} # end if
+) ?>
+<form name="f1" method="post" action="/main/order/information.html">
+	<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
+	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
+	<input type="hidden" name="Status" value="<?Status?>" />
+	<div class="InstantPricing">
+		<div id="instant_price_section">
+		   <div class="instant_price_section_top_shadow">
+			  <div class="instant_price_section_shadow_tl"></div>
+			  <div class="instant_price_section_shadow_tr"></div>
+		   </div>
+		   <div id="instant_price_section_content">
+			  <div id="instant_price_section_inner">
+                        
+				<div class="Questions">
+					<h3>Instant Pricing</h3>
+
+					<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
+					<!--#include virtual="/includes/sizes.html"-->
+					<div class="row"><span class="label">Colours:</span>
+						<span class="input">
+						<select name="Colours" onchange="calc(this.form.name);">
+							<option value="4/0">4 Colour One Side</option>
+							<option value="4/1">4 Colour/Black</option>
+							<option value="4/4">4 Colour Both Sides</option>
+						</select>
+						</span>
+					</div>
+					<br/>
+					<!--#include virtual="/includes/aqueous.html"-->
+					<!--#include virtual="/includes/uvcoating.html"-->
+					<div class="row">
+						<span class="label">Stock Information</span><br/>
+						<!--#include virtual="/includes/paper_dropdowns.html"-->
+					</div>
+					<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+					<div class="row">
+						<span class="label">Fold Type:</span>
+						<span class="input">
+							<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
+								<? echo (
+									ssi::make_drop_down( [ 'NoFold','No Fold', 
+			'2PanelFold','2 Panel Fold',
+			'3PanelFold','3 Panel Fold',
+			'3PanelZFold','3 Panel Z Fold',
+			'4PanelFold','4 Panel Fold',
+			'4PanelZFold','4 Panel Z Fold',
+			'4PanelRollFold','4 Panel Roll Fold',
+			'5PanelFold','5 Panel Fold',
+			'5PanelZFold','5 Panel Z Fold',
+			'6PanelFold','6 Panel Fold',
+			'6PanelZFold','6 Panel Z Fold',], $$variable{'FoldType'} ); ) ?>
+
+							</select>
+						</span>
+					</div>
+					<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+					<? if ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) ?>
+						<input type="hidden" name="FoldType" value="2PanelFold"/>
+					<? endif ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) ?>
+					<? if ( sets::isin( $$variable{'ProjectTypeName'}, 'Covers' ) ) ?>
+							<div class="row">
+								<span class="label">Fold Type:</span>
+								<span class="input">
+									<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
+										<option value="NoFold">No Fold</option>
+										<option value="2PanelFold">2 Panel Fold</option>
+									</select>
+								</span>
+							</div>
+					<? endif ( sets::isin( $$variable{'ProjectTypeName'}, 'Covers' ) ) ?>
+
+					<!--#include virtual="/includes/drilling.html"-->
+					<!--#include virtual="/includes/scoring.html"-->
+					<!--#include virtual="/includes/perfing.html"-->
+		<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards'] ); ) ?>
+					<!--#include virtual="/includes/shrinkwrapping.html"-->
+					<!--#include virtual="/includes/bundling.html"-->
+		<? endif ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards'] ); ) ?>
+
+					<!--#include virtual="/includes/turnaround.html"-->
+					<br class="spacer"/>
+					<? if ( sets::isin( $$variable{'ProjectTypeName'}, 'ScratchPads' ) ) ?>
+					<div class="row">
+						<span class="label">Number of pages per pad:</span>
+						<span class="input">
+							<input type="text" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" size="4" />
+						</span>
+					</div>
+					<? endif ( sets::isin( $$variable{'ProjectTypeName'}, 'ScratchPads' ) ) ?>
+					<!--#include virtual="/includes/quantity.html"-->
+					<br class="spacer"/>
+					<!--#include virtual="/includes/press_type.html"-->
+					<br class="spacer"/>
+					<!--#include virtual="/includes/prices.html"-->
+					<div class="Prices">
+						<!--#include virtual="/includes/buttons.html"-->
+						<br class="spacer"/>
+					</div>
+				</div><!--Questions-->
+				   <br class="spacer"/>
+			  </div>
+		   </div>
+		   <div class="instant_price_section_bottom_shadow">
+			  <div class="instant_price_section_shadow_bl"></div>
+			  <div class="instant_price_section_shadow_br"></div>
+		   </div>
+		</div>
+		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+	</div><!--InstantPricing-->
+</form>

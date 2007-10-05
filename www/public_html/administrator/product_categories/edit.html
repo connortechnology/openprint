@@ -1,0 +1,35 @@
+<form name="f1" id="f1" action="list.html" method="post">
+	<input type="hidden" name="category_id" value="<? echo ( $openprint::param{'category_id'} ) ?>" />
+	<fieldset>
+		<legend>
+		<? echo (
+			return $$variable{Category}->id() ? 'Editing Category ' . $$variable{Category}->id() : 'Add New Category';
+		) ?>
+		</legend>
+		<p>
+			<label>Name</label>
+			<input type="text" name="name" value="<? hecho ( $$variable{'Category'}->name(); ) ?>"  />
+		</p>
+		<p>
+			<label>Project Type</label>
+			<select name="projecttype_id">
+				<option value=""> select </option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find( 'order'=>'strname' ) ], $$variable{Category}->type_id() ); ) ?>
+			</select>
+		</p>
+		<p>
+			<label>Description</label>
+			<textarea name="description" rows="4" ><? echo ( ssi::htmlize($$variable{'Category'}->description()); ) ?></textarea>
+		</p>
+		<br class="spacer"/>
+		<p style="float: right;">
+			<? echo ( join('',
+			ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
+			ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
+			ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.btnFunction.value='Copy';f1.action='edit.html';f1.submit();", '', 'Copy' ),
+			ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
