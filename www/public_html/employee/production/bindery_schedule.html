@@ -1,0 +1,543 @@
+<? eval ( 
+	require openprint::bindery_schedule;
+	require openprint::Project;
+
+	# Look for jobs that should be on here, but arent
+	my @missing_jobs = sql::execute( undef, undef, q{SELECT Index FROM tbl_Projects WHERE strStatus='Printed' AND Index NOT IN (SELECT ProjectIndex FROM Bindery_Schedule) AND ( SELECT invoice_id FROM Orders WHERE Orders.Index=(SELECT OrderIndex FROM Order_Contents WHERE Order_Contents.lngProjectIndex=tbl_Projects.Index)) IS NULL} );
+	foreach my $Project ( openprint::Project::find('id'=>\@missing_jobs) ) {
+		openprint::bindery_schedule::add_project( $Project );
+	} # end foreach project
+	
+	if ( 0 ) {
+
+	sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE (SELECT invoice_id FROM Orders WHERE OrderIndex=(SELECT OrderIndex FROM tbl_Order_Contents WHERE tbl_Order_Contents.lngProjectIndex=ProjectIndex)) IS NULL} );
+	sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE (SELECT Max(dtmtimestamp) FROM tbl_Project_Log WHERE tbl_Project_Log.lngProjectIndex=ProjectIndex) < NOW() - '2 months'::interval} );
+	} # end if
+
+	if ( $openprint::param{'btnFunction'} eq 'Reset' ) {
+		delete @openprint::param{
+			'ddmScheduleStartYear',
+			'ddmScheduleStartMonth',
+			'ddmScheduleStartDay',
+			'ddmScheduleEndYear',
+			'ddmScheduleEndMonth',
+			'ddmScheduleEndDay',
+			'Services',
+			};
+		delete @openprint::session{
+			'/employee/production/bindery_schedule.html?ddmScheduleStartYear',
+			'/employee/production/bindery_schedule.html?ddmScheduleStartMonth',
+			'/employee/production/bindery_schedule.html?ddmScheduleStartDay',
+			'/employee/production/bindery_schedule.html?ddmScheduleEndYear',
+			'/employee/production/bindery_schedule.html?ddmScheduleEndMonth',
+			'/employee/production/bindery_schedule.html?ddmScheduleEndDay',
+			'/employee/production/bindery_schedule.html?Services',
+			};
+	} elsif ( $openprint::param{'btnFunction'} eq 'JumpToDate' ) {
+		my $service_index = $openprint::param{'ServiceIndex'};
+		my $date = $r->param("ScheduleDate-$service_index");
+		sql::update( $log, $dbh, 'Bindery_Schedule', "ServiceIndex=$service_index", 'starttime', $date );
+	} elsif ( $openprint::param{'btnFunction'} eq 'SetDueDate' ) {
+		my $service_index = $openprint::param{'ServiceIndex'};
+		my $date = $r->param("ScheduleDate-$service_index");
+		my ( $project_index ) = sql::execute( $log, $dbh, q{SELECT ProjectIndex FROM Bindery_Schedule WHERE ServiceIndex=?}, $service_index );
+		my $Project = new openprint::Project( $project_index );
+		$Project->due_date( $date );
+		$Project->save();
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
+	} # end if
+
+	if ( $openprint::param{'ddmScheduleStartYear'} ) {
+		@openprint::session{
+		'/employee/production/bindery_schedule.html?ddmScheduleStartYear',
+		'/employee/production/bindery_schedule.html?ddmScheduleStartMonth',
+		'/employee/production/bindery_schedule.html?ddmScheduleStartDay'} = @openprint::param{'ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay'};
+	} elsif ( ! $openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleStartYear'} ) {
+		($_) = sql::execute( $log, $dbh, q{SELECT date(MIN(StartTime)) FROM Bindery_Schedule} );
+		@openprint::session{
+			'/employee/production/bindery_schedule.html?ddmScheduleStartYear',
+			'/employee/production/bindery_schedule.html?ddmScheduleStartMonth',
+			'/employee/production/bindery_schedule.html?ddmScheduleStartDay'} = $_ ? split('-', $_) : Date::Calc::Today();
+	} # end if
+
+	if ( $openprint::param{'ddmScheduleEndYear'} ) {
+		@openprint::session{
+		'/employee/production/bindery_schedule.html?ddmScheduleEndYear',
+		'/employee/production/bindery_schedule.html?ddmScheduleEndMonth',
+		'/employee/production/bindery_schedule.html?ddmScheduleEndDay'} = @openprint::param{'ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay'};
+	} elsif ( ! $openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleEndYear'} ) {
+		($_) = sql::execute( $log, $dbh, q{SELECT date(MAX(StartTime)) FROM Bindery_Schedule} );
+		@openprint::session{
+			'/employee/production/bindery_schedule.html?ddmScheduleEndYear',
+			'/employee/production/bindery_schedule.html?ddmScheduleEndMonth',
+			'/employee/production/bindery_schedule.html?ddmScheduleEndDay'} = $_ ? split('-', $_) : Date::Calc::Today();
+	} # end if
+
+	@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh,
+		1*$openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleStartYear'},
+		1*$openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleStartMonth'},
+		1*$openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleStartDay'} );
+	@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh,
+		1*$openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleEndYear'},
+		1*$openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleEndMonth'},
+		1*$openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleEndDay'} );
+
+	if ( exists $openprint::param{'Services'} ) {
+		$openprint::session{'/employee/production/bindery_schedule.html?Services'} = ref $openprint::param{'Services'} eq 'ARRAY' ? join(';', @{$openprint::param{'Services'}} ) : $openprint::param{'Services'};
+	} elsif ( ! $openprint::session{'/employee/production/bindery_schedule.html?Services'} ) {
+		$openprint::session{'/employee/production/bindery_schedule.html?Services'} = join(';', sets::exclude( ['Finishing','Outsource'], \@openprint::bindery_schedule::columns ) );
+	} # end if
+) ?>
+<script type="text/javascript" src="/javascripts/popups.js"></script>
+<script type="text/javascript">
+	function setduedate( date ) {
+		var form = date.params.inputField.form;
+		var name = date.params.inputField.name;
+		var reg = /ScheduleDate-(\d*)/;
+		var ar = reg.exec( name );
+		form.ServiceIndex.value = ar[1];
+		form.btnFunction.value='SetDueDate';
+		form.submit();
+	}
+
+	function editRunTime( p_id, s_id, ss_id, runtime, e ) {
+		form = document.forms['RunTime'];
+		if ( form ) {
+			form.p_id.value = p_id;
+			form.s_id.value = s_id;
+			form.ss_id.value = ss_id;
+			form.runtime.value = runtime;
+			show_div( 'EditRunTime', e );
+			form.focusFirstElement();
+		} // end if
+	} // end function editRunTime
+
+
+	function saveRunTime( p_id, s_id, ss_id, runtime ) {
+		//for( var i= 0; i < document.all.length; i+=1 ) {
+		//if ( ! confirm( document.all[i].name ) ) {
+		//break;
+		//}
+		//}
+		var div = $( ss_id+'-'+s_id + '-RunTime' );
+		if ( div ) {
+			var a = runtime.split(':');
+			var seconds = a[0] * 3600 + a[1] * 60;
+			div.innerHTML = 'wait';
+			div.onClick = 'editRunTime(' + p_id + ', ' + s_id + ', ' + ss_id + ", '" + runtime + "', event );";
+			var code = "openprint::service::insert_service_spec( $log, $dbh, @specs{'p_id','s_id'}, 'RunTime', $specs{'runtime'} );\n";
+			code += "return join('|' , map { sprintf( 'Div~%d-%d-RunTime~%d:%.2d', $_, $specs{'s_id'}, misc::seconds_to_interval( $specs{'runtime'} ) ); } sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $specs{'p_id'} ) );\n";
+			jsrsExecute( '/jsrs.htm', cbRunTime, 'jsrs::execute', new Array( 'code', code, 'p_id', p_id, 's_id', s_id, 'runtime', seconds ) );
+		} else {
+			alert('Could not find div:'+ss_id+'-'+s_id + '-RunTime');
+		} // end if
+	} // end function saveRunTime
+
+	function cbRunTime( results ) {
+		var rows = results.split( '|' );
+		for ( var r = 0;r< rows.length; r+= 1 ) {
+			var row = rows[r].split('~');
+			var div = $(row[1]);
+			if ( ! div ) { continue; } // end if
+			div.innerHTML = row[2];
+		} // end for r
+	}
+
+	function editComment( project_index, service_index, comment, e ) {
+		form = document.forms['f2'];
+		if ( form ) {
+			form.ProjectIndex.value=project_index;
+			form.ServiceIndex.value=service_index;
+			form.Comment.value=comment;
+			show_div('CommentEdit', e )	
+		} // end if
+	} 
+	function saveComment( project_index, service_index, comment ) {
+		var div = $( service_index + 'Comment' );
+		if ( div )
+			div.innerHTML = '<div style="width:100%;" onClick="editComment('+project_index+', '+service_index+', \''+comment+'\', event );">'+comment+'&nbsp;</div>';
+		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_comment', new Array( project_index, service_index, comment ) );
+	} // end function saveComment
+
+	function icon_image( pid, service, colour ) {
+		var image = document.images[pid + service + 'icon'];
+		if ( ! image ) {
+			alert('no image found!');
+		} else {
+			if ( image.length ) {
+				for ( var i = 0; i < image.length; i += 1 ) {
+					image[i].src='/images/icons/bindery/'+service+'-'+colour+'.gif';
+				} // end for
+			} else {
+				image.src = '/images/icons/bindery/'+service+'-'+colour+'.gif';
+			} // end if
+		} // end if
+	} // end function
+
+	function move_up( pid, sid, service, column ) {
+		var code = "require openprint::bindery_schedule;\n";
+		code += "return openprint::bindery_schedule::move_up( $specs{'p_id'} );\n";
+		jsrsExecute( '/jsrs.htm', loadDivs, 'jsrs::execute', new Array( 'code', code, 'p_id', pid ) );
+	} // end function
+
+	function icon_action(pid, sid, service, column ) {
+		var image = document.images[pid + service + 'icon'];
+		var colour;
+		if ( image.length ) {
+			colour = image[0].src.substring( image[0].src.lastIndexOf('-') + 1 );
+		} else {
+			colour = image.src.substring( image.src.lastIndexOf('-') + 1 );
+		} // end if
+		colour = colour.substring( 0, colour.lastIndexOf('.') );
+		if ( column == 'Complete' ) {
+			icon_image( pid, service, 'checkmark' );
+			var code = "my $Project = new openprint::Project( $specs{'pid'} );\n";
+			code += "my %services = $Project->services();\n";
+			code += "foreach my $sid ( @{$services{$specs{'Service'}}} ) {\n";
+			code += "openprint::service::status( $specs{'pid'}, $sid, 'Complete' );\n";
+			code += "openprint::bindery_schedule::remove( $specs{'pid'}, $sid );\n"; 
+			code += "} # end if\n";
+			jsrsExecute( '/jsrs.htm', null, 'jsrs::execute', new Array( 'code', code, 'pid', pid, 'Service', service ) );
+			var li = $('service_'+sid);
+			if ( li ) {
+				li.style.display = 'none';
+			} // end if
+		} else if ( colour == 'white' ) {
+			icon_image( pid, service, 'red' );
+			var code = "my $Project = new openprint::Project( $specs{'pid'} );\n";
+			code += "my %services = $Project->services();\n";
+			code += "foreach my $sid ( @{$services{$specs{'Service'}}} ) {\n";
+			code += "openprint::service::status( $specs{'pid'}, $sid, 'On Hold' );\n";
+			code += "} # end if\n";
+			jsrsExecute( '/jsrs.htm', null, 'jsrs::execute', new Array( 'code', code, 'pid', pid, 'Service', service ) );
+		} else if ( colour == 'green' ) {
+			if ( $(column+'-In ProductionOn Hold') ) 
+				$(column+'-In ProductionOn Hold').innerHTML = 'Loading...';
+			if ( $(column+'-calculateduncalculatedOrdered') ) 
+				$(column+'-calculateduncalculatedOrdered').innerHTML = 'Loading...';
+			icon_image( pid, service, 'white' );
+			var code = "require openprint::bindery_schedule;\n";
+			code += "my $Project = new openprint::Project( $specs{'pid'} );\n";
+			code += "my %services = $Project->services();\n";
+			code += "foreach my $sid ( @{$services{$specs{'Service'}}} ) {\n";
+			code += "openprint::service::status( $specs{'pid'}, $sid, 'In Production' );\n";
+			code += "} # end if\n";
+			code += "my @results;\n";
+			code += "push @results, join('~', 'Div', $specs{'Column'}.'-In ProductionOn Hold', openprint::bindery_schedule::get_lis( join('-', @openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleStartYear','/employee/production/bindery_schedule.html?ddmScheduleStartMonth','/employee/production/bindery_schedule.html?ddmScheduleStartDay'}), join('-', @openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleEndYear','/employee/production/bindery_schedule.html?ddmScheduleEndMonth','/employee/production/bindery_schedule.html?ddmScheduleEndDay'}), [$specs{'Service'}], ['In Production','On Hold'], $specs{'Column'} ) );\n";
+			code += "push @results, join('~', 'Div', $specs{'Column'}.'-calculateduncalculatedOrdered', openprint::bindery_schedule::get_lis( join('-', @openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleStartYear','/employee/production/bindery_schedule.html?ddmScheduleStartMonth','/employee/production/bindery_schedule.html?ddmScheduleStartDay'}), join('-', @openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleEndYear','/employee/production/bindery_schedule.html?ddmScheduleEndMonth','/employee/production/bindery_schedule.html?ddmScheduleEndDay'}), [$specs{'Service'}], ['calculateduncalculated','Ordered'], $specs{'Column'} ) );\n";
+			code += "return join('|', @results );\n";
+			jsrsExecute( '/jsrs.htm', loadDivs, 'jsrs::execute', new Array( 'code', code, 'pid', pid, 'Service', service, 'Column', column ) );
+		} else if ( colour == 'red' ) {
+			icon_image( pid, service, 'white' );
+			var code = "my $Project = new openprint::Project( $specs{'pid'} );\n";
+			code += "my %services = $Project->services();\n";
+			code += "foreach my $sid ( @{$services{$specs{'Service'}}} ) {\n";
+			code += "openprint::service::status( $specs{'pid'}, $sid, 'In Production' );\n";
+			code += "} # end if\n";
+			jsrsExecute( '/jsrs.htm', null, 'jsrs::execute', new Array( 'code', code, 'pid', pid, 'Service', service, 'Column', column ) );
+		} else if ( colour == 'grey' ) {
+			icon_image( pid, service, 'green' );
+			if ( $(column+'-calculateduncalculatedOrdered') ) 
+				$(column+'-calculateduncalculatedOrdered').innerHTML = 'Loading...';
+			var code = "require openprint::bindery_schedule;\n";
+			code += "my $Project = new openprint::Project( $specs{'pid'} );\n";
+			code += "my %services = $Project->services();\n";
+			code += "if ( ! $services{$specs{'Service'}} ) {\n";
+			code += "$Project->insert_into_log( @openprint::session{'company_id','user_id'}, 'Add ' . $specs{'Service'} );\n";
+			code += "$_ = openprint::print_project::insert_service( $log, $dbh, @specs{'pid','Service'} );\n";
+			code += "openprint::bindery_schedule::add( $specs{'pid'}, $_, $specs{'Service'} );\n";
+			code += "} # end if\n";
+			code += "my @results;\n";
+			code += "push @results, join('~', 'Div', $specs{'Column'}.'-calculateduncalculatedOrdered', openprint::bindery_schedule::get_lis( join('-', @openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleStartYear','/employee/production/bindery_schedule.html?ddmScheduleStartMonth','/employee/production/bindery_schedule.html?ddmScheduleStartDay'}), join('-', @openprint::session{'/employee/production/bindery_schedule.html?ddmScheduleEndYear','/employee/production/bindery_schedule.html?ddmScheduleEndMonth','/employee/production/bindery_schedule.html?ddmScheduleEndDay'}), undef, ['calculateduncalculated','Ordered'], $specs{'Service'} ) );\n";
+			code += "return join('|', @results );\n";
+			jsrsExecute( '/jsrs.htm', loadDivs, 'jsrs::execute', new Array( 'code', code, 'pid', pid, 'Service', service, 'Column', column ) );
+		} else if ( colour == 'checkmark' ) {
+		} // end if
+	}
+	function loadDivs( results ) {
+		var rows = results.split('|');
+		for ( var r = 0; r < rows.length; r += 1 ) {
+			var cols = rows[r].split('~');
+			if ( cols[0] == 'Div' ) {
+				var div=$(cols[1]);
+				if ( div ) {
+					div.style.display = 'none';
+					div.innerHTML = cols[2];
+					Sortable.create(cols[1], {constraint:'vertical',overlap:'vertical',
+							onUpdate:function(){
+								jsrsExecute ( '/jsrs.htm', loadDivs, 'jsrs::execute', new Array( 'code', "require openprint::bindery_schedule; openprint::bindery_schedule::drop( $specs{'"+cols[1]+"'} );", cols[1], Sortable.serialize(cols[1]) ) );
+							}
+							});
+					div.style.display = 'block';
+				} // end if
+			} // end if
+		} // end for
+	} // end function loadDivs( results )
+	function remove_project( p_id ) {
+		var code = "require openprint::bindery_schedule;\n";
+		code += "my @divs;\n";
+		code += "foreach my $s_id ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE ProjectIndex=?}, $specs{'p_id'} ) ) {\n";
+		code += "openprint::bindery_schedule::remove( $specs{'p_id'}, $s_id );\n";
+		code += "push @divs, join('~', 'Div','service_'.$s_id, '');\n";
+		code += "} # end foreach\n";
+		code += "return join('|', @divs);\n";
+		jsrsExecute( '/jsrs.htm', loadDivs, 'jsrs::execute', new Array( 'code', code, 'p_id', p_id ) );
+	} // end function remove_project( p_id ) 
+	function complete_project( p_id ) {
+		var code = "require openprint::bindery_schedule;\n";
+		code += "my @divs;\n";
+		code += "foreach my $s_id ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE ProjectIndex=?}, $specs{'p_id'} ) ) {\n";
+		code += "push @divs, join('~', 'Div','service_'.$s_id, '');\n";
+		code += "} # end foreach\n";
+		code += "my $Project = new openprint::Project( $specs{'p_id'} );\n";
+		code += "$Project->mark_bindery_complete();\n";
+		code += "return join('|', @divs);\n";
+		jsrsExecute( '/jsrs.htm', loadDivs, 'jsrs::execute', new Array( 'code', code, 'p_id', p_id ) );
+	} // end function complete_project( p_id ) 
+</script>
+<style type="text/css">
+span.icon {
+	text-align: center;
+	display: -moz-inline-box;
+	display: inline-block;
+	height: 50px;
+	padding: 1px;
+	font-size: x-small;
+}
+img.icon {
+	width: 25px;
+	margin-right: 2px;
+	border: none;
+}
+img.hidden {
+	display: none;
+}
+div.Popup {
+	position:absolute;
+	visibility: hidden;
+	background-color: #ffffff;
+	border:1px solid;
+	width: auto;
+	padding: 5px;
+	z-index: 200;
+}
+	.PressScheduleHeader {
+		border-top: solid 1px;
+		border-bottom: solid 1px;
+		text-align: center;
+		margin-left: auto;
+		margin-right: auto;
+		background-color: #E3E4F0;
+		font-weight: bold;
+		font-size: 16px;
+	}
+	A.buttonOff {
+		margin: 0px;
+		padding: 0px;
+		padding-left: 2px;
+		padding-right: 2px;
+		border: 1px solid black;
+	}
+	A.buttonOn {
+		margin: 0px;
+		padding: 0px;
+		padding-left: 2px;
+		padding-right: 2px;
+		border: 1px solid black;
+	}
+	.ServiceOption {
+		display: -moz-inline-box;
+		display: inline-block;
+		width: 80px;
+	}
+span.ServiceOption label.radio {
+width: auto;
+float: none;
+display: inline;
+margin: 0px;
+padding: 0px;
+}
+	
+		#BinderySchedule ul {
+			padding: 0px;
+			margin: 0px;
+			margin-bottom: 2px;
+			list-style: none none inside;
+			width: <? echo ( int (100/scalar split(';',$openprint::session{'/employee/production/bindery_schedule.html?Services'}) )-1; ) ?>%;
+			float: left;
+		}
+		#BinderySchedule ul li {
+			padding: 0px;
+			margin: 0px;
+			margin-top: 2px;
+			margin-bottom: 2px;
+			margin-right: 10px;
+			border-top: 1px solid black;
+			list-style: none;
+			display: inline-block;
+			background-color: #ffffff;
+			float: none;
+			width: 100%;
+		}
+		#BinderySchedule ul li.yellow {
+			background-color: #ffff99;
+		}
+		#BinderySchedule ul li.blue {
+			background-color: #E3E4F0;
+		}
+		#BinderySchedule ul li.green {
+			background-color: #99ff99;
+		}
+		#BinderySchedule ul li.pink {
+			background-color: #FAC6FF;
+		}
+		.handle {
+			float: right;
+		}
+		.Company {
+			font-weight: bold;
+			font-size: 14px;
+		}
+		.commands {
+			border-top: 1px solid #000000;
+		}
+		.Comment {
+			padding-left: 6px;
+			padding-right: 6px;
+		}
+		.DueDate {
+			float: right;
+			margin-left: 2px;
+			font-size: 14px;
+		}
+		@media print {
+			.Empty {
+				display: none;	
+			}
+			.Comment {
+				border: none;
+			}
+			ul {
+				border: 1px solid black;
+				margin: 2px;
+			}
+			li { 
+				margin: 0px;
+				padding: 1px;
+			}
+			span {
+				margin: 0px;
+				padding: 0px;
+				width: auto;
+			}
+		}
+	</style>
+<div class="Popup" id="CommentEdit">
+	<form name="f2" onSubmit="saveComment( f2.ProjectIndex.value, f2.ServiceIndex.value, f2.Comment.value );hide_div('CommentEdit'); return false;">
+		<input type="hidden" name="ProjectIndex" />
+		<input type="hidden" name="ServiceIndex" />
+		<input type="hidden" name="btnFunction" value="Comment"/>
+		<span style="float: left;">Comment: <input type="text" name="Comment"/></span>
+		<span style="float: right;">
+            <? echo ( ssi::writeButton( $log, $dbh, 'Save1', 'save.gif', 'saveComment( f2.ProjectIndex.value, f2.ServiceIndex.value, f2.Comment.value );hide_div(\'CommentEdit\');', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel1', 'cancel.gif', "hide_div('CommentEdit');", '', 'Cancel' ); ) ?>
+		</span>
+	</form>
+</div>
+<div class="Popup" id="EditRunTime">
+	<form name="RunTime">
+		<input type="hidden" name="p_id" />
+		<input type="hidden" name="s_id" />
+		<input type="hidden" name="ss_id" />
+		<span style="float: left;">
+			<input type="text" name="runtime"/>
+		</span>
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save2', 'save.gif', 'saveRunTime( RunTime.p_id.value, RunTime.s_id.value, RunTime.ss_id.value, RunTime.runtime.value );hide_div(\'EditRunTime\');', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel2', 'cancel.gif', "hide_div('EditRunTime');", '', 'Cancel' ); ) ?>
+		</span>
+	</form>
+</div>
+<form name="f1" method="post" action="bindery_schedule.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Display Criteria</legend>
+		<p>
+			<label>Services:</label>
+<? echo ( 
+	my $html;
+	foreach my $Column ( @openprint::bindery_schedule::columns ) {
+		$html .= sprintf('<span class="ServiceOption"><input type="checkbox" id="Services%1$s" name="Services" value="%1$s" %2$s /><label class="radio" for="Services%1$s">%1$s</label></span>', $Column, ( (sets::isin( $Column, [ split(';', $openprint::session{'/employee/production/bindery_schedule.html?Services'})] ) or ! $openprint::session{'/employee/production/bindery_schedule.html?Services'} ) ? 'checked' : '' ) ) . "\n";
+	} # end foreach
+	return $html;
+) ?>
+		</p>
+		<p>
+			<label>Schedule Date Range:</label>
+			<select name="ddmScheduleStartYear"><option value=""> select </option><?ScheduleStartYears?></select>
+			<select name="ddmScheduleStartMonth"><option value=""> select </option><?ScheduleStartMonths?></select>
+			<select name="ddmScheduleStartDay"><option value=""> select </option><?ScheduleStartDays?></select>
+			&nbsp;to&nbsp;
+			<select name="ddmScheduleEndYear"><option value=""> select </option><?ScheduleEndYears?></select>
+			<select name="ddmScheduleEndMonth"><option value=""> select </option><?ScheduleEndMonths?></select>
+			<select name="ddmScheduleEndDay"><option value=""> select </option><?ScheduleEndDays?></select>
+		</p>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.btnFunction.value='Reset';f1.submit();", '', 'Reset' ); ) ?>
+		</p>
+	</fieldset>
+	<div class="unprintable">Please click on the <b>Docket #</b> to view details.<br/></div>
+	<div class="PressScheduleHeader">
+		Bindery Schedule For 
+		<? echo ( Date::Calc::Date_to_Text( split( '-', $$variable{'ScheduleStart'} ) ) ) ?>
+		<? if ( Date::Calc::Date_to_Days( split('-', $$variable{'ScheduleEnd'} ) ) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+		to <? echo ( Date::Calc::Date_to_Text( split( '-', $$variable{'ScheduleEnd'} ) ) ) ?>
+		<? endif ( Date::Calc::Date_to_Days( split('-', $$variable{'ScheduleEnd'} ) ) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+		<br/>
+	</div>
+	<div id="BinderySchedule">
+	<? echo (
+		my $html;
+		foreach my $id ( @openprint::bindery_schedule::columns ) {
+			next if $openprint::session{'/employee/production/bindery_schedule.html?Services'} and ! sets::isin( $id, [ split(';', $openprint::session{'/employee/production/bindery_schedule.html?Services'})] );
+			$html .= '<span style="margin: 0px; padding: 0px; float:left; font-size:16px; text-align:center; font-weight:bold; width:'. sprintf('%d', (100/scalar split(';', $openprint::session{'/employee/production/bindery_schedule.html?Services'}) )-1 ) . '%;">'.$id.'</span>';
+		} # end foreach
+		return $html;
+	) ?>
+	<? echo (
+		my $html;
+		foreach my $status ( ['In Production', 'On Hold'], ['calculated','uncalculated','Ordered'] ) {
+
+			foreach my $id ( @openprint::bindery_schedule::columns ) {
+				next if $openprint::session{'/employee/production/bindery_schedule.html?Services'} and ! sets::isin( $id, [ split(';', $openprint::session{'/employee/production/bindery_schedule.html?Services'})] );
+				push @{$$variable{'drops'}}, sprintf('%s-%s', $id, , join('', @{$status} ) );
+				$html .= sprintf('<ul id="%s-%s">', $id, join('', @{$status} ) );
+				$html .= openprint::bindery_schedule::get_lis( @$variable{'ScheduleStart','ScheduleEnd'}, $openprint::bindery_schedule::services{$id}, $status, $id );
+				$html .= '</ul>';
+			} # end foreach service
+			$html .= '<hr style="height: 5px; background-color: black; color: black; clear: both;"/>';
+		} # end foreach status
+		return $html;
+	) ?>
+	</div>
+</form>
+<br class="spacer"/>
+	<? if ( openprint::usergroup::is_user_in( ['BinderyManager'], $openprint::session{'user_id'} ) ) ?>
+	 <script type="text/javascript">
+	  // <![CDATA[
+		<? echo (
+			my $html;
+			foreach my $id ( @{$$variable{'drops'}} ) {
+				$html .= qq/
+				Sortable.create('$id', {constraint:'vertical',overlap:'vertical',
+				 onUpdate:function(){
+				 jsrsExecute ( '\/jsrs.htm', loadDivs, 'jsrs::execute', new Array( 'code', "require openprint::bindery_schedule; openprint::bindery_schedule::drop( \$specs{'$id'} );", '$id', Sortable.serialize("$id") ) );
+				 }
+				});
+				\n/;
+			} # end foreach
+			return $html;
+		) ?>
+	// ]]>
+	</script>
+	<? endif ( openprint::usergroup::is_user_in( ['BinderyManager'], $openprint::session{'user_id'} ) ) ?>

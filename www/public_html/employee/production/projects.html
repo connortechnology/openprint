@@ -1,0 +1,145 @@
+<script type="text/javascript">
+	function load_projects( form ) {
+		LoadContent('ProjectList','/employee/production/_project_list.html', Serialize( form ) );
+	} // end function
+</script>
+
+<form name="f1" method="post" action="projects.html">
+<fieldset class="filters"><legend>Enter Docket #</legend>
+	<p>
+		<label>Docket #:</label>
+		<input type="text" name="StartDocket" value="<?StartDocket?>" size="13" />
+		to <input type="text" name="EndDocket" value="<?EndDocket?>" size="13"  />
+		<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', q{load_projects(f1);}, '', 'Go' ); ) ?>
+	</p>
+</fieldset>
+<fieldset class="filters"><legend>Search Information</legend>
+	<p>
+		<label>Company:</label>
+		<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" /> &nbsp;
+		<select name="ddmCustomer" onchange="load_projects(this.form);">
+			<option value="">All Companies</option>
+			<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomer'} ); ) ?>
+		</select>
+		<? echo ( ssi::writeButton( $log, $dbh, 'CompanyGo', 'go.gif', q{load_projects(f1);}, '', 'Go' ); ) ?>
+	</p>
+	<p>
+		<label>Operator:</label>
+		<select name="ddmEmployee" size="1" onchange="load_projects(this.form);">
+			<option value="">All Employees</option>
+<? echo (
+	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname)', 'usergroups'=>['Prepress'], 'type'=>['E','A'] ) ],
+	$openprint::param{'ddmEmployee'} );
+)?>
+			</select>
+	</p>
+	<p>
+		<label>Sales Rep:</label>
+			<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
+				<option value="">All Employees</option>
+<? echo (
+	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname)', 'type'=>'E') ],
+	$openprint::param{'ddmSalesRep'} );
+) ?>
+			</select>
+	</p>
+	<p>
+	<label>Project Status:</label>
+	<select name="ProjectStatus" multiple size="6" onchange="load_projects(this.form);">
+<? echo (
+		my @statuses = (
+			'Pending Deposit',
+			'In Prepress',
+			'Proofs Out',
+			'Approved',
+			'Printed',
+			'Complete',
+			'Waiting For Pickup',
+			'Picked Up',
+			'Shipped',
+			);
+
+	if ( %openprint::param ) {
+		if ( ref $openprint::param{'ddmStatus'} eq 'ARRAY' ) {
+			$openprint::session{'/employee/production/projects.html?ddmStatus'} = join(';', @{$openprint::param{'ddmStatus'}} );
+		} else {
+			$openprint::session{'/employee/production/projects.html?ddmStatus'} = $openprint::param{'ddmStatus'};
+		} # end if
+	} # end if
+
+		my @status_filter = map { sql::escape($_); } split(';', $openprint::session{'/employee/production/projects.html?ddmStatus'} );
+
+		if ( ! @status_filter ) {
+			if ( openprint::usergroup::is_user_in( ['Prepress'], $openprint::session{'user_id'} ) ) {
+				@status_filter = ( 'In Prepress', 'Proofs Out' );
+			} elsif ( openprint::usergroup::is_user_in( ['Press'], $openprint::session{'user_id'} ) ) {
+				@status_filter = ( 'Approved' );
+			} elsif ( openprint::usergroup::is_user_in( ['Bindery'], $openprint::session{'user_id'} ) ) {
+				@status_filter = ( 'Printed' );
+			} else {
+				@status_filter = @statuses;
+			} # end if
+		} # end if
+
+		$openprint::session{'/employee/production/projects.html?ProjectStatus'} = join(';',@status_filter );
+		return ssi::make_select( [ map { $_, $_ } @statuses ], \@status_filter );
+) ?>
+			</select>
+	</p>
+	<p>
+		<label>Press:</label>
+			<select name="ddmPress" onchange="load_projects(this.form);">
+				<option value="">All Presses</option>
+<? echo (
+		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $openprint::param{'ddmPress'} );
+) ?>
+			</select>
+	</p>
+<? eval (
+	if ( %openprint::param ) {
+		foreach my $param ( 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay' ) {
+			@openprint::session{"/employee/production/projects.html?$param"} = $openprint::param{$param};
+		} # end foreach
+	} 
+	if ( ! $openprint::session{'/employee/production/projects.html?DueDateStartYear'} )  {
+		@openprint::session{
+		'/employee/production/projects.html?DueDateStartYear',
+		'/employee/production/projects.html?DueDateStartMonth',
+		'/employee/production/projects.html?DueDateStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -3 );
+	} # end if
+	if ( ! $openprint::session{'/employee/production/projects.html?DueDateEndYear'} )  {
+		@openprint::session{
+		'/employee/production/projects.html?DueDateEndYear',
+		'/employee/production/projects.html?DueDateEndMonth',
+		'/employee/production/projects.html?DueDateEndDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 );
+	} # end if
+
+	@$variable{'DueDateStartYears','DueDateStartMonths','DueDateStartDays','DueDateStart'} = ssi::get_dates( $log, $dbh,
+		@openprint::session{
+		'/employee/production/projects.html?DueDateStartYear',
+		'/employee/production/projects.html?DueDateStartMonth',
+		'/employee/production/projects.html?DueDateStartDay'}
+		);
+
+	@$variable{'DueDateEndYears','DueDateEndMonths','DueDateEndDays','DueDateEnd'} = ssi::get_dates( $log, $dbh,
+			@openprint::session{
+			'/employee/production/projects.html?DueDateEndYear',
+			'/employee/production/projects.html?DueDateEndMonth',
+			'/employee/production/projects.html?DueDateEndDay'}
+			);
+) ?>
+	<p>
+		<label>Due Date:</label>
+				<select name="DueDateStartYear" onchange="load_projects(this.form);"><?DueDateStartYears?></select>
+				<select name="DueDateStartMonth" onchange="load_projects(this.form);"><?DueDateStartMonths?></select>
+				<select name="DueDateStartDay" onchange="load_projects(this.form);"><?DueDateStartDays?></select>
+			to
+				<select name="DueDateEndYear" onchange="load_projects(this.form);"><?DueDateEndYears?></select>
+				<select name="DueDateEndMonth" onchange="load_projects(this.form);"><?DueDateEndMonths?></select>
+				<select name="DueDateEndDay" onchange="load_projects(this.form);"><?DueDateEndDays?></select>
+	</p>
+</fieldset>
+</form>
+<br/>
+<div id="ProjectList"><!--#include virtual="_project_list.html"--></div>
+<script type="text/javascript">document.f1.StartDocket.focus();</script>

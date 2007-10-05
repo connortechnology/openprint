@@ -1,0 +1,134 @@
+<? eval (
+   if ( $openprint::param{StartYear} ) {
+		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
+			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
+				$openprint::session{'/employee/inventory/skids.html?'.$key} = join(';', @{$openprint::param{$key}} );
+			} else {
+				$openprint::session{'/employee/inventory/skids.html?'.$key} = $openprint::param{$key};
+			}
+		} # end foreach
+	} # end if
+
+	if ( ! $openprint::session{'/employee/inventory/skids.html?StartYear'} ) {
+		@openprint::session{'/employee/inventory/skids.html?EndYear','/employee/inventory/skids.html?EndMonth','/employee/inventory/skids.html?EndDay'} = Date::Calc::Today();
+		@openprint::session{'/employee/inventory/skids.html?StartYear','/employee/inventory/skids.html?StartMonth','/employee/inventory/skids.html?StartDay'} = Date::Calc::Today();
+	} # end if
+	@{$$variable{'Skids'}} = openprint::Skid::find( 
+		'owner_id'	=>	( defined $openprint::session{'/employee/inventory/skids.html?Owner'} ? $openprint::session{'/employee/inventory/skids.html?Owner'} : undef ),
+		'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
+			'/employee/inventory/skids.html?StartYear',
+			'/employee/inventory/skids.html?StartMonth',
+			'/employee/inventory/skids.html?StartDay'} ),
+		'created_on_end'	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
+			'/employee/inventory/skids.html?EndYear',
+			'/employee/inventory/skids.html?EndMonth',
+			'/employee/inventory/skids.html?EndDay'} ),
+		'updated_on_start'	=>	Date::Calc::check_date( @openprint::session{
+			'/employee/inventory/skids.html?UpdatedStartYear',
+			'/employee/inventory/skids.html?UpdatedStartMonth',
+			'/employee/inventory/skids.html?UpdatedStartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
+			'/employee/inventory/skids.html?UpdatedStartYear',
+			'/employee/inventory/skids.html?UpdatedStartMonth',
+			'/employee/inventory/skids.html?UpdatedStartDay'} ) : undef,
+		'updated_on_end'	=>	Date::Calc::check_date( @openprint::session{
+			'/employee/inventory/skids.html?UpdatedEndYear',
+			'/employee/inventory/skids.html?UpdatedEndMonth',
+			'/employee/inventory/skids.html?UpdatedEndDay'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
+			'/employee/inventory/skids.html?UpdatedEndYear',
+			'/employee/inventory/skids.html?UpdatedEndMonth',
+			'/employee/inventory/skids.html?UpdatedEndDay'} ) : undef,
+		'allocated_to_docket'	=>	$openprint::session{'/employee/inventory/skids.html?Docket'},
+		'fsc_code'				=>	$openprint::session{'/employee/inventory/skids.html?fsc_code'},
+		'order'		=>	'id',
+		);
+) ?>
+<? if ( @{$$variable{'Skids'}} ) ?>
+<form id="SkidResults" name="SkidResults" action="skids.html" method="post">
+	<table class="List">
+		<tr>
+			<th align="left" width="75">Skid ID</th>
+			<th align="left" width="100">Date Added</th>
+			<th align="left" width="100">Updated On</th>
+			<th align="left" width="100">Location</th>
+			<th align="left" width="140">Dockets</th>
+			<th align="left">Contents</th>
+			<th width="20"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Skid ( @{$$variable{'Skids'}} ) {
+				my $empty = 1;
+				foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
+					if ( $$Skid{'Paper'}{$paper_id} > 0 ) {
+						$empty = 0;
+						last;
+					} # end if
+				} # end foreach
+				if ( $openprint::session{'/employee/inventory/skids.html?empty'} ne 'Y' ) {
+                    next if $empty;
+                } # end if
+                if ( $openprint::session{'/employee/inventory/skids.html?notempty'} ne 'Y' ) {
+                    next if ! $empty;
+                } # end if
+				my $iftype = 0;
+                foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
+                    my $Paper = new openprint::Paper( $paper_id );
+                    if ( sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/skids.html?Type'} ) ) ) {
+                        $iftype = 1;
+                        last;
+                    } # end if
+                } # end foreach
+                next if ! $iftype;
+
+
+
+				$html .= "<tr$rowclass>";
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->created_on()) ), );
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->updated_on()) ), );
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->location(),);
+
+				$html .= '<td>';
+				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), paper_id, quantity FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $$Skid{'id'} );
+				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 5 ) {
+					my $Paper = new openprint::Paper( $paper_id );
+					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%d - %d %s</a><br/>',
+					$$Skid{'id'},
+					$docket,
+					$quantity,
+					$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
+					);
+				} # end while
+				$html .= '</td>';	
+				$html .= '<td>';
+				foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
+					my $Paper = new openprint::Paper( $paper_id );
+					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s - %d %s</a><br/>',
+					$$Skid{'id'},
+					$Paper->to_string(),
+					$$Skid{'Paper'}{$paper_id},
+					$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
+					);
+				} # end foreach
+				$html .= '</td>';	
+				$html .= qq`<td><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
+				$html .= '</tr>';
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Skid
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+	<span style="float: right;">
+		<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id='+\$A(SkidResults.skids).map(function(e){return e.value}).join(','), 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ),
+					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "SkidResults.btnFunction.value='Delete';SkidResults.submit();", '', 'Delete Checked' ),
+					ssi::writeButton( $log, $dbh, 'Select', 'select.gif', "SkidResults.btnFunction.value='Go';SkidResults.action='skid_details.html';SkidResults.submit();", '', 'Select Checked' ),
+
+			); ) ?>
+	</span>
+</form>
+<? else ( @{$$variable{'Skids'}} ) ?>
+There were no skids matching your search criteria.
+<? endif ( @{$$variable{'Skids'}} ) ?>

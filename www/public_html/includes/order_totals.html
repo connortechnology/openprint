@@ -1,0 +1,34 @@
+<table style="width: 250px;">
+	<tr>
+		<td width="175" height="10"></td>
+		<td width="75" height="10"></td>
+	</tr>
+	<tr>
+		<td align="right">Sub Total:</td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->sub_total() ); ) ?></td>
+	</tr>
+	<? if ( $$variable{'GST'} ne '' ) ?>
+	<tr>
+		<td align="right">Federal Tax:</td>
+		<td align="right"><?CurrencySymbol?><?GST?></td>
+	</tr>
+	<? endif ( $$variable{'GST'} ne '' ) ?>
+	<? if ( $$variable{'PST'} ne '' ) ?>
+	<tr>
+		<td align="right">State/Prov Tax:</td>
+		<td align="right"><?CurrencySymbol?><?PST?></td>
+	</tr>
+	<? endif ( $$variable{'PST'} ne '' ) ?>
+	<? if ( $$variable{'HST'} ne '' ) ?>
+	<tr>
+		<td align="right">Harmonized Tax:</td>
+		<td align="right"><?CurrencySymbol?><?HST?></td>
+	</tr>
+	<? endif ( $$variable{'HST'} ne '' ) ?>
+	<? if ( $$variable{'TOTAL'} ) ?>
+	<tr class="totals">
+		<td align="right"><b>TOTAL:</b></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'TOTAL'} ); ) ?></td>
+	</tr>
+	<? endif ( $$variable{'TOTAL'} ) ?>
+</table>

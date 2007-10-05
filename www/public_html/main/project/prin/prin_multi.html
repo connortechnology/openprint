@@ -1,0 +1,125 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/proj/paper.js"></script>
+<script type="text/javascript">
+	function calc( formName ) {
+		var form = getFormObj('f1');
+		if ( gettingNewPrice ) {
+			setTimeout( "calc('"+formName+"');", 1000 );
+			return;
+		} // end if
+
+		gettingNewPrice = true;
+		jsrsExecute( '/jsrs.htm', cbBookResults, 'openprint::service::external_calc', get_variables(formName,'Multipage') );
+	}
+	function cbBookResults( results ) {
+		cbFillResults(results);
+		var form = getFormObj('f1');
+		if ( get_value( form.rdbCover ) == 'Self' ) {
+			remove_div('CoverStocks');
+		} else {
+			add_div('CoverStocks');
+		} // end if
+		
+}
+
+	function validate_data(formName) {
+		var form = getFormObj(formName);
+		if ( ! form.txtTotalPageQuantity.value > 0 ) {
+			alert("Please enter the total quantity of pages.");
+			return 0;
+		} // end if
+		if ( parseFloat(form.txtGateFoldedSpreadQuantity.value) > parseFloat(form.txtTotalSpreadQuantity.value) ) {
+			alert('The quantity of gate folded spreads can not exceed the total spread quantity.');
+			return 0;
+		} // end if
+		if ( ! form.txtGateFoldedSpreadQuantity.value ) {
+			if ( parseInt(form.txtTotalPageQuantity.value/form.txtSpreadSize.value) != parseFloat(form.txtTotalPageQuantity.value/form.txtSpreadSize.value) ) {
+				alert('The number of pages should be a multiple of ' + form.txtSpreadSize.value );
+				return 0;
+			} // end if
+		} else {
+			if ( parseInt(form.txtTotalPageQuantity.value/2) != parseFloat(form.txtTotalPageQuantity.value/2) ) {
+				alert('The number of pages should be a multiple of ' + 2 );
+				return 0;
+			} // end if
+	
+		} // end if
+
+		return 1;
+	} // end function
+
+	<?TemplateSizes?>
+</script>
+<script type="text/javascript" src="/javascripts/templates/brochures.js"></script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<fieldset><legend><?ProjectTypeName?></legend>
+			<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
+			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
+			<!--#include virtual="/includes/main/proj/multipage_printing_type.html" -->
+			<!--#include virtual="/includes/main/proj/dimensions.html" -->
+<fieldset><legend>Book Specifications</legend>
+	<p>
+		<label>Total pages:</label>
+		<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="9"  onkeyup="calc('f1');" />
+	</p>
+	<p>
+		<label>Cover:</label>
+		<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('CoverStocks');calc('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Self' ) ?> />
+		<label class="radio" for="rdbCoverSelf">Self Cover</label>
+		<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('CoverStocks');calc('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
+		<label class="radio" for="rdbCoverDifferent">Different Cover</label>
+	</p>
+	<p>
+		<label>Total interior spreads:</label>
+		<input name="txtInteriorSpreadQuantity" readonly="readonly" value="<?txtInteriorSpreadQuantity?>" type="text" size="9" onfocus="this.blur();" />
+	</p>
+	<p>
+		<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> spreads:</label>
+		<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="9"  onkeyup="calc('f1');" />
+	</p>
+	<p>
+		<label>Total spreads:</label>
+		<input name="txtTotalSpreadQuantity" readonly="readonly" value="<?txtTotalSpreadQuantity?>" type="text" size="9" onfocus="this.blur();" />
+	</p>
+	<p>
+		<label># of inserts:</label>
+		<input name="txtInsertQuantity" size="9" value="<?txtInsertQuantity?>"/>
+	</p>
+</fieldset>
+				<br class="spacer"/>
+			<fieldset id="CoverStocks" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
+				<legend>Information for Cover</legend>
+				<? echo ( 
+					$$variable{'Signature'} = 'CoverSpreads';
+					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
+					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
+					return variable_substitution( $r, $log, $dbh, \$html, $variable );
+					) ?>
+			</fieldset>
+			<fieldset><legend>Information for Interior Pages</legend>
+				<? echo ( 
+					$$variable{'Signature'} = 'InteriorSpreads';
+					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
+					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
+					return variable_substitution( $r, $log, $dbh, \$html, $variable );
+					) ?>
+			</fieldset>
+		</fieldset>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="txtPrice1" value="n/a"/>
+		<input type="hidden" name="txtPrice2" value="n/a"/>
+		<input type="hidden" name="txtPrice3" value="n/a"/>
+		<input type="hidden" name="ContinueProject" value="Y"/>
+		<input type="hidden" name="NewBook" value="Y"/>
+		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>"/>
+		<input type="hidden" name="ServiceType" value="Multipage"/>
+	</form>
+</div><!--Service-->
+<script type="text/javascript">
+selectProjectTemplate( 'f1' );
+</script>

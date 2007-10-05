@@ -1,0 +1,79 @@
+<? echo (
+	my %parameters;	
+	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) {
+		$parameters{'SalesPerson'} = $openprint::session{'user_id'};
+		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$openprint::session{'user_id'})";
+	} elsif ( $openprint::param{'CSR'} ) {
+		$parameters{'SalesPerson'} = $openprint::param{'CSR'};
+	} # end if
+	#$parameters{'order'} = 'lower(strname)';
+	my @Companies = openprint::Company::find( %parameters );
+	my %companies = map { int($_->id()), $_->name() } @Companies;
+	if ( %companies ) {
+		@{$$variable{'Orders'}} = openprint::Order::find( 
+			'company_id' => ( ($openprint::param{'company_id'} and exists $companies{$openprint::param{'company_id'}} ) ? $openprint::param{'company_id'} : undef ),
+			'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'}),
+			'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'}),
+			'status' =>	$openprint::param{'status'},
+			'value_start' => $openprint::param{'value_start'},
+			'value_end' => $openprint::param{'value_end'},
+			'order' => ($openprint::param{'order'} ? $openprint::param{'order'} : 'Index'),
+			'user_id' => ($openprint::param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $openprint::param{'Estimator'}),
+			#'limit' => 1,
+		);
+	} else {
+		@{$$variable{'Orders'}} = ();
+		return 'There were no companies to filter on.<br/>';
+	} # end if
+	%{$$variable{'Companies'}} = %companies;
+	return '';
+) ?>
+<? if ( @{$$variable{'Orders'}} ) ?>
+<table class="List">
+	<tr>
+		<th width="60" align="left">Order #</th>
+		<th width="55" align="left">Docket #</th>
+		<th width="200" align="left">Company</th>
+		<th align="left">Project References</th>
+		<th width="120" align="left">Date</th>
+		<th width="120" align="left">Status</th>
+		<th width="75" align="right">Total</th>
+	</tr>
+	<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
+	<? if ( exists $$variable{'Companies'}{int($$variable{'Order'}->company_id())} ) ?>
+	<tr<?rowclass?>>
+		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
+		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
+		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Order'}->company_name() ); ) ?></a></td>
+		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>">
+		<? echo ( 
+			my $html;
+			foreach my $Project ( $$variable{'Order'}->projects() ) {
+			$html .= ssi::htmlize($Project->reference() ). '<br/>';;
+			} # end foreach
+			return $html;
+			) ?>
+		</a></td>
+		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></a></td>
+		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
+		<td align="right"><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>">$<? echo ( $$variable{'Order'}->total(); ) ?></a></td>
+	</tr>
+	<? eval ( 
+		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+		$$variable{'Total'} += $$variable{'Order'}->total();
+		$$variable{'Count'} += 1;
+	) ?>
+	<? endif ( exists $$variable{'Companies'}{int($$variable{'Order'}->company_id())} ) ?>
+	<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
+	<tr class="totals">
+		<td align="right">Count:</td>
+		<td><?Count?></td>
+		<td align="right">Average Value:</td>
+		<td>$<? echo ( sprintf('%.2f', $$variable{'Total'}/$$variable{'Count'} ); ) ?></td>
+		<td colspan="2" align="right">Total:</td>
+		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Total'} ); ) ?></td>
+	</tr>
+</table>
+<? else ( @{$$variable{'Orders'}} ) ?>
+There were no orders matching your criteria.  Please try again.
+<? endif ( @{$$variable{'Orders'}} ) ?>

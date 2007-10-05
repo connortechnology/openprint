@@ -1,0 +1,25 @@
+			<div class="formtable">	
+				<form name="f1" action="email_campaigns.html" method="post">
+					<input type="hidden" name="btnFunction"/>
+					<input type="hidden" name="index" value="<?index?>"/>
+					<div class="row"> <span class="label">Name:</span><span class="forminput"><input type="text" name="name" size="25" value="<?name?>"/></span> </div>
+					<div class="row"> <span class="label">Query:</span><span class="forminput"> <textarea name="query" cols="50" rows="8"><?query?></textarea></span> </div>
+					<div class="row"> <span class="label">Email Body:</span><span class="forminput"> <textarea name="emailtext" cols="50" rows="8"><?emailtext?></textarea></span> </div>
+					<div class="row"> <span class="label">Times to send:</span><span class="forminput"><input type="text" name="timestosend" size="25" value="<?timestosend?>"/></span> </div>
+					<div class="row"> <span class="label">Interval between emails:</span><span class="forminput"><input type="text" name="interval" size="25" value="<?interval?>"/></span> </div>
+					<div class="row"> <span class="label">Active:</span><span class="forminput">
+<input type="radio" name="active" value="Y" <? if ( $$variable{'active'} eq 'Y' ) ?>CHECKED<? endif ( $$variable{'active'} eq 'Y' ) ?> /> Yes
+<input type="radio" name="active" value="N" <? if ( $$variable{'active'} ne 'Y' ) ?>CHECKED<? endif ( $$variable{'active'} ne 'Y' ) ?> /> No
+</span> </div>
+					<div class="row"> <span class="label">Last Run:</span><span class="forminput"><?lastrun?></span></div>
+					<div class="row"> <span class="label"></span><span class="forminput">
+<script language="javascript">writeButton( 'DeleteBottom', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);");</script>
+<script language="javascript">writeButton( 'SaveBottom', 'save.gif', "f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);");</script>
+<script language="javascript">writeButton( 'ResetBottom', 'reset.gif', 'f1.reset();');</script>
+<script language="javascript">writeButton( 'Run', 'run.gif', "f1.btnFunction.value='Run';f1.submit();");</script>
+<script language="javascript">writeButton( 'TrialRun', 'run.gif', "f1.btnFunction.value='TrialRun';f1.submit();");</script>
+					</span> </div>
+					<div class="spacer">&nbsp;</div>
+
+				</form>
+			</div>

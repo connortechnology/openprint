@@ -1,0 +1,46 @@
+<div class="row"> 
+	<span class="label">Cover Type:</span>
+<? echo (
+	my $html;
+	foreach my $qty ( $$variable{'Project'}->quantities() ) {
+		next if ! $qty;
+		$html .= qq{<span class="value">$$variable{'rdbCover'}</span>};
+	} # end foreach
+	return $html;
+) ?>
+</div>
+<div class="row"> 
+	<span class="label">Total page quantity:</span>
+<? echo (
+	my $html;
+	foreach my $qty ( $$variable{'Project'}->quantities() ) {
+		next if ! $qty;
+		$html .= qq{<span class="value">$$variable{'txtTotalPageQuantity'}</span>};
+	} # end foreach
+	return $html;
+) ?>
+</div>
+<div class="row"> 
+	<span class="label">Total spread quantity:</span>
+<? echo (
+	my $html;
+	foreach my $qty ( $$variable{'Project'}->quantities() ) {
+		next if ! $qty;
+		$html .= qq{<span class="value">$$variable{'txtTotalSpreadQuantity'}</span>};
+	} # end foreach
+	return $html;
+) ?>
+</div>
+<? if ( $$variable{'txtGateFoldedSpreadQuantity'} ) ?>
+<div class="row"> 
+	<span class="label">Total gate folded spread quantity:</span>
+<? echo (
+	my $html;
+	foreach my $qty ( $$variable{'Project'}->quantities() ) {
+		next if ! $qty;
+		$html .= qq{<span class="value">$$variable{'txtGateFoldedSpreadQuantity'}</span>};
+	} # end foreach
+	return $html;
+) ?>
+</div>
+<? endif ( $$variable{'txtGateFoldedSpreadQuantity'} ) ?>

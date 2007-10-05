@@ -1,0 +1,98 @@
+<div class="PageTitle">
+<h1><?SiteTitle?></h1>
+<h2>Help Desk</h2>
+</div>
+<? eval (
+	$$variable{'User'} = new openprint::User( $openprint::session{'user_id'} );
+) ?>
+<form method="post" name="f1" action="confirmation_help_desk.html">
+<fieldset>
+	<p> 
+		<label>&nbsp;Company Name:</label>
+		<input type="text" name="txtCompanyName" value="<? hecho ( $$variable{'User'}->Company()->name(); ) ?>" />
+	</p>
+	<p> 
+		<label>*Salutation:</label>
+		<input type="radio" name="rdbSalutation" id="rdbSalutationMr." value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
+		<label class="radio" for="rdbSalutationMr.">Mr.</label>
+		<input type="radio" name="rdbSalutation" id="rdbSalutationMrs." value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
+		<label class="radio" for="rdbSalutationMrs.">Mrs.</label>
+		<input type="radio" name="rdbSalutation" id="rdbSalutationMs." value="Ms." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Ms.' ) ?> />
+		<label class="radio" for="rdbSalutationMs.">Ms.</label>
+		<input type="radio" name="rdbSalutation" id="rdbSalutationMiss" value="Miss" <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Miss' ) ?> />
+		<label class="radio" for="rdbSalutationMiss">Miss</label>
+	</p>
+	<p> 
+		<label>*First Name:</label>
+		<input type="text" name="txtFirstName" value="<? hecho ( $$variable{'User'}->firstname(); ) ?>" />
+	</p>
+	<p> 
+		<label>*Last Name:</label>
+		<input type="text" name="txtLastName" value="<? hecho ( $$variable{'User'}->lastname(); ) ?>" />
+	</p>
+	<p> 
+		<label>&nbsp;Title:</label>
+		<input type="text" name="txtTitle" value="<? hecho ( $$variable{'User'}->title(); ) ?>" />
+	</p>
+	<p> 
+		<label>*Address:</label>
+		<input type="text" name="txtAddress1" value="<? hecho ( $$variable{'User'}->Company()->address1(); ) ?>" />
+	</p>
+	<p> 
+		<label>&nbsp;</label>
+		<input type="text" name="txtAddress2" value="<? hecho ( $$variable{'User'}->Company()->address2(); ) ?>" />
+	</p>
+	<p> 
+		<label>*City:</label>
+		<input type="text" name="txtCity" value="<? hecho ( $$variable{'User'}->Company()->city(); ) ?>" />
+	</p>
+	<p> 
+		<label>*State/Province:</label>
+			<select name="ddmStateProvince">
+			<option value=""> Select </option>
+			<? echo ( join('',
+				ssi::make_drop_down( \@states::states, $$variable{'User'}->Company()->state() ),
+				ssi::make_drop_down( \@provinces::provinces, $$variable{'User'}->Company()->state() ),
+			); ) ?>
+
+			</select>
+	</p>
+	<p> 
+		<label>*Zip/Postal Code:</label>
+			<input type="text" name="txtPostalCode" value="<? hecho ( $$variable{'User'}->Company()->postalcode(); ) ?>" />
+	</p>
+	<p> 
+		<label>*Country:</label>
+			<select name="ddmCountry">
+			<option value=""> Select </option>
+			<? echo (
+				ssi::make_drop_down( \@countries::countries, $$variable{'User'}->Company()->country() );
+			) ?>
+			</select>
+	</p>
+	<p> 
+		<label>*Phone:</label>
+		<input type="text" name="txtPhone" value="<? hecho ( $$variable{'User'}->phone(); ) ?>" />
+	</p>
+	<p> 
+		<label>&nbsp;Extension:</label>
+		<input type="text" name="txtExtension" value="<? hecho ( $$variable{'User'}->extension(); ) ?>" />
+	</p>
+	<p> 
+		<label>*E-mail Address:</label>
+		<input type="text" name="txtEmail" value="<? hecho ( $$variable{'User'}->email(); ) ?>" />
+	</p>
+	<p> 
+		<label>*Question or Comment:</label>
+		<textarea name="txtQuestion-Quote" rows="10" ></textarea>
+	</p>
+</fieldset>
+		<fieldset>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Submit', '', "f1.btnSubmit.value='Submit';f1.submit();", '', 'Submit' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', '', "f1.reset();", '', 'Reset' ); ) ?>
+		</p>
+	</fieldset>
+
+	<input type="hidden" name="btnSubmit"/>
+</form>

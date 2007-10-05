@@ -1,0 +1,88 @@
+<form name="f1" method="post" action="helpdesk_search.html" >
+	<input type="hidden" name="HelpdeskIndex" value="<?HelpdeskIndex?>">
+	<fieldset>
+		<p> 
+			<label>Submission Date:</label>
+			<?sub_date?>
+		</p>
+		<p> 
+			<label>Company Name:</label>
+			<?company_name?>
+		</p>
+		<p> 
+			<label>Title:</label>
+			<?title?>
+		</p>
+		<p> 
+			<label>First Name:</label>
+			<?first_name?>
+		</p>
+		<p> 
+			<label>Last Name:</label>
+			<?last_name?>
+		</p>
+		<p> 
+			<label>Address:</label>
+			<?address_one?>
+		</p>
+<? if ( $$variable{'address_two'} ) ?>
+		<p> 
+			<label>&nbsp;</label>
+			<?address_two?>
+		</p>
+<? endif ( $$variable{'address_two'} ) ?>
+		<p> 
+			<label>City:</label>
+			<?city?>
+		</p>
+		<p> 
+			<label>State/Province:</label>
+			<?state?>
+		</p>
+		<p> 
+			<label>Zip/Postal Code:</label>
+			<?postal_code?>
+		</p>
+		<p> 
+			<label>Country:</label>
+			<?country?>
+		</p>
+		<p> 
+			<label>Phone:</label>
+			<?phone?>
+		</p>
+		<p> 
+			<label>Extension:</label>
+			<?extension?>
+		</p>
+		<p> 
+			<label>E-mail Address:</label>
+			<?email?>
+		</p>
+		<p> 
+		<label><b>Question or Comment:</b></label>
+			<?question?>
+		</p>
+		<p> 
+			
+	<label><b>Response Type:</b></label>
+			<?response_type?>
+		</p>
+		<p> 
+			<label><b>Customer Service Response:</b></label>
+				<textarea name="txtQuestion-Quote" rows="10" cols="30"><?response?></textarea>
+		</p>
+		<p> 
+			<label>Mark as reviewed:</label>
+			<input name="rdbReviewed" type="radio" value="Y" <?rdbReviewedY?> /> Yes
+			<input name="rdbReviewed" type="radio" value="N" <?rdbReviewedN?> /> No
+		</p>
+	<p class="buttons">
+		<script type="text/javascript">
+			writeButton('Submit1','submit.gif',"f1.btnFunction.value='Submit';f1.submit();",'','Submit');
+			writeButton('Reset1','reset.gif',"f1.reset();",'','Reset');
+		</script>
+	</p>
+</fieldset>
+<input type="hidden" name="btnFunction"/>
+</form>

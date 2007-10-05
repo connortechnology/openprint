@@ -1,0 +1,99 @@
+<html>
+	<head>
+		<title><?SiteTitle?> -  Payment Receipt</title>
+	<!--#include virtual="/styles/email_colours.html" -->
+	<!--#include virtual="/styles/email_styles.html" -->
+	</head>
+	<body bgcolor="#FFFFFF">
+		<center>
+	<table width="620" border="0" cellspacing="0" cellpadding="0">
+	<tr align="center"> 
+		<td height="20" colspan="2">&nbsp;</td>
+	</tr>
+	<tr class="title"> 
+		
+      <td width="310" height="20"><b>
+<?SiteTitle?> - Payment Receipt</b> </td>
+		<td width="310" align="right" height="20"><b><?PaymentIndex?>&nbsp;&nbsp;</b></td>
+	</tr> <tr> 
+		<td height="20" colspan="2"></td>
+	</tr> 
+	</table>
+			
+  <table width="620" border="0" cellspacing="0" cellpadding="0">
+    <tr> 
+      <td><b>Payment ID:</b> 
+        <?PaymentIndex?>
+      </td>
+    </tr>
+    <tr> 
+      <td><b>Payment Date:</b> 
+        <?PaymentDate?>
+      </td>
+    </tr>
+    <tr> 
+      <td><b>PO No:</b>
+        <?OrderPONUM?>
+      </td>
+    </tr>
+  </table>
+			<br>
+			 <hr width="620" size="1" color="#000000">
+			 
+  <table width="620" border="0" cellspacing="0" cellpadding="0">
+    <tr> 
+      <td width="310">&nbsp;</td>
+      <td width="310">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td colspan="2">Order ID: 
+        <?Order_ID?>
+      </td>
+    </tr>
+    <tr> 
+      <td colspan="2">Order Date: 
+        <?OrderDate?>
+      </td>
+    </tr>
+    <tr> 
+      <td colspan="2">Total Cost: 
+        <?CurrencySymbol?>
+        <?OrderTotal?>
+      </td>
+    </tr>
+    <tr> 
+      <td colspan="2">Amount Outstanding Before Payment: 
+        <?CurrencySymbol?>
+        <?OrderAmountOutstanding?>
+      </td>
+    </tr>
+    <tr> 
+      <td colspan="2">Amount Outstanding After Payment: 
+        <?CurrencySymbol?>
+        <?RemainderOutstanding?>
+      </td>
+    </tr>
+  </table>
+			<br>
+			<hr width="620" size="1" color="#000000">
+			
+  <table width="620" border="0" cellspacing="0" cellpadding="0">
+    <tr> 
+      <td width="300">&nbsp;</td>
+      <td width="300">&nbsp;</td>
+    </tr>
+    <tr> 
+      <td colspan="2">Payment Method: 
+        <?PaymentMethod?>
+      </td>
+    </tr>
+    <tr> 
+      <td colspan="2">Payment Amount: 
+        <?CurrencySymbol?>
+        <?PaymentAmount?>
+      </td>
+    </tr>
+  </table>
+		</center>
+	</body>
+</html>

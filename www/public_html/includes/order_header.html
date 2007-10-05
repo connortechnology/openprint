@@ -1,0 +1,70 @@
+<div class="OrderHeader">
+	<fieldset id="OrderInformation"><legend>Order Information</legend>
+		<p><label>Order ID:</label><?OrderID?></p>
+	<? if ( $$variable{'Order'}->docket() ) ?>
+		<p><label>Docket:</label><? echo ( $$variable{'Order'}->docket(); ) ?></p>
+	<? endif ( $$variable{'Order'}->docket() ) ?>
+		<p><label>P.O.:</label>&nbsp;<?PONUM?></p>
+		<? if ( $$variable{'Order'}->invoice_id() ) ?>
+		<p><label>Invoice ID:</label><? echo ( $$variable{'Order'}->invoice_id() ) ?></p>
+		<p><label>Date Invoiced:</label><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Order'}->invoiced_on()) ); ) ?></p>
+		<? endif ( $$variable{'Order'}->invoice_id() ) ?>
+		<p><label>Created:</label><? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'CreationDate'} ) ); ) ?></p>
+		<p><label>Status:</label><?ORDER_STATUS?></p>
+	</fieldset>
+<? if ( 0 ) ?>
+	<fieldset><legend>Company Information:</legend>
+		<? if ( $$variable{'txtCompanyName'} ) ?>
+		<p><label>Name:</label><?txtCompanyName?><br/></p>
+		<? endif ( $$variable{'txtCompanyName'} ) ?>
+		<p><label>Address:</label>
+		<? if ( $$variable{'txtAddress1'} ) ?>
+		<?txtAddress1?><br/>
+		<? endif ( $$variable{'txtAddress1'} ) ?>
+		<? if ( $$variable{'txtAddress2'} ) ?>
+		<?txtAddress2?><br/>
+		<? endif ( $$variable{'txtAddress2'} ) ?>
+		<?CCITYPROVCOUNTRY?><br/>
+		<?txtPostalCode?><br/>
+		</p>
+	</fieldset>
+	<fieldset><legend>Contact Information:</legend>
+		<? if ( $$variable{'txtFirstName'} or $$variable{'txtLastName'} ) ?>
+		<p><label>Name:</label><?txtSalutation?> <?txtFirstName?> <?txtLastName?><br/></p>
+		<? endif ( $$variable{'txtFirstName'} or $$variable{'txtLastName'} ) ?>
+		<? if ( $$variable{'txtPhone'} ) ?>
+			<p><label>Phone:</label>
+			<?txtPhone?><? if ( $$variable{'txtExtension'} ) ?>&nbsp;ext:<?txtExtension?><? endif ( $$variable{'txtExtension'} ) ?><br/>
+			</p>
+		<? endif ( $$variable{'txtPhone'} ) ?>
+		<? if ( $$variable{'txtFax'} ) ?><p><label>Fax:</label><?txtFax?><br/></p><? endif ( $$variable{'txtFax'} ) ?>
+		<p><label>Email:</label><?txtEmail?><br/></p>
+	</fieldset>
+<? else ( 0 ) ?>
+	<fieldset id="OrderedBy"><legend>Ordered By:</legend>
+		<? if ( $$variable{'txtCompanyName'} ) ?>
+		<p><label>Company Name:</label><?txtCompanyName?><br/></p>
+		<? endif ( $$variable{'txtCompanyName'} ) ?>
+		<p><label>Address:</label>
+		<? if ( $$variable{'txtAddress1'} ) ?>
+		<?txtAddress1?><br/>
+		<? endif ( $$variable{'txtAddress1'} ) ?>
+		<? if ( $$variable{'txtAddress2'} ) ?>
+		<?txtAddress2?><br/>
+		<? endif ( $$variable{'txtAddress2'} ) ?>
+		<?CCITYPROVCOUNTRY?><br/>
+		<?txtPostalCode?><br/>
+		</p>
+		<? if ( $$variable{'txtFirstName'} or $$variable{'txtLastName'} ) ?>
+		<p><label>Name:</label><?txtSalutation?> <?txtFirstName?> <?txtLastName?><br/></p>
+		<? endif ( $$variable{'txtFirstName'} or $$variable{'txtLastName'} ) ?>
+		<? if ( $$variable{'txtPhone'} ) ?>
+			<p><label>Phone:</label>
+			<?txtPhone?><? if ( $$variable{'txtExtension'} ) ?>&nbsp;ext:<?txtExtension?><? endif ( $$variable{'txtExtension'} ) ?><br/>
+			</p>
+		<? endif ( $$variable{'txtPhone'} ) ?>
+		<? if ( $$variable{'txtFax'} ) ?><p><label>Fax:</label><?txtFax?><br/></p><? endif ( $$variable{'txtFax'} ) ?>
+		<p><label>Email:</label><?txtEmail?><br/></p>
+	</fieldset>
+<? endif ( 0 ) ?>
+</div><!--OrderHeader-->

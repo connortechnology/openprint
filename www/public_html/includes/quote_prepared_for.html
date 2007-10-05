@@ -1,0 +1,31 @@
+<div class="QuoteHeader">
+	<fieldset><legend>Prepared For:</legend>
+	<p><label>Contact:</label>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_salutation() ) ) ?>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_firstname() ) ) ?>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_lastname() ) ) ?><br/>
+	</p>
+<? if ( $$variable{'Quote'}->for_companyname(); ) ?>
+	<p><label>Company:</label>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_companyname() ).'<br/>'; ) ?>
+	</p>
+<? endif ( $$variable{'Quote'}->for_companyname(); ) ?>
+	<p><label>Address:</label>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_address1() ).'<br/>' if $$variable{'Quote'}->for_address1(); ) ?>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_address2() ).'<br/>' if $$variable{'Quote'}->for_address2(); ) ?>
+		<? echo ( misc::build_city_prov_country(@$variable{'Quote'}->for_city(),$$variable{'Quote'}->for_state(),$$variable{'Quote'}->for_country() ).'<br/>'; ) ?>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_postalcode() ).'<br/>' if $$variable{'Quote'}->for_postalcode(); ) ?>
+	</p>
+	<p><label>Phone:</label>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_phone() ).'<br/>' if $$variable{'Quote'}->for_phone(); ) ?>
+	</p>
+	<? if ( $$variable{'Quote'}->for_fax() ) ?>
+	<p><label>Fax:</label>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_fax() ); ) ?>
+	</p>
+	<? endif ( $$variable{'Quote'}->for_fax() ) ?>
+	<p><label>Email:</label>
+		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_email() ).'<br/>' if $$variable{'Quote'}->for_email(); ) ?>
+	</p>
+	</fieldset>
+</div>

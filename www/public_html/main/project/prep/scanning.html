@@ -1,0 +1,86 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/scanning.js"></script>
+<div class="Service">
+	<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	<form name="f1" method="post" action="/main/project/view.html">
+	<fieldset><legend>Scanning Services</legend>
+		<div class="row"> 
+			<span class="required">*</span>
+			<span class="label">Scanner type:</span>
+			<span class="input"> 
+				<input type="radio" id="ScannerDrum" name="rdbScanner" value="Drum" <? echo ( 'checked="checked"' if $$variable{'rdbScanner'} eq 'Drum' ) ?> onclick="calc(this.form.name);" />
+				<label for="ScannerDrum">Drum</label>
+				<input type="radio" id="ScannerFlatbed" name="rdbScanner" value="Flatbed" <? echo ( 'checked="checked"' if $$variable{'rdbScanner'} eq 'Flatbed' ) ?> onclick="calc(this.form.name);" />
+				<label for="ScannerFlatbed">Flatbed</label>
+			</span>
+		</div>
+<div class="row"> 
+	<span class="required">*</span>
+	<span class="label">Original type?</span>
+	<span class="input"> 
+		<select name="ddmOriginal" size="1" onchange="calc('f1');"  >
+			<option value="">Please select one</option>
+			<option value="Transparency" <?ddmOriginalTransparency?> >Transparency</option>
+			<option value="ColourPrint" <?ddmOriginalColourPrint?> >Colour Print</option>
+			<option value="BWPrint" <?ddmOriginalBWPrint?> >B&amp;W Print</option>
+			<option value="OriginalArtWork" <?ddmOriginalOriginalArtWork?> >Original Art Work</option>
+		</select>
+	</span>
+</div>
+<div class="row"> 
+	<span class="required">*</span>
+	<span class="label">What is the original dimensions of the item(s) being scanned? (W x H in Inches)</span>
+	<span class="input"> 
+		<input name="txtScanWidth" size="9" value="<?txtScanWidth?>" onkeyup="calc(this.form.name);" />
+		<input name="txtScanHeight" size="9" value="<?txtScanHeight?>" onkeyup="calc(this.form.name);" />
+		(W x H)
+	</span>
+</div>
+<div class="row"> 
+	<span class="required">*</span>
+	<span class="label">Please select the % of enlargement or the final dimensions of the scan(s).</span>
+	<span class="input"> 
+		<input name="txtPercent" value="<?txtPercent?>" size="9" onkeyup="calc_size('f1');"/>
+		% or <br/>
+		<input name="txtScanWidthFinal" size="9" value="<?txtScanWidthFinal?>"  onkeyup="calc_percent_from_width('f1');" />
+		<input name="txtScanHeightFinal" size="9" value="<?txtScanHeightFinal?>"  onkeyup="calc_percent_from_height('f1');" />
+		(W x H)
+	</span>
+</div>
+<div class="row"> 
+	<span class="label">What is the required <? echo ( ssi::writeTip('line screen') ) ?>?</span>
+	<span class="input"> 
+		<input type="text" name="ddmLineScreen" value="<?ddmLineScreen?>" size="9" onkeyup="calc(this.form.name);" />
+	</span>
+</div>
+<div class="row"> 
+	<span class="required">*</span>
+	<span class="label">What is the quantity of scan(s) required as per the above specifications?</span>
+	<span class="input"> 
+		<input name="txtQuantity" value="<?txtQuantity?>" type="text" size="9" onkeyup="calc(this.form.name);" />
+	</span>
+</div>
+<div class="row"> 
+	<span class="label">Do you require <? echo ( ssi::writeTip('proofs') ) ?> of the scanned images?</span>
+	<span class="input"> 
+		<input type="radio" id="RandomProofY" name="rdbRandomProof" value="Yes" <? echo ( 'checked="checked"' if $$variable{'rdbRandomProof'} eq 'Yes' ) ?> />
+		<label class="radio" for="RandomProofY">Yes</label>
+		<input type="radio" id="RandomProofN" name="rdbRandomProof" value="No" <? echo ( 'checked="checked"' if $$variable{'rdbRandomProof'} ne 'Yes' ) ?> /> 
+		<label class="radio" for="RandomProofN">No</label>
+	</span>
+</div>
+<div class="row"> 
+	<span class="label">Do you require any additional scans for the current project?</span>
+	<span class="input"> 
+		<input type="radio" id="AdditionalY" name="rdbAdditional" value="Yes" />
+		<label class="radio" for="AdditionalY">Yes</label>
+		<input type="radio" id="AdditionalN" name="rdbAdditional" value="No" checked="checked" />
+		<label class="radio" for="AdditionalN">No</label>
+	</span>
+</div>
+	<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
+	</fieldset>
+	<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+	<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+	</form>
+</div><!--Service-->

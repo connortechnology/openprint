@@ -1,0 +1,28 @@
+<? eval ( 
+$$variable{'ProjectType'} = new openprint::ProjectType( $openprint::param{'projecttype_id'} ) if ! $$variable{'ProjectType'};
+if ( $openprint::param{'btnFunction'} eq 'Add' ) {
+	sql::execute( undef, undef, 'DELETE FROM Paper_recommendations WHERE lngPaperIndex=? AND lngProjectTypeIndex=?', @openprint::param{'paper_id','projecttype_id'} );
+	sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$openprint::param{'paper_id'},'lngProjectTypeIndex', $openprint::param{'projecttype_id'} );
+} elsif ( $openprint::param{'btnFunction'} eq 'Remove' ) {
+	sql::execute( undef, undef, 'DELETE FROM Paper_recommendations WHERE lngPaperIndex=? AND lngProjectTypeIndex=?', @openprint::param{'paper_id','projecttype_id'} );
+} # end if
+
+) ?>
+<table class="List">
+<tr><th>Paper</th><th>&nbsp;</th></tr>
+<? echo (
+	my $html;
+	
+	my @all_papers = openprint::Paper::find('order'=>'name,finish,colour,weight,width,height');
+	my @recommended_papers = openprint::Paper::find( 'project_type_id' => $$variable{'ProjectType'}->id(),'order'=>'name,finish,colour,weight,width,height' );
+	foreach my $Paper ( @recommended_papers ) {
+		$html .= '<tr><td>'.$Paper->to_string().'</td><td><input type="checkbox" name="Paper'.$Paper->id().'" value="'.$Paper->id().'" checked="checked" /></td></tr>';
+
+	} # end foreach
+	foreach my $Paper ( sets::exclude( \@recommended_papers, \@all_papers ) ) {
+		$html .= '<tr><td>'.$Paper->to_string().'</td><td><input type="checkbox" name="Paper'.$Paper->id().'" value="'.$Paper->id().'"/></td></tr>';
+	} # end foreach
+#$html .= ssi::writeButton( $log, $dbh, 'Paper'.$Paper->id(), '', "LoadContent( 'PaperRecommendations', '/administrator/project_types/_paper_recommendations.html', new Array('btnFunction','Remove','projecttype_id',".$$variable{'ProjectType'}->id().",'paper_id',".$Paper->id().") );", '', 'Remove' );
+	return $html;
+) ?>
+</table>

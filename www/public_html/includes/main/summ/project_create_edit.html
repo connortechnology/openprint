@@ -1,0 +1,16 @@
+<div class="row"> 
+	<span class="label">Supplied project format:</span>
+	<span class="value"><?ddmDesign?></span>
+</div>
+<? if ( $$variable{'txtOtherPrograms'} ) ?>
+<div class="row"> 
+	<span class="label">Additional software information:</span>
+	<span class="value"><?txtOtherPrograms?></span>
+</div>
+<? endif ( $$variable{'txtOtherPrograms'} ) ?>
+<div class="row">
+	<span class="label">Quantity:</span>
+	<? echo ( '<span class="value">'.$$variable{'Project'}->quantity1().'</span>' if $$variable{'Project'}->quantity1() > 0; ) ?>
+	<? echo ( '<span class="value">'.$$variable{'Project'}->quantity2().'</span>' if $$variable{'Project'}->quantity2() > 0; ) ?>
+	<? echo ( '<span class="value">'.$$variable{'Project'}->quantity3().'</span>' if $$variable{'Project'}->quantity3() > 0; ) ?>
+</div>

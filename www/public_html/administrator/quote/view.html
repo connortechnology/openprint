@@ -1,0 +1,56 @@
+<? if ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+Your quote is empty. 
+<? else ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+<!--#include virtual="/includes/quote_header.html" -->
+<!--#include virtual="/includes/quote_information.html" -->
+<br class="spacer"/>
+<form method="post" action="view.html?quote_id=<?quote_id?>" name="f1">
+	<table class="List">
+		<tr> 
+			<th width="50" align="left">id</th>
+			<th align="left">Project</th>
+			<th width="75">%</th>
+			<th width="100" align="right">Qty</th>
+			<th width="100" align="right">Price</th>
+			<th width="100" align="right">New Price</th>
+		</tr>
+		<? while ( @$variable{'index','description'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+		<? eval ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'index'}}},0,6; ) ?>
+		<tr> 
+			<td><a href="../project/view.html?ProjectIndex=<?index?>"><?index?></a></td>
+			<td><a href="../project/view.html?ProjectIndex=<?index?>"><?description?></a>&nbsp;</td>
+			<td align="center"> <?markup?> </td>
+			<td align="right"> <?qty?> </td>
+			<td align="right"> <?CurrencySymbol?> <?stdprice?> </td>
+			<td align="right"> <?CurrencySymbol?> <?newprice?> </td>
+		</tr>
+		<? while ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'index'}}},0,6; ) ?>
+		<? if ( $$variable{'qty'} != 0 ) ?>
+		<tr> 
+			<td>&nbsp;</td>
+			<td align="center"> <?markup?> </td>
+			<td align="right"> <?qty?> </td>
+			<td align="right"> <?CurrencySymbol?> <?stdprice?> </td>
+			<td align="right"> <?CurrencySymbol?> <?newprice?> </td>
+		</tr>
+		<? endif ( $$variable{'qty'} != 0 ) ?>
+		<? endwhile ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'index'}}},0,6; ) ?>
+		<? endwhile ( @$variable{'index','description'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+		<tr class="totals">
+			<td colspan="3"><br>
+				<? if ( $$variable{'AdministratorName'} ) ?>
+				<b>Administrator Name:</b> <?AdministratorName?><br>
+				<? endif ( $$variable{'AdministratorName'} ) ?>
+				<? if ( $$variable{'AdministratorComments'} ) ?>
+				<b>Administrator Comments:</b> <?AdministratorComments?><br>
+				<? endif ( $$variable{'AdministratorComments'} ) ?>
+			</td>
+			<td colspan="3" align="right"><br/>
+				<span class="Currency">All prices listed in <?CurrencyName?>.</span><br class="spacer"/>
+				Prices are subject to applicable taxes.<br>
+			</td>
+		</tr>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<? endif ( @{$$variable{'PROJECTS'}} == 0 ) ?>

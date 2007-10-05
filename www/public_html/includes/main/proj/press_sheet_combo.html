@@ -1,0 +1,17 @@
+<div class="row">
+	<span class="required">*</span>
+	<span class="input"> 
+		<input name="txtPressSheetComboItems" value="<?txtPressSheetComboItems?>" type="text" size="9" />
+	</span>
+	<span class="label">How many items will be cut from this press sheet?</span>
+</div>
+<div class="row"> 
+	<span class="required">*</span>
+	<span class="input"> 
+		<input name="txtWidth" size="9" value="<?txtWidth?>" onKeyUp="calc('f1');" />
+		<input name="txtHeight" size="9" value="<?txtHeight?>" onKeyUp="calc('f1');" />
+		<span class="smTbl">&nbsp;(W x H)</span>
+	</span>
+	<span class="label">What are the <? echo ( ssi::writeTip('flat'); )?>
+		dimensions of the combination layout? Layout must include all items to be cut from the press sheet. <span class="smTbl">(Width x Height in Inches)</span></span>
+</div>

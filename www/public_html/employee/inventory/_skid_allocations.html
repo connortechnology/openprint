@@ -1,0 +1,54 @@
+<? eval (
+	if ( $openprint::param{'action'} eq 'Add' ) {
+		my $Paper = new openprint::Paper( $openprint::param{'paper_id'} );
+		my @Projects = openprint::Project::find( 'id'=>$openprint::param{'ProjectID'}, 'docket'=>$openprint::param{'Docket'} );
+
+		if ( ! @Projects ) {
+			$$variable{'error'} .= "Docket not found. No paper allocated.<br/>";
+		} else {
+			my $Project = shift @Projects;
+			$Paper->allocate( $openprint::param{'skid_id'}, $Project->id(), @openprint::param{'AllocationQuantity','Units'} );
+			$$variable{'information'} .= sprintf('Allocated %s%s to docket %d<br/>', @openprint::param{'AllocationQuantity','Units'}, $Project->docket() );
+		} # end if
+	} # end if
+	$$variable{'skid_id'} = $openprint::param{'skid_id'} if ! $$variable{'skid_id'};
+) ?>
+<? if ( $$variable{'error'} ) ?>
+The following errors occurred:<br/>
+<div class="error"><?error?></div>
+<? endif ( $$variable{'error'} ) ?>
+<div class="information"><?information?></div>
+<table class="List">
+	<tr>
+		<th align="left" width="120">Date</th>
+		<th align="left">Paper</th>
+		<th align="left" width="120">Docket</th>
+		<th align="right" width="120">Amount</th>
+	</tr>
+	<? echo (
+		my $html;
+		my @data = sql::execute( $log, $dbh, q{SELECT created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), paper_id, quantity, units FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $$variable{'skid_id'} ) if $$variable{'skid_id'};
+		my $rowclass;
+		while ( my ( $time, $project_id, $docket, $paper_id, $quantity, $units ) = splice @data, 0, 6 ) {
+			my $Paper = new openprint::Paper( $paper_id );
+			$html .= sprintf( '<tr%s><td>%s</td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td></tr>',
+				$rowclass,
+				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
+				$project_id,
+				$Paper->to_string(),
+				$project_id,
+				$docket,
+				$quantity,
+				$units,
+				);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$$variable{'TotalAllocated'} += $quantity;
+			$$variable{'Units'} = $units;
+		} # end while
+		return $html;
+	) ?>
+	<tr class="totals">
+		<td colspan="3" align="right"><b>Totals:</b></td>
+		<td align="right"><?TotalAllocated?> <?Units?></td>
+	</tr>
+</table>

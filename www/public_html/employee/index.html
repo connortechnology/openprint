@@ -1,0 +1,61 @@
+<? if ( $openprint::session{'user_id'} ) ?>
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript">
+	function submit_handler( form ) {
+		if ( form.StartDocket.value || form.OrderID.value || form.Project.value ) {
+			form.action = '/employee/production/projects.html';
+			form.submit();
+		} else if ( form.skid_id.value ) {
+			form.action = '/employee/inventory/skid_details.html';
+			form.submit();
+		} else if ( form.paper_id.value ) {
+			form.action = '/employee/inventory/paper_details.html';
+			form.submit();
+		} else {
+			alert( "Please enter or scan the a docket, order or project number!" );
+		} // end if
+	}
+</script>
+To jump directly to a project, enter it's Docket # or Project #, and click Go.<br>
+You may use a barcode scanner.  Simply scan the code and click Go.<br/>
+<form name="f1" action="/employee/production/projects.html" method="post">
+	<input type="hidden" name="btnFunction" value="Go"/>
+	<fieldset>
+		<p>
+			<label>Docket #</label>
+			<input type="text" name="StartDocket" size="10" onChange="change_handler(this);" onKeyPress="return input_handler( this, event );" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
+		</p>
+	</fieldset>
+	<fieldset>
+		<p>
+			<label>Order #</label>
+			<input type="text" name="OrderID" size="10" onChange="change_handler(this);" onKeyPress="return input_handler( this, event );" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
+		</p>
+	</fieldset>
+	<fieldset>
+		<p>
+			<label>Project #</label>
+			<input type="text" name="Project" size="10" onChange="change_handler(this);" onKeyPress="return input_handler( this, event );" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
+		</p>
+	</fieldset>
+	<fieldset>
+		<p>
+			<label>Skid #</label>
+			<input type="text" name="skid_id" size="10" onChange="change_handler(this);" onKeyPress="return input_handler( this, event );" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go4', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
+		</p>
+	</fieldset>
+	<fieldset>
+		<p><label>Paper #</label>
+			<input type="text" name="paper_id" size="10" onChange="change_handler(this);" onKeyPress="return input_handler( this, event );" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go5', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">document.f1.StartDocket.focus();</script>
+<? else ( $openprint::session{'user_id'} ) ?>
+<!--#include virtual="/employee/account/login.html"-->
+<? endif ( $openprint::session{'user_id'} ) ?>

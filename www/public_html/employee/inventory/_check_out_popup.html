@@ -1,0 +1,34 @@
+<div class="Popup" id="CheckOut">
+	<form id="checkoutform" name="checkoutform" action="" method="post">
+		<input type="hidden" name="btnFunction" value="CheckOut" />
+		<fieldset><legend>Check Out Paper</legend>
+			<p>
+				<label>Docket:</label>
+				<input type="text" name="Docket" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckOutDocket', 'clear.gif', "checkoutform.Docket.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Project #:</label>
+				<input type="text" name="Project" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckOutProject', 'clear.gif', "checkoutform.Project.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Quantity:</label>
+				<input type="hidden" name="available_quantity"/>
+				<input type="text" name="Quantity" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckOutQuantity', 'clear.gif', "checkoutform.Quantity.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Units:</label>
+				<select name="Units">
+				<option value="sheets">sheets</option>
+				<option value="lbs">lbs</option>
+				</select>
+			</p>
+			<p style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveCheckOut', 'save.gif', 'if(check_inputs(checkoutform)){checkoutform.submit();}', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelCheckOut', 'cancel.gif', "hide_div('CheckOut');", '', 'Cancel' ); ) ?>
+			</p>
+		</fieldset>
+	</form>
+</div>

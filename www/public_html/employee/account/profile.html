@@ -1,0 +1,102 @@
+<div class="error"><?error?></div>
+<form name="f1" method="post" action="profile.html">
+<p>* denotes required information.<br/></p>
+<div class="column">
+	<fieldset><legend>User Information</legend>
+		<p> 
+			<label for="title">&nbsp;Title:</label>
+			<input type="text" id="title" name="title" value="<? hecho ( $$variable{'User'}->title() ) ?>" />
+		</p>
+		<p> 
+			<label for="firstname">*First Name:</label>
+			<input type="text" id="firstname" name="firstname" value="<? hecho ( $$variable{'User'}->firstname() ) ?>" />
+		</p>
+		<p> 
+			<label for="LastName">*Last Name:</label>
+			<input type="text" id="lastname" name="lastname" value="<? hecho ( $$variable{'User'}->lastname() ) ?>" />
+		</p>
+		<p>
+			<label>&nbsp;Salutation:</label>
+			<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
+			<label class="radio" for="SalutationMr.">Mr.</label>
+			<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
+			<label class="radio" for="SalutationMrs.">Mrs.</label>
+			<input type="radio" id="SalutationMs." name="salutation" value="Ms." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Ms.' ) ?> />
+			<label class="radio" for="SalutationMs.">Ms.</label>
+			<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Miss' ) ?> />
+			<label class="radio" for="SalutationMiss">Miss</label>
+		</p>
+		<p> 
+			<label for="">*Phone:</label>
+			<input type="text" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" >
+		</p>
+		<p> 
+			<label for="">&nbsp;Extension:</label>
+			<input type="text" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" >
+		</p>
+		<p> 
+			<label for="">&nbsp;Fax:</label>
+			<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" >
+		</p>
+		<p> 
+			<label for="">&nbsp;Add to our Mailing List</label>
+			<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
+			<label class="radio" for="MailingListY">Yes</label>
+			<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
+			<label class="radio" for="MailingListN">No</label>
+		</p>
+	</fieldset>
+	<fieldset><legend>The following information will be used for future logins.</legend>
+		<p> 
+			<label for="">*E-mail Address:</label>
+			<input type="text" name="email" value="<?  hecho ( $$variable{'User'}->email() ) ?>" />
+		</p>
+		<p> 
+			<label for="">*Password:</label>
+			<input type="password" name="password" />
+		</p>
+		<p> 
+			<label for="">*Verify Password:</label>
+			<input type="password" name="VerifyPassword" />
+		</p>
+	</fieldset>
+	</div><div class="column">
+<fieldset><legend>Email Settings:</legend>
+        <p>
+            <label>Password:</label>
+            <input type="text" name="EmailPassword" value="<?EmailPassword?>"  />
+        </p>
+        <p>
+            <label>Verify Password:</label>
+            <input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>"  />
+        </p>
+    </fieldset>
+    <fieldset><legend>Vacation Auto-Responder Settings:</legend>
+        <p>
+            <label>Subject:</label>
+            <input type="text" name="VacationSubject" value="<?VacationSubject?>"  />
+        </p>
+        <p>
+            <label>Message:</label>
+            <textarea name="VacationMessage" rows="10" ><?VacationMessage?></textarea>
+        </p>
+        <p>
+            <label>Vacation Status:</label>
+            <input type="radio" id="VacationState1" name="VacationState" <? echo ( 'checked' if $$variable{'VacationState'} ) ?> value="1"/>
+            <label class="radio" for="VacationState1">Enabled</label>
+            <input type="radio" id="VacationState0" name="VacationState" <? echo ( 'checked' if ! $$variable{'VacationState'} ) ?> value="0"/>
+            <label class="radio" for="VacationState0">Disabled</label>
+        </p>
+    </fieldset>
+
+	<fieldset>
+		<p class="buttons">
+			<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save'),
+					ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset'),
+					); ) ?>
+		</p>
+	</fieldset>
+	</div>
+	<input type="hidden" name="btnFunction"/>
+</form>

@@ -1,0 +1,90 @@
+#!/usr/bin/perl -w
+use lib qw( /etc/apache2/lib/perl );
+use Linux::Inotify2;
+
+use strict;
+
+require sets;
+my $source_path = $ARGV[0];
+my $dest_path = $ARGV[1];
+
+my $inotify = new Linux::Inotify2;
+if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
+	while () {
+		my @events = $inotify->read;
+		if ( ! @events ) {
+			print "Read error";
+		} # end if
+printf "mask\t%d\n", $_->mask foreach @events;
+		
+} # end while
+} else {
+# Command Line Params: 
+# 1. Hot Folder to monitor
+# 2.  Dest HotFolder
+my @filenames;
+if ( opendir DIRHANDLE, $source_path ) {
+	@filenames = readdir DIRHANDLE;
+	closedir DIRHANDLE;
+} # end if
+
+foreach my $file ( @filenames ) {
+	# Will ignore ., .., any hidden file
+	next if $file =~ /^\./; 
+	if ( $file =~ /(.*)B\.ppf$/i ) {
+		my $file_base = $1;
+		my  $out_base = $file_base;
+		$out_base =~ s/\./_/g;
+
+		if ( sets::isin( $file_base.'A.ppf', @filenames ) ) {
+			my @Back;
+			if ( ! open ( FH, '< ' . $source_path.'/'.$file_base.'B.ppf' ) ) {
+				print "Error opening " . $source_path.'/'.$file_base."B.ppf\n" ;
+				next;
+			} # end if
+
+			my $back_flag = 0;	
+			while ( <FH> ) {
+				$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
+				push @Back, $_ if ( $back_flag );
+				last if $_ =~ /CIPEndBack/;
+			} # end while
+			close( FH );
+			if ( ! @Back ) {
+				print "No Back found in B file!\n";
+				rename $source_path.'/'.$file_base.'B.ppf', $source_path.'/'.$file_base.'E.ppf';
+				next;
+			} # end if
+			if ( ! open( A, '< '.$source_path.'/'.$file_base.'A.ppf' ) ) {
+				print "Error opening " . $source_path.'/'.$file_base."A.ppf\n" ;
+				next;
+			} # end if
+			if ( ! open( M, '> '.$dest_path.'/'.$out_base.'M.ppf' ) ) {
+				print "Error opening " . $dest_path.'/'.$file_base."M.ppf\n" ;
+				next;
+			} # end if
+			my $fileA = $file_base.'A';
+			my $fileM = $file_base.'M';
+			while ( <A> ) {
+				my $line = $_;
+				$line =~ s/$fileA/$fileM/g;
+				print M $line;
+				if ( $line =~ /CIP3EndFront/ ) {
+					foreach ( @Back ) {
+						print M $_;
+					} # end foreach
+				} # end if
+			} # end while
+			close A;
+			close M;
+			unlink $source_path.'/'.$file_base.'A.ppf';
+			unlink $source_path.'/'.$file_base.'B.ppf';
+
+		} # end if
+	} # end if
+} # end foreach
+} # end if inotify
+1;
+__END__
+
+

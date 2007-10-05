@@ -1,0 +1,88 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Order History</h2>
+</div>
+<form id="f1" name="f1">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<p>
+			<label>Company:</label>
+			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" size="4" />
+			<select name="company_id">
+				<option value="">All</option>
+				<? echo ( openprint::Company::get_dropdown( $openprint::param{'company_id'} ); ) ?>
+			</select>
+		</p>
+		<p>
+			<label>Status:</label>
+			<select name="status" multiple size="4" >
+			<? echo (
+					my @options = sql::execute( undef, undef, q{SELECT name, name FROM order_statuses ORDER BY lower(name)} );
+					return ssi::make_select( \@options, $openprint::param{'status'} ? $openprint::param{'status'} : \@options);
+					) ?>
+			</select>
+		</p>
+		 <? eval (
+				 if ( ! $openprint::param{'DateStartYear'} ) {
+					 my ( $y, $m, $d ) = Date::Calc::Today();
+					 @$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh, $y, $m, 1 ); 
+					 @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} = ($y, $m, 1);
+				 } else {
+					 @$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,
+						 @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} );
+				 } # end if
+
+				 if ( ! $r->param('DateEndYear') ) {
+					 @$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+					 @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} = Date::Calc::Today();
+				 } else {
+				 @$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh,
+					 @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} );
+				 } # end if
+				 ) ?>
+		 <p>
+			 <label>Date:</label>
+			 <select name="DateStartYear"><?DateStartYears?></select>
+			 <select name="DateStartMonth"><?DateStartMonths?></select>
+			 <select name="DateStartDay"><?DateStartDays?></select>
+			to 
+			 <select name="DateEndYear"><?DateEndYears?></select>
+			 <select name="DateEndMonth"><?DateEndMonths?></select>
+			 <select name="DateEndDay"><?DateEndDays?></select>
+		</p>
+		<p>
+			<label>Value:</label>
+			<input type="text" id="value_start" name="value_start" value="<? echo ( $openprint::param{'value_start'}; ) ?>" style="width: auto;"  /> to
+			<input type="text" id="value_end" name="value_end" value="<? echo ( $openprint::param{'value_end'}; ) ?>" style="width: auto;"  />
+		</p>
+		<? if ( $openprint::session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+		<p>
+			<label>CSR:</label>
+			<select name="CSR" size="1">
+			<? echo (
+					my @options = ( '', 'All' );
+					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+					return ssi::make_drop_down( \@options, $openprint::param{'CSR'} );
+					) ?>
+
+			 </select>
+		</p>
+		<p>
+			<label>Sort By:</label>
+			<select name="order">
+				<option value="created_on">Date Ordered</option>
+				<option value="total">Value</option>
+				<option value="company">Company</option>
+			</select>
+		</p>
+		<? endif ( $openprint::session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+
+		 <p class="buttons">
+			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "LoadContent('Results', '/employee/reports/_order_history_results.html', Serialize(f1));", '', 'Show Results' ); ) ?>
+		 </p>
+
+
+	</fieldset>
+</form>
+<div id="Results">
+<!--#include virtual="/employee/reports/_order_history_results.html"-->
+</div>

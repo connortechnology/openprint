@@ -1,0 +1,10 @@
+<div class="row"> 
+	<span class="label">Flat dimensions:</span>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="value"><?txtWidth?>&quot; x <?txtHeight?>&quot;<span class="smTbl">&nbsp;(W x H)</span></span>
+	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</div>

@@ -1,0 +1,168 @@
+<div class="PageTitle">
+	<h1>QUOTE</h1>
+	<h2>View Quote <? echo ( $$variable{'Quote'}->id(); ) ?></h2>
+</div>
+<link href="/css/quote.css" rel="stylesheet" type="text/css">
+<script type="text/javascript">
+function delete_confirm(form) {
+	if ( confirm("Are you sure you wish to delete this quote from history?\nClicking OK will take you back to the quote history page.") ) {
+		form.submit();
+	}
+}
+</script>
+<span class="unprintable">
+To save, process a new quote or process an order from this quotation, please click on the appropriate button below.<br>
+<br>
+</span>
+<b>Attention:</b> <br>
+Projects listed in red have changed price from the time this quote was originally generated.<br>
+<br>
+<!--#include virtual="/includes/quote_header.html" -->
+<!--#include virtual="/includes/quote_information.html" -->
+<br class="spacer"/>
+<? if ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<table class="List">
+	<tr> 
+		<th align="left">Project</th>
+		<th width="130" align="right">Weight</th>
+		<th width="50" align="right">%</th>
+		<th width="90" align="right">Qty</th>
+		<th width="90" align="right">Std.Price</th>
+		<th width="90" align="right">Price</th>
+	</tr>
+	<? while ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+	<tr<?rowclass?>> 
+		<td><font color="<?colour?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?project_name?></a></font></td>
+		<td colspan="5">
+			<table>
+				<? while ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+				<? if ( $$variable{'qty'} ) ?>
+				<tr> 
+					<td width="130" align="right"><font color="<?colour?>">
+					<? echo (
+						my $Project = new openprint::Project( $$variable{'project_index'} );
+						my %services = $Project->get_services();
+						my $weight;
+
+						if ( $services{'BulkSkids'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} elsif ( $services{'PlainCartons'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} else {
+							$weight = openprint::print::get_finished_weight( $log, $dbh, $Project->id() ) * $$variable{qty};
+						} # end if
+						my $g = Math::Units::convert( $weight, 'lbs','g');
+						if ( $g > 1000 ) {
+							return sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
+						} else {
+							return sprintf( '%.0flbs (%.0fg)', $weight, $g );
+						} # end if
+					) ?></font></td>
+					<td width="50" align="right"><font color="<?colour?>"><?markup?></font></td>
+					<td width="90" align="right"><font color="<?colour?>"><?qty?></font></td>
+					<td width="90" align="right"><font color="<?colour?>"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?></font></td>
+					<td width="90" align="right"><font color="<?colour?>"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?newprice?></font></td>
+				</tr>
+				<? endif ( $$variable{'qty'} ) ?>
+				<? endwhile ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+				</table>
+			</td>
+		</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+</table>
+<? else ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<table class="List">
+	<tr> 
+		<th align="left">Project</th>
+		<th width="130" align="right">Weight</th>
+		<th width="90" align="right">Qty</th>
+		<th width="90" align="right">Price</th>
+	</tr>
+	<? while ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+	<tr<?rowclass?>> 
+		<td><font color="<?colour?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?project_name?></a></font></td>
+		<td colspan="3">
+			<table>
+				<? while ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+				<? if ( $$variable{'qty'} ) ?>
+				<tr> 
+					<td width="130" align="right"><font color="<?colour?>">
+					<? echo (
+						my $Project = new openprint::Project( $$variable{'project_index'} );
+						my %services = $Project->get_services();
+						my $weight;
+
+						if ( $services{'BulkSkids'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} elsif ( $services{'PlainCartons'} and ! $weight ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} elsif ( ! $weight ) {
+							$weight = openprint::print::get_finished_weight( $log, $dbh, $Project->id() ) * $$variable{qty};
+						} # end if
+						my $g = Math::Units::convert( $weight, 'lbs','g');
+							if ( $g > 1000 ) {
+								return sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
+							} else {
+								return sprintf( '%.0flbs (%.0fg)', $weight, $g );
+							} # end if
+					) ?></font></td>
+					<td width="90" align="right"><font color="<?colour?>"><?qty?></font></td>
+					<td width="90" align="right"><font color="<?colour?>"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?></font></td>
+				</tr>
+				<? endif ( $$variable{'qty'} ) ?>
+				<? endwhile ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+			</table>
+		</td>
+	</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+</table>
+<? endif ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+
+<table class="List">
+	<tr>
+		<td>
+			<? if ( $$variable{'AdministratorName'} ) ?>
+			<b>Administrator Name:</b> <?AdministratorName?><br>
+			<? endif ( $$variable{'AdministratorName'} ) ?>
+			<? if ( $$variable{'AdministratorComments'} ) ?>
+			<b>Administrator Comments:</b> <?AdministratorComments?><br>
+			<? endif ( $$variable{'AdministratorComments'} ) ?>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="3" align="right"><br/>
+			<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+			Prices are subject to applicable taxes.<br/>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="3" align="left"><br/>
+			<!--#include virtual="/skins/<?SiteTitle?>/includes/quote_disclaimer.html"-->
+		</td>
+	</tr>
+</table>
+<br/>
+<div style="float: right;">
+	<form name="f1" method="post" action="/main/quote/quote_history.html">
+		<input type="hidden" name="btnFunction" value="Delete Quote"/>
+		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id(); ) ?>"/>
+		<? echo ( 
+			my $html;
+			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'deleteFromHist.gif', "f1.action='/main/quote/history.html';delete_confirm(f1);", '', 'Delete' );
+			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy' );
+				$html .= ssi::writeButton( $log, $dbh, 'Resend', 'reSendQuote.gif', "f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", '', 'Resend' );
+				$html .= ssi::writeButton( $log, $dbh, 'Order', 'processOrder.gif', "f1.action='/main/order/selection.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Order' );
+			} else {
+				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' );
+			} # end if
+			return $html;
+		) ?>
+	</form>
+</div>

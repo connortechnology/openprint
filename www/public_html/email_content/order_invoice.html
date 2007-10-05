@@ -1,0 +1,16 @@
+<style type="text/css">
+<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/order.css' ); ) ?>
+</style>
+<table class="Title">
+	<tr>
+		<td><?SiteTitle?> - Order Invoice</td>
+		<td align="right"><a href="main/order/history_details.html?order_id=<?ORDER_ID?>"><?ORDER_ID?></a></td>
+	</tr>
+</table>
+<br/>
+<!--#include virtual="/includes/order_header.html" -->
+<br class="spacer"/>
+<!--#include virtual="/email_content/_order_products.html" -->
+<!--#include virtual="/email_content/_order_contents.html" -->
+<br class="spacer"/>
+<!--#include virtual="/skins/<?SiteTitle?>/includes/order_disclaimer.html"-->

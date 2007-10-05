@@ -1,0 +1,50 @@
+<div id="Configuration">
+<form name="f1" method="post">
+<? echo (
+	my $html;
+	my @config = sql::execute( $log, $dbh, 'SELECT Name, Value, Type, Description, category FROM Configuration ORDER BY category, lower(name)' );
+	my $cat;
+	while ( @config ) {
+        my ( $name, $value, $type, $description, $category ) = splice @config,0,5;
+
+		if ( ! defined $cat ) {
+			$html .= "<fieldset><legend>$category</legend>";
+		} elsif ( $cat ne $category ) {
+			$html .= "</fieldset><fieldset><legend>$category</legend>";
+		} # end if
+		
+        if ( $description eq '' ) {
+            $description = $name;
+        } # end if
+        $html .= qq{<p><label>$description</label>\n};
+        if ( $type eq 'pricelist' ) {
+            $html .= qq{<select name="$name"><option value=""> select one </option>};
+            $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist::find('order'=>'lower(name)') ], $value );
+            $html .= qq{</select>};
+        } elsif ( $type eq 'currency' ) {
+            $html .= qq{<select name="$name"><option value=""> select one </option>};
+            $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ], $value );
+            $html .= qq{</select>};
+        } elsif ( $type eq 'yes/no' ) {
+            $html .= qq{<input type="radio" id="}.$name.qq{Y" name="$name" value="Y"};
+            $html .= ' checked' if $value eq 'Y';
+            $html .= qq{ /><label class="radio" for="}.$name.qq{Y">Yes</label>\n};
+            $html .= qq{<input type="radio" id="}.$name.qq{N" name="$name" value="N"};
+            $html .= ' checked' if $value eq 'N';
+            $html .= qq{ /><label class="radio" for="}.$name.qq{N">No</label>\n};
+        } else {
+            $html .= sprintf('<input type="text" name="%s" value="%s" />', ssi::htmlize($name, $value) );
+        } # end if
+        $html .= qq{</p>\n};
+		$cat = $category;
+    } # end while
+	return $html;
+) ?>
+	</fieldset>
+	<p class="buttons"> 
+		<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();",'','Reset' ); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction"/>
+</form>
+</div>

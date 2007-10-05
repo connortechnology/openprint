@@ -1,0 +1,24 @@
+<!--#include virtual="/includes/employee/feedback/timer.js"-->
+<!--#include virtual="/includes/employee/feedback/line.html"-->
+<form method="post" name="f1" action="/employee/production/project_view.html">
+	<table width="600" border="0" cellspacing="0" cellpadding="0" cols="3">
+		<tr> 
+			<td width="320" valign="top"><b class="lgTxt">Production Feedback</b></td>
+			<td width="20">&nbsp;</td>
+			<td width="260" colspan="2"></td>
+		</tr>
+		<tr> 
+			<td colspan="4" height="10"></td>
+		</tr>
+		<tr> 
+			<td valign="top">Employee:</td>
+			<td>&nbsp;</td>
+			<td colspan="2"><input type="text" name="txtEmployeeName" readonly value="<?txtEmployeeName?>"/></td>
+		</tr>
+	</table>
+	<!--#include virtual="/includes/employee/feedback/comments.html"-->
+	<!--#include virtual="/includes/employee/feedback/complete.html"-->
+	<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
+	<!--#include virtual="/includes/employee/feedback/buttons.html"-->
+	<!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
+</form>

@@ -1,0 +1,6 @@
+<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
+<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
+    <!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
+    <!--#include virtual="/includes/main/proj/signature_equipment.html"-->
+<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
+<br class="spacer"/>

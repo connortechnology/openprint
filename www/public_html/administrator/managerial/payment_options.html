@@ -1,0 +1,30 @@
+<a name="top"></a>
+<form name="f1" action="payment_options.html" method="post">
+	<fieldset>
+		<p>
+			<label>Payment Option:</label>
+			<select name="ddmPaymentOption"	onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value="">Select a Payment Option</option>
+				<option value="">-----------------------</option>
+				<?ddmPaymentOption?>
+			</select>
+		</p>
+		<p class="buttons">
+			<? echo ( join ('',
+				ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<'),
+				ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>'),
+				ssi::writeButton( $log, $dbh, 'New1','new.gif',"keepCompany(f1);",'','New'),
+				ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
+				ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+				ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
+			); ) ?>
+		</p>
+	</fieldset>
+	<fieldset>
+		<p>
+			<label>Payment Option Name:</label>
+			<input type="text" name="txtPaymentOption" value="<?txtPaymentOption?>" />
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>

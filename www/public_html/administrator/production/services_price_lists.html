@@ -1,0 +1,82 @@
+<form name="f1" method="post" action="services_price_lists.html" enctype="multipart/form-data">
+	<input type="hidden" name="btnFunction" value=""/>
+	<div class="row"> 
+		<span class="label"><b>Search Price List:</b></span>
+		<span class="input"> 
+			<select name="ddmPriceList" onChange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
+			<option value="">- Select -</option>
+			<?ddmPriceList?>
+			</select>
+		</span>
+	</div>
+	<br/><hr/><br/>
+	<div class="row">
+		<span class="buttons">
+           <script type="text/javascript">
+                writeButton('ViewPrices','viewPrices.gif',"",'services_price_lists_view.html?ddmPriceList=<?ID?>','View Prices');
+                writeButton('Prev','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<');
+                writeButton('Next','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>');
+                writeButton('New','new.gif',"addCheck(f1);",'','New');
+                writeButton('Delete','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');
+                writeButton('Save','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
+                writeButton('Reset','reset.gif','f1.reset();','','Reset');
+            </script>
+		</span>
+	</div>
+		<div class="row"> 
+			<span class="label">Price List Name:&nbsp;</span>
+			<span class="input"> 
+				<input type="text" name="strName" value="<?strName?>">
+			</span>
+		</div>
+		<div class="row"> 
+			<span class="label">Price List Description:</span>
+			<span class="input"> 
+				<textarea name="strDescription" cols="30" rows="5"><?strDescription?></textarea>
+			</span>
+		</div>
+		<div class="row"> 
+			<span class="label">Currency:</span>
+			<span class="input"> 
+				<select name="ddmCurrency">
+				<option value="">- Select -</option>
+				<?ddmCurrency?>
+				</select>
+			</span>
+		</div>
+	<? if ( $$variable{'ID'} ) ?>
+		<br class="spacer"/><hr/>
+		<div class="row"> <b>Import/Export Price List</b> </div>
+		<div class="row"> 
+			Price list files <b>must</b> be in a comma 
+				separated values (CSV) format and the columns must be in the following 
+				order:<br>
+				<br>
+				ServiceID, EquipmentID, Min, Max, Units, Service Cost, Service Markup, 
+				Service Sale Price, Discountable<br>
+				<br>
+				The columns should have titles. The first row of data will be treated 
+				as column titles, and hence will be ignored. <br>
+				<br>
+				Clicking on the export button will download the current price list in 
+				CSV format.<br>
+				You can then open this in a spreadsheet program such as Microsoft Excel.<br>
+				<br>
+		</div>
+		<div class="row"> 
+			<span class="label"><b>CSV File:</b></span>
+			<span class="input"> 
+				<input type="file" name="filePrices"/>
+			</span>
+			<br class="spacer"/>
+		</div>
+		<div class="row"> 
+			<span class="buttons">
+<script type="text/javascript">
+	writeButton( 'Import', 'import.gif', "f1.btnFunction.value='Import Prices';f1.submit();", '', 'Import' );
+	writeButton( 'Export', 'export.gif', "f1.action='services_price_lists.html?Download';f1.btnFunction.value='Export Prices';f1.submit();", '', 'Export' );
+</script>
+			</span>
+		</div>
+	<? endif ( $$variable{'ID'} ) ?>
+</form>

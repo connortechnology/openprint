@@ -1,0 +1,20 @@
+<fieldset><legend>Last 5 Login Attempts</legend>
+	<table class="List">
+		<tr>
+			<th align="left" width="130">When</th>
+			<th align="left">From</th>
+			<th align="left" width="120">Result</th>
+		</tr>
+<? echo (
+	require openprint::logRecord;
+	my $html = '';
+
+	foreach my $Log ( openprint::logRecord::find('user_id'=>$openprint::session{user_id},'order'=>'date_time DESC', 'limit'=>5, 'action_type'=>[2,78] ) ) {
+		$html .= sprintf('<tr><td>%s</td><td style="overflow:hidden;">%s</td><td>%s</td></tr>',
+			Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
+			$Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->note() );
+	} # end foreach
+	return $html;
+) ?>
+	</table>
+</fieldset>

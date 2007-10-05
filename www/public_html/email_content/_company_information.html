@@ -1,0 +1,18 @@
+<fieldset><legend>Company Information</legend>
+    <p><label>Company:</label><? hecho ( $$variable{'Company'}->name() ) ?></p>
+    <p><label>Title:</label><? echo ( $$variable{'User'}->title() ) ?></p>
+    <p><label>Address:</label><? hecho ( $$variable{'Company'}->address1() ) ?></p>
+    <p><label></label><? hecho ( $$variable{'Company'}->address2() ) ?></p>
+    <p><label>City:</label><? hecho ( $$variable{'Company'}->city() ) ?></p>
+    <p><label>State:</label><? hecho ( $$variable{'Company'}->state() ) ?></p>
+    <p><label>Country:</label><? hecho ( $$variable{'Company'}->country() ) ?></p>
+    <p><label>Postal Code:</label><? hecho ( $$variable{'Company'}->postalcode() ) ?></p>
+    <p><label>Phone:</label><? hecho ( $$variable{'User'}->phone() ) ?>
+    <? hecho ( ' ext: ' . $$variable{'User'}->extension() if $$variable{'User'}->extension() ) ?>
+    </p>
+    <p><label>Fax:</label><? hecho ( $$variable{'User'}->fax() ) ?></p>
+    <p><label>Email:</label><a href="mailto:<? echo ( $$variable{'User'}->email() ) ?>"><? hecho ( $$variable{'User'}->email() ) ?></a></p>
+    <p><label>WebSite:</label><a href="<? echo ( $$variable{'Company'}->url() ) ?>"><? hecho ( $$variable{'Company'}->url() ) ?></a></p>
+    <p><label>Registered on:</label><? echo ( Date::Format::time2str( $openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Company'}->created_on() ) ); ) ?></p>
+</fieldset>
+

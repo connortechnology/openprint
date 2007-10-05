@@ -1,0 +1,51 @@
+
+<? if ( ( $$variable{'PAYMENTS'} and @{$$variable{'PAYMENTS'}} ) or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
+<? if ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) ?>
+<fieldset><legend>Payments</legend>
+<table class="List">
+        <tr>
+            <th width="50" align="left">Ref #</th>
+            <th width="70" align="center">Date</th>
+            <th width="100" align="left">Type</th>
+            <th align="left">Description</th>
+            <th width="120" align="right">Amount</th>
+            <th width="60" align="right">&nbsp;</th>
+        </tr>
+        <? if ( $$variable{'PAYMENTS'} ) ?>
+        <? while ( @$variable{'payment_index','date','type','description','amount','currency_id'} = splice @{$$variable{'PAYMENTS'}},0,6; ) ?>
+            <tr<?rowclass?>>
+                <td><?payment_index?></td>
+                <td align="center"><?date?></td>
+                <td>&nbsp;<?type?></td>
+                <td>&nbsp;<?description?></td>
+                <td align="right"><? echo ( new openprint::Currency($$variable{'currency_id'})->symbol(); ) ?> <?amount?></td>
+                <td align="right"><? echo ( ssi::writeButton($log, $dbh,'Delete'.$$variable{'payment_index'},'',"confirm_delete( document.f1, '$$variable{'payment_index'}' );", '', 'Delete' ); ) ?></td>
+            </tr>
+            <? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+        <? endwhile ( @$variable{'payment_index','date','type','description','amount','currency_id'} = splice @{$$variable{'PAYMENTS'}},0,6; ) ?>
+        <? endif ( $$variable{'PAYMENTS'} ) ?>
+        <tr class="totals unprintable">
+            <td colspan="3">Add new payment:</td>
+            <td><input type="text" name="Description" style="width: 100%;"/></td>
+            <td align="right"><?CurrencySymbol?><input type="text" name="Amount" style="width:auto;" size="10"/></td>
+            <td><? echo (ssi::writeButton($log, $dbh, 'AddPayment', 'add', "f1.btnFunction.value='Save Payment';f1.submit();",'','Add' ); ) ?></td>
+        </tr>
+    </table>
+	<div class="unprintable">
+    <br class="spacer"/>
+    <div style="float: right;">
+        <span style="float: left;">Invoice ID: <input type="text" id="invoice_id" name="invoice_id" /></span>
+        <? echo ( ssi::writeButton( $log, $dbh, 'Invoice', 'invoice.gif', "f1.btnFunction.value='Invoice';f1.submit();", '', 'Set Invoice ID' ); ) ?>
+    </div>
+    <br class="spacer"/>
+    <div style="float: right;">
+        <? echo ( my $html;
+        $html .= ssi::writeButton( $log, $dbh, 'Pay','pay.gif', "f1.btnFunction.value='Pay';f1.submit();",'','Pay' );
+        return $html;
+        ) ?>
+    </div>
+	</div>
+<? endif ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) ?>
+</fieldset>
+<input type="hidden" name="payment_id" />
+<? endif ( ( $$variable{'PAYMENTS'} and @{$$variable{'PAYMENTS'}} ) or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>

@@ -1,0 +1,212 @@
+<div class="PageTitle">
+	<h1>PROJECTS</h1>
+	<h2>View Project</h2>
+</div>
+<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+<? eval (
+	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
+	$$variable{'OrderStatus'} = $$variable{'Project'}->Order()->status();
+) ?>
+
+<script type="text/javascript">
+<!--
+	function open_project_docket() {
+		window.open('/main/project/docket_sheet.html?ProjectIndex=<?ProjectIndex?>','projectdocket','newWin,width=610,top=50,resizable=yes,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=yes');
+	}
+-->
+</script>
+<div id="ProjectView" style="float: left; width: 100%;">
+<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
+There is no current project. 
+<? else ( $$variable{'ProjectIndex'} eq '' ) ?>
+<form name="f1" method="post" action="">
+	<input type="hidden" name="btnFunction" value=""/>
+	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+	<span style="float: right;">
+		<? echo (
+			my $html;
+			if ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) and $$variable{'OrderStatus'} ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Docket', 'projectDocket.gif', 'open_project_docket();', '', 'Docket' );
+			} # end if
+			if ( sets::isin( $$variable{'ProjectStatus'}, 'Proofs Out','Approved','Printed','Complete' ) ) {
+			ssi::writeButton( $log, $dbh, 'ViewPDFs', 'view_pdf.gif', "f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", '', 'View PDFs' );
+			} # end if
+			if ( sets::isin( $$variable{'ProjectStatus'}, 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
+			$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Upload Files' );
+			} # end if
+$openprint::log->debug("($$variable{'HiddenSignatures'}) ($openprint::session{'ShowAllSignatures'}) (" . $$variable{'Project'}->signatures()  );
+if ( $$variable{'HiddenSignatures'} ) {
+			$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
+} elsif ( $openprint::session{'ShowAllSignatures'} and $$variable{'Project'}->signatures() > 1 ) {
+			$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
+} # end if
+			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
+			return $html;
+		) ?>
+	</span>
+<p class="unprintable">
+	Please confirm services, prices and quantities before clicking &quot;Add to 
+	Quote&quot; or &quot;Add to Order&quot;. If changes are required, please use 
+	the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
+</p>
+	<br class="spacer"/>
+	<!--#include virtual="/includes/project_header.html" -->
+	<table class="List" style="table-layout: auto;">
+		<tr> 
+			<th align="left">Services</th>
+			<? if ( $$variable{'Quantity1'} ) ?><th width="160" align="right"><?Quantity1?></th><? endif ( $$variable{'Quantity1'} ) ?>
+			<? if ( $$variable{'Quantity2'} ) ?><th width="160" align="right"><?Quantity2?></th><? endif ( $$variable{'Quantity2'} ) ?>
+			<? if ( $$variable{'Quantity3'} ) ?><th width="160" align="right"><?Quantity3?></th><? endif ( $$variable{'Quantity3'} ) ?>
+			<th width="90" align="right">Status</th>
+			<th class="unprintable" width="70" align="right">Changes</th>
+		</tr>
+		<? if ( @{$$variable{'SERVICES'}} ) ?>
+		<? while ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
+		<tr <?rowclass?>> 
+			<td>
+				<? if ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
+				<a href="/main/project/<?url?>?ProjectIndex=<?ProjectIndex?>&amp;ServiceIndex=<?index?>">
+				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
+</a>
+				<? else ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
+				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
+				<? endif ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
+			</td>
+	<? if ( $$variable{'Quantity1'} ) ?>
+			<td align="right">
+			<? echo ( 
+				my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
+				if ( $$specs{txtQuantity1} and $$specs{txtQuantity1} != $$variable{Quantity1} ) {
+					return "($$specs{txtQuantity1}) ";
+				} # end if
+				return '';
+			) ?>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price1?></b><br/>
+			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 ); ) ?>
+			</td>
+	<? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?>
+			<td align="right">
+			<? echo ( 
+				my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
+				if ( $$specs{txtQuantity2} and $$specs{txtQuantity2} != $$variable{Quantity2} ) {
+					return "($$specs{txtQuantity2}) ";
+				} # end if
+				return '';
+			) ?>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price2?></b><br/>
+			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 2 ); ) ?>
+			</td>
+	<? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?>
+			<td align="right">
+			<? echo ( 
+				my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
+				if ( $$specs{txtQuantity3} and $$specs{txtQuantity3} != $$variable{Quantity3} ) {
+					return "($$specs{txtQuantity3}) ";
+				} # end if
+				return '';
+			) ?>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price3?></b><br/>
+			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 3 ); ) ?>
+			</td>
+	<? endif ( $$variable{'Quantity3'} ) ?>
+			<td align="right"><?status?></td>
+			<td class="unprintable" align="right">
+				<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
+	<? if ( $$variable{'email'} =~ /iconnor/ ) ?>
+					<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>&amp;calc=<?index?>">Calc</a><br/>
+	<? else ( $$variable{'email'} =~ /iconnor/ ) ?>
+					<? if ( $$variable{'url'} ne '' ) ?>
+					<a href="/main/project/<?url?>?ProjectIndex=<?ProjectIndex?>&amp;ServiceIndex=<?index?>">Edit</a><br/>
+					<? endif ( $$variable{'url'} ne '' ) ?>
+	<? endif ( $$variable{'email'} =~ /iconnor/ ) ?>
+					<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>&amp;remove=<?index?>">Remove</a>
+				<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
+			</td>
+		</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq 'class="colRow"' ? '' : 'class="colRow"' ) ?>
+	<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
+	<? endif ( @{$$variable{'SERVICES'}} ) ?>
+		<tr class="totals"> 
+			<td align="left">Unit Prices:</td>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+			<td align="right">&nbsp;</td>
+			<td class="unprintable" align="right">&nbsp;</td>
+		</tr>
+		<tr> 
+			<td align="left">Total Before Taxes:</td>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+			<td align="right">&nbsp;</td>
+			<td class="unprintable" align="right">&nbsp;</td>
+		</tr>
+
+	<? if ( sets::isin( $openprint::session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
+		<tr class="totals unprintable">
+			<td><input name="txtServiceName"/></td>
+	<? if ( $$variable{'Quantity1'} ) ?>
+			<td><input type="text" name="txtPrice1"/></td>
+	<? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?>
+			<td><input type="text" name="txtPrice2"/></td>
+	<? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?>
+			<td><input type="text" name="txtPrice3"/></td>
+	<? endif ( $$variable{'Quantity3'} ) ?>
+			<td>&nbsp;</td>
+			<td class="unprintable"><span style="float:right;"><? echo ( ssi::writeButton($log, $dbh, 'AddToProject', 'addToProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Modify Project';f1.submit();", '', 'Add' ); ) ?></span></td>
+		</tr>
+	<? endif ( sets::isin( $openprint::session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
+	</table>
+<br/>
+<? if ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
+<? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+<span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
+<br class="spacer"/>
+<br/>
+<div style="float:left; p\osition: relative; height: 19px;">
+	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', "f1.action='/main/project/summary.html';f1.btnFunction.value='Project Summary';f1.submit();", '', 'Summary' ); ) ?>
+	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();", '', 'Delete' ); ) ?>
+	<? endif ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
+	<? echo ( ssi::writeButton( $log, $dbh, 'ReuseProject', 'reUseProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Reuse Project' ); ) ?>
+</div>
+<div style="float: right; p\osition: relative; height: 19px;">
+	<? if ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' ); ) ?>
+	<? endif ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
+	<? if ( $$variable{'ProjectStatus'} eq 'Unordered' ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
+	<? endif ( $$variable{'ProjectStatus'} eq 'Unordered' ) ?>
+	<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>
+	<? endif ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
+	<? echo ( 
+		my $html = '';
+		if ( $$variable{'Project'}->order_id() and sets::isin( $$variable{'Project'}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
+			$html .= ssi::writeButton( $log, $dbh, 'ContinueOrder', 'continueorder.gif', "f1.action='/main/order/information.html?OrderID=".$$variable{'Project'}->order_id()."';f1.btnFunction.value='';f1.submit();", '', 'Continue Order' );
+		} # end if
+		return $html;
+	 ) ?>
+</div>
+	<br class="spacer"/>
+</form>
+<br class="spacer"/>
+<? if ( $$variable{'Project'}->docket() ) ?>
+<span class="smTbl"> This project has already been sent to production and cannot 
+be modified or ordered at this time. You can reuse your project under a different 
+name and then make changes. If you have any questions please click on our <a href="/main/support/help_desk.html">helpdesk</a>.<br/>
+</span>
+<br class="spacer"/>
+
+<? endif ( $$variable{'Project'}->docket() ) ?>
+<!--#include virtual="/skins/<?SiteTitle?>/includes/projectview_disclaimer.html"-->
+<? endif ( $$variable{'ProjectIndex'} eq '' ) ?>
+</div>

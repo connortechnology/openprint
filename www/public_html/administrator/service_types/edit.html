@@ -1,0 +1,67 @@
+<p class="error">Please do not make changes here unless you know what you are doing!</p>
+<form name="f1" method="post" action="edit.html">
+	<fieldset class="filters"><legend>Search Information</legend>
+		<p>
+			<label>Category:</label>
+			<select name="SearchCategory" onchange="form.btnFunction.value='';f1.submit();">
+				<option value=""> All </option>
+				<? echo ( ssi::make_drop_down( [ sql::execute( undef, undef, q{SELECT DISTINCT category,category FROM Service_Types ORDER BY category} ) ], $openprint::param{'SearchCategory'} ); ) ?>
+			</select>
+		</p>
+		<p>
+			<label>Service Type:</label>
+			<select name="ServiceType_id" onchange="form.btnFunction.value='';f1.submit();">
+				<option value="">Select a Service Type</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType::find('category'=>$openprint::param{'SearchCategory'}, 'order'=>'lower(name)') ], $openprint::param{'ServiceType_id'} ); ) ?>
+			</select>
+		</p>
+		<p class="buttons"> 
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Previous1','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<'),
+				ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>'),
+				ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
+				ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
+				ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+				ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
+			); ) ?>
+		</p>
+	</fieldset>
+	<fieldset>
+		<p> 
+			<label>Name:</label>
+			<input type="text" name="name" value="<? echo ( $$variable{'ServiceType'}->name() ) ?>" /> 
+		</p>
+		<p> 
+			<label>Description:</label>
+			<input type="text" name="description" value="<? echo ( $$variable{'ServiceType'}->description() ) ?>" /> 
+		</p>
+		<p> 
+			<label>Category:</label>
+			<input type="text" name="category" value="<? echo ( $$variable{'ServiceType'}->category() ) ?>" /> 
+		</p>
+		<p>
+			<label>Visible in Project Create:</label>
+			<input type="radio" id="create_visible1" name="create_visible" value="1"  <? echo ( 'checked="checked"' if $$variable{'ServiceType'}->create_visible(); ) ?> />
+			<label class="radio" for="create_visible1">Yes</label>
+			<input type="radio" id="create_visible0" name="create_visible" value="0" <? echo ( 'checked="checked"' if ! $$variable{'ServiceType'}->create_visible(); ) ?> />
+			<label class="radio" for="create_visible0">No</label>
+		</p>
+		<p>
+			<label>Visible in Project View:</label>
+			<input type="radio" id="view_visible1" name="view_visible" value="1"  <? echo ( 'checked="checked"' if $$variable{'ServiceType'}->view_visible() ) ?> />
+			<label class="radio" for="view_visible1">Yes</label>
+			<input type="radio" id="view_visible0" name="view_visible" value="0" <? echo ( 'checked="checked"' if ! $$variable{'ServiceType'}->view_visible() ) ?> />
+			<label class="radio" for="view_visible0">No</label>
+		</p>
+		<p> 
+			<label>Sort:</label>
+			<input type="text" name="sorting" value="<? echo ( $$variable{'ServiceType'}->sorting() ) ?>" />
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+<fieldset><legend>Defaults</legend>
+	<div id="Defaults">
+	<!--#include virtual="_defaults.html"-->
+	</div>
+</fieldset>
+</form>

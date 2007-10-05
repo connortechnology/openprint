@@ -1,0 +1,57 @@
+<form name="f1" method="post" action="defaults_edit.html" enctype="multipart/form-data">
+	Default with a specified project type will override default with no project type.  This allows us to do things like
+	set bleeds for everything, and then set no bleeds for Letterhead.  The letterhead setting will override.
+	<br/><hr/><br/>
+	<div class="row">
+        <span class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset()';", '', 'Reset' ); ) ?>
+			<input type="file" name="fileImport" >
+			<? echo ( ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.action='project_defaults.html';f1.btnFunction.value='Import';f1.submit();", '', 'Import' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Export','export.gif',"f1.action='project_defaults.html?Download';f1.btnFunction.value='Export';f1.submit();", '', 'Export' ); ) ?>
+		</span>
+    </div>
+	<br class="spacer">
+	<table class="List">
+		<tr> 
+			<th>&nbsp;</th>
+			<th width="195" align="left">Project Type</th>
+			<th width="195" align="left">Field Name</th>
+			<th width="195" align="left">Field Value</th>
+		</tr>
+		<? while ( @{$$variable{'Defaults'}} ) ?>
+		<? eval ( @$variable{'id','name','value'} = splice @{$$variable{'Defaults'}},0,3; ) ?>
+		<? eval ( $$variable{'index'} = @{$$variable{'Defaults'}}; ) ?>
+		<tr<?rowclass?>> 
+			<td>&nbsp;</td>
+			<td>
+				<select name="txtID-<?index?>">
+					<option value=""> all </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)')], $$variable{'id'} ); ) ?>
+				</select>
+			</td>
+			<td> <input type="text" name="txtName-<?index?>" value="<?name?>"></td>
+			<td> <input type="text" name="txtValue-<?index?>" value="<?value?>"></td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+		<? endwhile ( @{$$variable{'Defaults'}} ) ?>
+		<tr> 
+			<td colspan="4"><hr/></td>
+		</tr>
+		<tr> 
+			<td colspan="4">Add New</td>
+		</tr>
+		<tr> 
+			<td>&nbsp;</td>
+			<td>
+				<select name="txtID-New">
+					<option value=""> all </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)')] ); ) ?>
+				</select>
+				</td>
+			<td> <input type="text" name="txtName-New"> </td>
+			<td> <input type="text" name="txtValue-New"> </td>
+		</tr>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+</form>

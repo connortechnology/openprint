@@ -1,0 +1,14 @@
+<p> 
+	<label>How many <? echo ( ssi::writeTip( 'negatives' ); ) ?> need <?ServiceTypeName?>:</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+		<input name="txtNegativeQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtNegativeQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc('f1');" />
+		<input type="checkbox" id="chkOverrideNegativeQuantity<?QTYIndex?>" name="chkOverrideNegativeQuantity<?QTYIndex?>" value="Y" <? echo ( 'checked="checked"' if $$variable{'chkOverrideNegativeQuantity'.$$variable{'QTYIndex'}} ) ?> onclick="if (this.checked == false) calc('f1');" />
+		<label class="radio" for="chkOverrideNegativeQuantity<?QTYIndex?>">Override</label>
+	</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>

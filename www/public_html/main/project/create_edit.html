@@ -1,0 +1,24 @@
+<div class="PageTitle">
+<h1>PROJECTS</h1>
+<h2><? echo ( $$variable{'ProjectIndex'} ? 'Edit' : 'Create' ) ?> Project <?ProjectIndex?></h2>
+</div>
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
+<form name="f1" method="post" action="view.html">
+	<? if ( $$variable{'error'} ) ?>
+	<span class="error"><?error?><br/><?details?></span>
+	<? endif ( $$variable{'error'} ) ?>
+	<div class="ProjectCreateEdit">
+		<!--#include virtual="/main/project/_create_edit.html" -->
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save_and_continue.gif',"f1.btnFunction.value='Save Project'; submit_handler(f1);",'','Save &amp; Continue' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();",'','Reset' ); ) ?>
+		</p>
+	</div>
+	<div id="AlertDiv" class="row" style="display:none;">
+		<span class="label">The following errors occured</span>
+		<span class="input" id="Alert"></span>
+	</div>
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+</form>

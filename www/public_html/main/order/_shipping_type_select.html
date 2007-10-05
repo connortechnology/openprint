@@ -1,0 +1,18 @@
+<p>
+	<label>Shipping Type:</label>
+	<? echo (
+		my $html;
+        my %Shipping_Services = map { $_->name(), $_->description() } openprint::ServiceType::find('category'=>'Shipping','order'=>'lower(name)');
+		my %services = $$variable{'Project'}->get_services();
+		foreach my $key ( keys %Shipping_Services ) {
+			$html .= qq#<input type="radio" id="ShippingType$$variable{'ProjectIndex'}$key" name="ShippingType$$variable{'ProjectIndex'}" value="$key" #;
+			$html .= 'checked ' if $$variable{'Project'}->shippingtype() eq $key or $services{$key};
+			$html .= qq#/><label class="radio" for="ShippingType$$variable{'ProjectIndex'}$key">$Shipping_Services{$key}</label>#;
+		} # end foreach
+		return $html;
+	) ?>
+<!--
+	<input type="radio" id="ShippingType<?ProjectIndex?>CustomerPickup" name="ShippingType<?ProjectIndex?>" value="Customer Pickup" <? echo ( 'checked' if $$variable{'Project'}->shippingtype() eq 'Customer Pickup' ) ?> />
+	<label class="radio" for="ShippingType<?ProjectIndex?>CustomerPickup">Customer Pickup</label>
+-->
+</p>

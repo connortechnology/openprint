@@ -1,0 +1,332 @@
+<script type="text/javascript">
+	function loadDivs( results ) {
+		var rows = results.split('|');
+		for ( var r = 0; r < rows.length; r += 1 ) {
+			var cols = rows[r].split('~');
+			if ( cols[0] == 'Div' ) {
+				var div=$(cols[1]);
+				if ( div ) {
+					div.style.display = 'none';
+					div.innerHTML = cols[2];
+					var containers = $$('ul.shift');
+					Sortable.create(cols[1], {dropOnEmpty:true,constraint:false,containment:containers,
+							onUpdate:function(){
+							jsrsExecute( '\/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( cols[1], Sortable.serialize(cols[1]) ) );
+							}
+							});
+
+					div.style.display = 'block';
+				} // end if
+			} // end if
+		} // end for
+	} // end function loadDivs( results )
+	function split_job( pid, sid, shift ) {
+		var div = $( shift );
+		if ( div )
+			div.innerHTML = 'updating...';
+		var code = "require openprint::press_schedule;\n";
+		code += "return openprint::press_schedule::split_job( @specs{'p_id','s_id','shift'} );\n";
+		jsrsExecute( '/jsrs.htm', loadDivs, 'jsrs::execute', new Array( 'code', code, 'p_id', pid, 's_id', sid, 'shift', shift ) );
+	} // end function
+
+	function jump_to_date( date ) {
+		var form = date.params.inputField.form;
+		var name = date.params.inputField.name;
+		var reg = /ScheduleDate-(\d*)/;
+		var ar = reg.exec( name );
+		form.ServiceIndex.value = ar[1];
+		form.btnFunction.value='JumpToDate';
+		form.submit();
+	}
+	function setduedate( date ) {
+		var form = date.params.inputField.form;
+		var name = date.params.inputField.name;
+		var reg = /ScheduleDate-(\d*)/;
+		var ar = reg.exec( name );
+		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_duedate', new Array( ar[1], date.params.inputField.value ) );
+		calendar.hide();
+	}
+
+	function checkOrder( results ) {
+	} // end function
+	function editOperator( period_id, operator, e ) {
+		form = document.forms['f3'];
+		if ( form ) {
+			form.Period.value=period_id;
+			ddm_select_by_value( form.Operator, operator );
+			show_div( 'OperatorEdit', e );
+		} // end if
+	} // end function editOperator
+	function saveOperator( period, operator, name ) {
+		var div = $( period + 'Operator' );
+		if ( div )
+			div.innerHTML = name;
+		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_operator', new Array( period, operator ) );
+	} // end function saveOperator
+	function editForms( project_index, service_index, forms, e ) {
+		form = document.forms['f5'];
+		if ( form ) {
+			form.ProjectIndex.value=project_index;
+			form.ServiceIndex.value=service_index;
+			form.Forms.value=forms;
+			show_div( 'FormsEdit', e );
+		} // end if
+	} // end function editImpressions
+	function saveForms( project_index, service_index, forms ) {
+		var div = $( service_index + 'Forms' );
+		if ( div )
+			div.onclick = 'editForms(' + project_index + ', ' + service_index + ', \'' + forms + '\', event );';
+			div.innerHTML = forms+' forms';
+		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_forms', new Array( project_index, service_index, forms ) );
+	} // end function saveOperator
+
+	function editImpressions( project_index, service_index, impressions, e ) {
+		form = document.forms['f4'];
+		if ( form ) {
+			form.ProjectIndex.value=project_index;
+			form.ServiceIndex.value=service_index;
+			form.Impressions.value=impressions;
+			show_div( 'ImpressionsEdit', e );
+		} // end if
+	} // end function editImpressions
+	function saveImpressions( project_index, service_index, impressions ) {
+		var div = $( service_index + 'Impressions' );
+		if ( div )
+			div.innerHTML = '<span onClick="editImpressions('+project_index+', '+service_index+', \''+impressions+'\', event );">'+impressions+' imps</span>';
+		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_impressions', new Array( project_index, service_index, impressions ) );
+	} // end function saveOperator
+	function editComment( project_index, service_index, comment, e ) {
+		form = document.forms['f2'];
+		if ( form ) {
+			form.ProjectIndex.value=project_index;
+			form.ServiceIndex.value=service_index;
+			form.Comment.value=comment;
+			show_div('CommentEdit', e )	
+		} // end if
+	} 
+	function saveComment( project_index, service_index, comment ) {
+		var div = $( service_index + 'Comment' );
+		if ( div )
+			div.innerHTML = '<div style="width:100%;" onClick="editComment('+project_index+', '+service_index+', \''+comment+'\', event );">'+comment+'&nbsp;</div>';
+		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_comment', new Array( project_index, service_index, comment ) );
+	} // end function saveComment
+	function errFunc( t ) {
+	}
+</script>
+<link rel="stylesheet" type="text/css" href="/css/press_schedule.css">
+<div class="Popup" id="CommentEdit">
+	<form name="f2" onsubmit="saveComment( f2.ProjectIndex.value, f2.ServiceIndex.value, f2.Comment.value );hide_div('CommentEdit'); return false;">
+		<input type="hidden" name="ProjectIndex" />
+		<input type="hidden" name="ServiceIndex" />
+		<input type="hidden" name="btnFunction" value="Comment"/>
+		<span style="float: left;">Comment: <input type="text" name="Comment"/></span>
+		<span style="float: right;">
+            <? echo ( ssi::writeButton( $log, $dbh, 'Save1', 'save.gif', 'saveComment( f2.ProjectIndex.value, f2.ServiceIndex.value, f2.Comment.value );hide_div(\'CommentEdit\');', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel1', 'cancel.gif', "hide_div('CommentEdit');", '', 'Cancel' ); ) ?>
+		</span>
+	</form>
+</div>
+<div class="Popup" id="OperatorEdit">
+	<form name="f3" onsubmit="saveOperator( f3.Period.value, f3.Operator.options[f3.Operator.selectedIndex].value, f3.Operator.options[f3.Operator.selectedIndex].text );hide_div('OperatorEdit'); return false;">
+		<input type="hidden" name="Period" />
+		<input type="hidden" name="btnFunction" value="Operator"/>
+		<span style="float: left;">
+			Operator: <select name="Operator" size="1"><option value="">select one</option>
+			<? echo ( 
+			   ssi::make_drop_down ( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>'E', 'usergroup'=>'Press','order'=>'lower(strfirstname)' ) ] );
+			   ) ?>
+			</select>
+		</span>
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save2', 'save.gif', 'saveOperator( f3.Period.value, f3.Operator.options[f3.Operator.selectedIndex].value, f3.Operator.options[f3.Operator.selectedIndex].text );hide_div(\'OperatorEdit\');', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel2', 'cancel.gif', "hide_div('OperatorEdit');", '', 'Cancel' ); ) ?>
+		</span>
+	</form>
+</div>
+<div class="Popup" id="ImpressionsEdit">
+	<form name="f4" onsubmit="saveImpressions( f4.ProjectIndex.value, f4.ServiceIndex.value, f4.Impressions.value );hide_div('ImpressionsEdit');return false;">
+		<input type="hidden" name="ProjectIndex" />
+		<input type="hidden" name="ServiceIndex" />
+		<span style="float: left;"> # of impressions: <input type="text" name="Impressions"/></span>
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save3', 'save.gif', 'saveImpressions( f4.ProjectIndex.value, f4.ServiceIndex.value, f4.Impressions.value );hide_div(\'ImpressionsEdit\');', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel3', 'cancel.gif', "hide_div('ImpressionsEdit');", '', 'Cancel' ); ) ?>
+		</span>
+	</form>
+</div>
+<div class="Popup" id="FormsEdit">
+	<form name="f5" onsubmit="saveForms( f5.ProjectIndex.value, f5.ServiceIndex.value, f5.Forms.value );hide_div('FormsEdit');return false;">
+		<input type="hidden" name="ProjectIndex" />
+		<input type="hidden" name="ServiceIndex" />
+		<span style="float: left;"> # of Forms: <input type="text" name="Forms"/></span>
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save5', 'save.gif', 'saveForms( f5.ProjectIndex.value, f5.ServiceIndex.value, f5.Forms.value );hide_div(\'FormsEdit\');', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel5', 'cancel.gif', "hide_div('FormsEdit');", '', 'Cancel' ); ) ?>
+		</span>
+	</form>
+</div>
+<? eval (
+		if ( ! $openprint::param{'ddmScheduleStartYear'} ) {
+			if ( ($_) = sql::execute( $log, $dbh, q{SELECT date(MIN(StartTime)) FROM Schedule} ) ) {
+				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, split('-', $_ ) );
+				$log->debug("Start: $$variable{'ScheduleStart'}");
+			} else {
+				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+			} # end if
+		} else {
+			@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh,
+				@openprint::param{'ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay'} );
+		} # end if
+
+		if ( ! $openprint::param{'ddmScheduleEndYear'} ) {
+			($_) = sql::execute( $log, $dbh, q{SELECT date(MAX(StartTime)) FROM Schedule} );
+			if ( $_ ) {
+				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, split('-',$_) );
+				$log->debug("Start: $$variable{'ScheduleEnd'}");
+			} else {
+				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+			} # end if
+		} else {
+			@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh,
+				@openprint::param{'ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay'} );
+		} # end if
+) ?>
+<form name="f1" method="post" action="print_overview.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="ProjectIndex" />
+	<input type="hidden" name="ServiceIndex" />
+	<fieldset class="filters"><legend>Display Criteria</legend>
+		<div style="float: left; width: 47%;">
+		<p>
+			<label>Presses:</label>
+				<select name="Presses" multiple size="4">
+<? echo ( 
+	my @presses = map { $_->id(), $_->name() } openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+	my %presses = @presses;
+	if ( ref $openprint::param{'Presses'} eq 'ARRAY' ) {
+		@{$$variable{'Presses'}} = map { $_, $presses{$_} } @{$openprint::param{'Presses'}};
+		return ssi::make_select( \@presses, $openprint::param{'Presses'} );
+	} elsif ( defined $openprint::param{'Presses'} ) {
+		@{$$variable{'Presses'}} = map { $_, $presses{$_} } $openprint::param{'Presses'};
+		return ssi::make_select( \@presses, [ $openprint::param{'Presses'} ] );
+	} else {
+		@{$$variable{'Presses'}} = @presses;
+		return ssi::make_select( \@presses, [ keys %presses ] );
+	} # end if
+) ?>
+				</select>
+		</p>
+		</div>
+		<div style="float: right; width: 47%;">
+		<p>
+			<label>Schedule Date Range:</label>
+			<span class="DateSelector">
+				<select name="ddmScheduleStartYear"><option value=""> select </option><?ScheduleStartYears?></select>
+				<select name="ddmScheduleStartMonth"><option value=""> select </option><?ScheduleStartMonths?></select>
+				<select name="ddmScheduleStartDay"><option value=""> select </option><?ScheduleStartDays?></select>
+			&nbsp;to&nbsp;
+			</span>
+			<span class="DateSelector">
+				<select name="ddmScheduleEndYear"><option value=""> select </option><?ScheduleEndYears?></select>
+				<select name="ddmScheduleEndMonth"><option value=""> select </option><?ScheduleEndMonths?></select>
+				<select name="ddmScheduleEndDay"><option value=""> select </option><?ScheduleEndDays?></select>
+			</span>
+		</p>
+		<p class="buttons">
+				<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ); ) ?>
+		</p>
+		</div>
+	</fieldset>
+	<div class="unprintable">
+		Please click on the <b>Docket #</b> to view details.<br/>
+	</div><!--unprintable-->
+	<div class="PressScheduleHeader">
+		Press Schedule For 
+		<? echo ( Date::Calc::Date_to_Text( split( '-', $$variable{'ScheduleStart'} ) ) ) ?>
+		<? if ( Date::Calc::Date_to_Days( split('-', $$variable{'ScheduleEnd'} ) ) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+		to <? echo ( Date::Calc::Date_to_Text( split( '-', $$variable{'ScheduleEnd'} ) ) ) ?>
+		<? endif ( Date::Calc::Date_to_Days( split('-', $$variable{'ScheduleEnd'} ) ) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+		<br/>
+	</div>
+	Projects highlighted in yellow have forms on other presses.<br/>
+	<style type="text/css">
+		div.PressColumn {
+			width: <? echo ( int (100/(@{$$variable{'Presses'}}/2)); ) ?>%;
+		}
+	</style>
+	<table class="List">
+		<tr>
+	<? echo (
+		my $html;
+		my %presses = @{$$variable{'Presses'}};
+		foreach my $id ( sort keys %presses ) {
+			$html .= '<th style="font-size:16px;"><a href="/employee/production/equipment_view.html?equipment_id='.$id.'">'.$presses{$id}.'</a></th>';
+		} # end foreach
+		return $html;
+		) ?>
+		</tr>
+	</table>
+	<? echo (
+		require openprint::press_schedule;
+		my $html;
+		my %presses = @{$$variable{'Presses'}};
+		foreach my $id ( sort keys %presses ) {
+			$html .= '<div class="PressColumn">';
+			my ( $year, $month, $day ) = split ('-', $$variable{'ScheduleStart'} );
+			my ( $h, $min, $s );
+			if ( ! $$variable{'ScheduleEnd'} ) {
+				@$variable{'ScheduleEnd'} = sql::execute( $log, $dbh, q{SELECT date(MAX(StartTime)) FROM Schedule} );
+			} # end if
+			my $end = 1;
+			if ( $$variable{'ScheduleEnd'} ) {
+				$end = Date::Calc::Delta_Days( split('-', $$variable{'ScheduleStart'}), split('-', $$variable{'ScheduleEnd'} ) ) + 1;
+			} # end if
+			my $shifts = $openprint::dbh->selectall_arrayref( q{SELECT name, starttime, duration FROM Shifts WHERE equipment_id=? ORDER BY starttime}, {Slice=>{}}, $id );
+
+			foreach ( 1 .. $end ) {
+				
+				foreach my $shift ( @$shifts ) {
+					my $starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, split(':', $$shift{'starttime'} ) );
+					my $endtime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', 
+						Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$shift{'starttime'} ), 0, split(':', $$shift{'duration'} ) ) );
+
+					push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $id, $year, $month, $day, $$shift{'name'} );
+					$html .= openprint::press_schedule::get_ul( $starttime, $endtime, $id, $shift );
+				} # end while shift
+
+				( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+			} # end foreach delta day
+			$html .= '</div>';
+		} # end foreach press
+		$html .= '<div class="unprintable"><hr class="spacer"/><h3>Pending:</h3>';
+		# Now do unassigned jobs
+		foreach my $id ( sort keys %presses ) {
+			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $id, 1900, 1, 0, '' );
+			$html .= '<div class="PressColumn">';
+			$html .= openprint::press_schedule::get_ul( undef, undef, $id, undef );
+			$html .= '</div>';
+		} # end foreach press
+		return '</div>'.$html;
+	) ?>
+</form>
+<br class="spacer"/>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+<script type="text/javascript">
+  // <![CDATA[
+	<? echo (
+		my $html;
+		foreach my $id ( @{$$variable{'drops'}} ) {
+			$html .= qq/
+			Sortable.create("$id", {dropOnEmpty:true,containment:["/.join('","', @{$$variable{'drops'}} ) . qq/"],constraint:false,
+			 onUpdate:function(){
+			 jsrsExecute( '\/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( '$id', Sortable.serialize("$id") ) );
+			 }
+			});
+			/;
+		} # end foreach
+		return $html;
+	) ?>
+// ]]>
+</script>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>

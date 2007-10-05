@@ -1,0 +1,55 @@
+<form method="post" action="taxes.html" name="f1">
+	<table class="List">
+		<tr>
+			<th align="left">Country</th>
+			<th align="left">State/Province</th>
+			<th width="80">Federal (%)</th>
+			<th width="80">State (%)</th>
+			<th width="80">Harmonised (%)</th>
+			<th width="20">&nbsp;</th>
+		</tr>
+		<? eval (
+				$_ = 'SELECT Country, State, dblFederalPercent, dblStatePercent, dblHarmonisedPercent FROM Taxes ORDER BY lower(State)';
+				@{$$variable{'TAXES'}} = sql::execute( $log, $dbh, $_ );
+				) ?>
+		<? while ( @$variable{'country','state','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
+		<tr<?rowclass?>>
+			<td><? echo ( $countries::countries{$$variable{'country'}} ? $countries::countries{$$variable{'country'}} : $$variable{'country'} ) ?></td>
+			<td><? echo (
+				if ( $$variable{'country'} eq 'CA' and $provinces::provinces{$$variable{'state'}} ) {
+					return $provinces::provinces{$$variable{'state'}};
+				} elsif ( $$variable{'country'} eq 'US' and $states::states{$$variable{'state'}} ) {
+					return $states::states{$$variable{'state'}};
+				} else {
+					return $$variable{'state'};
+				} # end if
+				) ?></td>
+			<td> 
+				<input type="text" name="txtFST<?state?>" value="<?gst?>" />
+			</td>
+			<td> 
+				<input type="text" name="txtSST<?state?>" value="<?pst?>" />
+			</td>
+			<td> 
+				<input type="text" name="txtHST<?state?>" value="<?hst?>" />
+			</td>
+			<td><input type="checkbox" id="chkDelete-<?country?>-<?state?>" name="chkDelete-<?country?>-<?state?>" /></td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+		<? endwhile ( @$variable{'country','state','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
+		<tr class="totals">
+			<td><input type="text" name="txtCountryNew"/></td>
+			<td><input type="text" name="txtStateNew"/></td>
+			<td><input type="text" name="txtFSTNew" /></td>
+			<td><input type="text" name="txtSSTNew" /></td>
+			<td><input type="text" name="txtHSTNew" /></td>
+			<td>&nbsp;</td>
+		</tr>
+	</table>
+	<p class="buttons"> 
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();",'','Delete Checked' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif','f1.reset();','','Reset' ); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction"/>
+</form>

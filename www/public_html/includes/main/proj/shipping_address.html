@@ -1,0 +1,27 @@
+<p> 
+	<label>Address:</label>
+	<input type="text" name="Address1" value="<?Address1?>" /><br/>
+	<input type="text" name="Address2" value="<?Address2?>" /> 
+</p>
+<p> 
+	<label>City:</label>
+	<input type="text" name="City" value="<?City?>" onkeyup="calc(this.form.name);"/> 
+</p>
+<p> 
+	<label>Country:</label>
+	<select name="Country" onchange="Country_onchange(this, this.form.StateProvince);calc(this.form.name);">
+	<option value=""> Select </option>
+	<? echo ( ssi::return_countries( $$variable{'Country'} ); ) ?>
+	</select>
+</p>
+<p> 
+	<label>State/Province:</label>
+	<select name="StateProvince" onchange="calc(this.form.name);">
+	<option value=""> Select </option>
+	<? echo ( ssi::return_states_and_provinces( $$variable{'StateProvince'} ); ) ?>
+	</select>
+</p>
+<p> 
+	<label>Zip/Postal Code:</label>
+	<input type="text" name="PostalCode" value="<?PostalCode?>" onkeyup="calc(this.form.name);"/>
+</p>

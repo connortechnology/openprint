@@ -1,0 +1,80 @@
+<? eval (
+	require Date::Parse;
+	require Date::Format;
+
+	$openprint::param{'/main/project/history.html?lastupdated'} = time;
+	foreach ( 'ddmStatus','CreatedStartYear','CreatedStartMonth','CreatedStartDay','CreatedEndYear','CreatedEndMonth','CreatedEndDay','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
+		$openprint::session{"/main/project/history.html?$_"} = $openprint::param{$_} if exists $openprint::param{$_};
+	} # end foreach
+	if ( ! $openprint::session{'/main/project/history.html?ddmStatus'} ) {
+		$openprint::session{'/main/project/history.html?ddmStatus'} = [ 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ];
+	} # end if
+
+	if ( $openprint::param{'ProjectID'} ) {
+		@{$$variable{'Projects'}} = openprint::Project::find( 
+		'company_id'		=> $openprint::session{'company_id'},
+		'id'				=> $openprint::param{'ProjectID'},
+		'order'				=> 'index DESC',
+		);
+	} else {
+	@{$$variable{'Projects'}} = openprint::Project::find( 
+		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} ),
+		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} ),
+		'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} ),
+		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} ),
+		'company_id'		=> $openprint::session{'company_id'},
+		'status'			=> $openprint::session{'/main/project/history.html?ddmStatus'},
+		'reference'				=> $openprint::param{'Reference'},
+		'and'				=> ($openprint::param{'ProjectID'} ? " AND Index LIKE '$openprint::param{'ProjectID'}\%'" : undef ),
+		'order'				=> 'index DESC',
+		);
+	} # end if
+
+	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+) ?>
+
+<? if ( @{$$variable{'Projects'}} ) ?>
+	<div class="unprintable">
+		Please click on a <b>Project ID #</b> to view project details.<br/>
+		To delete projects from history check the appropriate project(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th width="70" align="left">Project #</th>
+			<th align="left">Description</th>
+			<th width="75" align="right">Price 1</th>
+			<th width="75" align="right">Price 2</th>
+			<th width="75" align="right">Price 3</th>
+			<th width="85" align="right">Status</th>
+			<th width="120" align="right">Created</th>
+			<th width="30" class="unprintable" align="center"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f1);" /></th>
+		</tr>
+		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+		<? eval ( 
+			$$variable{'conversion_rate'} = $$variable{'Project'}->Currency()->conversions( $openprint::session{'Currency_id'} );
+		) ?>
+		<tr<?rowclass?>> 
+			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
+			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Project'}->price1()*$$variable{'conversion_rate'} ) if $$variable{'Project'}->price1(); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Project'}->price2()*$$variable{'conversion_rate'} ) if $$variable{'Project'}->price2(); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Project'}->price3()*$$variable{'conversion_rate'} ) if $$variable{'Project'}->price3(); ) ?></td>
+			<td align="right"><? echo ( $$variable{'Project'}->status(); ) ?></td>
+			<td align="right"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></td>
+			<td class="unprintable" align="center"><input type="checkbox" name="chkDelete<? echo ( $$variable{'Project'}->id(); ) ?>" /></td>
+		</tr>
+		<tr<?rowclass?>> 
+			<td>&nbsp;</td>
+			<td colspan="7"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? hecho ( $$variable{'Project'}->reference(); ) ?></a></td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+	</table>
+	<span class="Currency">All prices listed in <? echo ( new openprint::Currency( $openprint::session{'Currency_id'} )->name(); ) ?></span>
+	<br class="spacer"/>
+<span class="unprintable" style="float: right;">
+<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
+</span>
+<? else ( @{$$variable{'Projects'}} ) ?>
+	There are no projects which match your search criteria. 
+<? endif ( @{$$variable{'Projects'}} ) ?>

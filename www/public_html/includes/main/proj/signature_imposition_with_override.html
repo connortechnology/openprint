@@ -1,0 +1,20 @@
+<p>
+	<label><? echo ( ssi::writeTip('Imposition'); ) ?>:</label>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+		<input name="txtImposition-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtImposition-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>" size="9"  onkeyup="calc('f1');" />
+		 Out <input type="checkbox" id="chkOverrideImposition-<?SignatureIndex?>-<?QTYIndex?>" name="chkOverrideImposition-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');"
+<? echo ( 'checked' if $$variable{"chkOverrideImposition-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} eq 'Y' ) ?>
+/> 
+		<label class="radio" for="chkOverrideImposition-<?SignatureIndex?>-<?QTYIndex?>">Override</label><br/>
+		<input name="txtLayoutWidth-<?SignatureIndex?>-<?QTYIndex?>" readonly="readonly" size="9" />
+		<input name="txtLayoutHeight-<?SignatureIndex?>-<?QTYIndex?>" readonly="readonly" size="9" />
+		(W x H in inches)
+	</span>
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+

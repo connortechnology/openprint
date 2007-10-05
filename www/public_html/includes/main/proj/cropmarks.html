@@ -1,0 +1,8 @@
+<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
+<p>
+	<label>Crop mark space:</label>
+	<input type="text" name="txtCropMarkSpace" value="<?txtCropMarkSpace?>" size="9" onkeyup="calc('f1');" /> inches
+</p>
+<? else ( $$variable{'Mode'} ne 'Easy' ) ?>
+<input type="hidden" name="txtCropMarkSpace" value="<?txtCropMarkSpace?>" />
+<? endif ( $$variable{'Mode'} ne 'Easy' ) ?>

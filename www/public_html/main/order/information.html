@@ -1,0 +1,86 @@
+<div class="PageTitle">
+<h1>Orders</h1>
+<h2>Information</h2>
+</div>
+<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript">
+<!--
+	function radio_select_by_value( radio, value ) {
+		for ( var index = 0; index < radio.length; index += 1 ) {
+			if ( radio[index].value == value ) {
+				radio[index].checked = true;
+				return;
+			} // end if
+		} // end for
+	} // end function
+	function ddmUsers_onChange( formName ) {
+		var form = getFormObj(formName);
+		jsrsExecute( '/jsrs.htm', cbFillUserFor, 'openprint::order::fill_user_info', form.ddmUsers.options[form.ddmUsers.selectedIndex].value );
+	} // end function
+	function cbFillUserFor( results ) {
+		var form = getFormObj('f1');
+		var pairs = results.split('|');
+		for ( var i = 0; i < pairs.length; i += 1 ){
+			if ( pairs[i].indexOf('~') != -1 ) {
+				var data = pairs[i].split('~');
+
+				if ( form.elements[data[0]] ) {
+					if ( form.elements[data[0]].type == 'select-one' ) {
+						ddm_select_by_value( form.elements[data[0]], data[1] );
+					} else if ( form.elements[data[0]].type == 'text' ) {
+						form.elements[data[0]].value = data[1];
+					} else if ( form.elements[data[0]].type == 'hidden' ) {
+						form.elements[data[0]].value = data[1];
+					} else {
+						radio_select_by_value( form.elements[data[0]], data[1] );
+					} // end if
+				} // end if
+			} // end if
+		} // end for
+	} // end function
+-->
+</script>
+<div class="Order">
+	<div class="error"><?error?><?Error?></div>
+
+	<form method="post" name="f1" action="submit.html">
+		If you have a purchase order number please enter it below.<br/>
+		<br/>
+		(Fields marked with an * are required.)
+		<br/>
+		<br/>
+		<div style="float: left; width: 49%; min-width: 320px;">
+			<fieldset>
+				<p> 
+					<label>Purchase Order:</label>
+					<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
+				</p>
+			</fieldset>
+			<!--#include virtual="_contact_information.html"-->
+		</div>
+		<div style="float: right; width: 49%; min-width: 320px;">
+			<? eval ( 
+				@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, strProjectReference, intQuantityIndex, shippingtype, intQuantity1, intQuantity2, intQUantity3 FROM Order_Contents, tbl_Projects WHERE lngProjectIndex=Index AND OrderIndex=?}, $$variable{'Order'}->id() );
+				@{$$variable{'PRODUCTS'}} = $$variable{'Order'}->Products();
+ ) ?>
+			<? if ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
+				<? while ( @$variable{'ProjectIndex','Reference','SelectedQuantityIndex','ShippingType','Quantity1','Quantity2','Quantity3'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
+				<? eval ( $$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ); ) ?>
+				<!--#include virtual="_project_information.html"-->
+				<? endwhile ( @$variable{'ProjectIndex','Reference','SelectedQuantityIndex','ShippingType','Quantity1','Quantity2','Quantity3'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
+				<? if ( @{$$variable{'PRODUCTS'}} ) ?>
+				<!--#include virtual="_product_information.html"-->
+				<? endif ( @{$$variable{'PRODUCTS'}} ) ?>
+			<? else ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
+				<p>This order appears to be empty.</p>
+			<? endif ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
+		</div>
+		<br class="spacer"/>
+		<div style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue' ); ) ?>
+		</div>
+		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
+		<input type="hidden" name="btnFunction" value="Continue"/>
+	</form>
+</div>
+<br class="spacer"/>

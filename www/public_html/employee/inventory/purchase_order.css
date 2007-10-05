@@ -1,0 +1,238 @@
+
+@media screen {
+.unprintable {
+}
+}
+@media print {
+.unprintable {
+	display: none;
+}
+}
+
+.PO {
+}
+.PO .tableHeader {
+	font-weight: bold;
+	border-top: 1px solid;
+	border-bottom: 1px solid;
+}
+
+@media screen {
+.Actions {
+	text-align: center;
+	border-left: 1px solid;
+	width: 60px;
+	padding: 0px;
+	height: 35px;
+	float: left;
+	margin: none;
+}
+}
+@media print {
+.Actions {
+	display: none;
+}
+}
+.PO  .row {
+	margin: 0px;
+	height: 36px;
+	width: auto;
+	clear: both;
+}
+.PO .row .label {
+	height: 30px;
+	margin: 0px;
+	width: 100px;
+	float: left;
+	clear: none;
+}
+.PO .row .input {
+	height: 30px;
+	margin: 0px;
+	float: left;
+	width: 180px;
+	clear: none;
+}
+.Name {
+	padding: 0px;
+	float: left;
+	text-align: left;
+	border-left: 1px solid;
+	height: 35px;
+	clear: none;
+}
+@media screen{
+.Name {
+}
+}
+@media print {
+.Name {
+	margin-left: 0px;
+}
+}
+.Finish {
+	margin: none;
+	padding: none;
+	height: 35px;
+	border-left: 1px solid;
+	width: 50px;
+	float: right;
+}
+.Weight {
+	padding: 1px;
+	height: 35px;
+	width: 50px;
+	text-align: right;
+	border-left: 1px solid;
+	float: right;
+}
+.Size {
+	padding: 1px;
+	height: 35px;
+	width: 80px;
+	text-align: right;
+	border-left: 1px solid;
+	float: right;
+}
+.Price {
+	padding: 1px;
+	height: 35px;
+	width: 50px;
+	text-align: right;
+	border-left: 1px solid;
+	float: right;
+}
+.Qty {
+	padding: 1px;
+	height: 35px;
+	width: 60px;
+	text-align: right;
+	border-left: 1px solid;
+	float: right;
+}
+.Amount {
+	padding: 1px;
+	height: 35px;
+	width: 75px;
+	text-align: right;
+	border-right: 1px solid;
+	border-left: 1px solid;
+	float: right;
+}
+.PO .Contents .row .Label {
+	padding: 1px;
+	height: 35px;
+	width: 110px;
+	float: right;
+	border-left: 1px solid;
+}
+
+@media screen {
+	.AddNew {
+		p\osition:relative;
+		padding: 5px;
+		border: 1px solid;
+		margin: 0px;
+		height: auto;
+	}
+	
+}
+@media print {
+	.AddNew {
+		display: none;
+	}
+}
+.paper {
+    width: 295px;
+	height: 30px;
+    float: left;
+    p\osition: relative;
+    margin: 0px;
+    clear: none;
+}
+.paper .label {
+    width: 100px;
+    float: left;
+    p\osition: relative;
+    margin: 5px;
+    clear: none;
+}
+.paper .input {
+	width: 165px;
+    margin: 5px;
+    clear: none;
+}
+.paper .input select {
+	width: 165px;
+}
+
+td, th {
+	height: 40px;
+	vertical-align: bottom;
+}
+.row {
+	width: 100%;
+	margin: 5px;
+	clear: both;
+}
+.row .label {
+	width: 150px;
+	float: left;
+	clear: left;
+	text-align: left;
+}
+.row .input {
+	margin-left: 160px;
+	width: auto;
+	display: block;
+	clear: right;
+}
+@media print {
+	.buttons {
+		display: none;
+	}
+} 
+@media screen {
+	.buttons {
+		display: block;
+	}
+} 
+.row .buttons {
+	margin: 5px;
+	margin-left: 160px;
+	width: auto;
+	clear: right;
+}
+	
+.PONum {
+	float: left;
+	width: 100px;
+	clear: left;
+}
+.Date {
+	float: left;
+	width: 100px;
+}
+
+.Supplier {
+	float: left;
+}
+.Status {
+	float: right;
+	width: 100px;
+	clear: right;
+}
+.Total {
+	float: right;
+	width: 100px;
+}
+.ErrorMessage {
+	color: red;
+}
+
+input {
+	margin: 0px;
+	padding: 0px;
+	height: auto;
+	font-size: 12px;
+}

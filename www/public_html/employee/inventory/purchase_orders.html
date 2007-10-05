@@ -1,0 +1,53 @@
+<link href="purchase_orders.css" rel="stylesheet" type="text/css">
+<form name="f1" action="purchase_orders.html" method="post">
+	<fieldset class="filters"><legend>Select Search Criteria:</legend>
+		<p>
+			<label>Date:</label>
+				<select name="ddmStartYear"> <?ddmStartYear?> 
+				</select>
+				<select name="ddmStartMonth"> <?ddmStartMonth?> 
+				</select>
+				<select name="ddmStartDay"> <?ddmStartDay?> 
+				</select>
+to
+				<select name="ddmEndYear"><?ddmEndYear?></select>
+				<select name="ddmEndMonth"><?ddmEndMonth?></select>
+				<select name="ddmEndDay"><?ddmEndDay?></select>
+		</p>
+		<p class="buttons">
+				<? echo ( join( '',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', '/employee/inventory/purchase_order.html', 'Add New' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				); ) ?>
+		</p>
+	</fieldset>
+
+	<? if ( @{$$variable{'PURCHASEORDERS'}} == 0 ) ?>
+	There are no purchase orders matching your search criteria.
+	<? else ( @{$$variable{'PURCHASEORDERS'}} == 0 ) ?>
+	<br>
+	Please click on a <b>Purchase Order #</b> to view details. <br>
+	<br>
+<table class="List">
+	<tr>
+		<th>P.O.Num</th>
+		<th>Date</th>
+		<th>Supplier</th>
+		<th>Status</th>
+		<th>Total</th>
+	</tr>
+	<? while ( @$variable{'ppo_index','ponum','date','to','status','total'} = splice @{$$variable{'PURCHASEORDERS'}},0,6; ) ?>
+	<tr>
+		<td>&nbsp;<a href="purchase_order.html?PaperPurchaseOrderIndex=<?ppo_index?>"><?ponum?></a></td>
+		<td><a href="purchase_order.html?PaperPurchaseOrderIndex=<?ppo_index?>">&nbsp;<?date?></a></td>
+		<td>&nbsp;<?to?></td>
+		<td>&nbsp;<?status?></td>
+		<td>&nbsp;<?CurrencySymbol?>$<?total?></td>
+	</tr>
+	<? endwhile ( @$variable{'ppo_index','ponum','date','to','status','total'} = splice @{$$variable{'PURCHASEORDERS'}},0,6; ) ?>
+	</table>
+	<!--<div align="right" class="smTbl">All prices listed in <?CurrencyName?>.</div>-->
+	<? endif ( @{$$variable{'PURCHASEORDERS'}} == 0 ) ?>
+	<input type="hidden" name="btnFunction"/>
+</form>

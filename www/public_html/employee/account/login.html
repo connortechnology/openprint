@@ -1,0 +1,73 @@
+<script type="text/javascript">
+	var Users = new Array();
+	<? echo (
+			my $html;
+			foreach my $User ( openprint::User::find( 'type' => ['A','E'] ) ) {
+				$html .= sprintf( qq{   Users[%d] = '%s';\n}, $User->id(), $User->email() );
+			} # end foreach
+			return $html;
+			) ?>
+	function select_user( element ) {
+		if ( element.value.charAt(0) == 'E' ) {
+			element.value = element.value.substr(1,element.value.length-1);
+		} // end if
+		if ( Users[1*element.value] ) {
+			element.form.email.value = Users[1*element.value];
+			element.form.password.focus();
+		} else {
+			element.form.email.value = 'User not found: ' + element.value;
+
+		} // end if
+	}
+</script>
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<form name="LoginForm" method="post" action="/employee/account/login_confirmation.html">
+	<fieldset><legend>Please Login</legend>
+		Please enter your e-mail address and password.<br/>
+		<p>
+			<label for="UserID">UserID:</label>
+			<input type="text" id="UserID" name="UserID" EMPTYOK FORMAT="5N"  onkeypress="return input_handler( this, event );" onChange="select_user( this );" onkeyup="select_user( this );"/>
+		</p>
+		<p>
+			<label for="email">E-mail:</label>
+			<input type="text" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
+                <span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
+		</p>
+		<p> 
+			<label for="password">Password:</label>
+			<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
+                <span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
+		</p>
+		<p>
+			<label>Remember me:</label>
+			<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y"  />
+			<label class="radio" for="rdbRememberMeY">Yes</label>
+			<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N"  checked="checked" />
+			<label class="radio" for="rdbRememberMeN">No</label>
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"LoginForm.submit();",'','Submit'),
+				ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"LoginForm.reset();",'','Reset'),
+			); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">document.LoginForm.email.focus();</script>
+<br/>
+<form name="f2" method="post" action="/employee/account/password_confirmation.html">
+	<fieldset><legend>Forget your Password?</legend>
+		To have your password e-mailed to you, please submit your e-mail address below.<br/>
+		<p>
+			<label for="txtEmail2">E-mail:</label>
+			<input type="text" id="txtEmail2" name="txtEmail2" />
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Submit2','submit.gif',"f2.btnSendCustomerPassword.value='Send';f2.submit();",'','Submit'),
+				ssi::writeButton( $log, $dbh, 'Reset2','reset.gif',"f2.btnSendCustomerPassword.value='';f2.reset();",'','Reset'),
+				); ) ?>
+		</p>
+		<input type="hidden" name="btnSendCustomerPassword"/>
+	</fieldset>
+</form>

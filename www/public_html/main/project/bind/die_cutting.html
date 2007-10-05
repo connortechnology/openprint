@@ -1,0 +1,40 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<fieldset><legend>Die Cutting</legend>
+		<? if ( $$variable{'ShowPresentationFolderDieCutting'} ) ?>
+			<!--#include virtual="/includes/main/proj/presentation_folder_die_cutting.html"-->
+		<? else ( $$variable{'ShowPresentationFolderDieCutting'} ) ?>
+			<!--#include virtual="/includes/main/proj/die_cutting.html"-->
+		<? endif ( $$variable{'ShowPresentationFolderDieCutting'} ) ?>
+		</fieldset>
+
+
+<!-- The rest is done for each qty -->
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <hr/>
+    <div class="row"><b>The following results are for Quantity <?QTYIndex?> (<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>)</b></div>
+<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
+<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,26; ) ?>
+		<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
+        <!--#include virtual="/includes/main/proj/signature_equipment.html"-->
+<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,26; ) ?>
+        <!--#include virtual="/includes/main/proj/prices.html"-->
+<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<!-- End of Results -->
+        <!--#include virtual="/includes/main/proj/add_to_project.html"-->
+        <input type="hidden" name="btnFunction" value="Save Service"/>
+        <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+        <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
+        <input type="hidden" name="ContinueProject" value="Y" />
+        <input type="hidden" name="ServiceType" value="<?ServiceType?>" />
+        <input type="hidden" name="hdnBreakdown1" />
+        <input type="hidden" name="hdnBreakdown2" />
+        <input type="hidden" name="hdnBreakdown3" />
+	</form>
+</div>

@@ -1,0 +1,10 @@
+<div class="row">
+	<span class="label">Required CDs?</span>
+	<? echo ( my $html;
+		foreach my $qty_index ( 1 .. 3 ) {
+			next if ! $$variable{'txtQuantity'.$qty_index};
+			$html .= '<span class="value">'.$$variable{'txtQuantity'}.'</span>';
+		} # end foreach
+		return $html;
+	) ?>
+</div>

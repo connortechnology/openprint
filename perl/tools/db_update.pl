@@ -1,0 +1,220 @@
+#!/usr/bin/perl
+use lib '/etc/apache2/lib/perl';
+use strict;
+
+require sql;
+require logger;
+require openprint::Object;
+require openprint::Paper;
+
+use openprint ();
+use vars qw( $log $dbh );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+$log = new logger( 'warn' );
+
+my $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
+my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
+print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
+if ( $version < 1275 ) {
+	print "Updating to version 1275\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('alter table papers add bladecleaning boolean');
+	sql::update( undef, undef, 'papers', 'bladecleaning IS NULL', 'bladecleaning', 'false' );
+	sql::insert( undef, undef, 'database_info', 'version', 1275, 'backup', $backup );
+	$version = 1275;
+	sql::end_transaction( $dbh, $ac );
+} # end if
+if ( $version < 1282 ) {
+	print "Updating to version 1282\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('alter table papers add grain_direction text');
+	sql::update( undef, undef, 'papers', 'width > height', 'grain_direction', 'Short' );
+	sql::update( undef, undef, 'papers', 'width < height', 'grain_direction', 'Long' );
+	sql::insert( undef, undef, 'database_info', 'version', 1282, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1282;
+} # end if
+if ( $version < 1291 ) {
+	print "Updating to version 1291\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('alter table material_specifications add interpolate boolean');
+	sql::insert( undef, undef, 'database_info', 'version', 1291, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1291;
+} # end if
+if ( $version < 1333 ) {
+	print "Updating to version 1333\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('alter table papers add basis_width float');
+	$dbh->do('alter table papers add basis_height float');
+	$dbh->do('alter table papers add basis_mweight float');
+	sql::update( undef, undef, 'papers', "type='Roll'", 'basis_width', 25, 'basis_height', 38 );
+	sql::insert( undef, undef, 'database_info', 'version', 1333, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1333;
+} # end if
+if ( $version < 1334 ) {
+	print "Updating to version 1334\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('alter table papers add grade integer');
+	sql::insert( undef, undef, 'database_info', 'version', 1334, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1334;
+} # end if
+if ( $version < 1381 ) {
+	print "Updating to version 1381\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('alter table tbl_ink_colours rename to inks');
+	$dbh->do('create sequence inks_id_seq');
+	$dbh->do('alter table inks add id INTEGER');
+	$dbh->do(q{alter table inks alter id set default nextval('inks_id_seq')});
+	$dbh->do(q{DELETE FROM inks WHERE strpmsid like 'PMS%'});
+	$dbh->do(q{DELETE FROM inks WHERE strpmsid like 'pms%'});
+	$dbh->do(q{update inks set id=nextval('inks_id_seq')});
+	$dbh->do(q{alter table inks alter id set NOT NULL});
+	$dbh->do(q{alter table inks add service_id INTEGER});
+	$dbh->do(q{alter table inks add material_id INTEGER});
+	$dbh->do(q{update inks set service_id=(SELECT lngindex from tbl_Services where strid=strserviceid)});
+	$dbh->do(q{update inks set material_id=(SELECT lngindex from tbl_Materials where strid=strmaterialid)});
+	$dbh->do(q{alter table inks add washups integer});
+	$dbh->do(q{alter table inks drop strserviceid});
+	$dbh->do(q{alter table inks drop strmaterialid});
+	$dbh->do(q{alter table inks rename column strpmsid to pmsid});
+	$dbh->do(q{alter table inks add foreign key (material_id) REFERENCES tbl_Materials (lngIndex)});
+	$dbh->do(q{alter table inks add foreign key (service_id) REFERENCES tbl_Services (lngIndex)});
+	$dbh->do(q{alter table inks add PRIMARY key (id)});
+	$dbh->do(q{update inks set washups=1});
+	sql::insert( undef, undef, 'database_info', 'version', 1381, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1381;
+	
+}
+if ( $version < 1456 ) {
+	print "Updating to version 1456\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do(q{alter table skids add updated_on timestamp with time zone default NOW()});
+	$dbh->do(q{update skids set updated_on=NOW()});
+	$dbh->do(q{alter table skids add updated_by INTEGER});
+	$dbh->do(q{update skids set updated_by=created_by_id});
+	$dbh->do(q{alter table skids alter updated_by SET NOT NULL});
+	$dbh->do(q{alter table skids ADD FOREIGN KEY (updated_by) REFERENCES Users (Index)});
+	sql::insert( undef, undef, 'database_info', 'version', 1456, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1456;
+} # end if 1456
+if ( $version < 1540 ) {
+	print "Updating to version 1540\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do(q{alter table Users drop column ysnHTMLEmails});
+	$dbh->do(q{alter table Users drop column stremployeetype});
+	$dbh->do(q{alter table Users drop column strmailserverusername});
+	$dbh->do(q{alter table Users drop column strmailserverpassword});
+	$dbh->do(q{alter table Users drop column lastlogin});
+
+$dbh->do(q{alter table tbl_Service_Types rename column strid to name});
+$dbh->do(q{alter table tbl_Service_Types rename column strname to description});
+$dbh->do(q{alter table tbl_service_types drop column strbasicurl});
+$dbh->do(q{alter table tbl_service_types drop column strtemplateurl});
+$dbh->do(q{alter table tbl_service_types drop column stremployeeurl});
+$dbh->do(q{alter table tbl_Service_types add create_visible boolean});
+$dbh->do(q{update tbl_Service_types set create_visible=true where ysncreatevisible='Y'});
+$dbh->do(q{update tbl_Service_types set create_visible=true where ysncreatevisible='Y'});
+$dbh->do(q{alter table tbl_Service_Types add view_visible boolean});
+$dbh->do(q{update tbl_Service_types set view_visible=true where ysnviewvisible='Y'});
+$dbh->do(q{alter table tbl_Service_Types rename column lngsort to sorting});
+$dbh->do(q{alter table tbl_service_types drop ysncreatevisible});
+$dbh->do(q{alter table tbl_service_types drop ysnviewvisible});
+$dbh->do(q{alter table tbl_service_types rename column lngindex to id});
+$dbh->do(q{alter table tbl_Service_Types rename to Service_Types});
+$dbh->do(q{alter table service_types rename column strcategory to category});
+	sql::insert( undef, undef, 'database_info', 'version', 1540, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1540;
+} # end if
+if ( $version < 1586 ) {
+	print "Updating to version 1586\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter table tbl_Materials rename column lngindex to id});
+$dbh->do(q{alter table tbl_Materials rename column strid to name});
+$dbh->do(q{alter table tbl_Materials rename column strname to description});
+$dbh->do(q{alter table tbl_Materials drop column strdetails});
+$dbh->do(q{alter table tbl_Materials drop column strdescription});
+$dbh->do(q{alter table tbl_Materials rename column lngsupplierindex to supplier_id});
+$dbh->do(q{alter table tbl_Materials rename column lngcategoryindex to category_id});
+$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt1 to taxexempt1});
+$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt2 to taxexempt2});
+$dbh->do(q{alter table tbl_Materials rename to Materials});
+	sql::insert( undef, undef, 'database_info', 'version', 1586, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1586;
+} # end if
+
+if ( $version < 1587 ) {
+	print "Updating to version 1587\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter table tbl_Material_Categories rename column lngindex to id});
+$dbh->do(q{alter table tbl_Material_Categories rename column strid to name});
+$dbh->do(q{alter table tbl_Material_Categories drop column strname});
+$dbh->do(q{alter table tbl_Material_Categories rename to Material_Categories});
+$dbh->do(q{ALTER TABLE Materials ADD foreign key (category_id) REFERENCES Material_Categories (id)});
+	sql::insert( undef, undef, 'database_info', 'version', 1587, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1587;
+} # end if
+if ( $version < 1600 ) {
+	print "Updating to version 1600\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter table tbl_Services rename column lngindex to id});
+$dbh->do(q{alter table tbl_Services rename column strid to name});
+$dbh->do(q{alter table tbl_Services rename column strname to description});
+$dbh->do(q{alter table tbl_Services drop column strdetails});
+$dbh->do(q{alter table tbl_Services drop column strdescription});
+$dbh->do(q{alter table tbl_Services rename column lngsupplierindex to supplier_id});
+$dbh->do(q{alter table tbl_Services rename column lngcategoryindex to category_id});
+$dbh->do(q{alter table tbl_Services rename column ysntaxexempt1 to taxexempt1});
+$dbh->do(q{alter table tbl_Services rename column ysntaxexempt2 to taxexempt2});
+$dbh->do(q{alter table tbl_Services rename to Services});
+	sql::insert( undef, undef, 'database_info', 'version', 1600, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1600;
+} # end if
+if ( $version < 1601 ) {
+	print "Updating to version 1601\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter table tbl_Service_Categories rename column lngindex to id});
+$dbh->do(q{alter table tbl_Service_Categories rename column strid to name});
+$dbh->do(q{alter table tbl_Service_Categories drop column strname});
+$dbh->do(q{alter table tbl_Service_Categories rename to Service_Categories});
+$dbh->do(q{update Services set category_id=NULL where category_id NOT IN (SELECT id FROM Service_Categories)});
+$dbh->do(q{ALTER TABLE Services ADD foreign key (category_id) REFERENCES Service_Categories (id)});
+	sql::insert( undef, undef, 'database_info', 'version', 1601, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1601;
+} # end if
+if ( $version < 1895 ) {
+	print "Updating to version 1895\n";
+	my $ac = sql::start_transaction( $dbh );
+sql::insert(undef,undef,'configuration', [
+    'name'=>'UseCaptchaOnRegistration',
+    'value'=>'N',
+    'type'=>'yes/no',
+    'description'=>'Use a CAPTCHA on the registration to protect against automated bots.',
+    'category'=> 'Captcha Settings'] );
+sql::insert(undef,undef,'configuration', [
+    'name'=>'RegistrationCaptchaLength',
+    'value'=>'3',
+    'type'=>'text',
+    'description'=>'Number of characters in the CAPTCHA on the registration page.',
+    'category'=> 'Captcha Settings'] );
+$dbh->do(q{alter table users add howdidyouhearaboutusother text});
+	sql::insert( undef, undef, 'database_info', 'version', 1895, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1895;
+} # end if
+
+
+$dbh->disconnect();
+1;
+__END__

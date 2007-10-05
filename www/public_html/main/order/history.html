@@ -1,0 +1,74 @@
+<script type="text/javascript">
+	function load_orders( form ) {
+		LoadContent('OrderList','/main/order/_order_list.html', Serialize( form ) );
+	} // end function load_quotes
+	function initializeDayDropDowns() {
+		setDaysDropDown(document.f1.ddmStartYear.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);
+		setDaysDropDown(document.f1.ddmEndYear.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);
+	}
+	window.onload = initializeDayDropDowns;
+</script>
+<div class="PageTitle">
+<h1>Orders</h1>
+<h2>History</h2>
+</div>
+<? if ( $openprint::session{'user_id'} ) ?>
+<form id="f1" name="f1" action="history.html" method="post">
+	<div class="OrderHistory">
+		<fieldset class="filters unprintable" style="margin: 0px; width:44%; float: left;"><legend>Enter Order ID:</legend>
+			<p>
+				<label for="OrderID">Order ID:</label>
+				<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" />
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_orders(f1);", '', 'Go' ); ) ?>
+			</p>
+			<p>
+				<label>Docket:</label>
+				<input type="text" size="10" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load_orders(f1);", '', 'Go' ); ) ?>
+			</p>
+		</fieldset>
+		<fieldset class="filters unprintable" style="margin: 0px; width:55%; float: right;"><legend>or Select Search Criteria:</legend>
+			<p>
+				<label>Ordered by:</label>
+				<select name="ddmOrderedBy" size="1" onchange="load_orders( this.form );">
+					<option value="">Ordered By</option>
+					<? echo ( 
+						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id' => $openprint::session{'company_id'}, 'order'=>'lower(strLastName),lower(strfirstname)' ) ], $openprint::session{'/main/order/history.html?ddmOrderedBy'} );
+					) ?>
+				</select>
+			</p>
+	<? eval (
+		if ( $openprint::param{'ddmStartYear'} ) {
+			openprint::store_session( '/main/order/history.html', \%openprint::param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
+		} elsif ( ( ! $openprint::session{'/main/order/history.html?ddmStartYear'} ) or $openprint::session{'/main/order/history.html?lastupdated'} < (time-3600) ) {
+			@openprint::session{'/main/order/history.html?ddmStartYear','/main/order/history.html?ddmStartMonth','/main/order/history.html?ddmStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
+			@openprint::session{'/main/order/history.html?ddmEndYear','/main/order/history.html?ddmEndMonth','/main/order/history.html?ddmEndDay'} = Date::Calc::Today();
+			$openprint::session{'/main/order/history.html?ddmOrderedBy'} = '';
+		} # end if
+
+		@$variable{'StartYears','StartMonths','StartDays'} = get_dates( $log, $dbh, @openprint::session{'/main/order/history.html?ddmStartYear', '/main/order/history.html?ddmStartMonth', '/main/order/history.html?ddmStartDay'} );
+		@$variable{'EndYears','EndMonths','EndDays'} = get_dates( $log, $dbh, @openprint::session{'/main/order/history.html?ddmEndYear', '/main/order/history.html?ddmEndMonth', '/main/order/history.html?ddmEndDay'} );
+	) ?>
+			<p> 
+				<label>Created:</label>
+				<span class="DateSelector">
+				<select name="ddmStartDay" onchange="load_orders( this.form );"><?StartDays?></select>
+				<select name="ddmStartMonth" onchange="setDaysDropDown(document.f1.ddmStartYear.value,this.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);load_orders( this.form );"><?StartMonths?></select>
+				<select name="ddmStartYear" onchange="setDaysDropDown(this.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);load_orders( this.form );"><?StartYears?></select>
+				to
+				</span>
+				<span class="DateSelector">
+				<select name="ddmEndDay" onchange="load_orders( this.form );"><?EndDays?></select>
+				<select name="ddmEndMonth" onchange="setDaysDropDown(this.form.ddmEndYear.value,this.value,this.form.ddmEndDay,this.form.ddmEndDay.value);load_orders( this.form );"><?EndMonths?></select>
+				<select name="ddmEndYear" onchange="setDaysDropDown(this.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);load_orders( this.form );"><?EndYears?></select>
+				</span>
+			</p>
+		</fieldset>
+	</div>
+	<hr class="spacer"/>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<div id="OrderList"><!--#include virtual="_order_list.html"--></div>
+<? else ( $openprint::session{'user_id'} ) ?>
+Only logged in customers have an order history. 
+<? endif ( $openprint::session{'user_id'} ) ?>

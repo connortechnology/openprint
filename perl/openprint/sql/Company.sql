@@ -1,0 +1,57 @@
+DROP SEQUENCE CompanyIndex_seq;
+DROP INDEX CompanyName_Index;
+DROP TABLE Company;
+
+CREATE SEQUENCE CompanyIndex_seq;
+CREATE TABLE Company (
+	Index INT4 NOT NULL DEFAULT nextval('CompanyIndex_seq'),
+	ysnSupplier		CHAR(1) default 'N',
+	ysnReseller		CHAR(1) default 'N',
+	strAccountNum	TEXT,
+	strName			TEXT NOT NULL,
+	strAddress1		TEXT,
+	strAddress2		TEXT,
+	strCity			TEXT,
+	strProvState	TEXT,
+	strPostalCode	TEXT,
+	strCountry		TEXT,
+	strPhone		TEXT,
+	strExt			TEXT,
+	strFax			TEXT,
+	strPSTNumber	TEXT,	
+	strGSTNumber	TEXT,
+	ysnGSTExempt		char(1) default 'N',
+	ysnPSTExempt		char(1) default 'N',
+	LegalForm	 		TEXT,
+	strPrintExpenditure	TEXT,
+	strPurchaseDate		TEXT,
+	strLegalBusName		TEXT,
+	strBusinessType		TEXT,
+	strBusinessNature	TEXT,
+	dtmBusinessStartdate date,
+	strPresidentOwner	TEXT,
+	strEmployees		TEXT,
+	strAnnualSales		TEXT,
+	strBankName			TEXT,
+	strBankBranch		TEXT,
+	strBankAccountNo	TEXT,
+	strBankAccountManager	TEXT,
+	strBankPhone		TEXT,
+	strBankFax			TEXT,
+	strBankEmail			TEXT,
+	lngPriceList			INT4,
+	dblPricingPercent		numeric(16,4) DEFAULT '0.0000' NOT NULL,
+	lngSalesperson			INT4, FOREIGN KEY (lngSalesPerson) REFERENCES Users (Index),
+	dtmDateEntered			timestamp with time zone NOT NULL,
+	dtmLastModified			timestamp with time zone,
+	LastLoggedIn			timestamp with time zone,
+	currency_id		INT2, FOREIGN KEY (currency_id) REFERENCES Currency (Index),
+	ysnAccountActivation	CHAR(1) DEFAULT 'N' NOT NULL,
+	strCustomGreeting		TEXT,
+	strWebURL				TEXT,
+	ysnMailingList			CHAR(1) DEFAULT 'N' NOT NULL,
+	PRIMARY KEY (Index)
+);
+CREATE UNIQUE INDEX CompanyName_Index on Company (Index);
+
+alter table Users add foreign key (CompanyIndex) REFERENCES Company (Index);

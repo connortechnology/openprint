@@ -1,0 +1,57 @@
+<div class="PageTitle">
+<h1>PROJECTS</h1>
+<h2>Reuse Project</h2>
+</div>
+<div class="ProjectCreateEdit">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<fieldset>
+			<p> 
+				<label>Please provide a reference:</label>
+				<textarea name="reference" rows="3" wrap="virtual" >Copy of <? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
+			</p>
+			<p>
+				<label>Additional comments or instructions:</label>
+				<textarea name="comments" rows="5" wrap="virtual" ><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
+			</p>
+		</fieldset>
+		<fieldset>
+			<legend>What quantities would you like to calculate pricing for?</legend>
+			<ul>
+				<li>
+					<label for="quantity1">Quantity 1:</label>
+					<input id="quantity1" name="quantity1" value="<? echo ( $$variable{'Project'}->quantity1(); ) ?>" type="text" size="12" />
+				</li>
+				<li>
+					<label for="quantity2">Quantity 2:</label>
+					<input id="quantity2" name="quantity2" value="<? echo ( $$variable{'Project'}->quantity2(); ) ?>" type="text" size="12" />
+				</li>
+				<li>
+					<label for="quantity3">Quantity 3:</label>
+					<input id="quantity3" name="quantity3" value="<? echo ( $$variable{'Project'}->quantity3(); ) ?>" type="text" size="12" />
+				</li>
+			</ul>
+		</fieldset>
+		<? if ( $openprint::session{'user_type'} eq 'E' or $openprint::session{'user_type'} eq 'A' ) ?>
+	<fieldset>
+			If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from now on will be recorded in their history.
+		<p>
+			<label>Company:</label>
+			<input type="text" onkeyup="filterDDM(this, f1.ddmCompany);" size="4" style="width: auto;"/>
+			<select name="ddmCompany">
+				<option value="">Select a Customer</option>
+				<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} ); ) ?>
+			</select>
+		</p>
+	</fieldset>
+		<? endif ( $openprint::session{'user_type'} eq 'E' or $openprint::session{'user_type'} eq 'A' ) ?>
+		Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
+		<p class="buttons">
+			<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'Reset','reset.gif','f1.reset();','','Reset'),
+					ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue'),
+			); ) ?>
+		</p>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="btnFunction" value="Reuse Project"/>
+	</form>
+</div>

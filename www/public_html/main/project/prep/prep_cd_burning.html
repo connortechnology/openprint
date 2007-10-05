@@ -1,0 +1,16 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/proj/prepress.js"></script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+	<fieldset><legend><?ServiceTypeName?></legend>
+		<p> 
+			<label>CD quantity:</label>
+			&nbsp;<input name="txtQuantity" value="<?txtQuantity?>" type="text" size="9" onkeyup="calc('f1');" />
+		</p>
+		<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
+	</fieldset>
+	<hr/>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+	</form>
+</div>

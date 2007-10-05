@@ -1,0 +1,27 @@
+<html>
+<head>
+<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
+<script language="javascript">
+	function runJSRS() {
+	if ( window.jsrsLoaded ) {
+		window.jsrsLoaded('<?C?>');
+	} else {
+		window.parent.jsrsLoaded('<?C?>');
+	} // end if
+	//if ( document.layers ) {
+//for ( var index = 0; index < document.layers.length; index += 1 ) {
+//alert(document.layers[index].name );
+//} // end for
+	//} // end if
+//var p=document.layers?parentLayer:window.parent;
+//p.jsrsLoaded('<?C?>');
+	} // end function
+</script>
+</head>
+<body onload="runJSRS('<?C?>');">
+jsrsPayload:<br>
+<form name="jsrs_Form">
+<textarea name="jsrs_Payload"><?payload?></textarea>
+</form>
+</body>
+</html>

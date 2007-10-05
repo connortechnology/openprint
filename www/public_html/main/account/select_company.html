@@ -1,0 +1,54 @@
+<p class="error"><?error?></p>
+<? if ( sets::isin( $openprint::session{'user_type'},['E','A'] ) ) ?>
+	<? if ( $openprint::param{'ddmCompany'} ) ?>
+		Any actions you perform during the course of this login will be stored in <? echo ( new openprint::Company($openprint::session{company_id})->name() ) ?>'s history.<br/>
+		<br/>
+		Prices will be displayed in <? echo ( new openprint::Currency( $openprint::session{'Currency_id'} )->name() ) ?>.<br/>
+		<br/>
+<fieldset><legend>Last 10 Login Attempts</legend>
+    <table class="List">
+		<tr>
+			<th align="left" width="130">When</th>
+			<th align="left" width="130">Who</th>
+			<th align="left">From</th>
+			<th align="left" width="120">Type</th>
+			<th align="left" width="120">Result</th>
+		</tr>
+		<? echo ( 
+			require openprint::logRecord;
+			my $html = '';
+			foreach my $Log ( openprint::logRecord::find('company_id'=>$openprint::session{'company_id'}, 'action_type'=>[2,3,78,79], 'order'=>'date_time DESC','limit'=>10 ) ) {
+			     $html .= sprintf('<tr><td>%s</td><td>%s</td><td style="overflow:hidden;">%s</td><td>%s</td><td>%s</td></tr>',
+					 Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),$Log->User()->name(),
+					 $Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Action()->description(),$Log->note() );
+
+			} # end foreach
+			return $html;
+		) ?>
+	</table>
+</fieldset>
+	<? else ( $openprint::param{'ddmCompany'} ) ?>
+	<br/>
+	You are currently representing <? echo ( new openprint::Company( $openprint::session{'company_id'} )->name(); ) ?>.<br/>
+	To represent another company, please select it from the dropdown and click submit. <br/>
+	Any orders or quotes you make will be recorded in the selected company's history.<br/>
+	<form name="f1" action="select_company.html" method="post">
+		<fieldset class="SelectCompany">
+			<p>
+				<label>Company:</label>
+				<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, f1.ddmCompany);" size="4"/>
+				<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+					<option value="">Select a Company</option>
+	<? echo ( 
+	 openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} );
+	) ?>
+				</select>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'f1.submit();', '', 'Submit' ); ) ?>
+			</p>
+		</fieldset>
+		<input type="hidden" name="btnFunction" value="SelectCompany"/>
+	</form>
+	<script type="text/javascript">document.f1.CompanyFilter.focus();</script>
+	<? endif ( $openprint::param{'ddmCompany'} ) ?>
+<? endif ( sets::isin( $openprint::session{'user_type'},['E','A'] ) ) ?>
+

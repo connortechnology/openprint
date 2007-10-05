@@ -1,0 +1,42 @@
+<span class="PageTitle">Order Project</span>
+<div class="error"><?error?></div>
+<? if ( $$variable{'Projects'} ) ?>
+<form action="information.html" method="post" name="f1">
+	Please enter a project reference and select a quantity to order and click &quot;Save and Continue&quot;. 
+	If you need the project by a specific date, please specify the date. 
+	48 Hour minimum turn around for most projects upon approval of final 
+	proofs. Delivery date is subject to administrative approval.<br/>
+	<br/>
+	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+	<fieldset>
+		<p>
+			<label>Project:</label>
+			<textarea name="Reference<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference()); ) ?></textarea>
+		</p>
+		<!--#include virtual="_required_by.html"-->
+		<!--#include virtual="_quantity_select.html"-->
+		<!--#include virtual="_shipping_type_select.html"-->
+		<span style="float: right;">
+			<a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">Edit</a> /
+			<a href="selection.html?remove=<? echo ( $$variable{'Project'}->id(); ) ?>">Remove</a>
+		</span>
+	</fieldset>
+	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+	<hr class="spacer"/>
+	<p>
+		<span style="float: left;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'AddProjectFromHistory','add_project_from_history.gif','','/project/history.html','Add Project From History' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'AddNewProject','add_new_project.gif','','/project/create_edit.html','Add New Project' ); ) ?>
+		</span>
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue' ); ) ?>
+		</span>
+		<br class="spacer"/>
+	</p>
+	<input type="hidden" name="btnFunction" value="Continue"/>
+	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
+</form>
+<? else ( $$variable{'Projects'} ) ?>
+<p>Your order is empty.</p>
+<? endif ( $$variable{'Projects'} ) ?>
+<br/>

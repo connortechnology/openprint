@@ -1,0 +1,331 @@
+<script type="text/javascript" src="/administrator/production/pricing.js"></script>
+<script type="text/javascript">
+function mweight_to_gsm( form ) {
+    var mweight;
+    var width;
+    var height;
+	if ( get_value( form.elements['type'] ) == 'Roll' ) {
+        mweight = parseFloat(1*form.elements['basis_mweight'].value);
+        width = parseFloat(1*form.elements['basis_width'].value);
+        height = parseFloat(1*form.elements['basis_height'].value);
+    } else { // sheet
+        mweight = parseFloat(1*form.elements['mweight'].value);
+        width = parseFloat(1*form.elements['width'].value);
+        height = parseFloat(1*form.elements['height'].value);
+    } //e nd if
+
+	var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
+    form.elements['gsm'].value = gsm;
+}
+function gsm_to_mweight( form ) {
+    var gsm = parseFloat(1*form.elements['gsm'].value);
+    var width;
+    var height;
+    var mweight;
+
+    width = parseFloat(1*form.elements['basis_width'].value);
+    height = parseFloat(1*form.elements['basis_height'].value);
+    mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
+    form.elements['basis_mweight'].value = mweight;
+
+    width = parseFloat(1*form.elements['width'].value);
+    height = parseFloat(1*form.elements['height'].value);
+    mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
+    form.elements['mweight'].value = mweight;
+}
+</script>
+
+<style type="text/css">
+	span.input {
+		float: right;
+	}
+	fieldset p {
+		padding: 0px;
+		text-align: right;
+	}
+	fieldset p label {
+		width: auto;
+		margin: 0px;
+	}
+	
+</style>
+<div class="error"><?error?></div>
+<form name="f1" method="post" action="paper.html?paper_id=<? echo ( $$variable{'Paper'}->id(); ) ?>">
+		<p class="buttons">
+			<? echo ( join('',
+			ssi::writeButton($log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='Prev';fmChange=1;fmCheck(f1);",'','<<'),
+			ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);",'','>>'),
+			ssi::writeButton($log, $dbh, 'Add1','add.gif',"f1.action='paper.html';f1.btnFunction.value='';f1.submit();",'','Add New'),
+			ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
+			ssi::writeButton($log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';f1.submit();",'','Copy'),
+			ssi::writeButton($log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+			ssi::writeButton($log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
+); ) ?>
+		</p>
+	<br class="spacer"/>
+	<fieldset><legend>Paper Information: (<? echo ( $$variable{'Paper'}->id(); ) ?>)</legend>
+		<div class="column">
+			<p>
+				<label for="ddmOwner">Owner:</label>
+				<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() ); ) ?></select>
+			</p>
+			<p>
+				<label for="txtManufacturer" onclick="f1.ddmManufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
+				<select id="ddmManufacturer" name="ddmManufacturer" size="1">
+				<? echo (
+						my @options = ( '', 'select one',
+							sql::execute( $log, $dbh, q{SELECT id, longname FROM Manufacturers ORDER BY lower(longname)} )
+							);
+						return ssi::make_drop_down( \@options, $$variable{'Paper'}->manufacturer_id() );
+						) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
+			</p>
+			<p>
+				<label for="txtName" onclick="f1.txtName.toggle();f1.ddmName.toggle();">Name:</label>
+				<select id="ddmName" name="ddmName" size="1" onChange="f1.txtName.value='';">
+					<? echo (
+						my @options = ( '', 'select one',
+							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
+							);
+						return ssi::make_drop_down( \@options, $$variable{'Paper'}->name_id() );
+					) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="ddm_select_by_index( f1.ddmName, 0 );" />
+			</p>
+			<p>
+				<label for="txtFinish" onclick="f1.txtFinish.toggle();f1.ddmFinish.toggle();">Finish:</label>
+				<select id="ddmFinish" name="ddmFinish" size="1" onChange="f1.txtFinish.value='';">
+				<? echo (
+					my @options = ( '', 'select one',
+						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperFinishes ORDER BY lower(longname)} )
+						);
+					return ssi::make_drop_down( \@options, $$variable{'Paper'}->finish_id() );
+				) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.ddmFinish, 0 );" />
+			</p>
+			<p>
+				<label for="txtColour" onclick="f1.txtColour.toggle();f1.ddmColour.toggle();">Colour:</label>
+				<select id="ddmColour" name="ddmColour" size="1" onChange="f1.txtColour.value='';">
+					<? echo (
+						my @options = ( '', 'select one',
+							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperColours ORDER BY lower(longname)} )
+							);
+						return ssi::make_drop_down( \@options, $$variable{'Paper'}->colour_id() );
+					) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.ddmColour, 0 );" />
+			</p>
+			<p>
+				<label for="txtWeight" onclick="f1.txtWeight.toggle();f1.ddmWeight.toggle();">Weight:</label>
+				<select id="ddmWeight" name="ddmWeight" size="1" onChange="f1.txtWeight.value='';">
+				<? echo (
+						my @options = ( '', 'select one',
+							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
+							);
+						return ssi::make_drop_down( \@options, $$variable{'Paper'}->weight_id() );
+						) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
+			</p>
+			<p>
+				<label for="txtQuality" onclick="f1.txtQuality.toggle();f1.ddmQuality.toggle();">Quality:</label>
+				<select id="ddmQuality" name="ddmQuality" size="1">
+				<? echo (
+						my @options = ( '', 'select one',
+							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperQualities ORDER BY lower(longname)} )
+							);
+						return ssi::make_drop_down( \@options, $$variable{'Paper'}->quality_id() );
+						) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.ddmQuality, 0 ) ;" />
+			</p>
+			<p>
+				<label for="grade">Grade:</label>
+				<select id="grade" name="grade" size="1">
+				<? echo (
+					my @options = ( '', 'select one',1,'Gloss-coated paper',2,'Matt-coated paper',3,'Gloss-coated, web paper', 4, 'Uncoated, white paper', 5, 'Uncoated, yellow paper' );
+					return ssi::make_drop_down( \@options, $$variable{'Paper'}->grade() );
+				) ?>
+				</select>
+			</p>
+			<p> 
+				<label>Calliper:</label>
+				<input type="text" name="calliper" value="<? echo ( $$variable{'Paper'}->calliper(); ) ?>"  size="12" style="width: auto;"> inches
+			</p>
+			<p>
+				<label>Type:</label>
+				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('BasisSize').hide();$('MWeight').show();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() ne 'Roll'; ) ?> />
+                <label class="radio" for="typeSheet">Sheet</label>
+                <input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('BasisSize').show();$('MWeight').hide();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() eq 'Roll'; ) ?> />
+                <label class="radio" for="typeRoll">Roll</label>
+			<p>
+				<label>Size:</label>
+				<input type="text" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );"/>
+				<span id="PaperHeight" <? echo ( 'style="display: none;"' if $$variable{Paper}->type() eq 'Roll' ) ?>> x
+				<input type="text" name="height" value="<? echo ( $$variable{'Paper'}->height(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );"/>
+			
+				</span> inches
+			</p>
+			<p id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Paper}->type() eq 'Roll' ) ?>> 
+				<label>MWeight:</label>
+				<input type="text" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>"  size="12" style="width: auto;" onkeyup="mweight_to_gsm( this.form );" />
+			</p>
+			<p id="BasisSize" <? echo ( 'style="display: none;"' if $$variable{Paper}->type() ne 'Roll' ) ?>>
+                <label>Basis MWeight:</label><input type="text" name="basis_mweight" size="9" value="<? echo ( $$variable{Paper}->basis_mweight() ) ?>"  onkeyup="mweight_to_gsm(this.form);calc(this.form.name);" style="width: auto;" /><br/>
+                <label>Basis Size:</label>
+				<input type="text" name="basis_width" size="9" value="<? echo ( $$variable{Paper}->basis_width() ? $$variable{Paper}->basis_width() : 25 ) ?>"  onkeyup="gsm_to_mweight(this.form);calc(this.form.name);" style="width: auto;" />
+				<input type="text" name="basis_height" size="9" value="<? echo ( $$variable{Paper}->basis_height() ?  $$variable{Paper}->basis_height() : 38 ) ?>"  onkeyup="gsm_to_mweight(this.form);calc(this.form.name);" style="width: auto;" />
+            </p>
+			<p> 
+				<label>GSM:</label>
+				<input type="text" name="gsm" value="<? echo ( $$variable{'Paper'}->gsm(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );" />
+			</p>
+			<p> 
+				<label>Grain Direction:</label>
+				<input type="radio" name="grain_direction" id="grain_directionLong" value="Long" <? echo ( 'checked="checked"' if $$variable{'Paper'}->grain_direction() eq 'Long' ) ?> />
+				<label class="radio" for="grain_directionLong">Long</label>
+				<input type="radio" name="grain_direction" id="grain_directionShort" value="Short" <? echo ( 'checked="checked"' if $$variable{'Paper'}->grain_direction() eq 'Short' ) ?> />
+				<label class="radio" for="grain_directionShort">Short</label>
+			</p>
+			<p> 
+				<label>Sheets Per Package:</label>
+				<input type="text" name="sheets_per_package" value="<? echo ( $$variable{'Paper'}->sheets_per_package(); ) ?>"  size="12" style="width: auto;"> 
+			</p>
+	</div><!--left-->
+	<div class="column">
+		<p> 
+			<label>FSC Code:</label>
+			<input type="text" name="fsc_code" value="<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>"  size="13" style="width: auto;"> 
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="cuttableY" name="cuttable" value="1" <? echo ( 'checked' if $$variable{'Paper'}->cuttable() ) ?> />
+				<label class="radio" for="cuttableY">Yes</label>
+				<input type="radio" id="cuttableN" name="cuttable" value="0" <? echo ( 'checked' if ! $$variable{'Paper'}->cuttable() ) ?> />
+				<label class="radio" for="cuttableN">No</label>
+			</span>
+			Can this paper be cut?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="doublesidedY" name="doublesided" value="1" <? echo ( 'checked' if $$variable{'Paper'}->doublesided(); ) ?> />
+				<label class="radio" for="doublesidedY">Yes</label>
+				<input type="radio" id="doublesidedN" name="doublesided" value="0" <? echo ( 'checked' if ! $$variable{'Paper'}->doublesided(); ) ?> />
+				<label class="radio" for="doublesidedN">No</label>
+			</span>
+			Is this paper double sided?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="multipartY" name="multipart" value="1" <? echo ( 'checked' if $$variable{'Paper'}->multipart(); ) ?> />
+				<label class="radio" for="multipartY">Yes</label>
+				<input type="radio" id="multipartN" name="multipart" value="0" <? echo ( 'checked' if ! $$variable{'Paper'}->multipart(); ) ?> />
+				<label class="radio" for="multipartN">No</label>
+			</span>
+			Does this paper have multiple parts (eg: forms)?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="perfectingY" name="perfecting" value="1" <? echo ( 'checked' if $$variable{'Paper'}->perfecting(); ) ?> />
+				<label class="radio" for="perfectingY">Yes</label>
+				<input type="radio" id="perfectingN" name="perfecting" value="0" <? echo ( 'checked' if ! $$variable{'Paper'}->perfecting(); ) ?> />
+				<label class="radio" for="perfectingN">No</label>
+			</span>
+			Is this paper stiff enough to perfect without gutters?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="scoringY" name="scoring" value="1" <? echo ( 'checked' if $$variable{'Paper'}->score_required(); ) ?> />
+				<label class="radio" for="scoringY">Yes</label>
+				<input type="radio" id="scoringN" name="scoring" value="0" <? echo ( 'checked' if ! $$variable{'Paper'}->score_required(); ) ?> />
+				<label class="radio" for="scoringN">No</label>
+			</span>
+			Does this paper require scoring before folding?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="digitalY" name="digital" value="1" <? echo ( 'checked' if $$variable{'Paper'}->digital(); ) ?> />
+				<label class="radio" for="digitalY">Yes</label>
+				<input type="radio" id="digitalN" name="digital" value="0" <? echo ( 'checked' if ! $$variable{'Paper'}->digital(); ) ?> />
+				<label class="radio" for="digitalN">No</label>
+			</span>
+			Is this paper suitable for digital printing?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="bladecleaningY" name="bladecleaning" value="1" <? echo ( 'checked' if $$variable{'Paper'}->bladecleaning(); ) ?> />
+				<label class="radio" for="bladecleaningY">Yes</label>
+				<input type="radio" id="bladecleaningN" name="bladecleaning" value="0" <? echo ( 'checked' if ! $$variable{'Paper'}->bladecleaning(); ) ?> />
+				<label class="radio" for="bladecleaningN">No</label>
+			</span>
+			Does this stock require blade cleaning after cutting?:
+		</p>
+		<hr class="spacer"/>
+		<p> <b>Tax Information</b> </p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="taxexempt1Y" name="taxexempt1" value="1" <? echo ( 'checked' if $$variable{'Paper'}->taxexempt1(); ) ?> />
+				<label class="radio" for="taxexempt1Y">Yes</label>
+				<input type="radio" id="taxexempt1N" name="taxexempt1" value="0" <? echo ( 'checked' if ! $$variable{'Paper'}->taxexempt1(); ) ?> />
+				<label class="radio" for="taxexempt1N">No</label>
+			</span>
+			Federal Tax Exemption?
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="taxexempt2Y" name="taxexempt2" value="1" <? echo ( 'checked' if $$variable{'Paper'}->taxexempt2(); ) ?> />
+				<label class="radio" for="taxexempt2Y">Yes</label>
+				<input type="radio" id="taxexempt2N" name="taxexempt2" value="0" <? echo ( 'checked' if ! $$variable{'Paper'}->taxexempt2(); ) ?> />
+				<label class="radio" for="taxexempt2N">No</label>
+			</span>
+			Prov/State Tax Exemption?
+		</p>
+			<p>
+				<span class="input">
+					<? echo ( $$variable{'Paper'}->in_stock(); ) ?>
+				</span>
+				In Stock:
+			</p>
+			<p>
+				<span class="input">
+					<? echo ( $$variable{'Paper'}->back_ordered(); ) ?>
+				</span>
+				Ordered:
+			</p>
+	</div><!-- left-->
+</fieldset>
+<style type="text/css">
+ul.Recommendations {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+ul.Recommendations li {
+	float: left;
+	width: 25%;
+	margin: 0px;
+	padding: 0px;
+}
+	
+</style>
+<fieldset><legend>Recomended For</legend>
+	<ul class="Recommendations">
+		<? echo ( 
+			my $html;
+			foreach my $ProjectType ( openprint::ProjectType::find('order'=>'lower(strid)') ) {
+				$html .= sprintf('<li><input type="checkbox" id="chkPRF%1$s" name="chkPRF%1$s" %2$s /><label class="radio" for="chkPRF%1$s">%1$s</label></li>',
+					$ProjectType->strid(),
+					( sets::isin( $ProjectType->strid(), [ $$variable{'Paper'}->recommendations() ] ) ? 'checked' : '' ),
+					);
+			} # end foreach
+			return $html;
+) ?>
+	</ul>
+</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+<? if ( $$variable{'paper_id'} ) ?>
+<!--#include virtual="/administrator/paper/paper_prices.html" -->
+<? endif ( $$variable{'paper_id'} ) ?>

@@ -1,0 +1,99 @@
+<script type="text/javascript">
+function check_input( form, signature_index ) {
+    if ( form.elements['txtProofQuantity-'+signature_index].value ) {
+        if ( ! form.elements['txtProofWidth-'+signature_index].value ) {
+            alert('Please enter the width of the additional proofs');
+            return false;
+        } else if ( ! form.elements['txtProofHeight-'+signature_index].value ) {
+            alert('Please enter the height of the additional proofs');
+            return false;
+        } else if ( ! get_ddm_value(form.elements['ddmProofType-'+signature_index] ) ) {
+            alert('Please enter the type of the additional proofs');
+            return false;
+        } // end if
+    } // end if
+    return true;
+} // end function check_input
+</script>
+
+<? eval ( 
+	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} );
+	@$variable{'Docket'} = $$variable{'Project'}->docket();
+	@$variable{'CustomerEmail'} = sql::execute( $log, $dbh, q{SELECT strEmail FROM Orders WHERE Index=?}, $$variable{'OrderID'});
+) ?>
+<a href="/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
+<br/>
+<div class="error"><?ErrorMessage?></div>
+<div style="float: left; width: 49%;"/>
+	<form method="post" name="f1" action="/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
+		<fieldset><legend>Production Feedback</legend>
+			<!--#include virtual="/includes/employee/feedback/employee.html"-->
+			<!--#include virtual="/includes/employee/feedback/comments.html"-->
+			<!--#include virtual="/includes/employee/feedback/complete.html"-->
+			<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
+			<p>
+				<label>Client Approved?:</label>
+				<? if ( $$variable{'rdbClientApproved'} eq 'Y' ) ?>
+					Yes at <? echo ( $$variable{'ClientApprovalDate'} ) ?>
+				<? else ( $$variable{'rdbClientApproved'} eq 'Y' ) ?>
+					<input type="radio" id="rdbClientApprovedY" name="rdbClientApproved" value="Y" />
+					<label class="radio" for="rdbClientApprovedY">Yes</label>
+					<input type="radio" id="rdbClientApprovedN" name="rdbClientApproved" value="N" checked="checked" />
+					<label class="radio" for="rdbClientApprovedN">No</label>
+				<? endif ( $$variable{'rdbClientApproved'} eq 'Y' ) ?>
+			</p>
+			<p>
+				<label>QA Approved?:</label>
+				<? eval ( $$variable{'Status'} = openprint::service::get_status( $log, $dbh, @$variable{'ServiceIndex','ProjectIndex'} ); ) ?>
+				<? if ( $$variable{'Status'} eq 'Approved' ) ?>
+					Yes at <? echo ( $$variable{'ApprovalDate'} ) ?>
+				<? else ( $$variable{'Status'} eq 'Approved' ) ?>
+					<input type="radio" id="rdbApprovedY" name="rdbApproved" value="Y" onClick="add_div('ScheduleForPress');" />
+					<label class="radio" for="rdbApprovedY">Yes</label>
+					<input type="radio" id="rdbApprovedN" name="rdbApproved" value="N" onClick="remove_div('ScheduleForPress');" checked="checked" />
+					<label class="radio" for="rdbApprovedN">No</label>
+				<? endif ( $$variable{'Status'} eq 'Approved' ) ?>
+			</p>
+			<p id="ScheduleForPress" <? echo ( 'style="display:none;"' if $$variable{'rdbClientApproved'} ne 'Y' ) ?> >
+                <label>Print Pending?:</label>
+				<input type="radio" id="ScheduleForPressY" name="ScheduleForPress" value="Y" />
+				<label class="radio" for="ScheduleForPressY">Yes</label>
+				<input type="radio" id="ScheduleForPressN" name="ScheduleForPress" value="N" checked="checked" />
+				<label class="radio" for="ScheduleForPressN">No</label>
+            </p>
+			<p>
+				<label>Due Date:</label>
+					<? eval (
+						 $$variable{'days'} = ssi::getdays($$variable{'ddmDueDateDay'}?$$variable{'ddmDueDateDay'}:(localtime(time))[3]); 
+						$$variable{'months'} = ssi::getmonths($$variable{'ddmDueDateMonth'}?$$variable{'ddmDueDateMonth'}:(localtime(time))[4]+1); 
+						$$variable{'years'} = ssi::return_years( undef,undef,($$variable{'ddmDueDateYear'}?$$variable{'ddmDueDateYear'}:(localtime(time))[5]+1900));
+ ) ?>
+					<select style="width: auto;" name="ddmDueDateMonth" size="1"><?months?></select>
+					<select style="width: auto;" name="ddmDueDateDay" size="1"><?days?></select>
+					<select style="width: auto;" name="ddmDueDateYear" size="1"><?years?></select>
+			</p>
+			<p class="buttons">
+			<? echo (
+					my $html;
+					$html .= ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.submit();", '', 'Save' );
+					$html .= ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' );
+					my $body = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/sign-off.html' );
+					$body = ssi::variable_substitution( $r, $log, $dbh, \$body, $variable );
+					$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
+					$$variable{'body'} = $body;
+					$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', '', qq`mailto:$$variable{'CustomerEmail'}?subject=Docket%20$$variable{'Docket'}&body=$$variable{'body'}`, 'Email' );
+					$html .= ssi::writeButton( $log, $dbh, 'UploadPDFs', 'uploadFiles.gif', "open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", '', 'Upload PDFs' );
+					return $html;
+			) ?>
+			</p>
+		</fieldset>
+		<input type="hidden" name="OrderId" value="<?OrderID?>"/>
+		<input type="hidden" name="Docket" value="<?Docket?>"/>
+		<input type="hidden" name="btnFunction" value="Save"/>
+	</form>
+</div><!-- Column -->
+<div id="Signatures" style="float: right; width: 49%;"/>
+<!--#include virtual="/employee/proj/prep/_proofs_signatures.html"-->
+</div><!-- Column -->
+	<br class="spacer"/>
+</form>

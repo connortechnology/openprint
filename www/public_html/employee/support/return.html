@@ -1,0 +1,83 @@
+		<script language="javascript">
+			function submit_handler(form) {
+				if ( form.rdbVerdict[0].checked && form.RMANumber.value == '' ) {
+					alert( "Please enter an RMA Number." );
+				} else {
+					form.submit();
+				} // end if
+			} // end function
+		</script>  
+			<form name="f1" method="post" action="returns.html">
+				<table border="0" width="600" cellpadding="0" cellspacing="0" cols="2">
+      				<tr> 
+        				<td width="180">&nbsp;</td>
+        				<td width="420">&nbsp;</td>
+      				</tr>
+      				<tr> 
+        				<td>Submission Date:</td>
+        				<td><?RequestDate?></td>
+      				</tr>
+		  			<tr> 
+						<td colspan="2"></td>
+		  			</tr>
+		  			<tr> 
+						<td>Order ID #: (click to view)</td>
+						<td><a href="/employee/production/order_edit.html?order_id=<?OrderID?>"><?OrderID?></a></td>
+		  			</tr>
+		  			<tr> 
+						<td>Order Date:</td>
+						<td><?OrderDate?></td>
+		  			</tr>
+		  			<tr> 
+						<td>Docket #: (click to view)</td>
+						<td><a href="/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>&order_id=<?OrderID?>"><?ProjectReference?></a></td>
+		  			</tr>
+		  			<tr> 
+						<td>Company Name: </td>
+						<td><?CompanyName?></td>
+		  			</tr>
+		  			<tr> 
+						<td colspan="2" height="20"></td>
+		  			</tr>
+		  			<tr> 
+						<td valign="top" height="25"><b>Description of problem:</b></td>
+						<td><?Problem?></td>
+		  			</tr>
+		  			<tr> 
+						<td height="25"><b>Type of Request:</b></td>
+						<td><?rmatype?></td>
+		  			</tr>
+		  			<tr> 
+						<td valign="top"><b>Comments:</b></td>
+						<td> 
+			  			<textarea name="txtAdminComments" cols="38" rows="6"><?txtAdminComments?></textarea>
+						</td>
+		  			</tr>
+      				<tr> 
+        				<td><b>Status:</b></td>
+        				<td> 
+					   	<input type="radio" name="rdbVerdict" value="Y" <?rdbVerdictY?> /> <b>Approve</b>
+						<input type="radio" name="rdbVerdict" value="N" <?rdbVerdictN?> /> <b>Decline</b>
+						</td>
+      				</tr>
+      				<tr> 
+						<td>RMA #:</td>
+						<td><input type="text" name="RMANumber" value="<?RMANumber?>"></td>
+		  			</tr>
+		  			<tr> 
+						<td colspan="2" height="20"></td>
+		  			</tr>
+				</table>
+<div class="row">
+	<span class="buttons">
+
+      <script type="text/javascript">
+                writeButton('Send','send.gif',"f1.btnFunction.value='Send';submit_handler(f1);",'','Send');
+                writeButton('Reset1','reset.gif',"f1.reset();",'','Reset');
+            </script>
+</span>
+</div>
+
+				<input type="hidden" name="rma_id" value="<?RMAIndex?>"/>
+				<input type="hidden" name="btnFunction"/>
+			</form>

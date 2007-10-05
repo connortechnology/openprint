@@ -1,0 +1,34 @@
+<div class="Popup" id="Allocate">
+	<form id="allocateform" name="allocateform" action="" method="post">
+		<input type="hidden" name="btnFunction" value="Allocate" />
+		<fieldset><legend>Allocate Paper</legend>
+			<p>
+				<label>Docket:</label>
+				<input type="text" name="Docket" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateDocket', 'clear.gif', "allocateform.Docket.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Project:</label>
+				<input type="text" name="Project" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateProject', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Quantity:</label>
+				<input type="hidden" name="available_quantity"/>
+				<input type="text" name="Quantity" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Units:</label>
+				<select name="Units">
+				<option value="sheets">sheets</option>
+				<option value="lbs">lbs</option>
+				</select>
+			</p>
+			<p style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveAllocate', 'save.gif', 'if( check_inputs(allocateform) ){document.allocateform.submit();}', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelAllocate', 'cancel.gif', "hide_div('Allocate');", '', 'Cancel' ); ) ?>
+			</p>
+		</fieldset>
+	</form>
+</div>

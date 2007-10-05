@@ -1,0 +1,30 @@
+<? eval (
+	@$variable{'Operator','PickupDate'} = sql::execute( $log, $dbh, q{SELECT (SELECT strFirstName || ' ' || strLastName FROM Users WHERE Index=operator_id), starttime FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$variable{'ProjectIndex','ServiceIndex'} );
+	) ?>
+<p>
+	<label>Operator:</label>
+		<input type="text" name="txtEmployeeName" readonly="readonly" value="<?Operator?>"/>
+		<input id="TakeOver" name="TakeOver" type="checkbox" onClick="if ( this.checked ) { this.form.txtEmployeeName.value='<?Employee?>'} else { this.form.txtEmployeeName.value=this.form.txtEmployeeName.defaultValue;}" /><label class="radio" for="TakeOver">Take Over</label>
+</p>
+<p>
+	<label>Pickup Time:</label>
+<? if ( ! $$variable{'PickupDate'} ) ?>
+	<? eval ( @$variable{'PickupDate'} = sql::execute( $log, $dbh, "SELECT to_char(NOW(),'YYYY-MM-DD HH24:MI')" ); ) ?>
+	<input type="text" size="18" name="PickupDate" id="PickupDate" value="<?PickupDate?>"/>
+		<img src="/javascripts/jscalendar/img.gif" id="PickupDateButton" style="cursor: pointer;" title="Date selector" />
+			<script type="text/javascript">
+				Calendar.setup({
+inputField	:	"PickupDate",
+ifFormat	:	"%Y-%m-%d %H:%M",
+button		:	"PickupDateButton",
+align		:	"Tl",
+showsTime	:	true,
+singleClick	:	false
+				});
+				</script>
+<? else ( ! $$variable{'PickupDate'} ) ?>
+	<?PickupDate?>
+<? endif ( ! $$variable{'PickupDate'} ) ?>
+</p>
+
+

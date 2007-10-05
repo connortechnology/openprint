@@ -1,0 +1,128 @@
+		<script language="javascript">
+			function approve( form ) {
+				form.txtTerms.value = form.AccountTermsDesired.value;
+				form.CreditLimit.value = form.AccountLimitDesired.value;
+				form.txtDownpayment.value = '0';
+			} // end function approve( form )
+			function decline( form ) {
+				form.txtTerms.value = '0';
+				form.CreditLimit.value = '0';
+				form.txtDownpayment.value = form.CurrentDownpayment.value;
+			} // end function decline( form )
+			function submit_check( form ) {
+				if ( ! ( form.verdict[0].checked || form.verdict[1].checked ) ) {
+					alert( "You must either approve or decline the credit application." );
+				} else {
+					form.submit();
+				} // end if
+			} // end function submit_check( form )
+		</script>
+			<? if ( $$variable{'credit_index'} ) ?>
+			<form name="f1" method="post" action="credit_applications.html">
+				<br>
+				<? if ( $$variable{'hiddenCustomerID'} ) ?>
+				Select whether to approve or decline the credit application, edit as neccessary, and click Submit.<br>
+				<br>
+				<input type="hidden" name="credit_index" value="<?credit_index?>">
+				<table border="0" width="600" cellpadding="0" cellspacing="0">
+					<tr> 
+						<td width="180">&nbsp;</td>
+						<td width="420">&nbsp;</td>
+					</tr> 
+                    <tr>
+                        <td> <? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';submit_check(f1);", '', 'Save' ); ) ?> </td>
+                        <td>
+							<input type="radio" name="verdict" value="Approved" onclick="approve(f1);" <?verdictApproved?> /> Approved
+							<input type="radio" name="verdict" value="Declined" onclick="decline(f1);" <?verdictDeclined?> /> Declined
+						</td>
+					</tr> 
+                    <tr>
+                        <td>Terms:</td>
+                        <td><input type="text" name="txtTerms" value="<?GrantedTerms?>"> Days </td>
+                    </tr>
+                    <tr>
+                        <td>Credit Limit:</td>
+                        <td> <input type="text" name="CreditLimit" value="<?GrantedCreditLimit?>" /></td>
+                    </tr>
+                    <tr>
+                        <td>Required Downpayment Amount:</td>
+                        <td>
+                            <input type="text" name="txtDownpayment" value="<?GrantedDownpayment?>"> %
+                        </td>
+                    </tr>
+					<tr> 
+						<td colspan="2" height="5">&nbsp;</td>
+                    </tr>
+					<tr> 
+						<td colspan="2"><b>Credit Options Requested:</b></td>
+					</tr> <tr> 
+						<td colspan="2" height="5"></td>
+					</tr> <tr>
+						<td>First Order Value:</td>
+						<td><?FirstOrderValue?></td>
+					</tr> <tr>
+						<td>Annual Purchases:</td>
+						<td><?AnnualPurchases?></td>
+					</tr> <tr> 
+						<td>Accounts Payable Contact:</td>
+						<td><?AccountsPayableContact?></td>
+					</tr> <tr> 
+						<td>Account Limit:</td>
+						<td><input type="hidden" name="AccountLimitDesired" value="<?AccountLimitDesired?>"/><?AccountLimitDesired?></td>
+					</tr> <tr> 
+						<td>Terms:</td>
+						<td><input type="hidden" name="AccountTermsDesired" value="<?AccountTermsDesired?>"/><?AccountTermsDesired?></td>
+					</tr> <tr> 
+						<td>Financial Statement Available?:</td>
+						<td><?FinancialStatementAvailable?></td>
+					</tr> <tr> 
+						<td>Signed By:</td>
+						<td><?Signature?></td>
+					</tr> <tr> 
+						<td>Submitted On:</td>
+						<td><?SubmissionDate?></td>
+					</tr> <tr> 
+						<td colspan="2" height="5"></td>
+					</tr>
+					<tr> 
+						<td colspan="2"><b>Current Credit Information:</b></td>
+					</tr>
+					<tr> 
+						<td colspan="2" height="5"></td>
+					</tr>
+					<tr> 
+						<td>Terms:</td>
+						<td><?txtTerms?> Days</td>
+					</tr>
+					<tr> 
+						<td>Credit Limit:</td>
+						<td><?CreditLimit?></td>
+					</tr>
+					<tr> 
+                        <td>Required Downpayment Amount:</td>
+                        <td><input type="hidden" name="CurrentDownpayment" value="<?txtDownpayment?>"/><?txtDownpayment?> %</td>
+                    </tr>
+					<tr> 
+						<td colspan="2" height="5"></td>
+					</tr>
+				</table>
+				<div style="width: 47%; float: left;">
+					<!--#include virtual="/email_content/_company_information.html"-->
+				</div>
+				<div style="width: 47%; float: right;">
+					<!--#include virtual="/email_content/_business_information.html"-->
+				</div>
+				<br class="spacer"/>
+				<div style="width: 47%; float: left;">
+					<!--#include virtual="/email_content/_trade_references.html"-->
+				</div>
+				<div style="width: 47%; float: right;">
+					<!--#include virtual="/email_content/_bank_information.html"-->
+				</div>
+				<br class="spacer"/>
+				<? endif ( $$variable{'hiddenCustomerID'} ) ?>
+				<input type="hidden" name="btnFunction"/>
+			</form>
+			<? else ( $$variable{'credit_index'} ) ?>
+		    No Credit Application specified.<br>	
+			<? endif ( $$variable{'credit_index'} ) ?>

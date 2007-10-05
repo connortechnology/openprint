@@ -1,0 +1,21 @@
+<p id="AlertDiv" style="display:none;">
+	<label>The following errors occured</label>
+	<span id="Alert"></span>
+</p>
+<p>
+	<label>When you are satisfied with the specifications, click 
+<? if ( $$variable{'ServiceIndex'} ) ?>Save and Continue<? else ( $$variable{'ServiceIndex'} ) ?>Close<? endif ( $$variable{'ServiceIndex'} ) ?>.</label>
+	<span class="AddToProjectButtons">
+		<? echo (
+			my $html;
+			if ( $$variable{'ServiceIndex'} ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Recalculate', 'recalculate.gif', "calc('f1',true);", '', 'Recalculate' );
+				$html .= ssi::writeButton( $log, $dbh, 'Save', 'save_and_continue.gif', "submit_handler('f1');", '', 'Save and Continue' );
+				$html .= ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' );
+			} else {
+				$html .= ssi::writeButton( $log, $dbh, 'Close', 'close.gif', "window.close();", '', 'Close' );
+			} # end if
+			return $html;
+		) ?>
+	</span>
+</p>

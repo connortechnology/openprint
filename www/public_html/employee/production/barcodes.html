@@ -1,0 +1,37 @@
+<? if ( $r->param('Show') eq 'Operators' ) ?>
+<span style="float:left;">Operators:</span> <script type="text/javascript">writeButton('Show', 'show.gif', '', 'barcodes.html?Show=Actions', 'Show Actions' );</script><br/>
+<br/>
+<table cellspacing="10">
+<? echo (
+	my $html;
+	my @operators = sql::execute( $log, $dbh, q{ SELECT lngUserID, strFirstName || ' ' || strLastName FROM tbl_Customer_Users WHERE chrType='E' ORDER By strLastName, strFirstName } );
+	while ( @operators ) {
+		$html .= '<tr>';
+		if ( my ( $id, $name ) = splice @operators, 0, 2 ) {
+			$html .= sprintf( '<td><img src="/barcode.png?Code=E%.5d+"/></td><td>%s</td>', $id, $name );
+		} # end if
+		if ( my ( $id, $name ) = splice @operators, 0, 2 ) {
+			$html .= sprintf( '<td><img src="/barcode.png?Code=E%.5d+"/></td><td>%s</td>', $id, $name );
+		} else {
+		} # end if
+		if ( my ( $id, $name ) = splice @operators, 0, 2 ) {
+			$html .= sprintf( '<td><img src="/barcode.png?Code=E%.5d+"/></td><td>%s</td>', $id, $name );
+		} else {
+		} # end if
+		$html .= '</tr>';
+	} # end while
+	return $html;
+) ?>
+</table>
+<? else ( $r->param('Show') eq 'Operators' ) ?>
+<span style="float: left;">Actions:</span><script type="text/javascript">writeButton('Show', 'show.gif', '', 'barcodes.html?Show=Operators', 'Show Operators' );</script><br/>
+<table cellspacing="10">
+	<tr><td><img src="/barcode.png?Code=A00001+"/></td><td>Assign Operator</td></tr>
+	<tr><td><img src="/barcode.png?Code=A00002+"/></td><td>Proofs Out</td></tr>
+	<tr><td><img src="/barcode.png?Code=A00003+"/></td><td>Proofs Approved</td></tr>
+	<tr><td><img src="/barcode.png?Code=A00004+"/></td><td>Service Complete</td></tr>
+	<tr><td><img src="/barcode.png?Code=A00005+"/></td><td>Project Printed</td></tr>
+	<tr><td><img src="/barcode.png?Code=A00006+"/></td><td>Project Compete</td></tr>
+	<tr><td><img src="/barcode.png?Code=A00007+"/></td><td>Project Shipped</td></tr>
+</table>
+<? endif ( $r->param('Show') eq 'Operators' ) ?>

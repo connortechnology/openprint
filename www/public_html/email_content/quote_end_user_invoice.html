@@ -1,0 +1,62 @@
+		<style type="text/css">
+		<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/quote.css' ); ) ?>
+		</style>
+		<br class="spacer"/>
+		<!--#include virtual="/email_content/quote_header.html" -->
+		<br class="spacer"/>
+		<table class="List"> 
+			<tr> 
+				<th width="60" align="left">ID</th>
+				<th align="left">Description</th>
+				<th width="130" align="right">Weight</th>
+				<th width="100" align="right">Qty</th>
+				<th width="120" align="right">Price</th>
+			</tr>
+			<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+			<tr<?rowclass?>> 
+				<td><a href="main/project/view.html?ProjectIndex=<?project_index?>"><?project_index?></a></td>
+				<td><a href="main/project/view.html?ProjectIndex=<?project_index?>"><?name?></a></td>
+				<td colspan="3">
+					<table>
+						<? while ( @$variable{'qty_index', 'markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+						<? if ( $$variable{'qty'} ) ?>
+						<tr> 
+							<td width="130" align="right">
+							<? echo (
+								my $Project = new openprint::Project( $$variable{'project_index'} );
+								my %services = $Project->services();
+								my $weight;
+
+								if ( $services{'BulkSkids'} ) {
+									my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
+									$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+								} elsif ( $services{'PlainCartons'} ) {
+									my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
+									$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+								} else {
+									$weight = openprint::print::get_finished_weight( $log, $dbh, $Project->id() ) * $$variable{qty};
+								} # end if
+								my $g = Math::Units::convert( $weight, 'lbs','g');
+									if ( $g > 1000 ) {
+										return sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
+									} else {
+										return sprintf( '%.0flbs (%.0fg)', $weight, $g );
+									} # end if
+							) ?></td>
+							<td width="100" align="right"><?qty?></td>
+							<td width="120" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol() ) ?><?newprice?></td>
+						</tr>
+						<? endif ( $$variable{'qty'} ) ?>
+						<? endwhile ( @$variable{'qty_index', 'markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+					</table>
+				</td>
+			</tr>
+			<? eval (
+				$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
+			) ?>
+			<? endwhile ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+		</table>
+		<br/>
+		<span class="Currency">All prices are in <b><? echo ( $$variable{'Quote'}->Currency()->name() ) ?></b> and are subject to applicable taxes.</span><br/>
+		<br/>
+		<!--#include virtual="/skins/<?SiteTitle?>/includes/quote_disclaimer.html"-->

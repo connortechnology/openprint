@@ -1,0 +1,24 @@
+<? echo (
+	$$variable{'Currency'} = new openprint::Currency( $openprint::param{'currency_id'} ) if ! $$variable{'Currency'};
+	if ( $openprint::param{'btnFunction'} eq 'Add' ) {
+		$$variable{'Currency'}->set_conversion( @openprint::param{'To','Rate'} );
+	} # end if
+	my $html;
+	my %conversions = $$variable{'Currency'}->conversions();
+	foreach my $to ( keys %conversions ) {
+		my $ToCurrency = new openprint::Currency( $to );
+		$html .= sprintf("To %s %s\%<br/>", $ToCurrency->name(), $conversions{$to} ); 
+	} # end foreach
+	return $html;
+) ?>
+	Set Conversion to:
+	<select name="to-<? echo ( $$variable{'Currency'}->id(); ) ?>">
+		<option value=""> select </option>
+		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ] ); ) ?>
+	</select>
+	<input type="text" name="rate-<? echo ( $$variable{'Currency'}->id(); ) ?>" size="5" style="width:auto;" />
+<? echo ( 
+	ssi::writeButton( $log, $dbh, 'Add'.$$variable{'Currency'}->id(), '', 
+		sprintf(q{LoadContent( 'Conversions%d','/administrator/managerial/_currency_conversions.html', new Array('currency_id', %d, 'To', get_ddm_value(f1.elements['to-%d']), 'Rate', f1.elements['rate-%d'].value, 'btnFunction', 'Add'));}, $$variable{'Currency'}->id(), $$variable{'Currency'}->id(), $$variable{'Currency'}->id(),$$variable{'Currency'}->id() ), 
+		'', 'Set Conversion' );
+) ?>

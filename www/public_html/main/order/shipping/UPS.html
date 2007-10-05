@@ -1,0 +1,65 @@
+<? eval (
+	$$variable{'OrderID'} = $r->param('OrderID');
+	$$variable{'ProjectIndex'} = $r->param('ProjectIndex');
+	$$variable{'ServiceIndex'} = $r->param('ServiceIndex');
+	@$variable{'ServiceTypeID','ServiceTypeName'} = openprint::print::get_service_type( $log, $dbh, @$variable{'ProjectIndex','ServiceIndex'} );
+	my $Currency = new openprint::Project( $$variable{'ProjectIndex'} )->Currency();	
+	@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+
+	require openprint::print_UPS;
+	openprint::print_UPS::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
+) ?>
+<script type="text/javascript">
+function validate_data(formName) {
+	var form = getFormObj( formName );
+	var text = '';
+	return true;
+} // end function
+</script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/order/submit.html">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<div class="row"><b class="lgTxt">UPS Shipping Services</b></div>
+		<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
+		<!--#include virtual="/includes/main/proj/shipping_address.html"-->
+		<div class="row">
+			<span class="required">*</span>
+			<span id="ServiceTypeDiv" class="input">
+				Please wait while services types are loaded.
+				<input type="hidden" name="ddmServiceType" value="<?ddmServiceType?>" />
+			</span>
+			<span class="label">Service Type:</span>
+		</div>
+		<div class="row">
+			<span class="required">*</span>
+			<span id="PickupTypeDiv" class="input">
+				Please wait while pickup types are loaded.
+				<input type="hidden" name="ddmPickupType" value="<?ddmPickupType?>" />
+			</span>
+			<span class="label">Pickup Type:</span>
+		</div>
+		<div class="row">
+			<span class="required">&nbsp;</span>
+			<span class="input">
+				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+				<input name="txtPrice<?QTYIndex?>" size="9" class="smbox" readonly onFocus="this.blur();" />
+				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+			</span>
+			<span class="label"><b>Price:</b></span>
+		</div>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<input type="hidden" name="OrderID" value="<?OrderID?>">
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>">
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="Status" />
+
+	</form>
+	UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved
+</div><!-- Service -->

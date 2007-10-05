@@ -1,0 +1,114 @@
+#!/usr/bin/perl
+
+use Apache2::Request;		# instead of CGI, it's MUCH faster, and does nice things.
+use Apache2::RequestRec ();
+use APR::URI;
+use APR::Request;
+use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
+use Apache2::Log;
+use Apache2::ServerUtil ();
+use Apache2::RequestIO ();
+use Apache::Session::Postgres;
+
+use Date::Calc qw(Add_Delta_Days);
+use MIME::QuotedPrint;
+use MIME::Base64;
+
+use strict;
+
+require jsrs;
+require sql;
+require ssi;
+require misc;
+require configuration;
+require openprint::login;
+require openprint::upload_handler;
+
+use openprint;
+use vars qw( %variable %session %param %config $log $dbh );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+
+my ( $cookie, $status );
+my $request = shift;
+$log	= $request->log;
+
+$request->no_cache(1);
+#$request->headers_out('Cache-Control', 'no-store, no-cache');
+
+my $starttime = time;
+$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
+#$r->parse;
+
+#$log->debug("Database: $sql_server{'database'} Page: " . $r->uri());
+$dbh = sql::open_sql( $log, 
+		'database'	=> $request->dir_config('database'),
+		'driver'	=> $request->dir_config('db_driver'),
+		'host'		=> $request->dir_config('db_host'),
+		'login'		=> $request->dir_config('db_user'),
+		'password'	=> $request->dir_config('db_password'),
+		);
+
+my $r = Apache2::Request->new( $request );
+configuration::init_cache( $log, $dbh, $r->dir_config() );
+my $cookie = misc::get_cookie( $request, $log, 'SessionID' );
+
+tie %session, 'Apache::Session::Postgres', $cookie, {
+	Handle			=> $dbh,
+				Commit			=> 0,
+				IDLength		=> 8,
+};
+
+if ( ! $session{'user_id'} ) {
+	 print "Location: /main/account/login.html\n\n";
+} else {
+	 my $sourceDir = $openprint::config{'ProjectFilesPath'} . openprint::upload_handler::get_destdir();
+	 my $filename;
+	 my $filesize;
+	 my $docket;
+	 my $projectIndex;
+	 
+	 if(-e "$sourceDir$filename") {
+			#$request->args() =~ /filename=(.*)/;
+			$filename = $r->param('filename');
+			
+			#$request->args() =~ /Docket=(.*)/;
+			#$docket = $r->param('Docket');
+			
+			#$request->args() =~ /ProjectIndex=(.*)/;
+			#$projectIndex = $r->param('ProjectIndex');
+			
+			#if($docket)
+			#{
+				 #$sourceDir .= $docket . '/';
+			#}
+			#elsif($projectIndex)
+			#{
+				 #$sourceDir .= $projectIndex . '/';
+			#}
+			
+			$filesize = -s "$sourceDir$filename";
+
+			print "Content-length: $filesize\n";
+			print "Content-Disposition:attachment;filename=$filename\n";
+			print "Content-Type:application/x-download\n";
+			#print "Content-Type: text/html\n";
+			print "\n";
+			
+			#print "$sourceDir$filename - $filesize bytes";
+
+			open(DLFILE, "<$sourceDir$filename");
+			my @fileholder = <DLFILE>;
+			close (DLFILE);
+			
+			foreach (@fileholder) {
+				 print $_;
+			}
+	 } else {
+			print "Location: /upload/upload_center.html\n\n";
+	 }
+}

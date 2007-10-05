@@ -1,0 +1,13 @@
+<? if ( openprint::Service::find('name'=>'FM Screening' ) ) ?>
+<div class="row">
+	<span class="label">What is the desired screen type?</span>
+	<span class="input">
+		<input type="radio" id="ScreenTypeAM" name="ScreenType" value="AM" <? echo ( 'checked="checked"' if $$variable{'ScreenType'} ne 'FM' ) ?> onClick="calc(this.form.name);" />
+		<label for="ScreenTypeAM">AM</label>
+		<input type="radio" id="ScreenTypeFM" name="ScreenType" value="FM" <? echo ( 'checked="checked"' if $$variable{'ScreenType'} eq 'FM' ) ?> onClick="calc(this.form.name);" />
+		<label for="ScreenTypeFM">FM</label>
+	</span>
+</div>
+<? else ( openprint::Service::find('name'=>'FM Screening' ) ) ?>
+<input type="hidden" name="ScreenType" value="AM" />
+<? endif ( openprint::Service::find('name'=>'FM Screening' ) ) ?>

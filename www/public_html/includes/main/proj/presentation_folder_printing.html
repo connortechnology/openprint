@@ -1,0 +1,40 @@
+<div class="PresentationFolderQuestions">
+<p>
+    <label>Number of panels:</label>
+	<span class="checkOption">
+	<input type="radio" id="rdbPanels2" name="rdbPanels" value="2" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbPanels'} == 2 ) ?> />
+	<label class="radio" for="rdbPanels2">2</label>
+	</span>
+	<span class="checkOption">
+	<input type="radio" id="rdbPanels3" name="rdbPanels" value="3" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbPanels'} == 3 ) ?> />
+	<label class="radio" for="rdbPanels3">3</label>
+	</span>
+</p>
+<p>
+    <label>Pocket size:</label>
+	<span class="checkOption">
+	<input type="radio" id="rdbPocketSize3" name="rdbPocketSize" value="3" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbPocketSize'} == 3 ) ?> />
+	<label class="radio" for="rdbPocketSize3">3&quot;</label>
+	</span>
+	<span class="checkOption">
+	<input type="radio" id="rdbPocketSize4" name="rdbPocketSize" value="4" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbPocketSize'} == 4 ) ?> />
+	<label class="radio" for="rdbPocketSize4">4&quot;</label>
+	</span>
+</p>
+<p>
+    <label>Pocket location:</label>
+	<span class="checkOption">
+		<input type="checkbox" id="chkPocketLeft" name="chkPocketLeft" value="Left" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'chkPocketLeft'} ) ?> />
+		<label class="radio" for="chkPocketLeft">Left</label>
+	</span>
+	<span class="checkOption">
+		<input type="checkbox" id="chkPocketCenter" name="chkPocketCenter" value="Center" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'chkPocketCenter'} ) ?> />
+		<label class="radio" for="chkPocketCenter">Center</label>
+	</span>
+	<span class="checkOption">
+		<input type="checkbox" id="chkPocketRight" name="chkPocketRight" value="Right" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'chkPocketRight'} ) ?> />
+		<label class="radio" for="chkPocketRight">Right</label>
+	</span>
+</p>
+</div>
+<br class="spacer"/>

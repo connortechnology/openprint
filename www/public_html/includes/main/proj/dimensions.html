@@ -1,0 +1,17 @@
+<div id="Dimensions">
+	<fieldset><legend>Dimensions</legend>
+		<div style="float:left; width: 50%;">
+		<select name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(f1);">
+			<option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
+		</select>
+		</div>
+		<div style="float:left; width: 50%;">
+		<input type="text" name="txtFinalWidth" size="9" value="<?txtFinalWidth?>"  onkeyup="calc('f1');"/> 
+		<input type="text" name="txtFinalHeight" size="9" value="<?txtFinalHeight?>"  onkeyup="calc('f1');"/> 
+		(<? echo ( ssi::writeTip( 'Finished' ); ) ?> - W x H in inches)<br/>
+		<input name="txtWidth" size="9" value="<?txtWidth?>" onkeyup="calc('f1');" /> 
+		<input name="txtHeight" size="9" value="<?txtHeight?>" onkeyup="calc('f1');"/> 
+		(<? echo ( ssi::writeTip( 'Flat' ); ) ?> - W x H in inches)
+		</div>
+	</fieldset>
+</div>

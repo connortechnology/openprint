@@ -1,0 +1,60 @@
+Choose report criteria and click submit. <br>
+<br/>		
+<form name="f1" method="post">
+	<fieldset class="filters"><legend>Search</legend>
+		<p>
+			<label>Company:</label>
+			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4" />
+			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> Select a Customer</option>
+				<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomers'} ); ) ?>
+			</select>
+		</p>
+		<p>
+			<label>Review Status:</label>
+			<select name="ddmReviewed" size="1" >
+				<option value="">All</option>
+				<option value="Y" <?ddmReviewedY?>>Only Reviewed</option>
+				<option value="N" <?ddmReviewedN?>>Only Non-Reviewed</option>
+			</select>
+		</p>
+		<p>
+			<label>Date Submitted:</label>
+			<select name="ddmStartMonth" > <?startmonths?> </select>
+			<select name="ddmStartDay" > <?startdays?> </select>
+			<select name="ddmStartYear" > <?startyears?> </select>
+			to
+			<select name="ddmEndMonth" > <?endmonths?> </select>
+			<select name="ddmEndDay" > <?enddays?> </select>
+			<select name="ddmEndYear" > <?endyears?> </select>
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+                ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"f1.submit();",'','Submit'),
+                ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset'),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+		<? if ( @{$$variable{'HELPDESKENTRIES'}} ) ?>
+			<table class="List">
+				<tr>
+					<th align="left" width="200">Submitter</th>
+					<th align="center" width="100">Date</th>
+					<th align="left" width="200">Company</th>
+					<th align="right" width="100">Reviewed?</th>
+				</tr>
+				<? while ( @$variable{'index','name','date','company', 'reviewed'} = splice @{$$variable{'HELPDESKENTRIES'}},0,5; ) ?>
+				<tr<?rowclass?>>
+					<td align="left"><a href="helpdesk.html?helpdesk_id=<?index?>">&nbsp;<?name?></a></td>
+					<td align="center"><a href="helpdesk.html?helpdesk_id=<?index?>">&nbsp;<?date?></a></td>
+					<td align="left"><a href="helpdesk.html?helpdesk_id=<?index?>">&nbsp;<?company?></a></td>
+					<td align="right"><a href="helpdesk.html?helpdesk_id=<?index?>">&nbsp;<?if ( $$variable{'reviewed'} eq 'Y' ) ?>Yes<?else ( $$variable{'reviewed'} eq 'Y' ) ?>No<?endif ( $$variable{'reviewed'} eq 'Y' ) ?></a></td>
+				</tr>
+				<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+				<? endwhile ( @$variable{'index','name','date','company', 'reviewed'} = splice @{$$variable{'HELPDESKENTRIES'}},0,5; ) ?>
+			</table>
+			<? else ( @{$$variable{'HELPDESKENTRIES'}} ) ?>
+			There were no results.	Please try another query.
+			<? endif ( @{$$variable{'HELPDESKENTRIES'}} ) ?>
+

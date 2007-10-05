@@ -1,0 +1,33 @@
+		<script language="javascript" src="/javascripts/proj/calc_prepress.js"></script>
+		<script language="javascript" src="/javascripts/proj/misc_prin.js"></script>
+		<script language="javascript">
+			var service = "TypeSetting";
+			var projectType = "Type Setting";
+
+			var services = new Array();
+			<?SERVICE_ARRAYS?>
+			<?SERVICE_PRICES?>
+
+			var quantities = new Array();
+			<?QUANTITIES?>
+
+			function calc() {
+				calc_prepress('f1');
+			}
+		</script>
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<table width="600" border="0" cellpadding="0" cellspacing="0" cols="3">
+			<tr> 
+				<td width="320" valign="top"><b class="lgTxt">Type Setting Services</b></td>
+				<td width="20">&nbsp;</td>
+				<td width="260">&nbsp;</td>
+			</tr>
+		</table>
+			<form name="f1" method="POST" action="/main/project/view.html">
+				<!--#include virtual="/includes/main/proj/prepress_hours.html"-->
+				<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
+				<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+				<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+			</form>
+	<script language="javascript">calc_prepress('f1');</script>
+

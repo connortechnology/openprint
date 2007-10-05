@@ -1,0 +1,42 @@
+<div class="Press">
+	<p>
+		<label>Press:</label>
+		<select name="UsePress-<?SignatureIndex?>">
+			<option value=""> select </option>
+		<? echo ( 
+			ssi::make_drop_down( [ map { $_->strid(), $_->strid() } openprint::Equipment::find('category'=>'Printing','order'=>'lower(strname)') ], $$variable{"UsePress-$$variable{SignatureIndex}"} );
+			) ?>
+		</select>
+	</p>
+	<p>
+		<label>Operator:</label>
+		<input type="text" name="txtEmployeeName-<?SignatureIndex?>" readonly="readonly" value="<? echo ( $$variable{"txtEmployeeName-$$variable{'SignatureIndex'}"} ) ?>"/>
+		<input id="TakeOver" name="TakeOver" type="checkbox" onclick="if ( this.checked ) { this.form.elements['txtEmployeeName-<?SignatureIndex?>'].value='<?Employee?>'} else { this.form.elements['txtEmployeeName-<?SignatureIndex?>'].value=this.form.elements['txtEmployeeName-<?SignatureIndex?>'].defaultValue;}" />
+		<label class="radio" for="TakeOver">Take Over</label>
+	</p>
+	<p>
+		<label>Comments:</label>
+		<textarea name="txtEmployeeComments-<?SignatureIndex?>" cols="41" rows="5" wrap="VIRTUAL"><? echo ( $$variable{"txtEmployeeComments-$$variable{'SignatureIndex'}"} ) ?></textarea>
+	</p>
+	<p>
+		<label>Completed:</label>
+		<? eval ( 
+		my ( $y, $m, $d ) = Date::Calc::Today();
+		@$variable{'years','months','days'} = ssi::get_dates( undef, undef, 
+			$$variable{"ddmPressCompletionDateYear-$$variable{'SignatureIndex'}"}?$$variable{"ddmPressCompletionDateYear-$$variable{'SignatureIndex'}"}:$y,
+			$$variable{"ddmPressCompletionDateMonth-$$variable{'SignatureIndex'}"}?$$variable{"ddmPressCompletionDateMonth-$$variable{'SignatureIndex'}"}:$m,
+			$$variable{"ddmPressCompletionDateDay-$$variable{'SignatureIndex'}"}?$$variable{"ddmPressCompletionDateDay-$$variable{'SignatureIndex'}"}:$d,
+			); ) ?>
+		<select name="ddmPressCompletionDateMonth-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, this.value, document.f1.elements['ddmPressCompletionDateDay-<?SignatureIndex?>'], document.f1.elements['ddmPressCompletionDateDay-<?SignatureIndex?>'].value);"><?months?></select>
+		<select name="ddmPressCompletionDateDay-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, document.f1.elements['ddmPressCompletionDateMonth-<?SignatureIndex?>'],this, this.value);"><?days?></select>
+		<select name="ddmPressCompletionDateYear-<?SignatureIndex?>" size="1"><?years?></select>
+	</p>
+	<p>
+		<label>Complete:</label>
+		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>Y" name="rdbPressComplete-<?SignatureIndex?>" value="Yes" <? echo ( 'checked="checked"' if $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq 'Yes' ) ?> />
+		<label class="radio" for="rdbPressComplete-<?SignatureIndex?>Y">Yes</label>
+		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>N" name="rdbPressComplete-<?SignatureIndex?>" value="No" <? echo ( 'checked="checked"' if $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} ne 'Yes' ) ?> />
+		<label class="radio" for="rdbPressComplete-<?SignatureIndex?>N">No</label>
+	</p>
+</div>
+	<!--#include virtual="/includes/employee/feedback/paper.html"-->

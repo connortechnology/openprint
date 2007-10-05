@@ -1,0 +1,96 @@
+<fieldset>
+<? eval (
+	@{$$variable{'Quantities'}} = ();
+	foreach ( 1 .. 3 ) {
+		push @{$$variable{'Quantities'}}, $$variable{"Quantity$_"} if $$variable{"Quantity$_"};
+	} # end foreach
+	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ( ! $$variable{'Project'} );
+) ?>
+<legend>Project # <? echo ( $$variable{'Project'}->id() ) ?></legend>
+	<span style="float: right;">
+		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'ProjectIndex'}, '', '', "information.html?OrderID=$$variable{'OrderID'}&remove=$$variable{'ProjectIndex'}", 'Remove' ); ) ?>
+	</span>
+	<? echo ( 
+		return $$variable{'Project'}->summary();
+	) ?>
+	<br class="spacer"/>
+	<p>
+		<label>Reference:</label>
+		<textarea name="Reference<?ProjectIndex?>" rows="10"><? hecho ( $$variable{'Project'}->reference() ) ?></textarea>
+	</p>
+<? if ( @{$$variable{'Quantities'}} > 1 ) ?>
+<!--#include virtual="_quantity_select.html"-->
+<? endif ( @{$$variable{'Quantities'}} > 1 ) ?>
+<? if ( ! $$variable{'Project'}->requested_date() ) ?>
+<!--#include virtual="_required_by.html"-->
+<? endif ( ! $$variable{'Project'}->requested_date() ) ?>
+<!--#include virtual="_shipping_type_select.html"-->
+<? echo ( 
+	my $html;
+	my %shipping_fields = (
+		'txtShippingCompanyName'    =>  'CompanyName',
+		'rdbShippingSalutation'     =>  'Salutation',
+		'txtShippingFirstName'      =>  'FirstName',
+		'txtShippingLastName'       =>  'LastName',
+		'txtShippingAddress1'       =>  'Address1',
+		'txtShippingAddress2'       =>  'Address2',
+		'txtShippingCity'           =>  'City',
+		'ddmShippingStateProvince'  =>  'StateProvince',
+		'ddmShippingCountry'        =>  'Country',
+		'txtShippingPostalCode'  	=>	'PostalCode',
+		'txtShippingPhone'          =>  'Phone',
+		'txtShippingExtension'      =>  'Extension',
+		'txtShippingFax'            =>  'Fax',
+		'txtShippingEmail'          =>  'Email',
+		);
+
+	my %services = $$variable{'Project'}->get_services();
+	my %shipping_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'ProjectIndex'}, 'Shipping' );
+
+	foreach my $service_id ( keys %shipping_services ) {
+
+		my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $$variable{'ProjectIndex'}, $service_id );
+		next if $specs{'ServiceType'} eq 'CustomerPickUp';
+		$$variable{'ServiceIndex'} = $service_id;
+		my $ServiceType = new openprint::ServiceType( $shipping_services{$service_id} );	
+		$$variable{'ServiceType'} = $ServiceType->name();
+
+		if ( ! ( $specs{'txtShippingCompanyName'} and $specs{'txtShippingAddress1'} and $specs{'txtShippingCity'} and $specs{'ddmShippingCountry'} ) ) {
+			# Load from customer
+			my $customer = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
+			my $shipping_address = $customer->get_shipping_address();
+			my %shipping_specs;
+			@shipping_specs{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
+
+			foreach my $spec ( keys %shipping_fields ) {
+				$specs{$spec} = $shipping_specs{$spec} if ! $specs{$spec};
+			} # end foreach
+		} # end if
+
+		foreach my $spec ( keys %shipping_fields ) {
+			$$variable{"$spec-$$variable{'ProjectIndex'}-$service_id"} = $specs{$spec};
+		} # end foreach
+
+		my %UserSpecs = (
+				'txtShippingEmail'		=>	'Email',
+				'rdbShippingSalutation'	=>	'Salutation',
+				'txtShippingFirstName'	=>	'FirstName',
+				'txtShippingLastName'	=>	'LastName',
+				'txtShippingPhone'	=>	'Phone',
+				);
+		if ( ! ( $specs{'txtShippingEmail'} and $specs{'txtShippingPhone'} ) ) {
+			require openprint::User;
+			my $User = new openprint::User( $openprint::session{'user_id'} );
+			foreach my $spec ( keys %UserSpecs ) {
+				$specs{$spec} = $User->get($UserSpecs{$spec}) if ! $specs{$spec};
+			} # end foreach
+        } # end if
+        foreach my $spec ( keys %UserSpecs ) {
+            $$variable{"$spec-$$variable{'ProjectIndex'}-$service_id"} = $specs{$spec};
+        } # end foreach
+		my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_project_shipping_address.html');
+		$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
+    } # end foreach
+	return $html;
+) ?>
+</fieldset>

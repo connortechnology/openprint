@@ -1,0 +1,79 @@
+<form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+	<fieldset class="filters"><legend>Search</legend>
+		<p> 
+			<label>Category:</label>
+			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
+				<option value="">All Categories</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MaterialCategory::find('order'=>'lower(name)') ], $openprint::param{'ddmSearchCategory'} ); ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Material:</label>
+			<select name="ddmMaterial" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
+				<option value="">Select a Material</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Material::find('order'=>'lower(name)') ], $$variable{'Material'}->id() ); ) ?>
+			</select>
+		</p>
+		<p class="buttons">
+			<? echo ( 
+				my $html = '';
+				$html .= ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','<<');
+				$html .= ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>');
+				$html .= ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New');
+				$html .= ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
+				if ( $$variable{'Material'}->id() ) {
+					$html .= ssi::writeButton( $log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';fmCheck(f1);",'','Copy');
+					$html .= ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset');
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<fieldset style="float: left; width: 47%;"><legend>Material Information</legend>
+		<p> 
+			<label>Material Name:</label>
+			<input type="text" name="name" value="<? hecho ( $$variable{'Material'}->name(); ) ?>" />
+		</p>
+		<p> 
+			<label>Category:</label>
+				<select name="ddmCategory">
+					<option value="">Select a category</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MaterialCategory::find('order'=>'lower(name)') ], $$variable{'Material'}->category_id() ); ) ?>
+				</select>
+		</p>
+		<p> 
+			<label>Description:</label>
+			<input type="text" name="description" value="<? hecho ( $$variable{'Material'}->description(); ) ?>" />
+		</p>
+	</fieldset>
+	<fieldset style="float: right; width: 47%;"><legend>Purchasing Information</legend>
+		<p> 
+			<label>Supplier:</label>
+			<select name="ddmSupplier">
+				<option value="">Select a supplier</option>
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('supplier'=>'Y','order'=>'lower(strname)') ], $$variable{'Material'}->supplier_id() ); ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Federal Tax Exempt?</label>
+			<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( 'checked="checked"' if $$variable{'Material'}->taxexempt1() eq 'Y' ) ?> />
+			<label class="radio" for="taxexempt1Y">Yes</label>
+			<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( 'checked="checked"' if $$variable{'Material'}->taxexempt1() eq 'N' ) ?> />
+			<label class="radio" for="taxexempt1N">No</label>
+		</p>
+		<p> 
+			<label>State/Province Exempt?</label>
+			<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( 'checked="checked"' if $$variable{'Material'}->taxexempt2() eq 'Y' ) ?> />
+			<label class="radio" for="taxexempt2Y">Yes</label>
+			<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( 'checked="checked"' if $$variable{'Material'}->taxexempt2() eq 'N' ) ?> />
+			<label class="radio" for="taxexempt2N">No</label>
+		</p>
+	</fieldset>
+	<br class="spacer"/>
+	<? if ( $$variable{'Material'}->id() ) ?>
+		<!--#include virtual="_prices.html"-->
+		<!--#include virtual="_specifications.html"-->
+	<? endif ( $$variable{'Material'}->id() ) ?>
+	<input type="hidden" name="btnFunction"/>
+</form>

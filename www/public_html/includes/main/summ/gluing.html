@@ -1,0 +1,16 @@
+<div class="row">
+    <span class="label">
+        Gluing area? (square inches)
+    </span>
+  <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+    <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+    <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <span class="value"><?txtArea?> 
+		<? echo ( 'overriden' if $$variable{'chkOverrideArea'} eq 'Y' ) ?>
+    </span>
+    <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+    <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+
+    <br class="spacer"/>
+</div>

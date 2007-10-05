@@ -1,0 +1,72 @@
+<? eval (
+		foreach my $key ( 'ddmCustomer','ddmStatus','ddmEmployee','ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','dblTotal1','dblTotal2' ) {
+			$openprint::session{'/employee/accounting/search.html?'.$key} = $openprint::param{$key} if ( defined $openprint::param{$key} );
+		} # end foreach
+		if ( $openprint::session{'/employee/accounting/search.html?ddmStatus'} ) {
+			$openprint::session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
+		} # end if
+
+	@{$$variable{'Orders'}} = openprint::Order::find(
+		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
+			'/employee/accounting/search.html?ddmStartYear',
+			'/employee/accounting/search.html?ddmStartMonth',
+			'/employee/accounting/search.html?ddmStartDay',
+			} ),
+		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
+			'/employee/accounting/search.html?ddmEndYear',
+			'/employee/accounting/search.html?ddmEndMonth',
+			'/employee/accounting/search.html?ddmEndDay',
+			} ),
+		'status'		=> $openprint::session{'/employee/accounting/search.html?ddmStatus'}, 
+		'company_id'	=> $openprint::session{'/employee/accounting/search.html?ddmCustomer'},
+		'salesrep_id'	=> $openprint::session{'/employee/accounting/search.html?ddmEmployee'},
+
+		'value_start'	=> $openprint::session{'/employee/accounting/search.html?dblTotal1'},
+		'value_end'	=> $openprint::session{'/employee/accounting/search.html?dblTotal2'},
+		'order'		=> 'created_on',
+		);
+
+) ?>
+	<? if ( @{$$variable{'Orders'}} ) ?>
+<table class="List">
+	<tr> 
+		<th align="left" width="65">Order ID</th>
+		<th align="left" width="60">Docket</th>
+		<th align="center" width="75">Date</th>
+		<th align="left">Company</th>
+		<th align="left" width="100">Status</th>
+		<th align="right" width="70">Invoice #</th>
+		<th align="right" width="70">P.O. #</th>
+		<th align="right" width="75">Total</th>
+		<th align="right" width="75">Balance</th>
+	</tr>
+	<? eval (
+		$$variable{'ReportTotal'} = $$variable{'ReportBalance'} = 0;
+	) ?>
+	<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
+	<tr<?rowclass?>> 
+		<td><a href="details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
+		<td><a href="details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
+		<td align="center"><? echo ( Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></td>
+		<td align="left"><? echo ( ssi::htmlize( $$variable{'Order'}->Company->name() ); ) ?></td>
+		<td align="left"><? echo ( $$variable{'Order'}->status(); ) ?></td>
+		<td align="right">&nbsp;<? echo ( ssi::htmlize( $$variable{'Order'}->invoice_id() ); ) ?></td>
+		<td align="right">&nbsp;<? echo ( ssi::htmlize( $$variable{'Order'}->ponum() ); ) ?></td>
+		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Order'}->total() ); ) ?></td>
+		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Order'}->total() - $$variable{'Order'}->paid() ); ) ?></td>
+	</tr>
+	<? eval ( 
+		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+		$$variable{'ReportTotal'} += $$variable{'Order'}->total();
+		$$variable{'ReportBalance'} += ($$variable{'Order'}->total() - $$variable{'Order'}->paid());
+ ) ?>
+	<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
+	<tr class="totals"> 
+		<td colspan="7" align="right"><b>Report Total:</b></td>
+		<td align="right">&nbsp;$<? echo ( sprintf('%.2f', $$variable{'ReportTotal'} ); ) ?></td>
+		<td align="right">&nbsp;$<? echo ( sprintf('%.2f', $$variable{'ReportBalance'} ); ) ?></td>
+	</tr>
+</table>
+<? else ( @{$$variable{'Orders'}} ) ?>
+There were no results matching your criteria.<br>
+<? endif ( @{$$variable{'Orders'}} ) ?>

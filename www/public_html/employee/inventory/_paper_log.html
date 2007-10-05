@@ -1,0 +1,67 @@
+<? eval (
+	$$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} );
+	if ( $openprint::param{'ddmStartYear'} ) {
+		@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @openprint::param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+	} else {
+		@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, 
+			Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 ),
+			);
+	} # end if
+	if ( $openprint::param{'ddmEndYear'} ) {
+		@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, @openprint::param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+	} else {
+		@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+	} # end if
+) ?>
+<form name="LogForm" id="LogForm">
+	<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>"/>
+	<p>
+		<label>Date:</label>
+		<span class="DateSelector">
+			<select name="ddmStartYear" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?StartYears?></select>
+			<select name="ddmStartMonth" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?StartMonths?></select>
+			<select name="ddmStartDay" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?StartDays?></select>
+			to
+		</span>
+		<span class="DateSelector">
+			<select name="ddmEndYear" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?EndYears?></select>
+			<select name="ddmEndMonth" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?EndMonths?></select>
+			<select name="ddmEndDay" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?EndDays?></select>
+		</span>
+	</p>
+<hr/>
+<table class="List">
+	<tr>
+		<th align="left" width="120">Date</th>
+		<th align="left">Employee</th>
+		<th align="left" width="100">Amount</th>
+		<th align="left" width="100">In Stock</th>
+		<th align="left" width="75">Units</th>
+		<th align="left">Location</th>
+		<th align="left" width="100">Skid</th>
+	</tr>
+	<? echo (
+		my $html;
+		my @data = sql::execute( $log, $dbh, q{SELECT updatetime, user_id, delta, instock, units, comment, poindex, skid_id FROM Paper_Inventory WHERE paper_id=? AND ( updatetime BETWEEN ? AND ? ) ORDER BY updatetime},
+		$openprint::param{'paper_id'},
+		$$variable{'Start'} . ' 00:00:00',
+		$$variable{'End'} . ' 23:59:59',
+		);
+		my $rowclass;
+		while ( my ( $time, $user_id, $delta, $instock, $units, $comment, $po_id, $skid_id ) = splice @data, 0, 8 ) {
+			$html .= sprintf( '<tr%s><td>%s</td><td>%s</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td><td><a href="skid_details.html?skid_id=%d">%d</a></td></tr>',
+				$rowclass,
+				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
+				new openprint::User($user_id)->name(),
+				$delta,
+				$instock,
+				$units,
+				$comment,
+				$skid_id, $skid_id
+				);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end while
+		return $html;
+	) ?>
+</table>
+</form>

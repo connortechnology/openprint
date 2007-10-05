@@ -1,0 +1,73 @@
+<? eval ( 
+	if ( $openprint::param{'action'} eq 'Add' ) {
+		$openprint::param{'skid_id'} =~ s/\D//g;
+		$openprint::param{'paper_id'} =~ s/\D//g;
+		$openprint::param{'Docket'} =~ s/\D//g;
+		$openprint::param{'AllocationQuantity'} =~ s/[^\d\-]//g;
+		my $Paper = new openprint::Paper( $openprint::param{'paper_id'} );
+		my @Projects = openprint::Project::find( 'docket'=>$openprint::param{'Docket'} );
+		if ( ! @Projects ) {
+			$$variable{'error'} .= "Docket $openprint::param{'Docket'} not found.";
+		} else {
+			$Paper->allocate( $openprint::param{'skid_id'}, $Projects[0]->id(), $openprint::param{'AllocationQuantity'} );
+		} # end if
+		delete $openprint::param{'skid_id'};
+	} # end if
+) ?>
+<? if ( $$variable{'error'} ) ?>
+<div class="error"><?error?></div>
+<? endif ( $$variable{'error'} ) ?>
+<form id="f3" name="f3">
+	<table class="List">
+		<tr>
+			<th align="left" width="130">Date</th>
+			<th align="left"><? echo ( 
+				return 'Skid' if $openprint::param{'paper_id'};
+				return 'Paper' if $openprint::param{'skid_id'};
+			) ?></th>
+			<th align="left" width="60">Docket</th>
+			<th align="right" width="120">Amount</th>
+			<th width="75">&nbsp;</th>
+		</tr>
+		<? echo (
+			my $html;
+			my @data;
+			@data = sql::execute( $log, $dbh, q{SELECT id, created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), skid_id, paper_id, quantity, units FROM Paper_Allocations WHERE paper_id=? ORDER BY created_on}, $openprint::param{'paper_id'} ) if $openprint::param{'paper_id'};
+			@data = sql::execute( $log, $dbh, q{SELECT id, created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), skid_id, paper_id, quantity, units FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $openprint::param{'skid_id'} ) if $openprint::param{'skid_id'};
+			my $rowclass;
+			while ( my ( $id, $time, $project_id, $docket, $skid_id, $paper_id, $quantity, $units ) = splice @data, 0, 8 ) {
+				$html .= sprintf( '<tr%s><td>%s</td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%d</a></td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td><td>',
+					$rowclass,
+					Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
+					$project_id,
+					$openprint::param{'skid_id'} ? new openprint::Paper( $paper_id )->to_string() : $skid_id,
+					$project_id,
+					$docket,
+					$quantity, $units,
+					);
+				$html .= ssi::writeButton( $log, $dbh, 'Delete'.$id, 'delete.gif', "f3.btnFunction.value='Delete Allocation';f3.allocation_id.value=$id;f3.submit();", '', 'Delete' );
+				$html .= '</td></tr>',
+
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$$variable{'TotalAllocated'} += $quantity;
+			} # end while
+			return $html;
+		) ?>
+		<tr class="totals">
+			<td colspan="3" align="right"><b>Totals:</b></td>
+			<td align="right"><?TotalAllocated?> <? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr class="totals">
+			<td>Allocate paper:</td>
+			<td><input type="text" id="skid_id" name="skid_id" /></td>
+			<td><input type="text" id="Docket" name="Docket" /></td>
+			<td><input type="text" id="AllocationQuantity" name="AllocationQuantity" /></td>
+			<td><? echo ( ssi::writeButton( $log, $dbh, 'AddAllocation', 'add.gif', "LoadContent( 'Allocations', '/employee/inventory/_paper_allocations.html', Serialize( document.forms['f3'] ) );", '', 'Add' ); ) ?></td>
+		</tr>
+	</table>
+	<input type="hidden" name="paper_id" value="<? echo ( $openprint::param{paper_id} ) ?>" />
+	<input type="hidden" name="action" value="Add" />
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="allocation_id" />
+</form>

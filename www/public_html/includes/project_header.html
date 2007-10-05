@@ -1,0 +1,99 @@
+<? eval (
+	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
+) ?>
+<div class="ProjectHeader">
+	<fieldset id="ProjectInformation"><legend>Project Information</legend>
+		<p>
+			<label>Project #:</label>
+	  		<?ProjectIndex?>
+		</p>
+	  	<? if ( $$variable{'DocketNumber'} ) ?>
+		<p>
+	  		<label>Docket Number:</label>
+	  		<?DocketNumber?>
+		</p>
+		<p>
+	  		<label>Ordered Quantity:</label>
+	  		<?OrderedQuantity?>   			
+   		</p>
+	  	<? endif ( $$variable{'DocketNumber'} ) ?>
+   		<p>
+			<label>Status:</label>
+			<? if ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
+			<span style="color: red;"><?ProjectStatus?></span>
+			<? else ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
+			<?ProjectStatus?>
+			<? endif ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
+		</p>
+	  	<p> 
+			<label>Creation Date:</label>
+	  		<?CreationDate?>
+		</p>
+		<? if ( $$variable{'DocketNumber'} ) ?>
+	  	<p> 
+			<label>Shipping Type:</label>
+	  		<span name="shippingTypeValue"><? echo ( $$variable{'Project'}->shippingtype() ) ?></span>
+		</p>
+	  		<? if ( $$variable{'DueDate'} ) ?>
+		<p>
+				<label>Due Date:</label>
+				<?DueDate?>
+		</p>
+	  		<? else ( $$variable{'DueDate'} ) ?>
+				<p class="RequiredDate">
+				<label>Requested Date:</label>
+				<?RequiredDate?>
+				</p>
+	  		<? endif ( $$variable{'DueDate'} ) ?>
+		<? if ( $$variable{'PrepressOperator'} = openprint::project::get_prepress_operator( $log, $dbh, $$variable{'ProjectIndex'} ); ) ?>
+		<p>
+			<label>Prepress Operator:</label>
+			<?PrepressOperator?>
+		</p>
+		<? endif ( $$variable{'PrepressOperator'} = openprint::project::get_prepress_operator( $log, $dbh, $$variable{'ProjectIndex'} ); ) ?>
+
+	  	<? endif ( $$variable{'DocketNumber'} ) ?>
+	</fieldset>
+	<fieldset id="ContactInformation"><legend>Contact Information</legend>
+		<p>
+			<label>Company:</label>
+			<?CompanyName?>
+		</p>
+		<p>
+			<label>Name:</label>
+			<?CreatedByName?>
+		</p>
+		<p>
+			<label>Phone:</label>
+			<?CreatedByPhone?>
+		</p>
+		<p>
+			<label>Email:</label>
+			<a href="mailto:<?CreatedByEmail?>"><?CreatedByEmail?></a>
+		</p>
+		<? if ( $$variable{'CSRName'} ) ?>
+		<p>
+			<label>Customer Service Rep:</label>
+			<a href="mailto:<?CSREmail?>"><?CSRName?></a>
+		</p>
+		<? endif ( $$variable{'CSRName'} ) ?>
+	</fieldset>
+	<br class="spacer"/>
+	<fieldset id="Reference">
+	   <legend>Reference:</legend>
+		<? echo ( ssi::htmlize($$variable{'Project'}->reference() ); ) ?>
+		<? if ( $$variable{'Project'}->comments() ) ?>
+<br/>
+		<p>
+			<label>Additional Comments:</label><? echo ( $$variable{'Project'}->comments(); ) ?>
+		</p>
+		<? endif ( $$variable{'Project'}->comments() ) ?>
+	</fieldset>
+	<fieldset id="Description">
+	   <legend>Description:</legend>
+		<? echo ( 
+			return $$variable{'Project'}->summary();
+		) ?>
+	</fieldset>
+</div>
+<br class="spacer"/>

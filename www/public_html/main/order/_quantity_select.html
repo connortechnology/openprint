@@ -1,0 +1,50 @@
+<p>
+	<label>Quantity:</label>
+	<span style="width: 67%;">
+	<table class="List">
+		<tr> 
+			<th width="20"></td>
+			<th align="right">Quantity</th>
+<!--
+			<th align="right">Unit Price</th>
+-->
+			<th align="right">Price</th>
+		</tr>
+		<? if ( $$variable{'Project'}->quantity1(); ) ?>
+		<tr> 
+			<td><input type="radio" name="rdbQuantity<? echo ( $$variable{'Project'}->id(); ) ?>" value="1"
+				<? echo ( 'checked="checked"' if $$variable{'Project'}->ordered_quantity_index() == 1; ) ?> /></td>
+			<td align="right"><? echo ( $$variable{'Project'}->quantity1() ) ?></td>
+<!--
+			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price1()/$$variable{'Project'}->quantity1() ); ) ?></td>
+-->
+			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price1() ); ) ?></td>
+		</tr>
+		<? endif ( $$variable{'Project'}->quantity1(); ) ?>
+		<? if ( $$variable{'Project'}->quantity2(); ) ?>
+		<tr> 
+			<td><input type="radio" name="rdbQuantity<? echo ( $$variable{'Project'}->id(); ) ?>" value="2"
+				<? echo ( 'checked="checked"' if $$variable{'Project'}->ordered_quantity_index() == 2; ) ?>
+			/></td>
+			<td align="right"><? echo ( $$variable{'Project'}->quantity2() ) ?></td>
+<!--
+			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price2()/$$variable{'Project'}->quantity2() ); ) ?></td>
+-->
+			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price2() ); ) ?></td>
+		</tr>
+		<? endif ( $$variable{'Project'}->quantity2(); ) ?>
+		<? if ( $$variable{'Project'}->quantity3(); ) ?>
+		<tr> 
+			<td><input type="radio" name="rdbQuantity<? echo ( $$variable{'Project'}->id(); ) ?>" value="3"
+				<? echo ( 'checked="checked"' if $$variable{'Project'}->ordered_quantity_index() == 3; ) ?>
+			/></td>
+			<td align="right"><? echo ( $$variable{'Project'}->quantity3() ) ?></td>
+<!--
+			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price3()/$$variable{'Project'}->quantity3() ); ) ?></td>
+-->
+			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price3() ); ) ?></td>
+		</tr>
+		<? endif ( $$variable{'Project'}->quantity3(); ) ?>
+	</table>
+	</span>
+</p>

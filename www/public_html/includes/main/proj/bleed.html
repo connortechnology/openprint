@@ -1,0 +1,30 @@
+<? if ( $$variable{'Mode'} eq 'Easy' ) ?>
+	<input type="hidden" name="chkBleedLeft" value="<?chkBleedLeft?>" />
+	<input type="hidden" name="chkBleedRight" value="<?chkBleedRight?>" />
+	<input type="hidden" name="chkBleedTop" value="<?chkBleedTop?>" />
+	<input type="hidden" name="chkBleedBottom" value="<?chkBleedBottom?>" />
+<? else ( $$variable{'Mode'} eq 'Easy' ) ?>
+<p>
+	<label>Bleed:</label>
+	<span class="BleedOption">
+		<input type="checkbox" id="BleedLeft" name="chkBleedLeft" value="Left" onclick="calc('f1');" 
+		<? echo ( 'checked="checked"' if $$variable{'chkBleedLeft'} eq 'Left' ) ?>
+		/> <label class="radio" for="BleedLeft">Left</label>
+	</span>
+	<span class="BleedOption">
+		<input type="checkbox" id="BleedRight" name="chkBleedRight" value="Right" onclick="calc('f1');" 
+		<? echo ( 'checked="checked"' if $$variable{'chkBleedRight'} eq 'Right' ) ?>
+		/> <label class="radio" for="BleedRight">Right</label>
+	</span>
+	<span class="BleedOption">
+		<input type="checkbox" id="BleedTop" name="chkBleedTop" value="Top" onclick="calc('f1');" 
+		<? echo ( 'checked="checked"' if $$variable{'chkBleedTop'} eq 'Top' ) ?>
+		/> <label class="radio" for="BleedTop">Top</label>
+	</span>
+	<span class="BleedOption">
+		<input type="checkbox" id="BleedBottom" name="chkBleedBottom" value="Bottom" onclick="calc('f1');" 
+		<? echo ( 'checked="checked"' if $$variable{'chkBleedBottom'} eq 'Bottom' ) ?>
+		/> <label class="radio" for="BleedBottom">Bottom</label>
+	</span>
+</p>
+<? endif ( $$variable{'Mode'} eq 'Easy' ) ?>

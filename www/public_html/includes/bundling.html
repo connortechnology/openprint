@@ -1,0 +1,20 @@
+<div class="row">
+	<span class="label">Bundling:</span>
+	<span class="input">
+		<input type="radio" id="BundlingY" name="Bundling" value="Y" onclick="add_div('BundlingDiv');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Bundling'} eq 'Y' ) ?> />
+		<label for="BundlingY">Yes</label>
+		<input type="radio" id="BundlingN" name="Bundling" value="N" onclick="remove_div('BundlingDiv');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Bundling'} ne 'Y' ) ?> />
+		<label for="BundlingN">No</label>
+	</span>
+</div>
+<div id="BundlingDiv" <? echo ( 'style="display:none;"' if $$variable{'Bundling'} ne 'Y' ) ?> >
+	<div class="row">
+		<span class="label">
+			<label for="txtItemsPerBundle">Items per bundle:</label>
+		</span>
+		<span class="input">
+			<input type="text" id="txtItemsPerBundle" name="txtItemsPerBundle" value="<?txtItemsPerBundle?>" size="5" onkeyup="remove_div('OrderButton');" />
+		</span>
+	</div>
+</div>
+

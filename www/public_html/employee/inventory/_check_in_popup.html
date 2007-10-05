@@ -1,0 +1,33 @@
+<div class="Popup" id="CheckIn">
+	<form id="checkinform" name="checkinform" action="" method="post">
+		<input type="hidden" name="btnFunction" value="CheckIn" />
+		<fieldset><legend>Check In Paper</legend>
+			<p>
+				<label>Docket:</label>
+				<input type="text" name="Docket" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckInDocket', 'clear.gif', "checkinform.Docket.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Project #:</label>
+				<input type="text" name="Project_id" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckInProject', 'clear.gif', "checkinform.Project.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Quantity:</label>
+				<input type="text" name="Quantity" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckInQuantity', 'clear.gif', "checkinform.Quantity.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Units:</label>
+				<select name="Units">
+				<option value="sheets">sheets</option>
+				<option value="lbs">lbs</option>
+				</select>
+			</p>
+			<p style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveCheckIn', 'save.gif', 'if(check_inputs(checkinform)){checkinform.submit();}', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelCheckIn', 'cancel.gif', "hide_div('CheckIn');", '', 'Cancel' ); ) ?>
+			</p>
+		</fieldset>
+	</form>
+</div>

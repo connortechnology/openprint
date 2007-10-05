@@ -1,0 +1,86 @@
+<? eval (
+	require Date::Parse;
+	require Date::Format;
+	require openprint::Order;
+	$openprint::param{'/main/order/history.html?lastupdated'} = time;
+	if ( $openprint::param{'ddmStartYear'} ) {
+		openprint::store_session( '/main/order/history.html', \%openprint::param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
+	} # end if
+	$$variable{'Currency'} = openprint::Currency::get_current();
+	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = ( $$variable{'Currency'}->name(),$$variable{'Currency'}->symbol(), $$variable{'Currency'}->short());
+	if ( $openprint::param{'OrderID'} ) {
+		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$openprint::param{'OrderID'} );
+	} elsif ( $openprint::param{'Docket'} ) {
+		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$openprint::param{'Docket'} );
+	} else {
+
+		@{$$variable{'Orders'}} = openprint::Order::find(
+				'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/main/order/history.html?ddmStartYear','/main/order/history.html?ddmStartMonth','/main/order/history.html?ddmStartDay'} ),
+				'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/main/order/history.html?ddmEndYear','/main/order/history.html?ddmEndMonth','/main/order/history.html?ddmEndDay'} ),
+				'company_id'		=>	$openprint::session{'company_id'},
+				'user_id'			=>	$openprint::session{'/main/order/history.html?ddmOrderedBy'},
+				'order'				=> 'Index DESC',
+				);
+	} # end if
+
+) ?>
+<? if ( @{$$variable{'Orders'}} ) ?>
+	<? eval ( 
+			$$variable{'ReportTotal'} = 0;
+			$$variable{'ReportBalance'} = 0;
+			) ?>
+	<div class="unprintable">
+		<br/>
+		Please click on an <b>Order ID #</b> to view an order's details. <br/>
+	</div>
+	<br/>
+	<table class="List">
+		<tr> 
+			<th align="left" width="75">Order ID</th>
+			<th align="left" width="75">Docket</th>
+			<th align="left">Ordered By</th>
+			<th align="center" width="120">Date</th>
+			<th align="right" width="125">Status</th>
+			<th align="right" width="75">Total</th>
+			<th align="right" width="100">Balance</th>
+		</tr>
+		<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
+		<? eval (
+				$$variable{'total'} = $$variable{'Order'}->total();
+				$$variable{'balance'} = $$variable{'Order'}->balance();
+				if ( $$variable{'Currency'}->id() != $$variable{'Order'}->currency_id() ) {
+					if ( my $rate = $$variable{'Order'}->Currency()->conversions( $openprint::session{Currency_id} ) ) {
+						$$variable{'total'} = $$variable{'total'} * $rate;
+						$$variable{'balance'} = $$variable{'balance'} * $rate;
+					} # end if
+				} # end if
+				if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
+					$$variable{'ReportTotal'} += $$variable{'total'};
+					$$variable{'ReportBalance'} += $$variable{'balance'};
+				} else {
+					$$variable{'balance'} = '0.00';
+				} # end if
+				$$variable{'rowclass'} = ' class="colRowRed"' if $$variable{'Order'}->status() eq 'Waiting For Customer Approval';
+		) ?>
+		<tr<?rowclass?>> 
+			<td><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
+			<td><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
+			<td align="left"><? echo ( $$variable{'Order'}->name(); ) ?></td>
+			<td align="right"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></td>
+			<td align="right"><? echo ( $$variable{'Order'}->status(); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'total'} ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'balance'} ); ) ?></td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+		<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
+		<tr class="totals">
+			<td colspan="5" align="right"><b>Report Totals:</b></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'ReportTotal'} ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'ReportBalance'} ); ) ?></td>
+		</tr>
+	</table>
+	<br/>
+	<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name(); ) ?>.</span>
+<? else ( @{$$variable{'Orders'}} ) ?>
+There are no orders which match your search criteria.
+<? endif ( @{$$variable{'Orders'}} ) ?>

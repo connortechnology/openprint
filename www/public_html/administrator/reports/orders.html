@@ -1,0 +1,136 @@
+<form name="f1" method="post" action="orders.html">
+	<fieldset class="filters"><legend>Select Report Criteria</legend>
+		<p>
+			<label>Company:</label>
+			<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4" />
+			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> Select a Customer</option>
+				<? echo (
+					openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::param{'ddmCustomer'} );
+				) ?>
+			</select>
+		</p>
+		<p>
+			<label>Status:</label>
+			<select name="ddmStatus" size="1">
+				<option value="">All</option>
+				<? echo (
+						ssi::fill_drop_down( $log, $dbh, q{SELECT DISTINCT strStatus, strStatus FROM Orders ORDER BY strStatus}, $r->param('ddmStatus') );
+						) ?>
+			</select>
+		</p>
+		<p>
+			<label>Currency:</label>
+			<select name="ddmCurrency" size="1">
+			<option value="">All Currencies</option>
+<? echo ( 
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ], $openprint::param{'ddmCurrency'} );
+) ?>
+			</select>
+		</p>
+		<p>
+			<label>Marketing Category:</label>
+			<select name="ddmMarketingCategory" size="1">
+			<option value="">All Categories</option>
+<? echo (
+ssi::fill_drop_down( $log, $dbh, q{SELECT id, name FROM Marketing_Categories ORDER BY lower(name)}, $r->param('ddmMarketingCategory') );
+) ?>
+			</select>
+		</p>
+		<p>
+			<label>Sales Reps:</label>
+			<select name="ddmEmployee" size="1">
+				<option value="">All Employees</option>
+<? echo (
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ] , $openprint::param{'ddmEmployees'} );
+) ?>
+			</select>
+		</p>
+<? eval (
+	if ( $openprint::param{'StartYear'} ) {
+		@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = 
+			@openprint::param{'StartYear','StartMonth','StartDay'};
+		@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = 
+			@openprint::param{'EndYear','EndMonth','EndDay'};
+	} else {
+		@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = Date::Calc::Today();
+		@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = Date::Calc::Today();
+	} # end if
+) ?>
+		<p> 
+			<label>Date:</label>
+			<select name="StartYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?StartYear'} ); ) ?></select>
+			<select name="StartMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?StartMonth'} ); ) ?></select>
+			<select name="StartDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?StartDay'} ); ) ?></select>
+			-
+		 
+			<select name="EndYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?EndYear'} ); ) ?></select>
+			<select name="EndMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?EndMonth'} ); ) ?></select>
+			<select name="EndDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?EndDay'} ); ) ?></select>
+		</p>
+		<p> 
+			<label>Total Range:</label>
+			<input type="text" name="TotalStart" size="12" style="width: auto;" value="<? echo ( $openprint::param{'TotalStart'} ) ?>" />
+			to 
+			<input type="text" name="TotalEnd" size="12" style="width: auto;" value="<? echo ( $openprint::param{'TotalEnd'} ) ?>" />
+		</p>
+		<p class="buttons">
+		<? echo ( $log, $dbh, join('',
+			ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
+			ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='reports_orders.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
+			ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+); ) ?>
+		</p>
+	</fieldset>
+<? eval ( 
+	@{$$variable{'Orders'}} = openprint::Order::find( 
+		'company_id'		=> $openprint::param{'ddmCustomer'},
+		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
+		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
+		'value_start'		=> $openprint::param{'TotalStart'},
+		'value_end'			=> $openprint::param{'TotalEnd'},
+		'salesrep_id'		=> $openprint::param{'ddmEmployee'},
+		'status'			=> $openprint::param{'ddmStatus'},
+		'currency_id'		=> $openprint::param{'ddmCurrency'},
+	);
+) ?>
+	<? if ( @{$$variable{'Orders'}} ) ?>
+	<table class="List">
+		<tr> 
+			<th align="left" width="75">ID</th>
+			<th align="left" width="60">Docket</th>
+			<th align="left" width="120">Date</th>
+			<th align="left">Company</th>
+			<th align="left" width="100">Status</th>
+			<th align="right" width="75">Total</th>
+			<th align="right" width="125">Balance</th>
+		</tr>
+		<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
+		<tr<?rowclass?>> 
+			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
+			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
+			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on())); ) ?></a></td>
+			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->Company()->name(); ) ?></a></td>
+			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
+			<td align="right"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>">$<? echo ( $$variable{'Order'}->total(); ) ?></a></td>
+			<td align="right"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>">$<? echo ( $$variable{'Order'}->balance(); ) ?></a></td>
+		</tr>
+		<? eval ( 
+			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
+			$$variable{'ReportTotal'} += $$variable{'Order'}->total();
+			$$variable{'ReportBalance'} += $$variable{'Order'}->balance();
+} # end if
+		 ) ?>
+		<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
+		<tr class="totals"> 
+			<td colspan="5" align="right"><b>Report Total:</b></td>
+			<td align="right">&nbsp;$<? echo ( sprintf('%.2f', $$variable{'ReportTotal'} ); ) ?></td>
+			<td align="right">&nbsp;$<? echo ( sprintf('%.2f', $$variable{'ReportBalance'} ); ) ?></td>
+		</tr>
+	</table>
+	<? else ( @{$$variable{'Orders'}} ) ?>
+	There were no results matching your criteria.<br>
+	<? endif ( @{$$variable{'Orders'}} ) ?>
+	<input type="hidden" name="btnFunction"/>
+</form>

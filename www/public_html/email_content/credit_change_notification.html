@@ -1,0 +1,11 @@
+Dear <?txtSignature?>,<br>
+<br>
+<? if ( $$variable{'Terms'} > 0 and  $$variable{'CreditLimit'} > 0 ) ?>
+You have been granted Net <?Terms?> Day terms for <?SiteTitle?>, with a credit limit of $ <?CreditLimit?>.<br>
+<? else ( $$variable{'Terms'} > 0 and  $$variable{'CreditLimit'} > 0 ) ?>
+<?SiteTitle?> has denied you terms.<br>
+<br>
+Orders will require a <?Downpayment?>% deposit before production begins.<br>
+<? endif ( $$variable{'Terms'} > 0 and  $$variable{'CreditLimit'} > 0 ) ?>
+<br>
+If you have any questions, please contact our <a href="<? echo ( $openprint::config{ExternalSiteURL} ) ?>/support/help_desk.html">helpdesk</a>.<br>

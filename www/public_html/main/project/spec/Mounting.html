@@ -1,0 +1,28 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<!--#include virtual="/includes/main/proj/finished_dimensions.html"-->
+			<p>
+				<label>Mounting material:</label>
+				<select name="MountingType" size="1" onchange="calc(this.form.name);">
+					<option value="">Please select one</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Material::find('category'=>'Mounting Types', 'order'=>'lower(name)') ], $$variable{'MountingType'}); ) ?>
+				</select>
+			</p>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		</fieldset>
+		</hr>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<input type="hidden" name="btnFunction" value="Save Service" />
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
+		<input type="hidden" name="Status" />
+		<div id="hdnBreakdown1" style="display:none;"></div>
+		<div id="hdnBreakdown2" style="display:none;"></div>
+		<div id="hdnBreakdown3" style="display:none;"></div>
+	</form>
+</div>

@@ -1,0 +1,70 @@
+<form name="f1" method="post">
+	<fieldset class="filters"><legend>Search:</legend>
+	<p>
+		<label>Company:</label>
+			<input type="text" onKeyUp="filterDDM(this, f1.ddmCompany);" size="4" />
+		<select name="ddmCompany">
+			<option value=""> All Companies </option>
+			<? echo ( 
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)' ) ], $openprint::param{'ddmCompany'} );
+) ?>
+		</select>
+	</p>
+	<p>
+		<label>Status:</label>
+		<select name="ddmStatus">
+			<option value="" /> All </option>
+			<option value="Approved" <?Approved?> > Approved </option>
+			<option value="Declined" <?Declined?> > Declined </option>
+			<option value="Reviewed" <?Reviewed?> > Reviewed </option>
+			<option value="Non-Reviewed" <?Non-Reviewed?> > Non-Reviewed </option>
+		</select>
+	</p>
+	<p>
+		<label>Application Date:</label>
+		<span class="DateSelector">
+			<select name="ddmStartMonth"><?startmonths?></select>
+			<select name="ddmStartDay"><?startdays?></select>
+			<select name="ddmStartYear"><?startyears?></select>
+		</span>
+		<span class="DateSelector"> to </span>
+		<span class="DateSelector">
+			<select name="ddmEndMonth"><?endmonths?></select>
+			<select name="ddmEndDay"><?enddays?></select>
+			<select name="ddmEndYear"><?endyears?></select>
+		</span>
+	</p>
+	<p class="buttons">
+		<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults','showResults.gif', "f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ),
+); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<hr/>
+<br>
+<? if ( @{$$variable{'CreditApps'}} ) ?>
+<br>
+The following Credit Applications matched your criteria:<br>
+<br>
+<table class="List">
+	<tr>
+		<th align="left">Company</th>
+		<th width="200" align="left">Submitted By</th>
+		<th width="120" align="center">Date</th>
+		<th width="100" align="right">Status</th>
+	</tr>
+	<? while ( @$variable{'index','signature','date','company','status'} = splice @{$$variable{'CreditApps'}},0,5; ) ?>
+	<tr<?rowclass?>>
+		<td align="left" class="smTbl"><a href="credit_application.html?credit_index=<?index?>">&nbsp;<?company?></a></td>
+		<td align="left" class="smTbl"><a href="credit_application.html?credit_index=<?index?>"><?signature?>&nbsp;</a></td>
+		<td align="center" class="smTbl"><a href="credit_application.html?credit_index=<?index?>">&nbsp;<?date?></a></td>
+		<td align="right" class="smTbl"><a href="credit_application.html?credit_index=<?index?>">&nbsp;<?status?></a></td>
+	</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @$variable{'index','signature','date','company','status'} = splice @{$$variable{'CreditApps'}},0,5; ) ?>
+</table>
+<? else ( @{$$variable{'CreditApps'}} ) ?>
+There are no credit apps matching your criteria.
+<? endif ( @{$$variable{'CreditApps'}} ) ?>

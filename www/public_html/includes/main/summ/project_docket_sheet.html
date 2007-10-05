@@ -1,0 +1,452 @@
+<table width="100%" border="0">
+	<tr>
+		<th width="20">&nbsp;</th>
+		<th align="left">Project #</th>
+		<!--<th>Order #</th>-->
+		<th align="right">Submit</th>
+		<th width="20">&nbsp;</th>
+	</tr><tr>
+		<td width="20">&nbsp;</td>
+		<td align="left"><img src="/barcode.png?code=P<?ProjectIndex?>+&NoText=1&Height=20"/></td>
+		<!--
+		<img src="/barcode.png?code=D<?DocketNumber?>+"/>&nbsp;</td>-->
+		<!--<td align="center"><img src="/barcode.png?code=O<?OrderId?>+"/></td>-->
+		<td align="right"><img src="/barcode.png?Code=S10000+&NoText=1&Height=20"/></td>
+		<td width="20">&nbsp;</td>
+	</tr>
+</table>
+<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+	<tr> 
+		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+				<tr>
+				<td width="50%" class="headerText" valign="top"><b>Date:</b></td>
+				<td width="50%" class="docketText">&nbsp;<?OrderedDate?></td>
+				</tr>
+			</table></td>
+		<td colspan="6" width="60%" valign="top">
+			<table cellspacing="0" cellpadding="0" border="0" width="100%">
+				<tr>
+					<td width="16%" class="headerText"><b>Company Name:</b></td>
+					<td width="55%" class="hugeText"><b><?OrderCompanyName?></b></td>
+					<td width="4%" class="headerText"><b>CSR:</b></td>
+					<td width="25%" class="docketText"><?CSRName?></td>
+				</tr>
+			</table>
+		</td>
+		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+				<tr>
+					<td width="50%" class="headerText" valign="top"><b>Customer PO#:</b></td>
+					<td width="50%" align="right" class="docketText">&nbsp;<?PONum?></td>
+				</tr>
+			</table></td>
+	</tr>
+	<tr>
+		<td colspan="2" width="20%" valign="top">
+			<span style="float:left;" class="headerText"><b>Docket #:</b></span>
+			<span style="float: right;" class="docketText"><?DocketNumber?></span>
+			<br class="spacer"/>
+			<span style="float: left;" class="headerText"><b>Order #:</b></span>
+			<span style="float: right;" class="docketText">&nbsp;<?order_id?></span>
+		</td>
+		<td colspan="6" width="60%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
+				<tr>
+					<td width="16%" class="headerText" valign="top"><b>Project Reference:</b></td>
+					<td width="84%" class="docketText"><?ProjectReference?></td>
+				</tr>
+			</table></td>
+		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+				<tr>
+					<td width="50%" class="headerText" valign="top"><b>COD?:</b></td>
+					<td width="50%" class="docketText">&nbsp;</td>
+				</tr>
+			</table></td>
+	</tr>
+	<tr> 
+		<td colspan="2" width="20%" valign="top">
+			<span style="float:left;" class="headerText"><b>Project #:</b></span>
+			<span style="float:right;" class="docketText"><?ProjectIndex?></span>
+		</td>
+		<td colspan="3" width="30%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
+				<tr>
+				<td width="33%" class="headerText"><b>Contact:</b></td>
+				<td width="66%" class="docketText"><?OrderSalutation?>&nbsp;<?OrderFirstName?>&nbsp;<?OrderLastName?></td>
+				</tr>
+			</table></td>
+		<td colspan="3" width="30%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+				<tr>
+				<td width="33%" class="headerText"><b>Phone:</b></td>
+				<td width="66%" class="docketText">&nbsp;<?OrderPhone?> <? if ( $$variable{'OrderExtension'} ne '' ) ?> &nbsp;ext: <?OrderExtension?> <? endif ( $$variable{'OrderExtension'} ne '' ) ?></td>
+				</tr>
+			</table></td>
+		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+				<tr>
+					<td width="50%" class="headerText"><b>Quantity:</b></td>
+					<td width="50%" class="docketText">&nbsp;<?OrderedQuantity?></td>
+				</tr>
+			</table></td>
+	</tr>
+</table>
+<br>
+<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+	<tr> 
+		<td class="headerText" width="25%"><b>Flat Size:</b>&nbsp;<?txtWidth?>&quot; x <?txtHeight?>&quot;</td>
+		<td class="headerText" width="25%"><b>Folded To:</b>&nbsp;<?txtFinalWidth?>&quot; x <?txtFinalHeight?>&quot;</td>
+		<td class="headerText" width="25%"><b># of Pages:</b>&nbsp;<?txtTotalPageQuantity?></td>
+		<td class="headerText" width="25%"><b>Cover Type:</b>&nbsp;<?rdbCover?></td>
+	</tr>
+</table>
+<br>
+<table width="100%" border="1" cellspacing="0" cellpadding="0"  bordercolorlight="black" bordercolordark="white">
+	<tr>
+		<td width="30%" class="headerText"><b>Press Proof Required?</b>&nbsp;
+		<? if ( $$variable{'rdbPressProofYes'} ne '' ) ?>
+			Yes <?rdbPressProofYes?>
+		<? endif ( $$variable{'rdbPressProofYes'} ne '' ) ?>
+		<? if ( $$variable{'rdbPressProofYes'} eq '' ) ?>
+			No
+		<? endif ( $$variable{'rdbPressProofYes'} eq '' ) ?>
+		</td>
+		<td width="40%" class="headerText"><b>Special Inks:</b>&nbsp;</td>
+		<td width="30%" class="docketText"><b><? echo ( 'FM SCREENING' if $$variable{'ScreenType'} eq 'FM' ) ?></b>&nbsp;</td>
+	</tr>
+</table>
+<br/>
+<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+	<tr> 
+		<td width="20%" class="headerText" valign="top"><b>Press</b></td>
+		<td class="headerText" valign="top"><b>Stock/Weight/Size</b></td>
+		<td width="10%" class="headerText" valign="top"><b>Run Style</b></td>
+		<td width="10%" class="headerText" valign="top"><b>Ink Colours</b></td>
+		<td width="10%" class="headerText" valign="top"><b>Net Required</b></td>
+		<td width="10%" class="headerText" valign="top"><b>Gross Allowed</b></td>
+		<td width="10%" class="headerText" valign="top"><b>Final Press Count</b></td>
+		<td width="10%" class="headerText" valign="top"><b>Skid Count</b></td>
+	</tr>
+	<? echo (
+		my $html = '';
+		while ( my $service_index = shift @{$$variable{'PrintingServices'}} ) {
+			my $sig_specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $service_index );
+			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ( ! $$sig_specs{'UsePress'} );
+			$html .= '<tr valign="top"><td class="docketText" align="center">';
+			if ( $$sig_specs{'UsePress'} eq '4C-1' ) {
+				$html .= 'GTO';
+			} elsif ( sets::isin( $$sig_specs{'UsePress'}, '6C-1', '6C-2', '6C-3','6C-4') ) {
+				$html .= 'H-6';
+			} elsif ( $$sig_specs{'UsePress'} eq '8C-1' ) {
+				$html .= 'H-8';
+			} elsif ( $$sig_specs{'UsePress'} eq 'Web1' ) {
+				$html .= 'Web';
+			} else {
+				$html .= $$sig_specs{'UsePress'};
+			} # end if
+			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/></td><td class="docketText">';
+			if ( $$sig_specs{'rdbSpecificStock'} ne 'Y' ) {
+				$html .= sprintf('%s,<b>%s</b>,%s', $$sig_specs{ddmStockBrand}, uc $$sig_specs{ddmStockFinish}, $$sig_specs{ddmStockWeight} );
+			} else {
+				$html .= sprintf('%s,<b>%s</b>,%s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
+			} # end if
+			$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
+			if ( $$sig_specs{'ddmStockFinish'} eq 'Coated 1 Side' or $$sig_specs{'ddmStockFinish'} eq 'C1S' ) {
+				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
+			} # end if
+			$html .= '</td><td class="docketText">';
+			$html .= ($$sig_specs{'txtSignatureSpreadQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$variable{'txtSpreadSize'} ) . 'pp ' if ( $$sig_specs{'txtSignatureSpreadQuantity'.$$variable{'Project'}->ordered_quantity_index()} > 0 );
+			$html .= sprintf('%2$dout %1$s', @$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index(), 'txtImposition'.$$variable{'Project'}->ordered_quantity_index()} );
+			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
+				if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {
+					my $specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $$variable{'Services'}{'Folding'}[0] );
+					my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()} );
+					if ( $Equipment->strid() eq $$sig_specs{'UsePress'} ) {
+						$html .= ' Fold inline';
+					} else {
+						$html .=' Sheeting';
+					} # end if
+				} # end if
+			} # end if
+			$html .= '</td><td class="docketText">';
+			foreach my $side ( 'SideOne','SideTwo' ) {
+				$html .= scalar openprint::print_printing::get_colours( $sig_specs, $side );
+				$html .= '+AQ (Gloss)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Gloss' );
+				$html .= '+AQ (Matte)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Matte' );
+				$html .= '+Varnish (Spot Gloss)' if ( $$sig_specs{'chkVarnishSpotGloss'.$side} );
+				$html .= '+Varnish (Spot Matte)' if ( $$sig_specs{'chkVarnishSpotMatte'.$side} );
+				$html .= '+Varnish (Dry Trap)' if ( $$sig_specs{'chkVarnishDryTrap'.$side} );
+				$html .= '+Varnish (Overall Gloss)' if ( $$sig_specs{'chkVarnishOverallGloss'.$side} );
+				$html .= '+Varnish (Overall Matte)' if ( $$sig_specs{'chkVarnishOverallMatte'.$side} );
+				$html .= '/' if $side eq 'SideOne'; 
+			} # end foreach side
+		$html .= '</td><td class="docketText">&nbsp;</td><td class="docketText">&nbsp;</td><td class="docketText">&nbsp;</td><td class="docketText"><br/><br/><br/></td></tr>';
+	} # end while service_index
+return $html;
+) ?>
+	<tr>
+		<td align="center"><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F<? echo ( ++$$variable{'SignatureIndex'} ) ?>+&NoText=1&Height=20"/></td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td><br><br><br></td>
+	</tr>
+</table>
+<br>
+<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white" style="table-layout: fixed;">
+	<tr> 
+		<td colspan="3" class="headerText"><b>Proofs</b>:</td>
+	</tr>
+<? eval ( 
+	openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'ProofServiceIndex'} );
+	openprint::print_Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ProofServiceIndex'} );
+ ) ?>
+<? while ( @{$$variable{'SignatureGroups'}} ) ?>
+	<tr>
+		<td class="headerText">
+<? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br><? endif ( $$variable{'Reference'} ) ?>
+	<table>
+		<tr>
+			<td class="headerText"><b>Quantity</b></td>
+			<td class="headerText"><b>Size</b></td>
+			<td class="headerText"><b>Type</b></td>
+		</tr>
+		<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
+		<? if ( $$variable{'ProofQuantity'} ) ?>
+		<tr>
+			<td class="docketText"><?ProofQuantity?>&nbsp;</td>
+			<td class="docketText"><?ProofWidth?>&quot;&nbsp;x&nbsp;<?ProofHeight?>&quot;</td>
+			<td class="docketText">
+			<? if ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>Digital Dylux<? endif ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>
+			<? if ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>Epson Proof<? endif ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>
+			<? if ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>Fuji Proof<? endif ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>
+			<? if ( $$variable{'ProofType'} eq 'PDFProof' ) ?>PDF Proof<? endif ( $$variable{'ProofType'} eq 'PDFProof' ) ?>
+			</td>
+		</tr>
+		<? endif ( $$variable{'ProofQuantity'} ) ?>
+		<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
+	</table>
+<? endif ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+</td>
+		<td class="docketText">
+<? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br><? endif ( $$variable{'Reference'} ) ?>
+	<table>
+		<tr>
+			<td class="headerText"><b>Quantity</b></td>
+			<td class="headerText"><b>Size</b></td>
+			<td class="headerText"><b>Type</b></td>
+		</tr>
+		<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
+		<? if ( $$variable{'ProofQuantity'} ) ?>
+		<tr>
+			<td class="docketText"><?ProofQuantity?>&nbsp;</td>
+			<td class="docketText"><?ProofWidth?>&quot;&nbsp;x&nbsp;<?ProofHeight?>&quot;</td>
+			<td class="docketText">
+			<? if ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>Digital Dylux<? endif ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>
+			<? if ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>Epson Proof<? endif ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>
+			<? if ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>Fuji Proof<? endif ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>
+			<? if ( $$variable{'ProofType'} eq 'PDFProof' ) ?>PDF Proof<? endif ( $$variable{'ProofType'} eq 'PDFProof' ) ?>
+			</td>
+		</tr>
+		<? endif ( $$variable{'ProofQuantity'} ) ?>
+		<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
+	</table>
+<? endif ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+		</td>
+		<td class="docketText">
+<? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br><? endif ( $$variable{'Reference'} ) ?>
+	<table>
+		<tr>
+			<td class="headerText"><b>Quantity</b></td>
+			<td class="headerText"><b>Size</b></td>
+			<td class="headerText"><b>Type</b></td>
+		</tr>
+		<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
+		<? if ( $$variable{'ProofQuantity'} ) ?>
+		<tr>
+			<td class="docketText"><?ProofQuantity?>&nbsp;</td>
+			<td class="docketText"><?ProofWidth?>&quot;&nbsp;x&nbsp;<?ProofHeight?>&quot;</td>
+			<td class="docketText">
+			<? if ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>Digital Dylux<? endif ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>
+			<? if ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>Epson Proof<? endif ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>
+			<? if ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>Fuji Proof<? endif ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>
+			<? if ( $$variable{'ProofType'} eq 'PDFProof' ) ?>PDF Proof<? endif ( $$variable{'ProofType'} eq 'PDFProof' ) ?>
+			</td>
+		</tr>
+		<? endif ( $$variable{'ProofQuantity'} ) ?>
+		<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
+	</table>
+<? endif ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+		</td>
+	</tr>
+<? endwhile ( @{$$variable{'SignatureGroups'}} ) ?>
+		<tr>
+            <td colspan="3" class="headerText"><b>Special Prepress Instructions:</b>
+			<b><? echo ( 'FM SCREENING' if $$variable{'ScreenType'} eq 'FM' ) ?></b>
+			</td>
+        </tr>
+        <tr>
+            <td class="headerText">&nbsp;</td>
+            <td class="headerText">&nbsp;</td>
+            <td class="headerText">&nbsp;</td>
+        </tr>
+
+</table>
+<br>
+<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+	<tr> 
+		<td width="10%" class="docketText" ><b>Quantity</b></td>
+		<td width="60%" class="headerText" ><b>Bindery Instructions:</b></td>
+		<td width="10%" class="headerText" align="center"><b>Box Count</b></td>
+		<td width="10%" class="headerText" align="center"><b>Qty/Box</b></td>
+		<td width="10%" class="headerText" align="center"><b>Total</b></td>
+	</tr>
+	<tr>
+		<td class="docketText" valign="top">
+			<? echo ( $$variable{'Project'}->ordered_quantity() ) ?>
+		</td>
+		<td class="docketText" valign="top">
+		<? echo (
+			if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {
+				my $specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, openprint::project::get_project_type_service_index( $log, $dbh, $$variable{'ProjectIndex'} ) );
+				return qq`<img style="float: left;" src="/images/templates/$$specs{'rdbTemplateType'}.gif"/>` if $$specs{'rdbTemplateType'};
+			} # end if
+			return '';
+		) ?>
+		<? if ( $$variable{'BinderyServices'} eq '' ) ?>
+		Ship Flat
+		<? endif ( $$variable{'BinderyServices'} eq '' ) ?>
+        <!-- This following varible should list all the bindery services as per the project view page separated by a comma -->
+		<? if ( sets::isin( 'Saddle Stitching', split(',',$$variable{'BinderyServices'})) ) ?>
+		Stitch 
+		<? endif ( sets::isin( 'Saddle Stitching', split(',',$$variable{'BinderyServices'})) ) ?>
+		<? if ( sets::isin( 'Loop Stitching', split(',',$$variable{'BinderyServices'})) ) ?>
+		Loop Stitch
+		<? endif ( sets::isin( 'Loop Stitching', split(',',$$variable{'BinderyServices'})) ) ?>
+
+		<? if ( sets::isin( 'Perforation', split(',',$$variable{'BinderyServices'} ) ) ) ?>
+		Perf
+		<? endif ( sets::isin( 'Perforation', split(',',$$variable{'BinderyServices'} ) ) ) ?>
+
+		<? if ( ! ( sets::isin( 'Saddle Stitching', split(',',$$variable{'BinderyServices'})) or sets::isin( 'Loop Stitching', split(',',$$variable{'BinderyServices'})) ) ) ?>
+			<? if ( sets::isin( 'Cutting', split(',',$$variable{'BinderyServices'})) ) ?>
+			Trim
+			<? if ( ! sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) ?>
+			<?txtFinalWidth?>&quot; x <?txtFinalHeight?>&quot;
+			<? endif ( ! sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) ?>
+
+			<? endif ( sets::isin( 'Cutting', split(',',$$variable{'BinderyServices'})) ) ?>
+			<? echo (
+                if ( sets::isin( 'Scoring', split(',',$$variable{'BinderyServices'} ) ) ) {
+                    my $html = ' with <b>';
+                    my %services = $$variable{'Project'}->get_services();
+                    my $specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $services{'Scoring'}[0] );
+                    my @signatures = $$variable{'Project'}->signatures();
+                    foreach my $signature_service_index ( @signatures ) {
+                        my $sig_specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $signature_service_index );
+                        next if ! $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"};
+                        if ( $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} == 1 ) {
+                        $html .= $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} . ' x Score';
+                        } else {
+                        $html .= $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} . ' x Scores';
+                        } # end if
+                        $html .= '</b>';
+                        $html .= ' on form ' . $$sig_specs{'SignatureIndex'} if @signatures > 1;
+                    } # end foreach
+                    return $html;
+                } # end if
+                return;
+            ) ?>
+
+			<? if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) ?>
+			Fold <?txtWidth?>&quot; x <?txtHeight?>&quot;-&gt;<?txtFinalWidth?>&quot; x <?txtFinalHeight?>&quot;
+			<? endif ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) ?>
+		<? endif ( ! ( sets::isin( 'Saddle Stitching', split(',',$$variable{'BinderyServices'})) or sets::isin( 'Loop Stitching', split(',',$$variable{'BinderyServices'})) ) ) ?>
+
+			<? echo (
+				if ( sets::isin( 'Drilling', split(',',$$variable{'BinderyServices'})) ) {
+					my %services = openprint::project::get_services( $log, $dbh, $$variable{'ProjectIndex'} );
+					my %drill_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$variable{'ProjectIndex'}, $services{'Drilling'} );
+					return sprintf('Drill %d holes (%s&quot;)', @drill_specs{'txtHoleQty','txtHoleSize'} );
+				} # end if
+				return;
+			) ?>
+
+        <? if ( $$variable{'txtTotalPageQuantity'} ) ?>
+			<? if ( $$variable{'rdbCover'} eq 'DifferentCover' ) ?>
+				<? eval ( $$variable{'txtTotalPageQuantity'} -= 4; ) ?>
+				<?txtTotalPageQuantity?>pp+C,
+			<? else ( $$variable{'rdbCover'} eq 'DifferentCover' ) ?>
+				<?txtTotalPageQuantity?>pp,
+			<? endif ( $$variable{'rdbCover'} eq 'DifferentCover' ) ?>
+			<?txtFinalWidth?>&quot; x <?txtFinalHeight?>&quot;
+			<? if ( $$variable{'txtInsertQuantity'} ) ?>
+            with 
+            <?txtInsertQuantity?>
+            Inserts Page 
+            <?Page1?>
+            and page 
+            <?Page2?>
+			<? endif ( $$variable{'txtInsertQuantity'} ) ?>
+        <? endif ( $$variable{'txtTotalPageQuantity'} ) ?>
+		<? eval ( @{$$variable{'ShrinkWrapServices'}} = openprint::print::check_for_service( $log, $dbh, $$variable{'ProjectIndex'}, 'ShrinkWrap' ) ) ?>
+		<? while ( $$variable{'ShrinkWrapServiceIndex'} = pop @{$$variable{'ShrinkWrapServices'}} ) ?>
+		<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'KraftWrapServiceIndex'} ); ) ?>
+, ShrinkWrap in <?txtWrapQuantity?>'s
+		<? endwhile ( $$variable{'ShrinkWrapServiceIndex'} = pop @{$$variable{'ShrinkWrapServices'}} ) ?>
+
+		<? eval ( @{$$variable{'BundleServices'}} = openprint::print::check_for_service( $log, $dbh, $$variable{'ProjectIndex'}, 'Bundle' ) ) ?>
+		<? while ( $$variable{'BundleServiceIndex'} = pop @{$$variable{'BundleServices'}} ) ?>
+		<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'BundleServiceIndex'} ); ) ?>
+, Bundles in <?txtWrapQuantity?>'s
+		<? endwhile ( $$variable{'BundleServiceIndex'} = pop @{$$variable{'BundleServices'}} ) ?>
+
+		<? eval ( @{$$variable{'KraftWrapServices'}} = openprint::print::check_for_service( $log, $dbh, $$variable{'ProjectIndex'}, 'KraftWrap' ) ) ?>
+		<? while ( $$variable{'KraftWrapServiceIndex'} = pop @{$$variable{'KraftWrapServices'}} ) ?>
+		<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'KraftWrapServiceIndex'} ); ) ?>
+, KraftWrap in <?txtWrapQuantity?>'s
+		<? endwhile ( $$variable{'KraftWrapServiceIndex'} = pop @{$$variable{'KraftWrapServices'}} ) ?>
+
+		<? if ( sets::isin( 'Plain Cartons', split(',',$$variable{'PackagingServices'})) ) ?>
+		, Bulk Pack in Cartons<br>
+		<? endif ( sets::isin( 'Plain Cartons', split(',',$$variable{'PackagingServices'})) ) ?>
+	</td>
+		<td class="docketText">&nbsp;</td>
+		<td class="docketText">&nbsp;</td>
+		<td class="docketText">
+			<br><br><br><br><br><br><br><br>
+		</td>
+
+	</tr>
+</table>
+<br>
+<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+	<tr> 
+		<td width="60%" class="headerText"><b>Shipping Instructions</b>:</td>
+		<td width="40%" class="headerText"><b>Sample Instructions</b>:</td>
+	</tr>
+	<tr> 
+		<td rowspan="2" class="docketText">&nbsp;
+			<? if ( $$variable{'ShippingServiceIndex'} ) ?>
+			<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'ShippingServiceIndex'} ); ) ?>
+						<?rdbShippingType?>
+						- 
+						<?txtPackageQty?>
+						<?ServiceTypeName?>
+						- 
+						<?txtItemsPerPackage?>
+						- 
+						<?txtPackageWeight?>
+						lbs.
+			<? else ( $$variable{'ShippingServiceIndex'} ) ?>
+				To be picked up by customer.
+			<? endif ( $$variable{'ShippingServiceIndex'} ) ?>
+
+			</td>
+		<td class="headerText"><br/><br/><br/></td>
+	</tr>
+	<tr> 
+		<td class="hugeText"><br/><b>Date Due</b>:<?RequiredDateAlternate?><br/><br/></td>
+	</tr>
+</table>

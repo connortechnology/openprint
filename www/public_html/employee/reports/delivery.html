@@ -1,0 +1,65 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Delivery</h2>
+</div>
+<script type="text/javascript">
+	function load_projects( form ) {
+		LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( form ) );
+	} // end function
+</script>
+<form name="f1" method="post" action="delivery.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<p>
+			<label>Project Status:</label>
+			<select name="Status" multiple size="2" onchange="load_projects(this.form);">
+			<? echo ( 
+				my @options = ( 'Shipped','Shipped','Picked Up', 'Picked Up' );
+				my @selected = defined $r->param('Status') ? $r->param('Status') : ( 'Shipped', 'Picked Up' );
+				return ssi::make_select( \@options, \@selected );
+			 ) ?>
+			</select>
+		</p>
+		<p>
+			<label>CSR:</label>
+			<select name="CSR" size="1" onchange="load_projects(this.form);">
+			<? echo ( 
+				my @options = ( '', 'All' );
+				push @options, map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'usergroup'=>'Sales','order'=>'lower(strfirstname),lower(strlastname)' );
+				return ssi::make_drop_down( \@options, $openprint::param{'CSR'} );
+			 ) ?>
+			</select>
+		</p>
+	<? eval (
+		my @time = localtime(time);
+		if ( ! $r->param('DateStartYear') ) {
+			@$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
+		} else {
+			@$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,
+			$r->param('DateStartYear'), $r->param('DateStartMonth'),$r->param('DateStartDay') );
+		} # end if
+
+		if ( ! $r->param('DateEndYear') ) {
+			@$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
+		} else {
+			@$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh,
+			$r->param('DateEndYear'), $r->param('DateEndMonth'),$r->param('DateEndDay') );
+		} # end if
+	) ?>
+		<p>
+			<label>Date:</label>
+			<select name="DateStartYear"><?DateStartYears?></select>
+			<select name="DateStartMonth"><?DateStartMonths?></select>
+			<select name="DateStartDay"><?DateStartDays?></select>
+		 -
+		
+			<select name="DateEndYear"><?DateEndYears?></select>
+			<select name="DateEndMonth"><?DateEndMonths?></select>
+			<select name="DateEndDay"><?DateEndDays?></select>
+		</p>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', q{load_projects(f1);}, '', 'Show Results' ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<br/>
+<div id="Results">Select Report Criteria, and click Show Results.</div>

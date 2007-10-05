@@ -1,0 +1,221 @@
+<div class="PageTitle">
+<h1>MANAGERIAL</h1>
+<h2>User Profiles</h2>
+</div>
+<script type="text/javascript">
+function keepCompany( what ){
+	var Company = what.ddmCustomer.selectedIndex;
+	clearForm(what);
+	what.ddmCustomer.selectedIndex = Company;
+}
+</script>
+Please select a company or user to obtain login information.<br/>
+<br/>
+<div id="UserProfile">
+	<form name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
+		<fieldset class="filters"><legend>Search:</legend>
+			<p>
+				<label>Company Name:</label>
+				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" />
+				<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+					<option value="">All Companies</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(strname)') ], $openprint::param{'ddmCustomer'} ); ) ?>
+				</select>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
+			</p>
+			<p>
+				<label>User Type:</label>
+				<select name="ddmUserRole" onchange="f1.submit();">
+					<option value="">All User Types</option>
+					<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $openprint::param{'ddmUserRole'} ); ) ?>
+				</select>
+			</p>
+			<p>
+				<label>User Name:</label>
+				<select name="ddmUser" onchange="f1.submit();">
+					<option value="">Select a User</option>
+					<?FILL_USER_NAME?>
+				</select>
+			</p>
+		</fieldset>
+		<fieldset>
+			<p> 
+				<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Company Info.<? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
+				
+				<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
+				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
+				<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
+				<? echo ( join ('',
+					ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;'),
+					ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;'),
+					ssi::writeButton( $log, $dbh, 'New1','new.gif',"keepCompany(f1);",'','New'),
+					ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
+					ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+					ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
+				); ) ?>
+			</p>
+		</fieldset>
+		<fieldset><legend>User Information:</legend>
+			<p> 
+				<label>Company Name:</label>
+				<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" style="width: auto;" />
+				<select name="company_id">
+					<option value=""> Select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(strname)') ], $$variable{'User'}->company_id() ); ) ?>
+				</select>
+			</p>
+			<p>
+				<label>Salutation:</label>
+				<input type="radio" id="salutationMr." name="salutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
+				<label class="radio" for="salutationMr.">Mr.</label>
+				<input type="radio" id="salutationMrs." name="salutation" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
+				<label class="radio" for="salutationMrs.">Mrs.</label>
+				<input type="radio" id="salutationMs." name="salutation" value="Ms." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Ms.' ) ?> />
+				<label class="radio" for="salutationMs.">Ms.</label>
+				<input type="radio" id="salutationMiss" name="salutation" value="Miss" <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Miss' ) ?> />
+				<label class="radio" for="salutationMiss">Miss</label>
+			</p>
+			<p> 
+				<label>First Name:</label>
+				<input type="text" name="firstname" value="<? hecho ( $$variable{'User'}->firstname() ) ?>" />
+			</p>
+			<p> 
+				<label>Last Name:</label>
+				<input type="text" name="lastname" value="<? hecho ( $$variable{'User'}->lastname() ) ?>" />
+			</p>
+			<p> 
+				<label>Title:</label>
+				<input type="text" name="title" value="<? hecho ( $$variable{'User'}->title() ) ?>" />
+			</p>
+			<p> 
+				<label>Phone:</label>
+				<input type="text" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" style="width: auto;" size="15" />x
+				<input type="text" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" style="width: auto;" size="4" />
+			</p>
+			<p> 
+				<label>Fax:</label>
+				<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
+			</p>
+			<p> 
+				<label>Add to our Mailing List</label>
+				<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
+				<label class="radio" for="MailingListY">Yes</label>
+				<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
+				<label class="radio" for="MailingListN">No</label>
+			</p>
+			<p> 
+				<label>Is this account a company administrator?</label>
+			 
+				<input type="radio" id="administratorY" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() eq 'Y' ) ?> value="Y" />
+				<label class="radio" for="administratorY">Yes</label>
+				<input type="radio" id="administratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" />
+				<label class="radio" for="administratorN">No</label>
+			</p>
+			<p> 
+				<label>Can this account login to the web site?</label>
+				<input type="radio" id="web_activeY" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() eq 'Y' ) ?> value="Y" />
+				<label class="radio" for="web_activeY">Yes</label>
+				<input type="radio" id="web_activeN" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() ne 'Y' ) ?> value="N" />
+				<label class="radio" for="web_activeN">No</label>
+			</p>
+			<p>
+				<label>Can this account login to the ftp site?</label>
+				<input type="radio" id="ftp_activeY" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="Y" />
+				<label class="radio" for="ftp_activeY">Yes</label>
+				<input type="radio" id="ftp_activeN" name="ftp_active" <?echo ( 'checked="checked"' if ! $$variable{'User'}->ftp_active() ) ?> value="N" />
+				<label class="radio" for="ftp_activeN">No</label>
+			</p>
+			<p> 
+				<label>Custom Greeting</label>
+				<input type="text" name="greeting" value="<? hecho ( $$variable{'User'}->greeting() ) ?>" />
+			</p>
+			<p> 
+				<label>User Type</label>
+				<select name="type">
+					<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{'User'}->type() ); ) ?>
+				</select>
+			</p>
+		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+		<p> 
+			<label>Commission Rate</label>
+			<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" />
+		</p>
+		<p>
+			<label>Assistant to:</label>
+			<select name="csr_ids" size="4" multiple="multiple">
+				<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+			</select>
+		</p>
+		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+		<? eval ( @{$$variable{'Groups'}} = openprint::user::groups( $log, $dbh, $$variable{'UserIndex'} ); )?>
+		<p>
+			<label>Groups:</label>
+			<select name="UserGroups" multiple="multiple" size="4">
+				<? echo ( ssi::make_select( [openprint::usergroup::find( $log, $dbh )], $$variable{'Groups'} ) ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>User Category:</label>
+			<select name="selectUserCategories" size="4" multiple="multiple">
+			<?selectUserCategories?>
+			</select>
+		</p>
+		</fieldset>
+		<? if ( $$variable{'Email'} =~ /point-one.com/ ) ?>
+		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+		<fieldset><legend>Vacation Auto-Responder Settings:</legend>
+			<p>
+				<label>Vacation Message:</label>
+				<textarea name="VacationMessage" rows="10"><?VacationMessage?></textarea>
+			</p>
+			<p>
+				<label>Vacation Status:</label>
+				<input type="radio" id="VacationStateY" name="VacationState" <?VacationStateY?> value="Y">
+				<label class="radio" for="VacationStateY">Enabled</label>
+				<input type="radio" id="VacationStateN" name="VacationState" <?VacationStateN?> value="N">
+				<label class="radio" for="VacationStateN">Disabled</label>
+			</p>
+		</fieldset>
+		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+		<? endif ( $$variable{'Email'} =~ /point-one.com/ ) ?>
+		<fieldset><legend>Login Information:</legend> 
+			<p> 
+				<label>E-mail Address:</label>
+				<input	type="text" name="email" value="<? hecho ( $$variable{'User'}->email() ) ?>" />
+			</p>
+			<p> 
+				<label>Password:</label>
+				<input	type="text" name="password" value="<? echo ( $$variable{'User'}->password() ) ?>" />
+			</p>
+			<p> 
+				<label>Verify Password:</label>
+				<input	type="text" name="verifypassword" value="<? echo ( $$variable{'User'}->password() ) ?>" />
+			</p>
+			<p> 
+				<label>User must change password on next login?</label>
+				<input type="radio" id="ChangePasswordY" name="changepassword" <? echo ( 'checked="checked"' if $$variable{'User'}->changepassword() eq 'Y' ) ?> value="Y"/>
+				<label for="ChangePasswordY" class="radio">Yes</label>
+				<input type="radio" id="ChangePasswordN" name="changepassword" <? echo ( 'checked="checked"' if $$variable{'User'}->changepassword() ne 'Y' ) ?> value="N"/>
+				<label for="ChangePasswordN" class="radio">No</label>
+			</p>
+		</fieldset>
+		<fieldset>
+		<p>
+			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Company Info.<? endif ( $$variable{'CustomerIndex'} )?>&nbsp;</label>
+			
+	<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
+			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
+	<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
+				<? echo ( join ( '', 
+					ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;'),
+					ssi::writeButton( $log, $dbh, 'Next2','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;'),
+					ssi::writeButton( $log, $dbh, 'New2','new.gif',"keepCompany(f1);",'','New'),
+					ssi::writeButton( $log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
+					ssi::writeButton( $log, $dbh, 'Save2','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+					ssi::writeButton( $log, $dbh, 'Reset2','reset.gif','f1.reset();','','Reset'),
+	); ) ?>
+		</p>
+		</fieldset>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+</div>

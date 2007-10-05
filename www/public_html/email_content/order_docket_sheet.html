@@ -1,0 +1,19 @@
+<html>
+	<head>
+	<title><? echo ( $openprint::config{'SiteTitle'} ) ?> -->Docket Summary</title>
+	<style TYPE="text/css">
+		.docketText {font-family: Arial, Helvetica, Sans-Serif; font-size:8pt; color: #000000;}
+		.headerText {font-family: Arial, Helvetica, Sans-Serif; font-size:8pt;}
+		.bigheaderText {font-family: Arial, Helvetica, Sans-Serif; font-size:10pt;}
+        .hugeText {font-family: Arial, Helvetica, Sans-Serif; font-size:12pt;}
+	</style>
+		<base href="<? echo ( $openprint::config{'ExternalSiteURL'} ) ?>"/>
+	</head>
+	<body marginwidth="0" marginheight="0" topmargin="0" leftmargin="0" >
+	<? if ( $$variable{'Project'}->order_id() ) ?>
+	<!--#include virtual="/includes/main/summ/project_docket_sheet.html" -->
+	<? else ( $$variable{'Project'}->order_id() ) ?>
+		This Project has not been ordered yet. <?OrderId?>
+	<? endif ( $$variable{'Project'}->order_id() ) ?>
+	</body>
+</html>

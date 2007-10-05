@@ -1,0 +1,111 @@
+<form name="f1" method="post" action="surveys.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Select Survey</legend>
+		<p>
+			<label>Survey:</label>
+			<select name="survey_id" onchange="f1.submit();">
+				<option value=""> select </option>
+			<? echo ( 
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Survey::find( 'order'=>'lower(name)' ) ], $openprint::param{'survey_id'} );
+			) ?>
+			</select>
+		</p>
+		<p>
+			<label>CSR:</label>
+			<select name="CSR" onchange="f1.submit();">
+				<option value=""> All </option>
+			<? echo ( 
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'strLastName, strFirstName' ) ], $openprint::param{'CSR'} );
+			) ?>
+			</select>
+		</p>
+	</fieldset>
+	<fieldset>
+        <p>
+            <label>Name:</label>
+            <input type="text" name="name" value="<? echo ( $$variable{'Survey'}->name() ) ?>" />
+        </p>
+        <p>
+            <label>Description:</label>
+            <textarea name="description"><? echo ( $$variable{'Survey'}->description() ) ?></textarea>
+        </p>
+        <p class="buttons">
+            <? echo ( join('',
+                ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
+                ssi::writeButton( $log, $dbh, 'Copy','copy.gif',"f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
+                ); ) ?>
+        </p>
+    </fieldset>
+
+<? if ( $openprint::param{'survey_id'} ) ?>
+<fieldset><legend>Viewing Survey</legend>
+	<? echo (
+		my $html;
+		my @responses;
+		if ( $openprint::param{'CSR'} ) {
+			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses, Users WHERE user_id=users.index AND survey_id=? AND company_id IN (SELECT Index FROM Company WHERE lngSalesPerson=?) }, @openprint::param{'survey_id','CSR'} );
+		} else {
+			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses WHERE survey_id=?}, $openprint::param{'survey_id'} );
+		} # end if
+		if ( @responses ) {
+			$html .= '<span style="float:right;">';
+			$html .= ssi::writeButton( $log, $dbh, 'Responses', '', '', 'survey_responses.html?survey_id='.$openprint::param{'survey_id'}, 'View Responses' );
+			$html .= '</span>';
+			if ( @responses == 1 ) {
+				$html .= "There is 1 response.";
+			} else {
+				$html .= "There are " . scalar @responses. ' responses.';
+			} # end if
+		} else {
+			$html .= "There are no responses to this survey.";
+		} # end if
+		if ( $openprint::param{'CSR'} ) {
+			my $csr = new openprint::User( $openprint::param{'CSR'} );
+			$html .= 'CSR: ' . $csr->name();
+		} # end if
+		return $html;
+	) ?>
+	<br class="spacer"/>
+	<table class="List" style="border: 1px solid #353c91; border-width: 1px; table-layout: auto;">
+	<? echo (
+		my $html;
+		my @categories = sql::execute( $log, $dbh, q{SELECT id, name, type FROM survey_question_categories ORDER BY sorting} );
+		while ( my ( $cat_id, $cat_name, $cat_type ) = splice @categories, 0, 3 ) {
+			$html .= qq{<tr><th align="left">$cat_name</th>};
+			if ( $cat_type eq 'radio' ) {
+				$html .= qq{<th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>\n};
+			} else{
+				$html .= qq{<th colspan="6">&nbsp;</th>\n};
+			} # end if
+			$html .= "</tr>\n";
+			my @questions = sql::execute( $log, $dbh, q{SELECT id, text, type FROM survey_questions WHERE survey_id=? AND category_id=?}, $r->param('survey_id'),$cat_id );
+			while ( my ( $id, $text, $type ) = splice @questions, 0, 3 ) {
+				$html .= qq{<tr><td>$text</td>};
+				if ( $type eq 'radio' ) {
+					my @available_answers = sql::execute( $log, $dbh, q{SELECT answer_id FROM Survey_Question_Available_Answers WHERE question_id=? ORDER BY sorting}, $id );
+
+					my @answers;
+					if ( $r->param('CSR') ) {
+					@answers = sql::execute( $log, $dbh, q{SELECT answer FROM Survey_Responses WHERE survey_id=? AND question_id=? AND company_id IN (SELECT lngCustomerID FROM tbl_Customer WHERE lngSalesPerson=?)}, $r->param('survey_id'), $id, $r->param('CSR') );
+					} else {
+					@answers = sql::execute( $log, $dbh, q{SELECT answer FROM Survey_Responses WHERE survey_id=? AND question_id=?}, $r->param('survey_id'), $id  );
+					} # end if
+					my %counts;
+					foreach my $answer ( @answers ) {
+						$counts{$answer} += 1;
+					} # end foreach
+					foreach my $answer ( @available_answers ) {
+						$html .= sprintf( '<td align="center">%d%</td>' , 100*( $counts{$answer} / @answers ) );
+					} # end foreach
+				} else {
+					$html .= '<td colspan="6">&nbsp;</td>';
+				} # end if type
+				$html .= "</tr>\n";
+			} # end while questions
+		} # end while categories
+		return $html;
+		) ?>
+		</table>
+	</fieldset>
+<? endif ( $openprint::param{'survey_id'} ) ?>
+</form>

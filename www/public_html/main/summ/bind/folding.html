@@ -1,0 +1,48 @@
+<? eval ( openprint::Estimating::Folding::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ) ) ?>
+<div class="row">
+	<span class="label">Quantity:</span>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+		<span class="value"><? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?></span>
+		<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<br class="spacer"/>
+</div>
+<? eval ( @{$$variable{'tempSignatures'}} = @{$$variable{'Signatures'}} ) ?>
+<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatures'}},0,2; ) ?>
+	<div class="row">
+		<? if ( $$variable{'Reference'} ) ?>For <b><?Reference?></b>:<? endif ( $$variable{'Reference'} ) ?>
+	</div>
+	<div class="row">
+		<span class="label">FoldType:</span>
+		<? echo ( my $html;
+			foreach my $qty_index ( 1 .. 3 ) {
+				next if ! $$variable{"txtQuantity$qty_index"};
+				$html .= '<span class="value">';
+				foreach my $foldtype ( sort keys %openprint::Estimating::Folding::fold_types ) {
+					next if ! $$variable{$foldtype.'-Qty-'.$$variable{'SignatureIndex'}.'-'.$qty_index};
+					$html .= $$variable{$foldtype.'-Qty-'.$$variable{'SignatureIndex'}.'-'.$qty_index} . ' - ' . $openprint::Estimating::Folding::fold_types{$foldtype} . '<br/>';
+				} # end foreach
+				$html .= '</span>';
+			} # end foreach
+			return $html;
+		) ?>
+	</div>
+	<div class="row">
+		<span class="label">Equipment:</span>
+		<!-- The rest is done for each qty -->
+		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+			<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+			<span class="value"><? echo ( 
+				my $E = new openprint::Equipment( $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} );
+				return $E->name();
+			)  ?></span>
+			<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<br class="spacer"/>
+	</div>
+<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatures'}},0,2; ) ?>

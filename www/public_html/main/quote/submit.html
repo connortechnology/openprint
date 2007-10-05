@@ -1,0 +1,135 @@
+<link href="/css/quote.css" rel="stylesheet" type="text/css">
+<div id="Quote">
+Please review the quote below to ensure accuracy.  When ready, click "Submit Quote" to save it and send a copy via email to the addresses listed.<br/>
+<br class="spacer"/>
+<!--#include virtual="/includes/quote_header.html"-->
+<!--#include virtual="/includes/quote_information.html"-->
+<br class="spacer"/><br/>
+<form name="f1" method="post" action="/main/quote/confirmation.html">
+<? if ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<table class="List">
+	<tr> 
+		<th align="left">Projects</th>
+		<th width="130" align="right">Weight</th>
+		<th width="50" align="right">%</th>
+		<th width="90" align="right">Qty</th>
+		<th width="90" align="right">Price</th>
+		<th width="90" align="right">New Price</th>
+	</tr>
+	<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+	<tr<?rowclass?>> 
+		<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( ssi::htmlize($$variable{'reference'}) . ':<br/>'  if $$variable{'reference'} ) ?><? echo ( new openprint::Project( $$variable{'project_index'} )->summary(); ) ?></a></td>
+		<td colspan="5">
+			<table>
+				<? while ( @$variable{'qty_index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+				<? if ( $$variable{'qty'} ) ?>
+				<tr> 
+					<td width="130" align="right">
+					<? echo (
+						my $Project = new openprint::Project( $$variable{'project_index'} );
+						my %services = $Project->services();
+						my $weight;
+
+						if ( $services{'BulkSkids'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} elsif ( $services{'PlainCartons'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} else {
+							$weight = openprint::print::get_finished_weight( $log, $dbh, $Project->id() ) * $$variable{qty};
+						} # end if
+						my $g = Math::Units::convert( $weight, 'lbs','g');
+						if ( $g > 1000 ) {
+							return sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
+						} else {
+							return sprintf( '%.0flbs (%.0fg)', $weight, $g );
+						} # end if
+					) ?></td>
+					<td width="50" align="right"><?markup?></td>
+					<td width="90" align="right"><?qty?></td>
+					<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> <?stdprice?></td>
+					<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> <?newprice?></td>
+				</tr>
+				<? endif ( $$variable{'qty'} ) ?>
+				<? endwhile ( @$variable{'qty_index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+				</table>
+			</td>
+		</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+</table>
+<? else ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<table class="List">
+	<tr> 
+		<th align="left">Projects</th>
+		<th width="130" align="right">Weight</th>
+		<th width="100" align="right">Qty</th>
+		<th width="100" align="right">Price</th>
+	</tr>
+	<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+	<tr<?rowclass?>> 
+		<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( ssi::htmlize($$variable{'reference'}) . ':<br/>'  if $$variable{'reference'} ) ?><? echo ( new openprint::Project( $$variable{'project_index'} )->summary(); ) ?></a></td>
+		<td colspan="3">
+			<table>
+				<? while ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+				<? if ( $$variable{'qty'} ) ?>
+				<tr> 
+					<td width="130" align="right">
+					<? echo (
+						my $Project = new openprint::Project( $$variable{'project_index'} );
+						my %services = $Project->services();
+						my $weight;
+
+						if ( $services{'BulkSkids'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} elsif ( $services{'PlainCartons'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} else {
+							$weight = openprint::print::get_finished_weight( $log, $dbh, $Project->id() ) * $$variable{qty};
+						} # end if
+						my $g = Math::Units::convert( $weight, 'lbs','g');
+						if ( $g > 1000 ) {
+							return sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
+						} else {
+							return sprintf( '%.0flbs (%.0fg)', $weight, $g );
+						} # end if
+					) ?></td>
+					<td width="100" align="right"><?qty?></td>
+					<td width="100" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?></td>
+				</tr>
+				<? endif ( $$variable{'qty'} ) ?>
+				<? endwhile ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+			</table>
+		</td>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+</table>
+<? endif ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+	<? if ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) ) ?>
+			<br/>
+			<fieldset id="SalesRepComments">
+				<p><label>Administrator Name:</label>
+					<input type="text" name="AdministratorName" value="<?AdministratorName?>" />
+				</p>
+				<p>
+					<label>Administrator Comments:</label>
+					<textarea name="AdministratorComments" rows="5"><?AdministratorComments?></textarea>
+				</p>
+			</fieldset>
+	<? endif ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) ) ?>
+	<div style="width:49%; float: right;" align="right"><br/><span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+		Prices are subject to applicable taxes.<br/>
+	</div>
+	<br class="spacer"/>
+	<!--#include virtual="/skins/<?SiteTitle?>/includes/quote_disclaimer.html"-->
+	<br/>
+	<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'SubmitQuote', 'submitQuote.gif', "f1.btnFunction.value='Submit Quote';f1.submit();", '', 'Submit Quote' ); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction"/>
+</form>
+</div>
+<br class="spacer"/>

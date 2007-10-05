@@ -1,0 +1,35 @@
+A new paper has been entered as follows:<br/><br/>
+<div class="row">
+	<span class="label">ID #:</span>
+	<span class="input"><a href="<?ExternalSiteURL?>/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}{'id'} ) ?></a></span>
+</div>
+<div class="row">
+	<span class="label">Name:</span>
+	<span class="value"><? echo ( $$variable{'Paper'}->name(); ) ?></span>
+</div>
+<div class="row">
+	<span class="label">Finish:</span>
+	<span class="value"><? echo ( $$variable{'Paper'}->finish(); ) ?></span>
+</div>
+<div class="row">
+	<span class="label">Colour:</span>
+	<span class="value"><? echo ( $$variable{'Paper'}->colour(); ) ?></span>
+</div>
+<div class="row">
+	<span class="label">Weight:</span>
+	<span class="value"><? echo ( $$variable{'Paper'}->weight(); ) ?></span>
+</div>
+<div class="row">
+	<span class="label">Quality:</span>
+	<span class="value"><? echo ( $$variable{'Paper'}->quality(); ) ?></span>
+</div>
+<div class="row">
+	<span class="label">MWeight:</span>
+	<span class="value"><? echo ( $$variable{'Paper'}->mweight(); ) ?></span>
+</div>
+<div class="row">
+	<span class="label">Owner:</span>
+	<span class="value"><? echo ( $$variable{'Paper'}->Owner()->name(); ) ?></span>
+</div>
+<br/>
+Please verify it and enter any missing information.  Click <a href="<?ExternalSiteURL?>/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>">here</a> to view this paper.

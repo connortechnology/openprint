@@ -1,0 +1,104 @@
+<script type="text/javascript">
+	function confirm_delete( form, payment_index ) {
+		if ( confirm( "Are you sure you want to delete this payment?" ) ) {
+			form.btnFunction.value = 'Delete';
+			form.PaymentIndex.value = payment_index;
+			form.submit();
+		} // end if
+	} // end function confirm_delete()
+</script>
+<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+<form name="f1" method="post" action="details.html?order_id=<?OrderID?>">
+	<!--#include virtual="/includes/order_header.html" -->
+	<br class="spacer"/>
+	<table class="List" style="table-layout: auto;">
+		<tr>
+			<th width="65" align="left">Project #</th>
+			<th align="left">Reference</th>
+			<th align="left">Status</th>
+			<th width="100" align="center">Requested Date</th>
+			<th width="100" align="center">Due Date</th>
+			<th align="right">Qty</th>
+			<th width="75" align="right">Price</th>
+		</tr>
+		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+		<tr<?rowclass?>>
+			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->reference(); ) ?></a></td>
+			<td align="left"><? echo ( $$variable{'Project'}->status(); ) ?></td>
+			<td align="center"><? echo ( $$variable{'Project'}->requested_date(); ) ?></td>
+			<td align="center"><? echo ( $$variable{'Project'}->due_date(); ) ?></td>
+			<td align="right"><? echo ( $$variable{'Project'}->ordered_quantity(); ) ?></td>
+			<td align="right"><?CurrencySymbol?> <? echo ( $$variable{'Project'}->ordered_price(); ) ?></td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+	</table>
+	<div style="float: right; width: 250px;">
+		<!--#include virtual="/includes/order_totals.html" --> 
+		<table>
+			<tr> 
+				<td width="175" align="right"><b>Amount Paid:</b></td>
+				<td width="75" align="right"><?CurrencySymbol?> <?AmountPaid?></td>
+			</tr>
+			<? if ( $$variable{'AmountPaid'} < $$variable{'Downpayment'} ) ?>
+			<tr> 
+				<td align="right"><b>Deposit Due:</b></td>
+				<td align="right"><?CurrencySymbol?> <?DepositDue?></td>
+			</tr>
+			<? endif ( $$variable{'AmountPaid'} < $$variable{'Downpayment'} ) ?>
+			<tr> 
+				<td align="right"><b>Amount Owing:</b></td>
+				<td align="right"><?CurrencySymbol?> <?AmountOutstanding?></td>
+			</tr>
+		</table>
+		<br/>
+		<span class="Currency">All prices listed in <?CurrencyName?>.</span>
+	</div>
+	<br class="spacer"/>
+	<table class="List">
+		<tr>
+			<th width="50" align="left">Ref #</th>
+			<th width="70" align="center">Date</th>
+			<th width="100" align="left">Type</th>
+			<th align="left">Description</th>
+			<th width="120" align="right">Amount</th>
+			<th width="50" align="right">&nbsp;</th>
+		</tr>
+		<? if ( $$variable{'PAYMENTS'} ) ?>
+		<? while ( @$variable{'payment_index','date','type','description','amount','currency_id'} = splice @{$$variable{'PAYMENTS'}},0,6; ) ?>
+			<tr class="<?colRow?>"> 
+				<td><?payment_index?></td>
+				<td align="center"><?date?></td>
+				<td>&nbsp;<?type?></td>
+				<td>&nbsp;<?description?></td>
+				<td align="right"><? echo ( new openprint::Currency($$variable{'currency_id'})->symbol(); ) ?> <?amount?></td>
+				<td align="right"><script type="text/javascript">writeButton('Delete<?payment_index?>','',"confirm_delete( document.f1, '<?payment_index?>' );", '', 'Delete' );</script></td>
+			</tr>
+			<? eval ( $$variable{'colRow'} = $$variable{'colRow'} ? '' : 'colRow' ) ?>
+		<? endwhile ( @$variable{'payment_index','date','type','description','amount','currency_id'} = splice @{$$variable{'PAYMENTS'}},0,6; ) ?>
+		<? endif ( $$variable{'PAYMENTS'} ) ?>
+		<tr class="totals">
+			<td colspan="3">Add new payment:</td>
+			<td><input type="text" name="Description" style="width: 100%;"/></td>
+			<td align="right"><?CurrencySymbol?><input type="text" name="Amount" style="width:auto;" size="10"/></td>
+			<td><? echo (ssi::writeButton($log, $dbh, 'AddPayment', 'add', "f1.btnFunction.value='Save';f1.submit();",'','Add' ); ) ?></td>
+		</tr>
+	</table>
+	<br class="spacer"/>
+	<div style="float: right;">
+		<span style="float: left;">Invoice ID: <input type="text" id="invoice_id" name="invoice_id" /></span>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Invoice', 'invoice.gif', "f1.btnFunction.value='Invoice';f1.submit();", '', 'Mark Invoiced' ); ) ?>
+	</div>
+	<br class="spacer"/>
+	<div style="float: right;">
+		<? echo ( my $html;
+		#writeButton('Send','sendEmailInvoice.gif', "f1.btnFunction.value='Send';f1.submit();",'','Send Email Invoice' );
+		$html .= ssi::writeButton( $log, $dbh, 'Pay','pay.gif', "f1.btnFunction.value='Pay';f1.submit();",'','Pay' );
+		$html .= ssi::writeButton( $log, $dbh, 'Back','back.gif', '','search.html','Back' );
+		return $html;
+		) ?>
+	</div>
+	<input type="hidden" name="PaymentIndex"/>
+	<input type="hidden" name="btnFunction"/>
+</form>

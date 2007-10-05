@@ -1,0 +1,85 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<div class="PageTitle">
+<h1>Prepress</h1>
+<h2>Proofs</h2>
+</div>
+<div class="Service">
+Please enter the specifications for your proofs. In most cases these are automatically chosen, but if you would like to modify them, check the override and make your changes.
+	<form name="f1" method="post" action="/main/project/view.html">
+<p><label>Do you require colour proofs?</label>
+<input type="radio" name="RequireColourProofs" id="RequireColourProofsY" value="Y" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'RequireColourProofs'} eq 'Y' ) ?> />
+<label class="radio" for="RequireColourProofsY">Yes</label>
+<input type="radio" name="RequireColourProofs" id="RequireColourProofsN" value="N" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'RequireColourProofs'} eq 'N' ) ?> />
+ <label class="radio" for="RequireColourProofsN">No</label>
+<input type="radio" name="RequireColourProofs" id="RequireColourProofsA" value="A" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin($$variable{'RequireColourProofs'}, ['Y','N'] ) ) ?> />
+ <label class="radio" for="RequireColourProofsA">Auto</label>
+</p>
+		<!-- The rest is done for each qty -->
+		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
+			<fieldset><legend>The following results are for Quantity <?QTYIndex?> (<? echo ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>)</legend>
+
+			<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures() ) ?>
+			<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}}; ) ?>
+				<? eval ( 
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
+					$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
+					$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
+					$$variable{'Reference'} .= openprint::service::summary( $$variable{'Project'}->id(), @$variable{'SignatureServiceIndex','QTYIndex'} );
+					$$variable{'Reference'} = ssi::htmlize( $$variable{'Reference'} );
+				) ?>
+			<table>
+				<tr><td valign="top" rowspan="<? echo ( int(@{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}}/6)+2) ?>"><?Reference?></td><th width="40">Qty</th><th width="170">Dimensions</th><th>Type</th><th width="105">Unit Price</th><th width="90">&nbsp;</th></tr>
+	<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}},0,6; ) ?>
+				<tr>
+					<td align="center"><input type="text" name="txtProofQuantity-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofQuantity?>" size="3" onkeyup="calc('f1')"  /></td>
+					<td align="center">
+						<input type="text" name="txtProofWidth-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofWidth?>" size="6" onkeyup="calc('f1')"	 />
+						x 
+						<input type="text" name="txtProofHeight-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofHeight?>" size="6" onkeyup="calc('f1')"  /><br/>
+					</td>
+					<td><select name="ddmProofType-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" onchange="calc('f1');">
+					<option value="">select one</option>
+					<?ddmProofType?>
+					</select></td>
+					<td><?CurrencySymbol?><input type="text" name="txtProofUnitPrice-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+					<td>
+					<input type="checkbox" id="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" name="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverride-$$variable{'SignatureIndex'}-$$variable{'ProofIndex'}-$$variable{'QTYIndex'}"} ) ?> onchange="if ( ! this.checked ) calc('f1');" />
+					<label for="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>">Override</label>
+					<input type="hidden" name="txtProofIndex-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofIndex?>"/>
+					</td>
+				</tr>
+	<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}},0,6; ) ?>
+				<tr>
+					<td colspan="4" align="right">Additional proofs?</td>
+					<td colspan="1">
+						<input type="radio" id="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>Y" name="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>" value="Yes" />
+						<label for="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>Y">Yes</label>
+						<input type="radio" id="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>N" name="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>" value="No" checked="checked" />
+						<label for="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>N">No</label>
+					</td>
+					<td></td>
+				</tr>
+			</table>
+			<br/>
+<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}}; ) ?>
+			<table>
+				<tr>
+					<td align="right"><b>Total Service Price:</b></td>
+					<td width="85"><?CurrencySymbol?><input name="txtPrice<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+					<td width="90"><? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin($openprint::session{'user_type'}, ['A','E'] ); ) ?></td>
+				</tr>
+			</table>
+			<br class="spacer"/>
+			<input type="hidden" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>"/>
+		</fieldset>
+		<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
+			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<!-- End of Results -->
+
+			<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+			<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+	</form>
+</div><!--Service-->

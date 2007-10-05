@@ -1,0 +1,70 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<? eval (
+	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+	$$variable{'Columns'} = 'Three';
+	} else {
+	$$variable{'Columns'} = 'Two';
+	} # end if
+	push @{$$variable{'uvoptions'}}, 'Overall' if openprint::Service::find('strid'=>'UVCoatingOverall');
+	push @{$$variable{'uvoptions'}}, 'Spot' if openprint::Service::find('strid'=>'UVCoatingSpot');
+	push @{$$variable{'uvoptions'}}, 'None';
+) ?>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend>Ultra Violet Coating</legend>
+		<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'Signatures'}} ) ?>
+		<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
+			<? if ( $$variable{'Reference'} ) ?>
+				Information for <?Reference?>:<br/>
+			<? endif ( $$variable{'Reference'} ) ?>
+			<div class="Front">
+				<p>
+					<label>Coating on Front:</label>
+					<? echo (
+						my $html;
+						foreach my $type ( @{$$variable{'uvoptions'}} ) {
+							$html .= qq`<input type="radio" id="SideOneCoatingType$type-$$variable{'SignatureIndex'}" name="SideOneCoatingType-$$variable{SignatureIndex}" value="$type" onclick="calc(this.form.name);" ` . ( $$variable{"SideOneCoatingType-$$variable{'SignatureIndex'}"} eq $type ? 'checked="checked"' : '' ) . " />\n";
+							$html .= qq`<label class="radio" for="SideOneCoatingType$type-$$variable{SignatureIndex}">$type</label>\n`;
+						} # end foreach
+						return $html;
+					) ?>
+				</p>
+			</div>
+			<div class="Back">
+				<p>
+					<label>Coating on Back:</label>
+					<? echo (
+						my $html;
+						foreach my $type ( @{$$variable{'uvoptions'}} ) {
+							$html .= qq`<input type="radio" id="SideTwoCoatingType$type-$$variable{'SignatureIndex'}" name="SideTwoCoatingType-$$variable{SignatureIndex}" value="$type" onclick="\$('Results-$$variable{SignatureIndex}').show();calc(this.form.name);" ` . ( $$variable{"SideTwoCoatingType-$$variable{'SignatureIndex'}"} eq $type ? 'checked="checked"' : '' ) . " />\n";
+							$html .= qq`<label class="radio" for="SideTwoCoatingType$type-$$variable{SignatureIndex}">$type</label>\n`;
+						} # end foreach
+						return $html;
+					) ?>
+				</p>
+			</div>
+			<br class="spacer"/>
+			<br class="spacer"/>
+			<br class="spacer"/>
+			<div id="Results-<?SignatureIndex?>" >
+				<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
+				<!--#include virtual="/includes/main/proj/signature_equipment.html"-->
+			</div>
+		</fieldset>
+		<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
+		<fieldset><legend>Results</legend>
+			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		</fieldset>
+		<hr/>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+        <input type="hidden" name="btnFunction" value="Save Service"/>
+        <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+        <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+        <input type="hidden" name="ServiceType" value="<?ServiceType?>"/>
+        <input type="hidden" name="Status"/>
+		<div id="hdnBreakdown1" style="display: none;"></div>
+        <div id="hdnBreakdown2" style="display: none;"></div>
+        <div id="hdnBreakdown3" style="display: none;"></div>
+	</form>
+</div>
+

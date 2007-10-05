@@ -1,0 +1,48 @@
+<form name="f1" method="post" action="currency.html">
+	To set a currency conversion, select the destination currency and the rate, and click Set Conversion.  Existing conversions will be overwritten.
+	<table class="List">
+		<tr>
+			<th width="100" align="left">Long Name</th>
+			<th width="75" align="left">Short Name</th>
+			<th width="50" align="left">Symbol</th>
+			<th align="left">Conversions</th>
+		</tr>
+		<? eval ( @{$$variable{'Currencies'}} = openprint::Currency::find('order'=>'lower(name)'); ) ?>
+		<? while ( $$variable{'Currency'} = shift @{$$variable{'Currencies'}}; ) ?>
+		<tr<?rowclass?>> 
+			<td valign="top"> 
+				<input type="text" name="strName<? echo ( $$variable{'Currency'}->id(); ) ?>" value="<? echo ( $$variable{'Currency'}->name(); ) ?>" />
+			</td>
+			<td valign="top"> 
+				<input type="text" name="strShort<? echo ( $$variable{'Currency'}->id(); ) ?>" value="<? echo ( $$variable{'Currency'}->short(); ) ?>" />
+			</td>
+			<td valign="top"> 
+				<input type="text" name="strSymbol<? echo ( $$variable{'Currency'}->id(); ) ?>" value="<? echo ( $$variable{'Currency'}->symbol(); ) ?>" />
+			</td>
+			<td valign="top">
+				<div id="Conversions<? echo ( $$variable{'Currency'}->id(); ) ?>">
+				<!--#include virtual="_currency_conversions.html"-->
+				</div>
+			</td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+		<? endwhile ( $$variable{'Currency'} = shift @{$$variable{'Currencies'}}; ) ?>
+		<tr><th colspan="4"></th></tr>
+		<tr<?rowclass?>> 
+			<td colspan="4"><b>Add a Currency:</b></td>
+		</tr>
+		<tr> 
+			<td><input type="text" name="strName" /></td>
+			<td><input type="text" name="strShort" /></td>
+			<td><input type="text" name="strSymbol" /></td>
+			<td>&nbsp;</td>
+		</tr>
+	</table>
+	<p class="buttons">
+			<? echo ( join( '',
+				ssi::writeButton( $log, $dbh, 'Submit','submit.gif',"f1.btnFunction.value='Save';f1.submit();",'','Submit' ),
+				ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();",'','Reset' ),
+			); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction"/>
+</form>

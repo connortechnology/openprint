@@ -1,0 +1,7 @@
+<p> 
+	<label>Total <? echo ( ssi::writeTip( 'calliper' ); ) ?>:</label>
+		<input name="txtFinishedCalliper" size="9" value="<?txtFinishedCalliper?>" onkeyup="calc(this.form.name);" />
+		(in thousandths of an inch ex: 0.0049)
+		<input type="checkbox" id="chkOverrideFinishedCalliper" name="chkOverrideFinishedCalliper" value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" <? echo ( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ? 'checked="checked"' : '' ) ?> /> 
+		<label class="radio" for="chkOverrideFinishedCalliper">Override</label>
+</p>
