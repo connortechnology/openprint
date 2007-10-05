@@ -1,0 +1,48 @@
+<ul class="unprintable" id="menubar">
+<li class="off"><a href="/contact.html">Contact Us</a></li>
+<li class="off"><a href="/our_facility.html">Our Facility</a></li>
+<li class="off"><a href="/specials.html">Specials</a></li>
+	<li class="off" ><a href="#">Account</a>
+		<ul>
+<? if ( $openprint::session{'user_id'} ) ?>
+			<li><a href="/main/account/company_profile.html">Company Information</a></li>
+			<li><a href="/main/account/user_profile.html">User Information</a></li>
+<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+			<li><a href="/main/account/select_company.html">Select Company</a></li>
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+			<li><a href="/main/account/credit_application.html">Credit App</a></li>
+			<li><a href="/main/account/logout.html">Logout</a></li>
+<? else ( $openprint::session{'user_id'} ) ?>
+			<li><a href="/main/account/login.html">Login</a></li>
+			<li><a href="/main/account/registration.html">Registration</a></li>
+<? endif ( $openprint::session{'user_id'} ) ?>
+		</ul>
+	</li>
+<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+	<li class="off"><a href="#">Custom Quote</a>
+		<ul>
+			<li><a href="/main/project/create_edit.html;NOSSL">Create New</a></li>
+<? if ( $openprint::session{'project_id'} ) ?>
+			<li><a href="/main/project/view.html;NOSSL">Resume Current</a></li>
+<? endif ( $openprint::session{'project_id'} ) ?>
+			<li><a href="/main/project/history.html;NOSSL">History</a></li>
+		</ul>
+	</li>
+	<li class="off"><a href="#">Quotes</a>
+		<ul>
+			<li><a href="/main/quote/details.html;NOSSL">Resume Current</a></li>
+<? if ( $openprint::session{'user_id'} ) ?>
+			<li><a href="/main/quote/history.html;NOSSL">History</a></li>
+<? endif ( $openprint::session{'user_id'} ) ?>
+		</ul>
+	</li>
+	<li class="off"><a href="#">Orders</a>
+		<ul>
+			<li><a href="/main/order/information.html;NOSSL">Resume Current</a></li>
+<? if ( $openprint::session{'user_id'} ) ?>
+			<li><a href="/main/order/history.html;NOSSL">History</a></li>
+<? endif ( $openprint::session{'user_id'} ) ?>
+		</ul>
+	</li>
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+</ul>

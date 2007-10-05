@@ -1,0 +1,12 @@
+<? eval (
+    $$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+) ?>
+<div class="InstantPricing">
+	<form name="f1" method="post" action="/main/order/information.html">
+		<input type="hidden" name="ProjectIndex" value="" />
+		<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
+		<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
+		<input type="hidden" name="Status" value="<?Status?>" />
+	</form>
+	<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+</div>

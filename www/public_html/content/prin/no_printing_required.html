@@ -1,0 +1,6 @@
+<? eval (
+    $$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+) ?>
+<div class="InstantPricing">
+<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+</div>

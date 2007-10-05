@@ -1,0 +1,54 @@
+<div class="row">
+Please enter your e-mail address and password to login.<br>
+</div>
+<form name="f1" method="post" action="<?SecureSiteURL?>/account/index.html">
+	<div class="row"> 
+		<span class="label">E-mail:</span>
+		<span class="input"> 
+			<input type="text" name="txtEmail" class="text" >
+		</span>
+		<br class="spacer"/>
+	</div>
+	<div class="row"> 
+		<span class="label">Password:</span>
+		<span class="input"> 
+			<input type="password" name="txtPassword" class="text"  />
+		</span>
+		<br class="spacer"/>
+	</div>
+	<div class="row">
+		<span class="buttons">
+			<script type="text/javascript">
+				writeButton('Submit1','submit.gif',"f1.btnFunction.value='Login';f1.submit();",'','Submit');
+				writeButton('Reset1','reset.gif','f1.reset();','','Reset');
+			</script>
+		</span>
+		<br class="spacer"/>
+	</div>
+	<input type="hidden" name="Destination" value="<?Destination?>"/>
+	<script type="text/javascript"> document.f1.txtEmail.focus(); </script>
+<br>
+	<div class="row">
+		<span class="colTitle">Forget your Password?</span> <br>
+			To have your password e-mailed to you, please submit your e-mail address 
+			below.
+	</div>
+	<br>
+	<div class="row">
+		<span class="label">E-mail:</span>
+		<span class="input"> 
+			<input type="text" name="txtEmail2" class="text" >
+		</span>
+		<br class="spacer"/>
+	</div>
+	<div class="row">
+		<span class="buttons">
+			<script type="text/javascript">
+				writeButton('Submit2','submit.gif',"f1.btnFunction.value='SendPassword';f1.submit();",'','Submit');
+				writeButton('Reset2','reset.gif','f1.reset();','','Reset');
+			</script>
+		</span>
+		<br class="spacer"/>
+	</div>
+	<input type="hidden" name="btnFunction"/>
+</form>

@@ -1,0 +1,22 @@
+table.Title {
+	background-color: #ded9c2;
+	color: #404171;
+	width: 100%;
+	table-layout: fixed;
+	border-bottom: 1px solid #cfbb4b;
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+A {
+	text-decoration: none;
+	color: #404171;
+}
+A:visited {
+	color: #404171;
+}
+A:hover {
+	color: #687796;
+}
+body {
+	padding: 10px;
+}

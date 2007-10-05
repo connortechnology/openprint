@@ -1,0 +1,16 @@
+<div class="Prices">
+	<span class="label">Price each:</span>
+	<span class="input"><input type="text" size="9" name="txtUnitPrice1" readonly="readonly" style="text-align: right;" /></span>
+	<br class="spacer"/>
+	<span class="label" style="color: red;font-size: large;">Total:</span>
+	<span class="input"><input type="text" size="9" name="txtPrice1" readonly="readonly" style="text-align: right; color: red;" /></span>
+	<br class="spacer"/><br/>
+	<span class="label">Quote #:</span>
+	<span class="input"><input type="text" size="9" name="ProjectIndex" readonly="readonly" style="text-align: right;" /></span>
+	<br class="spacer"/><b class="importantNotice">
+	<? echo (
+		my $Currency = openprint::Currency::get_current();
+		return 'Prices in ' .$Currency->name;
+		) ?></b>
+</div><!--Prices-->
+
