@@ -1,0 +1,521 @@
+
+html {
+	height: 100%;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+	font-size: x-small;
+	font-style: normal;
+    margin: 0px;
+	padding: 0px;
+    background-color: #ffffff;
+	height: 100%;
+}
+
+@media print {
+	body {
+		padding: 0px;
+	}
+}
+
+body .Header {
+    height: 45px;
+}
+
+.Content {
+    background-color: #ffffff;
+    padding: 0px;
+    margin: 0px;
+    border: 1px solid;
+}
+.ContentInner {
+    z-index: 0;
+    margin: 5px;
+}
+A {
+	text-decoration: none;
+    color: #404171;
+}
+A:visited {
+    color: #404171;
+}
+A:hover {
+	color: #687796;
+}
+
+.formOn {
+	background-color: #f1eee5;
+}
+.formOff {
+	background-color: #ffffff;
+}
+
+select, textarea, option {
+    font-size: x-small;
+}
+input {
+    font-size: x-small;
+}
+input[type="text"], input[type="password"]  {
+}
+
+.tipDiv {
+    position:absolute;
+    z-index:2;
+    visibility: hidden;
+    background-color: #ffffff;
+    width: 350px;
+    border: 1px solid;
+	height: auto;
+}
+.tipHead {
+    background-color:#ddddff;
+    padding: 5px;
+}
+.tipText {
+    padding: 5px;
+}
+
+.PopUp {
+	background-color: white;
+	border: 1px solid;
+	visibility: hidden;
+	position: absolute;
+}
+
+.spacer {
+	clear: both;
+}
+
+@media print {
+	.filters {
+		display: none;
+	}
+}
+
+form {
+	margin: 0px;
+	padding: 0px;
+}
+
+.error {
+	color: red;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	table-layout: fixed;
+	width: 100%;
+}
+table.List {
+	border-bottom: 1px solid #0046a2;
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	table-layout: fixed;
+	font-size: x-small;
+}
+table.List th {
+	font-weight: bold;
+	border-bottom: 1px solid #0046a2;
+	font-size: x-small;
+}
+table.List td {
+	padding-top: 1px;
+	font-size: x-small;
+}
+table.List tr.totals {
+	border-top: 1px solid #0046a2;
+}
+table.List tr.totals td {
+	border-top: 1px solid #0046a2;
+}
+
+table.List td input {
+    width: expression(this.type=="text" || this.type=="password"?'90%':'auto');
+}
+table.List td input[type="text"], table.List td input[type="password"]  {
+	width: 90%;
+}
+table.List td textarea {
+	width: 100%;
+}
+
+.Docket {
+}
+.Project span {
+	width: 31%;
+	margin-right: 10px;
+	margin-bottom: 5px;
+	float: left;
+	p\osition: relative;
+}
+.Project label {
+	font-weight: bold;
+	float: left;
+	p\osition: relative;
+	margin-right: 5px;
+}
+
+
+.Application fieldset {
+	margin-bottom: 5px;
+}
+.Application span.label {
+    float: left;
+    width: 180px;
+    padding: 2px;
+    margin: 0px;
+    margin-top: 3px;
+}
+.Application legend {
+	color: #BCA205;
+	font-weight: bold;
+}
+.Application .text {
+	width: 200px;
+	margin:3px;
+	height:20px;
+}
+
+.Currency {
+	font-weight: bold;
+}
+
+fieldset {
+	border-top: 1px solid #0046a2;
+	border-right: none;
+	border-left: none;
+	border-bottom: none;
+}
+fieldset legend {
+	color: #ff7f00;
+	font-weight: bold;
+}
+
+fieldset p {
+	vertical-align: top;
+	display: inline-block;
+	padding-left: 25%;
+}
+fieldset p:after {
+    content: ".";
+    display: block;
+    height: 0;
+	font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset p {height: 1%;}
+* fieldset p {display:block;}
+*/* End hide from IE-mac */
+
+
+fieldset p label {
+    width: 25%;
+    text-align: right;
+	margin-left: -25%;
+	vertical-align: top;
+	float: left;
+	padding: .2em;
+}
+label.radio {
+	vertical-align: baseline;
+	padding: 0px;
+	padding-top: 3px;
+	padding-bottom: 0px;
+	margin: 0px;
+	
+	width: auto;
+	display: inline-block;
+	float: none;
+}
+p.buttons {
+	float: right;
+}
+fieldset p.buttons {
+	margin: 0px;
+	padding: 0px;
+	margin-left: 26%;
+	float: none;
+}
+fieldset p .buttons {
+    margin-left: 26%;
+	display: -moz-inline-box;
+    display: inline-block;
+    float: none;
+}
+fieldset p input {
+    float: none;
+	margin: 0px;
+    width: expression( (this.type=="text" || this.type=="password") ?'40%':'auto');
+	vertical-align: top;
+}
+fieldset p input[type="text"], fieldset p input[type="password"]  {
+    width: 40%;
+}
+.QuoteInformation fieldset p input {
+    width: expression( (this.type=="text" || this.type=="password") ?'70%':'auto');
+}
+.QuoteInformation fieldset p input[type="text"] {
+    width: 70%;
+}
+fieldset p input[type="radio"] {
+/*
+    margin-top: 3px;
+*/
+}
+fieldset p select {
+    width: 40%;
+}
+fieldset p textarea {
+    width: 66%;
+}
+fieldset p table.List {
+    width: 67%;
+}
+fieldset p option {
+    width: 70%;
+}
+fieldset.filters p select {
+    width: auto;
+}
+fieldset.filters p input[type="text"] {
+    width: auto;
+}
+
+div.QuoteHeader {
+    float: left;
+    width: 32%;
+    margin-right: .5em;
+}
+div.QuoteHeader fieldset p {
+    text-align: right;
+}
+div.QuoteHeader fieldset p label {
+    font-weight: bold;
+    margin-right: 10px;
+    float: left;
+    width: auto;
+    text-align: left;
+}
+.CompanyProfile fieldset {
+	margin-bottom: 5px;
+}
+.Service fieldset {
+	margin-bottom: 5px;
+}
+
+hr {
+	margin: 1px;
+	padding: 0px;
+	height: 1px;
+	border: 0px;
+	color: #0046a2;
+	background-color: #0046a2;
+}
+
+.column {
+	width: 48%;
+}
+.leftColumn {
+	width: 48%;
+	float: left;
+}
+.rightColumn {
+	width: 48%;
+	float: right;
+}
+.PageTitle {
+	position: absolute;
+	top: 0px;
+	left: 400px;
+}
+.PageTitle h1 {
+	display: block;
+	color: #ff7f00;
+	font-size: large;
+}
+.PageTitle h2 {
+	display: block;
+	color: #ff7f00;
+	font-size: medium;
+}
+
+.colRow {
+	background-color: #ddddff;
+}					/* alternating row color in generated tables */
+.colRowRed {
+    color: red;
+    background-color: #f0d6d6;
+}/* alternating row color in generated tables */
+
+div.ProjectHeader {
+	border-bottom: 1px solid #0046a2;
+	margin-bottom: 5px;
+}
+div.ProjectHeader:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.ProjectHeader {height: 1%;}
+*/* End hide from IE-mac */
+div.ProjectHeader fieldset {
+	border-left: none;
+	border-right: none;
+	border-bottom: none;
+	margin-bottom: 0px;
+	padding: 6px;
+	width: 47%;
+	text-align: left;
+}
+div.ProjectHeader fieldset#ProjectInformation {
+	float: left;
+	width: 47%;
+}
+div.ProjectHeader fieldset#ContactInformation {
+	float: right;
+	width: 47%;
+}
+div.ProjectHeader fieldset#Reference {
+	float: left;
+	text-align: left;
+	width: 47%;
+}
+div.ProjectHeader fieldset#Description {
+	float: right;
+	text-align: left;
+	width: 47%;
+}
+
+
+div.ProjectHeader fieldset p {
+	text-align: right;
+	padding: 0px;
+	margin: 0px;
+}
+div.ProjectHeader fieldset p label {
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	font-weight: bold;
+	text-align: left;
+	width: auto;
+}
+
+div.row {
+	p\osition: relative;
+	clear: both;
+	margin-bottom: 10px;
+	padding: 1px;
+	padding-left: 10px;
+}
+div.row .required {
+	width: 10px;
+	float:left;
+	margin-left: -10px;
+	right: 10px;
+	height: 100%;
+}
+
+div.row .label {
+	padding: 5px;
+	width: 180px;
+	text-align: left;
+	p\osition: relative;
+	float:left;
+}
+
+div.row .input {
+	padding: 5px;
+	text-align: left;
+	float:left;
+	p\osition: relative;
+	vertical-align: top;
+}
+div.row .buttons {
+	margin-left: 180px;
+	padding: 5px;
+	float: left;
+	p\osition: relative;
+}
+fieldset .row {
+	width: 100%;
+}
+fieldset .row .label {
+	width: 30%;
+	padding: 7px;
+}
+fieldset .row .input {
+	width: 60%;
+}
+fieldset .row .value {
+	padding: 7px;
+}
+div.row:after {
+    content: ".";
+    display: block;
+    height: 0;
+	font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.row {height: 1%;}
+* 	div.row {display:block;}
+*/* End hide from IE-mac */
+.ProjectSummary div.row {
+       width: 100%;
+       p\osition: relative;
+       clear: both;
+       margin: 0px;
+padding: 0px;
+}
+.ProjectSummary div.row .label {
+       width: 320px;
+       text-align: left;
+       p\osition: relative;
+       float:left;
+       font-weight: normal;
+       padding: 0px;
+}
+.ProjectSummary div.row .value {
+       width: 20%;
+       text-align: left;
+       float:left;
+       p\osition: relative;
+       margin-right: 10px;
+       background-color: #ddddff;
+       padding: 0px;
+}
+
+.ProjectSummary div.row .input {
+       line-height: 19px;
+       margin-left: 10px;
+       width: 200px;
+       text-align: left;
+       float:left;
+       p\osition: relative;
+}
+
+fieldset div.logAction
+{
+   float: left;
+   width: 200px;
+}
+
+div#logActions
+{
+   display: block;
+}
+
+span.DateSelector {
+	display: inline-block;
+	float: left;
+}
+

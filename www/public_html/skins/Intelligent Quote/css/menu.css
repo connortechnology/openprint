@@ -1,0 +1,217 @@
+.menubar {
+	display: block;
+	height: 22px;
+	margin: 0px;
+	margin-bottom: 10px;
+	padding: 0px;
+	padding-left: 20px;
+	padding-right: 20px;
+    left:0px;
+    z-index: 1;
+	background: url(/images/menu_fill_blue.png) repeat-x top;
+	font-size: 1.3em;
+	font-family: Arial, Helvetica, sans-serif;
+	color: #ffffff;
+	min-width: 640px;
+	margin-left: 100px;
+}
+
+@media print {
+    .menubar {
+        display: none;
+    }
+}
+
+div.menubar .filler {
+	display: none;
+}
+
+
+
+.MenuBox {
+    clear: both;
+    visibility: hidden;
+	position: absolute;
+	/*
+padding-top:2px;
+*/
+	background-color: #ffffff;
+	z-index: 100;
+	border-right: 1px solid #9c9c9c;
+	margin: 0px;
+	padding: 0px;
+}
+.MenuBox A {
+	background: url(/images/menu_fill_blue.png) repeat-x top;
+	float: left;
+	p\osition: relative;
+	padding-top: 3px;
+	padding-bottom: 3px;
+    padding-left: 10px;
+    padding-right: 10px;
+    text-decoration: none;
+}
+.MenuItem {
+}
+.MenuItem A {
+	width: 100%;
+}
+.MenuBox A {
+	width: 100%;
+}
+
+A.menuOff {
+    background: url(/images/menu_fill_blue.png) repeat-x top;
+	color: #ffffff;
+    text-decoration: none;
+	border-left: 1px solid #9c9c9c;
+}
+A.menuOff:link, A.menuOff:visited, A.menuOff:hover, A.menuOff:active {
+	color: #ffffff;
+}
+
+A.menuOn {
+	border-left: 1px solid #9c9c9c;
+	color: #ff7f00;
+}
+A.menuOn:visited, A.menuOn:hover {
+	color: #ff7f00;
+}
+
+A.submenuOff:hover, A.submenuOff:link, A.submenuOff:active, A.submenuOff:visited {
+	color: #ffffff;
+}
+A.submenuOff {
+	float: left;
+	p\osition: relative;
+	padding-top: 3px;
+	padding-bottom: 3px;
+    padding-left: 10px;
+    padding-right: 10px;
+	color: #ffffff;
+    text-decoration: none;
+	border-top: 1px solid #ffffff;
+	border-left: 1px solid #ffffff;
+	margin-right: -1px;
+}
+A.submenuOn {
+	float: left;
+	p\osition: relative;
+	padding-top: 3px;
+	padding-bottom: 3px;
+    padding-left: 10px;
+    padding-right: 10px;
+	color: #ff7f00;
+    text-decoration: none;
+	border-top: 1px solid #ffffff;
+	border-left: 1px solid #ffffff;
+}
+A.submenuOn:hover, A.submenuOn:link, A.submenuOn:active, A.submenuOn:visited {
+	color: #ff7f00;
+}
+/*
+.Main {
+	width: 703px;
+*/
+.MenuCompany, .MenuSupport {
+	width: 60px;
+}
+#CompanyItem, #SupportItem {
+	width: 60px;
+}
+
+.MenuProjects, #ProjectMenu {
+	width: 100px;
+}
+.MenuQuotes, .MenuOrders {
+	width: 95px;
+}
+.MenuAccount {
+	width: 110px;
+}
+#AccountItem {
+	width: 80px;
+}
+#ProjectsItem , #ServicesItem {
+	width: 100px;
+}
+#QuotesItem , #OrdersItem {
+	width: 90px;
+}
+
+/* Admin menu */
+
+.MenuServices, #ServicesItem {
+	width: 90px;
+}
+.MenuProducts, #ProductsItem {
+	width: 80px;
+}
+.MenuAdministrator, .MenuEquipment, .MenuMaterials, .MenuProject, .MenuPaper, .MenuManagerial, .MenuReports {
+	width: 90px;
+}
+#AdministratorItem, #EquipmentItem, #MaterialsItem, #ProjectItem, #PaperItem, #ManagerialItem, #ReportsItem {
+	width: 90px;
+}
+
+.MenuManagerial {
+	width: 140px;
+}
+/* Employee Menu Styles */
+#HomeItem {
+	width: 45px;
+}
+A#AccountItem {
+	width: 80px;
+}
+#AccountMenu {
+	width: 110px;
+}
+#AccountMenu A {
+	width: 100%;
+}
+A#ProductionItem, #ProductionMenu {
+	width: 115px;
+}
+#ProductionMenu A {
+	width: 100%;
+}
+
+#MarketingItem, #AccountingItem {
+	width: 90px;
+}
+.MenuProduction A {
+	width: 100%;
+}
+#ProductionMenu A#ProjectsItem {
+	width: 115px;
+}
+.MenuMarketing {
+	width: 120px;
+}
+.MenuAccounting {
+	width: 110px;
+}
+#ReportsItem, #ReportsMenu {
+	width: 80px;
+}
+#ReportsMenu A {
+	width: 100%;
+}
+
+#InventoryItem {
+	width: 90px;
+}
+#InventoryMenu {
+	width: 110px;
+}
+#InventoryMenu A {
+	width: 100%;
+}
+
+#SupportItem, #SupportMenu {
+	width: 75px;
+}
+#SupportMenu A {
+	width: 100%;
+}
