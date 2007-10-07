@@ -83,5 +83,5 @@ sub Action {
 	my $self = shift;
 	return new openprint::logAction( $$self{action_type} );	
 } # end sub Action
-return 1;
+1;
 __END__

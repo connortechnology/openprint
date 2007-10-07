@@ -758,7 +758,7 @@ sub delete_service {
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	sql::end_transaction( $dbh, $ac );
-	openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
+	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
 } # end sub delete_service
 
 sub display_reuse_project {

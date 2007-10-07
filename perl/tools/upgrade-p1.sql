@@ -54,8 +54,8 @@ CREATE TABLE Currency_Conversions (
 );
 insert into currency_conversions values (1,1,1);
 insert into currency_conversions values (2,2,1);
-insert into currency_conversions values (1,2,0.9);
-insert into currency_conversions values (2,1,1.1);
+insert into currency_conversions values (1,2,1);
+insert into currency_conversions values (2,1,1);
 update Configuration set value='1' where value='default';
 
 

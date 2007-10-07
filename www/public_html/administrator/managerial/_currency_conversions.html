@@ -1,13 +1,13 @@
 <? echo (
 	$$variable{'Currency'} = new openprint::Currency( $openprint::param{'currency_id'} ) if ! $$variable{'Currency'};
 	if ( $openprint::param{'btnFunction'} eq 'Add' ) {
-		$$variable{'Currency'}->set_conversion( @openprint::param{'To','Rate'} );
+		$$variable{'Currency'}->set_conversion( $openprint::param{'To'},$openprint::param{'Rate'}/100 );
 	} # end if
 	my $html;
 	my %conversions = $$variable{'Currency'}->conversions();
 	foreach my $to ( keys %conversions ) {
 		my $ToCurrency = new openprint::Currency( $to );
-		$html .= sprintf("To %s %s\%<br/>", $ToCurrency->name(), $conversions{$to} ); 
+		$html .= sprintf("To %s %s\%<br/>", $ToCurrency->name(), $conversions{$to}*100 ); 
 	} # end foreach
 	return $html;
 ) ?>

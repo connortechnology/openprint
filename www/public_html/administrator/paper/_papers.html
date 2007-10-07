@@ -45,9 +45,9 @@
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->weight() ) ?></a></td>
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->size() ) ?></a></td>
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->calliper() ) ?></a></td>
-		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Paper'}->mweight() ); ) ?></a></td>
-		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Paper'}->gsm() ); ) ?></a></td>
-		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->sheets_per_package() ) ?></a></td>
+		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Paper'}->mweight() ); ) ?></a></td>
+		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Paper'}->gsm() ); ) ?></a></td>
+		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->sheets_per_package() ) ?></a></td>
 		<td style="text-align:center;"><input type="checkbox" id="chkPaper" name="chkPaper" value="<? echo ( $$variable{'Paper'}{'id'} ) ?>"/></td>
 	</tr>
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>

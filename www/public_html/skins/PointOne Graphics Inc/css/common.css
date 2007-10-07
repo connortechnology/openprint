@@ -48,7 +48,6 @@ body {
 	max-width: 1280px;
 }
 input, select, textarea, option {
-	background: none;
 	color: black;
 	font-size: x-small;
 	padding: 1px;

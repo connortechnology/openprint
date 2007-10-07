@@ -96,7 +96,6 @@ sub getLog {
    my @sql_results;
    my @bind_params;
    my @log_records;
-   my @log_actions;
    my @limit_params;
    my @date_params;
    
@@ -106,13 +105,9 @@ sub getLog {
    my @action_types = ref $openprint::param{'log_actions'} eq 'ARRAY' ? @{$openprint::param{'log_actions'}} : ($openprint::param{'log_actions'} );
    
    if(scalar(@action_types)) {
-      for(my $i = 0; $i < scalar(@action_types); $i++) {
-         push(@log_actions, 'log.action_type = ?',);
-      }
-      $log_actions_qry = join(' OR ', @log_actions,);
-      $log_actions_qry = "( $log_actions_qry ) ";
+	   $log_actions_qry = 'log.action_type IN ('.join(',',map{'?'} @action_types).')';
    }
-   
+
    if($openprint::param{'orderBy_Type'} eq 'descend') {
       $order_type = 'DESC';
    }
@@ -175,53 +170,8 @@ sub getLog {
    return \@log_records;
 }
 
-sub getTotalResults {
-   my $sql;
-   my $log_actions_qry;
-   my $totalResults;
-   my $startDate;
-   my $endDate;
-   my $dateRange_qry;
-   my $whereMarker;
-   
-   my @action_types;
-   my @log_actions;
-   my @date_params;
-   
-   foreach my $log_action (ref $openprint::param{'log_actions'} eq 'ARRAY' ? @{$openprint::param{'log_actions'}} : $openprint::param{'log_actions'} ) {
-      push(@action_types, $log_action,);
-   }
-   
-   if(scalar(@action_types)) {
-      for(my $i = 0; $i < scalar(@action_types); $i++) {
-         push(@log_actions, 'log.action_type = ?',);
-      }
-      $log_actions_qry = join(' OR ', @log_actions,);
-      $log_actions_qry = "( $log_actions_qry ) ";
-   }
-
-   # Set date range query if any.
-   if($openprint::param{'dateRange'} eq 'on') {
-      $startDate = $openprint::param{'StartYear'} . '-' . $openprint::param{'StartMonth'} . '-' . $openprint::param{'StartDay'};
-      $endDate = $openprint::param{'EndYear'} . '-' . $openprint::param{'EndMonth'} . '-' . $openprint::param{'EndDay'};
-      $dateRange_qry  = " AND " if(scalar(@action_types));
-      $dateRange_qry .= " log.date_time BETWEEN to_date(?,'YYYY-MM-DD') AND to_date(?,'YYYY-MM-DD'); ";
-      push(@date_params,$startDate);
-      push(@date_params,$endDate);
-   }
-   
-   $whereMarker = " WHERE " if($log_actions_qry || $dateRange_qry);
-   
-   # Get total results.
-   $sql = qq~ SELECT COUNT(id) FROM log $whereMarker $log_actions_qry $dateRange_qry ~;
-   
-   ( $totalResults ) = sql::execute( $openprint::log, $openprint::dbh, $sql, @action_types, @date_params,);
-
-   return $totalResults;
-}
-
 sub getPages {
-   my $totalResults;       # Total search results.
+   my $totalResults = shift;
    my $paginationResults;  # Referense to pagination results hash.
    
    my $limit;  # Number of search results per page.
@@ -234,7 +184,7 @@ sub getPages {
    $offset = $openprint::param{'offset'};
    $radius = 4;
    
-   $totalResults = getTotalResults();
+   #$totalResults = getTotalResults();
 
    $paginationResults = openprint::pagination::calculateOutput($totalResults,$radius,$offset+1,$limit,);
    
