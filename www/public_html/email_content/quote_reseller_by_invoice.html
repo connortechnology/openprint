@@ -23,7 +23,7 @@
 my $html;
 my $Project = new openprint::Project( $$variable{'project_index'} );
 $html .= ssi::htmlize($Project->reference()) . ':<br/>' if $Project->reference();
-$html .= $Project->summary();
+$html .= $Project->summary() if $openprint::config{'ShowProjectSummaryOnQuote'} ne 'N';
 return $html;
  ) ?></a></td>
 				<td colspan="5">

@@ -28,6 +28,10 @@
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
+	<? eval (
+		$openprint::session{'menu'} = $openprint::param{'menu'} if exists $openprint::param{'menu'};
+		) ?>
+	<? if ( ( ! exists $openprint::session{'menu'} ) or $openprint::session{'menu'} ) ?>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div id="Header">	
 			<div id="Logo">
@@ -122,4 +126,11 @@
 			</div>
 		</div>
 	</body>
+	<? else ( ( ! exists $openprint::session{'menu'} ) or $openprint::session{'menu'} ) ?>
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();" style="background-image: none; padding: 5px;">
+			<div id="ContentInner"> 
+				<?PageContent?>
+			</div>
+	</body>
+	<? endif ( ( ! exists $openprint::session{'menu'} ) or $openprint::session{'menu'} ) ?>
 </html>

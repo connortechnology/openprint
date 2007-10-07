@@ -2,8 +2,9 @@ body {
 	background-color: #ffffff;
 	font-family: Arial, Helvetica, Sans-Serif; 
 	font-size: small;
-	padding: 0px;
+	padding: 5px;
 	margin: 0px;
+	max-width: 1024px;
 }
 
 table {

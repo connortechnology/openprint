@@ -443,7 +443,7 @@ img {
 }
 span.DateSelector {
 	float: left;
-	width: 200px;
+	width: 230px;
 }
 fieldset.filters p span.DateSelector select {
 	width: auto;
