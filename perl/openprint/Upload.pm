@@ -3,6 +3,7 @@ package openprint::Upload;
 use strict;
 
 require openprint::Company;
+require openprint::File;
 
 my $debug = 1;
 
@@ -61,6 +62,16 @@ sub Company {
 	my $self = shift;
 	return new openprint::Company($$self{company_id});
 } # end sub Company
+
+sub User {
+	my $self = shift;
+	return new openprint::User($$self{user_id});
+} # end sub User
+
+sub Files {
+	my $self = shift;
+	return openprint::File::find('upload_id'=>$$self{id});
+} # end sub
 
 1;
 __END__

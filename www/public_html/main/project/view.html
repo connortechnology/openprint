@@ -32,7 +32,7 @@ There is no current project.
 			ssi::writeButton( $log, $dbh, 'ViewPDFs', 'view_pdf.gif', "f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", '', 'View PDFs' );
 			} # end if
 			if ( sets::isin( $$variable{'ProjectStatus'}, 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Upload Files' );
+			$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?project_id='.$$variable{'ProjectIndex'}, 'Upload Files' );
 			} # end if
 $openprint::log->debug("($$variable{'HiddenSignatures'}) ($openprint::session{'ShowAllSignatures'}) (" . $$variable{'Project'}->signatures()  );
 if ( $$variable{'HiddenSignatures'} ) {

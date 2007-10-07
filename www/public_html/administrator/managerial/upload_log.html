@@ -1,4 +1,4 @@
-<form name="searchLog" action="logs.html" method="post">
+<form name="searchLog" action="upload_log.html" method="post">
 	<fieldset class="filters"><legend>Search</legend>
 	<? eval (
 		if ( $openprint::param{'StartYear'} ) {
@@ -49,16 +49,16 @@
 				my @Uploads = openprint::Upload::find(
 					'started_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'upload_log.html?StartYear','upload_log.html?StartMonth','upload_log.html?StartDay'} ),
 					'started_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'upload_log.html?EndYear','upload_log.html?EndMonth','upload_log.html?EndDay'} ),
-					'order'=>'start',
+					'order'=>'start DESC',
 				);
 
 				foreach my $Upload ( @Uploads ) {
-					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
 						$rowclass,
 						Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Upload->start() ) ),
 						$Upload->company_id() ? $Upload->Company()->name() : $Upload->company(),
 						$Upload->user_id() ? $Upload->User()->name() : $Upload->user(),
-						$Upload->filename(),
+						join('<br/>',map { $_->filename() } $Upload->Files() ),
 						
 						);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
