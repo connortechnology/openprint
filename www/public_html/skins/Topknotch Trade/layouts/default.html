@@ -8,6 +8,9 @@
 		<link href="/css/main.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>

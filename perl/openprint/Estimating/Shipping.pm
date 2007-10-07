@@ -111,14 +111,22 @@ sub display {
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	if ( $qty_index ) {
+		if ( $$specs{'txtPackageQuantity'.$qty_index} ) {
 		return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
+		} else {
+		return sprintf( q{%d items}, $$specs{'txtQuantity'.$qty_index} );
+		} # end if
 	} else {
+		if ( $$specs{'Address1'} or $$specs{'City'} or $$specs{'StateProvince'} or $$specs{'Country'} ) {
 		return join("\n", 
 			join(',', $$specs{'CompanyName'} ) ,
 			join(',', $$specs{'Address1'} , $$specs{'Address2'},
 			@$specs{'City','StateProvince','Country'},
 			@$specs{'PostalCode'} ),
 			);
+		} else {
+			return 'unspecified address';
+		} # end if
 	} # end if
 } # end sub summary
 

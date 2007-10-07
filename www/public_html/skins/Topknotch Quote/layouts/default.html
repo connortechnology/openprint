@@ -14,6 +14,9 @@
 		<script type="text/javascript" src="/javascripts/tips.js"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
         <link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? if ( $r->uri() =~ /\/main\/project\/prin/ ) ?>
