@@ -32,7 +32,9 @@ div.row {
 }
 	div.PressColumn {
 		float: left;
-		margin-top: 2px;
+		margin: 0px 0px 0px 0px;
+		padding: 0px;
+		border: none;
 	}
 	div.PressColumn ul {
 		padding: 0px;

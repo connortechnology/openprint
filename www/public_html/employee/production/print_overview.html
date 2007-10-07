@@ -253,20 +253,21 @@
 	<style type="text/css">
 		div.PressColumn {
 			width: <? echo ( int (100/(@{$$variable{'Presses'}}/2)); ) ?>%;
+			text-align: center;
+			padding: 0px;
+			margin: 0px;
 		}
 	</style>
-	<table class="List">
-		<tr>
+	
 	<? echo (
 		my $html;
 		my %presses = @{$$variable{'Presses'}};
 		foreach my $id ( sort keys %presses ) {
-			$html .= '<th style="font-size:16px;"><a href="/employee/production/equipment_view.html?equipment_id='.$id.'">'.$presses{$id}.'</a></th>';
+			$html .= '<div class="PressColumn" style="font-size:16px; font-weight:bold;"><a href="/employee/production/equipment_view.html?equipment_id='.$id.'">'.$presses{$id}.'</a></div>';
 		} # end foreach
 		return $html;
 		) ?>
-		</tr>
-	</table>
+	<hr style="clear: both;"/>
 	<? echo (
 		require openprint::press_schedule;
 		my $html;
