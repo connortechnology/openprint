@@ -64,9 +64,10 @@ Projects listed in red have changed price from the time this order was originall
 <br class="spacer"/><br/>
 <!--#include virtual="/skins/<?SiteTitle?>/includes/order_disclaimer.html"-->
 <br class="spacer"/>
-	<form name="f1" method="post" action="history_details.html?OrderID=<?OrderID?>">
+	<form name="f1" method="post" action="history_details.html">
 <span style="float: right;">
 		<input type="hidden" name="btnFunction" value=""/>
+		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 		<? echo ( 
 			my $html;
 			if ( sets::isin( $$variable{'ORDER_STATUS'}, 'Re-Opened', 'Incomplete') ) {

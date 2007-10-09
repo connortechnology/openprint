@@ -82,19 +82,20 @@ sub handler {
 	openprint::session_init();
 	openprint::usergroup::init_cache();
 
-	my $lastpage;
+	my $lastpage = '';
 	my $page = $r->uri();
+$openprint::log->debug("Page: $page");
 	while ( $page and $lastpage ne $page ) {
 		# This is for loop detection
 		$lastpage = $page;
 		parse_page( $page );
-		if ( $variable{'Redirect'} ne '' ) {
+		if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
 			$page = $variable{'Redirect'};
 			$variable{'Redirect'} = '';
 		} # end if
 	} # end while
 
-	if ( $variable{'Download'} ne '' ) {
+	if ( exists $variable{'Download'} and $variable{'Download'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {
 			$r->print( $_ );
 		} # end foreach
@@ -119,13 +120,13 @@ sub handler {
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
 				my $file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, $filename );
-				#$log->debug("Looking for $file");
+				$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
 				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, 'default.html' );
-				#$log->debug("Looking for $file");
+				$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
@@ -135,7 +136,7 @@ sub handler {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-	#$log->debug("[[[[ $file ]]]]");
+	$log->debug("[[[[ $file ]]]]");
 				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
@@ -185,7 +186,6 @@ sub parse_page {
 	my $third = shift @thing if @thing;
 	my $fourth = shift @thing if @thing;
 
-$log->debug( "$first:$second:$third:$fourth:$filename" );
 	if ( $filename eq 'getfile.html' ) {
 $openprint::log->debug("Getfile");
 		$variable{'Download'} = $openprint::param{'filename'};

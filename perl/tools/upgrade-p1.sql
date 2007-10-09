@@ -475,6 +475,16 @@ alter table project_files rename column strfilename to filename;
 alter table project_files rename column strdescription to description;
 delete from project_files where project_id NOT IN (select index from tbl_Projects);
 alter table project_Files add foreign key (project_id) references tbl_Projects (index);
+alter table project_files add id integer;
+create sequence project_files_id_seq;
+alter table project_files alter id set default nextval('project_files_id_seq');
+update project_files set id=nextval('project_files_id_seq');
+alter table project_files alter id set not null;
+alter table project_files add upload_id integer;
+alter table project_files add foreign key (upload_id) references uploads(id);
+CREATE INDEX project_files_project_id_idx on project_files (project_id);
+alter table project_files add primary key (id);
+
 
 update tbl_Service_Types set strid='CustomService' where strid='OS';
 update tbl_Service_Specifications set strvalue='CustomService' where strname='ServiceType' and strvalue='OS';

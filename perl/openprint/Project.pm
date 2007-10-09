@@ -114,7 +114,6 @@ sub jdf {
 
 	my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self ) );
 	
-	my $printing_specs = openprint::service::get_specs_ref( $self->id(), $services{''}[0] );
 	#$Component->setAttribute('ReaderPageCount','2');
 
 	my $ComponentLink = $ProductResourceLinkPool->appendChild( $doc->createElement('ComponentLink') );

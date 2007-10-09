@@ -319,9 +319,9 @@ $openprint::log->debug("ADding signature");
 	$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 	my ( $sig_index ) = sql::execute( undef, undef, $_, $project_index );
 	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureIndex', ++$sig_index );
-	sql::end_transaction( $openprint::dbh, $ac );
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	# Releases the lock
+	$openprint::dbh->commit();
 	foreach my $key ( openprint::Estimating::Printing::variables() ) {
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 	} # end foreach

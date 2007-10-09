@@ -22,7 +22,7 @@ sub import_specs {
 
 		my $upload = $r->upload( 'fileSpecifications' );
 		my $io = $upload->io();
-		$openprint::log->info( <$io> );
+		$_ = <$io>;
 
 		my $csv = Text::CSV_XS->new();
 

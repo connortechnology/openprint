@@ -19,6 +19,7 @@ my @fields = (
 	'colour_bar_size',
 	'colour_bar_orientation',
 	'cropmark_top','cropmark_bottom','cropmark_left','cropmark_right',
+	'stock_width','stock_height',
 );
 
 use strict;

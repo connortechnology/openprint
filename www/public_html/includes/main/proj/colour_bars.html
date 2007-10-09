@@ -3,9 +3,11 @@
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
 <p id="ColourBars" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 	<label><? echo ( ssi::writeTip('Colour bar'); ) ?>:</label>
-		<input type="radio" id="rdbColourBarY" name="rdbColourBar" value="Y" onclick="calc('f1');" <? echo ( 'checked' if $$variable{'rdbColourBar'} ne 'N' ) ?> />
+		<input type="radio" id="rdbColourBarY" name="rdbColourBar" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbColourBarY">Yes</label>
-		<input type="radio" id="rdbColourBarN" name="rdbColourBar" value="N" onclick="calc('f1');" <? echo ( 'checked' if $$variable{'rdbColourBar'} eq 'N' ) ?> />
+		<input type="radio" id="rdbColourBarN" name="rdbColourBar" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'} eq 'N' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbColourBarN">No</label>
+		<input type="radio" id="rdbColourBarAUTO" name="rdbColourBar" value="" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'} eq '' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbColourBarAUTO">Auto</label>
 </p>
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>

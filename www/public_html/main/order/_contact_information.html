@@ -19,7 +19,7 @@
 		<label>Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
 		<input type="hidden" name="txtFirstName" value="<?txtFirstName?>"/>
 		<input type="hidden" name="txtLastName" value="<?txtLastName?>"/>
-		<select name="ddmUsers" onchange="ddmUsers_onchange('f1');">
+		<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 			<option value="">Please Select</option>
 <? echo ( 
 ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id'=>$openprint::session{'company_id'}, 'order'=>'lower(strLastName),lower(strFirstName)' ) ], $openprint::session{'user_id'} );

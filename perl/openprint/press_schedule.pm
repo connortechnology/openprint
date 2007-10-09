@@ -189,7 +189,7 @@ sub get_li {
 			} # end if
 	} # end if
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
-		$html .= sprintf( '<div id="%2$dComment" class="Comment" onclick="editComment( %1$s, %2$s, \'%3$s\', event );">%3$s</div>', @$row{'projectindex','serviceindex'}, @specs{'txtEmployeeComments'} );
+		$html .= sprintf( '<div id="%2$dComment" class="Comment" onclick="editComment( %1$s, %2$s, \'%3$s\', event );">%3$s</div>', @$row{'projectindex','serviceindex'}, $specs{'txtEmployeeComments'} );
 
 		$html .= sprintf( '<span class="Forms" id="%dForms" onclick="editForms(%s, %s,\'%s\', event );">%d %s</span>', @$row{'serviceindex','projectindex','serviceindex'}, @specs{'SignatureQuantity','SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
 		$html .= sprintf( '<span id="%dImpressions" class="Impressions" onclick="editImpressions(%s, %s,\'%s\', event );">%d imps</span>', @$row{'serviceindex','projectindex','serviceindex'}, @specs{'ImpressionQuantity','ImpressionQuantity'} );
@@ -282,7 +282,7 @@ sub split_job {
 	my $new_service_index = openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'AdditionalSignature' );
 	my %new_specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $project_index, $new_service_index );
 	$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-	@specs{'SignatureIndex'} = sql::execute( $openprint::log, $openprint::dbh, $_, $project_index );
+	($specs{'SignatureIndex'}) = sql::execute( $openprint::log, $openprint::dbh, $_, $project_index );
 	$specs{'SignatureIndex'} += 1;
 
 	foreach my $key ( keys %specs ) {
