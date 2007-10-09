@@ -1341,7 +1341,7 @@ sub cancel_order {
 	sql::update( $log, $dbh, 'Orders', ['Index=?',$order_id], 'strStatus', 'Cancelled' );
 	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
 	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
-		sql::update( $log, $dbh, 'tbl_Projects', ['Index=?', $project_index], 'strStatus', 'Unordered' );
+		sql::update( $log, $dbh, 'tbl_Projects', ['Index=?', $project_index], 'strStatus', 'Unordered','order_id', undef );
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );

@@ -6,6 +6,7 @@ use strict;
 require sql;
 require ssi;
 require configuration;
+require email;
 require openprint::Currency;
 require openprint::User;
 require openprint::logs;
@@ -148,6 +149,14 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'Error Saving.', "There was an error saving the user's information. $error");
 		} # end if
 
+		if ( $User->email() =~ /(.*)\@point\-one\.com/ ) {
+			if ( $openprint::param{'VacationState'} ) {
+				email::start_vacation( $r, $log, $User->email(), @openprint::param{'VacationSubject','VacationMessage'} );
+			} else {
+				email::stop_vacation( $r, $log, $User->email() );
+			} # end if
+			$sql::dbh = $dbh;
+        } # end if
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
@@ -196,6 +205,13 @@ sub user_profiles {
 			$count += 1;
 		} # end foreach
 	} # end if 
+
+	if ( $User->email() =~ /(.*)\@point\-one\.com/ ) {
+$openprint::log->debug("Getting vacation");
+		@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
+		$sql::dbh = $dbh;
+	} # end if
+
 				
 	# fill in User Name Drop Down Menu
     $$variable{'FILL_USER_NAME'} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $User->id() );

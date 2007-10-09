@@ -134,7 +134,7 @@ sub credit {
 
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
 		my @errors;
-		foreach my $order_id ( $param{'PAID'} ) {
+		foreach my $order_id ( ref $param{'PAID'} eq 'ARRAY' ? @{$param{'PAID'}} : $param{'PAID'} ) {
 			my $Order = new openprint::Order( $order_id );
 			push @errors, $Order->pay();
 		} # end foreach
