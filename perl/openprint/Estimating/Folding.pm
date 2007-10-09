@@ -288,10 +288,9 @@ sub test_fold {
 } # end sub test_fold
 
 sub signature_calc {
-	my ( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
+	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
 	$$specs{"txtQuantity$qty_index"} = int $$specs{"txtQuantity$qty_index"};
 
-	
 	if ( ! $Imposition ) {
 		$Imposition = new openprint::Imposition;
 		$Imposition->paper( $Paper );
@@ -324,7 +323,7 @@ sub signature_calc {
 	my @my_equipment;
 
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		$log->debug("Overriding Equipment! " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
+		$openprint::log->debug("Overriding Equipment! " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		if ( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
 			push @my_equipment, new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 		} # end if
@@ -433,7 +432,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 							push @good_folds, $I;
 							next;
 						} # end if
-						my $fold_type= $I->spread_columns().'x'.$I->spread_rows().'-'.$I->pages().'PageSignatureFold';
+						$fold_type= $I->spread_columns().'x'.$I->spread_rows().'-'.$I->pages().'PageSignatureFold';
 						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type ) ) {
 							push @good_folds, $I;
 							next;
@@ -491,7 +490,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		foreach my $fold ( keys %folds ) {
 			next if ! $folds{$fold};
 		
-			$log->debug("Pricing fold $fold : $folds{$fold}") if $debug;
+			$openprint::log->debug("Pricing fold $fold : $folds{$fold}") if $debug;
 
 			my $runSpeed = $Equipment->specification($fold.'RunSpeed');
 			if ( ! $runSpeed ) {
@@ -500,13 +499,13 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 			} # end if
 
 			# We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
-			my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, $fold, $folds{$fold} * $$specs{"txtQuantity$qty_index"}, $Equipment );
+			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold, $folds{$fold} * $$specs{"txtQuantity$qty_index"}, $Equipment );
 			if ( ! %servicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No price assigned for $fold on ".$Equipment->name().". <br/>";
 				next;
 			} # end if
 
-			my %setupPrice = openprint::service::get_price_object( $log, $dbh, $variable, $fold.'MakeReady', undef, $Equipment );
+			my %setupPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold.'MakeReady', undef, $Equipment );
 			if ( $setupPrice{'units'} eq 'Per Form' ) {
 				$totalPrice += $setupPrice{'Price'};
 			} elsif ( ! sets::isin( $fold, $makereadies{$Equipment->id()} ) ) {
@@ -593,7 +592,7 @@ sub calc {
 			$$sig_specs{'txtSpreadSize'} = 2 if ! $$sig_specs{'txtSpreadSize'};
 
 			if ( ( ! exists $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) or $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
-				my %results = signature_calc( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index );
+				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index );
 				$price += $results{'Price'};
 				$mprice += $results{'MPrice'};
 				if ( $results{'Equipment'} ) {

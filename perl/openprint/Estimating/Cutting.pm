@@ -353,6 +353,12 @@ sub signature_calc {
 		} else {
 			if ( $$sig_specs{'txtImposition'.$qty_index} != $$sig_specs{'StitchingImposition'.$qty_index} ) {
 				$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
+				if ( 
+						( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
+						( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) )
+				   ) {
+					$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
+			} # end if
 			} # end if
 		} # end if
 
@@ -369,6 +375,12 @@ sub signature_calc {
 		} else {
 			if ( $$sig_specs{'txtImposition'.$qty_index} != $$sig_specs{'StitchingImposition'.$qty_index} ) {
 				$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
+			if (   
+					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
+					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) )
+			   ) {
+				$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
+			} # end if
 			} # end if
 		} # end if
 

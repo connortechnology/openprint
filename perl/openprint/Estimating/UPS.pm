@@ -176,7 +176,6 @@ $log->debug("Carton Status: $carton_status");
 	} # end if
 
 	my %bestService;
-	my %services;
 	while ( my ( $service, $price ) = splice @{$upsResponse{'RatedShipments'}}, 0, 2 ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= ups::get_service_name($service).": $price\n";
 		if ( $$specs{'ddmServiceType'} ) {

@@ -410,7 +410,6 @@ sub get_price {
 
 	my $qty = $$specs{'txtQuantity'.$qty_index};
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition'));
-$openprint::log->debug("Height: $$specs{'Height'} : " . $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) );
 if ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty_index} ) {
 	$price{'Imposition'} = 1 
 } elsif ( $Equipment->specification('Maximum Spine Length') and $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) < $$specs{'Height'} ) {

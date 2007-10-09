@@ -12,8 +12,7 @@
 			} // end if
 		} // end for
 	} // end function
-	function ddmUsers_onChange( formName ) {
-		var form = getFormObj(formName);
+	function ddmUsers_onchange( form ) {
 		jsrsExecute( '/jsrs.htm', cbFillUserFor, 'openprint::order::fill_user_info', form.ddmUsers.options[form.ddmUsers.selectedIndex].value );
 	} // end function
 	function cbFillUserFor( results ) {

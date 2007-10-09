@@ -109,7 +109,7 @@ sub load {
 sub load_info {
 	my ( $self, $variable ) = @_;
 	foreach my $key ( @Fields ) {
-		$$variable{$key} = ssi::htmlize($self->{$key});
+		$$variable{$key} = $self->{$key};
 	} # end foreach
 } # end sub load_info
 

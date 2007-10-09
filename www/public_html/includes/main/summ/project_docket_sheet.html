@@ -27,7 +27,7 @@
 			<table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 					<td width="16%" class="headerText"><b>Company Name:</b></td>
-					<td width="55%" class="hugeText"><b><?OrderCompanyName?></b></td>
+					<td width="55%" class="hugeText"><b><?CompanyName?></b></td>
 					<td width="4%" class="headerText"><b>CSR:</b></td>
 					<td width="25%" class="docketText"><?CSRName?></td>
 				</tr>
@@ -124,7 +124,8 @@
 	</tr>
 	<? echo (
 		my $html = '';
-		while ( my $service_index = shift @{$$variable{'PrintingServices'}} ) {
+		my @sigs = $$variable{'Project'}->signatures();
+		while ( my $service_index = shift @sigs ) {
 			my $sig_specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $service_index );
 			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ( ! $$sig_specs{'UsePress'} );
 			$html .= '<tr valign="top"><td class="docketText" align="center">';
@@ -145,12 +146,16 @@
 			} else {
 				$html .= sprintf('%s,<b>%s</b>,%s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
 			} # end if
+			if ( $$sig_specs{'StockType'.$$variable{'Project'}->ordered_quantity_index()} eq 'Roll' ) {
+			$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} );
+			} else {
 			$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
+			} # end if
 			if ( $$sig_specs{'ddmStockFinish'} eq 'Coated 1 Side' or $$sig_specs{'ddmStockFinish'} eq 'C1S' ) {
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
 			} # end if
 			$html .= '</td><td class="docketText">';
-			$html .= ($$sig_specs{'txtSignatureSpreadQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$variable{'txtSpreadSize'} ) . 'pp ' if ( $$sig_specs{'txtSignatureSpreadQuantity'.$$variable{'Project'}->ordered_quantity_index()} > 0 );
+			$html .= ($$sig_specs{'txtSignatureSpreadQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$variable{'txtSpreadSize'} ) . 'pp ' if ( $$sig_specs{'txtSignatureType'} eq 'AdditionalSignature' );
 			$html .= sprintf('%2$dout %1$s', @$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index(), 'txtImposition'.$$variable{'Project'}->ordered_quantity_index()} );
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {
@@ -159,13 +164,13 @@
 					if ( $Equipment->strid() eq $$sig_specs{'UsePress'} ) {
 						$html .= ' Fold inline';
 					} else {
-						$html .=' Sheeting';
+						$html .=' Sheeter';
 					} # end if
 				} # end if
 			} # end if
 			$html .= '</td><td class="docketText">';
 			foreach my $side ( 'SideOne','SideTwo' ) {
-				$html .= scalar openprint::print_printing::get_colours( $sig_specs, $side );
+				$html .= scalar openprint::Estimating::Printing::get_colours( $sig_specs, $side );
 				$html .= '+AQ (Gloss)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Gloss' );
 				$html .= '+AQ (Matte)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Matte' );
 				$html .= '+Varnish (Spot Gloss)' if ( $$sig_specs{'chkVarnishSpotGloss'.$side} );
@@ -197,7 +202,7 @@ return $html;
 	</tr>
 <? eval ( 
 	openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'ProofServiceIndex'} );
-	openprint::print_Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ProofServiceIndex'} );
+	openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ProofServiceIndex'} );
  ) ?>
 <? while ( @{$$variable{'SignatureGroups'}} ) ?>
 	<tr>
@@ -390,23 +395,30 @@ return $html;
             <?Page2?>
 			<? endif ( $$variable{'txtInsertQuantity'} ) ?>
         <? endif ( $$variable{'txtTotalPageQuantity'} ) ?>
-		<? eval ( @{$$variable{'ShrinkWrapServices'}} = openprint::print::check_for_service( $log, $dbh, $$variable{'ProjectIndex'}, 'ShrinkWrap' ) ) ?>
+
+		<? if ( $$variable{Services}{'ShrinkWrap'} ) ?>
+		<? eval ( @{$$variable{'ShrinkWrapServices'}} = $$variable{Services}{'ShrinkWrap'}[0] ) ?>
 		<? while ( $$variable{'ShrinkWrapServiceIndex'} = pop @{$$variable{'ShrinkWrapServices'}} ) ?>
 		<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'KraftWrapServiceIndex'} ); ) ?>
 , ShrinkWrap in <?txtWrapQuantity?>'s
 		<? endwhile ( $$variable{'ShrinkWrapServiceIndex'} = pop @{$$variable{'ShrinkWrapServices'}} ) ?>
+		<? endif ( $$variable{Services}{'ShrinkWrap'} ) ?>
 
-		<? eval ( @{$$variable{'BundleServices'}} = openprint::print::check_for_service( $log, $dbh, $$variable{'ProjectIndex'}, 'Bundle' ) ) ?>
+		<? if ( $$variable{Services}{'Bundling'} ) ?>
+		<? eval ( @{$$variable{'ShrinkWrapServices'}} = $$variable{Services}{'Bundling'}[0] ) ?>
 		<? while ( $$variable{'BundleServiceIndex'} = pop @{$$variable{'BundleServices'}} ) ?>
 		<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'BundleServiceIndex'} ); ) ?>
 , Bundles in <?txtWrapQuantity?>'s
 		<? endwhile ( $$variable{'BundleServiceIndex'} = pop @{$$variable{'BundleServices'}} ) ?>
+		<? endif ( $$variable{Services}{'Bundling'} ) ?>
 
-		<? eval ( @{$$variable{'KraftWrapServices'}} = openprint::print::check_for_service( $log, $dbh, $$variable{'ProjectIndex'}, 'KraftWrap' ) ) ?>
+		<? if ( $$variable{Services}{'KraftWrap'} ) ?>
+		<? eval ( @{$$variable{'KraftWrapServices'}} = $$variable{Services}{'KraftWrap'}[0] ) ?>
 		<? while ( $$variable{'KraftWrapServiceIndex'} = pop @{$$variable{'KraftWrapServices'}} ) ?>
 		<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'KraftWrapServiceIndex'} ); ) ?>
 , KraftWrap in <?txtWrapQuantity?>'s
 		<? endwhile ( $$variable{'KraftWrapServiceIndex'} = pop @{$$variable{'KraftWrapServices'}} ) ?>
+		<? endif ( $$variable{Services}{'KraftWrap'} ) ?>
 
 		<? if ( sets::isin( 'Plain Cartons', split(',',$$variable{'PackagingServices'})) ) ?>
 		, Bulk Pack in Cartons<br>

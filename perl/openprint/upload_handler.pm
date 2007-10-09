@@ -33,7 +33,6 @@ use vars qw( %variable %session %param %config $log $dbh );
 *config = \%openprint::config;
 
 sub handler {
-	my ( $cookie, $status );
 	my $request = shift;
 	$log	= $request->log;
 

@@ -23,7 +23,7 @@ $sql_server{'password'} = 'point-1';
 $openprint::Object::no_cache = 1;
 
 $dbh = sql::open_sql( $log, %sql_server );
-foreach my $Project ( openprint::Project::find('id_start'=>200000,'order'=>'index desc') ) {
+foreach my $Project ( openprint::Project::find('id_end'=>200000,'order'=>'index desc') ) {
 	my $project_index = $Project->id();
 	my %services = $Project->get_services();
 $log->warn("Looking at Project $project_index");

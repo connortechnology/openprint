@@ -10,7 +10,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 use strict;
 
 use vars qw( $log $dbh $debug );
-$debug = 1;
+$debug = 0;
 
 sub open_sql {
 	my ( $l, %sql_server ) = @_;
@@ -96,7 +96,7 @@ sub insert {
 	$l = $log if ! $l;
 
 	my $starttime = gettimeofday();
-	my %commands;
+	my %commands = ();
 	if ( @_ == 1 ) {
 		my $data = shift;
 		if ( ref $data eq 'HASH' ) {
@@ -108,10 +108,15 @@ sub insert {
 		%commands = @_;
 	} # end if
 
+	my @values = values %commands;
+
 	# we can use push and pop in here, because we actually don't acre about order, only pairing
-	my $command = "INSERT INTO $table (".join( ',', keys %commands ).") VALUES (" .join(',', map { '?' } values %commands).")";
-	my $print_command = "INSERT INTO $table (".join( ',', keys %commands ).") VALUES (" .join(',', values %commands ).')';
-	#$log->debug("Sending sql statement:\n $command");
+	my $command = "INSERT INTO $table (".join( ',', keys %commands ).') VALUES (';
+	my $print_command = $command;
+	$print_command .= join(',', @values ) if @values;
+	$print_command .= ')';
+
+	$command .= join(',', map { '?' } @values ).')';
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
 		$l->error( "Error Preparing SQL Statement: ($command):" . $d->errstr ) if $l;

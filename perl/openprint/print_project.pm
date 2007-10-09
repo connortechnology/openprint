@@ -772,8 +772,7 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
-	@openprint::param{'reference'} = misc::trim( $openprint::param{'reference'} );
-	@openprint::param{'comments'} = misc::trim( $openprint::param{'comments'} );
+	@openprint::param{'reference','comments'} = misc::trim( @openprint::param{'reference','comments'} );
 
 	my $Project = new openprint::Project( $project_index );
 	my $NewProject = $Project->copy();
@@ -919,7 +918,7 @@ sub calc {
 
 		if ( $specs{'Dimensions'} ne 'Custom' ) {
 			my ( $width, $height, $type ) = $specs{'Dimensions'} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
-			my @args = ( @specs{'ProjectType'}, $width, $height );
+			my @args = ( $specs{'ProjectType'}, $width, $height );
 
 			if ( $type eq 'Flat' ) {
 				$_ = q{SELECT dblfinishedwidth::float, dblfinishedheight::float FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?) AND dblFlatWidth=? AND dblFlatHeight=?};
@@ -1324,7 +1323,7 @@ sub calc {
 # add up the prices
 		foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$project{'id'} ) ) {
 			my $service_specs = openprint::service::get_specs_ref( $$project{'id'}, $service_index );
-			@specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
+			$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
 		} # end foreach
 		$specs{'txtPrice1'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $specs{'txtPrice1'} );
 		$specs{'txtUnitPrice1'} = sprintf( '%.2f', $specs{'txtPrice1'}/$specs{'txtQuantity1'} );	
