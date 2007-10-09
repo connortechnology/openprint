@@ -1,9 +1,9 @@
 <div class="PageTitle">
 <h1>Printing</h1>
 </div>
-<script type="text/javascript" src="/javascripts/printing.js"></script>
-<script type="text/javascript" src="/javascripts/service.js"></script>
-<script type="text/javascript" src="/javascripts/proj/paper.js"></script>
+<script type="text/javascript" src="/javascripts/printing.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
 <script type="text/javascript">
 	var quantities=new Array();
 	<?QUANTITIES?>
@@ -11,13 +11,13 @@
 	var projectType = "<?ProjectTypeID?>";
 </script>
 <? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-<script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js"></script>
+<script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js?version=1.0"></script>
 <script type="text/javascript">
 	function calc() {
 		calc_presentation_folder('f1');
 	}
 </script>
-<script type="text/javascript" src="/javascripts/templates/presentation_folders.js"></script>
+<script type="text/javascript" src="/javascripts/templates/presentation_folders.js?version=1.0"></script>
 <? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 <script type="text/javascript">
 	function calc( formName, force ) {
@@ -25,7 +25,7 @@
 	}
 </script>
 <? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-<script type="text/javascript" src="/javascripts/templates/brochures.js"></script>
+<script type="text/javascript" src="/javascripts/templates/brochures.js?version=1.0"></script>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/required_fields.html"-->

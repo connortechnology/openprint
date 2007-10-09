@@ -448,16 +448,15 @@ my $master_time = gettimeofday();
 					} # end if
 				} # end foreach signature
 
-				if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
-					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'}*2 + $finished_calliper;
-					$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
-					if ( ! $$specs{'txtHeight'} ) {
-						$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
-						$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
-					} else {
-						$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
-					} # end if
+				$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'}*2 + $finished_calliper;
+				$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
+				if ( ! $$specs{'txtHeight'} ) {
+					$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
+					$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
+				} else {
+					$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 				} # end if
+$openprint::log->debug("Cover size calc: $finished_calliper");
 			} else {
 				$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 				$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];

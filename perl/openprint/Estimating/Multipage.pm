@@ -130,7 +130,9 @@ sub calculate_signatures {
 
 	my $unspecified_spreads = 0;
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
-	my @signatures = sort $Project->signatures();
+	my @signatures = sort $Project->signatures('Interior Spreads');
+	push @signatures, sort $Project->signatures('Cover Spreads');
+	push @signatures, sort $Project->signatures('GateFolded Spreads');
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {

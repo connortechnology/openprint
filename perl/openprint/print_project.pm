@@ -563,6 +563,7 @@ sub create_edit_process {
     } # end if
 
 	my $Project = new openprint::Project( int $openprint::param{'ProjectIndex'} );
+	$Project->save() if ( ! $Project->id() );
 	$openprint::session{'project_id'} = $Project->id();
 	my $project_index = $Project->id();
 

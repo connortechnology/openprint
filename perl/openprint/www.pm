@@ -120,13 +120,13 @@ $openprint::log->debug("Page: $page");
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
 				my $file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, $filename );
-				$log->debug("Looking for $file");
+				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
 				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, 'default.html' );
-				$log->debug("Looking for $file");
+				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
@@ -136,7 +136,7 @@ $openprint::log->debug("Page: $page");
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-	$log->debug("[[[[ $file ]]]]");
+	#$log->debug("[[[[ $file ]]]]");
 				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );

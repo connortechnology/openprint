@@ -10,7 +10,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 use strict;
 
 use vars qw( $log $dbh $debug );
-$debug = 0;
+$debug = 1;
 
 sub open_sql {
 	my ( $l, %sql_server ) = @_;

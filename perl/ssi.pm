@@ -311,7 +311,7 @@ sub fix_date {
 sub get_dates {
 	my ( $log, $dbh, $year, $month, $day ) = @_;
 
-	( $year, $month, $day ) = fix_date( $year, $month, $day );
+	( $year, $month, $day ) = fix_date( int $year, int $month, int $day );
 
 	my ( $startYear ) = $openprint::config{'startYear'};
 	$startYear = 2002 if ! $startYear;

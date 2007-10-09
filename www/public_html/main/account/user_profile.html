@@ -68,7 +68,7 @@
 					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
 					<label class="radio" for="MailingListN">No</label>
    				</p>
-			<? if ( $$variable{'User'}->administrator() eq 'Y' ) ?>
+			<? if ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
    				<p>
    					<label>Can login to the web site?&nbsp;&nbsp;&nbsp;</label>
    					<input type="radio" id="web_activeY" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() eq 'Y' ) ?> value="Y" />
@@ -90,7 +90,7 @@
    					<input type="radio" id="AdministratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" /> 
    					<label class="radio" for="AdministratorN">No</label>
    				</p>
-			<? endif ( $$variable{'User'}->administrator() eq 'Y' ) ?>
+			<? endif ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
    			</fieldset>
    			<fieldset>
    			   <legend>Login Information</legend>
