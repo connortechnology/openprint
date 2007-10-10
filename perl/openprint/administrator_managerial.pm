@@ -119,7 +119,7 @@ sub user_profiles {
 	my $cust_id = $openprint::param{'ddmCustomer'};
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
-	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(strlastname),lower(strfirstname)' );
+	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(strfirstname),lower(strlastname)' );
 
 	my $User = new openprint::User( $user_id );
 	if ( ! $User->id() ) {
@@ -149,7 +149,6 @@ sub user_profiles {
 		} # end if
 
 		my @Users = openprint::User::find( 'email' => lc $openprint::param{'email'} );
-$openprint::log->debug("Users: " . $Users[0]->id() . ' ' . $User->id() );
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			return misc::error( $log, $dbh, $variable, 'User already exists.', "There is already a user with the specified email address.  Please try another.");
 		} # end if

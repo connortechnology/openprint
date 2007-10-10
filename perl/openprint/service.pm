@@ -97,10 +97,9 @@ sub save_service {
 
 	my $service_type = $$specs{'ServiceType'};
 	if ( ! $service_type ) {
-		$log->warn( "No serviceType for service $service_index.  Trying to recover" );
 		$service_type = $openprint::param{'ServiceType'};
 	} # end if
-	if ( ! $service_type ) {
+	if ( (! $service_type) and (! $$specs{'ProjectType'}) ) {
 		$log->error( "No serviceType in params for service $service_index.  Trying to recover" );
 	} # end if
 	if ( sets::isin( $service_type, ['SaddleStitching', 'LoopStitching'] ) ) {
@@ -114,15 +113,15 @@ sub save_service {
 	} elsif ( sets::isin( $service_type, ( 'PhotoRetouching', 'ColourCorrection', 'PhotoPlacement', 'CDBurning' ) ) ) {
 		$service_type = 'Prepress';
 	} # end if
-eval ( 'require openprint::Estimating::'.$service_type.';' );
+	eval ( 'require openprint::Estimating::'.$service_type.';' );
 	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs )');
 	$log->error($@) if $@;
 	# make this fast by doing it in one transaction
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $key (@variables) {
-$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+#$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+#$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		} elsif ( ! exists $openprint::param{$key} ) {
 			delete_service_spec( $project_index, $service_index, $key );
 		} else {

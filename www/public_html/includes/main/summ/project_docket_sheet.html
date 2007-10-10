@@ -382,12 +382,12 @@ return $html;
 			) ?>
 
         <? if ( $$variable{'txtTotalPageQuantity'} ) ?>
-			<? if ( $$variable{'rdbCover'} eq 'DifferentCover' ) ?>
+			<? if ( $$variable{'rdbCover'} eq 'Different' ) ?>
 				<? eval ( $$variable{'txtTotalPageQuantity'} -= 4; ) ?>
 				<?txtTotalPageQuantity?>pp+C,
-			<? else ( $$variable{'rdbCover'} eq 'DifferentCover' ) ?>
+			<? else ( $$variable{'rdbCover'} eq 'Different' ) ?>
 				<?txtTotalPageQuantity?>pp,
-			<? endif ( $$variable{'rdbCover'} eq 'DifferentCover' ) ?>
+			<? endif ( $$variable{'rdbCover'} eq 'Different' ) ?>
 			<?txtFinalWidth?>&quot; x <?txtFinalHeight?>&quot;
 			<? if ( $$variable{'txtInsertQuantity'} ) ?>
             with 

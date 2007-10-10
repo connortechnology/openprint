@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 # Make sure we can get access to the perl modules
 use lib "/etc/apache2/lib/perl/";

@@ -328,8 +328,8 @@ sub user_profile {
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
 
 	if ( $Me->administrator() eq 'Y' ) {
+		$User = new openprint::User( $openprint::param{'ddmUser'} );
 		if ( $openprint::param{'ddmUser'} ) {
-			$User = new openprint::User( $openprint::param{'ddmUser'} );
 # Enforce that we can only edit users from our company
 			if ( $User->company_id() != $openprint::session{'company_id'} ) {
 				$User = new openprint::User( $openprint::session{'user_id'} );
@@ -360,12 +360,13 @@ sub user_profile {
 			return misc::error( $log, $dbh, $variable, 'Bad Field', $error );
 		} # end if
 
-		if ( ! $openprint::param{'ddmUser'} ) { # add
-			foreach my $U ( openprint::User::find('email'=>$openprint::param{'email'}) ) {
+			foreach my $U ( openprint::User::find('email'=>lc $openprint::param{'email'}) ) {
 				if ( $U->id() != $User->id() ) {
 					return misc::error( $log, $dbh, $variable, 'User already exists.', $openprint::param{'email'} . " is already a user." );
 				} # end if
 			} # end foreach
+		if ( ! $openprint::param{'ddmUser'} ) { # add
+			$User->company_id( $openprint::session{company_id} ) if ! $User->company_id();
 		} # end if
 		$$variable{'error'} .= $User->save( \%openprint::param );
 	} # end if
