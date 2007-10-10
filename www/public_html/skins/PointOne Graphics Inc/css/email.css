@@ -76,6 +76,9 @@ hr {
 }
 
 .colRow { background-color: #E3E4F0 }
+.colRowRed {
+    color: red;
+}/* alternating row color in generated tables */
 
 img {
 	border: none;

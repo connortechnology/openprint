@@ -69,7 +69,7 @@ sub run_query {
 	my ( $log, $dbh, $sql_statement ) = @_;
 	my ( @return_array, $num_of_fields, $ref );
 
-	my $starttime = gettimeofday();
+	my $starttime = [gettimeofday];
 	my $sth = $dbh->prepare($sql_statement) or $log->error( "Error Preparing SQL Statement: ($sql_statement): " . $dbh->errstr );
 	if ( ! $sth or ! $sth->execute() ) {
 		$log->error("SQL statement execution failed: ($sql_statement):" . $dbh->errstr);
@@ -83,7 +83,7 @@ sub run_query {
 		} # end for
 	} # end while
 	#$sth->finish(); # unneccessary
-	$log->debug("SQL (".(sprintf('%.4f', tv_interval( [$starttime])*1000) )." useconds). ($sql_statement) Results:".join(',',@return_array));
+	$log->debug("SQL (".(sprintf('%.4f', tv_interval( $starttime, [gettimeofday])*1000) )." useconds). ($sql_statement) Results:".join(',',@return_array));
 	
 	return ( $num_of_fields, @return_array );
 } # end sub run_query
@@ -95,7 +95,7 @@ sub insert {
 	$d = $dbh if ! $d;
 	$l = $log if ! $l;
 
-	my $starttime = gettimeofday();
+	my $starttime = [gettimeofday];
 	my %commands = ();
 	if ( @_ == 1 ) {
 		my $data = shift;
@@ -126,7 +126,7 @@ sub insert {
 		$l->error("SQL statement execution failed: ($print_command):" . $d->errstr) if $l;
 		return $d->errstr;
 	} # end if
-	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval([$starttime])*1000, $print_command ) ) if $l;
+	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime, [gettimeofday])*1000, $print_command ) ) if $l;
 	return;
 } # end sub insert
 
@@ -135,7 +135,7 @@ sub update {
 
 	$d = $dbh if ! $d;
 
-	my $starttime = gettimeofday();
+	my $starttime = [gettimeofday];
 	my %commands;
 	if ( @_ == 1 ) {
 		my $data = shift;
@@ -172,7 +172,7 @@ sub update {
 		$log->error("SQL statement execution failed: ($command):" . $d->errstr) if $log;
 		return $d->errstr;
 	} # end if
-	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( [$starttime])*1000, sprintf($print_command, values %commands, @conditions ) ) ) if $log;
+	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, sprintf($print_command, values %commands, @conditions ) ) ) if $log;
 	return;
 } # end sub update
 

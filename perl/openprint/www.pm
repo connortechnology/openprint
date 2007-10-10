@@ -279,8 +279,6 @@ $openprint::log->debug("Getfile");
 			
 			if ( $filename eq 'proofs.html' or $filename eq 'FilmStripping.html' ) {
 				my $printing_service_index = openprint::project::get_project_type_service_index( $log, $dbh, $variable{'ProjectIndex'} );
-				my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $variable{'ProjectIndex'}, $printing_service_index );	
-
 				my $duedatedays = openprint::employee_production::load_press_use( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 
 				if ( ! $variable{'ddmDueDate'} ) {
@@ -300,7 +298,6 @@ $openprint::log->debug("Getfile");
 				} else {
 					@variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = split('-', $variable{'ddmDueDate'});
 				} # end if
-
 
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );

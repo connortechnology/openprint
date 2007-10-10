@@ -358,9 +358,9 @@ sub project_view {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$printing_service_index", 'strStatus', 'Ordered' );	
 			} # end if
 
-		} elsif ( $service_type eq 'Proofs' or $service_type eq 'FilmStripping' ) {
+		} elsif ( sets::isin( $service_type,[ 'Proofs', 'FilmStripping' ] ) ) {
 
-# Store Usepress
+			# Store Usepress
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $signature_service_index );
 				next if ! $openprint::param{'UsePress-'.$printing_specs{'SignatureIndex'}};
@@ -429,17 +429,15 @@ sub project_view {
 							if ( my @Equipment = openprint::Equipment::find('strid'=>$sig_specs{'UsePress'}) ) {
 								$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
 								if ( $_ ) {
-									$$variable{'error'} .= "Error adding to press schedule: " . $_;
+									$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
 								} else {
 									$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $sig_specs{'SignatureIndex'} to pending press schedule." );
 
 								} # end if
 							} # end if
-
 						} # end foreach
 						sql::end_transaction( $dbh, $ac );
 					} # end if
-
 
 					if ( $openprint::param{'rdbApproved'} eq 'Y' or ! defined $openprint::param{'rdbApproved'} ) {
 						if ( ! Date::Calc::check_date( @openprint::param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ) ) {
@@ -706,7 +704,7 @@ sub send_additional_charges_notifications {
 #misc::send_email_with_attachment( $log, \%mail, @body );
 
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
+	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $openprint::config{'Mail Server'},
@@ -716,7 +714,7 @@ sub send_additional_charges_notifications {
 			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 #TO      => 'iconnor@point-one.com',
 			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $openprint::param{'AdditionalEmailRecipients'}),
-			CC      => sprintf( "%s %s <%s>", @info{'CSRFirstName','CSRLastName','CSREmail'}),
+			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
 			SUBJECT => 'Additional Charges required',
 			);
 	misc::send_email_with_attachment( $log, \%mail, @body );
@@ -909,17 +907,16 @@ sub send_duedate_change_notification {
 	my $User = new openprint::User( $openprint::session{'user_id'} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my $sales_person_email = sprintf( "%s %s <%s>", $CSR->firstname(), $CSR->lastname(), $CSR->email() );
-	if ( $sales_person_email ne '  <>' ) {
+	if ( $CSR->email() ) {
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
+		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},
 				FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 #TO      => 'iconnor@point-one.com',
-				TO      => $sales_person_email,
+				TO      => sprintf( '"%s %s" <%s>', $CSR->firstname(), $CSR->lastname(), $CSR->email() ),
 				SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",
 				);
 		misc::send_email_with_attachment( $log, \%mail, @body );

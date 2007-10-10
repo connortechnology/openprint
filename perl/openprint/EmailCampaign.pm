@@ -115,7 +115,7 @@ sub load_info {
 
 sub format_email {
 	#@_[0] =~ s/\n/<BR>/g;
-	return @_[0];
+	return $_[0];
 } # end sub format_email
 
 sub get_user_detail {
@@ -191,14 +191,14 @@ __ADMIN_EMAIL__
 
 	# Send the email
 	misc::send_email_with_attachment($log, \%mail, @body, ());
-	my %mail = (
+	%mail = (
 			SMTP => $openprint::config{'Mail Server'},
 			FROM => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
 			TO => sprintf("\"%s\" <%s>", 'Keith Luder', 'keith@point-one.com' ),
 			SUBJECT => 'Automatically Generated Account Deletion Email',
 		);
 	misc::send_email_with_attachment($log, \%mail, @body, ());
-	my %mail = (
+	%mail = (
 			SMTP => $openprint::config{'Mail Server'},
 			FROM => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
 			TO => 'iconnor@point-one.com',

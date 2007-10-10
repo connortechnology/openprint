@@ -141,6 +141,9 @@
 				$html .= $$sig_specs{'UsePress'};
 			} # end if
 			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/></td><td class="docketText">';
+			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
+				$html .= '<b>Customer Supplied</b> ';
+			} # end if
 			if ( $$sig_specs{'rdbSpecificStock'} ne 'Y' ) {
 				$html .= sprintf('%s,<b>%s</b>,%s', $$sig_specs{ddmStockBrand}, uc $$sig_specs{ddmStockFinish}, $$sig_specs{ddmStockWeight} );
 			} else {
@@ -155,7 +158,7 @@
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
 			} # end if
 			$html .= '</td><td class="docketText">';
-			$html .= ($$sig_specs{'txtSignatureSpreadQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$variable{'txtSpreadSize'} ) . 'pp ' if ( $$sig_specs{'txtSignatureType'} eq 'AdditionalSignature' );
+			$html .= ($$sig_specs{'txtSignatureSpreadQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$variable{'txtSpreadSize'} ) . 'pp ' if ( $$sig_specs{'txtSignatureType'} ne '' );
 			$html .= sprintf('%2$dout %1$s', @$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index(), 'txtImposition'.$$variable{'Project'}->ordered_quantity_index()} );
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {

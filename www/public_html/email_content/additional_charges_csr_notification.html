@@ -1,8 +1,11 @@
+
+<style type="text/css">
+	<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/project.css' ); ) ?>
+</style>
 <a href="mailto:<?OperatorEmail?>"><?OperatorFirstName?> <?OperatorLastName?></a> has added additional charges to the following project.
 These charges may need to be approved before production will continue.
 
-<? eval ( eprint::project::get_header( $log, $dbh, $variable, @$variable{'ProjectIndex', 'OrderID'} ); ) ?>
-<!--#include virtual="/includes/project_header_style.html"-->
+<? eval ( openprint::project::get_header( $log, $dbh, $variable, @$variable{'ProjectIndex', 'OrderID'} ); ) ?>
 <!--#include virtual="/includes/project_header.html"-->
 <div class="ProjectHeader">
 	<fieldset>
@@ -47,8 +50,8 @@ These charges may need to be approved before production will continue.
 </div>
 
 
-<a href="<? echo ( $r->dir_config('ExternalSiteURL') ) ?>/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>&OrderID=<?OrderID?>&Issue_Cookie=true">Click here</a> to view this project on the employee side.<br/>
+<a href="<? echo ( $r->dir_config('ExternalSiteURL') ) ?>/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>&OrderID=<?OrderID?>">Click here</a> to view this project on the employee side.<br/>
 <br/>
 Use the following link to enter the customer side and approve the order.<br/>
-<a href="<? echo ( $r->dir_config('ExternalSiteURL') ) ?>/main/order/history_details.html?order_id=<?OrderID?>&Issue_Cookie=true"><? echo ( $r->dir_config('ExternalSiteURL'); ) ?>/main/order/history_details.html?order_id=<?OrderID?>&Issue_Cookie=true</a>
+<a href="<? echo ( $r->dir_config('ExternalSiteURL') ) ?>/main/order/history_details.html?order_id=<?OrderID?>"><? echo ( $r->dir_config('ExternalSiteURL'); ) ?>/main/order/history_details.html?order_id=<?OrderID?></a>
 

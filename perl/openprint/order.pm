@@ -534,7 +534,7 @@ sub store_order_info {
 		$$variable{$key} = $r->param($key);
 	} # end foreach
 
-	return sql::update( $log, $dbh, 'Orders', ['Index=?', $order_id],
+	my $rc = sql::update( $log, $dbh, 'Orders', ['Index=?', $order_id],
 		#'strTitle',				 $openprint::param{'txtTitle'},
 		'strCompanyName',			$$variable{'txtCompanyName'},
 		'strFirstName',				$$variable{'txtFirstName'},
@@ -556,6 +556,7 @@ sub store_order_info {
 
 	my $Order = new openprint::Order( $order_id );
 	$Order->load();
+	return $rc;
 } # end sub store_order_info
 
 sub get_invoice_to {
@@ -1341,7 +1342,11 @@ sub cancel_order {
 	sql::update( $log, $dbh, 'Orders', ['Index=?',$order_id], 'strStatus', 'Cancelled' );
 	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
 	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
-		sql::update( $log, $dbh, 'tbl_Projects', ['Index=?', $project_index], 'strStatus', 'Unordered','order_id', undef );
+		my $Project = new openprint::Project( $project_index );
+		$Project->status('Unordered');
+		$Project->order_id( undef );
+		$Project->docket( undef );
+		$Project->save();
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );

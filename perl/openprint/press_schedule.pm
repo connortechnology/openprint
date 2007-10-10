@@ -56,7 +56,7 @@ sub find {
 		$openprint::log->error( "Error loading schedule: ($sql) (@values) : " . $openprint::dbh->errstr() );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->error( "Loading schedule: ($sql) (@values) : " . @$data ); 
+		$openprint::log->debug( "Loading schedule: ($sql) (@values) : " . @$data ); 
 	} # end if
 	return @$data;
 } # end sub find
@@ -93,8 +93,8 @@ sub get_li {
 	my $Project = new openprint::Project( $$row{'projectindex'} );
 	my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, @$row{'projectindex','serviceindex'} );
 	if ( ! $specs{'txtEmployeeComments'} ) {
-		my @side_one = openprint::print_printing::get_colours( \%specs, 'SideOne' );
-		my @side_two = openprint::print_printing::get_colours( \%specs, 'SideTwo' );
+		my @side_one = openprint::Estimating::Printing::get_colours( \%specs, 'SideOne' );
+		my @side_two = openprint::Estimating::Printing::get_colours( \%specs, 'SideTwo' );
 		$specs{'txtEmployeeComments'} .= sprintf( '%d/%d', scalar @side_one, scalar @side_two );
 
 		my %pms;
@@ -127,7 +127,7 @@ sub get_li {
 			$specs{'txtEmployeeComments'} .= '+Varnish';
 		} # end if
 
-		$specs{'txtEmployeeComments'} .= ' on ' . $specs{'ddmStockSheetSize'};
+		$specs{'txtEmployeeComments'} .= ' on ' . $specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, @$row{'projectindex','serviceindex'}, 'txtEmployeeComments', $specs{'txtEmployeeComments'} );
 	} # end if
 
@@ -136,10 +136,8 @@ sub get_li {
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, @$row{'projectindex', 'serviceindex'}, 'SignatureQuantity', $specs{'SignatureQuantity'} );
 	} # end if
 	if ( ! $specs{'ImpressionQuantity'} ) {
-		my ( $qty_index ) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT intQuantityIndex FROM Order_Contents WHERE lngProjectIndex=?}, $$row{'projectindex'} );
-
-		$specs{'ImpressionQuantity'} = $specs{'hdnImpressionQuantity'.$qty_index};
-		$specs{'ImpressionQuantity'} /= 2 if $specs{'ddmRunStyle'} eq 'Perfecting';
+		$specs{'ImpressionQuantity'} = $specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
+		#$specs{'ImpressionQuantity'} /= 2 if $specs{'ddmRunStyle'.$Project->ordered_quantity_index()} eq 'Perfecting';
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, @$row{'projectindex', 'serviceindex'}, 'ImpressionQuantity', $specs{'ImpressionQuantity'} );
 
 	} # end if
@@ -189,7 +187,7 @@ sub get_li {
 			} # end if
 	} # end if
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
-		$html .= sprintf( '<div id="%2$dComment" class="Comment" onclick="editComment( %1$s, %2$s, \'%3$s\', event );">%3$s</div>', @$row{'projectindex','serviceindex'}, $specs{'txtEmployeeComments'} );
+		$html .= sprintf( '<div id="%2$dComment" class="Comment" onclick="editComment( %1$s, %2$s, event );">%3$s</div>', @$row{'projectindex','serviceindex'}, $specs{'txtEmployeeComments'} );
 
 		$html .= sprintf( '<span class="Forms" id="%dForms" onclick="editForms(%s, %s,\'%s\', event );">%d %s</span>', @$row{'serviceindex','projectindex','serviceindex'}, @specs{'SignatureQuantity','SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
 		$html .= sprintf( '<span id="%dImpressions" class="Impressions" onclick="editImpressions(%s, %s,\'%s\', event );">%d imps</span>', @$row{'serviceindex','projectindex','serviceindex'}, @specs{'ImpressionQuantity','ImpressionQuantity'} );

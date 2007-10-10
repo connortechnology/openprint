@@ -504,6 +504,10 @@ sub get_service_specifications {
 			require openprint::Estimating::Scoring;
 			openprint::Estimating::Scoring::get_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id eq 'Proofs' ) {
+			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			foreach ( keys %$specs ) {
+				$$variable{$_} = $$specs{$_};
+			} # end foreach
 			openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id ) {
 			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );

@@ -366,9 +366,9 @@ sub signature_calc {
 		my $horizontal_cuts = 0;
 		if ( $ProjectTypeID ne 'MultiPagePublication' ) {
 			$horizontal_cuts += 2 + $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
-			if (   
+			if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
 					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
-					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) )
+					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) )
 			   ) {
 				$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
 			} # end if
@@ -392,7 +392,7 @@ sub signature_calc {
 			$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
 			$totalPrice += $price;
-			if ( ! $openprint::config{'Dumb Cutting'} ) {
+			if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
 				$sheets *= $$sig_specs{'hdnImpositionColumns'.$qty_index};
 				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 			} # end if
@@ -403,7 +403,7 @@ sub signature_calc {
 			$price = ( $runs * $horizontal_cuts * $ServicePrice{'Price'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $horizontal_cuts, $sheets, $runs, $price );
 			$totalPrice += $price;
-			if ( ! $openprint::config{'Dumb Cutting'} ) {
+			if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
 				$sheets *= $$sig_specs{'hdnImpositionRows'.$qty_index};
 				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 			} # end if
@@ -449,7 +449,7 @@ sub signature_calc {
 				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
-				if ( ! $openprint::config{'Dumb Cutting'} ) {
+				if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$sig_specs{'hdnImpositionDutchColumns'.$qty_index};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 				} # end if
@@ -461,7 +461,7 @@ sub signature_calc {
 				$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
-				if ( ! $openprint::config{'Dumb Cutting'} ) {
+				if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$sig_specs{'hdnImpositionDutchRows'.$qty_index};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 				} # end if
@@ -675,6 +675,26 @@ sub summary {
 	my ( $project_id, $service_id, $specs, $qty_index ) = @_;
 	$specs = openprint::service::get_specs_ref( $project_id, $service_id ) if ! $specs;
 } # end sub summary
+
+sub runtime {
+    my ( $p_id, $s_id, $specs, $qty_index ) = @_;
+    return 0 if ! $$specs{'ddmEquipment'.$qty_index};
+
+	my $runtime = 0;
+	my @Equipment = openprint::Equipment::find('strid'=>$$specs{'ddmEquipment'.$qty_index});
+	if ( @Equipment ) {	
+		my $makeready = $Equipment[0]->specification( 'Make Ready Time' );
+		my $runspeed = $Equipment[0]->specification( 'Cutting Time' );
+		my $Project = new openprint::Project( $p_id );
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			$runtime += $$specs{"txtCalculatedCuts$$sig_specs{'SignatureIndex'}"} * ( $makeready + $runspeed);
+			$runtime += $$specs{"txtAdditionalCuts$$sig_specs{'SignatureIndex'}"} * ( $makeready + $runspeed);
+		} # end foreach
+	
+	} # end if
+	return $runtime;
+} # end sub runtime
 
 
 1;

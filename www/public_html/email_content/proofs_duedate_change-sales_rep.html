@@ -1,6 +1,9 @@
-<br>
+
+<style type="text/css">
+	<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/project.css' ); ) ?>
+</style>
+<br/>
 The due date for the following project was changed to <?DueDate?>.<br/><br/>
-<? eval ( eprint::project::get_header( $log, $dbh, $variable, @$variable{'ProjectIndex', 'OrderID'} ); ) ?>
-<!--#include virtual="/includes/project_header_style.html"-->
+<? eval ( openprint::project::get_header( $log, $dbh, $variable, $$variable{'ProjectIndex'} ); ) ?>
 <!--#include virtual="/includes/project_header.html"-->
-<br>
+<br/>

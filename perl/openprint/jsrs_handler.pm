@@ -64,9 +64,9 @@ sub handler {
 	openprint::session_init();
 	openprint::usergroup::init_cache();
 
-	#foreach my $key ( $r->param() ) {
-#$log->debug("Paramter: $key => " . $r->param($key) );
-#}
+	foreach my $key ( $r->param() ) {
+$log->debug("Paramter: $key => " . $r->param($key) );
+}
 	jsrs::Dispatch( $r, $log, $dbh, \%variable );
 
 	if ( exists $variable{'Download'} and $variable{'Download'} ) {

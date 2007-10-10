@@ -557,12 +557,13 @@ sub summary {
 			$side_two_coatings .= '+Varnish (Overall Gloss)' if $$specs{'chkVarnishOverallGlossSideTwo'};
 			$side_two_coatings .= '+Varnish (Overall Matte)' if $$specs{'chkVarnishOverallMatteSideTwo'};
 
-			return sprintf( qq{%s %s"x%s" %d%s/%d%s %s\n%s}, 
+			return sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s}, 
 					@$specs{'txtServiceDescription','txtWidth','txtHeight'}, 
 					scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideOne')), 
 					$side_one_coatings,
 					scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideTwo')),
 					$side_two_coatings,
+					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
 					$$specs{'rdbSpecificStock'} eq 'Y' ? 
 					join(',', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(',', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ) 

@@ -22,10 +22,11 @@ my $r;
 $log = logger->new('warn');
 
 $dbh = sql::open_sql( $log, 
-'database' => $ARGV[0],
-'driver'   => 'Pg',
-'login'    => $ARGV[1],
-'password' => $ARGV[2],
+	'host'		=> $ARGV[0],
+	'database'	=> $ARGV[1],
+	'driver'	=> 'Pg',
+	'login'		=> $ARGV[2],
+	'password'	=> $ARGV[3],
 );
 die 'Error opening db' if ! $dbh;
 
@@ -53,28 +54,59 @@ foreach my $session ( sql::execute( $log, $dbh, q{SELECT id FROM sessions} ) ) {
 
 if ( 1 ) {
 # Clean out uncalculated projects
-	my $ac = sql::start_transaction( $dbh );
-	my @Projects = openprint::Project::find('status'=>'uncalculated','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
-	$log->debug("# of projects to delete: @Projects");
-	foreach my $Project ( @Projects ) {
-		$Project->delete();
-	} # end foreach
-	my @Projects = openprint::Project::find('status'=>'Unordered','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
-	$log->debug("# of projects to delete: @Projects");
-	foreach my $Project ( @Projects ) {
-		$Project->delete();
-	} # end foreach
-	my @Projects = openprint::Project::find('status'=>'Deleted','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) ) );
-	$log->debug("# of projects to delete: @Projects");
-	foreach my $Project ( @Projects ) {
-		$Project->delete();
-	} # end foreach
-	sql::end_transaction( $dbh, $ac );
+	my @Projects = openprint::Project::find('status'=>'uncalculated','order'=>'index desc','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	if ( @Projects ) {
+		my $ac = sql::start_transaction( $dbh );
+		$log->warn("# of uncalculated projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
+		foreach my $Project ( @Projects ) {
+			if ( $Project->status() ne 'uncalculated' ) {
+				$log->error('WTF!');
+				next;
+			} # end if
+			$Project->delete();
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
+	} # end if
 
-	$ac = sql::start_transaction( $dbh );
+	@Projects = openprint::Project::find('status'=>'Unordered','order'=>'index desc','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	if ( @Projects ) {
+		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
+		my $ac = sql::start_transaction( $dbh );
+		foreach my $Project ( @Projects ) {
+			if ( $Project->status() ne 'Unordered' ) {
+				$log->error('WTF!');
+				next;
+			} # end if
+			if ( $Project->order_id() ) {
+				$log->error('WTF!');
+				next;
+			} # end if
+			if ( $Project->docket() ) {
+				$log->error('WTF!');
+				next;
+			} # end if
+			$Project->delete();
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+	@Projects = openprint::Project::find('status'=>'Deleted','order'=>'index desc','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) );
+	if ( @Projects ) {
+		my $ac = sql::start_transaction( $dbh );
+		$log->warn("# of Deleted projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
+		foreach my $Project ( @Projects ) {
+			if ( $Project->status() ne 'Deleted' ) {
+				$log->error('WTF!');
+				next;
+			} # end if
+			$Project->delete();
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+
+	my $ac = sql::start_transaction( $dbh );
 # Clean out unfinished Orders
 	my @Orders = openprint::Order::find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
-	$log->debug('Cleaning out ' . @Orders . ' incomplete orders');
+	$log->warn('Cleaning out ' . @Orders . ' incomplete orders');
 	foreach my $Order ( @Orders ) {
 		$Order->delete();
 	} # end foreach
@@ -82,7 +114,7 @@ if ( 1 ) {
 
 	$ac = sql::start_transaction( $dbh );
 	my @Quotes = openprint::Quote::find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
-	$log->debug('Cleaning out ' . @Quotes . ' incomplete quotes ');
+	$log->warn('Cleaning out ' . @Quotes . ' incomplete quotes ');
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
 	} # end foreach
