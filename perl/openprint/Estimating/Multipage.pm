@@ -234,7 +234,7 @@ $openprint::log->debug("after initial recalc");
 							or $$sig_specs{'txtSignatureSpreadQuantity3'} ) ) {
 					openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
 				} # end if
-			} elsif ( $unspecified_spreads > 0 ) {
+			} elsif ( ( $unspecified_spreads > 0 ) and ( $$sig_specs{'txtSignatureType'} ne 'Cover Spreads' ) ) {
 	# Need to add signatures
 				my $check_unspecified_spreads = $unspecified_spreads;
 				while ( $unspecified_spreads > 0 ) {

@@ -1,7 +1,13 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<? eval (
+	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+	$$variable{'Columns'} = 'Three';
+	} else {
+	$$variable{'Columns'} = 'Two';
+	} # end if
+) ?>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<p>
 				<label>Spine width:</label>
@@ -9,29 +15,20 @@
 			</p>
 		</fieldset>
 		<fieldset><legend>Results</legend>
-			<p>
-			<!-- The rest is done for each qty -->
-			<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-			<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-			<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-			<span class="<?Columns?>Columns">
-				  <!--#include virtual="/includes/main/proj/quantities_prices.html"-->
-			</span>
-			<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-			<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-			<!-- End of Results -->
-			</p>
+			  <!--#include virtual="/includes/main/proj/quantities_prices.html"-->
 		</fieldset>
+		<hr/>
 
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
 		<input type="hidden" name="ContinueProject" value="Y" />
-		<input type="hidden" name="hdnBreakdown1" />
-		<input type="hidden" name="hdnBreakdown2" />
-		<input type="hidden" name="hdnBreakdown3" />
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<div id="hdnBreakdown1" style="display: none;"></div>
+		<div id="hdnBreakdown2" style="display: none;"></div>
+		<div id="hdnBreakdown3" style="display: none;"></div>
+		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>
 
