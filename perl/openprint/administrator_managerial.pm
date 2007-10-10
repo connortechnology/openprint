@@ -118,7 +118,17 @@ sub user_profiles {
 	my $user_role = $openprint::param{'ddmUserRole'};
 	my $cust_id = $openprint::param{'ddmCustomer'};
 
+	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
+	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(strlastname),lower(strfirstname)' );
+
 	my $User = new openprint::User( $user_id );
+	if ( ! $User->id() ) {
+		if ( sets::isin( $openprint::session{user_id}, map { $_->id() } @Users ) ) {
+			$User = new openprint::User( $openprint::session{user_id} );
+		} else {
+			$User = $Users[0] if @Users;
+		} # end if
+    } # end if
 
 	if ( $openprint::param{'btnFunction'} eq '<<' ) {
 		$User = $User->Prev( 'type'=>$openprint::param{'ddmUserRole'}, 'company_id'=>$openprint::param{'ddmCustomer'} );
@@ -138,7 +148,8 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
 
-		my @Users = openprint::User::find( 'email'=>lc $openprint::param{'email'} );
+		my @Users = openprint::User::find( 'email' => lc $openprint::param{'email'} );
+$openprint::log->debug("Users: " . $Users[0]->id() . ' ' . $User->id() );
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			return misc::error( $log, $dbh, $variable, 'User already exists.', "There is already a user with the specified email address.  Please try another.");
 		} # end if
@@ -149,7 +160,7 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'Error Saving.', "There was an error saving the user's information. $error");
 		} # end if
 
-		if ( $User->email() =~ /(.*)\@point\-one\.com/ ) {
+		if ( $opepnrint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 			if ( $openprint::param{'VacationState'} ) {
 				email::start_vacation( $r, $log, $User->email(), @openprint::param{'VacationSubject','VacationMessage'} );
 			} else {
@@ -178,16 +189,7 @@ sub user_profiles {
 		$$variable{'information'} = "Record saved successfully.";
 	} # end if btnFunction
 
-	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
-	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(strlastname),lower(strfirstname)' );
 
-	if ( ! $User->id() ) {
-		if ( sets::isin( $openprint::session{user_id}, map { $_->id() } @Users ) ) {
-			$User = new openprint::User( $openprint::session{user_id} );
-		} else {
-			$User = $Users[0] if @Users;
-		} # end if
-    } # end if
 
 	# load user fields
 
@@ -206,8 +208,7 @@ sub user_profiles {
 		} # end foreach
 	} # end if 
 
-	if ( $User->email() =~ /(.*)\@point\-one\.com/ ) {
-$openprint::log->debug("Getting vacation");
+	if ( $opepnrint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 		@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
 		$sql::dbh = $dbh;
 	} # end if
@@ -222,14 +223,9 @@ $openprint::log->debug("Getting vacation");
     # get categories this customer is in we do it this way to limit databse transaction to 2.
     my @users_categories;
 	if ( $User->id() ) {
-			@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
+		@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
 	} # end if
 	$$variable{'selectUserCategories'} = ssi::make_select( \@available_categories, \@users_categories );
-
-	# Fill in User Type Drop Down Menus
-	my @data = sql::execute( $log, $dbh, 'SELECT Identifier, Label FROM User_Types' );
-    $$variable{'FILL_USER_TYPE'} = ssi::make_drop_down( \@data, $user_role );
-    $$variable{'ddmUserType'} = ssi::make_drop_down( \@data, $User->type() );
 
 } # end sub edit
 
