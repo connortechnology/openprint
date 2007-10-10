@@ -33,15 +33,14 @@ use vars qw( %variable %session %param %config $log $dbh );
 *config = \%openprint::config;
 
 sub handler {
-	my ( $cookie, $status );
 	my $request = shift;
 	$log	= $request->log;
 
 	$request->no_cache(1);
 	#$request->headers_out('Cache-Control', 'no-store, no-cache');
 
-	my $starttime = time;
-	$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
+	#my $starttime = time;
+	#$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
 	#$r->parse;
 
 	#$log->debug("Database: $sql_server{'database'} Page: " . $r->uri());
@@ -64,25 +63,28 @@ sub handler {
 					IDLength    => 8,
 	};
 
+
 	if ( $request->method eq 'POST' ) {
-		$request->args() =~ /serial=(\d*)/;
-		my $serial = $1;
+		my $uploaded = 0;
+		my ($serial) = $request->args() =~ /serial=(\d*)/;
+		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
 		my $rsize=$request->headers_in->{'Content-Length'};
 		sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
-		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'user_id', $session{'user_id'} ] );
+		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'company', $company, 'user_id', $session{'user_id'} ] );
 
 		my $upload_hook = sub {
-			my ( $upload, $data ) = @_;
+			my ( $upload, $data, $data_len, $hook_data ) = @_;
+			$data_len = length $data if ( ! $data_len );
 
-			my ( $start, $size, $total ) = sql::execute( undef, undef, q{SELECT start, size, total FROM Uploads WHERE id=?}, $serial );
-			$size += length( $data );	
-			sql::update( undef, undef, 'Uploads', ['id=?', $serial], ['size', $size] );
+			#my ( $size, $total ) = sql::execute( undef, undef, q{SELECT size, total FROM Uploads WHERE id=?}, $serial );
+			$uploaded += $data_len;	
+
+			sql::update( undef, undef, 'Uploads', ['id=?', $serial], ['size', $uploaded] );
 		};
 		$r = Apache2::Request->new( $request, UPLOAD_HOOK=>$upload_hook );
 	} else {
 		$r = Apache2::Request->new( $request );
 	} # end if
-
 
     foreach my $key ( sort $r->param() ) {
         $log->debug("Parameter $key is (" . $r->param($key) . ")" );
@@ -90,7 +92,7 @@ sub handler {
     } # end foreach
 
 	if ( $r->param('action') eq 'get_progress_and_size' ) {
-		my ($progress,$currentfile,$totalfiles,$size,$elapsedtime) = sql::execute( $log, $dbh, q{SELECT size, 1, 1, total, extract( epoch from date_trunc('seconds', NOW()) - date_trunc('seconds', start ) ) FROM Uploads WHERE id=?}, $r->param('serial') );
+		my ($progress,$size,$elapsedtime) = sql::execute( $log, $dbh, q{SELECT size, total, extract( epoch from date_trunc('seconds', NOW()) - date_trunc('seconds', start ) ) FROM Uploads WHERE id=?}, $r->param('serial') );
 
 #<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 		my $output =qq{ 
@@ -99,12 +101,13 @@ sub handler {
 <totalsize>$size</totalsize>
 <elapsedtime>$elapsedtime</elapsedtime>
 <serial>}.$r->param('serial').q{</serial></response>};
-		$log->debug($output);
+		#$log->debug($output);
 		$request->content_type('text/xml');
 		$r->print( $output );
 	} else {
 		configuration::init_cache( $log, $dbh, $r->dir_config() );
 		my $serial = $r->param('serial');
+		#sql::execute( $log, $dbh, q{UPDATE Uploads SET finished=NOW() WHERE id=?}, $serial );
 		sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
 		upload_files( $r, $log, $dbh, \%variable );
 		my $page = '/upload/_upload_complete.html';
@@ -116,29 +119,26 @@ sub handler {
 		my @page_path = split('/', $page );
         my $filename = pop @page_path;
         my $template;
+
 		while ( @page_path ) {
 			my $file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins', $r->dir_config('SiteTitle'), 'layouts', @page_path, $filename );
 			if ( -e $file ) {
-$log->debug("Using $file");
 				$template = misc::load_file( $log, $file );
 				last;
 			} # end if
 			$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins', $r->dir_config('SiteTitle'), 'layouts', @page_path, 'default.html' );
 			if ( -e $file ) {
-$log->debug("Using $file");
 				$template = misc::load_file( $log, $file );
 				last;
 			} # end if
 			$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, $filename );
 			if ( -e $file ) {
-$log->debug("Using $file");
 				$template = misc::load_file( $log, $file );
 				last;
 			} # end if
 
 			$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
 			if ( -e $file ) {
-$log->debug("Using $file");
 				$template = misc::load_file( $log, $file );
 				last;
 			} # end if
@@ -180,7 +180,7 @@ sub get_destdir {
 	if ( $session{'company_id'} ) {
 		( $destdir ) = new openprint::Company( $session{company_id} )->name();
 		$destdir = '/'.$destdir.'/';
-		create_dir( $openprint::config{'ProjectFilesPath'}.$destdir );
+		return '' if ! create_dir( $openprint::config{'ProjectFilesPath'}.$destdir );
 	} else {
 # This ends up prefixing the file with the company's name
 		$destdir .= $openprint::param{'txtCompanyName'} . '_';
@@ -188,12 +188,12 @@ sub get_destdir {
 
 	if ( $param{'docket'} ) {
 		$destdir .= '/' . $param{'docket'} . '/';
-		create_dir( $config{'ProjectFilesPath'}.$destdir );
+		return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
 	} elsif ( $param{'project_id'} ) {
 		my $Project = new openprint::Project( $param{'project_id'} );
 		my $docket = $Project->docket();
 		$destdir .= '/' . $docket . '/';
-		create_dir( $config{'ProjectFilesPath'}.$destdir );
+		return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
 	} # end if
 	return $destdir;
 } # end sub get_Destdir
@@ -209,6 +209,10 @@ sub upload_files {
 	} # end if
 
 	my $destdir = get_destdir();
+	if ( ! $destdir ) {
+		$$variable{'error'} .= 'There was an error saving your upload!<br/>';
+		return;
+	} # end if
 	
 	if ( $r->param('btnFunction') eq 'Upload Files' ) {
 
@@ -235,7 +239,8 @@ sub upload_files {
 				sql::insert( $log, $dbh, 'project_files', [
 						'project_id',	$param{'project_id'} ? $param{'project_id'} : undef,
 						'filename',		$destdir.$filename,
-						'description',	$param{'txtDescription'.$index}
+						'description',	$param{'txtDescription'.$index},
+						'upload_id',	$param{'serial'},
 						] );
 			} # end if
 		} # end foreach

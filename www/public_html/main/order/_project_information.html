@@ -9,10 +9,11 @@
 <legend>Project # <? echo ( $$variable{'Project'}->id() ) ?></legend>
 	<span style="float: right;">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'ProjectIndex'}, '', '', "information.html?OrderID=$$variable{'OrderID'}&remove=$$variable{'ProjectIndex'}", 'Remove' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'ProjectIndex'}, '', '', "/main/project/view.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Edit Project' ); ) ?>
 	</span>
-	<? echo ( 
-		return $$variable{'Project'}->summary();
-	) ?>
+	<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>">
+	<? echo ( return $$variable{'Project'}->summary();) ?>
+	</a>
 	<br class="spacer"/>
 	<p>
 		<label>Reference:</label>

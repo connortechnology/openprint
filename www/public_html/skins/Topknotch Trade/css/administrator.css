@@ -1,0 +1,39 @@
+fieldset p {
+    padding-left: 115px;
+}
+fieldset p label {
+    margin-left: -115px;
+    width: 110px;
+}
+fieldset p.buttons {
+    margin: 0px;
+    padding: 0px;
+    margin-left: 115px;
+    float: left;
+}
+
+ul#menubar li#Account a {
+	width: 55px;
+}
+ul#menubar li#Pricing a {
+	width: 75px;
+}
+ul#menubar li#Paper a {
+	width: 65px;
+}
+ul#menubar li#Managerial a {
+	width: 95px;
+}
+ul#menubar li#Equipment a {
+	width: 65px;
+}
+ul#menubar li#Reports a {
+	width: 95px;
+}
+ul#menubar li#Setup a {
+	width: 120px;
+}
+.ContentInner {
+width: auto;
+padding: 5px;
+}

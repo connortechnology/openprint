@@ -21,7 +21,7 @@ sub open_sql {
 	if ( ! ( $dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1} ) ) ) {
 		die $log->crit("Unable to connect to database $sql_server{'database'}: " . DBI->errstr );
 	} # end if
-	$log->info("Opened connection to $sql_server{'database'}.	Thread ID: " . $dbh->{'thread_id'});
+	#$log->info("Opened connection to $sql_server{'database'}.	Thread ID: " . $dbh->{'thread_id'});
 
 	return $dbh;
 } # end sub open_sql
@@ -69,7 +69,7 @@ sub run_query {
 	my ( $log, $dbh, $sql_statement ) = @_;
 	my ( @return_array, $num_of_fields, $ref );
 
-	my $starttime = gettimeofday();
+	my $starttime = [gettimeofday];
 	my $sth = $dbh->prepare($sql_statement) or $log->error( "Error Preparing SQL Statement: ($sql_statement): " . $dbh->errstr );
 	if ( ! $sth or ! $sth->execute() ) {
 		$log->error("SQL statement execution failed: ($sql_statement):" . $dbh->errstr);
@@ -83,7 +83,7 @@ sub run_query {
 		} # end for
 	} # end while
 	#$sth->finish(); # unneccessary
-	$log->debug("SQL (".(sprintf('%.4f', tv_interval( [$starttime])*1000) )." useconds). ($sql_statement) Results:".join(',',@return_array));
+	$log->debug("SQL (".(sprintf('%.4f', tv_interval( $starttime, [gettimeofday])*1000) )." useconds). ($sql_statement) Results:".join(',',@return_array));
 	
 	return ( $num_of_fields, @return_array );
 } # end sub run_query
@@ -95,8 +95,8 @@ sub insert {
 	$d = $dbh if ! $d;
 	$l = $log if ! $l;
 
-	my $starttime = gettimeofday();
-	my %commands;
+	my $starttime = [gettimeofday];
+	my %commands = ();
 	if ( @_ == 1 ) {
 		my $data = shift;
 		if ( ref $data eq 'HASH' ) {
@@ -108,10 +108,15 @@ sub insert {
 		%commands = @_;
 	} # end if
 
+	my @values = values %commands;
+
 	# we can use push and pop in here, because we actually don't acre about order, only pairing
-	my $command = "INSERT INTO $table (".join( ',', keys %commands ).") VALUES (" .join(',', map { '?' } values %commands).")";
-	my $print_command = "INSERT INTO $table (".join( ',', keys %commands ).") VALUES (" .join(',', values %commands ).')';
-	#$log->debug("Sending sql statement:\n $command");
+	my $command = "INSERT INTO $table (".join( ',', keys %commands ).') VALUES (';
+	my $print_command = $command;
+	$print_command .= join(',', @values ) if @values;
+	$print_command .= ')';
+
+	$command .= join(',', map { '?' } @values ).')';
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
 		$l->error( "Error Preparing SQL Statement: ($command):" . $d->errstr ) if $l;
@@ -121,7 +126,7 @@ sub insert {
 		$l->error("SQL statement execution failed: ($print_command):" . $d->errstr) if $l;
 		return $d->errstr;
 	} # end if
-	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval([$starttime])*1000, $print_command ) ) if $l;
+	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime, [gettimeofday])*1000, $print_command ) ) if $l;
 	return;
 } # end sub insert
 
@@ -130,7 +135,7 @@ sub update {
 
 	$d = $dbh if ! $d;
 
-	my $starttime = gettimeofday();
+	my $starttime = [gettimeofday];
 	my %commands;
 	if ( @_ == 1 ) {
 		my $data = shift;
@@ -167,7 +172,7 @@ sub update {
 		$log->error("SQL statement execution failed: ($command):" . $d->errstr) if $log;
 		return $d->errstr;
 	} # end if
-	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( [$starttime])*1000, sprintf($print_command, values %commands, @conditions ) ) ) if $log;
+	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, sprintf($print_command, values %commands, @conditions ) ) ) if $log;
 	return;
 } # end sub update
 

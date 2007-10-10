@@ -1,0 +1,115 @@
+<? eval (
+    $$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+) ?>
+		<form name="f1" method="post" action="/main/order/information.html">
+			<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
+			<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
+			<input type="hidden" name="Status" value="<?Status?>" />
+
+<div class="InstantPricing">
+            <div id="instant_price_section">
+               <div class="instant_price_section_top_shadow">
+                  <div class="instant_price_section_shadow_tl"></div>
+                  <div class="instant_price_section_shadow_tr"></div>
+               </div>
+               <div id="instant_price_section_content">
+                  <div id="instant_price_section_inner">
+	<div class="Questions">
+		<h3>Instant Pricing</h3>
+			<? eval ( $$variable{'TemplateType'} = $$variable{'TemplateType'} ? $$variable{'TemplateType'} : 'SaddleStitching' ) ?>
+			<? eval ( $$variable{'DimensionsDisplay'} = 'Finished' ) ?>
+			<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
+			<!--#include virtual="/includes/sizes.html"-->
+			<div class="row">
+				<span class="label">Number of pages:</span>
+				<span class="input">
+					<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4"  onkeyup="remove_div('OrderButton');"/>
+				</span>
+				<br class="spacer"/>
+				<span class="input">
+					<span class="checkOption">
+						<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onClick="remove_div('CoverStocks');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} ne 'Different' ) ?> />
+						<label for="rdbCoverSelf">Self Cover</label>
+					</span>
+					<span class="checkOption">
+						<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onClick="add_div('CoverStocks');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
+						<label for="rdbCoverDifferent">Different Cover</label>
+					</span>
+					<br class="spacer"/>
+				</span>
+				<br class="spacer"/>
+			</div>
+			<div class="row">
+				<span class="label">Binding Type</span>
+				<span class="input">
+					<select name="rdbTemplateType" onchange="remove_div('OrderButton');">
+						<option value="SaddleStitching">Saddle Stitching</option>
+						<option value="PerfectBound">Perfect Bound</option>
+					</select>
+				</span>
+			</div>
+			<div id="CoverStocks" class="row" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
+				<span class="label">Information for Cover</span>
+				<div class="row">
+					<span class="label">Colours:</span>
+					<span class="input">
+						<select name="ColoursCover" onchange="calc(this.form.name);">
+							<option value="4/0">4 Colour One Side</option>
+							<option value="4/1">4 Colour/Black</option>
+							<option value="4/4">4 Colour Both Sides</option>
+						</select>
+					</span>
+				</div>
+				<br class="spacer"/>
+				<? echo ( 
+					$$variable{'Signature'} = 'Cover Spreads';
+					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
+					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
+					return variable_substitution( $r, $log, $dbh, \$html, $variable );
+					) ?>
+			</div>
+			<br class="spacer"/>
+			<div class="row">
+				<span class="label">Information for Interior Pages</span>
+				<div class="row">
+					<span class="label">Colours:</span>
+					<span class="input">
+						<select name="Colours" onchange="calc(this.form.name);">
+							<option value="4/4">4 Colour</option>
+							<option value="1/1">Black</option>
+						</select>
+					</span>
+				</div>
+				<br class="spacer"/>
+				<? echo ( 
+					$$variable{'Signature'} = 'Interior Spreads';
+					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
+					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
+					return variable_substitution( $r, $log, $dbh, \$html, $variable );
+					) ?>
+				<br class="spacer"/>
+			</div>
+			<!--#include virtual="/includes/shrinkwrapping.html"-->
+			<!--#include virtual="/includes/drilling.html"-->
+			<!--#include virtual="/includes/turnaround.html"-->
+			<!--#include virtual="/includes/quantity.html"-->
+			<!--#include virtual="/includes/press_type.html"-->
+			<br class="spacer"/>
+			<!--#include virtual="/includes/prices.html"-->
+			<div class="Prices">
+			   <!--#include virtual="/includes/buttons.html"-->
+			   <br class="spacer"/>
+			</div>
+	</div><!--Questions-->
+	               <br class="spacer"/>
+                  </div>
+               </div>
+               <div class="instant_price_section_bottom_shadow">
+                  <div class="instant_price_section_shadow_bl"></div>
+                  <div class="instant_price_section_shadow_br"></div>
+               </div>
+            </div>
+
+	<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+</div><!--InstantPricing-->
+</form>

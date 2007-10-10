@@ -26,6 +26,9 @@
 				<th width="100" align="right">Qty</th>
 				<th width="120" align="right">Price</th>
 			</tr>
+			<? eval (
+					$$variable{'rowclass'} = '';
+					) ?>
 			<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 			<tr> 
 				<td><?project_index?></td>
@@ -34,7 +37,7 @@
 my $html;
 my $Project = new openprint::Project( $$variable{'project_index'} );
 $html .= ssi::htmlize($Project->reference()) . ':<br/>' if $Project->reference();
-$html .= $Project->summary();
+$html .= $Project->summary() if $openprint::config{'ShowProjectSummaryOnQuote'} ne 'N';
 return $html;
  ) ?></td>
 				<td colspan="3">
@@ -73,6 +76,9 @@ return $html;
 					</table>
 				</td>
 			</tr>
+			<? eval (
+					$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+					) ?>
 			<? endwhile ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 		</table>
 		<span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span><br/>

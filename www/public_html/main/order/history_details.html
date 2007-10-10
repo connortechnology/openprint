@@ -1,4 +1,3 @@
-<link href="/css/order.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript">
     function confirm_delete( form, payment_id ) {
         if ( confirm( "Are you sure you want to delete this payment?" ) ) {
@@ -65,20 +64,21 @@ Projects listed in red have changed price from the time this order was originall
 <br class="spacer"/><br/>
 <!--#include virtual="/skins/<?SiteTitle?>/includes/order_disclaimer.html"-->
 <br class="spacer"/>
-	<form name="f1" method="post" action="history_details.html?OrderID=<?OrderID?>">
+	<form name="f1" method="post" action="history_details.html">
 <span style="float: right;">
 		<input type="hidden" name="btnFunction" value=""/>
+		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 		<? echo ( 
 			my $html;
 			if ( sets::isin( $$variable{'ORDER_STATUS'}, 'Re-Opened', 'Incomplete') ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', '', "information.html?OrderID=$$variable{'OrderID'}", 'Continue' );
-			} elsif ( sets::isin( $$variable{'ORDER_STATUS'}, 'Complete', 'Paid','Pending Deposit','In Production' ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'UploadCenter', 'upload_center.gif', '', '/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Center' );
+			} elsif ( sets::isin( $$variable{'ORDER_STATUS'}, 'Complete', 'Paid','Pending Deposit','In Production','Cancelled' ) ) {
+				$html .= ssi::writeButton( $log, $dbh, 'UploadCenter', 'upload_center.gif', '', '/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Center' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
 				$html .= ssi::writeButton( $log, $dbh, 'reOrder','reOrder.gif',"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", '', 'ReOrder' ); 
-				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ); 
+				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled'; 
 				if ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) or ( $$variable{'ORDER_STATUS'} eq 'Pending Deposit' ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'ReOpen','re_open.gif',"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", '', 'ReOpen' );
-					$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' );
+					$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
 				} # end if
 			} elsif ( $$variable{'ORDER_STATUS'} eq 'Cancelled' ) {
 			} # end if

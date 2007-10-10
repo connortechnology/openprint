@@ -7,7 +7,7 @@ require openprint::Object;
 require sql;
 
 # This treats a Currency as an object.  The database is only accessed on method access.
-my $debug = 1;
+my $debug = 0;
 
 sub find {
 	my %params = @_;
@@ -99,7 +99,8 @@ sub get_current {
 
 	if ( ! $openprint::session{'Currency_id'} ) {
 		my $list_id = openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable );
-		@openprint::session{'Currency_id'} = sql::execute( undef, undef, q{SELECT CurrencyIndex FROM Pricelists WHERE Index=?}, $list_id ) if $list_id;
+		my $Pricelist = new openprint::Pricelist( $list_id );
+		$openprint::session{'Currency_id'} = $Pricelist->currency_id();
 	} # end if
 	if ( $openprint::session{'Currency_id'} ) {
 		return new openprint::Currency( $openprint::session{'Currency_id'} );

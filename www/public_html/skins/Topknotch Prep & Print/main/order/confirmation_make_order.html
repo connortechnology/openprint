@@ -1,0 +1,30 @@
+<b/>
+Thank you. Your order and information have been received. You will receive a copy of the order via e-mail shortly.<br>
+<br>
+You now need to upload the file(s) pertaining to your project.<br/>
+<? echo (
+	my $html;
+	my @data = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, strProjectReference FROM Order_Contents, tbl_Projects WHERE lngProjectIndex=Index AND OrderIndex=?}, $$variable{'OrderID'} );
+	while ( my ( $project_index, $reference ) = splice @data, 0, 2 ) {
+		$html .= qq`To upload files for project $project_index : $reference click <a href="/main/project/upload.html?ProjectIndex=$project_index">here</a><br/>`;
+	} # end while
+	return $html;
+) ?>
+<br/>
+</b>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>

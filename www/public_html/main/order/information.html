@@ -2,7 +2,6 @@
 <h1>Orders</h1>
 <h2>Information</h2>
 </div>
-<link href="/css/order.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript">
 <!--
 	function radio_select_by_value( radio, value ) {
@@ -13,8 +12,7 @@
 			} // end if
 		} // end for
 	} // end function
-	function ddmUsers_onChange( formName ) {
-		var form = getFormObj(formName);
+	function ddmUsers_onchange( form ) {
 		jsrsExecute( '/jsrs.htm', cbFillUserFor, 'openprint::order::fill_user_info', form.ddmUsers.options[form.ddmUsers.selectedIndex].value );
 	} // end function
 	function cbFillUserFor( results ) {

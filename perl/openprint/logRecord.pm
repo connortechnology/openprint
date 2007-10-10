@@ -37,6 +37,10 @@ sub find {
 		$sql .= ' AND user_id=?';
 		push @values, $params{'user_id'};
 	} # end if
+	if ( $params{'company_id'} ) {
+		$sql .= ' AND company_id=?';
+		push @values, $params{'company_id'};
+	} # end if
 	if ( $params{'action_type'} ) {
         if ( ref $params{'action_type'} eq 'ARRAY' ) {
             $sql .= q{ AND action_type IN (}.join(',', map {'?'} @{$params{'action_type'}} ).')';
@@ -83,5 +87,5 @@ sub Action {
 	my $self = shift;
 	return new openprint::logAction( $$self{action_type} );	
 } # end sub Action
-return 1;
+1;
 __END__

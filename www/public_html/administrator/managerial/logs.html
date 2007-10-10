@@ -5,8 +5,7 @@
 	}
 </style>
 <form name="searchLog" action="logs.html" method="post">
-	<fieldset class="filters">
-	   <legend>Search</legend>
+	<fieldset class="filters"><legend>Search</legend>
 		<p><label>Actions:<br/>
 		  <a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', true );return false;">Select All</a> | <a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', false );return false;">Clear All</a></label>
 		  <? echo(
@@ -41,24 +40,16 @@
 	) ?>
 		<p>
 			<label>Date:</label>
+			<span class="DateSelector">
 			<select name="StartYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?StartYear'} ); ) ?></select>
 			<select name="StartMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?StartMonth'} ); ) ?></select>
 			<select name="StartDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?StartDay'} ); ) ?></select>
-			-
-
+			&nbsp;to&nbsp;</span>
+			<span class="DateSelector">
 			<select name="EndYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?EndYear'} ); ) ?></select>
 			<select name="EndMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?EndMonth'} ); ) ?></select>
 			<select name="EndDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?EndDay'} ); ) ?></select>
-		</p>
-		<p>
-	  <label for="resultsLimit">Results per page</label>
-	  <select name="resultsLimit" id="resultsLimit" size="1">
-			<option value="">All</option>
-		 <option value="25">25</option>
-		 <option value="50">50</option>
-		 <option value="100">100</option>
-		 <option value="200">200</option>
-	  </select>
+			</span>
 		</p>
 		<p class="buttons">
 	  <? echo ( ssi::writeButton( $log, $dbh, 'Search','',"document.searchLog.submit();", '', 'Search' ); ) ?>
@@ -79,26 +70,21 @@
 		</tr>
 			<? echo (
 				my $html = '';
-				my $log_records_arrRef = openprint::logs::getLog();
+				$$variable{'ResultsRef'} = openprint::logs::getLog();
 
-				foreach my $Log (@$log_records_arrRef) {
-					my $dateFormatted = Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Log->date_time() ) );
-
-					$html .= sprintf(
-						'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s, %s</td></tr>',
+				foreach my $Log ( @{$$variable{'ResultsRef'}} ) {
+					$html .= sprintf('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s, %s</td></tr>',
 						$Log->Action->name(),
-						$dateFormatted,
+						Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Log->date_time() ) ),
 						$Log->ip_address(),
 						$Log->note(),
 						$Log->User->email(),
 						$Log->User->firstname(),
 						$Log->User->lastname(),
 						);
-					} # end foreach
-					return $html;
-
-				) ?>
+				} # end foreach
+				return $html;
+			) ?>
 	  </table>
    </div>
-<? echo ( openprint::logs::getPages() ) ?>
 </fieldset>

@@ -3,13 +3,13 @@
 	<head>
 		<title><?PageTitle?></title>	
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
-		<script type="text/javascript" src="/javascripts/buttons.js"></script>
-		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
-		<script type="text/javascript" src="/javascripts/popups.js"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
-		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-		<script type="text/javascript" src="/javascripts/window.js"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
 		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/common-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
 		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
@@ -33,8 +33,11 @@
 		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 
-		<script type="text/javascript" src="/javascripts/tips.js"></script>
+		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">

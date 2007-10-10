@@ -95,20 +95,29 @@
 			div.innerHTML = '<span onClick="editImpressions('+project_index+', '+service_index+', \''+impressions+'\', event );">'+impressions+' imps</span>';
 		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_impressions', new Array( project_index, service_index, impressions ) );
 	} // end function saveOperator
-	function editComment( project_index, service_index, comment, e ) {
-		form = document.forms['f2'];
-		if ( form ) {
-			form.ProjectIndex.value=project_index;
-			form.ServiceIndex.value=service_index;
-			form.Comment.value=comment;
-			show_div('CommentEdit', e )	
-		} // end if
+	function editComment( project_index, service_index, e ) {
+		var div = $( service_index + 'Comment' );
+        form = document.forms['f2'];
+        if ( form ) {
+            form.ProjectIndex.value=project_index;
+            form.ServiceIndex.value=service_index;
+            form.Comment.value=div.innerHTML;
+            show_div('CommentEdit', e )
+        } // end if
 	} 
 	function saveComment( project_index, service_index, comment ) {
 		var div = $( service_index + 'Comment' );
-		if ( div )
-			div.innerHTML = '<div style="width:100%;" onClick="editComment('+project_index+', '+service_index+', \''+comment+'\', event );">'+comment+'&nbsp;</div>';
-		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_comment', new Array( project_index, service_index, comment ) );
+		if ( div ) {
+			if ( comment == '' )
+				div.innerHTML='&nbsp;';
+			else
+				div.innerHTML = comment;
+
+			jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_comment', new Array( project_index, service_index, comment ) );
+		} else {
+			alert('Error!  Comment not updated!');
+		} // end if
+
 	} // end function saveComment
 	function errFunc( t ) {
 	}
@@ -253,20 +262,21 @@
 	<style type="text/css">
 		div.PressColumn {
 			width: <? echo ( int (100/(@{$$variable{'Presses'}}/2)); ) ?>%;
+			text-align: center;
+			padding: 0px;
+			margin: 0px;
 		}
 	</style>
-	<table class="List">
-		<tr>
+	
 	<? echo (
 		my $html;
 		my %presses = @{$$variable{'Presses'}};
 		foreach my $id ( sort keys %presses ) {
-			$html .= '<th style="font-size:16px;"><a href="/employee/production/equipment_view.html?equipment_id='.$id.'">'.$presses{$id}.'</a></th>';
+			$html .= '<div class="PressColumn" style="font-size:16px; font-weight:bold;"><a href="/employee/production/equipment_view.html?equipment_id='.$id.'">'.$presses{$id}.'</a></div>';
 		} # end foreach
 		return $html;
 		) ?>
-		</tr>
-	</table>
+	<hr style="clear: both;"/>
 	<? echo (
 		require openprint::press_schedule;
 		my $html;
@@ -288,8 +298,10 @@
 				
 				foreach my $shift ( @$shifts ) {
 					my $starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, split(':', $$shift{'starttime'} ) );
-					my $endtime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', 
-						Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$shift{'starttime'} ), 0, split(':', $$shift{'duration'} ) ) );
+					my ( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$shift{'starttime'} ), 0, split(':', $$shift{'duration'} ) );
+					( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $y, $mon, $d, $h, $min, $s, 0, 0, 0, -1 );
+					my $endtime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $y, $mon, $d, $h, $min, $s ) );
+
 
 					push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $id, $year, $month, $day, $$shift{'name'} );
 					$html .= openprint::press_schedule::get_ul( $starttime, $endtime, $id, $shift );

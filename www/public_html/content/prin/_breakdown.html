@@ -1,0 +1,74 @@
+<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+<? eval (
+	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
+	$$variable{'OrderStatus'} = $$variable{'Project'}->Order()->status();
+) ?>
+
+<div id="ProjectView">
+<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
+There is no current project. 
+<? else ( $$variable{'ProjectIndex'} eq '' ) ?>
+	<br class="spacer"/>
+	<!--#include virtual="/includes/project_header.html" -->
+	<table class="List" style="table-layout: auto;">
+		<tr> 
+			<th align="left">Services</th>
+			<? if ( $$variable{'Quantity1'} ) ?><th width="160" align="right"><?Quantity1?></th><? endif ( $$variable{'Quantity1'} ) ?>
+			<? if ( $$variable{'Quantity2'} ) ?><th width="160" align="right"><?Quantity2?></th><? endif ( $$variable{'Quantity2'} ) ?>
+			<? if ( $$variable{'Quantity3'} ) ?><th width="160" align="right"><?Quantity3?></th><? endif ( $$variable{'Quantity3'} ) ?>
+			<th width="90" align="right">Status</th>
+		</tr>
+		<? if ( @{$$variable{'SERVICES'}} ) ?>
+		<? while ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
+		<tr <?rowclass?>> 
+			<td>
+				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
+			</td>
+	<? if ( $$variable{'Quantity1'} ) ?>
+			<td align="right">
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price1?></b><br/>
+			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 ); ) ?>
+			</td>
+	<? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?>
+			<td align="right">
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price2?></b><br/>
+			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 2 ); ) ?>
+			</td>
+	<? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?>
+			<td align="right">
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price3?></b><br/>
+			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 3 ); ) ?>
+			</td>
+	<? endif ( $$variable{'Quantity3'} ) ?>
+			<td align="right"><?status?></td>
+		</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq 'class="colRow"' ? '' : 'class="colRow"' ) ?>
+	<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
+	<? endif ( @{$$variable{'SERVICES'}} ) ?>
+		<tr class="totals"> 
+			<td align="left">Unit Prices:</td>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+			<td align="right">&nbsp;</td>
+			<td class="unprintable" align="right">&nbsp;</td>
+		</tr>
+		<tr> 
+			<td align="left">Total Before Taxes:</td>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+			<td align="right">&nbsp;</td>
+			<td class="unprintable" align="right">&nbsp;</td>
+		</tr>
+	</table>
+<br/>
+<? if ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
+<? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+<span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
+<br class="spacer"/>
+<? endif ( $$variable{'ProjectIndex'} eq '' ) ?>
+</div>

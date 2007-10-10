@@ -115,8 +115,8 @@ sub Prepress {
 		my $BinderySignature = $ResourcePool->appendChild( BinderySignature( $doc, $Project, $sig_id, $sig_specs ) );
 	#} #end if
 
-	my @side_one_colours = openprint::print_printing::get_colours( $sig_specs, 'SideOne' );
-	my @side_two_colours = openprint::print_printing::get_colours( $sig_specs, 'SideTwo' );
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+	my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 	my $RunListFile = $ResourcePool->appendChild( $doc->createElement('RunList') );
 	$RunListFile->setAttribute('ID','RNL'.$$sig_specs{'SignatureIndex'}.'_File');
 	$RunListFile->setAttribute('Class','Parameter');
@@ -238,8 +238,8 @@ sub BinderySignature {
 	} else {
 		#$BinderySignature->setAttribute('BinderySignatureType','Grid');
 		my $SignatureCell = $BinderySignature->appendChild( $doc->createElement('SignatureCell') );
-		my @side_one_colours = openprint::print_printing::get_colours( $sig_specs, 'SideOne' );
-		my @side_two_colours = openprint::print_printing::get_colours( $sig_specs, 'SideTwo' );
+		my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+		my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 		if ( @side_one_colours ) {
 			$SignatureCell->setAttribute('FrontPages',1);
 		} # end if
@@ -277,8 +277,8 @@ sub StrippingParams {
 	$SPSheetName->setAttribute('SheetName','Sig#'.$$sig_specs{'SignatureIndex'}.'Sheet#1' );
 	$SPSheetName->setAttribute('SectionList','0' );
 
-	my @side_one_colours = openprint::print_printing::get_colours( $sig_specs, 'SideOne' );
-	my @side_two_colours = openprint::print_printing::get_colours( $sig_specs, 'SideTwo' );
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+	my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 	
 	# FIXME Handle Simplex
 	if ( @side_one_colours and @side_two_colours ) {
@@ -473,8 +473,8 @@ sub Layout_Signature {
 
     my $Ord = 0;
 
-	my @side_one_colours = openprint::print_printing::get_colours( $sig_specs, 'SideOne' );
-	my @side_two_colours = openprint::print_printing::get_colours( $sig_specs, 'SideTwo' );
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+	my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
     my @Surfaces = ('Front');
    if ( $Imposition->runstyle() eq 'Sheet Work' and @side_one_colours and @side_two_colours ) {
         push @Surfaces, 'Back';
@@ -822,8 +822,8 @@ sub JDF_PrintingProcess {
 
 	my @Equipment = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 	my $Equipment = shift @Equipment if @Equipment;
-	my @side_one_colours = openprint::print_printing::get_colours( $sig_specs, 'SideOne' );
-	my @side_two_colours = openprint::print_printing::get_colours( $sig_specs, 'SideTwo' );
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+	my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 
 	my $TopResourcePool = openprint::JDF::getNode( $doc, 'ResourcePool' );
 
@@ -853,7 +853,7 @@ $NodeInfoLink->setAttribute('Usage','Input');
 	} else {
 	$NodeInfo = $project->appendChild( $doc->createElement('NodeInfo') );
 	} # end if
-	my $time = openprint::print_printing::runtime( $Project,$sig_specs );
+	my $time = openprint::Estimating::Printing::runtime( $Project,$sig_specs );
 	
 	$NodeInfo->setAttribute('SetupDuration','PT'.misc::seconds_to_JDF_interval( $$time{'Setup'} ));
 	$NodeInfo->setAttribute('TotalDuration','PT'.misc::seconds_to_JDF_interval( $$time{'Total'} ));

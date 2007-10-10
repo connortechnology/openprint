@@ -2,7 +2,7 @@
 	$$variable{'Project'} = new openprint::Project( $openprint::param{'ProjectIndex'} );
 	$$variable{'Company'} = $$variable{'Project'}->Company();
 	my %services = $$variable{'Project'}->get_services();
-	$$variable{'Operator'} = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND servicetype_id=?}, $openprint::param{'ProjectIndex'}, $services{''}[0] ) );
+	$$variable{'Operator'} = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $openprint::param{'ProjectIndex'}, $services{''}[0] ) );
 ) ?>
 <style type="text/css">
 	body {

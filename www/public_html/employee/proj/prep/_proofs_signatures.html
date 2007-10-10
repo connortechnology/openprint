@@ -11,7 +11,7 @@
 				if ( $key =~ /txtProofQuantity-$sig_specs{'SignatureIndex'}-(\d*)/ ) {
 					my $proof_index = $1;
 					if ( $openprint::param{"chkDelete-$sig_specs{'SignatureIndex'}-$proof_index"} ) {
-						openprint::print_Proofs::delete_proof( $log, $dbh, @openprint::param{'ProjectIndex','ServiceIndex'}, $sig_specs{'SignatureIndex'}, $proof_index );
+						openprint::Estimating::Proofs::delete_proof( $log, $dbh, @openprint::param{'ProjectIndex','ServiceIndex'}, $sig_specs{'SignatureIndex'}, $proof_index );
 					} # end if
 				} # end if
 			} # end foreach  key
@@ -39,7 +39,7 @@
 		} # end foreach
 
 		my %proof_specs = openprint::service::get_specifications_pairs( $log, $dbh, @openprint::param{'ProjectIndex','ServiceIndex'} );
-		openprint::print_Proofs::calc( $log, $dbh, $variable, @openprint::param{'ProjectIndex','ServiceIndex'}, \%proof_specs );
+		openprint::Estimating::Proofs::calc( $log, $dbh, $variable, @openprint::param{'ProjectIndex','ServiceIndex'}, \%proof_specs );
 
 		my $qty_index = $Project->ordered_quantity_index();
 		foreach my $sid ( $Project->signatures() ) {
@@ -53,6 +53,7 @@
 						} # end if
 					} # end if
 				} # end foreach  key
+				$proof_index = 3 if ( $proof_index < 3 );
 				$proof_index += 1;
 				$openprint::param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}"} =~ s/\D//g;
 				$openprint::param{"txtProofHeight-$$sig_specs{'SignatureIndex'}"} =~ s/[^\d\.]//g;
@@ -64,6 +65,7 @@
 				$proof_specs{"txtProofHeight-$$sig_specs{'SignatureIndex'}-$proof_index-$qty_index"} = $openprint::param{"txtProofHeight-$$sig_specs{'SignatureIndex'}"};
 				$proof_specs{"ddmProofType-$$sig_specs{'SignatureIndex'}-$proof_index-$qty_index"} = $openprint::param{"ddmProofType-$$sig_specs{'SignatureIndex'}"};
 				$proof_specs{"chkOverride-$$sig_specs{'SignatureIndex'}-$proof_index-$qty_index"} = 'Y';
+
 				$$variable{'information'} .= qq`Added $openprint::param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}"} $openprint::param{"ddmProofType-$$sig_specs{'SignatureIndex'}"} to Signature $$sig_specs{'SignatureIndex'}<br/>`;
 
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Added Proof %d %sx%s %s', @openprint::param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}", "txtProofWidth-$$sig_specs{'SignatureIndex'}", "txtProofHeight-$$sig_specs{'SignatureIndex'}", "ddmProofType-$$sig_specs{'SignatureIndex'}"}) );
@@ -80,7 +82,7 @@
 			$Project->Order()->status( 'Waiting For Customer Approval' );
 
 			my @prices = @proof_specs{'txtPrice1','txtPrice2','txtPrice3'};
-			openprint::print_Proofs::calc( $log, $dbh, $variable, @openprint::param{'ProjectIndex','ServiceIndex'}, \%proof_specs );
+			openprint::Estimating::Proofs::calc( $log, $dbh, $variable, @openprint::param{'ProjectIndex','ServiceIndex'}, \%proof_specs );
 
 			# Now do the abominable thing and add a custom line item for it too...
 			if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
@@ -113,7 +115,7 @@
 	<input type="hidden" name="btnFunction" value=""/>
 	<? eval ( 
 		@{$$variable{'Presses'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strCategory='Printing' ORDER BY lower(strName)} );
-		openprint::print_Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); 
+		openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); 
 
 		@{$$variable{'SignatureIndices'}} = $$variable{'Project'}->signatures();
 	) ?>

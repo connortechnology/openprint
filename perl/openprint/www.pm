@@ -82,19 +82,20 @@ sub handler {
 	openprint::session_init();
 	openprint::usergroup::init_cache();
 
-	my $lastpage;
+	my $lastpage = '';
 	my $page = $r->uri();
+$openprint::log->debug("Page: $page");
 	while ( $page and $lastpage ne $page ) {
 		# This is for loop detection
 		$lastpage = $page;
 		parse_page( $page );
-		if ( $variable{'Redirect'} ne '' ) {
+		if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
 			$page = $variable{'Redirect'};
 			$variable{'Redirect'} = '';
 		} # end if
 	} # end while
 
-	if ( $variable{'Download'} ne '' ) {
+	if ( exists $variable{'Download'} and $variable{'Download'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {
 			$r->print( $_ );
 		} # end foreach
@@ -185,7 +186,6 @@ sub parse_page {
 	my $third = shift @thing if @thing;
 	my $fourth = shift @thing if @thing;
 
-$log->debug( "$first:$second:$third:$fourth:$filename" );
 	if ( $filename eq 'getfile.html' ) {
 $openprint::log->debug("Getfile");
 		$variable{'Download'} = $openprint::param{'filename'};
@@ -279,8 +279,6 @@ $openprint::log->debug("Getfile");
 			
 			if ( $filename eq 'proofs.html' or $filename eq 'FilmStripping.html' ) {
 				my $printing_service_index = openprint::project::get_project_type_service_index( $log, $dbh, $variable{'ProjectIndex'} );
-				my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $variable{'ProjectIndex'}, $printing_service_index );	
-
 				my $duedatedays = openprint::employee_production::load_press_use( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 
 				if ( ! $variable{'ddmDueDate'} ) {
@@ -300,7 +298,6 @@ $openprint::log->debug("Getfile");
 				} else {
 					@variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = split('-', $variable{'ddmDueDate'});
 				} # end if
-
 
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );

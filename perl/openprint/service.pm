@@ -40,7 +40,7 @@ sub init_cache {
 } # end sub init_cache
 
 sub get_index_by_id {
-	my ( $log, $dbh, $id ) = @_;
+	my ( $id ) = @_;
 	if ( ! %cache_index_by_id ) {
 		%cache_index_by_id = map { $_->name(), $_->id() } openprint::Service::find();
 	} # end if
@@ -67,7 +67,7 @@ sub get_price {
 sub get_price_object {
 	my ( $log, $dbh, $variable, $service, $range, $equipment ) = @_;
 
-	my $index = get_index_by_id( $log, $dbh, $service );
+	my $index = get_index_by_id( $service );
 	return if ! $index;
 
 	if ( ref $equipment eq 'openprint::Equipment' ) {
@@ -398,7 +398,7 @@ sub external_calc {
 		$log->error("Error in eval: $@") if $@;
 	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
 		$log->error("Error in eval: $@") if $@;
-	my @results;
+	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
 	@vars = keys %specs if ! @vars;
 
@@ -409,7 +409,7 @@ $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 
 	foreach my $key ( @vars ) {
 		if ( exists $specs{$key} ) {
-			if ( $specs{$key} ne $initial_specs{$key} ) {
+			if ( ( ! exists $initial_specs{$key} ) or ( $specs{$key} ne $initial_specs{$key} ) ) {
 				push @results, "$key~$specs{$key}";
 			} # end if
 		} # end if
@@ -557,12 +557,13 @@ sub summary {
 			$side_two_coatings .= '+Varnish (Overall Gloss)' if $$specs{'chkVarnishOverallGlossSideTwo'};
 			$side_two_coatings .= '+Varnish (Overall Matte)' if $$specs{'chkVarnishOverallMatteSideTwo'};
 
-			return sprintf( qq{%s %s"x%s" %d%s/%d%s %s\n%s}, 
+			return sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s}, 
 					@$specs{'txtServiceDescription','txtWidth','txtHeight'}, 
 					scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideOne')), 
 					$side_one_coatings,
 					scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideTwo')),
 					$side_two_coatings,
+					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
 					$$specs{'rdbSpecificStock'} eq 'Y' ? 
 					join(',', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(',', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ) 

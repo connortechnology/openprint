@@ -48,7 +48,6 @@ body {
 	max-width: 1280px;
 }
 input, select, textarea, option {
-	background-color: none;
 	color: black;
 	font-size: x-small;
 	padding: 1px;
@@ -443,7 +442,7 @@ img {
 }
 span.DateSelector {
 	float: left;
-	width: 200px;
+	width: 220px;
 }
 fieldset.filters p span.DateSelector select {
 	width: auto;

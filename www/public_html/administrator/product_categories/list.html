@@ -1,0 +1,22 @@
+<table class="List">
+	<tr>
+		<th align="left">Name</th>
+		<th align="left">Description</th>
+		<th align="left" width="100">Project Type</th>
+		<th align="left" width="100"># of Products</th>
+	</tr>
+
+<? eval (
+	@{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)' );
+) ?>
+<? while ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
+<tr<?rowclass?>>
+	<td><a href="edit.html?category_id=<? echo ( $$variable{'Category'}->id(); ) ?>"><? echo ( $$variable{'Category'}->name(); ) ?></a></td>
+	<td><? echo ( $$variable{'Category'}->description(); ) ?></td>
+	<td><? echo ( $$variable{'Category'}->ProjectType()->name(); ) ?></td>
+	<td><? echo ( $$variable{'Category'}->products(); ) ?></td>
+</tr>
+<? endwhile ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
+</table>
+<? eval ( delete $openprint::param{'category_id'}; ) ?>
+<!--#include virtual="edit.html"-->

@@ -32,7 +32,9 @@ div.row {
 }
 	div.PressColumn {
 		float: left;
-		margin-top: 2px;
+		margin: 0px 0px 0px 0px;
+		padding: 0px;
+		border: none;
 	}
 	div.PressColumn ul {
 		padding: 0px;
@@ -95,6 +97,7 @@ div.row {
 		font-size: 14px;
 		overflow: hidden;
 		height: 14px;
+		text-align: left;
 	}
 	.Forms {
 		float: left;
@@ -123,6 +126,7 @@ div.row {
 	.Comment {
 		padding-left: 6px;
 		padding-right: 6px;
+		text-align: left;
 	}
 	.TotalImpressions {
 		margin-left: auto;

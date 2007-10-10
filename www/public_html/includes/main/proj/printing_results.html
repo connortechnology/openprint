@@ -22,7 +22,7 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-        <select name="ddmStockSheetSize<?QTYIndex?>" size="1" onchange="ddmStockSheetSize_onChange();">
+        <select name="ddmStockSheetSize<?QTYIndex?>" size="1" onchange="ddmStockSheetSize_onchange();">
             <option value="">Please select one</option>
          <? echo (
                     ssi::make_drop_down( [ openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',

@@ -1,0 +1,23 @@
+ <? if ( $openprint::session{'Country'} eq 'CA' ) ?>
+<img style="width: 100%; float: none;" src="/images/canada.gif" alt="Canada"/>
+<? endif ( $openprint::session{'Country'} eq 'CA' ) ?>
+<? if ( $openprint::session{'Country'} eq 'US' ) ?>
+<img style="width: 100%; float: none;" src="/images/us.gif" alt="United States"/>
+<? endif ( $openprint::session{'Country'} eq 'US' ) ?>
+<br/>You are currently viewing prices in
+<? echo (
+my $Currency = openprint::Currency::get_current();
+return $Currency->name();
+) ?>.<br/>
+<br/>
+Click on the following flag to change currencies.<br/>
+<? if ( $openprint::session{'Country'} eq 'CA' ) ?>
+<a href="http://www.topknotch.com"><img style="width: 100%; float: none;" src="/images/us.gif" alt="United States"/></a>
+<? endif ( $openprint::session{'Country'} eq 'CA' ) ?>
+<? if ( $openprint::session{'Country'} eq 'US' ) ?>
+<a href="http://www.topknotch.ca"><img style="width: 100%; float: none;" src="/images/canada.gif" alt="Canada"/></a>
+<? endif ( $openprint::session{'Country'} eq 'US' ) ?>
+<? if ( ! ( $openprint::session{'Country'} eq 'US' or $openprint::session{'Country'} eq 'CA' ) ) ?>
+Unknown Country <? echo ( $openprint::session{'Country'} ) ?>
+<? endif ( ! ( $openprint::session{'Country'} eq 'US' or $openprint::session{'Country'} eq 'CA' ) ) ?>
+

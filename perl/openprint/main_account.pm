@@ -325,8 +325,9 @@ sub user_profile {
 # We assume that we are authorized to be here now.
 
 	my $User = new openprint::User( $openprint::session{'user_id'} );
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
 
-	if ( $User->Administrator() eq 'Y' ) {
+	if ( $Me->administrator() eq 'Y' ) {
 		if ( $openprint::param{'ddmUser'} ) {
 			$User = new openprint::User( $openprint::param{'ddmUser'} );
 # Enforce that we can only edit users from our company
@@ -369,6 +370,10 @@ sub user_profile {
 		$$variable{'error'} .= $User->save( \%openprint::param );
 	} # end if
 
+	$$variable{'Me'} = $Me;
+	if ( $User->company_id() != $openprint::session{company_id} ) {
+		$User = new openprint::User();
+	} # end if
 	$$variable{'User'} = $User;
 } # end sub user_edit
 
@@ -585,7 +590,7 @@ sub credit_application {
 		$info{'User'} = new openprint::User( $session{user_id} );
 
 		$_ = 'SELECT MAX(Id) FROM CreditApplications WHERE user_id=? AND company_id=?';
-		@info{'CreditAppIndex'} = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
+		($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
