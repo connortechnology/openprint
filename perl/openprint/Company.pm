@@ -329,5 +329,10 @@ sub get_dropdown {
     return ssi::make_drop_down( \@array, $selected );
 } # sub get_customer_dropdown
 
+sub CSR {
+	my $self = shift;
+	return new openprint::User( $$self{'salesrep_id'} );
+}
+
 1;
 __END__

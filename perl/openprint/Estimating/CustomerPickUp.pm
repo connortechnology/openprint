@@ -66,6 +66,10 @@ sub calc {
 		$$specs{'alert'} .= 'Carton service has not been calculated yet.';
 		return 'uncalculated';
 	} # end if
+	if ( ! $$carton_specs{txtItemsPerPackage} ) {
+		$$specs{'alert'} .= 'Unable to determine how many items per package.';
+		return 'calculated';
+	} # end if
 
 	my $carton_specs = openprint::service::get_specs_ref( $project_index, $carton_service_index );
 

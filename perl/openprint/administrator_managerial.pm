@@ -173,7 +173,7 @@ sub user_profiles {
 		sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $user_id );
 
 		# add them back in 
-		my $sth = $dbh->prepare( q{INSERT INTO Users_in_Categories (category_id,user_id) VALUES ( ?, ? )} );
+		my $sth = $dbh->prepare( q{INSERT INTO Users_in_Marketing_Categories (category_id,user_id) VALUES ( ?, ? )} );
 		foreach my $cat ( ref $openprint::param{'selectUserCategories'} eq 'ARRAY' ? @{$openprint::param{'selectUserCategories'}} : $openprint::param{'selectUserCategories'} ) {
 			if ( sets::isin( $cat, \@categories ) ) {
 				$sth->execute( $cat, $user_id ) or $log->error( DBI->errstr );

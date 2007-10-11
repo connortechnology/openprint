@@ -351,6 +351,7 @@ sub auto_calculate {
 			} elsif ( sets::isin( $type, ['', 'AdditionalSignature'] ) ) {
 			} else {
 				eval "require openprint::Estimating::$type";
+				$openprint::log->error('Error in eval: ' . @_ ) if @_;
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $type );
 				$alert .= $$specs{'alert'};
 			} # end if

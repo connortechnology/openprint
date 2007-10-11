@@ -39,7 +39,7 @@ sub history {
 
 
 	$_ = "SELECT Id, PONum, to_char(Created, 'MM/DD/YYYY'), SupplierTo, Status, Total\n".
-		"FROM Paper_Purchase_Orders WHERE date(Created_on) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}')\n";
+		"FROM Paper_Purchase_Orders WHERE date(Created) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}')\n";
 	$_ .= "ORDER BY Id DESC\n";
 
 	@{$$variable{'PURCHASEORDERS'}} = sql::execute( $log, $dbh, $_ );

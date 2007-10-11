@@ -7,6 +7,7 @@ require ssi;
 require logger;
 require misc;
 require configuration;
+require openprint::Object;
 require openprint::Quote;
 require openprint::Order;
 require openprint::Project;
@@ -29,6 +30,7 @@ $dbh = sql::open_sql( $log,
 	'password'	=> $ARGV[3],
 );
 die 'Error opening db' if ! $dbh;
+$openprint::Object::no_cache = 1;
 
 
 # Clear out old sessions

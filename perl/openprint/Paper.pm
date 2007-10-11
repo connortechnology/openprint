@@ -251,7 +251,7 @@ sub save {
 						TO      => $openprint::config{'InventoryEmail'},
 						SUBJECT => 'A new paper has been added to inventory',
 						);
-				misc::send_email_with_attachment( $openprint::log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
+				#misc::send_email_with_attachment( $openprint::log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
 			} # end if
 		} else {
 			$$self{'id'} = undef;

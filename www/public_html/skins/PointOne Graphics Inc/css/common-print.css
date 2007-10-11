@@ -23,7 +23,7 @@ body {
 	background: none;
 	color: #000000;
 }
-#Menu {
+#Menu,.Menu {
 display: none;
 }
 #QuickLogin, #DidYouKnow,#CurrencySelection {

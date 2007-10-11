@@ -22,8 +22,8 @@
 }
 /* Hides from IE-mac \*/
 * html #Content {height: 1%;}
-* * #Content {display: block;}
-*/* End hide from IE-mac */
+* #Content {display: block;}
+/* End hide from IE-mac */
 
 #ContentInner {
 	padding: 0px;

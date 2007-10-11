@@ -133,6 +133,7 @@
 								<? echo ( join('', 
 									ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ),
 									ssi::writeButton( $log, $dbh, 'QuickForgotButton','forgot.gif',"QuickLoginForm.btnFunction.value='Forgotten Password';QuickLoginForm.submit();", '', 'Forgotten Password' ),
+									ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register Now' ),
 									);
 								) ?>
 						</fieldset>

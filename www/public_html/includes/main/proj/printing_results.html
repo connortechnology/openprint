@@ -51,7 +51,7 @@
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? if ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? if ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -59,7 +59,7 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? else ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} ) ?>
 <p>
     <label>Bleed Size:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -78,7 +78,7 @@
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? endif ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} ) ?>
 
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -181,7 +181,7 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-            <input name="txtPlateQuantity<?QTYIndex?>" readonly type="text" size="9" />
+            <input name="txtPlateQuantity<?QTYIndex?>" readonly="readonly" type="text" size="9" />
             <input name="BlankPlateQuantity<?QTYIndex?>" type="hidden" />
     </span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -227,7 +227,7 @@
 <? echo ( 'checked="checked"' if $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'width' ) ?>
  />
         <label class="radio" for="rdbGrainDirection<?QTYIndex?>Width">Width</label>
-        <input type="radio" id="rdbGrainDirection<?QTYIndex?>Width" name="rdbGrainDirection<?QTYIndex?>" value="height" onclick="calc(this.form.name);"
+        <input type="radio" id="rdbGrainDirection<?QTYIndex?>Height" name="rdbGrainDirection<?QTYIndex?>" value="height" onclick="calc(this.form.name);"
 <? echo ( 'checked="checked"' if $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'height' ) ?>
  />
         <label class="radio" for="rdbGrainDirection<?QTYIndex?>Height">Height</label>
@@ -251,7 +251,7 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 	<span class="<?Columns?>Columns">
 		<input type="hidden" name="txtSignatureSpreadQuantity<?QTYIndex?>" />
 		<input type="text" id="PageQuantity<?QTYIndex?>" name="PageQuantity<?QTYIndex?>" value="<? echo ( $$variable{'PageQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9"  onkeyup="calc('f1');" /> Pages
-		<input type="checkbox" name="chkOverridePageQuantity<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');" <? echo ( 'checked' if $$variable{"chkOverridePageQuantity$$variable{'QTYIndex'}"} eq 'Y' ) ?> />
+		<input type="checkbox" id="chkOverridePageQuantity<?QTYIndex?>" name="chkOverridePageQuantity<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');" <? echo ( 'checked' if $$variable{"chkOverridePageQuantity$$variable{'QTYIndex'}"} eq 'Y' ) ?> />
 		<label class="radio" for="chkOverridePageQuantity<?QTYIndex?>">Override</label>
 	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>

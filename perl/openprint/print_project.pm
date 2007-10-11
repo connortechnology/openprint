@@ -498,9 +498,17 @@ sub get_service_specifications {
 
 		# Do Specific Stuff
 		if ( $service_type_id eq 'Perforating' ) {
+			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			foreach my $name ( keys %$specs ) {
+				$$variable{$name} = $$specs{$name};
+			} # end foreach
 			require openprint::Estimating::Perforating;
 			openprint::Estimating::Perforating::get_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id eq 'Scoring' ) {
+			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			foreach my $name ( keys %$specs ) {
+				$$variable{$name} = $$specs{$name};
+			} # end foreach
 			require openprint::Estimating::Scoring;
 			openprint::Estimating::Scoring::get_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id eq 'Proofs' ) {

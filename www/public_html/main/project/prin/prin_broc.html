@@ -28,7 +28,6 @@
 <script type="text/javascript" src="/javascripts/templates/brochures.js?version=1.0"></script>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend><?ProjectTypeName?></legend>
 <? if ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
                 <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
@@ -159,6 +158,7 @@
 </fieldset>
 </div>
 		<!--#include virtual="/includes/main/proj/paper_dropdowns.html"-->
+<br class="spacer"/>
 </fieldset>
 <!-- End of Input - Start of Results -->
 <fieldset><legend>Results</legend>

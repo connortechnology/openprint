@@ -128,16 +128,16 @@ sub get_user_detail {
 	# C is the customer table that the UserID is linked to
 	# R is the user table that contains the Sales Rep fir the company
 	#   that the user belongs to
-	my $user_detail_query = "SELECT U.strEmail, C.strCompanyName, ".
+	my $user_detail_query = "SELECT U.strEmail, C.strName, ".
 			"U.strSalutation, U.strFirstName, U.strLastName, ".
 			"R.strEmail, R.strFirstName||' '|| R.strLastName, ".
 			"R.strext ".
-			"FROM customer_users U ".
-			"LEFT JOIN customer C ON ".
-			"U.lngcustomerid = C.lngcustomerid ".
-			"LEFT JOIN customer_users R ON ".
-			"C.lngsalesperson = R.lnguserid ".
-			"WHERE U.lnguserid = '$userid'";
+			"FROM users U ".
+			"LEFT JOIN company C ON ".
+			"U.companyindex = C.index ".
+			"LEFT JOIN users R ON ".
+			"C.lngsalesperson = R.index ".
+			"WHERE U.index = ?";
 
 	$log->info("Getting users details with query: $user_detail_query\n");
 
@@ -150,7 +150,7 @@ sub get_user_detail {
 					'REPEMAIL',
 					'REPNAME',
 					'REPEXT'
-					} = sql::execute($log, $dbh, $user_detail_query);
+					} = sql::execute($log, $dbh, $user_detail_query, $user_id);
 
 	$log->info("Got results:");
 	$log->info(%$replacements);

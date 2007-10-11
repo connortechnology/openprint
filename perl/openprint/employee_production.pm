@@ -40,7 +40,7 @@ sub press_schedule {
 		my $service_index = $openprint::param{'ServiceIndex'};
 		my $project_index = $openprint::param{'ProjectIndex'};
 		my $Project = new openprint::Project( $project_index );
-		openprint::employee_project::mark_proofs_approved( $log, $dbh, $variable, $project_index );
+		mark_proofs_approved( $log, $dbh, $variable, $project_index );
 		sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Waiting For Customer Approval'", 'strStatus', 'Complete' );
 		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Approved from print overview' );
 		$Project->update_status();

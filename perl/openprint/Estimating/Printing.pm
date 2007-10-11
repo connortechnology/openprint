@@ -586,7 +586,20 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 		} # end if
 	} else {
 		$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
-		if ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
+		if ( ! $$specs{'ddmStockBrand'} ) {
+			$$specs{'alert'} .= 'Please select a stock.';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		if ( ! $$specs{'ddmStockFinish'} ) {
+			$$specs{'alert'} .= 'Please select a stock finish.';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		if ( ! $$specs{'ddmStockColour'} ) {
+			$$specs{'alert'} .= 'Please select a stock colour.';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		if ( ! $$specs{'ddmStockWeight'} ) {
+			$$specs{'alert'} .= 'Please select a stock weight.';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		@Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
@@ -1223,6 +1236,8 @@ my %best_price = %{$b_price};
 		$$specs{'hdnImageOrientation'.$qty_index} = $Imposition->image_orientation();
 		$$specs{'SpreadRows'.$qty_index} = $Imposition->spread_rows();
 		$$specs{'SpreadCols'.$qty_index} = $Imposition->spread_columns();
+
+		$$specs{'hdnImpressionQuantity'.$qty_index} = $best_price{'Impressions'};
 #$$specs{'RunTime'.$qty_index} = $best_price{'RunTime'};
 
 		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'} );

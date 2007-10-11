@@ -11,7 +11,9 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<p>
 				<label>Spine width:</label>
-				<input type="text" name="txtCalliper" readonly="readonly" onkeyup="calc(this.form.name);" />
+				<input type="text" name="txtCalliper" onkeyup="calc(this.form.name);" /> inches
+				<input type="checkbox" id="OverrideSpineWidth" name="chkOverrideCalliper" value="Y" <? echo ( $$variable{'chkOverrideCalliper'} eq 'Y' ? 'checked="checked"' : '' ) ?> />	
+				<label class="radio" for="OverrideSpineWidth">Override</label>
 			</p>
 		</fieldset>
 		<fieldset><legend>Results</legend>

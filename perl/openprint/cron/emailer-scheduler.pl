@@ -1,12 +1,13 @@
 #!/usr/bin/perl
+use lib "/etc/apache2/lib/perl";
+use strict;
 
-# Make sure we can get access to the perl modules
-use lib "/etc/apache2/lib/perl/";
 
 require sql;
 require logger;
 require misc;
 require ssi;
+require openprint::Object;
 require openprint::EmailCampaign;
 
 use MIME::QuotedPrint;
@@ -18,13 +19,12 @@ use vars qw( %variable $log $dbh);
 *dbh = \$openprint::dbh;
 
 
-use strict;
-
 $log = logger->new();
 $log->{level} = "warn";
 my %sql_server;
 
 my $site_admin_email = 'iconnor@point-one.com';
+$openprint::Object::no_cache = 1;
 
 # This is a bit of a hack, but it allows us to use similar styled code
 # as is found in the apache modules
@@ -40,6 +40,7 @@ $dbh = sql::open_sql( $log,
 	'password'	=> $ARGV[3],
 );
 die 'Error opening db' if ! $dbh;
+
 %openprint::config = configuration::init_cache( $log, $dbh, {
 		'siteURL' => 'http://www.point-one.com',
 		'SecureSiteURL'	=> 'https://www.point-one.com',

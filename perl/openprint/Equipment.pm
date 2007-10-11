@@ -346,6 +346,11 @@ sub save {
 sub update_schedule {
 	my $self = shift;
 
+	if ( $openprint::config{'Smart Schedule'} ne 'Y' ) {
+		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
+		return;
+	} # end if
+
     $openprint::log->debug("Updating Press Schedule");
     my ( $start_time ) = sql::execute( undef, undef, q{SELECT NOW()} );
     $_ = q{SELECT DISTINCT ProjectIndex, ServiceIndex, StartTime FROM tbl_Projects, Schedule WHERE Equipment_id=? AND Index=ProjectIndex AND tbl_Projects.strStatus='Approved' ORDER BY StartTime};

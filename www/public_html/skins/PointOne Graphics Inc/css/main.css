@@ -206,6 +206,19 @@ div.ProjectCreateEdit ul {
 	padding: 0px;
 	margin: 0px;
 }
+div.ProjectCreateEdit ul:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html .ProjectCreateEdit ul  {height: 1%;}
+* .ProjectCreateEdit ul  {display: block;}
+/* End hide from IE-mac */
 div.ProjectCreateEdit li {
 	float: left;
 	width: 200px;
