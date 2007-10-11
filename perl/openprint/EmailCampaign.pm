@@ -119,7 +119,7 @@ sub format_email {
 } # end sub format_email
 
 sub get_user_detail {
-	my ($log, $dbh, $userid, $replacements) = @_;
+	my ($log, $dbh, $user_id, $replacements) = @_;
 
 	# query the db and get the all the details we might possibly need
 	# to fill into an email template
