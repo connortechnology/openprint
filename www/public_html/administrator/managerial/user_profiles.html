@@ -3,10 +3,16 @@
 <h2>User Profiles</h2>
 </div>
 <script type="text/javascript">
-function keepCompany( what ){
-	var Company = what.ddmCustomer.selectedIndex;
-	clearForm(what);
-	what.ddmCustomer.selectedIndex = Company;
+function keepCompany( form ){
+	var Company = form.ddmCustomer.selectedIndex;
+	var Role = form.ddmUserRole.selectedIndex;
+
+	clearForm(form);
+	form.ddmCustomer.selectedIndex = Company;
+	form.ddmUserRole.selectedIndex= Role;
+	
+	form.company_id.selectedIndex = Company;
+
 }
 </script>
 Please select a company or user to obtain login information.<br/>

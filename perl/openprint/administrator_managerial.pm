@@ -118,17 +118,8 @@ sub user_profiles {
 	my $user_role = $openprint::param{'ddmUserRole'};
 	my $cust_id = $openprint::param{'ddmCustomer'};
 
-	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
-	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(strfirstname),lower(strlastname)' );
 
 	my $User = new openprint::User( $user_id );
-	if ( ! $User->id() ) {
-		if ( sets::isin( $openprint::session{user_id}, map { $_->id() } @Users ) ) {
-			$User = new openprint::User( $openprint::session{user_id} );
-		} else {
-			$User = $Users[0] if @Users;
-		} # end if
-    } # end if
 
 	if ( $openprint::param{'btnFunction'} eq '<<' ) {
 		$User = $User->Prev( 'type'=>$openprint::param{'ddmUserRole'}, 'company_id'=>$openprint::param{'ddmCustomer'} );
@@ -181,14 +172,25 @@ sub user_profiles {
 		} # end foreach
 
 		sql::execute( $log, $dbh, q{DELETE FROM Users_in_UserGroups WHERE User_Id=?}, $user_id );
-		foreach my $group_id ( ref $openprint::param{'UserGroups'} eq 'ARRAY' ? @{$openprint::param{'UserGroups'}} : $openprint::param{'UserGroups'} ) {
-			sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $user_id ] );
-		} # end foreach
+		if ( $openprint::param{'UserGroups'} ) {
+			foreach my $group_id ( ref $openprint::param{'UserGroups'} eq 'ARRAY' ? @{$openprint::param{'UserGroups'}} : $openprint::param{'UserGroups'} ) {
+				sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $user_id ] );
+			} # end foreach
+		} # end if
 
 		$$variable{'information'} = "Record saved successfully.";
 	} # end if btnFunction
 
+	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
+	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(strfirstname),lower(strlastname)' );
 
+	if ( ! $User->id() ) {
+		if ( sets::isin( $openprint::session{user_id}, map { $_->id() } @Users ) ) {
+			$User = new openprint::User( $openprint::session{user_id} );
+		} else {
+			$User = $Users[0] if @Users;
+		} # end if
+    } # end if
 
 	# load user fields
 

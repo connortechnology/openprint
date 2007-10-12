@@ -477,25 +477,26 @@ function clearSelect( what ) {
 		} 
 }
 
-function clearForm(what) {
-	for (var i=0, j=what.elements.length; i<j; i++) {
-				myName = what.elements[i].type;
-		if ( ! myName )
+function clearForm(form) {
+	for ( var i=0; i < form.elements.length; i += 1 ) {
+		var e = form.elements[i];
+		if ( ! e.type )
 			continue;
-				if (myName.indexOf('checkbox') > -1 || myName.indexOf('radio') > -1) {
-					what.elements[i].checked = "";
-		}
-				if (myName.indexOf('hidden') > -1 || myName.indexOf('password') > -1 || myName.indexOf('text') > -1) {
-						 what.elements[i].value = "";
-		}
-				if (myName.indexOf('select') > -1) {
-					for (var k=0, l=what.elements[i].options.length; k<l; k++) {
-							what.elements[i].options[k].selected = 0;
-						 	what.elements[i].options[0].selected = 1;
-			}
-		}
-	}					
-}	
+		if ( e.type == 'checkbox' || e.type == 'radio' ) {
+			e.checked = '';
+		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' ) {
+			e.value = '';
+		} else if ( e.type == 'select-one' ) {
+			e.selectedIndex = -1;
+		} else if ( e.type == 'select-multiple' ) {
+			while ( e.selectedIndex >= 0 ) {
+				e.options[e.selectedIndex].selected = false;
+			} // end while
+		} else {
+			//alert(e.type);
+		} // end if
+	} // end for
+} // end function clearForm(form)
 
 function element_changed( element ) {
 	if ( element.type == 'select-one' ) {
