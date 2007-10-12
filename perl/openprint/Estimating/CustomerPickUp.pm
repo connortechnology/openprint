@@ -66,12 +66,11 @@ sub calc {
 		$$specs{'alert'} .= 'Carton service has not been calculated yet.';
 		return 'uncalculated';
 	} # end if
+	my $carton_specs = openprint::service::get_specs_ref( $Project, $carton_service_index );
 	if ( ! $$carton_specs{txtItemsPerPackage} ) {
 		$$specs{'alert'} .= 'Unable to determine how many items per package.';
 		return 'calculated';
 	} # end if
-
-	my $carton_specs = openprint::service::get_specs_ref( $project_index, $carton_service_index );
 
 	if ( $$specs{'chkOverridePackageWeight'} ne 'Y' ) {
 # Load from skids or cartons
@@ -95,6 +94,7 @@ sub summary {
 	if ( $qty_index ) {
 		return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 	} # end if
+	return '';
 } # end sub summary
 
 1;

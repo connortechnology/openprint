@@ -583,7 +583,7 @@ sub find {
 	} elsif ( ! @$data ) {
 		$openprint::log->debug("No  Projects ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Projects ($sql) (@values) " );
+		$openprint::log->debug("Loading Projects ($sql) (@values) # of results:" . @$data );
 	} # end if
 	return map { new openprint::Project( $_->{index}, $_ ) } @$data;
 } # end sub find
