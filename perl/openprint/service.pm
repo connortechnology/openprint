@@ -351,7 +351,7 @@ sub auto_calculate {
 			} elsif ( sets::isin( $type, ['', 'AdditionalSignature'] ) ) {
 			} else {
 				eval "require openprint::Estimating::$type";
-				$openprint::log->error('Error in eval: ' . @_ ) if @_;
+				$openprint::log->error('Error requiring openAprint::Estimating::$type: ' . $@ ) if $@;
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $type );
 				$alert .= $$specs{'alert'};
 			} # end if
@@ -395,9 +395,9 @@ sub external_calc {
 	my %initial_specs = %specs;
 #blah
 	eval 'require openprint::Estimating::'.$service_type;
-		$log->error("Error in eval: $@") if $@;
+		$log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
 	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
-		$log->error("Error in eval: $@") if $@;
+		$log->error("Error requiring openprint::Estimating::$service_type: in eval: $@") if $@;
 	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
 	@vars = keys %specs if ! @vars;
@@ -444,7 +444,7 @@ sub internal_calc {
 	my $starttime = time;
 	eval 'require openprint::Estimating::'.$service_type;
 	if ( ! eval '$status = openprint::Estimating::'.$service_type.'::calc( $log, $dbh, $variable, $project_index, $service_index, \%specs );' ) {
-		$log->error("Error in eval: $@");
+		$log->error("Error in openprint::Estiamting::$service_type ::calc: $@") if $@;
 	} # end if
 	$specs{'Status'} = $status;
 	my $elapsed = time - $starttime;
@@ -576,7 +576,7 @@ sub summary {
 		return openprint::Estimating::Packaging::summary($Project->id(), $service_id, $specs, $qty_index );
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['SaddleStitching','LoopStitching'] ) ) {
 		return openprint::Estimating::Stitching::summary($Project->id(), $service_id, $specs, $qty_index );
-	} else {
+	} elsif ( $$specs{'ServiceType'} ) {
 		eval('require openprint::Estimating::'.$$specs{'ServiceType'}.';' );
 	$openprint::log->warn("ERror requiring openprint::Estimating::$$specs{'ServiceType'}.'::summary: $@)") if $@;
 		my $summary = eval('openprint::Estimating::'.$$specs{'ServiceType'}.'::summary( $Project, $service_id, $specs, $qty_index );' );
