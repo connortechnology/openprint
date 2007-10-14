@@ -146,6 +146,7 @@ sub delete {
 	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Payments WHERE Company_Id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM log WHERE company_id=?', $$self{'id'} );
 
 	foreach my $Paper ( openprint::Paper::find('owner_id'=>$$self{'id'} ) ) {
 		$Paper->owner_id( undef );
