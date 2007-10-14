@@ -28,7 +28,7 @@ $openprint::Object::no_cache = 1;
 
 # This is a bit of a hack, but it allows us to use similar styled code
 # as is found in the apache modules
-$ENV{'DOCUMENT_ROOT'} = '/var/www/point-one/www/public/';
+$ENV{'DOCUMENT_ROOT'} = '/var/www/point-one/www/publici_html/';
 
 
 $log->info("Opening SQL connection");

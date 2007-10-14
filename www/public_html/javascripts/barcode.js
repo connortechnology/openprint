@@ -259,9 +259,9 @@ function input_handler( element, e ) {
 		} else if ( element.name == 'UserID' ) {
 			if ( Users ) {
 				if ( Users['E'+element.value] ) {
-				element.form.txtEmail.value = Users['E'+element.value];
+				element.form.email.value = Users['E'+element.value];
 				} else {
-				element.form.txtEmail.value = 'User not found: E'+element.value;
+				element.form.email.value = 'User not found: E'+element.value;
 				}
 			} // end if
 			return true;
