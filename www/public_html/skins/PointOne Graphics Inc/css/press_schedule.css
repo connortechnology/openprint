@@ -35,6 +35,7 @@ div.row {
 		margin: 0px 0px 0px 0px;
 		padding: 0px;
 		border: none;
+
 	}
 	div.PressColumn ul {
 		padding: 0px;
@@ -92,11 +93,11 @@ div.row {
 		margin-left: 5px;
 	}
 	.Company {
-		width: 100%;
 		font-weight: bold;
 		font-size: 14px;
 		overflow: hidden;
 		height: 14px;
+		text-align: left;
 	}
 	.Forms {
 		float: left;
@@ -125,6 +126,7 @@ div.row {
 	.Comment {
 		padding-left: 6px;
 		padding-right: 6px;
+		text-align: left;
 	}
 	.TotalImpressions {
 		margin-left: auto;
@@ -162,6 +164,9 @@ div.row {
 			padding: 0px;
 			width: auto;
 		}
+	#Header {
+		display: none;
+	}
 	}
 
 a.buttonImageOff, a.buttonImageOn {

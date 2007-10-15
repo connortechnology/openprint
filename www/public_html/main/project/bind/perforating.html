@@ -10,7 +10,18 @@
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
         <fieldset><legend><?ServiceTypeName?></legend>
-			<!--#include virtual="/includes/main/proj/scoring_inputs.html"-->
+			<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
+			<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
+				<? if ( $$variable{'Reference'} ne '' ) ?>
+				Information for <?Reference?>:
+				<? endif ( $$variable{'Reference'} ne '' ) ?>
+				<p> 
+					<label>Perforations Quantity:</span>
+						<input name="txtQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="9"  onkeyup="calc('f1');" /> 
+				</p>
+				<!--#include virtual="/includes/main/proj/score_direction.html"-->
+				<!--#include virtual="/includes/main/proj/score_length.html"-->
+			<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<!--#include virtual="/includes/main/proj/scoring_results.html"-->

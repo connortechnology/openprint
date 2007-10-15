@@ -109,17 +109,17 @@ sub load {
 sub load_info {
 	my ( $self, $variable ) = @_;
 	foreach my $key ( @Fields ) {
-		$$variable{$key} = ssi::htmlize($self->{$key});
+		$$variable{$key} = $self->{$key};
 	} # end foreach
 } # end sub load_info
 
 sub format_email {
 	#@_[0] =~ s/\n/<BR>/g;
-	return @_[0];
+	return $_[0];
 } # end sub format_email
 
 sub get_user_detail {
-	my ($log, $dbh, $userid, $replacements) = @_;
+	my ($log, $dbh, $user_id, $replacements) = @_;
 
 	# query the db and get the all the details we might possibly need
 	# to fill into an email template
@@ -128,16 +128,16 @@ sub get_user_detail {
 	# C is the customer table that the UserID is linked to
 	# R is the user table that contains the Sales Rep fir the company
 	#   that the user belongs to
-	my $user_detail_query = "SELECT U.strEmail, C.strCompanyName, ".
+	my $user_detail_query = "SELECT U.strEmail, C.strName, ".
 			"U.strSalutation, U.strFirstName, U.strLastName, ".
 			"R.strEmail, R.strFirstName||' '|| R.strLastName, ".
 			"R.strext ".
-			"FROM customer_users U ".
-			"LEFT JOIN customer C ON ".
-			"U.lngcustomerid = C.lngcustomerid ".
-			"LEFT JOIN customer_users R ON ".
-			"C.lngsalesperson = R.lnguserid ".
-			"WHERE U.lnguserid = '$userid'";
+			"FROM users U ".
+			"LEFT JOIN company C ON ".
+			"U.companyindex = C.index ".
+			"LEFT JOIN users R ON ".
+			"C.lngsalesperson = R.index ".
+			"WHERE U.index = ?";
 
 	$log->info("Getting users details with query: $user_detail_query\n");
 
@@ -150,7 +150,7 @@ sub get_user_detail {
 					'REPEMAIL',
 					'REPNAME',
 					'REPEXT'
-					} = sql::execute($log, $dbh, $user_detail_query);
+					} = sql::execute($log, $dbh, $user_detail_query, $user_id);
 
 	$log->info("Got results:");
 	$log->info(%$replacements);
@@ -191,14 +191,14 @@ __ADMIN_EMAIL__
 
 	# Send the email
 	misc::send_email_with_attachment($log, \%mail, @body, ());
-	my %mail = (
+	%mail = (
 			SMTP => $openprint::config{'Mail Server'},
 			FROM => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
 			TO => sprintf("\"%s\" <%s>", 'Keith Luder', 'keith@point-one.com' ),
 			SUBJECT => 'Automatically Generated Account Deletion Email',
 		);
 	misc::send_email_with_attachment($log, \%mail, @body, ());
-	my %mail = (
+	%mail = (
 			SMTP => $openprint::config{'Mail Server'},
 			FROM => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
 			TO => 'iconnor@point-one.com',

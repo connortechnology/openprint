@@ -17,6 +17,9 @@ require openprint::press_schedule;
 require sql;
 require openprint::MXML;
 
+sub print_overview {
+	press_schedule( @_ );
+} 
 
 sub press_schedule {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -36,14 +39,15 @@ sub press_schedule {
 	} elsif ( $openprint::param{'btnFunction'} eq 'ApproveJob' ) {
 		my $service_index = $openprint::param{'ServiceIndex'};
 		my $project_index = $openprint::param{'ProjectIndex'};
-		openprint::employee_project::mark_proofs_approved( $log, $dbh, $variable, $project_index );
+		my $Project = new openprint::Project( $project_index );
+		mark_proofs_approved( $log, $dbh, $variable, $project_index );
 		sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Waiting For Customer Approval'", 'strStatus', 'Complete' );
-		openprint::project::insert_into_log( $log, $dbh, @$variable{'cust_id','user_id'}, $project_index, "Approved from print overview" );
-
-		openprint::project::update_project_status( $log, $dbh, $variable, $project_index );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Approved from print overview' );
+		$Project->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'BumpJob' ) {
 		my $service_index = $openprint::param{'ServiceIndex'};
 		my $project_index = $openprint::param{'ProjectIndex'};
+		my $Project = new openprint::Project( $project_index );
 		my ( $starttime ) = sql::execute( $log, $dbh, q{SELECT starttime FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
 		my ( $year, $month, $day, $hours, $minutes, $seconds ) = $starttime =~ /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/;
 		$seconds = 0;
@@ -57,21 +61,23 @@ sub press_schedule {
 		if ( $year ) {
 			my $starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $hours, $minutes, $seconds );
 			sql::update( $log, $dbh, 'Schedule', "ProjectIndex=$project_index AND ServiceIndex=$service_index", 'starttime', $starttime );
-			openprint::project::insert_into_log( $log, $dbh, @$variable{'cust_id','user_id'}, $project_index, "Job bumped to next shift: $starttime " );
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Job bumped to next shift: $starttime " );
 		} # end if
 
 	} elsif ( $openprint::param{'btnFunction'} eq 'CompleteJob' ) {
 # Actually this is complete Signature
 		my $service_index = $openprint::param{'ServiceIndex'};
 		my $project_index = $openprint::param{'ProjectIndex'};
-		openprint::project::insert_into_log( $log, $dbh, @$variable{'cust_id','user_id'}, $project_index, "Job Completed from print schedule." );
-		openprint::employee_project::complete_signature( $log, $dbh, $variable, $project_index, $service_index );
-		openprint::project::update_project_status( $log, $dbh, $variable, $project_index );
+		my $Project = new openprint::Project( $project_index );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Job Completed from print schedule." );
+		complete_signature( $log, $dbh, $variable, $project_index, $service_index );
+		$Project->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'RemoveJob' ) {
 		my $service_index = $openprint::param{'ServiceIndex'};
 		my $project_index = $openprint::param{'ProjectIndex'};
 		sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
-		openprint::project::insert_into_log( $log, $dbh, @$variable{'cust_id','user_id'}, $project_index, "Job removed from print schedule." );
+		my $Project = new openprint::Project( $project_index );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Job removed from print schedule." );
 	} # end if
 	openprint::employee_schedule::add_missing_jobs_to_schedule( $log, $dbh );
 #openprint::employee_schedule::update_late_jobs( $log, $dbh );
@@ -352,9 +358,9 @@ sub project_view {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$printing_service_index", 'strStatus', 'Ordered' );	
 			} # end if
 
-		} elsif ( $service_type eq 'Proofs' or $service_type eq 'FilmStripping' ) {
+		} elsif ( sets::isin( $service_type,[ 'Proofs', 'FilmStripping' ] ) ) {
 
-# Store Usepress
+			# Store Usepress
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $signature_service_index );
 				next if ! $openprint::param{'UsePress-'.$printing_specs{'SignatureIndex'}};
@@ -401,7 +407,7 @@ sub project_view {
 				} else { # Not Complete
 					if ( $status ne 'Ordered' ) {
 # Make sure we don't get approved without complete, because they can't unapprove
-						openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_index, "Marked Filmstripping Ordered from $status" );
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Filmstripping Ordered from $status" );
 						sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex='$project_index' AND lngServiceIndex='$service_index'", 'strStatus', 'Ordered' );
 					} # end if
 				} # end if Complete or NOT
@@ -423,17 +429,15 @@ sub project_view {
 							if ( my @Equipment = openprint::Equipment::find('strid'=>$sig_specs{'UsePress'}) ) {
 								$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
 								if ( $_ ) {
-									$$variable{'error'} .= "Error adding to press schedule: " . $_;
+									$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
 								} else {
-									openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_index, "Added Form $sig_specs{'SignatureIndex'} to pending press schedule." );
+									$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $sig_specs{'SignatureIndex'} to pending press schedule." );
 
 								} # end if
 							} # end if
-
 						} # end foreach
 						sql::end_transaction( $dbh, $ac );
 					} # end if
-
 
 					if ( $openprint::param{'rdbApproved'} eq 'Y' or ! defined $openprint::param{'rdbApproved'} ) {
 						if ( ! Date::Calc::check_date( @openprint::param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ) ) {
@@ -458,14 +462,14 @@ sub project_view {
 						} # end if
 					} elsif ( $openprint::param{'rdbApproved'} eq 'N' ) { # NOT APPROVED
 						if ( $status ne 'Proofs Out' and $status ne 'Waiting For Customer Approval' ) {
-							openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_index, "Marked Proofs Proofs Out from $status" );
+							$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Proofs Proofs Out from $status" );
 							sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$service_index", 'strStatus', 'Proofs Out' );
 						} # end if
 					} # end if Approved
 				} else { # Not Complete
 # Make sure we don't get approved without complete, because they can't unapprove
 					$openprint::param{'rdbApproved' => 'N'};
-					openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_index, "Marked Proofs Ordered from $status" );
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Proofs Ordered from $status" );
 					sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$service_index", 'strStatus', 'Ordered' );
 				} # end if Complete Or NOT
 
@@ -530,12 +534,12 @@ sub project_view {
 # There is now a set of press completion buttons for each signature
 			if ( $complete ) {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
-				openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_index, "Marked Printed from $status" );
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Printed from $status" );
 # shuffle jobs on the print schedule
 
 			} else {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$service_index", 'strStatus', 'Ordered' );
-				openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_index, "Marked Ordered from $status" );
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Ordered from $status" );
 			} #nd if
 		} elsif ( $service_type eq 'AdditionalSignature' ) {
 			foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockBrand UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
@@ -583,7 +587,7 @@ sub project_view {
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'txtServiceDescription', 'Additional Signature' );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'SignatureIndex', ++$signature_count );
 			} # end if
-			openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_index, sprintf( 'Added Service: %s', $ServiceType->name() ) );
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Added Service: %s', $ServiceType->name() ) );
 		} elsif ( $openprint::param{'txtServiceName'} ) {
 			
 			my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService');
@@ -643,7 +647,7 @@ sub project_view {
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $sid );
 				openprint::press_schedule::remove( $project_index, $sid );
 				openprint::bindery_schedule::remove( $project_index, $sid );
-				openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_index, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
 			} # end if
 		} # end foreach
 		$Project->update_status();
@@ -700,7 +704,7 @@ sub send_additional_charges_notifications {
 #misc::send_email_with_attachment( $log, \%mail, @body );
 
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
+	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $openprint::config{'Mail Server'},
@@ -710,11 +714,12 @@ sub send_additional_charges_notifications {
 			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 #TO      => 'iconnor@point-one.com',
 			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $openprint::param{'AdditionalEmailRecipients'}),
-			CC      => sprintf( "%s %s <%s>", @info{'CSRFirstName','CSRLastName','CSREmail'}),
+			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
 			SUBJECT => 'Additional Charges required',
 			);
 	misc::send_email_with_attachment( $log, \%mail, @body );
-	openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_index, "Additional charges notification sent to : $mail{TO}." );
+	my $Project = new openprint::Project( $project_index );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Additional charges notification sent to : $mail{TO}." );
 
 } # End sub send_additional_charges_notifications
 
@@ -902,17 +907,16 @@ sub send_duedate_change_notification {
 	my $User = new openprint::User( $openprint::session{'user_id'} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my $sales_person_email = sprintf( "%s %s <%s>", $CSR->firstname(), $CSR->lastname(), $CSR->email() );
-	if ( $sales_person_email ne '  <>' ) {
+	if ( $CSR->email() ) {
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
+		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},
 				FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 #TO      => 'iconnor@point-one.com',
-				TO      => $sales_person_email,
+				TO      => sprintf( '"%s %s" <%s>', $CSR->firstname(), $CSR->lastname(), $CSR->email() ),
 				SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",
 				);
 		misc::send_email_with_attachment( $log, \%mail, @body );
@@ -1107,7 +1111,7 @@ sub barcode {
 		} # end if
 
 		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_index, 'rdbComplete', 'Yes' );
-		openprint::project::insert_into_log( $log, $dbh, $openprint::session{'company_id'}, $openprint::param{'Operator'}, $Project->id(), "Marked Proofs Proofs Out from $status via barcode" );
+		$Project->add_to_log( $openprint::session{'company_id'}, $openprint::param{'Operator'}, "Marked Proofs Proofs Out from $status via barcode" );
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $service_index], 'strStatus', 'Proofs Out' );
 		$message = sprintf( 'Marked project %d Proofs Out from %s', $Project->id(), $status );
 
@@ -1170,7 +1174,7 @@ sub barcode {
 	if ( $openprint::param{'Action'} ) {
 		add_to_barcode_log( $log, $dbh, $variable, $Project->id(), $docket_id, $openprint::param{'Operator'}, $message );
 #$$variable{'Results'} = sprintf('<tr><td>%.4d-%.2d-%.2d %.2d:%.2d:%.2d</td><td>%s</td><td><a href="project_view.html?ProjectIndex=%d&OrderID=%d">%d</a></td><td>%s</td></tr>', Date::Calc::Today_and_Now(), $operators{$operator}, $project_index, $order_id, $docket_id, $message ) . $$variable{'Results'};
-		openprint::project::update_project_status( $log, $dbh, $variable, $Project->id(), $openprint::param{'Order'} );
+		$Project->update_status();
 		openprint::order::update_order_status( $r, $log, $dbh, $openprint::param{'Order'} );
 	} # end if
 
@@ -1265,6 +1269,7 @@ sub complete_signature {
 
 	my $ac = sql::start_transaction( $dbh );
 	my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_id, $service_id );
+	my $Project = new openprint::Project( $project_id );
 
 	sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_id AND lngServiceIndex=$service_id", 'strStatus', 'Complete' );
 # Remove from Print Schedule
@@ -1273,7 +1278,7 @@ sub complete_signature {
 	sql::update( $log, $dbh, 'Bindery_Schedule', "ProjectIndex=$project_id", 'starttime', 
 			sql::execute( $log, $dbh, q{SELECT NOW() + '2 hours'::interval} )
 			);
-	openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_id, "Form $specs{'SignatureIndex'} Completed" );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Form $specs{'SignatureIndex'} Completed" );
 	sql::end_transaction( $dbh, $ac );
 } # end sub complete_signature
 

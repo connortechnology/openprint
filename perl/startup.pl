@@ -23,7 +23,7 @@ BEGIN {
 	use	Authen::Captcha;
 	use GD::Barcode;
 
-	use Carp ();
+	#use Carp ();
 
 	use sql;
 	use misc;

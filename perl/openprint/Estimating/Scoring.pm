@@ -492,7 +492,6 @@ sub get_scores {
 
 sub get_specs {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
-
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
 

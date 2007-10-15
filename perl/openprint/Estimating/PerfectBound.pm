@@ -62,19 +62,27 @@ sub calc {
 
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
 		$$specs{'txtCalliper'} = 0;
-		$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=$project_index AND strName='txtSignatureType' AND NOT strValue='Cover Spreads'";
-		my @signature_service_indices = sql::execute( $log, $dbh, $_ );
-		foreach my $signature_service_index ( $Project->signatures('Cover Spreads') ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index, 'txtSpecificStockCalliper','txtSignatureSpreadQuantity' );
+		foreach my $signature_service_index ( $Project->signatures('Interior Spreads') ) {
+			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 			my $calliper = $$sig_specs{'txtSignatureSpreadQuantity'} ? $$sig_specs{'txtSignatureSpreadQuantity'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-			$$specs{'txtCalliper'} += $calliper * 2;
+			$$specs{'txtCalliper'} += $calliper * $$sig_specs{'txtSpreadSize'}/2;
 		} # end foreach
 	} # end if
 
 	my $equipment;
 	my @Equipment = openprint::Equipment::find('strid'=>'PerfectBinder');
 	if ( ! @Equipment ) {
-		return 'uncalculated';
+		$$specs{'alert'} .= 'We are unable to automatically provide a price for Perfect Binding.  You may enter your own price in the price fields, or contact your CSR for a quote.';
+
+		foreach my $qty_index ( 1 ..3 ) {
+			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
+			my $qty = $$specs{'txtQuantity'.$qty_index};
+			if ( $qty and ! $$specs{'txtPrice'.$qty_index} ) {
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
+		} # end foreach
+		
+		return 'calculated';
 	} # end if
 
 	$equipment = $Equipment[0];
@@ -112,6 +120,9 @@ sub calc {
 	$log->debug(" END Perfect Bound!!!!!!!!!!!!!!!!!!");
 	return $status;
 } # end sub calc
+
+sub summary {
+} # end sub summary
 
 1;
 

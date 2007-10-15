@@ -2,6 +2,9 @@
 <? if ( sets::isin( $openprint::session{'user_type'},['E','A'] ) ) ?>
 	<? if ( $openprint::param{'ddmCompany'} ) ?>
 		Any actions you perform during the course of this login will be stored in <? echo ( new openprint::Company($openprint::session{company_id})->name() ) ?>'s history.<br/>
+<br>
+  <? eval ( $$variable{'Company'} = new openprint::Company( $openprint::session{'company_id'} ); ) ?>
+  The CSR for <? echo ( $$variable{'Company'}->name() ) ?> is <? echo ( $$variable{'Company'}->CSR()->name() ) ?>.<br/>
 		<br/>
 		Prices will be displayed in <? echo ( new openprint::Currency( $openprint::session{'Currency_id'} )->name() ) ?>.<br/>
 		<br/>

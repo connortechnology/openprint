@@ -2,7 +2,7 @@
 	require Date::Parse;
 	require Date::Format;
 
-	$openprint::param{'/main/project/history.html?lastupdated'} = time;
+	$openprint::session{'/main/project/history.html?lastupdated'} = time;
 	foreach ( 'ddmStatus','CreatedStartYear','CreatedStartMonth','CreatedStartDay','CreatedEndYear','CreatedEndMonth','CreatedEndDay','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
 		$openprint::session{"/main/project/history.html?$_"} = $openprint::param{$_} if exists $openprint::param{$_};
 	} # end foreach

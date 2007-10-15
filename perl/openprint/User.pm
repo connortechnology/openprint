@@ -209,6 +209,7 @@ sub delete {
 
 	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Assistants WHERE csr_id=? OR assistant_id=?', @$self{'id','id'} );
 
 
 	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Users WHERE Index=?', $$self{'id'} );

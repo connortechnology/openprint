@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-package openprint::Estimating::CustomService;
+package openprint::Estimating::NoBindery;
 
 use strict;
 
@@ -23,8 +23,6 @@ require openprint::print;
 require openprint::service;
 
 my @variables = (
-		'txtPrice1', 'txtPrice2', 'txtPrice3',
-		'Price', 'Units',
 );
 
 sub variables {
@@ -32,8 +30,6 @@ sub variables {
 } # end sub variables
 
 my @no_output = (
-	'Hours1', 'Hours2', 'Hours3','Units',
-	'ProjectIndex','ServiceIndex','ServiceType',
 );
 
 sub no_outputs {
@@ -42,25 +38,8 @@ sub no_outputs {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-	my $status = 'calculated';
 
-	my $Project = new openprint::Project( $project_index );
-
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity($qty_index);
-
-		my $price;
-		if ( $$specs{'Units'} eq 'Per Item' ) {
-			$price = $$specs{'Price'.$qty_index} * $Project->quantity($qty_index);
-		} elsif ( $$specs{'Units'} eq 'Per M' ) {
-			$price = $$specs{'Price'.$qty_index} * $Project->quantity($qty_index)/1000;
-		} else { # Flat
-			next;
-		} # end if
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $price );
-	} # end foreach
-
-	return $status;
+	return 'calculated';
 } # end sub calc
 
 
@@ -68,9 +47,12 @@ sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 } # end sub display
-
 sub summary {
-}
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	return '';
+
+} # end sub summary
 
 1;
 __END__

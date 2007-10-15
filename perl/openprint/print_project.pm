@@ -498,12 +498,24 @@ sub get_service_specifications {
 
 		# Do Specific Stuff
 		if ( $service_type_id eq 'Perforating' ) {
+			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			foreach my $name ( keys %$specs ) {
+				$$variable{$name} = $$specs{$name};
+			} # end foreach
 			require openprint::Estimating::Perforating;
 			openprint::Estimating::Perforating::get_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id eq 'Scoring' ) {
+			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			foreach my $name ( keys %$specs ) {
+				$$variable{$name} = $$specs{$name};
+			} # end foreach
 			require openprint::Estimating::Scoring;
 			openprint::Estimating::Scoring::get_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id eq 'Proofs' ) {
+			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			foreach ( keys %$specs ) {
+				$$variable{$_} = $$specs{$_};
+			} # end foreach
 			openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id ) {
 			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
@@ -563,6 +575,7 @@ sub create_edit_process {
     } # end if
 
 	my $Project = new openprint::Project( int $openprint::param{'ProjectIndex'} );
+	$Project->save() if ( ! $Project->id() );
 	$openprint::session{'project_id'} = $Project->id();
 	my $project_index = $Project->id();
 
@@ -581,7 +594,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)2$/ ) {
+						if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -591,7 +604,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)3$/ ) {
+						if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -616,7 +629,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)1$/ ) {
+						if ( $key =~ /(.*)1$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -626,7 +639,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)3$/ ) {
+						if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -651,7 +664,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)1$/ ) {
+						if ( $key =~ /(.*)1$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -661,7 +674,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)2$/ ) {
+						if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -772,8 +785,7 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
-	@openprint::param{'reference'} = misc::trim( $openprint::param{'reference'} );
-	@openprint::param{'comments'} = misc::trim( $openprint::param{'comments'} );
+	@openprint::param{'reference','comments'} = misc::trim( @openprint::param{'reference','comments'} );
 
 	my $Project = new openprint::Project( $project_index );
 	my $NewProject = $Project->copy();
@@ -919,7 +931,7 @@ sub calc {
 
 		if ( $specs{'Dimensions'} ne 'Custom' ) {
 			my ( $width, $height, $type ) = $specs{'Dimensions'} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
-			my @args = ( @specs{'ProjectType'}, $width, $height );
+			my @args = ( $specs{'ProjectType'}, $width, $height );
 
 			if ( $type eq 'Flat' ) {
 				$_ = q{SELECT dblfinishedwidth::float, dblfinishedheight::float FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?) AND dblFlatWidth=? AND dblFlatHeight=?};
@@ -1324,7 +1336,7 @@ sub calc {
 # add up the prices
 		foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$project{'id'} ) ) {
 			my $service_specs = openprint::service::get_specs_ref( $$project{'id'}, $service_index );
-			@specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
+			$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
 		} # end foreach
 		$specs{'txtPrice1'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $specs{'txtPrice1'} );
 		$specs{'txtUnitPrice1'} = sprintf( '%.2f', $specs{'txtPrice1'}/$specs{'txtQuantity1'} );	

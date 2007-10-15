@@ -47,7 +47,7 @@
 							<li><a href="/administrator/production/pricelists.html;SSL">&raquo; Pricelists</a></li>
 						</ul>
 					</li>
-					<li class="off" id="ManagerialMenu"><a href="#" onclick="toggleMenu($('ManagerialMenu'), 'off', 'on');return false;">MANAGERIAL</a>
+					<li class="<? echo ( $r->uri() =~ /administrator\/managerial/ ? 'on' : 'off' ) ?>" id="ManagerialMenu"><a href="#" onclick="toggleMenu($('ManagerialMenu'), 'off', 'on');return false;">MANAGERIAL</a>
 						<ul>
 							<li><a href="/administrator/managerial/credit_applications.html;SSL">&raquo; Credit Applications</a></li>
 							<li><a href="/administrator/managerial/company_profiles.html;SSL">&raquo; Company Profiles</a></li>

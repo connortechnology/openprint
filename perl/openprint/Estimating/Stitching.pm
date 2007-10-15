@@ -410,7 +410,6 @@ sub get_price {
 
 	my $qty = $$specs{'txtQuantity'.$qty_index};
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition'));
-$openprint::log->debug("Height: $$specs{'Height'} : " . $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) );
 if ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty_index} ) {
 	$price{'Imposition'} = 1 
 } elsif ( $Equipment->specification('Maximum Spine Length') and $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) < $$specs{'Height'} ) {
@@ -490,6 +489,55 @@ sub summary {
 	} # end if
 	return '';
 } # end sub summary
+
+sub runtime {
+	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
+
+	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
+	my @Equipment = openprint::Equipment::find('strid'=>$$specs{'ddmEquipment'.$qty_index});
+	return 0 if @Equipment != 1;
+
+	my $Equipment = $Equipment[0];
+
+	my $runTime;
+
+# Count the # of signatures
+	my $pockets = 0;
+	foreach my $spec ( keys %$specs ) {
+		if ( $spec =~ /^txtSignatureQty(.*)$/ ) {
+			$pockets += int($$specs{$spec});
+		} # end if
+	} # end foreach
+
+	$pockets += int( $$specs{'txtInsertQuantity'} );
+	my $gateFolds = int($$specs{'txtSignatureQtySingleGateFolded'} ) + int($$specs{'txtSignatureQtyDoubleGateFolded'});
+	if ( $$specs{'rdbGateFoldFit'} eq 'Exact' ) {
+		$pockets -= $gateFolds;
+	} # end if
+
+	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
+	my $makereadytime = $Equipment->specification( 'Pocket Make Ready' ) * 60;
+	$openprint::log->debug("MakeReadyTime: $makereadytime");
+	$runTime += $pockets * $makereadytime;
+
+# Calculate Full Passes
+	if ( $pockets > $maxPockets ) {
+# Loaded here, so we don't do it in the loop many times
+		if ( my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) ) {
+
+
+			$runTime += ($$specs{"txtQuantity$qty_index"}*3600/$unitsPerHour) * int ( $pockets / $maxPockets );
+			$pockets = $pockets % $maxPockets;
+		} # end if
+	} # end if
+
+# Calculate Last Pass
+	if ( my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $pockets ) ) {
+		$runTime += $$specs{"txtQuantity$qty_index"}*3600/$unitsPerHour; # in seconds
+	} # end if
+	return $runTime;
+} # end sub get_runtime
+
 
 1;
 __END__

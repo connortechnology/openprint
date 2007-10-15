@@ -1,6 +1,6 @@
 <div class="Stock">
 	<fieldset><legend>Stock</legend>
-		<? if ( $$variable{'Mode'} ne 'Easy' and sets::isin( $openprint::session{'user_type'}, ['E', 'A'] ) ) ?>
+		<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 		<p>
 			<label>Customer supplied:</label>
 			<input type="radio" id="SuppliedStock<?Signature?>Y" name="rdbSuppliedStock<?Signature?>" value="Y" <? echo ( 'checked="checked"' if $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ) ?> onclick="$('SuppliedStockWarning<?Signature?>').show();calc(this.form.name);" />
@@ -16,7 +16,7 @@
 			<input type="radio" id="SpecificStock<?Signature?>N" name="rdbSpecificStock<?Signature?>" value="N" <? echo ( 'checked="checked"' if $$variable{'rdbSpecificStock'.$$variable{'Signature'}} ne 'Y' ) ?> onclick="remove_div('SpecificStock<?Signature?>');add_div('HouseStock<?Signature?>');ddmStockWeight_onchange(this,'<?Signature?>');calc(this.form.name);" />
 			<label class="radio" for="SpecificStock<?Signature?>N">No</label>
 		</p>
-		<? endif ( $$variable{'Mode'} ne 'Easy' and sets::isin( $openprint::session{'user_type'}, ['E', 'A'] ) ) ?>
+		<? endif ( $$variable{'Mode'} ne 'Easy' ) ?>
 		<div id="SpecificStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} ne 'Y' ? 'none' : 'block' ) ?>;">
 			<p><label>Brand:</label>
 			<input type="text" name="txtSpecificStockBrand<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockBrand'.$$variable{'Signature'}} ) ?>" onkeyup="txtSpecificStockBrand_onKeyUp(this);" />

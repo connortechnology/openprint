@@ -26,7 +26,7 @@ $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 #push @projects, map { new openprint::Project( $_ ); } sql::execute( undef, undef, q{SELECT DISTINCT projectindex from Schedule} );
 #push @projects, openprint::Project::find( 'id'=>222386, 'company_id'=>6, 'id_start'=>200000, 'order'=>'index desc');
-push @projects, openprint::Project::find( 'id_start'=>'230000', 'order'=>'index desc');
+push @projects, openprint::Project::find( 'id_end'=>'150000', 'order'=>'index desc');
 #@projects = sets::union( @projects );
 
 foreach my $Project ( @projects ) {

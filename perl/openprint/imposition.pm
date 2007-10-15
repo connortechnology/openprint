@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -117,11 +117,18 @@ sub check_setup {
 				$setup->columns(0);
 			} elsif ( $setup->imposition() % 2 ) {
 # This uses two rollers, on non-offset paper so need more gutter space, which works out to be 0.25 
-				calc_setup( $setup, $setup->image_width(), $setup->image_height(), $setup->paper()->width() - ( $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} ), $setup->paper()->height() );
+				calc_setup( $setup, 
+						( $setup->image_orientation() eq 'Vertical' ? ($setup->image_width(), $setup->image_height()) : ( $setup->image_height(), $setup->image_width() ) ), 
+						$setup->stock_width() - ( $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} ), 
+						$setup->stock_height()
+						);
+			$openprint::log->debug(' CHECK 3 Using Paper ' . $setup->paper()->width() . ' x' . $setup->paper()->height() .' ' . $setup->image_width() . ' x ' . $setup->image_height() . ' Imposition: ' . $setup->imposition(). ":".$setup->columns() . 'x' . $setup->rows(). ' ' . $setup->layout_width() . 'x' . $setup->layout_height() ) if $debug;
 				if ( $setup->imposition() == 1 ) {
+$openprint::log->debug('kill1');
 					$setup->rows(0);
 					$setup->columns(0);
 				} elsif ( $setup->columns() < 3 ) {
+$openprint::log->debug('kill2');
 					$setup->rows(0);
 					$setup->columns(0);
 				} # end if
@@ -134,7 +141,6 @@ sub calc_setup_object {
 	my ( $specs, $image_width, $image_height, $Paper, $run_style, $grain_direction, $Press ) = @_;
 
 	my $press_grain = $Press->specification('Grain', $Paper->gsm());
-$openprint::log->debug("Grain ($press_grain) (".$Paper->grain_direction().') (' . $Paper->gsm() . ')' );
 	if ( $press_grain and ($press_grain ne $Paper->grain_direction() ) ) {
 		return;
 	} # end if
@@ -144,6 +150,7 @@ $openprint::log->debug("Grain ($press_grain) (".$Paper->grain_direction().') (' 
 	my @results;
 	my $paper_width;
 	my $paper_height;
+	my $cropmarkspace;
 
 	$setup1->paper( $Paper->clone() );
 	$setup1->runstyle( $run_style );
@@ -200,6 +207,11 @@ $openprint::log->debug("Grain ($press_grain) (".$Paper->grain_direction().') (' 
 			$paper_height = $Paper->height();
 		} # end if
 	} # end if
+	$setup1->stock_width( $paper_width );
+	$setup1->stock_height( $paper_height );
+	$setup2->stock_width( $paper_width );
+	$setup2->stock_height( $paper_height );
+
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;
 	if ( sets::isin( $$specs{'Binding'}, ['SaddleStitching','LoopStitching'] ) ) {
@@ -297,21 +309,35 @@ $openprint::log->debug("Grain ($press_grain) (".$Paper->grain_direction().') (' 
 		} # end if
 
 # There needs to be enough space to put crop marks, but they can go in th bleed space, so it's only an nissue if we are running small or no bleeds.
-		my $cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Top', \@bleed_locations );
 		$cropmarkspace = 0 if $cropmarkspace < 0;
 		$setup1->cropmark_top( $cropmarkspace );
-		$adjusted_paper_height -= $cropmarkspace;
 
 		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Bottom', \@bleed_locations );
 		$cropmarkspace = 0 if $cropmarkspace < 0;
 		$setup1->cropmark_bottom( $cropmarkspace );
-		$adjusted_paper_height -= $cropmarkspace;
+
+		$adjusted_paper_height -= $setup1->cropmark_top();
+		$adjusted_paper_height -= $setup1->cropmark_bottom();
 		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 
 		my $adjusted_paper_width = $paper_width; 
 #$openprint::log->debug("P Width: $adjusted_paper_width");
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Left', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_left( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Right', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_right( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$gutters = 0 if $gutters < 0;
+		$setup1->gutters($gutters);
+		$adjusted_paper_width -= $gutters;
 
 		if ( ( ! $paper_width ) or ( $$specs{'Maximum Image Area Width'} > 0 and $adjusted_paper_width > $$specs{'Maximum Image Area Width'} ) ) {
 			$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
@@ -321,27 +347,9 @@ $openprint::log->debug("Grain ($press_grain) (".$Paper->grain_direction().') (' 
 			$adjusted_paper_width -= $$specs{'colour_bar_size'};
 		} # end if
 
-		my $cropmarkspace = $$specs{'CropMarkSpace'};
-		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Left', \@bleed_locations );
-		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup1->cropmark_left( $cropmarkspace );
-		$adjusted_paper_width -= $cropmarkspace;
-#$openprint::log->debug("P Width crop left $$specs{'BleedSize'} @bleed_locations: $adjusted_paper_width");
+		$adjusted_paper_width -= $setup1->cropmark_left();
+		$adjusted_paper_width -= $setup1->cropmark_right();
 
-		$gutters -= $cropmarkspace;
-
-		my $cropmarkspace = $$specs{'CropMarkSpace'};
-		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Right', \@bleed_locations );
-		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup1->cropmark_right( $cropmarkspace );
-		$adjusted_paper_width -= $cropmarkspace;
-#$openprint::log->debug("P Width crop right: $adjusted_paper_width");
-
-		$gutters -= $cropmarkspace;
-		$gutters = 0 if $gutters < 0;
-		$setup1->gutters($gutters);
-
-		$adjusted_paper_width -= $gutters;
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 #$openprint::log->debug("P Width gutters: $adjusted_paper_width");
 
@@ -439,20 +447,35 @@ $openprint::log->debug("Grain ($press_grain) (".$Paper->grain_direction().') (' 
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
 		} # end if
 
-		my $cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Left', \@bleed_locations );
 		$cropmarkspace = 0 if $cropmarkspace < 0;
 		$setup2->cropmark_top( $cropmarkspace );
-		$adjusted_paper_height -= $cropmarkspace;
 
-		my $cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Right', \@bleed_locations );
 		$cropmarkspace = 0 if $cropmarkspace < 0;
 		$setup2->cropmark_bottom( $cropmarkspace );
-		$adjusted_paper_height -= $cropmarkspace;
+
+		$adjusted_paper_height -= $setup2->cropmark_top();
+		$adjusted_paper_height -= $setup2->cropmark_bottom();
 		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 
 		my $adjusted_paper_width = $paper_width;
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Top', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_left( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Bottom', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_right( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$gutters = 0 if $gutters < 0;
+		$setup2->gutters($gutters);
+		$adjusted_paper_width -= $gutters;
+
 		if ( (! $paper_width ) or ( $$specs{'Maximum Image Area Width'} > 0 and $adjusted_paper_width > $$specs{'Maximum Image Area Width'} ) ) {
 			$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
 			$openprint::log->debug("*** Using Max Image Width2: $adjusted_paper_width ***") if $debug;
@@ -461,25 +484,8 @@ $openprint::log->debug("Grain ($press_grain) (".$Paper->grain_direction().') (' 
 			$adjusted_paper_width -= $$specs{'colour_bar_size'};
 		} # end if
 
-		my $cropmarkspace = $$specs{'CropMarkSpace'};
-		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Top', \@bleed_locations );
-		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_left( $cropmarkspace );
-		$adjusted_paper_width -= $cropmarkspace;
-
-		$gutters -= $cropmarkspace;
-
-		$cropmarkspace = $$specs{'CropMarkSpace'};
-		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Bottom', \@bleed_locations );
-		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_right( $cropmarkspace );
-		$adjusted_paper_width -= $cropmarkspace;
-
-		$gutters -= $cropmarkspace;
-		$gutters = 0 if $gutters < 0;
-		$setup2->gutters($gutters);
-
-		$adjusted_paper_width -= $gutters;
+		$adjusted_paper_width -= $setup2->cropmark_left();
+		$adjusted_paper_width -= $setup2->cropmark_right();
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 
 		if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
@@ -626,12 +632,12 @@ sub convert_impositions {
 			6	=>	[ [2,3],[3,2],[1,6],[6,1] ],
 			7	=>	[ [7,1] ],
 			8	=>	[ [2,4],[4,2] ],
+			12	=>	[ [3,4], [4,3] ],
 			);
 	if ( $spread_size == 2 ) {
 			$blocks{9}	=	[ [3,3] ];
 			$blocks{10}	=	[ [5,2], [2,5] ];
 			$blocks{11}	=	[ ];
-			$blocks{12}	=	[ [3,4], [4,3] ];
 			$blocks{13}	=	[ ];
 			$blocks{14}	=	[ [2,7],[7,2] ];
 			$blocks{15}	=	[ [3,5],[5,3] ];

@@ -48,9 +48,10 @@ sub get_log_actions {
 }
 
 sub insertLogRecord {
-	my ( $action_type_id, $note, $user_id ) = @_;
+	my ( $action_type_id, $note, $user_id, $company_id ) = @_;
 
 	$user_id = $openprint::session{user_id} if ! $user_id;
+	$company_id = $openprint::session{company_id} if ! $company_id;
 	return if ! $user_id;
 
 	if(!defined($action_type_id) || !($action_type_id > 0)) {
@@ -60,6 +61,7 @@ sub insertLogRecord {
 	sql::insert( $openprint::log, $openprint::dbh, 'log', [
 		'action_type', $action_type_id, 
 		'user_id', $user_id, 
+		'company_id',	$company_id,
 		'date_time', 'NOW()', 
 		'ip_address', $ENV{REMOTE_ADDR}, 
 		'hostname', reverse_dns( $ENV{REMOTE_ADDR} ), 

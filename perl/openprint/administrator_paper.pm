@@ -50,10 +50,12 @@ sub paper {
 		my $new = $Paper->next();
 		$new = $Paper->previous() if $new == $Paper;
 		$Paper->delete();
+		$$variable{'information'} .= 'Paper ' . $Paper->id() . ' has been deleted.';
 		$Paper = $new;
 		$openprint::param{'paper_id'} = $Paper->id();
 		
 	} elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
+		$$variable{'information'} .= 'Paper ' . $Paper->id() . ' has been copied.';
 		$Paper = $Paper->copy();
 		$Paper->save();
 		$openprint::param{'paper_id'} = $Paper->id();
@@ -124,6 +126,7 @@ sub paper {
 		} # end foreach
 
 		$$variable{'error'} .= $Paper->save();
+		$$variable{'information'} .= 'Paper ' . $Paper->id() . ' has been saved.';
 	} elsif ( $openprint::param{'btnFunction'} eq 'Prev' ) {
 		$Paper = $Paper->previous();
 		$openprint::param{'paper_id'} = $Paper->id();

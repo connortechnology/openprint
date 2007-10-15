@@ -9,9 +9,9 @@
 	$$variable{'Currency'} = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = ( $$variable{'Currency'}->name(),$$variable{'Currency'}->symbol(), $$variable{'Currency'}->short());
 	if ( $openprint::param{'OrderID'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$openprint::param{'OrderID'} );
+		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$openprint::param{'OrderID'},'company_id'=>$openprint::session{'company_id'}, );
 	} elsif ( $openprint::param{'Docket'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$openprint::param{'Docket'} );
+		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$openprint::param{'Docket'},'company_id'=>$openprint::session{'company_id'}, );
 	} else {
 
 		@{$$variable{'Orders'}} = openprint::Order::find(

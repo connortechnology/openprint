@@ -109,22 +109,6 @@ sub prices {
 	return openprint::ServicePrice::find( 'service_id'=>$$self{id} );
 } # end sub prices
 
-my %cache_index_by_id;
-
-sub init_cache {
-	%cache_index_by_id = ();
-} # end sub init_cache
-
-sub get_index_by_id {
-	my ( $log, $dbh, $id ) = @_;
-
-	if ( ! exists $cache_index_by_id{$id} ) {
-		( $_ ) = sql::execute( undef, undef, 'SELECT id FROM Services WHERE name=?', $id );
-		$cache_index_by_id{$id} = $_;
-	} # end if
-	return $cache_index_by_id{$id};
-} # end sub get_index_by_id
-
 sub find {
 	my %params = @_;
 	my $sql = 'SELECT * FROM Services WHERE 1>0';

@@ -73,11 +73,14 @@ sub do_new_substitution {
 	} elsif ( $$command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		return $result . variable_substitution( $r, $log, $dbh, $text, $variable );
+		$result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
+		return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		return htmlize($result) . variable_substitution( $r, $log, $dbh, $text, $variable );
+		$result = htmlize($result);
+		$result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
+		return $result;
 	} else {
 		my $replacement = $$variable{$$command};
 #my $replacement = variable_substitution( $r, $log, $dbh, $$variable{$command}, $variable );
@@ -122,6 +125,7 @@ sub htmlize {
 	return if ! @_;
 	if ( @_ == 1 ) {
 		$_ = shift;
+		return if ! defined $_;
 		$_ =~ s/&/&amp;/mg;
 		$_ =~ s/"/&quot;/mg;
 		$_ =~ s/</&lt;/mg;
@@ -131,6 +135,7 @@ sub htmlize {
 		return $_;
 	} # end if
 	for( $_ = 0; $_ < @_; $_ += 1 ) {
+		next if ! defined $_[$_];
 		$_[$_] =~ s/&/&amp;/mg;
 		$_[$_] =~ s/"/&quot;/mg;
 		$_[$_] =~ s/</&lt;/mg;
@@ -306,7 +311,7 @@ sub fix_date {
 sub get_dates {
 	my ( $log, $dbh, $year, $month, $day ) = @_;
 
-	( $year, $month, $day ) = fix_date( $year, $month, $day );
+	( $year, $month, $day ) = fix_date( int $year, int $month, int $day );
 
 	my ( $startYear ) = $openprint::config{'startYear'};
 	$startYear = 2002 if ! $startYear;
@@ -362,13 +367,13 @@ sub writeButton {
 	my $html = qq{<a id="$name" href="$href" class="buttonImageOff" };
 	if ( $onclick ne '' ) {
 		$html .= 'onclick="';
-		if ( $openprint::config{'ButtonsUseImages'} eq 'true' and $gif ne '' ) {
+		if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
 			$html .= "btnOff('$name');";
 		} # end if
 		$html .= $onclick."return false;\" ";
 	} # end if
 	$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('$name');}\">";
-	if ( $openprint::config{'ButtonsUseImages'} eq 'true' and $gif ne '' ) {
+	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
 		$html .= "<img src=\"/images/buttons/off/$gif\" border=\"0\" name=\"$name\"";
 		if ( $text ne '' ) {
 			$html .= "alt=\"$text\"";

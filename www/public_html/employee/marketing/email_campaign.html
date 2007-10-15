@@ -16,9 +16,9 @@
 		<p><label>Time of day to send:</label><input type="text" name="timeofday" value="<?timeofday?>"  /></p>
 		<p><label>Interval between emails:</label><input type="text" name="interval" value="<?interval?>"  /></p>
 		<p><label>Active:</label>
-		<input type="radio" id="activeY" name="active" value="Y" <? echo ( 'checked' if $$variable{'active'} eq 'Y' ) ?> />
+		<input type="radio" id="activeY" name="active" value="Y" <? echo ( $$variable{'active'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label for="activeY" class="radio">Yes</label>
-		<input type="radio" id="activeN" name="active" value="N" <? echo ( 'checked' if $$variable{'active'} ne 'Y' ) ?> />
+		<input type="radio" id="activeN" name="active" value="N" <? echo ( $$variable{'active'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label for="activeN" class="radio">No</label>
 		</p>
 		<p> <label>Last Run:</label><?lastrun?></p>

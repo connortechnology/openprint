@@ -69,12 +69,12 @@ $log->debug("Paramter: $key => " . $r->param($key) );
 }
 	jsrs::Dispatch( $r, $log, $dbh, \%variable );
 
-	if ( $variable{'Download'} ne '' ) {
+	if ( exists $variable{'Download'} and $variable{'Download'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {
 			$r->print( $_ );
 		} # end foreach
 	} else {
-		if ( $variable{'Redirect'} ne '' ) {
+		if ( exists $variable{'Redirect'} and $variable{'Redirect'} ) {
 			unless (open(file_handle, $ENV{'DOCUMENT_ROOT'} . $variable{'Redirect'} )) {
 				$log->error("Failed opening " . $ENV{'DOCUMENT_ROOT'} . $variable{'Redirect'} . ": $!");
 				$dbh->disconnect();

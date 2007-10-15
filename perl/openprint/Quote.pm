@@ -101,6 +101,9 @@ sub find {
 			$sql .= q{ AND (SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quoteindex=index)=?};
 			push @values, $params{'for_name'};
 		} # end if
+		if ( $params{'id_like'} ) {
+			$sql .= " AND index LIKE '$params{'id_like'}%'";
+		} # end if
 
 		if ( exists $params{'order'} ) {
 			if ( $params{'order'} eq 'created_on' ) {

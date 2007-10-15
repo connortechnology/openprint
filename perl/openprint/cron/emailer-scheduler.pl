@@ -1,13 +1,14 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
+use lib "/etc/apache2/lib/perl";
+use strict;
 
-# Make sure we can get access to the perl modules
-use lib "/etc/apache/lib/perl/";
 
 require sql;
 require logger;
 require misc;
 require ssi;
-require eprint::EmailCampaign;
+require openprint::Object;
+require openprint::EmailCampaign;
 
 use MIME::QuotedPrint;
 use Mail::Sendmail;
@@ -18,27 +19,28 @@ use vars qw( %variable $log $dbh);
 *dbh = \$openprint::dbh;
 
 
-use strict;
-
 $log = logger->new();
 $log->{level} = "warn";
 my %sql_server;
 
 my $site_admin_email = 'iconnor@point-one.com';
+$openprint::Object::no_cache = 1;
 
 # This is a bit of a hack, but it allows us to use similar styled code
 # as is found in the apache modules
-$ENV{'DOCUMENT_ROOT'} = '/var/www/point-one/www.point-one.com/';
+$ENV{'DOCUMENT_ROOT'} = '/var/www/point-one/www/public_html/';
 
 
 $log->info("Opening SQL connection");
-$dbh = sql::open_sql($log, 
-		'database' => 'point-one',
-		'driver'   => 'Pg',
-		'host'     => '192.168.1.203',
-		'login'    => 'point-one',
-		'password' => 'point-1',
-		);
+$dbh = sql::open_sql( $log, 
+	'host'		=> $ARGV[0],
+	'database'	=> $ARGV[1],
+	'driver'	=> 'Pg',
+	'login'		=> $ARGV[2],
+	'password'	=> $ARGV[3],
+);
+die 'Error opening db' if ! $dbh;
+
 %openprint::config = configuration::init_cache( $log, $dbh, {
 		'siteURL' => 'http://www.point-one.com',
 		'SecureSiteURL'	=> 'https://www.point-one.com',
@@ -49,7 +51,7 @@ $dbh = sql::open_sql($log,
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
-my @campaign_ids = eprint::EmailCampaign::find( 'active' => 'Y', 'misc' => '(lastrun+interval<now() OR lastrun IS NULL ) AND timeofday <= NOW()::time' );
+my @campaign_ids = openprint::EmailCampaign::find( 'active' => 'Y', 'misc' => '(lastrun+interval<now() OR lastrun IS NULL ) AND timeofday <= NOW()::time' );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 

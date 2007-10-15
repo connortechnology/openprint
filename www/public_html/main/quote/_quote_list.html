@@ -1,18 +1,25 @@
 <? eval (         
-	if ( %openprint::param ) {
-		foreach my $key ( 'QuotedFor', 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay' ) {
-			$openprint::session{'/main/quote/history.html?'.$key} = $openprint::param{$key};
-		} # end foreach
-	} # end if
-	$openprint::session{'/main/quote/history.html?lastupdated'} = time;
-
-	@{$$variable{'Quotes'}} = openprint::Quote::find( 
-		'company_id'		=> $openprint::session{'company_id'},
-		'for_name'			=> $openprint::session{'/main/quote/history.html?QuotedFor'},
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/main/quote/history.html?ddmStartYear','/main/quote/history.html?ddmStartMonth','/main/quote/history.html?ddmStartDay'}),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/main/quote/history.html?ddmEndYear','/main/quote/history.html?ddmEndMonth','/main/quote/history.html?ddmEndDay'}),
-		'order'				=> 'dtmquotedate DESC',
+	if ( $openprint::param{'QuoteID'} ) {
+		@{$$variable{'Quotes'}} = openprint::Quote::find( 
+			'company_id'		=> $openprint::session{'company_id'},
+			'id_like'=>$openprint::param{'QuoteID'},
 		);
+	} else {
+		if ( %openprint::param ) {
+			foreach my $key ( 'QuotedFor', 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay' ) {
+				$openprint::session{'/main/quote/history.html?'.$key} = $openprint::param{$key};
+			} # end foreach
+		} # end if
+		$openprint::session{'/main/quote/history.html?lastupdated'} = time;
+
+		@{$$variable{'Quotes'}} = openprint::Quote::find( 
+			'company_id'		=> $openprint::session{'company_id'},
+			'for_name'			=> $openprint::session{'/main/quote/history.html?QuotedFor'},
+			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/main/quote/history.html?ddmStartYear','/main/quote/history.html?ddmStartMonth','/main/quote/history.html?ddmStartDay'}),
+			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/main/quote/history.html?ddmEndYear','/main/quote/history.html?ddmEndMonth','/main/quote/history.html?ddmEndDay'}),
+			'order'				=> 'dtmquotedate DESC',
+			);
+	} # end if
 	$$variable{'Currency'} = new openprint::Currency( $openprint::session{Currency_id} );
 ) ?>
 <? if ( @{$$variable{'Quotes'}} == 0 ) ?>

@@ -42,14 +42,14 @@
 				} # end foreach paper_id
 			} else {
                 my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/inventory/paper_label.html' );
-                $html .= ssi::variable_substitution( $r, $log, $dbh, $content, $variable );
+                $html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
             } # end if
             $html .= '<br class="pagebreak"/>';
         } # end foreach skid_id
         if ( $openprint::param{'Manifest'} ) {
             @{$$variable{'Skids'}} = @skid_ids;
             my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/inventory/manifest.html' );
-            $html .= ssi::variable_substitution( $r, $log, $dbh, $content, $variable );
+            $html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
         } # end if
 
 		return $html;

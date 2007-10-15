@@ -30,10 +30,12 @@
 	  		<?CreationDate?>
 		</p>
 		<? if ( $$variable{'DocketNumber'} ) ?>
+		<? if ( $$variable{'Project'}->shippingtype() ) ?>
 	  	<p> 
 			<label>Shipping Type:</label>
 	  		<span name="shippingTypeValue"><? echo ( $$variable{'Project'}->shippingtype() ) ?></span>
 		</p>
+		<? endif ( $$variable{'Project'}->shippingtype() ) ?>
 	  		<? if ( $$variable{'DueDate'} ) ?>
 		<p>
 				<label>Due Date:</label>

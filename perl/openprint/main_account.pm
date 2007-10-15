@@ -325,10 +325,11 @@ sub user_profile {
 # We assume that we are authorized to be here now.
 
 	my $User = new openprint::User( $openprint::session{'user_id'} );
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
 
-	if ( $User->Administrator() eq 'Y' ) {
+	if ( $Me->administrator() eq 'Y' ) {
+		$User = new openprint::User( $openprint::param{'ddmUser'} );
 		if ( $openprint::param{'ddmUser'} ) {
-			$User = new openprint::User( $openprint::param{'ddmUser'} );
 # Enforce that we can only edit users from our company
 			if ( $User->company_id() != $openprint::session{'company_id'} ) {
 				$User = new openprint::User( $openprint::session{'user_id'} );
@@ -359,51 +360,58 @@ sub user_profile {
 			return misc::error( $log, $dbh, $variable, 'Bad Field', $error );
 		} # end if
 
-		if ( ! $openprint::param{'ddmUser'} ) { # add
-			foreach my $U ( openprint::User::find('email'=>$openprint::param{'email'}) ) {
+			foreach my $U ( openprint::User::find('email'=>lc $openprint::param{'email'}) ) {
 				if ( $U->id() != $User->id() ) {
 					return misc::error( $log, $dbh, $variable, 'User already exists.', $openprint::param{'email'} . " is already a user." );
 				} # end if
 			} # end foreach
+		if ( ! $openprint::param{'ddmUser'} ) { # add
+			$User->company_id( $openprint::session{company_id} ) if ! $User->company_id();
 		} # end if
 		$$variable{'error'} .= $User->save( \%openprint::param );
 	} # end if
 
+	$$variable{'Me'} = $Me;
+	if ( $User->company_id() != $openprint::session{company_id} ) {
+		$User = new openprint::User();
+	} # end if
 	$$variable{'User'} = $User;
 } # end sub user_edit
 
 sub change_password {
+}
+sub change_password_confirmation {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	if ( $openprint::param{'txtNewPassword'} ne $openprint::param{'txtConfirmPassword'} ) {
-		$$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
-		return;
-	} # end if
+		if ( $openprint::param{'txtNewPassword'} ne $openprint::param{'txtConfirmPassword'} ) {
+			$$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
+			$$variable{'Redirect'} = '/main/account/change_password.html';
+			return;
+		} # end if
 
-	if ( $openprint::param{'txtNewPassword'} eq '' ) {
-		$$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
-		return;
-	} # end if
+		if ( $openprint::param{'txtNewPassword'} eq '' ) {
+			$$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
+			$$variable{'Redirect'} = '/main/account/change_password.html';
+			return;
+		} # end if
 
-	my $User = new openprint::User( $openprint::session{'user_id'} );
+		my $User = new openprint::User( $openprint::session{'user_id'} );
 
-	if ( $openprint::param{'txtNewPassword'} eq $User->Password() ) {
-		$$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
-		return;
-	} # end if
-	
-	if ( $User->Password() eq $openprint::param{'txtOldPassword'} ) {
-		$User->Password( $openprint::param{'txtNewPassword'} );
-		$User->change_password( 'N' );
-		$User->save();
-	} else {
-		$$variable{'error'} = 'You entered the wrong old password.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
-		return;
-	} # end if
+		if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
+			$$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
+			$$variable{'Redirect'} = '/main/account/change_password.html';
+			return;
+		} # end if
+		
+		if ( $User->password() eq $openprint::param{'txtOldPassword'} ) {
+			$User->password( $openprint::param{'txtNewPassword'} );
+			$User->changepassword( 'N' );
+			$User->save();
+		} else {
+			$$variable{'error'} = 'You entered the wrong old password.<br/>';
+			$$variable{'Redirect'} = '/main/account/change_password.html';
+			return;
+		} # end if
 } # sub change_password
 
 sub login {
@@ -585,7 +593,7 @@ sub credit_application {
 		$info{'User'} = new openprint::User( $session{user_id} );
 
 		$_ = 'SELECT MAX(Id) FROM CreditApplications WHERE user_id=? AND company_id=?';
-		@info{'CreditAppIndex'} = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
+		($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );

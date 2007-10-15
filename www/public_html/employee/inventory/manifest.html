@@ -1,7 +1,7 @@
 <? eval ( 
 	$$variable{'pages'} = POSIX::ceil(@{$$variable{'Skids'}}/3);
 	$$variable{'page'} = 1;
-	my $Skid = new eprint::Skid( $$variable{'Skids'}[0] );
+	my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
 	$$variable{'total_quantity'} = $$Skid{'Paper'}{$$variable{'paper_id'}}*@{$$variable{'Skids'}};
 	$$variable{'FirstSkid'} = $$variable{'Skids'}[0];
 	$$variable{'LastSkid'} = $$variable{'Skids'}[@{$$variable{'Skids'}}-1];
@@ -13,7 +13,7 @@
 	<span style="float:left;">Received:
 	<? echo ( 
 		$$variable{'page'} += 1;
-		my $Skid = new eprint::Skid( $$variable{'Skids'}[0] );
+		my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
 		Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time( $Skid->created_on() ) );
 
 		) ?>
@@ -21,8 +21,8 @@
 </p>
 <div style="border: 1px solid black; margin-bottom: 2px;">
 <? echo ( 
-	my $Paper = new eprint::Paper( $$variable{'paper_id'} );
-	my $Skid = new eprint::Skid( $$variable{'Skids'}[0] );
+	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
+	my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
 	my $html;
 	$html .= '<table style="width:100%; height: 86px; table-layout:fixed;">';
 	$html .= '<tr><td width="40%" rowspan="2">';
@@ -65,11 +65,11 @@
 ) ?>
 </p>
 <? echo (
-	my $Paper = new eprint::Paper( $$variable{'paper_id'} );
+	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
 	my $html = '';
 	my @skids = splice @{$$variable{'Skids'}}, 0, 3;
 	foreach my $skid_id ( @skids ) {
-		my $Skid = new eprint::Skid( $skid_id );
+		my $Skid = new openprint::Skid( $skid_id );
 		$html .= '<table style="width:100%;">';
 		$html .= qq`<tr><td width="17%"><b>Skid #:</b></td><td width="33%">$skid_id</td>`;
 		$html .= qq`<td width="50%" rowspan="2" align="right"><img src="/barcode.png?code=I$skid_id+&amp;NoText=1&amp;Height=50"/></td></tr>`;

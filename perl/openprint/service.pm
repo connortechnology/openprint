@@ -40,7 +40,7 @@ sub init_cache {
 } # end sub init_cache
 
 sub get_index_by_id {
-	my ( $log, $dbh, $id ) = @_;
+	my ( $id ) = @_;
 	if ( ! %cache_index_by_id ) {
 		%cache_index_by_id = map { $_->name(), $_->id() } openprint::Service::find();
 	} # end if
@@ -67,7 +67,7 @@ sub get_price {
 sub get_price_object {
 	my ( $log, $dbh, $variable, $service, $range, $equipment ) = @_;
 
-	my $index = get_index_by_id( $log, $dbh, $service );
+	my $index = get_index_by_id( $service );
 	return if ! $index;
 
 	if ( ref $equipment eq 'openprint::Equipment' ) {
@@ -97,10 +97,9 @@ sub save_service {
 
 	my $service_type = $$specs{'ServiceType'};
 	if ( ! $service_type ) {
-		$log->warn( "No serviceType for service $service_index.  Trying to recover" );
 		$service_type = $openprint::param{'ServiceType'};
 	} # end if
-	if ( ! $service_type ) {
+	if ( (! $service_type) and (! $$specs{'ProjectType'}) ) {
 		$log->error( "No serviceType in params for service $service_index.  Trying to recover" );
 	} # end if
 	if ( sets::isin( $service_type, ['SaddleStitching', 'LoopStitching'] ) ) {
@@ -114,15 +113,15 @@ sub save_service {
 	} elsif ( sets::isin( $service_type, ( 'PhotoRetouching', 'ColourCorrection', 'PhotoPlacement', 'CDBurning' ) ) ) {
 		$service_type = 'Prepress';
 	} # end if
-eval ( 'require openprint::Estimating::'.$service_type.';' );
+	eval ( 'require openprint::Estimating::'.$service_type.';' );
 	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs )');
 	$log->error($@) if $@;
 	# make this fast by doing it in one transaction
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $key (@variables) {
-$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+#$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+#$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		} elsif ( ! exists $openprint::param{$key} ) {
 			delete_service_spec( $project_index, $service_index, $key );
 		} else {
@@ -352,6 +351,7 @@ sub auto_calculate {
 			} elsif ( sets::isin( $type, ['', 'AdditionalSignature'] ) ) {
 			} else {
 				eval "require openprint::Estimating::$type";
+				$openprint::log->error('Error requiring openAprint::Estimating::$type: ' . $@ ) if $@;
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $type );
 				$alert .= $$specs{'alert'};
 			} # end if
@@ -395,10 +395,10 @@ sub external_calc {
 	my %initial_specs = %specs;
 #blah
 	eval 'require openprint::Estimating::'.$service_type;
-		$log->error("Error in eval: $@") if $@;
+		$log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
 	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
-		$log->error("Error in eval: $@") if $@;
-	my @results;
+		$log->error("Error requiring openprint::Estimating::$service_type: in eval: $@") if $@;
+	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
 	@vars = keys %specs if ! @vars;
 
@@ -409,7 +409,7 @@ $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 
 	foreach my $key ( @vars ) {
 		if ( exists $specs{$key} ) {
-			if ( $specs{$key} ne $initial_specs{$key} ) {
+			if ( ( ! exists $initial_specs{$key} ) or ( $specs{$key} ne $initial_specs{$key} ) ) {
 				push @results, "$key~$specs{$key}";
 			} # end if
 		} # end if
@@ -443,8 +443,9 @@ sub internal_calc {
 	my $status;
 	my $starttime = time;
 	eval 'require openprint::Estimating::'.$service_type;
+	$log->error("Error in requiring openprint::Estiamting::$service_type ::calc: $@") if $@;
 	if ( ! eval '$status = openprint::Estimating::'.$service_type.'::calc( $log, $dbh, $variable, $project_index, $service_index, \%specs );' ) {
-		$log->error("Error in eval: $@");
+		$log->error("Error in openprint::Estiamting::$service_type ::calc: $@") if $@;
 	} # end if
 	$specs{'Status'} = $status;
 	my $elapsed = time - $starttime;
@@ -557,12 +558,13 @@ sub summary {
 			$side_two_coatings .= '+Varnish (Overall Gloss)' if $$specs{'chkVarnishOverallGlossSideTwo'};
 			$side_two_coatings .= '+Varnish (Overall Matte)' if $$specs{'chkVarnishOverallMatteSideTwo'};
 
-			return sprintf( qq{%s %s"x%s" %d%s/%d%s %s\n%s}, 
+			return sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s}, 
 					@$specs{'txtServiceDescription','txtWidth','txtHeight'}, 
 					scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideOne')), 
 					$side_one_coatings,
 					scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideTwo')),
 					$side_two_coatings,
+					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
 					$$specs{'rdbSpecificStock'} eq 'Y' ? 
 					join(',', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(',', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ) 
@@ -575,11 +577,11 @@ sub summary {
 		return openprint::Estimating::Packaging::summary($Project->id(), $service_id, $specs, $qty_index );
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['SaddleStitching','LoopStitching'] ) ) {
 		return openprint::Estimating::Stitching::summary($Project->id(), $service_id, $specs, $qty_index );
-	} else {
+	} elsif ( $$specs{'ServiceType'} ) {
 		eval('require openprint::Estimating::'.$$specs{'ServiceType'}.';' );
-	$openprint::log->warn("ERror requiring openprint::Estimating::$$specs{'ServiceType'}.'::summary: $@)") if $@;
+		$openprint::log->error("ERror requiring openprint::Estimating::$$specs{'ServiceType'}.'::summary: $@)") if $@;
 		my $summary = eval('openprint::Estimating::'.$$specs{'ServiceType'}.'::summary( $Project, $service_id, $specs, $qty_index );' );
-	$openprint::log->warn("ERror evalling openprint::Estimating::$$specs{'ServiceType'}.'::summary: $@)") if $@;
+	$openprint::log->error("ERror evalling openprint::Estimating::$$specs{'ServiceType'}.'::summary: $@)") if $@;
 		return $summary;
 	} # end if
 	return;

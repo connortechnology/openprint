@@ -74,10 +74,10 @@ sub save {
 	} # end foreach
 	
 	if ( ! $$self{'id'} ) {
-		@$self{'id'} = @sql{'id'} = sql::execute( undef, undef, q{SELECT nextval('Marketing_Category_id_seq')} );
-		sql::insert( undef, undef, 'Marketing_Categories', %sql );
+		($$self{'id'}) = ($sql{'id'}) = sql::execute( undef, undef, q{SELECT nextval('Marketing_Category_id_seq')} );
+		sql::insert( undef, undef, 'Marketing_Categories', \%sql );
 	} else {
-		sql::update( undef, undef, 'Marketing_Categories', "id=$$self{id}", %sql );
+		sql::update( undef, undef, 'Marketing_Categories', "id=$$self{id}", \%sql );
 	} # end if
 	$self->load();
 } # end sub save

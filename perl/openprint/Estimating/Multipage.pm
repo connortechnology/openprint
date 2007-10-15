@@ -130,7 +130,9 @@ sub calculate_signatures {
 
 	my $unspecified_spreads = 0;
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
-	my @signatures = sort $Project->signatures();
+	my @signatures = sort $Project->signatures('Interior Spreads');
+	push @signatures, sort $Project->signatures('Cover Spreads');
+	push @signatures, sort $Project->signatures('GateFolded Spreads');
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
@@ -232,7 +234,7 @@ $openprint::log->debug("after initial recalc");
 							or $$sig_specs{'txtSignatureSpreadQuantity3'} ) ) {
 					openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
 				} # end if
-			} elsif ( $unspecified_spreads > 0 ) {
+			} elsif ( ( $unspecified_spreads > 0 ) and ( $$sig_specs{'txtSignatureType'} ne 'Cover Spreads' ) ) {
 	# Need to add signatures
 				my $check_unspecified_spreads = $unspecified_spreads;
 				while ( $unspecified_spreads > 0 ) {
@@ -319,9 +321,9 @@ $openprint::log->debug("ADding signature");
 	$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 	my ( $sig_index ) = sql::execute( undef, undef, $_, $project_index );
 	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureIndex', ++$sig_index );
-	sql::end_transaction( $openprint::dbh, $ac );
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	# Releases the lock
+	$openprint::dbh->commit();
 	foreach my $key ( openprint::Estimating::Printing::variables() ) {
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 	} # end foreach

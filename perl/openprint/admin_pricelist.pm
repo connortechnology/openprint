@@ -141,7 +141,7 @@ sub edit {
 			my ( $prod_id, $equip_ids, @data ) = misc::trim( $csv->fields());
 			next if ! $prod_id;
 			
-			my $prod_index = openprint::service::get_index_by_id( $log, $dbh, $prod_id );
+			my $prod_index = openprint::service::get_index_by_id( $prod_id );
 			if ( $prod_index eq '' ) {
 				$error .= "No Service found for $prod_id<br>";
 				next;

@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/administrator/production/pricing.js"></script>
+	<script type="text/javascript" src="/administrator/production/pricing.js"></script>
 <script type="text/javascript">
 function mweight_to_gsm( form ) {
     var mweight;
@@ -50,11 +50,13 @@ function gsm_to_mweight( form ) {
 	
 </style>
 <div class="error"><?error?></div>
+<div class="information"><?information?></div>
 <form name="f1" method="post" action="paper.html?paper_id=<? echo ( $$variable{'Paper'}->id(); ) ?>">
 		<p class="buttons">
 			<? echo ( join('',
 			ssi::writeButton($log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='Prev';fmChange=1;fmCheck(f1);",'','<<'),
-			ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);",'','>>'),
+			ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';f1.submit();",'','>>'),
+			#ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);",'','>>'),
 			ssi::writeButton($log, $dbh, 'Add1','add.gif',"f1.action='paper.html';f1.btnFunction.value='';f1.submit();",'','Add New'),
 			ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 			ssi::writeButton($log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';f1.submit();",'','Copy'),

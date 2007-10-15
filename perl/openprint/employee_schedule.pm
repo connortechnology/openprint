@@ -16,7 +16,7 @@ sub add_missing_jobs_to_schedule {
 		$log->debug("Not add lost jobs due to Smart Scheduling being turned off.");
 		return;
 	} # end if
-	my @missing_jobs = sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM tbl_Projects WHERE strStatus='Approved' AND lngProjectIndex NOT IN (SELECT ProjectIndex FROM Schedule)} );
+	my @missing_jobs = sql::execute( $log, $dbh, q{SELECT Index FROM tbl_Projects WHERE strStatus='Approved' AND Index NOT IN (SELECT ProjectIndex FROM Schedule)} );
 	foreach my $project_id ( @missing_jobs ) {
 		my $Project = new openprint::Project( $project_id );
 		foreach my $signature_service_index ( $Project->signatures() ) {
@@ -145,7 +145,7 @@ sub insert {
 	my ( $log, $dbh, $project_index, $service_index, $equipment_id ) = @_;
 
 	my $ac = sql::start_transaction( $dbh );
-	my ( $start_time ) = sql::execute( $log, $dbh, q{SELECT MAX(StartTime+RunTime) FROM Schedule, tbl_Projects WHERE lngProjectIndex=ProjectIndex AND strStatus='Approved' AND Equipment_ID=?}, $equipment_id );
+	my ( $start_time ) = sql::execute( $log, $dbh, q{SELECT MAX(StartTime+RunTime) FROM Schedule, tbl_Projects WHERE Index=ProjectIndex AND strStatus='Approved' AND Equipment_ID=?}, $equipment_id );
 	( $start_time ) = sql::execute( $log, $dbh, 'SELECT NOW()' ) if ! $start_time;
 	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ServiceIndex=?}, $service_index );
 	my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $service_index );

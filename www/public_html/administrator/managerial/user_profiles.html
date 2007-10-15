@@ -3,10 +3,16 @@
 <h2>User Profiles</h2>
 </div>
 <script type="text/javascript">
-function keepCompany( what ){
-	var Company = what.ddmCustomer.selectedIndex;
-	clearForm(what);
-	what.ddmCustomer.selectedIndex = Company;
+function keepCompany( form ){
+	var Company = form.ddmCustomer.selectedIndex;
+	var Role = form.ddmUserRole.selectedIndex;
+
+	clearForm(form);
+	form.ddmCustomer.selectedIndex = Company;
+	form.ddmUserRole.selectedIndex= Role;
+	
+	form.company_id.selectedIndex = Company;
+
 }
 </script>
 Please select a company or user to obtain login information.<br/>
@@ -161,23 +167,27 @@ Please select a company or user to obtain login information.<br/>
 			</select>
 		</p>
 		</fieldset>
-		<? if ( $$variable{'Email'} =~ /point-one.com/ ) ?>
+		<? if ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<fieldset><legend>Vacation Auto-Responder Settings:</legend>
+			<p>
+				<label>Subject:</label>
+				<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
+			</p>
 			<p>
 				<label>Vacation Message:</label>
 				<textarea name="VacationMessage" rows="10"><?VacationMessage?></textarea>
 			</p>
 			<p>
 				<label>Vacation Status:</label>
-				<input type="radio" id="VacationStateY" name="VacationState" <?VacationStateY?> value="Y">
-				<label class="radio" for="VacationStateY">Enabled</label>
-				<input type="radio" id="VacationStateN" name="VacationState" <?VacationStateN?> value="N">
-				<label class="radio" for="VacationStateN">Disabled</label>
+				<input type="radio" id="VacationState1" name="VacationState" <? echo ( $$variable{'VacationState'} ? 'checked="checked"' : '' ) ?> value="1">
+				<label class="radio" for="VacationState1">Enabled</label>
+				<input type="radio" id="VacationState0" name="VacationState" <? echo ( (!$$variable{'VacationState'})? 'checked="checked"' : '' ) ?> value="0">
+				<label class="radio" for="VacationState0">Disabled</label>
 			</p>
 		</fieldset>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
-		<? endif ( $$variable{'Email'} =~ /point-one.com/ ) ?>
+		<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 		<fieldset><legend>Login Information:</legend> 
 			<p> 
 				<label>E-mail Address:</label>

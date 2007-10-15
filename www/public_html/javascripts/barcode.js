@@ -201,7 +201,11 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 83 || character == 115 ) { // S
-		submit_handler(element.form);
+		if ( typeof(submit_handler)==  'function' ) {
+			submit_handler(element.form);
+		} else {
+			element.form.submit();
+		} // end if
 		return false;
 	} else if ( character == 84 || character == 116 ) { // T
 		if ( element.form.Time ) {
@@ -247,7 +251,7 @@ function input_handler( element, e ) {
 			} // end if
 			return false;
 		} else if ( element.name == 'Equipment' ) {
-			var equipmentname = getDiv('EquipmentName');
+			var equipmentname = $('EquipmentName');
 			if ( equipmentname && Equipment ) {
 				equipmentname.innerHTML = Equipment[element.value+(character-48)];
 			} // end if
@@ -255,9 +259,9 @@ function input_handler( element, e ) {
 		} else if ( element.name == 'UserID' ) {
 			if ( Users ) {
 				if ( Users['E'+element.value] ) {
-				element.form.txtEmail.value = Users['E'+element.value];
+				element.form.email.value = Users['E'+element.value];
 				} else {
-				element.form.txtEmail.value = 'User not found: E'+element.value;
+				element.form.email.value = 'User not found: E'+element.value;
 				}
 			} // end if
 			return true;

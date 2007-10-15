@@ -269,7 +269,7 @@ sub create_order {
 			'dtmOrderDate',	 	'NOW()',
 			'strStatus',		'Incomplete',
 			'EmployeeIndex',	( $emp_id ? $emp_id : undef ),
-			'CurrencyIndex',	openprint::Currency::get_currenct()->id(),
+			'CurrencyIndex',	openprint::Currency::get_current()->id(),
 			);
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Created' );
 
@@ -401,10 +401,10 @@ sub information {
 		delete_unfinished_orders( $log, $dbh, $cookie );
 		if ( $order_id = $openprint::param{'OrderID'} ) {
 			sql::update( $log, $dbh, 'Orders', ['Index=?', $order_id], 'strStatus', 'Re-Opened', 'strSessionID', $cookie );
-			#foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
-				#sql::update( $log, $dbh, 'tbl_Projects', "Index=$project_index", 'strStatus', 'Unordered' );
+			foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
+				sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $order_id, $project_index], 'cursalesprice', undef );
 				#sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus NOT IN ('Complete','Proofs Out','Approved')", 'strStatus', 'calculated' );
-			#} # end foreach
+			} # end foreach
 			add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Re-Opened' );
 		} else {
 			$error = 'No OrderID given to Re-Open.';
@@ -534,7 +534,7 @@ sub store_order_info {
 		$$variable{$key} = $r->param($key);
 	} # end foreach
 
-	return sql::update( $log, $dbh, 'Orders', ['Index=?', $order_id],
+	my $rc = sql::update( $log, $dbh, 'Orders', ['Index=?', $order_id],
 		#'strTitle',				 $openprint::param{'txtTitle'},
 		'strCompanyName',			$$variable{'txtCompanyName'},
 		'strFirstName',				$$variable{'txtFirstName'},
@@ -556,6 +556,7 @@ sub store_order_info {
 
 	my $Order = new openprint::Order( $order_id );
 	$Order->load();
+	return $rc;
 } # end sub store_order_info
 
 sub get_invoice_to {
@@ -1053,7 +1054,7 @@ sub send_sales_order {
 	my $sales_person_email;
 	if ( $Order->salesrep_id() ) {
 		my $CSR = new openprint::User( $Order->salesrep_id() );
-		$sales_person_email = sprintf( "%s %s <%s>", $CSR->FirstName(), $CSR->LastName(), $CSR->Email() );
+		$sales_person_email = sprintf( '"%s" <%s>', $CSR->name(), $CSR->email() );
 	} else {
 		$sales_person_email = $openprint::config{'OrderingEmail'};
 	} # end if
@@ -1341,7 +1342,11 @@ sub cancel_order {
 	sql::update( $log, $dbh, 'Orders', ['Index=?',$order_id], 'strStatus', 'Cancelled' );
 	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
 	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
-		sql::update( $log, $dbh, 'tbl_Projects', ['Index=?', $project_index], 'strStatus', 'Unordered' );
+		my $Project = new openprint::Project( $project_index );
+		$Project->status('Unordered');
+		$Project->order_id( undef );
+		$Project->docket( undef );
+		$Project->save();
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );

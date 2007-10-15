@@ -146,6 +146,7 @@ sub delete {
 	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Payments WHERE Company_Id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM log WHERE company_id=?', $$self{'id'} );
 
 	foreach my $Paper ( openprint::Paper::find('owner_id'=>$$self{'id'} ) ) {
 		$Paper->owner_id( undef );
@@ -328,6 +329,11 @@ sub get_dropdown {
     my @array = map { $company{$names{$_}}, $names{$_} } sort keys %names;
     return ssi::make_drop_down( \@array, $selected );
 } # sub get_customer_dropdown
+
+sub CSR {
+	my $self = shift;
+	return new openprint::User( $$self{'salesrep_id'} );
+}
 
 1;
 __END__

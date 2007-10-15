@@ -64,6 +64,7 @@
 	) ?>
 	<? endif ( exists $$variable{'Companies'}{int($$variable{'Project'}->company_id())} ) ?>
 	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+	<? if ( $$variable{'ReportCount'} ) ?>
 	<tr class="totals">
 		<td>Counts:</td><td><?ReportCount?> Projects, <?OrderedCount?> Ordered</td>
 		<td>Percentage:</td><td><? echo ( sprintf('%.1f',($$variable{'OrderedCount'}/$$variable{'ReportCount'})*100 ); ) ?>%</td>
@@ -72,6 +73,7 @@
 		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Total2'} ); ) ?></td>
 		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Total3'} ); ) ?></td>
 	</tr>
+	<? endif ( $$variable{'ReportCount'} ) ?>
 </table>
 <? else ( @{$$variable{'Projects'}} ) ?>
 There were no projects matching your criteria.  Please try again.
