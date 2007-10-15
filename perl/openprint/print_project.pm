@@ -594,7 +594,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)2$/ ) {
+						if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -604,7 +604,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)3$/ ) {
+						if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -629,7 +629,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)1$/ ) {
+						if ( $key =~ /(.*)1$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -639,7 +639,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)3$/ ) {
+						if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -664,7 +664,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)1$/ ) {
+						if ( $key =~ /(.*)1$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -674,7 +674,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)2$/ ) {
+						if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
 						} # end if
 					} # end foreach
