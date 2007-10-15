@@ -200,13 +200,13 @@ $log->debug("Carton Status: $carton_status");
 	} # end if
 	@ups{'PickupType','ServiceType'} = @$specs{'ddmPickupType','ddmServiceType'};
 
-	$$specs{'ServiceTypeDiv'} = qq{<select name="ddmServiceType" onfocus="on(this.options[this.selectedIndex]);on(this);" onblur="off(this.options[this.selectedIndex]);off(this);" onChange="calc(this.form.name);"><option value=""> Select </option>};
+	$$specs{'ServiceTypeDiv'} = qq{<select name="ddmServiceType" onchange="calc(this.form.name);"><option value=""> Select </option>};
 	foreach my $service ( keys %services ) {
 		$$specs{'ServiceTypeDiv'} .= qq{<option value="$service"} . ( $$specs{'ddmServiceType'} == $service ? ' selected' : '' ) .'>'.ups::get_service_name( $service ) . '</option>';
 	} # end foreach
 	$$specs{'ServiceTypeDiv'} .= '</select>';
 
-	$$specs{'PickupTypeDiv'} = qq{<select name="ddmPickupType" onfocus="on(this.options[this.selectedIndex]);on(this);" onblur="off(this.options[this.selectedIndex]);off(this);" onChange="calc(this.form.name);"><option value=""> Select </option>};
+	$$specs{'PickupTypeDiv'} = qq{<select name="ddmPickupType" onchange="calc(this.form.name);"><option value=""> Select </option>};
 	foreach my $pickup ( ups::get_pickup_types() ) {
 		$$specs{'PickupTypeDiv'} .= sprintf('<option value="%s"%s>%s</option>',ups::get_pickup_type( $pickup ), $$specs{'ddmPickupType'} == ups::get_pickup_type($pickup) ? ' selected' : '', $pickup );
 	} # end while
