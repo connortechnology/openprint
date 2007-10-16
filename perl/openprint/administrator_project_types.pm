@@ -184,7 +184,7 @@ sub templates {
 			if ( ! $openprint::param{"type$index"} ) {
 				sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE id=?}, $index );
 			} else {
-				sql::update( $log, $dbh, 'ProjectTemplate', "id=$index", 
+				sql::update( $log, $dbh, 'ProjectTemplate', ['id=?', $index], 
 					'type',					$param{"type$index"},
 					'description',			$param{"description$index"},
 					'dblFinishedWidth', 	$param{"finishedwidth$index"},
