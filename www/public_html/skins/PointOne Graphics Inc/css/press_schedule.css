@@ -73,6 +73,7 @@ div.row {
 	}
 	div.PressColumn li.red {
 		background-color: #FF0000;
+		color: black;
 	}
 	.When {
 		background-color: #ffb4da;

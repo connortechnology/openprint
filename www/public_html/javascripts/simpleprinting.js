@@ -1,4 +1,4 @@
-function FoldType_onChange( select ) {
+function FoldType_onchange( select ) {
 	var foldtype = get_ddm_value( select );
 	var image = document.images['FoldType'];
 	if ( image ) {
@@ -12,9 +12,9 @@ function FoldType_onChange( select ) {
 	remove_div('OrderButton');
 } // end function
 
-function cbFoldType_onChange( results ) {
+function cbFoldType_onchange( results ) {
 	//var select = jsrs_cbFillDDM( results, 'Custom' );
-	//Dimensions_onChange( select );
+	//Dimensions_onchange( select );
 }
 
 function calc( formName ) {

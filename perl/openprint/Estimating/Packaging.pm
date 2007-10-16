@@ -82,14 +82,14 @@ sub calc {
 		my $qty = $$specs{'txtPressSheetComboItems'} ? $$specs{'txtQuantity'.$qty_index} * $$specs{'txtPressSheetComboItems'} : $$specs{'txtQuantity'.$qty_index};
 		$qty = $$specs{'txtItemsPerPackage'} ? ceil( $qty/$$specs{'txtItemsPerPackage'}) : 0;
 
-		$$specs{'hdnBreakdown'.$qty_index} .= "Minimum Charge: $minCharge\n";
-		$$specs{'hdnBreakdown'.$qty_index} .= "Makeready: $makeReady\n";
+		$$specs{'hdnBreakdown'.$qty_index} .= "Minimum Charge: $minCharge<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} .= "Makeready: $makeReady<br/>";
 		my $price = 0;
 		my $unitPrice = 0;
 		if ( $qty ) {
 			$unitPrice = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}, $qty, undef );
 			$price = $unitPrice * $qty + $makeReady;
-			$$specs{'hdnBreakdown'.$qty_index} .= "Pricing for quantity $qty_index: $qty $$specs{'ServiceType'} * $unitPrice = $price\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Pricing for quantity $qty_index: $qty $$specs{'ServiceType'} * $unitPrice = $price<br/>";
 			if ( $$specs{'rdbCardboardBacking'} eq 'Y' ) {
 				my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
 
@@ -102,7 +102,7 @@ sub calc {
 					} elsif ( $CardboardPrice{'units'} eq 'Per Pad' ) {
 						$CardboardPrice{'Total'} = $CardboardPrice{'Price'};
 					} # end if
-					$$specs{'hdnBreakdown'.$qty_index} .= "\tCardboard Price: $CardboardPrice{'Price'} $CardboardPrice{'units'} * $$printing_specs{'txtFinalWidth'} x $$printing_specs{'txtFinalHeight'} = $CardboardPrice{'Total'} per package\n";
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%.2f %s * %s x %s = $%.2f per package = %.2f total<br/>',@CardboardPrice{'Price','units'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'}, $CardboardPrice{'Total'}, $CardboardPrice{'Total'}*$qty );
 					$price += $CardboardPrice{'Total'} * $qty;
 				} # end if
 			} # end if

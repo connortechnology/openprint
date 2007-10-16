@@ -335,8 +335,6 @@ sub multipage_signatures {
 		} # end foreach
 	} # end if
 
-	# first we should confirm that our project has a bindery service.
-	my $bindery_service = get_book_type( $project_index );
 
 # On each call to this, we save, then check to see if there are any unspecified signatures
 
@@ -415,9 +413,18 @@ sub multipage_signatures {
 		} # end foreach spec
 	} # end foreach
 
+	my %services = $Project->get_services();
+	my $old_bindery_type = get_book_type( $project_index );
+$openprint::log->debug("Old: $old_bindery_type, New: $$param{'rdbTemplateType'}");
+	if ( ($$param{'rdbTemplateType'} ne $old_bindery_type) and $services{$old_bindery_type} ) {
+$openprint::log->debug("deleting Old: $old_bindery_type, New: $$param{'rdbTemplateType'}");
+		foreach ( @{$services{$old_bindery_type}} ) {
+			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+		} # end foreach
+		delete $services{$old_bindery_type};
+	} # end if
 	my $status = openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 
-	my %services = $Project->get_services();
 	if ( $$param{'rdbTemplateType'} eq 'NoBindery' ) {
 		foreach ( openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' ) ) {
 			if ( $_ ne 'NoBindery' ) {
@@ -451,12 +458,12 @@ sub multipage_signatures {
 sub get_book_type {
 	my ( $Project ) = @_;
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
 # the way we cut down the book depends on how it is being bound, so we need this for the signature information.
 	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire, Cerlox','NoBindery' ) {
 		
-		if ( $services{$service} ) {
+		if ( $$services{$service} ) {
 			return $service;
 		} # end if
 	} # end foreach
@@ -517,6 +524,10 @@ sub publication_pages {
 			$$variable{$spec.$type} = $$sig_specs{$spec};
 		} # end foreach spec
 	} # end foreach ss_id
+
+	if ( ! $$variable{'rdbTemplateType'} ) {
+		$$variable{'rdbTemplateType'} = get_book_type( $project_index );
+	} # end if
 
 } # end sub publication_pages
 

@@ -293,7 +293,7 @@ sub auto_calculate {
 	} # end if
 
 	if ( openprint::Estimating::Stitching::neccessary( $log, $dbh, $project_index ) ) {
-		if ( ! $services{'SaddleStitching'} ) {
+		if ( ! ( $services{'SaddleStitching'} or $services{'LoopStitching'} ) ) {
 			push @{$services{'SaddleStitching'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'SaddleStitching' );
 		} # end if
 	} # end if

@@ -6,9 +6,11 @@
 }
 .InstantPricing IMG {
 	border: 1px solid black;
-	width: 150px;
+	height: 130px;
 }
 .InstantPricing IMG#FoldType {
+	width: 130px;
+	height: 130px;
 	display: none;
 }
 .InstantPricing select {

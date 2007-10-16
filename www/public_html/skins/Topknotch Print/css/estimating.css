@@ -9,6 +9,8 @@
 	width: 150px;
 }
 .InstantPricing IMG#FoldType {
+	width: 130px;
+	height: 130px;
 	display: none;
 }
 .InstantPricing select {
