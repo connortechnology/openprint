@@ -632,7 +632,6 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 # Paper is now an array ref
 
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
-	$project{'DieCutting'} = $$services{'DieCutting'};
 	if ( ! $$services{'NoBindery'} ) {
 		if ( $$services{'DieCutting'} ) {
 			$project{'NeedFolding'} = 0;
@@ -650,6 +649,8 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 	} # end if
 	$project{'HasFolding'} = $$services{'Folding'} ? $$services{'Folding'}[0] : 0;
 	$project{'HasScoring'} = $$services{'Scoring'} ? $$services{'Scoring'}[0] : 0;
+	$project{'HasPerforating'} = $$services{'Perforating'} ? $$services{'Perforating'}[0] : 0;
+	$project{'HasDieCutting'} = $$services{'DieCutting'} ? $$services{'DieCutting'}[0] : 0;
 	$project{'HasCutting'} = $$services{'Cutting'} ? $$services{'Cutting'}[0] : 0;
 	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
 	@$specs{'NeedFolding','NeedCutting','NeedScoring'} = @project{'NeedFolding','NeedCutting','NeedScoring'};
@@ -1048,6 +1049,7 @@ last;
 
 								if ( $imps{$imp->imposition().$imp->runstyle()} ) {
 									for ( my $j = 0; $j < @{$imps{$imp->imposition().$imp->runstyle()}}; $j += 1 ) {
+
 										my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
 										my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 										my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
@@ -1056,8 +1058,11 @@ last;
 												splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 											} # end if
 											$add = 1;
-										} else {
-											if ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
+										} else { # same or smaller area
+											if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
+												splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
+												$add = 1;
+											} elsif ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
 												$add = 1;
 											} # end if
 										} # end if
@@ -1087,6 +1092,9 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 				} # end if
 
 $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' before convert:' . @impositions);
+foreach my $imp ( @impositions ) {
+$imp->display();
+}
 				if ( $project{'SpreadLayout'} > 0 ) {
 					$openprint::log->debug("Converting Impositions spread Layout: $project{'SpreadLayout'}") if $debug;
 					@impositions = openprint::imposition::convert_impositions( $project{'SpreadLayout'}, $$specs{'txtSpreadSize'}, \@impositions );
