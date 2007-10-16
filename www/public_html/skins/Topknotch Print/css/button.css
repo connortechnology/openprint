@@ -32,9 +32,11 @@
 		color: #ffffff;
 display: -moz-inline-box;
 display: inline-block;
-margin-right: 5px;
+margin: 0px 0px 0px 5px;
 outline: 0;
 cursor: default;
+height: 20px;
+padding: 0px;
 	}
 	a.buttonImageOn {
 		font-family: Arial, Helvetica, sans-serif;
@@ -43,7 +45,7 @@ cursor: default;
 		font-size: 11px;
 display: -moz-inline-box;
 display: inline-block;
-margin-right: 5px;
+margin: 0px 0px 0px 5px;
 outline: 0;
 cursor: default;
 	}
@@ -83,6 +85,7 @@ background: url(/images/buttons/right.gif) no-repeat;
 width: 11px;
 height: 20px;
 cursor: default;
+margin:0px;
 }
 a.buttonImageOff .c {
 background: url(/images/buttons/center.gif) repeat-x top;
@@ -92,8 +95,9 @@ height: 17px;
 font-size: 11px;
 font-weight: bold;
 color: #002260;
-padding-top: 3px;
+padding: 3px 0px 0px 0px;
 cursor: default;
+vertical-align: top;
 }
 
 
@@ -123,4 +127,5 @@ font-weight: bold;
 padding-top: 3px;
 color: #ffffff;
 cursor: default;
+vertical-align: top;
 }
