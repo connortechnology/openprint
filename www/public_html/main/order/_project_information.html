@@ -17,7 +17,7 @@
 	<br class="spacer"/>
 	<p>
 		<label>Reference:</label>
-		<textarea name="Reference<?ProjectIndex?>" rows="10"><? hecho ( $$variable{'Project'}->reference() ) ?></textarea>
+		<textarea name="Reference<?ProjectIndex?>" rows="10"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
 	</p>
 <? if ( @{$$variable{'Quantities'}} > 1 ) ?>
 <!--#include virtual="_quantity_select.html"-->
