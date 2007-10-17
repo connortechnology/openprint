@@ -100,7 +100,7 @@
 <? endif ( $$variable{'ProjectTypeID'} eq 'Letterhead' ) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'Scratch/WritingPads' or $$variable{'ProjectType'} eq 'ScratchPads' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
-<p>
+<p id="NotepadPages">
     <label># of pages per pad:</label>
     <input type="text" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
 </p>

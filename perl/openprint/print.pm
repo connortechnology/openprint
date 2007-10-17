@@ -415,9 +415,7 @@ sub multipage_signatures {
 
 	my %services = $Project->get_services();
 	my $old_bindery_type = get_book_type( $project_index );
-$openprint::log->debug("Old: $old_bindery_type, New: $$param{'rdbTemplateType'}");
-	if ( ($$param{'rdbTemplateType'} ne $old_bindery_type) and $services{$old_bindery_type} ) {
-$openprint::log->debug("deleting Old: $old_bindery_type, New: $$param{'rdbTemplateType'}");
+	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $services{$old_bindery_type} ) {
 		foreach ( @{$services{$old_bindery_type}} ) {
 			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 		} # end foreach

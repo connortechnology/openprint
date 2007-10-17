@@ -233,3 +233,10 @@ span.SpotColour label, span.Coverages label {
     padding: 0px 0px 0px 2px;
 }
 
+#NotepadPages, p#NotepadPages label {
+	font-weight: bold;
+	color: red;
+}
+#hdnBreakdown1 b, #hdnBreakdown2 b, #hdnBreakdown3 b {
+	color: red;
+}

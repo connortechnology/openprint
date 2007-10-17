@@ -30,6 +30,8 @@ my @variables = (
 	'rdbSuppliedDie','txtDieCutPunches',
 	'rdbDieCutting',
 	'txtPrice1','txtPrice2','txtPrice3',
+	'DiePrice1','DiePrice2','DiePrice3',
+	'OverrideDiePrice',
 );
 
 sub variables {
@@ -53,7 +55,7 @@ sub calc_price {
 		%MakeReady = openprint::service::get_price_object( $log, $dbh, $variable, 'DieCuttingMakeReady' ,'', $Equipment);
 	} # end if
 	$Total{'MakeReady'} = \%MakeReady;
-	$$specs{'hdnBreakdown'.$qty_index} .= "\tMakeReady: \$" . sprintf( '%.2f', $MakeReady{'Price'})."\n";
+	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $MakeReady{'Price'});
 	$Total{'Total'} += $MakeReady{'Price'};
 
 	my %DiePrice;
@@ -101,8 +103,11 @@ sub calc_price {
 	} #end if supplied die
 
 	$Total{'DiePrice'} = \%DiePrice;
+	if ( $$specs{'OverrideDiePrice'} eq 'Y' ) {
+		$DiePrice{'Price'} = $$specs{'DiePrice'.$qty_index};
+	} # end if
 	$Total{'Total'} += $DiePrice{'Price'};
-	$$specs{'hdnBreakdown'.$qty_index} .= "\tDiePrice: \$". sprintf( '%.2f', $DiePrice{'Price'})."\n";
+	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $DiePrice{'Price'});
 #$$specs{'hdnBreakdown'.$qty_index} .= 'Materials: $' . sprintf( '%.2f', $price{'MaterialPrice'}->{'Price'})."\n";
 
 	# Why 1.28, overs I assume
@@ -114,7 +119,7 @@ sub calc_price {
 	} # end if
 
 	$ServicePrice{'Total'} = $impressions * $ServicePrice{'Price'} / 1000;
-	$$specs{'hdnBreakdown'.$qty_index} .= "\tService: \$". sprintf('%.2f %s * %d impressions = %.2f', @ServicePrice{'Price','units'}, $impressions, $ServicePrice{'Total'})."\n";
+	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%.2f %s * %d impressions = $%.2f<br/>', @ServicePrice{'Price','units'}, $impressions, $ServicePrice{'Total'});
 	$Total{'ServicePrice'} = \%ServicePrice;
 	$Total{'Total'} += $ServicePrice{'Total'};
 # the extra services are priced by qty, not impressions.
@@ -145,7 +150,7 @@ sub calc_price {
 
 	$Total{'txtPrice'} = $Total{'Total'};
 	$Total{'txtUnitPrice'} = $Total{'Total'} / $$specs{"txtQuantity$qty_index"};
-	$$specs{'hdnBreakdown'.$qty_index} .= "\tTotal: \$". sprintf('%.2f', $Total{'txtPrice'})."\n";
+	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f<br/>', $Total{'txtPrice'});
     return %Total;
 
 } # end sub calc_price
@@ -206,11 +211,11 @@ sub calc {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		next if ! $qty;
-		$$specs{'hdnBreakdown'.$qty_index} = '';
+		$$specs{'hdnBreakdown'.$qty_index} = 'Quantity: ' . $$specs{"txtQuantity$qty_index"} . '<br/>';
 
 		my $totalPrice = 0;
 		my $totalUnitPrice = 0;
-
+		my $totalDiePrice = 0;
         foreach my $signature_service_index ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 
@@ -270,19 +275,18 @@ sub calc {
 			} # end if
 
 			foreach my $Equipment ( @equipment ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "\tEquipment: ".$Equipment->strid()."\n";
+				$$specs{'hdnBreakdown'.$qty_index} .= "Equipment: ".$Equipment->strid()."<br/>";
 
 				foreach my $imposition ( @impositions ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "\tImposition: $$imposition{'imposition'}\n";
+					$$specs{'hdnBreakdown'.$qty_index} .= "&nbsp;Imposition: $$imposition{'imposition'}";
 					my $width = $$specs{"txtWidth-$$sig_specs{'SignatureIndex'}"} * $$imposition{$imposition->image_orientation() eq 'Vertical' ? 'columns' : 'rows'};
 					my $height = $$specs{"txtHeight-$$sig_specs{'SignatureIndex'}"} * $$imposition{$imposition->image_orientation() eq 'Vertical' ? 'rows' : 'columns'};
 #$log->debug(qq` $$imposition{'Orientation'} : $$specs{"txtWidth-$printing_specs{'SignatureIndex'}"}*$$imposition{'Rows'}  x $$specs{"txtHeight-$printing_specs{'SignatureIndex'}"}*$$imposition{'Cols'} ` );
 					if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= "\tDoesn't fit. $_\n";
+						$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
 						next;
 					} # end if
 
-					$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"}. ", Equipment: " . $Equipment->strid().", Imposition: $$imposition{'imposition'}\n";
 					my %price = calc_price($log, $dbh, $variable, $specs, $Equipment, $qty_index, $imposition->imposition());
 					if ( ! $bestPrice{'txtPrice'} or $price{'txtPrice'} < $bestPrice{'txtPrice'} ) {
 						$bestEquipment = $Equipment;
@@ -306,9 +310,12 @@ sub calc {
 				} # end if
 				$totalPrice += $bestPrice{'txtPrice'};
 				$totalUnitPrice += $bestPrice{'txtUnitPrice'};
+				$totalDiePrice += $bestPrice{'DiePrice'}{'Price'} if $bestPrice{'DiePrice'};
 			} # end if
 		} # end foreach Signature
 
+	
+		$$specs{"DiePrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalDiePrice );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $totalUnitPrice );
 

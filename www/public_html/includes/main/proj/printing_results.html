@@ -177,7 +177,13 @@
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 <? else ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
-    <input type="text" name="rdbPlateType<?QTYIndex?>" value="CTP" />
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+    <input type="hidden" name="rdbPlateType<?QTYIndex?>" value="CTP" />
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? endif ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
     <p>
         <label><? echo ( ssi::writeTip( 'Plate' ); ) ?> Quantity:</label>
@@ -220,6 +226,13 @@
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <input type="hidden" name="rdbGrainDirection<?QTYIndex?>" value="" />
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 <p>
     <label>Grain direction:</label>

@@ -518,17 +518,18 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 
 			# In hours
 			my $runTime = sprintf( '%.4f', $$specs{"txtQuantity$qty_index"} / $runSpeed );
+			$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('Folds: %d, QTY: %d, Runspeed: %d/Hr = %.2f hours', $folds{$fold}, $$specs{'txtQuantity'.$qty_index}, $runSpeed, $runTime) . "<br/>";
 			if ( lc $servicePrice{'units'} eq 'per hour' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime;
+				$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('%s %s: Setup: %.2f, Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f', $folds{$fold}, $fold, $setupPrice{'Price'}, @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} ) . "<br/>";
 			} elsif ( sets::isin( lc $servicePrice{'units'}, ['per m', 'per 1000'] ) ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * ( $folds{$fold}*$$specs{"txtQuantity$qty_index"} / 1000 );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%s %s: Setup: %.2f, Run: $%.2f%s * %d = $%.2f', $folds{$fold}, $fold, $setupPrice{'Price'}, @servicePrice{'Price','units'}, $folds{$fold}*$$specs{"txtQuantity$qty_index"}, $servicePrice{'Total'} ) . "<br/>";
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= qq`No Units ($servicePrice{'units'}) given for $fold on `.$Equipment->name().",<br/>";
 				next;
 			} # end if
 			
-			$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('Folds: %d, QTY: %d, Runspeed: %d/Hr = %.2f hours', $folds{$fold}, $$specs{'txtQuantity'.$qty_index}, $runSpeed, $runTime) . "<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('%s %s: Setup: %.2f, Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f', $folds{$fold}, $fold, $setupPrice{'Price'}, @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} ) . "<br/>";
 			$totalPrice += $servicePrice{'Total'};
 			$totalTime += $runTime * 3600;
 			if ( defined $bestPrice and $totalPrice > $bestPrice ) {

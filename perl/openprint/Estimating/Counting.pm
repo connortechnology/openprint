@@ -39,6 +39,8 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+
 	my $makeReadyPrice = openprint::service::get_price( $log, $dbh, $variable, 'CountingMakeReady', undef, undef );
 	my $minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'CountingMinimumCharge', undef, undef );
 
@@ -46,22 +48,30 @@ sub calc {
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
-		$$specs{'hdnBreakdown'.$qty_index} = '';
-		$$specs{'hdnBreakdown'.$qty_index}  .= 'MakeReady: ' . sprintf( '%.2f', $makeReadyPrice ) . "\n";
-		$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: ' . sprintf( '%.2f', $minimumCharge ) . "\n";
+		my $qty = $$specs{"txtQuantity$qty_index"};
 
-		my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Counting', $$specs{"txtQuantity$qty_index"}, undef );
+		if ( $$services{''} ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+			$qty *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
+		} # end if
+
+		$$specs{'hdnBreakdown'.$qty_index} = '';
+		$$specs{'hdnBreakdown'.$qty_index}  .= 'MakeReady: ' . sprintf( '%.2f', $makeReadyPrice ) . '<br/>';
+		$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: ' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
+
+		my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Counting', $qty, undef );
 		if ( sets::isin( $ServicePrice{'units'}, ['Per M', 'Per 1000'] ) ) {
-			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $$specs{"txtQuantity$qty_index"} / 1000;
+			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServiceCharge: $%.2f%s * %d=$%.2f<br/>' , @ServicePrice{'Price','units'}, $qty, $ServicePrice{'Total'} );
 		} else {
-			$log->error('Unknown units for Counting service price');
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Unknown units for Counting service price $%.2f%s<br/>', @ServicePrice{'Price','units'} );
 		} # end if
 		my $price = $makeReadyPrice + $ServicePrice{'Total'};
 		if ( $minimumCharge > 0 and $price < $minimumCharge ) {
 			$price = $minimumCharge;
 		} # end if
 
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $price / $$specs{"txtQuantity$qty_index"} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $price / $qty );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 	} # end foreach
 	return $$specs{'Status'} = 'calculated';

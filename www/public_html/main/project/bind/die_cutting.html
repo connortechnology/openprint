@@ -1,4 +1,11 @@
 <script type="text/javascript" src="/javascripts/service.js"></script>
+<? eval (
+    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+    $$variable{'Columns'} = 'Three';
+    } else {
+    $$variable{'Columns'} = 'Two';
+    } # end if
+) ?>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/required_fields.html"-->
@@ -10,31 +17,41 @@
 		<? endif ( $$variable{'ShowPresentationFolderDieCutting'} ) ?>
 		</fieldset>
 
+		<fieldset><legend>Results</legend>
+		<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
+		<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,26; ) ?>
+			<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
+			<!--#include virtual="/includes/main/proj/signature_equipment.html"-->
+		<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,26; ) ?>
+<p id="DiePrice">
+	<label><b>Die Price:</b></label>
 
-<!-- The rest is done for each qty -->
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-    <hr/>
-    <div class="row"><b>The following results are for Quantity <?QTYIndex?> (<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>)</b></div>
-<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
-<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,26; ) ?>
-		<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
-        <!--#include virtual="/includes/main/proj/signature_equipment.html"-->
-<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,26; ) ?>
-        <!--#include virtual="/includes/main/proj/prices.html"-->
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<!-- End of Results -->
+		<input type="checkbox" id="OverridePrice" name="OverrideDiePrice" value="Y" <? echo ( $$variable{'OverrideDiePrice'} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if ( ! this.checked ) { calc(this.form.name); }"/>
+		<label class="radio" for="OverrideDiePrice">Override</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+		$<input type="text" name="DiePrice<?QTYIndex?>" value="<? echo ( $$variable{'DiePrice'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
+		<b><?CurrencyName?></b>
+	</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+			<!--#include virtual="/includes/main/proj/unitprices.html"-->
+			<!--#include virtual="/includes/main/proj/serviceprices.html"-->
+		</fieldset>
+		<hr/>
         <!--#include virtual="/includes/main/proj/add_to_project.html"-->
         <input type="hidden" name="btnFunction" value="Save Service"/>
         <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
         <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
         <input type="hidden" name="ContinueProject" value="Y" />
         <input type="hidden" name="ServiceType" value="<?ServiceType?>" />
-        <input type="hidden" name="hdnBreakdown1" />
-        <input type="hidden" name="hdnBreakdown2" />
-        <input type="hidden" name="hdnBreakdown3" />
+		<div id="hdnBreakdown1" style="display: none;"></div>
+		<div id="hdnBreakdown2" style="display: none;"></div>
+		<div id="hdnBreakdown3" style="display: none;"></div>
+		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>
