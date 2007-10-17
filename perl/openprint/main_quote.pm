@@ -229,8 +229,7 @@ $openprint::log->debug( join(',', @$variable{'ByCompanyName', 'ByAddress1', 'ByA
 	} # end if
 
 	if ( $openprint::session{'user_id'} ) {
-		$$variable{'ddmUsersOptions'} = ssi::fill_drop_down( $log, $dbh, "SELECT Index, strFirstName || ' ' || strLastName FROM Users WHERE CompanyIndex=$
-				openprint::session{'company_id'} ORDER BY lower(strLastName)" );
+		$$variable{'ddmUsersOptions'} = ssi::fill_drop_down( $log, $dbh, "SELECT Index, strFirstName || ' ' || strLastName FROM Users WHERE CompanyIndex=$openprint::session{'company_id'} ORDER BY lower(strLastName)" );
 	} # end if
 } # end sub information
 
