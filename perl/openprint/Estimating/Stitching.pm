@@ -48,6 +48,9 @@ my %variables = (
 		'txtSignatureQty20Page-1'=>['save','output'], 'txtSignatureQty20Page-2'=>['save','output'], 'txtSignatureQty20Page-3'=>['save','output'],
 		'txtSignatureQty24Page-1'=>['save','output'], 'txtSignatureQty24Page-2'=>['save','output'], 'txtSignatureQty24Page-3'=>['save','output'],
 		'txtSignatureQty32Page-1'=>['save','output'], 'txtSignatureQty32Page-2'=>['save','output'], 'txtSignatureQty32Page-3'=>['save','output'],
+		'txtSignatureQty36Page-1'=>['save','output'], 'txtSignatureQty36Page-2'=>['save','output'], 'txtSignatureQty36Page-3'=>['save','output'],
+		'txtSignatureQty40Page-1'=>['save','output'], 'txtSignatureQty40Page-2'=>['save','output'], 'txtSignatureQty40Page-3'=>['save','output'],
+		'txtSignatureQty48Page-1'=>['save','output'], 'txtSignatureQty48Page-2'=>['save','output'], 'txtSignatureQty48Page-3'=>['save','output'],
 		);
 sub variables {
 	my ( $p_id, $s_id, $specs ) = @_;
@@ -214,7 +217,7 @@ sub calc {
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
 		next if ! $$specs{'txtQuantity'.$qty_index};
-		foreach my $pages ( 4, 8, 12, 16, 20, 24, 32 ) {
+		foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
 			$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
 		} # end foreach
 		$$specs{"txtPockets$qty_index"} = 0;

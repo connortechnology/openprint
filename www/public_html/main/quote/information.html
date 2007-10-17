@@ -20,13 +20,13 @@ For&quot; fields blank.<br/>
 			</p>
 			<p> 
 				<label>&nbsp;Salutation:</label>
-				<input type="radio" id="BySalutationMr." name="BySalutation" value="Mr." <? echo ( 'checked' if $$variable{'BySalutation'} eq 'Mr.' ) ?> />
+				<input type="radio" id="BySalutationMr." name="BySalutation" value="Mr." <? echo ( $$variable{'BySalutation'} eq 'Mr.' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="BySalutationMr."/>Mr.</label>
-				<input type="radio" id="BySalutationMrs." name="BySalutation" value="Mrs" <? echo ( 'checked' if $$variable{'BySalutation'} eq 'Mrs.' ) ?> />
+				<input type="radio" id="BySalutationMrs." name="BySalutation" value="Mrs" <? echo ( $$variable{'BySalutation'} eq 'Mrs.' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="BySalutationMrs."/>Mrs.</label>
-				<input type="radio" id="BySalutationMs." name="BySalutation" value="Ms." <? echo ( 'checked' if $$variable{'BySalutation'} eq 'Ms.' ) ?> />
+				<input type="radio" id="BySalutationMs." name="BySalutation" value="Ms." <? echo ( $$variable{'BySalutation'} eq 'Ms.' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="BySalutationMs."/>Ms.</label>
-				<input type="radio" id="BySalutationMiss" name="BySalutation" value="Miss" <? echo ( 'checked' if $$variable{'BySalutation'} eq 'Miss' ) ?> />
+				<input type="radio" id="BySalutationMiss" name="BySalutation" value="Miss" <? echo ( $$variable{'BySalutation'} eq 'Miss' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="BySalutationMiss"/>Miss</label>
 			</p>
 			<p> 
@@ -111,13 +111,13 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 			</p>
 			<p> 
 				<label>&nbsp;Salutation:</label>
-				<input type="radio" id="ForSalutationMr." name="ForSalutation" value="Mr." <? echo ( 'checked' if $$variable{'BySalutation'} eq 'Mr.' ) ?> />
+				<input type="radio" id="ForSalutationMr." name="ForSalutation" value="Mr." <? echo ( $$variable{'ForSalutation'} eq 'Mr.' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="ForSalutationMr."/>Mr.</label>
-				<input type="radio" id="ForSalutationMrs." name="ForSalutation" value="Mrs" <? echo ( 'checked' if $$variable{'BySalutation'} eq 'Mrs.' ) ?> />
+				<input type="radio" id="ForSalutationMrs." name="ForSalutation" value="Mrs" <? echo ( $$variable{'ForSalutation'} eq 'Mrs.' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="ForSalutationMrs."/>Mrs.</label>
-				<input type="radio" id="ForSalutationMs." name="ForSalutation" value="Ms." <? echo ( 'checked' if $$variable{'BySalutation'} eq 'Ms.' ) ?> />
+				<input type="radio" id="ForSalutationMs." name="ForSalutation" value="Ms." <? echo ( $$variable{'ForSalutation'} eq 'Ms.' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="ForSalutationMs."/>Ms.</label>
-				<input type="radio" id="ForSalutationMiss" name="ForSalutation" value="Miss" <? echo ( 'checked' if $$variable{'BySalutation'} eq 'Miss' ) ?> />
+				<input type="radio" id="ForSalutationMiss" name="ForSalutation" value="Miss" <? echo ( $$variable{'ForSalutation'} eq 'Miss' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="ForSalutationMiss"/>Miss</label>
 			</p>
 			<p> 

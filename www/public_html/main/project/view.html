@@ -2,7 +2,6 @@
 	<h1>PROJECTS</h1>
 	<h2>View Project</h2>
 </div>
-<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 <? eval (
 	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
 	$$variable{'OrderStatus'} = $$variable{'Project'}->Order()->status();
