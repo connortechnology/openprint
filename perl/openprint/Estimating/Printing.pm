@@ -1844,7 +1844,9 @@ $openprint::log->warn("Got no runspeed.");
 			$price{'Ink breakdown'} .= sprintf("\t%s breakdown: Grade: %d, %.2f sq feet  * %s%s = \$%.2f<br/>", $real_colour, $grade, $area, @ink_price{'Price','units'}, $p );
 		} elsif ( lc $ink_price{'units'} eq 'per unit' ) {
 			my $sheets_per_ink_unit = 750000;
-			$price{'Ink Price'} += $ink_price{'Price'} * $area / ($sheets_per_ink_unit * 1000) / $$project{print_sides};
+			my $p = ($ink_price{'Price'} * $area / $sheets_per_ink_unit * 1000) / $$project{print_sides};
+			$price{'Ink Price'} += $p;
+			$price{'Ink breakdown'} .= sprintf('%s breakdown: %.2f sq feet * %s%s / %d sheets per unit / %d = $%.2f<br/>', $real_colour, $area, @ink_price{'Price','units'}, $sheets_per_ink_unit, $$project{print_sides}, $p );
 		} elsif ( lc $ink_price{'units'} eq 'per square inch' ) {
 			my $p = $ink_price{'Price'} * $area;
 			$price{'Ink Price'} += $p;
