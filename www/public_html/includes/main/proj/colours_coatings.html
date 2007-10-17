@@ -76,12 +76,14 @@
 				</span>
 				</span>
 				<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+				<? if ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
 				<span class="SpecialColour">
 				<span class="checkOption">
 					<input type="checkbox" id="chkVarnishDryTrapSideOne<?Signature?>" name="chkVarnishDryTrapSideOne<?Signature?>" value="DryTrap" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishDryTrapSideOne'.$$variable{'Signature'}} eq 'DryTrap' ) ?> />
 					<label for="chkVarnishDryTrapSideOne<?Signature?>"><? echo ( ssi::writeTip( 'Dry Trap' ); ) ?></label>
 				</span>
 				</span>
+				<? endif ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
 			</p>
 			<br class="spacer"/>
 			<p>
@@ -191,12 +193,14 @@
 			</span>
 			</span>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+				<? if ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
 			<span class="SpecialColour">
 			<span class="checkOption">
 				<input type="checkbox" id="chkVarnishDryTrapSideTwo<?Signature?>" name="chkVarnishDryTrapSideTwo<?Signature?>" value="DryTrap" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishDryTrapSideTwo'.$$variable{'Signature'}} eq 'DryTrap' ) ?> />
 				<label for="chkVarnishDryTrapSideTwo<?Signature?>"><? echo ( ssi::writeTip( 'Dry Trap' ); ) ?></label>
 			</span>
 			</span>
+				<? endif ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
 		</p>
 		<br class="spacer"/>
 		<p>
