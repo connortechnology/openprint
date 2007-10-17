@@ -13,10 +13,11 @@ require openprint::EmailCampaign;
 use MIME::QuotedPrint;
 use Mail::Sendmail;
 use openprint;
-use vars qw( %variable $log $dbh);
+use vars qw( %variable $log $dbh %config);
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
 
 $log = logger->new();
@@ -41,11 +42,12 @@ $dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 
-%openprint::config = configuration::init_cache( $log, $dbh, {
+%config = configuration::init_cache( $log, $dbh, {
 		'siteURL' => 'http://www.point-one.com',
 		'SecureSiteURL'	=> 'https://www.point-one.com',
 		'ExternalSiteURL'	=> 'http://www.point-one.com',
 		'ExternalSecureSiteURL'	=> 'https://www.point-one.com',
+		'SiteTitle'	=>'PointOne Graphics Inc',
 		}
 		);
 
