@@ -325,7 +325,7 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	return join('-', ( $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), $self->mweight().'M', $self->quality() ) );
+	return join('-', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), $self->mweight().'M', $self->quality() ) );
 }
 
 sub name {

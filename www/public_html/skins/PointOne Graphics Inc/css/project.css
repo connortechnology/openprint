@@ -79,8 +79,8 @@ div.Service div.row:after {
 }
 /* Hides from IE-mac \*/
 * html div.Service div.row {height: 1%;}
-* * *   div.Service div.row {display:block;}
-* * */* End hide from IE-mac */
+*   div.Service div.row {display:block;}
+/* End hide from IE-mac */
 
 div.Service div.row .required {
     width: 10px;

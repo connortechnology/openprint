@@ -322,11 +322,11 @@ fieldset.filters {
 }
 
 fieldset.filters p {
-	padding-left: 90px;
+	padding-left: 135px;
 }
 fieldset.filters p label {
-	width: 85px;
-	margin-left: -90px;
+	width: 130px;
+	margin-left: -135px;
 }
 fieldset.filters p input {
 	width: auto;
@@ -515,3 +515,8 @@ h3 {
 	width: 75px;
 	margin-left: -75px;
 }
+br.pagebreak {
+    height: 0px;
+    page-break-after: always;
+}
+
