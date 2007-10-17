@@ -21,16 +21,22 @@
 		<input type="radio" id="rdbTemplateType3PanelZFold" name="rdbTemplateType" value="3PanelZFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '3PanelZFold' ) ?> />
 		<label for="rdbTemplateType3PanelZFold">3 Panel Z</label>
 	</span>
+	
+ <? eval ( %{$$variable{'Templates'}} = sql::execute( undef, undef, q{SELECT DISTINCT type,1 FROM projecttemplate WHERE projecttype_id=? ORDER BY type}, $$variable{'Project'}->type_id() ); ) ?>
+<? if ( $$variable{'Templates'}{'12pg3PanelZFold'} ) ?>
     <span class="templateOption">
 		<img src="/images/templates/12pg3PanelZFold.gif" alt=""/>
 		<input type="radio" id="rdbTemplateType12pg3PanelZFold" name="rdbTemplateType" value="12pg3PanelZFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '12pg3PanelZFold' ) ?> /> 
 		<label for="rdbTemplateType12pg3PanelZFold">12page 3 Panel Z</label>
 	</span>
+<? endif ( $$variable{'Templates'}{'12pg3PanelZFold'} ) ?>
+<? if ( $$variable{'Templates'}{'12pg3PanelRollFold'} ) ?>
     <span class="templateOption">
 		<img src="/images/templates/12pg3PanelRollFold.gif" alt=""/>
 		<input type="radio" id="rdbTemplateType12pg3PanelRollFold" name="rdbTemplateType" value="12pg3PanelRollFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '12pg3PanelRollFold' ) ?> /> 
 		<label for="rdbTemplateType12pg3PanelRollFold">12page 3 Panel Roll</label>
 	</span>
+<? endif ( $$variable{'Templates'}{'12pg3PanelRollFold'} ) ?>
     <span class="templateOption">
 		<img src="/images/templates//4PanelFolds.gif" alt=""/>
 		<input type="radio" id="rdbTemplateType4PanelFold" name="rdbTemplateType" value="4PanelFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '4PanelFold' ) ?> /> 
