@@ -158,6 +158,7 @@
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
 <div id="Plates" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
+<? if ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
     <p>
         <label><? echo ( ssi::writeTip( 'Plate' ); ) ?> type:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -175,6 +176,9 @@
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
+<? else ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
+    <input type="text" name="rdbPlateType<?QTYIndex?>" value="CTP" />
+<? endif ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
     <p>
         <label><? echo ( ssi::writeTip( 'Plate' ); ) ?> Quantity:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
