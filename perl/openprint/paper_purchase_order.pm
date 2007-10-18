@@ -154,7 +154,7 @@ sub display {
 	} # end if btnFunction == Save
 
 	# Update it on every refresh... a bit ugly...
-	sql::execute( $log, $dbh, 'UPDATE Paper_Purchase_Orders SET Total=(SELECT SUM((Price*strMWeight::numeric) * Quantity/1000) FROM Paper_Purchase_Order_Contents, Paper WHERE lngIndex=Paper_Id AND PaperPurchaseOrder_Id=?) WHERE Index=?', $ppo_index, $ppo_index );
+	sql::execute( $log, $dbh, 'UPDATE Paper_Purchase_Orders SET Total=(SELECT SUM((Price*strMWeight::numeric) * Quantity/1000) FROM Paper_Purchase_Order_Contents, Papers WHERE id=Paper_Id AND PaperPurchaseOrder_Id=?) WHERE Index=?', $ppo_index, $ppo_index );
 	sql::execute( $log, $dbh, 'UPDATE Paper_Purchase_Orders SET GST=Total*0.07 WHERE Id=?', $ppo_index );
 
 	if ( $error ne '' ) {

@@ -46,7 +46,7 @@ sub drop_project {
 
 	return if ! @order;
 
-	$id =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w\w)/;
+	$id =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)/;
 	my ( $press_index, $year, $month, $day, $shift ) = ( $1, $2, $3, $4, $5 );
 	my ( $start_time, $operator_id );
 
@@ -71,7 +71,7 @@ sub drop_project {
 		my @rows = openprint::press_schedule::find('service_id'=>$service_index);
 		next if ! @rows;
 		my $row = shift @rows;
-		if ( ! $$row{starttime} ) {
+		if ( $start_time and ! $$row{starttime} ) {
 			my $Project = new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on $start_time" );
 		} # end if
 

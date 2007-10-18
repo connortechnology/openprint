@@ -2618,9 +2618,9 @@ sub runtime {
 } # end sub runtime
 
 sub get_weight {
-	my ( $specs, $qty_index ) = @_;
+	my ( $Project, $specs, $qty_index ) = @_;
 
-	my $Paper = openprint::Paper::load_from_signature( undef, $specs, $qty_index );
+	my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
 	my $sig_weight = ($$specs{'txtSignatureSpreadQuantity'.$qty_index} > 0 ? $$specs{'txtSignatureSpreadQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * $Paper->wpsi();
 	if ( $$specs{'PageQuantity'} ) {
 		# For Scratch Pads

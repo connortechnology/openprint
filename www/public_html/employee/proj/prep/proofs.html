@@ -29,9 +29,15 @@ function check_input( form, signature_index ) {
 		<fieldset><legend>Production Feedback</legend>
 			<!--#include virtual="/includes/employee/feedback/employee.html"-->
 			<!--#include virtual="/includes/employee/feedback/comments.html"-->
-			<!--#include virtual="/includes/employee/feedback/complete.html"-->
+<p>
+	<label>Service Complete:</label>
+	<input type="radio" id="rdbCompleteY" name="rdbComplete" value="Yes" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').show();$('QAApproved').show();" />
+	<label class="radio" for="rdbCompleteY">Yes</label>
+	<input type="radio" id="rdbCompleteN" name="rdbComplete" value="No" <? echo ( $$variable{'rdbComplete'} ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').hide();$('QAApproved').hide();" />
+	<label class="radio" for="rdbCompleteN">No</label>
+</p>
 			<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
-			<p>
+			<p id="ClientApproved" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>Client Approved?:</label>
 				<? if ( $$variable{'rdbClientApproved'} eq 'Y' ) ?>
 					Yes at <? echo ( $$variable{'ClientApprovalDate'} ) ?>
@@ -42,35 +48,33 @@ function check_input( form, signature_index ) {
 					<label class="radio" for="rdbClientApprovedN">No</label>
 				<? endif ( $$variable{'rdbClientApproved'} eq 'Y' ) ?>
 			</p>
-			<p>
+			<p id="QAApproved" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>QA Approved?:</label>
 				<? eval ( $$variable{'Status'} = openprint::service::get_status( $log, $dbh, @$variable{'ServiceIndex','ProjectIndex'} ); ) ?>
 				<? if ( $$variable{'Status'} eq 'Approved' ) ?>
 					Yes at <? echo ( $$variable{'ApprovalDate'} ) ?>
 				<? else ( $$variable{'Status'} eq 'Approved' ) ?>
-					<input type="radio" id="rdbApprovedY" name="rdbApproved" value="Y" onClick="add_div('ScheduleForPress');" />
+					<input type="radio" id="rdbApprovedY" name="rdbApproved" value="Y" onclick="$('ScheduleForPress').show();$('DueDate').show();" />
 					<label class="radio" for="rdbApprovedY">Yes</label>
-					<input type="radio" id="rdbApprovedN" name="rdbApproved" value="N" onClick="remove_div('ScheduleForPress');" checked="checked" />
+					<input type="radio" id="rdbApprovedN" name="rdbApproved" value="N" onclick="$('ScheduleForPress').hide();$('DueDate').hide();" checked="checked" />
 					<label class="radio" for="rdbApprovedN">No</label>
 				<? endif ( $$variable{'Status'} eq 'Approved' ) ?>
 			</p>
-			<p id="ScheduleForPress" <? echo ( 'style="display:none;"' if $$variable{'rdbClientApproved'} ne 'Y' ) ?> >
+			<p id="ScheduleForPress" <? echo ( $$variable{'rdbClientApproved'} ne 'Y' ? 'style="display:none;"' : '' ) ?> >
                 <label>Print Pending?:</label>
 				<input type="radio" id="ScheduleForPressY" name="ScheduleForPress" value="Y" />
 				<label class="radio" for="ScheduleForPressY">Yes</label>
 				<input type="radio" id="ScheduleForPressN" name="ScheduleForPress" value="N" checked="checked" />
 				<label class="radio" for="ScheduleForPressN">No</label>
             </p>
-			<p>
+			<p id="DueDate" <? echo ( $$variable{'Status'} eq 'Approved' ? '' : 'style="display:none;"' ) ?> >
 				<label>Due Date:</label>
-					<? eval (
-						 $$variable{'days'} = ssi::getdays($$variable{'ddmDueDateDay'}?$$variable{'ddmDueDateDay'}:(localtime(time))[3]); 
-						$$variable{'months'} = ssi::getmonths($$variable{'ddmDueDateMonth'}?$$variable{'ddmDueDateMonth'}:(localtime(time))[4]+1); 
-						$$variable{'years'} = ssi::return_years( undef,undef,($$variable{'ddmDueDateYear'}?$$variable{'ddmDueDateYear'}:(localtime(time))[5]+1900));
- ) ?>
-					<select style="width: auto;" name="ddmDueDateMonth" size="1"><?months?></select>
-					<select style="width: auto;" name="ddmDueDateDay" size="1"><?days?></select>
-					<select style="width: auto;" name="ddmDueDateYear" size="1"><?years?></select>
+				<? eval (
+					 @$variable{'years','months','days'} = ssi::get_dates( $log, $dbh, @$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ); 
+) ?>
+				<select style="width: auto;" name="ddmDueDateMonth" size="1"><?months?></select>
+				<select style="width: auto;" name="ddmDueDateDay" size="1"><?days?></select>
+				<select style="width: auto;" name="ddmDueDateYear" size="1"><?years?></select>
 			</p>
 			<p class="buttons">
 			<? echo (

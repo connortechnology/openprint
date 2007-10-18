@@ -556,7 +556,7 @@ sub get_finished_weight {
 		my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 		foreach my $qty_index ( 1 ..3 ) {
 			next if ! $$specs{'txtQuantity'.$qty_index};
-			$project_weight += openprint::Estimating::Printing::get_weight( $specs, $qty_index );
+			$project_weight += openprint::Estimating::Printing::get_weight( $Project, $specs, $qty_index );
 			last;
 		} # end foreach
 	} # end foreach

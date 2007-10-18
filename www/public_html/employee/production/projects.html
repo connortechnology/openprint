@@ -38,7 +38,7 @@
 			<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
 				<option value="">All Employees</option>
 <? echo (
-	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname)', 'type'=>'E') ],
+	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname)', 'type'=>['E','A']) ],
 	$openprint::param{'ddmSalesRep'} );
 ) ?>
 			</select>

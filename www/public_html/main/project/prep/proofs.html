@@ -30,7 +30,7 @@ Please enter the specifications for your proofs. In most cases these are automat
 					$$variable{'Reference'} = ssi::htmlize( $$variable{'Reference'} );
 				) ?>
 			<table>
-				<tr><td valign="top" rowspan="<? echo ( int(@{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}}/6)+2) ?>"><?Reference?></td><th width="40">Qty</th><th width="170">Dimensions</th><th>Type</th><th width="105">Unit Price</th><th width="90">&nbsp;</th></tr>
+				<tr><td valign="top" rowspan="<? echo ( int(@{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}}/6)+2) ?>"><?Reference?></td><th width="40">Qty</th><th width="170">Dimensions</th><th>Type</th><th width="105">Unit Price</th><th width="105">&nbsp;</th></tr>
 	<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}},0,6; ) ?>
 				<tr>
 					<td align="center"><input type="text" name="txtProofQuantity-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofQuantity?>" size="3" onkeyup="calc('f1')"  /></td>
@@ -68,7 +68,7 @@ Please enter the specifications for your proofs. In most cases these are automat
 				<tr>
 					<td align="right"><b>Total Service Price:</b></td>
 					<td width="85"><?CurrencySymbol?><input name="txtPrice<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
-					<td width="90"><? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin($openprint::session{'user_type'}, ['A','E'] ); ) ?></td>
+					<td width="105"><? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin($openprint::session{'user_type'}, ['A','E'] ); ) ?></td>
 				</tr>
 			</table>
 			<br class="spacer"/>
