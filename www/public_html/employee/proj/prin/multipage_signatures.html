@@ -2,10 +2,9 @@
 <script type="text/javascript" src="/javascripts/popups.js"></script>
 <script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 <script type="text/javascript" src="/includes/employee/feedback/paper.js"></script>
-<div class="row"> <b class="lgTxt">Multi-Page Publication - Signatures</b></div>
 <div class="Service">
-    <!--#include virtual="/includes/employee/feedback/line.html"-->
-    <form method="POST" name="f1" action="/employee/production/project_view.html">
+    <form method="post" name="f1" action="/employee/production/project_view.html">
+		<fieldset><legend>Multi-Page Publication - Signatures</legend>
         <div class="row">
             <b class="lgTxt">Production Feedback
             <? if ( $$variable{'DocketNumber'} ) ?>
@@ -17,15 +16,14 @@
 			<? if ( $$variable{'Reference'} ) ?>
 			<p>Information for: <?Reference?></p>
 			<? endif ( $$variable{'Reference'} ) ?>
-			<? eval ( @{$$variable{'Presses'}} = @{$$variable{"Presses-$$variable{'SignatureIndex'}"}} ) ?>
 			<!--#include virtual="/includes/employee/feedback/press_completion.html"-->
-
 			<div id="ActivitiesDiv">
 			<!--#include virtual="/includes/employee/feedback/press_activities.html"-->
 			</div>
 		</div>
         <!--#include virtual="/includes/employee/feedback/buttons.html"-->
         <!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
+		</fieldset>
     </form>
 </div>
 

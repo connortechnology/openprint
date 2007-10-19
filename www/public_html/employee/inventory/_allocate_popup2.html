@@ -2,11 +2,17 @@
 	$ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
 	$$variable{'referer'} = $1;
 	$$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} );
+	if ( exists $openprint::param{'quantity'} ) {
+		$$variable{'quantity'} = $openprint::param{'quantity'};
+	} else {
+		$$variable{'quantity'} = $$variable{Paper}->in_stock() - $$variable{Paper}->allocated();
+	} # end if
 ) ?>
-<div id="Allocate">
+<div id="Allocate" class="PopupWindow">
 	<form id="allocateform" name="allocateform" action="<?referer?>" method="post">
 		<input type="hidden" name="btnFunction" value="Allocate" />
 		<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />
+		<input type="hidden" name="skid_id" value="<? echo ( $openprint::param{'skid_id'} ) ?>" />
 		<fieldset><legend>Allocate Paper</legend>
 			<p>
 				<label>Docket:</label>
@@ -29,9 +35,13 @@
 			</p>
 			<hr/>
 			<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'SaveAllocate', 'save.gif', 'if(check_inputs(allocateform)){document.allocateform.submit();}', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'CancelAllocate', 'cancel.gif', "contentWin.destroy();", '', 'Cancel' ); ) ?>
-			
+			<? echo ( 
+				my $html = '';
+				$html .= ssi::writeButton( $log, $dbh, 'SaveAllocate', 'save.gif', 'if(check_inputs(allocateform)){document.allocateform.submit();}', '', 'Save' );
+				$html .= ssi::writeButton( $log, $dbh, 'CancelAllocate', 'cancel.gif', "contentWin.destroy();", '', 'Cancel' ); 
+				return $html;
+			) ?>
+			</p>
 		</fieldset>
 	</form>
 </div>

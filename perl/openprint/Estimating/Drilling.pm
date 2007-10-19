@@ -198,5 +198,9 @@ sub display {
 
 }  # end sub display
 
+sub summary {
+	return '';
+} # end sub summary
+
 1;
 __END__

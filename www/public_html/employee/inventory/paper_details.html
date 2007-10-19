@@ -245,14 +245,14 @@ The following errors occurred:<br/>
 		</div>
 	</fieldset>
  <? if ( $$variable{Paper}->id() ) ?>
- <? eval ( @{$$variable{Duplicates}} = eprint::Paper::find(
+ <? eval ( @{$$variable{Duplicates}} = openprint::Paper::find(
 		'manufacturer_id'		=>$$variable{Paper}->manufacturer_id(),
-		'name_id'						=>$$variable{Paper}->name_id(),
-		'finish_id'					 =>$$variable{Paper}->finish_id(),
-		'colour_id'					 =>$$variable{Paper}->colour_id(),
-		'weight_id'					 =>$$variable{Paper}->weight_id(),
-		'width'						 =>$$variable{Paper}->width(),
-		'height'						=>$$variable{Paper}->height(),
+		'name_id'				=>$$variable{Paper}->name_id(),
+		'finish_id'				=>$$variable{Paper}->finish_id(),
+		'colour_id'				=>$$variable{Paper}->colour_id(),
+		'weight_id'				=>$$variable{Paper}->weight_id(),
+		'width'					=>$$variable{Paper}->width(),
+		'height'				=>$$variable{Paper}->height(),
 		);
 		) ?>
 		<? if ( @{$$variable{Duplicates}} > 1 ) ?>

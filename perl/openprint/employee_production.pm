@@ -351,11 +351,13 @@ sub project_view {
 				} # end foreach
 			} # end if
 
-			my $printing_service_index = openprint::print::get_printing_service( $log, $dbh, $project_index );
-			if ( $complete ) {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$printing_service_index", 'strStatus', 'Complete' );	
-			} else {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$printing_service_index", 'strStatus', 'Ordered' );	
+			my $services = $Project->services();
+			if ( $$services{''} ) {
+				if ( $complete ) {
+					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Complete' );	
+				} else {
+					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Ordered' );	
+				} # end if
 			} # end if
 
 		} elsif ( sets::isin( $service_type,[ 'Proofs', 'FilmStripping' ] ) ) {

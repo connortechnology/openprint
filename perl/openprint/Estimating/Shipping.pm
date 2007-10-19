@@ -69,7 +69,7 @@ sub calc {
 	my $carton_status = openprint::service::get_status( $log, $dbh, $carton_service_index, $project_index );
 	$log->debug("Carton Status: $carton_status");
 	if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
-		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $carton_service_index, 'skids' );
+		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $carton_service_index, 'Skids' );
 	} # end if
 	my $carton_specs = openprint::service::get_specs_ref( $project_index, $carton_service_index );
 
@@ -77,6 +77,11 @@ sub calc {
 # Load from skids or cartons
 		$$specs{"txtPackageWeight"} = $$carton_specs{"txtPackageWeight"};
 	} # end if
+	if ( ! $$carton_specs{'txtItemsPerPackage'} ) {
+		$$specs{'alert'} = 'Unable to determine how many items per carton.';
+		return 'uncalculated';
+	} # end if
+
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};

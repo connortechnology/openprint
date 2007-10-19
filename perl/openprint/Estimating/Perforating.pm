@@ -385,6 +385,9 @@ sub fits_on_equipment {
 
 } # end sub fits_on_equipment
 
+sub summary {
+	return '';
+} # end sub summary
 
 1;
 
