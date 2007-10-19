@@ -1,7 +1,27 @@
-<div class="Popup" id="CheckOut">
-	<form id="checkoutform" name="checkoutform" action="" method="post">
+<? eval (
+    $ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
+    $$variable{'referer'} = $1;
+    $$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} );
+	if ( exists $openprint::param{'quantity'} ) {
+		$$variable{'quantity'} = $openprint::param{'quantity'};
+	} else {
+		$$variable{'quantity'} = $$variable{Paper}->in_stock() - $$variable{Paper}->allocated();
+	} # end if
+) ?>
+<div class="PopupWindow" id="CheckOut">
+	<form id="checkoutform" name="checkoutform" action="<?referer?>" method="post">
 		<input type="hidden" name="btnFunction" value="CheckOut" />
+		<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />
+		<input type="hidden" name="skid_id" value="<? echo ( $openprint::param{'skid_id'} ) ?>" />
 		<fieldset><legend>Check Out Paper</legend>
+			<? echo ( 
+			my $html = '';
+			foreach my $skid_id ( split(',', $openprint::param{'skid_id'} ) ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				$html .= sprintf('skid %d contains %d%s<br/>', $skid_id, $$Skid{Paper}{$$variable{'Paper'}->id()}, $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : ' sheets' ); 
+			} # end foreach	
+			return $html;
+			) ?>
 			<p>
 				<label>Docket:</label>
 				<input type="text" name="Docket" onkeypress="return input_handler( this, event);"/>
@@ -13,18 +33,12 @@
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckOutProject', 'clear.gif', "checkoutform.Project.value='';", '', 'Clear' ); ) ?>
 			</p>
 			<p>
-				<label>Quantity:</label>
-				<input type="hidden" name="available_quantity"/>
-				<input type="text" name="Quantity" onkeypress="return input_handler( this, event);"/>
+				<label>Quantity:( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
+				<input type="hidden" name="available_quantity" value="<?quantity?>" />
+				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckOutQuantity', 'clear.gif', "checkoutform.Quantity.value='';", '', 'Clear' ); ) ?>
 			</p>
-			<p>
-				<label>Units:</label>
-				<select name="Units">
-				<option value="sheets">sheets</option>
-				<option value="lbs">lbs</option>
-				</select>
-			</p>
+			<hr/>
 			<p style="float: right;">
 			<? echo ( ssi::writeButton( $log, $dbh, 'SaveCheckOut', 'save.gif', 'if(check_inputs(checkoutform)){checkoutform.submit();}', '', 'Save' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'CancelCheckOut', 'cancel.gif', "hide_div('CheckOut');", '', 'Cancel' ); ) ?>

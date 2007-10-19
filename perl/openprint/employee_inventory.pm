@@ -481,8 +481,10 @@ sub skid_details {
 			check_in( $variable, $skid_id, @openprint::param{'paper_id', 'Quantity','Project','Docket'} );
 		} # end foreach
 	} elsif ( $openprint::param{'btnFunction'} eq 'CheckOut' ) {
+		my $qty = $openprint::param{'Quantity'};
 		foreach my $skid_id ( @skid_ids ) {
-			check_out( $variable, $skid_id, @openprint::param{'paper_id', 'Quantity','Project','Docket'} );
+			$qty -= check_out( $variable, $skid_id, $openprint::param{'paper_id'}, $qty, @openprint::param{'Project','Docket'} );
+			last if ! $qty;
 		} # end foreach
 	} elsif ( $r->param('btnFunction') eq 'DeletePaper' ) {
 		foreach my $skid_id ( @skid_ids ) {
@@ -564,6 +566,7 @@ sub check_out {
 	} else {
 		$$variable{'information'} .= "Checked out $quantity $units to unknown docket.<br/>";
 	} # end if
+	return $quantity;
 } # end sub check_out
 
 sub check_in {

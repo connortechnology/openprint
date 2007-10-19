@@ -13,7 +13,7 @@ function allocate_window(paper_id) {
 		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube"} );
 		allocateWin.setHTMLContent('Loading... please wait');
 		allocateWin.showCenter();
-		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup2.html?paper_id='+paper_id, null , true);
+		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?paper_id='+paper_id, null , true);
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
