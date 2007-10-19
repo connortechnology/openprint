@@ -84,6 +84,8 @@
 	return $html;
 	) ?>
 	<br/>
+<? if ( 3 > @{$$variable{'Skids'}} ) ?>
 	<img src="/barcode.png?code=I<? echo ( join('-', $$variable{'FirstSkid'}, $$variable{'LastSkid'}) ) ?>+&amp;NoText=1&amp;Height=50"/>
+<? endif ( 3 > @{$$variable{'Skids'}} ) ?>
 <br class="pagebreak"/>
 <? endwhile ( @{$$variable{'Skids'}} ) ?>
