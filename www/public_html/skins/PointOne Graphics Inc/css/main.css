@@ -9,7 +9,8 @@
     visibility: hidden;
 }
 /* Hides from IE-mac \*/
-* html div.templates {height: 1%;}
+* html .Service div.templates {height: 1%;}
+* .Service div.templates {display:block;}
 /* End hide from IE-mac */
 
 .Service div.templates p {

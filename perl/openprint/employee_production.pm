@@ -1300,7 +1300,10 @@ sub complete_signature {
 
 sub docket_sheet {
 	openprint::print_project::summary( @_ );
-} # end sub docket_shet
+} # end sub docket_sheet
+sub summary {
+	openprint::print_project::summary( @_ );
+} # end sub summary
 
 1;
 
