@@ -303,6 +303,7 @@ $openprint::log->debug("sign calc");
 
 	foreach my $Equipment ( @equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Equipment: ".$Equipment->name().', ';
+		next if ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'};
 		my @impositions = ();
 		if ( $Equipment->specification('Type') eq 'Press' ) {
 			if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
