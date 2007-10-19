@@ -49,7 +49,7 @@ sub view_services {
 	my $project_index = $openprint::param{'ProjectIndex'};
 
 	# I put these here because the don't need a project index
-	if ( $r->param('btnFunction') eq 'Save Project' ) {
+	if ( defined $openprint::param{'btnFunction'} and ( $openprint::param{'btnFunction'} eq 'Save Project' ) ) {
 		$log->debug("*** Time to Save Project - View Services Function ***");
 		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
 		my $Project = new openprint::Project( $project_index );
@@ -74,109 +74,104 @@ sub view_services {
 
 	if ( $cust_id eq $openprint::session{'company_id'} or $openprint::session{'user_type'} eq 'A' ) {
 
-		if ( $r->param('btnFunction') eq 'Save Service' ) {
-			# Update the 'current project'
-			$openprint::session{'project_id'} = $project_index;
-			$log->debug("** Save Service in View Services Function **");
+		if ( defined $openprint::param{'btnFunction'} ) {
+			if ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
+				# Update the 'current project'
+				$openprint::session{'project_id'} = $project_index;
+				$log->debug("** Save Service in View Services Function **");
 
-			my $service_index = $r->param('ServiceIndex');
-			save_service( $r, $log, $dbh, $variable, $project_index, $service_index );
+				my $service_index = $r->param('ServiceIndex');
+				save_service( $r, $log, $dbh, $variable, $project_index, $service_index );
 
-			if ( $r->param('NewBook') eq 'Y' ) {
-				multipage_signatures(scalar $r->param, $log, $dbh, $variable, $project_index, $service_index );
-				openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
-				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
-			} elsif ( $r->param('PrintingService') eq 'Y' ) {
+				if ( $r->param('NewBook') eq 'Y' ) {
+					multipage_signatures(scalar $r->param, $log, $dbh, $variable, $project_index, $service_index );
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
+					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
+				} elsif ( $r->param('PrintingService') eq 'Y' ) {
 
-				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
-				# Now run code to modify all other services
-				# Only do this if all signatures have been specified, otherwise it is a waste of time
-				$log->info("********* Auto Calculate  ( PrintingService eq 'Y' ) *************");
-				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
-			} # end if
-			$Project->Currency( openprint::Currency::get_current() );
-			$Project->save();
-		} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
-			my $service_name = $openprint::param{'txtServiceName'};
-			if ( $service_name eq '' ) {
-				$service_name = 'Adjust';
-			} # end if
-
-			if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
-				my $ac = sql::start_transaction( $dbh );
-
-				sql::insert( $log, $dbh, 'tbl_Project_Contents',
-						'lngProjectIndex',	$project_index,
-						'strStatus',		'',
-						'servicetype_id',	$ServiceTypes[0]->id(),
-						);
-
-				$_ = 'SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?';
-				my ( $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
-				sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-							'lngProjectIndex',  $project_index,
-							'lngServiceIndex',  $service_index,
-							'strName',          'ServiceType',
-							'strValue',         'CustomService' ]);
-				if ( defined $r->param('txtPrice1') ) {
-				sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-							'lngProjectIndex',  $project_index,
-							'lngServiceIndex',  $service_index,
-							'strName',          'txtPrice1',
-							'strValue',         misc::moneyfilter($r->param('txtPrice1') )]);
+					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
+					# Now run code to modify all other services
+					# Only do this if all signatures have been specified, otherwise it is a waste of time
+					$log->info("********* Auto Calculate  ( PrintingService eq 'Y' ) *************");
+					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
 				} # end if
-				if ( defined $r->param('txtPrice2') ) {
-				sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-							'lngProjectIndex',  $project_index,
-							'lngServiceIndex',  $service_index,
-							'strName',          'txtPrice2',
-							'strValue',         misc::moneyfilter($r->param('txtPrice2') )]);
+				$Project->Currency( openprint::Currency::get_current() );
+				$Project->save();
+			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
+				my $service_name = $openprint::param{'txtServiceName'};
+				if ( $service_name eq '' ) {
+					$service_name = 'Adjust';
 				} # end if
-				if ( defined $r->param('txtPrice3') ) {
-				sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-							'lngProjectIndex',  $project_index,
-							'lngServiceIndex',  $service_index,
-							'strName',          'txtPrice3',
-							'strValue',         misc::moneyfilter($r->param('txtPrice3') )]);
-				} # end if
-				sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-							'lngProjectIndex',  $project_index,
-							'lngServiceIndex',  $service_index,
-							'strName',          'ServiceName',
-							'strValue',         $service_name ]);
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%.2f, %.2f, %.2f)', $service_name, @openprint::param{'txtPrice1','txtPrice2','txtPrice3'} ) );
-				sql::end_transaction( $dbh, $ac );
-			} # end if
 
-		} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
-			foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
+					my $ac = sql::start_transaction( $dbh );
+
+					sql::insert( $log, $dbh, 'tbl_Project_Contents',
+							'lngProjectIndex',	$project_index,
+							'strStatus',		'',
+							'servicetype_id',	$ServiceTypes[0]->id(),
+							);
+
+					$_ = 'SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?';
+					my ( $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
+					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
+								'lngProjectIndex',  $project_index,
+								'lngServiceIndex',  $service_index,
+								'strName',          'ServiceType',
+								'strValue',         'CustomService' ]);
+					if ( defined $r->param('txtPrice1') ) {
+					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
+								'lngProjectIndex',  $project_index,
+								'lngServiceIndex',  $service_index,
+								'strName',          'txtPrice1',
+								'strValue',         misc::moneyfilter($r->param('txtPrice1') )]);
+					} # end if
+					if ( defined $r->param('txtPrice2') ) {
+					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
+								'lngProjectIndex',  $project_index,
+								'lngServiceIndex',  $service_index,
+								'strName',          'txtPrice2',
+								'strValue',         misc::moneyfilter($r->param('txtPrice2') )]);
+					} # end if
+					if ( defined $r->param('txtPrice3') ) {
+					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
+								'lngProjectIndex',  $project_index,
+								'lngServiceIndex',  $service_index,
+								'strName',          'txtPrice3',
+								'strValue',         misc::moneyfilter($r->param('txtPrice3') )]);
+					} # end if
+					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
+								'lngProjectIndex',  $project_index,
+								'lngServiceIndex',  $service_index,
+								'strName',          'ServiceName',
+								'strValue',         $service_name ]);
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%.2f, %.2f, %.2f)', $service_name, @openprint::param{'txtPrice1','txtPrice2','txtPrice3'} ) );
+					sql::end_transaction( $dbh, $ac );
+				} # end if
+
+			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
+				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				} # end if
+			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
+				$Project->currency_id( $openprint::session{Currency_id} );
+				foreach my $signature_service_index ( $Project->signatures( ) ) {
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
+				} # end foreach
+				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+				$Project->save();
+				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
+				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
+				$project_index = openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_index );
 			} # end if
-		} elsif ( $r->param('remove') ne '' ) {
+		} # end if btnFunction defined
+		if ( defined $openprint::param{'remove'} and ( $openprint::param{'remove'} ne '' ) ) {
 			openprint::print_project::delete_service( $log, $dbh, $project_index, $r->param('remove') );
 			$openprint::session{'project_id'} = $project_index;
-			#my $unspecified_spreads = 0;
-			#foreach my $signature_service_index ( $Project->signatures() ) {
-				#my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index,'Printing' );
-				#$unspecified_spreads = $$sig_specs{'txtUnspecifiedSpreads1'} or $$sig_specs{'txtUnspecifiedSpreads2'} or $$sig_specs{'txtUnspecifiedSpreads3'};
-				#last if ( $$sig_specs{'Status'} eq 'uncalculated' );
-			#} # end foreach
-			#openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef ) if ( ! $unspecified_spreads );
-			
-		} elsif ( $r->param('calc') ) {
+		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
-		} elsif ( $r->param('btnFunction') eq 'Recalculate Project' ) {
-			$Project->currency_id( $openprint::session{Currency_id} );
-			foreach my $signature_service_index ( $Project->signatures( ) ) {
-				openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
-			} # end foreach
-			openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
-			$Project->save();
-			openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-		} elsif ( $r->param('btnFunction') eq 'Continue Project' ) {
-			openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-		} elsif ( $r->param('btnFunction') eq 'Reuse Project' ) {
-			$project_index = openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_index );
 		} # end if
 
 		if ( $r->param('ContinueProject') and $r->param('ContinueProject') ne 'Incomplete Form' ) {
@@ -626,8 +621,8 @@ sub get_quantities {
 		my @qtys = $Project->quantities();
 		for ( my $index = 0; $index < @qtys; $index += 1 ) {
 			$$variable{'QUANTITIES'} .= " quantities[$index] = '$qtys[$index]'; \n";
-			$$variable{'QUANTITY'.$index+1} = $qtys[$index];
-			$$variable{'txtQuantity'.$index+1} = $qtys[$index];
+			$$variable{'QUANTITY'.($index+1)} = $qtys[$index];
+			$$variable{'txtQuantity'.($index+1)} = $qtys[$index];
 		} # end for
 	} # end if
 } # end sub get_quantities
@@ -635,4 +630,3 @@ sub get_quantities {
 1;
 
 __END__
-~	   

@@ -166,86 +166,57 @@ sub impositions {
 
 	my @imps = ( $Imposition );
 
-	@equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' ) if ! @equipment;
-	@stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) if ! @stitchers;
-	
-	my @my_equipment;
-
-	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		$openprint::log->debug("Overriding Equipment! " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
-		if ( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
-			push @my_equipment, new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-		} # end if
-	} else {
-		@my_equipment = @equipment;
-
-		if ( $Imposition->Press()->specification('Folding Capable') ) {
-			unshift @my_equipment, $Imposition->Press();
-		} # end if
-	} # end if
-	# First step, find out if we are stitching, then find out which equipment is being used for stitching
-	my $services = $Project->services();
-	#my $stitching_specs;
-	if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
-		#my $stitching_sid = shift @{$services{'SaddleStitching'}};
-		#$stitching_specs = openprint::service::get_specs_ref( $project_index, $stitching_sid );
-		@my_equipment = sets::exclude( \@stitchers, \@my_equipment );
-	} # end if
-
-	if ( ! @my_equipment ) {
-		$$specs{'alert'} .= 'There is no Folding capable equipment.';
+	if ( $Imposition->Press()->specification('Folding Capable') ne 'Y' ) {
 		return @imps;
 	} # end if
-	foreach my $Equipment ( @my_equipment ) {
-		if ( $Equipment->id() eq $Imposition->Press()->id() ) {
+	my $Equipment = $Imposition->Press();
+
 # Special case because we can't cut it in the middle of printing.  This case is basically for web presses
-			my $foldtype = $Imposition->spread_columns().'x'.$Imposition->spread_rows().'-'.$Imposition->pages().'Page-'.$Imposition->image_orientation().'SignatureFold';
+	my $foldtype = $Imposition->spread_columns().'x'.$Imposition->spread_rows().'-'.$Imposition->pages().'Page-'.$Imposition->image_orientation().'SignatureFold';
 
-			if ( ! ( $Equipment->specification($foldtype .'RunSpeed', $$sig_specs{'txtStockGSM'} ) ) ) {
-				$openprint::log->debug("No fold") if $debug;
-				next;
-			} 
-			if ( ( defined $Equipment->specification($foldtype.'MaximumImposition' ) and $Equipment->specification($foldtype.'MaximumImposition' ) > $Imposition->imposition() ) ) {
-				$openprint::log->debug('No fold due to max impo ' . $Imposition->imposition() . '>' . $Equipment->specification($foldtype.'MaximumImposition' ) ) if $debug;
-				next;
-			} 
-			if ( ( defined $Equipment->specification($foldtype.'MaximumColumns' ) and $Equipment->specification($foldtype.'MaximumColumns' ) > $Imposition->columns() ) ) {
-				$openprint::log->debug("No fold due to max columns") if $debug;
-				next;
-			} 
-			if ( $Equipment->specification($foldtype.'MaximumWidth' ) and ( $Equipment->specification($foldtype.'MaximumWidth' ) < ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) ) {
-				$openprint::log->debug("No fold due to max width") if $debug;
-				next;
-			}
-			if ( $Equipment->specification($foldtype.'MinimumHeight' ) and ( $Equipment->specification($foldtype.'MinimumHeight') > ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) ) {
-				$openprint::log->debug("No fold due to min height") if $debug;
-				next;
-}
+	if ( ! ( $Equipment->specification($foldtype .'RunSpeed', $$sig_specs{'txtStockGSM'} ) ) ) {
+		$openprint::log->debug("No fold") if $debug;
+		return @imps;
+	} 
+	if ( ( defined $Equipment->specification($foldtype.'MaximumImposition' ) and $Equipment->specification($foldtype.'MaximumImposition' ) > $Imposition->imposition() ) ) {
+		$openprint::log->debug('No fold due to max impo ' . $Imposition->imposition() . '>' . $Equipment->specification($foldtype.'MaximumImposition' ) ) if $debug;
+		return @imps;
+	} 
+	if ( ( defined $Equipment->specification($foldtype.'MaximumColumns' ) and $Equipment->specification($foldtype.'MaximumColumns' ) > $Imposition->columns() ) ) {
+		$openprint::log->debug("No fold due to max columns") if $debug;
+		return @imps;
+	} 
+	if ( $Equipment->specification($foldtype.'MaximumWidth' ) and ( $Equipment->specification($foldtype.'MaximumWidth' ) < ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) ) {
+		$openprint::log->debug("No fold due to max width") if $debug;
+		return @imps;
+	}
+	if ( $Equipment->specification($foldtype.'MinimumHeight' ) and ( $Equipment->specification($foldtype.'MinimumHeight') > ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) ) {
+		$openprint::log->debug("No fold due to min height") if $debug;
+		return @imps;
+	}
 
-			if ( $Equipment->specification($foldtype.'MinimumWidth' ) and ( $Equipment->specification($foldtype.'MinimumWidth' ) > ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) ) {
-				my $I = $Imposition->copy();
-				
-				if ( $I->image_orientation() eq 'Vertical' ) {
-					my $space = $Equipment->specification($foldtype.'MinimumWidth' ) - $I->image_width();
-					$I->cropmark_left(0) if $space >= $I->cropmark_left();
-					$I->cropmark_right(0) if $space >= $I->cropmark_right();
-					$I->gutters(0) if $space >= $I->gutters();
-					$I->image_width( $Equipment->specification($foldtype.'MinimumWidth' ) );
-				} else {
-					my $space = $Equipment->specification($foldtype.'MinimumWidth' ) - $I->image_height();
-					$I->cropmark_left(0) if $space >= $I->cropmark_left();
-					$I->cropmark_right(0) if $space >= $I->cropmark_right();
-					$I->gutters(0) if $space >= $I->gutters();
-					$I->image_height( $Equipment->specification($foldtype.'MinimumWidth' ) );
-				} # end if
-				
-				next if ( $I->paper()->start_width() and $I->paper()->start_width() < $I->used_width() );
-				$I->paper()->width( $I->used_width() ) if ! $I->paper()->start_width();
-				push @imps, $I;
-			} # end if
-		} # end if Press is Press
-	} # end foreach Equipment
-return @imps;
+	if ( $Equipment->specification($foldtype.'MinimumWidth' ) and ( $Equipment->specification($foldtype.'MinimumWidth' ) > ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) ) {
+		my $I = $Imposition->copy();
+
+		if ( $I->image_orientation() eq 'Vertical' ) {
+			my $space = $Equipment->specification($foldtype.'MinimumWidth' ) - $I->image_width();
+			$I->cropmark_left(0) if $space >= $I->cropmark_left();
+			$I->cropmark_right(0) if $space >= $I->cropmark_right();
+			$I->gutters(0) if $space >= $I->gutters();
+			$I->image_width( $Equipment->specification($foldtype.'MinimumWidth' ) );
+		} else {
+			my $space = $Equipment->specification($foldtype.'MinimumWidth' ) - $I->image_height();
+			$I->cropmark_left(0) if $space >= $I->cropmark_left();
+			$I->cropmark_right(0) if $space >= $I->cropmark_right();
+			$I->gutters(0) if $space >= $I->gutters();
+			$I->image_height( $Equipment->specification($foldtype.'MinimumWidth' ) );
+		} # end if
+
+		next if ( $I->paper()->start_width() and $I->paper()->start_width() < $I->used_width() );
+		$I->paper()->width( $I->used_width() ) if ! $I->paper()->start_width();
+		push @imps, $I;
+	} # end if
+	return @imps;
 
 } # end sub impositions
 

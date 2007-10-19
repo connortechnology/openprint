@@ -449,7 +449,7 @@ sub internal_calc {
 	} # end if
 	$specs{'Status'} = $status;
 	my $elapsed = time - $starttime;
-	$log->debug( "\033" . sprintf( '[41;37m %s calc: Elapsed seconds: %d', $service_type, $elapsed ) );
+	$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d', $service_type, $status, $elapsed ) );
 
 	my $ac = sql::start_transaction( $dbh );
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', $status );

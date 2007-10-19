@@ -75,6 +75,7 @@
 		</div>
 		<br class="spacer"/>
 		<div style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'AddProject','add_project.gif','','/main/project/history.html','Add Project From History' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue' ); ) ?>
 		</div>
 		<input type="hidden" name="OrderID" value="<?OrderID?>"/>

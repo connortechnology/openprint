@@ -251,22 +251,23 @@ sub continue_project {
 	if ( $$variable{'Redirect'} eq '' ) {
 		$project_index = get_unfinished_project( $log, $dbh, undef ) if ! $project_index;
 
-		my $Project = new openprint::Project( $project_index );
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity($qty_index);
-			if ( $_ = openprint::Estimating::Multipage::status( $project_index, undef, $qty_index ) ) {
-				my @sigs = $Project->signatures($_);
-				my $src_id = pop @sigs;
-				my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
-				my $dst_id = openprint::Estimating::Multipage::copy_signature( $project_index, $src_specs );
-				# Need another signature
-				#openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
-				last;
-			} # end if
-		} # end foreach
-
-		my ( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );	
+		my ( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
 		# pick the next unfinished service.
+
+		if ( ! $service_index ) {
+			my $Project = new openprint::Project( $project_index );
+			foreach my $qty_index ( 1 .. 3 ) {
+				next if ! $Project->quantity($qty_index);
+				if ( $_ = openprint::Estimating::Multipage::status( $project_index, undef, $qty_index ) ) {
+					my @sigs = $Project->signatures($_);
+					my $src_id = pop @sigs;
+					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
+					$service_index = openprint::Estimating::Multipage::copy_signature( $project_index, $src_specs );
+					( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
+					last;
+				} # end if
+			} # end foreach
+		} # end if
 
 		if ( $redirect ne '' and $service_index != $incoming_service_index ) {
 			#plugin new service.

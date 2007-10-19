@@ -273,6 +273,9 @@ $openprint::log->debug("Applying Sort");
 sub split_job {
 	my ( $project_index, $service_index, $ul_id ) = @_;
 
+	my $Project = new openprint::Project( $project_index );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Splitting forms' );
+
 	my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $project_index, $service_index );
 
 	my $ac = sql::start_transaction( $openprint::dbh );
@@ -284,7 +287,6 @@ sub split_job {
 	$specs{'SignatureIndex'} += 1;
 
 	foreach my $key ( keys %specs ) {
-		next if $key eq 'ServiceIndex';
 		if ( $specs{$key} and ( $specs{$key} ne $new_specs{$key} ) ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $specs{$key}, exists $new_specs{$key} );
 		} # end if

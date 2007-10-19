@@ -28,7 +28,9 @@ sub open_sql {
 
 sub execute {
 	my ( $l, $d, $sql, @values ) = @_;
-	my ( @return_array, $num_of_fields, $ref, $print_sql, $starttime );
+	my @return_array = ();
+	my $print_sql = '';
+	my $starttime;
 
 	$l = $log if ! defined $l;
 	$d = $dbh if ! $d;
@@ -48,12 +50,13 @@ sub execute {
 		$l->error("SQL execution failed: ($print_sql):" . $d->errstr) if $l;
 		return;
 	} # end if
-	$num_of_fields = $sth->{'NUM_OF_FIELDS'};
-	while ( $num_of_fields and $ref = $sth->fetchrow_arrayref) {
-		for ( my $i = 0; $i < $num_of_fields; $i += 1 ) {
-			push( @return_array, $$ref[$i] );
-		} # end for
-	} # end while
+	if ( my $num_of_fields = $sth->{'NUM_OF_FIELDS'} ) {
+		while ( my $ref = $sth->fetchrow_arrayref ) {
+			for ( my $i = 0; $i < $num_of_fields; $i += 1 ) {
+				push( @return_array, $$ref[$i] );
+			} # end for
+		} # end while
+	} # end if
 	$sth->finish(); # unneccessary
 	if ( $l and $debug ) {
 		$l->debug("SQL (".sprintf('%.4f', tv_interval( [$starttime])*1000)." usecs). ($print_sql) Results:".join(',',@return_array));

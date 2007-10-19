@@ -355,6 +355,7 @@ sub project_view {
 			if ( $$services{''} ) {
 				if ( $complete ) {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Complete' );	
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'All signatures complete - marking printing complete.' );
 				} else {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Ordered' );	
 				} # end if
@@ -976,8 +977,9 @@ sub load_press_completion {
 		my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 		push @{$$variable{'Signatures'}}, @$specs{'SignatureIndex','txtServiceDescription'};
 
+		$$variable{"txtEmployeeName-$$specs{'SignatureIndex'}"} = new openprint::User( sql::execute( undef, undef, 'SELECT operator_id FROM tbl_Project_COntents WHERE lngProjectIndex=? AND lngServiceINdex=?', $project_index, $signature_service_index ) )->name();
+
 		@$variable{
-			"txtEmployeeName-$$specs{'SignatureIndex'}",
 				"txtEmployeeComments-$$specs{'SignatureIndex'}",
 				"UsedStockType-$$specs{'SignatureIndex'}",
 				"UsedStockBrand-$$specs{'SignatureIndex'}",
@@ -998,7 +1000,6 @@ sub load_press_completion {
 				"UsedDutchRows-$$specs{'SignatureIndex'}",
 				"UsedRunStyle-$$specs{'SignatureIndex'}",
 		} = @$specs{
-			"txtEmployeeName",
 				"txtEmployeeComments",
 				"UsedStockType",
 				"UsedStockBrand",
@@ -1045,12 +1046,15 @@ sub load_press_completion {
 sub is_sig_complete {
 	my ( $r, $log, $dbh, $project_index, $signature_service_index ) = @_;
 
-	my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $signature_service_index );
-	if ( $r->param("rdbPressComplete-$printing_specs{'SignatureIndex'}") ne 'Yes' ) {
-		sql::update( $log, $dbh, 'tbl_Project_Contents', "lngServiceIndex=$signature_service_index", 'strStatus','Ordered' );
+	my $Project = new openprint::Project( $project_index );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+	if ( $r->param("rdbPressComplete-$$printing_specs{'SignatureIndex'}") ne 'Yes' ) {
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$printing_specs{'SignatureIndex'} incomplete." );
+		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Ordered' );
 		return 0;
 	} # end if
-	sql::update( $log, $dbh, 'tbl_Project_Contents', "lngServiceIndex=$signature_service_index", 'strStatus','Complete' );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$printing_specs{'SignatureIndex'} complete." );
+	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
 	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $signature_service_index );
@@ -1284,17 +1288,17 @@ sub complete_signature {
 	my ( $log, $dbh, $variable, $project_id, $service_id ) = @_;
 
 	my $ac = sql::start_transaction( $dbh );
-	my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_id, $service_id );
 	my $Project = new openprint::Project( $project_id );
+	my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 
-	sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_id AND lngServiceIndex=$service_id", 'strStatus', 'Complete' );
+	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
 # Remove from Print Schedule
 	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
 # Update Bindery Schedule
-	sql::update( $log, $dbh, 'Bindery_Schedule', "ProjectIndex=$project_id", 'starttime', 
+	sql::update( $log, $dbh, 'Bindery_Schedule', ['ProjectIndex=?', $project_id], 'starttime', 
 			sql::execute( $log, $dbh, q{SELECT NOW() + '2 hours'::interval} )
 			);
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Form $specs{'SignatureIndex'} Completed" );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Form $$specs{'SignatureIndex'} Completed" );
 	sql::end_transaction( $dbh, $ac );
 } # end sub complete_signature
 

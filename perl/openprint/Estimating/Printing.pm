@@ -223,6 +223,7 @@ sub get_colours {
 	my @colours;
 
 	$v = \%variables if ( ! $v );
+	$signature = '' if ! defined $signature;
 
 	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
 		if ( $$specs{'chk'.$colour.$side.$signature} ) {
@@ -339,7 +340,7 @@ my $master_time = gettimeofday();
 	$$specs{'Status'} = 'calculated';
 	$$specs{'alert'} = '';
 
-	if ( $$specs{'PageQuantity'} =~ /[^\d\.]/ ) {
+	if ( ( defined $$specs{'PageQuantity'} ) and $$specs{'PageQuantity'} =~ /[^\d\.]/ ) {
 		$variables{'PageQuantity'} = [ sets::exclude( ['output'], $variables{'PageQuantity'} ) ];
 		$$specs{'PageQuantity'} =~ s/[^\d\.]//g;
 	} # end if
@@ -498,8 +499,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 	if ( $$specs{'ProjectType'} eq 'ScratchPads' ) {
 		if ( ! $$specs{'PageQuantity'} ) {
 			$$specs{'alert'} .= 'Please enter the # of pages per pad.';
-			$$specs{'Status'} = 'uncalculated';
-			return 'uncalculated';
+			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 	} elsif ( $$specs{'ProjectType'} eq 'PressSheetCombination' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
@@ -616,7 +616,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 	} # end if
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	my %project = (
@@ -801,15 +801,13 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 			if ( ! $$specs{'ddmPress'.$qty_index} ) {
 #$openprint::log->error("No overriden press!");
 				$$specs{'alert'} .= 'Please specify the desired press.<br/>';
-				$$specs{'Status'} = 'uncalculated';
-				return;
+				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 
 			if ( ! sets::intersection( map{ $_->id() } ( openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index}), @possible_presses ) ) ) {
 #$log->error( $$specs{'ddmPress'.$qty_index} . ' not in ' . join(',', @possible_presses ) );
 				$$specs{'alert'} = 'The press that you have chosen is not appropriate for the project specs.';
-				$$specs{'Status'} = 'uncalculated';
-				return;
+				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} else {
 			$variables{'ddmPress'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmPress'.$qty_index}} ) ];
@@ -1086,24 +1084,24 @@ last;
 $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 					if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
 						$$specs{'alert'} .= 'There were no possible impositions.  Your project may be too large for us.';
-						return;
+						return $$specs{'Status'} = 'uncalculated';
 					} # end if
 					next;
 				} # end if
 
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' before convert:' . @impositions);
-foreach my $imp ( @impositions ) {
-$imp->display();
-}
+#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' before convert:' . @impositions);
+#foreach my $imp ( @impositions ) {
+#$imp->display();
+#}
 				if ( $project{'SpreadLayout'} > 0 ) {
 					$openprint::log->debug("Converting Impositions spread Layout: $project{'SpreadLayout'}") if $debug;
 					@impositions = openprint::imposition::convert_impositions( $project{'SpreadLayout'}, $$specs{'txtSpreadSize'}, \@impositions );
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
+#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
 				} # end if
 # Gives us both inline and offline folding options
 				if ( $project{'HasFolding'} ) {
 					@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $project{'FoldingSpecs'}, $specs, $qty_index ) } @impositions;
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions);
+#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions);
 				} # end if Folding
 
 # Sort the impositions.  If we do it here, then after conversion, oh hell, I dunno
@@ -1318,7 +1316,7 @@ sub get_project_price {
 			@impositions = @{$$impositions{$Press->id()}} if $$impositions{$Press->id()};
 		} # end if
 		if ( ! $P ) {
-			$openprint::log->debug("No Press");
+			#$openprint::log->debug("No Press");
 			next;
 		} # end if
 		

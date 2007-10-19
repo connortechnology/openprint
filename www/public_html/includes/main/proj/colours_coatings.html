@@ -50,7 +50,7 @@
 					<label for="chkVarnishSpotGlossSideOne<?Signature?>"><? echo ( ssi::writeTip( 'Spot Gloss' ); ) ?></label>
 				</span>
 				<span id="VarnishSpotGlossSideOneCoverage<?Signature?>" class="VarnishCoverage">
-					<input type="text" name="VarnishSpotGlossSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotGlossSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />%
+					<input type="text" name="VarnishSpotGlossSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotGlossSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />%
 				</span>
 				</span>
 				<span class="SpecialColour">
@@ -59,7 +59,7 @@
 					<label for="VarnishSpotMatteSideOneCoverage<?Signature?>"><? echo ( ssi::writeTip( 'Spot Matte' ); ) ?></label>
 				</span>
 					<span id="VarnishSpotMatteSideOneCoverage<?Signature?>" class="VarnishCoverage">
-					<input type="text" name="VarnishSpotMatteSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotMatteSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />%</span>
+					<input type="text" name="VarnishSpotMatteSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotMatteSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />%</span>
 				</span>
 				<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 				<? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
@@ -168,7 +168,7 @@
 				<label for="chkVarnishSpotGlossSideTwo<?Signature?>"><? echo ( ssi::writeTip( 'Spot Gloss' ); ) ?></label>
 			</span>
 				<span id="VarnishSpotGlossSideTwoCoverage<?Signature?>" class="VarnishCoverage">
-				<input type="text" name="VarnishSpotGlossSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotGlossSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />%</span>
+				<input type="text" name="VarnishSpotGlossSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotGlossSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />%</span>
 			</span>
 			<span class="SpecialColour">
 			<span class="checkOption">
@@ -176,7 +176,7 @@
 				<label for="chkVarnishSpotMatteSideTwo<?Signature?>"><? echo ( ssi::writeTip( 'Spot Matte' ); ) ?></label>
 			</span>
 				<span id="VarnishSpotMatteSideTwoCoverage<?Signature?>" class="VarnishCoverage">
-				<input type="text" name="VarnishSpotMatteSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotMatteSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />%</span>
+				<input type="text" name="VarnishSpotMatteSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotMatteSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />%</span>
 			</span>
 			<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 			<? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>

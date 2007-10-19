@@ -201,7 +201,7 @@ $openprint::log->debug( "XXX$$sig_specs{txtSignatureSpreadQuantity1}XXXXXXXXXXXX
 				} # end if
 			} elsif ( $$sig_specs{'Status'} eq 'calculated' ) {
 				$status = $$sig_specs{'Status'};
-				if ( ( @signatures > 1 ) and $$printing_specs{'txtTotalPageQuantity'} and ! ( $$sig_specs{'txtSignatureSpreadQuantity1'}
+				if ( ( @signatures > 1 ) and $$printing_specs{'txtTotalPageQuantity'} and $$sig_specs{'txtSignatureType'} ne 'Cover Spreads' and ! ( $$sig_specs{'txtSignatureSpreadQuantity1'}
 							or $$sig_specs{'txtSignatureSpreadQuantity2'}
 							or $$sig_specs{'txtSignatureSpreadQuantity3'} ) ) {
 $openprint::log->warn('Deleting due to no spreads');

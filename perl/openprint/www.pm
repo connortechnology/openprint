@@ -1,5 +1,8 @@
 package openprint::www;
 
+#use Benchmark;
+#use diagnostics;
+
 use strict;
 use Apache2::Request;	# instead of CGI, it's MUCH faster, and does nice things.
 use Apache2::RequestRec ();
@@ -365,7 +368,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			openprint::order::history_details( $r, $log, $dbh, \%variable )						if $filename eq 'history_details.html';
 		
 		} elsif ( $second eq 'project' ) {
-			if ( $third ne '' ) {
+			if ( defined $third ) {
 				if ( ! $variable{'ServiceIndex'} ) {
 					$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
 				} # end if
