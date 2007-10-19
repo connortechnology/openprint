@@ -10,6 +10,12 @@
 		my $html;
 		foreach my $paper_id ( keys %{$$variable{'Skid'}{Paper}} ) {
 			my $Paper = new openprint::Paper( $paper_id );
+			my $available = 0;
+			foreach my $skid_id ( @{$$variable{'skid_ids'}} ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				$available += ($$Skid{Paper}{$paper_id} - $Skid->allocation('Paper'=>$Paper));
+			} # end foreach
+
 			$html .= '<tr>';
 			$html .= qq`<td><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
 			$html .= $Paper->to_string();
@@ -23,9 +29,9 @@
 			$html .= '</a></td>';
 			$html .= '</tr><tr>';
 			$html .= '<td colspan="3">';
-			$html .= ssi::writeButton( $log, $dbh, "CheckIn$paper_id", 'checkin.gif', sprintf(q{document.forms['checkinform'].action='/employee/inventory/skid_details.html?paper_id=%d&amp;skid_id=%d';document.forms['checkinform'].Quantity.value='%d';ddm_select_by_value(document.forms['checkinform'].Units,'%s');show_div('CheckIn',event);document.forms['checkinform'].Docket.focus();},$paper_id,$$variable{Skid}->id(),$$variable{Skid}{Paper}{$paper_id},$Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), '', 'Check In' );
-            $html .= ssi::writeButton( $log, $dbh, "CheckOut$paper_id", 'checkout.gif', sprintf(q{document.forms['checkoutform'].action='/employee/inventory/skid_details.html?paper_id=%d&amp;skid_id=%d';document.forms['checkoutform'].Quantity.value='%d';document.forms['checkinform'].available_quantity.value='%d';ddm_select_by_value(document.forms['checkoutform'].Units,'%s');show_div('CheckOut',event);document.forms['checkoutform'].Docket.focus();}, $paper_id,$$variable{Skid}->id(),$$variable{Skid}{Paper}{$paper_id},$$variable{Skid}{Paper}{$paper_id},$Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), '', 'Check Out' );
-            $html .= ssi::writeButton( $log, $dbh, "Allocate$paper_id", 'allocate.gif', sprintf(q{document.forms['allocateform'].action='/employee/inventory/skid_details.html?paper_id=%d&amp;skid_id=%d';document.forms['allocateform'].Quantity.value='%d';document.forms['allocateform'].available_quantity.value='%d';ddm_select_by_value(document.forms['allocateform'].Units,'%s');show_div('Allocate',event);document.forms['allocateform'].Docket.focus();},$paper_id,$$variable{Skid}->id(),$$variable{Skid}{Paper}{$paper_id},$$variable{Skid}{Paper}{$paper_id},$Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), '', 'Allocate' );
+			$html .= ssi::writeButton( $log, $dbh, "CheckIn$paper_id", 'checkin.gif', "checkin_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Check In' );
+			$html .= ssi::writeButton( $log, $dbh, "CheckOut$paper_id", 'checkout.gif', "checkout_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Check Out' );
+			$html .= ssi::writeButton( $log, $dbh, "Allocate$paper_id", 'allocate.gif', "allocate_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Allocate' );
 			$html .= ssi::writeButton( $log, $dbh, "Delete$paper_id", 'delete.gif', '', sprintf('/employee/inventory/skid_details.html?skid_id=%d&paper_id=%d&btnFunction=DeletePaper', $$variable{Skid}->id(), $paper_id ), 'Delete' );
 			$html .= ssi::writeButton( $log, $dbh, "Select$paper_id", 'select.gif', "if( \$('AddPaper').innerHTML == '' ) {add_div('AddPaper');new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id',{method:'get'} );} else {jsrsExecute( '/jsrs.htm',  loadPaper, 'jsrs::execute', new Array('code', 'object_encode( \$log, new openprint::Paper( $paper_id ) );') );}", '', 'Select' );
 			$html .= '</td>';

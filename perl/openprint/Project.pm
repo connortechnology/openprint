@@ -952,7 +952,7 @@ sub status_change {
         sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $self->id() );
 
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
-		foreach my $s_id ( eprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
+		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
 			sql::update( undef, undef, 'tbl_Project_Contents', "lngProjectIndex=$$self{'id'} AND lngServiceIndex=$s_id", 'strStatus', 'Complete' );
 		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );

@@ -16,7 +16,7 @@
 <fieldset class="filters"><legend>Search Information</legend>
 	<p>
 		<label>Company:</label>
-		<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" /> &nbsp;
+		<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" onkeydown="if(event.keyCode == 13){load_projects(f1);}" /> &nbsp;
 		<select name="ddmCustomer" onchange="load_projects(this.form);">
 			<option value="">All Companies</option>
 			<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomer'} ); ) ?>
@@ -130,13 +130,17 @@
 ) ?>
 	<p>
 		<label>Due Date:</label>
-				<select name="DueDateStartYear" onchange="load_projects(this.form);"><?DueDateStartYears?></select>
-				<select name="DueDateStartMonth" onchange="load_projects(this.form);"><?DueDateStartMonths?></select>
-				<select name="DueDateStartDay" onchange="load_projects(this.form);"><?DueDateStartDays?></select>
+		<span class="DateSelector">
+			<select name="DueDateStartYear" onchange="load_projects(this.form);"><?DueDateStartYears?></select>
+			<select name="DueDateStartMonth" onchange="load_projects(this.form);"><?DueDateStartMonths?></select>
+			<select name="DueDateStartDay" onchange="load_projects(this.form);"><?DueDateStartDays?></select>
 			to
-				<select name="DueDateEndYear" onchange="load_projects(this.form);"><?DueDateEndYears?></select>
-				<select name="DueDateEndMonth" onchange="load_projects(this.form);"><?DueDateEndMonths?></select>
-				<select name="DueDateEndDay" onchange="load_projects(this.form);"><?DueDateEndDays?></select>
+		</span>
+		<span class="DateSelector">
+			<select name="DueDateEndYear" onchange="load_projects(this.form);"><?DueDateEndYears?></select>
+			<select name="DueDateEndMonth" onchange="load_projects(this.form);"><?DueDateEndMonths?></select>
+			<select name="DueDateEndDay" onchange="load_projects(this.form);"><?DueDateEndDays?></select>
+		</span>
 	</p>
 </fieldset>
 </form>

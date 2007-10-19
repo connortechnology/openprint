@@ -28,20 +28,40 @@ sub skids {
 				$Skid->delete();
 				$$variable{'information'} .= "Skid $$Skid{'id'} has been deleted.<br/>";
 			} # end foreach
-
 		} elsif ( $openprint::param{'skids'} ) {
-			
 			foreach my $skid_id ( ref $openprint::param{'skids'} eq 'ARRAY' ? @{$openprint::param{'skids'}} : $openprint::param{'skids'} ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				$Skid->delete();
 				$$variable{'information'} .= "Skid $$Skid{'id'} has been deleted.<br/>";
 			} # end foreach
 		} # end if
+	} elsif ( $openprint::param{'btnFunction'} eq 'Allocate' ) {
+		if ( $openprint::param{'skid_id'} ) {
+			$openprint::param{'skid_id'} =~ s/[^\d\-\,]//g;
+			$openprint::param{Project} =~ s/\D//g;
+			$openprint::param{Docket} =~ s/\D//g;
+			my @Projects = openprint::Project::find( 'id'=>$openprint::param{Project}, 'docket'=>$openprint::param{Docket} ) if $openprint::param{Project} or $openprint::param{Docket};
+
+			if ( ! @Projects ) {
+				$$variable{'error'} .= "An invalid Docket or Project # was given. No paper allocated.<br/>";
+				return;
+			} # end if
+			foreach my $skid_id ( split(',', $openprint::param{'skid_id'} ) ) {
+				next if ! $skid_id;
+				my $Skid = new openprint::Skid( $skid_id );
+				foreach my $paper_id ( keys %{$$Skid{Paper}} ) {
+					my $Paper = new openprint::Paper( $paper_id );
+					$Skid->allocate( $paper_id, $Projects[0]->id(), $$Skid{Paper}{$paper_id}, $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				} # end foreach Paper
+			} # end foreach Skid
+		} # end if
+
 	} # end if
 } # end sub skids
 
 sub paper {
 	my ( $r, $log, $dbh, $variable ) = @_;
+
 	if ( $openprint::param{'btnFunction'} eq 'Download Log' ) {
 
 		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
@@ -63,7 +83,7 @@ sub paper {
 				 $skid_id,
 				 $delta . $units,
 				 $comment;
- } # end while
+		} # end while
 		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 		push @data, ( 'Report generated',$date,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef );
 		misc::export_csv( $r, $log, $variable, "PaperInventoryLog $date.csv", \@header, \@data );
@@ -432,7 +452,6 @@ sub skid_details {
 			} # end foreach
 		} # end if
 
-
 	} elsif ( sets::isin( $openprint::param{'btnFunction'}, 'Copy', 'Duplicate' ) ) {
 		foreach my $skid_id ( @skid_ids ) {
 			my $Skid = new openprint::Skid( $skid_id );
@@ -442,7 +461,7 @@ sub skid_details {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		foreach my $skid_id ( @skid_ids ) {
 			my $Skid = new openprint::Skid( $skid_id );
-			$Skid->delete();
+			$$variable{'information'} .= $Skid->delete();
 		} # end foreach
 	} elsif ( $openprint::param{'btnFunction'} eq 'Print Label' ) {
 		foreach my $skid_id ( @skid_ids ) {
@@ -462,8 +481,10 @@ sub skid_details {
 			check_in( $variable, $skid_id, @openprint::param{'paper_id', 'Quantity','Project','Docket'} );
 		} # end foreach
 	} elsif ( $openprint::param{'btnFunction'} eq 'CheckOut' ) {
+		my $qty = $openprint::param{'Quantity'};
 		foreach my $skid_id ( @skid_ids ) {
-			check_out( $variable, $skid_id, @openprint::param{'paper_id', 'Quantity','Project','Docket'} );
+			$qty -= check_out( $variable, $skid_id, $openprint::param{'paper_id'}, $qty, @openprint::param{'Project','Docket'} );
+			last if ! $qty;
 		} # end foreach
 	} elsif ( $r->param('btnFunction') eq 'DeletePaper' ) {
 		foreach my $skid_id ( @skid_ids ) {
@@ -472,6 +493,11 @@ sub skid_details {
 			$Skid->save();
 		} # end foreach
 	} # end if
+
+	$$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
+	$$variable{'skid_id'} = $openprint::param{'skid_id'};
+	@{$$variable{'skid_ids'}} = @skid_ids;
+
 } # end sub skid_details
 
 sub check_out {
@@ -523,8 +549,12 @@ sub check_out {
 			$$Skid{Paper}{$paper_id} = 0;
 		} else {
 			$$Skid{Paper}{$paper_id} -= $qty;
+			if ( @Projects ) {
 			$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' . @Projects ? ' for docket ' . $Projects[0]->docket() : '' );
 			$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
+			} else {
+			$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' );
+			} # end if
 			$qty = 0;
 		} # end if
 		$Skid->save();
@@ -536,6 +566,7 @@ sub check_out {
 	} else {
 		$$variable{'information'} .= "Checked out $quantity $units to unknown docket.<br/>";
 	} # end if
+	return $quantity;
 } # end sub check_out
 
 sub check_in {
@@ -631,7 +662,7 @@ sub allocate {
 		} # end if
 
 		foreach my $skid_id ( @skids ) {
-			my $Skid = new eprint::Skid( $skid_id );
+			my $Skid = new openprint::Skid( $skid_id );
 
 			if ( $$Skid{Paper}{$paper_id} < $qty ) {
 				$Paper->allocate( $skid_id, $Projects[0]->id(), $$Skid{Paper}{$paper_id}, $units );

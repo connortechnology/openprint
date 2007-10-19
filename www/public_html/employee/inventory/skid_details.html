@@ -1,20 +1,93 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript">
-function check_inputs(form ) {
-    if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
-        alert( 'Skids cannot contain more than 10000lbs' );
-        return false;
-    } // end if
-    if ( form.Units && get_ddm_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
-        alert( 'Skids cannot contain more than 10000lbs' );
-        return false;
-    } // end if
-    if ( form.available_quantity && form.Quantity.value > form.available_quantity.value ) {
-        alert( 'There are only ' + form.available_quantity.value + get_ddm_value( form.Units ) + ' available' );
-        return false;
-    } // end if
-    return true;
+var allocateWin;
+function allocate_window(paper_id, skid_id, quantity ) {
+	if ( ! allocateWin ) {
+		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:300} );
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+onDestroy: function(eventName, win) {
+			   if (win == allocateWin) {
+				   allocateWin = null;
+				   Windows.removeObserver(this);
+			   }
+		   }
+		}
+		Windows.addObserver(myObserver);
+	} // end if
+	allocateWin.setHTMLContent('Loading... please wait');
+	allocateWin.showCenter();
+	var url = '/employee/inventory/_allocate_popup.html?paper_id='+paper_id;
+	url += '&skid_id='+skid_id;
+	url += '&quantity='+quantity;
 
+	allocateWin.setAjaxContent(url, null , true);
+} // end function allocate_window
+var checkinWin;
+function checkin_window( paper_id, skid_id, quantity ) {
+	if ( ! checkinWin ) {
+		checkinWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:300} );
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+onDestroy: function(eventName, win) {
+			   if (win == checkinWin) {
+				   checkinWin = null;
+				   Windows.removeObserver(this);
+			   }
+		   }
+		}
+		Windows.addObserver(myObserver);
+	} // end if
+	checkinWin.setHTMLContent('Loading... please wait');
+	checkinWin.showCenter();
+	var url = '/employee/inventory/_check_in_popup.html?paper_id='+paper_id;
+	url += '&skid_id='+skid_id;
+	url += '&quantity='+quantity;
+	checkinWin.setAjaxContent(url, null , true);
+} // end function checkin_window
+var checkoutWin;
+function checkout_window( paper_id, skid_id, quantity ) {
+	if ( ! checkoutWin ) {
+		checkoutWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:300} );
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+onDestroy: function(eventName, win) {
+			   if (win == checkoutWin) {
+				   checkoutWin = null;
+				   Windows.removeObserver(this);
+			   }
+		   }
+		}
+		Windows.addObserver(myObserver);
+	} // end if
+	checkoutWin.setHTMLContent('Loading... please wait');
+	checkoutWin.showCenter();
+	var url = '/employee/inventory/_check_out_popup.html?paper_id='+paper_id;
+	url += '&skid_id='+skid_id;
+	url += '&quantity='+quantity;
+	checkoutWin.setAjaxContent(url, null , true);
+} // end function checkout_window
+
+function check_inputs(form ) {
+	if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
+		alert( 'Skids cannot contain more than 10000lbs' );
+		return false;
+	} // end if
+	var units;
+    if ( form.Units )
+        units = get_ddm_value( form.Units );
+    else if ($('Units'))
+        units = $('Units').innerHTML;
+
+	if ( units == 'lbs' && form.Quantity.value > 10000 ) {
+		alert( 'Skids cannot contain more than 10000lbs' );
+		return false;
+	} // end if
+	if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
+		alert( 'You asked for ' + form.Quantity.value + ' but there are only ' + form.available_quantity.value + ' ' + units + ' available' );
+		return false;
+	} // end if
+	return true;
 }
 
 function calc() {
@@ -42,29 +115,29 @@ function loadPaper(results) {
 	form.height.value = Paper['height'];
 	form.fsc_code.value = Paper['fsc_code'];
 	set_rdb_value( form.type, Paper['type'] );
-    if ( Paper['type'] == 'Roll' ) {
+	if ( Paper['type'] == 'Roll' ) {
 		$('Units').innerHTML='lbs';
-        //$('PaperHeight').hide();
-        //$('MWeight').hide();
-    } else {
+		//$('PaperHeight').hide();
+		//$('MWeight').hide();
+	} else {
 		$('Units').innerHTML='sheets';
-        //$('PaperHeight').show();
-        //$('MWeight').show();
-    } // end if
+		//$('PaperHeight').show();
+		//$('MWeight').show();
+	} // end if
 }
 function mweight_to_gsm( form ) {
-    var mweight = parseFloat(1*form.elements['mweight'].value);
-    var width = parseFloat(1*form.elements['width'].value);
-    var height = parseFloat(1*form.elements['height'].value);
-    var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
-    form.elements['gsm'].value = gsm;
+	var mweight = parseFloat(1*form.elements['mweight'].value);
+	var width = parseFloat(1*form.elements['width'].value);
+	var height = parseFloat(1*form.elements['height'].value);
+	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
+	form.elements['gsm'].value = gsm;
 }
 function gsm_to_mweight( form ) {
-    var gsm = parseFloat(1*form.elements['gsm'].value);
-    var width = parseFloat(1*form.elements['width'].value);
-    var height = parseFloat(1*form.elements['height'].value);
-    var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
-    form.elements['mweight'].value = mweight;
+	var gsm = parseFloat(1*form.elements['gsm'].value);
+	var width = parseFloat(1*form.elements['width'].value);
+	var height = parseFloat(1*form.elements['height'].value);
+	var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
+	form.elements['mweight'].value = mweight;
 }
 
 </script>
@@ -89,7 +162,7 @@ The following errors occurred:<br/>
 	<fieldset class="filters"><legend>Choose Skid</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
-			<input type="text" id="skid_id" name="skid_id" size="100" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
+			<input type="text" id="skid_id" name="skid_id" size="90" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}",'','Go' ),
 				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
@@ -110,13 +183,13 @@ The following errors occurred:<br/>
 		</legend>
 
 		<? if ( @{$$variable{'skid_ids'}} > 1 ) ?>
-        Multiple skids have been selected.  Only the first is shown, however changes will affect all.
-        <? if ( ! $$variable{'similar'} ) ?>
-        <div class="warning">
-        Warning: Not all specified skids are the same!
-        </div>
-        <? endif ( ! $$variable{'similar'} ) ?>
-        <? endif ( @{$$variable{'skid_ids'}} > 1 ) ?>
+		Multiple skids have been selected.  Only the first is shown, however changes will affect all.
+		<? if ( ! $$variable{'similar'} ) ?>
+		<div class="warning">
+		Warning: Not all specified skids are the same!
+		</div>
+		<? endif ( ! $$variable{'similar'} ) ?>
+		<? endif ( @{$$variable{'skid_ids'}} > 1 ) ?>
 
 		<div class="column">
 		<? if ( $$variable{'Skid'}->id() ) ?>
@@ -132,21 +205,20 @@ The following errors occurred:<br/>
 				) ?>
 			</p>
 			<p>
-                <label>Last Updated:</label>
-                <? echo (
-                    my $html;
-                    if ( $$variable{'Skid'}->updated_on() ) {
-                        $html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Skid'}->updated_on()) );
-                        $html .= ' by ' . join(' ', sql::execute( $log, $dbh, q{SELECT strFirstName, strLastName FROM tbl_Customer_Users WHE
-RE lngUSerID=?}, $$variable{'Skid'}->updated_by() ) );
-                    } # end if
-                    return $html;
-                ) ?>
-            </p>
+				<label>Last Updated:</label>
+				<? echo (
+					my $html;
+					if ( $$variable{'Skid'}->updated_on() ) {
+						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Skid'}->updated_on()) );
+						$html .= ' by ' . (new openprint::User( $$variable{'Skid'}->updated_by() )->name());
+					} # end if
+					return $html;
+				) ?>
+			</p>
 		<? else ( $$variable{'Skid'}->id() ) ?>
-            <p><label># of skids to add:</label>
-                <input type="text" name="skid_quantity" value="<? echo ( $openprint::param{skid_quantity} ) ?>" />
-            </p>
+			<p><label># of skids to add:</label>
+				<input type="text" name="skid_quantity" value="<? echo ( $openprint::param{skid_quantity} ) ?>" />
+			</p>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
 			<p>
 				<label>Location:</label>
@@ -163,9 +235,9 @@ RE lngUSerID=?}, $$variable{'Skid'}->updated_by() ) );
 				); ) ?>
 			</p>
 			<p>
-                <label for="Docket">Docket:</label>
-                <input type="text" id="Docket" name="Docket" size="10" value="<? echo ( $openprint::param{'Docket'} ) ?>" />
-            </p>
+				<label for="Docket">Docket:</label>
+				<input type="text" id="Docket" name="Docket" size="10" value="<? echo ( $openprint::param{'Docket'} ) ?>" />
+			</p>
 			<? if ( ! $$variable{'Skid'}->id() ) ?>
 			<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'saveLeft', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", '', 'Save' ); ) ?>
@@ -208,7 +280,4 @@ RE lngUSerID=?}, $$variable{'Skid'}->updated_by() ) );
 <div id="Log" style="display: none;"></div>
 </fieldset>
 <? endif ( $$variable{'skid_id'} ) ?>
-<!--#include virtual="/employee/inventory/_allocate_popup.html"-->
-<!--#include virtual="/employee/inventory/_check_out_popup.html"-->
-<!--#include virtual="/employee/inventory/_check_in_popup.html"-->
 <script type="text/javascript">document.jump.skid_id.focus();</script>

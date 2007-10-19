@@ -374,7 +374,7 @@ return $html;
 
 			<? echo (
 				if ( sets::isin( 'Drilling', split(',',$$variable{'BinderyServices'})) ) {
-					my %services = openprint::project::get_services( $log, $dbh, $$variable{'ProjectIndex'} );
+					my %services = $$variable{'Project'}->get_services();
 					my %drill_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$variable{'ProjectIndex'}, $services{'Drilling'} );
 					return sprintf('Drill %d holes (%s&quot;)', @drill_specs{'txtHoleQty','txtHoleSize'} );
 				} # end if

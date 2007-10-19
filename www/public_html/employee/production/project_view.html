@@ -10,6 +10,9 @@ function open_window( page ) {
 	window.open(page,'label','newWin,width=610,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 }
 </script>
+<? if ( $$variable{'error'} ) ?>
+<div class="error"><?error?></div>
+<? endif ( $$variable{'error'} ) ?>
 <? if ( $$variable{'information'} ) ?>
 <div class="information"><?information?></div>
 <? endif ( $$variable{'information'} ) ?>
