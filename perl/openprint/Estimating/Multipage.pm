@@ -121,7 +121,7 @@ sub calc {
 } # end sub calc
 
 sub calculate_signatures {
-	my ( $log, $dbh, $variable, $project_index ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $status;
 
@@ -130,6 +130,8 @@ sub calculate_signatures {
 
 	my $unspecified_spreads = 0;
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
+	return if ! $$printing_specs{'txtTotalPageQuantity'};
+
 	my @signatures = sort $Project->signatures('Interior Spreads');
 	push @signatures, sort $Project->signatures('Cover Spreads');
 	push @signatures, sort $Project->signatures('GateFolded Spreads');
@@ -217,7 +219,6 @@ $openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs
 #So all signatures were able to be calculated... which is good, but we may have too many, or not enough signatures
 $openprint::log->debug("after initial recalc");
 
-	if ( $$printing_specs{'txtTotalPageQuantity'} ) {
 	# Chekc for unspecified spreads
 		foreach my $ss_id ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
@@ -239,6 +240,9 @@ $openprint::log->debug("after initial recalc");
 	# Need to add signatures
 				my $check_unspecified_spreads = $unspecified_spreads;
 				while ( $unspecified_spreads > 0 ) {
+					if ( $service_index ) {
+						$sig_specs = openprint::service::get_specs_ref( $Project, $service_index );
+					} # end if
 					my $new_service_index = copy_signature( $project_index, $sig_specs );
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $new_service_index );
 					foreach my $qty_index ( 1 .. 3 ) {
@@ -279,7 +283,6 @@ $openprint::log->debug("after initial recalc");
 				} # end while
 			} # end if
 		} # end foreach signature
-	} # end if
 
 	return 'calculated';
 } # end sub calculate_signatures

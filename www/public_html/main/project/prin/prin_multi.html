@@ -19,8 +19,7 @@
 		} else {
 			add_div('CoverStocks');
 		} // end if
-		
-}
+	} // end function cbBookResults
 
 	function validate_data(formName) {
 		var form = getFormObj(formName);
@@ -88,7 +87,7 @@
 		<input name="txtInsertQuantity" size="9" value="<?txtInsertQuantity?>"/>
 	</p>
 </fieldset>
-				<br class="spacer"/>
+			<br class="spacer"/>
 			<fieldset id="CoverStocks" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
 				<legend>Information for Cover</legend>
 				<? echo ( 
