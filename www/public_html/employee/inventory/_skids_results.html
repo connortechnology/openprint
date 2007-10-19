@@ -122,7 +122,7 @@
 	<input type="hidden" name="btnFunction"/>
 	<span style="float: right;">
 		<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(','), 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ),
+					ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(','), 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=yes,status=no');", '', 'Print Labels' ),
 					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "SkidResults.btnFunction.value='Delete';SkidResults.submit();", '', 'Delete Checked' ),
 					ssi::writeButton( $log, $dbh, 'Select', 'select.gif', "SkidResults.btnFunction.value='Go';SkidResults.action='skid_details.html';SkidResults.submit();", '', 'Select Checked' ),
 
