@@ -325,7 +325,8 @@ $openprint::log->debug("ADding signature");
 	$openprint::dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
 	$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 	my ( $sig_index ) = sql::execute( undef, undef, $_, $project_index );
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureIndex', ++$sig_index );
+	$sig_index += 1;
+	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureIndex', $sig_index );
 
 	# Releases the lock
 	$openprint::dbh->commit();
