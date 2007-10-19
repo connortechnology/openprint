@@ -287,7 +287,7 @@ sub save_skid {
 				'quality_id' => $openprint::param{'ddmQuality'},
 				'quality'	=>	$openprint::param{'txtQuality'},
 				'width'	=> $openprint::param{'width'},
-				'height'	=>	$openprint::param{'height'},
+				'height'	=>	$openprint::param{'type'} ne 'Roll' ? $openprint::param{'height'} : undef,
 				'type'	=>	$openprint::param{'type'},
 				);
 		my $Paper;
