@@ -1602,9 +1602,10 @@ sub calc_price {
 	#$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
 
 	my %plate_setup = plate_setup_cost( $Press, $Paper->width() * $Paper->height(), $impressions, \@colours, $specs, $qty_index );
-	if ( ( $$specs{'Versions'} > 1 ) and sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble' ] ) ) {
-		$plate_setup{'Plate Count'} *= ( $imposition / $$specs{'Versions'} );
-	} # end if
+	# THis is here more to take care of multi-version documents as opposed to business cards
+	#if ( ( $$specs{'Versions'} > 1 ) and sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble' ] ) ) {
+		#$plate_setup{'Plate Count'} *= ( $imposition / $$specs{'Versions'} );
+	#} # end if
 
 	my $press_setup = 0;
 	if ( sets::isin( $Imposition->runstyle(), ['Sheet Work'] ) ) {

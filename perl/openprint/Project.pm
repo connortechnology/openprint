@@ -438,7 +438,7 @@ sub update_status {
 
 sub find {
 	my %params = @_;
-	my $sql = q{SELECT * FROM tbl_Projects WHERE 1>0};
+	my $sql = q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM tbl_Projects WHERE 1>0};
 	my @values;
 	if ( $params{'id'} ) {
         if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -463,7 +463,7 @@ sub find {
 		$sql .= q{ AND strprojectreference LIKE ?};
 		push @values, '%'.$params{'reference'}.'%';
 	} # en dif
-	if ( $params{'company_id'} ) {
+	if ( exists $params{'company_id'} ) {
 		if ( ref $params{'company_id'} eq 'ARRAY' ) {
 			if ( @{$params{'company_id'}} ) {
 				$sql .= q{ AND companyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
@@ -471,6 +471,8 @@ sub find {
 			} else {
 				$openprint::log->warn("EMpty company array passed to openprint::Project::find");
 			} # end if
+		} elsif ( ! defined $params{'company_id'} ) {
+			$sql .= q{ AND companyindex IS NULL};
 		} else {
 			$sql .= q{ AND companyindex=?};
 			push @values, $params{'company_id'};
