@@ -175,7 +175,7 @@ $openprint::log->warn('Deleting due to incorrect printing type');
 		foreach my $ss_id ( @signatures ) {
 $openprint::log->debug("Loop Count: $loop_count Sig: $ss_id: " . @signatures . ' Status: ' . $status); 
 			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
-$openprint::log->debug( "XXX$$sig_specs{txtSignatureSpreadQuantity1}XXXXXXXXXXXXXXXXX$$sig_specs{PageQuantity1} $$sig_specs{PageQuantity2} $$sig_specs{PageQuantity3} $$sig_specs{Status}" );
+$openprint::log->debug( "XXX$$sig_specs{txtSignatureSpreadQuantity1}XXXXXXXXXXXXXXXXX$$sig_specs{PageQuantity1} $$sig_specs{PageQuantity2} $$sig_specs{PageQuantity3} $$sig_specs{Status} $$sig_specs{alert}" );
 			# If we couldn't calculate, then delete all the other printing types and retry.
 			if ( $$sig_specs{'Status'} eq 'uncalculated' ) {
 				if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) {

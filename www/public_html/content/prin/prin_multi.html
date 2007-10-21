@@ -62,7 +62,7 @@
 				</div>
 				<br class="spacer"/>
 				<? echo ( 
-					$$variable{'Signature'} = 'Cover Spreads';
+					$$variable{'Signature'} = 'CoverSpreads';
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
 					return variable_substitution( $r, $log, $dbh, \$html, $variable );
@@ -82,7 +82,7 @@
 				</div>
 				<br class="spacer"/>
 				<? echo ( 
-					$$variable{'Signature'} = 'Interior Spreads';
+					$$variable{'Signature'} = 'InteriorSpreads';
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
 					return variable_substitution( $r, $log, $dbh, \$html, $variable );
