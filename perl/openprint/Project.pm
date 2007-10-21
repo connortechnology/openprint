@@ -438,7 +438,7 @@ sub update_status {
 
 sub find {
 	my %params = @_;
-	my $sql = q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM tbl_Projects WHERE 1>0};
+	my $sql = q{SELECT * FROM tbl_Projects WHERE 1>0};
 	my @values;
 	if ( $params{'id'} ) {
         if ( ref $params{'id'} eq 'ARRAY' ) {
