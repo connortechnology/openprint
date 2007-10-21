@@ -187,10 +187,10 @@ sub get_li {
 			} # end if
 	} # end if
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
-		$html .= sprintf( '<div id="%2$dComment" class="Comment" onclick="editComment( %1$s, %2$s, event );">%3$s</div>', @$row{'projectindex','serviceindex'}, $specs{'txtEmployeeComments'} );
+		$html .= sprintf( q{<div id="%2$dComment" class="Comment" onclick="openPopup( 'Comment', %1$s, %2$s );">%3$s</div>}, @$row{'projectindex','serviceindex'}, $specs{'txtEmployeeComments'} );
 
-		$html .= sprintf( '<span class="Forms" id="%dForms" onclick="editForms(%s, %s,\'%s\', event );">%d %s</span>', @$row{'serviceindex','projectindex','serviceindex'}, @specs{'SignatureQuantity','SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
-		$html .= sprintf( '<span id="%dImpressions" class="Impressions" onclick="editImpressions(%s, %s,\'%s\', event );">%d imps</span>', @$row{'serviceindex','projectindex','serviceindex'}, @specs{'ImpressionQuantity','ImpressionQuantity'} );
+		$html .= sprintf( q{<span class="Forms" id="%2$dForms" onclick="openPopup( 'Forms', %1$s, %2$s );">%3$d %4$s</span>}, @$row{'projectindex','serviceindex'}, $specs{'SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
+		$html .= sprintf( q{<span id="%2$dImpressions" class="Impressions" onclick="openPopup( 'Impressions', %1$s, %2$s );">%3$d imps</span>}, @$row{'projectindex','serviceindex'}, $specs{'ImpressionQuantity'} );
 
 		$html .= '<span class="Buttons">';
 		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Approve'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
@@ -199,6 +199,7 @@ sub get_li {
 		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Remove'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
 		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Split'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){split_job($$row{'projectindex'}, $$row{'serviceindex'}, '$ul_id' );}", '', 'S' ) if $specs{'SignatureQuantity'} > 1;
 		$html .= '</span>';
+		$html .= sprintf( q{<span id="%2$dRuntime" class="Runtime" onclick="openPopup( 'Runtime', %1$s, %2$s );">%3$.2d:%4$.2d</span>}, @$row{'projectindex','serviceindex'}, split(':',$$row{'runtime'}) );
 	} else {
 		$html .= sprintf( '<div class="Comment">%s</div>', ssi::htmlize($specs{'txtEmployeeComments'}) );
 		$html .= sprintf( '<span class="Forms">%d %s</span>', $specs{'SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
@@ -251,7 +252,7 @@ sub get_ul {
 		my $Operator = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents,Schedule WHERE lngProjectIndex=ProjectIndex AND lngServiceIndex=ServiceIndex AND strStatus != 'Complete' AND equipment_id=? AND ( schedule.starttime between ? AND ? ) LIMIT 1}, $equipment_id, $start_time_start, $start_time_end ) );
 		
 		if ( openprint::usergroup::is_user_in( ['PressManager'], $openprint::session{'user_id'} ) ) {
-			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onClick="editOperator(\'%s\', \'%s\', event );">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $$shift{'name'}, $total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $Operator->id(),($Operator->id() ? $Operator->name() : 'assign') ) . $html;
+			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onclick="openPopup('Operator', '%s', '%s' );">%s</span><br class="spacer"/></div>}, Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $$shift{'name'}, $total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $Operator->id(),($Operator->id() ? $Operator->name() : 'assign') ) . $html;
 		} else {
 			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $$shift{'name'}, ( $Operator->id() ? $Operator->name() : 'assign' ) ) . $html;
 		} # end if
@@ -342,6 +343,10 @@ sub split_job {
 
 } # end sub split_job
 
+sub set_runtime {
+	my ( $r, $log, $dbh, $variable, $project_index, $service_index, $runtime ) = @_;
+	sql::update( undef, undef, 'Schedule', ['Projectindex=? AND serviceindex=?', $project_index, $service_index], 'runtime', $runtime );
+} # end sub set_runtime
 
 
 1;
