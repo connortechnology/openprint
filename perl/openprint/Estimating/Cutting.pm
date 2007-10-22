@@ -66,9 +66,9 @@ sub signature_needs {
 	my ( $log, $dbh, $project_index, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
-    if ( $services{'NoBindery'} ) {
+    if ( $$services{'NoBindery'} ) {
         $log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
         return 0;
     } # end if
@@ -87,15 +87,8 @@ sub signature_needs {
 		} # end if
 	} # end foreach
 
-
-#	 even if the project as die cutting it may still need regular cutting.
-#    if ( openprint::print::check_for_service( $log, $dbh, $project_index, 'DieCutting' ) ) {
-#        $log->debug(" ** Project has Die Cutting, This Cutting Service is NOT needed ** ");
-#        return 0;
-#    } # end if
-
 	foreach my $service_name ( 'PlasticCoil', 'MetalCoil', 'PlasticComb', 'Cerlox', 'DoubleLoopWire' ) {
-		if ( $services{$service_name} ) {
+		if ( $$services{$service_name} ) {
 			return 1;
 		} # end if
 	} # end foreach
@@ -106,29 +99,28 @@ sub signature_needs {
 # A function that is smart enough to return true if the project needs cutting, and false if it doesn't.
 sub neccessary {
 	my ( $log, $dbh, $project_index ) = @_;
-	$log->debug(" ** Cutting::neccessary ** " );
 	my $Project = new openprint::Project( $project_index );
 	if ( $Project->Type()->strid() eq 'Envelopes' ) {
         $log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
 		return 0;
 	} # end if 
 
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
-	if ( $services{'NoBindery'} ) {
+	if ( $$services{'NoBindery'} ) {
         $log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
 		return 0;
 	} # end if
 
 	foreach my $service_name ( 'PlasticCoil', 'MetalCoil', 'PlasticComb', 'Cerlox', 'DoubleLoopWire' ) {
-		if ( $services{$service_name} ) {
+		if ( $$services{$service_name} ) {
 			return 1;
 		} # end if
 	} # end foreach
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
 
-		my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+		my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		if ( signature_needs( $log, $dbh, $project_index, $specs ) ) {
 			return 1;
 		} # end if
@@ -188,12 +180,6 @@ sub signature_calc_stock_cutting {
 		$$specs{'Status'} = 'uncalculated';
 		return;
 	} # end if
-	if ( ! ( $Paper->width() and $Paper->height() ) ) {
-		$$specs{'hdnBreakdown'.$qty_index} .= "No stock size:<br/>";
-		$$specs{'alert'} .= "No stock size for signature $signature_index";	
-		$$specs{'Status'} = 'uncalculated';
-		return;
-	} # End if
 
 	@$specs{"txtSuppliedStockWidth-$signature_index-$qty_index", "txtSuppliedStockHeight-$signature_index-$qty_index",
 		"txtSheetSizeWidth-$signature_index-$qty_index", "txtSheetSizeHeight-$signature_index-$qty_index"} =
@@ -531,7 +517,7 @@ sub calc {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! int($$specs{"txtQuantity$qty_index"});
 
-	$$specs{'hdnBreakdown'.$qty_index} = '';
+		$$specs{'hdnBreakdown'.$qty_index} = '';
 		my $price;
 		my $mprice;
 
