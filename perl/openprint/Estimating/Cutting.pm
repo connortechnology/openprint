@@ -297,16 +297,100 @@ sub signature_calc {
 		$$specs{'Status'} = 'uncalculated';
 		return;
 	} # end if
+
 	if ( ! ( $$sig_specs{'txtImposition'.$qty_index} and $$sig_specs{'hdnImpositionRows'.$qty_index} and $$sig_specs{'hdnImpositionColumns'.$qty_index}) ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "No Imposition:<br/>";
 		return;
 	} # end if
 
 	my ( $sheet_width, $sheet_height ) = ($Paper->width(), $Paper->height() );
-	my $ProjectType = $Project->Type();
-	my $ProjectTypeID = $ProjectType->strid();
 
-# Done Stock Cuts, can now do regular cuts
+# calculate cuts
+	my $vertical_cuts = 0;
+	$$specs{'hdnBreakdown'.$qty_index} .= "\tRegular Cuts: " . $calliper."<br/>";
+# interior vertical cuts = $sig_specs{'hdnImpositionColumns'}-1
+	if ( exists $$sig_specs{'txtSignatureType'} ) {
+		# Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
+		# but if we are cutting into smaller signatures, then we need more cutting
+		if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
+			$vertical_cuts += int ($$sig_specs{'txtImposition'.$qty_index} / $$sig_specs{'StitchingImposition'.$qty_index})-1;
+		} else {
+			$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
+		} # end if
+		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
+				# Assume head to head at all times - head trim
+				if ( $$sig_specs{'chkBleedTop'} ) {
+					$vertical_cuts += int ( $$sig_specs{'hdnImpositionColumns'.$qty_index}/2 );
+				} # end if
+			} # end if
+		} # end if
+	} else {
+# The 2 is for outside edge cuts
+		$vertical_cuts += 2+$$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
+		if ( 
+				( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
+				( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) )
+		   ) {
+			$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
+		} # end if
+	} # end if
+
+# interior horizontal cuts = $sig_specs{'hdnImpositionRows'}-1 with bleeds
+	my $horizontal_cuts = 0;
+	if ( exists $$sig_specs{'txtSignatureType'} ) {
+		if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
+			$horizontal_cuts += int ($$sig_specs{'txtImposition'.$qty_index} / $$sig_specs{'StitchingImposition'.$qty_index})-1; 
+		} else {
+			$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
+		} # end if
+		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
+				if ( $$sig_specs{'chkBleedTop'} ) {
+					$horizontal_cuts += int( $$sig_specs{'hdnImpositionRows'.$qty_index}/2);
+				} # end if
+			} # end if
+		} # end if
+	} else {
+		$horizontal_cuts += 2 + $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
+		if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
+					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
+					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) )
+		   ) {
+			$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
+		} # end if
+	} # end if
+
+	my $dutch_vertical_cuts = 0;
+	my $dutch_horizontal_cuts = 0;
+	# Dutch cuts don't happen on books
+	if ( ! exists $$sig_specs{'txtSignatureType'} ) {
+
+		# Now consider Dutch cuts
+		if ( $$sig_specs{'hdnImpositionDutchColumns'.$qty_index} and $$sig_specs{'hdnImpositionDutchRows'.$qty_index} ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
+
+			$dutch_vertical_cuts += 1 + $$sig_specs{'hdnImpositionDutchColumns'.$qty_index};
+			$dutch_horizontal_cuts += $$sig_specs{'hdnImpositionDutchRows'.$qty_index}; # +1 - 1
+			if ( ( $$sig_specs{'chkBleedTop'} and $$sig_specs{'chkBleedBottom'} ) or ($$sig_specs{'chkBleedLeft'} and $$sig_specs{'chkBleedRight'} ) ) {
+				$dutch_horizontal_cuts += 1;
+				
+			} # end if
+			if ( 
+					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) or
+					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) )
+			   ) {
+				$dutch_vertical_cuts += $$sig_specs{'hdnImpositionDutchColumns'.$qty_index}-1;
+			} # end if
+			if ( 
+					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) or
+					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) )
+			   ) {
+				$dutch_horizontal_cuts += $$sig_specs{'hdnImpositionDutchRows'.$qty_index}-1;
+			} # end if
+		} # end if dutch imposition
+	} # end if exists signaturetype
+
 	my $bestPrice = undef;
 	my $bestEquipment;
 	foreach my $Equipment ( @my_equipment ) {
@@ -316,59 +400,13 @@ sub signature_calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= "(Lift: $liftDepth)<br/>";
 		my $totalPrice = 0;
 
-		if ( my $reason = $Equipment->fits( $sheet_width, $sheet_height, $$specs{'txtStockCalliper'} ) ) {
+		if ( my $reason = $Equipment->fits( $sheet_width, $sheet_height, $$specs{"txtStockCalliper-$signature_index"} ) ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= $reason;
 			next;
 		} # end if
 
 		my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Cutting', $$specs{"txtQuantity$qty_index"}, $Equipment );
 
-# calculate cuts
-		my $vertical_cuts = 0;
-		$$specs{'hdnBreakdown'.$qty_index} .= "\tRegular Cuts: " . $calliper."<br/>";
-# interior vertical cuts = $sig_specs{'hdnImpositionColumns'}-1
-		if ( $ProjectTypeID ne 'MultiPagePublication' ) {
-# The 2 is for  outside edge cuts
-			$vertical_cuts += 2+$$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
-			if ( 
-					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
-					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) )
-			   ) {
-				$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
-			} # end if
-		} else {
-			if ( $$sig_specs{'txtImposition'.$qty_index} != $$sig_specs{'StitchingImposition'.$qty_index} ) {
-				$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
-				if ( 
-						( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
-						( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) )
-				   ) {
-					$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
-			} # end if
-			} # end if
-		} # end if
-
-# interior horizontal cuts = $sig_specs{'hdnImpositionRows'}-1 with bleeds
-		my $horizontal_cuts = 0;
-		if ( $ProjectTypeID ne 'MultiPagePublication' ) {
-			$horizontal_cuts += 2 + $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
-			if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
-					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
-					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) )
-			   ) {
-				$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
-			} # end if
-		} else {
-			if ( $$sig_specs{'txtImposition'.$qty_index} != $$sig_specs{'StitchingImposition'.$qty_index} ) {
-				$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
-			if (   
-					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
-					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) )
-			   ) {
-				$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
-			} # end if
-			} # end if
-		} # end if
 
 		my $price;
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$sig_specs{'txtImposition'.$qty_index} );
@@ -398,36 +436,9 @@ sub signature_calc {
 			$totalPrice += $price;
 		} # end if
 
+		
+		if ( $dutch_vertical_cuts or $dutch_horizontal_cuts ) {
 
-		# Now consider Dutch cuts
-		my $dutch_vertical_cuts = 0;
-		my $dutch_horizontal_cuts = 0;
-		if ( $$sig_specs{'hdnImpositionDutchColumns'.$qty_index} and $$sig_specs{'hdnImpositionDutchRows'.$qty_index} ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
-
-			if ( $ProjectTypeID ne 'MultiPagePublication' ) {
-				$dutch_vertical_cuts += 1 + $$sig_specs{'hdnImpositionDutchColumns'.$qty_index};
-				$dutch_horizontal_cuts += $$sig_specs{'hdnImpositionDutchRows'.$qty_index}; # +1 - 1
-				if ( ( $$sig_specs{'chkBleedTop'} and $$sig_specs{'chkBleedBottom'} ) or ($$sig_specs{'chkBleedLeft'} and $$sig_specs{'chkBleedRight'} ) ) {
-					$dutch_horizontal_cuts += 1;
-					
-				} # end if
-				if ( 
-						( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) or
-						( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) )
-				   ) {
-					$dutch_vertical_cuts += $$sig_specs{'hdnImpositionDutchColumns'.$qty_index}-1;
-				} # end if
-				if ( 
-						( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) or
-						( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) )
-				   ) {
-					$dutch_horizontal_cuts += $$sig_specs{'hdnImpositionDutchRows'.$qty_index}-1;
-				} # end if
-			} else {
-				$dutch_vertical_cuts += $$sig_specs{'hdnImpositionDutchColumns'.$qty_index}-1;
-				$dutch_horizontal_cuts += $$sig_specs{'hdnImpositionDutchRows'.$qty_index}-1;
-			} # end if
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$sig_specs{'txtImposition'.$qty_index} );
 			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 
@@ -456,7 +467,6 @@ sub signature_calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
 			} # end if
-
 		} # end if
 
 		$$specs{"txtCalculatedCuts-$signature_index-$qty_index"} = $vertical_cuts + $horizontal_cuts + $dutch_vertical_cuts + $dutch_horizontal_cuts;
@@ -523,8 +533,9 @@ sub calc {
 
 # For the non-book case, this devolves into the printing service
 		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 
 			@variables = sets::union( @variables, ( "txtStockCalliper-$signature_index",
 						"txtCalculatedCuts-$signature_index-$qty_index", "chkOverrideCalculatedCuts-$signature_index-$qty_index",
@@ -537,14 +548,14 @@ sub calc {
 						"txtSheetSizeHeight-$signature_index-$qty_index",
 						)	);
 			if ( ( $$sig_specs{'StockType'.$qty_index} ne 'Roll' ) and ( $$sig_specs{"hdnSuppliedStockWidth$qty_index"} != $$sig_specs{'StockWidth'.$qty_index} or $$sig_specs{"hdnSuppliedStockHeight$qty_index"} != $$sig_specs{'StockHeight'.$qty_index} ) ) {
-				my %results = signature_calc_stock_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index );
+				my %results = signature_calc_stock_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper );
 				$$specs{"ddmStockCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 				$$specs{"txtStockCutPrice-$signature_index-$qty_index"} = $results{'Price'};
 				$price += $results{'Price'};
 				$mprice += $results{'MPrice'};
 			} # end if
 
-			my %results = signature_calc( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index );
+			my %results = signature_calc( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper );
 
 			my $minCharge = openprint::service::get_price( $log, $dbh, $variable, 'CuttingChargeMinimum', undef, $results{'Equipment'} );
 			$results{'Price'} = $minCharge if $results{'Price'} and ($results{'Price'} < $minCharge);

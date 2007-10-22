@@ -206,7 +206,7 @@ sub copy {
 sub prices {
 	my $self = shift;
 	if ( ! $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'} );
+		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>shift );
 	} # end if
 	return @{$$self{'Prices'}};
 } # end sub prices
@@ -633,7 +633,7 @@ sub get_price {
 	} else {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $bestPrice;
-		my @Prices = $self->prices();
+		my @Prices = $self->prices( $list_id );
 		if ( ! @Prices ) {
 			$openprint::log->warn( 'No prices for paper for pricelist ' . $list_id );
 			return;
