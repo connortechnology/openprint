@@ -463,7 +463,7 @@ sub find {
 		$sql .= q{ AND strprojectreference LIKE ?};
 		push @values, '%'.$params{'reference'}.'%';
 	} # en dif
-	if ( $params{'company_id'} ) {
+	if ( exists $params{'company_id'} ) {
 		if ( ref $params{'company_id'} eq 'ARRAY' ) {
 			if ( @{$params{'company_id'}} ) {
 				$sql .= q{ AND companyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
@@ -471,6 +471,8 @@ sub find {
 			} else {
 				$openprint::log->warn("EMpty company array passed to openprint::Project::find");
 			} # end if
+		} elsif ( ! defined $params{'company_id'} ) {
+			$sql .= q{ AND companyindex IS NULL};
 		} else {
 			$sql .= q{ AND companyindex=?};
 			push @values, $params{'company_id'};

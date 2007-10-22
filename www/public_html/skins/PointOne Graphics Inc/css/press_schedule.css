@@ -113,12 +113,17 @@ div.row {
 	}
 	.Impressions {
 		float: right;
-		margin-left: 5px;
+		margin-left: 2px;
+		display: inline;
+	}
+	.Runtime {
+		float: right;
+		margin: 0px 2px 0px 2px;
 		display: inline;
 	}
 	.Buttons {
 		float: right;
-		margin-right: 5px;
+		margin-right: 2px;
 		display: inline;
 	}
 	.commands {

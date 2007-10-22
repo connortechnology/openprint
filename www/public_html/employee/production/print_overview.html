@@ -49,62 +49,117 @@
 
 	function checkOrder( results ) {
 	} // end function
-	function editOperator( period_id, operator, e ) {
-		form = document.forms['f3'];
-		if ( form ) {
-			form.Period.value=period_id;
-			ddm_select_by_value( form.Operator, operator );
-			show_div( 'OperatorEdit', e );
+
+	var popupWin;
+
+	function openPopup( popup, data1, data2, data3 ) {
+		if ( ! popupWin ) {
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:300, height: 200} );
+			// Set up a windows observer, check ou debug window to get messages
+			myObserver = {
+				onDestroy: function(eventName, win) {
+					if (win == popupWin) {
+						var content = popupWin.getContent();
+						for(var i = 0; i < content.childNodes.length; i++) {
+							var node = content.childNodes[i];
+							node.hide();
+							popupWin._oldParent.appendChild( node );
+						} // end for
+						popupWin = null;
+						Windows.removeObserver(this);
+					} // end if
+				} // end function
+			} // end observer
+			Windows.addObserver(myObserver);
 		} // end if
-	} // end function editOperator
+
+
+		if ( popup == 'Operator' ) {
+			form = document.forms['OperatorForm'];
+			if ( form ) {
+				form.Period.value=data1;
+				ddm_select_by_value( form.Operator, data2 );
+			} else {
+				alert('form not found');
+			} // end if
+		} else if ( popup == 'Forms' ) {
+			var div = $( data2 + 'Forms' );
+			form = document.forms['f5'];
+			if ( form ) {
+				var reg = /(\d*) forms/;
+				var ar = reg.exec( div.innerHTML );
+				form.ProjectIndex.value = data1;
+				form.ServiceIndex.value = data2;
+				form.Forms.value = ar[1];
+			} // end if
+		} else if ( popup == 'Impressions' ) {
+			var div = $( data2 + 'Impressions' );
+			form = document.forms['ImpressionsForm'];
+			if ( form ) {
+				var reg = /(\d*) imps/;
+				var ar = reg.exec( div.innerHTML );
+				form.ProjectIndex.value=data1;
+				form.ServiceIndex.value=data2;
+				form.Impressions.value=ar[1];
+			} // end if
+		} else if ( popup == 'Comment' ) {
+			var div = $( data2 + 'Comment' );
+			form = document.forms['f2'];
+			if ( form ) {
+				form.ProjectIndex.value=data1;
+				form.ServiceIndex.value=data2;
+				form.CommentInput.value = div.innerHTML;
+			} // end if
+		} else if ( popup == 'Runtime' ) {
+			var div = $( data2 + 'Runtime' );
+			form = document.forms['RuntimeForm'];
+			if ( form ) {
+				form.ProjectIndex.value=data1;
+				form.ServiceIndex.value=data2;
+				form.Runtime.value=div.innerHTML;
+			} // end if
+		} // end if
+		popupWin.setContent(popup+'Popup');
+		popupWin.showCenter();
+	} // end function openPopup
 	function saveOperator( period, operator, name ) {
 		var div = $( period + 'Operator' );
 		if ( div )
 			div.innerHTML = name;
 		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_operator', new Array( period, operator ) );
+		popupWin.destroy();
+		return false;
 	} // end function saveOperator
-	function editForms( project_index, service_index, forms, e ) {
-		form = document.forms['f5'];
-		if ( form ) {
-			form.ProjectIndex.value=project_index;
-			form.ServiceIndex.value=service_index;
-			form.Forms.value=forms;
-			show_div( 'FormsEdit', e );
-		} // end if
-	} // end function editImpressions
+
 	function saveForms( project_index, service_index, forms ) {
 		var div = $( service_index + 'Forms' );
 		if ( div )
-			div.onclick = 'editForms(' + project_index + ', ' + service_index + ', \'' + forms + '\', event );';
 			div.innerHTML = forms+' forms';
 		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_forms', new Array( project_index, service_index, forms ) );
+		popupWin.destroy();
+		return false;
 	} // end function saveOperator
 
-	function editImpressions( project_index, service_index, impressions, e ) {
-		form = document.forms['f4'];
-		if ( form ) {
-			form.ProjectIndex.value=project_index;
-			form.ServiceIndex.value=service_index;
-			form.Impressions.value=impressions;
-			show_div( 'ImpressionsEdit', e );
-		} // end if
-	} // end function editImpressions
 	function saveImpressions( project_index, service_index, impressions ) {
 		var div = $( service_index + 'Impressions' );
 		if ( div )
-			div.innerHTML = '<span onClick="editImpressions('+project_index+', '+service_index+', \''+impressions+'\', event );">'+impressions+' imps</span>';
+			div.innerHTML = impressions + ' imps';
+
 		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_impressions', new Array( project_index, service_index, impressions ) );
+		popupWin.destroy();
+		return false;
 	} // end function saveOperator
-	function editComment( project_index, service_index, e ) {
-		var div = $( service_index + 'Comment' );
-        form = document.forms['f2'];
-        if ( form ) {
-            form.ProjectIndex.value=project_index;
-            form.ServiceIndex.value=service_index;
-            form.Comment.value=div.innerHTML;
-            show_div('CommentEdit', e )
-        } // end if
-	} 
+
+	function saveRuntime( project_index, service_index, runtime ) {
+		var div = $( service_index + 'Runtime' );
+		if ( div )
+			div.innerHTML = runtime;
+
+		jsrsExecute( '/jsrs.htm', null, 'openprint::press_schedule::set_runtime', new Array( project_index, service_index, runtime+':00' ) );
+		popupWin.destroy();
+		return false;
+	} // end function saveRuntime
+
 	function saveComment( project_index, service_index, comment ) {
 		var div = $( service_index + 'Comment' );
 		if ( div ) {
@@ -117,26 +172,50 @@
 		} else {
 			alert('Error!  Comment not updated!');
 		} // end if
-
+		popupWin.destroy();
+		return false;
 	} // end function saveComment
 	function errFunc( t ) {
 	}
 </script>
 <link rel="stylesheet" type="text/css" href="/css/press_schedule.css">
-<div class="Popup" id="CommentEdit">
-	<form name="f2" onsubmit="saveComment( f2.ProjectIndex.value, f2.ServiceIndex.value, f2.Comment.value );hide_div('CommentEdit'); return false;">
+<div id="CommentPopup" style="display:none;">
+	<form name="f2" onsubmit="return saveComment( f2.ProjectIndex.value, f2.ServiceIndex.value, f2.CommentInput.value );">
 		<input type="hidden" name="ProjectIndex" />
 		<input type="hidden" name="ServiceIndex" />
-		<input type="hidden" name="btnFunction" value="Comment"/>
-		<span style="float: left;">Comment: <input type="text" name="Comment"/></span>
+		<p>Comment:<br/>
+		<textarea name="CommentInput" style="width:100%;" rows="4" cols="20"></textarea>
+		</p>
 		<span style="float: right;">
-            <? echo ( ssi::writeButton( $log, $dbh, 'Save1', 'save.gif', 'saveComment( f2.ProjectIndex.value, f2.ServiceIndex.value, f2.Comment.value );hide_div(\'CommentEdit\');', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel1', 'cancel.gif', "hide_div('CommentEdit');", '', 'Cancel' ); ) ?>
+            <? echo ( ssi::writeButton( $log, $dbh, 'Save1', 'save.gif', 'if(f2.onsubmit())f2.submit();', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel1', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
 		</span>
 	</form>
 </div>
-<div class="Popup" id="OperatorEdit">
-	<form name="f3" onsubmit="saveOperator( f3.Period.value, f3.Operator.options[f3.Operator.selectedIndex].value, f3.Operator.options[f3.Operator.selectedIndex].text );hide_div('OperatorEdit'); return false;">
+<div id="RuntimePopup" style="display:none;">
+	<form name="RuntimeForm" onsubmit="return saveRuntime( RuntimeForm.ProjectIndex.value, RuntimeForm.ServiceIndex.value, RuntimeForm.Runtime.value );">
+		<input type="hidden" name="ProjectIndex" />
+		<input type="hidden" name="ServiceIndex" />
+		<span style="float: left;">Estimated Runtime: <input type="text" name="Runtime"/></span>
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveRuntime', 'save.gif', 'if(RuntimeForm.onsubmit())RuntimeForm.submit();', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelRuntime', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
+		</span>
+	</form>
+</div>
+<div id="ImpressionsPopup" style="display:none;">
+	<form name="ImpressionsForm" onsubmit="return saveImpressions( ImpressionsForm.ProjectIndex.value, ImpressionsForm.ServiceIndex.value, ImpressionsForm.Impressions.value );">
+		<input type="hidden" name="ProjectIndex" />
+		<input type="hidden" name="ServiceIndex" />
+		<span style="float: left;"> # of impressions: <input type="text" name="Impressions"/></span>
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save3', 'save.gif', 'if(ImpressionsForm.onsubmit())ImpressionsForm.submit();', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel3', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
+		</span>
+	</form>
+</div>
+<div id="OperatorPopup" style="display:none;">
+	<form name="OperatorForm" onsubmit="return saveOperator( OperatorForm.Period.value, OperatorForm.Operator.options[OperatorForm.Operator.selectedIndex].value, OperatorForm.Operator.options[OperatorForm.Operator.selectedIndex].text );">
 		<input type="hidden" name="Period" />
 		<input type="hidden" name="btnFunction" value="Operator"/>
 		<span style="float: left;">
@@ -147,30 +226,19 @@
 			</select>
 		</span>
 		<span style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save2', 'save.gif', 'saveOperator( f3.Period.value, f3.Operator.options[f3.Operator.selectedIndex].value, f3.Operator.options[f3.Operator.selectedIndex].text );hide_div(\'OperatorEdit\');', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel2', 'cancel.gif', "hide_div('OperatorEdit');", '', 'Cancel' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save2', 'save.gif', 'if(OperatorForm.onsubmit())OperatorForm.submit();', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel2', 'cancel.gif', 'popupWin.destroy();', '', 'Cancel' ); ) ?>
 		</span>
 	</form>
 </div>
-<div class="Popup" id="ImpressionsEdit">
-	<form name="f4" onsubmit="saveImpressions( f4.ProjectIndex.value, f4.ServiceIndex.value, f4.Impressions.value );hide_div('ImpressionsEdit');return false;">
-		<input type="hidden" name="ProjectIndex" />
-		<input type="hidden" name="ServiceIndex" />
-		<span style="float: left;"> # of impressions: <input type="text" name="Impressions"/></span>
-		<span style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save3', 'save.gif', 'saveImpressions( f4.ProjectIndex.value, f4.ServiceIndex.value, f4.Impressions.value );hide_div(\'ImpressionsEdit\');', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel3', 'cancel.gif', "hide_div('ImpressionsEdit');", '', 'Cancel' ); ) ?>
-		</span>
-	</form>
-</div>
-<div class="Popup" id="FormsEdit">
-	<form name="f5" onsubmit="saveForms( f5.ProjectIndex.value, f5.ServiceIndex.value, f5.Forms.value );hide_div('FormsEdit');return false;">
+<div id="FormsPopup" style="display:none;">
+	<form name="f5" onsubmit="return saveForms( f5.ProjectIndex.value, f5.ServiceIndex.value, f5.Forms.value );">
 		<input type="hidden" name="ProjectIndex" />
 		<input type="hidden" name="ServiceIndex" />
 		<span style="float: left;"> # of Forms: <input type="text" name="Forms"/></span>
 		<span style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save5', 'save.gif', 'saveForms( f5.ProjectIndex.value, f5.ServiceIndex.value, f5.Forms.value );hide_div(\'FormsEdit\');', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel5', 'cancel.gif', "hide_div('FormsEdit');", '', 'Cancel' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save5', 'save.gif', 'if(f5.onsubmit())f5.submit();', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel5', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
 		</span>
 	</form>
 </div>

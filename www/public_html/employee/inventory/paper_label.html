@@ -45,7 +45,7 @@ return $html;
 			$html .= '<div style="padding:0px 7px 0px 7px;">';
 			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$docket+&amp;NoText=1&amp;Height=30"/><b>Docket:</b><br class="spacer"/>`;
 			$html .= '<img style="float: right;" src="/barcode.png?code=Q'.$totals{$docket}.'+&amp;NoText=1&amp;Height=30"><b>Allocated:</b>';
-			$html .= qq`<div style="font-size: 100pt; text-align: center;"><b>$docket</b></div></div><br class="pagebreak"/>`;
+			$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$docket</b></div></div><br class="pagebreak"/>`;
 		} # end foreach
 		
 		return $html;
@@ -53,7 +53,7 @@ return $html;
 			my $html;
 			$html .= '<div style="padding:0px 7px 0px 7px;">';
 			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$openprint::param{docket}+&amp;NoText=1&amp;Height=30"><b>Docket:</b><br class="spacer"/>`;
-			$html .= qq`<div style="font-size: 100pt; text-align: center;"><b>$openprint::param{docket}</b></div></div><br class="pagebreak"/>`;
+			$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$openprint::param{docket}</b></div></div><br class="pagebreak"/>`;
 			return $html;
 	} else {
 		return '<br class="pagebreak"/>';

@@ -988,43 +988,43 @@ sub calc {
 				return jsrs::encode_pairs(%specs);
 			} # end if
 			if ( $specs{'rdbCover'} eq 'Different' ) {
-				if ( ! $specs{'ddmStockBrandCover Spreads'} ) {
+				if ( ! $specs{'ddmStockBrandCoverSpreads'} ) {
 					$specs{'alert'} .= 'Please select Cover Stock Brand<br/>';
 					$specs{'Status'} = 'uncalculated';
 					return jsrs::encode_pairs(%specs);
 				} # end if
-				if ( ! $specs{'ddmStockFinishCover Spreads'} ) {
+				if ( ! $specs{'ddmStockFinishCoverSpreads'} ) {
 					$specs{'alert'} .= 'Please select Cover Stock Finish<br/>';
 					$specs{'Status'} = 'uncalculated';
 					return jsrs::encode_pairs(%specs);
 				} # end if
-				if ( ! $specs{'ddmStockColourCover Spreads'} ) {
+				if ( ! $specs{'ddmStockColourCoverSpreads'} ) {
 					$specs{'alert'} .= 'Please select Cover Stock Colour<br/>';
 					$specs{'Status'} = 'uncalculated';
 					return jsrs::encode_pairs(%specs);
 				} # end if
-				if ( ! $specs{'ddmStockWeightCover Spreads'} ) {
+				if ( ! $specs{'ddmStockWeightCoverSpreads'} ) {
 					$specs{'alert'} .= 'Please select Cover Stock Weight<br/>';
 					$specs{'Status'} = 'uncalculated';
 					return jsrs::encode_pairs(%specs);
 				} # end if
 			} # end if
-			if ( ! $specs{'ddmStockBrandInterior Spreads'} ) {
+			if ( ! $specs{'ddmStockBrandInteriorSpreads'} ) {
                     $specs{'alert'} .= 'Please select Interior Stock Brand<br/>';
                     $specs{'Status'} = 'uncalculated';
                     return jsrs::encode_pairs(%specs);
                 } # end if
-                if ( ! $specs{'ddmStockFinishInterior Spreads'} ) {
+                if ( ! $specs{'ddmStockFinishInteriorSpreads'} ) {
                     $specs{'alert'} .= 'Please select Interior Stock Finish<br/>';
                     $specs{'Status'} = 'uncalculated';
                     return jsrs::encode_pairs(%specs);
                 } # end if
-                if ( ! $specs{'ddmStockColourInterior Spreads'} ) {
+                if ( ! $specs{'ddmStockColourInteriorSpreads'} ) {
                     $specs{'alert'} .= 'Please select Interior Stock Colour<br/>';
                     $specs{'Status'} = 'uncalculated';
                     return jsrs::encode_pairs(%specs);
                 } # end if
-                if ( ! $specs{'ddmStockWeightInterior Spreads'} ) {
+                if ( ! $specs{'ddmStockWeightInteriorSpreads'} ) {
                     $specs{'alert'} .= 'Please select Interior Stock Weight<br/>';
                     $specs{'Status'} = 'uncalculated';
                     return jsrs::encode_pairs(%specs);
@@ -1052,51 +1052,51 @@ sub calc {
 			openprint::service::internal_calc( $log, $dbh, $variable, $$project{'id'}, $printing_service_index, 'Multipage' );
 
 			if ( $specs{'Colours'} eq '4/4' ) {
-				$specs{'chkBlackSideOneInterior Spreads'} = undef;
-				$specs{'chkBlackSideTwoInterior Spreads'} = undef;
-				$specs{'chkProcessColourSideOneInterior Spreads'} = 'ProcessColour';
-				$specs{'chkProcessColourSideTwoInterior Spreads'} = 'ProcessColour';
+				$specs{'chkBlackSideOneInteriorSpreads'} = undef;
+				$specs{'chkBlackSideTwoInteriorSpreads'} = undef;
+				$specs{'chkProcessColourSideOneInteriorSpreads'} = 'ProcessColour';
+				$specs{'chkProcessColourSideTwoInteriorSpreads'} = 'ProcessColour';
 			} elsif ( $specs{'Colours'} eq '4/0' ) {
-				$specs{'chkBlackSideOneInterior Spreads'} = undef;
-				$specs{'chkBlackSideTwoInterior Spreads'} = undef;
-				$specs{'chkProcessColourSideOneInterior Spreads'} = 'ProcessColour';
-				$specs{'chkProcessColourSideTwoInterior Spreads'} = '';
+				$specs{'chkBlackSideOneInteriorSpreads'} = undef;
+				$specs{'chkBlackSideTwoInteriorSpreads'} = undef;
+				$specs{'chkProcessColourSideOneInteriorSpreads'} = 'ProcessColour';
+				$specs{'chkProcessColourSideTwoInteriorSpreads'} = '';
 			} elsif ( $specs{'Colours'} eq '4/1' ) {
-				$specs{'chkBlackSideOneInterior Spreads'} = undef;
-				$specs{'chkBlackSideTwoInterior Spreads'} = 'Black';
-				$specs{'chkProcessColourSideOneInterior Spreads'} = 'ProcessColour';
-				$specs{'chkProcessColourSideTwoInterior Spreads'} = undef;
+				$specs{'chkBlackSideOneInteriorSpreads'} = undef;
+				$specs{'chkBlackSideTwoInteriorSpreads'} = 'Black';
+				$specs{'chkProcessColourSideOneInteriorSpreads'} = 'ProcessColour';
+				$specs{'chkProcessColourSideTwoInteriorSpreads'} = undef;
 			} elsif ( $specs{'Colours'} eq '1/1' ) {
-				$specs{'chkBlackSideOneInterior Spreads'} = 'Black';
-				$specs{'chkBlackSideTwoInterior Spreads'} = 'Black';
-				$specs{'chkProcessColourSideOneInterior Spreads'} = undef;
-				$specs{'chkProcessColourSideTwoInterior Spreads'} = undef;
+				$specs{'chkBlackSideOneInteriorSpreads'} = 'Black';
+				$specs{'chkBlackSideTwoInteriorSpreads'} = 'Black';
+				$specs{'chkProcessColourSideOneInteriorSpreads'} = undef;
+				$specs{'chkProcessColourSideTwoInteriorSpreads'} = undef;
 			} # end if
-			@specs{'rdbAqueousSideOneInterior Spreads','rdbAqueousSideTwoInterior Spreads'} = @specs{'Interior SpreadsAqueous','Interior SpreadsAqueous'};
+			@specs{'rdbAqueousSideOneInteriorSpreads','rdbAqueousSideTwoInteriorSpreads'} = @specs{'InteriorSpreadsAqueous','InteriorSpreadsAqueous'};
 
 			if ( $specs{'rdbCover'} eq 'Different' ) {
 				if ( $specs{'ColoursCover'} eq '4/4' ) {
-					$specs{'chkBlackSideOneCover Spreads'} = undef;
-					$specs{'chkBlackSideTwoCover Spreads'} = undef;
-					$specs{'chkProcessColourSideOneCover Spreads'} = 'ProcessColour';
-					$specs{'chkProcessColourSideTwoCover Spreads'} = 'ProcessColour';
+					$specs{'chkBlackSideOneCoverSpreads'} = undef;
+					$specs{'chkBlackSideTwoCoverSpreads'} = undef;
+					$specs{'chkProcessColourSideOneCoverSpreads'} = 'ProcessColour';
+					$specs{'chkProcessColourSideTwoCoverSpreads'} = 'ProcessColour';
 				} elsif ( $specs{'ColoursCover'} eq '4/0' ) {
-					$specs{'chkBlackSideOneCover Spreads'} = undef;
-					$specs{'chkBlackSideTwoCover Spreads'} = undef;
-					$specs{'chkProcessColourSideOneCover Spreads'} = 'ProcessColour';
-					$specs{'chkProcessColourSideTwoCover Spreads'} = undef;
+					$specs{'chkBlackSideOneCoverSpreads'} = undef;
+					$specs{'chkBlackSideTwoCoverSpreads'} = undef;
+					$specs{'chkProcessColourSideOneCoverSpreads'} = 'ProcessColour';
+					$specs{'chkProcessColourSideTwoCoverSpreads'} = undef;
 				} elsif ( $specs{'ColoursCover'} eq '4/1' ) {
-					$specs{'chkBlackSideOneCover Spreads'} = undef;
-					$specs{'chkBlackSideTwoCover Spreads'} = 'Black';
-					$specs{'chkProcessColourSideOneCover Spreads'} = 'ProcessColour';
-					$specs{'chkProcessColourSideTwoCover Spreads'} = undef;
+					$specs{'chkBlackSideOneCoverSpreads'} = undef;
+					$specs{'chkBlackSideTwoCoverSpreads'} = 'Black';
+					$specs{'chkProcessColourSideOneCoverSpreads'} = 'ProcessColour';
+					$specs{'chkProcessColourSideTwoCoverSpreads'} = undef;
 				} # end if
-			@specs{'rdbAqueousSideOneCover Spreads','rdbAqueousSideTwoCover Spreads'} = @specs{'Cover SpreadsAqueous','Cover SpreadsAqueous'};
+			@specs{'rdbAqueousSideOneCoverSpreads','rdbAqueousSideTwoCoverSpreads'} = @specs{'CoverSpreadsAqueous','CoverSpreadsAqueous'};
 			} # end if
 # The adding of signatures will be done automatically by multipage signatures
 # This will add bindery services, and a printing service
-# this also calls Estimating::Multipage::calculate_sigantures
-			$specs{'Status'} = openprint::print::multipage_signatures( \%specs, $log, $dbh, $variable, $$project{'id'},$printing_service_index );
+			$specs{'Status'} = openprint::print::multipage_signatures( \%specs, $log, $dbh, $variable, $$project{'id'}, $printing_service_index );
+			openprint::Estimating::Multipage::calculate_signatures($log, $dbh, $variable, $$project{'id'} );
 
 		} else {
 # Non-book
