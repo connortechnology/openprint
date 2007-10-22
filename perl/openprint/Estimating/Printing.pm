@@ -1336,9 +1336,9 @@ sub get_project_price {
 			} # end if
 #my $starttime = gettimeofday();
 
-#my $time = gettimeofday();
+my $time = gettimeofday();
 			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
-#$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 
 			if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} and $imp->spreads() ) {
 				my $usq = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
@@ -1366,13 +1366,13 @@ sub get_project_price {
 					my $sig_price;
 					if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} >= $imp->spreads() ) {
 # Going to just re-use the same impo
-#$openprint::log->warn("Doing half calc qtyi: $qty_index unspec: $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > " . $imp->spreads() . ' imp spreads');
+$openprint::log->warn("Doing half calc qtyi: $qty_index unspec: $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > " . $imp->spreads() . ' imp spreads');
 #$Imposition->display();
 
 # We assume that calc_price does not alter the specs hash.  
-#my $time = gettimeofday();
+my $time = gettimeofday();
 						$sig_price = calc_price( $Project, $s_id, $imp, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
-#$openprint::log->debug("2 Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+$openprint::log->debug("2 Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 
 #$openprint::log->warn("Done half calc: price: $sig_price{'Comparison Cost'}");
 					} else {
@@ -1386,13 +1386,13 @@ sub get_project_price {
 						$new_specs{'chkOverridePress'.$qty_index} = '';
 						$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 						if ( $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} ) {
-#$openprint::log->debug("Using cache: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
+$openprint::log->debug("Using cache: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
 							$sig_price = $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}};
 						} else {
-#$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
+$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 							$additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} = $sig_price;
-#$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
+$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
 						} # end if
 #$openprint::log->warn("Done full calc $sig_price{'Comparison Cost'} :". $$specs{'txtSignatureSpreadQuantity'.$qty_index});
 					} # end if
@@ -1411,13 +1411,14 @@ sub get_project_price {
 					my $additional_price = $$sig_price{'Comparison Cost'};
 					$additional_price -= $$sig_price{'Stitching Cost'};
 					if ( $$sig_price{'Comparison Cost'} == $$price{'Comparison Cost'} ) {
-						$additional_price *= $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads();
-						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $imp->spreads();
+						$additional_price *= int($$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads());
+						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads();
+					} else {
+						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $imp->spreads();
 					} # end if
 
 					$$price{'Comparison Cost'} += $additional_price;
 					$$price{'AdditionalSignature Breakdown'} .= 'Additional Signature: ' . sprintf('%.2f', $additional_price ) . '<br/>';
-					$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $imp->spreads();
 					last if check_price( $best_price{'Comparison Cost'}, $price, $specs, $qty_index, $imp, 'Sig' );
 				} # end while
 				$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $usq;
