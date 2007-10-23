@@ -22,13 +22,18 @@
 					next if ! $$sig_specs{'txtQuantity'.$qty_index};
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
 					foreach my $foldtype ( sort keys %openprint::Estimating::Folding::fold_types ) {
-						$html .= sprintf( '<input style="width: auto;" type="text" size="2" name="%1$s-Qty-%2$d-%3$d" value="%4$d" onkeyup="calc(this.form.name);" />%5$s<br/>',
+						$html .= sprintf( '<input style="width: auto;" type="text" size="2" name="%1$s-Qty-%2$d-%3$d" value="%4$d" onkeyup="calc(this.form.name);" %6$s />%5$s<br/>',
 						$foldtype,$$sig_specs{'SignatureIndex'},$qty_index,
 						$$variable{$foldtype.'-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index},
-						$openprint::Estimating::Folding::fold_types{$foldtype}
+						$openprint::Estimating::Folding::fold_types{$foldtype},
+						sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ? '' : 'readonly="readonly"',
 						);
 					} # end foreach fold type
+if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 					$html .= sprintf('<input type="checkbox" id="chkOverrideFoldType-%1$d-%2$d" name="chkOverrideFoldType-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /> <label class="radio" for="chkOverrideFoldType-%1$d-%2$d">Override</label>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+} elsif ( $$variable{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					$html .= sprintf('<input type="hidden" name="chkOverrideFoldType-%1$d-%2$d" value="Y" /> Overriden', $$sig_specs{'SignatureIndex'}, $qty_index );
+} # end if
 					$html .= '</span>';
 				} # end foreach qty_index
 				$html .= '</p><p><label>Equipment:</label>';
@@ -39,7 +44,12 @@
 					$html .= '<option value="">Equipment Options</option>';
 					$html .= make_drop_down( $$variable{'EquipmentArray'}, $$variable{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 					$html .= '</select>';
+if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 					$html .= sprintf('<input type="checkbox" id="chkOverrideEquipment-%1$d-%2$d" name="chkOverrideEquipment-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideEquipment-%1$d-%2$d">Override</label>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
+} elsif ( $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ) {
+					$html .= sprintf('<input type="hidden" name="chkOverrideEquipment-%1$d-%2$d" value="Y" />Overriden', $$sig_specs{'SignatureIndex'}, $qty_index );
+
+} # end if
 					$html .= '</span>';
 				} # end foreach qty_index
 				$html .= '</p></fieldset>';

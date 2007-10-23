@@ -142,7 +142,7 @@ div#ProjectView table tr td input {
 	float: left;
 	width: 50%;
 }
-#BleedsColourBars {
+.BleedsColourBars {
 	float: left;
 	width: 50%;
 }
