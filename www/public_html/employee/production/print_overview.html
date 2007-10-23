@@ -86,7 +86,7 @@
 			var div = $( data2 + 'Forms' );
 			form = document.forms['f5'];
 			if ( form ) {
-				var reg = /(\d*) forms/;
+				var reg = /(\d*) form/;
 				var ar = reg.exec( div.innerHTML );
 				form.ProjectIndex.value = data1;
 				form.ServiceIndex.value = data2;
@@ -124,8 +124,14 @@
 	} // end function openPopup
 	function saveOperator( period, operator, name ) {
 		var div = $( period + 'Operator' );
-		if ( div )
+		if ( div ) {
 			div.innerHTML = name;
+			if ( name == '' ) {
+			div.className = 'assign';
+			} else {
+			div.className = 'Operator';
+			} // end if
+		} // end if
 		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_operator', new Array( period, operator ) );
 		popupWin.destroy();
 		return false;

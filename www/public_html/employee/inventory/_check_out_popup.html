@@ -8,7 +8,7 @@
 		$$variable{'quantity'} = $$variable{Paper}->in_stock() - $$variable{Paper}->allocated();
 	} # end if
 ) ?>
-<div class="PopupWindow" id="CheckOut">
+<div id="CheckOut">
 	<form id="checkoutform" name="checkoutform" action="<?referer?>" method="post">
 		<input type="hidden" name="btnFunction" value="CheckOut" />
 		<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />
