@@ -217,9 +217,12 @@ sub calc {
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
 		next if ! $$specs{'txtQuantity'.$qty_index};
+
+		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
 		foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
 			$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
 		} # end foreach
+		} # end if
 		$$specs{"txtPockets$qty_index"} = 0;
 		my $imposition = 2;
 
@@ -243,22 +246,28 @@ sub calc {
 		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 		foreach my $qty_index ( 1 .. 3 ) {
 			next if ! $$specs{'txtQuantity'.$qty_index};
-			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
-				next;
-			} # end if
-			if ( ! $$sig_specs{'txtSpreadSize'} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spread size.<br/>";
-				next;
-			} # end if
-			if ( ! $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spreads.<br/>";
-				next;
-			} # end if
+			if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
+				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
+					next;
+				} # end if
+				if ( ! $$sig_specs{'txtSpreadSize'} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spread size.<br/>";
+					next;
+				} # end if
+				if ( ! $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spreads.<br/>";
+					next;
+				} # end if
 
-			my $sig_size = $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index}*$$sig_specs{'txtSpreadSize'};
-			$$specs{"txtPockets$qty_index"} += 1;
-			$$specs{'txtSignatureQty'.$sig_size.'Page-'.$qty_index} += 1; 
+				my $sig_size = $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index}*$$sig_specs{'txtSpreadSize'};
+				$$specs{"txtPockets$qty_index"} += 1;
+				$$specs{'txtSignatureQty'.$sig_size.'Page-'.$qty_index} += 1; 
+			} else {
+				foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+					$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
+				} # end foreach
+			} # end if
 		} # end foreach
 	} # end foreach
 

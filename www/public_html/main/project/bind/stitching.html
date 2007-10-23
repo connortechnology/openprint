@@ -49,6 +49,8 @@
 
 				<input name="txtSignatureQtyGateFolded-<?QTYIndex?>" value="<? echo ( $$variable{"txtSignatureQtyGateFolded-$$variable{'QTYIndex'}"} ) ?>" type="text" size="9" onkeyup="calc('f1');" />
 				Gate Folded Signature(s)<br/>
+				<input type="checkbox" id="OverridePockets<?QTYIndex?>" name="OverridePockets<?QTYIndex?>" value="Y" <? echo ( $$variable{'OverridePockets'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="OverridePockets<?QTYIndex?>">Override</label>
 			</span>
 			<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
