@@ -1363,6 +1363,8 @@ $openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval(
 					$new_specs{'PreviousPlates'.$qty_index} += $$price{'txtPlateQuantity'};
 					$new_specs{'PreviousBlankPlates'.$qty_index} += $$price{'txtBlankPlateQuantity'};
 
+					my $last_sig_price = $$price{'Comparison Cost'};
+
 					my $sig_price;
 					if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} >= $imp->spreads() ) {
 # Going to just re-use the same impo
@@ -1410,12 +1412,14 @@ $openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'t
 
 					my $additional_price = $$sig_price{'Comparison Cost'};
 					$additional_price -= $$sig_price{'Stitching Cost'};
-					if ( $$sig_price{'Comparison Cost'} == $$price{'Comparison Cost'} ) {
+					if ( $$sig_price{'Comparison Cost'} == $last_sig_price ) {
 						$additional_price *= int($$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads());
+						last if $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads() >= $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads();
 					} else {
 						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $imp->spreads();
 					} # end if
+					$last_sig_price = $$sig_price{'Comparison Cost'};
 
 					$$price{'Comparison Cost'} += $additional_price;
 					$$price{'AdditionalSignature Breakdown'} .= 'Additional Signature: ' . sprintf('%.2f', $additional_price ) . '<br/>';
