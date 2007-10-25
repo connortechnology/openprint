@@ -112,7 +112,7 @@ sub signature_needs {
 		return 1;
 	} # end if
 
-	if ( $$specs{'txtFinalWidth'} != $$specs{'txtWidth'} or $$specs{'txtFinalHeight'} != $$specs{'txtHeight'} ) {
+	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
 		#$openprint::log->debug("FOLDING NEEDED dimensions do not match!");
 		return 1;
 	} # end if

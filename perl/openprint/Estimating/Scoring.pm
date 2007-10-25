@@ -63,12 +63,12 @@ sub signature_needs {
 	my ( $Project, $specs ) = @_;
 # If it's not needing folding, then it doesn't need to be scored!!
 	if ( ! openprint::Estimating::Folding::signature_needs($specs) ) {
-#$log->debug("NeedFolding is not true");
+#$openprint::log->debug("NeedFolding is not true $$specs{'txtWidth'}x$$specs{'txtHeight'} : $$specs{'txtFinalWidth'}x$$specs{'txtFinalHeight'}");
 		return 0;
 	} # end if
 	if ( ( $$specs{'txtSignatureType'} eq '' ) or ( $$specs{'txtSignatureType'} eq 'Cover Spreads' ) or ( $$specs{'txtSignatureType'} and ( $$specs{'SignatureIndex'} == 1 ) ) ) {
 		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
-$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
+#$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
 		if ( $Paper->score_required() ) {
 			return 1;
 		} # end if
@@ -94,7 +94,7 @@ sub neccessary {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $specs = openprint::service::get_specs_ref( $Project->id(), $signature_service_index );
 
-			if ( signature_needs( $specs ) ) {
+			if ( signature_needs( $Project, $specs ) ) {
 				return 1;
 			} # end if
 		} # end foreach
