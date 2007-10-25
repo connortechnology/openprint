@@ -30,6 +30,7 @@ sub calc_setup {
 
 sub calc_dutch {
 	my ( $setup, $object_width, $object_height, $space_width, $space_height ) = @_;
+$openprint::log->debug("Trying dutch:") if $debug;
 	my @dutch_imps;
 	my $previous_dutch_imp = 0;
 	# So now we have a non-dutch imp, now
@@ -115,7 +116,22 @@ sub check_setup {
 			if ( $setup->imposition() == 1 ) {
 				$setup->rows(0);
 				$setup->columns(0);
-			} elsif ( $setup->imposition() % 2 ) {
+				return;
+			} elsif ( $setup->dutch_columns() == 1 ) {
+				$setup->rows(0);
+				$setup->columns(0);
+				return;
+			} # end if
+
+			if ( $setup->dutch_columns() % 2 ) {
+				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'}  > $setup->stock_width() ) {
+					$setup->rows(0);
+					$setup->columns(0);
+					return;
+				} # end if
+			} # end if
+
+			if ( $setup->columns() % 2 ) {
 # This uses two rollers, on non-offset paper so need more gutter space, which works out to be 0.25 
 				calc_setup( $setup, 
 						( $setup->image_orientation() eq 'Vertical' ? ($setup->image_width(), $setup->image_height()) : ( $setup->image_height(), $setup->image_width() ) ), 
@@ -368,7 +384,7 @@ sub calc_setup_object {
 						$setup1->paper()->height( $$specs{'Cut Off'} ); # Cut Off
 					} # end if
 					push @results, $setup1;
-					if ( sets::isin( $run_style, [ 'Sheet Work','Web'] ) and ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} ) ) {
+					if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} ) ) {
 						push @results, calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height );
 					} # end if
 				} # end if
@@ -510,7 +526,7 @@ $openprint::log->debug("Setting paper width: " . $setup2->paper()->width());
 					} # end if
 					push @results, $setup2;
 
-					if ( sets::isin( $run_style , [ 'Sheet Work','Web'] ) and ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
+					if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
 						push @results, calc_dutch( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height );
 					} # end if
 				} # end if
