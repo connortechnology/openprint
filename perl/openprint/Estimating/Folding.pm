@@ -362,15 +362,15 @@ sub signature_calc {
 			my $foldtype = $Imposition->spread_columns().'x'.$Imposition->spread_rows().'-'.$pages.'Page-'.$Imposition->image_orientation().'SignatureFold';
 
 			if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
-				$folds{$foldtype} = $Imposition->imposition();
+				$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
 			} else {
 				$foldtype = $$sig_specs{'SpreadCols'.$qty_index}.'x'.$$sig_specs{'SpreadRows'.$qty_index}.'-'.$pages.'Page-'.$$sig_specs{'hdnImageOrientation'.$qty_index}.'-'.$Imposition->imposition().'out-SignatureFold';
 				if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
-					$folds{$foldtype} = $Imposition->imposition();
+					$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
 				} else {
 					$foldtype = $pages.'PageSignatureFoldRunSpeed';
 					if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
-						$folds{$foldtype} = $Imposition->imposition();
+						$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
 					} # end if
 				} # end if
 			} # end if

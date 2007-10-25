@@ -464,6 +464,7 @@ sub find {
 		push @values, '%'.$params{'reference'}.'%';
 	} # en dif
 	if ( exists $params{'company_id'} ) {
+$openprint::log->debug("COmpany");
 		if ( ref $params{'company_id'} eq 'ARRAY' ) {
 			if ( @{$params{'company_id'}} ) {
 				$sql .= q{ AND companyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';

@@ -32,13 +32,14 @@
 				'used_press_name'	=> [ split ';', $openprint::session{'/employee/production/projects.html?ddmPress'} ],
 				'status'			=> [ split ';', $openprint::session{'/employee/production/projects.html?ProjectStatus'} ],
 				'due_date_start'	=> $$variable{'DueDateStart'},
-				'due_date_end'		=> $$variable{'DueDateStart'},
+				'due_date_end'		=> $$variable{'DueDateEnd'},
 				'due_date'			=> undef,
 				'misc'				=> ' AND order_id IS NOT NULL',
 				'order'				=> 'due_date, lngDocketNumber',
 			);
 			if ( $openprint::session{'/employee/production/projects.html?ddmCustomer'} ) {
-				$filters{'company_id'} => $openprint::session{'/employee/production/projects.html?ddmCustomer'};
+$openprint::log->debug("Adding Customer (" . $openprint::session{'/employee/production/projects.html?ddmCustomer'});
+				$filters{'company_id'} = $openprint::session{'/employee/production/projects.html?ddmCustomer'};
 			} # end if
 		@{$$variable{'Projects'}} = openprint::Project::find( %filters );
 	} # end if

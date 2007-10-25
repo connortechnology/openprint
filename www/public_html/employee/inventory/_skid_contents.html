@@ -29,8 +29,8 @@
 			$html .= '</a></td>';
 			$html .= '</tr><tr>';
 			$html .= '<td colspan="3">';
-			$html .= ssi::writeButton( $log, $dbh, "CheckIn$paper_id", 'checkin.gif', "checkin_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Check In' );
-			$html .= ssi::writeButton( $log, $dbh, "CheckOut$paper_id", 'checkout.gif', "checkout_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Check Out' );
+			$html .= ssi::writeButton( $log, $dbh, "CheckIn$paper_id", 'checkin.gif', "checkin_window( $paper_id, '$$variable{skid_id}' );", '', 'Check In' );
+			$html .= ssi::writeButton( $log, $dbh, "CheckOut$paper_id", 'checkout.gif', "checkout_window( $paper_id, '$$variable{skid_id}' );", '', 'Check Out' );
 			$html .= ssi::writeButton( $log, $dbh, "Allocate$paper_id", 'allocate.gif', "allocate_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Allocate' );
 			$html .= ssi::writeButton( $log, $dbh, "Delete$paper_id", 'delete.gif', '', sprintf('/employee/inventory/skid_details.html?skid_id=%d&paper_id=%d&btnFunction=DeletePaper', $$variable{Skid}->id(), $paper_id ), 'Delete' );
 			$html .= ssi::writeButton( $log, $dbh, "Select$paper_id", 'select.gif', "if( \$('AddPaper').innerHTML == '' ) {add_div('AddPaper');new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id',{method:'get'} );} else {jsrsExecute( '/jsrs.htm',  loadPaper, 'jsrs::execute', new Array('code', 'object_encode( \$log, new openprint::Paper( $paper_id ) );') );}", '', 'Select' );
