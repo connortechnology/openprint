@@ -157,6 +157,7 @@ my %variables = (
 		'StockType' => ['save','output'],'StockType1' => ['save','output'], 'StockType2' => ['save','output'], 'StockType3' => ['save','output'],
 		'hdnImageOrientation1' => ['save','output'], 'hdnImageOrientation2' => ['save','output'], 'hdnImageOrientation3' => ['save','output'], 
 		'hdnNetSheetCount1' => ['save','output'], 'hdnNetSheetCount2' => ['save','output'], 'hdnNetSheetCount3' => ['save','output'],
+		'SheetQuantity1' => ['save','output'], 'SheetQuantity2' => ['save','output'], 'SheetQuantity3' => ['save','output'],
 		'RunTime1' => ['save','output'], 'RunTime2' => ['save','output'], 'RunTime3' => ['save','output'],
 		'txtWidth' => ['save'], 'txtHeight' => ['save'], 'txtFinalWidth' => ['save'], 'txtFinalHeight' => ['save'],
 		'chkOverrideDimensions'	=> ['save'],
@@ -1213,12 +1214,12 @@ my %best_price = %{$b_price};
 		} # end if
 		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000;
 		$$specs{'rdbGrainDirection'.$qty_index} = $Imposition->grain_direction();
-#$$best_price{'hdnSheetQuantity'.$qty_index} = $price{'Gross Sheet Quantity'};
 		if ( $Paper->type() eq 'Roll' ) {
 			$$specs{'txtPressSheetQty'.$qty_index} = sprintf('%.0f lbs', $best_price{'Gross Sheet Count'} * $Paper->width() * $Paper->height() * $Paper->wpsi() );
 		} elsif ( $Paper->type() eq 'Sheet' ) {
 			$$specs{'txtPressSheetQty'.$qty_index} = $best_price{'Gross Sheet Count'} .'sheets';
 			$$specs{'hdnNetSheetCount'.$qty_index} = $best_price{'Net Sheet Count'};
+			$$specs{'SheetQuantity'.$qty_index} = $best_price{'Gross Sheet Quantity'};
 		} # end if
 #$$specs{'hdnPaperPrice'.$qty_index} = $best_price{'Paper Price'};
 		$$specs{'hdnSuppliedStockWidth'.$qty_index} = $Paper->start_width();
