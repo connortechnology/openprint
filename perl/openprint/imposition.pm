@@ -52,8 +52,10 @@ $openprint::log->debug("Trying dutch:") if $debug;
 		next if $dutch_imp->imposition() <= $previous_dutch_imp;
 		$dutch_imp->paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->paper()->start_width();
 
-		push @dutch_imps, $dutch_imp if check_setup( $dutch_imp, $specs );
-		$previous_dutch_imp = $dutch_imp->imposition();
+		if ( check_setup( $dutch_imp, $specs ) ) {
+			push @dutch_imps, $dutch_imp;
+			$previous_dutch_imp = $dutch_imp->imposition();
+		} # end if
 	} # end foreach
 	$previous_dutch_imp = 0;
 	foreach my $row_delta ( 0 .. int ( $setup->rows() / 2 ) ) {
@@ -74,8 +76,10 @@ $openprint::log->debug("Trying dutch:") if $debug;
 		next if $dutch_imp->imposition() <= $previous_dutch_imp;
 		$dutch_imp->paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->paper()->start_width();
 
-		push @dutch_imps, $dutch_imp if check_setup( $dutch_imp, $specs );
-		$previous_dutch_imp = $dutch_imp->imposition();
+		if ( check_setup( $dutch_imp, $specs ) ) {
+			push @dutch_imps, $dutch_imp;
+			$previous_dutch_imp = $dutch_imp->imposition();
+		} # end if
 	} # end foreach
 	return @dutch_imps;
 } # end sub calc_dutch
@@ -133,19 +137,9 @@ sub check_setup {
 
 			if ( $setup->columns() % 2 ) {
 # This uses two rollers, on non-offset paper so need more gutter space, which works out to be 0.25 
-				calc_setup( $setup, 
-						( $setup->image_orientation() eq 'Vertical' ? ($setup->image_width(), $setup->image_height()) : ( $setup->image_height(), $setup->image_width() ) ), 
-						$setup->stock_width() - ( $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} ), 
-						$setup->stock_height()
-						);
-			$openprint::log->debug(' CHECK 3 Using Paper ' . $setup->paper()->width() . ' x' . $setup->paper()->height() .' ' . $setup->image_width() . ' x ' . $setup->image_height() . ' Imposition: ' . $setup->imposition(). ":".$setup->columns() . 'x' . $setup->rows(). ' ' . $setup->layout_width() . 'x' . $setup->layout_height() ) if $debug;
-				if ( $setup->imposition() == 1 ) {
-$openprint::log->debug('kill1');
-					$setup->rows(0);
-					$setup->columns(0);
-					return 0;
-				} elsif ( $setup->columns() < 3 ) {
-$openprint::log->debug('kill2');
+$setup->display();
+				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} > $setup->stock_width() ) {
+			$openprint::log->debug(' CHECK 3 Using Paper ' . $setup->paper()->width() . ' x' . $setup->paper()->height() .' ' . $setup->image_width() . ' x ' . $setup->image_height() . ' Imposition: ' . $setup->imposition(). ":".$setup->columns() . 'x' . $setup->rows(). '+'.$setup->dutch_columns() . 'x'.$setup->dutch_rows() . ' ' . $setup->layout_width() . 'x' . $setup->layout_height() ) if $debug;
 					$setup->rows(0);
 					$setup->columns(0);
 					return 0;
@@ -675,7 +669,7 @@ sub convert_impositions {
 
 	foreach my $imp ( @$impositions ) {
 		my $impo = $imp->imposition();
-		$impo /= 2 if sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble' ] );
+		#$impo /= 2 if sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble' ] );
 
 		foreach my $signature_size ( 1 .. ( $impo > $desired_signature_size ? $desired_signature_size : $impo ) ) {
 #Now figure out how to cut up the imposition

@@ -49,3 +49,15 @@
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
+<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<div class="row">
+    <span class="label">Stock Cost:</span>
+<? echo ( 
+my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project','ServiceIndex'} );
+my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $$variable{'QTYIndex'} );
+   my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $Paper->type() eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
+    @price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb'};
+
+</div>
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<div

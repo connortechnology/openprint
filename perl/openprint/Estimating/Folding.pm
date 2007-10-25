@@ -542,7 +542,8 @@ sub calc {
 	} # end if
 
 	$log->debug(" Start FOLDING!!!!!!!!!!!!!!!!!!");
-	$$specs{'Status'} = 'calculated';
+	# sig_calc overwrites $$specs{Status}, so we keep our own copy
+	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
 	#my @signature_service_indices = openprint::print::get_signature_indices( $log, $dbh, $project_index );
@@ -571,7 +572,7 @@ sub calc {
 					$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'}->id();
 				} else {
 					$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
-					$$specs{'Status'} = 'uncalculated';
+					$status = 'uncalculated';
 				} # end if
 			}# # end if
 		} # end foreach signature
@@ -580,9 +581,9 @@ sub calc {
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
 	} # end foreach qty
 
-	$log->debug(" END FOLDING!!!!!!!!!!!!!!!!!!");
-	return $$specs{'Status'};
-} # end sub calc_folding
+	$log->debug(" END FOLDING!!!!!!!!!!!!!!!!!! $status");
+	return $$specs{'Status'} = $status;
+} # end sub calc
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
