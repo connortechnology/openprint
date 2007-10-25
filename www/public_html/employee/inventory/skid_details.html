@@ -3,7 +3,7 @@
 var allocateWin;
 function allocate_window(paper_id, skid_id, quantity ) {
 	if ( ! allocateWin ) {
-		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:300} );
+		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
@@ -26,7 +26,7 @@ onDestroy: function(eventName, win) {
 var checkinWin;
 function checkin_window( paper_id, skid_id, quantity ) {
 	if ( ! checkinWin ) {
-		checkinWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:300} );
+		checkinWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
@@ -48,7 +48,7 @@ onDestroy: function(eventName, win) {
 var checkoutWin;
 function checkout_window( paper_id, skid_id, quantity ) {
 	if ( ! checkoutWin ) {
-		checkoutWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:300} );
+		checkoutWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
@@ -64,7 +64,8 @@ onDestroy: function(eventName, win) {
 	checkoutWin.showCenter();
 	var url = '/employee/inventory/_check_out_popup.html?paper_id='+paper_id;
 	url += '&skid_id='+skid_id;
-	url += '&quantity='+quantity;
+	if ( quantity )
+		url += '&quantity='+quantity;
 	checkoutWin.setAjaxContent(url, null , true);
 } // end function checkout_window
 

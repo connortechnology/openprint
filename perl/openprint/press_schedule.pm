@@ -187,9 +187,9 @@ sub get_li {
 			} # end if
 	} # end if
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
-		$html .= sprintf( q{<div id="%2$dComment" class="Comment" onclick="openPopup( 'Comment', %1$s, %2$s );">%3$s</div>}, @$row{'projectindex','serviceindex'}, $specs{'txtEmployeeComments'} );
+		$html .= sprintf( q{<div id="%2$dComment" class="Comment" onclick="openPopup( 'Comment', '%1$s', '%2$s' );">%3$s</div>}, @$row{'projectindex','serviceindex'}, $specs{'txtEmployeeComments'} );
 
-		$html .= sprintf( q{<span class="Forms" id="%2$dForms" onclick="openPopup( 'Forms', %1$s, %2$s );">%3$d %4$s</span>}, @$row{'projectindex','serviceindex'}, $specs{'SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
+		$html .= sprintf( q{<span class="Forms" id="%2$dForms" onclick="openPopup( 'Forms', '%1$s', '%2$s' );">%3$d %4$s</span>}, @$row{'projectindex','serviceindex'}, $specs{'SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
 		$html .= sprintf( q{<span id="%2$dImpressions" class="Impressions" onclick="openPopup( 'Impressions', %1$s, %2$s );">%3$d imps</span>}, @$row{'projectindex','serviceindex'}, $specs{'ImpressionQuantity'} );
 
 		$html .= '<span class="Buttons">';

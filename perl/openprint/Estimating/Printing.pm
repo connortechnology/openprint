@@ -1363,14 +1363,17 @@ sub get_project_price {
 					$new_specs{'PreviousPlates'.$qty_index} += $$price{'txtPlateQuantity'};
 					$new_specs{'PreviousBlankPlates'.$qty_index} += $$price{'txtBlankPlateQuantity'};
 
+					my $last_sig_price = $$price{'Comparison Cost'};
+
 					my $sig_price;
 					if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} >= $imp->spreads() ) {
 # Going to just re-use the same impo
 #$openprint::log->warn("Doing half calc qtyi: $qty_index unspec: $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > " . $imp->spreads() . ' imp spreads');
-#$Imposition->display();
+##$Imposition->display();
 
 # We assume that calc_price does not alter the specs hash.  
 #my $time = gettimeofday();
+$new_specs{'no_stitching'} = 1; # unneccessary calculation
 						$sig_price = calc_price( $Project, $s_id, $imp, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("2 Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 
@@ -1410,14 +1413,17 @@ sub get_project_price {
 
 					my $additional_price = $$sig_price{'Comparison Cost'};
 					$additional_price -= $$sig_price{'Stitching Cost'};
-					if ( $$sig_price{'Comparison Cost'} == $$price{'Comparison Cost'} ) {
-						$additional_price *= $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads();
-						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $imp->spreads();
+					if ( $$sig_price{'Comparison Cost'} == $last_sig_price ) {
+						$additional_price *= int($$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads());
+						last if $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads() >= $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
+						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads();
+					} else {
+						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $imp->spreads();
 					} # end if
+					$last_sig_price = $$sig_price{'Comparison Cost'};
 
 					$$price{'Comparison Cost'} += $additional_price;
 					$$price{'AdditionalSignature Breakdown'} .= 'Additional Signature: ' . sprintf('%.2f', $additional_price ) . '<br/>';
-					$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $imp->spreads();
 					last if check_price( $best_price{'Comparison Cost'}, $price, $specs, $qty_index, $imp, 'Sig' );
 				} # end while
 				$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $usq;
@@ -1567,7 +1573,8 @@ sub calc_price {
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
 	my $setup_rate = $Press->specification( 'Press Run Overs Rate', scalar @colours );
 	my $setup_overs = $setup_rate * scalar @colours;
-	$setup_overs += $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
+	my $fm_overs = $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
+	$setup_overs += $fm_overs;
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
 
 	my $over_rate = $Press->specification( 'Press Run Overs', $base_impressions );
@@ -1631,7 +1638,7 @@ sub calc_price {
 	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
 	$setup_rate = $Press->specification( 'Press Run Overs Rate', $plate_setup{'Plate Count'} );
 	$setup_overs = $setup_rate * ( $plate_setup{'Plate Count'} );
-	$setup_overs += $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
+	$setup_overs += $fm_overs;
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
 
 	$run_overs = $base_impressions * $over_rate;
@@ -1647,7 +1654,6 @@ sub calc_price {
 	$impressions = $gross_qty;
 	my $sheets_per_package = $Paper->sheets_per_package();
 	if ( $sheets_per_package ) {
-$openprint::log->debug("Sheets Per Package: ($sheets_per_package)");
 		$gross_qty = $sheets_per_package * ( ceil( $gross_qty / $sheets_per_package ) );
 	} # end if
 	my %sheet_qty = (
@@ -1659,7 +1665,7 @@ $openprint::log->debug("Sheets Per Package: ($sheets_per_package)");
 			'Additional Plate Overs'	=> $additional_overs,
 			'Total Overs'				=> $impressions,
 			'Weight'					=> ( $gross_qty * $Paper->width() * $Paper->height() * $Paper->wpsi() ),
-			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$Press->specification( 'FM Screening Additional Overs', undef ) : 0,
+			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$fm_overs : 0,
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
 
@@ -1869,6 +1875,7 @@ $openprint::log->warn("Got no runspeed.");
 	$price{'Total Cost'} = $total_cost;
 	$price{'Total Cost'} += $price{'Paper Price'} if (! $$services{'Paper'}) and ($$specs{'rdbSuppliedStock'} ne 'Y');
 
+	if ( ! $$specs{'no_stitching'} ) {
 	if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
 
 		#my $starttime = gettimeofday();
@@ -1890,6 +1897,7 @@ $openprint::log->warn("Got no runspeed.");
 	if ( $$services{'LoopStitching'} ) {
 	} # end if
 	$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
+	} # end if
 
 # Now add in cutting costs to the comparison
 

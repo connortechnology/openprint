@@ -91,8 +91,21 @@
 			<fieldset id="CoverStocks" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
 				<legend>Information for Cover</legend>
 				<? echo ( 
+	
 					$$variable{'Signature'} = 'CoverSpreads';
+					if ( ! $$variable{'Project'}->signatures('Cover Spreads') ) {
+						# Load Defaults
+						if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+
+							$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
+							my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
+							while ( my ( $name, $value ) = splice @defaults,0,2 ) {
+								$$variable{$name.$$variable{'Signature'}} = $value;
+							} # end while
+						} # end if
+					} # end if
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
+					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/bleeds_colourbars.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
 					return variable_substitution( $r, $log, $dbh, \$html, $variable );
 					) ?>
@@ -100,7 +113,19 @@
 			<fieldset><legend>Information for Interior Pages</legend>
 				<? echo ( 
 					$$variable{'Signature'} = 'InteriorSpreads';
+					if ( ! $$variable{'Project'}->signatures('Interior Spreads') ) {
+						# Load Defaults
+						if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+
+							$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
+							my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
+							while ( my ( $name, $value ) = splice @defaults,0,2 ) {
+								$$variable{$name.$$variable{'Signature'}} = $value;
+							} # end while
+						} # end if
+					} # end if
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
+					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/bleeds_colourbars.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
 					return variable_substitution( $r, $log, $dbh, \$html, $variable );
 					) ?>

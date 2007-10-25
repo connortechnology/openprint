@@ -655,7 +655,10 @@ sub convert_impositions {
 
 
 	foreach my $imp ( @$impositions ) {
-		foreach my $signature_size ( 1 .. ( $imp->imposition() > $desired_signature_size ? $desired_signature_size : $imp->imposition() ) ) {
+		my $impo = $imp->imposition();
+		$impo /= 2 if sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble' ] );
+
+		foreach my $signature_size ( 1 .. ( $impo > $desired_signature_size ? $desired_signature_size : $impo ) ) {
 #Now figure out how to cut up the imposition
 #$openprint::log->debug("Considering sig size: $signature_size") if $debug;
 			my ( $rows, $cols );

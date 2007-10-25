@@ -198,7 +198,28 @@ return $html;
 		<td><br><br><br></td>
 	</tr>
 </table>
-<br>
+<br/>
+<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white" style="table-layout: fixed;">
+	<tr> 
+         <td class="headerText"><b>Special Press Instructions:</b></td>
+    </tr>
+    <tr>
+         <td class="headerText">
+			<? echo (
+				my $services = $$variable{'Project'}->services();
+				if ( $$services{'PerfectBound'} ) {
+					return 'spine perf';
+				} elsif ( $$services{''} ) {
+					my $p_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{''}[0] );
+					if ( $$p_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+						return 'spine perf';
+					} # end if
+				} # end if
+			) ?>
+	<br/><br/><br/></td>
+	</tr>
+</table>
+<br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white" style="table-layout: fixed;">
 	<tr> 
 		<td colspan="3" class="headerText"><b>Proofs</b>:</td>
@@ -292,6 +313,17 @@ return $html;
 		<tr>
             <td colspan="3" class="headerText"><b>Special Prepress Instructions:</b>
 			<b><? echo ( 'FM SCREENING' if $$variable{'ScreenType'} eq 'FM' ) ?></b>
+			<? echo (
+				my $services = $$variable{'Project'}->services();
+				if ( $$services{'PerfectBound'} ) {
+					return '1/4&quot; spine gutter';
+				} elsif ( $$services{''} ) {
+					my $p_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{''}[0] );
+					if ( $$p_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+						return 'spine perf';
+					} # end if
+				} # end if
+			) ?>
 			</td>
         </tr>
         <tr>

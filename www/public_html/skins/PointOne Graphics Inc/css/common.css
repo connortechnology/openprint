@@ -452,7 +452,6 @@ fieldset.filters p span.DateSelector select {
 	max-width: none;
 }
 fieldset.filters p span.DateSelector select option {
-	padding-right: 5px;
 }
 
 #DidYouKnow {

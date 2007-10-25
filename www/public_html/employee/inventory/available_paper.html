@@ -7,13 +7,10 @@ if ( $openprint::param{'btnFunction'} eq 'Allocate' ) {
 <script type="text/javascript">
 var allocateWin;
 function allocate_window(paper_id) {
-    if (allocateWin != null) {
-		Dialog.alert("Close the allocate window before opening it again!",{width:200, height:130});
-	} else {
-		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube"} );
+    if (allocateWin == null) {
+		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:300} );
 		allocateWin.setHTMLContent('Loading... please wait');
 		allocateWin.showCenter();
-		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?paper_id='+paper_id, null , true);
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
@@ -25,6 +22,7 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	}
+		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?paper_id='+paper_id, null , true);
 } // end function bug_report
 
 function check_inputs(form ) {

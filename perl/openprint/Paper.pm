@@ -206,7 +206,7 @@ sub copy {
 sub prices {
 	my $self = shift;
 	if ( ! $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'} );
+		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>shift );
 	} # end if
 	return @{$$self{'Prices'}};
 } # end sub prices
@@ -516,12 +516,15 @@ sub add_inventory {
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
+	my $Skid = new openprint::Skid( $skid_id );
+	#Skid{Paper}{paper_id} has already been adjusted
+
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
     sql::insert( undef, undef, 'Paper_Inventory',
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  $self->in_stock() + $quantity,
+        'InStock',  ($skid_id? $$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
         'UpdateTime',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
@@ -633,7 +636,7 @@ sub get_price {
 	} else {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $bestPrice;
-		my @Prices = $self->prices();
+		my @Prices = $self->prices( $list_id );
 		if ( ! @Prices ) {
 			$openprint::log->warn( 'No prices for paper for pricelist ' . $list_id );
 			return;
