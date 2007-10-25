@@ -550,10 +550,10 @@ sub check_out {
 		} else {
 			$$Skid{Paper}{$paper_id} -= $qty;
 			if ( @Projects ) {
-			$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' . @Projects ? ' for docket ' . $Projects[0]->docket() : '' );
-			$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
+				$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' .( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
+				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
 			} else {
-			$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' );
+				$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' );
 			} # end if
 			$qty = 0;
 		} # end if
