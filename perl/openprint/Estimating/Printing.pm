@@ -1933,7 +1933,7 @@ $openprint::log->warn("Got no runspeed.");
 		return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Cutting' );
 	} # end if
 
-	if ( $$project{'HasScoring'} ) {
+	if ( $$project{'HasScoring'} and $$project{'NeedScoring'} ) {
 $openprint::log->debug("Scoring");
 		my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $service_index, $specs, $qty_index );
 $openprint::log->debug("Scoring REsults: $scoring_results{'Status'} $scoring_results{'Price'}");

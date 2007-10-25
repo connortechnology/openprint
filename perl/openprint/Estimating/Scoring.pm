@@ -443,7 +443,11 @@ sub get_scores {
 		return;
 	} # end if
 	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
-		$$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} = 1;
+		if ( openprint::print::get_book_type( $Project ) eq 'PerfectBound' ) {
+			$$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} = 4;
+		} else {
+			$$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} = 1;
+		} # end if
 	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' ) {
 		if ( $$sig_specs{'SignatureIndex'} == 1 ) {
 			$$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} = 1;

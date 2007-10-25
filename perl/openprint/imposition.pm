@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -649,7 +649,7 @@ sub convert_impositions {
 			7	=>	[ [7,1] ],
 			8	=>	[ [2,4],[4,2] ],
 			9	=>	[ [3,3] ],
-			10	=>	[ [5,2], [2,5] ],
+			10	=>	[ [5,2], [2,5],[3,4],[4,3] ],
 			12	=>	[ [3,4], [4,3] ],
 			);
 	if ( $spread_size == 2 ) {
@@ -661,7 +661,7 @@ sub convert_impositions {
 			$blocks{17}	=	[ ];
 			$blocks{18}	=	[ [3,6],[6,3] ];
 			$blocks{19}	=	[ ];
-			$blocks{20}	=	[ ];
+			$blocks{20}	=	[ [4,5],[5,4] ];
 			$blocks{21}	=	[ [3,7],[7,3] ];
 			$blocks{22}	=	[ [3,8],[8,3] ];
 	} # end if
