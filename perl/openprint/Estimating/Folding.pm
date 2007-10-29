@@ -370,7 +370,8 @@ sub signature_calc {
 				} else {
 					$foldtype = $pages.'PageSignatureFoldRunSpeed';
 					if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
-						$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
+						#$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
+						$folds{$pages.'PageSignatureFold'} += 1;
 					} # end if
 				} # end if
 			} # end if
@@ -448,7 +449,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					next;
 				} else {
 					foreach my $I ( @good_folds ) {
-						$folds{$I->spreads()*$$sig_specs{'txtSpreadSize'}.'PageSignatureFold'} += $I->imposition();
+						$folds{$I->spreads()*$$sig_specs{'txtSpreadSize'}.'PageSignatureFold'} += 1;
 					}
 				} # end if
 			} # end if

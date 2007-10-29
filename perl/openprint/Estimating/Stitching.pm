@@ -220,9 +220,9 @@ sub calc {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
-		foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
-			$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
-		} # end foreach
+			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+				$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
+			} # end foreach
 		} # end if
 		$$specs{"txtPockets$qty_index"} = 0;
 		my $imposition = 2;
@@ -248,11 +248,13 @@ sub calc {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 	} # end if
 
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $$specs{'txtQuantity'.$qty_index};
-			if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $$specs{'txtQuantity'.$qty_index};
+
+		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
+			foreach my $signature_service_index ( $Project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+
 				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
 					next;
@@ -267,7 +269,7 @@ sub calc {
 				} # end if
 
 				if ( $folding_specs ) {
-$openprint::log->debug("Taking from folding");
+#$openprint::log->debug("Taking from folding");
 					foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
 						my $pockets = $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index};
 						$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} += $pockets;
@@ -278,13 +280,14 @@ $openprint::log->debug("Taking from folding");
 					$$specs{"txtPockets$qty_index"} += 1;
 					$$specs{'txtSignatureQty'.$sig_size.'Page-'.$qty_index} += 1; 
 				} # end if
-			} else {
-				foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
-					$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
-				} # end foreach
-			} # end if
-		} # end foreach
-	} # end foreach
+			} # end foreach signature
+		} else { # Override Pockets
+			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
+#$openprint::log->debug("Pckets $qty_index: " . $$specs{"txtPockets$qty_index"} );
+			} # end foreach
+		} # end if
+	} # end foreach qty_index
 
 	#At this point, if the job supports 2out impo, our setup is 2out.  This may change later, depending on the equipment's ability to support 2out stitching
 
@@ -292,7 +295,7 @@ $openprint::log->debug("Taking from folding");
 
 	my $plusCover = 0;
 	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
-		$log->debug("************* We Have Plus Cover *************************");
+		#$log->debug("************* We Have Plus Cover *************************");
 		$plusCover = 1;
 	} # end if
 
