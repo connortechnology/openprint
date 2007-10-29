@@ -154,6 +154,7 @@ sub view_services {
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
 				} # end if
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
+				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
 				foreach my $signature_service_index ( $Project->signatures( ) ) {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
