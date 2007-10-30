@@ -263,6 +263,7 @@ $openprint::log->debug("sign calc");
 	my $imposition = new openprint::Imposition();
 	$imposition->load( $sig_specs, $qty_index );
 
+	# IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $imposition->runstyle() eq 'Work & Turn' ) {
 		$imposition->columns( $imposition->columns()/2 );
 	} elsif ( $imposition->runstyle() eq 'Work & Tumble' ) {
@@ -280,7 +281,6 @@ $openprint::log->debug("sign calc");
 	if ( $cutting_service_index ) {
 		$imposition->display();
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
-		$imposition->display();
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
 			$imps[$i]->display();
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
@@ -430,6 +430,8 @@ $openprint::log->debug("sign calc");
 	} else {
 		$Results{'Status'} = 'calculated';
 	} # end if
+$openprint::log->debug("ALert: $$specs{'alert'}");
+$openprint::log->debug("Break: ".$$specs{'hdnBreakdown'.$qty_index});
 	return %Results;
 } # end sub signature_calc
 
@@ -443,7 +445,11 @@ sub get_scores {
 		return;
 	} # end if
 	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
-		$$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} = 1;
+		if ( openprint::print::get_book_type( $Project ) eq 'PerfectBound' ) {
+			$$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} = 4;
+		} else {
+			$$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} = 1;
+		} # end if
 	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' ) {
 		if ( $$sig_specs{'SignatureIndex'} == 1 ) {
 			$$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} = 1;
