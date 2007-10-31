@@ -283,7 +283,7 @@ sub split_job {
 
 	my $new_service_index = openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'AdditionalSignature' );
 	my %new_specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $project_index, $new_service_index );
-	$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+	$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 	($specs{'SignatureIndex'}) = sql::execute( $openprint::log, $openprint::dbh, $_, $project_index );
 	$specs{'SignatureIndex'} += 1;
 
