@@ -72,7 +72,7 @@ Projects listed in red have changed price from the time this order was originall
 			my $html;
 			if ( sets::isin( $$variable{'ORDER_STATUS'}, 'Re-Opened', 'Incomplete') ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', '', "information.html?OrderID=$$variable{'OrderID'}", 'Continue' );
-			} elsif ( sets::isin( $$variable{'ORDER_STATUS'}, 'Complete', 'Paid','Pending Deposit','In Production','Cancelled' ) ) {
+			} elsif ( sets::isin( $$variable{'ORDER_STATUS'}, 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval' ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'UploadCenter', 'upload_center.gif', '', '/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Center' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
 				$html .= ssi::writeButton( $log, $dbh, 'reOrder','reOrder.gif',"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", '', 'ReOrder' ); 
 				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled'; 

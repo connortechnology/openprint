@@ -23,7 +23,8 @@
 		} // end if
 	}
 	function load_projects( form ) {
-		LoadContent('ProjectList','/main/project/_project_list.html', Serialize( form ) );
+		$('ProjectList').innerHTML = 'Please wait...';
+		new Ajax.Updater('ProjectList','/main/project/_project_list.html', {method:'get',parameters:form.serialize()});
 	} // end function
 	function initializeDayDropDowns() {
 		if ( typeof(setDaysDropDown) == 'function' ) {
