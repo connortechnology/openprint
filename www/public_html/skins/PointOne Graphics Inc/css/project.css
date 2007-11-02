@@ -37,6 +37,7 @@ div.ProjectHeader fieldset#Reference {
     float: left;
     text-align: left;
     width: 47%;
+	font-size: medium;
 }
 div.ProjectHeader fieldset#Description {
     float: right;
