@@ -212,3 +212,7 @@ span.SpotColour label, span.Coverages label {
 	float: left;
 	width: 104px;
 }
+.PerforationSignature {
+	float: left;
+	width: 49%;
+}

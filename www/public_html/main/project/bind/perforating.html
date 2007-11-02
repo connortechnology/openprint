@@ -12,15 +12,18 @@
         <fieldset><legend><?ServiceTypeName?></legend>
 			<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
 			<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
-				<? if ( $$variable{'Reference'} ne '' ) ?>
-				Information for <?Reference?>:
-				<? endif ( $$variable{'Reference'} ne '' ) ?>
-				<p> 
-					<label>Perforations Quantity:</span>
-						<input name="txtQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="9"  onkeyup="calc('f1');" /> 
-				</p>
-				<!--#include virtual="/includes/main/proj/score_direction.html"-->
-				<!--#include virtual="/includes/main/proj/score_length.html"-->
+				<div class="PerforationSignature">
+					<? if ( $$variable{'Reference'} ne '' ) ?>
+					Information for <?Reference?>:
+					<? endif ( $$variable{'Reference'} ne '' ) ?>
+					<p> 
+						<label>Perforation Quantity:</label>
+						<input name="txtVerticalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="4" onkeyup="calc(this.form.name);" />
+						Vertical +
+						<input name="txtHorizontalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="4" onkeyup="calc(this.form.name);" />
+						Horizontal
+					</p>
+				</div>
 			<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
