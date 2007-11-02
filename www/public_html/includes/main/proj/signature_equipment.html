@@ -9,7 +9,7 @@
 <? echo ( ssi::fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ); ) ?>
 		</select>
 		<input type="checkbox" id="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>" name="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');"
-		<? echo ( $$variable{"chkOverrideEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} eq 'Y' ) ?>
+		<? echo ( $$variable{"chkOverrideEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} eq 'Y' ? 'checked="checked"' : '' ) ?>
 />
 		<label class="radio" for="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
 	</span>

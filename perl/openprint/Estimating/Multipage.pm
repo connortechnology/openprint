@@ -330,12 +330,13 @@ $openprint::log->debug("ADding signature");
 	$sig_index += 1;
 	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureIndex', $sig_index );
 
+	# Releases the lock
+	$openprint::dbh->commit();
+
 	foreach my $key ( openprint::Estimating::Printing::variables() ) {
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 	} # end foreach
 
-	# Releases the lock
-	$openprint::dbh->commit();
 	sql::end_transaction( $openprint::dbh, $ac );
 	return $new_service_index;
 } # end sub copy_signature

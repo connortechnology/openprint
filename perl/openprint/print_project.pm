@@ -1237,7 +1237,7 @@ sub calc {
 			} # end if
 			foreach my $sid ( @{$services{'Scoring'}} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'chkOverrideQty-0', $specs{'chkOverrideScoreQty'} );
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtQty-0', $specs{'txtScoreQty'} ) if $specs{'chkOverrideScoreQty'} eq 'Y';
+				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtVerticalQty-0', $specs{'txtScoreQty'} ) if $specs{'chkOverrideScoreQty'} eq 'Y';
 			} # end foreach
 		} else {
 			foreach ( @{$services{'Scoring'}} ) {
@@ -1249,7 +1249,7 @@ sub calc {
 		if ( $specs{'Perfing'} eq 'Y' ) {
 			push @{$services{'Perforating'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Perforating' ) if ! $services{'Perforating'};
 			foreach my $sid ( @{$services{'Perforating'}} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtQty-0', $specs{'txtPerfQty'} );
+				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtVerticalQty-0', $specs{'txtPerfQty'} );
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'chkOverrideQty-0', 'Y' );
 			} # end foreach
 		} else {
