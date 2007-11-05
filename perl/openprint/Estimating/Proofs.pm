@@ -486,7 +486,7 @@ sub save_proof_specs {
 				my ( $signature_service_index ) = sql::execute( $log, $dbh, $_, $project_index, 'SignatureIndex',$signature_index );
 
 				foreach my $qty_index ( 1 .. 3 ) {
-					$_ = 'SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName LIKE ?';
+					$_ = 'SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName LIKE ?';
 					my ( $proof_index ) = sql::execute( $log, $dbh, $_, $project_index, $service_index, "txtProofIndex-$signature_index-%-$qty_index" );
 					$proof_index += 1;
 

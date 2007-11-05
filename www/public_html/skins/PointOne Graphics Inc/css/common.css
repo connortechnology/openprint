@@ -447,12 +447,11 @@ span.DateSelector {
 	float: left;
 	width: 230px;
 }
-fieldset.filters p span.DateSelector select {
+span.DateSelector select {
 	width: auto;
 	max-width: none;
 }
-fieldset.filters p span.DateSelector select option {
-	padding-right: 5px;
+span.DateSelector select option {
 }
 
 #DidYouKnow {
@@ -522,4 +521,6 @@ br.pagebreak {
     height: 0px;
     page-break-after: always;
 }
-
+fieldset p input.CompanyFilter {
+	width: auto;
+}

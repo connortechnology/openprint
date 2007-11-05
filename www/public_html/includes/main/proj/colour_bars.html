@@ -1,13 +1,13 @@
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
-<input type="hidden" name="rdbColourBar" value="<?rdbColourBar?>"/>
+<input type="hidden" name="rdbColourBar<?Signature?>" value="<? echo ( $$variable{'rdbColourBar'.$$variable{'Signature'}} ) ?>"/>
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
-<p id="ColourBars" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
+<p class="ColourBars" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 	<label><? echo ( ssi::writeTip('Colour bar'); ) ?>:</label>
-		<input type="radio" id="rdbColourBarY" name="rdbColourBar" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="rdbColourBarY">Yes</label>
-		<input type="radio" id="rdbColourBarN" name="rdbColourBar" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'} eq 'N' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="rdbColourBarN">No</label>
-		<input type="radio" id="rdbColourBarAUTO" name="rdbColourBar" value="" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'} eq '' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="rdbColourBarAUTO">Auto</label>
+		<input type="radio" id="rdbColourBar<?Signature?>Y" name="rdbColourBar<?Signature?>" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'.$$variable{'Signature'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbColourBar<?Signature?>Y">Yes</label>
+		<input type="radio" id="rdbColourBar<?Signature?>N" name="rdbColourBar<?Signature?>" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'.$$variable{'Signature'}} eq 'N' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbColourBar<?Signature?>N">No</label>
+		<input type="radio" id="rdbColourBar<?Signature?>AUTO" name="rdbColourBar<?Signature?>" value="" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'.$$variable{'Signature'}} eq '' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbColourBar<?Signature?>AUTO">Auto</label>
 </p>
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>

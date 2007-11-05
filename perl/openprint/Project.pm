@@ -519,6 +519,10 @@ sub find {
 		push @values, $params{'ordered_on_end'};
 	} # end if
 
+	if ( $params{'salesrep_id'} ) {
+		$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
+		push @values, $params{'salesrep_id'};
+	} # end if
 
 	if ( $params{'value_start'} and $params{'value_end'} ) {
 		$sql .= q{ AND ( (price1 BETWEEN ? AND ? ) OR (price2 BETWEEN ? AND ?) OR (price3 BETWEEN ? AND ? ) )};

@@ -20,7 +20,7 @@ Projects listed in red have changed price from the time this quote was originall
 <!--#include virtual="/includes/quote_header.html" -->
 <!--#include virtual="/includes/quote_information.html" -->
 <br class="spacer"/>
-<? if ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <table class="List">
 	<tr> 
 		<th align="left">Project</th>
@@ -73,7 +73,7 @@ Projects listed in red have changed price from the time this quote was originall
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 	<? endwhile ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 </table>
-<? else ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? else ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <table class="List">
 	<tr> 
 		<th align="left">Project</th>
@@ -122,7 +122,7 @@ Projects listed in red have changed price from the time this quote was originall
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 	<? endwhile ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 </table>
-<? endif ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 
 <table class="List">
 	<tr>

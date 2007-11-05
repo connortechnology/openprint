@@ -37,6 +37,7 @@ div.ProjectHeader fieldset#Reference {
     float: left;
     text-align: left;
     width: 47%;
+	font-size: medium;
 }
 div.ProjectHeader fieldset#Description {
     float: right;
@@ -142,7 +143,7 @@ div#ProjectView table tr td input {
 	float: left;
 	width: 50%;
 }
-#BleedsColourBars {
+.BleedsColourBars {
 	float: left;
 	width: 50%;
 }
@@ -210,4 +211,8 @@ span.SpotColour label, span.Coverages label {
 .colourOption {
 	float: left;
 	width: 104px;
+}
+.PerforationSignature {
+	float: left;
+	width: 49%;
 }

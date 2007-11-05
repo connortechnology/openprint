@@ -92,7 +92,7 @@ sub neccessary {
 	my $services = $Project->services();
 
 	if ( $$services{'NoBindery'} ) {
-		$log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
+		$log->debug(" ** Project is marked as No bindery, Stitching not needed ! ** ");
 		return 0;
 	} # end if
 
@@ -218,9 +218,12 @@ sub calc {
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
 		next if ! $$specs{'txtQuantity'.$qty_index};
-		foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
-			$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
-		} # end foreach
+
+		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
+			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+				$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
+			} # end foreach
+		} # end if
 		$$specs{"txtPockets$qty_index"} = 0;
 		my $imposition = 2;
 
@@ -240,28 +243,51 @@ sub calc {
 		} # end if
 	} # end foreach
 
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $$specs{'txtQuantity'.$qty_index};
-			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
-				next;
-			} # end if
-			if ( ! $$sig_specs{'txtSpreadSize'} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spread size.<br/>";
-				next;
-			} # end if
-			if ( ! $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spreads.<br/>";
-				next;
-			} # end if
+	my $folding_specs = 0;
+	if ( $$services{'Folding'} ) {
+		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+	} # end if
 
-			my $sig_size = $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index}*$$sig_specs{'txtSpreadSize'};
-			$$specs{"txtPockets$qty_index"} += 1;
-			$$specs{'txtSignatureQty'.$sig_size.'Page-'.$qty_index} += 1; 
-		} # end foreach
-	} # end foreach
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $$specs{'txtQuantity'.$qty_index};
+
+		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
+			foreach my $signature_service_index ( $Project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+
+				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
+					next;
+				} # end if
+				if ( ! $$sig_specs{'txtSpreadSize'} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spread size.<br/>";
+					next;
+				} # end if
+				if ( ! $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spreads.<br/>";
+					next;
+				} # end if
+
+				if ( $folding_specs ) {
+#$openprint::log->debug("Taking from folding");
+					foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+						my $pockets = $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index};
+						$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} += $pockets;
+						$$specs{"txtPockets$qty_index"} += $pockets;
+					} # end foreach
+				} else {
+					my $sig_size = $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index}*$$sig_specs{'txtSpreadSize'};
+					$$specs{"txtPockets$qty_index"} += 1;
+					$$specs{'txtSignatureQty'.$sig_size.'Page-'.$qty_index} += 1; 
+				} # end if
+			} # end foreach signature
+		} else { # Override Pockets
+			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
+#$openprint::log->debug("Pckets $qty_index: " . $$specs{"txtPockets$qty_index"} );
+			} # end foreach
+		} # end if
+	} # end foreach qty_index
 
 	#At this point, if the job supports 2out impo, our setup is 2out.  This may change later, depending on the equipment's ability to support 2out stitching
 
@@ -269,7 +295,7 @@ sub calc {
 
 	my $plusCover = 0;
 	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
-		$log->debug("************* We Have Plus Cover *************************");
+		#$log->debug("************* We Have Plus Cover *************************");
 		$plusCover = 1;
 	} # end if
 
@@ -328,6 +354,8 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ", Equipment: ".$Equipment->strid() ."<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$price{'RunTime'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$price{'Passes'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$price{'Imposition'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%<br/>', @$price{'RunCost Discount','Imposition Discount'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$price{'MakeReady'}).",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Service: $' . sprintf( '%.2f', $$price{'Service'}).",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'}))."<br/><br/>";
@@ -477,8 +505,10 @@ if ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty
 		$price{'MakeReady'} += $makeReady + ( $pocketMakeReady * ( $gateFolds + 1 ) );
 	} # end if
 
-	$price{'Service'} *= ( 1 - ($Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} )/100));
-	$price{'Service'} *= ( 1 - ($Equipment->specification( 'Imposition Discount', $price{Imposition} )/100));
+	$price{'RunCost Discount'} = $Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} );
+	$price{'Service'} *= ( 1 - $price{'RunCost Discount'}/100);
+	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
+	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ));
 
 	$price{'txtPrice'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'};

@@ -86,7 +86,7 @@
 			var div = $( data2 + 'Forms' );
 			form = document.forms['f5'];
 			if ( form ) {
-				var reg = /(\d*) forms/;
+				var reg = /(\d*) form/;
 				var ar = reg.exec( div.innerHTML );
 				form.ProjectIndex.value = data1;
 				form.ServiceIndex.value = data2;
@@ -111,11 +111,10 @@
 				form.CommentInput.value = div.innerHTML;
 			} // end if
 		} else if ( popup == 'Runtime' ) {
-			var div = $( data2 + 'Runtime' );
+			var div = $( data1 + 'Runtime' );
 			form = document.forms['RuntimeForm'];
 			if ( form ) {
-				form.ProjectIndex.value=data1;
-				form.ServiceIndex.value=data2;
+				form.schedule_id.value=data1;
 				form.Runtime.value=div.innerHTML;
 			} // end if
 		} // end if
@@ -124,8 +123,14 @@
 	} // end function openPopup
 	function saveOperator( period, operator, name ) {
 		var div = $( period + 'Operator' );
-		if ( div )
+		if ( div ) {
 			div.innerHTML = name;
+			if ( name == '' ) {
+			div.className = 'assign';
+			} else {
+			div.className = 'Operator';
+			} // end if
+		} // end if
 		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_operator', new Array( period, operator ) );
 		popupWin.destroy();
 		return false;
@@ -150,12 +155,12 @@
 		return false;
 	} // end function saveOperator
 
-	function saveRuntime( project_index, service_index, runtime ) {
-		var div = $( service_index + 'Runtime' );
+	function saveRuntime( id, runtime ) {
+		var div = $( id + 'Runtime' );
 		if ( div )
 			div.innerHTML = runtime;
 
-		jsrsExecute( '/jsrs.htm', null, 'openprint::press_schedule::set_runtime', new Array( project_index, service_index, runtime+':00' ) );
+		jsrsExecute( '/jsrs.htm', null, 'openprint::press_schedule::set_runtime', new Array( id, runtime+':00' ) );
 		popupWin.destroy();
 		return false;
 	} // end function saveRuntime
@@ -193,9 +198,8 @@
 	</form>
 </div>
 <div id="RuntimePopup" style="display:none;">
-	<form name="RuntimeForm" onsubmit="return saveRuntime( RuntimeForm.ProjectIndex.value, RuntimeForm.ServiceIndex.value, RuntimeForm.Runtime.value );">
-		<input type="hidden" name="ProjectIndex" />
-		<input type="hidden" name="ServiceIndex" />
+	<form name="RuntimeForm" onsubmit="return saveRuntime( RuntimeForm.schedule_id.value, RuntimeForm.Runtime.value );">
+		<input type="hidden" name="schedule_id" />
 		<span style="float: left;">Estimated Runtime: <input type="text" name="Runtime"/></span>
 		<span style="float: right;">
 			<? echo ( ssi::writeButton( $log, $dbh, 'SaveRuntime', 'save.gif', 'if(RuntimeForm.onsubmit())RuntimeForm.submit();', '', 'Save' ); ) ?>
@@ -272,6 +276,7 @@
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
 	<input type="hidden" name="ServiceIndex" />
+	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters"><legend>Display Criteria</legend>
 		<div style="float: left; width: 47%;">
 		<p>

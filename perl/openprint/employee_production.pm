@@ -73,11 +73,19 @@ sub press_schedule {
 		complete_signature( $log, $dbh, $variable, $project_index, $service_index );
 		$Project->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'RemoveJob' ) {
-		my $service_index = $openprint::param{'ServiceIndex'};
-		my $project_index = $openprint::param{'ProjectIndex'};
-		sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
-		my $Project = new openprint::Project( $project_index );
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Job removed from print schedule." );
+		if ( $openprint::param{'schedule_id'} ) {
+			if ( my @rows = openprint::press_schedule::find('id'=>$openprint::param{'schedule_id'} ) ) {
+				my $row = shift @rows;
+				if ( ! sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE id=?}, $$row{id} ) ) {
+					if ( $$row{'projectindex'} ) {
+						my $Project = new openprint::Project( $$row{'projectindex'} );
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Job removed from print schedule.' );
+					} # end if
+				} # end if successful delete
+			} # end if
+		} else {
+			$$variable{'error'} .= 'No job given to delete...';
+		} # end if
 	} # end if
 	openprint::employee_schedule::add_missing_jobs_to_schedule( $log, $dbh );
 #openprint::employee_schedule::update_late_jobs( $log, $dbh );
@@ -598,7 +606,7 @@ sub project_view {
 			my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $ServiceType->name() );
 
 			if ( $ServiceType->name() eq 'AdditionalSignature' ) {
-				$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 				my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'txtSignatureType', 'AdditionalSignature' );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'txtServiceDescription', 'Additional Signature' );
@@ -1308,6 +1316,20 @@ sub docket_sheet {
 sub summary {
 	openprint::print_project::summary( @_ );
 } # end sub summary
+
+sub monthly_schedule {
+	my ( $r, $log, $dbh, $variable ) = @_;
+
+	if ( $openprint::param{'btnFunction'} eq 'MakeReservation' ) {
+		$$variable{'error'} .= sql::insert( undef, undef, 'Schedule',
+				'ProjectIndex', undef,
+				'ServiceIndex', undef,
+				'StartTime',    sprintf('%.4d-%.2d-%.2d', @openprint::param{'StartYear','StartMonth','StartDay'}),
+				'equipment_id', $openprint::param{'Press'},
+				'RunTime',      sprintf('%.2d:%.2d:%.2d', $openprint::param{'hours'}, 0, 0),
+				);
+	} # end if
+} # end sub monthly_schedule
 
 1;
 

@@ -6,7 +6,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 <!--#include virtual="/includes/quote_information.html"-->
 <br class="spacer"/><br/>
 <form name="f1" method="post" action="/main/quote/confirmation.html">
-<? if ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <table class="List">
 	<tr> 
 		<th align="left">Projects</th>
@@ -59,7 +59,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 	<? endwhile ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 </table>
-<? else ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? else ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <table class="List">
 	<tr> 
 		<th align="left">Projects</th>
@@ -107,7 +107,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 	<? endwhile ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 </table>
-<? endif ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 	<? if ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) ) ?>
 			<br/>
 			<fieldset id="SalesRepComments">

@@ -516,12 +516,15 @@ sub add_inventory {
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
+	my $Skid = new openprint::Skid( $skid_id );
+	#Skid{Paper}{paper_id} has already been adjusted
+
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
     sql::insert( undef, undef, 'Paper_Inventory',
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  $self->in_stock() + $quantity,
+        'InStock',  ($skid_id? $$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
         'UpdateTime',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,

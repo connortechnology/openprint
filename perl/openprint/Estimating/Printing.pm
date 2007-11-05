@@ -31,6 +31,7 @@ require openprint::Paper;
 require openprint::Estimating::Paper;
 require openprint::Estimating::Folding;
 require openprint::Estimating::Scoring;
+require openprint::Estimating::Perforating;
 require openprint::Estimating::Cutting;
 require openprint::Estimating::Stitching;
 require openprint::Equipment;
@@ -157,6 +158,7 @@ my %variables = (
 		'StockType' => ['save','output'],'StockType1' => ['save','output'], 'StockType2' => ['save','output'], 'StockType3' => ['save','output'],
 		'hdnImageOrientation1' => ['save','output'], 'hdnImageOrientation2' => ['save','output'], 'hdnImageOrientation3' => ['save','output'], 
 		'hdnNetSheetCount1' => ['save','output'], 'hdnNetSheetCount2' => ['save','output'], 'hdnNetSheetCount3' => ['save','output'],
+		'SheetQuantity1' => ['save','output'], 'SheetQuantity2' => ['save','output'], 'SheetQuantity3' => ['save','output'],
 		'RunTime1' => ['save','output'], 'RunTime2' => ['save','output'], 'RunTime3' => ['save','output'],
 		'txtWidth' => ['save'], 'txtHeight' => ['save'], 'txtFinalWidth' => ['save'], 'txtFinalHeight' => ['save'],
 		'chkOverrideDimensions'	=> ['save'],
@@ -564,7 +566,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 			} # end if
 		} # end if
 		my $Paper = new openprint::Paper();
-		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade'} = ( 'Y','N',@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'});
+		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade'} = ( 'Y',($$specs{'txtSpecificStockBrand'} =~ /offset/i ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'});
 		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight'};
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		push @Papers, $Paper;
@@ -687,6 +689,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 	%{$project{'FoldingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasFolding'} )} if $project{'HasFolding'};
 	%{$project{'CuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasCutting'} )} if $project{'HasCutting'};
 	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
+	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
 	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )} if $$services{'SaddleStitching'};
 
 #$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
@@ -813,37 +816,36 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 			$variables{'ddmPress'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmPress'.$qty_index}} ) ];
 		} # end if
 
-			if ( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) {
-				$variables{'ddmRunStyle'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmRunStyle'.$qty_index} ) ];
-			} else {
-				$variables{'ddmRunStyle'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmRunStyle'.$qty_index}} ) ];
-			} # end if
+		if ( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) {
+			$variables{'ddmRunStyle'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmRunStyle'.$qty_index} ) ];
+		} else {
+			$variables{'ddmRunStyle'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmRunStyle'.$qty_index}} ) ];
+		} # end if
 
-			if ( $$specs{'txtSignatureType'} ) {
-				if ( $$specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' ) {
-					$project{'SpreadLayout'} = $$specs{'txtSignatureSpreadQuantity'.$qty_index};
-				} elsif ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
-					$project{'SpreadLayout'} = $$specs{'PageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
-				} else {
-					$project{'SpreadLayout'} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
-				} # end if
+		if ( $$specs{'txtSignatureType'} ) {
+			if ( $$specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' ) {
+				$project{'SpreadLayout'} = $$specs{'txtSignatureSpreadQuantity'.$qty_index};
+			} elsif ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
+				$project{'SpreadLayout'} = $$specs{'PageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
 			} else {
+				$project{'SpreadLayout'} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
+			} # end if
+		} else {
 $openprint::log->debug("No spread layout for you!");
-			} # end if
+		} # end if
 
-			if ( (exists $project{'SpreadLayout'}) and ! $project{'SpreadLayout'} ) {
-				$$specs{"txtImposition$qty_index"} = '';
-				$$specs{"ddmRunStyle$qty_index"} = '';
-				$$specs{"txtSignatureSpreadQuantity$qty_index"} = 0;
-				$$specs{'alert'} .= "No more spreads need to be specified for quantity $qty_index.";
-				next;
-			} # end if
+		if ( (exists $project{'SpreadLayout'}) and ! $project{'SpreadLayout'} ) {
+			$$specs{"txtImposition$qty_index"} = '';
+			$$specs{"ddmRunStyle$qty_index"} = '';
+			$$specs{"txtSignatureSpreadQuantity$qty_index"} = 0;
+			$$specs{'alert'} .= "No more spreads need to be specified for quantity $qty_index.";
+			next;
+		} # end if
 
 # add all the impositions for each press
 		foreach my $Press ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : @possible_presses ) {
 # These should be cached by the underlying layer anyways
 			if ( $Press->strid() eq 'Web1' and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
-$openprint::log->debug("Not in Web Estimating group");
 				next;
 			} # end if
 
@@ -1030,10 +1032,10 @@ if ( 0 ) {
 									$P->width($width);
 									$P->height($height);
 									next;
-} else {
-last;
-} # end if
+								} else {
+									last;
 								} # end if
+} # end if
 							} # end if
 
 							my @imps = openprint::imposition::get_imposition( \%project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
@@ -1041,11 +1043,13 @@ last;
 									( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ? $$specs{'rdbGrainDirection'.$qty_index} : undef ),
 									$Press );
 							last if ! @imps;
-							
+						
+$openprint::log->debug("Sorting");	
 							foreach my $imp ( @imps ) {
 								my $add = 0;
-
+$imp->display();
 								if ( $imps{$imp->imposition().$imp->runstyle()} ) {
+$openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}} );
 									for ( my $j = 0; $j < @{$imps{$imp->imposition().$imp->runstyle()}}; $j += 1 ) {
 
 										my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
@@ -1089,19 +1093,19 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 					next;
 				} # end if
 
-#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' before convert:' . @impositions);
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' before convert:' . @impositions);
 #foreach my $imp ( @impositions ) {
 #$imp->display();
 #}
 				if ( $project{'SpreadLayout'} > 0 ) {
 					$openprint::log->debug("Converting Impositions spread Layout: $project{'SpreadLayout'}") if $debug;
 					@impositions = openprint::imposition::convert_impositions( $project{'SpreadLayout'}, $$specs{'txtSpreadSize'}, \@impositions );
-#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
 				} # end if
 # Gives us both inline and offline folding options
 				if ( $project{'HasFolding'} ) {
 					@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $project{'FoldingSpecs'}, $specs, $qty_index ) } @impositions;
-#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions);
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions);
 				} # end if Folding
 
 # Sort the impositions.  If we do it here, then after conversion, oh hell, I dunno
@@ -1193,6 +1197,7 @@ my %best_price = %{$b_price};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Folding Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Cutting Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Scoring Breakdown'} if $project{'HasScoring'};
+		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Perforating Breakdown'} if $project{'HasPerforating'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Stitching Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'AdditionalSignature Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Comparison Cost: \%.2f<br/>", $best_price{'Comparison Cost'});
@@ -1213,12 +1218,12 @@ my %best_price = %{$b_price};
 		} # end if
 		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000;
 		$$specs{'rdbGrainDirection'.$qty_index} = $Imposition->grain_direction();
-#$$best_price{'hdnSheetQuantity'.$qty_index} = $price{'Gross Sheet Quantity'};
 		if ( $Paper->type() eq 'Roll' ) {
 			$$specs{'txtPressSheetQty'.$qty_index} = sprintf('%.0f lbs', $best_price{'Gross Sheet Count'} * $Paper->width() * $Paper->height() * $Paper->wpsi() );
 		} elsif ( $Paper->type() eq 'Sheet' ) {
 			$$specs{'txtPressSheetQty'.$qty_index} = $best_price{'Gross Sheet Count'} .'sheets';
 			$$specs{'hdnNetSheetCount'.$qty_index} = $best_price{'Net Sheet Count'};
+			$$specs{'SheetQuantity'.$qty_index} = $best_price{'Gross Sheet Quantity'};
 		} # end if
 #$$specs{'hdnPaperPrice'.$qty_index} = $best_price{'Paper Price'};
 		$$specs{'hdnSuppliedStockWidth'.$qty_index} = $Paper->start_width();
@@ -1324,14 +1329,14 @@ sub get_project_price {
 
 		#$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions);
 		foreach my $imp ( @impositions ) {
-#$imp->display();
+$imp->display();
 			next if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) );
 			if ( ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $imp->pages() != $$specs{'PageQuantity'.$qty_index} ) ) {
-				#$openprint::log->debug("Doesn't match page quantity override" . $imp->pages() . ' != ' . $$specs{'PageQuantity'.$qty_index});
+				$openprint::log->debug("Doesn't match page quantity override " . $imp->pages() . ' != ' . $$specs{'PageQuantity'.$qty_index});
 				next;
 			}
 			if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} and ( $imp->spreads() > $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} ) ) {
-				#$openprint::log->debug("Unspec");
+				$openprint::log->debug("Unspec");
 				next;
 			} # end if
 #my $starttime = gettimeofday();
@@ -1363,16 +1368,27 @@ sub get_project_price {
 					$new_specs{'PreviousPlates'.$qty_index} += $$price{'txtPlateQuantity'};
 					$new_specs{'PreviousBlankPlates'.$qty_index} += $$price{'txtBlankPlateQuantity'};
 
+					my $last_sig_price = $$price{'Comparison Cost'};
+
+					my $additional_price;
 					my $sig_price;
 					if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} >= $imp->spreads() ) {
 # Going to just re-use the same impo
 #$openprint::log->warn("Doing half calc qtyi: $qty_index unspec: $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > " . $imp->spreads() . ' imp spreads');
-#$Imposition->display();
+##$Imposition->display();
 
-# We assume that calc_price does not alter the specs hash.  
 #my $time = gettimeofday();
+$new_specs{'no_stitching'} = 1; # unneccessary calculation
 						$sig_price = calc_price( $Project, $s_id, $imp, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("2 Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+					$additional_price = $$sig_price{'Comparison Cost'};
+					if ( $$sig_price{'Comparison Cost'} == $last_sig_price ) {
+						$additional_price *= int($$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads());
+						last if $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads() >= $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
+						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads();
+					} else {
+						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $imp->spreads();
+					} # end if
 
 #$openprint::log->warn("Done half calc: price: $sig_price{'Comparison Cost'}");
 					} else {
@@ -1382,7 +1398,7 @@ sub get_project_price {
 						$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}*$$specs{'txtSpreadSize'};
 #$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
 						$new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} = 'Y';
-						$new_specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
+					$new_specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 						$new_specs{'chkOverridePress'.$qty_index} = '';
 						$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 						if ( $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} ) {
@@ -1394,6 +1410,16 @@ sub get_project_price {
 							$additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} = $sig_price;
 #$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
 						} # end if
+						$additional_price = $$sig_price{'Comparison Cost'};
+						$additional_price -= $$sig_price{'Stitching Cost'};
+						if ( ! $$sig_price{'Imposition'} ) {
+$openprint::log->debug("No Imposition found.");
+							$$sig_price{'complete'} = 1;
+							$additional_price = 1000000;
+							$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = 0;
+						} else {
+							$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $$sig_price{'Imposition'}->spreads();
+						} # end if
 #$openprint::log->warn("Done full calc $sig_price{'Comparison Cost'} :". $$specs{'txtSignatureSpreadQuantity'.$qty_index});
 					} # end if
 
@@ -1403,21 +1429,15 @@ sub get_project_price {
 						last;
 					} # end if
 
-					if ( $$sig_price{'Comparison Cost'} < 0 ) {
+					if ( $additional_price < 0 ) {
 						$$price{'complete'} = 0;
 						last;
 					} # end if	
 
-					my $additional_price = $$sig_price{'Comparison Cost'};
-					$additional_price -= $$sig_price{'Stitching Cost'};
-					if ( $$sig_price{'Comparison Cost'} == $$price{'Comparison Cost'} ) {
-						$additional_price *= $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads();
-						$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $imp->spreads();
-					} # end if
+					$last_sig_price = $$sig_price{'Comparison Cost'};
 
 					$$price{'Comparison Cost'} += $additional_price;
 					$$price{'AdditionalSignature Breakdown'} .= 'Additional Signature: ' . sprintf('%.2f', $additional_price ) . '<br/>';
-					$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $imp->spreads();
 					last if check_price( $best_price{'Comparison Cost'}, $price, $specs, $qty_index, $imp, 'Sig' );
 				} # end while
 				$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $usq;
@@ -1492,54 +1512,50 @@ sub calc_price {
 	my $Press = $Imposition->Press();
 
 	# It's ok to do this, because $$specs is either a copy, or will be reset before being returned
-	$$specs{"hdnImpositionRows$qty_index"} = $Imposition->rows();
-	$$specs{"hdnImpositionColumns$qty_index"} = $Imposition->columns();
-	$$specs{"hdnImpositionDutchRows$qty_index"} = $Imposition->dutch_rows();
-	$$specs{"hdnImpositionDutchColumns$qty_index"} = $Imposition->dutch_columns();
-	$$specs{"txtImposition$qty_index"} = $Imposition->imposition();
-	$$specs{'SpreadRows'.$qty_index} = $Imposition->spread_rows();
-	$$specs{'SpreadCols'.$qty_index} = $Imposition->spread_columns();
-	$$specs{'hdnImageOrientation'.$qty_index} = $Imposition->image_orientation();
-	$$specs{"txtSignatureSpreadQuantity$qty_index"} = $Imposition->spreads();
+	$$specs{"hdnImpositionRows$qty_index"} = $$Imposition{rows};
+	$$specs{"hdnImpositionColumns$qty_index"} = $$Imposition{columns};
+	$$specs{"hdnImpositionDutchRows$qty_index"} = $$Imposition{dutch_rows};
+	$$specs{"hdnImpositionDutchColumns$qty_index"} = $$Imposition{dutch_columns};
+	$$specs{"txtImposition$qty_index"} = $$Imposition{imposition};
+	$$specs{'SpreadRows'.$qty_index} = $$Imposition{spread_rows};
+	$$specs{'SpreadCols'.$qty_index} = $$Imposition{spread_columns};
+	$$specs{'hdnImageOrientation'.$qty_index} = $$Imposition{image_orientation};
+	$$specs{"txtSignatureSpreadQuantity$qty_index"} = $$Imposition{spreads};
 	$$specs{'ddmPress'.$qty_index} = $Press->strid();
 	$$specs{'txtStockGSM'} = $Paper->gsm();
-	$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
+	$$specs{'ddmRunStyle'.$qty_index} = $$Imposition{runstyle};
 
 	my %price;
 	$price{'ddmBleedSize'} = $$project{'BleedSize'};
-	$price{'txtSignatureSpreadQuantity'} = $Imposition->spreads() ? $Imposition->spreads() : 1;
-
-
-#$log->debug("\n\n************ START OF CALC PRINT PRICE QTY: $qty 1: @$side_one_colours, @$side_two_colours CAL: $paper_calliper DT: $dry_trap  STYLE: $run_style ********* \n\n\n");
-	my ( $is_sheetwork, $is_perfecting );
-	if ( sets::isin( $Imposition->runstyle(),['Sheet Work','Web'] ) ) {
-		$is_sheetwork = 1;
-		$is_perfecting = 0;
-	} elsif ( sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble'] ) ) {
-		$is_sheetwork = 0;
-		$is_perfecting = 0;
-	} elsif ( $Imposition->runstyle() eq 'Perfecting' ) {
-#$log->debug("************ WE HAVE PERFECTING ****************");
-		$is_sheetwork = 1;
-		$is_perfecting = 1;
-	} else {
-		$openprint::log->error("\n\n\n********* UNKNOWN RUNSTYLE: in function 'get_project_price' ****************\n\n\n");
-	} # end if
+	$price{'txtSignatureSpreadQuantity'} = $$Imposition{spreads} ? $$Imposition{spreads} : 1;
 
 	my @colours = ();
 	$price{'WorkTurn Dry Charge'} = 0;
 
-	if ( sets::isin( $Imposition->runstyle(), ['Web','Sheet Work','Perfecting'] ) ) {
+#$log->debug("\n\n************ START OF CALC PRINT PRICE QTY: $qty 1: @$side_one_colours, @$side_two_colours CAL: $paper_calliper DT: $dry_trap  STYLE: $run_style ********* \n\n\n");
+	my ( $is_sheetwork, $is_perfecting );
+	if ( sets::isin( $$Imposition{runstyle},['Sheet Work','Web'] ) ) {
+		$is_sheetwork = 1;
+		$is_perfecting = 0;
 		@colours = ( @$side_one_colours, @$side_two_colours );
-	} else {
+	} elsif ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
+		$is_sheetwork = 0;
+		$is_perfecting = 0;
 		$price{'WorkTurn Dry Charge'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'WTDrying', $Paper->grade(), $Press );
 		@colours = @$filtered_colours;
+	} elsif ( $$Imposition{runstyle} eq 'Perfecting' ) {
+#$log->debug("************ WE HAVE PERFECTING ****************");
+		$is_sheetwork = 1;
+		$is_perfecting = 1;
+		@colours = ( @$side_one_colours, @$side_two_colours );
+	} else {
+		$openprint::log->error("\n\n\n********* UNKNOWN RUNSTYLE: in function 'get_project_price' ****************\n\n\n");
 	} # end if
 
-	my $imposition = $Imposition->imposition();
+	my $imposition = $$Imposition{imposition};
 	if ( $$specs{'Versions'} > 1 ) {
 # When W&T, each half has to be a multiple of the versions
-		if ( sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble'] ) ) {
+		if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
 			$imposition = int($imposition/2);
 			if ( $imposition < $$specs{'Versions'} ) {
 #i.e. if imp = 12 and ver = 30 then only 10 of the slots get used.
@@ -1567,7 +1583,8 @@ sub calc_price {
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
 	my $setup_rate = $Press->specification( 'Press Run Overs Rate', scalar @colours );
 	my $setup_overs = $setup_rate * scalar @colours;
-	$setup_overs += $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
+	my $fm_overs = $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
+	$setup_overs += $fm_overs;
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
 
 	my $over_rate = $Press->specification( 'Press Run Overs', $base_impressions );
@@ -1584,13 +1601,13 @@ sub calc_price {
 		$impressions += $additional_overs;
 	} # end if
 
-	$impressions *= $$project{print_sides} if (sets::isin($Imposition->runstyle(),['Sheet Work','Work & Turn','Work & Tumble'] ));
-	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $Paper->calliper() );
+	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
 		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug;
 		return;
 	} # end if
-	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $Paper->calliper() );
+	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
 		$openprint::log->debug("Next cuz of minimum impression quantity $min_impression_quantity: $impressions" ) if $debug;
 		return;
@@ -1601,23 +1618,23 @@ sub calc_price {
 	# Whya re we doing this here?
 	#$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
 
-	my %plate_setup = plate_setup_cost( $Press, $Paper->width() * $Paper->height(), $impressions, \@colours, $specs, $qty_index );
+	my %plate_setup = plate_setup_cost( $Press, $$Paper{width} * $$Paper{height}, $impressions, \@colours, $specs, $qty_index );
 	# THis is here more to take care of multi-version documents as opposed to business cards
 	#if ( ( $$specs{'Versions'} > 1 ) and sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble' ] ) ) {
 		#$plate_setup{'Plate Count'} *= ( $imposition / $$specs{'Versions'} );
 	#} # end if
 
 	my $press_setup = 0;
-	if ( sets::isin( $Imposition->runstyle(), ['Sheet Work'] ) ) {
-		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_one_colours, $Paper->calliper(), $specs, $qty_index, $Project, $service_index, $Imposition );
+	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
+		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_one_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
-		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_two_colours, $Paper->calliper(), $specs, $qty_index, $Project, $service_index, $Imposition );
+		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_two_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
-	} elsif ( sets::isin( $Imposition->runstyle(), ['Web','Sheet Work', 'Perfecting'] ) ) {
-		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $Paper->calliper(), $specs, $qty_index, $Project, $service_index, $Imposition );
+	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web','Sheet Work', 'Perfecting'] ) ) {
+		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
 	} else  {
-		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $Paper->calliper(), $specs, $qty_index, $Project, $service_index, $Imposition );
+		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
 	} # end if
 	$price{'Plate Costs'} = \%plate_setup;
@@ -1631,7 +1648,7 @@ sub calc_price {
 	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
 	$setup_rate = $Press->specification( 'Press Run Overs Rate', $plate_setup{'Plate Count'} );
 	$setup_overs = $setup_rate * ( $plate_setup{'Plate Count'} );
-	$setup_overs += $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
+	$setup_overs += $fm_overs;
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
 
 	$run_overs = $base_impressions * $over_rate;
@@ -1647,7 +1664,6 @@ sub calc_price {
 	$impressions = $gross_qty;
 	my $sheets_per_package = $Paper->sheets_per_package();
 	if ( $sheets_per_package ) {
-$openprint::log->debug("Sheets Per Package: ($sheets_per_package)");
 		$gross_qty = $sheets_per_package * ( ceil( $gross_qty / $sheets_per_package ) );
 	} # end if
 	my %sheet_qty = (
@@ -1658,8 +1674,8 @@ $openprint::log->debug("Sheets Per Package: ($sheets_per_package)");
 			'Run Overs'					=> $run_overs,
 			'Additional Plate Overs'	=> $additional_overs,
 			'Total Overs'				=> $impressions,
-			'Weight'					=> ( $gross_qty * $Paper->width() * $Paper->height() * $Paper->wpsi() ),
-			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$Press->specification( 'FM Screening Additional Overs', undef ) : 0,
+			'Weight'					=> ( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() ),
+			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$fm_overs : 0,
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
 
@@ -1672,7 +1688,7 @@ $openprint::log->debug("Sheets Per Package: ($sheets_per_package)");
 	$price{'Plate Price'} = $plate_setup{'Plate Price'} * $plate_setup{'Plate Count'};
 
 	$price{'Stock Weight'} = $sheet_qty{'Weight'};
-	my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $Paper->type() eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
+	my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
 	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb'};
 
 	$price{'Comparison Cost'} += $price{'Paper Price'};
@@ -1680,7 +1696,7 @@ $openprint::log->debug("Sheets Per Package: ($sheets_per_package)");
 
 	my $sheets = $impressions;
 	$$specs{"txtPressSheetQty$qty_index"} = $sheets;
-	$impressions *= $$project{print_sides} if (sets::isin($Imposition->runstyle(),['Sheet Work','Work & Turn','Work & Tumble'] ));
+	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
 	my %folding_results;
@@ -1699,7 +1715,7 @@ $openprint::log->debug("Sheets Per Package: ($sheets_per_package)");
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
 
 		if ( $folding_results{'Equipment'} and ($folding_results{'Equipment'}->id() eq $Press->id() ) ) {
-			my $fold_type = sprintf('%dx%d-%dPage-%sSignatureFoldRunSpeed', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->pages(), $Imposition->image_orientation());
+			my $fold_type = sprintf('%dx%d-%dPage-%sSignatureFoldRunSpeed', $$Imposition{spread_columns}, $$Imposition{spread_rows}, $Imposition->pages(), $$Imposition{image_orientation});
 
 			if ( ! ( $run_speed = $Press->specification($fold_type, $Paper->gsm() ) ) ) {
 #$openprint::log->debug("No specific fold run speed");
@@ -1725,19 +1741,13 @@ $openprint::log->warn("Got no runspeed.");
 	} # end if
 	$price{'Run Speed'} = $run_speed;
 	my %run_price;
-	if ( sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble'] ) ) {
-		%run_price = get_run_price( $impressions, scalar(@colours), 0, $Imposition, $Press, $run_speed ); 
-	} else {
-		%run_price = get_run_price( $impressions, scalar @$side_one_colours, scalar @$side_two_colours, $Imposition, $Press, $run_speed ); 
-	} # end if
 	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ); 
-#foreach my $key ( keys %aqueous ) {
-#$openprint::log->debug("AQUEous $key => $aqueous{$key}");
-#}
 	my %varnish_price;
-	if ( sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble'] ) ) {
+	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
+		%run_price = get_run_price( $impressions, scalar(@colours), 0, $Imposition, $Press, $run_speed ); 
 		%varnish_price = get_varnish_run_price( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$project{print_sides}, $impressions, $specs, \@colours, undef, $qty_index, $Imposition, $Project, $service_index, $inkCoverage );
 	} else {
+		%run_price = get_run_price( $impressions, scalar @$side_one_colours, scalar @$side_two_colours, $Imposition, $Press, $run_speed ); 
 		%varnish_price = get_varnish_run_price( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$project{print_sides}, $impressions, $specs, $side_one_colours, $side_two_colours, $qty_index, $Imposition, $Project, $service_index, $inkCoverage);
 	} # end if
 
@@ -1750,9 +1760,9 @@ $openprint::log->warn("Got no runspeed.");
 		$price{'Imposition MakeReady'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'ImpositionMakeReady','',$Press );
 		$price{'Imposition Price'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'Imposition',$Imposition->imposition(),$Press);
 	} # end if
-	$price{'Imposition Total'} = $price{'Imposition MakeReady'} + $price{'Imposition Price'} * $Imposition->imposition();
+	$price{'Imposition Total'} = $price{'Imposition MakeReady'} + $price{'Imposition Price'} * $$Imposition{imposition};
 
-	my %RunStylePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $Imposition->runstyle().'Setup','',$Press );
+	my %RunStylePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $$Imposition{runstyle}.'Setup','',$Press );
 	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
 
 	$price{'Ink Mix Charge'} = $$pms_prices{'Ink Mix Charge'};
@@ -1869,6 +1879,7 @@ $openprint::log->warn("Got no runspeed.");
 	$price{'Total Cost'} = $total_cost;
 	$price{'Total Cost'} += $price{'Paper Price'} if (! $$services{'Paper'}) and ($$specs{'rdbSuppliedStock'} ne 'Y');
 
+	if ( ! $$specs{'no_stitching'} ) {
 	if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
 
 		#my $starttime = gettimeofday();
@@ -1890,6 +1901,7 @@ $openprint::log->warn("Got no runspeed.");
 	if ( $$services{'LoopStitching'} ) {
 	} # end if
 	$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
+	} # end if
 
 # Now add in cutting costs to the comparison
 
@@ -1916,7 +1928,7 @@ $openprint::log->warn("Got no runspeed.");
 		return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Cutting' );
 	} # end if
 
-	if ( $$project{'HasScoring'} ) {
+	if ( $$project{'HasScoring'} and $$project{'NeedScoring'} ) {
 $openprint::log->debug("Scoring");
 		my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $service_index, $specs, $qty_index );
 $openprint::log->debug("Scoring REsults: $scoring_results{'Status'} $scoring_results{'Price'}");
@@ -1926,6 +1938,18 @@ $openprint::log->debug("Scoring REsults: $scoring_results{'Status'} $scoring_res
 		} else {
 			$price{'Scoring Breakdown'} .= "Scoring Price: $scoring_results{'Price'}<br/>";
 			$price{'Comparison Cost'} += $scoring_results{'Price'};
+		} # end if
+		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
+	} # end if
+	if ( $$project{'HasPerforating'} ) {
+$openprint::log->debug("Perforating");
+		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index );
+		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
+			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{'alert'} $$project{'PerforatingSpecs'}{alert} " . $$project{'PerforatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} else {
+			$price{'Perforating Breakdown'} .= "Perforating Price: $perforating_results{'Price'}<br/>";
+			$price{'Comparison Cost'} += $perforating_results{'Price'};
 		} # end if
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if

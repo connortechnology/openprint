@@ -1,5 +1,5 @@
 <? eval (
-    $$variable{'ProjectType'} = $r->param('ProjectType') if $r->param('ProjectType');
+    $$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
 ) ?>
 		<form name="f1" method="post" action="/main/order/information.html">
 			<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />

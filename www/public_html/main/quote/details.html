@@ -68,7 +68,7 @@
 	<!--#include virtual="/includes/quote_information.html"-->
 	<br class="spacer"/>
 	<form method="post" action="information.html" name="f1">
-		<? if ( $$variable{'Reseller'} eq 'Y' or sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
+		<? if ( new openprint::Company($openprint::session{'company_id'})->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 		<table class="List"> 
 			<tr> 
 				<th align="left">Project</th>
@@ -123,7 +123,7 @@
 					if changes are necessary you will be notified.</td>
 			</tr>
 		</table>
-		<? else ( $$variable{'Reseller'} eq 'Y' or sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
+		<? else ( new openprint::Company($openprint::session{'company_id'})->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 		<table class="List">
 			<tr> 
 				<th align="left">Project</th>
@@ -178,7 +178,7 @@
 				</td>
 			</tr>
 		</table>
-		<? endif ( $$variable{'Reseller'} eq 'Y' or sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
+		<? endif ( new openprint::Company($openprint::session{'company_id'})->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 		<div class="row">
 			<span style="float: right;">
 				<? echo ( 

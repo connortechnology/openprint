@@ -4,11 +4,15 @@
     $$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} );
 	if ( exists $openprint::param{'quantity'} ) {
 		$$variable{'quantity'} = $openprint::param{'quantity'};
+	} elsif ( $openprint::param{'skid_id'} ) {
+		my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
+
+		$$variable{'quantity'} = $$Skid{Paper}{$openprint::param{'paper_id'}};
 	} else {
-		$$variable{'quantity'} = $$variable{Paper}->in_stock() - $$variable{Paper}->allocated();
+		$$variable{'quantity'} = $$variable{Paper}->in_stock();
 	} # end if
 ) ?>
-<div class="PopupWindow" id="CheckOut">
+<div id="CheckOut">
 	<form id="checkoutform" name="checkoutform" action="<?referer?>" method="post">
 		<input type="hidden" name="btnFunction" value="CheckOut" />
 		<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />
@@ -41,7 +45,7 @@
 			<hr/>
 			<p style="float: right;">
 			<? echo ( ssi::writeButton( $log, $dbh, 'SaveCheckOut', 'save.gif', 'if(check_inputs(checkoutform)){checkoutform.submit();}', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'CancelCheckOut', 'cancel.gif', "hide_div('CheckOut');", '', 'Cancel' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelCheckOut', 'cancel.gif', "checkoutWin.destroy();", '', 'Cancel' ); ) ?>
 			</p>
 		</fieldset>
 	</form>
