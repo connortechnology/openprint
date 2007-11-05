@@ -33,25 +33,17 @@
 )?>
 			</select>
 	</p>
-  <? if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) ?>
-
 	<p>
 		<label>Sales Rep:</label>
-			<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
-				<option value="">All Employees</option>
+		<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
+			<option value="">All Employees</option>
 <? echo (
-	$openprint::session{'/employee/production/projects.html?ddmSalesRep'} = $openprint::session{'user_id'} if ! $openprint::session{'/employee/production/projects.html?ddmSalesRep'};
-	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'type'=>['E','A']) ],
-	$openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
+$openprint::session{'/employee/production/projects.html?ddmSalesRep'} = $openprint::session{'user_id'} if ! $openprint::session{'/employee/production/projects.html?ddmSalesRep'};
+ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'type'=>['E','A'],'usergroups'=>['Sales']) ],
+$openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
 ) ?>
-			</select>
+		</select>
 	</p>
-  <? else ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) ?>
-<? echo (
-	$openprint::session{'/employee/production/projects.html?ddmSalesRep'} = $openprint::session{'user_id'} if ! $openprint::session{'/employee/production/projects.html?ddmSalesRep'};
-) ?>
-		<input type="hidden" name="ddmSalesRep" value="<? echo ( $openprint::session{'user_id'} ) ?>" />
-  <? endif ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) ?>
 	<p>
 	<label>Project Status:</label>
 	<select name="ProjectStatus" multiple size="6" onchange="load_projects(this.form);">

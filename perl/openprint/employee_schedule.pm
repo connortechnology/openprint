@@ -77,7 +77,7 @@ sub drop_project {
 
 		sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'Equipment_ID', $press_index );
 		if ( $$row{operator_id} != $operator_id ) {
-			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['id=?', $id], 'operator_id', $operator_id );
+			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
 		} # end if
 
 		if ( @order ) {
