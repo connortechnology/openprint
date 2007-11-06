@@ -84,7 +84,7 @@ sub view_services {
 				save_service( $r, $log, $dbh, $variable, $project_index, $service_index );
 
 				if ( $r->param('NewBook') eq 'Y' ) {
-					multipage_signatures(scalar $r->param, $log, $dbh, $variable, $project_index, $service_index );
+					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
 				} elsif ( $r->param('PrintingService') eq 'Y' ) {
