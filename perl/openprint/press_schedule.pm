@@ -141,7 +141,6 @@ sub get_li {
 		} # end if
 
 		$specs{'txtEmployeeComments'} .= ' on ' . $specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, @$row{'projectindex','serviceindex'}, 'txtEmployeeComments', $specs{'txtEmployeeComments'} );
 
 		my $Equipment = new openprint::Equipment($$row{equipment_id});
 		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
@@ -155,6 +154,7 @@ sub get_li {
 				$specs{'txtEmployeeComments'} .= '(sheeted)';
 			} # end if
 		} # end if
+		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, @$row{'projectindex','serviceindex'}, 'txtEmployeeComments', $specs{'txtEmployeeComments'} );
 	} # end if
 
 	if ( ! $specs{'SignatureQuantity'} ) {
