@@ -71,6 +71,15 @@
 			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'total'} ); ) ?></td>
 			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'balance'} ); ) ?></td>
 		</tr>
+		<tr<?rowclass?>>
+			<td colspan="2">&nbsp;</td>
+			<td colspan="5"><? hecho ( my $html = '';
+				foreach my $Project ( $$variable{'Order'}->Projects() ) {
+					$html .= $Project->reference()."\n";
+				} # end foreach Project
+				return $html;
+			) ?></td>
+		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
 		<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
 		<tr class="totals">
