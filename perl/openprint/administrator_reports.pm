@@ -268,7 +268,7 @@ sub customer_login {
 			$r->param('ddmEndDay') );
 
 	@$variable{'LastProjectStartYears','LastProjectStartMonths','LastProjectStartDays','LastProjectStart'} = ssi::get_dates( $log, $dbh,
-			$r->param('ddmLastProjectStartYear'), $r->param('ddmLastProjectStartMonth'),$r->param('ddmLastProjectStartDay') );
+			@openprint::param{'ddmLastProjectStartYear','ddmLastProjectStartMonth','ddmLastProjectStartDay'} );
 	@$variable{'LastProjectEndYears','LastProjectEndMonths','LastProjectEndDays','LastProjectEnd'} = ssi::get_dates( $log, $dbh,
 			$r->param('ddmLastProjectEndYear'), $r->param('ddmLastProjectEndMonth'),$r->param('ddmLastProjectEndDay') );
 
