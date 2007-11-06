@@ -16,6 +16,7 @@ require openprint::press_schedule;
 
 require sql;
 require openprint::MXML;
+require openprint::JDF;
 
 sub print_overview {
 	press_schedule( @_ );
@@ -338,7 +339,7 @@ sub project_view {
 	$$variable{'OrderID'} = $order_id;
 
 	if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
-		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.jdf', [$Project->jdf()->toString()] );
+		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf()->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export MXML' ) {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [new openprint::MXML($Project)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {

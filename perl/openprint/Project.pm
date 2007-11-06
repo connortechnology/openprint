@@ -14,6 +14,7 @@ require openprint::print;
 require Math::Units;
 
 require sql;
+require openprint::JDF;
 
 my $debug = 1;
 
