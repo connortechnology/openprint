@@ -154,18 +154,25 @@ sub find {
 		} # end if
 	} # end if
 	if ( $params{'supplied'} ) {
-
-	if ( ref $params{'supplied'} eq 'ARRAY' ) {
-		my @options;
-		foreach my $option ( @{$params{'supplied'}} ) {
-			push @options, 'supplied=?';
-			push @values, $option;
-		} # end foreach
-		$sql .= ' AND ( ' . join(' OR ', @options ) . ' )';
-	} else {
-	$sql .= ' AND supplied=?';
-	push @values, $params{'supplied'} eq 'Y' ? 1 : 0;
-	} # end if
+		if ( ref $params{'supplied'} eq 'ARRAY' ) {
+			my @options;
+			foreach my $option ( @{$params{'supplied'}} ) {
+				if ( (! defined $option ) or ($option eq '' ) ) {
+					push @options, 'supplied IS NULL';
+				} else {
+					push @options, 'supplied=?';
+					push @values, $option;
+				} # end if
+			} # end foreach
+			$sql .= ' AND ( ' . join(' OR ', @options ) . ' )';
+		} else {
+			if ( (! defined $params{'supplied'} ) or ($params{'supplied'} eq '' ) ) {
+				$sql .= ' AND supplied IS NULL';
+			} else {
+				$sql .= ' AND supplied=?';
+				push @values, $params{'supplied'} eq 'Y' ? 1 : 0;
+			} # end if
+		} # end if
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};

@@ -63,7 +63,7 @@ sub get_paper {
 	push @results, "id~$id~$id";
 
 	return join('|', @results ); 
-} # end sub select_paper_names
+} # end sub get_paper
 
 sub select_paper {
 	my ( $r, $log, $dbh, $variable, $selected, $name, $finish, $colour, $weight, $supplied, $press, $project_index, $type, $specific_width, $specific_height ) = @_;
@@ -86,7 +86,7 @@ sub select_paper {
 			( sets::isin( $selected, [ 'Finish','Colour','Weight' ] ) ? ( 'finish'	=> $finish ) : () ),
 			( sets::isin( $selected, [ 'Colour','Weight' ] ) ? ( 'colour'	=> $colour ) : () ),
 			( sets::isin( $selected, [ 'Weight' ] ) ? ( 'weight'	=> $weight ) : () ),
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 			'type'=>\@types,
 				);
 	my %names;
@@ -94,7 +94,6 @@ sub select_paper {
 	my %colours;
 	my %weights;
 	foreach my $Paper ( @papers ) {
-$log->debug("Paper: " . $Paper->to_string() );
 		$names{$Paper->name()} = $Paper->name_id();
 		$finishes{$Paper->finish()} = $Paper->finish_id() if ( ! $name ) or ( $Paper->name() eq $name );
 		$colours{$Paper->colour()} = $Paper->colour_id() if ( ! $name ) or ( $Paper->name() eq $name );
@@ -103,7 +102,7 @@ $log->debug("Paper: " . $Paper->to_string() );
 
 
 	my @results;
-	push @results, jsrs::encode_array( 'Brand', map {$_, $_ } sort keys %names ) if ! $selected;
+	push @results, jsrs::encode_array( 'Brand', map {$_, $_ } sort keys %names ) if ( ! $name ) or ! sets::isin( $selected, 'Name','Finish','Colour','Weight' );
 	push @results, jsrs::encode_array( 'Finish', map { $_, $_ } sort keys %finishes ) if ( ! $finish ) or ! sets::isin( $selected, [ 'Finish', 'Colour', 'Weight' ] );
 	push @results, jsrs::encode_array( 'Colour', map { $_, $_ } sort keys %colours ) if ( ! $colour ) or ! sets::isin( $selected, [ 'Finish','Weight' ] );
 	if ( $selected ne 'Weight' ) {
@@ -134,7 +133,7 @@ sub get_names {
 
 	my @papers = openprint::Paper::find( 
 		'project_type_name'=>$type,
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 		'type'=>\@types,
 		 );
 	my %finishes;
@@ -159,14 +158,14 @@ sub get_finishes {
 	my @papers = openprint::Paper::find( 
 		'project_type_name'=>$type,
 		'name'=>$name, 'colour'=>$colour, 'weight'=>$weight,
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 		'type'=>\@types,
 		);
 	if ( ! @papers ) {
 	@papers = openprint::Paper::find( 
 		'project_type_name'=>$type,
 		'name'=>$name, 'colour'=>$colour,
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 		'type'=>\@types,
 		);
 	} # end if
@@ -174,7 +173,7 @@ sub get_finishes {
 	@papers = openprint::Paper::find( 
 		'project_type_name'=>$type,
 		'name'=>$name,
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 		'type'=>\@types,
 		);
 	} # end if
@@ -200,18 +199,18 @@ sub get_colours {
 		push @types, 'Roll';
 	} # end if
 	my @papers = openprint::Paper::find( 'project_type_name'=>$type, 'name'=>$name, 'finish'=>$finish, 'weight'=>$weight,
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 			'type'=>\@types,
 			);
 	if ( ! @papers ) {
 	@papers = openprint::Paper::find( 'project_type_name'=>$type, 'name'=>$name, 'finish'=>$finish,
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 			'type'=>\@types,
 			);
 	} # end if
 	if ( ! @papers ) {
 	@papers = openprint::Paper::find( 'project_type_name'=>$type, 'name'=>$name, 'type'=>\@types,
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 			);
 	} # end if
 	my %colours;
@@ -236,14 +235,14 @@ sub get_weights {
 	my @papers = openprint::Paper::find( 
 			'project_type_name'=>$type,
 			'name'=>$name, 'finish'=>$finish, 'colour'=>$colour,
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 			'type'=>\@types,
 			);
 	if ( ! @papers ) {
 		@papers = openprint::Paper::find( 
 				'project_type_name'=>$type,
 				'name'=>$name, 'finish'=>$finish,
-				'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 				'type'=>\@types,
 				);
 	} # end if
@@ -251,7 +250,7 @@ sub get_weights {
 		@papers = openprint::Paper::find( 
 				'project_type_name'=>$type,
 				'name'=>$name,
-				'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 				'type'=>\@types,
 				);
 	} # end if
@@ -355,7 +354,7 @@ sub get_sheetsizes {
 		push @types, 'Roll';
 	} # end if
 	my @papers = openprint::Paper::find( 'name', $name, 'finish', $finish, 'colour', $colour, 'weight', $weight, 'type'=>\@types,
-			'supplied'	=> $supplied,
+			'supplied'	=> [undef,$supplied],
 			);
 	return if ! @papers;
 

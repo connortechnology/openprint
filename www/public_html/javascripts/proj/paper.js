@@ -68,7 +68,7 @@ function rdbSuppliedStock_onchange( element, id ) {
 	if ( gettingNewPrice ) {
 		if ( timeout )
 			clearTimeout( timeout );
-		setTimeout( 'rdbSuppliedStock_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
+		setTimeout( 'rdbSuppliedStock_onchange($(' + element.id + '),"' + id + '");', 1000 );
 		return;
 	} // end if
 	timeout = null;
@@ -163,7 +163,7 @@ function ddmStockWeight_onchange( element, id ) {
 		setTimeout( 'ddmStockWeight_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
-timeout = null;
+	timeout = null;
 
 	form.elements['ddmStockBrand'+id].disabled = true;
 	form.elements['ddmStockFinish'+id].disabled = true;
