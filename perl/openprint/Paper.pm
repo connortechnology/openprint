@@ -25,7 +25,7 @@ my @fields = (
 		'owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
-		'bladecleaning','grade','grain_direction','fsc_code',
+		'bladecleaning','grade','grain_direction','fsc_code','supplied',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -151,6 +151,27 @@ sub find {
 		} else {
 			$sql .= ' AND type=?';
 			push @values, $params{'type'};
+		} # end if
+	} # end if
+	if ( $params{'supplied'} ) {
+		if ( ref $params{'supplied'} eq 'ARRAY' ) {
+			my @options;
+			foreach my $option ( @{$params{'supplied'}} ) {
+				if ( (! defined $option ) or ($option eq '' ) ) {
+					push @options, 'supplied IS NULL';
+				} else {
+					push @options, 'supplied=?';
+					push @values, $option;
+				} # end if
+			} # end foreach
+			$sql .= ' AND ( ' . join(' OR ', @options ) . ' )';
+		} else {
+			if ( (! defined $params{'supplied'} ) or ($params{'supplied'} eq '' ) ) {
+				$sql .= ' AND supplied IS NULL';
+			} else {
+				$sql .= ' AND supplied=?';
+				push @values, $params{'supplied'} eq 'Y' ? 1 : 0;
+			} # end if
 		} # end if
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};

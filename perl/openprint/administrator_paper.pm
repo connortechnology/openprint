@@ -99,6 +99,7 @@ sub paper {
 		$Paper->bladecleaning( $openprint::param{'bladecleaning'} );
 		$Paper->grade( $openprint::param{'grade'} );
 		$Paper->type( $openprint::param{'type'} );
+		$Paper->supplied( $openprint::param{'supplied'} );
 		$Paper->grain_direction( $openprint::param{'grain_direction'} );
 		$Paper->taxexempt1( $openprint::param{'taxexempt1'} );
 		$Paper->taxexempt2( $openprint::param{'taxexempt2'} );

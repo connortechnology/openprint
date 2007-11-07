@@ -53,6 +53,7 @@ function get_parameters( form, id, selected ) {
 			form.elements['ddmStockFinish'+id] ? get_ddm_value( form.elements['ddmStockFinish'+id] ) : '',
 			form.elements['ddmStockColour'+id] ? get_ddm_value( form.elements['ddmStockColour'+id] ) : '',
 			form.elements['ddmStockWeight'+id] ? get_ddm_value( form.elements['ddmStockWeight'+id] ) : '',
+			form.elements['rdbSuppliedStock'+id] ? get_value( form.elements['rdbSuppliedStock'+id] ) : '',
 			id, /* press */
 			form.ProjectIndex.value
 	);
@@ -61,6 +62,22 @@ function get_parameters( form, id, selected ) {
 	parameters[parameters.length] = form.txtSpecificStockHeight ? form.txtSpecificStockHeight.value : '';
 	return parameters;
 } // end function get_parameters( form )
+
+function rdbSuppliedStock_onchange( element, id ) {
+	var form = element.form;
+	if ( gettingNewPrice ) {
+		if ( timeout )
+			clearTimeout( timeout );
+		setTimeout( 'rdbSuppliedStock_onchange($(' + element.id + '),"' + id + '");', 1000 );
+		return;
+	} // end if
+	timeout = null;
+	form.elements['ddmStockBrand'+id].disabled = true;
+	form.elements['ddmStockFinish'+id].disabled = true;
+	form.elements['ddmStockColour'+id].disabled = true;
+	form.elements['ddmStockWeight'+id].disabled = true;
+	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Supplied') );
+} // end function rdbSuppliedStock_onchange( element, id )
 
 function ddmStockBrand_onchange( element, id ) {
 	var form = element.form;
@@ -146,7 +163,7 @@ function ddmStockWeight_onchange( element, id ) {
 		setTimeout( 'ddmStockWeight_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
-timeout = null;
+	timeout = null;
 
 	form.elements['ddmStockBrand'+id].disabled = true;
 	form.elements['ddmStockFinish'+id].disabled = true;
@@ -217,54 +234,46 @@ function fill_drop_down( results ) {
         } // end if
     } // end for
 	if ( form.elements['ddmStockBrand'+id] ) {
-		if ( BrandOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['ddmStockBrand'+id] );
-			fill_ddm( form.elements['ddmStockBrand'+id], BrandOptions, 'ddmStockBrand_onchange' );
-			
-			if ( BrandOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['ddmStockBrand'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['ddmStockBrand'+id], selectedValue, 0 );
-			} // end if
+		var selectedValue = get_ddm_value( form.elements['ddmStockBrand'+id] );
+		fill_ddm( form.elements['ddmStockBrand'+id], BrandOptions, 'ddmStockBrand_onchange' );
+		
+		if ( BrandOptions.length == 2 ) {
+			ddm_select_by_index( form.elements['ddmStockBrand'+id], 1 );
+		} else {
+			ddm_select_by_value( form.elements['ddmStockBrand'+id], selectedValue, 0 );
 		} // end if
 		form.elements['ddmStockBrand'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockFinish'+id] ) {
-		if ( FinishOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['ddmStockFinish'+id] );
-			fill_ddm( form.elements['ddmStockFinish'+id], FinishOptions, 'ddmStockFinish_onchange' );
-			if ( FinishOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['ddmStockFinish'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['ddmStockFinish'+id], selectedValue, 0 );
-			} // end if
+		var selectedValue = get_ddm_value( form.elements['ddmStockFinish'+id] );
+		fill_ddm( form.elements['ddmStockFinish'+id], FinishOptions, 'ddmStockFinish_onchange' );
+		if ( FinishOptions.length == 2 ) {
+			ddm_select_by_index( form.elements['ddmStockFinish'+id], 1 );
+		} else {
+			ddm_select_by_value( form.elements['ddmStockFinish'+id], selectedValue, 0 );
 		} // end if
 		form.elements['ddmStockFinish'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockColour'+id] ) {
-		if ( ColourOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['ddmStockColour'+id] );
-			fill_ddm( form.elements['ddmStockColour'+id], ColourOptions, 'ddmStockColour_onchange' );
-			if ( ColourOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['ddmStockColour'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['ddmStockColour'+id], selectedValue, 0 );
-			} // end if
+		var selectedValue = get_ddm_value( form.elements['ddmStockColour'+id] );
+		fill_ddm( form.elements['ddmStockColour'+id], ColourOptions, 'ddmStockColour_onchange' );
+		if ( ColourOptions.length == 2 ) {
+			ddm_select_by_index( form.elements['ddmStockColour'+id], 1 );
+		} else {
+			ddm_select_by_value( form.elements['ddmStockColour'+id], selectedValue, 0 );
 		} // end if
 		form.elements['ddmStockColour'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockWeight'+id] ) {
-		if ( WeightOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['ddmStockWeight'+id] );
-			fill_ddm( form.elements['ddmStockWeight'+id], WeightOptions, 'ddmStockWeight_onchange' );
-			if ( WeightOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['ddmStockWeight'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['ddmStockWeight'+id], selectedValue, 0 );
-			} // end if
+		var selectedValue = get_ddm_value( form.elements['ddmStockWeight'+id] );
+		fill_ddm( form.elements['ddmStockWeight'+id], WeightOptions, 'ddmStockWeight_onchange' );
+		if ( WeightOptions.length == 2 ) {
+			ddm_select_by_index( form.elements['ddmStockWeight'+id], 1 );
+		} else {
+			ddm_select_by_value( form.elements['ddmStockWeight'+id], selectedValue, 0 );
 		} // end if
 		form.elements['ddmStockWeight'+id].disabled = false;
 	} // end if
