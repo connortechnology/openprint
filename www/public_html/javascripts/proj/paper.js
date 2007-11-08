@@ -234,6 +234,7 @@ function fill_drop_down( results ) {
         } // end if
     } // end for
 	if ( form.elements['ddmStockBrand'+id] ) {
+		if ( BrandOptions.length > 1 ) {
 		var selectedValue = get_ddm_value( form.elements['ddmStockBrand'+id] );
 		fill_ddm( form.elements['ddmStockBrand'+id], BrandOptions, 'ddmStockBrand_onchange' );
 		
@@ -242,10 +243,12 @@ function fill_drop_down( results ) {
 		} else {
 			ddm_select_by_value( form.elements['ddmStockBrand'+id], selectedValue, 0 );
 		} // end if
+		} // end if
 		form.elements['ddmStockBrand'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockFinish'+id] ) {
+		if ( FinishOptions.length > 1 ) {
 		var selectedValue = get_ddm_value( form.elements['ddmStockFinish'+id] );
 		fill_ddm( form.elements['ddmStockFinish'+id], FinishOptions, 'ddmStockFinish_onchange' );
 		if ( FinishOptions.length == 2 ) {
@@ -253,10 +256,12 @@ function fill_drop_down( results ) {
 		} else {
 			ddm_select_by_value( form.elements['ddmStockFinish'+id], selectedValue, 0 );
 		} // end if
+		} // end if
 		form.elements['ddmStockFinish'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockColour'+id] ) {
+		if ( ColourOptions.length > 1 ) {
 		var selectedValue = get_ddm_value( form.elements['ddmStockColour'+id] );
 		fill_ddm( form.elements['ddmStockColour'+id], ColourOptions, 'ddmStockColour_onchange' );
 		if ( ColourOptions.length == 2 ) {
@@ -264,16 +269,19 @@ function fill_drop_down( results ) {
 		} else {
 			ddm_select_by_value( form.elements['ddmStockColour'+id], selectedValue, 0 );
 		} // end if
+		} // end if
 		form.elements['ddmStockColour'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockWeight'+id] ) {
-		var selectedValue = get_ddm_value( form.elements['ddmStockWeight'+id] );
-		fill_ddm( form.elements['ddmStockWeight'+id], WeightOptions, 'ddmStockWeight_onchange' );
-		if ( WeightOptions.length == 2 ) {
-			ddm_select_by_index( form.elements['ddmStockWeight'+id], 1 );
-		} else {
-			ddm_select_by_value( form.elements['ddmStockWeight'+id], selectedValue, 0 );
+		if ( WeightOptions.length > 1 ) {
+			var selectedValue = get_ddm_value( form.elements['ddmStockWeight'+id] );
+			fill_ddm( form.elements['ddmStockWeight'+id], WeightOptions, 'ddmStockWeight_onchange' );
+			if ( WeightOptions.length == 2 ) {
+				ddm_select_by_index( form.elements['ddmStockWeight'+id], 1 );
+			} else {
+				ddm_select_by_value( form.elements['ddmStockWeight'+id], selectedValue, 0 );
+			} // end if
 		} // end if
 		form.elements['ddmStockWeight'+id].disabled = false;
 	} // end if

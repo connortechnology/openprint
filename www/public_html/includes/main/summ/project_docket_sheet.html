@@ -184,7 +184,8 @@
 				$html .= '/' if $side eq 'SideOne'; 
 			} # end foreach side
 		$html .= sprintf('</td><td class="docketText">%d</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} );
-$html .= sprintf('<td class="docketText">%s</td>', $$sig_specs{'SheetQuantity'.$$variable{'Project'}->ordered_quantity_index()} );
+$$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} =~ s/\D//g;
+$html .= sprintf('<td class="docketText">%s</td>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
 $html .= '<td class="docketText">&nbsp;</td>';
 $html .= '<td class="docketText"><br/><br/><br/></td></tr>';
 	} # end while service_index

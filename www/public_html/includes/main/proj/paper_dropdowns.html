@@ -25,7 +25,7 @@
 			<input type="text" name="txtSpecificStockFinish<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockFinish'.$$variable{'Signature'}} ) ?>" onkeyup="txtSpecificStockFinish_onKeyUp(this);" />
 			</p>
 			<p><label>Colour:</label>
-			<input type="text" name="txtSpecificStockColour<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockColour'.$$variable{'Signature'}} ) ?>" onkeyup="txtSpecificStockColour_onKeyUp(this);" />
+			<input type="text" name="txtSpecificStockColour<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockColour'.$$variable{'Signature'}} ? $$variable{'txtSpecificStockColour'.$$variable{'Signature'}} : 'White' ) ?>" onkeyup="txtSpecificStockColour_onKeyUp(this);" />
 			</p>
 			<p><label>Weight:</label>
 			<input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{'Signature'}} ) ?>" onkeyup="txtSpecificStockWeight_onKeyUp(this);" />

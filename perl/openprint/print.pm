@@ -573,7 +573,7 @@ sub get_finished_calliper {
 	my %services = $Project->get_services();
 
 	my $folding_specs;	
-	( $folding_service_index ) = $services{'Folding'}[0] if ( ! $folding_service_index ) and $services{'Folding'};
+	$folding_service_index = $services{'Folding'}[0] if ( ! $folding_service_index ) and $services{'Folding'};
 	if ( $folding_service_index ) {
 		$folding_specs = openprint::service::get_specs_ref( $project_index, $folding_service_index );
 	} # end if
@@ -587,29 +587,25 @@ sub get_finished_calliper {
 		} elsif ( $$sig_specs{'ProjectType'} eq 'ScratchPads' ) {
 			$finished_calliper += $$sig_specs{'PageQuantity'} * $calliper;
 		} else {
-			if ( $folding_service_index ) {
 				my $pages = 1;
-				if ( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"} eq '2PanelFold' ) {
+				if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
 					$pages = 2;
-				} elsif ( sets::isin( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"},['3PanelFold','3PanelZFold'] ) ) {
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'},['3PanelFold','3PanelZFold'] ) ) {
 					$pages = 3;
-				} elsif ( sets::isin( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"}, ['4PanelFold', '4PanelZFold'] ) ) {
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PanelFold', '4PanelZFold'] ) ) {
 					$pages = 4;
-				} elsif ( sets::isin( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"}, ['5PanelFold', '5PanelZFold'] ) ) {
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['5PanelFold', '5PanelZFold'] ) ) {
 					$pages = 5;
-				} elsif ( sets::isin( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"}, ['6PanelFold', '6PanelZFold'] ) ) {
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['6PanelFold', '6PanelZFold'] ) ) {
 					$pages = 6;
-				} elsif ( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"} eq 'SingleGateFold' ) {
+				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
 					$pages = 3;
-				} elsif ( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"} eq 'DoubleGateFold' ) {
+				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DoubleGateFold' ) {
 					$pages = 4;
-				} elsif ( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"} eq 'DifficultFold' ) {
+				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
 					$pages = 6;
 				} #// end if
 				$finished_calliper += $pages * $$sig_specs{'txtSpecificStockCalliper'};
-			} else {
-				$finished_calliper += $calliper;
-			} # end if
 		} # end if
 	} # end foreach
 $log->debug("Calliper: $finished_calliper");

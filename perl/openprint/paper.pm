@@ -100,9 +100,8 @@ sub select_paper {
 		$weights{$Paper->weight()} = $Paper->weight_id() if ( ! $name ) or ( $Paper->name() eq $name );
 	} # end foreach
 
-
 	my @results;
-	push @results, jsrs::encode_array( 'Brand', map {$_, $_ } sort keys %names ) if ( ! $name ) or ! sets::isin( $selected, 'Name','Finish','Colour','Weight' );
+	push @results, jsrs::encode_array( 'Brand', map {$_, $_ } sort keys %names ) if ( ! $name ) or ! sets::isin( $selected, ['Name','Finish','Colour','Weight'] );
 	push @results, jsrs::encode_array( 'Finish', map { $_, $_ } sort keys %finishes ) if ( ! $finish ) or ! sets::isin( $selected, [ 'Finish', 'Colour', 'Weight' ] );
 	push @results, jsrs::encode_array( 'Colour', map { $_, $_ } sort keys %colours ) if ( ! $colour ) or ! sets::isin( $selected, [ 'Finish','Weight' ] );
 	if ( $selected ne 'Weight' ) {
