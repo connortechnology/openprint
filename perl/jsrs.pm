@@ -48,6 +48,7 @@ $log->debug( $error );
 	$clean =~ s/'/\\'/g;
 	$clean =~ s/\\"/\\\\\\"/g;
     $clean = "jsrsError: $clean";
+	$$variable{'C'} = $r->param('C');
 	$$variable{'payload'} = $error; 
 		#"<html><head></head><body ".
 		#"onload=\"p=document.layers?parentlayer:window.parent;p.jsrsError(\'" . $r->param('C') .
