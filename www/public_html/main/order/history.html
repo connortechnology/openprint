@@ -15,7 +15,7 @@
 <? if ( $openprint::session{'user_id'} ) ?>
 <form id="f1" name="f1" action="history.html" method="post">
 	<div class="OrderHistory">
-		<fieldset class="filters unprintable" style="margin: 0px; width:44%; float: left;"><legend>Enter Order ID:</legend>
+		<fieldset class="filters unprintable" style="margin: 0px; width:42%; float: left;"><legend>Enter Order ID:</legend>
 			<p>
 				<label for="OrderID">Order ID:</label>
 				<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" />
@@ -27,7 +27,7 @@
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load_orders(f1);", '', 'Go' ); ) ?>
 			</p>
 		</fieldset>
-		<fieldset class="filters unprintable" style="margin: 0px; width:55%; float: right;"><legend>or Select Search Criteria:</legend>
+		<fieldset class="filters unprintable" style="margin: 0px; width:58%; float: right;"><legend>or Select Search Criteria:</legend>
 			<p>
 				<label>Ordered by:</label>
 				<select name="ddmOrderedBy" size="1" onchange="load_orders( this.form );">

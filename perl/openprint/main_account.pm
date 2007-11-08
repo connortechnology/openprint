@@ -328,7 +328,7 @@ sub user_profile {
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
 
 	if ( $Me->administrator() eq 'Y' ) {
-		$User = new openprint::User( $openprint::param{'ddmUser'} );
+		$User = new openprint::User( $openprint::param{'ddmUser'} ) if $openprint::param{'ddmUser'};
 		if ( $openprint::param{'ddmUser'} ) {
 # Enforce that we can only edit users from our company
 			if ( $User->company_id() != $openprint::session{'company_id'} ) {
