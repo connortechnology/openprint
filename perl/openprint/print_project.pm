@@ -280,7 +280,7 @@ sub continue_project {
 		$$variable{'ProjectIndex'} = $project_index;
 	} # end if
 
-	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{'Redirect'} *************************");
+	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{'Redirect'} $$variable{'ProjectIndex'} $$variable{'ServiceIndex'} *************************");
 } # end sub continue_project 
 
 sub try_to_delete_project {
