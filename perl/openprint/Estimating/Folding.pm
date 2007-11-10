@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -223,8 +223,9 @@ sub impositions {
 sub test_fold {
 	my ( $Equipment, $I, $sig_specs, $foldtype, $max_imposition ) = @_;
 
+$openprint::log->debug( "Foldtype: $foldtype" ) if $debug;
 	if ( $max_imposition and $I->imposition() > $max_imposition ) {
-		$openprint::log->debug("Imposition too large " . $I->imposition() . ' > ' . $max_imposition ) if $debug;
+		$openprint::log->debug("MAX Imposition too large " . $I->imposition() . ' > ' . $max_imposition ) if $debug;
 		return 0;
 	} # end if
 
@@ -329,8 +330,9 @@ sub signature_calc {
 	my %makereadies;
 	my $max_imposition;
 
-	foreach my $ss_id ( $Project->signatures() ) {
+	foreach my $ss_id ( $Project->signatures( $$sig_specs{'txtSignatureType'} ) ) {
 		next if $signature_service_index and ($ss_id >= $signature_service_index);
+$openprint::log->debug("SIGS: $signature_service_index : $ss_id " );
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		if ( (!$max_imposition) or ( $$s_specs{'FoldingImposition'.$qty_index} < $max_imposition ) ) {
 			$max_imposition = $$s_specs{'FoldingImposition'.$qty_index};
@@ -364,15 +366,10 @@ sub signature_calc {
 			if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
 				$folds{$pages.'PageSignatureFold'} += 1;
 			} else {
-				$foldtype = $$sig_specs{'SpreadCols'.$qty_index}.'x'.$$sig_specs{'SpreadRows'.$qty_index}.'-'.$pages.'Page-'.$$sig_specs{'hdnImageOrientation'.$qty_index}.'-'.$Imposition->imposition().'out-SignatureFold';
+				$foldtype = $pages.'PageSignatureFoldRunSpeed';
 				if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
-					$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
-				} else {
-					$foldtype = $pages.'PageSignatureFoldRunSpeed';
-					if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
-						#$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
-						$folds{$pages.'PageSignatureFold'} += 1;
-					} # end if
+#$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
+					$folds{$pages.'PageSignatureFold'} += 1;
 				} # end if
 			} # end if
 		} else {
