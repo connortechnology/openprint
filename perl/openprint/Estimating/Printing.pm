@@ -387,6 +387,10 @@ my $master_time = gettimeofday();
 	} # end if
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 	if ( $$specs{'txtSignatureType'} ) {
+		if ( ! $$printing_specs{'txtSpreadSize'} ) {
+			$openprint::log->warn('No Spread Size!');
+			$$printing_specs{'txtSpreadSize'} = 4;
+		} # end if
 
 		if ( $$specs{'txtSignatureType'} eq 'GateFolded Spreads' ) {
 			if ( $$specs{'rdbTemplateType'} eq 'SingleGateFold' ) {

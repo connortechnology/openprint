@@ -1,2 +1,29 @@
-<!--#include virtual="/includes/main/summ/proofs.html"-->
+<? while ( @$variable{'SignatureGroupIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+<div class="row">
+	<? if ( $$variable{'Reference'} ) ?>
+	Information for:&nbsp;<b><?Reference?></b><br/>
+	<? endif ( $$variable{'Reference'} ) ?>
+	<span class="label">Quantity, size &amp; type of proof:</span>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+		<span class="value">
+<? echo (
+	return '&nbsp;' if ! ( $$variable{'Proofs-'.$$variable{'SignatureGroupIndex'}.'-'.$$variable{'QTYIndex'}} or @{$$variable{'Proofs-'.$$variable{'SignatureGroupIndex'}.'-'.$$variable{'QTYIndex'}}} );
+	my $html;
+	while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureGroupIndex'}.'-'.$$variable{'QTYIndex'}}},0,6 ) {
+		if ( $$variable{'ProofQuantity'} and $$variable{'ProofType'} ) {
+			$html .= $$variable{'ProofQuantity'};
+			$html .= ' - ' . $$variable{'ProofWidth'} . '&quot; x ' . $$variable{'ProofHeight'} . '&quot; ' if $$variable{'ProofWidth'} and $$variable{'ProofHeight'};
+			$html .= $$variable{'ProofType'} . '<br/>';
+		} # end if
+	} # end while
+	return $html;
+) ?>
+		</span>
+	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</div>
+<? endwhile ( @$variable{'SignatureGroupIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
 

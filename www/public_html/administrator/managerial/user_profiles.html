@@ -126,10 +126,10 @@ Please select a company or user to obtain login information.<br/>
 			</p>
 			<p>
 				<label>Can this account login to the ftp site?</label>
-				<input type="radio" id="ftp_activeY" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="Y" />
-				<label class="radio" for="ftp_activeY">Yes</label>
-				<input type="radio" id="ftp_activeN" name="ftp_active" <?echo ( 'checked="checked"' if ! $$variable{'User'}->ftp_active() ) ?> value="N" />
-				<label class="radio" for="ftp_activeN">No</label>
+				<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="1" />
+				<label class="radio" for="ftp_active1">Yes</label>
+				<input type="radio" id="ftp_active0" name="ftp_active" <?echo ( 'checked="checked"' if ! $$variable{'User'}->ftp_active() ) ?> value="0" />
+				<label class="radio" for="ftp_active0">No</label>
 			</p>
 			<p> 
 				<label>Custom Greeting</label>

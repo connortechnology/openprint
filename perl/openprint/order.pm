@@ -104,6 +104,11 @@ sub add_project_to_order {
 	my ( $log, $dbh, $cookie, $variable, $project_index, $order_id ) = @_;
 	my $error = '';
 
+	if ( ! $project_index ) {
+		return ( undef, 'No project given.' );
+
+	} # end if
+
 	return if check_credit( $log, $dbh, $variable );
 
 	$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
@@ -410,15 +415,19 @@ sub information {
 			$error = 'No OrderID given to Re-Open.';
 		} # end if OrderID
 	} elsif ( $openprint::param{'btnFunction'} eq 'Process Order' ) {
-		my $project_index = $openprint::param{'ProjectIndex'};
-		$_ = q{SELECT strStatus FROM Orders WHERE Index IN (SELECT OrderIndex FROM Order_Contents WHERE lngProjectIndex=?)}.
-			q{AND strStatus IN ( 'Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up' )};
-		if ( sql::execute( $log, $dbh, $_, $project_index ) ) {
-			return misc::error($log, $dbh, $variable, q{Can't order project.}, "Project $project_index has already been ordered." );
-		} # end if
+		if ( $openprint::param{'quote_id'} ) {
+			( $order_id, $error ) = make_order_from_quote( $r, $log, $dbh, $cookie, $openprint::param{'quote_id'}, $variable );
+		} else {
+			my $project_index = $openprint::param{'ProjectIndex'};
+			$_ = q{SELECT strStatus FROM Orders WHERE Index IN (SELECT OrderIndex FROM Order_Contents WHERE lngProjectIndex=?)}.
+				q{AND strStatus IN ( 'Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up' )};
+			if ( sql::execute( $log, $dbh, $_, $project_index ) ) {
+				return misc::error($log, $dbh, $variable, q{Can't order project.}, "Project $project_index has already been ordered." );
+			} # end if
 
-		# Normal Order Creation
-		( $order_id, $error ) = add_project_to_order( $log, $dbh, $cookie, $variable, $openprint::param{'ProjectIndex'} );
+			# Normal Order Creation
+			( $order_id, $error ) = add_project_to_order( $log, $dbh, $cookie, $variable, $openprint::param{'ProjectIndex'} );
+		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Continue') { # saving projcet information
 		foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
 			save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
