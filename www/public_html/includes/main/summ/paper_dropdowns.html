@@ -60,18 +60,14 @@
 		my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $qty_index );
 
 		my $qty = 0;
-		if ( $$sig_specs{'SheetQuantity'.$qty_index} ) {
-			$qty = $$sig_specs{'SheetQuantity'.$qty_index};
-		} else {
-			$qty  = $$sig_specs{'txtPressSheetQty'.$qty_index};
-			$qty =~ s/\D//g;
-		} # end if
-		my $weight = $qty * $Paper->width() * $Paper->height() * $Paper->wpsi();
+		$qty  = $$sig_specs{'txtPressSheetQty'.$qty_index};
+		$qty =~ s/\D//g;
 
 		if ( $Paper->type() eq 'Roll' ) {
-		my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $weight );
-		$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $weight, $paper_price{'Paper Price'} );
+			my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $qty );
+			$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $qty, $paper_price{'Paper Price'} );
 		} else {
+		my $weight = $qty * $Paper->width() * $Paper->height() * $Paper->wpsi();
 		my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $qty );
 		$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $weight, $paper_price{'Paper Price'} );
 		} # end if

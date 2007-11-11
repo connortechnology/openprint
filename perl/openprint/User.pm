@@ -324,8 +324,10 @@ sub find {
 		push @values, lc $param{'email'};
 	} # end if
 	if ( exists $param{'web_active'} ) {
+		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
 		$param{'web_active'} = 'N' if $param{'web_active'} == 0;
 		$param{'web_active'} = 'Y' if $param{'web_active'} == 1;
+		} # end if
 		$sql .= ' AND ysnaccountactivation=?';
 		push @values, $param{'web_active'};
 	} # end if
