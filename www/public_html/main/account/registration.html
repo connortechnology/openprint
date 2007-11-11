@@ -5,7 +5,7 @@
 <? if ( ( ! $$variable{'error'} ) and $openprint::param{'btnFunction'} ) ?>
 
 	<p>Thank you for registering!</p>
-	<p><? echo ( openprint::config{RegistrationMessage} ) ?></p>
+	<p><? echo ( $openprint::config{'RegistrationMessage'} ) ?></p>
 	<? if ( $openprint::session{'user_id'} ) ?>
 	<p>Your account has been activated and you have been automatically logged in.</p>
 	<? else ( $openprint::session{'user_id'} ) ?>

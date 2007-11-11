@@ -661,7 +661,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 
 	my @possible_presses = sort { $a->strid() <=> $b->strid() } select_presses( $project_index, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
 	if ( ! @possible_presses ) {
-		$$specs{'alert'} = 'There were no possible presses. Your project may be too large for us.';
+		$$specs{'alert'} = 'There were no possible presses. Your project may be too large for us.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} elsif ( $debug ) {
 		$openprint::log->debug( "Presses: " . join(',', map { $_->strid() } @possible_presses ) );
@@ -919,6 +919,9 @@ $openprint::log->debug("No spread layout for you!");
 					$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
 				} else {
 					$project{'colour_bar_size'} = $Press->specification('Process Colour Bar Size');
+					if ( !$project{'colour_bar_size'} ) {
+						$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
+					}
 				} # end if
 			} else {
 				$project{'colour_bar_size'} = 0;
@@ -1085,7 +1088,7 @@ $openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}}
 				if ( ! @impositions ) {
 $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 					if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
-						$$specs{'alert'} .= 'There were no possible impositions.  Your project may be too large for us.';
+						$$specs{'alert'} .= 'There were no possible impositions.  Your project may be too large for us.<br/>';
 						return $$specs{'Status'} = 'uncalculated';
 					} # end if
 					next;
@@ -1135,8 +1138,8 @@ $openprint::log->debug("Loaing old imp");
 } # end if
 
 		if ( ! $imposition_count ) {
-			$$specs{'alert'} .= 'There were no possible impositions for your specifications.';
-			$$specs{'Status'} = 'uncalculated';
+			$$specs{'alert'} .= 'There were no possible impositions for your specifications.<br/>';
+			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
 		my $b_price = get_project_price( $Project, $service_index, \@side_one_colours, \@side_two_colours, \@filtered_colours, \%special_colours, \%inkCoverage, \%mixed_colours, \%washed_colours, \%project, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \%impositions );

@@ -182,3 +182,7 @@ span.SpotColour label, span.Coverages label {
 #hdnBreakdown1 b, #hdnBreakdown2 b, #hdnBreakdown3 b {
 	color: red;
 }
+.PresentationFolderQuestions {
+	float: left;
+	width: 50%;
+}
