@@ -558,6 +558,10 @@ sub get_service_specifications {
 sub create_edit_process {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
+	$openprint::param{'txtQuantity1'} =~ s/\D//g;
+	$openprint::param{'txtQuantity2'} =~ s/\D//g;
+	$openprint::param{'txtQuantity3'} =~ s/\D//g;
+
 	my $error = '';
 	my ( $ref ) = misc::trim( $r->param('txtProjectReference') );
 	$error .= "You must specify a Project Reference.<br/>" if ! $ref =~ /[^\s]/;
@@ -786,6 +790,9 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
+	$openprint::param{'txtQuantity1'} =~ s/\D//g;
+	$openprint::param{'txtQuantity2'} =~ s/\D//g;
+	$openprint::param{'txtQuantity3'} =~ s/\D//g;
 	@openprint::param{'reference','comments'} = misc::trim( @openprint::param{'reference','comments'} );
 
 	my $Project = new openprint::Project( $project_index );

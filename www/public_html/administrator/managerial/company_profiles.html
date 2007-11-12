@@ -192,7 +192,7 @@
 			<label>Sales Person:</label>
 			<select name="ddmSalesPerson">
 				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'web_active'=>'Y', 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmSalesPerson'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmSalesPerson'} ); ) ?>
 			</select>
 	</p>
 	</fieldset>
