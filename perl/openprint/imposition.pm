@@ -699,7 +699,7 @@ sub convert_impositions {
 				#$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
 				push @imps, $newimp;
 			} # end foreach block
-			last if @imps and (@imps[@imps-1]->imposition() >= 2);
+			last if @imps and (@imps[@imps-1]->imposition() >= 4);
 		} # end foreach signature_size
 		push @good_impositions, @imps;
 	} # end foreach
