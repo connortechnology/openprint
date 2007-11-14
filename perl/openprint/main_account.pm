@@ -330,7 +330,7 @@ sub user_profile {
 	if ( $Me->administrator() eq 'Y' ) {
 
 		# IF it's empty, then we are adding a new user! Otherwise editing one
-		$User = new openprint::User( $openprint::param{'ddmUser'} );
+		$User = new openprint::User( $openprint::param{'ddmUser'} ) if exists $openprint::param{'ddmUser'};
 		if ( $openprint::param{'ddmUser'} ) {
 # Enforce that we can only edit users from our company
 			if ( $User->company_id() != $openprint::session{'company_id'} ) {
