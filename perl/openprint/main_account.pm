@@ -133,6 +133,9 @@ sub registration {
 		$Company->taxexempt1( $openprint::param{'gstnumber'} ? 'Y' : 'N' );
 		$Company->taxexempt2( $openprint::param{'pstnumber'} ? 'Y' : 'N' );
 		$Company->activation( $openprint::config{'NewCustomerAccountActivation'} );
+		if ( sets::isin( new openprint::User($openprint::session{'user_id'})->type(), ['E','A'] ) ) {
+			$Company->salesrep_id( $openprint::session{'user_id'} );
+		} # end if
 		if ( my $error = $Company->save() ) {
 			$$variable{'error'} .= $error;
 			return;
