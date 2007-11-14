@@ -3,7 +3,6 @@
 <h2>History</h2>
 </div>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_projects = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -24,7 +23,7 @@
 	}
 	function load_projects( form ) {
 		$('ProjectList').innerHTML = 'Please wait...';
-		new Ajax.Updater('ProjectList','/main/project/_project_list.html', {method:'get',parameters:form.serialize()});
+		new Ajax.Updater('ProjectList','/main/project/_project_list.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
 	function initializeDayDropDowns() {
 		if ( typeof(setDaysDropDown) == 'function' ) {
@@ -37,7 +36,6 @@
 	
 	if ( typeof(initializeDayDropDowns) ) 
 		window.onload = initializeDayDropDowns;
--->
 </script>	 
 <? if ( $openprint::session{'user_id'} ) ?>
 <form name="f1" method="post" action="/main/project/history.html">

@@ -16,7 +16,8 @@
 		} // end if
 	} // end function delete_confirrm
 	function load_quotes( form ) {
-		LoadContent('QuoteList','/main/quote/_quote_list.html', Serialize( form ) );
+		$('QuoteList').innerHTML = 'Please wait...';
+		new Ajax.Updater('QuoteList','/main/quote/_quote_list.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function load_quotes
 
 	function initializeDayDropDowns() {
