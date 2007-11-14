@@ -356,6 +356,7 @@ $openprint::log->debug("SIGS: $signature_service_index : $ss_id " );
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 			foreach ( keys %fold_types ) {
+				$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = int $$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"};
 				$folds{$_} = $$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"};
 			} # end foreach
 		} elsif ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) {
@@ -489,7 +490,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 			my $runTime = sprintf( '%.4f', $$specs{"txtQuantity$qty_index"} / $runSpeed );
 			$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('Folds: %d, QTY: %d, Runspeed: %d/Hr = %.2f hours', $folds{$fold}, $$specs{'txtQuantity'.$qty_index}, $runSpeed, $runTime) . "<br/>";
 			if ( lc $servicePrice{'units'} eq 'per hour' ) {
-				$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime;
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime * $folds{$fold};
 				$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('%s %s: Setup: %.2f, Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f', $folds{$fold}, $fold, $setupPrice{'Price'}, @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} ) . "<br/>";
 			} elsif ( sets::isin( lc $servicePrice{'units'}, ['per m', 'per 1000'] ) ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * ( $folds{$fold}*$$specs{"txtQuantity$qty_index"} / 1000 );
