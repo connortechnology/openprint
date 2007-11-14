@@ -192,9 +192,14 @@ sub registration {
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 		} # end foreach
 
-		if ( $openprint::config{'NewFirstUserAccountActivation'} eq 'Y' and $openprint::config{'NewCustomerAccountActivation'} eq 'Y') {
-			# auto log in.
-			@openprint::session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
+		if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
+			# If I'm a salesrep, then only change my company, not the user.
+			$openprint::session{'company_id'} = $Company->id();
+		} else { 
+			if ( $openprint::config{'NewFirstUserAccountActivation'} eq 'Y' and $openprint::config{'NewCustomerAccountActivation'} eq 'Y') {
+				# auto log in.
+				@openprint::session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
+			} # end if
 		} # end if
 	} else {
 		my $Company = new openprint::Company( $cust_id );
@@ -264,10 +269,15 @@ sub registration {
 			} # end if
 		} # end if
 
-		if ( $openprint::config{'NewNonFirstUserAccountActivation'} eq 'Y' ) {
-			# auto log in.
-			if ( $Company->activation() eq 'Y' ) {
-				@openprint::session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
+		if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
+			# If I'm a salesrep, then only change my company, not the user.
+			$openprint::session{'company_id'} = $Company->id();
+		} else { 
+			if ( $openprint::config{'NewNonFirstUserAccountActivation'} eq 'Y' ) {
+				# auto log in.
+				if ( $Company->activation() eq 'Y' ) {
+					@openprint::session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
+				} # end if
 			} # end if
 		} # end if
 

@@ -8,7 +8,7 @@
 		</p>
 		<p> 
 			<label>Customer:</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" size="4" />
+			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
 				<option value=""> Select a Customer</option>
 	 <? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::param{'ddmCustomer'} ); ) ?>
