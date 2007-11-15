@@ -31,8 +31,8 @@ ul#menubar:after {
 }
 /* Hides from IE-mac \*/
 * html ul#menubar {height: 1%;}
-* *     ul#menubar{display:block;}
-* */* End hide from IE-mac */
+*     ul#menubar{display:block;}
+/* End hide from IE-mac */
 ul#menubar li {
     float: left;
     list-style: none;

@@ -83,11 +83,11 @@
 	<br class="spacer"/>
 	<fieldset id="Reference">
 	   <legend>Reference:</legend>
-		<? echo ( ssi::htmlize($$variable{'Project'}->reference() ); ) ?>
+		<? hecho ( $$variable{'Project'}->reference(); ) ?>
 		<? if ( $$variable{'Project'}->comments() ) ?>
 <br/>
 		<p>
-			<label>Additional Comments:</label><? echo ( $$variable{'Project'}->comments(); ) ?>
+			<label>Additional Comments:</label><? hecho ( $$variable{'Project'}->comments(); ) ?>
 		</p>
 		<? endif ( $$variable{'Project'}->comments() ) ?>
 	</fieldset>

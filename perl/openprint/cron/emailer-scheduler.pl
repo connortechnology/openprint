@@ -42,7 +42,7 @@ $dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 
-%config = configuration::init_cache( $log, $dbh, {
+configuration::init_cache( $log, $dbh, {
 		'siteURL' => 'http://www.point-one.com',
 		'SecureSiteURL'	=> 'https://www.point-one.com',
 		'ExternalSiteURL'	=> 'http://www.point-one.com',

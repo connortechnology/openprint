@@ -1,18 +1,18 @@
 <link href="/css/quote.css" rel="stylesheet" type="text/css">
-<? if ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 If you would like to send a copy of this quotation to someone on your behalf 
 please fill in the necessary information below. This quote will be stored in 
 quote history. If it is for your own personal reference leave the &quot;Prepared 
 For&quot; fields blank.<br/>
-<? endif ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <br/>
 <form method="post" name="f1" action="submit.html"/>
 	<div class="QuoteInformation"/>
-		<? if ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset style="float: left; width: 49%;"/>
-		<? else ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? else ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset>
-		<? endif ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 			<legend>Prepared By:</legend>
 			<p> 
 				<label>&nbsp;Company Name:</label>
@@ -103,7 +103,7 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 				<input type="text" name="ByEmail" value="<?ByEmail?>" />
 			</p>
 		</fieldset>
-		<? if ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset style="float:right; width: 49%;"/><legend>Prepared For:</legend>
 			<p> 
 				<label>&nbsp;Company Name:</label>
@@ -195,7 +195,7 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 			</p>
 		</fieldset>
 		<br class="spacer"/>
-		<? endif ( $$variable{'Reseller'} eq 'Y' or $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) ?>
+<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' ); ) ?>
 		</p>

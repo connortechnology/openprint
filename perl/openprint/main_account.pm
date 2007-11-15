@@ -133,6 +133,9 @@ sub registration {
 		$Company->taxexempt1( $openprint::param{'gstnumber'} ? 'Y' : 'N' );
 		$Company->taxexempt2( $openprint::param{'pstnumber'} ? 'Y' : 'N' );
 		$Company->activation( $openprint::config{'NewCustomerAccountActivation'} );
+		if ( sets::isin( new openprint::User($openprint::session{'user_id'})->type(), ['E','A'] ) ) {
+			$Company->salesrep_id( $openprint::session{'user_id'} );
+		} # end if
 		if ( my $error = $Company->save() ) {
 			$$variable{'error'} .= $error;
 			return;
@@ -189,9 +192,14 @@ sub registration {
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 		} # end foreach
 
-		if ( $openprint::config{'NewFirstUserAccountActivation'} eq 'Y' and $openprint::config{'NewCustomerAccountActivation'} eq 'Y') {
-			# auto log in.
-			@openprint::session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
+		if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
+			# If I'm a salesrep, then only change my company, not the user.
+			$openprint::session{'company_id'} = $Company->id();
+		} else { 
+			if ( $openprint::config{'NewFirstUserAccountActivation'} eq 'Y' and $openprint::config{'NewCustomerAccountActivation'} eq 'Y') {
+				# auto log in.
+				@openprint::session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
+			} # end if
 		} # end if
 	} else {
 		my $Company = new openprint::Company( $cust_id );
@@ -261,10 +269,15 @@ sub registration {
 			} # end if
 		} # end if
 
-		if ( $openprint::config{'NewNonFirstUserAccountActivation'} eq 'Y' ) {
-			# auto log in.
-			if ( $Company->activation() eq 'Y' ) {
-				@openprint::session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
+		if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
+			# If I'm a salesrep, then only change my company, not the user.
+			$openprint::session{'company_id'} = $Company->id();
+		} else { 
+			if ( $openprint::config{'NewNonFirstUserAccountActivation'} eq 'Y' ) {
+				# auto log in.
+				if ( $Company->activation() eq 'Y' ) {
+					@openprint::session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
+				} # end if
 			} # end if
 		} # end if
 
@@ -327,8 +340,18 @@ sub user_profile {
 	my $User = new openprint::User( $openprint::session{'user_id'} );
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
 
-	if ( $Me->administrator() eq 'Y' ) {
+	if ( ( $Me->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $Me->id() ) ) {
+$openprint::log->debug('admin');
+
+		# IF it's empty, then we are adding a new user! Otherwise editing one
+		if ( exists $openprint::param{'ddmUser'} ) {
 		$User = new openprint::User( $openprint::param{'ddmUser'} );
+		} elsif ( $openprint::session{'company_id'} != $Me->company_id() ) {
+			my @Users = openprint::User::find('company_id'=>$openprint::session{'company_id'} );
+			if ( @Users == 1 ) {
+				$User = $Users[0];
+			} # end if
+		} # end if
 		if ( $openprint::param{'ddmUser'} ) {
 # Enforce that we can only edit users from our company
 			if ( $User->company_id() != $openprint::session{'company_id'} ) {

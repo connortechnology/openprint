@@ -14,6 +14,7 @@ require openprint::print;
 require Math::Units;
 
 require sql;
+require openprint::JDF;
 
 my $debug = 1;
 
@@ -464,7 +465,6 @@ sub find {
 		push @values, '%'.$params{'reference'}.'%';
 	} # en dif
 	if ( exists $params{'company_id'} ) {
-$openprint::log->debug("COmpany");
 		if ( ref $params{'company_id'} eq 'ARRAY' ) {
 			if ( @{$params{'company_id'}} ) {
 				$sql .= q{ AND companyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
@@ -520,6 +520,10 @@ $openprint::log->debug("COmpany");
 		push @values, $params{'ordered_on_end'};
 	} # end if
 
+	if ( $params{'salesrep_id'} ) {
+		$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
+		push @values, $params{'salesrep_id'};
+	} # end if
 
 	if ( $params{'value_start'} and $params{'value_end'} ) {
 		$sql .= q{ AND ( (price1 BETWEEN ? AND ? ) OR (price2 BETWEEN ? AND ?) OR (price3 BETWEEN ? AND ? ) )};

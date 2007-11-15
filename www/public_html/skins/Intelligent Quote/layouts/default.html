@@ -32,7 +32,7 @@
 					<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 				</div><!--Header-->
 				<br/>
-				<div class="menubar"><script type="text/javascript">writeMenu(Menus);</script><span class="filler">&nbsp;</span></div>
+				<!--#include virtual="/skins/<?SiteTitle?>/includes/customer_menu.html"-->
 				<?PageContent?>
 				<span class="unprintable">
 				<br class="spacer"/>

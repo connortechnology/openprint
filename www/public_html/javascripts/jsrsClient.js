@@ -297,8 +297,6 @@ function jsrsLoaded( contextID ){
 		// clean up and return context to pool
 		contextObj.callback = null;
 		contextObj.busy = false;
-	} else {
-		alert('No context object');
 	} // end if
 }
 
@@ -325,7 +323,9 @@ function jsrsUnescape( str ){
 }
 
 function jsrsBrowserSniff(){
-	if (document.layers) return "NS";
+	if (document.layers) {
+return "NS";
+}
 	if (document.all) {
 		// But is it really IE?
 		// convert all characters to lowercase to simplify testing
@@ -342,8 +342,13 @@ function jsrsBrowserSniff(){
 				return "IE";
 			}
 		}
-	}
-	if (document.getElementById) return "MOZ";
+	} else if (document.getElementById) {
+		var agt=navigator.userAgent.toLowerCase();
+		if ( agt.indexOf('safari') != -1 ) {
+			return 'MOZ';
+		} // en dif
+		return "MOZ";
+	} // end if
 	return "OTHER";
 }
 

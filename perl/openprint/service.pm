@@ -136,7 +136,7 @@ sub save_service {
 sub get_specifications {
 	my ( $log, $dbh, $project_index, $service_index, @specs ) = @_;
 	if ( ! ( $project_index or $service_index ) ) {
-		$log->warn(" ***** get_specifications requested without Project or Service Index *********");
+		$log->error(" ***** get_specifications requested without Project or Service Index *********");
 		return;
 	} # end if
 

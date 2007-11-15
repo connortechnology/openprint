@@ -83,7 +83,7 @@ sub calc {
 
 		my %proof_indexes;
 		my %proof_totals;
-		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty_index\n";
+		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty_index<br/>";
         foreach my $key ( keys %{$specs} ) {
 			if ( $key =~ /^txtProofIndex-(\d*)-(\d*)-$qty_index$/ ) {
 				push @{$proof_indexes{$1}}, $$specs{$key};
@@ -95,7 +95,7 @@ sub calc {
 		foreach my $signature_service_index ( @signature_service_indices ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition';
 				next;
@@ -112,7 +112,7 @@ sub calc {
 			} # end if
 				
 			foreach my $proof_index ( @{$proof_indexes{$signature_index}} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "\t\tProof: $proof_index\n";
+				$$specs{'hdnBreakdown'.$qty_index} .= "\t\tProof: $proof_index<br/>";
 				if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ne 'Y' ) {
 					@output = sets::union( @output,
 							"txtProofIndex-$signature_index-$proof_index-$qty_index",
@@ -158,7 +158,7 @@ sub calc {
 					"txtProofQuantity-$signature_index-$proof_index-$qty_index",
 						"ddmProofType-$signature_index-$proof_index-$qty_index",
 				};
-				$$specs{'hdnBreakdown'.$qty_index} .= "\t\tQuantity: $quantity, Type: $type\n";
+				$$specs{'hdnBreakdown'.$qty_index} .= "\t\tQuantity: $quantity, Type: $type<br/>";
 				if ( ! $proof_totals{$type} ) {
 					$proof_totals{$type} = { Quantity => 0, Price => 0 };
 				} # end if
@@ -488,7 +488,7 @@ sub save_proof_specs {
 				my ( $signature_service_index ) = sql::execute( $log, $dbh, $_, $project_index, 'SignatureIndex',$signature_index );
 
 				foreach my $qty_index ( 1 .. 3 ) {
-					$_ = 'SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName LIKE ?';
+					$_ = 'SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName LIKE ?';
 					my ( $proof_index ) = sql::execute( $log, $dbh, $_, $project_index, $service_index, "txtProofIndex-$signature_index-%-$qty_index" );
 					$proof_index += 1;
 

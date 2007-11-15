@@ -280,7 +280,7 @@ sub continue_project {
 		$$variable{'ProjectIndex'} = $project_index;
 	} # end if
 
-	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{'Redirect'} *************************");
+	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{'Redirect'} $$variable{'ProjectIndex'} $$variable{'ServiceIndex'} *************************");
 } # end sub continue_project 
 
 sub try_to_delete_project {
@@ -558,6 +558,10 @@ sub get_service_specifications {
 sub create_edit_process {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
+	$openprint::param{'txtQuantity1'} =~ s/\D//g;
+	$openprint::param{'txtQuantity2'} =~ s/\D//g;
+	$openprint::param{'txtQuantity3'} =~ s/\D//g;
+
 	my $error = '';
 	my ( $ref ) = misc::trim( $r->param('txtProjectReference') );
 	$error .= "You must specify a Project Reference.<br/>" if ! $ref =~ /[^\s]/;
@@ -786,6 +790,9 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
+	$openprint::param{'txtQuantity1'} =~ s/\D//g;
+	$openprint::param{'txtQuantity2'} =~ s/\D//g;
+	$openprint::param{'txtQuantity3'} =~ s/\D//g;
 	@openprint::param{'reference','comments'} = misc::trim( @openprint::param{'reference','comments'} );
 
 	my $Project = new openprint::Project( $project_index );
@@ -1237,7 +1244,7 @@ sub calc {
 			} # end if
 			foreach my $sid ( @{$services{'Scoring'}} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'chkOverrideQty-0', $specs{'chkOverrideScoreQty'} );
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtQty-0', $specs{'txtScoreQty'} ) if $specs{'chkOverrideScoreQty'} eq 'Y';
+				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtVerticalQty-0', $specs{'txtScoreQty'} ) if $specs{'chkOverrideScoreQty'} eq 'Y';
 			} # end foreach
 		} else {
 			foreach ( @{$services{'Scoring'}} ) {
@@ -1249,7 +1256,7 @@ sub calc {
 		if ( $specs{'Perfing'} eq 'Y' ) {
 			push @{$services{'Perforating'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Perforating' ) if ! $services{'Perforating'};
 			foreach my $sid ( @{$services{'Perforating'}} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtQty-0', $specs{'txtPerfQty'} );
+				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtVerticalQty-0', $specs{'txtPerfQty'} );
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'chkOverrideQty-0', 'Y' );
 			} # end foreach
 		} else {

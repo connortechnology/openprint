@@ -1,5 +1,7 @@
 package openprint::JDF;
 
+require JMF;
+
 use vars qw( %runstyles %folds %bindingtypes %coatings $version );
 use strict;
 
@@ -531,9 +533,6 @@ sub Layout_Signature {
     return $Signature;
 } # end sub Layout_Signature
 
-1;
-__END__
-
 sub JDF_ImpositionIntent {
 	my ( $doc, $Project, $sig_id, $sig_specs ) = @_;
 	my $ImpositionIntent = $doc->createElement('JDF');
@@ -681,8 +680,8 @@ if ( 1 ) {
     #$ArtDeliveryIntent->setAttribute('Status','Available');
     #$ArtDeliveryIntent->setAttribute('rRefs','');
 
-	my @side_one_colours = get_colours( $sig_specs,'SideOne' );
-	my @side_two_colours = get_colours( $sig_specs,'SideTwo' );
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+	my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 if ( 1 ) {
 	my $LayoutIntent = $ResourcePool->appendChild($doc->createElement('LayoutIntent'));
 	$LayoutIntent->setAttribute('Class','Intent');

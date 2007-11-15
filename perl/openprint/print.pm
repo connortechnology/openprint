@@ -34,7 +34,7 @@ sub save_service {
 	
 	my $ServiceType = get_ServiceType( $project_index, $service_index );
 
-	if ( $ServiceType->name() eq 'Proofs' ) {
+	if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
 		openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, $variable, $project_index, $service_index );
 	} else {
 		openprint::service::save_service( $r, $log, $dbh, $project_index, $service_index );
@@ -84,7 +84,7 @@ sub view_services {
 				save_service( $r, $log, $dbh, $variable, $project_index, $service_index );
 
 				if ( $r->param('NewBook') eq 'Y' ) {
-					multipage_signatures(scalar $r->param, $log, $dbh, $variable, $project_index, $service_index );
+					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
 				} elsif ( $r->param('PrintingService') eq 'Y' ) {
@@ -316,7 +316,7 @@ sub multipage_signatures {
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtServiceDescription', 'Cover');
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'Group', 1 );
 # Used to give each signature a # for reference in proofs, etc.
-			$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'SignatureIndex', ++$signature_count );
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'rdbTemplateType', '2PanelFold' );
@@ -345,7 +345,7 @@ sub multipage_signatures {
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'txtSignatureType', 'GateFolded Spreads');
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'txtServiceDescription', 'Gate Fold Spread');
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'Group', 3 );
-		$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'SignatureIndex', ++$signature_count );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'PrintingType', $$param{'PrintingType'} );
@@ -361,7 +361,7 @@ sub multipage_signatures {
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Spreads' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', 2 );
-		$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', ++$signature_count );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
@@ -445,7 +445,6 @@ $openprint::log->debug("Summ: " . misc::sum( values %pages ) );
 		} # end foreach
 		delete $services{$old_bindery_type};
 	} # end if
-	my $status = openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 
 	if ( $$param{'rdbTemplateType'} eq 'NoBindery' ) {
 		foreach ( openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' ) ) {
@@ -474,7 +473,7 @@ $openprint::log->debug("Summ: " . misc::sum( values %pages ) );
 		push @{$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' ) if ! $services{'Folding'};
 		push @{$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' ) if ! $services{'Cutting'};
 	} # end if
-	return $status;
+	return openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 } # end sub multipage_signatures
 
 sub get_book_type {
@@ -601,7 +600,7 @@ sub get_finished_calliper {
 	my $services = $Project->services();
 
 	my $folding_specs;	
-	( $folding_service_index ) = $$services{'Folding'}[0] if ( ! $folding_service_index ) and $$services{'Folding'};
+	$folding_service_index = $services{'Folding'}[0] if ( ! $folding_service_index ) and $services{'Folding'};
 	if ( $folding_service_index ) {
 		$folding_specs = openprint::service::get_specs_ref( $project_index, $folding_service_index );
 	} # end if
@@ -619,29 +618,25 @@ sub get_finished_calliper {
 		} elsif ( $$sig_specs{'ProjectType'} eq 'ScratchPads' ) {
 			$finished_calliper += $$sig_specs{'PageQuantity'} * $calliper;
 		} else {
-			if ( $folding_service_index ) {
 				my $pages = 1;
-				if ( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"} eq '2PanelFold' ) {
+				if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
 					$pages = 2;
-				} elsif ( sets::isin( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"},['3PanelFold','3PanelZFold'] ) ) {
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'},['3PanelFold','3PanelZFold'] ) ) {
 					$pages = 3;
-				} elsif ( sets::isin( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"}, ['4PanelFold', '4PanelZFold'] ) ) {
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PanelFold', '4PanelZFold'] ) ) {
 					$pages = 4;
-				} elsif ( sets::isin( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"}, ['5PanelFold', '5PanelZFold'] ) ) {
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['5PanelFold', '5PanelZFold'] ) ) {
 					$pages = 5;
-				} elsif ( sets::isin( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"}, ['6PanelFold', '6PanelZFold'] ) ) {
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['6PanelFold', '6PanelZFold'] ) ) {
 					$pages = 6;
-				} elsif ( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"} eq 'SingleGateFold' ) {
+				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
 					$pages = 3;
-				} elsif ( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"} eq 'DoubleGateFold' ) {
+				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DoubleGateFold' ) {
 					$pages = 4;
-				} elsif ( $$folding_specs{"ddmFoldType-$$sig_specs{'SignatureIndex'}-1"} eq 'DifficultFold' ) {
+				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
 					$pages = 6;
 				} #// end if
 				$finished_calliper += $pages * $$sig_specs{'txtSpecificStockCalliper'};
-			} else {
-				$finished_calliper += $calliper;
-			} # end if
 		} # end if
 	} # end foreach
 $log->debug("Calliper: $finished_calliper");

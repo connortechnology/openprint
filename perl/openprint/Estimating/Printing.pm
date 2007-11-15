@@ -31,6 +31,7 @@ require openprint::Paper;
 require openprint::Estimating::Paper;
 require openprint::Estimating::Folding;
 require openprint::Estimating::Scoring;
+require openprint::Estimating::Perforating;
 require openprint::Estimating::Cutting;
 require openprint::Estimating::Stitching;
 require openprint::Equipment;
@@ -378,6 +379,10 @@ my $master_time = gettimeofday();
 	} # end if
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 	if ( $$specs{'txtSignatureType'} ) {
+		if ( ! $$printing_specs{'txtSpreadSize'} ) {
+			$openprint::log->warn('No Spread Size!');
+			$$printing_specs{'txtSpreadSize'} = 4;
+		} # end if
 
 		if ( $$specs{'txtSignatureType'} eq 'GateFolded Spreads' ) {
 			if ( $$specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
@@ -680,6 +685,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 	%{$project{'FoldingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasFolding'} )} if $project{'HasFolding'};
 	%{$project{'CuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasCutting'} )} if $project{'HasCutting'};
 	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
+	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
 	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )} if $$services{'SaddleStitching'};
 
 #$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
@@ -1171,6 +1177,7 @@ my %best_price = %{$b_price};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Folding Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Cutting Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Scoring Breakdown'} if $project{'HasScoring'};
+		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Perforating Breakdown'} if $project{'HasPerforating'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Stitching Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'AdditionalSignature Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Comparison Cost: \%.2f<br/>", $best_price{'Comparison Cost'});
@@ -1332,6 +1339,7 @@ $new_specs{'no_stitching'} = 1; # unneccessary calculation
 						$sig_price = calc_price( $Project, $s_id, $imp, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("2 Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 					$additional_price = $$sig_price{'Comparison Cost'};
+
 					if ( $$sig_price{'Comparison Cost'} == $last_sig_price ) {
 						$additional_price *= int($$specs{'txtUnspecifiedPageQuantity'.$qty_index}/$imp->pages());
 						last if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} % $imp->spreads() >= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
@@ -1885,6 +1893,18 @@ $openprint::log->debug("Scoring REsults: $scoring_results{'Status'} $scoring_res
 		} else {
 			$price{'Scoring Breakdown'} .= "Scoring Price: $scoring_results{'Price'}<br/>";
 			$price{'Comparison Cost'} += $scoring_results{'Price'};
+		} # end if
+		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
+	} # end if
+	if ( $$project{'HasPerforating'} ) {
+$openprint::log->debug("Perforating");
+		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index );
+		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
+			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{'alert'} $$project{'PerforatingSpecs'}{alert} " . $$project{'PerforatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} else {
+			$price{'Perforating Breakdown'} .= "Perforating Price: $perforating_results{'Price'}<br/>";
+			$price{'Comparison Cost'} += $perforating_results{'Price'};
 		} # end if
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if

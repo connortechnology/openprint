@@ -1,3 +1,4 @@
+<? if ( $$variable{'PackageTypes'} ) ?>
 <p>
 	<label><?ServiceTypeName?> dimensions:</label>
 	<select name="ddmPackageType" size="1" onchange="calc('f1');">
@@ -9,6 +10,7 @@
 	/> 
 	<label class="radio" for="chkOverridePackageType">Override</label>
 </p>
+<? endif ( $$variable{'PackageTypes'} ) ?>
 <input type="hidden" name="txtPackageWidth" />
 <input type="hidden" name="txtPackageHeight" />
 <input type="hidden" name="txtPackageDepth" />
@@ -17,7 +19,7 @@
 	<input name="txtPackageWeight" value="<?txtPackageWeight?>" type="text" size="9" readonly="readonly" /> lbs
 </p>
 <p>
-    <label>Maximum Quantity of <?ProjectTypeName?> per <?ServiceTypeName?>:</label>
+    <label>Maximum Quantity per <?ServiceTypeName?>:</label>
 		<input name="txtItemsPerPackage" value="<?txtItemsPerPackage?>" type="text" size="9" onkeyup="calc(this.form.name);" />
 		<input type="checkbox" id="chkOverrideItemsPerPackage" name="chkOverrideItemsPerPackage" value="Y" onclick="if (this.checked == false) calc(this.form.name);" 
 		<? echo ( $$variable{'chkOverrideItemsPerPackage'} eq 'Y' ? 'checked="checked"' : '' ) ?>
