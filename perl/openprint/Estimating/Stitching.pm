@@ -263,8 +263,8 @@ sub calc {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spread size.<br/>";
 					next;
 				} # end if
-				if ( ! $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spreads.<br/>";
+				if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no pages.<br/>";
 					next;
 				} # end if
 
@@ -276,7 +276,7 @@ sub calc {
 						$$specs{"txtPockets$qty_index"} += $pockets;
 					} # end foreach
 				} else {
-					my $sig_size = $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index}*$$sig_specs{'txtSpreadSize'};
+					my $sig_size = $$sig_specs{'PageQuantity'.$qty_index};
 					$$specs{"txtPockets$qty_index"} += 1;
 					$$specs{'txtSignatureQty'.$sig_size.'Page-'.$qty_index} += 1; 
 				} # end if

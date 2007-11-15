@@ -87,7 +87,6 @@ sub new {
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_id = $signatures[$i];
 		my $sig_specs = openprint::service::get_specs_ref( $P->id(), $sig_id );
-		$$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()} = 1 if ! $$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()};
 		my @equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$P->ordered_quantity_index()});
 		my $Equipment = shift @equipment;
 
@@ -172,7 +171,7 @@ sub new {
 		if ( $$sig_specs{'rdbTemplateType'} ) {
 			$FoldingScheme->setAttribute('JDFFoldCatalog',$openprint::JDF::folds{$$sig_specs{'rdbTemplateType'}} );
 		} else {
-			$FoldingScheme->setAttribute('JDFFoldCatalog',$openprint::JDF::folds{$$sig_specs{'txtSpreadSize'}*$$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()}.'PageFold'} );
+			$FoldingScheme->setAttribute('JDFFoldCatalog',$openprint::JDF::folds{$$sig_specs{'PageQuantity'.$P->ordered_quantity_index()}.'PageFold'} );
 		} # end if
 
 		my $FoldingSchemeRef = $Component->appendChild( $doc->createElement('FoldingSchemeRef'));
@@ -219,25 +218,12 @@ sub new {
 		my $ComponentRef = $ComponentRefPool->appendChild( $doc->createElement( 'ComponentRef' ) );
 		$ComponentRef->setAttribute('rRef','Component'.$sig_id);
 
-		foreach my $spread ( 1 .. $$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()} ) {
-			if ( $$sig_specs{'txtSpreadSize'} == 4 ) {
-				foreach my $side ( 'SideOne','SideTwo' ) {
-					next if ! @{$Colors{$side}};
-					$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
-					$page += 1;
-				} # end foreach
-				foreach my $side ( 'SideOne','SideTwo' ) {
-					next if ! @{$Colors{$side}};
-					$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
-					$page += 1;
-				} # end foreach
-			} else { # SpreadSize==2
-				foreach my $side ( 'SideOne','SideTwo' ) {
-					next if ! @{$Colors{$side}};
-					$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
-					$page += 1;
-				} # end foreach
-			} # end if
+		foreach my $spread ( 1 .. $$sig_specs{'PageQuantity'.$P->ordered_quantity_index()} ) {
+			foreach my $side ( 'SideOne','SideTwo' ) {
+				next if ! @{$Colors{$side}};
+				$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
+				$page += 1;
+			} # end foreach
 		} # end foreach
 		$parent_sig_id = $sig_id;
 	} # end foreach signature

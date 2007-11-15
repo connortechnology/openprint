@@ -140,7 +140,7 @@ sub signature_calc_stock_cutting {
 # Add cutting the sheet prior to printing
 	return if ( ! ( $sheet_width and $sheet_height ) );
 	return if ($Paper->width() == $Paper->start_width()) and ($Paper->height() == $Paper->start_height() );
-	return if ( exists $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} and ! $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} );
+	return if ( exists $$sig_specs{'PageQuantity'.$qty_index} and ! $$sig_specs{'PageQuantity'.$qty_index} );
 
 	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @equipment;
 	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @stitchers;

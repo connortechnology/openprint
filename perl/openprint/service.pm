@@ -520,22 +520,19 @@ sub summary {
 	my ( $Project, $service_id, $qty_index ) = @_;
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+	my $services = $Project->services();
 
 	my $specs = get_specs_ref( $Project->id(), $service_id );
 	if ( $$specs{'ServiceType'} eq 'AdditionalSignature' or ( $$specs{'ServiceType'} eq '' and ! $$specs{'txtTotalPageQuantity'}  ) ) {
 		if ( $qty_index ) {
 			if ( ! $$specs{'txtSpreadSize'} ) {
-				my %services = $Project->get_services();
-				if ( $services{''} ) {
-					my $printing_specs = get_specs_ref( $Project->id(), $services{''}[0] );
+				if ( $$services{''} ) {
+					my $printing_specs = get_specs_ref( $Project, $$services{''}[0] );
 					$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
 				} # end if
 			} # end if
-			if ( ! exists $$specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
-				$$specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtSignatureSpreadQuantity'};
-			} # end if
 			return sprintf(qq{%s %dout %s\n\%s},
-					($$specs{'txtSignatureSpreadQuantity'.$qty_index} and $$specs{'txtSpreadSize'} ) ? ($$specs{'txtSignatureSpreadQuantity'.$qty_index} * $$specs{'txtSpreadSize'}) . 'pp' : '',
+					$$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
 					$$specs{'txtImposition'.$qty_index},
 					($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index} ),
 					'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index} . ($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? '' : sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index}) ),

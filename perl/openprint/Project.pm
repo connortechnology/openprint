@@ -154,7 +154,7 @@ if ( 0 ) {
 		$Component->setAttribute('Status','Unavailable');
 		$Component->setAttribute('ProductType', openprint::JDF::ProductType( $self, $sig_specs ) );
 
-		my $Pages = $$sig_specs{'txtSpreadSize'}*$$sig_specs{'txtSignatureSpreadQuantity'.$self->ordered_quantity_index()};
+		my $Pages = $$sig_specs{'PageQuantity'.$self->ordered_quantity_index()};
 		$Pages = 2 if ! $Pages;
 		$Component->setAttribute('ReaderPageCount',$Pages );
 		my $SignatureIntent = openprint::JDF::JDF_SignatureIntent( $doc, $self, $sig_id, $sig_specs );
