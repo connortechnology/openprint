@@ -334,8 +334,8 @@ sub signature_calc {
 		next if $signature_service_index and ($ss_id >= $signature_service_index);
 $openprint::log->debug("SIGS: $signature_service_index : $ss_id " );
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		if ( (!$max_imposition) or ( $$s_specs{'FoldingImposition'.$qty_index} < $max_imposition ) ) {
-			$max_imposition = $$s_specs{'FoldingImposition'.$qty_index};
+		if ( (!$max_imposition) or ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) ) {
+			$max_imposition = $$s_specs{'txtImposition'.$qty_index};
 		} # end if
 		foreach my $fold_type ( keys %fold_types ) {
 			if ( $$specs{$fold_type."-Qty-$$s_specs{'SignatureIndex'}-$qty_index"} > 0 ) {
