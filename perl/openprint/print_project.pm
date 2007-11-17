@@ -752,6 +752,8 @@ sub create_edit_process {
 			} # end if
 		} # end if
 	} # end foreach
+
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Edited' );
 	return $Project->id();
 } # end sub create_edit_process
 

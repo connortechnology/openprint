@@ -131,3 +131,26 @@ className:"alphacube", width:400, height:420
 		Windows.addObserver(myObserver);
 	}
 } // end function bug_report
+
+
+function ajax_window( url, width, height ) {
+	if ( ! contentWin ) {
+		if ( ! width )
+			width = 400;
+		
+		contentWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
+className:"alphacube", width:width, height:height
+		} );
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+			onDestroy: function(eventName, win) {
+			   if (win == contentWin) {
+				   contentWin = null;
+				   Windows.removeObserver(this);
+			   }
+		   }
+		}
+		Windows.addObserver(myObserver);
+	} // end if
+	contentWin.setAjaxContent(url, null , true);
+}

@@ -30,17 +30,22 @@ sub get_ServiceType {
 } # end sub get_ServiceType
 
 sub save_service {
-	my ( $r, $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my ( $r, $log, $dbh, $variable, $Project, $service_index ) = @_;
 	
-	my $ServiceType = get_ServiceType( $project_index, $service_index );
+	my $ServiceType = get_ServiceType( $Project->id(), $service_index );
 
 	if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
-		openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, $variable, $project_index, $service_index );
+		openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, $variable, $Project->id(), $service_index );
 	} else {
-		openprint::service::save_service( $r, $log, $dbh, $project_index, $service_index );
+		openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
 	} # end if service_type_id
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=? AND (NOT strStatus=?) OR (strStatus IS NULL)', $project_index, $service_index, 'Completed' ], 'strStatus', ($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated') );
+	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=? AND (NOT strStatus=?) OR (strStatus IS NULL)', $Project->id(), $service_index, 'Completed' ], 'strStatus', ($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated') );
 	#eval "openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type_id );"
+	if ( $ServiceType->id() ) {
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
+	} else {
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
+	} # end if
 } # end sub save_service
 
 # Adds completed/edited services, and then displays the status of the project
@@ -81,7 +86,7 @@ sub view_services {
 				$log->debug("** Save Service in View Services Function **");
 
 				my $service_index = $r->param('ServiceIndex');
-				save_service( $r, $log, $dbh, $variable, $project_index, $service_index );
+				save_service( $r, $log, $dbh, $variable, $Project, $service_index );
 
 				if ( $r->param('NewBook') eq 'Y' ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
