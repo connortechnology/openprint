@@ -350,6 +350,21 @@ my $master_time = gettimeofday();
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
+	# First, clean up all inputs
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $Project->quantity($qty_index);
+		
+		foreach my $k ( 'txtPlateChangeQuantity','txtImposition' ) {
+			if ( $$specs{$k.$qty_index} =~ /\D/ ) {
+				$variables{$k.$qty_index} = [ sets::union( 'output', @{$variables{$k.$qty_index}} ) ];
+				$$specs{$k.$qty_index} =~ s/\D//g;
+			} else {
+				$variables{$k.$qty_index} = [ sets::exclude( ['output'], $variables{$k.$qty_index} ) ];
+			} # end if
+		} # end foreach
+	} # end foreach
+
+
 	if ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
 		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'rdbPocketSize'} ) ) {
 			return $$specs{'Status'} = 'uncalculated';
@@ -501,6 +516,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
+$openprint::log->debug("# of colours: " . @side_one_colours );
 	my %inkCoverage = get_inkcoverage( $specs );
 	if ( $$specs{'ProjectType'} eq 'ScratchPads' ) {
 		if ( ! $$specs{'PageQuantity'} ) {

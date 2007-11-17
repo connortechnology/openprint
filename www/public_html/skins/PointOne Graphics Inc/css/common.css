@@ -63,7 +63,9 @@ body #Header {
 	width: 190px;
 	padding: 0px;
 	margin: 0px;
-	z-index: 100;
+/*
+	z-index: 10;
+*/
 }
 	
 body #Header #Logo {
