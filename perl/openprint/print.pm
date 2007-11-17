@@ -600,7 +600,7 @@ sub get_finished_calliper {
 	my $services = $Project->services();
 
 	my $folding_specs;	
-	$folding_service_index = $services{'Folding'}[0] if ( ! $folding_service_index ) and $services{'Folding'};
+	$folding_service_index = $$services{'Folding'}[0] if ( ! $folding_service_index ) and $$services{'Folding'};
 	if ( $folding_service_index ) {
 		$folding_specs = openprint::service::get_specs_ref( $project_index, $folding_service_index );
 	} # end if
