@@ -1,38 +1,27 @@
 @media screen {
 	a.buttonImageOff {
 		text-decoration: none;
-		background: url(/images/menu_fill_blue.png) repeat-x top;
-		font-size: 1.1em;
+		background: url(/images/menu_fill_blue.png) repeat top;
 		border: none;
 		color: #ffffff;
-		padding-left: 10px;
-		padding-right: 10px;
-		padding-top: 3px;
-		padding-bottom: 3px;
-		margin: 1px;
+		padding: 0px;
+		margin: 2px;
 		margin-right: 5px;
 		display: -moz-inline-box;
 		display: inline-block;
-		vertical-align: top;
 		outline: 0;
 		cursor: default;
-		
 	}
 	a.buttonImageOn {
 		text-decoration: none;
-		background: url(/images/menu_fill_blue.png) repeat-x top;
-		font-size: 1.1em;
+		background: url(/images/menu_fill_blue.png) repeat top;
 		border: none;
 		color: #ff7f00;
-		padding-left: 10px;
-		padding-right: 10px;
-		padding-top: 3px;
-		padding-bottom: 3px;
-		margin: 1px;
+		padding: 0px;
+		margin: 2px;
 		margin-right: 5px;
 		display: -moz-inline-box;
 		display: inline-block;
-		vertical-align: top;
 		outline:0;
 		cursor: default;
 	}
@@ -69,8 +58,17 @@ a.buttonImageOff .l {
 a.buttonImageOff .r {
 }
 a.buttonImageOff .c {
-	cursor: default;
-	color: #ffffff;
+	font-family: Arial, Helvetica, Sans-Serif;
+    font-weight: normal;
+    font-size: x-small;
+    background: none;
+    cursor: default;
+    display: -moz-inline-box;
+    display: inline-block;
+    float: none;
+    margin: 0px;
+    padding: 3px 10px 4px 10px;
+    color: white;
 }
 
 
@@ -79,6 +77,15 @@ a.buttonImageOn .l {
 a.buttonImageOn .r {
 }
 a.buttonImageOn .c {
+	font-family: Arial, Helvetica, Sans-Serif;
+    font-weight: normal;
+    font-size: x-small;
+    background: none;
+    cursor: default;
+    display: -moz-inline-box;
+    display: inline-block;
+    float: none;
+    margin: 0px;
+    padding: 3px 10px 4px 10px;
 	color: #ff7f00;
-	cursor: default;
 }
