@@ -195,11 +195,11 @@ sub import_export {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	if ( $openprint::param{'btnFunction'} eq 'Export Paper' ) {
-		my @header = ( 'ID', 'Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package', 'Recommendations');
+		my @header = ( 'ID', 'Owner','Manufacturer','Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Recommendations');
 		my @data;
 
 		foreach my $Paper ( openprint::Paper::find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
-			push @data, $Paper->id(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->mulitpart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package();
+			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package(), $Paper->supplied();
 			push @data, join(',', $Paper->recommendations());
 		} # end foreach
 		misc::export_csv( $r, $log, $variable, 'paper.csv', \@header, \@data );
