@@ -23,6 +23,7 @@
 <p>
 	<label>Stock Finish:</label>
 	<select name="UsedStockFinish-<?SignatureIndex?>" size="1" onchange="UsedPaperFinish_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
 		<? echo (
 				my %finishes;
 				foreach my $Paper ( openprint::Paper::find( 'name'=>$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
@@ -41,6 +42,7 @@
 <p>
 	<label>Stock Colour:</label>
 	<select name="UsedStockColour-<?SignatureIndex?>" size="1" onchange="UsedPaperColour_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
 		<? echo (
 				my %colours;
 				foreach my $Paper ( openprint::Paper::find( 'name'=>
@@ -65,6 +67,7 @@
 <p>
 	<label>Stock Weight:</label>
 	<select name="UsedStockWeight-<?SignatureIndex?>" size="1" onchange="UsedPaperWeight_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
 		<? echo (
 				my %colours;
 				foreach my $Paper ( openprint::Paper::find( 'name'=>

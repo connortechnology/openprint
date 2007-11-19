@@ -49,7 +49,7 @@ body {
 }
 input, select, textarea {
 	color: black;
-	font-size: x-small;
+	font-size: small;
 	padding: 1px;
 	color: black;
 }
@@ -63,7 +63,9 @@ body #Header {
 	width: 190px;
 	padding: 0px;
 	margin: 0px;
-	z-index: 100;
+/*
+	z-index: 10;
+*/
 }
 	
 body #Header #Logo {
@@ -171,6 +173,19 @@ fieldset {
 	margin: 0px;
 	padding-bottom: 10px;
 }
+fieldset:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html fieldset {height: 1%;}
+* fieldset {display: block;}
+/* End hide from IE-mac */
 
 fieldset legend {
 	font-weight: bold;
@@ -445,13 +460,13 @@ img {
 }
 span.DateSelector {
 	float: left;
-	width: 230px;
+	width: 235px;
 }
-fieldset.filters p span.DateSelector select {
+span.DateSelector select {
 	width: auto;
 	max-width: none;
 }
-fieldset.filters p span.DateSelector select option {
+span.DateSelector select option {
 }
 
 #DidYouKnow {
@@ -521,4 +536,6 @@ br.pagebreak {
     height: 0px;
     page-break-after: always;
 }
-
+fieldset p input.CompanyFilter {
+	width: auto;
+}

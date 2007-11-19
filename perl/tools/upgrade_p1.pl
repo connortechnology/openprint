@@ -21,7 +21,7 @@ if ( $year ) {
 
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		print "Getting db backup $month-$day-$year\n";
-		`su postgres -c "scp $src_host:/var/backups/www2/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
+		`su postgres -c "scp $src_host:/var/backups/www2/$src_db/$month-$day-$year.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
 	} # end if
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		die "No db dum[";
@@ -44,7 +44,7 @@ if ( $year ) {
 	`su postgres -c "createdb -E SQL_ASCII $dst_db"`;
 	print "done\n";
 	print "Loading db...";
-	`su postgres -c "ssh database pg_dump point-one | psql $dst_db"`;
+	`su postgres -c "ssh $src_host pg_dump point-one | psql $dst_db"`;
 	print "done\n";
 
 } # end if

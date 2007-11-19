@@ -245,6 +245,8 @@ $openprint::log->debug("after initial recalc");
 					} # end if
 					my $new_service_index = copy_signature( $project_index, $sig_specs );
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $new_service_index );
+
+					# Need to dro poverrides on the last sig so that we don't get more spreads than we need
 					foreach my $qty_index ( 1 .. 3 ) {
 						next if ! $$new_sig_specs{'txtQuantity'.$qty_index};
 						if ( $$new_sig_specs{'txtSignatureSpreadQuantity'.$qty_index} > $unspecified_spreads ) {
@@ -323,13 +325,14 @@ $openprint::log->debug("ADding signature");
 	my $new_specs = openprint::service::get_specs_ref( $project_index, $new_service_index );
 	my $ac = sql::start_transaction( $openprint::dbh );
 	$openprint::dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
-	$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+	$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 	my ( $sig_index ) = sql::execute( undef, undef, $_, $project_index );
 	$sig_index += 1;
 	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureIndex', $sig_index );
 
 	# Releases the lock
 	$openprint::dbh->commit();
+
 	foreach my $key ( openprint::Estimating::Printing::variables() ) {
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 	} # end foreach

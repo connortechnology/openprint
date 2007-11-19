@@ -1,6 +1,7 @@
 <script type="text/javascript">
 	function load_orders( form ) {
-		LoadContent('OrderList','/main/order/_order_list.html', Serialize( form ) );
+		$('OrderList').innerHTML = 'Please wait...';
+		new Ajax.Updater('OrderList','/main/order/_order_list.html', {method:'get',parameters: Form.serialize(form)});
 	} // end function load_quotes
 	function initializeDayDropDowns() {
 		setDaysDropDown(document.f1.ddmStartYear.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);
@@ -13,9 +14,9 @@
 <h2>History</h2>
 </div>
 <? if ( $openprint::session{'user_id'} ) ?>
-<form id="f1" name="f1" action="history.html" method="post">
+<form name="f1" action="history.html" method="post">
 	<div class="OrderHistory">
-		<fieldset class="filters unprintable" style="margin: 0px; width:44%; float: left;"><legend>Enter Order ID:</legend>
+		<fieldset class="filters unprintable" style="margin: 0px; width:42%; float: left;"><legend>Enter Order ID:</legend>
 			<p>
 				<label for="OrderID">Order ID:</label>
 				<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" />
@@ -27,7 +28,7 @@
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load_orders(f1);", '', 'Go' ); ) ?>
 			</p>
 		</fieldset>
-		<fieldset class="filters unprintable" style="margin: 0px; width:55%; float: right;"><legend>or Select Search Criteria:</legend>
+		<fieldset class="filters unprintable" style="margin: 0px; width:58%; float: right;"><legend>or Select Search Criteria:</legend>
 			<p>
 				<label>Ordered by:</label>
 				<select name="ddmOrderedBy" size="1" onchange="load_orders( this.form );">
@@ -62,6 +63,7 @@
 				<select name="ddmEndMonth" onchange="setDaysDropDown(this.form.ddmEndYear.value,this.value,this.form.ddmEndDay,this.form.ddmEndDay.value);load_orders( this.form );"><?EndMonths?></select>
 				<select name="ddmEndYear" onchange="setDaysDropDown(this.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);load_orders( this.form );"><?EndYears?></select>
 				</span>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
 			</p>
 		</fieldset>
 	</div>

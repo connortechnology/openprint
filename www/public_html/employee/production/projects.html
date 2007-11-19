@@ -35,13 +35,14 @@
 	</p>
 	<p>
 		<label>Sales Rep:</label>
-			<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
-				<option value="">All Employees</option>
+		<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
+			<option value="">All Employees</option>
 <? echo (
-	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname)', 'type'=>['E','A']) ],
-	$openprint::param{'ddmSalesRep'} );
+$openprint::session{'/employee/production/projects.html?ddmSalesRep'} = $openprint::session{'user_id'} if ! $openprint::session{'/employee/production/projects.html?ddmSalesRep'};
+ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'type'=>['E','A'],'usergroups'=>['Sales']) ],
+$openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
 ) ?>
-			</select>
+		</select>
 	</p>
 	<p>
 	<label>Project Status:</label>
@@ -67,7 +68,7 @@
 		} # end if
 	} # end if
 
-		my @status_filter = map { sql::escape($_); } split(';', $openprint::session{'/employee/production/projects.html?ddmStatus'} );
+		my @status_filter = split(';', $openprint::session{'/employee/production/projects.html?ddmStatus'} );
 
 		if ( ! @status_filter ) {
 			if ( openprint::usergroup::is_user_in( ['Prepress'], $openprint::session{'user_id'} ) ) {

@@ -487,7 +487,10 @@ function clearForm(form) {
 		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' ) {
 			e.value = '';
 		} else if ( e.type == 'select-one' ) {
-			e.selectedIndex = -1;
+			e.selectedIndex = 0;
+			while ( e.selectedIndex > 0 ) {
+				e.options[e.selectedIndex].selected = false;
+			} // end while
 		} else if ( e.type == 'select-multiple' ) {
 			while ( e.selectedIndex >= 0 ) {
 				e.options[e.selectedIndex].selected = false;
@@ -558,14 +561,13 @@ function fmCheck( form ) {
 	}
 }
 
-function addCheck(formName) {
+function addCheck(form) {
 	if (fmChange == 1) {
 		if (confirm("Are you sure you want to create a new record, without saving your changes")) {
-			clearForm(formName);
+			clearForm(form);
 		}
-	}
-	else { 
-		clearForm(formName);
+	} else { 
+		clearForm(form);
 	}
 }
 

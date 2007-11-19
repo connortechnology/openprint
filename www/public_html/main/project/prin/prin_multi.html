@@ -1,5 +1,5 @@
 <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
-<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.2"></script>
 <script type="text/javascript">
 	function calc( formName ) {
 		var form = getFormObj('f1');
@@ -58,6 +58,7 @@
 			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
 			<!--#include virtual="/includes/main/proj/multipage_printing_type.html" -->
 			<!--#include virtual="/includes/main/proj/dimensions.html" -->
+<br class="spacer"/>
 <fieldset><legend>Book Specifications</legend>
 	<p>
 		<label>Total pages:</label>
@@ -109,7 +110,7 @@
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
 					return variable_substitution( $r, $log, $dbh, \$html, $variable );
 					) ?>
-			</fieldset>
+			</fieldset><br class="spacer"/>
 			<fieldset><legend>Information for Interior Pages</legend>
 				<? echo ( 
 					$$variable{'Signature'} = 'InteriorSpreads';

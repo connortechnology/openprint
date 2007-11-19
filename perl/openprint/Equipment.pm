@@ -163,7 +163,7 @@ if ( ! defined $range ) {
 	}
 	return;
 } # end if
-#$openprint::log->debug("Looking for $name : $range") if $debug;
+$openprint::log->debug("Looking for $name : $range") if $debug;
 
 	$range = 1*$range;
 	my $i = 0;
@@ -171,8 +171,8 @@ if ( ! defined $range ) {
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
-	#$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
-		return $Spec->value() if ( 1*$Spec->min() == $range ) or (1*$Spec->max() == $range );
+	$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
+		return $Spec->value() if ( 1*($Spec->min()) == $range ) or (1*($Spec->max()) == $range );
 
 		return $Spec->value() if ( 
 			( ($Spec->min() eq '') or ($Spec->min() <= $range))
@@ -189,10 +189,10 @@ if ( ! defined $range ) {
 		$i -= 1;
 		# back up
 		$x = $$self{'Specifications'}{$name}[$i];
-#$openprint::log->debug("Found spec " . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( (1*$x->max()) and ( $x->max() < $range ) and ! $x->interpolate() );
 	} else {
-#$openprint::log->debug("Couldn't find monimum") if $debug;
+$openprint::log->debug("Couldn't find monimum") if $debug;
 		return;	
 	}
 	
@@ -206,9 +206,9 @@ if ( ! defined $range ) {
 	if ( $i and $i < @{$$self{'Specifications'}{$name}} ) {
 		# back up
 		$y = $$self{'Specifications'}{$name}[$i];
-#$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
-#$openprint::log->debug("Couldn't find maximum") if $debug;
+$openprint::log->debug("Couldn't find maximum") if $debug;
 		return;
 	} # end if
 
@@ -363,6 +363,42 @@ sub update_schedule {
     } # end while
 
 } # end sub update_schedule
+
+sub next {
+	my ($self, $params) = shift;
+	my $sql = q{SELECT min(strid) FROM tbl_Equipment WHERE strid > ?};
+	my @values = ($$self{'name'});
+	if ( $params and $$params{category_id} ) {
+		$sql .= ' AND category=?';
+		push @values, $$params{category_id};
+	} # end if
+    my ($name) = sql::execute( undef, undef, $sql, @values );
+	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+    return $_;
+} # end sub next
+
+sub Next {
+	my ($self, $params) = shift;
+	return new openprint::Equipment( $self->next($params) );
+} # end sub Next
+
+sub prev {
+    my ( $self, $params ) = shift;
+	my $sql = q{SELECT max(strid) FROM tbl_Equipment WHERE strid < ?};
+	my @values = ($$self{'name'});
+	if ( $params and $$params{category_id} ) {
+		$sql .= ' AND category=?';
+		push @values, $$params{category_id};
+	} # end if
+    my ($name) = sql::execute( undef, undef, $sql, @values );
+	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+    return $_;
+} # end sub next
+
+sub Previous {
+	my ($self, $params) = shift;
+	return new openprint::Equipment( $self->prev($params) );
+} # end sub Next
 
 
 1;

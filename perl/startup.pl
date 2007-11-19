@@ -52,6 +52,7 @@ BEGIN {
 	use openprint::Order;
 	use openprint::Quote;
 	use openprint::paper;
+	use openprint::JDF;
 
 }
 
