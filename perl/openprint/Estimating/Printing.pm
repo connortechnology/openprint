@@ -354,7 +354,7 @@ my $master_time = gettimeofday();
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $Project->quantity($qty_index);
 		
-		foreach my $k ( 'txtPlateChangeQuantity','txtImposition' ) {
+		foreach my $k ( 'txtPlateChangeQuantity' ) {
 			if ( $$specs{$k.$qty_index} =~ /\D/ ) {
 				$variables{$k.$qty_index} = [ sets::union( 'output', @{$variables{$k.$qty_index}} ) ];
 				$$specs{$k.$qty_index} =~ s/\D//g;
@@ -1064,12 +1064,12 @@ if ( 0 ) {
 									$Press );
 							last if ! @imps;
 						
-$openprint::log->debug("Sorting");	
+#$openprint::log->debug("Sorting");	
 							foreach my $imp ( @imps ) {
 								my $add = 0;
-$imp->display();
+#$imp->display();
 								if ( $imps{$imp->imposition().$imp->runstyle()} ) {
-$openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}} );
+#$openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}} );
 									for ( my $j = 0; $j < @{$imps{$imp->imposition().$imp->runstyle()}}; $j += 1 ) {
 
 										my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
@@ -1747,10 +1747,10 @@ sub calc_price {
 			} # end if
 		} # end if
 
-	if ( ! $run_speed ) {
-$openprint::log->warn("Got no runspeed.");
-		return;
-	} # end if
+		if ( ! $run_speed ) {
+			$openprint::log->warn("Got no runspeed.");
+			return;
+		} # end if
 
 		if ( $folding_results{'Equipment'} ) {
 			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) Price: $%.2f on %s', @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
