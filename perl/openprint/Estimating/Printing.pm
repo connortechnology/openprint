@@ -34,6 +34,7 @@ require openprint::Estimating::Scoring;
 require openprint::Estimating::Perforating;
 require openprint::Estimating::Cutting;
 require openprint::Estimating::Stitching;
+require openprint::Estimating::UVCoating;
 require openprint::Equipment;
 require openprint::Material;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
@@ -87,6 +88,7 @@ my %variables = (
 		'chkVarnishSpotGlossSideOne' => ['save'],'chkVarnishSpotMatteSideOne' => ['save'],'chkVarnishOverallGlossSideOne' => ['save'],'chkVarnishOverallMatteSideOne' => ['save'],'chkVarnishDryTrapSideOne' => ['save'],
 		'VarnishSpotGlossSideOneCoverage'=> ['save'],
 		'VarnishSpotMatteSideOneCoverage'=> ['save'],
+		'SideOneUVCoatingType'=>['save'],
 		'chkCyanSideTwo' => ['save'],'chkMagentaSideTwo' => ['save'],'chkYellowSideTwo' => ['save'],'chkBlackSideTwo' => ['save'],
 		'chkProcessColourSideTwo' => ['save'],
 		'chkSpecialSideTwoColour1' => ['save'], 'txtSpecialSideTwoColour1' => ['save'], 'txtSpecialSideTwoColourInkPercent1' => ['save'],
@@ -101,6 +103,7 @@ my %variables = (
 		'chkVarnishSpotGlossSideTwo' => ['save'],'chkVarnishSpotMatteSideTwo' => ['save'],'chkVarnishOverallGlossSideTwo' => ['save'],'chkVarnishOverallMatteSideTwo' => ['save'],'chkVarnishDryTrapSideTwo' => ['save'],
 		'VarnishSpotGlossSideTwoCoverage'=> ['save'],
 		'VarnishSpotMatteSideTwoCoverage'=> ['save'],
+		'SideTwoUVCoatingType'=>['save'],
 		'chkBleedLeft' => ['save'],'chkBleedRight' => ['save'],'chkBleedTop' => ['save'],'chkBleedBottom' => ['save'],
 		'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
 		'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
@@ -679,11 +682,11 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 
 	# Need UVCoating
 	if ( 
-			($$specs{'SideOneCoatingType-'.$$specs{SignatureIndex}} and ($$specs{'SideOneCoatingType-'.$$specs{SignatureIndex}} ne 'None' )) or
-			($$specs{'SideTwoCoatingType-'.$$specs{SignatureIndex}} and ($$specs{'SideTwoCoatingType-'.$$specs{SignatureIndex}} ne 'None' )) ) {
+			($$specs{'SideOneUVCoatingType'} and ($$specs{'SideOneUVCoatingType'} ne 'None' )) or
+			($$specs{'SideTwoUVCoatingType'} and ($$specs{'SideTwoUVCoatingType'} ne 'None' )) ) {
 		$project{'NeedUVCoating'} = 1;
 		if ( ! $$services{'UVCoating'} ) {
-			push @{$$services{'UVCoating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' );
+			push @{$$services{'UVCoating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'UVCoating' );
 		} # end if	
 		$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
 	} # end if
@@ -722,7 +725,13 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
 	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
 	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )} if $$services{'SaddleStitching'};
-	%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )} if $$services{'UVCoating'};
+
+	if ( $$services{'UVCoating'} ) {
+$openprint::log->debug("Grabbing UV Specs");
+		%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )};
+		$project{'UVCoatingSpecs'}{'SideOneCoatingType-'.$$specs{SignatureIndex}} = $$specs{'SideOneUVCoatingType'};
+		$project{'UVCoatingSpecs'}{'SideTwoCoatingType-'.$$specs{SignatureIndex}} = $$specs{'SideTwoUVCoatingType'};
+	} # end if
 
 #$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	foreach my $qty_index ( 1 .. 3 ) {
@@ -1214,6 +1223,7 @@ my %best_price = %{$b_price};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Scoring Breakdown'} if $project{'HasScoring'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Perforating Breakdown'} if $project{'HasPerforating'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'Stitching Breakdown'};
+		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'UVCoating Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= $best_price{'AdditionalSignature Breakdown'};
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Comparison Cost: \%.2f<br/>", $best_price{'Comparison Cost'});
 
@@ -1983,14 +1993,13 @@ $openprint::log->debug("Perforating");
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if
 	if ( $$project{'HasUVCoating'} ) {
-$openprint::log->debug("UV");
-		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index );
+		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 		if ( $uv_results{'Status'} eq 'uncalculated' ) {
 			$price{'UV Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} else {
-			$price{'UVCoating Breakdown'} .= "UVCoating Price: $uv_results{'Price'}<br/>";
-			$price{'Comparison Cost'} += $uv_results{'Price'};
+			$price{'UVCoating Breakdown'} .= "UVCoating Price: $uv_results{'Total'}<br/>";
+			$price{'Comparison Cost'} += $uv_results{'Total'};
 		} # end if
 
 	} # end if UVCoating
