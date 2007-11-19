@@ -364,6 +364,42 @@ sub update_schedule {
 
 } # end sub update_schedule
 
+sub next {
+	my ($self, $params) = shift;
+	my $sql = q{SELECT min(strid) FROM tbl_Equipment WHERE strid > ?};
+	my @values = ($$self{'name'});
+	if ( $params and $$params{category_id} ) {
+		$sql .= ' AND category=?';
+		push @values, $$params{category_id};
+	} # end if
+    my ($name) = sql::execute( undef, undef, $sql, @values );
+	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+    return $_;
+} # end sub next
+
+sub Next {
+	my ($self, $params) = shift;
+	return new openprint::Equipment( $self->next($params) );
+} # end sub Next
+
+sub prev {
+    my ( $self, $params ) = shift;
+	my $sql = q{SELECT max(strid) FROM tbl_Equipment WHERE strid < ?};
+	my @values = ($$self{'name'});
+	if ( $params and $$params{category_id} ) {
+		$sql .= ' AND category=?';
+		push @values, $$params{category_id};
+	} # end if
+    my ($name) = sql::execute( undef, undef, $sql, @values );
+	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+    return $_;
+} # end sub next
+
+sub Previous {
+	my ($self, $params) = shift;
+	return new openprint::Equipment( $self->prev($params) );
+} # end sub Next
+
 
 1;
 __END__

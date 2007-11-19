@@ -105,7 +105,7 @@ sub Next {
 	} # end if
 	return $New;
 } # end sub next
-sub Prevous {
+sub Previous {
 	my $self = shift;
 	my $New = new openprint::Pricelist( sql::execute( $openprint::log, $openprint::dbh, q{SELECT MAX(Index) FROM pricelists WHERE Index < ?}, $$self{'id'} ) );
 	if ( ! $New->id() ) {
