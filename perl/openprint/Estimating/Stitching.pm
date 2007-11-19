@@ -124,18 +124,17 @@ sub signature_calc {
 
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 1;
-	$imposition = 1 if $I->imposition() != $imposition;
+	$imposition = 1 if $I->imposition() != $imposition or sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] );;
 
 #$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures());
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		next if $service_index and ($signature_service_index == $service_index);
-		next if ! $I->imposition();
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-#$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index}");
 		next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
-		$imposition = 1 if $I->imposition() != $imposition or sets::isin( $I->runstyle(),['Work & Turn','Work & Tumble'] );
+#$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index}");
+		$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} != 2 ) or sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] );
 	} # end foreach
 #$openprint::log->debug( $$specs{'Imposition'.$qty_index} );
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
@@ -229,7 +228,7 @@ sub calc {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
-			$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} != 2 ) or sets::isin( $$sig_specs{'ddmRunStyle'}, ['Work & Turn','Work & Tumble'] );
+			$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} != 2 ) or sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] );
 			last if $imposition == 1;
 		} # end foreach
 
