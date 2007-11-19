@@ -191,7 +191,7 @@ sub prev {
     return $_;
 } # end sub next
 
-sub Prevous {
+sub Previous {
 	my ($self, $params) = shift;
 	return new openprint::Material( $self->prev($params) );
 } # end sub Next
