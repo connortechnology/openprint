@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -223,8 +223,9 @@ sub impositions {
 sub test_fold {
 	my ( $Equipment, $I, $sig_specs, $foldtype, $max_imposition ) = @_;
 
+$openprint::log->debug( "Foldtype: $foldtype" ) if $debug;
 	if ( $max_imposition and $I->imposition() > $max_imposition ) {
-		$openprint::log->debug("Imposition too large " . $I->imposition() . ' > ' . $max_imposition ) if $debug;
+		$openprint::log->debug("MAX Imposition too large " . $I->imposition() . ' > ' . $max_imposition ) if $debug;
 		return 0;
 	} # end if
 
@@ -329,11 +330,12 @@ sub signature_calc {
 	my %makereadies;
 	my $max_imposition;
 
-	foreach my $ss_id ( $Project->signatures() ) {
+	foreach my $ss_id ( $Project->signatures( $$sig_specs{'txtSignatureType'} ) ) {
 		next if $signature_service_index and ($ss_id >= $signature_service_index);
+$openprint::log->debug("SIGS: $signature_service_index : $ss_id " );
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		if ( (!$max_imposition) or ( $$s_specs{'FoldingImposition'.$qty_index} < $max_imposition ) ) {
-			$max_imposition = $$s_specs{'FoldingImposition'.$qty_index};
+		if ( (!$max_imposition) or ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) ) {
+			$max_imposition = $$s_specs{'txtImposition'.$qty_index};
 		} # end if
 		foreach my $fold_type ( keys %fold_types ) {
 			if ( $$specs{$fold_type."-Qty-$$s_specs{'SignatureIndex'}-$qty_index"} > 0 ) {
@@ -354,6 +356,7 @@ sub signature_calc {
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 			foreach ( keys %fold_types ) {
+				$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = int $$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"};
 				$folds{$_} = $$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"};
 			} # end foreach
 		} elsif ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) {
@@ -364,15 +367,10 @@ sub signature_calc {
 			if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
 				$folds{$pages.'PageSignatureFold'} += 1;
 			} else {
-				$foldtype = $$sig_specs{'SpreadCols'.$qty_index}.'x'.$$sig_specs{'SpreadRows'.$qty_index}.'-'.$pages.'Page-'.$$sig_specs{'hdnImageOrientation'.$qty_index}.'-'.$Imposition->imposition().'out-SignatureFold';
+				$foldtype = $pages.'PageSignatureFoldRunSpeed';
 				if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
-					$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
-				} else {
-					$foldtype = $pages.'PageSignatureFoldRunSpeed';
-					if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $max_imposition ) ) {
-						#$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
-						$folds{$pages.'PageSignatureFold'} += 1;
-					} # end if
+#$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
+					$folds{$pages.'PageSignatureFold'} += 1;
 				} # end if
 			} # end if
 		} else {
@@ -492,7 +490,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 			my $runTime = sprintf( '%.4f', $$specs{"txtQuantity$qty_index"} / $runSpeed );
 			$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('Folds: %d, QTY: %d, Runspeed: %d/Hr = %.2f hours', $folds{$fold}, $$specs{'txtQuantity'.$qty_index}, $runSpeed, $runTime) . "<br/>";
 			if ( lc $servicePrice{'units'} eq 'per hour' ) {
-				$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime;
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime * $folds{$fold};
 				$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('%s %s: Setup: %.2f, Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f', $folds{$fold}, $fold, $setupPrice{'Price'}, @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} ) . "<br/>";
 			} elsif ( sets::isin( lc $servicePrice{'units'}, ['per m', 'per 1000'] ) ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * ( $folds{$fold}*$$specs{"txtQuantity$qty_index"} / 1000 );

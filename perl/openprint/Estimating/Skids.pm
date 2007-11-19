@@ -149,10 +149,6 @@ sub calc {
 					my $setup1 = new openprint::Imposition();
 					my $setup2 = new openprint::Imposition();
 
-if ( $debug ) {
-$log->debug("Trying to fit $$specs{'txtFinalWidth'}x$$specs{'txtFinalHeight'} in $width x $height");
-$log->debug("Trying to fit $$specs{'txtFinalHeight'}x$$specs{'txtFinalWidth'} in $width x $height");
-} # end if
 					openprint::imposition::calc_setup( $setup1, @$specs{'txtFinalWidth','txtFinalHeight'}, $width, $height );
 					openprint::imposition::calc_setup( $setup2, @$specs{'txtFinalHeight','txtFinalWidth'}, $width, $height );
 					my $imposition = $setup1->imposition() > $setup2->imposition() ? $setup1->imposition() : $setup2->imposition();
@@ -167,8 +163,9 @@ $log->debug("Trying to fit $$specs{'txtFinalHeight'}x$$specs{'txtFinalWidth'} in
 					} else {
 						$items_per_package = int $$specs{'txtItemsPerPackage'};
 					} # end if
-					next if ! $items_per_package;
 				} # end if
+
+				next if ! $items_per_package;
 				
 				my $price;
 				if ( my @Materials = openprint::Material::find('name'=>$id) ) {
@@ -182,7 +179,7 @@ $log->debug("Trying to fit $$specs{'txtFinalHeight'}x$$specs{'txtFinalWidth'} in
 					@$specs{'ddmPackageType','txtItemsPerPackage'} = ( $id, $items_per_package );
 					@$specs{'txtPackageWidth','txtPackageHeight','txtPackageDepth'} = ( $width, $height, $depth );
 				} # end if
-			} # end foreach
+			} # end foreach Material
 		} else {
 			if ( $$specs{'chkOverrideItemsPerPackage'} ne 'Y'  ) {
 # Make sure it's not too heavy

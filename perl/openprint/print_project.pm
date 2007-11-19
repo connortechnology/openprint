@@ -280,7 +280,7 @@ sub continue_project {
 		$$variable{'ProjectIndex'} = $project_index;
 	} # end if
 
-	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{'Redirect'} *************************");
+	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{'Redirect'} $$variable{'ProjectIndex'} $$variable{'ServiceIndex'} *************************");
 } # end sub continue_project 
 
 sub try_to_delete_project {
@@ -558,6 +558,10 @@ sub get_service_specifications {
 sub create_edit_process {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
+	$openprint::param{'txtQuantity1'} =~ s/\D//g;
+	$openprint::param{'txtQuantity2'} =~ s/\D//g;
+	$openprint::param{'txtQuantity3'} =~ s/\D//g;
+
 	my $error = '';
 	my ( $ref ) = misc::trim( $r->param('txtProjectReference') );
 	$error .= "You must specify a Project Reference.<br/>" if ! $ref =~ /[^\s]/;
@@ -748,6 +752,8 @@ sub create_edit_process {
 			} # end if
 		} # end if
 	} # end foreach
+
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Edited' );
 	return $Project->id();
 } # end sub create_edit_process
 
@@ -786,6 +792,9 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
+	$openprint::param{'txtQuantity1'} =~ s/\D//g;
+	$openprint::param{'txtQuantity2'} =~ s/\D//g;
+	$openprint::param{'txtQuantity3'} =~ s/\D//g;
 	@openprint::param{'reference','comments'} = misc::trim( @openprint::param{'reference','comments'} );
 
 	my $Project = new openprint::Project( $project_index );

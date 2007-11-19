@@ -113,18 +113,22 @@ sub find {
 		push @values, split 'x', $params{'size'};
 	} # end if
 	if ( $params{'width'} ) {
+		$params{'width'} =~ s/[^\d\.]//g;
 		$sql .= ' AND width=?';
 		push @values, 1*$params{'width'};
 	} # end if
 	if ( $params{'width_start'} ) {
+		$params{'width_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND width>=?';
 		push @values, 1*$params{'width_start'};
 	} # end if
 	if ( $params{'height'} ) {
+		$params{'height'} =~ s/[^\d\.]//g;
 		$sql .= ' AND height=?';
 		push @values, 1*$params{'height'};
 	} # end if
 	if ( $params{'height_start'} ) {
+		$params{'height_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND height>=?';
 		push @values, 1*$params{'height_start'};
 	} # end if
