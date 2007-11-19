@@ -1117,24 +1117,7 @@ if ( 0 ) {
 #foreach my $imp ( @impositions ) {
 #$imp->display();
 #}
-				if ( $project{'SpreadLayout'} > 0 ) {
-					$openprint::log->debug("Converting Impositions spread Layout: $project{'SpreadLayout'}") if $debug;
-					@impositions = openprint::imposition::convert_impositions( $project{'SpreadLayout'}, $$specs{'txtSpreadSize'}, \@impositions );
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
-				} # end if
-# Gives us both inline and offline folding options
-				if ( $project{'HasFolding'} ) {
-					@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $project{'FoldingSpecs'}, $specs, $qty_index ) } @impositions;
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions);
-				} # end if Folding
 
-# Sort the impositions.  If we do it here, then after conversion, oh hell, I dunno
-				if ( exists $project{'SpreadLayout'} ) {
-#@impositions = sort { $a->imposition() <=> $b->imposition() } @impositions;
-					@impositions = sort { $a->spreads() <=> $b->spreads() } @impositions;
-				} else {
-					@impositions = reverse sort { $a->imposition() <=> $b->imposition() } @impositions;
-				} # end if
 				$imposition_count += scalar @impositions;
 				$impositions{$Press->id()} = \@impositions;
 		} # end foreach Press
@@ -1307,17 +1290,6 @@ $b =~ s/<br\/>/\n/g;
 	return $$specs{'Status'};
 } # end sub
 
-#if ( exists $$project{'SpreadLayout'} ) {
- #@impositions = sort { $a->imposition() <=> $b->imposition() } @impositions;
- #@impositions = reverse sort { $a->imposition() <=> $b->imposition() } @impositions;
- #@impositions = sort { $a->spreads() <=> $b->spreads() } @impositions;
- #} else {
- #@impositions = reverse sort { $a->imposition() <=> $b->imposition() } @impositions;
-#} # end if
-#foreach my $I ( @impositions ) {
-#$I->display();
-#} # end foreach
- 
 sub get_project_price {
 	my ( $Project, $service_index, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, $specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions ) = @_;
 
@@ -1344,6 +1316,29 @@ sub get_project_price {
 			#$openprint::log->debug("No Press");
 			next;
 		} # end if
+
+		my $SpreadLayout;
+		if ( $$specs{'txtSignatureType'} ) {
+			if ( $$specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' ) {
+				$SpreadLayout = $$specs{'txtSignatureSpreadQuantity'.$qty_index};
+			} elsif ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
+				$SpreadLayout = $$specs{'PageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
+			} else {
+				$SpreadLayout = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
+			} # end if
+		} # end if
+		$debug = 1;
+		if ( $SpreadLayout > 0 ) {
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
+			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
+		} # end if
+# Gives us both inline and offline folding options
+		if ( $$project{'HasFolding'} ) {
+			@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $$project{'FoldingSpecs'}, $specs, $qty_index ) } @impositions;
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
+		} # end if Folding
+		$debug = 0;
 		
 		my $pms_prices = get_special_colours_price( $openprint::log, $openprint::dbh, $openprint::variable, $P, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
@@ -1377,7 +1372,7 @@ sub get_project_price {
 
 				while ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 0 ) {
 					foreach ( $Project->signatures($$specs{'txtSignatureType'}) ) {
-						if ( $s_id and ($_ >= $s_id) ) {
+						if ( $s_id and ($_ > $s_id) ) {
 							$s_id = $_;
 							%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
 							last;
@@ -1422,6 +1417,7 @@ $new_specs{'no_stitching'} = 1; # unneccessary calculation
 						$new_specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 						$new_specs{'chkOverridePress'.$qty_index} = '';
 						$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
+						$new_specs{'chkOverrideImposition'.$qty_index} = '';
 						if ( $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} ) {
 #$openprint::log->debug("Using cache: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
 							$sig_price = $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}};
@@ -1724,7 +1720,7 @@ sub calc_price {
 
 	if ( $$project{'HasFolding'} ) {
 #my $time = gettimeofday();
-		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$Project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
+		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
 #$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		if ( $$project{'FoldingSpecs'}{'Status'} eq 'uncalculated' ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
