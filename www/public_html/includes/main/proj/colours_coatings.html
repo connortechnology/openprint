@@ -100,19 +100,29 @@
 					<label class="radio" for="rdbAqueousSideOneNone<?Signature?>">None</label>
 				</span>
 			</p>
-		<!--
-				<br class="spacer"/>
-				UV Coating<br/>
-				<span class="checkOption">
-					<input type="radio" id="rdbUVSideOneGloss" name="rdbUVSideOne" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbUVSideOne'} eq 'Gloss' ) ?> />
-					<label for="rdbUVSideOneGloss"><? echo ( ssi::writeTip('Overall Gloss'); ) ?></label>
-				</span>
-				<span class="checkOption">
-					<input type="radio" id="rdbUVSideOneGloss" name="rdbUVSideOne" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbUVSideOne'} eq 'Gloss' ) ?> />
-					<label for="rdbUVSideOneGloss"><? echo ( ssi::writeTip('Spot Gloss'); ) ?></label>
-				</span>
-		-->
-	</div>
+<? eval (
+		@{$$variable{'uvoptions'}} = ();
+		push @{$$variable{'uvoptions'}}, 'Overall' if openprint::Service::find('strid'=>'UVCoatingOverall');
+		push @{$$variable{'uvoptions'}}, 'Spot' if openprint::Service::find('strid'=>'UVCoatingSpot');
+		push @{$$variable{'uvoptions'}}, 'None';
+) ?>
+<? if ( @{$$variable{'uvoptions'}} > 1 ) ?>
+		<br class="spacer"/>
+		<p>
+			<label><b><? echo ( ssi::writeTip( 'UV Coating' ); ) ?>:</b></label>
+			 <? echo (
+				my $html;
+				foreach my $type ( @{$$variable{'uvoptions'}} ) {
+					$html .= '<span class="checkOption">';
+					$html .= qq`<input type="radio" id="SideOneCoatingType$type-$$variable{'SignatureIndex'}" name="SideOneCoatingType-$$variable{SignatureIndex}" value="$type" onclick="calc(this.form.name);" ` . ( ( $$variable{"SideOneCoatingType-$$variable{'SignatureIndex'}"} eq $type ) or ( $type eq 'None' and ! $$variable{"SideOneCoatingType-$$variable{'SignatureIndex'}"} )  ? 'checked="checked"' : '' ) . " />\n";
+					$html .= qq`<label class="radio" for="SideOneCoatingType$type-$$variable{SignatureIndex}">$type</label>\n`;
+					$html .= '</span>';
+				} # end foreach
+				return $html;
+			) ?>
+		</p>
+<? endif ( @{$$variable{'uvoptions'}} > 1 ) ?>
+		</div>
 	</fieldset>
 </div>
 <div class="InksBack">
@@ -216,19 +226,23 @@
 				<input type="radio" id="rdbAqueousSideTwoNone<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}}, 'Gloss', 'Matte' ) ) ?> />
 				<label class="radio" for="rdbAqueousSideTwoNone<?Signature?>">None</label>
 			</span>
-<!--
+		</p>
+<? if ( @{$$variable{'uvoptions'}} > 1 ) ?>
 		<br class="spacer"/>
-		UV Coating<br/>
-		<span class="checkOption">
-			<input type="radio" id="rdbUVSideTwoGloss" name="rdbUVSideTwo" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbUVSideTwo'} eq 'Gloss' ) ?> />
-			<label for="rdbUVSideTwoGloss"><? echo ( ssi::writeTip('Overall Gloss'); ) ?></label>
-		</span>
-		<span class="checkOption">
-			<input type="radio" id="rdbUVSideTwoGloss" name="rdbUVSideTwo" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbUVSideTwo'} eq 'Gloss' ) ?> />
-			<label for="rdbUVSideTwoGloss"><? echo ( ssi::writeTip('Spot Gloss'); ) ?></label>
-		</span>
--->
+		<p>
+			<label><b><? echo ( ssi::writeTip( 'UV Coating' ); ) ?>:</b></label>
+			 <? echo (
+				my $html;
+				foreach my $type ( @{$$variable{'uvoptions'}} ) {
+					$html .= '<span class="checkOption">';
+					$html .= qq`<input type="radio" id="SideTwoCoatingType$type-$$variable{'SignatureIndex'}" name="SideTwoCoatingType-$$variable{SignatureIndex}" value="$type" onclick="calc(this.form.name);" ` . ( ( $$variable{"SideTwoCoatingType-$$variable{'SignatureIndex'}"} eq $type ) or ( $type eq 'None' and ! $$variable{"SideTwoCoatingType-$$variable{'SignatureIndex'}"} )  ? 'checked="checked"' : '' ) . " />\n";
+					$html .= qq`<label class="radio" for="SideTwoCoatingType$type-$$variable{SignatureIndex}">$type</label>\n`;
+					$html .= '</span>';
+				} # end foreach
+				return $html;
+			) ?>
 			</p>
+<? endif ( @{$$variable{'uvoptions'}} > 1 ) ?>
 		</div>
 	</fieldset>
 </div>

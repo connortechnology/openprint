@@ -677,6 +677,17 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
 	@$specs{'NeedFolding','NeedCutting','NeedScoring'} = @project{'NeedFolding','NeedCutting','NeedScoring'};
 
+	# Need UVCoating
+	if ( 
+			($$specs{'SideOneCoatingType-'.$$specs{SignatureIndex}} and ($$specs{'SideOneCoatingType-'.$$specs{SignatureIndex}} ne 'None' )) or
+			($$specs{'SideTwoCoatingType-'.$$specs{SignatureIndex}} and ($$specs{'SideTwoCoatingType-'.$$specs{SignatureIndex}} ne 'None' )) ) {
+		$project{'NeedUVCoating'} = 1;
+		if ( ! $$services{'UVCoating'} ) {
+			push @{$$services{'UVCoating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' );
+		} # end if	
+		$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
+	} # end if
+
 # Do this once now, so we don't do it many times in calc_print_price
 	my @filtered_colours = filter_colours( @side_one_colours, @side_two_colours );
 
@@ -711,6 +722,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
 	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
 	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )} if $$services{'SaddleStitching'};
+	%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )} if $$services{'UVCoating'};
 
 #$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	foreach my $qty_index ( 1 .. 3 ) {
@@ -1974,6 +1986,18 @@ $openprint::log->debug("Perforating");
 		} # end if
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if
+	if ( $$project{'HasUVCoating'} ) {
+$openprint::log->debug("UV");
+		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index );
+		if ( $uv_results{'Status'} eq 'uncalculated' ) {
+			$price{'UV Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} else {
+			$price{'UVCoating Breakdown'} .= "UVCoating Price: $uv_results{'Price'}<br/>";
+			$price{'Comparison Cost'} += $uv_results{'Price'};
+		} # end if
+
+	} # end if UVCoating
 
 	$price{'complete'} = 1;
 	return \%price;
