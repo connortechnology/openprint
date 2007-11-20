@@ -21,3 +21,17 @@ $sql_server{'login'}    = 'topknotch';
 $sql_server{'password'} = 'topknotch';
 
 $dbh = sql::open_sql( $log, %sql_server );
+
+$openprint::Object::no_cache = 1;
+foreach my $Project ( openprint::Project::find('order'=>'index DESC' ) ) {
+	my $services = $Project->services();
+	if ( $$services{'UVCoating'} ) {
+		my $varnish_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] );
+		foreach my $ss_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'SideOneUVCoatingType', $$varnish_specs{'SideOneCoatingType-'.$$sig_specs{'SignatureIndex'}} );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'SideTwoUVCoatingType', $$varnish_specs{'SideTwoCoatingType-'.$$sig_specs{'SignatureIndex'}} );
+		} # end foreach
+	} # end if
+} # end foreach
