@@ -109,3 +109,7 @@ div.ProjectHeader fieldset p label {
 #hdnBreakdown1 b, #hdnBreakdown2 b, #hdnBreakdown3 b {
 	color: red;
 }
+.PresentationFolderQuestions {
+	float: left;
+	width: 50%;
+}
