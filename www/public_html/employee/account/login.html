@@ -1,9 +1,12 @@
 <script type="text/javascript">
-	var Users = new Array();
+	var emails_by_id = new Array();
+	var ids_by_email = new Array();
+
 	<? echo (
 			my $html;
 			foreach my $User ( openprint::User::find( 'type' => ['A','E'] ) ) {
-				$html .= sprintf( qq{   Users[%d] = '%s';\n}, $User->id(), $User->email() );
+				$html .= sprintf( qq{   emails_by_id[%d] = '%s';\n}, $User->id(), $User->email() );
+				$html .= sprintf( qq{   ids_by_email['%s'] = %d;\n}, $User->email(), $User->id() );
 			} # end foreach
 			return $html;
 			) ?>
@@ -11,14 +14,19 @@
 		if ( element.value.charAt(0) == 'E' ) {
 			element.value = element.value.substr(1,element.value.length-1);
 		} // end if
-		if ( Users[1*element.value] ) {
-			element.form.email.value = Users[1*element.value];
+		if ( emails_by_id[1*element.value] ) {
+			element.form.email.value = emails_by_id[1*element.value];
 			element.form.password.focus();
 		} else {
 			element.form.email.value = 'User not found: ' + element.value;
 
 		} // end if
 	}
+	function update_userid( e ) {
+		if ( ids_by_email[e.value] ) {
+				e.form.UserID.value = ids_by_email[e.value];
+		} // end if
+	} // end function
 </script>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <form name="LoginForm" method="post" action="/employee/account/login_confirmation.html">
@@ -30,7 +38,7 @@
 		</p>
 		<p>
 			<label for="email">E-mail:</label>
-			<input type="text" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
+			<input type="text" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" onkeyup="update_userid(this);" /><br/>
                 <span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
 		</p>
 		<p> 

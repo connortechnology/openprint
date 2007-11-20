@@ -40,3 +40,21 @@
 	</p>
 </div>
 	<!--#include virtual="/includes/employee/feedback/paper.html"-->
+	<!--#include virtual="/includes/employee/feedback/signature_imposition.html"-->
+<? echo ( 
+	my $html = '<p class="buttons">';
+	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
+
+		my @schedule = openprint::press_schedule::find('project_id'=>$$variable{'ProjectIndex'}, 'service_id'=>$$variable{'ServiceIndex'} );
+		if ( @schedule ) {
+			if ( ! $schedule[0]{starttime} ) {
+			$html .= 'Pending Schedule';
+			} else {
+			$html .= 'Scheduled to run at ' . $schedule[0]{starttime};
+			} # end if
+		#} else {
+			#$html .= ssi::writeButton( $log, $dbh, 'Schedule'.$$variable{'SignatureIndex'}, 'schedule.gif', '', '', 'Add to Schedule' );
+		} # end if
+	} # end if
+	return $html . '</p>';
+) ?>

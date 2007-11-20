@@ -84,6 +84,7 @@ sub save {
 	} # end if
 	sql::end_transaction( $openprint::dbh, $ac );
 	$self->load();
+	return '';
 } # end sub save
 
 sub delete {

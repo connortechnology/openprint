@@ -28,15 +28,20 @@
 		</p>
 		<p> 
 			<label for="">*Phone:</label>
-			<input type="text" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" >
+			<input type="text" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" >x
+			<input type="text" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" />
 		</p>
 		<p> 
-			<label for="">&nbsp;Extension:</label>
-			<input type="text" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" >
+			<label for="mobile">&nbsp;Mobile:</label>
+			<input type="text" name="mobile" value="<? hecho ( $$variable{'User'}->mobile() ) ?>" />
+		</p>
+		<p> 
+			<label for="sms">&nbsp;SMS (email):</label>
+			<input type="text" name="sms" value="<? hecho ( $$variable{'User'}->sms() ) ?>" />
 		</p>
 		<p> 
 			<label for="">&nbsp;Fax:</label>
-			<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" >
+			<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 		</p>
 		<p> 
 			<label for="">&nbsp;Add to our Mailing List</label>

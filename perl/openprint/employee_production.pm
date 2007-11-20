@@ -16,6 +16,7 @@ require openprint::press_schedule;
 
 require sql;
 require openprint::MXML;
+require openprint::JDF;
 
 sub print_overview {
 	press_schedule( @_ );
@@ -73,11 +74,19 @@ sub press_schedule {
 		complete_signature( $log, $dbh, $variable, $project_index, $service_index );
 		$Project->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'RemoveJob' ) {
-		my $service_index = $openprint::param{'ServiceIndex'};
-		my $project_index = $openprint::param{'ProjectIndex'};
-		sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
-		my $Project = new openprint::Project( $project_index );
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Job removed from print schedule." );
+		if ( $openprint::param{'schedule_id'} ) {
+			if ( my @rows = openprint::press_schedule::find('id'=>$openprint::param{'schedule_id'} ) ) {
+				my $row = shift @rows;
+				if ( ! sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE id=?}, $$row{id} ) ) {
+					if ( $$row{'projectindex'} ) {
+						my $Project = new openprint::Project( $$row{'projectindex'} );
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Job removed from print schedule.' );
+					} # end if
+				} # end if successful delete
+			} # end if
+		} else {
+			$$variable{'error'} .= 'No job given to delete...';
+		} # end if
 	} # end if
 	openprint::employee_schedule::add_missing_jobs_to_schedule( $log, $dbh );
 #openprint::employee_schedule::update_late_jobs( $log, $dbh );
@@ -330,7 +339,7 @@ sub project_view {
 	$$variable{'OrderID'} = $order_id;
 
 	if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
-		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.jdf', [$Project->jdf()->toString()] );
+		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf()->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export MXML' ) {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [new openprint::MXML($Project)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
@@ -591,6 +600,24 @@ sub project_view {
 		$Project->status_change( undef, undef, 'Complete' );
 	} elsif ( $openprint::param{'btnFunction'} eq 'AddToBinderySchedule' ) {
 		openprint::bindery_schedule::add_project( $Project );
+	} elsif ( $openprint::param{'btnFunction'} eq 'AddToPressSchedule' ) {
+		my $ac = sql::start_transaction( $dbh );
+
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
+			my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $s_s_id );
+			if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
+				$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
+				if ( $_ ) {
+					$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
+				} else {
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending press schedule." );
+
+				} # end if
+			} # end if
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Add Service' ) {
 
 		if ( $openprint::param{'NewServiceType'} ) {
@@ -598,7 +625,7 @@ sub project_view {
 			my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $ServiceType->name() );
 
 			if ( $ServiceType->name() eq 'AdditionalSignature' ) {
-				$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 				my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'txtSignatureType', 'AdditionalSignature' );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'txtServiceDescription', 'Additional Signature' );
@@ -1308,6 +1335,20 @@ sub docket_sheet {
 sub summary {
 	openprint::print_project::summary( @_ );
 } # end sub summary
+
+sub monthly_schedule {
+	my ( $r, $log, $dbh, $variable ) = @_;
+
+	if ( $openprint::param{'btnFunction'} eq 'MakeReservation' ) {
+		$$variable{'error'} .= sql::insert( undef, undef, 'Schedule',
+				'ProjectIndex', undef,
+				'ServiceIndex', undef,
+				'StartTime',    sprintf('%.4d-%.2d-%.2d', @openprint::param{'StartYear','StartMonth','StartDay'}),
+				'equipment_id', $openprint::param{'Press'},
+				'RunTime',      sprintf('%.2d:%.2d:%.2d', $openprint::param{'hours'}, 0, 0),
+				);
+	} # end if
+} # end sub monthly_schedule
 
 1;
 

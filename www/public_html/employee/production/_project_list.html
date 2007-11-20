@@ -1,6 +1,6 @@
 <? eval (
 	if ( %openprint::param ) {
-		foreach my $param ( 'DueDateStartYear','DueDateStartMonth','DueDateStartDay','DueDateEndYear','DueDateEndMonth','DueDateEndDay','ProjectStatus','ddmCustomer', 'ddmPress' ) {
+		foreach my $param ( 'DueDateStartYear','DueDateStartMonth','DueDateStartDay','DueDateEndYear','DueDateEndMonth','DueDateEndDay','ProjectStatus','ddmCustomer', 'ddmPress','ddmSalesRep' ) {
 			if ( ref $openprint::param{$param} eq 'ARRAY' ) {
 			$openprint::session{'/employee/production/projects.html?'.$param} = join(';', @{$openprint::param{$param}} );
 			} else {
@@ -37,6 +37,9 @@
 				'misc'				=> ' AND order_id IS NOT NULL',
 				'order'				=> 'due_date, lngDocketNumber',
 			);
+			if ( $openprint::session{'/employee/production/projects.html?ddmSalesRep'} ) {
+				$filters{'salesrep_id'} = $openprint::session{'/employee/production/projects.html?ddmSalesRep'};
+			} # end if
 			if ( $openprint::session{'/employee/production/projects.html?ddmCustomer'} ) {
 $openprint::log->debug("Adding Customer (" . $openprint::session{'/employee/production/projects.html?ddmCustomer'});
 				$filters{'company_id'} = $openprint::session{'/employee/production/projects.html?ddmCustomer'};

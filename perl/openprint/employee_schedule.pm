@@ -64,27 +64,27 @@ sub drop_project {
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
 	while ( @order ) {
-		my $service_index = shift @order;
-		$service_index =~ s/\D//g;
-		next if ! $service_index;
+		my $id = shift @order;
+		$id =~ s/\D//g;
+		next if ! $id;
 
-		my @rows = openprint::press_schedule::find('service_id'=>$service_index);
+		my @rows = openprint::press_schedule::find('id'=>$id);
 		next if ! @rows;
 		my $row = shift @rows;
 		if ( $start_time and ! $$row{starttime} ) {
 			my $Project = new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on $start_time" );
 		} # end if
 
-		sql::update( $log, $dbh, 'Schedule', ['ServiceIndex=?', $service_index], 'StartTime', $start_time, 'Equipment_ID', $press_index );
+		sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'Equipment_ID', $press_index );
 		if ( $$row{operator_id} != $operator_id ) {
-			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngServiceIndex=?', $service_index], 'operator_id', $operator_id );
+			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
 		} # end if
 
 		if ( @order ) {
 			if ( $openprint::config{'Smart Schedule'} eq 'Y') {
-				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE ServiceIndex=?}, $service_index );
+				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE id=?}, $id );
 			} else {
-				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE ServiceIndex=?}, $service_index );
+				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $id );
 			} # end if
 		} # end if
 	} # end foreach
@@ -106,8 +106,7 @@ sub set_operator {
 	my $end_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Add_Delta_DHMS( $year, $month, $day, $sh, $sm, $ss, 0, $dh, $dm, $ds ) );
 	my @schedule = openprint::press_schedule::find( 'starttime_start'=>$start_time, 'starttime_end'=>$end_time, 'equipment_id'=>$press_index );
 	foreach my $row ( @schedule ) {
-
-		sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngProjectIndex=? AND lngServiceIndex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator );
+		sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngProjectIndex=? AND lngServiceIndex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator ? $operator : undef );
 	} # end foreach
 
 	sql::end_transaction( $dbh, $ac );

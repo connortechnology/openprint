@@ -34,6 +34,16 @@
 					ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
 				); ) ?>
 		</p>
+		<p class="buttons">
+				<b>CSV File:</b>
+				<input type="file" name="fileImport" />
+	<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ImportDefinitions','import.gif',"f1.btnFunction.value='Import Definitions';f1.action='edit.html';f1.submit();",'','Import Definitions'),
+				ssi::writeButton( $log, $dbh, 'ExportDefinitions','export.gif',"f1.btnFunction.value='Export Definitions';f1.action='edit.html?Download';f1.submit();",'','Export Definitions'),
+				ssi::writeButton( $log, $dbh, 'ImportSpecifications','import.gif',"f1.btnFunction.value='Import Specifications';f1.action='edit.html';f1.submit();",'','Import Specifications'),
+				ssi::writeButton( $log, $dbh, 'ExportSpecifications','export.gif',"f1.btnFunction.value='Export Specifications';f1.action='edit.html?Download';f1.submit();",'','Export Specifications'),
+	); ) ?>
+		</p>
 	</fieldset>
 	<br class="spacer"/><hr/><br class="spacer"/>
 	<div style="width: 49%; float: left;">

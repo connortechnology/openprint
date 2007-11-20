@@ -4,6 +4,10 @@
 </div>
 <? if ( ( ! $$variable{'error'} ) and $openprint::param{'btnFunction'} ) ?>
 
+	<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+	Registration was successful.<br/><br/>
+	You are now representing <? echo ( $openprint::param{'name'} ) ?><br/>
+	<? else ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 	<p>Thank you for registering!</p>
 	<p><? echo ( $openprint::config{'RegistrationMessage'} ) ?></p>
 	<? if ( $openprint::session{'user_id'} ) ?>
@@ -13,6 +17,7 @@
 		<br/>
 		You will be notified via email when your account is activated.<br/>
 	<? endif ( $openprint::session{'user_id'} ) ?>
+	<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 	<br/>
 	<b><? echo ( $openprint::session{'Destination'}; ) ?></b><br/>
 

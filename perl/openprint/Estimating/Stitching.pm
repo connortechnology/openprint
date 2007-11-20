@@ -124,19 +124,17 @@ sub signature_calc {
 
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 1;
-	$imposition = 1 if $I->imposition() != $imposition;
+	$imposition = 1 if $I->imposition() != $imposition or sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] );;
 
 #$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures());
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		next if $service_index and ($signature_service_index == $service_index);
-		next if ! $I->imposition();
 		$$specs{"txtPockets$qty_index"} += 1;
-		next if $imposition == 1;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-#$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index}");
 		next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
-		$imposition = 1 if $I->imposition() != $imposition;
+#$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index}");
+		$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} != 2 ) or sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] );
 	} # end foreach
 #$openprint::log->debug( $$specs{'Imposition'.$qty_index} );
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
@@ -230,7 +228,7 @@ sub calc {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
-			$imposition = 1 if $$sig_specs{'txtImposition'.$qty_index} != 2;
+			$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} != 2 ) or sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] );
 			last if $imposition == 1;
 		} # end foreach
 
@@ -354,6 +352,8 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ", Equipment: ".$Equipment->strid() ."<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$price{'RunTime'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$price{'Passes'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$price{'Imposition'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%<br/>', @$price{'RunCost Discount','Imposition Discount'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$price{'MakeReady'}).",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Service: $' . sprintf( '%.2f', $$price{'Service'}).",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'}))."<br/><br/>";
@@ -503,8 +503,10 @@ if ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty
 		$price{'MakeReady'} += $makeReady + ( $pocketMakeReady * ( $gateFolds + 1 ) );
 	} # end if
 
-	$price{'Service'} *= ( 1 - ($Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} )/100));
-	$price{'Service'} *= ( 1 - ($Equipment->specification( 'Imposition Discount', $price{Imposition} )/100));
+	$price{'RunCost Discount'} = $Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} );
+	$price{'Service'} *= ( 1 - $price{'RunCost Discount'}/100);
+	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
+	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ));
 
 	$price{'txtPrice'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'};

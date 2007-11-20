@@ -81,7 +81,7 @@ sub calc {
 	if ( $$specs{'PageQuantity'} < 100 ) {
 		if ( ! $$services{'Counting'} ) {
 			$_ = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' );
-			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $_, 'Counting' );
+			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $_, 'Counting' ) if $_;
 		} # end if
 	} elsif ( $$services{'Counting'} ) {
 		foreach my $si ( @{$$services{'Counting'}} ) {

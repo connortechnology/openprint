@@ -192,6 +192,15 @@ function gsm_to_mweight( form ) {
 				<label class="radio" for="grain_directionShort">Short</label>
 			</p>
 			<p> 
+				<label>Customer Supplied:</label>
+				<input type="radio" name="supplied" id="supplied1" value="1" <? echo ( $$variable{'Paper'}->supplied() ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="supplied1">Yes</label>
+				<input type="radio" name="supplied" id="supplied0" value="0" <? echo ( $$variable{'Paper'}->supplied()eq '0' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="supplied0">No</label>
+				<input type="radio" name="supplied" id="supplied" value="" <? echo ( $$variable{'Paper'}->supplied() eq '' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="supplied">Both</label>
+			</p>
+			<p> 
 				<label>Sheets Per Package:</label>
 				<input type="text" name="sheets_per_package" value="<? echo ( $$variable{'Paper'}->sheets_per_package(); ) ?>"  size="12" style="width: auto;"> 
 			</p>

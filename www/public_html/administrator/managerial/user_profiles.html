@@ -22,10 +22,10 @@ Please select a company or user to obtain login information.<br/>
 		<fieldset class="filters"><legend>Search:</legend>
 			<p>
 				<label>Company Name:</label>
-				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" />
+				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
 				<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">All Companies</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(strname)') ], $openprint::param{'ddmCustomer'} ); ) ?>
+					<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomer'} ); ) ?>
 				</select>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 			</p>
@@ -99,6 +99,14 @@ Please select a company or user to obtain login information.<br/>
 				<input type="text" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" style="width: auto;" size="4" />
 			</p>
 			<p> 
+				<label>Mobile:</label>
+				<input type="text" name="mobile" value="<? hecho ( $$variable{'User'}->mobile() ) ?>" style="width: auto;" size="15" />
+			</p>
+			<p> 
+				<label>SMS (email):</label>
+				<input type="text" name="sms" value="<? hecho ( $$variable{'User'}->sms() ) ?>" style="width: auto;" size="15" />
+			</p>
+			<p> 
 				<label>Fax:</label>
 				<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 			</p>
@@ -126,10 +134,10 @@ Please select a company or user to obtain login information.<br/>
 			</p>
 			<p>
 				<label>Can this account login to the ftp site?</label>
-				<input type="radio" id="ftp_activeY" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="Y" />
-				<label class="radio" for="ftp_activeY">Yes</label>
-				<input type="radio" id="ftp_activeN" name="ftp_active" <?echo ( 'checked="checked"' if ! $$variable{'User'}->ftp_active() ) ?> value="N" />
-				<label class="radio" for="ftp_activeN">No</label>
+				<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="1" />
+				<label class="radio" for="ftp_active1">Yes</label>
+				<input type="radio" id="ftp_active0" name="ftp_active" <?echo ( 'checked="checked"' if ! $$variable{'User'}->ftp_active() ) ?> value="0" />
+				<label class="radio" for="ftp_active0">No</label>
 			</p>
 			<p> 
 				<label>Custom Greeting</label>

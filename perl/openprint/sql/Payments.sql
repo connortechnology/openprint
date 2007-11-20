@@ -4,7 +4,7 @@ DROP	SEQUENCE Payments_id_seq;
 CREATE	SEQUENCE Payments_Id_seq;
 CREATE TABLE Payments ( 
 	id			INTEGER NOT NULL default nextval('Payments_Id_seq'),	
-	Order_ID			INTEGER NOT NULL, FOREIGN KEY (Order_Id) REFERENCES Orders (index),
+	order_id			INTEGER, FOREIGN KEY (Order_Id) REFERENCES Orders (index),
 	Company_id		INTEGER NOT NULL, FOREIGN KEY (Company_id) REFERENCES Company (index),
 	strSessionID		TEXT,
 	curAmount			NUMERIC(10,2),

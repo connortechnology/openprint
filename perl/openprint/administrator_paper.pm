@@ -99,6 +99,7 @@ sub paper {
 		$Paper->bladecleaning( $openprint::param{'bladecleaning'} );
 		$Paper->grade( $openprint::param{'grade'} );
 		$Paper->type( $openprint::param{'type'} );
+		$Paper->supplied( $openprint::param{'supplied'} );
 		$Paper->grain_direction( $openprint::param{'grain_direction'} );
 		$Paper->taxexempt1( $openprint::param{'taxexempt1'} );
 		$Paper->taxexempt2( $openprint::param{'taxexempt2'} );
@@ -194,11 +195,11 @@ sub import_export {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	if ( $openprint::param{'btnFunction'} eq 'Export Paper' ) {
-		my @header = ( 'ID', 'Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package', 'Recommendations');
+		my @header = ( 'ID', 'Owner','Manufacturer','Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Recommendations');
 		my @data;
 
 		foreach my $Paper ( openprint::Paper::find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
-			push @data, $Paper->id(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->mulitpart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package();
+			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package(), $Paper->supplied();
 			push @data, join(',', $Paper->recommendations());
 		} # end foreach
 		misc::export_csv( $r, $log, $variable, 'paper.csv', \@header, \@data );
@@ -214,11 +215,13 @@ sub import_export {
 
 			my $ac = sql::start_transaction( $openprint::dbh );
 			my %project_types = sql::execute( $log, $dbh, 'SELECT strID, lngIndex FROM Project_Types' );
+			my %owners = map { $_->name(), $_->id() } openprint::Company::find();
+			my %papers = map { $_->id(), $_ } openprint::Paper::find();
 
 			my $csv = Text::CSV_XS->new();
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
-				my ( $paper_id, $name, $finish, $colour, $weight, $mweight, $gsm, $calliper, $type, $width, $height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $recommendations ) = misc::trim($csv->fields());
+				my ( $paper_id, $owner, $manufacturer, $name, $finish, $colour, $weight, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $recommendations ) = misc::trim($csv->fields());
 
 				next if ! $paper_id;
 
@@ -229,7 +232,9 @@ sub import_export {
 				$gsm =~ s/[^\d]//g;
 				$spp =~ s/[^\d]//g;
 
-				my $Paper = new openprint::Paper( $paper_id );
+				my $Paper = $papers{$paper_id} ? $papers{$paper_id} : new openprint::Paper();
+				$Paper->owner_id( $owners{$owner} ? $owners{$owner} : $openprint::session{'company_id'} );
+				$Paper->manufacturer( $manufacturer );
 				$Paper->name( $name );
 				$Paper->finish( $finish );
 				$Paper->colour( $colour );
@@ -240,6 +245,8 @@ sub import_export {
 				$Paper->type( $type );
 				$Paper->width( $width );
 				$Paper->height( $height );
+				$Paper->basis_width( $basis_width );
+				$Paper->basis_height( $basis_height );
 				$Paper->grain_direction( $grain_direction );
 				$Paper->perfecting( $perfecting );
 				$Paper->score_required( $scoring );
@@ -248,18 +255,13 @@ sub import_export {
 				$Paper->multipart( $multipart );
 				$Paper->bladecleaning( $scoring );
 				$Paper->grade( $scoring );
+				$Paper->supplied( $supplied );
 				$Paper->recommendations( misc::trim(split(',', $recommendations)));
 				my $rc = $Paper->save();	
 				if ( $rc ) {
 					$error .= "Error adding Paper: $rc<br>";
 					next;
 				} # end if
-
-               # Add record to audit log - action "New Paper".
-               #openprint::logs::insertLogRecord('63', "(VIA Import) Paper ID: $paper_id | Name: $name",);
-         
-               # Add record to audit log - action "Update Paper".
-               #openprint::logs::insertLogRecord('64', "(VIA Import) Paper ID: $paper_id | Name: $name",);
 			} # end foreach
 			sql::end_transaction( $openprint::dbh, $ac );
 		} else {

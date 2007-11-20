@@ -183,7 +183,11 @@
 				$html .= '+Varnish (Overall Matte)' if ( $$sig_specs{'chkVarnishOverallMatte'.$side} );
 				$html .= '/' if $side eq 'SideOne'; 
 			} # end foreach side
-		$html .= '</td><td class="docketText">&nbsp;</td><td class="docketText">&nbsp;</td><td class="docketText">&nbsp;</td><td class="docketText"><br/><br/><br/></td></tr>';
+		$html .= sprintf('</td><td class="docketText">%d</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} );
+$$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} =~ s/\D//g;
+$html .= sprintf('<td class="docketText">%s</td>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
+$html .= '<td class="docketText">&nbsp;</td>';
+$html .= '<td class="docketText"><br/><br/><br/></td></tr>';
 	} # end while service_index
 return $html;
 ) ?>
@@ -406,9 +410,9 @@ return $html;
 
 			<? echo (
 				if ( sets::isin( 'Drilling', split(',',$$variable{'BinderyServices'})) ) {
-					my %services = $$variable{'Project'}->get_services();
-					my %drill_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$variable{'ProjectIndex'}, $services{'Drilling'} );
-					return sprintf('Drill %d holes (%s&quot;)', @drill_specs{'txtHoleQty','txtHoleSize'} );
+					my $services = $$variable{'Project'}->services();
+					my $drill_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'Drilling'}[0] );
+					return sprintf('Drill %d holes (%s&quot;)', @$drill_specs{'txtHoleQty','txtHoleSize'} );
 				} # end if
 				return;
 			) ?>

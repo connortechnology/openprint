@@ -1,217 +1,127 @@
-.menubar {
-	display: block;
-	height: 22px;
-	margin: 0px;
-	margin-bottom: 10px;
-	padding: 0px;
-	padding-left: 20px;
-	padding-right: 20px;
-    left:0px;
-    z-index: 1;
-	background: url(/images/menu_fill_blue.png) repeat-x top;
-	font-size: 1.3em;
-	font-family: Arial, Helvetica, sans-serif;
-	color: #ffffff;
-	min-width: 640px;
-	margin-left: 100px;
-}
 
+ul#menubar {
+    display: block;
+	min-width: 640px;
+	height: 22px;
+
+	background-color: #ded9c2;
+	background: url(/images/menu_fill_blue.png) repeat-x top;
+    margin: 3px 0px 12px 0px;
+	margin-left: 100px;
+    padding: 0px 20px 0px 20px;
+    z-index: 6000;
+}
 @media print {
     .menubar {
         display: none;
     }
 }
 
-div.menubar .filler {
-	display: none;
-}
 
-
-
-.MenuBox {
+ul#menubar:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
     clear: both;
     visibility: hidden;
-	position: absolute;
-	/*
-padding-top:2px;
-*/
-	background-color: #ffffff;
-	z-index: 100;
-	border-right: 1px solid #9c9c9c;
-	margin: 0px;
+}
+/* Hides from IE-mac \*/
+* html ul#menubar {height: 1%;}
+* *     ul#menubar{display:block;}
+* */* End hide from IE-mac */
+ul#menubar li {
+    float: left;
+    list-style: none;
+    margin: 0px;
 	padding: 0px;
-}
-.MenuBox A {
-	background: url(/images/menu_fill_blue.png) repeat-x top;
-	float: left;
-	p\osition: relative;
-	padding-top: 3px;
-	padding-bottom: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
-    text-decoration: none;
-}
-.MenuItem {
-}
-.MenuItem A {
-	width: 100%;
-}
-.MenuBox A {
-	width: 100%;
+	border: none;
+    display: block;
 }
 
-A.menuOff {
-    background: url(/images/menu_fill_blue.png) repeat-x top;
-	color: #ffffff;
+ul#menubar li a {
+    color: #ffffff;
+    display: block;
+    width:85px;
+    padding: 3px 10px 3px 10px;
     text-decoration: none;
+	font-family: arial, helvetica, sans-serif;
+	font-size: 1.3em;
+    margin: 0px;
+    overflow: hidden;
+    text-align: left;
+    outline: 0;
 	border-left: 1px solid #9c9c9c;
-}
-A.menuOff:link, A.menuOff:visited, A.menuOff:hover, A.menuOff:active {
-	color: #ffffff;
-}
+	border-right: 1px solid #9c9c9c;
 
-A.menuOn {
-	border-left: 1px solid #9c9c9c;
-	color: #ff7f00;
 }
-A.menuOn:visited, A.menuOn:hover {
-	color: #ff7f00;
-}
-
-A.submenuOff:hover, A.submenuOff:link, A.submenuOff:active, A.submenuOff:visited {
-	color: #ffffff;
-}
-A.submenuOff {
-	float: left;
-	p\osition: relative;
-	padding-top: 3px;
-	padding-bottom: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
-	color: #ffffff;
-    text-decoration: none;
+ul#menubar li.off ul {
+    /*put the subnavs below and hide them all*/
+    display: none;
+    padding: 0px;
+    margin: 0px;
+    list-style: none;
+    position: absolute;
 	border-top: 1px solid #ffffff;
-	border-left: 1px solid #ffffff;
-	margin-right: -1px;
-}
-A.submenuOn {
-	float: left;
-	p\osition: relative;
-	padding-top: 3px;
-	padding-bottom: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
-	color: #ff7f00;
-    text-decoration: none;
-	border-top: 1px solid #ffffff;
-	border-left: 1px solid #ffffff;
-}
-A.submenuOn:hover, A.submenuOn:link, A.submenuOn:active, A.submenuOn:visited {
-	color: #ff7f00;
-}
-/*
-.Main {
-	width: 703px;
-*/
-.MenuCompany, .MenuSupport {
-	width: 60px;
-}
-#CompanyItem, #SupportItem {
-	width: 60px;
+	margin-top: 1px;
 }
 
-.MenuProjects, #ProjectMenu {
-	width: 100px;
-}
-.MenuQuotes, .MenuOrders {
-	width: 95px;
-}
-.MenuAccount {
-	width: 110px;
-}
-#AccountItem {
-	width: 80px;
-}
-#ProjectsItem , #ServicesItem {
-	width: 100px;
-}
-#QuotesItem , #OrdersItem {
-	width: 90px;
+ul#menubar li.on ul {
+    /*display the current topic*/
+    display: block;
+    padding: 0px;
+    margin: 0px;
+    list-style: none;
+    position: absolute;
 }
 
-/* Admin menu */
-
-.MenuServices, #ServicesItem {
-	width: 90px;
-}
-.MenuProducts, #ProductsItem {
-	width: 80px;
-}
-.MenuAdministrator, .MenuEquipment, .MenuMaterials, .MenuProject, .MenuPaper, .MenuManagerial, .MenuReports {
-	width: 90px;
-}
-#AdministratorItem, #EquipmentItem, #MaterialsItem, #ProjectItem, #PaperItem, #ManagerialItem, #ReportsItem {
-	width: 90px;
+ul#menubar li.on a {
+    /*change border color for active topic area*/
+	color: #ff7f00; 
 }
 
-.MenuManagerial {
-	width: 140px;
-}
-/* Employee Menu Styles */
-#HomeItem {
-	width: 45px;
-}
-A#AccountItem {
-	width: 80px;
-}
-#AccountMenu {
-	width: 110px;
-}
-#AccountMenu A {
-	width: 100%;
-}
-A#ProductionItem, #ProductionMenu {
-	width: 115px;
-}
-#ProductionMenu A {
-	width: 100%;
+ul#menubar li ul li {
+background: url(/images/menu_fill_blue.png) repeat top;
+    border: 0;
+	border-bottom: 1px solid white;
+    float: none;
+    padding: 0px;
+    margin:0px;
+    list-style: none;
+    text-align: center;
+	
 }
 
-#MarketingItem, #AccountingItem {
-	width: 90px;
+ul#menubar li.on ul li a, #menubar li.off ul li a {
+    /*ie doesn't inherit the float*/
+    color: #ffffff;
+    margin: 0px;
+    outline: 0;
+	border-left: 1px solid white;
+	border-right: 1px solid white;
 }
-.MenuProduction A {
-	width: 100%;
-}
-#ProductionMenu A#ProjectsItem {
-	width: 115px;
-}
-.MenuMarketing {
-	width: 120px;
-}
-.MenuAccounting {
-	width: 110px;
-}
-#ReportsItem, #ReportsMenu {
-	width: 80px;
-}
-#ReportsMenu A {
-	width: 100%;
+ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
+    color: #ff7f00;
 }
 
-#InventoryItem {
-	width: 90px;
-}
-#InventoryMenu {
-	width: 110px;
-}
-#InventoryMenu A {
-	width: 100%;
+ul#menubar li.off:hover ul, ul#menubar li.over ul {
+    /*  display the other topics when
+ *   *              their parent is hovered */
+    display: block;
+    z-index: 6000;
 }
 
-#SupportItem, #SupportMenu {
-	width: 75px;
+/* Sub meny entry color */
+#menubar li.off:hover a {
+    color: #ffffff;
 }
-#SupportMenu A {
-	width: 100%;
+#menubar li.off a:hover {
+    color: #ff7f00;
 }
+#menubar li:hover a {
+    color: #ff7f00;
+}
+#menubar li.over a {
+    color: #ff7f00;
+}
+

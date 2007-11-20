@@ -111,7 +111,7 @@ div.ProjectHeader fieldset p label {
     float: left;
     width: 50%;
 }
-#BleedsColourBars {
+.BleedsColourBars {
     float: left;
     width: 50%;
 }
@@ -124,10 +124,6 @@ div.ProjectHeader fieldset p label {
 }
 .VarnishCoverage input, .VarnishCoverage input[type="text"] {
     width: 35px;
-}
-.checkOption {
-    float: left;
-    width: 30%;
 }
 .bleedOption {
 	float: left;
@@ -161,7 +157,7 @@ span.SpotColour label, span.Coverages label {
 }
 .checkOption {
 	float: left;
-	width: 50%;
+	width: 30%;
 }
 .SpecialColour {
 	float: left;

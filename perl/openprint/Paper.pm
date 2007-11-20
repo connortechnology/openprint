@@ -25,7 +25,7 @@ my @fields = (
 		'owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
-		'bladecleaning','grade','grain_direction','fsc_code',
+		'bladecleaning','grade','grain_direction','fsc_code','supplied',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -113,18 +113,22 @@ sub find {
 		push @values, split 'x', $params{'size'};
 	} # end if
 	if ( $params{'width'} ) {
+		$params{'width'} =~ s/[^\d\.]//g;
 		$sql .= ' AND width=?';
 		push @values, 1*$params{'width'};
 	} # end if
 	if ( $params{'width_start'} ) {
+		$params{'width_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND width>=?';
 		push @values, 1*$params{'width_start'};
 	} # end if
 	if ( $params{'height'} ) {
+		$params{'height'} =~ s/[^\d\.]//g;
 		$sql .= ' AND height=?';
 		push @values, 1*$params{'height'};
 	} # end if
 	if ( $params{'height_start'} ) {
+		$params{'height_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND height>=?';
 		push @values, 1*$params{'height_start'};
 	} # end if
@@ -151,6 +155,27 @@ sub find {
 		} else {
 			$sql .= ' AND type=?';
 			push @values, $params{'type'};
+		} # end if
+	} # end if
+	if ( $params{'supplied'} ) {
+		if ( ref $params{'supplied'} eq 'ARRAY' ) {
+			my @options;
+			foreach my $option ( @{$params{'supplied'}} ) {
+				if ( (! defined $option ) or ($option eq '' ) ) {
+					push @options, 'supplied IS NULL';
+				} else {
+					push @options, 'supplied=?';
+					push @values, $option;
+				} # end if
+			} # end foreach
+			$sql .= ' AND ( ' . join(' OR ', @options ) . ' )';
+		} else {
+			if ( (! defined $params{'supplied'} ) or ($params{'supplied'} eq '' ) ) {
+				$sql .= ' AND supplied IS NULL';
+			} else {
+				$sql .= ' AND supplied=?';
+				push @values, $params{'supplied'} eq 'Y' ? 1 : 0;
+			} # end if
 		} # end if
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -506,7 +531,7 @@ sub owner_id {
     my $self = shift;
     if ( @_ ) {
         $$self{'owner_id'} = shift;
-        $$self{'owner_id'} =~ s/\D//g;
+        #$$self{'owner_id'} =~ s/\D//g;
     } # end if
     return $$self{'owner_id'};
 } # end sub owner
