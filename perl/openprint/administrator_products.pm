@@ -52,11 +52,11 @@ sub edit {
 		$Product = $Product->next();
 	} elsif ( $param{'btnFunction'} eq '<<' ) {
 		$Product = $Product->previous();
-	} elsif ( $param{'btnFunction'} eq 'Export' ) {
+	} elsif ( $param{'btnFunction'} eq 'Export Definitions' ) {
 	    my @header = ( 'Name', 'Description','Category', 'Tax Exempt 1','Tax Exempt2', 'Sort Order');
 	    my @data = sql::execute( $log, $dbh, 'SELECT name, description, (SELECT name from product_categories where id=category_id), taxexempt1, taxexempt2, sort FROM Products ORDER BY sort' );
     	misc::export_csv( $r, $log, $variable, 'Products.csv', \@header, \@data );
-	} elsif ( $param{'btnFunction'} eq 'Import' ) {
+	} elsif ( $param{'btnFunction'} eq 'Import Definitions' ) {
 		my $error = '';
 		if ( $openprint::param{'fileImport'} ) {
 			my $upload = $r->upload( 'fileImport' );
@@ -96,6 +96,42 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 		if ( $error ne '' ) {
 			return misc::error( $log, $dbh, $variable, 'Import errors.', $error );
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Export Specifications' ) {
+	    my @header = ( 'Product', 'Name','Value');
+	    my @data;
+		foreach my $Product ( openprint::Product::find() ) {
+			my %specs = %{$Product->specifications()};
+			foreach my $k ( keys %specs ) {
+			push @data, $Product->name(), $k, $specs{$k};
+			} # end foreach
+		} # end foreach
+    	misc::export_csv( $r, $log, $variable, 'ProductSpecifications.csv', \@header, \@data );
+	} elsif ( $param{'btnFunction'} eq 'Import Specifications' ) {
+		my $error = '';
+		if ( $openprint::param{'fileImport'} ) {
+			my $upload = $r->upload( 'fileImport' );
+			my $io = $upload->io();
+			$_ = <$io>;
+
+			my $csv = Text::CSV_XS->new();
+			my $ac = sql::start_transaction( $dbh );
+			my %products = map { $_->name(), $_ } openprint::Product::find();
+			# Clear Specifications
+			foreach my $P ( keys %products ) {
+				$products{$P}{Specifications} = ();
+			} # end foreach
+			
+			while ( <$io> ) {
+				my $status = $csv->parse($_);
+				my ( $product, $name, $value ) = misc::trim( $csv->fields() );
+				next if ! $product;
+				$products{$product}{Specifications}{$name} = $value;
+			} # end while
+
+			foreach my $P ( keys %products ) {
+				$error .= $products{$P}->save();
+			} # end foreach
+			sql::end_transaction( $dbh, $ac );
 	} # end if
 	$$variable{'Product'} = $Product;
 } # end sub edit
