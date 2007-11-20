@@ -256,11 +256,12 @@ sub signature_calc {
 
 	my $stitching_imposition = 0;
 
+	my $services = $Project->services();
+
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		$log->debug("Overriding Equipment! " . $$specs{"ddmEquipment$qty_index"});
 		@my_equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
 	} else {
-		my $services = $Project->services();
 		if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 			@my_equipment = @equipment;
 		} else {
@@ -396,7 +397,14 @@ sub signature_calc {
 	foreach my $Equipment ( @my_equipment ) {
 		next if ! $Equipment->id();
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $Equipment->name() .':';
-		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth' );
+
+		my $liftDepth;
+		if ( $$services{'UVCoating'} and (
+			( $$sig_specs{'SideOneUVCoatingType'} and $$sig_specs{'SideOneUVCoatingType'} ne 'None' ) or
+			( $$sig_specs{'SideTwoUVCoatingType'} and $$sig_specs{'SideTwoUVCoatingType'} ne 'None' ) ) ) {
+			$liftDepth = $Equipment->specification( 'Maximum Lift Depth with UVCoating' );
+		} # end if
+		$liftDepth = $Equipment->specification( 'Maximum Lift Depth' ) if ! $liftDepth;
 		$$specs{'hdnBreakdown'.$qty_index} .= "(Lift: $liftDepth)<br/>";
 		my $totalPrice = 0;
 

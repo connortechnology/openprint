@@ -52,9 +52,53 @@ sub edit {
 		$Product = $Product->next();
 	} elsif ( $param{'btnFunction'} eq '<<' ) {
 		$Product = $Product->previous();
+	} elsif ( $param{'btnFunction'} eq 'Export' ) {
+	    my @header = ( 'Name', 'Description','Category', 'Tax Exempt 1','Tax Exempt2', 'Sort Order');
+	    my @data = sql::execute( $log, $dbh, 'SELECT name, description, (SELECT name from product_categories where id=category_id), taxexempt1, taxexempt2, sort FROM Products ORDER BY sort' );
+    	misc::export_csv( $r, $log, $variable, 'Products.csv', \@header, \@data );
+	} elsif ( $param{'btnFunction'} eq 'Import' ) {
+		my $error = '';
+		if ( $openprint::param{'fileImport'} ) {
+			my $upload = $r->upload( 'fileImport' );
+			my $io = $upload->io();
+			$_ = <$io>;
+
+			my $csv = Text::CSV_XS->new();
+			my $ac = sql::start_transaction( $dbh );
+			my %categories = map { $_->name(), $_ } openprint::ProductCategory::find();
+			my %products = map { $_->name(), $_ } openprint::Product::find();
+			
+			while ( <$io> ) {
+				my $status = $csv->parse($_);
+				my ( $name, $description, $category, $taxexempt1, $taxexempt2, $sort ) = misc::trim( $csv->fields() );
+				next if ! $name;
+				if ( ! $categories{$category} ) {
+					$categories{$category} = new openprint::ProductCategory();
+					$categories{$category}->name( $category );
+					$categories{$category}->save();
+				} # end if
+				my %sql = (
+					'name'			=>	$name,
+					'description'	=>	$description,
+					'category_id'	=>	$categories{$category}->id(),
+					'taxexempt1'	=>	$taxexempt1,
+					'taxexempt2'	=>	$taxexempt2,
+					'sort'			=>	$sort,
+				);
+				my $Product = $products{$name} ? $products{$name} : new openprint::Product();
+$openprint::log->debug( "Product? $name :" . $products{$name} );
+				$error .= $Product->save( \%sql );
+			} # end while
+			sql::end_transaction( $dbh, $ac );
+		} else {
+			$log->warn( "No file given to upload." );
+		} # end if
+		if ( $error ne '' ) {
+			return misc::error( $log, $dbh, $variable, 'Import errors.', $error );
+		} # end if
 	} # end if
 	$$variable{'Product'} = $Product;
-} # end sub defaults_edit
+} # end sub edit
 
 sub categories {
 	$variable{'ProductCategory'} = new openprint::ProductCategory( $param{'id'} );

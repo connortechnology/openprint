@@ -129,6 +129,9 @@ sub save_service {
 		} # end if
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
+	if ( $service_type eq 'UVCoating' ) {
+		openprint::Estimating::UVCoating::save( $project_index, $service_index, \%openprint::param );
+	} # end if
 
 	$log->debug("***** END  OF  save_service ************");
 } # end sub save_service
@@ -565,6 +568,9 @@ sub summary {
 				$side_one_coatings .= '+Varnish (Overall Matte)';
 				$side_one_colours -= 1;
 			} # end if
+			if ( $$specs{'SideOneUVCoatingType'} and $$specs{'SideOneUVCoatingType'} ne 'None' ) {
+				$side_one_coatings .= '+' . $$specs{'SideOneUVCoatingType'} . 'UV';
+			} # end if
 
 			my $side_two_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideTwo'));
 			my $side_two_coatings;
@@ -589,6 +595,9 @@ sub summary {
 			if ( $$specs{'chkVarnishOverallMatteSideTwo'} ) {
 				$side_two_coatings .= '+Varnish (Overall Matte)';
 				$side_two_colours -= 1;
+			} # end if
+			if ( $$specs{'SideTwoUVCoatingType'} and $$specs{'SideTwoUVCoatingType'} ne 'None' ) {
+				$side_two_coatings .= '+' . $$specs{'SideTwoUVCoatingType'} . 'UV';
 			} # end if
 
 			return sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s}, 
