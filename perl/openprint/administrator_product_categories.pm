@@ -10,6 +10,10 @@ sub list {
 		$ProductCategory->save( \%openprint::param );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		$ProductCategory->delete();
+	} elsif ( $openprint::param{'btnFunction'} eq 'Export' ) {
+	    my @header = ( 'Name', 'Description');
+	    my @data = sql::execute( $log, $dbh, 'SELECT name, description FROM Product_Categories' );
+    	misc::export_csv( $r, $log, $variable, 'Product_Categories.csv', \@header, \@data );
 	} # end if
 } # end sub list
 
