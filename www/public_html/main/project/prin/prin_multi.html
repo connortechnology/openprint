@@ -95,28 +95,12 @@
 							$$variable{$name.1} = $value;
 						} # end while
 					} # end if
-<<<<<<< HEAD:www/public_html/main/project/prin/prin_multi.html
 				} # end if
 				if ( ! sets::isin( 2, \@Groups ) ) {
 					# Ensure 1 interior pages
 					push @Groups, 2;
 					# Load Defaults
 					if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
-=======
-					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
-					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/bleeds_colourbars.html' );
-					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
-					return variable_substitution( $r, $log, $dbh, \$html, $variable );
-					) ?>
-			</fieldset><br class="spacer"/>
-			<fieldset><legend>Information for Interior Pages</legend>
-				<? echo ( 
-					$$variable{'Signature'} = 'InteriorSpreads';
-					if ( ! $$variable{'Project'}->signatures('Interior Spreads') ) {
-						# Load Defaults
-						if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
->>>>>>> 3d7287bf0faf3ea5e85d970bc90dde3a0c7773ba:www/public_html/main/project/prin/prin_multi.html
-
 						$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
 						my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
 						while ( my ( $name, $value ) = splice @defaults,0,2 ) {
@@ -124,7 +108,6 @@
 						} # end while
 					} # end if
 				} # end if
-$openprint::log->debug("Groups: @Groups ");
 				my $html = '';
 				foreach my $Group ( @Groups ) {
 					$$variable{'Group'} = $Group;

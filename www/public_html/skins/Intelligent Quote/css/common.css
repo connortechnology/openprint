@@ -187,7 +187,24 @@ fieldset {
 	border-right: none;
 	border-left: none;
 	border-bottom: none;
+	padding: 2px;
+margin: 0px;
+padding-bottom: 10px;
 }
+fieldset:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html fieldset {height: 1%;}
+* fieldset {display: block;}
+/* End hide from IE-mac */
+
 fieldset legend {
 	color: #ff7f00;
 	font-weight: bold;
@@ -209,7 +226,7 @@ fieldset p:after {
 /* Hides from IE-mac \*/
 * html fieldset p {height: 1%;}
 * fieldset p {display:block;}
-*/* End hide from IE-mac */
+/* End hide from IE-mac */
 
 
 fieldset p label {
@@ -255,12 +272,6 @@ fieldset p input {
 fieldset p input[type="text"], fieldset p input[type="password"]  {
     width: 40%;
 }
-.QuoteInformation fieldset p input {
-    width: expression( (this.type=="text" || this.type=="password") ?'70%':'auto');
-}
-.QuoteInformation fieldset p input[type="text"] {
-    width: 70%;
-}
 fieldset p input[type="radio"] {
 /*
     margin-top: 3px;
@@ -285,21 +296,6 @@ fieldset.filters p input[type="text"] {
     width: auto;
 }
 
-div.QuoteHeader {
-    float: left;
-    width: 32%;
-    margin-right: .5em;
-}
-div.QuoteHeader fieldset p {
-    text-align: right;
-}
-div.QuoteHeader fieldset p label {
-    font-weight: bold;
-    margin-right: 10px;
-    float: left;
-    width: auto;
-    text-align: left;
-}
 .CompanyProfile fieldset {
 	margin-bottom: 5px;
 }

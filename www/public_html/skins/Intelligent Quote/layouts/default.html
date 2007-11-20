@@ -9,6 +9,12 @@
 		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
+		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
+		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
 		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
 		<script type="text/javascript" src="/javascripts/popups.js"></script>
@@ -16,6 +22,7 @@
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
+		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
 		<!--<LINK REL="SHORTCUT ICON" HREF="/favicon.ico">-->
 	</head>
 	<body onLoad="if ( typeof(body_onLoad) == 'function' ) body_onLoad();try { if (displayUploadResults) { displayUploadResults(); } } catch (theError){ return false; }">
