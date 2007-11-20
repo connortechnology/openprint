@@ -213,14 +213,14 @@ $dbh->do(q{alter table users add howdidyouhearaboutusother text});
 	sql::end_transaction( $dbh, $ac );
 	$version = 1895;
 } # end if
-if ( $version < 1896 ) {
-	print "Updating to version 1896\n";
+if ( $version < 1897 ) {
+	print "Updating to version 1897\n";
 	my $ac = sql::start_transaction( $dbh );
 $dbh->do(q{alter table products rename column ysntaxexempt1 to taxexempt1});
 $dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
-	sql::insert( undef, undef, 'database_info', 'version', 1896, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1897, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
-	$version = 1896;
+	$version = 1897;
 } # end if
 
 

@@ -72,7 +72,7 @@ sub edit {
 				my $status = $csv->parse($_);
 				my ( $name, $description, $category, $taxexempt1, $taxexempt2, $sort ) = misc::trim( $csv->fields() );
 				next if ! $name;
-				if ( ! $categories{$category} ) {
+				if ( $category and ! $categories{$category} ) {
 					$categories{$category} = new openprint::ProductCategory();
 					$categories{$category}->name( $category );
 					$categories{$category}->save();
@@ -80,7 +80,7 @@ sub edit {
 				my %sql = (
 					'name'			=>	$name,
 					'description'	=>	$description,
-					'category_id'	=>	$categories{$category}->id(),
+					'category_id'	=>	$category ? $categories{$category}->id() : undef,
 					'taxexempt1'	=>	$taxexempt1,
 					'taxexempt2'	=>	$taxexempt2,
 					'sort'			=>	$sort,

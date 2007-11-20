@@ -7,6 +7,7 @@ require openprint::logs;
 
 require sql;
 
+my $debug = 1;
 # This is a whole new style of Product.  A paper refers to all sheet sizes
 
 # Returns a paper object specified by the parameters
@@ -34,6 +35,8 @@ sub find {
 	if ( ! $data ) {
 		$openprint::log->error("Error loading Products: ($sql) (@values)");
 		return;
+	} elsif ( $debug ) {
+		$openprint::log->error("Loading Products: ($sql) (@values) " . @$data );
 	} # end if
 	return map { new openprint::Product( $_->{id}, $_ ); } @$data;
 } # end sub find

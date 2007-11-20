@@ -88,9 +88,9 @@ sub getPrices {
 		push @prices, openprint::PaperPrice::find( 'pricelist_id'=>$$self{'id'} );
 	} # end if
 	if ( ( ! $type ) or $type eq 'Product' ) {
-		my @indexes = sql::execute( $openprint::log, $openprint::dbh, q{SELECT id FROM Product_Prices WHERE pricelist_id=?}, $$self{'id'} );
+		my @indexes = sql::execute( undef, undef, q{SELECT id FROM Product_Prices WHERE pricelist_id=?}, $$self{'id'} );
 		while ( @indexes ) {
-			push @prices, new openprint::ProductPrice( $openprint::log, $openprint::dbh, shift @indexes );
+			push @prices, new openprint::ProductPrice( shift @indexes );
 		} # end while
 	} # end if
 	return @prices;
