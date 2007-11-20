@@ -1,4 +1,4 @@
-<form name="f1" id="f1" action="list.html" method="post">
+<form name="f1" method="post" enctype="multipart/form-data" action="list.html">
 	<input type="hidden" name="category_id" value="<? echo ( $openprint::param{'category_id'} ) ?>" />
 	<fieldset>
 		<legend>
@@ -29,6 +29,14 @@
 			ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.btnFunction.value='Copy';f1.action='edit.html';f1.submit();", '', 'Copy' ),
 			ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
 			); ) ?>
+		</p>
+		<p class="buttons">
+				<b>CSV File:</b>
+				<input type="file" name="fileImport" />
+	<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();",'','Import'),
+				ssi::writeButton( $log, $dbh, 'Export','export.gif',"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();",'','Export'),
+	); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction" />
