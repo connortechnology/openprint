@@ -102,7 +102,7 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 		foreach my $Product ( openprint::Product::find() ) {
 			my %specs = %{$Product->specifications()};
 			foreach my $k ( keys %specs ) {
-			push @data, $Product->name(), $k, $specs{$k};
+				push @data, $Product->name(), $k, $specs{$k};
 			} # end foreach
 		} # end foreach
     	misc::export_csv( $r, $log, $variable, 'ProductSpecifications.csv', \@header, \@data );
@@ -132,6 +132,7 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 				$error .= $products{$P}->save();
 			} # end foreach
 			sql::end_transaction( $dbh, $ac );
+		} # end if
 	} # end if
 	$$variable{'Product'} = $Product;
 } # end sub edit
