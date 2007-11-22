@@ -139,7 +139,6 @@ sub calc {
 				next;
 			} # end if
 			if ( sets::isin( $servicePrice{'units'}, 'Per M', 'Per 1000' ) ) {
-				$qty *= $$printing_specs{'txtTotalSpreadQuantity'}*2 if $$printing_specs{'txtTotalSpreadQuantity'};
 				my $runs = ceil( $$specs{'txtHoleQty'} / $Equipment->specification('Number of Drills'));
 				%servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Drilling', $runs * $qty, $Equipment);
 

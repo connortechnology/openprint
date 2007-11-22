@@ -156,6 +156,7 @@ sub calc {
 			$totalSetupPrice += $Price{'SetupPrice'};
 			$totalServicePrice += $Price{'ServicePrice'};
 			$totalMaterialPrice += $Price{'MaterialPrice'};
+			$status = 'uncalculated' if $Price{'Status'} eq 'uncalculated';
 		} # end foreach
 
 		my $price = 0;

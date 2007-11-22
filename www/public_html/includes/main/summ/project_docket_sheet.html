@@ -158,7 +158,7 @@
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
 			} # end if
 			$html .= '</td><td class="docketText">';
-			$html .= ($$sig_specs{'txtSignatureSpreadQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$variable{'txtSpreadSize'} ) . 'pp ' if ( $$sig_specs{'txtSignatureType'} ne '' );
+			$html .= $$sig_specs{'PageQuantity'.$$variable{'Project'}->ordered_quantity_index()}. 'pp ' if $$sig_specs{'txtSignatureType'} ne '';
 			$html .= sprintf('%2$dout %1$s', @$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index(), 'txtImposition'.$$variable{'Project'}->ordered_quantity_index()} );
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {

@@ -339,7 +339,7 @@ sub project_view {
 	$$variable{'OrderID'} = $order_id;
 
 	if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
-		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf()->toString()] );
+		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf(1.2)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export MXML' ) {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [new openprint::MXML($Project)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
