@@ -172,7 +172,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 <br class="spacer"/>
 <br/>
 <div style="float:left; p\osition: relative; height: 19px;">
-	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', "f1.action='/main/project/summary.html';f1.btnFunction.value='Project Summary';f1.submit();", '', 'Summary' ); ) ?>
+	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', '', '/main/project/summary.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Summary' ); ) ?>
 	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();", '', 'Delete' ); ) ?>

@@ -69,7 +69,7 @@ sub no_outputs {
 sub neccessary {
 	my ( $Project ) = @_;
 
-	my $finished_weight = openprint::print::get_finished_weight( $openprint::log, $openprint::dbh, $Project->id() );
+	my $finished_weight = openprint::print::get_finished_weight( $Project->id() );
 	foreach my $qty_index ( 1 .. 3 ) {
 	if ( $finished_weight * $$Project{'quantity'.$qty_index} > 1500 ) {
 		return 1;
@@ -103,11 +103,11 @@ sub calc {
 		$$specs{'alert'} .= "Dimensions of project are not known. Please enter them.";
 		return 'uncalculated';
 	} # end if
-	$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $log, $dbh, $project_index );
+	$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	if ( ! $$specs{'txtFinishedCalliper'} ) {
 		return 'uncalculated';
 	} # end if
-	$$specs{'txtFinishedWeight'} = 1 * openprint::print::get_finished_weight( $log, $dbh, $project_index, 1 );
+	$$specs{'txtFinishedWeight'} = 1 * openprint::print::get_finished_weight( $project_index, 1 );
 	if ( ! $$specs{'txtFinishedWeight'} ) {
 		return 'uncalculated';
 	} # end if

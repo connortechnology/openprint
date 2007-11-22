@@ -289,7 +289,7 @@ sub calc {
 
 	#At this point, if the job supports 2out impo, our setup is 2out.  This may change later, depending on the equipment's ability to support 2out stitching
 
-	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $log, $dbh, $project_index );
+	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
 
 	my $plusCover = 0;
 	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {

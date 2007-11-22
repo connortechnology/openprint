@@ -575,8 +575,7 @@ sub get_insert_specs {
 } # end sub
 
 sub get_finished_weight {
-	my ( $log, $dbh, $project_index ) = @_; 
-	my $debug = 0;
+	my ( $project_index ) = @_; 
 	my $project_weight;
 
 	my $Project = new openprint::Project( $project_index );
@@ -591,7 +590,7 @@ sub get_finished_weight {
 			last;
 		} # end foreach
 	} # end foreach
-	$log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{'WeightMarkup'}/100));
+	#$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{'WeightMarkup'}/100));
 	
 	# This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
 	return $project_weight * (1+$openprint::config{'WeightMarkup'}/100);
@@ -600,7 +599,7 @@ sub get_finished_weight {
 
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
-	my ( $log, $dbh, $project_index, $folding_service_index, $project_type ) = @_; 
+	my ( $project_index, $folding_service_index, $project_type ) = @_; 
 	$log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE $project_type *********************************");
 
 	my $Project = new openprint::Project( $project_index );

@@ -4,7 +4,7 @@
 		my $html;
 		foreach my $qty_index ( 1 .. 3 ) {
 			next if ! $$variable{'txtQuantity'.$qty_index};
-			$html .= '<span class="value">'.$$variable{'ddmBleedSize'.$qty_index}."inches</span>\n";
+			$html .= '<span class="value">'.$$variable{'ddmBleedSize'.$qty_index}."&quot;</span>\n";
 		} # end foreach
 		return $html;
 	) ?>

@@ -68,7 +68,7 @@ sub calc {
 	} # end if
 
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
-		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $log, $dbh, $project_index );
+		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 		@outputs = sets::union( 'txtFinishedCalliper', @outputs );
 	} else {
 		@outputs = sets::exclude( ['txtFinishedCalliper'], \@outputs );
