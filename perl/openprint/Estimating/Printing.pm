@@ -1697,7 +1697,8 @@ sub calc_price {
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
 	my %folding_results;
 
-	if ( $$project{'HasFolding'} ) {
+	# Has to be NEED because they always leave folding out, and it chooses dumb impositions
+	if ( $$project{'NeedFolding'} ) {
 #my $time = gettimeofday();
 		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
 #$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );

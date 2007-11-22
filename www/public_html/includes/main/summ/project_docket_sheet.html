@@ -183,13 +183,26 @@
 				$html .= '+Varnish (Overall Matte)' if ( $$sig_specs{'chkVarnishOverallMatte'.$side} );
 				$html .= '/' if $side eq 'SideOne'; 
 			} # end foreach side
-		$html .= sprintf('</td><td class="docketText">%d</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} );
-$$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} =~ s/\D//g;
-$html .= sprintf('<td class="docketText">%s</td>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
-$html .= '<td class="docketText">&nbsp;</td>';
-$html .= '<td class="docketText"><br/><br/><br/></td></tr>';
+
+		my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs );
+
+		if ( $Paper->type() eq 'Roll' ) {
+my @Equipment = openprint::Equipment::find('strid'=> $$sig_specs{'UsePress'} );
+if ( @Equipment ) {
+			$html .= sprintf('</td><td class="docketText">%dimps<br/>%d lbs</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} * $Paper->width() * $Equipment[0]->specification('Cut Off') * $Paper->wpsi() );
+} else {
+			$html .= sprintf('</td><td class="docketText">%d</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} );
+} # end if
+			$html .= sprintf('<td class="docketText">%dimps<br/>%s</td>', $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
+		} else {
+			$html .= sprintf('</td><td class="docketText">%d</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} );
+			$html .= sprintf('<td class="docketText">%s</td>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
+		} # end if
+		
+		$html .= '<td class="docketText">&nbsp;</td>';
+		$html .= '<td class="docketText"><br/><br/><br/></td></tr>';
 	} # end while service_index
-return $html;
+	return $html;
 ) ?>
 	<tr>
 		<td align="center"><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F<? echo ( ++$$variable{'SignatureIndex'} ) ?>+&NoText=1&Height=20"/></td>
