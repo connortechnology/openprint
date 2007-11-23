@@ -562,6 +562,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 			$$specs{'alert'} .= 'Please select the grade of stock';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
+		$$specs{'StockType'} =~ s/^\s*(\w*)\s*$/$1/;
 		if ( ! $$specs{'StockType'} ) {
 			$$specs{'alert'} .= 'Please select the stock format';
 			return $$specs{'Status'} = 'uncalculated';
@@ -1227,6 +1228,11 @@ my %best_price = %{$b_price};
 			$$specs{'txtPressSheetQty'.$qty_index} = $best_price{'Gross Sheet Count'} .'sheets';
 			$$specs{'hdnNetSheetCount'.$qty_index} = $best_price{'Net Sheet Count'};
 			$$specs{'SheetQuantity'.$qty_index} = $best_price{'Gross Sheet Quantity'};
+		} else {
+			$$specs{'txtPressSheetQty'.$qty_index} = 0;
+			$$specs{'hdnNetSheetCount'.$qty_index} = 0;
+			$$specs{'SheetQuantity'.$qty_index} = 0;
+			$$specs{'alert'} = 'Error: Unknown stock type.';
 		} # end if
 #$$specs{'hdnPaperPrice'.$qty_index} = $best_price{'Paper Price'};
 		$$specs{'hdnSuppliedStockWidth'.$qty_index} = $Paper->start_width();
@@ -1327,7 +1333,6 @@ sub get_project_price {
 				$SpreadLayout = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 			} # end if
 		} # end if
-		$debug = 1;
 		if ( $SpreadLayout > 0 ) {
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
@@ -1338,7 +1343,6 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after con
 			@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $$project{'FoldingSpecs'}, $specs, $qty_index ) } @impositions;
 $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 		} # end if Folding
-		$debug = 0;
 		
 		my $pms_prices = get_special_colours_price( $openprint::log, $openprint::dbh, $openprint::variable, $P, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
@@ -1512,11 +1516,11 @@ sub check_price {
 		#$p *= ( 1 + $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$Imposition->spreads() );
 	#} # end if
 
+$openprint::log->debug("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 	#if ( $price_to_beat > $p ) {
 	if ( $price_to_beat > $$price{'Comparison Cost'} ) {
 		return 0;
 	} # end if
-$openprint::log->debug("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 	return 1;
 } # end sub
 
