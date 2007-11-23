@@ -48,7 +48,7 @@
 				<label class="radio" for="StockType<?Signature?>Roll">Roll</label>
 			</p>
 <? else ( @{$$variable{'PaperTypes'}} > 1 ) ?>
-	<input type="hidden" name="StockType<?Signature?>" />
+	<input type="hidden" name="StockType<?Signature?>" value="<? echo ( $$variable{'StockType'.$$variable{'Signature'}} ? $$variable{'StockType'.$$variable{'Signature'}} : $$variable{'PaperTypes'}[0] ) ?> " />
 <? endif ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<p id="SpecificStockSize<?Signature?>">
 				<label>Size:</label>
