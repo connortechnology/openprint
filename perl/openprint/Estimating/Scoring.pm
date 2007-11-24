@@ -156,6 +156,7 @@ sub calc {
 			$totalSetupPrice += $Price{'SetupPrice'};
 			$totalServicePrice += $Price{'ServicePrice'};
 			$totalMaterialPrice += $Price{'MaterialPrice'};
+			$status = 'uncalculated' if $Price{'Status'} eq 'uncalculated';
 		} # end foreach
 
 		my $price = 0;
@@ -252,11 +253,13 @@ $openprint::log->debug("sign calc");
 	my $imposition = new openprint::Imposition();
 	$imposition->load( $sig_specs, $qty_index );
 
+	if ( 1 ) {
 	# IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $imposition->runstyle() eq 'Work & Turn' ) {
 		$imposition->columns( $imposition->columns()/2 );
 	} elsif ( $imposition->runstyle() eq 'Work & Tumble' ) {
 		$imposition->rows( $imposition->rows()/2 );
+	} # end if
 	} # end if
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {

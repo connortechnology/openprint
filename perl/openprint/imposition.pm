@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -694,6 +694,8 @@ sub convert_impositions {
 				$newimp->columns($cols);
 				$newimp->imposition($rows * $cols);
 				#$newimp->spreads( $signature_size );
+				$newimp->image_width( $newimp->image_width() * $col );
+				$newimp->image_height( $newimp->image_height() * $row );
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				#$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
