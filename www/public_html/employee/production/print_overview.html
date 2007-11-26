@@ -317,6 +317,8 @@
 		<p class="buttons">
 				<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ); ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
 		</p>
 		</div>
 	</fieldset>
