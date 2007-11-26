@@ -1,0 +1,42 @@
+<form name="AddDocketForm" action="/employee/production/print_overview.html" method="post">
+	<input type="hidden" name="btnFunction" value="Add Docket" />
+	<fieldset><legend>Create New Docket</legend>
+		<p><label>Company:</label>
+		<select name="company_id">
+			<? echo ( openprint::Company::get_dropdown( $openprint::session{'company_id'} ); ) ?>
+		</select>
+		</p>
+		<p><label>Comment:</label>
+			<textarea name="Comment" rows="5"></textarea>
+		</p>
+	<!--
+		<p><label>DueDate:</label>
+	<? eval ( @$variable{'DueDateYears','DueDateMonths','DueDateDays','DueDate'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() ); ) ?>
+			<span class="DateSelector">
+			<select name="DueDateYear"><?DueDateYears?></select>
+			<select name="DueDateMonth"><?DueDateMonths?></select>
+			<select name="DueDateDay"><?DueDateDays?></select>
+			</span>
+		</p>
+	-->
+		<p><label>Forms:</label>
+			<input type="text" name="forms" value="1" size="2" />
+		</p>
+		<p><label>Press:</label>
+			<select name="press_id">
+			
+		<? echo ( ssi::make_drop_down( [map { $_->id(), $_->name() } openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)') ] ) ) ?>
+			</select>
+		</p>
+		<p><label>Impressions:</label>
+			<input type="text" name="impressions" value="" size="7" />
+		</p>
+		<p><label>Runtime:</label>
+			<input type="text" name="runtime" value="" size="7" />
+		</p>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'AddDocketForm.submit();', '', 'Submit' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'contentWin.destroy();', '', 'Cancel' ); ) ?>
+		</p>
+	</fieldset>
+</form>

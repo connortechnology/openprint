@@ -25,7 +25,52 @@ sub print_overview {
 sub press_schedule {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	if ( $openprint::param{'btnFunction'} eq 'JumpToDate' ) {
+	if ( $openprint::param{'btnFunction'} eq 'Add Docket' ) {
+		my $Project = new openprint::Project();
+		$Project->save();
+		$Project->company_id( $openprint::param{'company_id'} );
+		$Project->reference( 'Dummy Docket' );
+		$Project->status( 'Approved' );
+		$Project->design( 'ElectronicFile' );
+		$Project->save();
+		openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
+		my $project_id = $Project->id();
+
+		my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'AdditionalSignature' );
+		$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_id );
+		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
+		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
+		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', ++$signature_count );
+
+		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtEmployeeComments', $openprint::param{'Comment'} );
+		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureQuantity', $openprint::param{'forms'} );
+		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $openprint::param{'impressions'} );
+
+		my $Equipment = new openprint::Equipment( $openprint::param{'press_id'} );
+		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
+
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'AdditionalSignature' ) );
+
+		my ( $h, $m, $s ) = split ':', $openprint::param{'runtime'};
+		$h =~ s/\D//g;
+		$m =~ s/\D//g;
+		$s =~ s/\D//g;
+		$s = 59 if ( $s > 59 );
+		$m = 59 if ( $m > 59 );
+		
+
+		# Dumps it in pending
+		sql::insert( $log, $dbh, 'Schedule',
+				'ProjectIndex', $Project->id(),
+				'ServiceIndex', $service_id,
+				'StartTime',    undef,
+				'equipment_id', $openprint::param{'press_id'},
+				'RunTime',      join(':', $h, $m, $s ),
+				);
+
+		%openprint::param = ();
+	} elsif ( $openprint::param{'btnFunction'} eq 'JumpToDate' ) {
 		my $service_index = $openprint::param{'ServiceIndex'};
 		my $date = $openprint::param{"ScheduleDate-$service_index"};
 		sql::update( $log, $dbh, 'Schedule', "ServiceIndex=$service_index", 'starttime', $date );
