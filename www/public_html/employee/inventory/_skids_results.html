@@ -1,6 +1,7 @@
 <? eval (
+	require openprint::StockPurpose;
    if ( $openprint::param{StartYear} ) {
-		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
+		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','purpose_id' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 				$openprint::session{'/employee/inventory/skids.html?'.$key} = join(';', @{$openprint::param{$key}} );
 			} else {
@@ -39,6 +40,7 @@
 			'/employee/inventory/skids.html?UpdatedEndDay'} ) : undef,
 		'allocated_to_docket'	=>	$openprint::session{'/employee/inventory/skids.html?Docket'},
 		'fsc_code'				=>	$openprint::session{'/employee/inventory/skids.html?fsc_code'},
+		'purpose_id'			=>	$openprint::session{'/employee/inventory/skids.html?purpose_id'},
 		'order'		=>	'id',
 		);
 ) ?>
@@ -59,11 +61,15 @@
 			my $rowclass;
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
 				my $empty = 1;
-				foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-					if ( $$Skid{'Paper'}{$paper_id} > 0 ) {
+				my $iftype = 0;
+				foreach my $c ( $Skid->contents() ) {
+					if ( $c->quantity() > 0 ) {
 						$empty = 0;
-						last;
 					} # end if
+                    my $Paper = new openprint::Paper( $c->paper_id() );
+                    if ( sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/skids.html?Type'} ) ) ) {
+                        $iftype = 1;
+                    } # end if
 				} # end foreach
 				if ( $openprint::session{'/employee/inventory/skids.html?empty'} ne 'Y' ) {
                     next if $empty;
@@ -71,17 +77,7 @@
                 if ( $openprint::session{'/employee/inventory/skids.html?notempty'} ne 'Y' ) {
                     next if ! $empty;
                 } # end if
-				my $iftype = 0;
-                foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-                    my $Paper = new openprint::Paper( $paper_id );
-                    if ( sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/skids.html?Type'} ) ) ) {
-                        $iftype = 1;
-                        last;
-                    } # end if
-                } # end foreach
                 next if ! $iftype;
-
-
 
 				$html .= "<tr$rowclass>";
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
@@ -102,12 +98,13 @@
 				} # end while
 				$html .= '</td>';	
 				$html .= '<td>';
-				foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-					my $Paper = new openprint::Paper( $paper_id );
-					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s - %d %s</a><br/>',
+				foreach my $c ( $Skid->contents() ) {
+					my $Paper = new openprint::Paper( $c->paper_id() );
+					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s %s - %d %s</a><br/>',
 					$$Skid{'id'},
 					$Paper->to_string(),
-					$$Skid{'Paper'}{$paper_id},
+					new openprint::StockPurpose( $c->purpose_id() )->name(),
+					$c->quantity(),
 					$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
 					);
 				} # end foreach

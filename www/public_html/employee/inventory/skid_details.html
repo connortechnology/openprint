@@ -110,6 +110,7 @@ function loadPaper(results) {
 	ddm_select_by_value( form.ddmColour, Paper['colour_id'] );
 	ddm_select_by_value( form.ddmWeight, Paper['weight_id'] );
 	ddm_select_by_value( form.ddmQuality, Paper['quality_id'] );
+	ddm_select_by_value( form.purpose_id, Paper['purpose_id'] );
 	form.mweight.value = Paper['mweight'];
 	form.gsm.value = Paper['gsm'];
 	form.width.value = Paper['width'];
@@ -226,7 +227,7 @@ The following errors occurred:<br/>
 				<select id="ddmLocation" name="ddmLocation">
 					<? echo ( 
 						my @data = ( '', 'select', sql::execute( $log, $dbh, q{SELECT id, name FROM Locations ORDER BY lower(name)} ) );
-						return ssi::make_drop_down( \@data, $$variable{'Skid'} ? $$variable{'Skid'}->location_id() : $r->param('ddmLocation') );
+						return ssi::make_drop_down( \@data, $$variable{'Skid'} ? $$variable{'Skid'}->location_id() : $openprint::param{'ddmLocation'} );
 						) ?>
 				</select>
 				<? echo ( join('',
@@ -243,9 +244,9 @@ The following errors occurred:<br/>
 			<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'saveLeft', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", '', 'Save' ); ) ?>
 			</p>
-			<? endif ( ! $$variable{'Skid'}->id() ) ?>
-
+			<? else ( ! $$variable{'Skid'}->id() ) ?>
 			<!--#include virtual="/employee/inventory/_skid_contents.html"-->
+			<? endif ( ! $$variable{'Skid'}->id() ) ?>
 		</div><!-- column -->
 		<div class="column">
 			<fieldset><legend onclick="toggleContent( 'AddPaper', '/employee/inventory/_add_paper_show.html', null, '/employee/inventory/_add_paper_hide.html' );">Add Paper - click to hide/show</legend>
@@ -274,10 +275,10 @@ The following errors occurred:<br/>
 	</fieldset>
 </form>
 <? if ( $$variable{'skid_id'} ) ?>
-<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<?skid_id?>) );">Allocations - click to hide/show</legend>
+<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', {skid_id:<?skid_id?>} );">Allocations - click to hide/show</legend>
 <div id="Allocations" style="display: none;"></div>
 </fieldset>
-<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', new Array('skid_id',<?skid_id?>) );">Inventory Log - click to hide/show</legend>
+<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id:<?skid_id?>} );">Inventory Log - click to hide/show</legend>
 <div id="Log" style="display: none;"></div>
 </fieldset>
 <? endif ( $$variable{'skid_id'} ) ?>

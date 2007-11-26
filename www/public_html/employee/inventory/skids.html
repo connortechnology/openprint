@@ -35,8 +35,6 @@ Please select a Skid to view/edit.<br>
 			<select name="StartYear"><option value="">select</option><?StartYears?></select>
 			<select name="StartMonth"><option value="">select</option><?StartMonths?></select>
 			<select name="StartDay"><option value="">select</option><?StartDays?></select>
-			</span>
-			<span class="DateSelector">
 			 -
 			</span>
 			<span class="DateSelector">
@@ -51,8 +49,6 @@ Please select a Skid to view/edit.<br>
 			<select name="UpdatedStartYear"><option value="">select</option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/skids.html?UpdatedStartYear'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedStartYear'} : ''); ) ?></select>
 			<select name="UpdatedStartMonth"><option value="">select</option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/skids.html?UpdatedStartMonth'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedStartMonth'} : ''); ) ?></select>
 			<select name="UpdatedStartDay"><option value="">select</option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/skids.html?UpdatedStartDay'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedStartDay'} : ''); ) ?></select>
-			</span>
-			<span class="DateSelector">
 			 -
 			</span>
 			<span class="DateSelector">
@@ -60,6 +56,15 @@ Please select a Skid to view/edit.<br>
 			<select name="UpdatedEndMonth"><option value="">select</option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/skids.html?UpdatedEndMonth'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedEndMonth'} : ''); ) ?></select>
 			<select name="UpdatedEndDay"><option value="">select</option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/skids.html?UpdatedEndDay'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedEndDay'} : ''); ) ?></select>
 			</span>
+		</p>
+		<p>
+			<label>Purpose:</label>
+			<select name="purpose_id">
+				<option value=""> all </option>
+				<? echo (
+					return ssi::make_drop_down( [ sql::execute( undef, undef, q{SELECT id,name FROM StockPurposes ORDER BY lower(name)} ) ], $openprint::session{'/employee/inventory/skids.html?purpose_id'} );
+				) ?>
+			</select>
 		</p>
 		<p>
 			<label>Docket:</label>

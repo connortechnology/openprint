@@ -222,6 +222,34 @@ $dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
 	sql::end_transaction( $dbh, $ac );
 	$version = 1897;
 } # end if
+if ( $version < 1898 ) {
+	print "Updating to version 1898\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{CREATE SEQUENCE StockPurposes_id_seq});
+$dbh->do(q{CREATE TABLE StockPurposes (
+    id  INTEGER NOT NULL default nextval('StockPurposes_id_seq'),
+    name   TEXT NOT NULL,
+    PRIMARY KEY (id)
+)});
+$dbh->do(q{alter table skid_contents add purpose_id integer});
+$dbh->do(q{alter table skid_contents add foreign key (purpose_id) references stockpurposes (id)});
+$dbh->do(q{insert into stockpurposes (name) values ('House Stock')});
+$dbh->do(q{insert into stockpurposes (name) values ('Job Stock')});
+$dbh->do(q{insert into stockpurposes (name) values ('Sample')});
+
+	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1898;
+} # end if
+if ( $version < 1899 ) {
+	print "Updating to version 1898\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter table skid_contents add primary key (skid_id, paper_id)});
+$dbh->do(q{drop index "skid_contents_skid_id_index"});
+	sql::insert( undef, undef, 'database_info', 'version', 1899, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1899;
+} # end if
 
 
 $dbh->disconnect();

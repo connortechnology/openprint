@@ -600,7 +600,7 @@ sub get_finished_weight {
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
 	my ( $project_index, $folding_service_index, $project_type ) = @_; 
-	$log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE $project_type *********************************");
+	#$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE $project_type *********************************");
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
@@ -645,7 +645,7 @@ sub get_finished_calliper {
 				$finished_calliper += $pages * $$sig_specs{'txtSpecificStockCalliper'};
 		} # end if
 	} # end foreach
-$log->debug("Calliper: $finished_calliper");
+#$openprint::log->debug("Calliper: $finished_calliper");
 	return $finished_calliper;
 } # end sub get_finished_calliper
 

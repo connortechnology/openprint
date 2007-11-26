@@ -139,7 +139,6 @@ $openprint::log->debug("Page: $page");
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-	#$log->debug("[[[[ $file ]]]]");
 				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
@@ -316,8 +315,8 @@ $openprint::log->debug("Getfile");
 				openprint::paper_purchase_order::history( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_orders.html';
 				openprint::paper_purchase_order::display( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_order.html';
 			} else {
-				$variable{'error'} = "Unauthorized";
-				$variable{'details'} = "You are not authorized to view this page.";
+				$variable{'error'} = 'Unauthorized';
+				$variable{'details'} = 'You are not authorized to view this page.';
 				$variable{'Redirect'} = $openprint::config{'errorpage'};
 				return;
 			} # endif

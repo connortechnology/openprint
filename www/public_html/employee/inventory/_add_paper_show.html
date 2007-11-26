@@ -78,11 +78,10 @@
     </p>
 	<p>
         <label for="width">Size:</label>
-        <input type="text" id="width" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>" size="6" style="width: auto;" onkeyup=
-"gsm_to_mweight(this.form);"/>
+        <input type="text" id="width" name="width" value="<? echo ( $$variable{'Paper'} ? $$variable{'Paper'}->width() : $openprint::param{width}; ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
         <span id="PaperHeight"<? echo ( ' style="display: none;"' if $openprint::param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?>>
         &nbsp;x&nbsp;
-        <input type="text" id="height" name="height" value="<? echo ( $$variable{'Paper'}->height(); ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
+        <input type="text" id="height" name="height" value="<? echo ( $$variable{'Paper'} ? $$variable{'Paper'}->height() : $openprint::param{height}; ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
         </span>
     </p>
     <p id="MWeight" <? echo ( 'style="display:none;"' if $openprint::param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?> >
@@ -94,8 +93,15 @@
         <input type="text" id="gsm" name="gsm" value="<? echo ( $openprint::param{gsm} ? $openprint::param{gsm} : $$variable{'Paper'}->gsm(); ) ?>" size="6"  onkeyup="gsm_to_mweight(this.form);" style="width: auto;" />
     </p>
 	<p>
+		<label for="Purpose">Purpose:</label>
+		<select id="Purpose" name="purpose_id">
+			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockPurpose::find('order'=>'lower(name)')], $openprint::param{'purpose_id'} ) ) ?>
+		</select>
+	<p>
 		<label for="Owner">Owner:</label>
-		<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $openprint::session{'company_id'} ); ) ?></select>
+		<select id="Owner" name="Owner">
+			<? echo ( openprint::Company::get_dropdown( $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $openprint::session{'company_id'} ); ) ?>
+		</select>
 	</p>
 	<p>
 		<label for="Quantity">Quantity:</label>

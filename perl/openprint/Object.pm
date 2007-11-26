@@ -30,8 +30,6 @@ sub new {
     my $self = {};
     bless $self, $parent;
 
-	$$self{'log'} = $openprint::log;
-	$$self{'dbh'} = $openprint::dbh;
     if ( ( $$self{'id'} = $id ) or $data ) {
         $self->load( $data );
     } # end if
