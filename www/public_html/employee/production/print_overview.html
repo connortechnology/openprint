@@ -1,3 +1,25 @@
+<? eval (
+	if ( %openprint::param ) {
+		if ( $openprint::param{'btnFunction'} eq 'Reset' ) {
+			foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) {
+				delete $openprint::session{'/employee/production/print_overview.html?'.$param};
+			} # end if
+		} else {
+			foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) {
+				if ( ref $openprint::param{$param} eq 'ARRAY' ) {
+					$openprint::session{'/employee/production/print_overview.html?'.$param} = join(';', @{$openprint::param{$param}} );
+				} else {
+					$openprint::session{'/employee/production/print_overview.html?'.$param} = $openprint::param{$param};
+				} # end if
+			} # end foreach
+		} # end if
+		$openprint::session{'/employee/production/print_overview.html?lastupdated'} = time;
+	} elsif ( time - $openprint::session{'/employee/production/print_overview.html?lastupdated'} > 60*60 ) { 
+		foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) {
+			delete $openprint::session{'/employee/production/print_overview.html?'.$param};
+		} # end if
+	} # end if
+) ?>
 <script type="text/javascript">
 	function loadDivs( results ) {
 		var rows = results.split('|');
@@ -247,19 +269,19 @@
 	</form>
 </div>
 <? eval (
-		if ( ! $openprint::param{'ddmScheduleStartYear'} ) {
+	
+		if ( ! $openprint::session{'/employee/production/print_overview.html?ddmScheduleStartYear'} ) {
 			if ( ($_) = sql::execute( $log, $dbh, q{SELECT date(MIN(StartTime)) FROM Schedule} ) ) {
 				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, split('-', $_ ) );
-				$log->debug("Start: $$variable{'ScheduleStart'}");
 			} else {
 				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 			} # end if
 		} else {
 			@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh,
-				@openprint::param{'ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay'} );
+				@openprint::session{'/employee/production/print_overview.html?ddmScheduleStartYear','/employee/production/print_overview.html?ddmScheduleStartMonth','/employee/production/print_overview.html?ddmScheduleStartDay'} );
 		} # end if
 
-		if ( ! $openprint::param{'ddmScheduleEndYear'} ) {
+		if ( ! $openprint::session{'/employee/production/print_overview.html?ddmScheduleEndYear'} ) {
 			($_) = sql::execute( $log, $dbh, q{SELECT date(MAX(StartTime)) FROM Schedule} );
 			if ( $_ ) {
 				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, split('-',$_) );
@@ -269,7 +291,11 @@
 			} # end if
 		} else {
 			@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh,
-				@openprint::param{'ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay'} );
+					@openprint::session{
+					'/employee/production/print_overview.html?ddmScheduleEndYear',
+					'/employee/production/print_overview.html?ddmScheduleEndMonth',
+					'/employee/production/print_overview.html?ddmScheduleEndDay'}
+					);
 		} # end if
 ) ?>
 <form name="f1" method="post" action="print_overview.html">
@@ -285,12 +311,9 @@
 <? echo ( 
 	my @presses = map { $_->id(), $_->name() } openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	my %presses = @presses;
-	if ( ref $openprint::param{'Presses'} eq 'ARRAY' ) {
-		@{$$variable{'Presses'}} = map { $_, $presses{$_} } @{$openprint::param{'Presses'}};
-		return ssi::make_select( \@presses, $openprint::param{'Presses'} );
-	} elsif ( defined $openprint::param{'Presses'} ) {
-		@{$$variable{'Presses'}} = map { $_, $presses{$_} } $openprint::param{'Presses'};
-		return ssi::make_select( \@presses, [ $openprint::param{'Presses'} ] );
+	if ( $openprint::session{'/employee/production/print_overview.html?Presses'} ) {
+		@{$$variable{'Presses'}} = map { $_, $presses{$_} } split ';', $openprint::session{'/employee/production/print_overview.html?Presses'};
+		return ssi::make_select( \@presses, [ split ';', $openprint::session{'/employee/production/print_overview.html?Presses'} ] );
 	} else {
 		@{$$variable{'Presses'}} = @presses;
 		return ssi::make_select( \@presses, [ keys %presses ] );
@@ -316,7 +339,10 @@
 		</p>
 		<p class="buttons">
 				<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.btnFunction.value='Reset';f1.submit();", '', 'Reset' ); ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'AddDocket', 'add.gif', "ajax_window('_add_docket.html', 600, 400 );", '', 'Add Docket' ); ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
 		</p>
 		</div>
 	</fieldset>
