@@ -1,7 +1,7 @@
-.Service div.templates {
+div.Service div.templates {
     padding-right: 0px;
 }
-.Service div.templates:after {
+div.Service div.templates:after {
     content: ".";
     display: block;
     height: 0;
@@ -9,11 +9,11 @@
     visibility: hidden;
 }
 /* Hides from IE-mac \*/
-* html .Service div.templates {height: 1%;}
-* .Service div.templates {display:block;}
+* html div.Service div.templates {height: 1%;}
+* div.Service div.templates {display:block;}
 /* End hide from IE-mac */
 
-.Service div.templates p {
+div.Service div.templates p {
 	float: left;
 	width: 165px;
 	height: 180px;
@@ -21,12 +21,12 @@
 	margin: 0px 5px 10px 5px;
 	padding: 0px;
 }
-.Service div.templates p label {
+div.Service div.templates p label {
 	clear: none;
 	float: none;
 	margin: 0px;
 }
-.Service div.templates p img {
+div.Service div.templates p img {
     clear: both;
     width: 130px;
     height: 130px;
