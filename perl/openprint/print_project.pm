@@ -813,12 +813,13 @@ sub reuse_project {
 	$NewProject->company_id( $r->param('ddmCompany') ) if $r->param('ddmCompany');
 	$NewProject->save();
 
+	$NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
+
 	if ( $r->param('ddmCompany') and $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
 		openprint::main_account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
 	} # end if
 
-	$NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 
 	my @dont_copy = (
 			'ServiceIndex','ProjectIndex','TemplateType',
