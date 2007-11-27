@@ -312,7 +312,7 @@ sub save {
 	my $ac = sql::start_transaction( $openprint::dbh );
 
 	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( undef, undef, q{nextval('Equipment_Index_seq')} );
+		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('Equipment_Index_seq')} );
 		$sql{lngindex} = $$self{id};
 		sql::insert( undef, undef, 'tbl_Equipment', \%sql );
 		openprint::logs::insertLogRecord('34', "Equipment: " . $self->strid(). " - " . $self->name(),);

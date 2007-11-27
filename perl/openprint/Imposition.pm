@@ -195,6 +195,8 @@ sub load {
 	} else {
 		$$self{'spread_rows'} = int($$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
 		$$self{'spread_columns'} = int($$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
+		#$$self{'spread_rows'} = 1;
+		#$$self{'spread_columns'} = 1;
 		$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
 	} # end if
 	$$self{'spread_size'} = $$specs{'txtSpreadSize'};

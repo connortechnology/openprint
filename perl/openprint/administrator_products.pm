@@ -20,6 +20,7 @@ sub edit {
 	my $Product = new openprint::Product( $param{'product_id'} );
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
+		$param{'btnFunction'} = '';
 		if ( (! $param{'product_id'}) and openprint::Product::find( 'name' => $param{'txtName'} ) ) {
 			$$variable{'error'} = "A product with name $param{'txtName'} already exists.  Please choose another name.";
 			return;
