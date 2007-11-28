@@ -1167,7 +1167,7 @@ my %best_price = %{$b_price};
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tPMS Ink Mix Charge:\t\$%.2f<br/>", $best_price{'Ink Mix Charge'} ) if $best_price{'Ink Mix Charge'};
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tInline Varnish Setup Charge: \$%.2f<br/>", $$Varnish{'Setup'} ) if $$Varnish{'Setup'};
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @best_price{'Press Wash Price','Press Washes','Press Wash Total'});
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tSetup Total:\t\t\$%.2f\nRun Charges:<br/>", $best_price{'Setup Total'} );
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $best_price{'Setup Total'} );
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @best_price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
 # if $$Varnish{'run_price'};
@@ -2131,7 +2131,7 @@ sub get_varnish_run_price {
 		$price{'Total'} /= 2 if ($varnish_sides == 1);
 	} # end if
 	$varnish_price{'run_price'} = $price{'Run Price'};
-	$varnish_price{'Run Total'} = $price{'Run Total'};
+	$varnish_price{'Run Total'} = $price{'Total'};
 	$varnish_price{'Run Units'} = $price{'units'};
 
 	foreach my $c ( @$side_one_colours, @$side_two_colours) {
