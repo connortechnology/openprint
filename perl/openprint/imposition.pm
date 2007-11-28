@@ -270,6 +270,7 @@ sub calc_setup_object {
 #	3. For %setup1, Paper Width is matched to Image Width. eg: For a 22x28 Image on 23x39 sheet would match the 22 IW to the 39 PW and 28 IH to the 22 PW.
 
 	my $gutters = $$specs{'Gutter'};
+	$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 	if ( sets::isin( 'Right', \@bleed_locations ) ) {
 		$gutters -= $$specs{'BleedSize'};
 	} # end if
@@ -277,7 +278,6 @@ sub calc_setup_object {
 		$gutters -= $$specs{'BleedSize'};
 	} # end if
 #$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
-	$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 
 	$gutters = 0 if $gutters < 0;
 
