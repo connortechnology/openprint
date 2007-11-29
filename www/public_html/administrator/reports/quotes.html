@@ -1,3 +1,15 @@
+<script type="text/javascript">
+	function initializeDayDropDowns() {
+        if ( typeof(setDaysDropDown) == 'function' ) {
+            setDaysDropDown(document.f1.ddmStartYear.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);
+            setDaysDropDown(document.f1.ddmEndYear.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);
+        } // end if
+    }
+
+    if ( typeof(initializeDayDropDowns) )
+        window.onload = initializeDayDropDowns;
+
+</script>
 Choose report criteria and click show results. 
 You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
 <br>
@@ -34,12 +46,16 @@ You may the download the results in CSV (spreadsheet format) to view in a progra
 		</p>
 		<p> 
 			<label>Date Quoted:</label>
-				<select name="ddmStartMonth"><?startmonths?></select>
+			<span class="DateSelector">
+				<select name="ddmStartMonth" onchange="setDaysDropDown(this.form.ddmStartYear.value,this.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startmonths?></select>
 				<select name="ddmStartDay"><?startdays?></select>
-				<select name="ddmStartYear"><?startyears?></select> to
-				<select name="ddmEndMonth"><?endmonths?></select>
+				<select name="ddmStartYear" onchange="setDaysDropDown(this.value,this.form.ddmStartMonth.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startyears?></select> to
+			</span>
+			<span class="DateSelector">
+				<select name="ddmEndMonth" onchange="setDaysDropDown(this.form.ddmEndYear.value,this.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endmonths?></select>
 				<select name="ddmEndDay"><?enddays?></select>
-				<select name="ddmEndYear"><?endyears?></select>
+				<select name="ddmEndYear" onchange="setDaysDropDown(this.value,this.form.ddmEndMonth.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endyears?></select>
+			</span>
 		</p>
 		<p> 
 			<label>Range Total:</label>

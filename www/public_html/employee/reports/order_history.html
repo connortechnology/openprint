@@ -1,3 +1,15 @@
+<script type="text/javascript">
+	function initializeDayDropDowns() {
+        if ( typeof(setDaysDropDown) == 'function' ) {
+            setDaysDropDown(document.f1.DateStartYear.value,document.f1.DateStartMonth.value,document.f1.DateStartDay,document.f1.DateStartDay.value);
+            setDaysDropDown(document.f1.DateEndYear.value,document.f1.DateEndMonth.value,document.f1.DateEndDay,document.f1.DateEndDay.value);
+        } // end if
+    }
+
+    if ( typeof(initializeDayDropDowns) )
+        window.onload = initializeDayDropDowns;
+
+</script>
 <div class="PageTitle">
 <h1>REPORTS</h1>
 <h2>Order History</h2>
@@ -41,12 +53,12 @@
 				 ) ?>
 		 <p>
 			 <label>Date:</label>
-			 <select name="DateStartYear"><?DateStartYears?></select>
-			 <select name="DateStartMonth"><?DateStartMonths?></select>
+			 <select name="DateStartYear" onchange="setDaysDropDown(this.value,this.form.DateStartMonth.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartYears?></select>
+			 <select name="DateStartMonth" onchange="setDaysDropDown(this.form.DateStartYear.value,this.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartMonths?></select>
 			 <select name="DateStartDay"><?DateStartDays?></select>
 			to 
-			 <select name="DateEndYear"><?DateEndYears?></select>
-			 <select name="DateEndMonth"><?DateEndMonths?></select>
+			 <select name="DateEndYear" onchange="setDaysDropDown(this.value,this.form.DateEndMonth.value,this.form.DateEndDay,this.form.DateEndDay.value);"><?DateEndYears?></select>
+			 <select name="DateEndMonth" onchange="setDaysDropDown(this.form.DateEndYear.value,this.value,this.form.DateEndDay,this.form.DateEndDay.value);"><?DateEndMonths?></select>
 			 <select name="DateEndDay"><?DateEndDays?></select>
 		</p>
 		<p>

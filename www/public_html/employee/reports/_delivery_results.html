@@ -3,7 +3,7 @@
 		foreach my $key ( keys %openprint::param ) {
 			if ( $key =~ /LateReason-(\d*)/ ) {
 				my $index = $1;
-				my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM tbl_Project_Log WHERE lngProjectIndex=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $index );
+				my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM Project_Log WHERE project_id=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $index );
 				$reason =~ s/Reason for lateness: (\s*)/$1/;
 				if ( $reason ne $openprint::param{$key} ) {
 					openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id', 'user_id'}, $index, "Reason for lateness: $openprint::param{$key}" );
@@ -12,11 +12,11 @@
 		} # end foreach
 	} # end if
 
-	$$variable{'DateStart'} = join('-', @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} );
-	$$variable{'DateEnd'} = join('-', @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} );
+	$$variable{'DateStart'} = join('-', ssi::fix_date( @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} ) );
+	$$variable{'DateEnd'} = join('-', ssi::fix_date( @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
 	my $sql = "SELECT OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber,".
 		"to_char(due_date, 'MM/DD/YYYY 17:00'), strStatus ".
-		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM tbl_Project_Log WHERE tbl_Project_log.lngProjectIndex=tbl_Projects.Index and description IN ('Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup' ,'Marked Shipped')) ".
+		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup' ,'Marked Shipped')) ".
 		"FROM Order_Contents, tbl_Projects WHERE 1>0";
 	$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
 	$sql .= " AND Order_Contents.lngProjectIndex = tbl_Projects.Index";
@@ -59,7 +59,7 @@ Results for <? echo (
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>">
 			<? echo ( 
 				if ( ! $$variable{'readytime'} ) {
-					@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM tbl_Project_Log WHERE lngProjectIndex=?}, $$variable{'index'} );
+					@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
 				} # end if
 				if ( $$variable{'readytime'} and $$variable{'duedate'} ) {
 					my ( $dmonth, $dday, $dyear, $dhour, $dminutes ) = $$variable{'duedate'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
@@ -68,7 +68,7 @@ Results for <? echo (
 					my ($Dd,$Dh,$Dm,$Ds) = Date::Calc::Delta_DHMS($dyear,$dmonth,$dday, $dhour,$dminutes,0,
 	                        		$ryear,$rmonth,$rday, $rhour,$rminutes,0);
 					if ( ($Dd > 0) or ($Dh > 0) or ($Dm > 0) ) {
-						my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM tbl_Project_Log WHERE lngProjectIndex=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $$variable{'index'});
+						my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM project_log WHERE project_id=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $$variable{'index'});
 						$reason =~ s/Reason for lateness: (\s*)/$1/;
 						$$variable{'LateCount'} += 1;
 						return qq`LATE by $Dd days $Dh hours $Dm minutes Reason:<select name="LateReason-$$variable{'index'}">` . ssi::make_drop_down( [ 
