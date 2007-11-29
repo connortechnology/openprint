@@ -589,6 +589,9 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 		my $Paper = new openprint::Paper();
 		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade'} = ( 'Y',($$specs{'txtSpecificStockBrand'} =~ /offset/i ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'});
 		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight'};
+		if ( $$specs{'StockType'} eq 'Roll' ) {
+			delete $$Paper{'height'};
+		} # end if
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		push @Papers, $Paper;
 		@$Paper{'start_width','start_height'} = @$Paper{'width','height'};
