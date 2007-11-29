@@ -395,6 +395,11 @@ function setDaysDropDown(year, month, dayDropDown, selectedDay) {
 		selectedDay = numberOfDays;
 	} // end if
 
+	if ( dayDropDown.options[0].value == '' ) {
+		numberOfDays += 1;
+		selectedDay += 1;
+	} // end if
+
 	if ( dayDropDown.options.length > numberOfDays ) {
 		for ( var i = dayDropDown.options.length; i > numberOfDays; i -= 1 ) {
 			dayDropDown.options[i-1] = null;

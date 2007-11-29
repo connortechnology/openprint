@@ -1,13 +1,13 @@
 <? eval (
-		$$variable{'DateStart'} = join('-', @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} );
-		$$variable{'DateEnd'} = join('-', @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} );
+		$$variable{'DateStart'} = join('-', ssi::fix_date( @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} ) );
+		$$variable{'DateEnd'} = join('-', ssi::fix_date( @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
 		my $sql = "SELECT OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber,".
 			"to_char(due_date, 'MM/DD/YYYY 17:00'), strStatus ".
-			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM tbl_Project_Log WHERE tbl_Project_log.lngProjectIndex=tbl_Projects.Index and description IN ('Marked In Prepress') ) AS Produced".
-			", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM tbl_Project_Log WHERE tbl_Project_log.lngProjectIndex=tbl_Projects.Index and (description LIKE 'Assigning%' OR description LIKE 'Taken Over by%') ) AS PickedUp".
-			", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM tbl_Project_Log WHERE tbl_Project_log.lngProjectIndex=tbl_Projects.Index and description LIKE ('Marked Proofs Out%') ) AS ProofsOut".
-			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM tbl_Project_Log WHERE tbl_Project_log.lngProjectIndex=tbl_Projects.Index and description IN ('Marked Approved','Marked Proofs QA Approved') ) AS Approved".
-			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') as completed FROM tbl_Project_Log WHERE tbl_Project_log.lngProjectIndex=tbl_Projects.Index and description IN ('Marked Waiting For Pickup','Marked Shipped','Marked Picked Up') ) AS completed".
+			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=tbl_Projects.Index and description IN ('Marked In Prepress') OR description LIKE 'Add to Order%' ) AS Produced".
+			", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=tbl_Projects.Index and (description LIKE 'Assigning%' OR description LIKE 'Taken Over by%') ) AS PickedUp".
+			", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=tbl_Projects.Index and description LIKE ('Marked Proofs Out%') ) AS ProofsOut".
+			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=tbl_Projects.Index and description IN ('Marked Approved','Marked Proofs QA Approved') ) AS Approved".
+			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') as completed FROM Project_Log WHERE project_id=tbl_Projects.Index and description IN ('Marked Waiting For Pickup','Marked Shipped','Marked Picked Up') ) AS completed".
 			" FROM Order_Contents, tbl_Projects WHERE 1>0";
 		$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
 		$sql .= " AND Order_Contents.lngProjectIndex = tbl_Projects.Index";
@@ -53,24 +53,15 @@ Results for <? echo (
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?complete?></a></td>
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>">
 			<? echo ( 
-					return if ! $$variable{'complete'};
+					return if ! ( $$variable{'complete'} and $$variable{'ordered'} and $$variable{'proofsout'} and $$variable{'approved'} );
 					my ( $omonth, $oday, $oyear, $ohour, $ominutes ) = $$variable{'ordered'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
 					my ( $cmonth, $cday, $cyear, $chour, $cminutes ) = $$variable{'complete'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
+					my ( $pomonth, $poday, $poyear, $pohour, $pominutes ) = $$variable{'proofsout'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
+					my ( $amonth, $aday, $ayear, $ahour, $aminutes ) = $$variable{'approved'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
 					my ($Dd,$Dh,$Dm,$Ds) = Date::Calc::Delta_DHMS(
-						$oyear,$omonth,$oday, $ohour,$ominutes,0,
+						$ayear,$amonth,$aday, $ahour,$aminutes,0,
 						$cyear,$cmonth,$cday, $chour,$cminutes,0,
 						);
-					#return "$puyear $pumonth $puday $puhour $puminutes,0 : $oyear,$omonth,$oday, $ohour,$ominutes,0";
-					#my $total = "$Dd days $Dh hours $Dm minutes";
-					#return $total;
-					# Subtract time between proofs out and approved
-					if ( $$variable{'proofsout'} ) {
-						my ( $pomonth, $poday, $poyear, $pohour, $pominutes ) = $$variable{'proofsout'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
-						my ( $amonth, $aday, $ayear, $ahour, $aminutes ) = $$variable{'approved'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
-						my ($dd,$dh,$dm,$ds) = Date::Calc::Delta_DHMS($ayear,$amonth,$aday, $ahour,$aminutes,0,
-										$poyear,$pomonth,$poday, $pohour,$pominutes,0);
-						( undef ,undef, $Dd,$Dh,$Dm,$Ds) = Date::Calc::Add_Delta_DHMS( 0,0,$Dd,$Dh,$Dm,$Ds, $dd,$dh,$dm,$ds );
-					} # end if
 					my $total = sprintf('%.2dd%.2dh%.2dm',$Dd,$Dh,$Dm);
 					if ( $Dd >= 2 ) {
 						$$variable{'LateCount'} += 1;

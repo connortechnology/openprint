@@ -1,4 +1,15 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript">
+	function initializeDayDropDowns() {
+        if ( typeof(setDaysDropDown) == 'function' ) {
+            setDaysDropDown(document.f1.StartYear.value,document.f1.StartMonth.value,document.f1.StartDay,document.f1.StartDay.value);
+            setDaysDropDown(document.f1.EndYear.value,document.f1.EndMonth.value,document.f1.EndDay,document.f1.EndDay.value);
+        } // end if
+    }
+
+    if ( typeof(initializeDayDropDowns) )
+        window.onload = initializeDayDropDowns;
+</script>
 <? eval ( 
 	foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code', 'width','height','OrLarger' ) {
 		$openprint::session{'/employee/inventory/paper.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
@@ -113,15 +124,14 @@ Please select a Paper to view/edit.<br>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
-				<select name="StartYear"><?StartYears?></select>
-				<select name="StartMonth"><?StartMonths?></select>
+				<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><?StartYears?></select>
+				<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><?StartMonths?></select>
 				<select name="StartDay"><?StartDays?></select>
-			</span>
-			<span class="DateSelector"> - </span>
+			to </span>
 			<span class="DateSelector">
-			<select name="EndYear"><?EndYears?></select>
-			<select name="EndMonth"><?EndMonths?></select>
-			<select name="EndDay"><?EndDays?></select>
+				<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><?EndYears?></select>
+				<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><?EndMonths?></select>
+				<select name="EndDay"><?EndDays?></select>
 			</span>
 		</p>
 		<p>

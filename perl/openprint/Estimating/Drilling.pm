@@ -202,5 +202,22 @@ sub summary {
 	return '';
 } # end sub summary
 
+sub runtime {
+    my ( $p_id, $s_id, $specs, $qty_index ) = @_;
+    return 0 if ! $$specs{'ddmEquipment'.$qty_index};
+
+    my $runtime;
+	my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
+	my $makeready = $Equipment->specification( 'Make Ready Time', undef );
+	my $runspeed = $Equipment->specification( 'Run Speed', undef );
+	my $runs = $$specs{'txtHoleQty'};
+
+# Should be the # of drills in the machine
+	$runs = ceil($runs/3);
+	$runtime = $makeready * 60 + ( $$specs{'txtQuantity'.$qty_index} * $runs * 3600 / $runspeed );
+	$openprint::log->debug("Drilling: $runtime");
+	return $runtime;
+} # end sub runtime
+
 1;
 __END__
