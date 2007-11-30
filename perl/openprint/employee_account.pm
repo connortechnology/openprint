@@ -36,7 +36,7 @@ sub profile {
 			delete $param{'btnFunction'};
 			$variable{'error'} .= $User->save( \%param );
         } # end if
-		if ( $param{'email'} =~ /(.*)\@point\-one\.com/ ) {
+		if ( $openprint::config{mail_db_name} and $param{'email'} =~ /(.*)\@point\-one\.com/ ) {
 			if ( $param{'VacationState'} ) {
 				email::start_vacation( $r, $log, @param{'email','VacationSubject','VacationMessage'} );
 			} else {
@@ -49,7 +49,7 @@ sub profile {
 		} # end if
     } # end if
 	$variable{'User'} = $User;
-	if ( $User->email() =~ /(.*)\@point\-one\.com/ ) {
+	if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
 		$sql::dbh = $dbh;
 	} # end if

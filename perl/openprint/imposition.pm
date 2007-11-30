@@ -137,7 +137,6 @@ sub check_setup {
 
 			if ( $setup->columns() % 2 ) {
 # This uses two rollers, on non-offset paper so need more gutter space, which works out to be 0.25 
-$setup->display();
 				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} > $setup->stock_width() ) {
 			$openprint::log->debug(' CHECK 3 Using Paper ' . $setup->paper()->width() . ' x' . $setup->paper()->height() .' ' . $setup->image_width() . ' x ' . $setup->image_height() . ' Imposition: ' . $setup->imposition(). ":".$setup->columns() . 'x' . $setup->rows(). '+'.$setup->dutch_columns() . 'x'.$setup->dutch_rows() . ' ' . $setup->layout_width() . 'x' . $setup->layout_height() ) if $debug;
 					$setup->rows(0);
@@ -270,6 +269,7 @@ sub calc_setup_object {
 #	3. For %setup1, Paper Width is matched to Image Width. eg: For a 22x28 Image on 23x39 sheet would match the 22 IW to the 39 PW and 28 IH to the 22 PW.
 
 	my $gutters = $$specs{'Gutter'};
+	$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 	if ( sets::isin( 'Right', \@bleed_locations ) ) {
 		$gutters -= $$specs{'BleedSize'};
 	} # end if
@@ -277,7 +277,6 @@ sub calc_setup_object {
 		$gutters -= $$specs{'BleedSize'};
 	} # end if
 #$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
-	$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 
 	$gutters = 0 if $gutters < 0;
 

@@ -1,3 +1,15 @@
+<script type="text/javascript">
+	function initializeDayDropDowns() {
+        if ( typeof(setDaysDropDown) == 'function' ) {
+            setDaysDropDown(document.f1.StartYear.value,document.f1.StartMonth.value,document.f1.StartDay,document.f1.StartDay.value);
+            setDaysDropDown(document.f1.EndYear.value,document.f1.EndMonth.value,document.f1.EndDay,document.f1.EndDay.value);
+        } // end if
+    }
+
+    if ( typeof(initializeDayDropDowns) )
+        window.onload = initializeDayDropDowns;
+
+</script>
 <form name="f1" method="post" action="orders.html">
 	<fieldset class="filters"><legend>Select Report Criteria</legend>
 		<p>
@@ -59,14 +71,17 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 ) ?>
 		<p> 
 			<label>Date:</label>
-			<select name="StartYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?StartYear'} ); ) ?></select>
-			<select name="StartMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?StartMonth'} ); ) ?></select>
-			<select name="StartDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?StartDay'} ); ) ?></select>
-			-
-		 
-			<select name="EndYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?EndYear'} ); ) ?></select>
-			<select name="EndMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?EndMonth'} ); ) ?></select>
-			<select name="EndDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?EndDay'} ); ) ?></select>
+			<span class="DateSelector">
+				<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?StartYear'} ); ) ?></select>
+				<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?StartMonth'} ); ) ?></select>
+				<select name="StartDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?StartDay'} ); ) ?></select>
+				-
+			</span>
+			<span class="DateSelector">
+				<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?EndYear'} ); ) ?></select>
+				<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?EndMonth'} ); ) ?></select>
+				<select name="EndDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?EndDay'} ); ) ?></select>
+			</span>
 		</p>
 		<p> 
 			<label>Total Range:</label>

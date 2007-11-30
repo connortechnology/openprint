@@ -150,7 +150,7 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'Error Saving.', "There was an error saving the user's information. $error");
 		} # end if
 
-		if ( $opepnrint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
+		if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 			if ( $openprint::param{'VacationState'} ) {
 				email::start_vacation( $r, $log, $User->email(), @openprint::param{'VacationSubject','VacationMessage'} );
 			} else {
@@ -209,7 +209,7 @@ sub user_profiles {
 		} # end foreach
 	} # end if 
 
-	if ( $opepnrint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
+	if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 		@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
 		$sql::dbh = $dbh;
 	} # end if

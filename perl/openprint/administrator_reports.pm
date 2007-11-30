@@ -282,8 +282,10 @@ sub customer_login {
 		$query .=  "strCity, strProvState, date(Company.dtmdateentered),";
 		$query .=  "(SELECT strFirstName || ' ' || strLastName FROM Users WHERE Index = lngSalesPerson ),";
 		$query .=  "(SELECT COUNT(Index) FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
+        $query .= "(SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
 		$query .=  "(SELECT COUNT(Index) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
-		$query .=  "'\$' || (SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index ) ";
+		$query .=  "'\$' || (SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
+        $query .= " (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) AS LastOrderDate ";
 		$query .=  "FROM Company, Users ";
 		$query .=  "WHERE date(Company.dtmdateentered) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
 		$query .=  "AND Users.CompanyIndex = Company.Index ";
@@ -319,9 +321,7 @@ sub customer_login {
             $query .= " AND Company.ysnAccountActivation = '$$variable{'rdbActive'}'\n";
         } # end if
 
-
-
-		my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','# of Orders','Total');
+		my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project','# of Orders','Total', 'Last Order');
 		my @data = sql::execute( $log, $dbh, $query );
 		misc::export_csv( $r, $log, $variable, 'customer_report.csv', \@header, \@data );
 	} else {

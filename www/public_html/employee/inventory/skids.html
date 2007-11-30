@@ -1,4 +1,17 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript">
+	function initializeDayDropDowns() {
+        if ( typeof(setDaysDropDown) == 'function' ) {
+            setDaysDropDown(document.f2.StartYear.value,document.f2.StartMonth.value,document.f2.StartDay,document.f2.StartDay.value);
+            setDaysDropDown(document.f2.EndYear.value,document.f2.EndMonth.value,document.f2.EndDay,document.f2.EndDay.value);
+            setDaysDropDown(document.f2.UpdatedStartYear.value,document.f2.UpdatedStartMonth.value,document.f2.UpdatedStartDay,document.f2.UpdatedStartDay.value);
+            setDaysDropDown(document.f2.UpdatedEndYear.value,document.f2.UpdatedEndMonth.value,document.f2.UpdatedEndDay,document.f2.UpdatedEndDay.value);
+        } // end if
+    }
+
+    if ( typeof(initializeDayDropDowns) )
+        window.onload = initializeDayDropDowns;
+</script>
 <? if ( $$variable{'information'} ) ?>
 <p class="information"><?information?></p>
 <hr/>
@@ -32,32 +45,28 @@ Please select a Skid to view/edit.<br>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
-			<select name="StartYear"><option value="">select</option><?StartYears?></select>
-			<select name="StartMonth"><option value="">select</option><?StartMonths?></select>
+			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartYears?></select>
+			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartMonths?></select>
 			<select name="StartDay"><option value="">select</option><?StartDays?></select>
+			to 
 			</span>
 			<span class="DateSelector">
-			 -
-			</span>
-			<span class="DateSelector">
-			<select name="EndYear"><option value="">select</option><?EndYears?></select>
-			<select name="EndMonth"><option value="">select</option><?EndMonths?></select>
+			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndYears?></select>
+			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndMonths?></select>
 			<select name="EndDay"><option value="">select</option><?EndDays?></select>
 			</span>
 		</p>
 		<p>
 			<label>Last Updated:</label>
 			<span class="DateSelector">
-			<select name="UpdatedStartYear"><option value="">select</option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/skids.html?UpdatedStartYear'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedStartYear'} : ''); ) ?></select>
-			<select name="UpdatedStartMonth"><option value="">select</option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/skids.html?UpdatedStartMonth'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedStartMonth'} : ''); ) ?></select>
+			<select name="UpdatedStartYear" onchange="setDaysDropDown(this.value,this.form.UpdatedStartMonth.value,this.form.UpdatedStartDay, this.form.UpdatedStartDay.value);"><option value="">select</option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/skids.html?UpdatedStartYear'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedStartYear'} : ''); ) ?></select>
+			<select name="UpdatedStartMonth" onchange="setDaysDropDown(this.form.UpdatedStartYear.value,this.value,this.form.UpdatedStartDay,this.form.UpdatedStartDay.value);"><option value="">select</option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/skids.html?UpdatedStartMonth'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedStartMonth'} : ''); ) ?></select>
 			<select name="UpdatedStartDay"><option value="">select</option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/skids.html?UpdatedStartDay'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedStartDay'} : ''); ) ?></select>
+			to 
 			</span>
 			<span class="DateSelector">
-			 -
-			</span>
-			<span class="DateSelector">
-			<select name="UpdatedEndYear"><option value="">select</option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/skids.html?UpdatedEndYear'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedEndYear'} : 1); ) ?></select>
-			<select name="UpdatedEndMonth"><option value="">select</option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/skids.html?UpdatedEndMonth'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedEndMonth'} : ''); ) ?></select>
+			<select name="UpdatedEndYear" onchange="setDaysDropDown(this.value,this.form.UpdatedEndMonth.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);"><option value="">select</option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/skids.html?UpdatedEndYear'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedEndYear'} : 1); ) ?></select>
+			<select name="UpdatedEndMonth" onchange="setDaysDropDown(this.form.UpdatedEndYear.value,this.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);"><option value="">select</option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/skids.html?UpdatedEndMonth'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedEndMonth'} : ''); ) ?></select>
 			<select name="UpdatedEndDay"><option value="">select</option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/skids.html?UpdatedEndDay'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedEndDay'} : ''); ) ?></select>
 			</span>
 		</p>

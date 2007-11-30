@@ -387,6 +387,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				my $service_index = $variable{'ServiceIndex'};
 
 				# Things like UPS SHipping might not actually have a service
+				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
 				my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
 				@variable{keys %$specs} = @$specs{keys %$specs};
@@ -414,7 +415,6 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 					} # end if
 
 				} elsif ($third eq 'bind') {
-					openprint::print::get_quantities( $log, $dbh, \%variable, $project_index );
 					if ( $filename eq 'folding.html' ) {
 						require openprint::Estimating::Folding;
 						openprint::Estimating::Folding::display( $log, $dbh, \%variable, $project_index, $service_index );
@@ -448,7 +448,6 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 						openprint::Estimating::UVCoating::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} # end if
 				} elsif ($third eq 'pack') {
-					openprint::print::get_quantities( $log, $dbh, \%variable, $project_index);
 					if ( $filename eq 'pack_by_weight.html' ) {
 						openprint::Estimating::Skids::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} # end if

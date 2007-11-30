@@ -44,11 +44,11 @@
 			<p><label>Format:</label>
 				<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( 'checked="checked"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').show();$('BasisSize<?Signature?>').hide();$('MWeight<?Signature?>').show();clear_ddm(f1.elements['CustomStockPriceUnits<?Signature?>']);add_option(f1.elements['CustomStockPriceUnits<?Signature?>'],'Per 100lbs','Per 100lbs','Per 100lbs');add_option(f1.elements['CustomStockPriceUnits<?Signature?>'],'Per M','Per M','Per 100lbs');gsm_to_mweight(this.form,'<?Signature?>');} calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Sheet">Sheet</label>
-				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( 'checked="checked"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();clear_ddm(f1.elements['CustomStockPriceUnits<?Signature?>']);add_option(f1.elements['CustomStockPriceUnits<?Signature?>'],'Per 100lbs','Per 100lbs','Per 100lbs');gsm_to_mweight(this.form,'<?Signature?>');}calc(this.form.name);" />
+				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( 'checked="checked"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?> onclick="if ( this.checked ) { f1.elements['txtSpecificStockHeight<?Signature?>'].value='';$('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();clear_ddm(f1.elements['CustomStockPriceUnits<?Signature?>']);add_option(f1.elements['CustomStockPriceUnits<?Signature?>'],'Per 100lbs','Per 100lbs','Per 100lbs');gsm_to_mweight(this.form,'<?Signature?>');}calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Roll">Roll</label>
 			</p>
 <? else ( @{$$variable{'PaperTypes'}} > 1 ) ?>
-	<input type="hidden" name="StockType<?Signature?>" />
+	<input type="hidden" name="StockType<?Signature?>" value="<? echo ( if ( $$variable{'StockType'.$$variable{'Signature'}} ) { return $$variable{'StockType'.$$variable{'Signature'}}; } else { return $$variable{'PaperTypes'}[0] } ) ?>" />
 <? endif ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<p id="SpecificStockSize<?Signature?>">
 				<label>Size:</label>

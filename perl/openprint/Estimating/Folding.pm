@@ -262,6 +262,7 @@ $openprint::log->debug( "Foldtype: $foldtype" ) if $debug;
 sub signature_calc {
 	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
 	$$specs{"txtQuantity$qty_index"} = int $$specs{"txtQuantity$qty_index"};
+	$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 
 	if ( ! $Imposition ) {
 		$Imposition = new openprint::Imposition;
@@ -332,7 +333,6 @@ sub signature_calc {
 
 	foreach my $ss_id ( $Project->signatures( $$sig_specs{'txtSignatureType'} ) ) {
 		next if $signature_service_index and ($ss_id >= $signature_service_index);
-$openprint::log->debug("SIGS: $signature_service_index : $ss_id " );
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		if ( (!$max_imposition) or ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) ) {
 			$max_imposition = $$s_specs{'txtImposition'.$qty_index};
@@ -570,7 +570,9 @@ sub calc {
 				if ( $results{'Equipment'} ) {
 					$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'}->id();
 				} else {
-					$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
+					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+						$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
+					} # end if
 					$status = 'uncalculated';
 				} # end if
 			}# # end if
