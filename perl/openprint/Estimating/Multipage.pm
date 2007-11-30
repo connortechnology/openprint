@@ -263,7 +263,7 @@ $openprint::log->debug("after initial recalc");
 
 					# Need to dro poverrides on the last sig so that we don't get more spreads than we need
 					foreach my $qty_index ( 1 .. 3 ) {
-						next if ! $$new_sig_specs{'txtQuantity'.$qty_index};
+						next if ! $Project->quantity($qty_index);
 						if ( $$new_sig_specs{'PageQuantity'.$qty_index} > $unspecified_pages ) {
 							openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverridePageQuantity'.$qty_index, '' );
 							openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverrideImposition'.$qty_index, '' );
@@ -273,7 +273,7 @@ $openprint::log->debug("after initial recalc");
 					last if $$new_sig_specs{'Status'} eq 'uncalculated';
 
 					foreach my $qty_index ( 1 .. 3 ) {
-						next if ! $$new_sig_specs{'txtQuantity'.$qty_index};
+						next if ! $Project->quantity($qty_index);
 						$unspecified_pages = $$new_sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
 						last if $unspecified_pages;
 					} # end foreach

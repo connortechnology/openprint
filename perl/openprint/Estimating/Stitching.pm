@@ -245,9 +245,23 @@ sub calc {
 	if ( $$services{'Folding'} ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 	} # end if
+	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $log, $dbh, $project_index );
+	my $plusCover = 0;
+	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
+		#$log->debug("************* We Have Plus Cover *************************");
+		$plusCover = 1;
+	} # end if
+
+	# Need to figure out which dimension the spine bisects
+	@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
+		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+	} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
 			foreach my $signature_service_index ( $Project->signatures() ) {
@@ -289,20 +303,6 @@ sub calc {
 
 	#At this point, if the job supports 2out impo, our setup is 2out.  This may change later, depending on the equipment's ability to support 2out stitching
 
-	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
-
-	my $plusCover = 0;
-	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
-		#$log->debug("************* We Have Plus Cover *************************");
-		$plusCover = 1;
-	} # end if
-
-	# Need to figure out which dimension the spine bisects
-	@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
-	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
-		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
-	} # end if
-    
 	my $error;
 	my @possible_equipment = get_equipment( $specs, \$error );
 
@@ -401,19 +401,19 @@ sub get_equipment {
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too big.\n";
+			$$error .= "For " . $Equipment->name() . ": Too big.<br/>";
 			next;
 		} # end if
 		if ( $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $Equipment->specification('Minimum Spread Width') ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too big.\n";
+			$$error .= "For " . $Equipment->name() . ": Too big.<br/>";
 			next;
 		} # end if
 		if ( $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $Equipment->specification('Maximum Calliper') ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too Thick.\n";
+			$$error .= "For " . $Equipment->name() . ": Too Thick.<br/>";
 			next;
 		} # end if
 		if ( $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $Equipment->specification('Minimum Calliper') ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too Thick.\n";
+			$$error .= "For " . $Equipment->name() . ": Too Thick.<br/>";
 			next;
 		} # end if
 		push @possible_equipment, $Equipment;

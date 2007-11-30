@@ -410,7 +410,7 @@ sub summary {
 	$$variable{'UNITPRICE2'} = $$variable{'txtQuantity2'} ? sprintf( "%.2f", $$variable{'TOTAL2'}/$$variable{'txtQuantity2'} ) : '0.00';
 	$$variable{'UNITPRICE3'} = $$variable{'txtQuantity3'} ? sprintf( "%.2f", $$variable{'TOTAL3'}/$$variable{'txtQuantity3'} ) : '0.00';
 
-	openprint::print::get_quantities( $log, $dbh, $variable, $project_index);
+	openprint::print::get_quantities( $variable, $project_index);
 
 	$$variable{'ProjectIndex'} = $project_index;
 	$$variable{'NoPriceBreakDown'} = $r->param('NoPriceBreakDown');
@@ -813,12 +813,13 @@ sub reuse_project {
 	$NewProject->company_id( $r->param('ddmCompany') ) if $r->param('ddmCompany');
 	$NewProject->save();
 
+	$NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
+
 	if ( $r->param('ddmCompany') and $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
 		openprint::main_account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
 	} # end if
 
-	$NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 
 	my @dont_copy = (
 			'ServiceIndex','ProjectIndex','TemplateType',

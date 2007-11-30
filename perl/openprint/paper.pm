@@ -427,7 +427,7 @@ sub get_sheetsizes {
 		} # end if
 	} # end foreach Paper
 
-	return map { $_, $_ } sort keys %results;
+	return sort keys %results;
 
 } # end sub get_sheetsize 
 

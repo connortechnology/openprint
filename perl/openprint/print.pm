@@ -215,7 +215,7 @@ sub print_prices {
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
 
-    get_quantities( $log, $dbh, $variable, $project_index);
+    get_quantities( $variable, $project_index);
 
     $$variable{'Cutting'} = $services{'Cutting'} ? 'YES' : 'NO';
     $$variable{'Folding'} = $services{'Folding'} ? 'YES' : 'NO';
@@ -650,7 +650,7 @@ sub get_finished_calliper {
 } # end sub get_finished_calliper
 
 sub get_quantities {
-	my ( $log, $dbh, $variable, $project_index) = @_;
+	my ( $variable, $project_index) = @_;
 	if ( ! $$variable{'QUANTITIES'} ) {
 		my $Project = new openprint::Project( $project_index );
 		my @qtys = $Project->quantities();

@@ -10,8 +10,8 @@
 	my @Companies = openprint::Company::find( %parameters );
 	my %companies = map { int($_->id()), $_->name() } @Companies;
 	my %filters = (
-		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'}),
-		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'}),
+		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
+		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
 			'status' =>	$openprint::param{'status'},
 			'value_start' => $openprint::param{'value_start'},
 			'value_end' => $openprint::param{'value_end'},

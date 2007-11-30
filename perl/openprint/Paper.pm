@@ -659,6 +659,7 @@ sub recommendations {
 
 sub get_price {
 	my ( $self, $qty ) = @_;
+    my %price;
 
 	if ( $$self{'width'} and $$self{'height'} and $$self{'start_width'} and $$self{'start_height'} ) {
 		# It's a sheet
@@ -671,7 +672,6 @@ sub get_price {
 		# Roll
 	} # end if
 
-    my %price;
     if ( $$self{'Price'} ) {
 		# If custom paper
 		%price = ( 'Price' => $$self{'Price'}, 'Cost'=>$$self{'Price'}, 'units'=>$$self{'Units'});
@@ -679,7 +679,7 @@ sub get_price {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $bestPrice;
 		my @Prices = $self->prices( $list_id );
-		if ( ! @Prices ) {
+		if ( (! $$self{'supplied'} ) and ! @Prices ) {
 			$openprint::log->warn( 'No prices for paper for pricelist ' . $list_id );
 			return;
 		} # end if
