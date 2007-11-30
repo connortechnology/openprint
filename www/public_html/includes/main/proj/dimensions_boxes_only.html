@@ -1,16 +1,9 @@
-<div class="row"> 
-	<span class="required">*</span>
-	<span class="label">
-			The most common <? echo ( ssi::writeTip('finished'); ) ?> dimensions for the 
-			project have been automatically entered. If you require another size, please input Width x Height in inches.
-			<span class="smTbl">(Use <? echo ( ssi::writeTip('decimals'); ) ?> ex. 8.5	Inches)</span>
-	</span>
-	<span class="input"> 
-		<input name="txtFinalWidth" size="9" value="<?txtFinalWidth?>"  onKeyUp="calc('f1');" />
-		<input name="txtFinalHeight" size="9" value="<?txtFinalHeight?>"  onKeyUp="calc('f1');" />
-		<span class="smTbl">(<? echo ( ssi::writeTip('Finished'); ) ?> - W x H)</span><br>
-		<input name="txtWidth" size="9" value="<?txtWidth?>"  onKeyUp="calc_print('f1');" />
-		<input name="txtHeight" size="9" value="<?txtHeight?>"  onKeyUp="calc_print('f1');" />
-		<span class="smTbl">(<? echo ( ssi::writeTip('Flat'); ) ?> - W x H)</span>
-	</span>
-</div>
+<p> 
+	<label>Dimensions:</label>
+		<input name="txtFinalWidth" size="9" value="<?txtFinalWidth?>"  onKeyUp="calc(this.form.name);" /> x
+		<input name="txtFinalHeight" size="9" value="<?txtFinalHeight?>"  onKeyUp="calc(this.form.name);" />
+		<span class="smTbl">(<? echo ( ssi::writeTip('Finished'); ) ?> - W x H in inches)</span><br>
+		<input name="txtWidth" size="9" value="<?txtWidth?>"  onKeyUp="calc(this.form.name);" /> x
+		<input name="txtHeight" size="9" value="<?txtHeight?>"  onKeyUp="calc(this.form.name);" />
+		<span class="smTbl">(<? echo ( ssi::writeTip('Flat'); ) ?> - W x H in inches)</span>
+</p>
