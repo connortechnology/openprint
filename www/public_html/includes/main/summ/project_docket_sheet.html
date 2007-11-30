@@ -144,16 +144,38 @@
 			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
 				$html .= '<b>Customer Supplied</b> ';
 			} # end if
+			my $type = 'unknown';
+			
 			if ( $$sig_specs{'rdbSpecificStock'} ne 'Y' ) {
-				$html .= sprintf('%s,<b>%s</b>,%s', $$sig_specs{ddmStockBrand}, uc $$sig_specs{ddmStockFinish}, $$sig_specs{ddmStockWeight} );
+				if ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['gloss','enamel','coated','cast coated'] ) ) {
+					$type = 'GLOSS';
+				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['dull','silk','matte','satin'] ) ) {
+					$type = 'MATTE';
+				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['uncoated','offset','smooth','opaque','vellum','tag','bristol','felt','linen','laid','double thick'] ) ) {
+					$type = 'UNCOATED';
+				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['c1s','ccnb','litho label'] ) ) {
+					$type = 'COATED 1 SIDE';
+				} # end if
+
+				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{ddmStockBrand}, uc $$sig_specs{ddmStockFinish}, $$sig_specs{ddmStockWeight} );
 			} else {
-				$html .= sprintf('%s,<b>%s</b>,%s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
+				if ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['gloss','enamel','coated','cast coated'] ) ) {
+					$type = 'GLOSS';
+				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['dull','silk','matte','satin'] ) ) {
+					$type = 'MATTE';
+				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['uncoated','offset','smooth','opaque','vellum','tag','bristol','felt','linen','laid','double thick'] ) ) {
+					$type = 'UNCOATED';
+				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['c1s','ccnb','litho label'] ) ) {
+					$type = 'COATED 1 SIDE';
+				} # end if
+				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
 			} # end if
 			if ( $$sig_specs{'StockType'.$$variable{'Project'}->ordered_quantity_index()} eq 'Roll' ) {
 			$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} );
 			} else {
 			$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
 			} # end if
+			$html .='<hr/>'.$type;
 			if ( $$sig_specs{'ddmStockFinish'} eq 'Coated 1 Side' or $$sig_specs{'ddmStockFinish'} eq 'C1S' ) {
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
 			} # end if
