@@ -410,7 +410,7 @@ sub summary {
 	$$variable{'UNITPRICE2'} = $$variable{'txtQuantity2'} ? sprintf( "%.2f", $$variable{'TOTAL2'}/$$variable{'txtQuantity2'} ) : '0.00';
 	$$variable{'UNITPRICE3'} = $$variable{'txtQuantity3'} ? sprintf( "%.2f", $$variable{'TOTAL3'}/$$variable{'txtQuantity3'} ) : '0.00';
 
-	openprint::print::get_quantities( $log, $dbh, $variable, $project_index);
+	openprint::print::get_quantities( $variable, $project_index);
 
 	$$variable{'ProjectIndex'} = $project_index;
 	$$variable{'NoPriceBreakDown'} = $r->param('NoPriceBreakDown');

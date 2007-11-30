@@ -921,7 +921,7 @@ $openprint::log->debug("No spread layout for you!");
 
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
 			$project{'Grip'} = $Press->specification('Grip');
-			$project{'Gutter'} = $Press->specification('Gutter') ? $Press->specification('Gutter') : $Press->specification('Grip');
+			$project{'Gutter'} = $Press->specification('Gutter');
 			$project{'Orientation'} = $Press->specification('Orientation');
 			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
 				$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
@@ -1011,7 +1011,7 @@ $openprint::log->debug("No spread layout for you!");
 
 					my $P = $Paper->clone();
 
-# Cut to fit on press
+					# Cut to fit on press
 					if ( 
 							( $P->width() > $Press->specification('Maximum Sheet Width') or $P->height() > $Press->specification('Maximum Sheet Length') )
 							and
@@ -1029,7 +1029,7 @@ $openprint::log->debug("No spread layout for you!");
 						} # end while
 					} # end if
 
-# Keep cutting whiel the sheet still fits on th press.  I originally thought that we shouldn't do this, because why would youw ant to run a half sheet if a full sheet fits?  The answer: small jobs, that due to overs requires the same sheets whether you run full or half.  So by running half, you need half the # of real sheets.
+					# Keep cutting while the sheet still fits on the press.  I originally thought that we shouldn't do this, because why would you want to run a half sheet if a full sheet fits?  The answer: small jobs, that due to overs requires the same sheets whether you run full or half.  So by running half, you need half the # of real sheets.
 						while (
 								( $P->width() >= $Press->specification('Minimum Sheet Width') or $P->height() >= $Press->specification('Minimum Sheet Length') )
 								and
@@ -1037,8 +1037,8 @@ $openprint::log->debug("No spread layout for you!");
 							   ) {
 
 							if ( ! ( 
-										( $P->width() > $$specs{'txtWidth'} and $P->height() > $$specs{'txtHeight'} ) 
-										or ( $P->height() > $$specs{'txtWidth'} and $P->width() > $$specs{'txtHeight'} ) 
+										( $P->width() >= $$specs{'txtWidth'} and $P->height() >= $$specs{'txtHeight'} ) 
+										or ( $P->height() >= $$specs{'txtWidth'} and $P->width() >= $$specs{'txtHeight'} ) 
 								   ) ) {
 								$openprint::log->debug("Next paper because it's too small for the item" . $P->width() . 'x' . $P->height() . ' => ' . $$specs{'txtWidth'} . 'x' . $$specs{'txtHeight'} ) if $debug;
 								last;
@@ -1049,15 +1049,15 @@ $openprint::log->debug("No spread layout for you!");
 								$openprint::log->debug("Override Sheet Size want:$width x $height Looking at " . $P->width() . 'x'.$P->height() . '@' . $P->mweight()) if $debug;
 								last if ! $height;
 								if ( $width != $P->width() or $height != $P->height() ) {
-if ( 0 ) {
+if ( 1 ) {
 									last if ! $P->cuttable();
 									last if $P->width() < $width or $P->height() < $height;
-									$P = $P->clone();
+									$P->gsm();
+									$P->mweight( 0 );
 									$P->width($width);
 									$P->height($height);
+								$openprint::log->debug("Override Sheet Size cut to :$width x $height from " . $P->width() . 'x'.$P->height() . '@' . $P->mweight()) if $debug;
 									next;
-								} else {
-									last;
 								} # end if
 } # end if
 							} # end if
@@ -1184,6 +1184,7 @@ my %best_price = %{$b_price};
 		my $stock_qty = $best_price{'Stock Quantity'};
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Overs: Base:%s Run:%s FM:%s Additional Plate:%s Total:%s<br/>', @$stock_qty{'Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Total Overs'} );
 		if ( $Paper->type() ne 'Roll' ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
 			$$specs{'hdnBreakdown'.$qty_index} .= "\tPaper: $best_price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $best_price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
 			$$specs{'hdnBreakdown'.$qty_index} .= "(\$ $$Paper{'Per M'} Per M) " if $$Paper{'Per M'};
 			$$specs{'hdnBreakdown'.$qty_index} .= " (\$ $best_price{'100lb'}/100lb) = \$ $best_price{'Paper Price'}<br/>";
