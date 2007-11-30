@@ -64,8 +64,8 @@ sub calc {
 		$$specs{'txtCalliper'} = 0;
 		foreach my $signature_service_index ( $Project->signatures('Interior Spreads') ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-			my $calliper = $$sig_specs{'txtSignatureSpreadQuantity'} ? $$sig_specs{'txtSignatureSpreadQuantity'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-			$$specs{'txtCalliper'} += $calliper * $$sig_specs{'txtSpreadSize'}/2;
+			my $calliper = $$sig_specs{'PageQuantity'} ? ($$sig_specs{'PageQuantity'}/2) * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
+			$$specs{'txtCalliper'} += $calliper;
 		} # end foreach
 	} # end if
 

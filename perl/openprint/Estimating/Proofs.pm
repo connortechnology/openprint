@@ -294,7 +294,6 @@ sub insert_colour_proof {
 	my ( $default_proof_type ) = $Equipment[0]->specification( 'Default Colour Proof' );
 	return if ! $default_proof_type;
 
-	$$signature_specs{'txtSignatureSpreadQuantity'.$qty_index} = 1 if $$signature_specs{'txtSignatureSpreadQuantity'.$qty_index} == 0;
 	my $quantity = 0;
 
 	if ( 
@@ -310,7 +309,10 @@ sub insert_colour_proof {
 
 	# we need extra proofs for business cards.
 	if ( $$signature_specs{'txtNameQuantity'} > 1 ) {
-		$$signature_specs{'txtSignatureSpreadQuantity'} *= $$signature_specs{'txtNameQuantity'};
+		$quantity *= $$signature_specs{'txtNameQuantity'};
+	} # end if
+	if ( $$signature_specs{'PageQuantity'.$qty_index} ) {
+		$quantity *= $$signature_specs{'PageQuantity'.$qty_index} / $$signature_specs{'txtSpreadSize'} if $$signature_specs{'txtSpreadSize'};
 	} # end if
 
 	if ( $$specs{'RequireColourProofs'} eq 'N' ) {
@@ -318,7 +320,7 @@ sub insert_colour_proof {
 	} # end if
 
 # only if project requires 4 colour process.
-	insert_new_proof( $log, $dbh, $specs, $proof_index, $$signature_specs{'SignatureIndex'}, $$signature_specs{'txtSignatureSpreadQuantity'.$qty_index} * $quantity, @$signature_specs{'txtWidth', 'txtHeight'}, $default_proof_type, $qty_index );
+	insert_new_proof( $log, $dbh, $specs, $proof_index, $$signature_specs{'SignatureIndex'}, $quantity, @$signature_specs{'txtWidth', 'txtHeight'}, $default_proof_type, $qty_index );
 } # end sub insert_colour_proof
 
 sub insert_layout_proof {

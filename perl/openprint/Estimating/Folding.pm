@@ -385,8 +385,6 @@ sub signature_calc {
 				}
 
 			} else {
-#if ( $$sig_specs{"txtSignatureSpreadQuantity$qty_index"} ) {
-
 				# A book
 $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $Equipment->name()) if $debug;
 
@@ -412,7 +410,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 						next;
 					} # end if
 					# This tells us whether it's a book or not
-					last if ! $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index};
+					last if ! $$sig_specs{'PageQuantity'.$qty_index};
 
 # If we have to cut it down
 					if ( $I->spread_rows() > $I->spread_columns() ) {
@@ -447,7 +445,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					next;
 				} else {
 					foreach my $I ( @good_folds ) {
-						$folds{$I->spreads()*$$sig_specs{'txtSpreadSize'}.'PageSignatureFold'} += 1;
+						$folds{$I->pages().'PageSignatureFold'} += 1;
 					}
 				} # end if
 			} # end if
@@ -563,7 +561,7 @@ sub calc {
 			$$sig_specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'} if ! $$sig_specs{'txtSpreadSize'};
 			$$sig_specs{'txtSpreadSize'} = 2 if ! $$sig_specs{'txtSpreadSize'};
 
-			if ( ( ! exists $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) or $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
+			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index );
 				$price += $results{'Price'};
 				$mprice += $results{'MPrice'};
