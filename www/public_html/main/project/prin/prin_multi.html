@@ -62,22 +62,22 @@
 <fieldset><legend>Book Specifications</legend>
 	<p>
 		<label>Total pages:</label>
-		<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="9"  onkeyup="calc(this.form.name);" />
+		<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="calc(this.form.name);" />
 	</p>
 	<p>
 		<label>Cover:</label>
-		<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('SignatureGroup1');calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Self' ) ?> />
+		<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Self' ) ?> />
 		<label class="radio" for="rdbCoverSelf">Self Cover</label>
-		<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('SignatureGroup1');calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
+		<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
 		<label class="radio" for="rdbCoverDifferent">Different Cover</label>
 	</p>
 	<p>
 		<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages:</label>
-		<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="9"  onkeyup="calc(this.form.name);" />
+		<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="4"  onkeyup="calc(this.form.name);" />
 	</p>
 	<p>
 		<label># of inserts:</label>
-		<input name="txtInsertQuantity" size="9" value="<?txtInsertQuantity?>"/>
+		<input name="txtInsertQuantity" size="4" value="<?txtInsertQuantity?>"/>
 	</p>
 </fieldset>
 			<br class="spacer"/>

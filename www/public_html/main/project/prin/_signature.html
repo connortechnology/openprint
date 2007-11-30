@@ -1,8 +1,8 @@
 <fieldset id="SignatureGroup<?Group?>" <? echo ( ( $$variable{'Group'} == 1 and $$variable{'rdbCover'} ne 'Different' ) ? 'style="display:none;"' : '' ) ?> >
 	<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ? $$variable{'txtServiceDescription'.$$variable{'Group'}} : ( $$variable{'Group'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
 	<p>
-		<label>Pages:</label>
-		<input type="text" name="GroupPageQuantity<?Group?>" value="<? echo ( $$variable{'GroupPageQuantity'.$$variable{'Group'}} ) ?>" onkeyup="calc(this.form.name);" />
+		<label># of Pages:</label>
+		<input type="text" name="GroupPageQuantity<?Group?>" value="<? echo ( $$variable{'GroupPageQuantity'.$$variable{'Group'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />
 		<input type="checkbox" id="OverrideGroupPageQuantity<?Group?>" name="OverrideGroupPageQuantity<?Group?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{'OverrideGroupPageQuantity'.$$variable{'Group'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="OverrideGroupPageQuantity<?Group?>">Override</label>
 	</p>

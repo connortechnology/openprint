@@ -430,7 +430,20 @@ sub skid_details {
 			return;
 		} # end if
 
-		if ( $openprint::param{'skid_quantity'} ) {
+		if ( ( ! $openprint::param{'skid_quantity'} ) and @skid_ids ) {
+			foreach my $skid_id ( @skid_ids ) {
+				$openprint::param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
+				my $S = new openprint::Skid( $skid_id );
+				save_skid( $r, $variable, $S );
+				if ( ! $$variable{'Paper'} ) {
+					if ( my @c = $S->contents() ) {
+						$$variable{'paper_id'} = $c[0]->paper_id();
+						$$variable{'Paper'} = new openprint::Paper( $$variable{'paper_id'} );
+					} # end of
+				} # end of
+			} # end foreach
+		} else {
+			$openprint::param{'skid_quantity'} = 1 if ! $openprint::param{'skid_quantity'};
 			if ( (@quantities>1) and ( @quantities != $openprint::param{'skid_quantity'} ) ) {
 				$$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
 				return;
@@ -449,18 +462,6 @@ sub skid_details {
 				} # end of
 			} # end foreach
 			$$variable{'information'} .= "Added $openprint::param{'skid_quantity'} skids.<br/>";
-		} else {
-			foreach my $skid_id ( @skid_ids ) {
-				$openprint::param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
-				my $S = new openprint::Skid( $skid_id );
-				save_skid( $r, $variable, $S );
-				if ( ! $$variable{'Paper'} ) {
-					if ( my @c = $S->contents() ) {
-						$$variable{'paper_id'} = $c[0]->paper_id();
-						$$variable{'Paper'} = new openprint::Paper( $$variable{'paper_id'} );
-					} # end of
-				} # end of
-			} # end foreach
 		} # end if
 
 	} elsif ( sets::isin( $openprint::param{'btnFunction'}, 'Copy', 'Duplicate' ) ) {

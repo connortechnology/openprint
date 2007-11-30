@@ -77,7 +77,18 @@ sub copy {
 	my $new = new openprint::SkidContent();
 	@$new{keys %$self} = @$self{keys %$self};
 	return $new;
-} # end sub
+} # end sub copy
+
+sub purpose {
+	my $self = shift;
+	return $self->Purpose()->name();
+} # end sub purpose
+
+sub Purpose {
+	my $self = shift;
+	my $Purpose = new openprint::StockPurpose( $$self{'purpose_id'} );
+	return $Purpose;
+} # end sub Purpose
 
 1;
 
