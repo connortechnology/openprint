@@ -3,6 +3,7 @@
 <h2>History</h2>
 </div>
 <script type="text/javascript">
+<!--
 	function delete_confirm(form) {
 		var number_of_deleted_projects = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -36,6 +37,7 @@
 	
 	if ( typeof(initializeDayDropDowns) ) 
 		window.onload = initializeDayDropDowns;
+-->
 </script>	 
 <? if ( $openprint::session{'user_id'} ) ?>
 <form name="f1" method="post" action="/main/project/history.html">
@@ -52,7 +54,7 @@
 			</p>
 			<p>
 				<label>Status:</label>
-				<select name="ddmStatus" size="1" onchange="load_projects( this.form );">
+				<select name="ddmStatus" onchange="load_projects( this.form );">
 					<option value="">All</option>
 <? echo ( 
 		$_ = q{SELECT name, name FROM Project_Statuses WHERE name != 'Deleted' ORDER BY sort,lower(name)};

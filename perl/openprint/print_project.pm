@@ -1152,6 +1152,8 @@ sub calc {
 				return jsrs::encode_pairs(%specs);
 			} # end if
 
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $services{''}[0], 'SideOneUVCoatingType', $specs{'SideOneCoatingType'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $services{''}[0], 'SideTwoUVCoatingType', $specs{'SideTwoCoatingType'} );
 			if ( 
 					( $specs{'SideOneCoatingType'} and ( $specs{'SideOneCoatingType'} ne 'None' ) ) or
 					( $specs{'SideTwoCoatingType'} and ( $specs{'SideTwoCoatingType'} ne 'None' ) ) 
@@ -1159,8 +1161,6 @@ sub calc {
 				if ( ! $services{'UVCoating'} ) {
 					push @{$services{'UVCoating'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'UVCoating' );
 				} # end if
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $services{'UVCoating'}[0], 'SideOneCoatingType-0', $specs{'SideOneCoatingType'} );
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $services{'UVCoating'}[0], 'SideTwoCoatingType-0', $specs{'SideTwoCoatingType'} );
 			} elsif ( $services{'UVCoating'} ) {
 				foreach ( @{$services{'UVCoating'}} ) {
 					openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );

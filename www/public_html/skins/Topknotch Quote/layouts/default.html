@@ -92,6 +92,9 @@
 						<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 						<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
 						<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+						<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+						<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
+						<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 					</div>
 					<br class="spacer"/>
 				</div><!--Header-->

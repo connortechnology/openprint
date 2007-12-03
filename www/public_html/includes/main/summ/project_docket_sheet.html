@@ -1,3 +1,4 @@
+<? if ( $openprint::config{'Barcodes Enabled'} ne 'N' ) ?>
 <table width="100%" border="0">
 	<tr>
 		<th width="20">&nbsp;</th>
@@ -15,6 +16,7 @@
 		<td width="20">&nbsp;</td>
 	</tr>
 </table>
+<? endif ( $openprint::config{'Barcodes Enabled'} ne 'N' ) ?>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
 	<tr> 
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -140,7 +142,10 @@
 			} else {
 				$html .= $$sig_specs{'UsePress'};
 			} # end if
-			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/></td><td class="docketText">';
+			if ( $openprint::config{'Barcodes Enabled'} ne 'N' ) {
+			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/>';
+			} # end if
+			$html .= '</td><td class="docketText">';
 			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
 				$html .= '<b>Customer Supplied</b> ';
 			} # end if
@@ -191,8 +196,11 @@ $html .= '<td class="docketText"><br/><br/><br/></td></tr>';
 	} # end while service_index
 return $html;
 ) ?>
+			<? if ( $openprint::config{'Barcodes Enabled'} ne 'N' ) ?>
 	<tr>
-		<td align="center"><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F<? echo ( ++$$variable{'SignatureIndex'} ) ?>+&NoText=1&Height=20"/></td>
+		<td align="center">
+<img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F<? echo ( ++$$variable{'SignatureIndex'} ) ?>+&NoText=1&Height=20"/>
+</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
@@ -201,6 +209,7 @@ return $html;
 		<td>&nbsp;</td>
 		<td><br><br><br></td>
 	</tr>
+			<? endif ( $openprint::config{'Barcodes Enabled'} ne 'N' ) ?>
 </table>
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white" style="table-layout: fixed;">

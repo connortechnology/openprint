@@ -19,10 +19,6 @@ body {
 #Header .Content {
 	padding: 5px;
 }
-#Header A {
-	background-color: #fafafa;
-	text-decoration: none;
-}
 #Header IMG.Logo {
 	border: none;
 	height: 80px;
