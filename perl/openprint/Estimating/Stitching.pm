@@ -245,7 +245,7 @@ sub calc {
 	if ( $$services{'Folding'} ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 	} # end if
-	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $log, $dbh, $project_index );
+	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	my $plusCover = 0;
 	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
 		#$log->debug("************* We Have Plus Cover *************************");
