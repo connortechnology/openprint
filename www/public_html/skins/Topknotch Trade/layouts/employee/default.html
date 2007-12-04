@@ -3,12 +3,11 @@
 	<head>
 		<title><?PageTitle?></title>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-		<link rel="stylesheet" href="/css/common.css" type="text/css"/>
-		<link rel="stylesheet" href="/css/menu.css" type="text/css">
-		<link rel="stylesheet" href="/css/button.css" type="text/css">
-		<link rel="stylesheet" href="/css/administrator.css" type="text/css">
+        <link href="/css/common.css" rel="stylesheet" type="text/css">
+        <link href="/css/menu.css" rel="stylesheet" type="text/css">
+        <link href="/css/employee.css" rel="stylesheet" type="text/css">
+        <link href="/css/button.css" rel="stylesheet" type="text/css">
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
-		<script type="text/javascript" src="/javascripts/tips.js"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
 		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
@@ -42,24 +41,27 @@
 
         <!-- calendar stylesheet -->
         <link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
-
+        <!-- main calendar program -->
         <script type="text/javascript" src="/javascripts/jscalendar/calendar.js"></script>
+        <!-- language for the calendar -->
         <script type="text/javascript" src="/javascripts/jscalendar/lang/calendar-en.js"></script>
+        <!-- the following script defines the Calendar.setup helper function, which makes
+        adding a calendar a matter of 1 or 2 lines of code. -->
         <script type="text/javascript" src="/javascripts/jscalendar/calendar-setup.js"></script>
-		<link rel="shortcut icon" href="/images/favicon.ico"/>
 	</head>
 	<body>
-		<div id="Header">
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
+		<div class="Header">
+			<span style="float: left; font-size: 30px; color: #687796;">Topknotch Quote</span>
+			<!--<img style="float: left; margin-right: 15px;" src="/images/main/header/logo.jpg">-->
+			<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
+			<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
 		</div><!-- Header -->
-		<div id="Menu">
-			<!--#include virtual="/includes/administrator_menu.html"-->
-		</div>
+		<br class="spacer"/>
+		<!--#include virtual="/skins/<?SiteTitle?>/includes/employee_menu.html"-->
 		<div id="Content">
-			<div class="Content">
-			<?PageContent?>
-			</div>
+			<div class="Content"><?PageContent?></div>
 		</div>
-		<div id="Footer"></div>
 	</body>
 </html>
