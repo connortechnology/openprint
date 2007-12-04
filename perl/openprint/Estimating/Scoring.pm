@@ -65,7 +65,7 @@ sub signature_needs {
 #$openprint::log->debug("NeedFolding is not true $$specs{'txtWidth'}x$$specs{'txtHeight'} : $$specs{'txtFinalWidth'}x$$specs{'txtFinalHeight'}");
 		return 0;
 	} # end if
-	if ( ( $$specs{'txtSignatureType'} eq '' ) or ( $$specs{'txtSignatureType'} eq 'Cover Spreads' ) or ( $$specs{'txtSignatureType'} and ( $$specs{'SignatureIndex'} == 1 ) ) ) {
+	if ( ( $$specs{'txtSignatureType'} eq '' ) or ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) or ( $$specs{'txtSignatureType'} and ( $$specs{'SignatureIndex'} == 1 ) ) ) {
 		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
 #$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
 		if ( $Paper->score_required() ) {
@@ -197,7 +197,7 @@ $openprint::log->debug("sign calc");
 	# juts for efficeincy
 	my $cutting_service_index = $$services{'Cutting'} ? $$services{'Cutting'}[0] : undef;
 
-	if ( ( $$sig_specs{'SignatureIndex'} == 1 ) and sets::isin( $$sig_specs{'txtSignatureType'}, ['Cover Spreads','Interior Spreads'] ) ) {
+	if ( ( $$sig_specs{'SignatureIndex'} == 1 ) and sets::isin( $$sig_specs{'txtSignatureType'}, ['Cover Pages','Interior Pages'] ) ) {
 		my $proj_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		@$sig_specs{'txtFinalWidth','txtFinalHeight'} = @$proj_specs{'txtFinalWidth','txtFinalHeight'};
 	} # end if
@@ -436,7 +436,7 @@ sub get_scores {
 		$openprint::log->debug("SIgnature $$sig_specs{'SignatureIndex'} doesn't need scoring in get_scores") if $debug;
 		return;
 	} # end if
-	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 		if ( openprint::print::get_book_type( $Project ) eq 'PerfectBound' ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 4;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
@@ -444,7 +444,7 @@ sub get_scores {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
 		} # end if
-	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' ) {
+	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Pages' ) {
 		if ( $$sig_specs{'SignatureIndex'} == 1 ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;

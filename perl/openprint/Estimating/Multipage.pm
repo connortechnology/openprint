@@ -90,9 +90,9 @@ sub calc {
 		$override_pages{$$sig_specs{'txtSignatureType'}} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
 	} # end foreach
 	my %pages;
-	$pages{'Cover Spreads'} = $override_pages{'Cover Spreads'} ? $override_pages{'Cover Spreads'} : ($$specs{'rdbCover'} eq 'Different' ? 4 : 0);
+	$pages{'Cover Pages'} = $override_pages{'Cover Pages'} ? $override_pages{'Cover Pages'} : ($$specs{'rdbCover'} eq 'Different' ? 4 : 0);
 	$pages{'Gate Folded Spreads'} = $$specs{'txtGateFoldedPageQuantity'};
-	$pages{'Interior Spreads'} = ( $$specs{'txtTotalPageQuantity'} - $pages{'Cover Spreads'} ) - $pages{'Gate Folded Spreads'};
+	$pages{'Interior Pages'} = ( $$specs{'txtTotalPageQuantity'} - $pages{'Cover Pages'} ) - $pages{'Gate Folded Spreads'};
 
 
 	foreach my $group_id ( @Groups ) {
@@ -100,9 +100,9 @@ sub calc {
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
 		if ( $group_id == 1 and $$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) {
-			$$specs{'GroupPageQuantity1'} = $pages{'Cover Spreads'};
+			$$specs{'GroupPageQuantity1'} = $pages{'Cover Pages'};
 		} elsif ( $$specs{'OverrideGroupPageQuantity'.$group_id} ne 'Y' ) {
-			$$specs{'GroupPageQuantity'.$group_id} = ( ( $$specs{'txtTotalPageQuantity'} - $pages{'Cover Spreads'} ) - $override_pages{'Interior Spreads'} );
+			$$specs{'GroupPageQuantity'.$group_id} = ( ( $$specs{'txtTotalPageQuantity'} - $pages{'Cover Pages'} ) - $override_pages{'Interior Pages'} );
 		} # end if
 	} # end foreach
 
@@ -150,8 +150,8 @@ sub calculate_signatures {
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 	return if ! $$printing_specs{'txtTotalPageQuantity'};
 
-	my @signatures = sort $Project->signatures('Interior Spreads');
-	push @signatures, sort $Project->signatures('Cover Spreads');
+	my @signatures = sort $Project->signatures('Interior Pages');
+	push @signatures, sort $Project->signatures('Cover Pages');
 	push @signatures, sort $Project->signatures('GateFolded Spreads');
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
@@ -218,7 +218,7 @@ $openprint::log->debug( "XXXXXXXXXXXXX$$sig_specs{PageQuantity1} $$sig_specs{Pag
 				} # end if
 			} elsif ( $$sig_specs{'Status'} eq 'calculated' ) {
 				$status = $$sig_specs{'Status'};
-				if ( ( @signatures > 1 ) and $$printing_specs{'txtTotalPageQuantity'} and $$sig_specs{'txtSignatureType'} ne 'Cover Spreads' and ! ( $$sig_specs{'PageQuantity1'}
+				if ( ( @signatures > 1 ) and $$printing_specs{'txtTotalPageQuantity'} and $$sig_specs{'txtSignatureType'} ne 'Cover Pages' and ! ( $$sig_specs{'PageQuantity1'}
 							or $$sig_specs{'PageQuantity2'}
 							or $$sig_specs{'PageQuantity3'} ) ) {
 $openprint::log->warn('Deleting due to no pages');
@@ -251,7 +251,7 @@ $openprint::log->debug("after initial recalc");
 					openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
 					@signatures = sets::exclude( [ $ss_id ], \@signatures );
 				} # end if
-			} elsif ( ( $unspecified_pages > 0 ) and ( $$sig_specs{'txtSignatureType'} ne 'Cover Spreads' ) ) {
+			} elsif ( ( $unspecified_pages > 0 ) and ( $$sig_specs{'txtSignatureType'} ne 'Cover Pages' ) ) {
 	# Need to add signatures
 				my $check_unspecified_pages = $unspecified_pages;
 				while ( $unspecified_pages > 0 ) {
@@ -322,11 +322,11 @@ sub status {
 	} # end foreach
 
 	if ( $$printing_specs{'rdbCover'} eq 'Different') {
-		return 'Cover Spreads' if ! $specified_pages{'Cover Spreads'};
+		return 'Cover Pages' if ! $specified_pages{'Cover Pages'};
 	} # end if
-	my $interior_pages = $$printing_specs{'txtTotalPageQuantity'} - $specified_pages{'Cover Spreads'};
+	my $interior_pages = $$printing_specs{'txtTotalPageQuantity'} - $specified_pages{'Cover Pages'};
 
-	return 'Interior Spreads' if $interior_pages > $specified_pages{'Interior Spreads'};
+	return 'Interior Pages' if $interior_pages > $specified_pages{'Interior Pages'};
 } # end sub status
         
 sub copy_signature {

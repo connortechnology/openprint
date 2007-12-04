@@ -242,13 +242,30 @@ $dbh->do(q{insert into stockpurposes (name) values ('Sample')});
 	$version = 1898;
 } # end if
 if ( $version < 1899 ) {
-	print "Updating to version 1898\n";
+	print "Updating to version 1899\n";
 	my $ac = sql::start_transaction( $dbh );
 $dbh->do(q{alter table skid_contents add primary key (skid_id, paper_id)});
 $dbh->do(q{drop index "skid_contents_skid_id_index"});
 	sql::insert( undef, undef, 'database_info', 'version', 1899, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1899;
+} # end if
+if ( $version < 1900 ) {
+	print "Updating to version 1900\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{
+CREATE TABLE Quote_Log (
+    quote_id    INTeger NOT NULL, FOREIGN KEY(quote_Id) REFERENCES tbl_Quotes (index),
+    Company_id  INTeger NOT NULL, FOREIGN KEY(company_id) REFERENCES Company (index),
+    User_id     INTeger NOT NULL, FOREIGN KEY(user_id) REFERENCES Users (index),
+    dtmwhen     timestamp with time zone NOT NULL default(NOW()),
+    Description         TEXT,
+    PRIMARY KEY (quote_Id,dtmwhen)
+)
+});
+	sql::insert( undef, undef, 'database_info', 'version', 1900, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1900;
 } # end if
 
 

@@ -62,7 +62,7 @@ sub calc {
 
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
 		$$specs{'txtCalliper'} = 0;
-		foreach my $signature_service_index ( $Project->signatures('Interior Spreads') ) {
+		foreach my $signature_service_index ( $Project->signatures('Interior Pages') ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 			my $calliper = $$sig_specs{'PageQuantity'} ? ($$sig_specs{'PageQuantity'}/2) * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
 			$$specs{'txtCalliper'} += $calliper;

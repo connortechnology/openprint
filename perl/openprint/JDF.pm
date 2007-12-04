@@ -53,9 +53,9 @@ my %coatings = (
 
 sub ProductType {
 	my ( $Project, $sig_specs ) = @_;
-	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 		return 'Cover';
-	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' ) {
+	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Pages' ) {
 		return 'Body';
 	} elsif ( sets::isin( $Project->Type->strid(), [ 'Brochures','Flyers' ] ) ) {
 		return 'Brochure';
@@ -305,7 +305,7 @@ sub StrippingParams {
 		$StripCellParams->setAttribute('MillingDepth',0);
 		$StripCellParams->setAttribute('Spine',0 );
 		my $lap = .25 * 72;
-		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 			if ( $Paper->gsm() >= 216 ) { # ROughly 80lb
 # Cover doesn't need lap, unless it is off center or under 80lb
 				$lap = 0;

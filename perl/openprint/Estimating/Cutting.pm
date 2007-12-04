@@ -318,7 +318,7 @@ sub signature_calc {
 		} else {
 			$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
 		} # end if
-		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
 				# Assume head to head at all times - head trim
 				if ( $$sig_specs{'chkBleedTop'} ) {
@@ -345,7 +345,7 @@ sub signature_calc {
 		} else {
 			$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
 		} # end if
-		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
 				if ( $$sig_specs{'chkBleedTop'} ) {
 					$horizontal_cuts += int( $$sig_specs{'hdnImpositionRows'.$qty_index}/2);

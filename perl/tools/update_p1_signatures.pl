@@ -34,6 +34,7 @@ foreach my $Project ( @projects ) {
 		#if ( ! exists $$sig_specs{'Group'} ) {
 		if ( $$sig_specs{'txtSignatureType'} ) {
 			if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Cover Pages' );
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '1' );
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
 		
@@ -41,6 +42,7 @@ foreach my $Project ( @projects ) {
 				my $p_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 			
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Interior Pages' );
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '2' );
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$p_specs{'txtInteriorSpreadQuantity'} * $$sig_specs{'txtSpreadSize'} );
 			} else {

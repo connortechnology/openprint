@@ -14,10 +14,10 @@ function calc( formName, force ) {
 </script>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
-		<? if ( $$variable{'txtSignatureType'} eq 'Cover Spreads' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+		<? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
 			<!--#include virtual="/includes/main/proj/templates/signature_template_select.html"-->
 			<!--#include virtual="/includes/main/proj/templates/signatures.html"-->
-		<? endif ( $$variable{'txtSignatureType'} eq 'Cover Spreads' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+		<? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
 
 		<fieldset><legend><?txtSignatureType?></legend>
 <p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>

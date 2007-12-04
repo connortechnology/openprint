@@ -78,7 +78,7 @@ sub new {
 	my $child_id = 0;
 	my $parent_sig_id = 0;
 
-	my ( $cover_sig_id ) = $P->signatures('Cover Spreads' );
+	my ( $cover_sig_id ) = $P->signatures('Cover Pages' );
 	my @signatures = $P->signatures();
 	$cover_sig_id = shift @signatures if ! $cover_sig_id;
 	@signatures = sets::exclude([$cover_sig_id], \@signatures );
@@ -103,7 +103,7 @@ sub new {
 		$Component->setAttribute('RequestedNumberOut', $$sig_specs{'txtImposition'.$P->ordered_quantity_index()} );
 		$Component->setAttribute('Priority', 5 );
 		$Component->setAttribute('Active', 'True' );
-		$Component->setAttribute('Cover', $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ? 'True' : 'False' );
+		$Component->setAttribute('Cover', $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ? 'True' : 'False' );
 		$Component->setAttribute('CombinePages','False');
 
 		if ( $sig_id != $cover_sig_id ) {
@@ -122,7 +122,7 @@ sub new {
 		} else {
 			$Component->setAttribute('FinishedGrain', 'Either' );
 		} # end if
-		if ( $sig_id == $cover_sig_id and $$sig_specs{'txtSignatureType'} ne 'Cover Spreads' ) {
+		if ( $sig_id == $cover_sig_id and $$sig_specs{'txtSignatureType'} ne 'Cover Pages' ) {
 			$Component->setAttribute('ChildIndex', '-1' );
 		} else {
 			if ( $binding eq 'SaddleStitching' ) {

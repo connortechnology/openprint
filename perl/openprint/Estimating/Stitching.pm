@@ -132,7 +132,7 @@ sub signature_calc {
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
+		next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index}");
 		$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} != 2 ) or sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] );
 	} # end foreach
@@ -227,7 +227,7 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-			next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
+			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} != 2 ) or sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] );
 			last if $imposition == 1;
 		} # end foreach

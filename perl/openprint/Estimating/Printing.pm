@@ -442,13 +442,13 @@ my $master_time = gettimeofday();
 					$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
 				} # end if
 			} # end if
-		} elsif ( $$specs{'txtSignatureType'} eq 'Cover Spreads' and $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+		} elsif ( $$specs{'txtSignatureType'} eq 'Cover Pages' and $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
 #$$specs{'txtSpreadSize'} = $printing_specs{'txtSpreadSize'};
 #$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
 			if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
 # Perfect bound requires more width on th cover to conver the calliiper	
 				my $finished_calliper = 0;
-				$_ = q{SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='txtSignatureType' AND NOT strValue='Cover Spreads'};
+				$_ = q{SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='txtSignatureType' AND NOT strValue='Cover Pages'};
 				my @signature_service_indices = sql::execute( $log, $dbh, $_, $project_index );
 				foreach my $signature_service_index ( @signature_service_indices ) {
 					my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
@@ -752,9 +752,9 @@ $openprint::log->debug("Grabbing UV Specs");
 			$$specs{'PrintingTypes'} = [ $$printing_specs{'PrintingType'} ];
 		} else {
 
-			if ( $$specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+			if ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
 # FIgure out printing types
-				foreach my $index ( $Project->signatures('Interior Spreads') ) {
+				foreach my $index ( $Project->signatures('Interior Pages') ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
 						$$specs{'PrintingTypes'} = ['Digital'];
@@ -768,13 +768,13 @@ $openprint::log->debug("Grabbing UV Specs");
 					last if $$specs{'PrintingTypes'};
 				} # end foreach
 
-			} elsif ( $$specs{'txtSignatureType'} eq 'Interior Spreads' ) {
+			} elsif ( $$specs{'txtSignatureType'} eq 'Interior Pages' ) {
 # if the cover is digital, then we need digital
 # if another interior spread is digital, then we need digital
 # if the cover is offset, then we need offset
 # if the cover is waterless, then we can do waterless, or offset
 				my $cover_specs;
-				foreach my $index ( $Project->signatures('Cover Spreads') ) {
+				foreach my $index ( $Project->signatures('Cover Pages') ) {
 					$cover_specs = openprint::service::get_specs_ref( $project_index, $index );
 				} # end foreach
 				if ( $$cover_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
@@ -786,7 +786,7 @@ $openprint::log->debug("Grabbing UV Specs");
 				} # end if
 				if ( ! $$specs{'PrintingTypes'} ) {
 
-					foreach my $index ( $Project->signatures('Interior Spreads') ) {
+					foreach my $index ( $Project->signatures('Interior Pages') ) {
 						next if $index == $service_index;
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 						if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
@@ -1896,7 +1896,7 @@ sub calc_price {
 	$price{'Total Cost'} += $price{'Paper Price'} if (! $$services{'Paper'}) and ($$specs{'rdbSuppliedStock'} ne 'Y');
 
 	if ( ! $$specs{'no_stitching'} ) {
-	if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
+	if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Pages') {
 
 		#my $starttime = gettimeofday();
 		my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
