@@ -75,8 +75,12 @@ if ( 1 ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE lngProjectIndex=?}, $Project->id() ) ) {
+				$log->error('Quoted!' . $Project->id());
+				next;
+			} # end if
 			if ( $Project->status() ne 'Unordered' ) {
-				$log->error('WTF!');
+				$log->error('WTF!' . $Project->id());
 				next;
 			} # end if
 			if ( $Project->order_id() ) {
@@ -127,7 +131,7 @@ if ( 1 ) {
 	} 
 	sql::end_transaction( $dbh, $ac );
 	$ac = sql::start_transaction( $dbh );
-	my @companies = sql::execute( undef, undef, q{select index from company where (select count(users.index) from users where companyindex=Company.Index)=0} );
+	my @companies = sql::execute( undef, undef, q{SELECT index FROM company WHERE (SELECT count(users.index) FROM users WHERE companyindex=Company.Index)=0} );
 	foreach my $id ( @companies ) {
 		new openprint::Company($id)->delete();
 	} 
