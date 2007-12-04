@@ -314,13 +314,13 @@ sub save_project_information {
 	if ( $openprint::param{'ddmDueDateYear'.$project_index} and $openprint::param{'ddmDueDateMonth'.$project_index} and $openprint::param{'ddmDueDateDay'.$project_index} ) {
 
 		if ( ! check_date(1*$openprint::param{'ddmDueDateYear'.$project_index},1*$openprint::param{'ddmDueDateMonth'.$project_index},1*$openprint::param{'ddmDueDateDay'.$project_index})) {
-			return misc::error( $log, $dbh, $variable, 'Invalid Date', q{Date is not valid.	Please select a correct date.} );
+			return q{Date is not valid. Please select a correct date.};
 		} # end if
 		$sql{'dateRequired'}=sprintf('%.4d-%.2d-%.2d', @openprint::param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} );
 		$Project->requested_date( sprintf('%.4d-%.2d-%.2d', @openprint::param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
 	} # end if
 
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 	# If we are specifying the Shipping Type
 	if ( $openprint::param{'ShippingType'.$project_index} ) {
 		$sql{'ShippingType'}=$openprint::param{'ShippingType'.$project_index};	
@@ -329,16 +329,19 @@ sub save_project_information {
 		my %ShippingServices = map { $_->name(), $_->id() } openprint::ServiceType::find('category'=>'Shipping');
 # If it's something we can auto-calc, then auto-calc
 		if ( $ShippingServices{$openprint::param{'ShippingType'.$project_index}} ) {
-			if ( ! $services{$openprint::param{'ShippingType'.$project_index}} ) {
+			if ( ! $$services{$openprint::param{'ShippingType'.$project_index}} ) {
 				my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $openprint::param{'ShippingType'.$project_index} );
-				push @{$services{$openprint::param{'ShippingType'.$project_index}}}, $new_service_index;
-				openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, $openprint::param{'ShippingType'.$project_index} );
+				push @{$$services{$openprint::param{'ShippingType'.$project_index}}}, $new_service_index;
+				my $service_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, $openprint::param{'ShippingType'.$project_index} );
+				if ( $$service_specs{'Status'} ne 'calculated' ) {
+					return 'Unable to calculate shipping: ' . $$service_specs{'alert'};
+				} # end if
 			} # end if
 		} # end if
 		foreach my $ShippingType ( keys %ShippingServices ) {
 			if ( $ShippingType ne $openprint::param{'ShippingType'.$project_index} ) {
-				if ( $services{$ShippingType} ) {
-					foreach ( @{$services{$ShippingType}} ) {
+				if ( $$services{$ShippingType} ) {
+					foreach ( @{$$services{$ShippingType}} ) {
 						openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 					} # end foreach
 				} # end if
@@ -376,9 +379,10 @@ sub save_project_information {
 				);
 
 		foreach my $spec ( keys %shipping_fields ) {
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $openprint::param{"$spec-$project_index-$service_id"} );
+			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $shipping_fields{$spec}, $openprint::param{"$spec-$project_index-$service_id"} );
 		} # end foreach
 	} # end if
+	return;
 } # end foreach save_project_information
 
 # displays the order_info page
@@ -430,7 +434,7 @@ sub information {
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Continue') { # saving projcet information
 		foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
-			save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
+			$$variable{'error'} .= save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
 		} # end foreach
 	} elsif ( $openprint::param{'Product'} and $openprint::param{'Quantity'} ) {
 		( $order_id, $error ) = add_product( $order_id, @openprint::param{'Product','Quantity'} );
@@ -627,7 +631,7 @@ sub verify_order {
 
 	if ( $openprint::param{'btnFunction'} eq 'Continue') { # saving projcet information
 		foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
-			save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
+			$$variable{'Error'} .= save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
 		} # end foreach
 		foreach my $Product ( $Order->Products() ) {
 			$Product->quantity( $openprint::param{'ProductQuantity'.$Product->id()} );
