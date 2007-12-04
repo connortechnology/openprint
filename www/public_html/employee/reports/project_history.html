@@ -1,4 +1,8 @@
 <script type="text/javascript">
+	function load_contents( form ) {
+		$('Results').innerHTML = 'Please wait...';
+		new Ajax.Updater('Results','/employee/reports/_project_history_results.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
 	function initializeDayDropDowns() {
         if ( typeof(setDaysDropDown) == 'function' ) {
             setDaysDropDown(document.f1.DateStartYear.value,document.f1.DateStartMonth.value,document.f1.DateStartDay,document.f1.DateStartDay.value);
@@ -91,7 +95,7 @@
 		<? endif ( $openprint::session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
 
 		 <p class="buttons">
-			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "LoadContent('Results', '/employee/reports/_project_history_results.html', Serialize(f1));", '', 'Show Results' ); ) ?>
+			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_contents(f1);", '', 'Show Results' ); ) ?>
 		 </p>
 
 

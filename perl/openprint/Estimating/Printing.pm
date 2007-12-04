@@ -1031,9 +1031,9 @@ $openprint::log->debug("No spread layout for you!");
 
 					# Keep cutting while the sheet still fits on the press.  I originally thought that we shouldn't do this, because why would you want to run a half sheet if a full sheet fits?  The answer: small jobs, that due to overs requires the same sheets whether you run full or half.  So by running half, you need half the # of real sheets.
 						while (
-								( $P->width() >= $Press->specification('Minimum Sheet Width') or $P->height() >= $Press->specification('Minimum Sheet Length') )
-								and
-								( $P->width() >= $Press->specification('Minimum Sheet Length') or $P->height() >= $Press->specification('Minimum Sheet Width') )
+								( $P->width() >= $Press->specification('Minimum Sheet Width') and $P->height() >= $Press->specification('Minimum Sheet Length') )
+								or
+								( $P->width() >= $Press->specification('Minimum Sheet Length') and $P->height() >= $Press->specification('Minimum Sheet Width') )
 							   ) {
 
 							if ( ! ( 
@@ -1593,6 +1593,7 @@ sub calc_price {
 	} # end if 
 
 	my $base_impressions = ceil($qty / $imposition);
+	$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
 
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
