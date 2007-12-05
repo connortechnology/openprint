@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 use strict;
@@ -1369,7 +1369,7 @@ $imp->display();
 				next;
 			} # end if
 #my $starttime = gettimeofday();
-$imp->display();
+#$imp->display();
 
 #my $time = gettimeofday();
 			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
@@ -1408,13 +1408,16 @@ $imp->display();
 ##$Imposition->display();
 
 #my $time = gettimeofday();
-$new_specs{'no_stitching'} = 1; # unneccessary calculation
+#n$new_specs{'no_stitching'} = 1; # unneccessary calculation
 						$sig_price = calc_price( $Project, $s_id, $imp, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("2 Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+#$new_specs{'no_stitching'} = 0; # unneccessary calculation
 						$additional_price = $$sig_price{'Comparison Cost'};
 
 						if ( $$sig_price{'Comparison Cost'} == $last_sig_price ) {
+							$additional_price -= $$sig_price{'Stitching Cost'};
 							$additional_price *= int($$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads());
+							$additional_price += $$sig_price{'Stitching Cost'};
 							last if $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads() >= $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads();
 						} else {
@@ -1445,18 +1448,9 @@ $new_specs{'no_stitching'} = 1; # unneccessary calculation
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 							$additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} = $sig_price;
-$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} . ' ' . $$sig_price{'Comparison Cost'} - $$sig_price{'Stitching Cost'} );
+#$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} . ' ' . $$sig_price{'Comparison Cost'} - $$sig_price{'Stitching Cost'} );
 						} # end if
 						$additional_price = $$sig_price{'Comparison Cost'};
-						$additional_price -= $$sig_price{'Stitching Cost'};
-						$$price{'Comparison Cost'} -= $$price{'Stitching Cost'};
-						$$price{'Stitching Cost'} = $$sig_price{'Stitching Cost'};
-						$$price{'Comparison Cost'} += $$price{'Stitching Cost'};
-
-						$$price{'StitchingImposition'} = $$sig_price{'StitchingImposition'};
-						$$price{'Stitching Breakdown'} = $$sig_price{'Stitching Breakdown'};
-$openprint::log->debug("Imposition stitching: $$price{'StitchingImposition'}");
-$openprint::log->debug("Imposition stitching: $$price{'Stitching Breakdown'}");
 
 						if ( ! $$sig_price{'Imposition'} ) {
 #$openprint::log->debug("No Imposition found.");
@@ -1469,6 +1463,14 @@ $openprint::log->debug("Imposition stitching: $$price{'Stitching Breakdown'}");
 						} # end if
 #$openprint::log->warn("Done full calc $sig_price{'Comparison Cost'} :". $$specs{'txtSignatureSpreadQuantity'.$qty_index});
 					} # end if
+
+					$additional_price -= $$sig_price{'Stitching Cost'};
+					$$price{'Comparison Cost'} -= $$price{'Stitching Cost'};
+					$$price{'Stitching Cost'} = $$sig_price{'Stitching Cost'};
+					$$price{'Comparison Cost'} += $$price{'Stitching Cost'};
+
+					$$price{'StitchingImposition'} = $$sig_price{'StitchingImposition'};
+					$$price{'Stitching Breakdown'} = $$sig_price{'Stitching Breakdown'};
 
 					if ( ! $$sig_price{complete} ) {
 #$openprint::log->debug("Unable to calculated");
@@ -1484,10 +1486,10 @@ $openprint::log->debug("Imposition stitching: $$price{'Stitching Breakdown'}");
 					$last_sig_price = $$sig_price{'Comparison Cost'};
 
 					$$price{'Comparison Cost'} += $additional_price;
-					$$price{'AdditionalSignature Breakdown'} .= 'Additional Signature: ' . sprintf('Additional Sig: Folding %.2f + Cutting %.2f + Sig %.2f = %.2f', @$sig_price{'Folding Cost','Cutting Cost'}, $additional_price - ( $$sig_price{'Folding Cost'} + $$sig_price{'Cutting Cost'} ), $additional_price ) . '<br/>';
-					$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Folding Breakdown'};
-					$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Cutting Breakdown'};
-					$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Stitching Breakdown'};
+					$$price{'AdditionalSignature Breakdown'} .= sprintf('Additional Sig: Folding %.2f + Cutting %.2f + Sig %.2f = %.2f', @$sig_price{'Folding Cost','Cutting Cost'}, $additional_price - ( $$sig_price{'Folding Cost'} + $$sig_price{'Cutting Cost'} ), $additional_price ) . '<br/>';
+					#$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Folding Breakdown'};
+					#$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Cutting Breakdown'};
+					#$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Stitching Breakdown'};
 					last if check_price( $best_price{'Comparison Cost'}, $price, $specs, $qty_index, $imp, 'Sig' );
 				} # end while
 				$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $usq;
