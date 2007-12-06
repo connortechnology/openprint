@@ -124,7 +124,6 @@ sub calc {
 	if ( ! @all_equipment ) {
 		@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'Y'} );
 		if ( $stitching_service_index and $$services{'Folding'} ) {
-
 			push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Folding'} );
 		} # end if
 
@@ -296,6 +295,7 @@ $openprint::log->debug("sign calc");
 	foreach my $Equipment ( @equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Equipment: ".$Equipment->name().', ';
 		next if ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'};
+		next if ( $Equipment->specification('Type') eq 'Stitcher' ) and ! $stitching_service_index;
 		my @impositions = ();
 		if ( $Equipment->specification('Type') eq 'Press' ) {
 			if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {

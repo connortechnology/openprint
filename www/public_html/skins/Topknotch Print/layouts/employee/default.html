@@ -14,29 +14,6 @@
 		<script type="text/javascript" src="/javascripts/popups.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
-<script type="text/javascript">
-<!--
-        var startList = function() {
-            if (document.all && document.getElementById) {
-                var navRoot = document.getElementById("menubar");
-                if ( navRoot ) {
-                    for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-                        var node = navRoot.childNodes[i];
-                        if (node.nodeName=="LI") {
-                            node.onmouseover=function() {
-                                this.className+=' over';
-                            }
-                            node.onmouseout=function() {
-                                this.className=this.className.replace(' over', '');
-                            }
-                        } // end if
-                    } // end for
-                } // end if
-            }
-        }
-        window.onload=startList;
--->
-        </script>
 
 		<!-- calendar stylesheet -->
 		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
@@ -93,7 +70,7 @@
 					</div>		 
 				</div>
 			</div>
-			<!--#include virtual="/includes/employee_menu.html"-->
+			<!--#include virtual="/skins/<?SiteTitle?>/includes/employee_menu.html"-->
 			<div id="main_content">
 				<div id="main_content_inner">
 					<div id="main_page">

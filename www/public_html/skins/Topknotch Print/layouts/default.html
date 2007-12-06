@@ -34,6 +34,20 @@
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 
 		<link rel="shortcut icon" href="/images/favicon.ico">
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+  <style type="text/css">
+           div#main_page
+         {
+            float: left;
+            width: 745px;
+         }
+         div#main_page_content
+         {
+            background-image: url(/images/shadow_border/full_page_bg.gif);
+         }
+        </style>
+
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div id="content_container">
@@ -45,7 +59,10 @@
          </div>
          <div id="main_content">
             <div id="main_content_inner">
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? else ( $r->uri() =~ /\/main\/order/ ) ?>
                <!--#include virtual="/skins/<?SiteTitle?>/includes/left_sidebar.html"-->
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
                <div id="main_page">
                   <div class="top_shadow">
                      <div class="shadow_tl"></div>

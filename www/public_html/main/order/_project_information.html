@@ -1,12 +1,12 @@
 <fieldset>
-<? eval (
-	@{$$variable{'Quantities'}} = ();
-	foreach ( 1 .. 3 ) {
-		push @{$$variable{'Quantities'}}, $$variable{"Quantity$_"} if $$variable{"Quantity$_"};
-	} # end foreach
-	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ( ! $$variable{'Project'} );
-) ?>
-<legend>Project # <? echo ( $$variable{'Project'}->id() ) ?></legend>
+	<? eval (
+		@{$$variable{'Quantities'}} = ();
+		foreach ( 1 .. 3 ) {
+			push @{$$variable{'Quantities'}}, $$variable{"Quantity$_"} if $$variable{"Quantity$_"};
+		} # end foreach
+		$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ( ! $$variable{'Project'} );
+	) ?>
+	<legend>Project # <? echo ( $$variable{'Project'}->id() ) ?></legend>
 	<span style="float: right;">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'ProjectIndex'}, '', '', "information.html?OrderID=$$variable{'OrderID'}&remove=$$variable{'ProjectIndex'}", 'Remove' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'ProjectIndex'}, '', '', "/main/project/view.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Edit Project' ); ) ?>

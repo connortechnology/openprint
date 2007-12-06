@@ -5,8 +5,8 @@
 	<? echo (
 			my $html;
 			foreach my $User ( openprint::User::find( 'type' => ['A','E'] ) ) {
-				$html .= sprintf( qq{   emails_by_id[%d] = '%s';\n}, $User->id(), $User->email() );
-				$html .= sprintf( qq{   ids_by_email['%s'] = %d;\n}, $User->email(), $User->id() );
+				$html .= sprintf( qq{	emails_by_id[%d] = '%s';\n}, $User->id(), $User->email() );
+				$html .= sprintf( qq{	ids_by_email['%s'] = %d;\n}, $User->email(), $User->id() );
 			} # end foreach
 			return $html;
 			) ?>
@@ -34,23 +34,23 @@
 		Please enter your e-mail address and password.<br/>
 		<p>
 			<label for="UserID">UserID:</label>
-			<input type="text" id="UserID" name="UserID" EMPTYOK FORMAT="5N"  onkeypress="return input_handler( this, event );" onChange="select_user( this );" onkeyup="select_user( this );"/>
+			<input type="text" id="UserID" name="UserID" emptyok="emptyok" format="5N" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );"/>
 		</p>
 		<p>
 			<label for="email">E-mail:</label>
 			<input type="text" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" onkeyup="update_userid(this);" /><br/>
-                <span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
+			<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
 		</p>
 		<p> 
 			<label for="password">Password:</label>
 			<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
-                <span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
+				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
 		</p>
 		<p>
 			<label>Remember me:</label>
-			<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y"  />
+			<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" />
 			<label class="radio" for="rdbRememberMeY">Yes</label>
-			<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N"  checked="checked" />
+			<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" checked="checked" />
 			<label class="radio" for="rdbRememberMeN">No</label>
 		</p>
 		<p class="buttons">
