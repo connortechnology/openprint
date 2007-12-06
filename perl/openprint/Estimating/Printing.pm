@@ -1031,9 +1031,9 @@ $openprint::log->debug("No spread layout for you!");
 
 					# Keep cutting while the sheet still fits on the press.  I originally thought that we shouldn't do this, because why would you want to run a half sheet if a full sheet fits?  The answer: small jobs, that due to overs requires the same sheets whether you run full or half.  So by running half, you need half the # of real sheets.
 						while (
-								( $P->width() >= $Press->specification('Minimum Sheet Width') or $P->height() >= $Press->specification('Minimum Sheet Length') )
-								and
-								( $P->width() >= $Press->specification('Minimum Sheet Length') or $P->height() >= $Press->specification('Minimum Sheet Width') )
+								( $P->width() >= $Press->specification('Minimum Sheet Width') and $P->height() >= $Press->specification('Minimum Sheet Length') )
+								or
+								( $P->width() >= $Press->specification('Minimum Sheet Length') and $P->height() >= $Press->specification('Minimum Sheet Width') )
 							   ) {
 
 							if ( ! ( 
@@ -1152,8 +1152,8 @@ my %best_price = %{$b_price};
 
 		my $Imposition = $best_price{'Imposition'};
 		my $Paper = $Imposition->paper();
-$openprint::log->debug("Results:");
-$Imposition->display();
+#$openprint::log->debug("Results:");
+#$Imposition->display();
 		my $Press = $Imposition->Press();
 
 		my $Aqueous = $best_price{'Aqueous'};
@@ -1338,7 +1338,7 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 
 		my $pms_prices = get_special_colours_price( $openprint::log, $openprint::dbh, $openprint::variable, $P, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
-		if ( $debug ) {
+		if ( 0 and $debug ) {
 		foreach my $imp ( @impositions ) {
 $imp->display();
 		} # end foreach
@@ -1351,6 +1351,7 @@ $imp->display();
 				next;
 			} # end if
 #my $starttime = gettimeofday();
+#$imp->display();
 
 #my $time = gettimeofday();
 			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
@@ -1389,13 +1390,16 @@ $imp->display();
 ##$Imposition->display();
 
 #my $time = gettimeofday();
-$new_specs{'no_stitching'} = 1; # unneccessary calculation
+#n$new_specs{'no_stitching'} = 1; # unneccessary calculation
 						$sig_price = calc_price( $Project, $s_id, $imp, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("2 Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+#$new_specs{'no_stitching'} = 0; # unneccessary calculation
 						$additional_price = $$sig_price{'Comparison Cost'};
 
 						if ( $$sig_price{'Comparison Cost'} == $last_sig_price ) {
+							$additional_price -= $$sig_price{'Stitching Cost'};
 							$additional_price *= int($$specs{'txtUnspecifiedPageQuantity'.$qty_index}/$imp->pages());
+							$additional_price += $$sig_price{'Stitching Cost'};
 							last if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} % $imp->spreads() >= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index} % $imp->pages();
 						} else {
@@ -1426,7 +1430,7 @@ $new_specs{'no_stitching'} = 1; # unneccessary calculation
 #$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}}{'Comparison Cost'} );
 						} # end if
 						$additional_price = $$sig_price{'Comparison Cost'};
-						$additional_price -= $$sig_price{'Stitching Cost'};
+
 						if ( ! $$sig_price{'Imposition'} ) {
 #$openprint::log->debug("No Imposition found.");
 							$$sig_price{'complete'} = 1;
@@ -1438,6 +1442,14 @@ $new_specs{'no_stitching'} = 1; # unneccessary calculation
 						} # end if
 #$openprint::log->warn("Done full calc $sig_price{'Comparison Cost'} :". $$specs{'PageQuantity'.$qty_index});
 					} # end if
+
+					$additional_price -= $$sig_price{'Stitching Cost'};
+					$$price{'Comparison Cost'} -= $$price{'Stitching Cost'};
+					$$price{'Stitching Cost'} = $$sig_price{'Stitching Cost'};
+					$$price{'Comparison Cost'} += $$price{'Stitching Cost'};
+
+					$$price{'StitchingImposition'} = $$sig_price{'StitchingImposition'};
+					$$price{'Stitching Breakdown'} = $$sig_price{'Stitching Breakdown'};
 
 					if ( ! $$sig_price{complete} ) {
 #$openprint::log->debug("Unable to calculated");
@@ -1453,7 +1465,10 @@ $new_specs{'no_stitching'} = 1; # unneccessary calculation
 					$last_sig_price = $$sig_price{'Comparison Cost'};
 
 					$$price{'Comparison Cost'} += $additional_price;
-					$$price{'AdditionalSignature Breakdown'} .= 'Additional Signature: ' . sprintf('%.2f', $additional_price ) . '<br/>';
+					$$price{'AdditionalSignature Breakdown'} .= sprintf('Additional Sig: Folding %.2f + Cutting %.2f + Sig %.2f = %.2f', @$sig_price{'Folding Cost','Cutting Cost'}, $additional_price - ( $$sig_price{'Folding Cost'} + $$sig_price{'Cutting Cost'} ), $additional_price ) . '<br/>';
+					#$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Folding Breakdown'};
+					#$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Cutting Breakdown'};
+					#$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Stitching Breakdown'};
 					last if check_price( $best_price{'Comparison Cost'}, $price, $specs, $qty_index, $imp, 'Sig' );
 				} # end while
 				$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = $upq;
@@ -1511,7 +1526,7 @@ sub check_price {
 		#$p *= ( 1 + $$specs{'txtUnspecifiedPageQuantity'.$qty_index}/$Imposition->spreads() );
 	#} # end if
 
-$openprint::log->debug("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
+#$openprint::log->debug("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 	#if ( $price_to_beat > $p ) {
 	if ( $price_to_beat > $$price{'Comparison Cost'} ) {
 		return 0;
@@ -1593,6 +1608,7 @@ sub calc_price {
 	} # end if 
 
 	my $base_impressions = ceil($qty / $imposition);
+	$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
 
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );

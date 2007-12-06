@@ -17,6 +17,8 @@
 package openprint::Estimating::Stitching;
 use strict;
 
+my $debug = 0;
+
 require openprint::project;
 require openprint::Equipment;
 require openprint::service;
@@ -126,17 +128,20 @@ sub signature_calc {
 	$$specs{"txtPockets$qty_index"} = 1;
 	$imposition = 1 if $I->imposition() != $imposition or sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] );;
 
-#$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures());
+#$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
+#$I->display();
+
+#$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		next if $service_index and ($signature_service_index == $service_index);
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
-#$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index}");
+#$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
 		$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} != 2 ) or sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] );
 	} # end foreach
-#$openprint::log->debug( $$specs{'Imposition'.$qty_index} );
+#$openprint::log->debug( $$specs{'Imposition'.$qty_index} ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 			$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
