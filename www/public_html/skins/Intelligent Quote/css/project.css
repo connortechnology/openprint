@@ -164,6 +164,23 @@ div.Service #Inserts {
 .VarnishCoverage input, .VarnishCoverage input[type="text"] {
 	width: 35px;
 }
+div.Service fieldset p {
+    padding-left: 130px;
+}
+div.Service fieldset p label {
+    width: 125px;
+    margin-left: -130px;
+    text-align: left;
+}
+div.Service fieldset p label.radio {
+    width: auto;
+    float: none;
+    margin: 0px;
+}
+div.Service fieldset p select, div.Service fieldset p input {
+    width: auto;
+}
+
 div.Service fieldset p span.checkOption label {
 	clear: none;
 	width: auto;
@@ -214,14 +231,6 @@ span.SpotColour label, span.Coverages label {
 .PerforationSignature {
 	float: left;
 	width: 49%;
-}
-div.Service span.ThreeColumns {
-	width: 32%;
-	float: left;
-}
-div.Service span.TwoColumns {
-	width: 50%;
-	float: left;
 }
 div.Service fieldset input {
 	width: auto;

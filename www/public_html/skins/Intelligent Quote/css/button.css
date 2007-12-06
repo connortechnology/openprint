@@ -1,4 +1,3 @@
-@media screen {
 	a.buttonImageOff {
 		text-decoration: none;
 		background: url(/images/menu_fill_blue.png) repeat top;
@@ -33,7 +32,6 @@
 		color: #ff7f00;
 		text-decoration: none;
 	}
-}
 @media print {
 	a.button {
 		display: none;
@@ -54,8 +52,10 @@
 
 
 a.buttonImageOff .l {
+display:none;
 }
 a.buttonImageOff .r {
+display:none;
 }
 a.buttonImageOff .c {
 	font-family: Arial, Helvetica, Sans-Serif;
@@ -73,8 +73,10 @@ a.buttonImageOff .c {
 
 
 a.buttonImageOn .l {
+display:none;
 }
 a.buttonImageOn .r {
+display:none;
 }
 a.buttonImageOn .c {
 	font-family: Arial, Helvetica, Sans-Serif;
