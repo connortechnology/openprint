@@ -154,6 +154,10 @@
 			if ( $$sig_specs{'rdbSpecificStock'} ne 'Y' ) {
 				if ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['gloss','enamel','coated','cast coated'] ) ) {
 					$type = 'GLOSS';
+				} elsif ( $$sig_specs{ddmStockFinish} =~ /gloss/i ) {
+					$type = 'GLOSS';
+				} elsif ( $$sig_specs{ddmStockFinish} =~ /c2s/i ) {
+					$type = 'GLOSS';
 				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['dull','silk','matte','satin'] ) ) {
 					$type = 'MATTE';
 				} elsif ( sets::isin( lc $$sig_specs{ddmStockFinish}, ['uncoated','offset','smooth','opaque','vellum','tag','bristol','felt','linen','laid','double thick'] ) ) {
@@ -165,6 +169,10 @@
 				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{ddmStockBrand}, uc $$sig_specs{ddmStockFinish}, $$sig_specs{ddmStockWeight} );
 			} else {
 				if ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['gloss','enamel','coated','cast coated'] ) ) {
+					$type = 'GLOSS';
+				} elsif ( $$sig_specs{txtSpecificStockFinish} =~ /gloss/i ) {
+					$type = 'GLOSS';
+				} elsif ( $$sig_specs{txtSpecificStockFinish} =~ /c2s/i ) {
 					$type = 'GLOSS';
 				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['dull','silk','matte','satin'] ) ) {
 					$type = 'MATTE';

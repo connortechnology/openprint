@@ -534,6 +534,7 @@ sub summary {
 					$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
 				} # end if
 			} # end if
+			return '' if ! $$specs{'txtImposition'.$qty_index};
 			return sprintf(qq{%s %dout %s\n\%s},
 					$$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
 					$$specs{'txtImposition'.$qty_index},

@@ -332,10 +332,6 @@ sub save_project_information {
 			if ( ! $$services{$openprint::param{'ShippingType'.$project_index}} ) {
 				my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $openprint::param{'ShippingType'.$project_index} );
 				push @{$$services{$openprint::param{'ShippingType'.$project_index}}}, $new_service_index;
-				my $service_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, $openprint::param{'ShippingType'.$project_index} );
-				if ( $$service_specs{'Status'} ne 'calculated' ) {
-					return 'Unable to calculate shipping: ' . $$service_specs{'alert'};
-				} # end if
 			} # end if
 		} # end if
 		foreach my $ShippingType ( keys %ShippingServices ) {
@@ -381,6 +377,11 @@ sub save_project_information {
 		foreach my $spec ( keys %shipping_fields ) {
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $shipping_fields{$spec}, $openprint::param{"$spec-$project_index-$service_id"} );
 		} # end foreach
+		my $service_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, $ServiceType->name() );
+$openprint::log->debug("Status: $$service_specs{'Status'}" );
+		if ( $$service_specs{'Status'} ne 'calculated' ) {
+			return 'Unable to calculate shipping: ' . $$service_specs{'alert'};
+		} # end if
 	} # end if
 	return;
 } # end foreach save_project_information
@@ -648,7 +649,8 @@ sub verify_order {
 			return;
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
-		openprint::print::save_service( $r, $log, $dbh, $variable, @openprint::param{'ProjectIndex','ServiceIndex'} );
+		my $Project = new openprint::Project( $openprint::param{'ProjectIndex'} );
+		openprint::print::save_service( $r, $log, $dbh, $variable, $Project, $openprint::param{'ServiceIndex'} );
 	} # end if
 
 	my @errors;

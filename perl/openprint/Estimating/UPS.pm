@@ -89,16 +89,17 @@ $log->debug("Carton Status: $carton_status");
 
 	if ( $$specs{'chkOverridePackageWeight'} ne 'Y' ) {
 		# Load from skids or cartons
-		$$specs{"txtPackageWeight"} = $$carton_specs{"txtPackageWeight"};
+		$$specs{'txtPackageWeight'} = $$carton_specs{'txtPackageWeight'};
 	} # end if
 
 	my %packages;
 	my $qty_index;
 	foreach my $qty_i ( 1 .. 3 ) {
-		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
+		$$specs{"txtQuantity$qty_i"} = $Project->quantity($qty_i) if ! $$specs{"txtQuantity$qty_i"};
+$openprint::log->debug("QT: " . $$specs{"txtQuantity$qty_i"});
 		next if ! $$specs{'txtQuantity'.$qty_i};
-		$$specs{'hdnBreakdown'.$qty_index} = '';
-		if ( $$specs{"chkOverridePackageQuantity"} ne 'Y' ) {
+		$$specs{'hdnBreakdown'.$qty_i} = '';
+		if ( $$specs{'chkOverridePackageQuantity'} ne 'Y' ) {
 			@outputs = sets::union( @outputs, 'chkOverridePackageQuantity' );	
 			$$specs{"txtPackageQuantity$qty_i"} = $$carton_specs{"txtPackageQuantity$qty_i"};
 			my $full_cartons = int ( $$specs{'txtQuantity'.$qty_i} / $$carton_specs{'txtItemsPerPackage'} );
@@ -325,14 +326,15 @@ $log->debug("UPS::display: $project_index, $service_index");
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	if ( $qty_index ) {
+		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! exists $$specs{'txtQuantity'.$qty_index};
 		return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 	} else {
 		return join("\n", 
-			join(',', ups::get_service_name($$specs{'ddmServiceType'}),ups::get_pickup_name($$specs{'ddmPickupType'}) ),
 			join(',', $$specs{'CompanyName'} ) ,
 			join(',', $$specs{'Address1'} , $$specs{'Address2'},
 			@$specs{'City','StateProvince','Country'},
 			@$specs{'PostalCode'} ),
+			join(',', ups::get_service_name($$specs{'ddmServiceType'}),ups::get_pickup_name($$specs{'ddmPickupType'}) ),
 			);
 	} # end if
 } # end sub summary
