@@ -46,7 +46,7 @@ ul#menubar li a {
     padding: 3px 10px 3px 10px;
     text-decoration: none;
 	font-family: arial, helvetica, sans-serif;
-	font-size: 1.3em;
+	font-size: 1em;
     margin: 0px;
     overflow: hidden;
     text-align: left;
@@ -62,8 +62,8 @@ ul#menubar li.off ul {
     margin: 0px;
     list-style: none;
     position: absolute;
-	border-top: 1px solid #ffffff;
-	margin-top: 1px;
+	border-bottom: 1px solid #ffffff;
+	margin-top: 0px;
 }
 
 ul#menubar li.on ul {
@@ -83,7 +83,7 @@ ul#menubar li.on a {
 ul#menubar li ul li {
 background: url(/images/menu_fill_blue.png) repeat top;
     border: 0;
-	border-bottom: 1px solid white;
+	border-top: 1px solid white;
     float: none;
     padding: 0px;
     margin:0px;

@@ -354,7 +354,7 @@ sub calc_setup_object {
 
 		if ( ( ! $paper_width ) or ( $$specs{'Maximum Image Area Width'} > 0 and $adjusted_paper_width > $$specs{'Maximum Image Area Width'} ) ) {
 			$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
-			#$openprint::log->debug("*** Using Max Image Width1: $adjusted_paper_width ***") if $debug;
+			$openprint::log->debug("*** Using Max Image Width1: $adjusted_paper_width ***") if $debug;
 		} # end if
 		if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
 			$adjusted_paper_width -= $$specs{'colour_bar_size'};
@@ -429,6 +429,7 @@ sub calc_setup_object {
 			or ($grain_direction eq 'height' and $setup2->rotate_sheet() == 0)
 	   ) {
 		my $gutters = $$specs{'Gutter'};
+		$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 		if ( sets::isin( 'Top', \@bleed_locations ) ) {
 			$gutters -= $$specs{'BleedSize'};
 		} # end if
@@ -436,7 +437,6 @@ sub calc_setup_object {
 			$gutters -= $$specs{'BleedSize'};
 		} # end if
 		#$openprint::log->debug("Bindery Gutters 2: $gutters <? $bindery_gutters");
-		$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 
 		$gutters = 0 if $gutters < 0;
 

@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 use strict;
