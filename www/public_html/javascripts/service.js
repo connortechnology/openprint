@@ -21,6 +21,9 @@ function calc( formName ) {
 
 function get_variables( formName, service_type ) {
 	var form = getFormObj( formName );
+	if ( ! form ) {
+		alert('No form in get_variables');
+	} // end if
 
     gettingNewPrice = true;
 
