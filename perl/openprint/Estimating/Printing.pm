@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 use strict;
@@ -866,7 +866,8 @@ $openprint::log->debug("No spread layout for you!");
 # add all the impositions for each press
 		foreach my $Press ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : @possible_presses ) {
 # These should be cached by the underlying layer anyways
-			if ( $Press->strid() eq 'Web1' and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
+			if ( ( $Press->specification('Feed') eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
+$openprint::log->debug('No Web 4 U');
 				next;
 			} # end if
 
