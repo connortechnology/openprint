@@ -299,8 +299,8 @@ sub signature_calc {
 			} # end if
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
-				$servicePrice = $servicePrice{'Price'} * $qty/ 1000;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d = $%.2f<br/>', @servicePrice{'Price','units'}, $qty, $servicePrice );
+				$servicePrice = $servicePrice{'Price'} * ($qty/$imposition->imposition())/ 1000;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d = $%.2f<br/>', @servicePrice{'Price','units'}, $qty/$imposition->imposition(), $servicePrice );
 			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
 				if ( int ( $_ = $Equipment->specification('PerfScoreRunSpeed') ) ) {
 					my $hours = $qty / $Equipment->specification('PerfScoreRunSpeed');
