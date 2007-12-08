@@ -128,20 +128,19 @@ sub signature_calc {
 	$$specs{"txtPockets$qty_index"} = 1;
 	$imposition = 1 if ($I->imposition()%2) or ( sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] ) and $I->imposition()%4);
 
-$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
-$I->display();
+#$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
 
-$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
+#$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		next if $service_index and ($signature_service_index == $service_index);
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
-$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
+#$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
 		$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 );
 	} # end foreach
-$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
+#$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 			$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
@@ -174,7 +173,7 @@ $openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	$results{'alert'} = $error;
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
-$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if $debug;
+#$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if $debug;
 	if ( $bestPrice ) {
 		$results{'Status'} = 'calculated';
 		$results{'Price'} = $$bestPrice{'txtPrice'};
