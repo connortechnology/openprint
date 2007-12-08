@@ -352,8 +352,8 @@ sub calc_setup_object {
 		$adjusted_paper_width -= $gutters;
 
 		if ( ( ! $paper_width ) or ( $$specs{'Maximum Image Area Width'} > 0 and $adjusted_paper_width > $$specs{'Maximum Image Area Width'} ) ) {
+			$openprint::log->debug("*** Using Max Image Width1: $adjusted_paper_width > $$specs{'Maximum Image Area Width'}***") if $debug;
 			$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
-			$openprint::log->debug("*** Using Max Image Width1: $adjusted_paper_width ***") if $debug;
 		} # end if
 		if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
 			$adjusted_paper_width -= $$specs{'colour_bar_size'};
