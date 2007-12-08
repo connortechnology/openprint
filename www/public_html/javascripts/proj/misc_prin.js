@@ -6,23 +6,23 @@ var breakdownWin;
 
 function show_breakdown( index ) {
 	if ( gettingNewPrice )
-		return ;
+		return;
     if (breakdownWin == null) {
-		breakdownWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: false, className:'alphacube', width:400, height:420 } );
+		breakdownWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: false, className:'alphacube', width:500, height:420 } );
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+			onDestroy: function(eventName, win) {
+				if (win == breakdownWin) {
+					$('hdnBreakdown').hide;
+					breakdownWin = null;
+					Windows.removeObserver(this);
+				} // end if
+			} // onDestroy
+		} // myObserver
+		Windows.addObserver(myObserver);
 	} // end if
 	breakdownWin.setContent( 'hdnBreakdown'+index, false, false );
 	breakdownWin.showCenter();
-	// Set up a windows observer, check ou debug window to get messages
-	myObserver = {
-		onDestroy: function(eventName, win) {
-			if (win == breakdownWin) {
-				$('hdnBreakdown').hide;
-				breakdownWin = null;
-				Windows.removeObserver(this);
-			} // end if
-		} // onDestroy
-	} // myObserver
-	Windows.addObserver(myObserver);
 } // end function show_breakdown
 
 function submit_handler( formName ) {
