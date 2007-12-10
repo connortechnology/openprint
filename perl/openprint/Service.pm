@@ -175,7 +175,7 @@ sub next {
 
 sub Next {
 	my ($self, $params) = shift;
-	return new openprint::Material( $self->next($params) );
+	return new openprint::Service( $self->next($params) );
 } # end sub Next
 
 sub prev {
@@ -193,8 +193,19 @@ sub prev {
 
 sub Previous {
 	my ($self, $params) = shift;
-	return new openprint::Material( $self->prev($params) );
+	return new openprint::Service( $self->prev($params) );
 } # end sub Next
+# Returns a copy of the paper object.
+# Will also save the data to db
+sub copy {
+	my $self = shift;
+	my $new = new openprint::Service( );
+	@$news{keys %fields} = @$self{keys %fields};
+	delete $$new{id};
+	$$new{'name'} = 'Copy of ' . $$new{'name'};
+
+	return $new;
+} # end sub copy
 
 
 1;
