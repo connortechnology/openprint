@@ -126,21 +126,21 @@ sub calc {
 				next;
 			} # end if
 
-			my $minPrice = openprint::service::get_price( $log, $dbh, $variable, 'DrillingChargeMinimum', undef, $Equipment );
+			my $minPrice = openprint::service::get_price( 'DrillingChargeMinimum', undef, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum Charge: $%.2f<br/>', $minPrice );
 
 			my $price = 0;
 
-			my $makeReady = openprint::service::get_price( $log, $dbh, $variable, 'DrillingMakeReady', $$specs{'txtHoleQty'}, $Equipment );
+			my $makeReady = openprint::service::get_price( 'DrillingMakeReady', $$specs{'txtHoleQty'}, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= "MakeReadyPrice: $makeReady<br/>";
-			my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Drilling', $qty, $Equipment);
+			my %servicePrice = openprint::service::get_price_object( 'Drilling', $qty, $Equipment);
 			if ( ! %servicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No Service Price found for this quantity.<br/>";
 				next;
 			} # end if
 			if ( sets::isin( $servicePrice{'units'}, 'Per M', 'Per 1000' ) ) {
 				my $runs = ceil( $$specs{'txtHoleQty'} / $Equipment->specification('Number of Drills'));
-				%servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Drilling', $runs * $qty, $Equipment);
+				%servicePrice = openprint::service::get_price_object( 'Drilling', $runs * $qty, $Equipment);
 
 				$servicePrice{'Total'} = $runs * $qty * ($servicePrice{Price}/1000);
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f %s = $%.2f<br/>',$qty, $servicePrice{'Price'}/1000, @servicePrice{'units','Total'} );

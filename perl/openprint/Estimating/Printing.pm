@@ -1572,7 +1572,7 @@ sub calc_price {
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
 		$is_sheetwork = 0;
 		$is_perfecting = 0;
-		$price{'WorkTurn Dry Charge'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'WTDrying', $Paper->grade(), $Press );
+		$price{'WorkTurn Dry Charge'} = openprint::service::get_price( 'WTDrying', $Paper->grade(), $Press );
 		@colours = @$filtered_colours;
 	} elsif ( $$Imposition{runstyle} eq 'Perfecting' ) {
 #$log->debug("************ WE HAVE PERFECTING ****************");
@@ -1786,16 +1786,16 @@ sub calc_price {
 
 	$price{'Press Washes'} += $$pms_prices{'Press Washes'};
 	$price{'Press Washes'} += $varnish_price{'Press Washes'};
-	$price{'Press Wash Price'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'WashUp', undef, $Press );
+	$price{'Press Wash Price'} = openprint::service::get_price( 'WashUp', undef, $Press );
 	$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
-		$price{'Imposition MakeReady'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'ImpositionMakeReady','',$Press );
-		$price{'Imposition Price'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'Imposition',$Imposition->imposition(),$Press);
+		$price{'Imposition MakeReady'} = openprint::service::get_price( 'ImpositionMakeReady','',$Press );
+		$price{'Imposition Price'} = openprint::service::get_price( 'Imposition',$Imposition->imposition(),$Press);
 	} # end if
 	$price{'Imposition Total'} = $price{'Imposition MakeReady'} + $price{'Imposition Price'} * $$Imposition{imposition};
 
-	my %RunStylePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $$Imposition{runstyle}.'Setup','',$Press );
+	my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup','',$Press );
 	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
 
 	$price{'Ink Mix Charge'} = $$pms_prices{'Ink Mix Charge'};
@@ -1822,7 +1822,7 @@ sub calc_price {
 	if ( $aqueous{'Total'} ) {
 		$run_cost += $aqueous{'Total'};
 	} # end if
-	$price{'Minimum Run Charge'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'PressRunChargeMinimum',undef,$Press );
+	$price{'Minimum Run Charge'} = openprint::service::get_price( 'PressRunChargeMinimum',undef,$Press );
 
 	if ( $run_cost < $price{'Minimum Run Charge'} ) {
 		$run_cost = $price{'Minimum Run Charge'};
@@ -2124,7 +2124,7 @@ sub get_varnish_run_price {
 	} # end for each
 	return if ! $varnish_sides;
 		
-	my %price = openprint::service::get_price_object( $log, $dbh, $variable, 'VarnishMakeReady', 1, $Press);
+	my %price = openprint::service::get_price_object( 'VarnishMakeReady', 1, $Press);
 	if ( $price{'units'} eq 'Per Form' ) {
 		my $previous_forms = 0;
  #$$specs{'PreviousForms'};
@@ -2137,15 +2137,15 @@ sub get_varnish_run_price {
 		#$openprint::log->debug("Previous Forms $previous_forms");
 		#$$specs{'PreviousForms'} = $previous_forms;
 
-		%price = openprint::service::get_price_object( $log, $dbh, $variable, 'VarnishMakeReady', $previous_forms + 1, $Press);
+		%price = openprint::service::get_price_object( 'VarnishMakeReady', $previous_forms + 1, $Press);
 	} # end if
 	$varnish_price{'Setup'} = $price{'Price'};
 
 
 	if ( $$specs{'chkVarnishDryTrapSideOne'} or $$specs{'chkVarnishDryTrapSideTwo'} ) {
-		%price = openprint::service::get_price_object( $log, $dbh, $variable, 'VarnishDryTrap', $impressions, $Press);
+		%price = openprint::service::get_price_object( 'VarnishDryTrap', $impressions, $Press);
 	} else {
-		%price = openprint::service::get_price_object( $log, $dbh, $variable, 'VarnishInLine', $impressions, $Press);
+		%price = openprint::service::get_price_object( 'VarnishInLine', $impressions, $Press);
 	} # end if
 	if ( sets::isin( lc $price{'units'}, [ 'per m', 'per 1000' ] ) ) {
 		$price{'Run Price'} = $price{'Price'};
@@ -2225,9 +2225,9 @@ sub get_special_colours_price {
 	my ( $log, $dbh, $variable, $Press, $colours, $mixed_colours, $washed_colours, $special_colours, $qty_index ) = @_;
 	my %price = ('Ink Mix Charge',0,'Press Washes',0);
 
-	my %metallic_mix_price = openprint::service::get_price_object( $log, $dbh, $variable, 'MetallicInkMix','',$Press);
-	my %pms_mix_price = openprint::service::get_price_object( $log, $dbh, $variable, 'PMSInkMix','',$Press);
-	#my %wash_price = openprint::service::get_price_object( $log, $dbh, $variable, 'WashUp','',$Press);
+	my %metallic_mix_price = openprint::service::get_price_object( 'MetallicInkMix','',$Press);
+	my %pms_mix_price = openprint::service::get_price_object( 'PMSInkMix','',$Press);
+	#my %wash_price = openprint::service::get_price_object( 'WashUp','',$Press);
 
 	foreach my $key ( @{$colours} ) {
 		next if sets::isin( $key, ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour'] );
@@ -2282,13 +2282,13 @@ sub get_aqueous_price {
 			} # end if
 		} # end foreach
 		if ( $do_setup ) {
-			$aqueous_price{'Setup'} = openprint::service::get_price( $log, $dbh, $variable, 'AqueousMakeReady','',$Press);
+			$aqueous_price{'Setup'} = openprint::service::get_price( 'AqueousMakeReady','',$Press);
 			if ( $aqueous_sides == 1 and ! $is_sheetwork ) {
-				$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
+				$aqueous_price{'Setup'} += openprint::service::get_price( 'AqueousBlanketCut','',$Press);
 			} # end if
 		} # end if
 # This will be * impressions /1000 later
-		my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press);
+		my %Price = openprint::service::get_price_object( 'Aqueous', $impressions, $Press);
 		$aqueous_price{'Run Cost'} = $Price{'Price'};
 		$aqueous_price{'Units'} = $Price{'units'};
 		if ( sets::isin( lc $Price{'units'}, ['per m', 'per 1000','per 1000 impressions'] ) ) {
@@ -2315,7 +2315,7 @@ sub get_run_price {
 
 	if ( $Press->specification('Feed') eq 'Web' ) {
 # A web does both sides at once, and cannot do multipass
-		my %RunPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'WebImpression', $impressions, $Press );
+		my %RunPrice = openprint::service::get_price_object( 'WebImpression', $impressions, $Press );
 		$run_price{'units'} = $RunPrice{'units'};
 		$running_price = $RunPrice{'Price'};
 #$openprint::log->debug("Price: $running_price");
@@ -2325,7 +2325,7 @@ sub get_run_price {
 			my $full_runs = int($side_one_colours / $max_colours);
 			if ( $full_runs ) {
 				my $run_colours = $side_one_colours > $max_colours ? $max_colours : $side_one_colours;
-				my %RunPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $run_colours.$impression_service, $impressions, $Press );
+				my %RunPrice = openprint::service::get_price_object( $run_colours.$impression_service, $impressions, $Press );
 				$run_price{'units'} = $RunPrice{'units'};
 				$running_price = $RunPrice{'Price'} * $full_runs;
 			} # end if
@@ -2333,7 +2333,7 @@ sub get_run_price {
 
 			my $mod_colours = $side_one_colours % $max_colours;
 			if ( $mod_colours ) {
-				my %RunPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $mod_colours.$impression_service, $impressions, $Press);
+				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press);
 				$running_price += $RunPrice{'Price'};
 				$run_price{'units'} = $RunPrice{'units'} if ! $run_price{'units'};
 #$log->debug("**** RUN PRICE 3 : $running_price **") if $debug;
@@ -2344,7 +2344,7 @@ sub get_run_price {
 			my $full_runs = int($side_two_colours / $max_colours);
 			if ( $full_runs ) {
 				my $run_colours = $side_two_colours > $max_colours ? $max_colours : $side_two_colours;
-				my %RunPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $run_colours.$impression_service, $impressions, $Press );
+				my %RunPrice = openprint::service::get_price_object( $run_colours.$impression_service, $impressions, $Press );
 				$running_price += $RunPrice{'Price'} * $full_runs;
 				$run_price{'units'} = $RunPrice{'units'} if ! $run_price{'units'};
 			} # end if
@@ -2352,7 +2352,7 @@ sub get_run_price {
 #
 			my $mod_colours = $side_two_colours % $max_colours;
 			if ( $mod_colours ) {
-				my %RunPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $mod_colours.$impression_service, $impressions, $Press);
+				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press);
 				$running_price += $RunPrice{'Price'};
 				$run_price{'units'} = $RunPrice{'units'} if ! $run_price{'units'};
 			} # end if
@@ -2417,11 +2417,11 @@ sub press_setup_cost {
 		} # end if
 	} # end foreach colour
 	my %Price;
-	if ( ! ( %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady'.$Imposition->runstyle(), undef, $Press)) ) {
-		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', undef, $Press);
+	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), undef, $Press ) ) ) {
+		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
 	} # end if
 	if ( $Price{'units'} eq 'Stock Calliper - Per Plate' ) {
-		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', $calliper, $Press);
+		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press);
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
 	} elsif ( $Price{'units'} eq 'Per Form' ) {
 
@@ -2434,17 +2434,19 @@ sub press_setup_cost {
 #$openprint::log->debug("Previous Forms: $previous_forms");
 		} # end foreach
 
-		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', $previous_forms + 1, $Press);
+		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $previous_forms + 1, $Press);
 		$Price{'Total'} = $Price{'Price'};
 	} else { # Per Unit
-		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', $setup_count, $Press );
+		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
+			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
+		} # end if
 		$Price{'Total'} = $Price{'Price'};
 	} # end if
 	if ( $Price{'units'} =~ /Per Run/i ) {
 		$Price{'Total'} *= $plate_runs if $plate_runs;
 		$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
-	my %PlateSetupPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'PlateMakeReady', undef, $Press);
+	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press);
 	if ( %PlateSetupPrice ) {
 		if ( lc $PlateSetupPrice{'units'} eq 'per hour') {
 			my $time = $Press->specification('Plate Setup Time');
@@ -2506,7 +2508,7 @@ sub plate_setup_cost {
 
 	my $film_cost = 0;
 	if ( $plate_type eq 'Conventional' ) {
-		$film_cost = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'Film', $sheet_area * $plate_price_qty, undef );
+		$film_cost = openprint::service::get_price( 'Film', $sheet_area * $plate_price_qty, undef );
 		$film_cost *= $sheet_area * $plate_price_qty;
 	} # end if 
 #$log->debug("Plate Count:: $plate_count");

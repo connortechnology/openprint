@@ -65,7 +65,7 @@ sub calc {
 		} else {
 			@no_output = sets::union( 'txtNegativeQuantity'.$qty_index, @no_output );
 		} # end if
-		my $service_price = openprint::service::get_price( $log, $dbh, $variable, 'FilmStripping', $$specs{'txtNegativeQuantity'.$qty_index}, undef );
+		my $service_price = openprint::service::get_price( 'FilmStripping', $$specs{'txtNegativeQuantity'.$qty_index}, undef );
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $service_price );
 		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $service_price * $$specs{'txtNegativeQuantity'.$qty_index} );
 	} # end foreach

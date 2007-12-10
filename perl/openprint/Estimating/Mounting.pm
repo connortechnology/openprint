@@ -76,7 +76,7 @@ my %services = $Project->get_services();
 		return 'uncalculated';
 	} # end if
 
-	my %MinimumCharge = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
+	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
 	my %MaterialPrice;
 	if ( my @Materials = openprint::Material::find('name'=>$$specs{'MountingType'}) ) {
 		%MaterialPrice = $Materials[0]->get_price( undef, undef );
@@ -93,8 +93,8 @@ my %services = $Project->get_services();
 
 		my %bestPrice;
 
-			my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}, undef, undef );
-			my %SetupPrice = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}.'MakeReady', undef, undef );
+			my %ServicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, undef );
+			my %SetupPrice = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', undef, undef );
 
 			my $price = $SetupPrice{'Price'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tSetup: \$ %.2f\n", $SetupPrice{'Price'});

@@ -72,7 +72,7 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-	my %MinimumCharge = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
+	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
 
 	my %MaterialPrice;
 	if ( my @Materials = openprint::Material::find( 'name'=>$$specs{'LaminationType'} ) ) {
@@ -136,8 +136,8 @@ sub calc {
 				# doesn't fit?
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Items across: ( %s x %s ) %d', $item_width, $item_height, $imposition->columns() ). "\n";
-			my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}, undef, $Equipment );
-			my %SetupPrice = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}.'MakeReady', undef, $Equipment );
+			my %ServicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, $Equipment );
+			my %SetupPrice = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', undef, $Equipment );
 
 			my $price = $SetupPrice{'Price'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tSetup: \$ %.2f\n", $SetupPrice{'Price'});

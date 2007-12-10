@@ -451,8 +451,8 @@ if ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty
 	$price{'Imposition'} = 1
 } # end if
 
-	my $makeReady = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-	my $pocketMakeReady = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+	my $makeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+	my $pocketMakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
 	$price{'MakeReady'} = $makeReady + $pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + $plusCover );
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets', undef );
@@ -462,7 +462,7 @@ if ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty
 # Calculate Full Passes
 	if ( $neededPockets > $maxPockets ) {
 # Loaded here, so we don't do it in the loop many times
-		my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}, $maxPockets, $Equipment );
+		my %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $maxPockets, $Equipment );
 		my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 			$price{'RunTime'} += $runtime * 360;
@@ -483,7 +483,7 @@ if ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty
 	} # end if
 
 # Calculate Last Pass
-	my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}, $neededPockets, $Equipment );
+	my %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $neededPockets, $Equipment );
 	my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
 	my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 	$price{'RunTime'} += $runtime * 360;
@@ -497,14 +497,14 @@ if ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty
 	$price{'Passes'} += 1;
 
 	if ( $$specs{'txtInsertQuantity'} > 0 ) {
-		$price{'Insert'} = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}.'Insert', $$specs{'txtInsertQuantity'}, $Equipment) * $$specs{'txtInsertQuantity'};
+		$price{'Insert'} = openprint::service::get_price( $$specs{'ServiceType'}.'Insert', $$specs{'txtInsertQuantity'}, $Equipment) * $$specs{'txtInsertQuantity'};
 # Convert to cost per thousand
 		$price{'Insert'} = ($price{'Insert'}*$qty)/1000;
 	} # end if
 
 	my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
 	if ( $$specs{'rdbGateFoldFit'} eq 'Exact' and $gateFolds > 0 ) {
-		$price{'Service'} += openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}, $gateFolds, $Equipment );
+		$price{'Service'} += openprint::service::get_price( $$specs{'ServiceType'}, $gateFolds, $Equipment );
 		$price{'MakeReady'} += $makeReady + ( $pocketMakeReady * ( $gateFolds + 1 ) );
 	} # end if
 

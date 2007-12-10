@@ -270,7 +270,7 @@ sub signature_calc {
 			@impositions = @cut_impositions;
 		} # end if
 
-		my $setupPrice = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'PerforationMakeReady', undef, $Equipment );
+		my $setupPrice = openprint::service::get_price( 'PerforationMakeReady', undef, $Equipment );
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Setup: $%.2f<br/>', $setupPrice);
 
 		foreach my $imposition ( @impositions ) {
@@ -293,7 +293,7 @@ sub signature_calc {
 			if ( $scor_equipment eq $Equipment->strid() and $scor_imposition == $imposition->imposition() ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "\tSame equipment as scoring, no service price needed.<br/>";
 			} else {
-				%servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Perforating', $rule_qty, $Equipment );
+				%servicePrice = openprint::service::get_price_object( 'Perforating', $rule_qty, $Equipment );
 # I don't know if we should be multiplying by this or not.. how many perfs can a given piece of equipment do in an impression?
 #$servicePrice *= $$specs{"txtQty-$signature_index"};
 			} # end if

@@ -97,13 +97,13 @@ sub calc {
 		my $unitPrice = 0;
 		my $additionalPrice = 0;
 
-		my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'PerfectBound', $qty, $equipment );
+		my %servicePrice = openprint::service::get_price_object( 'PerfectBound', $qty, $equipment );
 		$$specs{'hdnBreakdown'.$qty_index} .= "Service Price: \$ $servicePrice{'Price'} $servicePrice{'units'}\n";
 		my $servicePrice;
 		if ( $servicePrice{'units'} eq 'Per M' ) {
 			$servicePrice = $servicePrice{'Price'} / 1000;
 		} # end if
-		my $makeReady =  openprint::service::get_price( $log, $dbh, $variable, 'PerfectBoundMakeReady', $qty, $equipment );
+		my $makeReady =  openprint::service::get_price( 'PerfectBoundMakeReady', $qty, $equipment );
 		$$specs{'hdnBreakdown'.$qty_index} .= "MakeReady: \$ $makeReady\n";
 		$price = $servicePrice * $qty + $makeReady;
 		$unitPrice = $servicePrice;

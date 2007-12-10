@@ -467,13 +467,13 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 			} # end if
 
 			# We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
-			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold, $folds{$fold} * $$specs{"txtQuantity$qty_index"}, $Equipment );
+			my %servicePrice = openprint::service::get_price_object( $fold, $folds{$fold} * $$specs{"txtQuantity$qty_index"}, $Equipment );
 			if ( ! %servicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No price assigned for $fold on ".$Equipment->name().". <br/>";
 				next;
 			} # end if
 
-			my %setupPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold.'MakeReady', undef, $Equipment );
+			my %setupPrice = openprint::service::get_price_object( $fold.'MakeReady', undef, $Equipment );
 			if ( $setupPrice{'units'} eq 'Per Form' ) {
 				$totalPrice += $setupPrice{'Price'};
 			} elsif ( ! sets::isin( $fold, $makereadies{$Equipment->id()} ) ) {

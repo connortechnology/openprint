@@ -103,8 +103,8 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 		return 'uncalculated';
 	} # end if
 
-	my $makeReadyPrice = openprint::service::get_price( $log, $dbh, $variable, 'GluingMakeReady', undef, undef );
-	my $minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'GluingMinimumCharge', undef, undef );
+	my $makeReadyPrice = openprint::service::get_price( 'GluingMakeReady', undef, undef );
+	my $minimumCharge = openprint::service::get_price( 'GluingMinimumCharge', undef, undef );
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
@@ -117,7 +117,7 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 		$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
-		my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Gluing', $qty, undef );
+		my %servicePrice = openprint::service::get_price_object( 'Gluing', $qty, undef );
 		if ( sets::isin( $servicePrice{'units'}, ['', 'Per M', 'Per 1000'] ) ) {
 			$servicePrice{'Total'} = $qty * $servicePrice{'Price'} / 1000;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Service: \$\%.2f \%s = \$\%.2f<br/>", @servicePrice{'Price','units','Total'} );

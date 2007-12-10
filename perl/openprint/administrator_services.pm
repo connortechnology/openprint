@@ -78,9 +78,8 @@ sub edit {
         my @prices = $Service->prices();
         
         openprint::logs::insertLogRecord('27', "Service Index: " . $Service->id() . " - " . $Service->name(),);
+		$Service = $Service->copy();
         
-        $Service->name( 'Copy of ' . $Service->name() );
-        delete $$Service{'id'};
         if ( ! $Service->save() ) {
 			foreach my $price ( @prices ) {
 				$$price{'service_id'} = $$Service{'id'};

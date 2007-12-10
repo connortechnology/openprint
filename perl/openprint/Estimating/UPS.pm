@@ -278,7 +278,7 @@ foreach ( @{$upsResponse{'RatedShipments'}} ) {
 				$cost *= $rate;
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Converting to ' . $MY_Currency->name() . ' using ' .$rate."\%\n";
 			} # end if
-			my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'UPS Shipping', $cost, undef );
+			my %ServicePrice = openprint::service::get_price_object( 'UPS Shipping', $cost, undef );
 			if ( $ServicePrice{'Price'} > 0 ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'};
 			} else {

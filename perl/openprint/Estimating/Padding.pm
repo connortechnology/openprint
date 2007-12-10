@@ -89,14 +89,14 @@ sub calc {
 		} # end foreach
 	} # end if
 
-	my $minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'PaddingChargeMinimum' );
+	my $minimumCharge = openprint::service::get_price( 'PaddingChargeMinimum' );
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
 		$$specs{'hdnBreakdown'.$qty_index} .= "Minimum Charge: $minimumCharge\n";
 		$$specs{'hdnBreakdown'.$qty_index} .= "QTY $qty_index: ".$$specs{"txtQuantity$qty_index"}. "\n";
-		my $price = openprint::service::get_price( $log, $dbh, $variable, 'Padding', $$specs{"txtQuantity$qty_index"}, undef );
+		my $price = openprint::service::get_price( 'Padding', $$specs{"txtQuantity$qty_index"}, undef );
 		if ( ! $price ) {
 			$log->debug('No price');
 			$status = 'uncalculated';

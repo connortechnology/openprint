@@ -50,9 +50,9 @@ sub calc_price {
 
 	my %Total;
 
-	my %MakeReady = openprint::service::get_price_object( $log, $dbh, $variable, 'DieCutting'.$$specs{'rdbDieCutting'}.'MakeReady' ,'', $Equipment);
+	my %MakeReady = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting'}.'MakeReady' ,'', $Equipment);
 	if ( ! %MakeReady ) {
-		%MakeReady = openprint::service::get_price_object( $log, $dbh, $variable, 'DieCuttingMakeReady' ,'', $Equipment);
+		%MakeReady = openprint::service::get_price_object( 'DieCuttingMakeReady' ,'', $Equipment);
 	} # end if
 	$Total{'MakeReady'} = \%MakeReady;
 	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $MakeReady{'Price'});
@@ -76,7 +76,7 @@ sub calc_price {
 		} # end if
 			
 		if ( ! %DiePrice ) {
-			my %BendingPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'DieCutRuleBending',$$specs{'txtDieCutBends'}*$imposition, undef );
+			my %BendingPrice = openprint::service::get_price_object( 'DieCutRuleBending',$$specs{'txtDieCutBends'}*$imposition, undef );
 			$BendingPrice{'Total'} = $BendingPrice{'Price'} * $$specs{'txtDieCutBends'} * $imposition;
 			$DiePrice{'Price'} += $BendingPrice{'Total'};
 #$die_price += $bending_price;
@@ -113,9 +113,9 @@ sub calc_price {
 	# Why 1.28, overs I assume
 	my $impressions = $$specs{"txtQuantity$qty_index"} / $imposition * 1.28;
 # this is the price for acutal die cutting, priced by impressions.
-	my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'DieCutting'.$$specs{'rdbDieCutting'}, $impressions, $Equipment );
+	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting'}, $impressions, $Equipment );
 	if ( ! %ServicePrice ) {
-		%ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'DieCutting', $impressions, $Equipment );
+		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
 	} # end if
 
 	$ServicePrice{'Total'} = $impressions * $ServicePrice{'Price'} / 1000;
@@ -124,13 +124,13 @@ sub calc_price {
 	$Total{'Total'} += $ServicePrice{'Total'};
 # the extra services are priced by qty, not impressions.
 #if ( $folding eq 'Y' ) {
-#my $folding_price =  openprint::service::get_price( $log, $dbh, $variable, 'HandFolding'.$die_complexity ,$qty, '') / 1000; 
+#my $folding_price =  openprint::service::get_price( 'HandFolding'.$die_complexity ,$qty, '') / 1000; 
 #$run_price += $qty * $folding_price;
 #} # end fi
 
 	my $hole_clearing_holes = $$specs{'rdbHoleClearing'} eq 'N' ? 0 : $$specs{'txtHoleClearingHoles'};
 	if ( $hole_clearing_holes > 0 ) {
-		my %HoleClearingPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'HoleClearing', $hole_clearing_holes * $$specs{"txtQuantity$qty_index"}, undef ); 
+		my %HoleClearingPrice = openprint::service::get_price_object( 'HoleClearing', $hole_clearing_holes * $$specs{"txtQuantity$qty_index"}, undef ); 
 		$HoleClearingPrice{'Total'} = $impressions * $HoleClearingPrice{'Price'} * $hole_clearing_holes;
 		if ( lc $HoleClearingPrice{'units'} eq 'per m' ) {
 			$HoleClearingPrice{'Total'} /= 1000;
@@ -140,10 +140,10 @@ sub calc_price {
 	} # end if
 
 	#if ( $$specs{'rdbGlued'} eq 'Y' ) {
-		#my $gluing_price =  openprint::service::get_price( $log, $dbh, $variable, 'Gluing'.$$specs{'rdbDieCutting'}, $$specs{"txtQuantity$qty_index"}, '') / 1000; 
+		#my $gluing_price =  openprint::service::get_price( 'Gluing'.$$specs{'rdbDieCutting'}, $$specs{"txtQuantity$qty_index"}, '') / 1000; 
 		#$run_price += $$specs{"txtQuantity$qty_index"} * $gluing_price;
 	#} elsif ( $$specs{'rdbGlued'} eq 'M' ) {
-		#my $gluing_price =  openprint::service::get_price( $log, $dbh, $variable, 'GluingMachine', $$specs{"txtQuantity$qty_index"}, '') / 1000; 
+		#my $gluing_price =  openprint::service::get_price( 'GluingMachine', $$specs{"txtQuantity$qty_index"}, '') / 1000; 
 		#$run_price += $$specs{"txtQuantity$qty_index"} * $gluing_price;
 	#} # end if
 	#my $total_price = $make_ready + $run_price;	

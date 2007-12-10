@@ -48,8 +48,8 @@ sub calc {
 	} # end if
 
 	my $size = $$specs{'txtScanWidthFinal'} * $$specs{'txtScanHeightFinal'};
-	my $makeReady = openprint::service::get_price( $log, $dbh, $variable, $$specs{'rdbScanner'}.'ScanningMakeReady', $$specs{'txtQuantity'}, undef );
-	my $runPrice = openprint::service::get_price( $log, $dbh, $variable, 'Scanning', $$specs{'txtQuantity'}, undef );
+	my $makeReady = openprint::service::get_price( $$specs{'rdbScanner'}.'ScanningMakeReady', $$specs{'txtQuantity'}, undef );
+	my $runPrice = openprint::service::get_price( 'Scanning', $$specs{'txtQuantity'}, undef );
 	my $price = int( $makeReady + $runPrice * $size );
 
 	$$specs{"txtUnitPrice"} = sprintf( '%.2f', $price );

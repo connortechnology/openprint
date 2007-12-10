@@ -88,9 +88,9 @@ sub calc {
 	my $maxWeight = 1500;
 	$maxWeight = 40 if $$specs{'ServiceType'} eq 'PlainCartons';
 
-	my $makeReady = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}.'MakeReady', undef, undef );
-	my $serviceCharge = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}, undef, undef );
-	my $packingCharge = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}.'Packing', undef, undef );
+	my $makeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', undef, undef );
+	my $serviceCharge = openprint::service::get_price( $$specs{'ServiceType'}, undef, undef );
+	my $packingCharge = openprint::service::get_price( $$specs{'ServiceType'}.'Packing', undef, undef );
 
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
