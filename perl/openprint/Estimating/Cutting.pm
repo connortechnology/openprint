@@ -210,6 +210,7 @@ sub signature_calc_stock_cutting {
 		my $price = 0;
 		foreach my $cuts ( ( int($$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"}/$sheet_width)-1, int($$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"}/$sheet_height)-1 ) ) {
 			next if ! $cuts;
+$openprint::log->error("Negative CUTS!") if $cuts < 1;
 			my $runs = ceil( $sheets*$calliper/$liftDepth );
 			$price += ( $runs * $cuts * $ServicePrice{'Price'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\tCutting \%d sheets into \%d sheets in %d runs: %.2f<br/>", $sheets, $sheets*($cuts+1), $runs, $price );
@@ -319,6 +320,7 @@ sub signature_calc {
 			$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
 		} # end if
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
+$openprint::log->error('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
 				# Assume head to head at all times - head trim
 				if ( $$sig_specs{'chkBleedTop'} ) {
@@ -346,6 +348,7 @@ sub signature_calc {
 			$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
 		} # end if
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
+$openprint::log->error('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
 				if ( $$sig_specs{'chkBleedTop'} ) {
 					$horizontal_cuts += int( $$sig_specs{'hdnImpositionRows'.$qty_index}/2);
