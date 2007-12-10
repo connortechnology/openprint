@@ -336,11 +336,13 @@ hr {
 	display: block;
 	color: #ff7f00;
 	font-size: large;
+	margin: 8px 0px 0px 0px;
 }
 .PageTitle h2 {
 	display: block;
 	color: #ff7f00;
 	font-size: medium;
+	margin: 4px 0px 0px 0px;
 }
 
 .colRow {

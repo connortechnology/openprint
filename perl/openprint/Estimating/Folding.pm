@@ -178,11 +178,11 @@ sub impositions {
 		$openprint::log->debug("No fold") if $debug;
 		return @imps;
 	} 
-	if ( ( defined $Equipment->specification($foldtype.'MaximumImposition' ) and $Equipment->specification($foldtype.'MaximumImposition' ) > $Imposition->imposition() ) ) {
+	if ( ( defined $Equipment->specification($foldtype.'MaximumImposition') and $Equipment->specification($foldtype.'MaximumImposition') > $Imposition->imposition() ) ) {
 		$openprint::log->debug('No fold due to max impo ' . $Imposition->imposition() . '>' . $Equipment->specification($foldtype.'MaximumImposition' ) ) if $debug;
 		return @imps;
 	} 
-	if ( ( defined $Equipment->specification($foldtype.'MaximumColumns' ) and $Equipment->specification($foldtype.'MaximumColumns' ) > $Imposition->columns() ) ) {
+	if ( ( defined $Equipment->specification($foldtype.'MaximumColumns') and $Equipment->specification($foldtype.'MaximumColumns') > $Imposition->columns() ) ) {
 		$openprint::log->debug("No fold due to max columns") if $debug;
 		return @imps;
 	} 
@@ -199,20 +199,20 @@ sub impositions {
 		my $I = $Imposition->copy();
 
 		if ( $I->image_orientation() eq 'Vertical' ) {
-			my $space = $Equipment->specification($foldtype.'MinimumWidth' ) - $I->image_width();
+			my $space = $Equipment->specification($foldtype.'MinimumWidth') - $I->image_width();
 			$I->cropmark_left(0) if $space >= $I->cropmark_left();
 			$I->cropmark_right(0) if $space >= $I->cropmark_right();
 			$I->gutters(0) if $space >= $I->gutters();
-			$I->image_width( $Equipment->specification($foldtype.'MinimumWidth' ) );
+			$I->image_width( $Equipment->specification($foldtype.'MinimumWidth') );
 		} else {
-			my $space = $Equipment->specification($foldtype.'MinimumWidth' ) - $I->image_height();
+			my $space = $Equipment->specification($foldtype.'MinimumWidth') - $I->image_height();
 			$I->cropmark_left(0) if $space >= $I->cropmark_left();
 			$I->cropmark_right(0) if $space >= $I->cropmark_right();
 			$I->gutters(0) if $space >= $I->gutters();
-			$I->image_height( $Equipment->specification($foldtype.'MinimumWidth' ) );
+			$I->image_height( $Equipment->specification($foldtype.'MinimumWidth') );
 		} # end if
 
-		next if ( $I->paper()->start_width() and $I->paper()->start_width() < $I->used_width() );
+		return @imps if ( $I->paper()->start_width() and $I->paper()->start_width() < $I->used_width() );
 		$I->paper()->width( $I->used_width() ) if ! $I->paper()->start_width();
 		push @imps, $I;
 	} # end if

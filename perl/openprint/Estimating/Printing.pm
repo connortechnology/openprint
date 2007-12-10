@@ -2416,7 +2416,10 @@ sub press_setup_cost {
 			$setup_count += 1;
 		} # end if
 	} # end foreach colour
-	my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', undef, $Press);
+	my %Price;
+	if ( ! ( %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady'.$Imposition->runstyle(), undef, $Press)) ) {
+		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', undef, $Press);
+	} # end if
 	if ( $Price{'units'} eq 'Stock Calliper - Per Plate' ) {
 		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', $calliper, $Press);
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
