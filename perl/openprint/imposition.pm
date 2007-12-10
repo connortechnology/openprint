@@ -671,7 +671,10 @@ sub convert_impositions {
 		#$impo /= 2 if sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble' ] );
 
 		my @imps;
-		foreach my $signature_size ( reverse 1 .. ( $impo > $desired_signature_size ? $desired_signature_size : $impo ) ) {
+		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;
+		#foreach my $signature_size ( reverse 1 .. $start ) {
+		foreach my $signature_size ( reverse int($start/2) .. $start ) {
+			next if ! $blocks{$signature_size};
 #Now figure out how to cut up the imposition
 #$openprint::log->debug("Considering sig size: $signature_size") if $debug;
 			my ( $rows, $cols );
@@ -684,8 +687,8 @@ sub convert_impositions {
 				$openprint::log->debug("Trying $col x $row Got $cols x $rows") if $debug;
 				#$log->debug("Trying $col x $row Got $cols x $rows") if $debug;
 				next if ! ( $rows and $cols );
-				next if ( $imp->runstyle() eq 'Work & Turn' and $cols % 2 );
-				next if ( $imp->runstyle() eq 'Work & Tumble' and $rows % 2 );
+				next if ( $cols % 2 and $imp->runstyle() eq 'Work & Turn' );
+				next if ( $rows % 2 and $imp->runstyle() eq 'Work & Tumble' );
 
 				my $newimp = $imp->copy();
 
@@ -698,7 +701,9 @@ sub convert_impositions {
 				#$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
 				push @imps, $newimp;
 			} # end foreach block
-			last if @imps and (@imps[@imps-1]->imposition() >= 2);
+			#last if @imps;
+ #and (@imps[@imps-1]->imposition() >= 2);
+			last if @imps and ($imps[@imps-1]->imposition() >= 2);
 		} # end foreach signature_size
 		push @good_impositions, @imps;
 	} # end foreach

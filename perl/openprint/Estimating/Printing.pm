@@ -1474,10 +1474,10 @@ $imp->display();
 #$openprint::log->debug("Additional sig cost of " . $imp->spreads() . "spreads is : $additional_price. Leaving " . $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index});
 #$openprint::log->warn("Done half calc: price: $sig_price{'Comparison Cost'}");
 					} else {
-						if ( $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} ) {
+						if ( $additional_signature_cache{$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index}} ) {
 #$openprint::log->debug("Using cache: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
 							#$sig_price = $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}};
-						$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
+$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index}}, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
 						} else {
 							my $services = $Project->services();
 							my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -1490,14 +1490,20 @@ $imp->display();
 							$new_specs{'chkOverrideSheetSize'.$qty_index} = '';
 							$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 							$new_specs{'chkOverrideImposition'.$qty_index} = '';
-#$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
+$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 							if ( ! $$sig_price{'complete'} ) {
 								$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
-								$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}*$$specs{'txtSpreadSize'};
+$openprint::log->warn("Doing full calc without Page Override" . $imp->spreads() );
+								$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
+							} # end if
+							if ( ! $$sig_price{'complete'} ) {
+$openprint::log->warn("Doing full calc without Press Override" . $imp->spreads() );
 								$new_specs{'chkOverridePress'.$qty_index} = '';
 								$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 							} # end if
+$openprint::log->debug("Caching: " . $new_specs{'txtSignatureSpreadQuantity'.$qty_index} . ' : ' . $$sig_price{'Imposition'} );
+							#$additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} = $sig_price;
 							$additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} = $$sig_price{'Imposition'};
 
 							# get_project_price is recursive so we are done
