@@ -1552,7 +1552,7 @@ $openprint::log->debug("Caching: " . $new_specs{'txtSignatureSpreadQuantity'.$qt
 					if ( $$sig_price{'Imposition'} ) {
 						$$price{'AdditionalSignature Breakdown'} .= sprintf('Additional Sig %dpages %dout %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $additional_price ) . '<br/>';
 						#`:w
-						$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
+						#$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
 					} else {
 						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 					} # end if
