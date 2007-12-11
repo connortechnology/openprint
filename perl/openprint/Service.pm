@@ -43,44 +43,53 @@ sub load {
 
 } # end sub load
 
-# We do this for efficiency's sake.
 sub save {
 	my ( $self, $params ) = @_;
-	my @set_fields = ();
 
-	foreach my $field ( keys %{$params} ) {
-		if ( defined $fields{$field} ) {
+	my $change = 1;
 
-			foreach my $transform ( @{$transforms{$field}} ) {
-				eval '$params->{$field} =~ ' . $transform;
-			} # end foreach
+	if ( $params ) {
+		$change = 0;
+		foreach my $field ( keys %{$params} ) {
+			if ( defined $fields{$field} ) {
 
-			if ( $params->{$field} eq '' and exists $defaults{$field} ) {
-				$params->{$field} = $defaults{$field};
+				foreach my $transform ( @{$transforms{$field}} ) {
+					eval '$params->{$field} =~ ' . $transform;
+				} # end foreach
+
+				if ( $params->{$field} eq '' and exists $defaults{$field} ) {
+					$params->{$field} = $defaults{$field};
+				} # end if
+
+	# if valid db field
+				if ( ! defined $$self{$field} or $$self{$field} ne $$params{$field} ) {
+	# Only make changes to fields that have changed
+					$$self{$field} = $$params{$field};  # update cache
+					$change = 1;
+				} # end if
+			} else {
+				$openprint::log->warn("Service::Set::Invalid field requested: ($field)." );
 			} # end if
+		} # end foreach
+	} # end if
 
-# if valid db field
-			if ( ! defined $$self{$field} or $$self{$field} ne $$params{$field} ) {
-# Only make changes to fields that have changed
-				$$self{$field} = $$params{$field};  # update cache
-					push @set_fields, $fields{$field}, $$params{$field};   #mark for sql updating
-			} # end if
-		} else {
-			$self->{log}->warn("Service::Set::Invalid field requested: ($field)." );
-		} # end if
-	} # end foreach
+	if ( $change ) {
+		my %sql;
+		foreach my $k ( keys %fields ) {
+			$sql{$k} = $$self{$k};
+		} # end foreach
 
-	if ( @set_fields ) {
 		my $ac = sql::start_transaction( $openprint::dbh );
 		if ( ! $$self{'id'} ) {
 			@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('ServiceIndex_seq')} );
-			if ( my $error = sql::insert( undef, undef, 'Services', [ 'id', $$self{id}, @set_fields ] ) ) {
+			$sql{id} = $$self{id};
+			if ( my $error = sql::insert( undef, undef, 'Services', \%sql ) ) {
 				sql::end_transaction( $openprint::dbh, $ac );
 				return $error;
 			} # end if
 			openprint::logs::insertLogRecord('25', "Service Index: ". $$self{id},);
 		} else {
-			if ( my $error = sql::update( undef, undef, 'Services', ['id=?',$$self{id}], \@set_fields ) ) {
+			if ( my $error = sql::update( undef, undef, 'Services', ['id=?',$$self{id}], \%sql ) ) {
 				sql::end_transaction( $openprint::dbh, $ac );
 				return $error;
 			} # end if
@@ -175,7 +184,7 @@ sub next {
 
 sub Next {
 	my ($self, $params) = shift;
-	return new openprint::Material( $self->next($params) );
+	return new openprint::Service( $self->next($params) );
 } # end sub Next
 
 sub prev {
@@ -193,8 +202,19 @@ sub prev {
 
 sub Previous {
 	my ($self, $params) = shift;
-	return new openprint::Material( $self->prev($params) );
+	return new openprint::Service( $self->prev($params) );
 } # end sub Next
+# Returns a copy of the paper object.
+# Will also save the data to db
+sub copy {
+	my $self = shift;
+	my $new = new openprint::Service( );
+	@$new{keys %fields} = @$self{keys %fields};
+	delete $$new{id};
+	$$new{'name'} = 'Copy of ' . $$new{'name'};
+
+	return $new;
+} # end sub copy
 
 
 1;

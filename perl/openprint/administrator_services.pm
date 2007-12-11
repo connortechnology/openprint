@@ -75,19 +75,18 @@ sub edit {
 		} # end foreach 
 		sql::end_transaction( $dbh, $ac );
     } elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
-        my  @prices = $Service->prices();
+        my @prices = $Service->prices();
         
         openprint::logs::insertLogRecord('27', "Service Index: " . $Service->id() . " - " . $Service->name(),);
+		$Service = $Service->copy();
         
-        $Service->name( 'Copy of ' . $Service->name() );
-        delete $$Service{'id'};
-        $Service->save();
-
-        foreach my $price ( @prices ) {
-            $$price{'ServiceIndex'} = $$Service{'id'};
-            delete $$price{'id'};
-            $price->save();
-        } # end foreach
+        if ( ! $Service->save() ) {
+			foreach my $price ( @prices ) {
+				$$price{'service_id'} = $$Service{'id'};
+				delete $$price{'id'};
+				$price->save();
+			} # end foreach
+		} # end if
 	} # end if
 
 	$$variable{'Service'} = $Service;
