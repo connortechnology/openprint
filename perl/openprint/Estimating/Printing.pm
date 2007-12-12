@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 use strict;
@@ -655,13 +655,17 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
 			} # end if
 			my $found = 0;
-			foreach my $P ( @Papers ) {
+			my @Ps = @Papers;
+			@Papers = ();
+			
+			foreach my $P ( @Ps ) {
 				if ( $P->width() == $$specs{'OverrideStockWidth'.$qty_index } and $P->height() == $$specs{'OverrideStockHeight'.$qty_index} ) {
 					$found = 1;
+					push @Papers, $P;
 				} # end if
 			} # end foreach
+
 			if ( ! $found ) {
-				my @Ps = @Papers;
 				foreach my $P ( @Ps ) {
 					# Don't cut rolls into sheets
 					next if ! $P->cuttable();
@@ -1383,7 +1387,7 @@ sub get_project_price {
 
 		my $pms_prices = get_special_colours_price( $openprint::log, $openprint::dbh, $openprint::variable, $P, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
-		if ( 0 and $debug ) {
+		if ( 0 ) {
 		foreach my $imp ( @impositions ) {
 $imp->display();
 		} # end foreach
@@ -1552,7 +1556,7 @@ $openprint::log->debug("Caching: " . $new_specs{'txtSignatureSpreadQuantity'.$qt
 					if ( $$sig_price{'Imposition'} ) {
 						$$price{'AdditionalSignature Breakdown'} .= sprintf('Additional Sig %dpages %dout %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $additional_price ) . '<br/>';
 						#`:w
-						$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
+						#$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
 					} else {
 						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 					} # end if
