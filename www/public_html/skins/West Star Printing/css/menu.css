@@ -1,0 +1,121 @@
+
+ul#menubar {
+    display: block;
+	min-width: 640px;
+	background-color: #004EA2;
+    margin: 3px 0px 12px 0px;
+    padding: 0px 20px 0px 20px;
+    z-index: 6000;
+}
+@media print {
+    .menubar {
+        display: none;
+    }
+}
+
+
+ul#menubar:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html ul#menubar {height: 1%;}
+*     ul#menubar{display:block;}
+/* End hide from IE-mac */
+ul#menubar li {
+    float: left;
+    list-style: none;
+    margin: 0px;
+	padding: 0px;
+	border: none;
+    display: block;
+}
+
+ul#menubar li a {
+    color: #ffffff;
+    display: block;
+    width:85px;
+    padding: 3px 10px 1px 10px;
+    text-decoration: none;
+	font-family: arial, helvetica, sans-serif;
+	font-size: 1em;
+	font-weight: bold;
+    margin: 0px;
+    overflow: hidden;
+    text-align: left;
+    outline: 0;
+}
+ul#menubar li.off ul {
+    /*put the subnavs below and hide them all*/
+    display: none;
+    padding: 0px;
+    margin: 0px;
+    list-style: none;
+    position: absolute;
+	border-bottom: 1px solid #ffffff;
+	margin-top: 0px;
+}
+
+ul#menubar li.on ul {
+    /*display the current topic*/
+    display: block;
+    padding: 0px;
+    margin: 0px;
+    list-style: none;
+    position: absolute;
+}
+
+ul#menubar li.on a {
+    /*change border color for active topic area*/
+	color: #ff7f00; 
+}
+
+ul#menubar li ul li {
+	background-color: #004EA2;
+    border: 0;
+	border-top: 1px solid white;
+    float: none;
+    padding: 0px;
+    margin:0px;
+    list-style: none;
+    text-align: center;
+	
+}
+
+ul#menubar li.on ul li a, #menubar li.off ul li a {
+    /*ie doesn't inherit the float*/
+    color: #ffffff;
+    margin: 0px;
+    outline: 0;
+	border-left: 1px solid white;
+	border-right: 1px solid white;
+}
+ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
+    color: #ff7f00;
+}
+
+ul#menubar li.off:hover ul, ul#menubar li.over ul {
+    /*  display the other topics when
+ *   *              their parent is hovered */
+    display: block;
+    z-index: 6000;
+}
+
+/* Sub meny entry color */
+#menubar li.off:hover a {
+    color: #ffffff;
+}
+#menubar li.off a:hover {
+    color: #ff7f00;
+}
+#menubar li:hover a {
+    color: #ff7f00;
+}
+#menubar li.over a {
+    color: #ff7f00;
+}
+

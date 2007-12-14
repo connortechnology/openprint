@@ -1,0 +1,10 @@
+.titleCSS{ position:absolute; width:400px; left: 130px; top: 100px; z-index:1;}
+
+
+
+.contentCSS { position:absolute; left: 10px; top: 10px; z-index:1;; clip:   rect(   )}
+
+
+
+body { 	margin: 0px; }
+
