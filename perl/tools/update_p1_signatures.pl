@@ -66,3 +66,10 @@ foreach my $Project ( @projects ) {
 		#} # end if
 	} # end foreach
 } # end foreach
+
+sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',9.488], 'strvalue',37.952);
+sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',9.528], 'strvalue',37.952);
+sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',4.724], 'strvalue',18.896);
+sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',7.598], 'strvalue',37.990);
+sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',7.598], 'strvalue',37.990);
+

@@ -186,9 +186,9 @@ sub calc {
 
 				my $price;
 				if ( $type eq 'PressProof' ) {
-					$price = openprint::service::get_price( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, $Equipment[0] );
+					$price = openprint::service::get_price( $type, $proof_totals{$type}{Quantity}, $Equipment[0] );
 				} else {
-					$price = openprint::service::get_price( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, undef );
+					$price = openprint::service::get_price( $type, $proof_totals{$type}{Quantity}, undef );
 				} # end if
 				if ( sets::isin( $type , ['EpsonProof','DigitalDylux'] ) ) {
 					$price *= $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144;	# Prices are in square feet, so 144=12x12inches
@@ -201,7 +201,7 @@ sub calc {
 			} # end foreach my $proof_index
 		} # end foreach my $signature_service_index
 
-		my $minCharge = openprint::service::get_price( $log, $dbh, $variable, 'ProofsMinimumCharge', undef, undef );
+		my $minCharge = openprint::service::get_price( 'ProofsMinimumCharge', undef, undef );
 		if ( $totalPrice < $minCharge and $totalQuantity ) {
 			$totalPrice = $minCharge;
 		} # end if

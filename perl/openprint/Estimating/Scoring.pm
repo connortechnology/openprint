@@ -317,7 +317,7 @@ $openprint::log->debug("sign calc");
 			} # end if
 
 			
-			my $setupPrice = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'ScoringMakeReady', $score_qty, $Equipment );
+			my $setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Setup: %d scores $%.2f<br/>', $score_qty, $setupPrice);
 			$$specs{'hdnBreakdown'.$qty_index} .= "\t\tImposition: $$imposition{'imposition'}: ";
 			my $width = $imposition->layout_width();
@@ -344,7 +344,7 @@ $openprint::log->debug("sign calc");
 			my $servicePrice;
 			my $materialPrice = 0;
 
-			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Scoring', $score_qty, $Equipment );
+			my %servicePrice = openprint::service::get_price_object( 'Scoring', $score_qty, $Equipment );
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice = $servicePrice{'Price'} * $qty / 1000;

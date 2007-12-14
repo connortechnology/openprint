@@ -74,8 +74,8 @@ sub calc {
         return $$specs{'Status'} = 'uncalculated';
     } # end if
 
-	my $makeReady = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}.'MakeReady', undef, undef );
-	my $minCharge = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}.'Minimum', undef, undef );
+	my $makeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', undef, undef );
+	my $minCharge = openprint::service::get_price( $$specs{'ServiceType'}.'Minimum', undef, undef );
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -87,7 +87,7 @@ sub calc {
 		my $price = 0;
 		my $unitPrice = 0;
 		if ( $qty ) {
-			$unitPrice = openprint::service::get_price( $log, $dbh, $variable, $$specs{'ServiceType'}, $qty, undef );
+			$unitPrice = openprint::service::get_price( $$specs{'ServiceType'}, $qty, undef );
 			$price = $unitPrice * $qty + $makeReady;
 			$$specs{'hdnBreakdown'.$qty_index} .= "Pricing for quantity $qty_index: $qty $$specs{'ServiceType'} * $unitPrice = $price<br/>";
 			if ( $$specs{'rdbCardboardBacking'} eq 'Y' ) {

@@ -58,14 +58,14 @@ sub get_id_by_index {
 } # end sub get_id_by_index
 
 sub get_price {
-	my ( $log, $dbh, $variable, $service, $range, $equipment ) = @_;
+	my ( $service, $range, $equipment ) = @_;
 
-	my %price = get_price_object( $log, $dbh, $variable, $service, $range, $equipment );
+	my %price = get_price_object( $service, $range, $equipment );
 	return $price{'Price'};
 } # end sub get_price
 
 sub get_price_object {
-	my ( $log, $dbh, $variable, $service, $range, $equipment ) = @_;
+	my ( $service, $range, $equipment ) = @_;
 
 	my $index = get_index_by_id( $service );
 	return if ! $index;
@@ -74,8 +74,8 @@ sub get_price_object {
 		$equipment = $equipment->id();
 	} # end if
 
-	my $list_id = openprint::pricing::get_pricelist_id( $log, $dbh, $variable );
-	my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $index, $list_id, 'openprint::service_priceset', $range, $equipment );
+	my $list_id = openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable );
+	my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $index, $list_id, 'openprint::service_priceset', $range, $equipment );
 	return if ! %price;
 
 	my $Pricelist = new openprint::Pricelist( $list_id );

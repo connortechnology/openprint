@@ -57,8 +57,8 @@ sub calc {
 $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 	# Currently there is no equipmnet for spiral
 
-	my $makeReadyPrice = openprint::service::get_price( $log, $dbh, $variable, 'SpiralPunchingMakeReady', undef, undef );
-	my $minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'SpiralPunchingMinimumCharge', undef, undef );
+	my $makeReadyPrice = openprint::service::get_price( 'SpiralPunchingMakeReady', undef, undef );
+	my $minimumCharge = openprint::service::get_price( 'SpiralPunchingMinimumCharge', undef, undef );
 
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
@@ -88,7 +88,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 
 		if ( $$specs{"txtQuantity$qty_index"} ) {
 			my $qty = $$specs{"txtQuantity$qty_index"};
-			my %PunchingPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'SpiralPunching', $qty, undef );
+			my %PunchingPrice = openprint::service::get_price_object( 'SpiralPunching', $qty, undef );
 			$$specs{'hdnBreakdown'.$qty_index} .= "Punching: " . sprintf( '%.4f', $PunchingPrice{'Price'} ) . "$PunchingPrice{'units'}\n";
 			if ( $PunchingPrice{'units'} eq 'Per M' ) {
 				$PunchingPrice{'Total'} = ( $PunchingPrice{'Price'} / 1000 ) * $qty;
@@ -96,7 +96,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 				$PunchingPrice{'Total'} = $PunchingPrice{'Price'} * $qty;
 			} # end if
 
-			my %CoilingPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Coiling', $qty, undef );
+			my %CoilingPrice = openprint::service::get_price_object( 'Coiling', $qty, undef );
 			$$specs{'hdnBreakdown'.$qty_index} .= "Coiling: " . sprintf( '%.4f', $CoilingPrice{'Price'} ) . "$CoilingPrice{'units'}\n";
 			if ( $CoilingPrice{'units'} eq 'Per M' ) {
 				$CoilingPrice{'Total'} = ( $CoilingPrice{'Price'} / 1000 ) * $qty;

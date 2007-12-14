@@ -41,8 +41,8 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	my $makeReadyPrice = openprint::service::get_price( $log, $dbh, $variable, 'CountingMakeReady', undef, undef );
-	my $minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'CountingMinimumCharge', undef, undef );
+	my $makeReadyPrice = openprint::service::get_price( 'CountingMakeReady', undef, undef );
+	my $minimumCharge = openprint::service::get_price( 'CountingMinimumCharge', undef, undef );
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
@@ -59,7 +59,7 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index}  .= 'MakeReady: ' . sprintf( '%.2f', $makeReadyPrice ) . '<br/>';
 		$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: ' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
 
-		my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Counting', $qty, undef );
+		my %ServicePrice = openprint::service::get_price_object( 'Counting', $qty, undef );
 		if ( sets::isin( $ServicePrice{'units'}, ['Per M', 'Per 1000'] ) ) {
 			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServiceCharge: $%.2f%s * %d=$%.2f<br/>' , @ServicePrice{'Price','units'}, $qty, $ServicePrice{'Total'} );

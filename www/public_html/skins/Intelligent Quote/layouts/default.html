@@ -27,7 +27,7 @@
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 
-		<!--<LINK REL="SHORTCUT ICON" HREF="/favicon.ico">-->
+		<link rel="shortcut icon" href="/images/favicon.ico"/>
 <script type="text/javascript">
 <!--
         var startList = function() {
@@ -72,6 +72,8 @@
 							<? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?>
 							<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 					</span>
+					<br/>
+					<br/>
 					<span style="float: right;">
 							<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
 								Currently selected currency:
@@ -82,8 +84,6 @@
 								</select>
 							</form>
 					</span>
-					<br/>
-					<br/>
 					<br/>
 					<br/>
 				<!--#include virtual="/skins/<?SiteTitle?>/includes/customer_menu.html"-->

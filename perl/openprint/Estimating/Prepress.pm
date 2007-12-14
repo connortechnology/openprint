@@ -51,7 +51,7 @@ sub calc {
 	} elsif ( $$specs{'txtQuantity'} < 0.25 and $$specs{'txtQuantity'} > 0 ) {
 		$$specs{'txtQuantity'} = 0.25;
 	} # end if
-	my $price = openprint::service::get_price( $log, $dbh, $variable, @$specs{'ServiceType','txtQuantity'}, undef );
+	my $price = openprint::service::get_price( @$specs{'ServiceType','txtQuantity'}, undef );
 	$$specs{"txtUnitPrice"} = sprintf( '%.2f', $price );
 
 	$price *= $$specs{'txtQuantity'};
