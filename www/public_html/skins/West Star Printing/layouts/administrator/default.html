@@ -20,18 +20,15 @@
 		<div class="Content"> 
 		<div class="ContentInner"> 
 			<div class="Header">
-				<span style="float: left;"><img src="/images/IQ_logo.png" alt="Intelligent Quote Demo"/></span>
-				<span style="float: left;"><img src="/images/IQ_text.png" alt="Intelligent Quote Demo"/></span>
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
-				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+					<a href="/index.html"><img style="float: left;" src="/images/logo.gif" alt="West Star Printing"/></a>
+				<? if ( sets::isin( $openprint::session{'user_type'}, ['E'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+				<? endif ( sets::isin( $openprint::session{'user_type'}, ['E'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
+					<br class="spacer"/>
+					<!--#include virtual="/skins/<?SiteTitle?>/includes/administrator_menu.html"-->
 			</div>
 			<br/>
-				<!--#include virtual="/includes/administrator_menu.html"-->
 			<?PageContent?>
 			<br class="spacer"/>
 		</div><!--ContentInner-->

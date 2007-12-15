@@ -58,11 +58,6 @@ sub view_services {
 		$log->debug("*** Time to Save Project - View Services Function ***");
 		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
 		my $Project = new openprint::Project( $project_index );
-		$Project->Currency( openprint::Currency::get_current() );
-		foreach my $signature_service_index ( $Project->signatures() ) {
-			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
-		} # end foreach
-		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 		$Project->save();
 	} # end if

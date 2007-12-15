@@ -119,7 +119,7 @@ div.ProjectSummary div.row:after {
 /* End hide from IE-mac */
 
 div.ProjectSummary div.row span.label {
-	margin-right: 1%;
+	margin-right: 0;
 	text-align: right;
 	float: left;
 }
@@ -133,6 +133,14 @@ div.ProjectSummary div.row span.value {
 }
 div#ProjectView table tr td input {
 	width: 99%;
+}
+#PagesCover {
+	float: left;
+	width: 50%;
+}
+#GateInsert {
+	float: left;
+	width: 50%;
 }
 .InksFront {
 	float: left;

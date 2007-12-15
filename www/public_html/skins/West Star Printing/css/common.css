@@ -33,6 +33,7 @@ body .Header {
 A {
 	text-decoration: none;
     color: #404171;
+	outline: 0;
 }
 A:visited {
     color: #404171;
@@ -41,17 +42,7 @@ A:hover {
 	color: #687796;
 }
 
-.formOn {
-	background-color: #f1eee5;
-}
-.formOff {
-	background-color: #ffffff;
-}
-
-select, textarea, option {
-    font-size: x-small;
-}
-input {
+input, select, textarea, option {
     font-size: x-small;
 }
 input[type="text"], input[type="password"]  {
@@ -156,26 +147,6 @@ table.List td textarea {
 }
 
 
-.Application fieldset {
-	margin-bottom: 5px;
-}
-.Application span.label {
-    float: left;
-    width: 180px;
-    padding: 2px;
-    margin: 0px;
-    margin-top: 3px;
-}
-.Application legend {
-	color: #BCA205;
-	font-weight: bold;
-}
-.Application .text {
-	width: 200px;
-	margin:3px;
-	height:20px;
-}
-
 .Currency {
 	font-weight: bold;
 }
@@ -204,12 +175,12 @@ fieldset:after {
 /* End hide from IE-mac */
 
 fieldset legend {
-	color: #ff7f00;
+	color: #FE0F0B;
 	font-weight: bold;
 }
 
 fieldset p {
-margin: 0px;
+	margin: 0px;
     margin-top: .4em;
     display: inline-block;
     padding: 0px;
@@ -257,14 +228,9 @@ p.buttons {
 fieldset p.buttons {
 	margin: 0px;
 	padding: 0px;
-	margin-left: 26%;
+	margin-left: 185px;
+	
 	float: none;
-}
-fieldset p .buttons {
-    margin-left: 26%;
-	display: -moz-inline-box;
-    display: inline-block;
-    float: none;
 }
 fieldset p input {
     float: none;
@@ -327,9 +293,7 @@ hr {
 	float: right;
 }
 .PageTitle {
-	position: absolute;
-	top: 0px;
-	left: 400px;
+	display: none;
 }
 .PageTitle h1 {
 	display: block;
@@ -525,4 +489,7 @@ div.Service span.ThreeColumns {
 div.Service span.TwoColumns {
 	width: 50%;
 	float: left;
+}
+img {
+	border: none;
 }

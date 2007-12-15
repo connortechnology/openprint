@@ -1367,7 +1367,7 @@ sub get_project_price {
 #$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 		} # end if Folding
 
-		my $pms_prices = get_special_colours_price( $openprint::log, $openprint::dbh, $openprint::variable, $P, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
+		my $pms_prices = get_special_colours_price( $P, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
 		if ( 0 and $debug ) {
 		foreach my $imp ( @impositions ) {
@@ -2293,7 +2293,7 @@ sub get_varnish_run_price {
 
 # Returns a price per image, which will later need to be multiplied by the imposition
 sub get_special_colours_price {
-	my ( $log, $dbh, $variable, $Press, $colours, $mixed_colours, $washed_colours, $special_colours, $qty_index ) = @_;
+	my ( $Press, $colours, $mixed_colours, $washed_colours, $special_colours, $qty_index ) = @_;
 	my %price = ('Ink Mix Charge',0,'Press Washes',0);
 
 	my %metallic_mix_price = openprint::service::get_price_object( 'MetallicInkMix','',$Press);

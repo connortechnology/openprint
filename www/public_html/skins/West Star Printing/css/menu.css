@@ -39,7 +39,7 @@ ul#menubar li a {
     color: #ffffff;
     display: block;
     width:85px;
-    padding: 3px 10px 1px 10px;
+    padding: 3px 10px 2px 10px;
     text-decoration: none;
 	font-family: arial, helvetica, sans-serif;
 	font-size: 1em;
@@ -71,7 +71,7 @@ ul#menubar li.on ul {
 
 ul#menubar li.on a {
     /*change border color for active topic area*/
-	color: #ff7f00; 
+	color: #FE0F0B; 
 }
 
 ul#menubar li ul li {
@@ -95,7 +95,7 @@ ul#menubar li.on ul li a, #menubar li.off ul li a {
 	border-right: 1px solid white;
 }
 ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
-    color: #ff7f00;
+    color: #FE0F0B;
 }
 
 ul#menubar li.off:hover ul, ul#menubar li.over ul {
@@ -110,12 +110,35 @@ ul#menubar li.off:hover ul, ul#menubar li.over ul {
     color: #ffffff;
 }
 #menubar li.off a:hover {
-    color: #ff7f00;
+    color: #FE0F0B;
 }
 #menubar li:hover a {
-    color: #ff7f00;
+    color: #FE0F0B;
 }
 #menubar li.over a {
-    color: #ff7f00;
+    color: #FE0F0B;
 }
 
+li#Account {
+}
+li#Account ul li a {
+	width: 120px;
+}
+li#Projects {
+	width: 115px;
+}
+li#Projects ul li a {
+	width: 105px;
+}
+li#Orders {
+	width: 115px;
+}
+li#Orders ul li a {
+	width: 105px;
+}
+li#Quotes {
+	width: 115px;
+}
+li#Quotes ul li a {
+	width: 105px;
+}

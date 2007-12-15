@@ -21,8 +21,8 @@
 		<? endwhile ( $$variable{'Colour'} = shift @{$$variable{'ColourDefinitions'}} ) ?>
 			<tr class="totals">
 				<td><input type="text" name="pmsid-New" value=""/></td>
-				<td><select name="material_id-New"><? echo ( ssi::make_drop_down( $$variable{'Materials'} ); ) ?></select></td>
-				<td><select name="service_id-New"><? echo ( ssi::make_drop_down( $$variable{'Services'} ); ) ?></select></td>
+				<td><select name="material_id-New"><option value="">None</option><? echo ( ssi::make_drop_down( $$variable{'Materials'} ); ) ?></select></td>
+				<td><select name="service_id-New"><option value="">None</option><? echo ( ssi::make_drop_down( $$variable{'Services'} ); ) ?></select></td>
 				<td><input type="text" name="washups-New" value=""/></td>
 				<td>&nbsp;</td>
 			</tr>

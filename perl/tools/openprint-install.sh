@@ -20,4 +20,9 @@ ln -sf /etc/apache2/mods-available/rewrite.load   /etc/apache2/mods-enabled/
 ln -sf /etc/apache2/mods-available/apreq.load /etc/apache2/mods-enabled/
 
 mkdir /etc/apache2/lib
-ln -sf /etc/apache2/lib/perl /var/www/topknotch/perl
+ln -sf /etc/apache2/lib/perl /var/www/$1/perl
+
+perl -MCPAN -e shell << EOF
+force install Math::Units
+force install Barcode::Code128
+EOF
