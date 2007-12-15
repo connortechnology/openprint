@@ -11,15 +11,22 @@
             <? endif ( $$variable{'DocketNumber'} ) ?>
             </b>
         </div>
-		<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
-		<fieldset class="Signature">
-			<? if ( $$variable{'Reference'} ) ?>
-			<legend>Information for form <?SignatureIndex?>:</legend>
-			<p><?Reference?></p>
-			<? endif ( $$variable{'Reference'} ) ?>
-			<!--#include virtual="/includes/employee/feedback/press_completion.html"-->
-		</fieldset>
-		<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
+		<? echo (
+			my $html = '';
+			foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
+				$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
+				$html .= '<fieldset class="Signature"><legend>Information for form '.$$sig_specs{'SignatureIndex'}.':</legend>';
+				$html .= '<p>';
+				$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id );
+				$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id, $$variable{'Project'}->ordered_quantity_index() );
+				$html .= '</p>';
+				my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/press_completion.html' );
+				$html .= ssi::variable_substitution( $r, $r->log, $dbh, \$content, $variable );
+				$html .= '</fieldset>';
+			} # end foreach
+			return $html;
+		) ?>
         <!--#include virtual="/includes/employee/feedback/buttons.html"-->
         <!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
     </form>
