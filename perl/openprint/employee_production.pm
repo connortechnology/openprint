@@ -590,6 +590,11 @@ sub project_view {
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 
+				if ( $openprint::param{'TakeOver-'.$$sig_specs{'SignatureIndex'}} ) {
+		# Take Over
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Signature ' . $$sig_specs{'SignatureIndex'} . ' taken Over by '. $openprint::param{"txtEmployeeName-$$sig_specs{'SignatureIndex'}"} );
+				} # end if
+
 				foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockBrand UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
 					next if $$sig_specs{$param} eq $openprint::param{"$param-$$sig_specs{'SignatureIndex'}"};
 					openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, $param, $openprint::param{"$param-$$sig_specs{'SignatureIndex'}"} );
