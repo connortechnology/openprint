@@ -67,13 +67,6 @@ A:hover {
 	color: #687796;
 }
 
-.formOn {
-	background-color: #f1eee5;
-}
-.formOff {
-	background-color: #ffffff;
-}
-
 select, textarea, option {
     font-size: x-small;
 }
@@ -155,14 +148,6 @@ table.List td textarea {
 }
 
 .Docket {
-}
-
-.Application fieldset {
-	margin-bottom: 5px;
-}
-.Application legend {
-	color: #BCA205;
-	font-weight: bold;
 }
 
 .Currency {
