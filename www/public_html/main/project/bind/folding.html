@@ -11,6 +11,8 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<? echo ( 
 			my $html;
+			my $services = $$variable{'Project'}->services();
+
 			foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}->id(), $ss_id );
 				$html .= qq{
@@ -23,7 +25,7 @@
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
 					foreach my $foldtype ( sort keys %openprint::Estimating::Folding::fold_types ) {
 						next if ( ( $foldtype =~ /Pocket/ ) and ! ($$variable{'Project'}->Type()->name() =~ /Presentation/ ) );
-						next if ( ( $foldtype =~ /Panel/ ) and ($$variable{'Project'}->signatures() > 1) );
+						next if ( ( ! ( $foldtype =~ /Signature/ or $foldtype =~ /Gate/ ) ) and ($$services{'SaddleStitching'} or $$services{'LoopStitching'} ) );
 						$html .= sprintf( '<input style="width: auto;" type="text" size="2" name="%1$s-Qty-%2$d-%3$d" value="%4$d" onkeyup="calc(this.form.name);" %6$s />%5$s<br/>',
 						$foldtype,$$sig_specs{'SignatureIndex'},$qty_index,
 						$$variable{$foldtype.'-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index},
