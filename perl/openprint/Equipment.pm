@@ -323,18 +323,18 @@ sub save {
 
 	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
 	foreach my $key ( keys %$param ) {
-		if ( $key =~ /txtSpecificationName(.*)/ and $$param{$key} ne '' ) {
+		if ( $key =~ /SName(.*)/ and $$param{$key} ne '' ) {
 			my $i = $1;
-			$$param{'txtSpecificationMin'.$i} =~ s/[^\d\.]//g;
-			$$param{'txtSpecificationMax'.$i} =~ s/[^\d\.]//g;
+			$$param{'SMin'.$i} =~ s/[^\d\.]//g;
+			$$param{'SMax'.$i} =~ s/[^\d\.]//g;
 			sql::insert( undef, undef, 'tbl_Equipment_Specifications', [
 					'lngEquipmentIndex',    $$self{id},
-					'dblMin',               ( $$param{'txtSpecificationMin'.$1} ne '' ? $$param{'txtSpecificationMin'.$1} : undef ),
-					'dblMax',               ( $$param{'txtSpecificationMax'.$1} ne '' ? $$param{'txtSpecificationMax'.$1} : undef ),
-					'strUnits',             $$param{'txtSpecificationUnits'.$1},
-					'strName',              $$param{'txtSpecificationName'.$1},
-					'strValue',             $$param{'txtSpecificationValue'.$1},
-					'interpolate',          $$param{'interpolate'.$1},
+					'dblMin',               ( $$param{'SMin'.$1} ne '' ? $$param{'SMin'.$1} : undef ),
+					'dblMax',               ( $$param{'SMax'.$1} ne '' ? $$param{'SMax'.$1} : undef ),
+					'strUnits',             $$param{'SUnits'.$1},
+					'strName',              $$param{'SName'.$1},
+					'strValue',             $$param{'SValue'.$1},
+					'interpolate',          $$param{'i'.$1},
 					] );
 		} # end if
 	} # end foreach

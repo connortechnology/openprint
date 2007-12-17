@@ -1,7 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><?PageTitle?></title>	
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
@@ -30,13 +31,13 @@
 		<!--<LINK REL="SHORTCUT ICON" HREF="/favicon.ico">-->
 <script type="text/javascript">
 <!--
-        var startList = function() {
+        function startList() {
             if (document.all && document.getElementById) {
                 var navRoot = document.getElementById("menubar");
                 if ( navRoot ) {
                     for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
                         var node = navRoot.childNodes[i];
-                        if (node.nodeName=="LI") {
+                        if (node.nodeName=='LI') {
                             node.onmouseover=function() {
                                 this.className+=' over';
 							}

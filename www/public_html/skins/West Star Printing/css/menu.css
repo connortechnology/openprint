@@ -1,11 +1,19 @@
+/* Begin Menu Styles
+ * */
 
 ul#menubar {
-    display: block;
-	min-width: 640px;
-	background-color: #004EA2;
-    margin: 3px 0px 12px 0px;
-    padding: 0px 20px 0px 20px;
+	width:100%;
+    left:0px;
+	background-color: #194D98;
+	list-style: none;
+    margin: 0px;
+    margin-top: 3px;
+    margin-bottom: 12px;
+    padding: 0px;
     z-index: 6000;
+    min-width: 600px;
+    display: block;
+	border-top: 1px solid #ffffff;
 }
 @media print {
     .menubar {
@@ -33,21 +41,24 @@ ul#menubar li {
 	padding: 0px;
 	border: none;
     display: block;
+    background-color: #194D98;
 }
 
 ul#menubar li a {
     color: #ffffff;
     display: block;
     width:85px;
-    padding: 3px 10px 2px 10px;
+    padding: 3px 10px 3px 10px;
     text-decoration: none;
 	font-family: arial, helvetica, sans-serif;
-	font-size: 1em;
 	font-weight: bold;
+	font-size: 11px;
     margin: 0px;
     overflow: hidden;
     text-align: left;
     outline: 0;
+	border-right: 1px solid #ffffff;
+
 }
 ul#menubar li.off ul {
     /*put the subnavs below and hide them all*/
@@ -56,8 +67,7 @@ ul#menubar li.off ul {
     margin: 0px;
     list-style: none;
     position: absolute;
-	border-bottom: 1px solid #ffffff;
-	margin-top: 0px;
+	border-top: 1px solid #ffffff;
 }
 
 ul#menubar li.on ul {
@@ -71,31 +81,31 @@ ul#menubar li.on ul {
 
 ul#menubar li.on a {
     /*change border color for active topic area*/
-	color: #FE0F0B; 
+	color: #5a95d6; 
+	background-color: #ffffff;
 }
 
 ul#menubar li ul li {
-	background-color: #004EA2;
+    background-color: #ffffff;
     border: 0;
-	border-top: 1px solid white;
     float: none;
     padding: 0px;
     margin:0px;
     list-style: none;
     text-align: center;
-	
 }
 
 ul#menubar li.on ul li a, #menubar li.off ul li a {
     /*ie doesn't inherit the float*/
-    color: #ffffff;
-    margin: 0px;
-    outline: 0;
-	border-left: 1px solid white;
-	border-right: 1px solid white;
+	background-color: #5a95d6;
+    color: #134984;
+    margin: -1px 0px 0px 0px;
+	border-bottom: 1px solid white;
+	border-top: 1px solid #ffffff;
 }
 ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
-    color: #FE0F0B;
+	background-color: #5a95d6;
+    color: #FEE00F;
 }
 
 ul#menubar li.off:hover ul, ul#menubar li.over ul {
@@ -105,40 +115,19 @@ ul#menubar li.off:hover ul, ul#menubar li.over ul {
     z-index: 6000;
 }
 
-/* Sub meny entry color */
 #menubar li.off:hover a {
+/*
+    color: #5a95d6;
+*/
     color: #ffffff;
 }
 #menubar li.off a:hover {
-    color: #FE0F0B;
+    color: #FEE00F;
 }
 #menubar li:hover a {
-    color: #FE0F0B;
+    color: #FEE00F;
 }
 #menubar li.over a {
-    color: #FE0F0B;
+    color: #FEE00F;
 }
 
-li#Account {
-}
-li#Account ul li a {
-	width: 120px;
-}
-li#Projects {
-	width: 115px;
-}
-li#Projects ul li a {
-	width: 105px;
-}
-li#Orders {
-	width: 115px;
-}
-li#Orders ul li a {
-	width: 105px;
-}
-li#Quotes {
-	width: 115px;
-}
-li#Quotes ul li a {
-	width: 105px;
-}

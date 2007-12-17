@@ -1,5 +1,5 @@
 <ul class="unprintable" id="menubar">
-<li class="off"><a href="/contact.html">Contact Us</a></li>
+	<li class="off"><a href="/contact.html">Contact Us</a></li>
 	<li class="off" id="Account"><a href="#">Account</a>
 		<ul>
 <? if ( $openprint::session{'user_id'} ) ?>
@@ -43,7 +43,7 @@
 		</ul>
 	</li>
 <? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
-	<span style="float: right;">
+	<li style="float: right;">
 		<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
 			<b style="color: white;">Currency:</b>
 			<select name="select_currency_id" onchange="this.form.submit();">
@@ -52,5 +52,5 @@
 				) ?>
 			</select>
 		</form>
-	</span>
+	</li>
 </ul>
