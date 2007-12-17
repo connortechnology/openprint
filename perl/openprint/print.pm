@@ -266,7 +266,7 @@ sub multipage_signatures {
 	my ( $param, $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-    $log->debug(" **** STARTING MULTIPAGE SIGNATURES FUNCTION **** ");
+    $openprint::log->debug(" **** STARTING MULTIPAGE SIGNATURES FUNCTION **** ");
 
 	if ( ! $$param{'txtSpreadSize'} ) {
 		# now we have finished the first step for a new book, and have a basic signature set in place.
@@ -283,32 +283,16 @@ sub multipage_signatures {
 		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['CornerStitching', 'Cerlox', 'PlasticCoil','MetalCoil'] ) ) {
 			$$param{'txtSpreadSize'} = 2;
 		} else {
-			$log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );
+			$openprint::log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );
 			$$param{'txtSpreadSize'} = 4;
 		} # end if
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
 	} # end if
 
-	#if ( ! $$param{'txtTotalSpreadQuantity'} ) {
-		#$$param{'txtTotalSpreadQuantity'} = $$param{'txtTotalPageQuantity'} / $$param{'txtSpreadSize'};
-		#$log->warn("INSANITY: TotalSpreadQuantity Not Specified. Setting to $$param{'txtTotalSpreadQuantity'}");
-		#openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtTotalSpreadQuantity', $$param{'txtTotalSpreadQuantity'});
-	#} # end if
-
-	#if ( ! $$param{'txtInteriorSpreadQuantity'} ) {
-		## Can happen if all signatures are gatefolded...
-		#$log->warn('INSANITY: No interiorspreadquantity!');
-		#$$param{'txtInteriorSpreadQuantity'} = int($$param{'txtTotalSpreadQuantity'}) - int($$param{'txtGateFoldedSpreadQuantity'});
-		#if ( $$param{'rdbCover'} eq 'Different' ) {
-			#if ( $$param{'txtSpreadSize'} == 4 ) {
-				#$$param{'txtInteriorSpreadQuantity'} -= 1;
-			#} else {
-				#$$param{'txtInteriorSpreadQuantity'} -= 2;
-			#} # end if
-		#} # end if
-		#openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtInteriorSpreadQuantity', $$param{'txtInteriorSpreadQuantity'} );
-	#} # end if
-
+	my %pages;
+	$pages{'Cover Pages'} = $$param{'OverrideGroupPageQuantity1'} eq 'Y' ? $$param{'GroupPageQuantity1'} : ($$param{'rdbCover'} eq 'Different' ? 4 : 0);
+	$pages{'Gate Folded Spreads'} = $$param{'txtGateFoldedPageQuantity'};
+	$pages{'Interior Pages'} = ( $$param{'txtTotalPageQuantity'} - $pages{'Cover Pages'} ) - $pages{'Gate Folded Spreads'};
 
 	if ( $$param{'rdbCover'} eq 'Different' ) {
 # now add a cover spread if we need one.
@@ -329,14 +313,19 @@ sub multipage_signatures {
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtSpreadSize', 4 );
 			# Width and Height will be added on auto-calc
 			sql::end_transaction( $dbh, $ac );
+
+		} # end if
+
+		# Prime this for saving later
+		if ( ( ! $$param{'GroupPageQuantity1'} ) and ( $$param{'OverrideGroupPageQuantity1'} ne 'Y' ) ) {
+			$$param{'GroupPageQuantity1'} = $pages{'Cover Pages'};
 		} # end if
 	} else {
-		# Don't need a cover, so get rid of it
+# Don't need a cover, so get rid of it
 		foreach ( $Project->signatures('Cover Pages') ) {
-		openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 		} # end foreach
-	} # end if
-
+	} # end if Self or Different Cover
 
 # On each call to this, we save, then check to see if there are any unspecified signatures
 
@@ -373,8 +362,9 @@ sub multipage_signatures {
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
 		sql::end_transaction( $dbh, $ac );
 	} # end if
-
-	my %pages = ();
+	if ( ( ! $$param{'GroupPageQuantity2'} ) and ( $$param{'OverrideGroupPageQuantity2'} ne 'Y' ) ) {
+		$$param{'GroupPageQuantity2'} = $pages{'Interior Pages'};
+	} # end if
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
@@ -418,11 +408,8 @@ sub multipage_signatures {
 				'GroupPageQuantity','OverrideGroupPageQuantity',
 				) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
-			$pages{$type} = $$sig_specs{'GroupPageQuantity'};
 		} # end foreach spec
 	} # end foreach
-
-$openprint::log->debug("Summ: " . misc::sum( values %pages ) );
 
 	if ( misc::sum( values %pages ) < $$param{'txtTotalPageQuantity'} ) {
 # Must have at least 1 interioer signature

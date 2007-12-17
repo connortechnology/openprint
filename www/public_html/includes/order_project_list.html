@@ -36,7 +36,8 @@
 				eval(' require openprint::Estimating::'.$ServiceType->name().';' );
 				my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs, $$variable{Project}->ordered_quantity_index() );') . ' to<br/>'.eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs );');
 				$openprint::log->error("Error ". $@) if $@;
-				$shipping_html .= qq`<tr$$variable{'rowclass'}><td colspan="3">`.$ServiceType->description().qq` $summary</td><td colspan="2">$$specs{'alert'}</td><td align="left">&nbsp;</td><td align="right">`.sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $price).'</td></tr>';
+
+				$shipping_html .= sprintf('<tr%s><td rowspan="2" colspan="3">%s %s</td><td rowspan="2" colspan="2">%s</td><td rowspan="2" align="left">&nbsp;</td><td align="right">%s%.2f</td></tr><tr><td align="right"><a href="/main/order/%s?ProjectIndex=%d&amp;ServiceIndex=%d">Change</a></td></tr>',$$variable{'rowclass'}, $ServiceType->description(), $summary, $$specs{'alert'}, $$variable{'Currency'}->symbol(), $price, $ServiceType->url(), $$variable{'Project'}->id(), $service_index );
 			} # end foreach
 		} # end if
 	} # end foreach

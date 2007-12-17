@@ -81,6 +81,14 @@ function rdbSuppliedStock_onchange( element, id ) {
 
 function ddmStockBrand_onchange( element, id ) {
 	var form = element.form;
+
+	// Disable them all first so that we can't select an invalid paper while it's chugging away
+	form.elements['ddmStockBrand'+id].disabled = true;
+	form.elements['ddmStockFinish'+id].disabled = true;
+	form.elements['ddmStockColour'+id].disabled = true;
+	if ( form.elements['ddmStockWeight'+id] )
+		form.elements['ddmStockWeight'+id].disabled = true;
+
 	if ( gettingNewPrice ) {
 		if ( timeout )
 			clearTimeout( timeout );
@@ -88,11 +96,6 @@ function ddmStockBrand_onchange( element, id ) {
 		return;
 	} // end if
 	timeout = null;
-	form.elements['ddmStockBrand'+id].disabled = true;
-	form.elements['ddmStockFinish'+id].disabled = true;
-	form.elements['ddmStockColour'+id].disabled = true;
-	if ( form.elements['ddmStockWeight'+id] )
-		form.elements['ddmStockWeight'+id].disabled = true;
 
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Name') );
 
@@ -106,6 +109,10 @@ function txtSpecificStockBrand_onKeyUp( element ) {
 
 function ddmStockFinish_onchange( element, id ) {
 	var form = element.form;
+	form.elements['ddmStockBrand'+id].disabled = true;
+	form.elements['ddmStockFinish'+id].disabled = true;
+	form.elements['ddmStockColour'+id].disabled = true;
+	form.elements['ddmStockWeight'+id].disabled = true;
 	if ( gettingNewPrice ) {
 		if ( timeout )
 			clearTimeout( timeout );
@@ -113,10 +120,6 @@ function ddmStockFinish_onchange( element, id ) {
 		return;
 	} // end if
 	timeout = null;
-	form.elements['ddmStockBrand'+id].disabled = true;
-	form.elements['ddmStockFinish'+id].disabled = true;
-	form.elements['ddmStockColour'+id].disabled = true;
-	form.elements['ddmStockWeight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Finish') );
 
 } // end function ddmStockFinish_onchange();
@@ -131,6 +134,10 @@ function txtSpecificStockFinish_onKeyUp( element ) {
 
 function ddmStockColour_onchange( element, id ) {
 	var form = element.form;
+	form.elements['ddmStockBrand'+id].disabled = true;
+	form.elements['ddmStockFinish'+id].disabled = true;
+	form.elements['ddmStockColour'+id].disabled = true;
+	form.elements['ddmStockWeight'+id].disabled = true;
 	if ( gettingNewPrice ) {
 		if ( timeout )
 			clearTimeout( timeout );
@@ -138,10 +145,6 @@ function ddmStockColour_onchange( element, id ) {
 		return;
 	} // end if
 	timeout = null;
-	form.elements['ddmStockBrand'+id].disabled = true;
-	form.elements['ddmStockFinish'+id].disabled = true;
-	form.elements['ddmStockColour'+id].disabled = true;
-	form.elements['ddmStockWeight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id,'Colour') );
 
 	//if ( form.txtSpecificStockColour && get_ddm_value(form.ddmStockColour) ) form.txtSpecificStockColour.value='';
@@ -157,6 +160,10 @@ function txtSpecificStockColour_onKeyUp( element ) {
 
 function ddmStockWeight_onchange( element, id ) {
 	var form = element.form;
+	form.elements['ddmStockBrand'+id].disabled = true;
+	form.elements['ddmStockFinish'+id].disabled = true;
+	form.elements['ddmStockColour'+id].disabled = true;
+	form.elements['ddmStockWeight'+id].disabled = true;
 	if ( gettingNewPrice ) {
 		if ( timeout )
 			clearTimeout( timeout );
@@ -165,10 +172,6 @@ function ddmStockWeight_onchange( element, id ) {
 	} // end if
 	timeout = null;
 
-	form.elements['ddmStockBrand'+id].disabled = true;
-	form.elements['ddmStockFinish'+id].disabled = true;
-	form.elements['ddmStockColour'+id].disabled = true;
-	form.elements['ddmStockWeight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Weight') );
 } // end function ddmStockWeight_onchange();
 function txtSpecificStockWeight_onKeyUp( element ) {
