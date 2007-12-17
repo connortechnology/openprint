@@ -187,7 +187,7 @@ $openprint::log->debug("sign calc");
 	$sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index ) if ! $sig_specs;
 
 	my %Results = (
-		'Status' => 'uncalculated',
+		'Status' => 'calculated',
 	);
 	my $services = $Project->services();
 	# Can only use the stitcher for scoring if we are stitching.  There are also thickness constraints
@@ -214,6 +214,7 @@ $openprint::log->debug("sign calc");
 	@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
 	$$specs{'hdnBreakdown'.$qty_index} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
+	$Results{'Status'} = 'uncalculated';
 
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 	if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
