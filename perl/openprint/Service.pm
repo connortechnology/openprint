@@ -105,6 +105,8 @@ sub save {
 sub delete {
 	my $self = shift;
 
+	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
+
 	my $ac = sql::start_transaction( $openprint::dbh );
     sql::execute( undef, undef, q{DELETE FROM tbl_Service_Prices WHERE lngServiceIndex=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Services WHERE id=?}, $$self{id} );

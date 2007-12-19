@@ -167,6 +167,7 @@ $openprint::log->debug("Page: $page");
 	untie %session;
 	openprint::Material::init_cache();
 	openprint::Service::init_cache();
+	openprint::Equipment::init_cache();
 	$dbh->disconnect();
 	$log->warn( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client!  This is really smart.
