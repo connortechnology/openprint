@@ -448,6 +448,15 @@ sub project_view {
 							$$variable{'error'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 						} # end if
 						$openprint::param{'rdbComplete'} = 'No';
+					} elsif ( 0 < Date::Calc::Delta_Days( @openprint::param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
+						my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+						if ( @ServiceTypes ) {
+							$$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
+							$$variable{'ErrorMessage'} = 'You cannot select a date in the past. Please try again.';
+						} else {
+							$$variable{'error'} = 'You cannot select a duedate in the past. Please try again.';
+						} # end if
+						$openprint::param{'rdbComplete'} = 'No';
 					} else {
 						my $duedate = join('-', @openprint::param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
 						$Project->due_date( $duedate );
@@ -513,6 +522,15 @@ sub project_view {
 								$$variable{'error'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 							} # end if
 							$openprint::param{'rdbApproved'} = 'N';
+						} elsif ( 0 < Date::Calc::Delta_Days( @openprint::param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
+							my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+							if ( @ServiceTypes ) {
+								$$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
+								$$variable{'ErrorMessage'} = 'You cannot select a date in the past. Please try again.';
+							} else {
+								$$variable{'error'} = 'You cannot select a duedate in the past. Please try again.';
+							} # end if
+							$openprint::param{'rdbComplete'} = 'No';
 						} else {
 # It's a valid duedate
 							my $duedate = sprintf('%.4d-%.2d-%.2d', @openprint::param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );

@@ -695,6 +695,11 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 		} # end if override
 	} # end foreach qty_index
 
+	if ( ! @Papers ) {
+		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+
 	my %project = (
 			'Add Grip Width',	$$specs{'GripWidth'},
 			'Add Grip Height',	$$specs{'GripHeight'},
