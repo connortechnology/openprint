@@ -315,15 +315,15 @@ sub signature_calc_folding_cutting {
 		next if ! $liftDepth;
 
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $I->imposition() );
-		my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Cutting', $sheets, $Equipment );
+		my %ServicePrice = openprint::service::get_price_object( 'Cutting', $sheets, $Equipment );
 		my $price = 0;
 		my $runs = ceil( $sheets*$Paper->calliper()/$liftDepth );
 		$price += ( $runs * $folding_cuts * $ServicePrice{'Price'} );
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\tCutting \%d sheets in %d runs: %.2f<br/>", $sheets, $runs, $price );
-		my $setupCost = openprint::service::get_price( $log, $dbh, $variable, 'CuttingMakeReady', undef, $Equipment );
+		my $setupCost = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
 		my $totalPrice = $setupCost + $price;
 		if ( $Paper->bladecleaning() ) {
-			my %cleaning = openprint::service::get_price_object( $log, $dbh, $variable, 'Blade Cleaning', undef, $Equipment );
+			my %cleaning = openprint::service::get_price_object( 'Blade Cleaning', undef, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Blade Cleaning: %.2f<br/>", $cleaning{'Price'} );
 			$totalPrice += $cleaning{'Price'};
 		} # end if
