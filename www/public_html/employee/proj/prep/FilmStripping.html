@@ -1,3 +1,34 @@
-<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
-<!--#include virtual="/includes/employee/feedback/timer.js"-->
-<!--#include virtual="/includes/employee/feedback/filmstripping.html"-->
+<a href="/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
+<br/>
+<div class="error"><?ErrorMessage?></div>
+<div style="float: left; width: 49%;"/>
+	<form method="post" name="f1" action="/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
+		<fieldset><legend>Production Feedback</legend>
+			<!--#include virtual="/includes/employee/feedback/employee.html"-->
+			<!--#include virtual="/includes/employee/feedback/comments.html"-->
+			<!--#include virtual="/includes/employee/feedback/complete.html"-->
+			<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
+			<p id="DueDate">
+				<label>Due Date:</label>
+				<? eval (
+					 @$variable{'years','months','days'} = ssi::get_dates( $log, $dbh, @$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ); 
+) ?>
+				<select style="width: auto;" name="ddmDueDateMonth" size="1"><?months?></select>
+				<select style="width: auto;" name="ddmDueDateDay" size="1"><?days?></select>
+				<select style="width: auto;" name="ddmDueDateYear" size="1"><?years?></select>
+			</p>
+			<p class="buttons">
+			<? echo ( join('',
+						ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.submit();", '', 'Save' ),
+						ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ),
+						); ) ?>
+			</p>
+		</fieldset>
+		<input type="hidden" name="OrderId" value="<?OrderID?>"/>
+		<input type="hidden" name="Docket" value="<?Docket?>"/>
+		<input type="hidden" name="btnFunction" value="Save"/>
+	</form>
+</div><!-- Column -->
+<div id="Signatures" style="float: right; width: 49%;"/>
+<!--#include virtual="/employee/proj/prep/_filmstripping_signatures.html"-->
+</div><!-- Column -->
