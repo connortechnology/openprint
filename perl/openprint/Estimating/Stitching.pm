@@ -351,6 +351,17 @@ sub calc {
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $Equipment->name() . ':<br/>';
+
+			if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
+				next;
+			} # end if
+			if ( $Equipment->specification('Minimum Spine Length') and ( $$specs{'Height'} < $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
+				next;
+			} # end if
+
 			my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
 			if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
 				$bestEquipment = $Equipment;
@@ -412,7 +423,7 @@ sub get_equipment {
 			next;
 		} # end if
 		if ( $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $Equipment->specification('Minimum Spread Width') ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too big.<br/>";
+			$$error .= "For " . $Equipment->name() . ": Too small.<br/>";
 			next;
 		} # end if
 		if ( $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $Equipment->specification('Maximum Calliper') ) ) {
