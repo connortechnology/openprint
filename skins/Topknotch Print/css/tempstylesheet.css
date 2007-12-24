@@ -1,0 +1,257 @@
+      body
+      {
+         margin: 0px;
+         font-family: arial, helvetica, sans-serif;
+         font-size: 12px;
+         background-color: #a8a8a8;
+      }
+      div#header
+      {
+         
+      }
+      div#header_banner
+      {
+         background-image: url(/images/gradient_bg.gif);
+         background-repeat: repeat-x;
+         width: 100%;
+         height: 104px;
+         text-align: center;
+         margin: 0px auto 0px auto;
+      }
+      div#logo
+      {
+         float: left;
+         width: 251px;
+         height: 104px;
+      }
+      div#contact_information
+      {
+         float: left;
+         text-align: left;
+         margin-right: 15px;
+         margin-top: 15px;
+         color: #7068b3;
+      }
+      div#currencies
+      {
+         float: left;
+         margin-top: 4px;
+      }
+      div#nav_icons
+      {
+         float: right;
+         padding-right: 20px;
+      }
+      div#menu
+      {
+         text-align: right;
+         width: 761px;
+         margin: -20px auto 0px auto;
+         color: #11ff11;
+      }
+      div#main_content
+      {
+         width: 761px;
+         margin: 0px auto 0px auto;
+         background-color: #fff;
+      }
+      div#main_content_inner
+      {
+         padding-left: 6px;
+         padding-right: 6px;
+         background-color: #fff;
+      }
+      div#left_sidebar
+      {
+         float: left;
+         width: 180px;
+         margin-right: 4px;
+      }
+      div#main_page
+      {
+         float: left;
+      }
+      div#content_container
+      {
+         background-color: #fff;
+         width: 761px;
+         overflow: hidden;
+         margin: 0px auto 0px auto;
+      }
+      a:link,
+      a:visited,
+      a:hover,
+      a:active
+      {
+         text-decoration: none;
+         color: #6400b5;
+      }
+      div#menu_links
+      {
+         padding-right: 10px;
+      }
+      div.top_shadow
+      {
+         background-image: url(/images/shadow_border/top.gif);
+         background-repeat: repeat-x;
+         background-color: #fff;
+         height: 22px;
+      }
+      div.shadow_tl
+      {
+         float: left;
+         background-image: url(/images/shadow_border/tl.gif);
+         background-repeat: no-repeat;
+         width: 26px;
+         height: 22px;
+      }
+      div.shadow_tr
+      {
+         float: right;
+         background-image: url(/images/shadow_border/tr.gif);
+         background-repeat: no-repeat;
+         width: 17px;
+         height: 22px;
+      }
+      div.bottom_shadow
+      {
+         clear: left;
+         background-image: url(/images/shadow_border/bottom.gif);
+         background-repeat: repeat-x;
+         background-color: #fff;
+         height: 22px;
+      }
+      div.shadow_bl
+      {
+         float: left;
+         background-image: url(/images/shadow_border/bl.gif);
+         background-repeat: no-repeat;
+         width: 26px;
+         height: 22px;
+      }
+      div.shadow_br
+      {
+         float: right;
+         background-image: url(/images/shadow_border/br.gif);
+         background-repeat: no-repeat;
+         width: 17px;
+         height: 22px;
+      }
+      div#left_sidebar_content
+      {
+         background-image: url(/images/shadow_border/left_sidebar_bg.gif);
+         background-repeat: repeat-y;
+         padding-left: 20px;
+      }
+      div#left_sidebar_inner
+      {
+         text-align: left;
+         width: 150px;
+         margin: 0px auto 0px auto;
+      }
+      div#main_page
+      {
+         float: left;
+         width: 565px;
+      }
+      div#main_page_inner
+      {
+         background-color: #fff;
+         padding-top: 5px;
+         padding-bottom: 5px;
+         overflow: hidden;
+      }
+      div#main_page_content
+      {
+         background-image: url(/images/shadow_border/main_page_bg.gif);
+         background-repeat: repeat-y;
+         padding-left: 20px;
+         padding-right: 15px;
+      }
+      div#choose_currencies_top
+      {
+         font-size: 12px;
+         text-decoration: none;
+         color: #7c6aba;
+      }
+      div#contact_information div
+      {
+         line-height: 1.1em;
+      }
+      .headline_medium
+      {
+         font-weight: bold;
+         color: #6400b5;
+      }
+
+/* Instant pricing shadow border styles */
+      div.instant_price_section_top_shadow
+      {
+         background-image: url(/images/instant_pricing/shadow_border/top.gif);
+         background-repeat: repeat-x;
+         background-color: #fff;
+         height: 20px;
+      }
+      div.instant_price_section_shadow_tl
+      {
+         float: left;
+         background-image: url(/images/instant_pricing/shadow_border/tl.gif);
+         background-repeat: no-repeat;
+         width: 21px;
+         height: 20px;
+      }
+      div.instant_price_section_shadow_tr
+      {
+         float: right;
+         background-image: url(/images/instant_pricing/shadow_border/tr.gif);
+         background-repeat: no-repeat;
+         width: 21px;
+         height: 20px;
+      }
+      div#instant_price_section_content
+      {
+         background-image: url(/images/instant_pricing/shadow_border/main_background.gif);
+         background-repeat: repeat-y;
+         padding-left: 7px;
+         padding-right: 7px;
+      }
+      div#instant_price_section_inner
+      {
+         background-color: #e4d9f2;
+      }
+      div.instant_price_section_bottom_shadow
+      {
+         clear: left;
+         background-image: url(/images/instant_pricing/shadow_border/bottom.gif);
+         background-repeat: repeat-x;
+         background-color: #fff;
+         height: 20px;
+      }
+      div.instant_price_section_shadow_bl
+      {
+         float: left;
+         background-image: url(/images/instant_pricing/shadow_border/bl.gif);
+         background-repeat: no-repeat;
+         width: 21px;
+         height: 20px;
+      }
+      div.instant_price_section_shadow_br
+      {
+         float: right;
+         background-image: url(/images/instant_pricing/shadow_border/br.gif);
+         background-repeat: no-repeat;
+         width: 21px;
+         height: 20px;
+      }
+      div#instant_price_section
+      {
+         float: right;
+         width: 267px;
+      }
+      div#CalculateBtn
+      {
+         margin:0 auto; 
+         text-align:center; 
+         width: 95px;
+		outline: 0;
+      }

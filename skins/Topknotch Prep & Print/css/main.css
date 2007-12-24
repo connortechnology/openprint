@@ -1,0 +1,279 @@
+html {
+}
+body {
+	color: #000000;
+	padding: 10px;
+}
+
+#Header {
+	border-top: 1px solid black;
+	border-right: 1px solid black;
+	border-left: 1px solid black;
+	width: 873px;
+	margin: 0px;
+	margin-left: auto;
+	margin-right: auto;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+#Header .Content {
+	padding: 5px;
+}
+#Header IMG.Logo {
+	border: none;
+	height: 80px;
+	margin-left: 5px;
+}
+#Menu {
+	width: 873px;
+	margin-left: auto;
+	margin-right: auto;
+border-left: 1px solid black;
+border-right: 1px solid black;
+	float: none; 
+	display: block;
+	padding: 0px;
+}
+#Menu:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html #Menu {height: 1%;}
+* #Menu {display:block;}
+/* End hide from IE-mac */
+
+#Menu ul {
+	padding: 0px;
+	margin: 0px;
+}
+#Menu ul:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html #Menu ul {height: 1%;}
+* #Menu ul {display:block;}
+/* End hide from IE-mac */
+
+#Menu li {
+	float: left;
+	margin: 0px;
+	display: block;
+	background-color: #999999;
+	list-style: none;
+}
+
+#Menu li.off ul, #Menu li.on ul {
+  /*hide the subnavs*/
+  display: none;
+}
+
+#Menu li a {
+	/*for all links in the list*/
+	color: #ffffff;
+	font-weight: bold;
+	display: block;
+	height: 15px;
+	width: 85px;
+	border: 1px outset black;
+	border-left: 1px outset white;
+	padding: 5px;
+	padding-bottom: 3px;
+	text-decoration: none;
+	text-align: center;
+outline: 0;
+}
+#Content {
+	height: auto;
+	padding: 0px;
+	margin-top: 0px;
+	margin-left: auto;
+	margin-right: auto;
+	background-color: #ffffff;
+	display: block;
+	width: 873px;
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+	float: none; 
+	overflow: hidden;
+}
+#Content .Content {
+	margin: 0px;
+	padding: 5px;
+	width: auto;
+float: left;
+width: 700px;	
+}
+
+	#Content .ProjectTypeBox {
+		display: block;
+		float: left;
+		background-color: #ded9c2;
+		margin: 0px;
+		padding: 0px;
+		height: 100%;
+		padding-bottom: 32767px;
+		margin-bottom: -32767px;
+	width: 162px;
+	}
+	#Footer {
+	border-bottom: 1px solid black;
+	border-right: 1px solid black;
+	border-left: 1px solid black;
+	width: 873px;
+		background-color: #ded9c2;
+		font-weight: bold;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 10px;
+	} 
+@media print {
+	.Menu {
+		display: none;
+	}
+	#Content .Content {
+		padding: 10px;
+	}
+	#Content .ProjectTypeBox {
+		display: none;
+	}
+}
+#ProjectTypes {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: normal;
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	width: 162px;
+}
+#ProjectTypes ul {
+	margin: 0px;
+	padding: 0px;
+}
+#ProjectTypes li {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+	padding-left: 5px;
+}
+#ProjectTypes li.Category {
+	background-color: maroon;
+	color: white;
+	font-weight: bold;
+	list-style: none;
+	margin-left: 0px;
+	padding-left: 5px;
+}
+#ProjectTypes A {
+	color: #000000;
+	text-decoration: none;
+}
+#ProjectTypes a:hover {
+	color: #ff00ff;
+	text-decoration: underline;
+}
+
+.Estimate {
+	font-size: 10px;
+}
+#Estimate A IMG {
+	border: 1px solid black;
+}
+.CompanyProfile fieldset {
+	float: left;
+	width: 45%;
+	margin-right: 5px;
+}
+.CompanyProfile legend {
+	font-weight: bold;
+}
+.UserProfile fieldset {
+	float: left;
+	width: 45%;
+	margin-right: 5px;
+}
+.UserProfile legend {
+	font-weight: bold;
+}
+.Order {
+	padding: 5px;
+}
+.Content {
+	padding: 0px;
+}
+div.ProjectHeader {
+}
+div.ProjectHeader fieldset {
+	width: auto;
+}
+div.ProjectHeader legend {
+}
+	div.ProjectHeader div.row {
+		text-align: right;
+		margin-bottom: 2px;
+	}
+	div.ProjectHeader div.Left {
+		float: left;
+		width: 45%;
+	}
+	div.ProjectHeader div.Right {
+		float: right;
+		width: 45%;
+	}
+	div.ProjectHeader div.row span.label {
+		float: left;
+		width: auto;
+		p\osition: relative;
+		font-weight: bold;
+	}
+	div.ProjectHeader div.row span.value {
+		width: auto;
+		text-align: left;
+		p\osition: relative;
+	}
+
+.Service {
+}
+.Service div.row {
+	width: 100%;
+	p\osition: relative;
+	clear: both;
+	margin-bottom: 10px;
+	padding-bottom: 10px;
+}
+.Service div.row .required {
+	width: 10px;
+	height: 100%;
+	float:left;
+	clear: left;
+}
+ .Service div.row .label {
+	margin-left: 10px;
+	width: auto;
+	text-align: left;
+	float: none;
+	display:inline;
+	line-height: 22px;
+}
+
+.Service div.row span.input {
+	margin-left: 10px;
+	width: 360px;
+	text-align: left;
+	float:right;
+	p\osition: relative;
+}
+.PageTitle {
+	font-weight: bold;
+	font-size: 11pt;
+	margin-bottom: 5px;
+}

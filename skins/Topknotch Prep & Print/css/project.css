@@ -1,0 +1,115 @@
+.Docket {
+}
+.Project span {
+	width: 31%;
+	margin-right: 10px;
+	margin-bottom: 5px;
+	float: left;
+	p\osition: relative;
+}
+.Project label {
+	font-weight: bold;
+	float: left;
+	p\osition: relative;
+	margin-right: 5px;
+}
+
+div.ProjectHeader {
+    border-bottom: 1px solid #800000;
+	margin-bottom: 5px;
+}
+div.ProjectHeader:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.ProjectHeader {height: 1%;}
+*/* End hide from IE-mac */
+div.ProjectHeader fieldset {
+	border-left: none;
+	border-right: none;
+	border-bottom: none;
+	margin-bottom: 0px;
+	padding: 5px;
+	width: 47%;
+	text-align: left;
+}
+div.ProjectHeader fieldset#ProjectInformation {
+	float: left;
+	width: 47%;
+}
+div.ProjectHeader fieldset#ContactInformation {
+	float: right;
+	width: 47%;
+}
+div.ProjectHeader fieldset#Reference {
+	float: left;
+	text-align: left;
+	width: 47%;
+}
+div.ProjectHeader fieldset#Description {
+	float: right;
+	text-align: left;
+	width: 47%;
+}
+
+
+div.ProjectHeader fieldset p {
+	text-align: right;
+	padding: 0px;
+	margin: 0px;
+}
+div.ProjectHeader fieldset p label {
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	font-weight: bold;
+	text-align: left;
+	width: auto;
+}
+
+.ProjectSummary div.row {
+    margin: 0px;
+	padding: 0px;
+}
+.ProjectSummary div.row .label {
+       text-align: left;
+       p\osition: relative;
+       float:left;
+       font-weight: normal;
+       padding: 0px;
+}
+.ProjectSummary div.row .value {
+       text-align: left;
+       float:left;
+       p\osition: relative;
+       margin-right: 10px;
+/*
+       background-color: #ded9c2;
+*/
+       padding: 0px;
+}
+
+.ProjectSummary div.row .input {
+       line-height: 19px;
+       margin-left: 10px;
+       width: 200px;
+       text-align: left;
+       float:left;
+       p\osition: relative;
+}
+
+#NotepadPages, p#NotepadPages label {
+	font-weight: bold;
+	color: red;
+}
+#hdnBreakdown1 b, #hdnBreakdown2 b, #hdnBreakdown3 b {
+	color: red;
+}
+.PresentationFolderQuestions {
+	float: left;
+	width: 50%;
+}
