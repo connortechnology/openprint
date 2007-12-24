@@ -1,5 +1,5 @@
 <ul class="unprintable" id="menubar">
-	<li class="off"><a href="/contact.html">Contact Us</a></li>
+	<li class="off"><a href="/about.html">About Us</a></li>
 	<li class="off" id="Account"><a href="#">Account</a>
 		<ul>
 <? if ( $openprint::session{'user_id'} ) ?>
@@ -43,6 +43,13 @@
 		</ul>
 	</li>
 <? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+	<li class="off" id="Support"><a href="#">Support</a>
+		<ul>
+			<li><a href="/support/help_desk.html;NOSSL">Help Desk</a></li>
+			<li><a href="/support/returns.html;NOSSL">Returns</a></li>
+			<li><a href="/support/FAQ.html;NOSSL">FAQ</a></li>
+		</ul>
+	</li>
 	<li style="float: right;">
 		<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
 			<b style="color: white;">Currency:</b>
