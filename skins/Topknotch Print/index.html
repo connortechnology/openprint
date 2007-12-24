@@ -1,0 +1,12 @@
+<img id="HomeCollage" src="/images/home_collage13.jpg"/>
+You are currently viewing prices in 
+	<? echo (
+			my $Currency = openprint::Currency::get_current();
+			return $Currency->name;
+		) ?>.
+<br/>
+<br/>
+<div>
+   <a href="/index.html?Country=US&Currency=USD"><img src="/images/usa_home.gif" alt="USA" border="0" /></a>
+   <a href="/index.html?Country=CA&Currency=CDN"><img src="/images/canada_home.gif" alt="Canada" border="0" /></a>
+</div>
