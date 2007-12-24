@@ -110,36 +110,26 @@ $openprint::log->debug("Page: $page");
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
 		my $content;
-		if ( -e join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) ) {
-			$content = misc::load_file( $log, join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) );
+		if ( -e join('/', $config{'SkinPath'}, $page ) ) {
+			$content = misc::load_file( $log, join('/', $config{'SkinPath'}, $page ) );
 		} else {
 			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 		} # end if
-		$variable{'PageContent'} = ssi::variable_substitution( $r, $r->log, $dbh, \$content, \%variable );
+		$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		my $template;
 		my @page_path = split('/', $page );
 		my $filename = pop @page_path;
 		# _ signifies a page fragment, so don't load layout
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
-				my $file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, $filename );
+				my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
 				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, 'default.html' );
+				$file = join( '/', $config{'SkinPath'}, '/layouts', @page_path, 'default.html' );
 				#$log->debug("Looking for $file");
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, $filename );
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
@@ -149,7 +139,7 @@ $openprint::log->debug("Page: $page");
 		} # end if _
 		if ( $template ) {
 			$log->warn("parsing template!");
-			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
+			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			$log->warn("No template!");
 			$log->warn($variable{'PageContent'});
@@ -170,7 +160,7 @@ $openprint::log->debug("Page: $page");
 	openprint::Equipment::init_cache();
 	$dbh->disconnect();
 	$log->warn( "Elapsed seconds: " . ( time - $starttime ) );
-	# Clear all the caches AFTER we send the data to client!  This is really smart.
+	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();
 	openprint::pricing::clear_cache( );
 	openprint::Object::init_cache();
