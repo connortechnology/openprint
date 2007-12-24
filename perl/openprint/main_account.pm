@@ -170,7 +170,7 @@ sub registration {
 
 		# Send confirmation
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
 		my %mail = (
 				SMTP	=> $openprint::config{'Mail Server'},
@@ -178,11 +178,11 @@ sub registration {
 				TO		=> sprintf('"%s %s" <%s>', $User->get( 'firstname','lastname','email' ) ),
 				SUBJECT => 'New Login Application',
 				);
-		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
+		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 
 		# send notification
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_notification.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		foreach my $to ( split(',', $openprint::config{'UserRegistrationEmail'} ) ) {
 			%mail = (
 					SMTP	=> $openprint::config{'Mail Server'},
@@ -190,7 +190,7 @@ sub registration {
 					TO		=> $to,
 					SUBJECT => 'New Login Application',
 					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
+			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 		} # end foreach
 
 		if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
@@ -229,19 +229,19 @@ sub registration {
 				@info{'AdminSalutation','AdminFirstName','AdminLastName'} = $Notification->get('salutation','firstname','lastname');
 
 				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_notification_for_company_admin.html' );
-				$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 				my %mail = (
 						SMTP	=> $openprint::config{'Mail Server'},
 						FROM	=> $agent,
 						TO		=> sprintf('"%s %s" <%s>', $Notification->get('firstname','lastname','email') ),
 						SUBJECT => 'New Login Application'
 						);
-				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 			} # end foreach
 		} # end if
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_notification_for_site_admin.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		foreach my $to ( split(',', $openprint::config{'UserRegistrationEmail'} ) ) {
 			my %mail = (
 					SMTP	=> $openprint::config{'Mail Server'},
@@ -249,20 +249,20 @@ sub registration {
 					TO		=> $to,
 					SUBJECT => 'New Login Application'
 					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
+			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 		} # end foreach
 
 		if ( $openprint::config{'NewNonFirstUserAccountActivation'} ne 'Y') {
 			# Send confirmation
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_confirmation.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 			my %mail = (
 					SMTP	=> $openprint::config{'Mail Server'},
 					FROM	=> $agent,
 					TO		=> sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
 					SUBJECT => 'New Login Application'
 					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
+			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 		} # end if
 
 		if ( $openprint::param{'rdbReasonForPurchase'} eq 'Reseller' ) {
@@ -459,8 +459,8 @@ sub login {
 					);
 
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-			$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 
 			my %mail = (
@@ -535,7 +535,7 @@ sub reseller_application {
 			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
 
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/reseller_application_notification.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
 			my %mail = (
 					SMTP	=> $openprint::config{'Mail Server'},
@@ -545,7 +545,7 @@ sub reseller_application {
 					);
 
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(
-							ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info )
+							ssi::variable_substitution( \$email_template, \%info )
 							), 'text/html', 'quoted-printable' ) );
 
 		} # end if ! error
@@ -621,9 +621,9 @@ sub credit_application {
 		($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
-		my $template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
+		my $template = ssi::variable_substitution( \$email_template, \%info );
 
 		my %mail = (
 				SMTP	=> $openprint::config{'Mail Server'},

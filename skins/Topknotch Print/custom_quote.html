@@ -2,7 +2,7 @@
 	if ( $r->param('btnFunction') eq 'Submit' ) {
 		my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
 		$openprint::param{'ReplacementText'} = q{<!--#include virtual="/email_content/custom_quote.html"-->};
-		$template = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$template, \%openprint::param ) );
+		$template = encode_qp( ssi::variable_substitution( \$template, \%openprint::param ) );
 		my @body = ('', $template, 'text/html', 'quoted-printable');
 
 		my %mail = (

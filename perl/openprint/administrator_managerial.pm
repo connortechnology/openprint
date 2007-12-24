@@ -325,9 +325,9 @@ sub company_profiles {
 
 			$_ = $openprint::param{'rdbAccountActivation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ); 
+			$email_template = ssi::variable_substitution( \$email_template, \%info ); 
 
 			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
 			my %mail = (
@@ -346,9 +346,9 @@ sub company_profiles {
 
 			$_ = $openprint::param{'rdbReseller'} eq 'Y' ? 'customer_account_reseller.html' : 'customer_account_non_reseller.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ); 
+			$email_template = ssi::variable_substitution( \$email_template, \%info ); 
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'AdministratorEmail'},
@@ -365,8 +365,8 @@ sub company_profiles {
 
 			$_ = $openprint::param{'rdbSupplier'} eq 'Y' ? 'customer_account_supplier.html' : 'customer_account_non_supplier.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			$email_template = ssi::variable_substitution( \$email_template, \%info );
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'AdministratorEmail'},
@@ -549,9 +549,9 @@ sub credit_applications {
 				my ( $email ) = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE index=?', $$variable{'UserIndex'} );
 
 				$params{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
-				$params{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$params{'ReplacementText'}, \%params );
+				$params{'ReplacementText'} = ssi::variable_substitution( \$params{'ReplacementText'}, \%params );
 				$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
-				my $template = ssi::variable_substitution( $r, $log, $dbh, \$_, \%params );
+				my $template = ssi::variable_substitution( \$_, \%params );
 				my %mail = (
 						SMTP	=> $openprint::config{'Mail Server'},
 						FROM	=> $openprint::config{'AdministratorEmail'},

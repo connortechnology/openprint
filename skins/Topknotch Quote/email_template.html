@@ -5,7 +5,7 @@
     <title><? echo ( $openprint::config{'SiteTitle'} ) ?></title>
 	<base href="<? echo ( $openprint::config{'ExternalSiteURL'} ) ?>"/>
 	<style type="text/css">
-		<!--#include virtual="/skins/<? echo ( $openprint::config{'SiteTitle'} ) ?>/css/email.css"-->
+		<? echo ( misc::load( $openprint::config{'SkinPath'} . '/css/email.css' ); ) ?>
 	</style>
 </head>
 <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">

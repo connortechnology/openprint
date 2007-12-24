@@ -118,7 +118,7 @@
 					$$variable{'Signature'} = $Group;
 				
 					my $h .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_signature.html' );
-					$html .= variable_substitution( $r, $log, $dbh, \$h, $variable );
+					$html .= variable_substitution( \$h, $variable );
 				} # end foreach
 				return $html;
 			) ?>
