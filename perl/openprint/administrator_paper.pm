@@ -145,7 +145,7 @@ sub jsrs_get_prices {
 	my ( $r, $log, $dbh, $variable, $paper_index ) = @_;
 
 	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/administrator/paper/_prices.html' );
-	return ssi::variable_substitution( $r, $log, $dbh, \$content, $variable ); 
+	return ssi::variable_substitution( \$content, $variable ); 
 } # end sub jsrs_get_prices
 
 sub jsrs_del_price {

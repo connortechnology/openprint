@@ -23,7 +23,7 @@ my $username = shift @ARGV;
 
 #my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
 #$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_complete.html\"-->";
-#$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
+#$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 #my @body = ('', $_, 'text/html', 'quoted-printable');
 my $time = misc::pretty_date( localtime );
 my %mail = (

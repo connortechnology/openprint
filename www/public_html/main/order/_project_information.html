@@ -90,7 +90,7 @@
             $$variable{"$spec-$$variable{'ProjectIndex'}-$service_id"} = $specs{$spec};
         } # end foreach
 		my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_project_shipping_address.html');
-		$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
+		$html .= ssi::variable_substitution( \$h, $variable );
     } # end foreach
 	return $html;
 ) ?>
