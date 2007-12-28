@@ -110,8 +110,8 @@ $openprint::log->debug("Page: $page");
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
 		my $content;
-		if ( -e join('/', $config{'SkinPath'}, $page ) ) {
-			$content = misc::load_file( $log, join('/', $config{'SkinPath'}, $page ) );
+		if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+			$content = misc::load_file( $log, $_ );
 		} else {
 			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 		} # end if
@@ -128,7 +128,7 @@ $openprint::log->debug("Page: $page");
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-				$file = join( '/', $config{'SkinPath'}, '/layouts', @page_path, 'default.html' );
+				$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
 				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );

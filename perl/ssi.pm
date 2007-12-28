@@ -91,7 +91,7 @@ sub do_new_substitution {
 	} else {
 		my $replacement = $$variable{$$command};
 #$log->debug("Replacement: $command : $replacement");
-		return $replacement . variable_substitution( $r, $log, $dbh, $text, $variable );
+		return $replacement . variable_substitution( $text, $variable );
 	} # end if
 
 } # end sub do_new_substitution
@@ -99,7 +99,7 @@ sub do_new_substitution {
 sub include {
 	my ( $file ) = @_;
 	my $blah = misc::load_file( $log, $file);
-	return variable_substitution( \$blah, $variable );
+	return variable_substitution( \$blah, \%variable );
 }
 
 sub do_include {
