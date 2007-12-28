@@ -1,0 +1,87 @@
+/* Results Summary */
+div#resultsSummary
+{
+   float: right;
+   margin-top: 1em;
+}
+
+/* Page Numbers */
+div#pages
+{
+    margin: 0.5em 0;
+    clear: right;
+    float: right;
+}
+
+div#pages a, div#pages span
+{
+    display: block;
+    float: left;
+    padding: 0.2em 0.5em;
+    margin-right: 0.1em;
+    border: 1px solid #fff;
+    background: #fff;
+}
+
+div#pages span#currentPage
+{
+    border: 1px solid #2E6AB1;
+    background: #2E6AB1;
+    color: #fff;
+}
+
+div#pages a
+{
+    border: 1px solid #9AAFE5;
+    text-decoration: none;
+}
+
+div#pages a:hover
+{
+    border-color: #2E6AB1;
+}
+
+div#pages a.nextprev
+{
+    
+}
+
+div#pages span.nextprev
+{
+    color: #666;
+}
+
+div#pages span.nextprev
+{
+        border: 1px solid #ddd;
+        color: #999;
+}
+
+.ascend
+{
+   background: url(/images/ascend.gif) no-repeat left;
+   padding-left: 15px;
+}
+
+.descend
+{
+   background: url(/images/descend.gif) no-repeat left;
+   padding-left: 15px;
+}
+
+span#actionHeader,
+span#dateHeader,
+span#timeHeader,
+span#ipHeader,
+span#urlHeader,
+span#noteHeader,
+span#emailHeader,
+span#nameHeader
+{
+   cursor: pointer;
+}
+
+div#logDateRange
+{
+   margin-top: 2em;
+}
