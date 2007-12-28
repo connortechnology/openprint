@@ -198,8 +198,18 @@ sub information {
 		( $cust_id ) = new openprint::User( $openprint::session{'user_id'} )->company_id();
 	} # end if
 
+	my $populated = 0;
 	if ( ! openprint::quote::get_user_for_info( $log, $dbh, $variable, $quote_id ) ) {
-		if ( $openprint::session{'user_id'} ) {
+$openprint::log->debug("No for info");
+		foreach my $k ( 'CompanyName','Address1','Address2','City','StateProvince','PostalCode','Country','Phone','Extension','Fax','FirstName','LastName','Title','Email','Salutation' ) {
+			if ( $openprint::session{'/main/quote/information.html?For'.$k} ) {
+				$$variable{'For'.$k} = $openprint::session{'/main/quote/information.html?For'.$k};
+				$populated = 1;
+			} # end if
+		} # end foreach
+
+		if ( $openprint::session{'user_id'} and ! $populated ) {
+			# If we are representing some other company
 			if ( $cust_id != $openprint::session{'company_id'} ) {
 				my $Company = new openprint::Company( $openprint::session{'company_id'} );
 # pull information to pre-fill input fields
@@ -210,9 +220,7 @@ sub information {
     } # end if
 
     if ( ! openprint::quote::get_user_by_info( $log, $dbh, $variable, $quote_id ) ) {
-$openprint::log->debug('No by info');
         if ( $openprint::session{'user_id'} ) {
-$openprint::log->debug('loading by info (' . $cust_id . ') ('.$openprint::session{'company_id'} . ')');
 # pull information to pre-fill input fields
 			my $Company = new openprint::Company( $cust_id );
 			@$variable{'ByCompanyName', 'ByAddress1', 'ByAddress2', 'ByCity', 'ByStateProvince', 'ByPostalCode', 'ByCountry', 'ByPhone', 'ByExtension', 'ByFax'} = (
@@ -235,6 +243,12 @@ $openprint::log->debug( join(',', @$variable{'ByCompanyName', 'ByAddress1', 'ByA
 
 sub submit {
     my ( $r, $log, $dbh, $variable ) = @_;
+
+	if ( %openprint::param ) {
+		foreach my $k ( 'CompanyName','Address1','Address2','City','StateProvince','PostalCode','Country','Phone','Extension','Fax','FirstName','LastName','Title','Email','Salutation' ) {
+			$openprint::session{'/main/quote/information.html?For'.$k} = $openprint::param{'For'.$k};
+		} # end foreach
+	} # end if
 
     my $quote_id = $openprint::param{'quote_id'};
 	$quote_id = $openprint::session{'quote_id'} if ! $quote_id;

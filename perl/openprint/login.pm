@@ -165,7 +165,10 @@ sub logout {
 	my ( $log, $dbh, $variable, $cookie, $site ) = @_;
 
 	openprint::logs::insertLogRecord('3',);
-	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id'};
+	foreach my $k ( keys %openprint::session ) {
+		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country','Pricelist_id' ] );
+		delete $openprint::session{$k};
+	} # end foreach
 	
 } # sub logout
 

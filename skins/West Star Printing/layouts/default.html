@@ -69,7 +69,7 @@
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdministrator', 'administrator.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
 				<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 					<br class="spacer"/>
-					<!--#include virtual="/skins/<?SiteTitle?>/includes/customer_menu.html"-->
+					<? echo ( ssi::include( $config{'SkinPath'}.'/includes/customer_menu.html' ); ) ?>
 				</div><!--Header-->
 				<?PageContent?>
 				<span class="unprintable">

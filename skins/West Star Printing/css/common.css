@@ -18,8 +18,20 @@ body {
 	}
 }
 
-body .Header {
+.Header {
 }
+.Header :after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .Header {height: 1%;}
+* .Header {display: block;}
+/* End hide from IE-mac */
 
 .Content {
     background-color: #ffffff;

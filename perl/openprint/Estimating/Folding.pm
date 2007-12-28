@@ -411,7 +411,8 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				while ( @folds ) {
 					my $I = shift @folds;
 					last if ! $I->spreads();
-					$_ = $Equipment->fits( $I->image_width(), $I->image_height(), $$sig_specs{'txtSpecificStockCalliper'} );
+					
+					$_ = $Equipment->fits( $I->image_width(), $I->image_height()*$imposition, $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 						my $fold_type = $I->pages().'PageSignatureFold';
 						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type ) ) {
@@ -424,7 +425,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 							next;
 						} # end if
 					} else {
-						#$openprint::log->debug($_);
+						$openprint::log->debug($_);
 						next;
 					} # end if
 					# This tells us whether it's a book or not
