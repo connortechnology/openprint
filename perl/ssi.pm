@@ -91,7 +91,7 @@ sub do_new_substitution {
 	} else {
 		my $replacement = $$variable{$$command};
 #$log->debug("Replacement: $command : $replacement");
-		return $replacement . variable_substitution( $r, $log, $dbh, $text, $variable );
+		return $replacement . variable_substitution( $text, $variable );
 	} # end if
 
 } # end sub do_new_substitution
