@@ -245,7 +245,7 @@ sub signature_calc_folding_cutting {
 	my ( $log, $dbh, $variable, $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs ) = @_;
 
 	my %results = (
-			'Status'	=> 'uncalculated',
+			'Status'	=> 'calculated',
 			);
 
 	my $services = $Project->services();
@@ -256,6 +256,7 @@ sub signature_calc_folding_cutting {
 		$I = new openprint::Imposition();
 		$I->load( $sig_specs, $qty_index );
 	} # end if
+	$results{'Status'} = 'uncalculated';
 	return %results if ! $I->imposition();
 
 	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @equipment;
@@ -407,7 +408,6 @@ sub signature_calc {
 		return;
 	} # end if
 
-
 	my ( $sheet_width, $sheet_height ) = ($Paper->width(), $Paper->height() );
 
 # calculate cuts
@@ -513,7 +513,6 @@ $openprint::log->error('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 		} # end if
 
 		my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Cutting', $$specs{"txtQuantity$qty_index"}, $Equipment );
-
 
 		my $price;
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$sig_specs{'txtImposition'.$qty_index} );
@@ -664,12 +663,14 @@ sub calc {
 			} # end if
 
 			# Folding
+if ( 1 ) {
 			my %results = signature_calc_folding_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper );
 			$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 			$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
 			$price += $results{'Price'};
 			$mprice += $results{'MPrice'};
 			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
+} # end if
 
 			my %results = signature_calc( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper );
 			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
