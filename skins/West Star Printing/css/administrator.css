@@ -30,3 +30,10 @@ div.row .buttons {
 	p\osition: relative;
 	padding: 5px;
 }
+
+fieldset.leftColumn p input {
+	width: 90%;
+}
+fieldset.leftColumn p select {
+	width: 90%;
+}

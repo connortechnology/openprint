@@ -25,7 +25,7 @@
 		<div class="Content"> 
 		<div class="ContentInner"> 
 			<div class="Header">
-					<a href="/index.html"><img style="float: left;" src="/images/logo.gif" alt="West Star Printing"/></a>
+					<a style="float: left;" href="/index.html"><img src="/images/logo.gif" alt="West Star Printing"/></a>
 					<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 					<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
 					<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>

@@ -61,7 +61,7 @@ $openprint::log->debug("Setting default for $field to $defaults{$field}" );
 			} # end if
 
 # if valid db field
-			if ( ( ! defined $$self{$field} ) or ( $$self{$field} ne $$params{$field} ) ) {
+			if ( ( ! defined $$self{$field} ) or ( (defined $$params{$field}) and ( $$self{$field} ne $$params{$field} ) ) ) {
 # Only make changes to fields that have changed
 				$$self{$field} = $$params{$field};  # update cache
 				$change = 1;
