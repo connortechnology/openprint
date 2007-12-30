@@ -164,21 +164,21 @@ function gsm_to_mweight( form ) {
                 <label class="radio" for="typeRoll">Roll</label>
 			<p>
 				<label>Size:</label>
-				<input type="text" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );"/>
+				<input type="text" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
 				<span id="PaperHeight" <? echo ( 'style="display: none;"' if $$variable{Paper}->type() eq 'Roll' ) ?>> x
-				<input type="text" name="height" value="<? echo ( $$variable{'Paper'}->height(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );"/>
+				<input type="text" name="height" value="<? echo ( $$variable{'Paper'}->height(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
 			
 				</span> inches
 			</p>
 			<p id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Paper}->type() eq 'Roll' ) ?>> 
 				<label>MWeight:</label>
-				<input type="text" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>"  size="12" style="width: auto;" onkeyup="mweight_to_gsm( this.form );" />
+				<input type="text" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm( this.form );" />
 			</p>
 			<p id="BasisSize" <? echo ( 'style="display: none;"' if $$variable{Paper}->type() ne 'Roll' ) ?>>
-                <label>Basis MWeight:</label><input type="text" name="basis_mweight" size="9" value="<? echo ( $$variable{Paper}->basis_mweight() ) ?>"  onkeyup="mweight_to_gsm(this.form);calc(this.form.name);" style="width: auto;" /><br/>
+                <label>Basis MWeight:</label><input type="text" name="basis_mweight" size="9" value="<? echo ( $$variable{Paper}->basis_mweight() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm(this.form);" style="width: auto;" /><br/>
                 <label>Basis Size:</label>
-				<input type="text" name="basis_width" size="9" value="<? echo ( $$variable{Paper}->basis_width() ? $$variable{Paper}->basis_width() : 25 ) ?>"  onkeyup="gsm_to_mweight(this.form);calc(this.form.name);" style="width: auto;" />
-				<input type="text" name="basis_height" size="9" value="<? echo ( $$variable{Paper}->basis_height() ?  $$variable{Paper}->basis_height() : 38 ) ?>"  onkeyup="gsm_to_mweight(this.form);calc(this.form.name);" style="width: auto;" />
+				<input type="text" name="basis_width" size="9" value="<? echo ( $$variable{Paper}->basis_width() ? $$variable{Paper}->basis_width() : 25 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
+				<input type="text" name="basis_height" size="9" value="<? echo ( $$variable{Paper}->basis_height() ?  $$variable{Paper}->basis_height() : 38 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
             </p>
 			<p> 
 				<label>GSM:</label>
