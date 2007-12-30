@@ -272,6 +272,15 @@ sub save_skid {
 	$Skid->save();
 
 	if ( $openprint::param{'ddmName'} or $openprint::param{'txtName'} ) {
+		my $weight;
+		if ( $openprint::param{'txtWeight'} ) {
+			$weight = $openprint::param{'txtWeight'};
+		} elsif ( $openprint::param{'weight'} ) {
+			$weight = $openprint::param{'weight'} . 'lbs';
+		} elsif ( $openprint::param{'calliper'} ) {
+			$weight = $openprint::param{'calliper'} . 'PT';
+		} # end if
+
 		my @papers = openprint::Paper::find(
 				'owner_id'	=>	$openprint::param{'Owner'},
 				'manufacturer_id'	=>	$openprint::param{'ddmManufacturer'},
@@ -283,7 +292,7 @@ sub save_skid {
 				'colour_id' =>	$openprint::param{'ddmColour'},
 				'colour'	=>	$openprint::param{'txtColour'},
 				'weight_id' =>	$openprint::param{'ddmWeight'},
-				'weight'	=>	$openprint::param{'txtWeight'},
+				'weight'	=>	$weight,
 				'quality_id' => $openprint::param{'ddmQuality'},
 				'quality'	=>	$openprint::param{'txtQuality'},
 				'width'	=> $openprint::param{'width'},
@@ -304,7 +313,7 @@ sub save_skid {
 			$Paper->finish_id( $openprint::param{'ddmFinish'} ) if $openprint::param{'ddmFinish'};
 			$Paper->colour( $openprint::param{'txtColour'} ) if $openprint::param{'txtColour'};
 			$Paper->colour_id( $openprint::param{'ddmColour'} ) if $openprint::param{'ddmColour'};
-			$Paper->weight( $openprint::param{'txtWeight'} ) if $openprint::param{'txtWeight'};
+			$Paper->weight( $weight ) if $weight;
 			$Paper->weight_id( $openprint::param{'ddmWeight'} ) if $openprint::param{'ddmWeight'};
 			$Paper->quality( $openprint::param{'txtQuality'} ) if $openprint::param{'txtQuality'};
 			$Paper->quality_id( $openprint::param{'ddmQuality'} ) if $openprint::param{'ddmQuality'};
@@ -317,21 +326,35 @@ sub save_skid {
 				$Paper->width( $openprint::param{'width'} );
 				$Paper->height( $openprint::param{'height'} );
 			} # end if
+			if ( $openprint::param{'weight'} ) {
+				$Paper->basis_weight( $openprint::param{'weight'} * 2 );
+			} # end if
+			$Paper->calliper( $openprint::param{'calliper'} );
 			$Paper->mweight( $openprint::param{'mweight'} );
 			$Paper->gsm( $openprint::param{'gsm'} );
 			$Paper->save();
 			$$variable{'information'} .= 'Paper created.<br/>';
 		} elsif ( 1 == @papers ) {
 			$Paper = shift @papers;
+			my $changed = 0;
 # This is so that papers that don't have mweights will get filled in
+			if ( ( ! $Paper->basis_weight() ) and $openprint::param{'weight'} ) {
+				$Paper->basis_weight( $openprint::param{'weight'} * 2 );
+				$changed = 1;
+			} # end if
+			if ( ( ! $Paper->calliper() ) and $openprint::param{'calliper'} ) {
+				$Paper->calliper( $openprint::param{'calliper'} );
+				$changed = 1;
+			} # end if
 			if ( ( ! $Paper->mweight() ) and $openprint::param{'txtMWeight'} ) {
 				$Paper->mweight( $openprint::param{'txtMWeight'} );
-				$Paper->save();
+				$changed = 1;
 			} # end if
 			if ( ( ! $Paper->gsm() ) and $openprint::param{'gsm'} ) {
 				$Paper->gsm( $openprint::param{'gsm'} );
-				$Paper->save();
+				$changed = 1;
 			} # end if
+			$Paper->save() if $changed;
 		} else {
 			$$variable{'error'} .= 'Duplicate Paper Detected!.<br/>';
 			$$variable{'information'} .= 'The following papers both match, please edit them:<br/>';

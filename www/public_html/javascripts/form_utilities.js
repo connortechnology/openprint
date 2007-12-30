@@ -724,3 +724,9 @@ function Country_onchange( country_ddm, state ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @provinces::provinces )", jsrs_cbFillDDM );
 	} // end if
 } // end function
+function filter( input, regexp ) {
+	input.value.replace( /\D/g, '' );
+	var string = new String( input.value );
+	string.replace( regexp, '' );
+	input.value = string;
+}
