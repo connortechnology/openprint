@@ -256,8 +256,8 @@ sub signature_calc_folding_cutting {
 		$I = new openprint::Imposition();
 		$I->load( $sig_specs, $qty_index );
 	} # end if
-	$results{'Status'} = 'uncalculated';
 	return %results if ! $I->imposition();
+	$results{'Status'} = 'uncalculated';
 
 	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @equipment;
 	my @my_equipment;
