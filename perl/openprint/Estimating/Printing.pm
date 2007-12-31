@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
+my $threading = 0;
 my $debug = 0;
 my $master_time;
 
@@ -1175,6 +1176,7 @@ $openprint::log->debug("Loaing old imp");
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
+		if ( $threading ) {
 		$threads{$qty_index} = threads->create( sub { 
 				$openprint::log->debug( "Created thread:" . $qty_index );
 
@@ -1187,6 +1189,9 @@ $openprint::log->debug("Loaing old imp");
 					);
 				return get_project_price( $Project, $service_index, \@side_one_colours, \@side_two_colours, \@filtered_colours, \%special_colours, \%inkCoverage, \%mixed_colours, \%washed_colours, \%project, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \%impositions );
 				} );
+		} else {
+			$prices{$qty_index} = get_project_price( $Project, $service_index, \@side_one_colours, \@side_two_colours, \@filtered_colours, \%special_colours, \%inkCoverage, \%mixed_colours, \%washed_colours, \%project, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \%impositions );
+		} # end if
 
 	} # end foreach quantity
 
@@ -1198,7 +1203,9 @@ $openprint::log->debug("Loaing old imp");
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty: ";
 		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
 		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
+		if ( $threading ) {
 		$prices{$qty_index} = $threads{$qty_index}->join();
+		} # end if
 		my $b_price = $prices{$qty_index};
 
 		if ( ! $b_price ) {
