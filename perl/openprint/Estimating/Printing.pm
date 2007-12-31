@@ -1195,7 +1195,7 @@ $openprint::log->debug("Loaing old imp");
 
 	} # end foreach quantity
 
-	foreach my $qty_index ( keys %threads ) {
+	foreach my $qty_index ( 1 .. 3 ) {
 		my $qty = $Project->quantity($qty_index);
 		next if ! defined $qty;
 		next if ! int $qty;
