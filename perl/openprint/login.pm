@@ -118,10 +118,10 @@ sub verify_login {
 			$info{'UserType'} = $user_type;
 
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/login_notification.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
 			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-			$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my %mail = (
 					SMTP	=> $openprint::config{'Mail Server'},
@@ -165,7 +165,10 @@ sub logout {
 	my ( $log, $dbh, $variable, $cookie, $site ) = @_;
 
 	openprint::logs::insertLogRecord('3',);
-	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id'};
+	foreach my $k ( keys %openprint::session ) {
+		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country','Pricelist_id' ] );
+		delete $openprint::session{$k};
+	} # end foreach
 	
 } # sub logout
 
@@ -189,8 +192,8 @@ sub email_password {
 		
 		openprint::user::load( $log, $dbh, $user_id, \%info );
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 
 		my %mail = (

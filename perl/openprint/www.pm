@@ -110,12 +110,12 @@ $openprint::log->debug("Page: $page");
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
 		my $content;
-		if ( -e join('/', $config{'SkinPath'}, $page ) ) {
-			$content = misc::load_file( $log, join('/', $config{'SkinPath'}, $page ) );
+		if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+			$content = misc::load_file( $log, $_ );
 		} else {
 			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 		} # end if
-		$variable{'PageContent'} = ssi::variable_substitution( $r, $r->log, $dbh, \$content, \%variable );
+		$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		my $template;
 		my @page_path = split('/', $page );
 		my $filename = pop @page_path;
@@ -128,7 +128,7 @@ $openprint::log->debug("Page: $page");
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-				$file = join( '/', $config{'SkinPath'}, '/layouts', @page_path, 'default.html' );
+				$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
 				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
@@ -139,7 +139,7 @@ $openprint::log->debug("Page: $page");
 		} # end if _
 		if ( $template ) {
 			$log->warn("parsing template!");
-			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
+			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			$log->warn("No template!");
 			$log->warn($variable{'PageContent'});
@@ -157,6 +157,7 @@ $openprint::log->debug("Page: $page");
 	untie %session;
 	openprint::Material::init_cache();
 	openprint::Service::init_cache();
+	openprint::Equipment::init_cache();
 	$dbh->disconnect();
 	$log->warn( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.

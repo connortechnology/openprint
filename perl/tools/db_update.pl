@@ -6,6 +6,9 @@ require sql;
 require logger;
 require openprint::Object;
 require openprint::Paper;
+require openprint::Equipment;
+require openprint::ServicePrice;
+require openprint::Service;
 
 use openprint ();
 use vars qw( $log $dbh );
@@ -14,7 +17,7 @@ use vars qw( $log $dbh );
 
 $log = new logger( 'warn' );
 
-my $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
+$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 if ( $version < 1275 ) {
@@ -267,6 +270,28 @@ CREATE TABLE Quote_Log (
 	sql::end_transaction( $dbh, $ac );
 	$version = 1900;
 } # end if
+if ( $version < 1901 ) {
+	print "Updating to version 1901\n";
+	my $ac = sql::start_transaction( $dbh );
+	my @Services = openprint::Service::find('name'=>'PressUnitMakeReady');
+	push @Services, openprint::Service::find('name'=>'PressUnitMakeReadySheet Work');
+	if ( @Services ) {
+		my $Service = $Services[0];
+		foreach my $Equipment ( openprint::Equipment::find('category'=>'Printing') ) {
+			foreach my $Price ( openprint::ServicePrice::find('Equipment'=>$Equipment, 'Service'=>$Service )) {
+				if ( $$Price{'units'} eq 'Per Unit' ) {
+					$$Price{'cost'} = $$Price{'cost'}/$$Price{'min'};
+					$$Price{'price'} = $$Price{'price'}/$$Price{'min'};
+					$Price->save();
+				} # end if
+			} # end foreach
+		} # end foreach
+	} # en dif
+	sql::insert( undef, undef, 'database_info', 'version', 1901, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1901;
+} # end if
+
 
 
 $dbh->disconnect();

@@ -10,9 +10,11 @@
 	</p>
 	<p>
 		<label>Operator:</label>
-		<input type="text" name="txtEmployeeName-<?SignatureIndex?>" readonly="readonly" value="<? echo ( $$variable{"txtEmployeeName-$$variable{'SignatureIndex'}"} ) ?>"/>
-		<input id="TakeOver" name="TakeOver" type="checkbox" onclick="if ( this.checked ) { this.form.elements['txtEmployeeName-<?SignatureIndex?>'].value='<?Employee?>'} else { this.form.elements['txtEmployeeName-<?SignatureIndex?>'].value=this.form.elements['txtEmployeeName-<?SignatureIndex?>'].defaultValue;}" />
-		<label class="radio" for="TakeOver">Take Over</label>
+		<? echo (
+			@$variable{'operator_id'} = sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$variable{'Project'}->id(), $$variable{'service_id'} );
+			$$variable{'Operator'} = new openprint::User( $$variable{'operator_id'} );
+			return $$variable{'Operator'}->name();
+		) ?>
 	</p>
 	<p>
 		<label>Comments:</label>
@@ -33,14 +35,12 @@
 	</p>
 	<p>
 		<label>Complete:</label>
-		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>Y" name="rdbPressComplete-<?SignatureIndex?>" value="Yes" <? echo ( 'checked="checked"' if $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq 'Yes' ) ?> />
+		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>Y" name="rdbPressComplete-<?SignatureIndex?>" value="Yes" <? echo ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq 'Yes' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPressComplete-<?SignatureIndex?>Y">Yes</label>
-		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>N" name="rdbPressComplete-<?SignatureIndex?>" value="No" <? echo ( 'checked="checked"' if $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} ne 'Yes' ) ?> />
+		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>N" name="rdbPressComplete-<?SignatureIndex?>" value="No" <? echo ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} ne 'Yes' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPressComplete-<?SignatureIndex?>N">No</label>
 	</p>
 </div>
-	<!--#include virtual="/includes/employee/feedback/paper.html"-->
-	<!--#include virtual="/includes/employee/feedback/signature_imposition.html"-->
 <? echo ( 
 	my $html = '<p class="buttons">';
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {

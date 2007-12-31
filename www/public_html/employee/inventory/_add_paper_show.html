@@ -47,7 +47,10 @@
 		) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtColour" name="txtColour" />
-</p><p>
+</p>
+<p>
+	<label for="weight">Weight:</label>
+<!--
 	<label for="txtWeight" onclick="f1.txtWeight.value='';f1.ddmWeight.selectedIndex=0;f1.ddmWeight.toggle();f1.txtWeight.toggle();">Weight:</label>
 	<select id="ddmWeight" name="ddmWeight" size="1">
 	<? echo (
@@ -58,7 +61,10 @@
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtWeight" name="txtWeight" />
-</p><p>
+-->
+	<input type="text" id="weight" name="weight" value="<? echo ( $openprint::param{'weight'} ? $openprint::param{'weight'} : $$variable{'Paper'}->weight() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lbs
+</p>
+<p>
 	<label for="txtQuality" onclick="toggleInput('PaperQuality');">Quality:</label>
 	<select id="ddmQuality" name="ddmQuality" size="1">
 	<? echo (
@@ -78,19 +84,23 @@
     </p>
 	<p>
         <label for="width">Size:</label>
-        <input type="text" id="width" name="width" value="<? echo ( $$variable{'Paper'} ? $$variable{'Paper'}->width() : $openprint::param{width}; ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
+        <input type="text" id="width" name="width" value="<? echo ( $$variable{'Paper'} ? $$variable{'Paper'}->width() : $openprint::param{width}; ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
         <span id="PaperHeight"<? echo ( ' style="display: none;"' if $openprint::param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?>>
         &nbsp;x&nbsp;
-        <input type="text" id="height" name="height" value="<? echo ( $$variable{'Paper'} ? $$variable{'Paper'}->height() : $openprint::param{height}; ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
+        <input type="text" id="height" name="height" value="<? echo ( $$variable{'Paper'} ? $$variable{'Paper'}->height() : $openprint::param{height}; ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
         </span>
     </p>
-    <p id="MWeight" <? echo ( 'style="display:none;"' if $openprint::param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?> >
-        <label>MWeight:</label>
-        <input type="text" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>" size="6"  onkeyup="mweight_to_gsm(this.form);" style="width: auto;" />M
+    <p>
+        <label>Calliper:</label>
+        <input type="text" id="calliper" name="calliper" value="<? echo ( $openprint::param{calliper} ? $openprint::param{calliper} : $$variable{'Paper'}->calliper(); ) ?>" size="6" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );" style="width: auto;" />PT
     </p>
     <p>
         <label>GSM:</label>
-        <input type="text" id="gsm" name="gsm" value="<? echo ( $openprint::param{gsm} ? $openprint::param{gsm} : $$variable{'Paper'}->gsm(); ) ?>" size="6"  onkeyup="gsm_to_mweight(this.form);" style="width: auto;" />
+        <input type="text" id="gsm" name="gsm" value="<? echo ( $openprint::param{gsm} ? $openprint::param{gsm} : $$variable{'Paper'}->gsm(); ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);" style="width: auto;" />
+    </p>
+    <p id="MWeight" <? echo ( 'style="display:none;"' if $openprint::param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?> >
+        <label>MWeight:</label>
+        <input type="text" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );mweight_to_gsm(this.form);" style="width: auto;" />M
     </p>
 	<p>
 		<label for="Purpose">Purpose:</label>
@@ -105,7 +115,7 @@
 	</p>
 	<p>
 		<label for="Quantity">Quantity:</label>
-		<input type="text" id="Quantity" name="Quantity" size="10" value="<? echo ( $openprint::param{'Quantity'} ) ?>" style="width: auto;" onkeyup="if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs'; } else { $('Units').innerHTML='sheets';}" />
+		<input type="text" id="Quantity" name="Quantity" size="10" value="<? echo ( $openprint::param{'Quantity'} ) ?>" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs'; } else { $('Units').innerHTML='sheets';}" />
 		<span id="Units"><? echo ( ($openprint::param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll') ? 'lbs' : 'sheets' ) ?></span>
 	</p>
     <p>

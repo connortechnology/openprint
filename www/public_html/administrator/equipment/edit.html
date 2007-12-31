@@ -1,4 +1,8 @@
 <form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+	<? if ( $$variable{'error'} ) ?>
+	<div class="error"><?error?></div>
+	<? endif ( $$variable{'error'} ) ?>
+
 	<fieldset class="filters"><legend>Search Information</legend>
 		<p>
 			<label>Equipment ID:</label>
@@ -32,7 +36,7 @@
 	<input type="hidden" name="btnFunction"/>
 </form>
 <form name="f2" method="post" enctype="multipart/form-data" action="edit.html">
-	<input type="hidden" value="ddmEquipment" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
+	<input type="hidden" name="ddmEquipment" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
 	<fieldset><legend>Equipment Information</legend>
 		<p> 
 			<label>ID:</label>

@@ -50,25 +50,21 @@ sub save {
 
 	if ( $params ) {
 		$change = 0;
-		foreach my $field ( keys %{$params} ) {
-			if ( defined $fields{$field} ) {
+		foreach my $field ( keys %fields ) {
+			foreach my $transform ( @{$transforms{$field}} ) {
+				eval '$params->{$field} =~ ' . $transform;
+			} # end foreach
+$openprint::log->debug("FIeld: $field" );
+			if ( ( ( ! defined $$params{$field} ) or ( $$params{$field} eq '' ) ) and exists $defaults{$field} ) {
+$openprint::log->debug("Setting default for $field to $defaults{$field}" );
+				$$params{$field} = $defaults{$field};
+			} # end if
 
-				foreach my $transform ( @{$transforms{$field}} ) {
-					eval '$params->{$field} =~ ' . $transform;
-				} # end foreach
-
-				if ( $params->{$field} eq '' and exists $defaults{$field} ) {
-					$params->{$field} = $defaults{$field};
-				} # end if
-
-	# if valid db field
-				if ( ! defined $$self{$field} or $$self{$field} ne $$params{$field} ) {
-	# Only make changes to fields that have changed
-					$$self{$field} = $$params{$field};  # update cache
-					$change = 1;
-				} # end if
-			} else {
-				$openprint::log->warn("Service::Set::Invalid field requested: ($field)." );
+# if valid db field
+			if ( ( ! defined $$self{$field} ) or ( (defined $$params{$field}) and ( $$self{$field} ne $$params{$field} ) ) ) {
+# Only make changes to fields that have changed
+				$$self{$field} = $$params{$field};  # update cache
+				$change = 1;
 			} # end if
 		} # end foreach
 	} # end if
@@ -104,6 +100,8 @@ sub save {
 
 sub delete {
 	my $self = shift;
+
+	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
 
 	my $ac = sql::start_transaction( $openprint::dbh );
     sql::execute( undef, undef, q{DELETE FROM tbl_Service_Prices WHERE lngServiceIndex=?}, $$self{id} );

@@ -115,7 +115,7 @@ sub handler {
 			$page = '/skins/' . $r->dir_config('SiteTitle') . $page;
 		}
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
-        $variable{'PageContent'} = ssi::variable_substitution( $r, $log, $dbh, \$content, \%variable );
+        $variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		my @page_path = split('/', $page );
         my $filename = pop @page_path;
         my $template;
@@ -146,7 +146,7 @@ sub handler {
 		} # end while
 
         if ( $template ) {
-            $r->print( ssi::variable_substitution( $r, $r->log, $dbh, \$template, \%variable ) );
+            $r->print( ssi::variable_substitution( \$template, \%variable ) );
         } else {
             $r->print( $variable{'PageContent'} );
         } # end if
@@ -251,7 +251,7 @@ sub upload_files {
 		} else {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 		} # end if
-		$$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$$variable{'ReplacementText'}, $variable );
+		$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
 		my $csr_id;
 		my $to;
 		my $from;
@@ -274,7 +274,7 @@ sub upload_files {
 			$to = $openprint::config{'OrderingEmail'};
 		} # end if
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		my $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template, $variable );
+		my $body = ssi::variable_substitution( \$email_template, $variable );
 		my %mail = (
 						SMTP    => $openprint::config{'Mail Server'},
 						FROM    => $from,
@@ -289,7 +289,7 @@ sub upload_files {
 		} else {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
 		} # end if
-		$$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$$variable{'ReplacementText'}, $variable );
+		$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
 		$from = $to;
 		if ( $session{'user_id'} ) {
 			my $User = new openprint::User( $session{'user_id'} );
@@ -297,7 +297,7 @@ sub upload_files {
 		} else {
 			$to = $param{'txtEmailAddress'};
 		} # end if
-        $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template, $variable );
+        $body = ssi::variable_substitution( \$email_template, $variable );
         %mail = (
                         SMTP    => $openprint::config{'Mail Server'},
                         FROM    => $from,

@@ -1,0 +1,20 @@
+fieldset p {
+	padding-left: 140px;
+}
+fieldset p label {
+	width: 140px;
+	margin-left: -135px;
+}
+fieldset p label.radio {
+	width: auto;
+	margin: 0px;
+}
+
+div.PopupWindow fieldset p {
+	padding-left: 0px;
+}
+div.PopupWindow fieldset p label {
+	width: 100%;
+	margin: 0px;
+	text-align: left;
+}

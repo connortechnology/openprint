@@ -61,7 +61,7 @@
 					$$variable{'Signature'} = '1';
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
-					return variable_substitution( $r, $log, $dbh, \$html, $variable );
+					return variable_substitution( \$html, $variable );
 					) ?>
 			</div>
 			<br class="spacer"/>
@@ -81,7 +81,7 @@
 					$$variable{'Signature'} = '2';
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
-					return variable_substitution( $r, $log, $dbh, \$html, $variable );
+					return variable_substitution( \$html, $variable );
 					) ?>
 				<br class="spacer"/>
 			</div>
