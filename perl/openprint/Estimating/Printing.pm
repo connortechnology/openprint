@@ -785,6 +785,9 @@ $openprint::log->debug("Grabbing UV Specs");
 	} # end if
 
 #$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+	my %threads;
+	my %prices;
+
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtPrice$qty_index"} = 0;
 		my $qty = $Project->quantity($qty_index);
@@ -1171,19 +1174,45 @@ $openprint::log->debug("Loaing old imp");
 			$$specs{'alert'} .= 'There were no possible impositions for your specifications.<br/>';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
-$openprint::log->debug("$qty_index call to get_project_price");
-		my $b_price = get_project_price( $Project, $service_index, \@side_one_colours, \@side_two_colours, \@filtered_colours, \%special_colours, \%inkCoverage, \%mixed_colours, \%washed_colours, \%project, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \%impositions );
+
+		$threads{$qty_index} = threads->create( sub { 
+				$openprint::log->debug( "Created thread:" . $qty_index );
+
+				$openprint::dbh = sql::open_sql( $openprint::log, 
+					'database'	=> $openprint::r->dir_config('db_name'),
+					'driver'	=> $openprint::r->dir_config('db_driver'), 
+					'host'		=> $openprint::r->dir_config('db_host'),
+					'login'		=> $openprint::r->dir_config('db_user'),
+					'password'	=> $openprint::r->dir_config('db_password'),
+					);
+				return get_project_price( $Project, $service_index, \@side_one_colours, \@side_two_colours, \@filtered_colours, \%special_colours, \%inkCoverage, \%mixed_colours, \%washed_colours, \%project, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \%impositions );
+				} );
+
+	} # end foreach quantity
+
+	foreach my $qty_index ( keys %threads ) {
+		my $qty = $Project->quantity($qty_index);
+		next if ! defined $qty;
+		next if ! int $qty;
+
+		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty: ";
+		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
+		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
+		$prices{$qty_index} = $threads{$qty_index}->join();
+		my $b_price = $prices{$qty_index};
+
 		if ( ! $b_price ) {
 			$$specs{'alert'} .= 'Unable to calculate a price';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
-my %best_price = %{$b_price};
 
-	my $Imposition = $$b_price{'Imposition'};
-	my $Paper = $Imposition->paper();
-	my $Press = $Imposition->Press();
-	my $Aqueous = $$b_price{'Aqueous'};
-	my $Varnish = $$b_price{'Varnish'};
+		my %best_price = %{$b_price};
+
+		my $Imposition = $$b_price{'Imposition'};
+		my $Paper = $Imposition->paper();
+		my $Press = $Imposition->Press();
+		my $Aqueous = $$b_price{'Aqueous'};
+		my $Varnish = $$b_price{'Varnish'};
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 		$$specs{'ddmBleedSize'.$qty_index} = $best_price{'ddmBleedSize'};
@@ -1335,11 +1364,7 @@ $breakdown .= $$price{'Setup Breakdown'};
 sub get_project_price {
 	my ( $Project, $service_index, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, $specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions ) = @_;
 
-	
 	my %prices;
-	my %threads;
-
-	if ( ! %threads ) {
 	foreach my $Press ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
 
 		if ( ! $Press ) {
@@ -1348,34 +1373,10 @@ sub get_project_price {
 			} # end if
 		} # end if
 		next if ! $Press;
-$openprint::log->debug("Doing:" . $Press->strid());
+		$prices{$Press->id()} = get_price_for_press( $Project, $service_index, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, $specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $Press ); 
 
-		$threads{$Press->id()} = threads->create( sub { 
-$openprint::log->debug("Created thread:" . $Press->strid());
-
-			$openprint::dbh = sql::open_sql( $openprint::log, 
-					'database'	=> $openprint::r->dir_config('db_name'),
-					'driver'	=> $openprint::r->dir_config('db_driver'), 
-					'host'		=> $openprint::r->dir_config('db_host'),
-					'login'		=> $openprint::r->dir_config('db_user'),
-					'password'	=> $openprint::r->dir_config('db_password'),
-					);
-$openprint::log->debug("DBI:" . $Press->strid());
-			return get_price_for_press( $Project, $service_index, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, $specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $Press ); 
-#return;
-		} );
 	} # end foreach Press
 #$openprint::log->debug("Threading");
-	foreach my $t ( keys %threads ) {
-$openprint::log->debug("Join");
-		$prices{$t} = $threads{$t}->join();
-$openprint::log->debug("Joined");
-	} # end foreach
-	} else {
-		foreach my $Press ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
-			$prices{$Press->id()} = get_price_for_press( $Project, $service_index, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, $specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $Press ); 
-		} # end foreach Press
-	} # end if
 
 	my $best_price;
 	foreach my $Press ( keys %prices ) {
