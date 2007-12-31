@@ -60,6 +60,7 @@
 			<!--#include virtual="/includes/main/proj/dimensions.html" -->
 <br class="spacer"/>
 <fieldset><legend>Book Specifications</legend>
+	<div id="PagesCover">
 	<p>
 		<label>Total pages:</label>
 		<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="calc(this.form.name);" />
@@ -71,6 +72,8 @@
 		<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
 		<label class="radio" for="rdbCoverDifferent">Different Cover</label>
 	</p>
+	</div>
+	<div id="GateInsert">
 	<p>
 		<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages:</label>
 		<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="4"  onkeyup="calc(this.form.name);" />
@@ -79,6 +82,7 @@
 		<label># of inserts:</label>
 		<input name="txtInsertQuantity" size="4" value="<?txtInsertQuantity?>"/>
 	</p>
+	</div>
 </fieldset>
 			<br class="spacer"/>
 			<? echo (

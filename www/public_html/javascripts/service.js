@@ -1,6 +1,7 @@
 var timeout;
 
 function body_onLoad() {
+	if ( typeof(calc) == 'function' )
     calc('f1');
 }
 

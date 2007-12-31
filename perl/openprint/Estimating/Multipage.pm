@@ -94,7 +94,6 @@ sub calc {
 	$pages{'Gate Folded Spreads'} = $$specs{'txtGateFoldedPageQuantity'};
 	$pages{'Interior Pages'} = ( $$specs{'txtTotalPageQuantity'} - $pages{'Cover Pages'} ) - $pages{'Gate Folded Spreads'};
 
-
 	foreach my $group_id ( @Groups ) {
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );

@@ -82,16 +82,16 @@ sub neccessary {
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 
-	my %services = $Project->get_services( );
-	if ( $services{'NoBindery'} ) {
+	my $services = $Project->services( );
+	if ( $$services{'NoBindery'} ) {
         #$log->debug(" ** Project is marked as No bindery, Scoring not needed ! ** ");
         return 0;
     } # end if
 
 	# Only need scoring if it's being folded.
-	if ( $services{'Folding'} ) {
+	if ( $$services{'Folding'} ) {
 		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $specs = openprint::service::get_specs_ref( $Project->id(), $signature_service_index );
+			my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 			if ( signature_needs( $Project, $specs ) ) {
 				return 1;
@@ -177,7 +177,6 @@ sub calc {
 
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index ) = @_;
-$openprint::log->debug("sign calc");
 
 	my $qty = $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{'txtPressSheetComboItems'} ) {
@@ -187,20 +186,10 @@ $openprint::log->debug("sign calc");
 	$sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index ) if ! $sig_specs;
 
 	my %Results = (
-		'Status' => 'uncalculated',
+		'Status' => 'calculated',
 	);
 	my $services = $Project->services();
-	# Can only use the stitcher for scoring if we are stitching.  There are also thickness constraints
-	my $stitching_service_index = $$services{'SaddleStitching'} ? $$services{'SaddleStitching'}[0] : undef;
-	# Can only use the stitcher for scoring if we are stitching.  There are also thickness constraints
-	$stitching_service_index = ( $$services{'LoopStitching'} ? $$services{'LoopStitching'}[0] : undef ) if ! $stitching_service_index;
-	# juts for efficeincy
-	my $cutting_service_index = $$services{'Cutting'} ? $$services{'Cutting'}[0] : undef;
 
-	if ( ( $$sig_specs{'SignatureIndex'} == 1 ) and sets::isin( $$sig_specs{'txtSignatureType'}, ['Cover Pages','Interior Pages'] ) ) {
-		my $proj_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		@$sig_specs{'txtFinalWidth','txtFinalHeight'} = @$proj_specs{'txtFinalWidth','txtFinalHeight'};
-	} # end if
 
 	$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
 
@@ -215,6 +204,14 @@ $openprint::log->debug("sign calc");
 	$$specs{'hdnBreakdown'.$qty_index} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
+	$Results{'Status'} = 'uncalculated';
+
+	# Can only use the stitcher for scoring if we are stitching.  There are also thickness constraints
+	my $stitching_service_index = $$services{'SaddleStitching'} ? $$services{'SaddleStitching'}[0] : undef;
+	# Can only use the stitcher for scoring if we are stitching.  There are also thickness constraints
+	$stitching_service_index = ( $$services{'LoopStitching'} ? $$services{'LoopStitching'}[0] : undef ) if ! $stitching_service_index;
+	# juts for efficeincy
+	my $cutting_service_index = $$services{'Cutting'} ? $$services{'Cutting'}[0] : undef;
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 	if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 		$$specs{'alert'} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
