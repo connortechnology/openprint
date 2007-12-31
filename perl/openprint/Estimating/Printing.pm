@@ -1350,7 +1350,7 @@ $openprint::log->debug("Doing:" . $Press->strid());
 			return get_price_for_press( $Project, $service_index, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, $specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $Press ); 
 		} );
 	} # end foreach Press
-$openprint::log->debug("Threading");
+#$openprint::log->debug("Threading");
 	foreach my $t ( keys %threads ) {
 		$prices{$t} = $threads{$t}->join();
 	} # end foreach
