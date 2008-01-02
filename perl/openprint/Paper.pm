@@ -33,6 +33,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
+		'minimum_order','inventory_number','full_packages',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -685,7 +686,7 @@ sub get_price {
 		} # end if
 		foreach my $Price ( @Prices ) {
 			if ( 
-					( $Price->PricelistIndex() == $list_id ) and 
+					( $Price->pricelist_id() == $list_id ) and 
 					( $Price->Min() eq '' or $Price->Min() <= $qty ) and
 					( $Price->Max() eq '' or $Price->Max() >= $qty )
 			   ) {

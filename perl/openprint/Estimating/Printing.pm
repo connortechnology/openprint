@@ -1844,10 +1844,23 @@ sub calc_price {
 		$gross_qty += $additional_overs;
 	} # end if
 	$impressions = $gross_qty;
+	my $weight = ( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
 	my $sheets_per_package = $Paper->sheets_per_package();
 	if ( $sheets_per_package ) {
-		$gross_qty = $sheets_per_package * ( ceil( $gross_qty / $sheets_per_package ) );
+		if ( $Paper->type() eq 'Sheet' ) {
+			$gross_qty = $sheets_per_package * ( ceil( $gross_qty / $sheets_per_package ) );
+		} elsif ( $Paper->type() eq 'Roll' ) {
+			$weight = $sheets_per_package * ceil( $weight/$sheets_per_package);
+			$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
+		} else {
+			$openprint::log->error('Unknown paper type.');
+		} # end if
 	} # end if
+	if ( $Paper->minimum_order() and $Paper->minimum_order() > $weight ) {
+		$openprint::log->debug('Minimum Order Requirement not met');
+		return \%price;
+	} # end if
+	
 	my %sheet_qty = (
 			'Impressions'				=> $impressions, 
 			'Gross Sheet Count'			=> $gross_qty, 
@@ -1856,7 +1869,7 @@ sub calc_price {
 			'Run Overs'					=> $run_overs,
 			'Additional Plate Overs'	=> $additional_overs,
 			'Total Overs'				=> $impressions,
-			'Weight'					=> ( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() ),
+			'Weight'					=> $weight,
 			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$fm_overs : 0,
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;

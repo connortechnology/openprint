@@ -347,11 +347,19 @@ if ( $version < 1902 ) {
 if ( $version < 1903 ) {
 	print "Updating to version 1903\n";
 	my $ac = sql::start_transaction( $dbh );
-$dbh->do(q{alter paper add minimum_order integer});
-$dbh->do(q{alter paper add inventory_number	text});
+$dbh->do(q{alter table papers add minimum_order integer});
+$dbh->do(q{alter table papers add inventory_number	text});
 	sql::insert( undef, undef, 'database_info', 'version', 1903, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1903;
+} # end if
+if ( $version < 1904 ) {
+	print "Updating to version 1904\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter table papers add full_packages boolean});
+	sql::insert( undef, undef, 'database_info', 'version', 1904, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1904;
 } # end if
 
 $dbh->disconnect();

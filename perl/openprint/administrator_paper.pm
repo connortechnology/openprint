@@ -104,6 +104,9 @@ sub paper {
 		$Paper->taxexempt1( $openprint::param{'taxexempt1'} );
 		$Paper->taxexempt2( $openprint::param{'taxexempt2'} );
 		$Paper->fsc_code( $openprint::param{'fsc_code'} );
+		$Paper->inventory_number( $openprint::param{'inventory_number'} );
+		$Paper->minimum_order( $openprint::param{'minimum_order'} );
+		$Paper->full_packages( $openprint::param{'full_packages'} );
 
 		my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
 		@{$$Paper{'recommendations'}} = ();
@@ -155,12 +158,26 @@ sub jsrs_del_price {
 	return jsrs_get_prices( $r, $log, $dbh, $variable, $paper_index );
 }
 sub jsrs_add_price {
-	my ( $r, $log, $dbh, $variable, $paper_index, $pricelist_index ) = @_;
-	sql::insert( $log, $dbh, 'Paper_Prices',
-			'lngpaperindex', $paper_index, 
-			'lngListIndex', $pricelist_index );
-	$openprint::param{'paper_id'} = $paper_index;
-	return jsrs_get_prices( $r, $log, $dbh, $variable, $paper_index );
+	my ( $r, $log, $dbh, $variable, $paper_id, $pricelist_id ) = @_;
+
+	my $PaperPrice = new openprint::PaperPrice( );
+	$PaperPrice->paper_id( $paper_id );
+	$PaperPrice->pricelist_id( $pricelist_id );
+	$PaperPrice->save();
+
+	$openprint::param{'paper_id'} = $paper_id;
+	return jsrs_get_prices( $r, $log, $dbh, $variable, $paper_id );
+} # end sub jsrs_add_price
+
+sub jsrs_copy_price {
+	my ( $r, $log, $dbh, $variable, $paper_id, $price_id ) = @_;
+
+	my $PaperPrice = new openprint::PaperPrice( $price_id );
+	my $NewPrice = $PaperPrice->copy();
+	$NewPrice->save();
+
+	$openprint::param{'paper_id'} = $paper_id;
+	return jsrs_get_prices( $r, $log, $dbh, $variable, $paper_id );
 } # end sub jsrs_get_price
 
 sub jsrs_save_price {
