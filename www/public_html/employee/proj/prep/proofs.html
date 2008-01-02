@@ -82,7 +82,7 @@ function check_input( form, signature_index ) {
 					$html .= ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.submit();", '', 'Save' );
 					$html .= ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' );
 					my $body = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/sign-off.html' );
-					$body = ssi::variable_substitution( $r, $log, $dbh, \$body, $variable );
+					$body = ssi::variable_substitution( \$body, $variable );
 					$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
 					$$variable{'body'} = $body;
 					$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', '', qq`mailto:$$variable{'CustomerEmail'}?subject=Docket%20$$variable{'Docket'}&body=$$variable{'body'}`, 'Email' );
@@ -99,5 +99,4 @@ function check_input( form, signature_index ) {
 <div id="Signatures" style="float: right; width: 49%;"/>
 <!--#include virtual="/employee/proj/prep/_proofs_signatures.html"-->
 </div><!-- Column -->
-	<br class="spacer"/>
-</form>
+<br class="spacer"/>

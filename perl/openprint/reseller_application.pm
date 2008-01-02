@@ -104,7 +104,7 @@ sub reseller_application_process {
 	$info{'txtAnnualSales'} = ssi::get_range_text( sql::execute( $log, $dbh, "SELECT Min, Max FROM AnnualSales WHERE Id=$info{'ddmAnnualSales'}" ) );
 
 #$template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/reseller_application_confirmation.html' );
-#$template = ssi::variable_substitution( $r, $log, $dbh, $template, \%info );
+#$template = ssi::variable_substitution( $template, \%info );
 #
 #my %mail = (
 #SMTP	=>	$openprint::config{'Mail Server'},
@@ -115,8 +115,8 @@ sub reseller_application_process {
 #misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
 
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/reseller_application_notification.html' );
-	$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, $info{'ReplacementText'}, \%info );
-	my $template = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info );
+	$info{'ReplacementText'} = ssi::variable_substitution( $info{'ReplacementText'}, \%info );
+	my $template = ssi::variable_substitution( $email_template, \%info );
 
 	my %mail = (
 			SMTP	=> $openprint::config{'Mail Server'},

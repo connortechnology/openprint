@@ -28,9 +28,9 @@ sub helpdesk {
 		$info{'RequestDate','Question', 'Response'} = sql::execute( $log, $dbh, $_);
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_response.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		my $email_template = ssi::variable_substitution( $r, $log, $dbh, \$_, \%info );
+		my $email_template = ssi::variable_substitution( \$_, \%info );
 
 		my %mail = (
 			SMTP	=> $openprint::config{'Mail Server'},
@@ -164,9 +164,9 @@ sub returns {
 		$info{'siteURL'} = $r->dir_config('siteURL');
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_response.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
+		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 		my %mail = (
 				SMTP	=> $openprint::config{'Mail Server'},

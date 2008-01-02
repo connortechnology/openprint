@@ -21,16 +21,16 @@
 			
             <div class="Price" id="Price-<? echo ( $$variable{'Price'}->id() ) ?>">
 
-    <span class="Min"><input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Min() ) ?>"  /></span>
-    <span class="Max"><input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Max() ) ?>"  /></span>
+    <span class="Min"><input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Min() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></span>
+    <span class="Max"><input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Max() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></span>
     <span class="Units">
 		<select name="units-<? echo ( $$variable{'Price'}->id() ) ?>">
 			<? echo ( ssi::make_drop_down( [ 'Per 100lbs','Per 100lbs','Per M', 'Per M' ], $$variable{'Price'}->Units() ); ) ?>
 		</select>
 	</span>
-    <span class="Cost"><input class="text" type="text" name="cost-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>"  onKeyUp="calc_from_cost(this);"/></span>
-    <span class="Markup"><input class="text" type="text" name="markup-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Markup() ) ?>"  onKeyUp="calc_from_markup(this);"/></span>
-    <span class="Price"><input class="text" type="text" name="price-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>"  onKeyUp="calc_from_price(this);"/></span>
+    <span class="Cost"><input class="text" type="text" name="cost-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>"  onKeyUp="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_cost(this);"/></span>
+    <span class="Markup"><input class="text" type="text" name="markup-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Markup() ) ?>"  onKeyUp="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_markup(this);"/></span>
+    <span class="Price"><input class="text" type="text" name="price-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>"  onKeyUp="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_price(this);"/></span>
     <span class="Discount">
     <input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='Y'
     <? echo ( 'checked' if $$variable{'Price'}->Discountable() eq 'Y' ) ?>

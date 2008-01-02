@@ -41,6 +41,14 @@ sub edit {
             } # end if
         } # end foreach
 		sql::end_transaction( $openprint::dbh, $ac );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
+		my $New = $ServiceType->copy();
+        
+        if ( $_ = $New->save() ) {
+			$$variable{'error'} = $_;
+		} else {
+			$ServiceType = $New;
+		} # end if
 	} # end if
 
 	$$variable{'ServiceType'} = $ServiceType;

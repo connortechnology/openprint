@@ -94,6 +94,7 @@ function clear_price_data( form ) {
 			if ( form.elements['txtPrice'+qtyNum] ) form.elements["txtPrice"+qtyNum].value = '';
 			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
 			if ( form.elements["txtPressSheetQty"+qtyNum] ) form.elements["txtPressSheetQty"+qtyNum].value = '';
+			if ( form.elements["txtPlateQuantity"+qtyNum] ) form.elements["txtPlateQuantity"+qtyNum].value = '';
 			
 			if ( form.elements["txtImposition"+qtyNum] ) {
 				if ( ( ! form.elements['chkOverrideImposition'+qtyNum] ) || ( ! form.elements['chkOverrideImposition'+qtyNum].checked ) ) {

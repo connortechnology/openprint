@@ -6,15 +6,21 @@ require sql;
 require logger;
 require openprint::Object;
 require openprint::Paper;
+require openprint::Equipment;
+require openprint::ServicePrice;
+require openprint::Service;
+require openprint::Project;
+require openprint::service;
 
 use openprint ();
 use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+$openprint::Object::no_cache = 1;
 
 $log = new logger( 'warn' );
 
-my $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
+$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 if ( $version < 1275 ) {
@@ -267,7 +273,86 @@ CREATE TABLE Quote_Log (
 	sql::end_transaction( $dbh, $ac );
 	$version = 1900;
 } # end if
+if ( $version < 1901 ) {
+	print "Updating to version 1901\n";
+	my $ac = sql::start_transaction( $dbh );
+	my @Services = openprint::Service::find('name'=>'PressUnitMakeReady');
+	push @Services, openprint::Service::find('name'=>'PressUnitMakeReadySheet Work');
+	if ( @Services ) {
+		my $Service = $Services[0];
+		foreach my $Equipment ( openprint::Equipment::find('category'=>'Printing') ) {
+			foreach my $Price ( openprint::ServicePrice::find('Equipment'=>$Equipment, 'Service'=>$Service )) {
+				if ( $$Price{'units'} eq 'Per Unit' ) {
+					$$Price{'cost'} = $$Price{'cost'}/$$Price{'min'};
+					$$Price{'price'} = $$Price{'price'}/$$Price{'min'};
+					$Price->save();
+				} # end if
+			} # end foreach
+		} # end foreach
+	} # en dif
+	sql::insert( undef, undef, 'database_info', 'version', 1901, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1901;
+} # end if
+if ( $version < 1902 ) {
+	print "Updating to version 1902\n";
+	my $ac = sql::start_transaction( $dbh );
+	my @projects;
+	push @projects, openprint::Project::find( 'order'=>'index desc');
 
+	foreach my $Project ( @projects ) {
+		my $services = $Project->services();
+		foreach my $sig_id ( $Project->signatures() ) {
+
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			#if ( ! exists $$sig_specs{'Group'} ) {
+			if ( $$sig_specs{'txtSignatureType'} ) {
+				if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Cover Pages' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '1' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
+			
+				} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' ) {
+					my $p_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
+				
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Interior Pages' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '2' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$p_specs{'txtInteriorSpreadQuantity'} * $$sig_specs{'txtSpreadSize'} );
+				} else {
+					# Gate Fold?
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '3' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
+				} # end if
+			} # end if
+
+			foreach my $qty_index ( 1 .. 3 ) {
+				if ( $$sig_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' and $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkOverridePageQuantity'.$qty_index, 'Y' );
+					if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'PageQuantity'.$qty_index, $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} * $$sig_specs{'txtSpreadSize'} );
+					} # end if
+					openprint::service::delete_service_spec( $Project->id(), $sig_id, 'chkOverrideSignatureSpreadQuantity'.$qty_index );
+				} # end if
+				openprint::service::delete_service_spec( $Project->id(), $sig_id, 'txtSignatureSpreadQuantity'.$qty_index );
+		
+			} # end foreach qty_index
+			#} # end if
+		} # end foreach
+	} # end foreach
+	sql::insert( undef, undef, 'database_info', 'version', 1902, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1902;
+} # end if
+if ( $version < 1903 ) {
+	print "Updating to version 1903\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter paper add minimum_order integer});
+$dbh->do(q{alter paper add inventory_number	text});
+	sql::insert( undef, undef, 'database_info', 'version', 1903, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1903;
+} # end if
 
 $dbh->disconnect();
 1;

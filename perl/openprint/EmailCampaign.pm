@@ -176,7 +176,7 @@ __ADMIN_EMAIL__
 
 	# Do the appropriate variable substitutions
 	$email_template = format_email($email_template);
-	$email_template = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, $replacements ) );
+	$email_template = encode_qp( ssi::variable_substitution( \$email_template, $replacements ) );
 
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');
@@ -218,8 +218,8 @@ sub send_email {
 	# - The seconds substitution replaces the any tags that were
 	#   inserted by the first replacement
 	# NB. Only encode_qp ONCE
-	$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements );
-	$email_template = encode_qp( ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements ) );
+	$email_template = ssi::variable_substitution( \$email_template, $replacements );
+	$email_template = encode_qp( ssi::variable_substitution( \$email_template, $replacements ) );
 
 
 	# Formulate the body of the message
