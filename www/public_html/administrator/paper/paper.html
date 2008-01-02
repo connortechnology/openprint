@@ -119,8 +119,8 @@ function gsm_to_mweight( form ) {
 				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.ddmColour, 0 );" />
 			</p>
 			<p>
-				<label for="txtWeight" onclick="f1.txtWeight.toggle();f1.ddmWeight.toggle();">Weight:</label>
-				<select id="ddmWeight" name="ddmWeight" size="1" onChange="f1.txtWeight.value='';">
+				<label for="txtWeight" onclick="$('txtWeight').toggle();$('ddmWeight').toggle();">Weight:</label>
+				<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';">
 				<? echo (
 						my @options = ( '', 'select one',
 							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
@@ -131,7 +131,7 @@ function gsm_to_mweight( form ) {
 				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
 			</p>
 			<p>
-				<label for="txtQuality" onclick="f1.txtQuality.toggle();f1.ddmQuality.toggle();">Quality:</label>
+				<label for="txtQuality" onclick="$('txtQuality').toggle();$('ddmQuality').toggle();">Quality:</label>
 				<select id="ddmQuality" name="ddmQuality" size="1">
 				<? echo (
 						my @options = ( '', 'select one',
