@@ -15,8 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $threading = 0;
-my $debug = 0;
+my $threading = 1;
+my $debug = 1;
 my $master_time;
 
 use strict;
@@ -718,7 +718,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
 		} # end if
 
-		$project{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $log, $dbh, $project_index, $specs );
+		$project{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
 	} else {
 		$project{'NeedScoring'} = 0;
 		$project{'NeedFolding'} = 0;
@@ -789,7 +789,10 @@ $openprint::log->debug("Grabbing UV Specs");
 	my %threads;
 	my %prices;
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	my @blah = ( 1 .. 3 );
+
+	foreach my $qty_index ( reverse @blah ) {
+$openprint::log->debug("QTY: $qty_index");
 		$$specs{"txtPrice$qty_index"} = 0;
 		my $qty = $Project->quantity($qty_index);
 		next if ! defined $qty;
@@ -835,6 +838,7 @@ $openprint::log->debug("Grabbing UV Specs");
 				my $cover_specs;
 				foreach my $index ( $Project->signatures('Cover Pages') ) {
 					$cover_specs = openprint::service::get_specs_ref( $project_index, $index );
+					last;
 				} # end foreach
 				if ( $$cover_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
 					$$specs{'PrintingTypes'} = ['Digital'];
@@ -1176,8 +1180,9 @@ $openprint::log->debug("Loaing old imp");
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
-		if ( $threading ) {
-		$threads{$qty_index} = threads->create( sub { 
+		# Only thread qtys 2 and 3
+		if ( $threading and $qty_index > 1 ) {
+			$threads{$qty_index} = threads->create( sub { 
 				$openprint::log->debug( "Created thread:" . $qty_index );
 
 				$openprint::dbh = sql::open_sql( $openprint::log, 
@@ -1195,7 +1200,7 @@ $openprint::log->debug("Loaing old imp");
 
 	} # end foreach quantity
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( reverse @blah ) {
 		my $qty = $Project->quantity($qty_index);
 		next if ! defined $qty;
 		next if ! int $qty;
@@ -1203,7 +1208,7 @@ $openprint::log->debug("Loaing old imp");
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty: ";
 		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
 		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
-		if ( $threading ) {
+		if ( $threading and $qty_index > 1 ) {
 		$prices{$qty_index} = $threads{$qty_index}->join();
 		} # end if
 		my $b_price = $prices{$qty_index};
