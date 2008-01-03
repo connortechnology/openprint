@@ -1,7 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><?PageTitle?></title>	
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/administrator.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
@@ -15,19 +16,45 @@
         <script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
         <script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 		<link rel="shortcut icon" href="/images/favicon.ico">
+		<script type="text/javascript">
+<!--
+        function startList() {
+            if (document.all && document.getElementById) {
+                var navRoot = document.getElementById("menubar");
+                if ( navRoot ) {
+                    for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
+                        var node = navRoot.childNodes[i];
+                        if (node.nodeName=='LI') {
+                            node.onmouseover=function() {
+                                this.className+=' over';
+							}
+                            node.onmouseout=function() {
+								this.className=this.className.replace(' over', '');
+							}
+                        } // end if
+                    } // end for
+                } // end if
+            }
+        }
+		Event.observe(window, 'load', startList );
+			
+		if ( typeof(body_onLoad) == 'function' ) 
+			Event.observe(window, 'load', body_onLoad );
+-->
+        </script>
 	</head>
-	<body onLoad="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
+	<body>
 		<div class="Content"> 
 		<div class="ContentInner"> 
 			<div class="Header">
-					<a href="/index.html"><img style="float: left;" src="/images/logo.gif" alt="West Star Printing"/></a>
+				<a style="float: left;" href="/index.html"><img src="/images/logo.gif" alt="West Star Printing"/></a>
 				<? if ( sets::isin( $openprint::session{'user_type'}, ['E'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
 				<? endif ( sets::isin( $openprint::session{'user_type'}, ['E'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
-					<br class="spacer"/>
-					<!--#include virtual="/skins/<?SiteTitle?>/includes/administrator_menu.html"-->
+				<br class="spacer"/>
 			</div>
+			<? echo ( ssi::include( $config{'SkinPath'} . '/includes/administrator_menu.html' ); ) ?>
 			<br/>
 			<?PageContent?>
 			<br class="spacer"/>

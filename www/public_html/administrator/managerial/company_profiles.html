@@ -30,20 +30,46 @@
 ); ) ?>
 		</p>
 	</fieldset>
-	<fieldset>
+	<fieldset><legend>Sales Information:</legend>
 		<p> 
 			<label><b>Account Activated:</b></label>
 			<input type="radio" name="rdbAccountActivation" value="Y" <?rdbAccountActivationY?> /> Yes 
 			<input type="radio" name="rdbAccountActivation" value="N" <?rdbAccountActivationN?> /> No
 		</p>
 		<p>
-			<label>Is this a supplier?:</label>
+			<label>Is this a Supplier?:</label>
 			<input type="radio" name="rdbSupplier" value="Y" <?rdbSupplierY?> /> Yes
 			<input type="radio" name="rdbSupplier" value="N" <?rdbSupplierN?> /> No
 		</p> <p>
 			<label>Is this a Reseller?:</label>
 			<input type="radio" name="rdbReseller" value="Y" <?rdbResellerY?> /> Yes
 			<input type="radio" name="rdbReseller" value="N" <?rdbResellerN?> /> No
+		</p>
+		<p> 
+			<label>Pricing List:</label>
+			<select name="ddmPriceList">
+				<option value="">Please select a Price list</option>
+				<option value="">--------------------------</option>
+				<?ddmPriceList?>
+			</select>
+		</p>
+		<p> 
+			<label>Preferred Currency:</label>
+			<select name="ddmCurrency">
+				<option value=""> Please select a Currency </option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $$variable{'ddmCurrency'} ); ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Pricing Discount:</label>
+			<input type="text" name="txtPricingLevel" value="<?txtPricingLevel?>" >
+		</p>
+		<p> 
+			<label>Sales Person:</label>
+			<select name="ddmSalesPerson">
+				<option value="">select</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmSalesPerson'} ); ) ?>
+			</select>
 		</p>
 	</fieldset>
 	<fieldset><legend>Customer Information:</legend>
@@ -164,36 +190,6 @@
 		
 			<input type="radio"	name="rdbPSTExempt" value="Y" <?rdbPSTExemptY?>>Yes
 			<input type="radio"	name="rdbPSTExempt" value="N" <?rdbPSTExemptN?>>No
-	</p>
-	</fieldset>
-	<fieldset><legend>Sales Information:</legend>
-	<p> 
-		<label>Pricing List:</label>
-		 
-			<select name="ddmPriceList">
-				<option value="">Please select a Price list</option>
-				<option value="">--------------------------</option>
-				<?ddmPriceList?>
-			</select>
-	</p>
-	<p> 
-		<label>Preferred Currency:</label>
-		 
-			<select name="ddmCurrency">
-				<option value=""> Please select a Currency </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $$variable{'ddmCurrency'} ); ) ?>
-			</select>
-	</p>
-	<p> 
-		<label>Pricing Discount:</label>
-			<input type="text" name="txtPricingLevel" value="<?txtPricingLevel?>" >
-		</p>
-		<p> 
-			<label>Sales Person:</label>
-			<select name="ddmSalesPerson">
-				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmSalesPerson'} ); ) ?>
-			</select>
 	</p>
 	</fieldset>
 	<fieldset><legend>Marketing Information:</legend>

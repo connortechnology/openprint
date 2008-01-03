@@ -24,7 +24,7 @@ require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockWeight;
 require openprint::StockQuality;
-use Time::HiRes qw{ time gettimeofday tv_interval }; 
+#use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 my $debug = 1;
 
@@ -188,14 +188,14 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
-	my $starttime = gettimeofday();
+	#my $starttime = gettimeofday();
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$openprint::log->debug("Error loading papers SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
 		$openprint::log->debug('No papers loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded papers ($sql) (@values) in " . sprintf('%.4f', tv_interval( [$starttime])*1000) . 'usecs records:' . @$data );
+		#$openprint::log->debug("Debug loaded papers ($sql) (@values) in " . sprintf('%.4f', tv_interval( [$starttime])*1000) . 'usecs records:' . @$data );
 	} # end if
 	return map { new openprint::Paper( $_->{id}, $_ ) } @$data;
 } # end sub find

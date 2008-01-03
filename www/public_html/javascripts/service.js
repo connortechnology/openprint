@@ -2,7 +2,7 @@ var timeout;
 
 function body_onLoad() {
 	if ( typeof(calc) == 'function' )
-    calc('f1');
+		calc('f1');
 }
 
 function calc( formName ) {
@@ -15,7 +15,8 @@ function calc( formName ) {
 		remove_div('AlertDiv');
 		gettingNewPrice = true;
 		var form = getFormObj( formName );
-		jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+		if ( form ) 
+			jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
 	} // end if
 } // end calc()
 

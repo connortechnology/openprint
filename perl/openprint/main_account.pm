@@ -46,9 +46,10 @@ sub select_company {
 			my @currencies = openprint::Currency::find('short'=>'CDN');
 			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 		} # end if
-		delete $openprint::session{'OrderID'};
-		delete $openprint::session{'quote_id'};
-		delete $openprint::session{'project_id'};
+		foreach my $k ( keys %openprint::session ) {
+			next if sets::isin( $k, [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country','Pricelist_id' ] );
+			delete $openprint::session{$k};
+		} # end foreach
 	} # end if
 
 } # end sub select_company

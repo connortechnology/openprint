@@ -1,7 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><?PageTitle?></title>	
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
@@ -24,18 +25,14 @@
 		<div class="Content"> 
 		<div class="ContentInner"> 
 			<div class="Header">
-					<span style="float: left;"><img src="/images/IQ_logo.png" alt="Intelligent Quote Demo"/></span>
-					<span style="float: left;"><img src="/images/IQ_text.png" alt="Intelligent Quote Demo"/></span>
+					<a style="float: left;" href="/index.html"><img src="/images/logo.gif" alt="West Star Printing"/></a>
 					<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 					<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
 					<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
-					<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
-					<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
-					<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 					<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
+			<br class="spacer"/>
 			</div>
-			<br/>
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/employee_menu.html"-->
+			<? echo ( ssi::include( $config{'SkinPath'} . '/includes/employee_menu.html' ); ) ?>
 			<?PageContent?>
 			<br/>
 		</div><!--ContentInner-->
