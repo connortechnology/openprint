@@ -57,6 +57,9 @@ A:hover {
 input, select, textarea, option {
     font-size: x-small;
 }
+select {
+	vertical-align: top;
+}
 input[type="text"], input[type="password"]  {
 }
 
