@@ -59,6 +59,13 @@ A:hover {
 	color: #687796;
 }
 
+.formOn {
+	background-color: #f1eee5;
+}
+.formOff {
+	background-color: #ffffff;
+}
+
 select, textarea, option {
     font-size: x-small;
 	background-color: white;
@@ -144,6 +151,26 @@ table.List td textarea {
 }
 
 .Docket {
+}
+
+.Application fieldset {
+	margin-bottom: 5px;
+}
+.Application span.label {
+    float: left;
+    width: 180px;
+    padding: 2px;
+    margin: 0px;
+    margin-top: 3px;
+}
+.Application legend {
+	color: #BCA205;
+	font-weight: bold;
+}
+.Application .text {
+	width: 200px;
+	margin:3px;
+	height:20px;
 }
 
 .Currency {
@@ -537,4 +564,7 @@ div.Service span.ThreeColumns {
 div.Service span.TwoColumns {
 	width: 50%;
 	float: left;
+}
+h1,h2,h3,h5 {
+	color: maroon;
 }

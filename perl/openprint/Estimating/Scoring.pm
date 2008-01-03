@@ -203,6 +203,7 @@ sub signature_calc {
 	@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
 	$$specs{'hdnBreakdown'.$qty_index} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
+	$Results{'Status'} = 'uncalculated';
 
 	$Results{'Status'} = 'uncalculated';
 

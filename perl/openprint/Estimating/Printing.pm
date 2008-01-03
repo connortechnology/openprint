@@ -1796,7 +1796,7 @@ sub calc_price {
 	# Whya re we doing this here?
 	#$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
 
-	my %plate_setup = plate_setup_cost( $Press, $$Paper{width} * $$Paper{height}, $impressions, \@colours, $specs, $qty_index );
+	my %plate_setup = plate_setup_cost( $Imposition, $Press, $$Paper{width} * $$Paper{height}, $impressions, \@colours, $specs, $qty_index );
 	# THis is here more to take care of multi-version documents as opposed to business cards
 	#if ( ( $$specs{'Versions'} > 1 ) and sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble' ] ) ) {
 		#$plate_setup{'Plate Count'} *= ( $imposition / $$specs{'Versions'} );
@@ -2624,7 +2624,7 @@ sub press_setup_cost {
 #
 
 sub plate_setup_cost {
-	my ( $Press, $sheet_area, $impressions, $colours, $specs, $qty_index ) = @_;
+	my ( $Imposition, $Press, $sheet_area, $impressions, $colours, $specs, $qty_index ) = @_;
 
 	my $plate_count = 0;
 	my $non_process_colours = 0;
@@ -2656,7 +2656,9 @@ sub plate_setup_cost {
 # becuase the material id for plates is the PlateSetter we do not send the press to get a plate price or it will not find it.
 		
 	my %plate_price;
-	if ( my @materials = openprint::Material::find( 'name'=>$plate_id ) ) {
+	if ( my @materials = openprint::Material::find( 'name'=>$plate_id.$Imposition->runstyle() ) ) {
+		%plate_price = $materials[0]->get_price( $plate_price_qty, undef );
+	} elsif ( my @materials = openprint::Material::find( 'name'=>$plate_id ) ) {
 		%plate_price = $materials[0]->get_price( $plate_price_qty, undef );
 	} # end if
 
