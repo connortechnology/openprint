@@ -52,17 +52,17 @@
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div id="content_container">
-         <!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
+			<? echo ( ssi::include( $config{'SkinPath'}.'/includes/header.html' ); ) ?>
          <div id="menu">
             <div id="menu_links">
-               <!--#include virtual="/skins/<?SiteTitle?>/includes/menu.html"-->
+			<? echo ( ssi::include( $config{'SkinPath'}.'/includes/menu.html' ); ) ?>
             </div>
          </div>
          <div id="main_content">
             <div id="main_content_inner">
 		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
 		<? else ( $r->uri() =~ /\/main\/order/ ) ?>
-               <!--#include virtual="/skins/<?SiteTitle?>/includes/left_sidebar.html"-->
+			<? echo ( ssi::include( $config{'SkinPath'}.'/includes/left_sidebar.html' ); ) ?>
 		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
                <div id="main_page">
                   <div class="top_shadow">

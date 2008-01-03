@@ -378,7 +378,11 @@ sub calc_setup_object {
 						$setup1->paper()->width( $setup1->used_width() );
 					} # end if
 					if ( ! $paper_height ) {
+						if ( $$specs{'Cut Off'} ) {
 						$setup1->paper()->height( $$specs{'Cut Off'} ); # Cut Off
+						} else {
+						$setup1->paper()->height( $setup1->used_height() );
+						} # end if
 					} # end if
 					push @results, $setup1;
 					if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} ) ) {
@@ -519,7 +523,11 @@ sub calc_setup_object {
 $openprint::log->debug("Setting paper width: " . $setup2->paper()->width());
 					} # end if
 					if ( ! $paper_height ) {
-						$setup2->paper()->height( $$specs{'Cut Off'} );
+						if ( $$specs{'Cut Off'} ) {
+							$setup2->paper()->height( $$specs{'Cut Off'} );
+						} else {
+							$setup2->paper()->height( $setup2->used_height() );
+						} # end if
 					} # end if
 					push @results, $setup2;
 

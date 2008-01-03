@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $threading = 1;
+my $threading = 0;
 my $debug = 1;
 my $master_time;
 
@@ -913,7 +913,7 @@ $openprint::log->debug("QTY: $qty_index");
 			} else {
 				$project{'SpreadLayout'} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
 			} # end if
-$openprint::log->debug("SpreadLayout");
+$openprint::log->debug("SpreadLayout : " . $project{'SpreadLayout'} );
 		} else {
 $openprint::log->debug("No spread layout for you!");
 		} # end if
@@ -1021,7 +1021,6 @@ $openprint::log->debug('No Web 4 U');
 			$project{'Runstyles'} = $Press->specification('Runstyles');
 			$project{'Cut Off'} = $Press->specification('Cut Off');
 			$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
-
 
 			my @impositions;
 # Start with an arrayof papers... an overrided paper may or may not exist in the array.  What we should do is... try to find in in the array, if not, try to find it in an array of cut papers... if not, then special cut it...
@@ -1209,7 +1208,7 @@ $openprint::log->debug("Loaing old imp");
 		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
 		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
 		if ( $threading and $qty_index > 1 ) {
-		$prices{$qty_index} = $threads{$qty_index}->join();
+			$prices{$qty_index} = $threads{$qty_index}->join();
 		} # end if
 		my $b_price = $prices{$qty_index};
 
@@ -1308,9 +1307,10 @@ $openprint::log->debug("Loaing old imp");
 
 sub breakdown {
 	my ( $price, $specs ) = @_;
-if ( ! $$price{'Imposition'} ) {
-$openprint::log->debug(" Price $price $$price{Imposition}");
-}
+
+	if ( ! $$price{'Imposition'} ) {
+		$openprint::log->debug(" Price $price $$price{Imposition}");
+	} # end if
 
 	my $Imposition = $$price{'Imposition'};
 	my $Paper = $Imposition->paper();
@@ -1323,7 +1323,7 @@ $openprint::log->debug(" Price $price $$price{Imposition}");
 	$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
 $breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf("\tImposition Charge:\t\$%1\$.2f + \$%2\$.2f*\%4\$d=\$%3\$.2f<br/>", @$price{'Imposition MakeReady','Imposition Price','Imposition Total'}, $Imposition->imposition() );
-	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", @$price{'Runstyle Charge'} );
+	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", $$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
 	$breakdown .= sprintf("\tAqueous Setup:\t\$%.2f<br/>", $$Aqueous{'Setup'}) if $$Aqueous{'Setup'};
 	$breakdown .= sprintf("\tPMS Ink Mix Charge:\t\$%.2f<br/>", $$price{'Ink Mix Charge'} ) if $$price{'Ink Mix Charge'};
@@ -1348,7 +1348,8 @@ $breakdown .= $$price{'Setup Breakdown'};
 		$breakdown .= "(\$ $$Paper{'Per M'} Per M) " if $$Paper{'Per M'};
 		$breakdown .= " (\$ $$price{'100lb'}/100lb) = \$ $$price{'Paper Price'}<br/>";
 		$$price{'Paper 1000 Price'} = ($$price{'Sheet Price'}*1000/$Imposition->imposition());
-	} elsif ( $Paper->width() ) {
+	#} elsif ( $Paper->width() ) {
+	} else {
 		$breakdown .= sprintf("\tPaper: \%sx\%s * \%.6flbs/sq inch = \%.6f lbs per sheet (%d gsm)<br/>", $Paper->width(), $Paper->height(), $Paper->wpsi(), $Paper->width() * $Paper->height()* $Paper->wpsi(), $Paper->gsm() );
 		$$price{'Paper 1000 Price'} = (($Paper->mweight()/$Imposition->imposition())/100)*$$price{'100lb'};
 
@@ -1844,10 +1845,24 @@ sub calc_price {
 		$gross_qty += $additional_overs;
 	} # end if
 	$impressions = $gross_qty;
+	my $weight = $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi();
+$openprint::log->debug("Weight: $weight");
 	my $sheets_per_package = $Paper->sheets_per_package();
-	if ( $sheets_per_package ) {
-		$gross_qty = $sheets_per_package * ( ceil( $gross_qty / $sheets_per_package ) );
+	if ( $sheets_per_package and $Paper->full_packages() ) {
+		if ( $Paper->type() eq 'Sheet' ) {
+			$gross_qty = $sheets_per_package * ceil( $gross_qty / $sheets_per_package );
+		} elsif ( $Paper->type() eq 'Roll' ) {
+			$weight = $sheets_per_package * ceil( $weight/$sheets_per_package);
+			$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
+		} else {
+			$openprint::log->error('Unknown paper type.');
+		} # end if
 	} # end if
+	if ( $Paper->minimum_order() and ($Paper->minimum_order() > $weight) ) {
+		$openprint::log->debug('Minimum Order Requirement not met');
+		return \%price;
+	} # end if
+	
 	my %sheet_qty = (
 			'Impressions'				=> $impressions, 
 			'Gross Sheet Count'			=> $gross_qty, 
@@ -1856,7 +1871,7 @@ sub calc_price {
 			'Run Overs'					=> $run_overs,
 			'Additional Plate Overs'	=> $additional_overs,
 			'Total Overs'				=> $impressions,
-			'Weight'					=> ( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() ),
+			'Weight'					=> $weight,
 			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$fm_overs : 0,
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;

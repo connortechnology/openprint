@@ -38,7 +38,7 @@ sub edit {
 		my @prices = $Pricelist->getPrices();
 		foreach my $price (@prices ) {
 			$$price{'id'} = undef;
-			$$price{'PricelistIndex'} = $new->id();
+			$$price{'pricelist_id'} = $new->id();
 			$price->save();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );

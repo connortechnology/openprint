@@ -45,7 +45,7 @@ sub load {
 		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Paper_Prices WHERE id=?', {}, $$self{'id'} );
 		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
 	} # end if
-	@$self{qw/id PricelistIndex PaperIndex Min Max Units Cost Markup Price Discountable/} = 
+	@$self{qw/id pricelist_id paper_id Min Max Units Cost Markup Price Discountable/} = 
 		@$data{qw/id lnglistindex lngpaperindex lngmin lngmax strunits dblcost dblmarkup dblprice ysndiscountable/};
 
 } # end sub load
@@ -61,8 +61,8 @@ sub save {
 	$$self{Price} = $$self{Cost} * ( 1+($$self{Markup}/100) ) if ( ! $$self{Price} );
 
 	my @sql = (
-			'lngListIndex',			$$self{'PricelistIndex'},
-			'lngPaperIndex',		$$self{'PaperIndex'},
+			'lngListIndex',			$$self{'pricelist_id'},
+			'lngPaperIndex',		$$self{'paper_id'},
 			'lngMin',				$$self{'Min'} eq '' ? undef : $$self{'Min'},
 			'lngMax',				$$self{'Max'} eq '' ? undef : $$self{'Max'},
 			'strUnits',				$$self{'Units'},

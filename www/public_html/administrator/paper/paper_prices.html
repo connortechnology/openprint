@@ -1,7 +1,10 @@
 <script type="text/javascript" src="/administrator/production/pricing.js"></script>
 <script type="text/javascript" >
-	function addPrice( list_index ) {
-		jsrsExecute( '/jsrs.htm', cbFillPrices, 'openprint::administrator_paper::jsrs_add_price', new Array( <?paper_id?>, list_index ) );
+	function newPrice( pricelist_id ) {
+		jsrsExecute( '/jsrs.htm', cbFillPrices, 'openprint::administrator_paper::jsrs_add_price', new Array( <?paper_id?>, pricelist_id  ) );
+	}
+	function copyPrice( id ) {
+		jsrsExecute( '/jsrs.htm', cbFillPrices, 'openprint::administrator_paper::jsrs_copy_price', new Array( <?paper_id?>, id ) );
 	}
 	function delPrice( id ) {
 		jsrsExecute( '/jsrs.htm', cbFillPrices, 'openprint::administrator_paper::jsrs_del_price', new Array( <?paper_id?>, id ) );
@@ -17,86 +20,12 @@
 		div.innerHTML = results;
 	}
 </script>
-
-<style type="text/css">
-.Prices {
-}
-.Price {
-}
-	.Price .Add {
-		float: left;
-		width: 20px;
-		text-align: center;
-	}
-	.Price .Min  {
-		float: left;
-		width: 10%;
-		text-align: center;
-	}
-	.Price .Min input.text {
-		width: 100%;
-	}
-	.Price .Max  {
-		float: left;
-		width: 10%;
-		text-align: center;
-	}
-	.Price .Max input.text {
-		width: 90%;
-	}
-	.Price .Units {
-		float: left;
-		width: 95px;
-		text-align: center;
-	}
-	.Price .Cost {
-		float: left;
-		width: 10%;
-		text-align: center;
-	}
-	.Price .Cost input.text {
-		width: 90%;
-	}
-	.Price .Markup {
-		float: left;
-		width: 10%;
-		text-align: center;
-	}
-	.Price .Markup input.text {
-		width: 90%;
-	}
-	.Price .Price {
-		float: left;
-		width: 10%;
-		text-align: center;
-	}
-	.Price .Price input.text {
-		width: 90%;
-	}
-	.Price .Discount {
-		float: left;
-		width: 15%;
-		text-align: center;
-	}
-</style>
 	<fieldset><legend>Pricing</legend>
 	<div id="Prices"><!--#include virtual="_prices.html"--></div>
 	<div class="row">
 		<span style="float: right;">
 			<form name="paper_prices">
 			<? echo ( ssi::writeButton( $log, $dbh, 'SavePrices', 'savePrices.gif', 'savePrices(document.Prices);', '', 'Save All Prices' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'AddNewPrice', 'addPrice.gif', "addPrice(get_ddm_value(document.paper_prices.Pricelist) );", '', 'Add Price to:' ); ) ?>
-			<select name="Pricelist" size="1">
-				<option value="">select pricelist</option>
-				<? echo (
-						my @pricelists = openprint::Pricelist::find('order'=>'lower(name)');
-						if ( @pricelists == 1 ) {
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } @pricelists ], $pricelists[0]->id() );
-						} else {
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } @pricelists ] );
-						} # end if
-					) ?>
-			</select>
 			<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id(); ) ?>" />
 			</form>
 		</span>
