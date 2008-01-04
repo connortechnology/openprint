@@ -273,6 +273,7 @@ sub signature_calc {
 	$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 
 	if ( ! $Imposition ) {
+$openprint::log->debug("Loading imposition");
 		$Imposition = new openprint::Imposition;
 		$Imposition->paper( $Paper );
 		$Imposition->load( $sig_specs, $qty_index );
@@ -362,6 +363,7 @@ sub signature_calc {
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
 	} # end if
 	$imposition = 1 if ! $imposition;
+$Imposition->display();
 
 	$openprint::log->debug("Sign info: $$sig_specs{'SpreadCols'.$qty_index}*$$sig_specs{'SpreadRows'.$qty_index}*$$sig_specs{'txtSpreadSize'}") if $debug;
 	my $pages = $Imposition->pages();
@@ -546,7 +548,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = $$bestFolds{$_};
 	} # end foreach
 	$$specs{'Status'} = $bestEquipment ? 'calculated' : 'uncalculated';
-$openprint::log->debug("Return from folding");
+#$openprint::log->debug("Return from folding");
 	return %results;
 } # end sub signature_calc
 

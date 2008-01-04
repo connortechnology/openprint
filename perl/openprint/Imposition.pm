@@ -9,7 +9,7 @@ my @fields = (
 	'layout_width','layout_height',
 	'runstyle',
 	'spread_rows','spread_columns','spreads','spread_size',
-	'gutters',
+	'grip','gutters',
 	'image_orientation',
 	'paper',
 	'Press',
@@ -82,7 +82,7 @@ sub AUTOLOAD {
 
 sub display {
 	my $self = shift;
-	$openprint::log->debug("Imp: $$self{'columns'}x$$self{'rows'}+$$self{'dutch_columns'}x$$self{'dutch_rows'}:$$self{imposition}out spreads:$$self{'spread_columns'}x$$self{'spread_rows'}=$$self{'spreads'} $$self{runstyle} on: $self->{paper}->{width}x$self->{paper}->{height} $$self{Press}->{strid}");
+	$openprint::log->debug("Imp: $$self{'columns'}x$$self{'rows'}+$$self{'dutch_columns'}x$$self{'dutch_rows'}:$$self{imposition}out spreads:$$self{'spread_columns'}x$$self{'spread_rows'}=$$self{'spreads'} $$self{runstyle} on: $self->{paper}->{width}x$self->{paper}->{height} $$self{Press}->{strid} Layout: $$self{'layout_width'}x$$self{'layout_height'} $$self{'image_orientation'}");
 } # end sub display
 
 sub set {
@@ -206,6 +206,10 @@ sub load {
 sub used_width {
 	my $self = shift;
 	return $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'};
+}
+sub used_height {
+	my $self = shift;
+	return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'};
 }
 
 sub object_area {

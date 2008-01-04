@@ -177,7 +177,6 @@ sub calc_setup_object {
 	$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
-
 	$setup2->paper( $Paper->clone() );
 	$setup2->runstyle( $run_style );
 	$setup2->image_orientation('Horizontal');
@@ -311,6 +310,7 @@ sub calc_setup_object {
 # Calculate Available Printing Space
 		my $adjusted_paper_height = $paper_height;
 		$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
+		$setup1->grip( $$specs{'Grip Size'} );
 
 		# On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 		if ( ( ! $paper_height ) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
@@ -374,16 +374,16 @@ sub calc_setup_object {
 				$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
 				if ( $setup1->imposition() ) {
 					$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? 'height' : 'width' );
-					if ( ! $paper_width ) {
+#$openprint::log->debug( "Imposition: Paper: " . $setup1->paper()->width() . 'x'.$setup1->paper()->height() . ', used: ' . $setup1->used_width() . 'x'.$setup1->used_height() );
+					if ( ! $setup1->paper()->width() ) {
 						$setup1->paper()->width( $setup1->used_width() );
 					} # end if
-					if ( ! $paper_height ) {
-						if ( $$specs{'Cut Off'} ) {
+					if ( $$specs{'Cut Off'} ) {
 						$setup1->paper()->height( $$specs{'Cut Off'} ); # Cut Off
-						} else {
+					} elsif ( ! $setup1->paper()->height() ) {
 						$setup1->paper()->height( $setup1->used_height() );
-						} # end if
 					} # end if
+#$openprint::log->debug( "Imposition: Paper: " . $setup1->paper()->width() . 'x'.$setup1->paper()->height() . ', used: ' . $setup1->used_width() . 'x'.$setup1->used_height() );
 					push @results, $setup1;
 					if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} ) ) {
 						push @results, calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height, $specs );
@@ -456,6 +456,7 @@ sub calc_setup_object {
 			$gutters = 0 if $gutters < 0;
 		} # end if
 
+		$setup2->grip( $$specs{'Grip Size'} );
 		my $adjusted_paper_height = $paper_height;
 		$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
 		if ( (!$paper_height) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
@@ -518,16 +519,14 @@ sub calc_setup_object {
 #	if no grain direction is specified, then use the larger imposition
 				if ( $setup2->imposition() ) {
 					$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? 'height' : 'width' );
-					if ( ! $paper_width ) {
+#$openprint::log->debug( "Imposition: Paper: " . $setup2->paper()->width() . 'x'.$setup2->paper()->height() . ', used: ' . $setup2->used_width() . 'x'.$setup2->used_height() );
+					if ( ! $setup2->paper()->width() ) {
 						$setup2->paper()->width( $setup2->used_width() );
-$openprint::log->debug("Setting paper width: " . $setup2->paper()->width());
 					} # end if
-					if ( ! $paper_height ) {
-						if ( $$specs{'Cut Off'} ) {
-							$setup2->paper()->height( $$specs{'Cut Off'} );
-						} else {
-							$setup2->paper()->height( $setup2->used_height() );
-						} # end if
+					if ( $$specs{'Cut Off'} ) {
+						$setup2->paper()->height( $$specs{'Cut Off'} );
+					} elsif ( ! $setup2->paper()->height() ) {
+						$setup2->paper()->height( $setup2->used_height() );
 					} # end if
 					push @results, $setup2;
 
@@ -704,8 +703,13 @@ sub convert_impositions {
 				$newimp->rows($rows);
 				$newimp->columns($cols);
 				$newimp->imposition($rows * $cols);
+				if ( $newimp->image_orientation() eq 'Vertical' ) {
 				$newimp->image_width( $newimp->image_width() * $col );
 				$newimp->image_height( $newimp->image_height() * $row );
+				} else {
+				$newimp->image_width( $newimp->image_width() * $row );
+				$newimp->image_height( $newimp->image_height() * $col );
+				} # end if
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				#$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
