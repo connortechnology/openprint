@@ -192,6 +192,7 @@ fieldset:after {
 fieldset legend {
 	color: #FE0F0B;
 	font-weight: bold;
+	outline: 0;
 }
 
 fieldset p {

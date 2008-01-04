@@ -370,8 +370,10 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$price{'Passes'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$price{'Imposition'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%<br/>', @$price{'RunCost Discount','Imposition Discount'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', @$price{'Calliper Markup'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$price{'MakeReady'}).",<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Service: $' . sprintf( '%.2f', $$price{'Service'}).",<br/>";
+			my $servicePrice = $$price{'ServicePrice'};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'}))."<br/><br/>";
 		} # end foreach
 		if ( ! $bestEquipment ) {
@@ -440,10 +442,6 @@ sub get_equipment {
 sub get_price {
 	my ( $Equipment, $specs, $plusCover, $qty_index ) = @_;
 
-	my $log = $openprint::log;
-	my $dbh = $openprint::dbh;
-	my $variable = $openprint::variable;
-
 	my %price = (
 		'MakeReady' => 0,
 		'Service'	=> 0,
@@ -475,7 +473,11 @@ sub get_price {
 # Calculate Full Passes
 	if ( $neededPockets > $maxPockets ) {
 # Loaded here, so we don't do it in the loop many times
-		my %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $maxPockets, $Equipment );
+		my %servicePrice;
+		if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
+			%servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $maxPockets, $Equipment );
+		} # end if
+		
 		my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 			$price{'RunTime'} += $runtime * 360;
@@ -486,7 +488,7 @@ sub get_price {
 			} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
 				$price{'Service'} += $servicePrice{'Price'} * $runtime;
 			} else {
-				$log->debug("Unknown Unit Type: ($servicePrice{'units'}) on $$specs{'ServiceType'}");
+				$openprint::log->debug("Unknown Unit Type: ($servicePrice{'units'}) on $$specs{'ServiceType'}");
 			} # end if
 
 			$neededPockets -= $maxPockets;
@@ -496,16 +498,22 @@ sub get_price {
 	} # end if
 
 # Calculate Last Pass
-	my %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $neededPockets, $Equipment );
+	my %servicePrice;
+	if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}.$neededPockets.'Pockets', $qty, $Equipment ) ) ) {
+		%servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $neededPockets, $Equipment );
+	} # end if
+	$price{'ServicePrice'} = \%servicePrice;
 	my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
 	my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 	$price{'RunTime'} += $runtime * 360;
 	if ( $servicePrice{'units'} eq 'Per M' ) {
-		$price{'Service'} += $servicePrice{'Price'} * $qty/1000;
+		$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
+		$price{'Service'} += $servicePrice{'Total'};
 	} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
-		$price{'Service'} += $servicePrice{'Price'} * $runtime;
+		$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
+		$price{'Service'} += $servicePrice{'Total'}
 	} else {
-		$log->debug("Unknown Unit Type: $servicePrice{'units'} for $$specs{'ServiceType'} range($neededPockets) equipment(".$Equipment->strid().")");
+		$openprint::log->debug("Unknown Unit Type: $servicePrice{'units'} for $$specs{'ServiceType'} range($neededPockets) equipment(".$Equipment->strid().")");
 	} # end if
 	$price{'Passes'} += 1;
 
@@ -521,8 +529,12 @@ sub get_price {
 		$price{'MakeReady'} += $makeReady + ( $pocketMakeReady * ( $gateFolds + 1 ) );
 	} # end if
 
+	$price{'Calliper Markup'} = $Equipment->specification( 'Calliper Price Adjustment', $$specs{'txtCalliper'} );
+	$price{'Service'} *= ( 1 + $price{'Calliper Markup'}/100);
+
 	$price{'RunCost Discount'} = $Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} );
 	$price{'Service'} *= ( 1 - $price{'RunCost Discount'}/100);
+
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 
