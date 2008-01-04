@@ -456,7 +456,6 @@ sub width {
     if ( defined $width ) {
         $width =~ s/[^\d\.]//g;
         $$self{'width'} = $width;
-		#$$self{'start_width'} = $$self{'width'} if ! $$self{'start_width'};
     } # end if
     return $$self{'width'};
 } # end if
@@ -465,7 +464,6 @@ sub height {
     if ( defined $height ) {
         $height =~ s/[^\d\.]//g;
         $$self{'height'} = $height;
-		#$$self{'start_height'} = $$self{'height'} if ! $$self{'start_height'};
     } # end if
     return $$self{'height'};
 } # end if
