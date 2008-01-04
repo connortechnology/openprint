@@ -2210,7 +2210,7 @@ sub select_presses {
 			next;
 		} # end if
 
-		if ( $Paper->calliper() > $Press->specification('Maximum Calliper') ) {
+		if ( $Paper->calliper() > $Press->specification('Maximum Calliper', $Paper->grade() ) ) {
 			$openprint::log->debug(" ** Press $press_id Failed Calliper Check **");
 			next;
 		} # end if
