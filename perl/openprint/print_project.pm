@@ -939,7 +939,7 @@ sub calc {
 			%printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$project{'id'}, $printing_service_index );
 		} # end if
 
-		if ( $specs{'Dimensions'} ne 'Custom' ) {
+		if ( ! sets::isin( $specs{'Dimensions'}, ['', 'Custom'] ) ) {
 			my ( $width, $height, $type ) = $specs{'Dimensions'} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
 			my @args = ( $specs{'ProjectType'}, $width, $height );
 
@@ -1246,7 +1246,9 @@ sub calc {
 			} # end if
 			foreach my $sid ( @{$services{'Scoring'}} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'chkOverrideQty-0', $specs{'chkOverrideScoreQty'} );
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtVerticalQty-0', $specs{'txtScoreQty'} ) if $specs{'chkOverrideScoreQty'} eq 'Y';
+				if ( $specs{'chkOverrideScoreQty'} eq 'Y' ) {
+					openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtVerticalQty-0', $specs{'txtScoreQty'} );
+				} # end if
 			} # end foreach
 		} else {
 			foreach ( @{$services{'Scoring'}} ) {
@@ -1334,7 +1336,11 @@ sub calc {
 
 		if ( $services{'Scoring'} ) {
 			my $score_specs = openprint::service::get_specs_ref( $$project{'id'}, $services{'Scoring'}[0] );
-			$specs{'txtScoreQty'} = $$score_specs{'txtQty-0'};
+			$specs{'txtScoreQty'} = $$score_specs{'txtVerticalQty-0'};
+			if ( ! $specs{'txtScoreQty'} ) {
+				$specs{'alert'} .= 'Please enter the # of scores.';
+				$specs{'Status'} = 'uncalculated';
+			} # end if
 		} # end if
 		if ( $services{'Drilling'} ) {
 			my $drill_specs = openprint::service::get_specs_ref( $$project{'id'}, $services{'Drilling'}[0] );
@@ -1375,7 +1381,7 @@ sub calc {
 		delete $specs{$key};
 	} # end foreach
 
-	$specs{'Status'} = $project->update_status( $variable );
+	$specs{'Status'} = $project->update_status( $variable ) if ! $specs{'Status'};
 	return jsrs::encode_pairs(%specs);
 } # end sub calc
 

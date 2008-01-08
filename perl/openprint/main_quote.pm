@@ -104,7 +104,9 @@ sub history {
 sub history_details {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
+
 	my $quote_id = $openprint::param{'quote_id'};
+	$quote_id =~ s/\D//g;
 	$$variable{'Quote'} = new openprint::Quote( $quote_id );
 	if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) or ( $$variable{'Quote'}->company_id() == $openprint::session{'company_id'} ) ) {
 		openprint::quote::get_finished_quote_contents( $log, $dbh, $variable, $quote_id );

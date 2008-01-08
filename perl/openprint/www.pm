@@ -345,10 +345,6 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
 
-		if ( $r->param('SelectCustomer') and ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ) {
-			$session{'company_id'} = $r->param('SelectCustomer');
-		} # end if
-
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.
 			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
