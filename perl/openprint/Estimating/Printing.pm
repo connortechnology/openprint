@@ -1472,17 +1472,21 @@ $imp->display();
 
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $imp->pages();
 
-			my $s_id = 0;
+			my $s_id = $service_index;
 			my %new_specs = %$specs;
 
 			while ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} > 0 ) {
-				foreach ( $Project->signatures($$specs{'txtSignatureType'}) ) {
-					if ( $s_id and ($_ > $s_id) ) {
-						$s_id = $_;
-						%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
-						last;
-					} # end if
-				} # end foreach
+				if ( $s_id ) {
+					foreach ( $Project->signatures($$specs{'txtSignatureType'}) ) {
+						if ( $_ > $s_id ) {
+							$s_id = $_;
+							%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
+							last;
+						} # end if
+					} # end foreach
+# If we didn't get a new s_id, then we are using fake services
+					$s_id = 0 if $s_id == $service_index;
+				} # end if
 
 # Need to update these too. 
 				$new_specs{'PreviousPlates'.$qty_index} += $$price{'txtPlateQuantity'};
@@ -2068,7 +2072,7 @@ sub calc_price {
 				$price{'Stitching Cost'} = 1000000;
 			} else {
 				$price{'StitchingImposition'} = $$results{'Imposition'};
-				$price{'Stitching Breakdown'} .= "Stitching ($$results{'Imposition'} out) Price: \$$$results{'Price'}<br/>$$results{'alert'}<br/>";
+				$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
 				$price{'Stitching Cost'} = $$results{'Price'};
 				$price{'Comparison Cost'} += $$results{'Price'};
 			} # end if

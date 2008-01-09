@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-my $debug = 0;
+my $debug = 1;
 
 require openprint::project;
 require openprint::Equipment;
@@ -132,7 +132,7 @@ sub signature_calc {
 
 #$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
 	foreach my $signature_service_index ( $Project->signatures() ) {
-		next if $service_index and ($signature_service_index == $service_index);
+		next if $service_index and ($signature_service_index >= $service_index);
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -161,20 +161,30 @@ sub signature_calc {
 
 	my $bestPrice;
 	my $bestEquipment;
-
+#$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	foreach my $Equipment ( @equipment ) {
+		if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
+			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
+			next;
+		} # end if
+		if ( $Equipment->specification('Minimum Spine Length') and ( $$specs{'Height'} < $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
+			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
+			next;
+		} # end if
 		my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
 		if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
 			$bestEquipment = $Equipment;
 			$bestPrice = $price;
 		} # end if
 	} # end foreach Equipment
+#$openprint::log->debug("Breakdown: $$specs{'hdnBreakdown'.$qty_index}");
 	my %results;
 	$results{'alert'} = $error;
+$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . $bestEquipment->strid() . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets serviceindex: '. $service_index . ':' . join(',', $Project->signatures() );
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
 #$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if $debug;
-	if ( $bestPrice ) {
+	if ( $$bestPrice{'Imposition'} ) {
 		$results{'Status'} = 'calculated';
 		$results{'Price'} = $$bestPrice{'txtPrice'};
 	} else {
@@ -307,7 +317,6 @@ sub calc {
 	} # end foreach qty_index
 
 	#At this point, if the job supports 2out impo, our setup is 2out.  This may change later, depending on the equipment's ability to support 2out stitching
-
 	my $error;
 	my @possible_equipment = get_equipment( $specs, \$error );
 
@@ -349,8 +358,6 @@ sub calc {
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $Equipment->name() . ':<br/>';
-
 			if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
 				next;
