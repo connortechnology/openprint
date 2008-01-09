@@ -132,6 +132,12 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
 			<? echo ( $openprint::param{'txtQuoteNumber'} ) ?>
 		</p>
 	<? endif ( $openprint::param{'txtQuoteNumber'} ) ?>
+	<? if ( $openprint::param{'txtQuotedPrice'} ) ?>
+		<p>
+			<label>Quoted Price:</label>
+			<? echo ( $openprint::param{'txtQuotedPrice'} ) ?>
+		</p>
+	<? endif ( $openprint::param{'txtQuotedPrice'} ) ?>
    	<p>
    		<label>Description:</label>
    		<? echo ( $openprint::param{'txtJobDescription'} ) ?>

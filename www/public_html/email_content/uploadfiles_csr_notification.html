@@ -112,6 +112,12 @@ OR:
 			<? echo ( $openprint::param{'txtQuoteNumber'} ) ?>
 		</p>
 	<? endif ( $openprint::param{'txtQuoteNumber'} ) ?>
+	<? if ( $openprint::param{'txtQuotedPrice'} ) ?>
+		<p>
+			<label>Quoted Price:</label>
+			<? echo ( $openprint::param{'txtQuotedPrice'} ) ?>
+		</p>
+	<? endif ( $openprint::param{'txtQuoteNumber'} ) ?>
 		<p>
 			<label>Description:</label>
 			<? echo ( $openprint::param{'txtJobDescription'} ) ?>
