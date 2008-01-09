@@ -84,6 +84,9 @@ sub handler {
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	openprint::session_init();
 	openprint::usergroup::init_cache();
+	openprint::Material::init_cache();
+	openprint::Service::init_cache();
+	openprint::Equipment::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -155,9 +158,6 @@ $openprint::log->debug("Page: $page");
 
 	$session{'lastupdated'} = time;
 	untie %session;
-	openprint::Material::init_cache();
-	openprint::Service::init_cache();
-	openprint::Equipment::init_cache();
 	$dbh->disconnect();
 	$log->warn( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.

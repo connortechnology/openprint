@@ -363,7 +363,7 @@ $openprint::log->debug("Loading imposition");
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
 	} # end if
 	$imposition = 1 if ! $imposition;
-$Imposition->display();
+#$Imposition->display();
 
 	$openprint::log->debug("Sign info: $$sig_specs{'SpreadCols'.$qty_index}*$$sig_specs{'SpreadRows'.$qty_index}*$$sig_specs{'txtSpreadSize'}") if $debug;
 	my $pages = $Imposition->pages();

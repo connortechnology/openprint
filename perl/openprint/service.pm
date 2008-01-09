@@ -285,7 +285,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::PerfectBound::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $services{'PerfectBound'} ) {
 			push @{$services{'PerfectBound'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'PerfectBound' );
 		} # end if
