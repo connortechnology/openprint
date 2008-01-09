@@ -132,7 +132,7 @@ sub signature_calc {
 
 #$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
 	foreach my $signature_service_index ( $Project->signatures() ) {
-		next if $service_index and ($signature_service_index == $service_index);
+		next if $service_index and ($signature_service_index >= $service_index);
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -180,6 +180,7 @@ sub signature_calc {
 #$openprint::log->debug("Breakdown: $$specs{'hdnBreakdown'.$qty_index}");
 	my %results;
 	$results{'alert'} = $error;
+$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . $bestEquipment->strid() . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets serviceindex: '. $service_index . ':' . join(',', $Project->signatures() );
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
 #$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if $debug;
@@ -316,8 +317,6 @@ sub calc {
 	} # end foreach qty_index
 
 	#At this point, if the job supports 2out impo, our setup is 2out.  This may change later, depending on the equipment's ability to support 2out stitching
-
-
     
 	my $error;
 	my @possible_equipment = get_equipment( $specs, \$error );
@@ -360,8 +359,6 @@ sub calc {
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $Equipment->name() . ':<br/>';
-
 			if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
 				next;
