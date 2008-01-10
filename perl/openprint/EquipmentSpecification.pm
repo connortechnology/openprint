@@ -63,6 +63,14 @@ sub load {
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
 
+sub copy {
+	my ( $self ) = @_;
+	my $new = new openprint::EquipmentSpecification();
+	@$new{keys %fields} = @$self{keys %fields};
+	delete $$new{id};
+	return $new;
+} # end sub copy
+
 sub Equipment {
 	my $self = shift;
 	return new openprint::Equipment( $$self{equipment_id} );
