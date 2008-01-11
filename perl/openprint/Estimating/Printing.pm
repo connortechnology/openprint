@@ -583,7 +583,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 			} # end if
 		} # end if
 		my $Paper = new openprint::Paper();
-		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade'} = ( 'Y',($$specs{'txtSpecificStockBrand'} =~ /offset/i ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'});
+		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',($$specs{'txtSpecificStockBrand'} =~ /offset/i ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
 		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};
@@ -795,7 +795,6 @@ $openprint::log->debug("Grabbing UV Specs");
 	my @blah = ( 1 .. 3 );
 
 	foreach my $qty_index ( reverse @blah ) {
-$openprint::log->debug("QTY: $qty_index");
 		$$specs{"txtPrice$qty_index"} = 0;
 		my $qty = $Project->quantity($qty_index);
 		next if ! defined $qty;
@@ -940,12 +939,12 @@ $openprint::log->debug('No Web 4 U');
 			$openprint::log->debug("Trying press " . $Press->strid()) if $debug;
 			if ( $$specs{'chkOverridePrintingType'.$qty_index} eq 'Y' ) {
 				if ( $Press->specification('Printing Type') ne $$specs{'PrintingType'.$qty_index} ) {
-#$openprint::log->error("Press Printing Type ($press_specs{'Printing Type'}) is not the overriden type " . $$specs{'PrintingType'.$qty_index} );
+$openprint::log->error("Press Printing Type (" . $Press->specification('Printing Type') .") is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if $debug;
 					next;
 				} # end if
 			} else {
 				if ( $$specs{'PrintingTypes'} and ! sets::isin( $Press->specification('Printing Type'), $$specs{'PrintingTypes'} ) ) {
-					$openprint::log->error('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes');
+					$openprint::log->error('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes') if $debug;
 					next;
 				} # end if
 			} # end if
@@ -1061,6 +1060,7 @@ $openprint::log->debug('No Web 4 U');
 			} else { # Sheet Fed
 				my %imps;
 				foreach my $Paper ( @Papers ) {
+$openprint::log->debug("Paper: " . $Paper->width() . 'x' . $Paper->height() );
 					next if $Paper->type() eq 'Roll';
 					next if ! ( $Paper->width() and $Paper->height() );
 					next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
@@ -1106,7 +1106,7 @@ $openprint::log->debug('No Web 4 U');
 									$Press );
 							last if ! @imps;
 						
-#$openprint::log->debug("Sorting");	
+$openprint::log->debug("Sorting" . @imps );	
 							foreach my $imp ( @imps ) {
 								my $add = 0;
 #$imp->display();
