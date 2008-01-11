@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-my $debug = 1;
+my $debug = 0;
 
 require openprint::project;
 require openprint::Equipment;
