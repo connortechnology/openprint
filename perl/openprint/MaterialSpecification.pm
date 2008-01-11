@@ -16,7 +16,7 @@ my %fields = (
 	'interpolate'	=>	'interpolate',
 );
 
-my $debug = 1;
+my $debug = 0;
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;

@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-my $debug = 1;
+my $debug = 0;
 
 require openprint::project;
 require openprint::Equipment;
@@ -110,7 +110,7 @@ my @possible_equipment;
 
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 sub signature_calc {
-	my ( $Project, $service_index, $I, $specs, $qty_index ) = @_;
+	my ( $Project, $service_index, $I, $specs, $qty_index, $folding_specs ) = @_;
 
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -170,6 +170,13 @@ sub signature_calc {
 		if ( $Equipment->specification('Minimum Spine Length') and ( $$specs{'Height'} < $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
 			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 			next;
+		} # end if
+		if ( $Equipment->specification('Type') eq 'Press' ) {
+			next if $$specs{'txtPockets'.$qty_index} > 1;
+			my @sigs = $Project->signatures();
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+			next if $I->Press()->id() != $Equipment->id();
+			next if $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id();
 		} # end if
 		my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
 		if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
@@ -365,6 +372,13 @@ sub calc {
 			if ( $Equipment->specification('Minimum Spine Length') and ( $$specs{'Height'} < $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 				next;
+			} # end if
+			if ( $Equipment->specification('Type') eq 'Press' ) {
+				next if $$specs{'txtPockets'.$qty_index} > 1;
+				my @sigs = $Project->signatures();
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+				next if $$specs{'ddmPress'.$qty_index} ne $Equipment->strid();
+				next if $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id();
 			} # end if
 
 			my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );

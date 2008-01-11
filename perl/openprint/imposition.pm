@@ -396,6 +396,15 @@ sub calc_setup_object {
 			if ( $setup1->imposition() ) {
 				$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? 'height' : 'width' );
 
+				if ( ! $setup1->paper()->width() ) {
+					$setup1->paper()->width( $setup1->used_width()*2 );
+				} # end if
+				if ( $$specs{'Cut Off'} ) {
+					$setup1->paper()->height( $$specs{'Cut Off'} ); # Cut Off
+				} elsif ( ! $setup1->paper()->height() ) {
+					$setup1->paper()->height( $setup1->used_height() );
+				} # end if
+
 				if ( ! ( $grain_direction or exists ($$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
 					foreach my $imp ( calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 						$imp->columns( $imp->columns() * 2 );
@@ -412,6 +421,15 @@ sub calc_setup_object {
 			$openprint::log->debug( sprintf('CHECK 1 Work&TumbleUsing Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $image_width, $image_height, $setup1->imposition(), $setup1->columns(), $setup1->rows() ) ) if $debug;
 			if ( $setup1->imposition() ) {
 				$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? 'height' : 'width' );
+					if ( ! $setup1->paper()->width() ) {
+						$setup1->paper()->width( $setup1->used_width() );
+					} # end if
+					if ( $$specs{'Cut Off'} ) {
+						$setup1->paper()->height( $$specs{'Cut Off'} ); # Cut Off
+					} elsif ( ! $setup1->paper()->height() ) {
+						$setup1->paper()->height( $setup1->used_height()*2 );
+					} # end if
+
 				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
 					foreach my $imp ( calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height/2, $specs ) ) {
 						$imp->rows( $imp->rows() * 2 );
@@ -540,6 +558,16 @@ sub calc_setup_object {
 			$openprint::log->debug( sprintf('CHECK 2 Work&Turn Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $image_height, $image_width, $setup2->imposition(), $setup2->columns(), $setup2->rows() ) ) if $debug;
 			if ( $setup2->imposition() ) {
 				$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? 'height' : 'width' );
+
+				if ( ! $setup2->paper()->width() ) {
+					$setup2->paper()->width( $setup2->used_width()*2 );
+				} # end if
+				if ( $$specs{'Cut Off'} ) {
+					$setup2->paper()->height( $$specs{'Cut Off'} ); # Cut Off
+				} elsif ( ! $setup2->paper()->height() ) {
+					$setup2->paper()->height( $setup2->used_height() );
+				} # end if
+
 				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
 					foreach my $imp ( calc_dutch( $setup2, $image_height, $image_width, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 						$imp->columns( $imp->columns() * 2 );
@@ -556,6 +584,15 @@ sub calc_setup_object {
 			$openprint::log->debug( sprintf('CHECK 2 Work&Tumble Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $image_height, $image_width, $setup2->imposition(), $setup2->columns(), $setup2->rows()) ) if $debug;
 			if ( $setup2->imposition() ) {
 				$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? 'height' : 'width' );
+					if ( ! $setup2->paper()->width() ) {
+						$setup2->paper()->width( $setup2->used_width() );
+					} # end if
+					if ( $$specs{'Cut Off'} ) {
+						$setup2->paper()->height( $$specs{'Cut Off'} ); # Cut Off
+					} elsif ( ! $setup2->paper()->height() ) {
+						$setup2->paper()->height( $setup2->used_height()*2 );
+					} # end if
+
 				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
 					foreach my $imp ( calc_dutch( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height/2, $specs ) ) {
 						$imp->rows( $imp->rows() * 2 );
