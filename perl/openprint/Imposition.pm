@@ -246,6 +246,18 @@ sub pages {
 	return $$self{'spreads'} * $$self{'spread_size'};
 }
 
+sub equals {
+	my ( $i1, $i2 ) = @_;
+	return 0 if $i1->Press()->id() != $i2->Press()->id();
+	return 0 if $$i1{'runstyle'} ne $$i2{'runstyle'};
+	return 0 if $$i1{'imposition'} != $$i2{'imposition'};
+	return 0 if $$i1{'columns'} != $$i2{'columns'};
+	return 0 if $$i1{'spreads'} != $$i2{'spreads'};
+	return 0 if $$i1{'paper'}->width() != $$i2{'paper'}->width();
+	return 0 if $$i1{'paper'}->height() != $$i2{'paper'}->height();
+	return 1;
+}
+
 1;
 
 __END__

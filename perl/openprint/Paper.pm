@@ -41,6 +41,7 @@ my @fields = (
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;
+$openprint::log->debug("Paper find?!");
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
 	my $sql = 'SELECT *, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id) AS weight FROM Papers WHERE 1>0';

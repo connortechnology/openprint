@@ -63,6 +63,9 @@ sub handler {
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	openprint::session_init();
 	openprint::usergroup::init_cache();
+	openprint::Material::init_cache();
+	openprint::Service::init_cache();
+	openprint::Equipment::init_cache();
 
 	foreach my $key ( $r->param() ) {
 $log->debug("Paramter: $key => " . $r->param($key) );
@@ -108,8 +111,6 @@ $log->debug("Paramter: $key => " . $r->param($key) );
 	#} # end foreach
 
 	# This one loads the cache as well, so it needs the db
-	openprint::Material::init_cache();
-	openprint::Service::init_cache();
 	$session{'lastupdated'} = time;
 	untie %session;
 	$dbh->disconnect();# if $dbh->{'thread_id'};

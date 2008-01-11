@@ -176,7 +176,7 @@ sub signature_calc_stock_cutting {
 	if ( ! ($$sig_specs{'hdnImpositionRows'.$qty_index} and $$sig_specs{'hdnImpositionColumns'.$qty_index}) ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "No Imposition:<br/>";
 		$$specs{'alert'} .= "No imposition for signature $signature_index";	
-		$$specs{'Status'} = 'uncalculated';
+		$$specs{'Status'} = 'calculated';
 		return;
 	} # end if
 
@@ -254,6 +254,7 @@ sub signature_calc_folding_cutting {
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
 	if ( ! $I ) {
 		$I = new openprint::Imposition();
+		$I->paper( $Paper );
 		$I->load( $sig_specs, $qty_index );
 	} # end if
 	$results{'Status'} = 'uncalculated';
@@ -349,8 +350,9 @@ sub signature_calc {
 
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
 	if ( ! $I ) {
-	$I = new openprint::Imposition();
-	$I->load( $sig_specs, $qty_index );
+		$I = new openprint::Imposition();
+		$I->paper( $Paper );
+		$I->load( $sig_specs, $qty_index );
 	} # end if
 	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @equipment;
 	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @stitchers;
@@ -406,6 +408,7 @@ sub signature_calc {
 
 	if ( ! ( $$sig_specs{'txtImposition'.$qty_index} and $$sig_specs{'hdnImpositionRows'.$qty_index} and $$sig_specs{'hdnImpositionColumns'.$qty_index}) ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "No Imposition:<br/>";
+		$$specs{'Status'} = 'calculated';
 		return;
 	} # end if
 

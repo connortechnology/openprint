@@ -262,7 +262,7 @@ sub signature_calc {
 			} else {
 				@impositions = ($imposition);
 			} # end if
-			if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
+			if ( ( $Equipment->specification('WTPerforation') ne 'Y' ) and sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant do an inline perf when W&T.<br/>';
 				next;
 			} # end if

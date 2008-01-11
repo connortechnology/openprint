@@ -37,8 +37,8 @@
 							$html .= sprintf('<td><input type="text" name="markup-%d-%s-%d" value="%s" onkeyup="calc_from_markup(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->markup() );
 							$html .= sprintf('<td><input type="text" name="price-%d-%s-%d" value="%s" onkeyup="calc_from_price(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->price() );
 							$html .= sprintf('<td class="Discount"> 
-								<input type="radio" name="discount-%1$d-%2$s-%3$d" value="Y" %4$s /> Yes
-								<input type="radio" name="discount-%1$d-%2$s-%3$d" value="N" %5$s /> No 
+								<input type="radio" id="discount-%1$d-%2$s-%3$dY" name="discount-%1$d-%2$s-%3$d" value="Y" %4$s /><label class="radio" for="discount-%1$d-%2$s-%3$d">Yes</label>
+								<input type="radio" id="discount-%1$d-%2$s-%3$dN" name="discount-%1$d-%2$s-%3$d" value="N" %5$s /><label class="radio" for="discount-%1$d-%2$s-%3$d">No </label>
 							</td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) );
 							$html .= '</tr>';
 						} # end foreach
