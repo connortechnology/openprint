@@ -112,13 +112,15 @@ $openprint::log->debug("Page: $page");
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
-		my $content;
-		if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
-			$content = misc::load_file( $log, $_ );
-		} else {
-			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+		if ( ! $variable{'PageContent'} ) {
+			my $content;
+			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+				$content = misc::load_file( $log, $_ );
+			} else {
+				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+			} # end if
+			$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		} # end if
-		$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		my $template;
 		my @page_path = split('/', $page );
 		my $filename = pop @page_path;

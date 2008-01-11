@@ -63,6 +63,38 @@ sub load {
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
 
+sub save {
+	my ( $self, $param ) = @_;
+
+	my %sql;
+	foreach my $k ( keys %fields ) {
+		if ( $param and exists $$param{$k} ) {
+			$sql{$fields{$k}} = $$param{$k};
+		} else {
+			$sql{$fields{$k}} = $$self{$k};
+		} # end if
+	} # end foreach
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+
+	if ( ! $$self{id} ) {
+		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('EquipmentSpecification_id_seq')} );
+		$sql{id} = $$self{id};
+
+		if ( ( my $error = sql::insert( undef, undef, 'tbl_Equipment_Specifications', \%sql ) ) ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return $error;
+		} # end if
+	} else {
+		if ( ( my $error = sql::update( undef, undef, 'tbl_Equipment_Specifications', ['lngindex=?',$$self{id}], \%sql ) ) ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return $error;
+		} # end if
+	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
+	$self->load();
+} # end sub save
+
 sub copy {
 	my ( $self ) = @_;
 	my $new = new openprint::EquipmentSpecification();

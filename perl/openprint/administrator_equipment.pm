@@ -7,6 +7,7 @@ require sql;
 require misc;
 
 require openprint::Equipment;
+require openprint::EquipmentSpecification;
 require openprint::logs;
 
 sub import_specs {
@@ -98,6 +99,21 @@ sub edit {
 
 	$$variable{'Equipment'} = $Equipment;
 } # end sub equipment_edit
+
+sub _specification {
+	my $Specification = new openprint::EquipmentSpecification( $openprint::param{'id'} );
+	if ( $openprint::param{'field'} eq 'name' ) {
+	} elsif ( $openprint::param{'field'} eq 'min' ) {
+		$openprint::param{'value'} =~ s/[^\d\.]//g;
+	} elsif ( $openprint::param{'field'} eq 'max' ) {
+		$openprint::param{'value'} =~ s/[^\d\.]//g;
+	} elsif ( $openprint::param{'field'} eq 'value' ) {
+	} elsif ( $openprint::param{'field'} eq 'units' ) {
+	} # end if
+	$$Specification{$openprint::param{'field'}} = $openprint::param{'value'};
+	$Specification->save();
+	$openprint::variable{'PageContent'} = $$Specification{$openprint::param{'field'}};
+} # end sub _specification
 
 1;
 

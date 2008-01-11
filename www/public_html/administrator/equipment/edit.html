@@ -116,11 +116,11 @@
 			<? eval ( @{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications(); ) ?>
 			<? while ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
 			<tr<?rowclass?>> 
-				<td><input type="text" name="SName<? echo ( $$variable{'Spec'}->id() ) ?>" value="<? echo ( $$variable{'Spec'}->name(); ) ?>" /></td>
-				<td><input type="text" name="SMin<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->min(); ) ?>" /></td>
-				<td><input type="text" name="SMax<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->max(); ) ?>" /></td>
-				<td><input type="text" name="SValue<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( HTML::Entities::encode_entities($$variable{'Spec'}->value()); ) ?>" /></td>
-				<td><input type="text" name="SUnits<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->units(); ) ?>" /></td>
+				<td><span id="SName<? echo ( $$variable{'Spec'}->id() ) ?>"><? hecho ( $$variable{'Spec'}->name(); ) ?></span></td>
+				<td><span id="SMin<? echo ( $$variable{'Spec'}->id(); ) ?>"><? hecho ( $$variable{'Spec'}->min(); ) ?></span></td>
+				<td><span id="SMax<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->max(); ) ?></span></td>
+				<td><span id="SValue<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( HTML::Entities::encode_entities($$variable{'Spec'}->value()); ) ?></span></td>
+				<td><span id="SUnits<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->units(); ) ?></span></td>
 				<td>
 					<input type="radio" id="i<? echo ( $$variable{'Spec'}->id(); ) ?>true" name="i<? echo ( $$variable{'Spec'}->id(); ) ?>" value="true" <? echo ( 'checked="checked"' if $$variable{'Spec'}->interpolate() ) ?> />
 					<label class="radio" for="i<? echo ( $$variable{'Spec'}->id(); ) ?>true">Yes</label>
@@ -128,6 +128,13 @@
 					<label class="radio" for="i<? echo ( $$variable{'Spec'}->id(); ) ?>false">No</label>
 				</td>
 			</tr>
+<script type="text/javascript">
+	  new Ajax.InPlaceEditor( 'SName<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&field=name',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'SMin<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&field=min');
+	  new Ajax.InPlaceEditor( 'SMax<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&field=max');
+	  new Ajax.InPlaceEditor( 'SValue<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&field=value');
+	  new Ajax.InPlaceEditor( 'SUnits<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&field=units');
+</script>
 			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 			<? endwhile ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
 			<tr> 
