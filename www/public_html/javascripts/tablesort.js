@@ -380,7 +380,7 @@ var SortableTable = {
 	},
 	options : {
 		autoLoad : true,
-		tableSelector : ['table.sortable'],
+		tableSelector : ['table.sortable','table.stripe'],
 		columnClass : 'sortcol',
 		descendingClass : 'sortdesc',
 		ascendingClass : 'sortasc',

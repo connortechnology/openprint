@@ -322,7 +322,7 @@ hr {
 	font-size: medium;
 }
 
-.colRow {
+.colRow,.roweven {
 	background-color: #ddddff;
 }					/* alternating row color in generated tables */
 .colRowRed {

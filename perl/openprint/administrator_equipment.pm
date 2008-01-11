@@ -102,17 +102,28 @@ sub edit {
 
 sub _specification {
 	my $Specification = new openprint::EquipmentSpecification( $openprint::param{'id'} );
-	if ( $openprint::param{'field'} eq 'name' ) {
-	} elsif ( $openprint::param{'field'} eq 'min' ) {
-		$openprint::param{'value'} =~ s/[^\d\.]//g;
-	} elsif ( $openprint::param{'field'} eq 'max' ) {
-		$openprint::param{'value'} =~ s/[^\d\.]//g;
-	} elsif ( $openprint::param{'field'} eq 'value' ) {
-	} elsif ( $openprint::param{'field'} eq 'units' ) {
+	if ( $openprint::param{'action'} eq 'add' ) {
+		foreach my $k ( 'name','min','max','value','units','interpolate','equipment_id' ) {
+			$$Specification{$k} = $openprint::param{$k};
+		} # end foreach
+		$Specification->save();
+		$openprint::variable{'Specification'} = $Specification;
+	} elsif ( $openprint::param{'action'} eq 'delete' ) {
+		$Specification->delete();
+		$openprint::variable{'PageContent'} = ' ';
+	} else {
+		if ( $openprint::param{'field'} eq 'name' ) {
+		} elsif ( $openprint::param{'field'} eq 'min' ) {
+			$openprint::param{'value'} =~ s/[^\d\.]//g;
+		} elsif ( $openprint::param{'field'} eq 'max' ) {
+			$openprint::param{'value'} =~ s/[^\d\.]//g;
+		} elsif ( $openprint::param{'field'} eq 'value' ) {
+		} elsif ( $openprint::param{'field'} eq 'units' ) {
+		} # end if
+		$$Specification{$openprint::param{'field'}} = $openprint::param{'value'};
+		$Specification->save();
+		$openprint::variable{'PageContent'} = $$Specification{$openprint::param{'field'}};
 	} # end if
-	$$Specification{$openprint::param{'field'}} = $openprint::param{'value'};
-	$Specification->save();
-	$openprint::variable{'PageContent'} = $$Specification{$openprint::param{'field'}};
 } # end sub _specification
 
 1;

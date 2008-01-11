@@ -78,8 +78,9 @@ sub save {
 	my $ac = sql::start_transaction( $openprint::dbh );
 
 	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('EquipmentSpecification_id_seq')} );
-		$sql{id} = $$self{id};
+		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('EquipmentSpecification_seq')} );
+		$sql{lngindex} = $$self{id};
+		delete $sql{id};
 
 		if ( ( my $error = sql::insert( undef, undef, 'tbl_Equipment_Specifications', \%sql ) ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
@@ -94,6 +95,11 @@ sub save {
 	sql::end_transaction( $openprint::dbh, $ac );
 	$self->load();
 } # end sub save
+
+sub delete {
+	my ( $self ) = @_;
+	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngindex=?}, $$self{id} );
+} # end sub delete
 
 sub copy {
 	my ( $self ) = @_;
