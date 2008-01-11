@@ -357,13 +357,21 @@ sub signature_calc {
 	my $imposition;
 	if ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
-		$imposition = $$stitching_specs{'Imposition'.$qty_index};
+		if ( $$stitching_specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
+			$imposition = $$stitching_specs{'Imposition'.$qty_index};
+		} # end if
 	} # end if
-	$imposition = 1 if ! $imposition;
+	if ( ! $imposition ) {
+		if ( $max_imposition % 2 ) {
+			$imposition = 1;
+		} else {
+			$imposition = 2;
+		} # end if
+	} # end if
 
-	$openprint::log->debug("Sign info: $$sig_specs{'SpreadCols'.$qty_index}*$$sig_specs{'SpreadRows'.$qty_index}*$$sig_specs{'txtSpreadSize'}") if $debug;
+	#$openprint::log->debug("Sign info: $$sig_specs{'SpreadCols'.$qty_index}*$$sig_specs{'SpreadRows'.$qty_index}*$$sig_specs{'txtSpreadSize'} Max $max_imposition out") if $debug;
 	my $pages = $Imposition->pages();
-	$openprint::log->debug(sprintf('Sign info: %dx%d*%d', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size() ) ) if $debug;
+	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {

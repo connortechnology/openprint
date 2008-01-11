@@ -1098,7 +1098,7 @@ $openprint::log->debug("No spread layout for you!");
 						
 #$openprint::log->debug("Sorting");	
 							foreach my $imp ( @imps ) {
-								my $add = 0;
+								my $add = -1;
 #$imp->display();
 								if ( $imps{$imp->imposition().$imp->runstyle()} ) {
 #$openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}} );
@@ -1110,11 +1110,14 @@ $openprint::log->debug("No spread layout for you!");
 										if ( $I->Paper()->area() > $P->area() ) {
 											if ( (1*$BiggerPrice{'100lb'}) == (1*$SmallerPrice{'100lb'}) ) {
 												splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
+												$j -= 1;
 											} # end if
 											$add = 1;
 										} else { # same or smaller area
+											$add = 0;
 											if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
 												splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
+												$j -= 1;
 												$add = 1;
 											} elsif ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
 												$add = 1;
@@ -1124,7 +1127,7 @@ $openprint::log->debug("No spread layout for you!");
 								} else {
 									$add = 1;
 								} # end if
-								push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp if $add;
+								push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp if $add > 0;
 							} # end foreach
 
 							last if ( ! $P->cuttable() );
@@ -1427,6 +1430,7 @@ $imp->display();
 #my $time = gettimeofday();
 			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+						#$openprint::log->debug( breakdown( $price, $specs ) );
 
 			if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} and $imp->spreads() ) {
 				my $usq = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
@@ -1590,11 +1594,11 @@ $openprint::log->debug("Caching: " . $new_specs{'txtSignatureSpreadQuantity'.$qt
 				$openprint::log->debug("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
 				#$imp->display();
 			} elsif ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
+				#$imp->display();
 				#$openprint::log->debug("No good, more expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
-				#$imp->display();
 			} else {
-#$openprint::log->debug("Got better: $best_price{'Comparison Cost'} > $$price{'Comparison Cost'}" );
 				#$imp->display();
+#$openprint::log->debug("Got better: Best: $best_price{'Comparison Cost'} > New: $$price{'Comparison Cost'}" );
 				%best_price = %{$price};
 #$imp->display();
 #keep track of the best price we have found so far.
