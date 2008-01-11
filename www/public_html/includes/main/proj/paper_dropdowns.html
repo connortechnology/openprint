@@ -58,8 +58,9 @@
 			<p>
 				<label>Price:</label><input type="text" name="CustomStockPrice<?Signature?>" size="9" value="<? echo ( $$variable{'CustomStockPrice'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
 				<select name="CustomStockPriceUnits<?Signature?>" onchange="calc(this.form.name);">
-					<option value="Per 100lbs">Per 100lbs</option>
-					<option value="Per M">Per M</option>
+					<? echo (
+						ssi::make_drop_down( [ map { $_, $_ } ( 'Per 100lbs', 'Per M' ) ], $$variable{'CustomStockPriceUnits'.$$variable{'Signature'}} );
+					) ?>
 				</select>
 			</p>
 			<p id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>>

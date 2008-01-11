@@ -1488,6 +1488,7 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 #my $time = gettimeofday();
 		my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, (%best_price ? $best_price{'Comparison Cost'} : 0), $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+						#$openprint::log->debug( breakdown( $price, $specs ) );
 
 		if ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} and $imp->pages() ) {
 			my $upq = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
