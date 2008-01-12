@@ -6,7 +6,7 @@ use openprint ();
 require openprint::EquipmentSpecification;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
 my %find_cache;
 my %fields = (
 	'id'	=>	'lngindex',
@@ -38,7 +38,7 @@ sub find {
 	my @values;
 	$sql = q{SELECT * FROM tbl_Equipment WHERE 1>0};
 
-	if ( $params{'id'} ) {
+	if ( exists $params{'id'} ) {
 		if ( ref $params{id} eq 'ARRAY' ) {
 			if ( @{$params{id}} > 1 ) {
 			$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}  ) . ')';

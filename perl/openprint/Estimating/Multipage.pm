@@ -131,10 +131,7 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-	
-
 	return 'calculated';
-
 } # end sub calc
 
 sub calculate_signatures {

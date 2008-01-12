@@ -38,6 +38,7 @@
 <form name="f2" method="post" enctype="multipart/form-data" action="edit.html">
 	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
 	<fieldset><legend>Equipment Information</legend>
+		<div class="leftColumn">
 		<p> 
 			<label>ID:</label>
 			<input type="text" name="strid" value="<? hecho ( $$variable{Equipment}->strid(); ) ?>"/>
@@ -61,6 +62,8 @@
 			<label>Image:</label>
 			<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
 		</p>
+		</div>
+		<div class="rightColumn">
 		<p> 
 			<label>Supplier:</label>
 			<input type="text" name="supplier" value="<? hecho ( $$variable{Equipment}->supplier(); ) ?>" />
@@ -101,6 +104,7 @@
 			<input type="text" name="cost_center" value="<? hecho ( $$variable{'Equipment'}->cost_center(); ) ?>"  />
 		</p>
 <? endif ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
+		</div>
 	</fieldset>
 <? if ( $$variable{'Equipment'}->id() ) ?>
 	<fieldset><legend>Specifications</legend>
@@ -127,7 +131,15 @@
 					<label class="radio" for="iNewfalse">No</label>
 				</td>
 				<td>
-<? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=add&amp;name='+\$('SNameNew').value+'&amp;min='+\$('SMinNew').value+'&amp;max='+\$('SMaxNew').value+'&amp;value='+\$('SValueNew').value+'&amp;units='+\$('SUnitsNew').value+'&amp;interpolate='+get_value(f2.elements['iNew'])+'&amp;equipment_id='+\$('ddmEquipment').value, { method: 'get', onSuccess: function(response){new Insertion.After(\$('New'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=add' + 
+'&name=' + encodeURIComponent(\$('SNameNew').value) + 
+'&min=' + encodeURIComponent(\$('SMinNew').value) + 
+'&max=' + encodeURIComponent(\$('SMaxNew').value) + 
+'&value=' + encodeURIComponent(\$('SValueNew').value) + 
+'&units=' + encodeURIComponent(\$('SUnitsNew').value) + 
+'&equipment_id=' + encodeURIComponent(\$('ddmEquipment').value) +
+'&interpolate=' + encodeURIComponent(get_value(f2.elements['iNew'])) + 
+'', { method: 'get', onSuccess: function(response){new Insertion.After(\$('New'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
 				</td>
 			</tr>
 			<? eval ( @{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications(); ) ?>

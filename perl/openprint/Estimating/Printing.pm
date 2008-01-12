@@ -1238,7 +1238,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 
 		if ( ! $b_price ) {
 			$$specs{'alert'} .= 'Unable to calculate a price';
-			return $$specs{'Status'} = 'uncalculated';
+			next;
 		} # end if
 
 		my %best_price = %{$b_price};
@@ -1932,7 +1932,6 @@ sub calc_price {
 					$run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
 				} # end if
 			} # end if
-			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
 		} # end if
 
 		if ( ! $run_speed ) {
@@ -1942,8 +1941,10 @@ sub calc_price {
 
 		if ( $folding_results{'Equipment'} ) {
 			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) Price: $%.2f on %s', @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
 		} else {
 			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
+			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = '';
 		} # end if
 		$price{'Comparison Cost'} += $folding_results{'Price'};
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Folding' );

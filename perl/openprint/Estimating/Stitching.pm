@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-my $debug = 0;
+my $debug = 1;
 
 require openprint::project;
 require openprint::Equipment;
@@ -106,7 +106,6 @@ sub neccessary {
 
 	return 0;
 } # end sub neccessary
-my @possible_equipment;
 
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 sub signature_calc {
@@ -150,11 +149,13 @@ sub signature_calc {
 	} # end if
 
 	my $error;
-	@possible_equipment = get_equipment( $specs, \$error ) if ! @possible_equipment;
+	# THe Equipment::find call gets cached... and the rest is impo-specific... so we can't really cache this.
+	my @possible_equipment = get_equipment( $specs, \$error );
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-		@equipment = openprint::Equipment::find( 'strid'=> $$specs{"ddmEquipment$qty_index"} );
+$openprint::log->debug("Override Stitcher to " . $$specs{"ddmEquipment$qty_index"} );
+		@equipment = openprint::Equipment::find( 'id' => $$specs{"ddmEquipment$qty_index"} );
 	} else {
 		@equipment = @possible_equipment;
 	} # end if
@@ -175,8 +176,15 @@ sub signature_calc {
 			next if $$specs{'txtPockets'.$qty_index} > 1;
 			my @sigs = $Project->signatures();
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-			next if $I->Press()->id() != $Equipment->id();
-			next if $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id();
+			if ( $I->Press()->id() != $Equipment->id() ) {
+				$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
+				next;
+			} # end if
+			if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
+				$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
+				next;
+			} # end if
+
 		} # end if
 		my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
 		if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
@@ -187,7 +195,7 @@ sub signature_calc {
 #$openprint::log->debug("Breakdown: $$specs{'hdnBreakdown'.$qty_index}");
 	my %results;
 	$results{'alert'} = $error;
-$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . $bestEquipment->strid() . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets serviceindex: '. $service_index . ':' . join(',', $Project->signatures() );
+$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . $bestEquipment->strid() . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets serviceindex: '. $service_index . ':' . join(',', $Project->signatures() ) if $bestEquipment;;
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
 #$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if $debug;
@@ -360,7 +368,9 @@ sub calc {
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
 			@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
+            $variables{"ddmEquipment$qty_index"} = [ sets::exclude( ['output'], $variables{"ddmEquipment$qty_index"} ) ];
 		} else {
+			$variables{"ddmEquipment$qty_index"} = [ sets::union( 'output', @{$variables{"ddmEquipment$qty_index"}} ) ];
 			@equipment = @possible_equipment;
 		} # end if
 
@@ -377,8 +387,14 @@ sub calc {
 				next if $$specs{'txtPockets'.$qty_index} > 1;
 				my @sigs = $Project->signatures();
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-				next if $$specs{'ddmPress'.$qty_index} ne $Equipment->strid();
-				next if $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id();
+				if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+$openprint::log->debug("Printing Equipment not same: " . $$sig_specs{'ddmPress'.$qty_index} );
+					next;
+				} # end if
+				if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
+$openprint::log->debug("Folding Equipment not same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+					next;
+				} # end if
 			} # end if
 
 			my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
@@ -475,7 +491,7 @@ sub get_price {
 
 	my $qty = $$specs{'txtQuantity'.$qty_index};
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition'));
-	if ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty_index} ) {
+	if ( $Equipment->specification('Maximum Imposition') and ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty_index} ) ) {
 		$price{'Imposition'} = 1;
 		$openprint::log->debug("Maximum Imposition: " . $Equipment->specification('Maximum Imposition')  ) if $debug;
 	} elsif ( $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) and $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) < $$specs{'Height'} ) {
@@ -577,7 +593,7 @@ sub runtime {
 	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
 
 	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-	my @Equipment = openprint::Equipment::find('strid'=>$$specs{'ddmEquipment'.$qty_index});
+	my @Equipment = openprint::Equipment::find( 'id' => $$specs{'ddmEquipment'.$qty_index} );
 	return 0 if @Equipment != 1;
 
 	my $Equipment = $Equipment[0];

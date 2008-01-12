@@ -15,6 +15,14 @@ my %fields = (
 	'value'			=>	'strvalue',
 	'interpolate'	=>	'interpolate',
 );
+my %transforms = (
+	'min' => [ 's/[^\d\.]//g' ],
+	'max' => [ 's/[^\d\.]//g' ],
+);
+my %defaults = (
+	'min'	=>	undef,
+	'max'	=>	undef,
+);
 
 my $debug = 0;
 # Returns a paper object specified by the parameters
@@ -67,13 +75,23 @@ sub save {
 	my ( $self, $param ) = @_;
 
 	my %sql;
-	foreach my $k ( keys %fields ) {
+    foreach my $k ( keys %fields ) {
 		if ( $param and exists $$param{$k} ) {
-			$sql{$fields{$k}} = $$param{$k};
-		} else {
-			$sql{$fields{$k}} = $$self{$k};
+			$$self{$k} = $$param{$k};
 		} # end if
-	} # end foreach
+
+        my @transforms = @{$transforms{$k}} if $transforms{$k};
+        foreach my $transform ( @transforms ) {
+            eval '$$self{$k} =~ ' . $transform;
+        } # end foreach
+
+        if ( ( ( ! defined $$self{$k} ) or ( $$self{$k} eq '' ) ) and exists $defaults{$k} ) {
+            $openprint::log->debug("Setting default for $k $defaults{$k}");
+            $sql{$fields{$k}} = $defaults{$k};
+        } else {
+            $sql{$fields{$k}} = $$self{$k};
+        } # end if
+    } # end foreach
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
