@@ -126,6 +126,20 @@ sub _specification {
 	} # end if
 } # end sub _specification
 
+sub _fold {
+	my $Fold = new openprint::Fold( $openprint::param{'id'} );
+	if ( $openprint::param{'action'} eq 'add' ) {
+		foreach my $k ( 'equipment_id' ) {
+			$$Fold{$k} = $openprint::param{$k};
+		} # end foreach
+		$Fold->save();
+		$openprint::variable{'Fold'} = $Fold;
+	} elsif ( $openprint::param{'action'} eq 'save' ) {
+		$Fold->save(\%openprint::param);
+		$openprint::variable{'Fold'} = $Fold;
+	} # end if
+} # end sub _fold
+
 1;
 
 __END__

@@ -13,12 +13,15 @@ my %fields = (
 	'max_width'				=>	'max_width',
 	'min_height'			=>	'min_height',
 	'max_height'			=>	'max_height',
+	'page_columns'			=>	'page_columns',
+	'page_rows'				=>	'page_rows',
 	'min_imposition'		=>	'min_imposition',
 	'max_imposition'		=>	'max_imposition',
 	'stitching'				=>	'stitching',
 	'perfectbind'			=>	'perfectbind',
 	'spinepaste'			=>	'spinepaste',
-	'spinedirection'		=>	'spinedirection',
+	'spine_direction'		=>	'spine_direction',
+	'makeready_time'		=>	'makeready_time',
 	'makeready_overs'		=>	'makeready_overs',
 	'makeready_overs_units'	=>	'makeready_overs_units',
 	'run_overs_units'		=>	'run_overs_units',
@@ -31,14 +34,24 @@ my %transforms = (
 	'max_height' => [ 's/[^\d\.]//g' ],
 	'min_imposition' => [ 's/\D//g' ],
 	'max_imposition' => [ 's/\D//g' ],
+	'page_columns' => [ 's/\D//g' ],
+	'page_rows' => [ 's/\D//g' ],
+	'makeready_time' => [ 's/\D//g' ],
+	'makeready_overs' => [ 's/\D//g' ],
+	'run_overs' => [ 's/\D//g' ],
 );
 my %defaults = (
-	'min_width'		=>	undef,
-	'max_width'		=>	undef,
-	'min_height'	=>	undef,
-	'max_height'	=>	undef,
+	'min_width'			=>	undef,
+	'max_width'			=>	undef,
+	'min_height'		=>	undef,
+	'max_height'		=>	undef,
 	'min_imposition'	=>	undef,
 	'max_imposition'	=>	undef,
+	'page_columns'		=>	undef,
+	'page_rows'			=>	undef,
+	'makeready_time' => undef,
+	'makeready_overs' => undef,
+	'run_overs' => undef,
 );
 
 my $debug = 1;
@@ -72,8 +85,7 @@ sub find {
 		if ( ! $data ) {
 			$openprint::log->error( "Error loading Fold ($sql) (@values) :" . $openprint::dbh->errstr );
 		} elsif ( $debug ) {
-		#$openprint::log->debug( 'Number of results: ' . @$data );
-			$openprint::log->debug( $sql . join(',',@values) );
+			$openprint::log->debug( $sql . join(',',@values) . ' Number of results: ' . @$data );
 		} # end if
 		
 		return map { new openprint::Fold( $_->{id}, $_ ) } @$data;
@@ -113,7 +125,7 @@ sub save {
 	my $ac = sql::start_transaction( $openprint::dbh );
 
 	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('Folds_id_seq')} );
+		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('Fold_id_seq')} );
 		$sql{id} = $$self{id};
 
 		if ( ( my $error = sql::insert( undef, undef, 'Folds', \%sql ) ) ) {

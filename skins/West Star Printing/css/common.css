@@ -509,3 +509,6 @@ div.Service span.TwoColumns {
 img {
 	border: none;
 }
+.changed {
+	background-color: yellow;
+}

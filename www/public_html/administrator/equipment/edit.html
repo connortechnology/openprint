@@ -175,14 +175,16 @@
 	<input type="hidden" name="btnFunction"/>
 <? if ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
-		<ul>
-			<? eval ( @{$$variable{'Folds'}} = $$variable{'Equipment'}->Folds(); ) ?>
-			<? while ( $$variable{'Fold'} = shift @{$$variable{'Folds'}}; ) ?>
-				<li><? echo ( $$variable{'Fold'}->name() ) ?><br/>
-					<p>
-					</p>
-				</li>
-			<? endwhile ( $$variable{'Fold'} = shift @{$$variable{'Folds'}}; ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'AddFold', 'add.gif',"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{'Equipment'}->id() ."', { method: 'get', onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
+		<ul id="Folds">
+			<? echo (
+				my $html = '';
+				 my @Folds = $$variable{'Equipment'}->Folds();
+				 while ( $$variable{'Fold'} = shift @Folds ) {
+					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/equipment/_fold.html');
+				} # end while
+				return $html;
+			) ?>
 		</ul>
 	</fieldset>
 <? endif ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
