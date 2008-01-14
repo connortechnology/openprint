@@ -140,8 +140,8 @@ sub fits {
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'strname, dblmin' );
-}
+	return openprint::EquipmentSpecification::find( 'Equipment'=> $self, 'order'=>'strname, dblmin' );
+} # end sub Specifications
 
 sub specification {
 	my $Specification = Specification( @_ );
@@ -336,6 +336,7 @@ sub save {
 		openprint::logs::insertLogRecord('35', "Equipment: " . $self->strid(). ' - ' . $self->name(),);
 	} # end if
 
+if ( 0 ) {
 	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
 	foreach my $key ( keys %$param ) {
 		if ( $key =~ /SName(.*)/ and $$param{$key} ne '' ) {
@@ -353,6 +354,7 @@ sub save {
 					] );
 		} # end if
 	} # end foreach
+} # end if
 
 	sql::end_transaction( $openprint::dbh, $ac );
 	$self->load();

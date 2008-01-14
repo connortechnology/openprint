@@ -1,16 +1,19 @@
 <tr<?rowclass?> id="S<? echo ( $$variable{'Specification'}->id(); ) ?>" >
-	<td><span id="SName<? echo ( $$variable{'Specification'}->id() ) ?>"><? hecho ( $$variable{'Specification'}->name(); ) ?></span></td>
-	<td><span id="SMin<? echo ( $$variable{'Specification'}->id(); ) ?>"><? hecho ( $$variable{'Specification'}->min(); ) ?></span></td>
-	<td><span id="SMax<? echo ( $$variable{'Specification'}->id(); ) ?>"><? echo ( $$variable{'Specification'}->max(); ) ?></span></td>
-	<td><span id="SValue<? echo ( $$variable{'Specification'}->id(); ) ?>"><? echo ( HTML::Entities::encode_entities($$variable{'Specification'}->value()); ) ?></span></td>
-	<td><span id="SUnits<? echo ( $$variable{'Specification'}->id(); ) ?>"><? echo ( $$variable{'Specification'}->units(); ) ?></span></td>
-	<td>
-	<input type="radio" id="i<? echo ( $$variable{'Specification'}->id(); ) ?>true" name="i<? echo ( $$variable{'Specification'}->id(); ) ?>" value="true" <? echo ( 'checked="checked"' if $$variable{'Specification'}->interpolate() ) ?> />
-	<label class="radio" for="i<? echo ( $$variable{'Specification'}->id(); ) ?>true">Yes</label>
-	<input type="radio" id="i<? echo ( $$variable{'Specification'}->id(); ) ?>false" name="i<? echo ( $$variable{'Specification'}->id(); ) ?>" value="false" <? echo ( 'checked="checked"' if ! $$variable{'Specification'}->interpolate() ) ?> />
-	<label class="radio" for="i<? echo ( $$variable{'Specification'}->id(); ) ?>false">No</label>
-	</td>
+	<td><span style="width:100%; float: left;" id="SName<? echo ( $$variable{'Specification'}->id() ) ?>"><? hecho ( $$variable{'Specification'}->name(); ) ?></span></td>
+	<td><span style="width:100%; float: left;" id="SMin<? echo ( $$variable{'Specification'}->id(); ) ?>"><? hecho ( $$variable{'Specification'}->min(); ) ?></span></td>
+	<td><span style="width:100%; float: left;" id="SMax<? echo ( $$variable{'Specification'}->id(); ) ?>"><? echo ( $$variable{'Specification'}->max(); ) ?></span></td>
+	<td><span style="width:100%; float: left;" id="SValue<? echo ( $$variable{'Specification'}->id(); ) ?>"><? echo ( HTML::Entities::encode_entities($$variable{'Specification'}->value()); ) ?></span></td>
+	<td><span style="width:100%; float: left;" id="SUnits<? echo ( $$variable{'Specification'}->id(); ) ?>"><? echo ( $$variable{'Specification'}->units(); ) ?></span></td>
+	<td><span style="width:100%; float: left;" id="i<? echo ( $$variable{'Specification'}->id(); ) ?>" onclick="new Ajax.Updater('i<? echo ( $$variable{'Specification'}->id(); ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=interpolate', {} );"><? echo ( $$variable{'Specification'}->interpolate() ? 'Yes' : 'No' ) ?></span></td>
 	<td>
 	<? echo ( ssi::writeButton( $log, $dbh, 'delete'.$$variable{'Specification'}->id(), 'delete.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id=".$$variable{'Specification'}->id()."', { method: 'get', onSuccess: function(){var tr = \$('S".$$variable{'Specification'}->id()."'); tr.parentNode.removeChild(tr);} } );",'','Delete' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'copy'.$$variable{'Specification'}->id(), 'copy.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id=".$$variable{'Specification'}->id()."', { method: 'get', onSuccess: function(response){new Insertion.After(\$('S".$$variable{'Specification'}->id()."'), response.responseText); SortableTable.load();} } );",'','Copy' ); ) ?>
 	</td>
 </tr>
+<script type="text/javascript">
+	  new Ajax.InPlaceEditor( 'SName<? echo ( $$variable{'Specification'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=name',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'SMin<? echo ( $$variable{'Specification'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=min',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'SMax<? echo ( $$variable{'Specification'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=max',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'SValue<? echo ( $$variable{'Specification'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=value',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'SUnits<? echo ( $$variable{'Specification'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=units',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+</script>
