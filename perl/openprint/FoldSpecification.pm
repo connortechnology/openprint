@@ -2,7 +2,7 @@ package openprint::FoldSpecification;
 @ISA = qw( openprint::Object );
 use strict;
 use openprint ();
-use openprint::Equipment;
+use openprint::Fold;
 require sql;
 
 my %fields = (
@@ -20,9 +20,10 @@ my %transforms = (
 	'runspeed'		=> [ 's/\D//g' ],
 );
 my %defaults = (
-	'min_weight'	=>	undef,
-	'max_weight'	=>	undef,
-	'runspeed'		=>	undef,
+	'min_weight'	=>	0,
+	'max_weight'	=>	0,
+	'weight_units'	=>	'gsm',
+	'runspeed'		=>	0,
 	'interpolate'	=>	0,
 );
 
@@ -92,15 +93,15 @@ sub save {
 	my $ac = sql::start_transaction( $openprint::dbh );
 
 	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('FoldSpecification_seq')} );
+		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('FoldSpecification_id_seq')} );
 		$sql{id} = $$self{id};
 
-		if ( ( my $error = sql::insert( undef, undef, 'FoldSpecifications', \%sql ) ) ) {
+		if ( ( my $error = sql::insert( undef, undef, 'Fold_Specifications', \%sql ) ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
 	} else {
-		if ( ( my $error = sql::update( undef, undef, 'FoldSpecifications', ['id=?',$$self{id}], \%sql ) ) ) {
+		if ( ( my $error = sql::update( undef, undef, 'Fold_Specifications', ['id=?',$$self{id}], \%sql ) ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
@@ -111,7 +112,7 @@ sub save {
 
 sub delete {
 	my ( $self ) = @_;
-	sql::execute( undef, undef, q{DELETE FROM FoldSpecifications WHERE id=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM Fold_Specifications WHERE id=?}, $$self{id} );
 } # end sub delete
 
 sub copy {

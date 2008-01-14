@@ -1,0 +1,115 @@
+<li id="Fold<? echo ( $$variable{'Fold'}->id() ) ?>">
+	<div class="leftColumn">
+		<fieldset><legend>Fold</legend>
+		<p>
+			<label>Description:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-name" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-name" value="<? echo ( $$variable{'Fold'}->name() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />
+		</p>
+		<p>
+			<label>Page Columns:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_columns" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_columns" value="<? echo ( $$variable{'Fold'}->page_columns() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />
+		</p>
+		<p>
+			<label>Page Rows:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_rows" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_rows" value="<? echo ( $$variable{'Fold'}->page_rows() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />
+		</p>
+		<p>
+			<label>Spine Direction:</label>
+			<select id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spine_direction" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spine_direction">
+				<option value="Vertical" <? echo ( $$variable{'Fold'}->spine_direction() eq 'Vertical' ? 'selected="selected"' : '' ) ?>>Vertical</option>
+				<option value="Horizontal" <? echo ( $$variable{'Fold'}->spine_direction() eq 'Horizontal' ? 'selected="selected"' : '' ) ?>>Horizontal</option>
+			</select>
+		</p>
+		<p>
+			<label>Minimum Imposition:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_imposition" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_imposition" value="<? echo ( $$variable{'Fold'}->min_imposition() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />out
+		</p>
+		<p>
+			<label>Maximum Imposition:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_imposition" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_imposition" value="<? echo ( $$variable{'Fold'}->max_imposition() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />out
+		</p>
+		<p>
+			<label>Minimum Page Width:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_width" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_width" value="<? echo ( $$variable{'Fold'}->min_width() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />inches
+		</p>
+		<p>
+			<label>Maximum Page Width:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_width" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_width" value="<? echo ( $$variable{'Fold'}->max_width() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />inches
+		</p>
+		<p>
+			<label>Minimum Page Height:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_height" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_height" value="<? echo ( $$variable{'Fold'}->min_height() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />inches
+		</p>
+		<p>
+			<label>Maximum Page Height:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_height" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_height" value="<? echo ( $$variable{'Fold'}->max_height() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />inches
+		</p>
+		<p>
+			<label>Make Ready Time:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-makeready_time" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-makeready_time" value="<? echo ( $$variable{'Fold'}->makeready_time() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />minutes
+		</p>
+		<p>
+			<label>Make Ready Overs:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-makeready_overs" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-makeready_overs" value="<? echo ( $$variable{'Fold'}->makeready_overs() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />
+			<select id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-makeready_overs_units" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-makeready_overs_units" onchange="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" >
+				<option value="Sheets" <? echo ( $$variable{'Fold'}->makeready_overs_units() eq 'Sheets' ? 'selected="selected"' : '' ) ?>>Sheets</option>
+				<option value="Percent" <? echo ( $$variable{'Fold'}->makeready_overs_units() eq 'Percent' ? 'selected="selected"' : '' ) ?>>Percent</option>
+			</select>
+		</p>
+		<p>
+			<label>Run Overs:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-run_overs" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-run_overs" value="<? echo ( $$variable{'Fold'}->run_overs() ) ?>" onchange="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />
+			<select id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-run_overs_units" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-run_overs_units" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" >
+				<option value="Sheets" <? echo ( $$variable{'Fold'}->run_overs_units() eq 'Sheets' ? 'selected="selected"' : '' ) ?>>Sheets</option>
+				<option value="Percent" <? echo ( $$variable{'Fold'}->run_overs_units() eq 'Percent' ? 'selected="selected"' : '' ) ?>>Percent</option>
+			</select>
+		</p>
+		
+	<? echo ( ssi::writeButton( $log, $dbh, 'SaveFold'.$$variable{'Fold'}->id(), 'add.gif',"new Ajax.Request('/administrator/equipment/_fold.html?action=save&id=". $$variable{'Fold'}->id() ."&equipment_id=".$$variable{'Fold'}->equipment_id()."' + 
+'&name=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-name') ) +
+'&page_columns=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-page_columns') ) +
+'&page_rows=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-page_rows') ) +
+'&spine_direction=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-spine_direction') ) +
+'&min_imposition=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-min_imposition') ) +
+'&max_imposition=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-max_imposition') ) +
+'&min_width=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-min_width') ) +
+'&max_width=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-max_width') ) +
+'&min_height=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-min_height') ) +
+'&max_height=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-max_height') ) +
+'&makeready_time=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-makeready_time') ) +
+'&makeready_overs=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-makeready_overs') ) +
+'&makeready_overs_units=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-makeready_overs_units') ) +
+'&run_overs=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-run_overs') ) +
+'&run_overs_units=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-run_overs_units') ) +
+'', { method: 'get', onSuccess: function(response){\$('Fold". $$variable{'Fold'}->id()."').removeClassName('changed');} } );",'','Save' ); ) ?>
+		</fieldset>
+	</div>
+	<div class="rightColumn">
+		<fieldset><legend>Runspeeds</legend>
+		<table id="FoldSpecifications<? echo ( $$variable{'Fold'}->id() ) ?>" class="List sortable">
+			<thead>
+				<tr>
+					<th align="left">MinWeight</th>
+					<th align="left">MaxWeight</th>
+					<th align="left">Units</th>
+					<th align="left">Runspeed</th>
+					<th align="left">Interpolate</th>
+					<th>&nbsp;</th>
+				</tr>
+			</thead>
+			<tbody>
+			<? echo (
+				my $html = '';
+				my @specs = $$variable{'Fold'}->Specifications();
+				while ( $$variable{'Specification'} = shift @specs ) {
+					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/equipment/_fold_specification.html');
+				} # end while
+				return $html;
+			) ?>
+			</tbody>
+		</table>
+<? echo ( ssi::writeButton( $log, $dbh, 'AddFoldSpec'.$$variable{'Fold'}->id(), 'add.gif',"new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id=". $$variable{'Fold'}->id() ."', { method: 'get', onSuccess: function(response){new Insertion.Bottom(\$('FoldSpecifications".$$variable{'Fold'}->id()."'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
+		</fieldset>
+	</div>
+	<br class="spacer"/>
+</li>

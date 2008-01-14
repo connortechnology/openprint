@@ -3,6 +3,8 @@ package openprint::Fold;
 use strict;
 use openprint ();
 use openprint::Equipment;
+use openprint::Fold;
+use openprint::FoldSpecification;
 require sql;
 
 my %fields = (
@@ -158,6 +160,10 @@ sub copy {
 sub Equipment {
 	my $self = shift;
 	return new openprint::Equipment( $$self{equipment_id} );
+} # end sub Equipment
+sub Specifications {
+	my $self = shift;
+	return openprint::FoldSpecification::find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
 } # end sub Equipment
 
 

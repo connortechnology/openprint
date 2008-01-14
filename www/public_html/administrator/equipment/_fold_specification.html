@@ -1,0 +1,16 @@
+<tr id="FoldSpecification-<? echo ( $$variable{'Specification'}->id(); ) ?>" >
+	<td><span style="width:100%; float: left;" id="min_weight-<? echo ( $$variable{'Specification'}->id() ) ?>"><? hecho ( $$variable{'Specification'}->min_weight(); ) ?></span></td>
+	<td><span style="width:100%; float: left;" id="max_weight-<? echo ( $$variable{'Specification'}->id(); ) ?>"><? echo ( $$variable{'Specification'}->max_weight(); ) ?></span></td>
+	<td><span style="width:100%; float: left;" id="weight_units-<? echo ( $$variable{'Specification'}->id(); ) ?>"><? echo ( $$variable{'Specification'}->weight_units(); ) ?></span></td>
+	<td><span style="width:100%; float: left;" id="runspeed-<? echo ( $$variable{'Specification'}->id(); ) ?>"><? echo ( $$variable{'Specification'}->runspeed(); ) ?></span></td>
+	<td><span style="width:100%; float: left;" id="interpolate-<? echo ( $$variable{'Specification'}->id(); ) ?>" onclick="new Ajax.Updater('interpolate-<? echo ( $$variable{'Specification'}->id(); ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=interpolate', {} );"><? echo ( $$variable{'Specification'}->interpolate() ? 'Yes' : 'No' ) ?></span></td>
+	<td>
+	<? echo ( ssi::writeButton( $log, $dbh, 'deletefoldspec'.$$variable{'Specification'}->id(), 'delete.gif',"new Ajax.Request('/administrator/equipment/_fold_specification.html?action=delete&amp;id=".$$variable{'Specification'}->id()."', { method: 'get', onSuccess: function(){var tr = \$('FoldSpecification-".$$variable{'Specification'}->id()."'); tr.parentNode.removeChild(tr);} } );",'','Delete' ); ) ?>
+	</td>
+</tr>
+<script type="text/javascript">
+	  new Ajax.InPlaceEditor( 'min_weight-<? echo ( $$variable{'Specification'}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=min_weight',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'max_weight-<? echo ( $$variable{'Specification'}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=max_weight',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'weight_units-<? echo ( $$variable{'Specification'}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=weight_units',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'runspeed-<? echo ( $$variable{'Specification'}->id() ) ?>', '/administrator/equipment/_fold_specification.html?id=<? echo ( $$variable{'Specification'}->id() ) ?>&action=update&field=runspeed',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+</script>

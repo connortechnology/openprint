@@ -34,8 +34,8 @@ CREATE TABLE Fold_Specifications (
 	id	INTEGER NOT NULL default nextval('FoldSpecification_id_seq'),
 	fold_id			INTEGER NOT NULL, FOREIGN KEY (fold_id) REFERENCES Folds (id),
 	min_weight		float,
-	min_weight_units	TEXT,
 	max_weight		float,
-	max_weight_units	TEXT,
+	weight_units	TEXT,
+	runspeed		INTEGER,
 	PRIMARY KEY (fold_id, id)
 );

@@ -8,6 +8,8 @@ require misc;
 
 require openprint::Equipment;
 require openprint::EquipmentSpecification;
+require openprint::Fold;
+require openprint::FoldSpecification;
 require openprint::logs;
 
 sub import_specs {
@@ -153,6 +155,30 @@ sub _fold {
 	} # end if
 } # end sub _fold
 
+sub _fold_specification {
+	my $FoldSpecification = new openprint::FoldSpecification( $openprint::param{'id'} );
+	if ( $openprint::param{'action'} eq 'add' ) {
+		foreach my $k ( 'fold_id' ) {
+			$$FoldSpecification{$k} = $openprint::param{$k};
+		} # end foreach
+		$FoldSpecification->save();
+		$openprint::variable{'Specification'} = $FoldSpecification;
+	} elsif ( $openprint::param{'action'} eq 'delete' ) {
+		$FoldSpecification->delete();
+		$openprint::variable{'PageContent'} = ' ';
+	} elsif ( $openprint::param{'action'} eq 'update' ) {
+		if ( $openprint::param{'field'} ne 'interpolate' ) {
+			$$FoldSpecification{$openprint::param{'field'}} = $openprint::param{'value'};
+			$FoldSpecification->save();
+			$openprint::variable{'PageContent'} = $$FoldSpecification{$openprint::param{'field'}};
+		} else {
+			$$FoldSpecification{'interpolate'} = ! $$FoldSpecification{'interpolate'};
+			$$FoldSpecification{'interpolate'} = 1 * $$FoldSpecification{'interpolate'};
+			$FoldSpecification->save();
+			$openprint::variable{'PageContent'} = $$FoldSpecification{'interpolate'} ? 'Yes' : 'No';
+		} # end if
+	} # end if
+} # end sub _fold_specification
 1;
 
 __END__
