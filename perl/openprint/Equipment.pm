@@ -4,6 +4,7 @@ use strict;
 require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
+require openprint::Fold;
 require sql;
 
 my $debug = 1;
@@ -137,6 +138,11 @@ sub fits {
    } # end if
 
 } # end sub fits
+
+sub Folds {
+	my $self = shift;
+	return openprint::Fold::find( 'Equipment'=>$self, 'order'=>'lower(name)' );
+} # end sub Folds
 
 sub Specifications {
 	my $self = shift;
