@@ -1345,8 +1345,9 @@ sub breakdown {
 
 	my $breakdown = '';
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
-	$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
-$breakdown .= $$price{'Setup Breakdown'};
+	$breakdown .= '<b>Setups</b><br/>';
+	#$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
+	$breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf("\tImposition Charge:\t\$%1\$.2f + \$%2\$.2f*\%4\$d=\$%3\$.2f<br/>", @$price{'Imposition MakeReady','Imposition Price','Imposition Total'}, $Imposition->imposition() );
 	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", $$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
@@ -1366,10 +1367,10 @@ $breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf( "\tPlates: \%d plates * \$%.2f per plate = \$%.2f<br/>", @$price{'txtPlateQuantity','Plate Cost','Plate Price'});
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 	my $stock_qty = $$price{'Stock Quantity'};
-	$breakdown .= sprintf( 'Overs: Base:%s Run:%s FM:%s Additional Plate:%s Total:%s<br/>', @$stock_qty{'Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Total Overs'} );
+	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Total Overs'} );
 	if ( $Paper->type() ne 'Roll' ) {
-		$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
-		$breakdown .= "\tPaper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
+		#$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
+		$breakdown .= "\tStock: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
 		$breakdown .= "(\$ $$Paper{'Per M'} Per M) " if $$Paper{'Per M'};
 		$breakdown .= " (\$ $$price{'100lb'}/100lb) = \$ $$price{'Paper Price'}<br/>";
 		$$price{'Paper 1000 Price'} = ($$price{'Sheet Price'}*1000/$Imposition->imposition());
@@ -1381,7 +1382,7 @@ $breakdown .= $$price{'Setup Breakdown'};
 		$breakdown .= sprintf("\tPaper: %.0f lbs * \$%.2f/100lb = \$%.2f<br/>", @$price{'Stock Weight','100lb','Paper Price'});
 	} # end if
 	if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
-		$breakdown .= "\tPaper Price not included in total<br/>";
+		$breakdown .= 'Paper Price not included in total<br/>';
 	} # end if
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf("\tInk Total: \$%.2f<br/>", $$price{'Ink Price'} );
@@ -1849,7 +1850,7 @@ sub calc_price {
 
 	$run_overs = $base_impressions * $over_rate;
 	#my $gross_qty = $impressions;
-	my $gross_qty = sprintf( '%.0f', $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
+	my $gross_qty = sprintf( '%.0f', $base_impressions + $setup_overs + $run_overs );
 	my $additional_overs=0;
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );

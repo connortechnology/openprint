@@ -67,6 +67,9 @@ sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM tbl_Equipment_Specifications WHERE lngIndex=?}, {}, $$self{'id'} );
+		if ( ! $data ) {
+			$openprint::log->error("ERror loading Equipment Specification: " . $openprint::dbh->errstr );
+		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
@@ -74,9 +77,15 @@ sub load {
 sub save {
 	my ( $self, $param ) = @_;
 
+foreach my $k ( keys %$self ) {
+	$openprint::log->debug("Self for $k $$self{$k}");
+}
+
 	my %sql;
     foreach my $k ( keys %fields ) {
 		if ( $param and exists $$param{$k} ) {
+	$openprint::log->debug("Setting for $k $$self{$k} $$param{$k}");
+
 			$$self{$k} = $$param{$k};
 		} # end if
 
