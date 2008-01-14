@@ -171,4 +171,17 @@
 	</fieldset>
 <? endif ( $$variable{'Equipment'}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
+<? if ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
+	<fieldset><legend>Fold Specifications</legend>
+		<ul>
+			<? eval ( @{$$variable{'Folds'}} = $$variable{'Equipment'}->Folds(); ) ?>
+			<? while ( $$variable{'Fold'} = shift @{$$variable{'Folds'}}; ) ?>
+				<li><? echo ( $$variable{'Fold'}->name() ) ?><br/>
+					<p>
+					</p>
+				</li>
+			<? endwhile ( $$variable{'Fold'} = shift @{$$variable{'Folds'}}; ) ?>
+		</ul>
+	</fieldset>
+<? endif ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
 </form>
