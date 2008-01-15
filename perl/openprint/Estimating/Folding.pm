@@ -360,6 +360,8 @@ sub signature_calc {
 		if ( $$stitching_specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 			$imposition = $$stitching_specs{'Imposition'.$qty_index};
 		} # end if
+	} else {
+		$imposition = 1;
 	} # end if
 	if ( ! $imposition ) {
 		if ( $max_imposition % 2 ) {
@@ -514,7 +516,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 
 			# In hours
 			my $runTime = sprintf( '%.4f', ($$specs{"txtQuantity$qty_index"}/$imposition) / $runSpeed );
-			$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('Folds: %d, QTY: %d, Runspeed: %d/Hr = %.2f hours', $folds{$fold}, $$specs{'txtQuantity'.$qty_index}, $runSpeed, $runTime) . "<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('Folds: %d, QTY: %d, %dout Runspeed: %d/Hr = %.2f hours', $folds{$fold}, $$specs{'txtQuantity'.$qty_index}, $imposition, $runSpeed, $runTime) . "<br/>";
 			if ( lc $servicePrice{'units'} eq 'per hour' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime * $folds{$fold};
 				$$specs{'hdnBreakdown'.$qty_index} .= "\t" .sprintf('%s %s: Setup: %.2f, Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f', $folds{$fold}, $fold, $setupPrice{'Price'}, @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} ) . "<br/>";
