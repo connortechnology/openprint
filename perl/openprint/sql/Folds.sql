@@ -37,5 +37,6 @@ CREATE TABLE Fold_Specifications (
 	max_weight		float,
 	weight_units	TEXT,
 	runspeed		INTEGER,
+	interpolate		BOOLEAN,
 	PRIMARY KEY (fold_id, id)
 );

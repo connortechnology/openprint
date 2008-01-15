@@ -361,6 +361,73 @@ $dbh->do(q{alter table papers add full_packages boolean});
 	sql::end_transaction( $dbh, $ac );
 	$version = 1904;
 } # end if
+if ( $version < 1905 ) {
+	print "Updating to version 1905\n";
+	my $ac = sql::start_transaction( $dbh );
+$_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
+foreach my $st ( split(';', $_ ) ) {
+$dbh->do($st);
+}
+foreach my $E ( openprint::Equipment::find('Specification'=>{'Folding Capable'=>'When Printing'}) ) {
+	foreach my $Spec ( $E->Specifications() ) {
+		if ( $Spec->name() =~ /(\d)x(\d)-(\d*)Page-(\w*)FoldDescription/ ) {
+			my ( $columns, $rows, $pages, $spine_direction ) = ( $1, $2, $3, $4 );
+			my $spread_size = $pages/($columns*$rows);
+$spread_size /= 2;
+			my $fold = sprintf('%dx%d-%dPage-%sFold', $columns, $rows, $pages, $spine_direction );
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $Spec->value() );
+			$Fold->page_columns( $columns );
+			$Fold->page_rows( $rows );
+			$Fold->spine_direction( $spine_direction );
+			if ( $_ = $E->Specification( $fold.'MinimumWidth' ) ) {
+				$Fold->min_width( ($_->value()/$columns)/$spread_size );
+				$_->delete();
+			} #end if
+			if ( $_ = $E->Specification( $fold.'MaximumWidth' ) ) {
+				$Fold->max_width( ($_->value()/$columns)/$spread_size );
+				$_->delete();
+			} # en dif
+			if ( $_ = $E->Specification( $fold.'MinimumHeight' ) ) {
+				$Fold->min_height( ($_->value()/$rows)/$spread_size );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification( $fold.'MaximumHeight' ) ) {
+				$Fold->max_height( ($_->value()/$rows)/$spread_size );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification( $fold.'MaximumImposition' ) ) {
+				$Fold->max_imposition( $_->value() );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification( $fold.'MinimumImposition' ) ) {
+				$Fold->min_imposition( $_->value() );
+				$_->delete();
+			} # end if
+			$_ = $Fold->save();
+			die $_ if $_;
+			while ( my $S = $E->Specification( $fold.'RunSpeed' ) ) {
+				my $FS = new openprint::FoldSpecification();
+				$FS->fold_id( $Fold->id() );
+				$FS->min_weight( $S->min() );
+				$FS->max_weight( $S->max() );
+				$FS->weight_units( $S->units() );
+				$FS->runspeed( $S->value() );
+				$FS->interpolate( $S->interpolate() );
+				$_ =  $FS->save();
+				die $_ if $_;
+				$S->delete();
+				delete $$E{'Specifications'};
+			} # end while
+		} # end if
+	} # end foreach
+} # end foreach
+sql::insert( undef, undef, 'database_info', 'version', 1905, 'backup', $backup );
+sql::end_transaction( $dbh, $ac );
+$version = 1905;
+} # end if
+
 
 $dbh->disconnect();
 1;
