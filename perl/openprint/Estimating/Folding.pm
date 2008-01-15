@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -316,7 +316,11 @@ $openprint::log->debug("Loading imposition");
 		if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
 			my $Press = shift @Press;
 			if ( $Press->specification('Folding Capable') ) {
-				unshift @my_equipment, $Press;
+				if ( $Press->specification('Sheeter') ne 'Y' ) {
+					@my_equipment = ( $Press );
+				} else {
+					unshift @my_equipment, $Press;
+				} # end if
 			} # end if
 		} # end if
 	} # end if
