@@ -56,7 +56,12 @@ foreach my $session ( sql::execute( $log, $dbh, q{SELECT id FROM sessions} ) ) {
 
 if ( 1 ) {
 # Clean out uncalculated projects
-	my @Projects = openprint::Project::find('status'=>'uncalculated','order'=>'index desc','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	my @Projects = openprint::Project::find(
+'status'=>'uncalculated',
+'order'=>'index desc',
+'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+ );
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of uncalculated projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
@@ -74,7 +79,12 @@ if ( 1 ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 
-	@Projects = openprint::Project::find('status'=>'Unordered','order'=>'index desc','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	@Projects = openprint::Project::find(
+'status'=>'Unordered',
+'order'=>'index desc',
+'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+ );
 	if ( @Projects ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		my $ac = sql::start_transaction( $dbh );
@@ -99,7 +109,11 @@ if ( 1 ) {
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} # end if
-	@Projects = openprint::Project::find('status'=>'Deleted','order'=>'index desc','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) );
+	@Projects = openprint::Project::find(
+'status'=>'Deleted','order'=>'index desc',
+'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+ );
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of Deleted projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
