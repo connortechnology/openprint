@@ -110,15 +110,29 @@ sub load {
 sub fits {
    my ( $self, $width, $height, $calliper ) = @_;
 
-   if ( $self->specification('Maximum Sheet Width') or $self->specification('Maximum Sheet Length') ) {
+   if ( $self->specification('Maximum Sheet Width') and $self->specification('Maximum Sheet Length') ) {
 	   my $imp = openprint::imposition::fit( $width, $height, $self->specification('Maximum Sheet Width'),$self->specification('Maximum Sheet Length') );
 #$log->debug("Impo: $imp{'Imposition'} $imp{'Rows'}x$imp{'Cols'}");
 	   if ( ! $imp->imposition() ) {
 		   return sprintf('Too big %s x %s on %s x %s', $width, $height, $self->specification('Maximum Sheet Width'),$self->specification('Maximum Sheet Length') );
 	   } # end if
+	} elsif ( $self->specification('Maximum Sheet Width') ) {
+		if (
+			( $width > $self->specification('Maximum Sheet Width') ) and
+			( $height > $self->specification('Maximum Sheet Width') ) 
+			) {
+		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification('Maximum Sheet Width'));
+		} # end if
+	} elsif ( $self->specification('Maximum Sheet Height') ) {
+		if (
+			( $width > $self->specification('Maximum Sheet Height') ) and
+			( $height > $self->specification('Maximum Sheet Height') ) 
+			) {
+		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification('Maximum Sheet Height'));
+		} # end if
    } # end if
 
-   if ( $self->specification('Minimum Sheet Width') or $self->specification('Minimum Sheet Length') ) {
+   if ( $width and $height and $self->specification('Minimum Sheet Width') or $self->specification('Minimum Sheet Length') ) {
 	   my $imp = openprint::imposition::fit( $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length'), $width, $height );
 	   if ( ! $imp->imposition() ) {
 		   return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length') );
