@@ -62,7 +62,11 @@ if ( 1 ) {
 		$log->warn("# of uncalculated projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'uncalculated' ) {
-				$log->error('WTF!');
+				$log->error('WTF! status was supposed to be uncalculated');
+				next;
+			} # end if
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
+				$log->error('Quoted!' . $Project->id());
 				next;
 			} # end if
 			$Project->delete();
@@ -76,19 +80,19 @@ if ( 1 ) {
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
 			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
-				$log->error('Quoted!' . $Project->id());
+				$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
 			if ( $Project->status() ne 'Unordered' ) {
-				$log->error('WTF!' . $Project->id());
+				$log->error('WTF! Was supposed to be Unordered' . $Project->id());
 				next;
 			} # end if
 			if ( $Project->order_id() ) {
-				$log->error('WTF!');
+				$log->error('WTF! Project has an order_id bu is Unordered');
 				next;
 			} # end if
 			if ( $Project->docket() ) {
-				$log->error('WTF!');
+				$log->error('WTF! has docket, but is not ordered');
 				next;
 			} # end if
 			$Project->delete();
@@ -102,6 +106,10 @@ if ( 1 ) {
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'Deleted' ) {
 				$log->error('WTF!');
+				next;
+			} # end if
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
+				$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
 			$Project->delete();
