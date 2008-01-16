@@ -150,7 +150,6 @@ sub save {
 	foreach my $key ( keys %fields ) {
 		$sql{$fields{$key}} = ( defined $$self{$key} ? $$self{$key} : $defaults{$key} );
 	} # end foreach
-
 		
 	if ( ! $$self{'id'} ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -167,13 +166,16 @@ sub save {
 			@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Quotes_id_seq')} );
 		} # end if
 		$sql{'index'} = $$self{'id'};
-		sql::insert( undef, undef, 'tbl_Quotes', \%sql );
+		if ( ( my $error = sql::insert( undef, undef, 'tbl_Quotes', \%sql ) ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} else {
 		sql::update( undef, undef, 'tbl_Quotes', ['Index=?', $$self{'id'}], \%sql );
 	} # end if
 	$self->load();
-
+	return;
 } # end sub save
 
 sub delete {
