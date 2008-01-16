@@ -14,6 +14,15 @@ function delete_confirm(form) {
 To save, process a new quote or process an order from this quotation, please click on the appropriate button below.<br>
 <br>
 </span>
+<span style="float: right;">
+	<? echo ( my $html = '';
+			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
+			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?quote_id=".$$variable{'Quote'}->id()."', 800 );", '', 'View Log' );
+			} # end if
+			return $html;
+		) ?>
+	</span>
 <b>Attention:</b> <br>
 Projects listed in red have changed price from the time this quote was originally generated.<br>
 <br>
