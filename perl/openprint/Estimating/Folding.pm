@@ -395,6 +395,23 @@ $openprint::log->debug("Loading imposition");
 		} elsif ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) {
 # Special case because we can't cut it in the middle of printing.  This case is basically for web presses
 
+			my $Fold = $Equipment->Fold( 
+					'pages'				=>	$pages,
+					'page_columns'		=>	$$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(),
+					'page_rows'			=>	$Imposition->spread_rows(),
+					'spine_direction'	=>	$Imposition->image_orientation(),
+					'stitching'			=>	$$services{'SaddleStitching'} or $$services{'LoopStitching'},
+					'perfectbind'		=>	$$services{'PerfectBind'},
+					'spinepaste'		=>	$$services{'SpinePaste'},
+					);
+			if ( $Fold ) {
+				$folds{$pages.'PageSignatureFold'} += 1;
+	$openprint::log->debug(sprintf('Found: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+			} else {
+	$openprint::log->debug(sprintf('Didnt find: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+			} # end if
+
+if ( 0 ) {
 			my $foldtype = $Imposition->spread_columns().'x'.$Imposition->spread_rows().'-'.$pages.'Page-'.$Imposition->image_orientation().'SignatureFold';
 
 			if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $imposition ) ) {
@@ -406,6 +423,7 @@ $openprint::log->debug("Loading imposition");
 					$folds{$pages.'PageSignatureFold'} += 1;
 				} # end if
 			} # end if
+} # end if
 		} else {
 
 			# FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...

@@ -382,19 +382,19 @@ $spread_size /= 2;
 			$Fold->page_rows( $rows );
 			$Fold->spine_direction( $spine_direction );
 			if ( $_ = $E->Specification( $fold.'MinimumWidth' ) ) {
-				$Fold->min_width( ($_->value()/$columns)/$spread_size );
+				$Fold->min_width( sprintf( '%.3f', ($_->value()/$columns)/$spread_size ) );
 				$_->delete();
 			} #end if
 			if ( $_ = $E->Specification( $fold.'MaximumWidth' ) ) {
-				$Fold->max_width( ($_->value()/$columns)/$spread_size );
+				$Fold->max_width( sprintf('%.3f', ($_->value()/$columns)/$spread_size ) );
 				$_->delete();
 			} # en dif
 			if ( $_ = $E->Specification( $fold.'MinimumHeight' ) ) {
-				$Fold->min_height( ($_->value()/$rows)/$spread_size );
+				$Fold->min_height( sprintf('%.3f', ($_->value()/$rows)/$spread_size ) );
 				$_->delete();
 			} # end if
 			if ( $_ = $E->Specification( $fold.'MaximumHeight' ) ) {
-				$Fold->max_height( ($_->value()/$rows)/$spread_size );
+				$Fold->max_height( sprintf('%.3f', ($_->value()/$rows)/$spread_size ) );
 				$_->delete();
 			} # end if
 			if ( $_ = $E->Specification( $fold.'MaximumImposition' ) ) {
@@ -420,12 +420,24 @@ $spread_size /= 2;
 				$S->delete();
 				delete $$E{'Specifications'};
 			} # end while
+			$Spec->delete();
 		} # end if
 	} # end foreach
 } # end foreach
 sql::insert( undef, undef, 'database_info', 'version', 1905, 'backup', $backup );
 sql::end_transaction( $dbh, $ac );
 $version = 1905;
+} # end if
+if ( $version < 1906 ) {
+	print "Updating to version 1906\n";
+	my $ac = sql::start_transaction( $dbh );
+	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_Log LIMIT 1', {} );
+	if ( ( ! $blah ) or ( $$blah{'dtmwhen'} ) ) {
+		$dbh->do(q{alter table quote_log rename column dtmwhen to created_on});
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1906, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1906;
 } # end if
 
 

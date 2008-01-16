@@ -1774,6 +1774,51 @@ sub calc_price {
 	my $base_impressions = ceil($qty / $imposition);
 	$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
 
+	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
+	my %folding_results;
+
+	# Has to be NEED because they always leave folding out, and it chooses dumb impositions
+	if ( $$project{'NeedFolding'} ) {
+#my $time = gettimeofday();
+		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
+#$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+		if ( $$project{'FoldingSpecs'}{'Status'} eq 'uncalculated' ) {
+# do not want an invalid fold style to win out unless there are no other valid signatures.
+			$price{'Comparison Cost'} += 1000000; 
+			$openprint::log->debug("Unable to fold") if $debug;
+		} # end if
+		$price{'FoldingImposition'} = $folding_results{'Imposition'};
+#$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
+
+		if ( $folding_results{'Equipment'} and ($folding_results{'Equipment'}->id() != $Press->id() ) ) {
+			my $fold_type = sprintf('%dx%d-%dPage-%sSignatureFoldRunSpeed', $$Imposition{spread_columns}, $$Imposition{spread_rows}, $Imposition->pages(), $$Imposition{image_orientation});
+
+			if ( ! ( $run_speed = $Press->specification($fold_type, $Paper->gsm() ) ) ) {
+#$openprint::log->debug("No specific fold run speed");
+				if ( ! ( $run_speed = $Press->specification($Imposition->pages().'PageSignatureFoldRunSpeed', $Paper->gsm() ) ) ) {
+#$openprint::log->debug("Not Using base fold run speed");
+					$run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
+				} # end if
+			} # end if
+		} # end if
+
+		if ( ! $run_speed ) {
+			$openprint::log->warn("Got no runspeed.");
+			return \%price;
+		} # end if
+
+		if ( $folding_results{'Equipment'} ) {
+			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) Price: $%.2f on %s', @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
+		} else {
+			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
+			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = '';
+		} # end if
+		$price{'Comparison Cost'} += $folding_results{'Price'};
+		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Folding' );
+	} # end if
+	$price{'Run Speed'} = $run_speed;
+
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
 	my $setup_rate = $Press->specification( 'Press Run Overs Rate', scalar @colours );
@@ -1907,50 +1952,6 @@ sub calc_price {
 	$$specs{"txtPressSheetQty$qty_index"} = $sheets;
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 
-	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
-	my %folding_results;
-
-	# Has to be NEED because they always leave folding out, and it chooses dumb impositions
-	if ( $$project{'NeedFolding'} ) {
-#my $time = gettimeofday();
-		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
-#$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
-		if ( $$project{'FoldingSpecs'}{'Status'} eq 'uncalculated' ) {
-# do not want an invalid fold style to win out unless there are no other valid signatures.
-			$price{'Comparison Cost'} += 1000000; 
-			$openprint::log->debug("Unable to fold") if $debug;
-		} # end if
-		$price{'FoldingImposition'} = $folding_results{'Imposition'};
-#$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
-
-		if ( $folding_results{'Equipment'} and ($folding_results{'Equipment'}->id() != $Press->id() ) ) {
-			my $fold_type = sprintf('%dx%d-%dPage-%sSignatureFoldRunSpeed', $$Imposition{spread_columns}, $$Imposition{spread_rows}, $Imposition->pages(), $$Imposition{image_orientation});
-
-			if ( ! ( $run_speed = $Press->specification($fold_type, $Paper->gsm() ) ) ) {
-#$openprint::log->debug("No specific fold run speed");
-				if ( ! ( $run_speed = $Press->specification($Imposition->pages().'PageSignatureFoldRunSpeed', $Paper->gsm() ) ) ) {
-#$openprint::log->debug("Not Using base fold run speed");
-					$run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
-				} # end if
-			} # end if
-		} # end if
-
-		if ( ! $run_speed ) {
-			$openprint::log->warn("Got no runspeed.");
-			return \%price;
-		} # end if
-
-		if ( $folding_results{'Equipment'} ) {
-			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) Price: $%.2f on %s', @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
-			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
-		} else {
-			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
-			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = '';
-		} # end if
-		$price{'Comparison Cost'} += $folding_results{'Price'};
-		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Folding' );
-	} # end if
-	$price{'Run Speed'} = $run_speed;
 	my %run_price;
 	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ); 
 	my %varnish_price;

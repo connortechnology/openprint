@@ -141,8 +141,31 @@ sub fits {
 
 sub Folds {
 	my $self = shift;
-	return openprint::Fold::find( 'Equipment'=>$self, 'order'=>'lower(name)' );
+
+	if ( ! $$self{'Folds'} ) {
+		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'lower(name)' );
+	} # end if
+	return @{$$self{'Folds'}};
 } # end sub Folds
+
+sub Fold {
+	my ( $self, %param ) = @_;
+
+	if ( ! $$self{'Folds'} ) {
+		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'lower(name)' );
+	} # end if
+
+	foreach my $Fold ( @{$$self{'Folds'}} ) {
+		next if $$Fold{pages} and $param{pages} and ($$Fold{pages} != $param{pages} );
+		next if $$Fold{page_columns} and $param{page_columns} and ($$Fold{page_columns} != $param{page_columns} );
+		next if $$Fold{page_rows} and $param{page_rows} and ($$Fold{page_rows} != $param{page_rows} );
+		next if $$Fold{spine_direction} and $param{spine_direction} and ($$Fold{spine_direction} ne $param{spine_direction} );
+		next if $param{stitching} and ! $$Fold{stitching};
+		next if $param{perfectbind} and ! $$Fold{perfectbind};
+		next if $param{spinepaste} and ! $$Fold{spinepaste};
+		return $Fold;
+	} # end foreach Fold
+} # end sub Fold
 
 sub Specifications {
 	my $self = shift;
