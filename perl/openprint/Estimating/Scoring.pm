@@ -26,7 +26,7 @@ require openprint::Paper;
 require openprint::Estimating::Folding;
 require openprint::Equipment;
 
-my $debug = 0;
+my $debug = 1;
 
 my @variables = (
 	'txtQuantity',
@@ -221,7 +221,7 @@ $openprint::log->debug("sign calc");
 		return %Results;
 	} # end if
 
-	my $bestPrice = 0;
+	my $bestPrice = -1;
 	my $bestEquipment = '';
 	my $bestSetupPrice = 0;
 	my $bestMaterialPrice = 0;
@@ -313,10 +313,6 @@ $openprint::log->debug("sign calc");
 				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$imposition->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $imposition->rows() );
 			} # end if
 
-			
-			my $setupPrice = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'ScoringMakeReady', $score_qty, $Equipment );
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Setup: %d scores $%.2f<br/>', $score_qty, $setupPrice);
-			$$specs{'hdnBreakdown'.$qty_index} .= "\t\tImposition: $$imposition{'imposition'}: ";
 			my $width = $imposition->layout_width();
 			my $height = $imposition->layout_height();
 
@@ -337,6 +333,9 @@ $openprint::log->debug("sign calc");
 				} # end if
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= '<br/>';
+			my $setupPrice = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'ScoringMakeReady', $score_qty, $Equipment );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Setup: %d scores $%.2f<br/>', $score_qty, $setupPrice);
+			$$specs{'hdnBreakdown'.$qty_index} .= "\t\tImposition: $$imposition{'imposition'}: ";
 
 			my $servicePrice;
 			my $materialPrice = 0;
@@ -350,7 +349,7 @@ $openprint::log->debug("sign calc");
 				my $hours = $qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
 				$servicePrice = $servicePrice{'Price'} * $hours;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s @ %d%s =%.2f', @servicePrice{'Price','units'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour', $servicePrice );
-			} else {
+			} elsif ( $servicePrice{'Price'} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units set on service price ($score_qty) ($servicePrice{'units'}) <br/>";
 			} # end if
 
@@ -374,9 +373,10 @@ $openprint::log->debug("sign calc");
 			$servicePrice /= $imposition->imposition() if $imposition->imposition();
 
 			my $totalPrice = $setupPrice + $materialPrice + $servicePrice;
-			$$specs{'hdnBreakdown'.$qty_index} .= "\t\tTotal: \$".sprintf('%.2f', int($totalPrice) )."<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 
-			if ( $totalPrice < $bestPrice or $bestPrice == 0 ) {
+			if ( $totalPrice < $bestPrice or $bestPrice == -1 ) {
+$openprint::log->debug(sprintf('Choosing %dout on %s : $%.2f', $imposition->imposition(), $Equipment->name(), $totalPrice ) );
 				$bestPrice = $totalPrice;
 				$bestSetupPrice = $setupPrice;
 				$bestMaterialPrice = $materialPrice;
