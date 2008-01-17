@@ -173,14 +173,20 @@ sub save {
 		
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
-		sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] );
+		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if	
 	} else {
-		sql::update( $log, $dbh, 'Orders', ['Index=?', $$self{'id'}], @sql );
+		if ( ( my $error = sql::update( $log, $dbh, 'Orders', ['Index=?', $$self{'id'}], @sql ) ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if	
 	} # end if
 
 	$self->load();
 	sql::end_transaction( $dbh, $ac );
-
+	return;
 } # end sub save
 
 sub delete {

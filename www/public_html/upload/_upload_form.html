@@ -53,6 +53,10 @@
 				<input type="text" id="txtQuoteNumber" name="txtQuoteNumber" />
 			</p>
 			<p>
+				<label for="txtQuotedPrice">Quoted Price:</label>
+				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" />
+			</p>
+			<p>
 				<label for="ddmDueDateMonth">Due Date:</label>
 				<select style="width: auto;" name="ddmDueDateMonth" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(document.upload.ddmDueDateYear.value,this.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::getmonths( undef ); ) ?></select>
 				<select style="width: auto;" name="ddmDueDateDay" onchange="off(this.options[this.selectedIndex]);"><? echo ( ssi::getdays( undef ); ) ?></select>

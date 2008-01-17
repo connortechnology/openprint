@@ -11,30 +11,30 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 
 		<!--#include virtual="/includes/main/proj/finished_dimensions.html"-->
-<? if ( openprint::service::get_index_by_id( $log, $dbh, 'Lamination' ) ) ?>	
+<? if ( openprint::Service::find( name=>'Lamination' ) ) ?>	
 		<p> 
 			<label><? echo ( ssi::writeTip('Laminating'); ) ?> type:</label>
-			<select name="LaminationType" size="1" onchange="calc('f1');">
+			<select name="LaminationType" size="1" onchange="calc(this.form.name);">
 				<option value="">Please select one</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Material::find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationType'}); ) ?>
 			</select>
 		</p>
-<? else ( openprint::service::get_index_by_id( $log, $dbh, 'Lamination' ) ) ?>	
+<? else ( openprint::Service::find( name=>'Lamination' ) ) ?>	
 		<p> 
 			<label><? echo ( ssi::writeTip('Laminating'); ) ?> type for side one:</label>
-			<select name="ddmSideOneLamination" size="1" onchange="calc('f1');">
+			<select name="ddmSideOneLamination" size="1" onchange="calc(this.form.name);">
 				<option value="">Please select one</option>
-				<?ddmSideOneLamination?>
+				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Material::find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationType'}); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label><? echo ( ssi::writeTip('Laminating'); ) ?> type for side two:</label>
-			<select name="ddmSideTwoLamination" size="1" onchange="calc('f1');">
+			<select name="ddmSideTwoLamination" size="1" onchange="calc(this.form.name);">
 				<option value="">Please select one</option>
-				<?ddmSideTwoLamination?>
+				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Material::find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationType'}); ) ?>
 			</select>
 		</p>
-<? endif ( openprint::service::get_index_by_id( $log, $dbh, 'Lamination' ) ) ?>	
+<? endif ( openprint::Service::find( name=>'Lamination' ) ) ?>	
 		</fieldset>
 		<fieldset><legend>Results</legend>
 		<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
