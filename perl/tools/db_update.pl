@@ -473,6 +473,26 @@ if ( $version < 1906 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1906;
 } # end if
+if ( $version < 1907 ) {
+	print "Updating to version 1907\n";
+	my $ac = sql::start_transaction( $dbh );
+foreach my $E ( openprint::Equipment::find('Specification'=>{'Type'=>'Press'}) ) {
+	my $Spec = $E->Specification('Feed');
+	if ( ! $Spec ) {
+		$Spec = new openprint::EquipmentSpecification();
+		$Spec->equipment_id( $E->id() );
+		$Spec->name( 'Feed' );
+		$Spec->value('Sheet');
+		$Spec->save();
+	} elsif ( $Spec->value() eq 'Web' ) {
+		$Spec->value('Roll');
+		$Spec->save();
+	} # end if
+} # end foreach
+	sql::insert( undef, undef, 'database_info', 'version', 1907, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1907;
+} # end if
 
 
 $dbh->disconnect();
