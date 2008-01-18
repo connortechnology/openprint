@@ -20,8 +20,8 @@ my %transforms = (
 	'runspeed'		=> [ 's/\D//g' ],
 );
 my %defaults = (
-	'min_weight'	=>	0,
-	'max_weight'	=>	0,
+	'min_weight'	=>	undef,
+	'max_weight'	=>	undef,
 	'weight_units'	=>	'gsm',
 	'runspeed'		=>	0,
 	'interpolate'	=>	0,

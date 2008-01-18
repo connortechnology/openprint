@@ -10,11 +10,13 @@ require sql;
 my %fields = (
 	'id'					=>	'id',
 	'equipment_id'			=>	'equipment_id',
+	'type'					=>	'type',
 	'name'					=>	'name',
 	'min_width'				=>	'min_width',
 	'max_width'				=>	'max_width',
 	'min_height'			=>	'min_height',
 	'max_height'			=>	'max_height',
+	'pages'					=>	'pages',
 	'page_columns'			=>	'page_columns',
 	'page_rows'				=>	'page_rows',
 	'min_imposition'		=>	'min_imposition',
@@ -36,6 +38,7 @@ my %transforms = (
 	'max_height' => [ 's/[^\d\.]//g' ],
 	'min_imposition' => [ 's/\D//g' ],
 	'max_imposition' => [ 's/\D//g' ],
+	'pages' => [ 's/\D//g' ],
 	'page_columns' => [ 's/\D//g' ],
 	'page_rows' => [ 's/\D//g' ],
 	'makeready_time' => [ 's/\D//g' ],
@@ -49,6 +52,7 @@ my %defaults = (
 	'max_height'		=>	undef,
 	'min_imposition'	=>	undef,
 	'max_imposition'	=>	undef,
+	'pages'		=>	undef,
 	'page_columns'		=>	undef,
 	'page_rows'			=>	undef,
 	'makeready_time' => undef,
@@ -164,9 +168,67 @@ sub Equipment {
 } # end sub Equipment
 sub Specifications {
 	my $self = shift;
-	return openprint::FoldSpecification::find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
+	if ( ! $$self{'Specifications'} ) {
+		@{$$self{'Specifications'}} = openprint::FoldSpecification::find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
+	} # end if
+	return @{$$self{'Specifications'}};
 } # end sub Equipment
 
+sub Specification {
+	my ( $self, $range ) = @_;
+
+    if ( ! $$self{'Specifications'} ) {
+		@{$$self{'Specifications'}} = openprint::FoldSpecification::find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
+    } # end if
+
+	$range = 1*$range;
+	my $i = 0;
+	my $x;
+	my $y;
+	for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
+		my $Spec = $$self{'Specifications'}[$i];
+#$openprint::log->debug("Examining: (" . $Spec->min() .     ') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
+		return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max} == $range );
+
+		return $Spec if (
+				(! $$Spec{interpolate})
+				and (($$Spec{min_weight} eq '') or ($$Spec{min_weight} <= $range))
+				and (($$Spec{max_weight} eq '') or ($$Spec{max_weight} >= $range))
+				);
+
+# first step, find one less than the min
+		last if 1*$$Spec{min_weight} > $range;
+#last if ( $Spec->max() eq '' and ! $Spec->interpolate() );
+	} # end if
+
+   if ( $i and $i <= @{$$self{'Specifications'}} ) {
+        $i -= 1;
+        # back up
+		$x = $$self{'Specifications'}[$i];
+#$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+		return if ( (1*$$x{max_weight}) and ( $$x{max_weight} < $range ) and ! $$x{interpolate} );
+   } else {
+	   $openprint::log->debug("Couldn't find monimum for $range ") if $debug;
+	   return;
+   } # end if
+
+   for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
+	   my $Spec = $$self{'Specifications'}[$i];
+	   return $Spec if ( $$Spec{max_weight} == $range ) or ( !(1*$$Spec{max_weight}) and ! (1*$$Spec{interpolate}) );
+
+# first step, find one less than the min
+	   last if $$Spec{max_weight} > $range;
+   } # end foreach
+   if ( $i and $i < @{$$self{'Specifications'}} ) {
+# back up
+	   $y = $$self{'Specifications'}[$i];
+#$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+   } else {
+#$openprint::log->debug("Couldn't find maximum") if $debug;
+	   return;
+   } # end if
+
+} # end sub Specification
 
 1;
 __END__

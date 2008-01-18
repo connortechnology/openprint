@@ -143,7 +143,7 @@ sub Folds {
 	my $self = shift;
 
 	if ( ! $$self{'Folds'} ) {
-		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'lower(name)' );
+		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'pages' );
 	} # end if
 	return @{$$self{'Folds'}};
 } # end sub Folds
@@ -163,6 +163,9 @@ sub Fold {
 		next if $param{stitching} and ! $$Fold{stitching};
 		next if $param{perfectbind} and ! $$Fold{perfectbind};
 		next if $param{spinepaste} and ! $$Fold{spinepaste};
+		if ( $param{gsm} ) {
+			next if ! $Fold->Specification( $param{gsm} );
+		} # end if
 		return $Fold;
 	} # end foreach Fold
 } # end sub Fold
@@ -233,7 +236,7 @@ if ( ! defined $range ) {
 #$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-$openprint::log->debug("Couldn't find monimum") if $debug;
+$openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
 		return;	
 	}
 	

@@ -56,6 +56,7 @@ A:hover {
 
 input, select, textarea, option {
     font-size: x-small;
+	padding: 1px;
 }
 select {
 	vertical-align: top;

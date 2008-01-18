@@ -370,7 +370,24 @@ $dbh->do($st);
 }
 foreach my $E ( openprint::Equipment::find('Specification'=>{'Folding Capable'=>'When Printing'}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
-		if ( $Spec->name() =~ /(\d)x(\d)-(\d*)Page-(\w*)FoldDescription/ ) {
+		if ( $Spec->name() =~ /^(\d*)PageSignatureFoldRunSpeed$/ ) {
+			my $pages = $1;
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $pages.'PageSignatureFold' );
+			$Fold->type( $pages . 'PageSignatureFold' );
+			$Fold->pages( $pages );
+			$_ = $Fold->save();
+			die $_ if $_;
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
+
+		} elsif ( $Spec->name() =~ /(\d)x(\d)-(\d*)Page-(\w*)FoldDescription/ ) {
 			my ( $columns, $rows, $pages, $spine_direction ) = ( $1, $2, $3, $4 );
 			my $spread_size = $pages/($columns*$rows);
 $spread_size /= 2;
@@ -378,6 +395,8 @@ $spread_size /= 2;
 			my $Fold = new openprint::Fold();
 			$Fold->equipment_id( $E->id() );
 			$Fold->name( $Spec->value() );
+			$Fold->type( $pages . 'PageSignatureFold' );
+			$Fold->pages( $pages );
 			$Fold->page_columns( $columns );
 			$Fold->page_rows( $rows );
 			$Fold->spine_direction( $spine_direction );
@@ -420,6 +439,21 @@ $spread_size /= 2;
 				$S->delete();
 				delete $$E{'Specifications'};
 			} # end while
+			$Spec->delete();
+		} elsif ( $Spec->name() =~ /^(\w*)FoldRunSpeed/ ) {
+			my $type = $1;
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $type.'Fold' );
+			$Fold->type( $type.'Fold' );
+			$_ = $Fold->save();
+			die $_ if $_;
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
 			$Spec->delete();
 		} # end if
 	} # end foreach

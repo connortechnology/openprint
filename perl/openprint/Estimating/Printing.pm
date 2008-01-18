@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 1;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 use strict;
@@ -1367,7 +1367,8 @@ sub breakdown {
 	$breakdown .= sprintf( "\tPlates: \%d plates * \$%.2f per plate = \$%.2f<br/>", @$price{'txtPlateQuantity','Plate Cost','Plate Price'});
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 	my $stock_qty = $$price{'Stock Quantity'};
-	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Total Overs'} );
+
+	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s FoldMakeReady: %d FoldRun: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'FoldingMakeReadyOvers','FoldingRunOvers','Total Overs'} );
 	if ( $Paper->type() ne 'Roll' ) {
 		#$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
 		$breakdown .= "\tStock: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
@@ -1790,24 +1791,11 @@ sub calc_price {
 		$price{'FoldingImposition'} = $folding_results{'Imposition'};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
 
-		if ( $folding_results{'Equipment'} and ($folding_results{'Equipment'}->id() != $Press->id() ) ) {
-			my $fold_type = sprintf('%dx%d-%dPage-%sSignatureFoldRunSpeed', $$Imposition{spread_columns}, $$Imposition{spread_rows}, $Imposition->pages(), $$Imposition{image_orientation});
-
-			if ( ! ( $run_speed = $Press->specification($fold_type, $Paper->gsm() ) ) ) {
-#$openprint::log->debug("No specific fold run speed");
-				if ( ! ( $run_speed = $Press->specification($Imposition->pages().'PageSignatureFoldRunSpeed', $Paper->gsm() ) ) ) {
-#$openprint::log->debug("Not Using base fold run speed");
-					$run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
-				} # end if
-			} # end if
-		} # end if
-
-		if ( ! $run_speed ) {
-			$openprint::log->warn("Got no runspeed.");
-			return \%price;
-		} # end if
-
 		if ( $folding_results{'Equipment'} ) {
+			if ( $folding_results{'Equipment'}->id() != $Press->id() ) {
+				$run_speed = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
+			} # end if
+
 			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) Price: $%.2f on %s', @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
 		} else {
@@ -1832,7 +1820,7 @@ sub calc_price {
 		$over_rate *= 2;
 	} # end if
 	my $run_overs = $base_impressions * $over_rate;
-	my $impressions = sprintf( '%.0f', $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
+	my $impressions = sprintf( '%.0f', $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $setup_overs + $run_overs );
 
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		my $additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
@@ -1895,7 +1883,7 @@ sub calc_price {
 
 	$run_overs = $base_impressions * $over_rate;
 	#my $gross_qty = $impressions;
-	my $gross_qty = sprintf( '%.0f', $base_impressions + $setup_overs + $run_overs );
+	my $gross_qty = sprintf( '%.0f', $base_impressions + $setup_overs + $run_overs + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} );
 	my $additional_overs=0;
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
@@ -1931,6 +1919,8 @@ sub calc_price {
 			'Total Overs'				=> $impressions,
 			'Weight'					=> $weight,
 			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$fm_overs : 0,
+			'FoldingMakeReadyOvers'		=>	$folding_results{'MakeReadyOvers'},
+			'FoldingRunOvers'			=>	$folding_results{'RunOvers'},
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
 

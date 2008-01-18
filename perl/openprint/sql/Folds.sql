@@ -9,7 +9,9 @@ CREATE SEQUENCE Fold_id_seq;
 CREATE TABLE Folds (
 	id INTEGER NOT NULL default nextval('Fold_id_seq'),
 	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (lngIndex),
+	type	TEXT,
 	name	TEXT,
+	pages			INTEGER,
 	page_columns	INTEGER,
 	page_rows		INTEGER,
 	min_width		float,

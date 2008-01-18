@@ -2,16 +2,23 @@
 	<div class="leftColumn">
 		<fieldset><legend>Fold</legend>
 		<p>
+			<label>Type:</label>
+			<select id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-type" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-type" style="width: 100%;">
+				<option value=""> select one </option>
+					<? echo ( ssi::make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ], $$variable{'Fold'}->type() ); ) ?>
+			</select>
+		</p>
+		<p>
 			<label>Description:</label>
-			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-name" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-name" value="<? echo ( $$variable{'Fold'}->name() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-name" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-name" value="<? echo ( $$variable{'Fold'}->name() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" style="width: 100%;" />
 		</p>
 		<p>
-			<label>Page Columns:</label>
-			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_columns" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_columns" value="<? echo ( $$variable{'Fold'}->page_columns() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />
-		</p>
-		<p>
-			<label>Page Rows:</label>
-			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_rows" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_rows" value="<? echo ( $$variable{'Fold'}->page_rows() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />
+			<label>Pages:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-pages" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-pages" value="<? echo ( $$variable{'Fold'}->pages() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="4" style="width: auto;" />
+			:
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_columns" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_columns" value="<? echo ( $$variable{'Fold'}->page_columns() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="4" style="width: auto;" />
+			x
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_rows" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_rows" value="<? echo ( $$variable{'Fold'}->page_rows() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="4" style="width: auto;" />
 		</p>
 		<p>
 			<label>Spine Direction:</label>
@@ -21,28 +28,22 @@
 			</select>
 		</p>
 		<p>
-			<label>Minimum Imposition:</label>
-			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_imposition" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_imposition" value="<? echo ( $$variable{'Fold'}->min_imposition() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />out
+			<label>Imposition:</label>
+			Min: <input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_imposition" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_imposition" value="<? echo ( $$variable{'Fold'}->min_imposition() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="4" style="width:auto;" />out
+			Max: <input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_imposition" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_imposition" value="<? echo ( $$variable{'Fold'}->max_imposition() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="4" style="width:auto;" />out
 		</p>
 		<p>
-			<label>Maximum Imposition:</label>
-			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_imposition" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_imposition" value="<? echo ( $$variable{'Fold'}->max_imposition() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />out
-		</p>
-		<p>
-			<label>Minimum Page Width:</label>
-			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_width" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_width" value="<? echo ( $$variable{'Fold'}->min_width() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />inches
-		</p>
-		<p>
-			<label>Maximum Page Width:</label>
-			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_width" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_width" value="<? echo ( $$variable{'Fold'}->max_width() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />inches
+			<label>Page Width:</label>
+			Min: <input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_width" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_width" value="<? echo ( $$variable{'Fold'}->min_width() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="7" style="width:auto;" />inches
+			Max: <input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_width" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_width" value="<? echo ( $$variable{'Fold'}->max_width() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="7" style="width:auto;" />inches
 		</p>
 		<p>
 			<label>Minimum Page Height:</label>
-			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_height" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_height" value="<? echo ( $$variable{'Fold'}->min_height() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />inches
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_height" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_height" value="<? echo ( $$variable{'Fold'}->min_height() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="7" style="width:auto;" />inches
 		</p>
 		<p>
 			<label>Maximum Page Height:</label>
-			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_height" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_height" value="<? echo ( $$variable{'Fold'}->max_height() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />inches
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_height" name="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_height" value="<? echo ( $$variable{'Fold'}->max_height() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="7" style="width:auto;" />inches
 		</p>
 		<p>
 			<label>Make Ready Time:</label>
@@ -82,6 +83,7 @@
 '&run_overs=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-run_overs') ) +
 '&run_overs_units=' + encodeURIComponent(\$F('fold-" . $$variable{'Fold'}->id() . "-run_overs_units') ) +
 '', { method: 'get', onSuccess: function(response){\$('Fold". $$variable{'Fold'}->id()."').removeClassName('changed');} } );",'','Save' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'DeleteFold'.$$variable{'Fold'}->id(), 'delete.gif',"new Ajax.Request('/administrator/equipment/_fold.html?action=delete&amp;id=".$$variable{'Fold'}->id()."', { method: 'get', onSuccess: function(){var f = \$('Fold".$$variable{'Fold'}->id()."'); f.parentNode.removeChild(f);} } );",'','Delete' ); ) ?>
 		</fieldset>
 	</div>
 	<div class="rightColumn">
