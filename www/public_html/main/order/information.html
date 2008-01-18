@@ -53,6 +53,17 @@
 					<label>Purchase Order:</label>
 					<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
 				</p>
+<? if ( (! $openprint::session{'company_id'}) and sets::isin($openprint::session{'user_type'}, ['A','E'] ) ) ?>
+				<p>
+					<label>Company:</label>
+					<select name="company_id">
+					<option value="">Select a Company</option>
+					<? echo ( 
+							openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} );
+							) ?>
+					</select>
+				</p>
+<? endif ( (! $openprint::session{'company_id'}) and sets::isin($openprint::session{'user_type'}, ['A','E'] ) ) ?>
 			</fieldset>
 			<!--#include virtual="_contact_information.html"-->
 		</div>

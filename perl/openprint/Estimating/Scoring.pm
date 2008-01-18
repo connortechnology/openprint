@@ -429,7 +429,8 @@ sub get_scores {
 	my ( $Project, $specs, $sig_specs ) = @_;
 
 	if ( ! signature_needs( $Project, $sig_specs ) ) {
-		$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+		# Default to 1 score, because we assume that if we have scoring, then we must want at least 1
+		$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 		$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
 		$openprint::log->debug("SIgnature $$sig_specs{'SignatureIndex'} doesn't need scoring in get_scores") if $debug;
 		return;

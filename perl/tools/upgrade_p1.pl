@@ -55,3 +55,8 @@ print "upgrading structures 2...";
 print "upgrading signatures...";
 `/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db point-one point-one` or $log->error($!);
 print "done\n";
+print 'Turning off backups...';
+$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
+my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
+sql::insert( undef, undef, 'database_info', 'version', $version, 'backup', 'false' );
+print "done\n";
