@@ -14,10 +14,11 @@ OR:
 		$$variable{'txtCompanyName'} = $Company->name();
 		$$variable{'txtAddress1'} = $Company->address1();
 		$$variable{'txtAddress2'} = $Company->address2();
+		$$variable{'txtPostalCode'} = $Company->postalcode();
 		
 	} else {
-		@$variable{'txtContactName','txtCompanyName','txtEmailAddress','txtPhoneNumber','txtAddress1','txtAddress2'} = 
-			@openprint::param{'txtContactName','txtCompanyName','txtEmailAddress','txtPhoneNumber','txtAddress1','txtAddress2'};
+		@$variable{'txtContactName','txtCompanyName','txtEmailAddress','txtPhoneNumber','txtAddress1','txtAddress2','txtPostalCode'} = 
+			@openprint::param{'txtContactName','txtCompanyName','txtEmailAddress','txtPhoneNumber','txtAddress1','txtAddress2','txtPostalCode'};
 	} # end if
 ) ?>
 <fieldset>
@@ -33,9 +34,15 @@ OR:
 					<label>Address:</label>
 					<?txtAddress1?>
 				</p>
+<? if ( $$variable{'txtAddress2'} ) ?>
 				<p>
 					<label>&nbsp;</label>
 					<?txtAddress2?>
+				</p>
+<? endif ( $$variable{'txtAddress2'} ) ?>
+				<p>
+					<label>Postal Code:</label>
+					<?txtPostalCode?>
 				</p>
 			</div>
 		</div>
