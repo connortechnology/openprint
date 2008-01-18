@@ -4,7 +4,7 @@ a.buttonImageOff {
 	border: none;
 	color: #ffffff;
 	padding: 0px;
-	margin: 0px 2px 2px 5px;
+	margin: 2px 2px 2px 4px;
 	display: -moz-inline-box;
 	display: inline-block;
 	outline: 0;
@@ -16,7 +16,7 @@ background-color: #004EA2;
 	border: none;
 	color: #FE0F0B;
 	padding: 0px;
-	margin: 0px 2px 2px 5px;
+	margin: 2px 2px 2px 4px;
 	display: -moz-inline-box;
 	display: inline-block;
 	outline:0;
@@ -65,7 +65,7 @@ a.buttonImageOff .c {
     display: inline-block;
     float: none;
     margin: 0px;
-    padding: 3px 10px 3px 10px;
+    padding: 2px 8px 2px 8px;
     color: white;
 }
 
@@ -86,6 +86,6 @@ a.buttonImageOn .c {
     display: inline-block;
     float: none;
     margin: 0px;
-    padding: 3px 10px 3px 10px;
+    padding: 2px 8px 2px 8px;
 	color: #FE0F0B;
 }

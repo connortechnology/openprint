@@ -20,7 +20,7 @@ body {
 
 .Header {
 }
-.Header :after {
+.Header:after {
     content: ".";
     display: block;
     height: 0;

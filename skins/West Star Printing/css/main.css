@@ -156,3 +156,27 @@ div.ProjectCreateEdit ul:after {
 /* Hides from IE-mac \*/
 * html div.ProjectCreateEdit ul {height: 1%;}
 /* End hide from IE-mac */
+
+#QuickLogin {
+	float: right;
+	margin: 0px;
+	padding: 0px;
+}
+#QuickLogin fieldset {
+	margin: 0px;
+	padding: 0px;
+	border: none;
+}
+#QuickLogin fieldset legend {
+	display: none;
+}
+#QuickLogin p {
+	padding-left: 80px;
+}
+#QuickLogin p label {
+	width: 75px;
+	margin-left: -80px;
+}
+#QuickLogin p input {
+	width: 95%;
+}
