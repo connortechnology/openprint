@@ -2787,6 +2787,7 @@ sub runtime {
 sub get_weight {
 	my ( $Project, $specs, $qty_index ) = @_;
 
+$openprint::log->debug("Load from get_weight");
 	my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
 	my $sig_weight = ($$specs{'txtSignatureSpreadQuantity'.$qty_index} > 0 ? $$specs{'txtSignatureSpreadQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * $Paper->wpsi();
 	if ( $$specs{'PageQuantity'} ) {

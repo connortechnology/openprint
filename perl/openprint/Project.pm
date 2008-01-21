@@ -72,10 +72,10 @@ sub JDF_ProductIntent {
 	$doc->setXMLDecl( $doc->createXMLDecl( '1.0' ) );
 	foreach my $sig_id ( $self->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $$self{'id'}, $sig_id );
-		$doc->appendChild( openprint::Estimating::Printing::jdf( $doc, $self, $sig_id, $sig_specs ) );
+		$doc->appendChild( openprint::Estimating::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
 	} # end foreach
 	return $doc;
-} # end sub jdf
+} # end sub JDF_ProductIntent
 
 sub jdf {
 	my ( $self ) = @_;
