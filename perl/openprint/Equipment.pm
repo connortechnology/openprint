@@ -176,17 +176,22 @@ sub Fold {
 #}
 
 	foreach my $Fold ( @{$$self{'Folds'}} ) {
-		#$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}");
+		$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}");
 		next if $$Fold{pages} and $$params{pages} and ($$Fold{pages} != $$params{pages} );
-		#$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}");
+		$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}");
 		next if $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} );
-		#$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}");
+		$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}");
 		next if $$Fold{page_rows} and $$params{page_rows} and ($$Fold{page_rows} != $$params{page_rows} );
+		$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}");
 		next if $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} );
-		next if defined $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching};
-		next if defined $$params{perfectbind} and defined $$Fold{perfectbind};
-		next if defined $$params{spinepaste} and defined $$Fold{spinepaste};
+		$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}");
+		next if $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching};
+		$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}");
+		next if $$params{perfectbind} and defined $$Fold{perfectbind} and $$params{perfectbind} != $$Fold{perfectbind};
+		$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}");
+		next if $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste};
 		if ( $$params{gsm} ) {
+		$openprint::log->debug("Wanted gsm: $$params{gsm}");
 			next if ! $Fold->Specification( $$params{gsm} );
 		} # end if
 		return $Fold;

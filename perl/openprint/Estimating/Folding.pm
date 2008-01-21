@@ -349,8 +349,8 @@ $openprint::log->debug("Loading imposition");
 							'page_rows'			=>	$Imposition->spread_rows(),
 							'spine_direction'	=>	$Imposition->image_orientation(),
 							'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-							'perfectbind'		=>	$$services{'PerfectBind'},
-							'spinepaste'		=>	$$services{'SpinePaste'},
+							'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
+							'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 							'gsm'				=>	$Imposition->Paper()->gsm(),
 							);
 				} else {
@@ -373,14 +373,15 @@ $openprint::log->debug("Loading imposition");
 					'page_rows'			=>	$Imposition->spread_rows(),
 					'spine_direction'	=>	$Imposition->image_orientation(),
 					'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-					'perfectbind'		=>	$$services{'PerfectBind'},
-					'spinepaste'		=>	$$services{'SpinePaste'},
+					'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
+					'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 					'gsm'				=>	$Imposition->Paper()->gsm(),
 					);
 			if ( $Fold ) {
 				push @{$folds{$pages.'PageSignatureFold'}}, $Fold;
 	$openprint::log->debug(sprintf('Found: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 			} else {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Didnt find fold<br/>';
 	$openprint::log->debug(sprintf('Didnt find: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 			} # end if
 		} else {
@@ -422,8 +423,8 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 								'page_rows'			=>	$Imposition->spread_rows(),
 								'spine_direction'	=>	$Imposition->image_orientation(),
 								'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-								'perfectbind'		=>	$$services{'PerfectBind'},
-								'spinepaste'		=>	$$services{'SpinePaste'},
+								'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
+								'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 								'gsm'				=>	$Imposition->Paper()->gsm(),
 								);
 						if ( $Fold ) {
@@ -574,6 +575,8 @@ $openprint::log->debug('Got fold ' . $F->pages() );
 				} else {
 					$results{'MakeReadyOvers'} += $Fold->makeready_overs();
 				} # end if
+				my $RunSpeed = $Fold->Specification( $Imposition->Paper()->gsm() );
+				$results{'RunSpeed'} = $$RunSpeed{'runspeed'};
 				$results{'RunOvers'} += $Fold->run_overs();
 				$results{'RunOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$Imposition->imposition()) * $Fold->run_overs() /100;
 			} # end foreach

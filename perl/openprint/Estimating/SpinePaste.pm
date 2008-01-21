@@ -78,8 +78,8 @@ sub signature_calc {
 				$openprint::log->debug("Imposition too large " . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid() );
 				next;
 			} # end if
-			if ( $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
-				$openprint::log->debug("Imposition too large for " . $Equipment->strid() );
+			if ( $Equipment->specification('SpinePaste Maximum Pages') and $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
+				$openprint::log->debug("Too many Pages " . $I->pages() . '>' . $Equipment->specification('SpinePaste Maximum Pages') . " for " . $Equipment->strid() );
 				next;
 			} # end if
 			if ( $Project->signatures() > 1 or ! $service_index ) {
@@ -105,6 +105,7 @@ sub signature_calc {
 		$Results{'Equipment'} = $best{'Equipment'};
 		$Results{'Price'} = $best{'Price'}{'Total'};
 		$Results{'RunSpeed'} = $best{'Price'}{'RunSpeed'};
+$openprint::log->debug("Runspeed $Results{'RunSpeed'}");
 		$Results{'MakeReadyTime'} = $best{'Price'}{'MakeReadyTime'};
 	} # end if
 	return \%Results;
@@ -164,8 +165,8 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition too large " . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid();
 				next;
 			} # end if
-			if ( $Equipment->specification('SpinePaste Maximum Pages') and $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition too large for " . $Equipment->strid();
+			if ( $Equipment->specification('SpinePaste Maximum Pages') and $Equipment->specification('SpinePaste Maximum Pages') and $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= "Too many pages for " . $Equipment->strid();
 				next;
 			} # end if
 			if ( $folding_results ) {
@@ -211,12 +212,17 @@ sub calc_price {
 	
 	$Price{'MakeReadyTime'} = $Equipment->specification('SpinePaste MakeReady Time');
 
-	my $RunSpeed = $Equipment->Specification('Runspeed');
-	if ( $RunSpeed->units() eq 'Percent' ) {
-		$Price{'RunSpeed'} = $runspeed * ( 1 + $RunSpeed->value()/100 );
+	$openprint::log->debug("Starting Runspeed $runspeed ");
+	if ( ( my $RunSpeed = $Equipment->Specification('SpinePaste RunSpeed') ) ) {
+		if ( $RunSpeed->units() eq 'Percent' ) {
+			$Price{'RunSpeed'} = $runspeed * ( 1 + $RunSpeed->value()/100 );
+		} else {
+			$Price{'RunSpeed'} = $RunSpeed->value();
+		} # end if
 	} else {
-		$Price{'RunSpeed'} = $RunSpeed->value();
-	} # end if
+	$openprint::log->debug("No Runspeed set");
+	} # end if Runspeed
+	$openprint::log->debug("Runspeed is " . $Price{'RunSpeed'});
 	my %ServicePrice = openprint::service::get_price_object('SpinePaste', $qty, $Equipment );
 	if ( $ServicePrice{'units'} eq 'Per M' ) {
 		$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;

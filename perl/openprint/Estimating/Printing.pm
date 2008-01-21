@@ -787,7 +787,7 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
 	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
 	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )} if $$services{'SaddleStitching'};
-	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SpinePaste'}[0] )} if $$services{'SpinePaste'};
+	%{$project{'SpinePasteSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SpinePaste'}[0] )} if $$services{'SpinePaste'};
 
 	if ( $$services{'UVCoating'} ) {
 $openprint::log->debug("Grabbing UV Specs");
@@ -1795,11 +1795,11 @@ sub calc_price {
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
 
 		if ( $folding_results{'Equipment'} ) {
-			if ( $folding_results{'Equipment'}->id() != $Press->id() ) {
+			if ( $folding_results{'Equipment'}->id() == $Press->id() ) {
 				$run_speed = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
 			} # end if
 
-			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) Price: $%.2f on %s', @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) %d/hr Price: $%.2f on %s', @folding_results{'Imposition','RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
 		} else {
 			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
@@ -1808,24 +1808,26 @@ sub calc_price {
 		$price{'Comparison Cost'} += $folding_results{'Price'};
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Folding' );
 	} # end if
-	$price{'Run Speed'} = $run_speed;
 	if ( $$services{'SpinePaste'} ) {
 #my $starttime = gettimeofday();
 		my $results = openprint::Estimating::SpinePaste::signature_calc( $Project, $service_index, $Imposition, $$project{'SpinePasteSpecs'}, $qty_index, \%folding_results );
 		if ( $$results{'Status'} eq 'uncalculated' ) {
 			$price{'SpinePaste Breakdown'} .= "SpinePaste error: $$results{'alert'}<br/>";
 			$price{'Comparison Cost'} += 1000000; # Can't SP this on
-				$price{'SpinePaste Cost'} = 1000000;
+			$price{'SpinePaste Cost'} = 1000000;
 		} else {
 			$price{'SpinePaste Breakdown'} .= sprintf('SpinePaste MR: %dminutes RS: %d/hr Price: $%.2f<br/>%s<br/>', @$results{'MakeReadyTime','RunSpeed','Price','alert'} );
 			$price{'SpinePaste Cost'} = $$results{'Price'};
 			$price{'Comparison Cost'} += $$results{'Price'};
 		} # end if
 #$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-		$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} < $run_speed;
+		if ( $$results{'Equipment'}->id() == $Press->id() ) {
+			$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} < $run_speed;
+		} # end if
 
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'SpinePaste' );
 	} # end if
+	$price{'Run Speed'} = $run_speed;
 
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
