@@ -222,56 +222,14 @@ sub impositions {
 
 } # end sub impositions
 
-sub test_fold {
-	my ( $Equipment, $I, $sig_specs, $foldtype, $max_imposition ) = @_;
-
-$openprint::log->debug( "Foldtype: $foldtype" ) if $debug;
-	if ( $max_imposition and $I->imposition() > $max_imposition ) {
-		$openprint::log->debug("MAX Imposition too large " . $I->imposition() . ' > ' . $max_imposition ) if $debug;
-		return 0;
-	} # end if
-
-	if ( ! $Equipment->specification($foldtype .'RunSpeed', $$sig_specs{'txtStockGSM'} ) ) {
-		$openprint::log->debug("DId not Found $foldtype on " . $Equipment->name() ) if $debug;
-		return 0;
-	} else {
-		$openprint::log->debug("Found $foldtype on " . $Equipment->name() ) if $debug;
-
-		if ( ( defined $Equipment->specification($foldtype.'MaximumImposition' ) and $Equipment->specification($foldtype.'MaximumImposition' ) < $I->imposition() ) ) {
-			$openprint::log->debug("Fold no good due to imposition ".$I->imposition()." > ".$Equipment->specification($foldtype.'MaximumImposition' ) ) if $debug;
-			return 0;
-		} # end if
-		if ( ( defined $Equipment->specification($foldtype.'MaximumColumns' ) and $Equipment->specification($foldtype.'MaximumColumns' ) < $I->columns() ) ) {
-			$openprint::log->debug("Fold no good due to imposition " . $I->columns() . "> ".$Equipment->specification($foldtype.'MaximumColumns' ) ) if $debug;
-			return 0;
-		} # end if
-		if ( ( $Equipment->specification($foldtype.'MinimumWidth' ) and 1*$Equipment->specification($foldtype.'MinimumWidth' ) > 1*( $I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) ) ) {
-			$openprint::log->debug("Fold no good due to Minimum Width " . 1*($I->image_orientation() eq 'Vertical' ? $$sig_specs{'txtWidth'} : $$sig_specs{'txtHeight'} ) . ' < ' . $Equipment->specification($foldtype.'MinimumWidth' ) ) if $debug;
-			return 0;
-		}
-		if ( ( $Equipment->specification($foldtype.'MaximumWidth') and ( 1*$Equipment->specification($foldtype.'MaximumWidth' ) < 1*( $I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) ) ) ) {
-			$openprint::log->debug("Fold no good due to Maximum Width " . ( $I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) . ' > ' . $Equipment->specification($foldtype.'MaximumWidth') ) if $debug;
-			return 0;
-		} # end if
-		if ( ( $Equipment->specification($foldtype.'MinimumHeight' ) and $Equipment->specification($foldtype.'MinimumHeight') > ( $I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) ) ) {
-			$openprint::log->debug("Fold no good due to Minimum height " . ($I->image_orieintation() eq 'Vertical' ? $$sig_specs{'txtWidth'} : $$sig_specs{'txtHeight'} ) . ' < ' . $Equipment->specification($foldtype.'MinimumWidth' ) ) if $debug;
-			return 0;
-		} # end if
-		if ( ( $Equipment->specification($foldtype.'MaximumHeight' ) and $Equipment->specification($foldtype.'MaximumHeight') < ( $I->image_orientation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) ) ) {
-			$openprint::log->debug("Fold no good due to Maximum height " . ($I->image_orieintation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) . ' > ' . $Equipment->specification($foldtype.'MaximumHeight' ) ) if $debug;
-			return 0;
-		#} else {
-			#$openprint::log->debug("Fold good due to Maximum height " . ($I->image_orieintation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) . ' > ' . $Equipment->specification($foldtype.'MaximumHeight' ) ) if $debug;
-		} # end if
-	} # end if
-	return 1;
-} # end sub test_fold
-
 sub signature_calc {
 	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
 
 	$$specs{"txtQuantity$qty_index"} = int $$specs{"txtQuantity$qty_index"};
 	$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
+	if ( $$specs{'txtPressSheetComboItems'} ) {
+		$$specs{"txtQuantity$qty_index"} *= $$specs{'txtPressSheetComboItems'};
+	} # end if
 
 	if ( ! $Imposition ) {
 $openprint::log->debug("Loading imposition");
@@ -280,25 +238,12 @@ $openprint::log->debug("Loading imposition");
 		$Imposition->load( $sig_specs, $qty_index );
 	} # end if
 
-	$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}:<br/>" if $$sig_specs{'txtServiceDescription'};
-	if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-		$$specs{'hdnBreakdown'.$qty_index} .= "No imposition.<br/>";
-		return;
-	} # endif
-	if ( ! $$sig_specs{'txtSpreadSize'} ) {
-		$$sig_specs{'txtSpreadSize'} = 2;
-	} # end if
-
 	my $bestPrice;
 	my $bestRunPrice = 0;
 	my $bestRunTime = 0;
 	my $bestSetupPrice = 0;
 	my $bestEquipment;
 	my $bestFolds;
-
-	if ( $$specs{'txtPressSheetComboItems'} ) {
-		$$specs{"txtQuantity$qty_index"} *= $$specs{'txtPressSheetComboItems'};
-	} # end if
 
 	@equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' ) if ! @equipment;
 	@stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) if ! @stitchers;
@@ -388,6 +333,7 @@ $openprint::log->debug("Loading imposition");
 	foreach my $Equipment ( @my_equipment ) {
 		my %folds;
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment '.$Equipment->name().': ';
+		$openprint::log->debug('Equipment '.$Equipment->name());
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -402,7 +348,7 @@ $openprint::log->debug("Loading imposition");
 							'page_columns'		=>	$$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(),
 							'page_rows'			=>	$Imposition->spread_rows(),
 							'spine_direction'	=>	$Imposition->image_orientation(),
-							'stitching'			=>	$$services{'SaddleStitching'} or $$services{'LoopStitching'},
+							'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
 							'perfectbind'		=>	$$services{'PerfectBind'},
 							'spinepaste'		=>	$$services{'SpinePaste'},
 							'gsm'				=>	$Imposition->Paper()->gsm(),
@@ -421,12 +367,12 @@ $openprint::log->debug("Loading imposition");
 		} elsif ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) {
 # Special case because we can't cut it in the middle of printing.  This case is basically for web presses
 
-			my $Fold = $Equipment->Fold( 
+			my $Fold = $Equipment->Fold(
 					'pages'				=>	$pages,
 					'page_columns'		=>	$$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(),
 					'page_rows'			=>	$Imposition->spread_rows(),
 					'spine_direction'	=>	$Imposition->image_orientation(),
-					'stitching'			=>	$$services{'SaddleStitching'} or $$services{'LoopStitching'},
+					'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
 					'perfectbind'		=>	$$services{'PerfectBind'},
 					'spinepaste'		=>	$$services{'SpinePaste'},
 					'gsm'				=>	$Imposition->Paper()->gsm(),
@@ -445,11 +391,15 @@ $openprint::log->debug("Loading imposition");
 				if ( $_ ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit: $_<br/>";
 				} else {
-					my $Fold = $Equipment->Fold( 
+					my $Fold = $Equipment->Fold(
 							'type'				=>	$$sig_specs{'rdbTemplateType'},
 							'gsm'				=>	$Imposition->Paper()->gsm(),
 							);
+					if ( $Fold ) {
 					push @{$folds{$$sig_specs{'rdbTemplateType'}}}, $Fold;
+					} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Can't fold that:<br/>";
+					} # end if
 				} # end if
 
 			} else {
@@ -466,12 +416,12 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 					$_ = $Equipment->fits( $I->image_width(), $I->image_height()*$imposition, $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 
-						my $Fold = $Equipment->Fold( 
+						my $Fold = $Equipment->Fold(
 								'pages'				=>	$pages,
 								'page_columns'		=>	$$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(),
 								'page_rows'			=>	$Imposition->spread_rows(),
 								'spine_direction'	=>	$Imposition->image_orientation(),
-								'stitching'			=>	$$services{'SaddleStitching'} or $$services{'LoopStitching'},
+								'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
 								'perfectbind'		=>	$$services{'PerfectBind'},
 								'spinepaste'		=>	$$services{'SpinePaste'},
 								'gsm'				=>	$Imposition->Paper()->gsm(),
@@ -485,6 +435,7 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 						} # end if
 					} else {
 						$openprint::log->debug($_);
+						last;
 					} # end if
 					# This tells us whether it's a book or not
 					last if ! $$sig_specs{'PageQuantity'.$qty_index};
@@ -530,9 +481,10 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 					next;
 				} else {
 					foreach my $F ( @good_folds ) {
+$openprint::log->debug('Got fold ' . $F->pages() );
 						push @{$folds{$F->pages().'PageSignatureFold'}}, $F;
 					} # end foreach
-				} # end if
+				} # end if able to fold all
 			} # end if
 		} # end if
 
@@ -612,6 +564,7 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 		);
 
 	foreach ( keys %fold_types ) {
+		$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
 		if ( $$bestFolds{$_} ) {
 			$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = scalar @{$$bestFolds{$_}};
 			foreach my $Fold ( @{$$bestFolds{$_}} ) {
@@ -659,10 +612,15 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.<br/>';
+				next;
+			} # endif
 			$$sig_specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'} if ! $$sig_specs{'txtSpreadSize'};
 			$$sig_specs{'txtSpreadSize'} = 2 if ! $$sig_specs{'txtSpreadSize'};
 
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}:<br/>" if $$sig_specs{'txtServiceDescription'};
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index );
 				$price += $results{'Price'};
 				$mprice += $results{'MPrice'};

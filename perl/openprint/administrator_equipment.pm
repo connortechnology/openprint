@@ -149,9 +149,17 @@ sub _fold {
 		} # end foreach
 		$Fold->save();
 		$openprint::variable{'Fold'} = $Fold;
+	} elsif ( $openprint::param{'action'} eq 'copy' ) {
+		$Fold = $Fold->copy();
+		delete $openprint::param{id};
+		$Fold->save(\%openprint::param);
+		$openprint::variable{'Fold'} = $Fold;
 	} elsif ( $openprint::param{'action'} eq 'save' ) {
 		$Fold->save(\%openprint::param);
 		$openprint::variable{'Fold'} = $Fold;
+	} elsif ( $openprint::param{'action'} eq 'delete' ) {
+		$Fold->delete();
+		$openprint::variable{'PageContent'} = ' ';
 	} # end if
 } # end sub _fold
 

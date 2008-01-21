@@ -458,7 +458,7 @@ $spread_size /= 2;
 		} # end if
 	} # end foreach
 } # end foreach
-sql::insert( undef, undef, 'database_info', 'version', 1905, 'backup', $backup );
+die if sql::insert( undef, undef, 'database_info', 'version', 1905, 'backup', $backup );
 sql::end_transaction( $dbh, $ac );
 $version = 1905;
 } # end if

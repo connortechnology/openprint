@@ -151,7 +151,12 @@ sub save {
 
 sub delete {
 	my ( $self ) = @_;
-	sql::execute( undef, undef, q{DELETE FROM Folds WHERE id=?}, $$self{id} );
+	my $ac = sql::start_transaction( $openprint::dbh );
+	sql::execute( undef, undef, q{DELETE FROM Fold_Specifications WHERE fold_id=?}, $$self{id} );
+	if ( ! sql::execute( undef, undef, q{DELETE FROM Folds WHERE id=?}, $$self{id} ) ) {
+		delete $openprint::Object::cache{ref $self}{$$self{id}};
+	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
 sub copy {

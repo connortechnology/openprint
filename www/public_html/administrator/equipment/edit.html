@@ -170,10 +170,11 @@
 		</table>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
+</form>
 <? if ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
 <? echo ( ssi::writeButton( $log, $dbh, 'AddFold', 'add.gif',"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{'Equipment'}->id() ."', { method: 'get', onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
-		<ul id="Folds">
+		<div id="Folds">
 			<? echo (
 				my $html = '';
 				 my @Folds = $$variable{'Equipment'}->Folds();
@@ -182,8 +183,7 @@
 				} # end while
 				return $html;
 			) ?>
-		</ul>
+		</div>
 	</fieldset>
 <? endif ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
 <? endif ( $$variable{'Equipment'}->id() ) ?>
-</form>

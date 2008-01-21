@@ -52,7 +52,7 @@
 	</li>
 	<li style="float: right;">
 		<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
-			<b style="color: white;">Currency:</b>
+			<label>Currency:</label>
 			<select name="select_currency_id" onchange="this.form.submit();">
 				<? echo (
 					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );

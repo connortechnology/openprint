@@ -163,22 +163,31 @@ sub Folds {
 } # end sub Folds
 
 sub Fold {
-	my ( $self, %param ) = @_;
+	my $self = shift;
+	my %params = @_;
+	my $params = \%params;
 
 	if ( ! $$self{'Folds'} ) {
 		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'lower(name)' );
 	} # end if
+#$openprint::log->debug("Param" . ref $params );
+#foreach my $k ( keys %params ) {
+#$openprint::log->debug("Param: $k => $$params{$k}");
+#}
 
 	foreach my $Fold ( @{$$self{'Folds'}} ) {
-		next if $$Fold{pages} and $param{pages} and ($$Fold{pages} != $param{pages} );
-		next if $$Fold{page_columns} and $param{page_columns} and ($$Fold{page_columns} != $param{page_columns} );
-		next if $$Fold{page_rows} and $param{page_rows} and ($$Fold{page_rows} != $param{page_rows} );
-		next if $$Fold{spine_direction} and $param{spine_direction} and ($$Fold{spine_direction} ne $param{spine_direction} );
-		next if $param{stitching} and ! $$Fold{stitching};
-		next if $param{perfectbind} and ! $$Fold{perfectbind};
-		next if $param{spinepaste} and ! $$Fold{spinepaste};
-		if ( $param{gsm} ) {
-			next if ! $Fold->Specification( $param{gsm} );
+		#$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}");
+		next if $$Fold{pages} and $$params{pages} and ($$Fold{pages} != $$params{pages} );
+		#$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}");
+		next if $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} );
+		#$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}");
+		next if $$Fold{page_rows} and $$params{page_rows} and ($$Fold{page_rows} != $$params{page_rows} );
+		next if $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} );
+		next if defined $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching};
+		next if defined $$params{perfectbind} and defined $$Fold{perfectbind};
+		next if defined $$params{spinepaste} and defined $$Fold{spinepaste};
+		if ( $$params{gsm} ) {
+			next if ! $Fold->Specification( $$params{gsm} );
 		} # end if
 		return $Fold;
 	} # end foreach Fold
