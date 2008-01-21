@@ -58,6 +58,9 @@ my %defaults = (
 	'makeready_time' => undef,
 	'makeready_overs' => undef,
 	'run_overs' => undef,
+	'stitching'	=> undef,
+	'perfectbind'	=> undef,
+	'spinepaste'	=> undef,
 );
 
 my $debug = 1;
