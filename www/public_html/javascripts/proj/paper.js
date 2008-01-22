@@ -3,7 +3,6 @@
 function body_onLoad() {
 	var form = getFormObj('f1');
 	calc('f1');
-	//jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, '', '' ) );
 } // end function body_onLoad();
 
 function mweight_to_gsm( form, signature ) {
@@ -42,10 +41,6 @@ function gsm_to_mweight( form, signature ) {
 
 function get_parameters( form, id, selected ) {
 	gettingNewPrice = true;
-	var template = '';
-	if ( form.hdnPaperTemplate && form.hdnPaperTemplate.value ) {
-		template = form.hdnPaperTemplate.value;
-	} // end if
 
     var parameters = new Array (
 			selected,
@@ -172,20 +167,9 @@ function ddmStockWeight_onchange( element, id ) {
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Weight') );
 } // end function ddmStockWeight_onchange();
 function txtSpecificStockWeight_onKeyUp( element ) {
-	//ddm_select_by_value( element.form.ddmStockBrand, 'Customer Supplied', 0 );
-	//ddmStockBrand_onchange();
 } // end function txtSpecificStockWieght_onKeyUp()
 
 function txtSpecificStockCalliper_onKeyUp( element ) {
-	//var form = getFormObj('f1');
-	//if ( get_ddm_value(form.ddmStockBrand) != 'Customer Supplied' ) {
-		//form.txtSpecificStockCalliper.value = get_ddm_value( form.ddmStockWeight );
-	//} else {
-		//ddm_select_by_value( form.ddmStockWeight, '' );
-		//if ( form.txtSpecificStockCalliper.value != '' && isNaN( parseFloat( 1*form.txtSpecificStockCalliper.value ) ) ) {
-			//alert( "Paper calliper must be a positive numerical value." );
-		//} // end if
-	//} // end if
 }
 
 function ddmStockSheetSize_onchange() {
@@ -235,14 +219,14 @@ function fill_drop_down( results ) {
     } // end for
 	if ( form.elements['ddmStockBrand'+id] ) {
 		if ( BrandOptions.length > 1 ) {
-		var selectedValue = get_ddm_value( form.elements['ddmStockBrand'+id] );
-		fill_ddm( form.elements['ddmStockBrand'+id], BrandOptions, 'ddmStockBrand_onchange' );
-		
-		if ( BrandOptions.length == 2 ) {
-			ddm_select_by_index( form.elements['ddmStockBrand'+id], 1 );
-		} else {
-			ddm_select_by_value( form.elements['ddmStockBrand'+id], selectedValue, 0 );
-		} // end if
+			var selectedValue = get_ddm_value( form.elements['ddmStockBrand'+id] );
+			fill_ddm( form.elements['ddmStockBrand'+id], BrandOptions, 'ddmStockBrand_onchange' );
+			
+			if ( BrandOptions.length == 2 ) {
+				ddm_select_by_index( form.elements['ddmStockBrand'+id], 1 );
+			} else {
+				ddm_select_by_value( form.elements['ddmStockBrand'+id], selectedValue, 0 );
+			} // end if
 		} // end if
 		form.elements['ddmStockBrand'+id].disabled = false;
 	} // end if
@@ -310,6 +294,3 @@ function cbFillDropDowns( results ) {
 	gettingNewPrice = false;
 	calc('f1');
 } // end function cbFillDropDowns( results )
-
-function ddmRunStyle_onchange() {
-} // end function
