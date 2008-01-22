@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -337,8 +337,9 @@ sub signature_calc {
 	my %makereadies;
 	my $max_imposition = $Imposition->imposition();
 
-	foreach my $ss_id ( $Project->signatures( $$sig_specs{'txtSignatureType'} ) ) {
-		next if $signature_service_index and ($ss_id >= $signature_service_index);
+	foreach my $ss_id ( $Project->signatures( ) ) {
+		next if $Paper and $signature_service_index and ($ss_id > $signature_service_index);
+		next if $ss_id == $signature_service_index;
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		if ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) {
 			$max_imposition = $$s_specs{'txtImposition'.$qty_index};

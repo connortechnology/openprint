@@ -1,4 +1,4 @@
-package opepnrint::main_company;
+package openprint::main_company;
 
 1;
 __END__
