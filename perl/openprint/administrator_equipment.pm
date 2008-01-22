@@ -150,10 +150,16 @@ sub _fold {
 		$Fold->save();
 		$openprint::variable{'Fold'} = $Fold;
 	} elsif ( $openprint::param{'action'} eq 'copy' ) {
-		$Fold = $Fold->copy();
+		my $NewFold = $Fold->copy();
 		delete $openprint::param{id};
-		$Fold->save(\%openprint::param);
-		$openprint::variable{'Fold'} = $Fold;
+		$NewFold->save(\%openprint::param);
+		foreach my $Spec ( $Fold->Specifications() ) {
+			$Spec = $Spec->copy();
+			$Spec->fold_id( $NewFold->id() );
+			$Spec->save();
+		} # end foreach Spec
+		$openprint::variable{'Fold'} = $NewFold;
+		
 	} elsif ( $openprint::param{'action'} eq 'save' ) {
 		$Fold->save(\%openprint::param);
 		$openprint::variable{'Fold'} = $Fold;

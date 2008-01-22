@@ -1819,10 +1819,10 @@ sub calc_price {
 			$price{'SpinePaste Breakdown'} .= sprintf('SpinePaste MR: %dminutes RS: %d/hr Price: $%.2f<br/>%s<br/>', @$results{'MakeReadyTime','RunSpeed','Price','alert'} );
 			$price{'SpinePaste Cost'} = $$results{'Price'};
 			$price{'Comparison Cost'} += $$results{'Price'};
-		} # end if
 #$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-		if ( $$results{'Equipment'}->id() == $Press->id() ) {
-			$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} < $run_speed;
+			if ( $$results{'Equipment'}->id() == $Press->id() ) {
+				$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} < $run_speed;
+			} # end if
 		} # end if
 
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'SpinePaste' );

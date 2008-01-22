@@ -62,7 +62,7 @@ sub signature_calc {
 	my %Results;
 	if ( ! @Equipment ) {
 		$Results{'Status'} = 'uncalculated';
-		$Results{'alert'} .= 'We are unable to automatically provide a price for Spine Pasting.  You may enter your own price in the price fields, or contact your CSR for a quote.';
+		$Results{'alert'} .= 'No equipment for Spine Pasting';
 		return \%Results;
 	} # end if
 
@@ -71,19 +71,27 @@ sub signature_calc {
 		if ( $Equipment->specification('Type') eq 'Press' ) {
 # Inline pasting
 			if ( $Equipment->id() != $I->Press()->id() ) {
-				$openprint::log->debug("Not printing on " . $Equipment->strid() );
+				$openprint::log->debug("Not printing on " . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
 			if ( $Equipment->specification('SpinePaste Maximum Imposition') and $I->imposition() > $Equipment->specification('SpinePaste Maximum Imposition') ) {
-				$openprint::log->debug("Imposition too large " . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid() );
+				$openprint::log->debug("Imposition too large " . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid() .'<br/>' );
 				next;
 			} # end if
 			if ( $Equipment->specification('SpinePaste Maximum Pages') and $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
-				$openprint::log->debug("Too many Pages " . $I->pages() . '>' . $Equipment->specification('SpinePaste Maximum Pages') . " for " . $Equipment->strid() );
+				$openprint::log->debug("Too many Pages " . $I->pages() . '>' . $Equipment->specification('SpinePaste Maximum Pages') . " for " . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
-			if ( $Project->signatures() > 1 or ! $service_index ) {
-				$openprint::log->debug("Can only stitch 1 signature for " . $Equipment->strid() );
+			if ( ! $service_index ) {
+				$openprint::log->debug("Can only spine paste 1 signature for " . $Equipment->strid() . '<br/>' );
+				next;
+			} # end if
+			my $sigs = 1;
+			foreach my $ss_id ( $Project->signatures() ) {
+				$sigs += 1 if ( $ss_id < $service_index );
+			} # end foreach
+			if ( $sigs > 1 ) {
+				$openprint::log->debug("Can only spine paste 1 signature for " . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
 			if ( $$folding_results{'Equipment'}->id() != $Equipment->id() ) {
@@ -99,13 +107,12 @@ sub signature_calc {
 	} # end foreach Equipment
 	if ( ! %best ) {
 		$Results{'Status'} = 'uncalculated';
-		$Results{'alert'} .= 'We were unable to automatically provide a price for Spine Pasting.  You may enter your own price in the price fields, or contact your CSR for a quote.';
+		$Results{'alert'} .= 'Unable to calculate';
 	} else {
 		$Results{'Status'} = 'calculated';
 		$Results{'Equipment'} = $best{'Equipment'};
 		$Results{'Price'} = $best{'Price'}{'Total'};
 		$Results{'RunSpeed'} = $best{'Price'}{'RunSpeed'};
-$openprint::log->debug("Runspeed $Results{'RunSpeed'}");
 		$Results{'MakeReadyTime'} = $best{'Price'}{'MakeReadyTime'};
 	} # end if
 	return \%Results;
@@ -142,42 +149,42 @@ sub calc {
 		next if ! $qty;
 
 		my %best;
-	my $folding_results;
+		my $folding_results;
 
 		foreach my $Equipment ( @Equipment ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: $s<br/>', $Equipment->strid() );
-			
-		if ( $Equipment->specification('Type') eq 'Press' ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s<br/>', $Equipment->strid() );
+
+			if ( $Equipment->specification('Type') eq 'Press' ) {
 # Inline pasting
-			if ( $Project->signatures() > 1 or ! $service_index ) {
-				$$specs{'hdnBreakdown'.$qty_index} .="Can only stitch 1 signature for " . $Equipment->strid();
-				next;
+				my @sigs = $Project->signatures();
+				if ( @sigs > 1 ) {
+					$openprint::log->debug("Can only spine paste 1 signature for " . $Equipment->strid() );
+					next;
+				} # end if
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+				my $I = new openprint::Imposition;
+				$I->load( $sig_specs, $qty_index );	
+				if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Not printing on " . $Equipment->strid();
+					next;
+				} # end if
+				if ( $Equipment->specification('SpinePaste Maximum Imposition') and $I->imposition() > $Equipment->specification('SpinePaste Maximum Imposition') ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Imposition too large " . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid();
+					next;
+				} # end if
+				if ( $Equipment->specification('SpinePaste Maximum Pages') and $Equipment->specification('SpinePaste Maximum Pages') and $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Too many pages for " . $Equipment->strid();
+					next;
+				} # end if
+				if ( $folding_results ) {
+					if ( $$folding_results{'Equipment'}->id() != $Equipment->id() ) {
+						$$specs{'hdnBreakdown'.$qty_index} .="Must also be folded on " . $Equipment->strid();
+						next;
+					} # end if
+				} # end if
 			} # end if
-			my @sigs = $Project->signatures();
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-			my $I = new openprint::Imposition;
-			$I->load( $sig_specs, $qty_index );	
-			if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Not printing on " . $Equipment->strid();
-				next;
-			} # end if
-			if ( $Equipment->specification('SpinePaste Maximum Imposition') and $I->imposition() > $Equipment->specification('SpinePaste Maximum Imposition') ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition too large " . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid();
-				next;
-			} # end if
-			if ( $Equipment->specification('SpinePaste Maximum Pages') and $Equipment->specification('SpinePaste Maximum Pages') and $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Too many pages for " . $Equipment->strid();
-				next;
-			} # end if
-			if ( $folding_results ) {
-			if ( $$folding_results{'Equipment'}->id() != $Equipment->id() ) {
-				$$specs{'hdnBreakdown'.$qty_index} .="Must also be folded on " . $Equipment->strid();
-				next;
-			} # end if
-			} # end if
-		} # end if
 			my %Price = calc_price( $qty, $Equipment );
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%.2f%s for %d = $%.2f<br/>', $Price{'ServicePrice'}{'Price','units'},$qty, $Price{'ServicePrice'}{'Total'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%.2f%s for %d = $%.2f<br/>', $Price{'ServicePrice'}{'Price'},$Price{'ServicePrice'}{'units'},$qty, $Price{'ServicePrice'}{'Total'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f<br/>', $Price{'MakeReady'}{'Price'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReadyTime: %dminutes<br/>', $Price{'MakeReadyTime'} );
 
