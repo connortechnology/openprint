@@ -393,7 +393,7 @@ div.row:after {
 }
 span.DateSelector {
     float: left;
-	width: 200px;
+	width: 205px;
 }
 
 div.Popup {
@@ -564,4 +564,7 @@ div.Service span.ThreeColumns {
 div.Service span.TwoColumns {
 	width: 50%;
 	float: left;
+}
+h1,h2,h3,h5 {
+	color: maroon;
 }

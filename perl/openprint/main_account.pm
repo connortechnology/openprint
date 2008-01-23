@@ -164,6 +164,7 @@ sub registration {
 		$User->howdidyouhearaboutus( $openprint::param{'howdidyouhearaboutus'} );
 		$User->howdidyouhearaboutusother( $openprint::param{'howdidyouhearaboutusother'} );
 		$$variable{'error'} .= $User->save();		
+		return if $$variable{'error'};
 
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;
@@ -216,6 +217,7 @@ sub registration {
 		$User->howdidyouhearaboutus( $openprint::param{'howdidyouhearaboutus'} );
 		$User->howdidyouhearaboutusother( $openprint::param{'howdidyouhearaboutusother'} );
 		$$variable{'error'} .= $User->save();		
+		return if $$variable{'error'};
 
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;

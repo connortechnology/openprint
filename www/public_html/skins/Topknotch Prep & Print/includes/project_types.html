@@ -10,7 +10,7 @@
 		while ( $$variable{'ProjectType'} = shift @{$$variable{'ProjectTypes'}} ) {
 		$html .= sprintf('<li><a href="/content/%4$s?ProjectType=%1$s&amp;ProjectTypeName=%3$s" title="%3$s">%2$s</a></li>',
 			$$variable{'ProjectType'}->strid(), 
-			$$variable{'ProjectType'}->name(), 
+			ssi::htmlize( $$variable{'ProjectType'}->name() ),
 			URI::Escape::uri_escape($$variable{'ProjectType'}->name()), 
 			$$variable{'ProjectType'}->url()
 			);

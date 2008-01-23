@@ -44,6 +44,9 @@
 		<div class="Content"> 
 			<div id="Header">
 				<img style="float: left; margin-right: 15px;" src="/images/logo.gif" alt="Topknotch Trade" />
+			<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
+			<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
 			</div>
 			<br/>

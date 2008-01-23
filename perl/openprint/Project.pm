@@ -827,10 +827,14 @@ sub summary {
 			} else {
 				$summary .= sprintf( '%s&quot;x%s&quot; ', @specs{'txtFinalWidth','txtFinalHeight'});
 			} # end if
-			$summary .= sprintf('%d/%d ',
+			$summary .= sprintf('%d%s%s/%d%s%s ',
 					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideOne' ),
-					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideTwo' ) );
-			$summary .= '+AQ ' if $specs{'rdbAqueousSideOne'} ne 'None' or $specs{'rdbAqueousSideTwo'} ne 'None';
+					$specs{'rdbAqueousSideOne'} ne 'None' ? '+AQ' : '',
+					$specs{'SideOneUVCoatingType'} ne 'None' ? '+UV' : '',
+					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideTwo' ),
+					$specs{'rdbAqueousSideTwo'} ne 'None' ? '+AQ' : '',
+					$specs{'SideTwoUVCoatingType'} ne 'None' ? '+UV' : '',
+ );
 			if ( $specs{'rdbSuppliedStock'} eq 'Y' ) {
 				$summary .= 'Customer Supplied Stock';
 			} elsif ( $specs{'rdbSpecificStock'} eq 'Y' ) {

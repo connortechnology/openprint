@@ -27,14 +27,10 @@
 				</span>
 				<br class="spacer"/>
 				<span class="input">
-					<span class="checkOption">
 						<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onClick="remove_div('CoverStocks');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} ne 'Different' ) ?> />
 						<label for="rdbCoverSelf">Self Cover</label>
-					</span>
-					<span class="checkOption">
 						<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onClick="add_div('CoverStocks');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
 						<label for="rdbCoverDifferent">Different Cover</label>
-					</span>
 					<br class="spacer"/>
 				</span>
 				<br class="spacer"/>

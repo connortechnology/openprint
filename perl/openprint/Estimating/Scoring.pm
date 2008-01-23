@@ -124,7 +124,6 @@ sub calc {
 	if ( ! @all_equipment ) {
 		@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'Y'} );
 		if ( $stitching_service_index and $$services{'Folding'} ) {
-
 			push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Folding'} );
 		} # end if
 
@@ -156,6 +155,7 @@ sub calc {
 			$totalSetupPrice += $Price{'SetupPrice'};
 			$totalServicePrice += $Price{'ServicePrice'};
 			$totalMaterialPrice += $Price{'MaterialPrice'};
+			$status = 'uncalculated' if $Price{'Status'} eq 'uncalculated';
 		} # end foreach
 
 		my $price = 0;
@@ -187,7 +187,7 @@ $openprint::log->debug("sign calc");
 	$sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index ) if ! $sig_specs;
 
 	my %Results = (
-		'Status' => 'uncalculated',
+		'Status' => 'calculated',
 	);
 	my $services = $Project->services();
 	# Can only use the stitcher for scoring if we are stitching.  There are also thickness constraints
@@ -214,6 +214,7 @@ $openprint::log->debug("sign calc");
 	@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
 	$$specs{'hdnBreakdown'.$qty_index} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
+	$Results{'Status'} = 'uncalculated';
 
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 	if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -252,11 +253,13 @@ $openprint::log->debug("sign calc");
 	my $imposition = new openprint::Imposition();
 	$imposition->load( $sig_specs, $qty_index );
 
+	if ( 1 ) {
 	# IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $imposition->runstyle() eq 'Work & Turn' ) {
 		$imposition->columns( $imposition->columns()/2 );
 	} elsif ( $imposition->runstyle() eq 'Work & Tumble' ) {
 		$imposition->rows( $imposition->rows()/2 );
+	} # end if
 	} # end if
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -293,6 +296,7 @@ $openprint::log->debug("sign calc");
 	foreach my $Equipment ( @equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Equipment: ".$Equipment->name().', ';
 		next if ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'};
+		next if ( $Equipment->specification('Type') eq 'Stitcher' ) and ! $stitching_service_index;
 		my @impositions = ();
 		if ( $Equipment->specification('Type') eq 'Press' ) {
 			if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
@@ -428,7 +432,8 @@ sub get_scores {
 	my ( $Project, $specs, $sig_specs ) = @_;
 
 	if ( ! signature_needs( $Project, $sig_specs ) ) {
-		$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+		# Default to 1 score, because we assume that if we have scoring, then we must want at least 1
+		$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 		$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
 		$openprint::log->debug("SIgnature $$sig_specs{'SignatureIndex'} doesn't need scoring in get_scores") if $debug;
 		return;

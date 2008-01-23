@@ -15,25 +15,39 @@
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 		<? if ( $r->uri() =~ /\/content\/prin/ ) ?>
-               <script type="text/javascript" src="/javascripts/service.js"></script>
-               <script type="text/javascript" src="/javascripts/proj/paper.js"></script>
-               <script type="text/javascript" src="/javascripts/simpleprinting.js"></script>
+               <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+               <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+               <script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
 		<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/content\/prin/ ) ?>
 
-		<script type="text/javascript" src="/javascripts/tips.js"></script>
-		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
-		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
-		<script type="text/javascript" src="/javascripts/popups.js"></script>
-		<script type="text/javascript" src="/javascripts/buttons.js"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-		<script type="text/javascript" src="/javascripts/window.js"></script>
+		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 
 		<link rel="shortcut icon" href="/images/favicon.ico">
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+  <style type="text/css">
+           div#main_page
+         {
+            float: left;
+            width: 745px;
+         }
+         div#main_page_content
+         {
+            background-image: url(/images/shadow_border/full_page_bg.gif);
+         }
+        </style>
+
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div id="content_container">
@@ -45,7 +59,10 @@
          </div>
          <div id="main_content">
             <div id="main_content_inner">
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? else ( $r->uri() =~ /\/main\/order/ ) ?>
                <!--#include virtual="/skins/<?SiteTitle?>/includes/left_sidebar.html"-->
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
                <div id="main_page">
                   <div class="top_shadow">
                      <div class="shadow_tl"></div>

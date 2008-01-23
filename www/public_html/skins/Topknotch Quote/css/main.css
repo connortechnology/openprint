@@ -224,4 +224,13 @@ ul#ProjectTypes {
 .ProjectTypes a:hover {
     color: #ff00ff;
 }
-
+#CurrencySelection {
+}
+#CurrencySelection p {
+}
+#CurrencySelection p label {
+	color: black;
+	font-size: x-small;
+	font-weight: normal;
+	width: 180px;
+}

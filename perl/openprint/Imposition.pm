@@ -61,20 +61,20 @@ sub AUTOLOAD {
 				$$self{'layout_height'} = $$self{'rows'} * $$self{'image_width'};
 
 				if ( $$self{'dutch_orientation'} eq 'width' ) {
-					$$self{'layout_width'} += $$self{'dutch_columns'} * $$self{'image_width'} if $$self{'dutch_orientation'} eq 'width';
+					$$self{'layout_width'} += $$self{'dutch_columns'} * $$self{'image_width'};
 					my $dutch_height = $$self{'dutch_rows'} * $$self{'image_height'};
 					$$self{'layout_height'} = $dutch_height if $dutch_height > $$self{'layout_height'};
 				} else {
-					$$self{'layout_height'} += $$self{'dutch_rows'} * $$self{'image_height'} if $$self{'dutch_orientation'} eq 'height';
+					$$self{'layout_height'} += $$self{'dutch_rows'} * $$self{'image_height'};
 					my $dutch_width = $$self{'dutch_columns'} * $$self{'image_width'};
 					$$self{'layout_width'} = $dutch_width if $dutch_width > $$self{'layout_width'};
 				} # end if
 
 			} # end if
-			if ( $$self{'spreads'} ) {
-				$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
-				$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
-			} # end if
+			#if ( $$self{'spreads'} ) {
+				#$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
+				#$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
+			#} # end if
 		} # end if
 	} # end if
 	return $self->{$name};
@@ -109,11 +109,11 @@ sub set {
 		$$self{'layout_width'} = $$self{'columns'} * $$self{'image_height'};
 		$$self{'layout_height'} = $$self{'rows'} * $$self{'image_width'};
 		if ( $$self{'dutch_orientation'} eq 'width' ) {
-			$$self{'layout_width'} += $$self{'dutch_columns'} * $$self{'image_width'} if $$self{'dutch_orientation'} eq 'width';
+			$$self{'layout_width'} += $$self{'dutch_columns'} * $$self{'image_width'};
 			my $dutch_height = $$self{'dutch_rows'} * $$self{'image_height'};
 			$$self{'layout_height'} = $dutch_height if $dutch_height > $$self{'layout_height'};
 		} else {
-			$$self{'layout_height'} += $$self{'dutch_rows'} * $$self{'image_height'} if $$self{'dutch_orientation'} eq 'height';
+			$$self{'layout_height'} += $$self{'dutch_rows'} * $$self{'image_height'};
 			my $dutch_width = $$self{'dutch_columns'} * $$self{'image_width'};
 			$$self{'layout_width'} = $dutch_width if $dutch_width > $$self{'layout_width'};
 		} # end if
@@ -194,6 +194,8 @@ sub load {
 	} else {
 		$$self{'spread_rows'} = int($$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
 		$$self{'spread_columns'} = int($$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
+		#$$self{'spread_rows'} = 1;
+		#$$self{'spread_columns'} = 1;
 		$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
 	} # end if
 	$$self{'spread_size'} = $$specs{'txtSpreadSize'};

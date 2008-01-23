@@ -63,7 +63,7 @@
 					) ?>
 				</select>
 			</p>
-			<p id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} ne 'Sheet' ) ?>>
+			<p id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>>
 			<label>MWeight:</label><input type="text" name="txtCustomMWeight<?Signature?>" size="9" value="<? echo ( $$variable{'txtCustomMWeight'.$$variable{'Signature'}} ) ?>" onkeyup="mweight_to_gsm(this.form,'<?Signature?>');calc(this.form.name);" />
 			</p>
 			<p id="BasisSize<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ) ?>>

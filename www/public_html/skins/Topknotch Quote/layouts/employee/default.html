@@ -55,13 +55,10 @@
 			<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
 			<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
-			<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
-			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
-			<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
 		</div><!-- Header -->
 		<br class="spacer"/>
-		<!--#include virtual="/includes/employee_menu.html"-->
+		<!--#include virtual="/skins/<?SiteTitle?>/includes/employee_menu.html"-->
 		<div id="Content">
 			<div class="Content"><?PageContent?></div>
 		</div>

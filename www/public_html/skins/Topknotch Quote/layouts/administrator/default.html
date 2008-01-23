@@ -5,6 +5,12 @@
 		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/administrator.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
+		<? if ( $r->uri() =~ /\/administrator\/order/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/administrator\/order/ ) ?>
+		<? if ( $r->uri() =~ /\/administrator\/quote/ ) ?>
+		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/administrator\/quote/ ) ?>
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
 		<script type="text/javascript" src="/javascripts/popups.js"></script>
 		<script type="text/javascript" src="/javascripts/tips.js"></script>
@@ -45,9 +51,6 @@
 			<div class="Header">
 					<span style="float: left; font-size: 30px; color: #687796;">Topknotch Quote</span>
 				<!--<img style="float: left; margin-right: 15px;" src="/images/main/header/logo.jpg">-->
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
-				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 				<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
 				<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>

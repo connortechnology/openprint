@@ -454,13 +454,13 @@ sub information {
 		my @data = sql::execute( $log, $dbh, q{SELECT intQuantityIndex, ShippingType, lngProjectIndex, (SELECT strProjectReference FROM tbl_Projects WHERE Index=lngProjectIndex) FROM Order_Contents WHERE OrderIndex=?}, $order_id );
 		while ( my ( $qty, $shipping, $project_index, $ref ) = splice @data, 0, 4 ) {
 			if ( ! $qty ) {
-				push @errors, "Please select the quantity to order for project $project_index";
+				push @errors, "Please select the quantity to order for project $project_index<br/>";
 			} # end if
 			if ( ! $ref ) {
-				push @errors, "Please give project $project_index a reference";
+				push @errors, "Please give project $project_index a reference<br/>";
 			} # end if
 			if ( ! $shipping ) {
-				push @errors, "Please select a shipping type for project $project_index";
+				push @errors, "Please select a shipping type for project $project_index<br/>";
 			} # end if
 
 		} # end while
@@ -523,13 +523,14 @@ sub store_order_info {
 	$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
 
 	my $error = '';
-	$error .= "Company Name is a required field.<br>" if $openprint::param{'txtCompanyName'} eq '';
-	$error .= "Address is a required field.<br>" if $openprint::param{'txtAddress1'} eq '';
-	$error .= "City is a required field.<br>" if $openprint::param{'txtCity'} eq '';
-	$error .= "State/Province is a required field.<br>" if $openprint::param{'ddmStateProvince'} eq '';
-	$error .= "PostalCode is a required field.<br>" if $openprint::param{'txtPostalCode'} eq '';
-	$error .= "Country is a required field.<br>" if $openprint::param{'ddmCountry'} eq '';
-	$error .= "Email is a required field.<br>" if	$openprint::param{'txtEmail'} eq '';
+	$error .= 'Company Name is a required field.<br/>' if $openprint::param{'txtCompanyName'} eq '';
+	$error .= 'Address is a required field.<br/>' if $openprint::param{'txtAddress1'} eq '';
+	$error .= 'City is a required field.<br/>' if $openprint::param{'txtCity'} eq '';
+	$error .= 'State/Province is a required field.<br/>' if $openprint::param{'ddmStateProvince'} eq '';
+	$error .= 'PostalCode is a required field.<br/>' if $openprint::param{'txtPostalCode'} eq '';
+	$error .= 'Country is a required field.<br/>' if $openprint::param{'ddmCountry'} eq '';
+	$error .= 'Email is a required field.<br/>' if	$openprint::param{'txtEmail'} eq '';
+	$error .= 'Please select a company.<br/>' if exists $openprint::param{'company_id'} and ! $openprint::param{'company_id'};
 
 	if ( ! Email::Valid->address($openprint::param{'txtEmail'}) ) {
 		$error .= "Email is not a valid email address.<br>";
@@ -539,33 +540,28 @@ sub store_order_info {
 		return $error;
 	} # end if
 
-	foreach my $key ( $r->param() ) {
-		$$variable{$key} = $r->param($key);
-	} # end foreach
-
-	my $rc = sql::update( $log, $dbh, 'Orders', ['Index=?', $order_id],
-		#'strTitle',				 $openprint::param{'txtTitle'},
-		'strCompanyName',			$$variable{'txtCompanyName'},
-		'strFirstName',				$$variable{'txtFirstName'},
-		'strLastName',				$$variable{'txtLastName'},
-		'strSalutation',			$$variable{'rdbSalutation'},
-		'strAddress1',				$$variable{'txtAddress1'},
-		'strAddress2',				$$variable{'txtAddress2'},
-		'strCity',					$$variable{'txtCity'},
-		'strState',					( $$variable{'ddmStateProvince'} ? $$variable{'ddmStateProvince'} : $$variable{'txtOtherStateProvince'} ),
-		'strPostalCode',			$$variable{'txtPostalCode'},
-		'strCountry',				( $$variable{'ddmCountry'} ? $$variable{'ddmCountry'} : $$variable{'txtOtherCountry'} ),
-		'strPhone',					$$variable{'txtPhone'},
-		'strExt',					$$variable{'txtExtension'},
-		'strFax',					$$variable{'txtFax'},
-		'strEmail',				 	$$variable{'txtEmail'},
-		'strAlsoNotify',			$$variable{'txtAlsoNotify'},
-		'strPONumber',				$$variable{'txtPurchaseOrder'},
-	);
-
 	my $Order = new openprint::Order( $order_id );
-	$Order->load();
-	return $rc;
+	if ( $openprint::param{'company_id'} ) {
+		$Order->company_id( $openprint::param{'company_id'} );
+		$openprint::session{'company_id'} = $openprint::param{'company_id'};
+	} # end if
+	$Order->company_name( $r->param('txtCompanyName') );
+	$Order->first_name( $r->param('txtFirstName') );
+	$Order->last_name( $r->param('txtLastName') );
+	$Order->salutation( $r->param('rdbSalutation') );
+	$Order->address1( $r->param('txtAddress1') );
+	$Order->address2( $r->param('txtAddress2') );
+	$Order->city( $r->param('txtCity') );
+	$Order->state( $openprint::param{'ddmStateProvince'} ? $openprint::param{'ddmStateProvince'} : $openprint::param{'txtOtherStateProvince'} );
+	$Order->city( $openprint::param{'txtPostalCode'} );
+	$Order->country( $openprint::param{'ddmStateProvince'} ? $openprint::param{'ddmStateProvince'} : $openprint::param{'txtOtherStateProvince'} );
+	$Order->phone( $openprint::param{'txtPhone'} );
+	$Order->extension( $openprint::param{'txtExtension'} );
+	$Order->fax( $openprint::param{'txtFax'} );
+	$Order->email( $openprint::param{'txtEmail'} );
+	$Order->alsonotify( $openprint::param{'txtAlsoNotify'} );
+	$Order->po( $openprint::param{'txtPurchaseOrder'} );
+	return $Order->save();
 } # end sub store_order_info
 
 sub get_invoice_to {

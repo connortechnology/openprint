@@ -182,7 +182,7 @@ label.radio {
 	float: none;
 } 
 
-h1 {
+h1, h2, h3, h5 {
 	color: maroon;
 }
 .PageTitle {
@@ -190,7 +190,7 @@ h1 {
 }
 span.DateSelector {
     float: left;
-	width: 200px;
+	width: 215px;
 }
 div.Service span.ThreeColumns {
 	width: 32%;
@@ -200,3 +200,4 @@ div.Service span.TwoColumns {
 	width: 50%;
 	float: left;
 }
+
