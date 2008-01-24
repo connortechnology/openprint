@@ -108,7 +108,7 @@
 	</p>
 	<p>
 		<label for="Quantity">Quantity:</label>
-		<input type="text" id="Quantity" name="Quantity" size="10" value="<? echo ( $openprint::param{'Quantity'} ) ?>" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs'; } else { $('Units').innerHTML='sheets';}" />
+		<input type="text" id="Quantity" name="Quantity" size="10" value="<? echo ( $openprint::param{'Quantity'} ) ?>" style="width: auto;" onkeyup="if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs'; } else { $('Units').innerHTML='sheets';}" />
 		<span id="Units"><? echo ( ($openprint::param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll') ? 'lbs' : 'sheets' ) ?></span>
 	</p>
     <p>
