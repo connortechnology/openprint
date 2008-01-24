@@ -7,7 +7,7 @@ require openprint::EquipmentSpecification;
 require openprint::Fold;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
 my %find_cache;
 my %fields = (
 	'id'	=>	'lngindex',
@@ -191,7 +191,7 @@ sub Fold {
 		$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
 		next if $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste};
 		if ( $$params{gsm} ) {
-		$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
+			$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
 			next if ! $Fold->Specification( $$params{gsm} );
 		} # end if
 		return $Fold;

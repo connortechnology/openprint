@@ -81,6 +81,7 @@ sub no_outputs {
 	'4PageSignatureFold', '4PageSignatureFold',
 	'6PageSignatureFold', '6PageSignatureFold',
 	'8PageSignatureFold', '8PageSignatureFold',
+	'10PageSignatureFold', '10PageSignatureFold',
 	'12PageSignatureFold', '12PageSignatureFold',
 	'16PageSignatureFold', '16PageSignatureFold',
 	'18PageSignatureFold', '18PageSignatureFold',
@@ -334,7 +335,7 @@ $openprint::log->debug("Loading imposition");
 
 	#$openprint::log->debug("Sign info: $$sig_specs{'SpreadCols'.$qty_index}*$$sig_specs{'SpreadRows'.$qty_index}*$$sig_specs{'txtSpreadSize'} Max $max_imposition out") if $debug;
 	my $pages = $Imposition->pages();
-	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Sign info: %dx%d %s,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
@@ -386,10 +387,10 @@ $openprint::log->debug("Loading imposition");
 					);
 			if ( $Fold ) {
 				push @{$folds{$pages.'PageSignatureFold'}}, $Fold;
-	$openprint::log->debug(sprintf('Found: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Found: %dx%d*%d,%dout Max %dout', $$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Didnt find fold<br/>';
-	$openprint::log->debug(sprintf('Didnt find: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 			} # end if
 		} else {
 
