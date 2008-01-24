@@ -22,7 +22,8 @@
 		</p>
 		<p>
 			<label>Spine Direction:</label>
-			<select id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spine_direction" name="spine_direction">
+			<select id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spine_direction" name="spine_direction" onchange="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');">
+				<option value="" <? echo ( $$variable{'Fold'}->spine_direction() eq '' ? 'selected="selected"' : '' ) ?>>Either</option>
 				<option value="Vertical" <? echo ( $$variable{'Fold'}->spine_direction() eq 'Vertical' ? 'selected="selected"' : '' ) ?>>Vertical</option>
 				<option value="Horizontal" <? echo ( $$variable{'Fold'}->spine_direction() eq 'Horizontal' ? 'selected="selected"' : '' ) ?>>Horizontal</option>
 			</select>
@@ -74,23 +75,23 @@
 		<fieldset><legend>Binding Options</legend>
 		<p>
 			<label>Stitching:</label>
-			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching1" name="stitching" value="1" <? echo ( $$variable{'Fold'}->stitching() ? 'checked="checked"' : '' ) ?> />
+			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching1" name="stitching" value="1" <? echo ( $$variable{'Fold'}->stitching() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');"/>
 			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching1">Yes</label>
-			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching0" name="stitching" value="0" <? echo ( ! $$variable{'Fold'}->stitching() eq '0' ? 'checked="checked"' : '' ) ?> />
+			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching0" name="stitching" value="0" <? echo ( ! $$variable{'Fold'}->stitching() eq '0' ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');" />
 			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching0">No</label>
 		</p>
 		<p>
 			<label>Perfect Bind:</label>
-			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-perfectbind1" name="perfectbind" value="1" <? echo ( $$variable{'Fold'}->perfectbind() ? 'checked="checked"' : '' ) ?> />
+			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-perfectbind1" name="perfectbind" value="1" <? echo ( $$variable{'Fold'}->perfectbind() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');" />
 			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-perfectbind1">Yes</label>
-			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-perfectbind0" name="perfectbind" value="0" <? echo ( ! $$variable{'Fold'}->perfectbind() ? 'checked="checked"' : '' ) ?> />
+			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-perfectbind0" name="perfectbind" value="0" <? echo ( ! $$variable{'Fold'}->perfectbind() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');" />
 			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-perfectbind0">No</label>
 		</p>
 		<p>
 			<label>Spine Paste:</label>
-			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spinepaste1" name="spinepaste" value="1" <? echo ( $$variable{'Fold'}->spinepaste() ? 'checked="checked"' : '' ) ?> />
+			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spinepaste1" name="spinepaste" value="1" <? echo ( $$variable{'Fold'}->spinepaste() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');" />
 			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spinepaste1">Yes</label>
-			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spinepaste0" name="spinepaste" value="0" <? echo ( ! $$variable{'Fold'}->spinepaste() ? 'checked="checked"' : '' ) ?> />
+			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spinepaste0" name="spinepaste" value="0" <? echo ( ! $$variable{'Fold'}->spinepaste() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');" />
 			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-spinepaste0">No</label>
 		</p>
 		</fieldset>
