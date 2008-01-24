@@ -805,6 +805,7 @@ sub reuse_project {
 	$NewProject->reference( $openprint::param{'reference'} );
 	$NewProject->comments( $openprint::param{'comments'} );
 	$NewProject->docket( '' );
+	$NewProject->due_date( '' );
 	$NewProject->user_id( $openprint::session{'user_id'} );
 	$NewProject->order_id( '' );
 	# This allows uncalc->uncalc, everything else to UnOrdered
