@@ -1208,7 +1208,13 @@ $openprint::log->debug("Loaing old imp");
 			$$specs{'alert'} .= 'Unable to calculate a price';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
-my %best_price = %{$b_price};
+
+		my %best_price = %{$b_price};
+		my $Imposition = $$b_price{'Imposition'};
+		my $Paper = $Imposition->paper();
+		my $Press = $Imposition->Press();
+		my $Aqueous = $$b_price{'Aqueous'};
+		my $Varnish = $$b_price{'Varnish'};
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
 
