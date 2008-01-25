@@ -79,17 +79,24 @@ sub no_outputs {
 	'SingleGateFold', 'Single Gate Fold',
 	'DoubleGateFold', 'Double Gate Fold',
 	'4PageSignatureFold', '4PageSignatureFold',
+	'6PageSignatureFold', '6PageSignatureFold',
 	'8PageSignatureFold', '8PageSignatureFold',
+	'10PageSignatureFold', '10PageSignatureFold',
 	'12PageSignatureFold', '12PageSignatureFold',
 	'16PageSignatureFold', '16PageSignatureFold',
+	'18PageSignatureFold', '18PageSignatureFold',
 	'20PageSignatureFold', '20PageSignatureFold',
 	'24PageSignatureFold', '24PageSignatureFold',
 	'28PageSignatureFold', '28PageSignatureFold',
+	'30PageSignatureFold', '30PageSignatureFold',
 	'32PageSignatureFold', '32PageSignatureFold',
 	'36PageSignatureFold', '36PageSignatureFold',
 	'40PageSignatureFold', '40PageSignatureFold',
+	'42PageSignatureFold', '42PageSignatureFold',
 	'44PageSignatureFold', '44PageSignatureFold',
 	'48PageSignatureFold', '48PageSignatureFold',
+	'60PageSignatureFold', '60PageSignatureFold',
+	'72PageSignatureFold', '72PageSignatureFold',
 	'PerpendicularSoftFold', 'PerpendicularSoftFold',
 	'ParallelSoftFold', 'ParallelSoftFold',
 	'2Panel1Pocket', 'Single Pocket Presentation Folder',
@@ -290,8 +297,9 @@ $openprint::log->debug("Loading imposition");
 	my %makereadies;
 	my $max_imposition = $Imposition->imposition();
 
-	foreach my $ss_id ( $Project->signatures( $$sig_specs{'txtSignatureType'} ) ) {
-		next if $signature_service_index and ($ss_id >= $signature_service_index);
+	foreach my $ss_id ( $Project->signatures( ) ) {
+		next if $Paper and $signature_service_index and ($ss_id > $signature_service_index);
+		next if $ss_id == $signature_service_index;
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		if ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) {
 			$max_imposition = $$s_specs{'txtImposition'.$qty_index};
@@ -327,7 +335,7 @@ $openprint::log->debug("Loading imposition");
 
 	#$openprint::log->debug("Sign info: $$sig_specs{'SpreadCols'.$qty_index}*$$sig_specs{'SpreadRows'.$qty_index}*$$sig_specs{'txtSpreadSize'} Max $max_imposition out") if $debug;
 	my $pages = $Imposition->pages();
-	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Sign info: %dx%d %s,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
@@ -379,10 +387,10 @@ $openprint::log->debug("Loading imposition");
 					);
 			if ( $Fold ) {
 				push @{$folds{$pages.'PageSignatureFold'}}, $Fold;
-	$openprint::log->debug(sprintf('Found: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Found: %dx%d*%d,%dout Max %dout', $$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Didnt find fold<br/>';
-	$openprint::log->debug(sprintf('Didnt find: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 			} # end if
 		} else {
 

@@ -75,7 +75,9 @@ sub view_services {
 	if ( $cust_id eq $openprint::session{'company_id'} or $openprint::session{'user_type'} eq 'A' ) {
 
 		if ( defined $openprint::param{'btnFunction'} ) {
-			if ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
+			if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
+				misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf()->toString()] );
+			} elsif ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
 				# Update the 'current project'
 				$openprint::session{'project_id'} = $project_index;
 				$log->debug("** Save Service in View Services Function **");

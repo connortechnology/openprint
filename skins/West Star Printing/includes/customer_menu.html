@@ -1,5 +1,10 @@
 <ul class="unprintable" id="menubar">
-	<li class="off"><a href="/about.html">About Us</a></li>
+	<li class="off" id="AboutUs"><a href="/about.html">About Us</a>
+		<ul>
+			<li><a href="/about.html">Contact</a></li>
+			<li><a href="/services.html">Services</a></li>
+		</ul>
+	</li>
 	<li class="off" id="Account"><a href="#">Account</a>
 		<ul>
 <? if ( $openprint::session{'user_id'} ) ?>

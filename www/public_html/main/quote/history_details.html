@@ -152,7 +152,7 @@ Projects listed in red have changed price from the time this quote was originall
 	</tr>
 	<tr>
 		<td colspan="3" align="left"><br/>
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/quote_disclaimer.html"-->
+<? echo ( ssi::include( $config{'SkinPath'}.'/includes/quote_disclaimer.html'); ) ?>
 		</td>
 	</tr>
 </table>

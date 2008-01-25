@@ -1819,10 +1819,10 @@ sub calc_price {
 			$price{'SpinePaste Breakdown'} .= sprintf('SpinePaste MR: %dminutes RS: %d/hr Price: $%.2f<br/>%s<br/>', @$results{'MakeReadyTime','RunSpeed','Price','alert'} );
 			$price{'SpinePaste Cost'} = $$results{'Price'};
 			$price{'Comparison Cost'} += $$results{'Price'};
-		} # end if
 #$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-		if ( $$results{'Equipment'}->id() == $Press->id() ) {
-			$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} < $run_speed;
+			if ( $$results{'Equipment'}->id() == $Press->id() ) {
+				$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} < $run_speed;
+			} # end if
 		} # end if
 
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'SpinePaste' );
@@ -2888,6 +2888,7 @@ sub runtime {
 sub get_weight {
 	my ( $Project, $specs, $qty_index ) = @_;
 
+$openprint::log->debug("Load from get_weight");
 	my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
 	my $sig_weight = $$specs{'txtWidth'} * $$specs{'txtHeight'} * $Paper->wpsi();
 	if ( $$specs{'PageQuantity'.$qty_index} ) {
