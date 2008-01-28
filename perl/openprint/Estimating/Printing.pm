@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 1;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 use strict;
@@ -1457,18 +1457,22 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 
 	my $pms_prices = get_special_colours_price( $Press, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
-	if ( 1 ) {
+	if ( 0 ) {
 		foreach my $imp ( @impositions ) {
 			$imp->display();
 		} # end foreach
 	} # end if
 	$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions) if $debug;
 	foreach my $imp ( @impositions ) {
+		$imp->display();
 		if ( ( $imp->runstyle() eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 			$openprint::log->debug('No Web 4 U');
 			next;
 		} # end if
-		next if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) );
+		if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) ) {
+			$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$specs{'txtImposition'.$qty_index}) if $debug;
+			next;
+		} # end if
 		if ( ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $imp->pages() != $$specs{'PageQuantity'.$qty_index} ) ) {
 			$openprint::log->debug("Doesn't match page quantity override " . $imp->pages() . ' != ' . $$specs{'PageQuantity'.$qty_index}) if $debug;
 			next;
@@ -1488,7 +1492,7 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 			$openprint::log->debug("QTY $qty_index: Right stock want : ".$$specs{'OverrideStockWidth'.$qty_index}.'x'.$$specs{'OverrideStockHeight'.$qty_index}." but have " . $imp->paper()->width() . 'x'.$imp->paper()->height() );
 		} # end if
 #my $starttime = gettimeofday();
-#$imp->display();
+$imp->display();
 
 #my $time = gettimeofday();
 		my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, (%best_price ? $best_price{'Comparison Cost'} : 0), $pms_prices, $inkCoverage, $special_colours );
@@ -1786,26 +1790,28 @@ sub calc_price {
 #my $time = gettimeofday();
 		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
 #$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
-		if ( $$project{'FoldingSpecs'}{'Status'} eq 'uncalculated' ) {
+		if ( $$project{'FoldingSpecs'}{'Status'} eq 'uncalculated' or ! $folding_results{'Equipment'} ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
-			$price{'Comparison Cost'} += 1000000; 
-			$openprint::log->debug("Unable to fold") if $debug;
-		} # end if
-		$price{'FoldingImposition'} = $folding_results{'Imposition'};
-#$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
-
-		if ( $folding_results{'Equipment'} ) {
+			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
+			$price{'Comparison Cost'} += 10000000; 
+			if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = '';
+			} # end if
+		} else {
 			if ( $folding_results{'Equipment'}->id() == $Press->id() ) {
 				$run_speed = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
 			} # end if
 
 			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) %d/hr Price: $%.2f on %s', @folding_results{'Imposition','RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+			if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
-		} else {
-			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
-			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = '';
+			} # end if
 		} # end if
+		$price{'FoldingImposition'} = $folding_results{'Imposition'};
+#$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
+
 		$price{'Comparison Cost'} += $folding_results{'Price'};
+		 #$price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison Cost'}.'<br/>';
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Folding' );
 	} # end if
 	if ( $$services{'SpinePaste'} ) {
@@ -1892,7 +1898,7 @@ sub calc_price {
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
 	} # end if
 	$price{'Plate Costs'} = \%plate_setup;
-	$price{'Comparison Cost'} = $press_setup + ($plate_setup{'Plate Price'} * $plate_setup{'Plate Count'}) + ( $plate_setup{'Blank Price'} * $plate_setup{'Blank Plates'});
+	$price{'Comparison Cost'} += $press_setup + ($plate_setup{'Plate Price'} * $plate_setup{'Plate Count'}) + ( $plate_setup{'Blank Price'} * $plate_setup{'Blank Plates'});
 
 	$price{'rdbPlates'} = $plate_setup{'Plate Type'};
 

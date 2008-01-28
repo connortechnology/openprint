@@ -57,8 +57,6 @@
         </script>
 	</head>
 	<body>
-		<div class="Content">
-			<div class="ContentInner">
 				<div class="Header">
 					<a style="float: left;" href="/index.html"><img src="/images/logo.gif" alt="West Star Printing"/></a>
 					<img style="float: left;" src="/images/main_banner.gif" alt="West Star Printing"/>
@@ -68,12 +66,14 @@
                         <fieldset><legend>Quick Login:</legend>
 							<p><label>Email:</label><input type="text" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/></p>
                             <p><label>Password:</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/></p>
+							<div style="float:right;">
                                 <? echo ( join('',
                                     ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ),
                                     ssi::writeButton( $log, $dbh, 'QuickForgotButton','forgot.gif',"QuickLoginForm.btnFunction.value='Forgotten Password';QuickLoginForm.submit();", '', 'Forgotten Password' ),
                                     ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register Now' ),
                                     );
                                 ) ?>
+							</div>
                         </fieldset>
                         <input type="hidden" name="btnFunction" />
                     </form>
@@ -90,6 +90,8 @@
     <? endif ( ! $openprint::session{'user_id'} ) ?>
 				</div><!--Header-->
 				<? echo ( ssi::include( $config{'SkinPath'}.'/includes/customer_menu.html' ); ) ?>
+		<div class="Content">
+			<div class="ContentInner">
 				<?PageContent?>
 				<span class="unprintable">
 				<br class="spacer"/>

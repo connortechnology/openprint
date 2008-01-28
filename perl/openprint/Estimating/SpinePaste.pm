@@ -94,7 +94,7 @@ sub signature_calc {
 				$openprint::log->debug("Can only spine paste 1 signature for " . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
-			if ( $$folding_results{'Equipment'}->id() != $Equipment->id() ) {
+			if ( ( ! $$folding_results{'Equipment'} ) or ( $$folding_results{'Equipment'}->id() != $Equipment->id() ) ) {
 				$openprint::log->debug("Must also be folded on " . $Equipment->strid() );
 				next;
 			} # end if

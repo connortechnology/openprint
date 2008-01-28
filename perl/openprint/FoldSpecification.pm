@@ -15,8 +15,8 @@ my %fields = (
 	'interpolate'	=>	'interpolate',
 );
 my %transforms = (
-	'min_weight'	=> [ 's/\D//g' ],
-	'max_weight'	=> [ 's/\D//g' ],
+	'min_weight'	=> [ 's/[^\d\.]//g' ],
+	'max_weight'	=> [ 's/[^\d\.]//g' ],
 	'runspeed'		=> [ 's/\D//g' ],
 );
 my %defaults = (

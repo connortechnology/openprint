@@ -5,6 +5,7 @@ function selectProjectTemplate( formName ) {
 		var TemplateType = get_value( form.rdbTemplateType );
 		var selected_size = get_value( form.ddmProjectSize );
 		clear_ddm(ddm);
+		add_option( form.ddmProjectSize, 'Custom','Custom' );
 		if ( TemplateType ) {
 			if ( options[TemplateType] ) {
 				for ( var x = 0; x < options[TemplateType].length; x++ ) {
@@ -18,7 +19,6 @@ function selectProjectTemplate( formName ) {
 				} // type
 			} // end if
 		} // end if TemplateType
-		add_option( form.ddmProjectSize, 'Custom','Custom' );
 		ddm_select_by_value( form.ddmProjectSize, selected_size );
 		ddmProjectSize_onChange( form );
 	} else {

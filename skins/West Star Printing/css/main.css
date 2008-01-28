@@ -180,3 +180,31 @@ div.ProjectCreateEdit ul:after {
 #QuickLogin p input {
 	width: 95%;
 }
+
+/* Menu Styles */
+
+ul#menubar li#Account a {
+	width: 120px;
+}
+ul#menubar li#Projects a {
+	width: 90px;
+}
+ul#menubar li#Quotes a {
+	width: 90px;
+}
+ul#menubar li#Orders a {
+	width: 90px;
+}
+
+#Certifications {
+}
+#Certifications p {
+	float: left;
+	width: 230px;
+	font-weight: bold;
+	margin: 0px 10px 0px 10px;
+}
+#Certifications img {
+	height: 85px;
+	float: left;
+}

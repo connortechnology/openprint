@@ -298,7 +298,7 @@ if ( $version < 1902 ) {
 	print "Updating to version 1902\n";
 	my $ac = sql::start_transaction( $dbh );
 	my @projects;
-	push @projects, openprint::Project::find( 'order'=>'index desc', 'created_on_start'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) );
+	push @projects, openprint::Project::find( 'order'=>'index desc', 'created_on_start'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) );
 
 	foreach my $Project ( @projects ) {
 		my $services = $Project->services();

@@ -40,6 +40,11 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
+	if ( $$specs{'Inserts'} eq '' ) {
+		$$specs{'alert'} .= 'Please specify how many additional items are to be placed in each bag.';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+
 	my $pockets = 1 + $$specs{'Inserts'};
 
 	my @Equipment = openprint::Equipment::find('strid'=>'PolyBagger');

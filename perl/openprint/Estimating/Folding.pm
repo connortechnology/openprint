@@ -258,9 +258,11 @@ $openprint::log->debug("Loading imposition");
 	my @my_equipment;
 
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		$openprint::log->debug("Overriding Equipment! " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
+		$openprint::log->debug("Overriding Folding Equipment for sig $$sig_specs{'SignatureIndex'} to " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		if ( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
 			push @my_equipment, new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+		} else {
+		$openprint::log->warn("Folding Equipment override to nothing");
 		} # end if
 		push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 	} else {
@@ -345,6 +347,7 @@ $openprint::log->debug("Loading imposition");
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+$openprint::log->debug("OVerriding Fold Types") if $debug;
 			foreach ( keys %fold_types ) {
 				$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = int $$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"};
 
@@ -384,6 +387,7 @@ $openprint::log->debug("Loading imposition");
 					'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
 					'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 					'gsm'				=>	$Imposition->Paper()->gsm(),
+					'imposition'		=>	$Imposition->imposition(),
 					);
 			if ( $Fold ) {
 				push @{$folds{$pages.'PageSignatureFold'}}, $Fold;
@@ -422,7 +426,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					last if ! $I->spreads();
 $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Equipment->name()) if $debug;
 					
-					$_ = $Equipment->fits( $I->image_width(), $I->image_height()*$imposition, $$sig_specs{'txtSpecificStockCalliper'} );
+					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height()*$imposition ) : ( $I->image_width()*$imposition, $I->image_height() ), $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 
 						my $Fold = $Equipment->Fold(
@@ -572,11 +576,13 @@ $openprint::log->debug('Got fold ' . $F->pages() );
 		'Status'		=> $bestEquipment ? 'calculated' : 'uncalculated',
 		);
 
-	foreach ( keys %fold_types ) {
-		$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
-		if ( $$bestFolds{$_} ) {
-			$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = scalar @{$$bestFolds{$_}};
-			foreach my $Fold ( @{$$bestFolds{$_}} ) {
+	foreach my $fold_type ( keys %fold_types ) {
+		$$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
+$openprint::log->debug("Foldtype: $fold_type $$bestFolds{$fold_type} ");
+		if ( $$bestFolds{$fold_type} ) {
+			$$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = scalar @{$$bestFolds{$fold_type}};
+$openprint::log->debug("$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index : " . scalar @{$$bestFolds{$fold_type}} );
+			foreach my $Fold ( @{$$bestFolds{$fold_type}} ) {
 				$results{'MakeReadyTime'} += $Fold->makeready_time();
 				if ( $Fold->makeready_overs_units() eq 'Percent' ) {
 					$results{'MakeReadyOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$Imposition->imposition()) * $Fold->makeready_overs() /100;
@@ -587,7 +593,7 @@ $openprint::log->debug('Got fold ' . $F->pages() );
 				$results{'RunSpeed'} = $$RunSpeed{'runspeed'};
 				$results{'RunOvers'} += $Fold->run_overs();
 				$results{'RunOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$Imposition->imposition()) * $Fold->run_overs() /100;
-			} # end foreach
+			} # end foreach Fold
 		} # end if
 	} # end foreach
 	$$specs{'Status'} = $bestEquipment ? 'calculated' : 'uncalculated';
@@ -627,16 +633,17 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.<br/>';
 				next;
 			} # endif
-			$$sig_specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'} if ! $$sig_specs{'txtSpreadSize'};
-			$$sig_specs{'txtSpreadSize'} = 2 if ! $$sig_specs{'txtSpreadSize'};
 
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}:<br/>" if $$sig_specs{'txtServiceDescription'};
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index );
+
 				$price += $results{'Price'};
 				$mprice += $results{'MPrice'};
 				if ( $results{'Equipment'} ) {
+					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 					$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'}->id();
+					} # end if
 				} else {
 					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 						$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';

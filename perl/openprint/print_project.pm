@@ -899,6 +899,7 @@ sub reuse_project {
 		} # end foreach
 		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $NewProject->id(), undef );
 	} # endif
+	$openprint::session{'project_id'} = $NewProject->id();
 	return $NewProject->id();
 } # end sub reuse_project
 

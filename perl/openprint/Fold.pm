@@ -189,6 +189,15 @@ sub Specification {
 		@{$$self{'Specifications'}} = openprint::FoldSpecification::find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
     } # end if
 
+    if ( ! @{$$self{'Specifications'}} ) {
+		return;
+	} # end if
+
+	if ( $$self{'Specifications'}[0]{weight_units} eq 'lbs' )  {
+$openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $range ) );
+		$range = openprint::Paper::gsm_to_weight( $range );
+	} # end if
+
 	$range = 1*$range;
 	my $i = 0;
 	my $x;

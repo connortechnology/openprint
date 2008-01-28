@@ -984,5 +984,19 @@ sub area {
 	return $$self{width}*$$self{height};
 }
 
+sub gsm_to_mweight {
+	my ( $gsm ) = @_;
+
+	my $wpsi = $gsm/703064.5;
+	return sprintf('%.2f', $wpsi * 25 * 38 * 1000);
+} # end sub gsm_to_mweight
+sub gsm_to_weight {
+	my ( $gsm ) = @_;
+
+	my $wpsi = $gsm/703064.5;
+	return sprintf('%.2f', $wpsi * 25 * 38 * 500 );
+} # end sub gsm_to_mweight
+
+
 1;
 __END__

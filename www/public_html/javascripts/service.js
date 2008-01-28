@@ -6,17 +6,18 @@ function body_onLoad() {
 }
 
 function calc( formName ) {
-	if ( gettingNewPrice ) {
-		if ( timeout )
-			clearTimeout( timeout );
-		timeout = setTimeout( "calc('" + formName + "');", 1000 );
-	} else {
-		timeout = null;
-		remove_div('AlertDiv');
-		gettingNewPrice = true;
-		var form = getFormObj( formName );
-		if ( form ) 
+	var form = getFormObj( formName );
+	if ( form && form.ServiceType ) {
+		if ( gettingNewPrice ) {
+			if ( timeout )
+				clearTimeout( timeout );
+			timeout = setTimeout( "calc('" + formName + "');", 1000 );
+		} else {
+			timeout = null;
+			remove_div('AlertDiv');
+			gettingNewPrice = true;
 			jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+		} // end if
 	} // end if
 } // end calc()
 

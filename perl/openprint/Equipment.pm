@@ -182,6 +182,9 @@ sub Fold {
 		next if $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} );
 		$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;
 		next if $$Fold{page_rows} and $$params{page_rows} and ($$Fold{page_rows} != $$params{page_rows} );
+		#$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{'max_imposition}") if $debug;
+		next if $$Fold{min_imposition} and $$params{imposition} and ($$Fold{min_imposition} > $$params{imposition});
+		next if $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition});
 		$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if $debug;
 		next if $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} );
 		$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
@@ -192,15 +195,24 @@ sub Fold {
 		next if $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste};
 		if ( $$params{gsm} ) {
 			$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
-			next if ! $Fold->Specification( $$params{gsm} );
+			my $RunSpeed = $Fold->Specification( $$params{gsm} );
+			if ( ! $RunSpeed ) {
+$openprint::log->debug("Didn't find runspeed");
+				next;
+			} else {
+$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}");
+			} # end if
 		} # end if
+$openprint::log->debug("Got fold" . $Fold->description());
 		return $Fold;
+$openprint::log->debug("NEVER Got fold" . $Fold->description());
 	} # end foreach Fold
+	return;
 } # end sub Fold
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification::find( 'Equipment'=> $self, 'order'=>'strname, dblmin' );
+	return openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'strname, dblmin' );
 } # end sub Specifications
 
 sub specification {
