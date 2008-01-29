@@ -155,8 +155,13 @@ sub load {
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref( 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE order_id=Index) AS paid FROM Orders WHERE Index=?', {}, $$self{'id'} );
 $openprint::log->debug("Loaded order: " . $$self{'id'} );
+		if ( ( ! $data ) and $openprint::dbh->errstr() ) {
+			$openprint::log->error('Error loading Order: ' . $openprint::dbh->errstr() );
+			return;
+		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
+$openprint::log->debug("Loaded order: " . $$self{'id'} );
 } # end sub load
 
 sub save {
@@ -342,9 +347,9 @@ sub update_status {
 
 sub add_log {
 	my ( $self, $comment ) = @_;
-	sql::insert( $log, $dbh, 'Order_Log',[
+	sql::insert( undef, undef, 'Order_Log',[
 			'order_id',		$$self{'id'},
-			'company_id',	$openprint::session{'company_id'},
+			'company_id',	$openprint::session{'company_id'} ? $openprint::session{'company_id'} : undef,
 			'user_id',		$openprint::session{'user_id'},
 			'description',	$comment,
 			] );

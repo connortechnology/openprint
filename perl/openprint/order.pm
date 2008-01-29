@@ -415,6 +415,7 @@ sub information {
 			$error = 'No OrderID given to Re-Open.';
 		} # end if OrderID
 	} elsif ( $openprint::param{'btnFunction'} eq 'Process Order' ) {
+$openprint::log->debug("Making order from quote");
 		if ( $openprint::param{'quote_id'} ) {
 			( $order_id, $error ) = make_order_from_quote( $r, $log, $dbh, $cookie, $openprint::param{'quote_id'}, $variable );
 		} else {
@@ -429,6 +430,7 @@ sub information {
 			( $order_id, $error ) = add_project_to_order( $log, $dbh, $cookie, $variable, $openprint::param{'ProjectIndex'} );
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Continue') { # saving projcet information
+		$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
 		foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
 			save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
 		} # end foreach
@@ -510,6 +512,7 @@ sub information {
 
 	$$variable{'OrderID'} = $order_id;
 	$$variable{'Order'} = new openprint::Order( $order_id );
+$openprint::log->debug("Order id: " . $$variable{'Order'}->id() );
 
 } # end sub information
 
@@ -629,9 +632,13 @@ sub verify_order {
 			$Product->quantity( $openprint::param{'ProductQuantity'.$Product->id()} );
 			my %price = $Product->Product()->get_price( $Product->quantity() );
 			$Product->price( $price{Price} );
+			if ( Date::Calc::check_date( @openprint::param{'ProductDueDateYear'.$Product->id(),'ProductDueDateMonth'.$Product->id(),'ProductDueDateDay'.$Product->id()} ) ) {
 			$Product->requested_for( join('-', @openprint::param{'ProductDueDateYear'.$Product->id(),'ProductDueDateMonth'.$Product->id(),'ProductDueDateDay'.$Product->id()} ) );
 			$Product->shipping_type( $openprint::param{'ProductShippingType'.$Product->id()} );
 			$$variable{'Error'} .= $Product->save();
+			} else {
+			$$variable{'Error'} .= 'Invalid date<br/>';
+			} # end if
 		} # end foreach Product
 
 		$$variable{'Error'} .= store_order_info( $r, $log, $dbh, $cookie, $variable );
@@ -1391,7 +1398,7 @@ sub add_to_log {
 	my ( $log, $dbh, $order_id, $cust_id, $user_id, $message ) = @_;
 	sql::insert( $log, $dbh, 'Order_Log', [
 				'Order_Id',	$order_id,
-				'Company_Id',	$cust_id,
+				'Company_Id',	$cust_id ? $cust_id : undef,
 				'User_Id',	$user_id,
 				'Description',	$message,
 				] 
