@@ -82,6 +82,10 @@ sub find {
 			$sql .= q{ AND equipment_id=?};
 			push @values, $params{'equipment_id'};
 		} # end if
+		if ( $params{'pages'} ) {
+			$sql .= q{ AND pages=?};
+			push @values, $params{'pages'};
+		} # end if
 
 		if ( $params{'name'} ) {
 			$sql .= q{ AND name=?};

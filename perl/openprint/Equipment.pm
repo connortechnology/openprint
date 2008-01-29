@@ -157,7 +157,7 @@ sub Folds {
 	my $self = shift;
 
 	if ( ! $$self{'Folds'} ) {
-		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'pages' );
+		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'pages,page_columns' );
 	} # end if
 	return @{$$self{'Folds'}};
 } # end sub Folds

@@ -1,3 +1,8 @@
+<? eval (
+	$$variable{'Equipment'} = new openprint::Equipment( $openprint::param{'equipment_id'} );
+	@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'}, 'pages'=>$openprint::param{'pages'} );
+) ?>
+<? while ( $$variable{'Fold'} = shift @{$$variable{'Folds'}} ) ?>
 <form id="Fold<? echo ( $$variable{'Fold'}->id() ) ?>">
 	<div class="leftColumn">
 		<fieldset><legend>Fold</legend>
@@ -123,3 +128,4 @@
 	</div>
 	<br class="spacer"/>
 </form>
+<? endwhile ( $$variable{'Fold'} = shift @{$$variable{'Folds'}} ) ?>
