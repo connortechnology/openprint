@@ -332,7 +332,7 @@ sub signature_calc {
 
 	foreach my $ss_id ( $Project->signatures( $$sig_specs{'txtSignatureType'} ) ) {
 		next if $signature_service_index and ($ss_id >= $signature_service_index);
-$openprint::log->debug("SIGS: $signature_service_index : $ss_id " );
+#$openprint::log->debug("SIGS: $signature_service_index : $ss_id " );
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		if ( (!$max_imposition) or ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) ) {
 			$max_imposition = $$s_specs{'txtImposition'.$qty_index};
