@@ -879,6 +879,9 @@ sub summary {
 	if ( $services{'SaddleStitching'} or $services{'LoopStitching'} ) {
 		$summary .= ' Stitch ';
 	} # end if
+	if ( $services{'SpinePaste'} ) {
+		$summary .= ' Spine Paste ';
+	} # end if
 	if ( $services{'PlainCartons'} ) {
 		$summary .= ' Boxes';
 	} # end if
