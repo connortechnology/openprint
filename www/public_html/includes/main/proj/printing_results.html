@@ -22,10 +22,10 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-        <select name="ddmStockSheetSize<?QTYIndex?>" size="1" onchange="ddmStockSheetSize_onchange();">
+        <select name="ddmStockSheetSize<?QTYIndex?>" size="1" onchange="this.form.OverrideStockWidth<?QTYIndex?>.value='';this.form.OverrideStockHeight<?QTYIndex?>.value='';ddmStockSheetSize_onchange();">
             <option value="">Please select one</option>
          <? echo (
-                    ssi::make_drop_down( [ openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
+                    ssi::make_drop_down( [ map { $_,$_ } openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
                             'ddmStockBrand'.$$variable{'Signature'},
                             'ddmStockFinish'.$$variable{'Signature'},
                             'ddmStockColour'.$$variable{'Signature'},
@@ -33,7 +33,7 @@
 } ) ], $$variable{'ddmStockSheetSize'.$$variable{'QTYIndex'}} );
                     ) ?>
         </select>
-        <input type="checkbox" id="chkOverrideSheetSize<?QTYIndex?>" name="chkOverrideSheetSize<?QTYIndex?>" value="Y" onclick="if(!this.checked){$('OverrideStockSize<?QTYIndex?>').hide();}else{$('OverrideStockSize<?QTYIndex?>').show();}; calc(this.form.name);"
+        <input type="checkbox" id="chkOverrideSheetSize<?QTYIndex?>" name="chkOverrideSheetSize<?QTYIndex?>" value="Y" onclick="if(!this.checked){this.form.OverrideStockWidth<?QTYIndex?>.value='';this.form.OverrideStockHeight<?QTYIndex?>.value='';$('OverrideStockSize<?QTYIndex?>').hide();}else{$('OverrideStockSize<?QTYIndex?>').show();}; calc(this.form.name);"
         <? echo ( 'checked="checked"' if $$variable{'chkOverrideSheetSize'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
         />
         <label class="radio" for="chkOverrideSheetSize<?QTYIndex?>">Override</label><br/>

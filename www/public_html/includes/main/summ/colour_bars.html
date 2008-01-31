@@ -3,7 +3,15 @@
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-    <span class="value"><? echo ( $$variable{'rdbColourBar'} eq 'Y' ? 'Yes' : 'No' ) ?></span>
+    <span class="value"><? echo ( 
+if ( $$variable{'rdbColourBar'} eq 'Y' ) {
+return 'Yes';
+} elsif ( $$variable{'rdbColourBar'} eq 'N' ) {
+return 'No';
+} else {
+return 'Auto';
+} # endif
+) ?></span>
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>

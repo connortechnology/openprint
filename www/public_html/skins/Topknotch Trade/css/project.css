@@ -38,6 +38,7 @@ div.ProjectHeader fieldset {
 	border-bottom: none;
 	margin-bottom: 0px;
 	padding: 6px;
+	width: 47%;
 	text-align: left;
 }
 div.ProjectHeader fieldset#ProjectInformation {
@@ -111,7 +112,7 @@ div.ProjectHeader fieldset p label {
     float: left;
     width: 50%;
 }
-#BleedsColourBars {
+.BleedsColourBars {
     float: left;
     width: 50%;
 }

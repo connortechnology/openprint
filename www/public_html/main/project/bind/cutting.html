@@ -30,14 +30,13 @@
 	<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
 	<? endif ( $$variable{'Reference'} ) ?>
 	<input name="txtStockCalliper-<?SignatureIndex?>" type="hidden" value="<? echo ( $$variable{'txtStockCalliper-'.$$variable{'SignatureIndex'}} ) ?>" />
-	<? if ( sets::isin( $$variable{'ProjectTypeID'}, ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
+	<? if ( sets::isin( $$variable{'ProjectTypeID'}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $openprint::session{'user_type'},['E','A']) ) ?>
 	<p>
     	<label>Additional cuts:</label>
         <input name="txtAdditionalCuts<?SignatureIndex?>" size="9" value="<? echo ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>"  onkeyup="calc('f1');" />
 	</p>
 </fieldset>
-	<? endif ( sets::isin( $$variable{'ProjectTypeID'}, ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
-<? if ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} or $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
+	<? endif ( sets::isin( $$variable{'ProjectTypeID'}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $openprint::session{'user_type'},['E','A']) ) ?>
 <fieldset><legend>Pre-press Stock Cutting</legend>
 	<p>
 		<label>Quantity:</label>
@@ -55,8 +54,8 @@
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="<?Columns?>Columns">
-		<input name="txtSuppliedStockWidth-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="9" readonly="readonly" />
-		<input name="txtSuppliedStockHeight-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="9" readonly="readonly" />
+		<input name="txtSuppliedStockWidth-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="6" readonly="readonly" />
+		<input name="txtSuppliedStockHeight-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="6" readonly="readonly" />
 		</span>
 		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -68,8 +67,8 @@
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="<?Columns?>Columns">
-		<input name="txtSheetSizeWidth-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="9" readonly="readonly" />
-		<input name="txtSheetSizeHeight-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="9" readonly="readonly" />
+		<input name="txtSheetSizeWidth-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="6" readonly="readonly" />
+		<input name="txtSheetSizeHeight-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="6" readonly="readonly" />
 		</span>
 		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -100,10 +99,17 @@
 	</p>
 	<p>
 		<label>Stock cutting price:</label>
+		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<span class="<?Columns?>Columns">
 		$<input name="txtStockCutPrice-<?SignatureIndex?>-<?QTYIndex?>" size="9" readonly="readonly" />
+		</span>
+		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 </fieldset>
-<? endif ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} or $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
 <fieldset><legend>Post-press Cutting</legend>
 	<p>
 		<label>Quantity:</label>

@@ -150,7 +150,7 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'Error Saving.', "There was an error saving the user's information. $error");
 		} # end if
 
-		if ( $opepnrint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
+		if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 			if ( $openprint::param{'VacationState'} ) {
 				email::start_vacation( $r, $log, $User->email(), @openprint::param{'VacationSubject','VacationMessage'} );
 			} else {
@@ -209,7 +209,7 @@ sub user_profiles {
 		} # end foreach
 	} # end if 
 
-	if ( $opepnrint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
+	if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 		@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
 		$sql::dbh = $dbh;
 	} # end if
@@ -338,7 +338,7 @@ sub company_profiles {
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 		} # end if
-		if ( $Company->reseller() ne $openprint::param{'rdbReseller'} ) {
+		if ( $Company->reseller() and ( $Company->reseller() ne $openprint::param{'rdbReseller'} ) ) {
 			my %info;
 			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
 			$info{'Company'} = $Company;
@@ -357,6 +357,7 @@ sub company_profiles {
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 		} # end if
+if ( 0 ) {
 		if ( $Company->supplier() ne $openprint::param{'rdbSupplier'} ) {
 			my %info;
 			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
@@ -375,6 +376,7 @@ sub company_profiles {
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 		} # end if
+} # end if
 
 		my %params;
 		foreach my $field ( keys %fields ) {

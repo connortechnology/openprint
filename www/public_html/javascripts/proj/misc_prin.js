@@ -2,27 +2,31 @@
 var gettingNewPrice = false;
 var submitForm = false;
 
-var breakdownWin;
+var breakdownWin = new Array();
 
 function show_breakdown( index ) {
 	if ( gettingNewPrice )
-		return ;
-    if (breakdownWin == null) {
-		breakdownWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: false, className:'alphacube', width:400, height:420 } );
+		return;
+    if (breakdownWin[index] == null) {
+		breakdownWin[index] = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: false, className:'alphacube', width:500, height:420 } );
+		breakdownWin[breakdownWin[index]] = index;
+
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+			onDestroy: function(eventName, win) {
+				if ( win == breakdownWin[breakdownWin[win]] ) {
+					breakdownWin[breakdownWin[win]] = null;
+					breakdownWin[win] = null;
+
+					win.getContent().hide;
+					Windows.removeObserver(this);
+				} // end if
+			} // onDestroy
+		} // myObserver
+		Windows.addObserver(myObserver);
 	} // end if
-	breakdownWin.setContent( 'hdnBreakdown'+index, false, false );
-	breakdownWin.showCenter();
-	// Set up a windows observer, check ou debug window to get messages
-	myObserver = {
-		onDestroy: function(eventName, win) {
-			if (win == breakdownWin) {
-				$('hdnBreakdown').hide;
-				breakdownWin = null;
-				Windows.removeObserver(this);
-			} // end if
-		} // onDestroy
-	} // myObserver
-	Windows.addObserver(myObserver);
+	breakdownWin[index].setContent( 'hdnBreakdown'+index, false, false );
+	breakdownWin[index].showCenter();
 } // end function show_breakdown
 
 function submit_handler( formName ) {

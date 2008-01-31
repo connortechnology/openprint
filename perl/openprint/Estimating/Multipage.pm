@@ -248,7 +248,7 @@ $openprint::log->debug("after initial recalc");
 
 					# Need to dro poverrides on the last sig so that we don't get more spreads than we need
 					foreach my $qty_index ( 1 .. 3 ) {
-						next if ! $$new_sig_specs{'txtQuantity'.$qty_index};
+						next if ! $Project->quantity($qty_index);
 						if ( $$new_sig_specs{'txtSignatureSpreadQuantity'.$qty_index} > $unspecified_spreads ) {
 							openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverrideSignatureSpreadQuantity'.$qty_index, '' );
 							openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverridePageQuantity'.$qty_index, '' );
@@ -259,7 +259,7 @@ $openprint::log->debug("after initial recalc");
 					last if $$new_sig_specs{'Status'} eq 'uncalculated';
 
 					foreach my $qty_index ( 1 .. 3 ) {
-						next if ! $$new_sig_specs{'txtQuantity'.$qty_index};
+						next if ! $Project->quantity($qty_index);
 						$unspecified_spreads = $$new_sig_specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 						last if $unspecified_spreads;
 					} # end foreach
@@ -273,7 +273,7 @@ $openprint::log->debug("after initial recalc");
 					my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
 					foreach my $qty_index ( 1 .. 3 ) {
 						$unspecified_spreads = openprint::Estimating::Printing::get_unspecified_spreads( $Project, undef, $printing_specs, $sig_specs, $qty_index );
-						last if $unspecified_spreads >= 0;
+						last if $unspecified_spreads < 0;
 					} # end foreach
 					if ( (@signatures > 1 ) and ( $unspecified_spreads < 0 ) ) {
 						openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );

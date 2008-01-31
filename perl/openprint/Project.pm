@@ -30,7 +30,10 @@ sub delete {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM paper_allocations WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_files WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Order_Contents WHERE lngprojectindex=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Quote_Details WHERE projectindex=?}, $$self{'id'} );
+	foreach my $quote_id ( sql::execute( undef, undef, q{SELECT QuoteIndex FROM tbl_Quote_Details WHERE projectindex=?}, $$self{'id'} ) ) {
+		my $Quote = new openprint::Quote( $quote_id );
+		$Quote->add_log('Deleted Project ' . $$self{'id'} );
+	} # end foreach
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_projects WHERE Index=?}, $$self{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
@@ -69,10 +72,10 @@ sub JDF_ProductIntent {
 	$doc->setXMLDecl( $doc->createXMLDecl( '1.0' ) );
 	foreach my $sig_id ( $self->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $$self{'id'}, $sig_id );
-		$doc->appendChild( openprint::Estimating::Printing::jdf( $doc, $self, $sig_id, $sig_specs ) );
+		$doc->appendChild( openprint::Estimating::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
 	} # end foreach
 	return $doc;
-} # end sub jdf
+} # end sub JDF_ProductIntent
 
 sub jdf {
 	my ( $self ) = @_;

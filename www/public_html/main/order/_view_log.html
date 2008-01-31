@@ -1,0 +1,23 @@
+<fieldset><legend>Modification History</legend>
+	<table class="List" style="table-layout: auto;">
+	<tr>
+		<th align="left">Company</th>
+		<th align="left">User</th>
+		<th align="left" width="150">When</th>
+		<th align="left">Description</th>
+	</tr>
+	<? eval ( 
+		$_ = q{SELECT company_id, user_id, to_char(dtmwhen,'HH12:MIpm MM/DD/YYYY'), Description FROM Order_Log WHERE order_id=? ORDER BY dtmwhen DESC};
+		@{$$variable{'Log'}} = sql::execute( $log, $dbh, $_, $openprint::param{'order_id'} );
+	) ?>
+	<? while ( @$variable{'company_id','user_id','when','description'} = splice @{$$variable{'Log'}},0,4; ) ?>
+	<tr<?rowclass?>>
+		<td><? echo ( new openprint::Company( $$variable{'company_id'} )->name(); ) ?></td>
+		<td><? echo ( new openprint::User( $$variable{'user_id'} )->name(); ) ?></td>
+		<td width="150"><?when?></td>
+		<td><? echo ( $$variable{'description'} ) ?></td>
+	</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @$variable{'company_id','user_id','when','description'} = splice @{$$variable{'Log'}},0,4; ) ?>
+	</table>
+</fieldset>

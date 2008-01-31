@@ -537,6 +537,7 @@ sub summary {
 			if ( ! exists $$specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
 				$$specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtSignatureSpreadQuantity'};
 			} # end if
+			return '' if ! $$specs{'txtImposition'.$qty_index};
 			return sprintf(qq{%s %dout %s\n\%s},
 					($$specs{'txtSignatureSpreadQuantity'.$qty_index} and $$specs{'txtSpreadSize'} ) ? ($$specs{'txtSignatureSpreadQuantity'.$qty_index} * $$specs{'txtSpreadSize'}) . 'pp' : '',
 					$$specs{'txtImposition'.$qty_index},

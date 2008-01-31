@@ -91,7 +91,7 @@ $openprint::log->warn("Node not found $tagname");
 sub Prepress {
     my ( $doc, $Project, $sig_id, $sig_specs ) = @_;
 
-	
+$openprint::log->debug("Starting JDF Prepress");	
 
 	my $Prepress = $doc->createElement('JDF');
     #$project->setAttribute('xmlns','http://www.cip4.org/JDFSchema_1_1');
@@ -149,12 +149,14 @@ sub Prepress {
 	my $StrippingParams = $ResourcePool->appendChild( StrippingParams( $doc, $Project, $sig_id, $sig_specs ) );
 	my $PrePressPreparation = $Prepress->appendChild( PrePressPreparation( $doc, $Project, $sig_id, $sig_specs ) );
 	my $ImpositionPreparation = $Prepress->appendChild( ImpositionPreparation( $doc, $Project, $sig_id, $sig_specs ) );
+$openprint::log->debug("Leaveing JDF Prepress");	
 	return $Prepress;
 
 } # end sub JDF_Prepress
 
 sub PrePressPreparation {
     my ( $doc, $Project, $sig_id, $sig_specs ) = @_;
+$openprint::log->debug("Starting JDF PrePressPreparation");	
 	my $PPP = $doc->createElement('JDF');
     $PPP->setAttribute('Status','Waiting');
     $PPP->setAttribute('Category','PrePressPreparation');
@@ -173,11 +175,13 @@ sub PrePressPreparation {
 	$OutputLink->setAttribute('Usage','Output');
 	$OutputLink->setAttribute('ProcessUsage','Document');
 	$OutputLink->setAttribute('rRef','RNL'.$$sig_specs{'SignatureIndex'}.'_Document');
+$openprint::log->debug("Leavting JDF PrePressPreparation");	
 	return $PPP;
 } # end sub PrePressPreparation
 
 sub ImpositionPreparation {
     my ( $doc, $Project, $sig_id, $sig_specs ) = @_;
+$openprint::log->debug("Starting JDF ImpositionPreparation");	
 	my $IP = $doc->createElement('JDF');
     $IP->setAttribute('Status','Waiting');
     $IP->setAttribute('Category','ImpositionPreparation');
@@ -202,11 +206,13 @@ sub ImpositionPreparation {
 	$RunListLink->setAttribute('ProcessUsage','Marks');
 	$RunListLink->setAttribute('rRef','RNL'.$$sig_specs{'SignatureIndex'}.'_Marks');
 
+$openprint::log->debug("Leaveing JDF ImpositionPreparation");	
 	return $IP;
 } # end sub ImpositionPreparation
 
 sub Assembly {
     my ( $doc, $Project, $sig_id, $sig_specs ) = @_;
+$openprint::log->debug("Starting JDF Assembly");	
 	my $Assembly = $doc->createElement('Assembly');
     $Assembly->setAttribute('Status','Available');
     $Assembly->setAttribute('Class','Parameter');
@@ -219,11 +225,13 @@ sub Assembly {
 		$Assembly->setAttribute('Order','Collecting');
 		#$Assembly->setAttribute('Order','List');
 	} # end if
+$openprint::log->debug("Leaveing JDF Assembly");	
 	return $Assembly;
 } # end sub Assembly
 
 sub BinderySignature {
 	my ( $doc, $Project, $sig_id, $sig_specs ) = @_;
+$openprint::log->debug("Starting JDF BinderySignature");	
 	my $BinderySignature = $doc->createElement('BinderySignature');
     $BinderySignature->setAttribute('Status','Available');
     $BinderySignature->setAttribute('Class','Parameter');
@@ -254,14 +262,17 @@ sub BinderySignature {
 	} # end if
     #$BinderySignature->setAttribute('NumberUp',join(' ', @$sig_specs{'hdnImpositionColumns'.$Project->ordered_quantity_index(),'hdnImpositionRows'.$Project->ordered_quantity_index()} ) );
 	$BinderySignature->setAttribute('ID', 'BIS'.$sig_id );
+$openprint::log->debug("Leaveing JDF BinderySignature");	
 	return $BinderySignature;
 } # end sub BinderySignature
 
 sub StrippingParams {
     my ( $doc, $Project, $sig_id, $sig_specs ) = @_;
 
+$openprint::log->debug("Starting JDF StrippingParams");	
 
 	my $Imposition = new openprint::Imposition();
+	$$Imposition{'paper'} = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() );
 	$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
 	my $Paper = $Imposition->paper();
 	my $binding = openprint::print::get_book_type( $Project );
@@ -410,6 +421,7 @@ $Imposition->display();
 			$Position->setAttribute('RelativeBox',join(' ', ( ($col-1)/$columns, ($row-1)/$rows, $col/$columns, $row/$rows ) ));
 		} # end foreach row
 	} # end foreach col
+$openprint::log->debug("leaveing JDF StrippingParams");	
 
 	return $StrippingParams;
 } # end sub StrippingParams
@@ -655,7 +667,9 @@ sub JDF_SignatureIntent {
     my $ResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
     my $ResourceLinkPool = $project->appendChild( $doc->createElement('ResourceLinkPool') );
 
+$openprint::log->debug("Before load from signature");
 	my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+$openprint::log->debug("After load from signature");
 if ( 1 ) {
 # Paper
 	$ResourcePool->appendChild( $Paper->JDF_MediaIntent( $doc, $$sig_specs{'SignatureIndex'} ) );
@@ -814,10 +828,13 @@ if ( 0 ) {
 sub JDF_PrintingProcess {
 
     my ( $doc, $Project, $sig_id, $sig_specs ) = @_;
+$openprint::log->debug("Start JDF_PrintingProcess");
 
     my %services = $Project->get_services();
     my $printing_specs = openprint::service::get_specs_ref( $Project->id(), $services{''}[0] );
+$openprint::log->debug("Before load from signature");
 	my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+$openprint::log->debug("After load from signature");
 
 	my @Equipment = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 	my $Equipment = shift @Equipment if @Equipment;
@@ -1161,6 +1178,7 @@ $NodeInfoLink->setAttribute('Usage','Input');
 	$WastePart->setAttribute('SheetName','Sig#'.$$sig_specs{'SignatureIndex'}.'Sheet#1');
 	$WastePart->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	$WastePart->setAttribute('Condition','Waste');
+$openprint::log->debug("Leave JDF_PrintingProcess");
 	return $project;
 
-} # end sub jdf
+} # end sub JDF_PrintingProcess

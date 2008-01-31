@@ -31,15 +31,16 @@ if ( opendir DIRHANDLE, $source_path ) {
 foreach my $file ( @filenames ) {
 	# Will ignore ., .., any hidden file
 	next if $file =~ /^\./; 
-	if ( $file =~ /(.*)B\.ppf$/i ) {
+	if ( $file =~ /(.*)B\.(ppf)$/i ) {
 		my $file_base = $1;
+		my $extension = $2;
 		my  $out_base = $file_base;
 		$out_base =~ s/\./_/g;
 
-		if ( sets::isin( $file_base.'A.ppf', @filenames ) ) {
+		if ( sets::isin( $file_base.'A.'.$extension, @filenames ) ) {
 			my @Back;
-			if ( ! open ( FH, '< ' . $source_path.'/'.$file_base.'B.ppf' ) ) {
-				print "Error opening " . $source_path.'/'.$file_base."B.ppf\n" ;
+			if ( ! open ( FH, '< ' . $source_path.'/'.$file_base.'B.'.$extension ) ) {
+				print "Error opening " . $source_path.'/'.$file_base."B.$extension\n" ;
 				next;
 			} # end if
 
@@ -52,21 +53,22 @@ foreach my $file ( @filenames ) {
 			close( FH );
 			if ( ! @Back ) {
 				print "No Back found in B file!\n";
-				rename $source_path.'/'.$file_base.'B.ppf', $source_path.'/'.$file_base.'E.ppf';
+				rename $source_path.'/'.$file_base.'B.'.$extension, $source_path.'/'.$file_base.'E.'.$extension;
 				next;
 			} # end if
-			if ( ! open( A, '< '.$source_path.'/'.$file_base.'A.ppf' ) ) {
-				print "Error opening " . $source_path.'/'.$file_base."A.ppf\n" ;
+			if ( ! open( A, '< '.$source_path.'/'.$file_base.'A.'.$extension ) ) {
+				print "Error opening " . $source_path.'/'.$file_base."A.$extension\n" ;
 				next;
 			} # end if
-			if ( ! open( M, '> '.$dest_path.'/'.$out_base.'M.ppf' ) ) {
-				print "Error opening " . $dest_path.'/'.$file_base."M.ppf\n" ;
+			if ( ! open( M, '> '.$dest_path.'/'.$out_base.'M.'.$extension ) ) {
+				print "Error opening " . $dest_path.'/'.$file_base."M.$extension\n" ;
 				next;
 			} # end if
 			my $fileA = $file_base.'A';
 			my $fileM = $file_base.'M';
 			while ( <A> ) {
 				my $line = $_;
+				next if $line =~ /CIP3EndOfFile/;
 				$line =~ s/$fileA/$fileM/g;
 				print M $line;
 				if ( $line =~ /CIP3EndFront/ ) {
@@ -77,8 +79,8 @@ foreach my $file ( @filenames ) {
 			} # end while
 			close A;
 			close M;
-			unlink $source_path.'/'.$file_base.'A.ppf';
-			unlink $source_path.'/'.$file_base.'B.ppf';
+			unlink $source_path.'/'.$file_base.'A.'.$extension;
+			unlink $source_path.'/'.$file_base.'B.'.$extension;
 
 		} # end if
 	} # end if

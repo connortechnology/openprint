@@ -80,7 +80,9 @@ sub view_services {
 	if ( $cust_id eq $openprint::session{'company_id'} or $openprint::session{'user_type'} eq 'A' ) {
 
 		if ( defined $openprint::param{'btnFunction'} ) {
-			if ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
+			if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
+				misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf()->toString()] );
+			} elsif ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
 				# Update the 'current project'
 				$openprint::session{'project_id'} = $project_index;
 				$log->debug("** Save Service in View Services Function **");
@@ -215,7 +217,7 @@ sub print_prices {
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
 
-    get_quantities( $log, $dbh, $variable, $project_index);
+    get_quantities( $variable, $project_index);
 
     $$variable{'Cutting'} = $services{'Cutting'} ? 'YES' : 'NO';
     $$variable{'Folding'} = $services{'Folding'} ? 'YES' : 'NO';
@@ -323,7 +325,6 @@ sub multipage_signatures {
 			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'SignatureIndex', ++$signature_count );
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'rdbTemplateType', '2PanelFold' );
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'PrintingType', $$param{'PrintingType'} );
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtSpreadSize', 4 );
 			# Width and Height will be added on auto-calc
@@ -373,8 +374,8 @@ sub multipage_signatures {
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
-			my $type = $$sig_specs{'txtSignatureType'};
-			$type =~ s/\s//g;
+		my $type = $$sig_specs{'txtSignatureType'};
+		$type =~ s/\s//g;
 		foreach my $spec ( 
 				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
@@ -412,7 +413,7 @@ sub multipage_signatures {
 				'chkVarnishSpotGlossSideTwo','chkVarnishSpotMatteSideTwo','chkVarnishOverallGlossSideTwo','chkVarnishOverallMatteSideTwo','chkVarnishDryTrapSideTwo',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} ) if defined $$param{$spec.$type};
 		} # end foreach spec
 	} # end foreach
 
@@ -620,7 +621,7 @@ $log->debug("Calliper: $finished_calliper");
 } # end sub get_finished_calliper
 
 sub get_quantities {
-	my ( $log, $dbh, $variable, $project_index) = @_;
+	my ( $variable, $project_index) = @_;
 	if ( ! $$variable{'QUANTITIES'} ) {
 		my $Project = new openprint::Project( $project_index );
 		my @qtys = $Project->quantities();

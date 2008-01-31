@@ -410,7 +410,7 @@ sub summary {
 	$$variable{'UNITPRICE2'} = $$variable{'txtQuantity2'} ? sprintf( "%.2f", $$variable{'TOTAL2'}/$$variable{'txtQuantity2'} ) : '0.00';
 	$$variable{'UNITPRICE3'} = $$variable{'txtQuantity3'} ? sprintf( "%.2f", $$variable{'TOTAL3'}/$$variable{'txtQuantity3'} ) : '0.00';
 
-	openprint::print::get_quantities( $log, $dbh, $variable, $project_index);
+	openprint::print::get_quantities( $variable, $project_index);
 
 	$$variable{'ProjectIndex'} = $project_index;
 	$$variable{'NoPriceBreakDown'} = $r->param('NoPriceBreakDown');
@@ -792,9 +792,9 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
-	$openprint::param{'txtQuantity1'} =~ s/\D//g;
-	$openprint::param{'txtQuantity2'} =~ s/\D//g;
-	$openprint::param{'txtQuantity3'} =~ s/\D//g;
+	$openprint::param{'quantity1'} =~ s/\D//g;
+	$openprint::param{'quantity2'} =~ s/\D//g;
+	$openprint::param{'quantity3'} =~ s/\D//g;
 	@openprint::param{'reference','comments'} = misc::trim( @openprint::param{'reference','comments'} );
 
 	my $Project = new openprint::Project( $project_index );
@@ -805,6 +805,8 @@ sub reuse_project {
 	$NewProject->reference( $openprint::param{'reference'} );
 	$NewProject->comments( $openprint::param{'comments'} );
 	$NewProject->docket( '' );
+	$NewProject->due_date( '' );
+	$NewProject->user_id( $openprint::session{'user_id'} );
 	$NewProject->order_id( '' );
 	# This allows uncalc->uncalc, everything else to UnOrdered
 	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete' ] ) ) {
@@ -813,12 +815,13 @@ sub reuse_project {
 	$NewProject->company_id( $r->param('ddmCompany') ) if $r->param('ddmCompany');
 	$NewProject->save();
 
+	$NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
+
 	if ( $r->param('ddmCompany') and $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
 		openprint::main_account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
 	} # end if
 
-	$NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 
 	my @dont_copy = (
 			'ServiceIndex','ProjectIndex','TemplateType',
@@ -1105,7 +1108,7 @@ sub calc {
 # The adding of signatures will be done automatically by multipage signatures
 # This will add bindery services, and a printing service
 			$specs{'Status'} = openprint::print::multipage_signatures( \%specs, $log, $dbh, $variable, $$project{'id'}, $printing_service_index );
-			openprint::Estimating::Multipage::calculate_signatures($log, $dbh, $variable, $$project{'id'} );
+			#openprint::Estimating::Multipage::calculate_signatures($log, $dbh, $variable, $$project{'id'} );
 
 		} else {
 # Non-book
