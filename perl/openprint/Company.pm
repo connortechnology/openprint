@@ -61,6 +61,8 @@ require openprint::Object;
 	'updated_on'	=> 'NOW()',
 	'currency_id'	=>	undef,
 	'pricelist_id'	=>	undef,
+	'activation'	=>	'N',
+	'mailinglist'	=>	'N',
 );
 
 my $debug = 1;
@@ -86,6 +88,10 @@ sub find {
 	if ( $params{'Name'} ) {
 		$sql .= q{ AND strName=?};
 		push @values, $params{'Name'};
+	} # end if
+	if ( $params{'name'} ) {
+		$sql .= q{ AND strName=?};
+		push @values, $params{'name'};
 	} # end if
 	if ( $params{'SalesPerson'} ) {
 		if ( ref $params{'SalesPerson'} eq 'ARRAY' ) {

@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 1;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 use strict;
@@ -1244,14 +1244,14 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		} # end if
 
 		my %best_price = %{$b_price};
-
 		my $Imposition = $$b_price{'Imposition'};
-		my $Paper = $Imposition->Paper();
+		my $Paper = $Imposition->paper();
 		my $Press = $Imposition->Press();
 		my $Aqueous = $$b_price{'Aqueous'};
 		my $Varnish = $$b_price{'Varnish'};
-#$openprint::log->debug("QTY $qty_index $Paper $$Paper{width} $$Paper{height}");
+
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
+
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 		$$specs{'ddmBleedSize'.$qty_index} = $best_price{'ddmBleedSize'};
 		$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
@@ -1511,18 +1511,18 @@ $imp->display();
 
 			while ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} > 0 ) {
 				if ( $s_id ) {
-					foreach ( $Project->signatures($$specs{'txtSignatureType'}) ) {
+					foreach ( sort $Project->signatures($$specs{'txtSignatureType'}) ) {
 						if ( $_ > $s_id ) {
 							$s_id = $_;
 							%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
 							last;
 						} # end if
 					} # end foreach
-# If we didn't get a new s_id, then we are using fake services
+					# If we didn't get a new s_id, then we are using fake services
 					$s_id = 0 if $s_id == $service_index;
 				} # end if
 
-# Need to update these too. 
+				# Need to update these too. 
 				$new_specs{'PreviousPlates'.$qty_index} += $$price{'txtPlateQuantity'};
 				$new_specs{'PreviousBlankPlates'.$qty_index} += $$price{'txtBlankPlateQuantity'};
 
@@ -1559,12 +1559,13 @@ $imp->display();
 				} else {
 					if ( $additional_signature_cache{$new_specs{'txtUnspecifiedPageQuantity'.$qty_index}} ) {
 #$openprint::log->debug("Using cache: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
-						#$sig_price = $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}};
 						$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtUnspecifiedPageQuantity'.$qty_index}}, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, ( %best_price ? $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'} : 0 ), $pms_prices, $inkCoverage, $special_colours );
 					} else {
 $openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedPageQuantity'.$qty_index} <= " . $imp->spreads() );
 						my $services = $Project->services();
 						my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+						# if the new_specs comes from an existing signature, this may not be correct, so update it.
+						$new_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 						$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
 						$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 #$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
@@ -1579,19 +1580,25 @@ $openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedPageQuantity'.$qty
 						if ( ! $$sig_price{'complete'} ) {
 							$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
 #$openprint::log->warn("Doing full calc without Page Override" );
+							#$sig_price = $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}};
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 						} # end if
+
 						if ( ! $$sig_price{'complete'} ) {
 #$openprint::log->warn("Doing full calc without Press Override" );
 							$new_specs{'chkOverridePress'.$qty_index} = '';
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 						} # end if
+						if ( ! $$sig_price{'complete'} ) {
+							$openprint::log->warn('Couldnt calculate full price');
+						} else {
 #$openprint::log->debug("Caching: " . $new_specs{'PageQuantity'.$qty_index} . ' : ' . $$sig_price{'Imposition'} );
-						$additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}} = $$sig_price{'Imposition'};
+							$additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}} = $$sig_price{'Imposition'};
 
-						# get_project_price is recursive so we are done
-						$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0;
-						$new_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
+# get_project_price is recursive so we are done
+							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0;
+							$new_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
+						} # end if
 						
 #$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} . ' ' . $$sig_price{'Comparison Cost'} - $$sig_price{'Stitching Cost'} );
 					} # end if

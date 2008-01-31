@@ -824,6 +824,7 @@ sub reuse_project {
 	$NewProject->reference( $openprint::param{'reference'} );
 	$NewProject->comments( $openprint::param{'comments'} );
 	$NewProject->docket( '' );
+	$NewProject->due_date( '' );
 	$NewProject->user_id( $openprint::session{'user_id'} );
 	$NewProject->order_id( '' );
 	# This allows uncalc->uncalc, everything else to UnOrdered
@@ -1132,7 +1133,7 @@ sub calc {
 # The adding of signatures will be done automatically by multipage_signatures
 # This will add bindery services, and a printing service
 			$specs{'Status'} = openprint::print::multipage_signatures( \%specs, $log, $dbh, $variable, $$project{'id'}, $printing_service_index );
-			openprint::Estimating::Multipage::calculate_signatures($log, $dbh, $variable, $$project{'id'} );
+			#openprint::Estimating::Multipage::calculate_signatures($log, $dbh, $variable, $$project{'id'} );
 
 		} else {
 # Non-book
@@ -1308,15 +1309,13 @@ sub calc {
 		push @{$services{'PlainCartons'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'PlainCartons' ) if ! $services{'PlainCartons'};
 		if ( $specs{'UPSShipping'} eq 'Y' ) {
 			push @{$services{'UPS'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'UPS' ) if ! $services{'UPS'};
-			my $ac = $dbh->{AutoCommit};
-			$dbh->{AutoCommit} = 0;
+			my $ac = sql::start_transaction( $dbh );
 			foreach my $sid ( @{$services{'UPS'}} ) {
 				foreach my $spec ( 'txtShippingPostalCode' ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, $spec, $specs{$spec} );
 				} # end foreach
 			} # end foreach
-			$dbh->commit() if $ac;
-			$dbh->{AutoCommit} = $ac;
+			sql::end_transaction( $dbh, $ac );
 		} else {
 			foreach my $sid ( @{$services{'UPS'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $sid );
@@ -1363,7 +1362,10 @@ sub calc {
 
 		if ( $services{'Scoring'} ) {
 			my $score_specs = openprint::service::get_specs_ref( $$project{'id'}, $services{'Scoring'}[0] );
-			$specs{'txtScoreQty'} = $$score_specs{'txtVerticalQty-0'};
+			foreach my $ss_id ( $project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $$project{'id'}, $ss_id );
+				$specs{'txtScoreQty'} += $$score_specs{'txtVerticalQty-'.$$sig_specs{'SignatureIndex'}} + $$score_specs{'txtHorizontalQty-'.$$sig_specs{'SignatureIndex'}};
+			} # end foreach
 			if ( ! $specs{'txtScoreQty'} ) {
 				$specs{'alert'} .= 'Please enter the # of scores.';
 				$specs{'Status'} = 'uncalculated';

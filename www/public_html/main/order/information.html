@@ -12,6 +12,22 @@
 			} // end if
 		} // end for
 	} // end function
+	function company_id_onchange( e ) {
+		if ( e.getValue() ) {
+		new Ajax.Updater('ContactInformation','_contact_information.html', { method:'get', parameters:e.form.serialize() });
+			$('AddFromBelow').hide();
+		} else {
+			$('AddFromBelow').show();
+		} // end if
+	} // end function
+	function save_company( ) {
+		if ( ! $('txtCompanyName').getValue() ) {
+			alert('Please provide a name for the company');
+		} else {
+			new Ajax.Updater('CompanyDropDown','_company_dropdown.html', { method:'get', parameters:$('f1').serialize() });
+		} // end if
+	} // end function save_company()
+
 	function ddmUsers_onchange( form ) {
 		jsrsExecute( '/jsrs.htm', cbFillUserFor, 'openprint::order::fill_user_info', form.ddmUsers.options[form.ddmUsers.selectedIndex].value );
 	} // end function
@@ -41,7 +57,7 @@
 <div class="Order">
 	<div class="error"><?error?><?Error?></div>
 
-	<form method="post" name="f1" action="submit.html">
+	<form method="post" id="f1" name="f1" action="submit.html">
 		If you have a purchase order number please enter it below.<br/>
 		<br/>
 		(Fields marked with an * are required.)
@@ -50,22 +66,25 @@
 		<div style="float: left; width: 49%; min-width: 320px;">
 			<fieldset>
 				<p> 
+					<label>Order ID:</label><? echo ( $$variable{'Order'}->id() ) ?>
+				</p>
+				<p> 
 					<label>Purchase Order:</label>
 					<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
 				</p>
 <? if ( (! $openprint::session{'company_id'}) and sets::isin($openprint::session{'user_type'}, ['A','E'] ) ) ?>
 				<p>
 					<label>Company:</label>
-					<select name="company_id">
-					<option value="">Select a Company</option>
-					<? echo ( 
-							openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} );
-							) ?>
-					</select>
+					<span id="CompanyDropDown">
+					<!--#include virtual="_company_dropdown.html"-->
+					</span>
+					<? echo ( ssi::writeButton( $log, $dbh, 'AddFromBelow', 'add_from_below.gif', 'save_company();', '', 'Save Company' ); ) ?>
 				</p>
 <? endif ( (! $openprint::session{'company_id'}) and sets::isin($openprint::session{'user_type'}, ['A','E'] ) ) ?>
 			</fieldset>
+			<div id="ContactInformation">
 			<!--#include virtual="_contact_information.html"-->
+			</div>
 		</div>
 		<div style="float: right; width: 49%; min-width: 320px;">
 			<? eval ( 
@@ -78,7 +97,9 @@
 				<!--#include virtual="_project_information.html"-->
 				<? endwhile ( @$variable{'ProjectIndex','Reference','SelectedQuantityIndex','ShippingType','Quantity1','Quantity2','Quantity3'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
 				<? if ( @{$$variable{'PRODUCTS'}} ) ?>
+				<span id="Products">
 				<!--#include virtual="_product_information.html"-->
+				</span>
 				<? endif ( @{$$variable{'PRODUCTS'}} ) ?>
 			<? else ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
 				<p>This order appears to be empty.</p>

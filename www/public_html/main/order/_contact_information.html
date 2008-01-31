@@ -1,7 +1,33 @@
+<? eval (
+	foreach my $k ( 'txtCompanyName', 'txtAddress1', 'txtAddress2', 'txtCity', 'ddmStateProvince', 'txtPostalCode', 'ddmCountry', 'txtPhone', 'txtExtension', 'txtFax', 'rdbSalutation', 'txtFirstName','txtLastName','txtEmail' ) {
+		#$$variable{$k} = $openprint::param{$k};
+	} # end foreach
+
+	if ( $openprint::param{'company_id'} ) {
+		my $Company = new openprint::Company( $openprint::param{'company_id'} );
+		@$variable{'txtCompanyName',
+			 'txtAddress1',
+			 'txtAddress2',
+			 'txtCity',
+			 'ddmStateProvince',
+			 'txtPostalCode',
+			 'ddmCountry',
+			 'txtPhone',
+			 'txtExtension',
+			 'txtFax'} = $Company->get( 'name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
+		my @Users = openprint::User::find( 
+			 'company_id'=>$openprint::param{'company_id'} ? $openprint::param{'company_id'} : $openprint::session{'company_id'}, 
+			 'order'=>'lower(strLastName),lower(strFirstName)'
+		);
+		if ( scalar @Users == 1 ) {
+			@$variable{'rdbSalutation','txtFirstName','txtLastName','txtEmail'} = $Users[0]->get('salutation','firstname','lastname','email');
+		} # end if
+	} # end if
+) ?>
 <fieldset><legend>Contact Information</legend>
 	<p> 
 		<label>Company Name:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="txtCompanyName" value="<?txtCompanyName?>"/>
+		<input type="text" id="txtCompanyName" name="txtCompanyName" value="<?txtCompanyName?>"/>
 	</p>
 	<p> 
 		<label>Salutation:<span class="requiredFieldIndicator">&nbsp;</span></label>
@@ -22,7 +48,15 @@
 		<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 			<option value="">Please Select</option>
 <? echo ( 
-ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id'=>$openprint::session{'company_id'}, 'order'=>'lower(strLastName),lower(strFirstName)' ) ], $openprint::session{'user_id'} );
+	my @Users = openprint::User::find( 
+		'company_id'=>$openprint::param{'company_id'} ? $openprint::param{'company_id'} : $openprint::session{'company_id'}, 
+		'order'=>'lower(strLastName),lower(strFirstName)'
+	 );
+	return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ],
+		scalar @Users == 1 ? $Users[0]->id() : (
+			$openprint::param{'ddmUsers'} ? $openprint::param{'ddmUsers'} : $openprint::session{'user_id'} 
+			)
+	);
 ) ?>
 		</select>
 	</p>

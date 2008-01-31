@@ -299,11 +299,11 @@ $openprint::log->debug("Loading imposition");
 	my %makereadies;
 	my $max_imposition = $Imposition->imposition();
 
-	foreach my $ss_id ( $Project->signatures( ) ) {
+	foreach my $ss_id ( $Project->signatures() ) {
 		next if $Paper and $signature_service_index and ($ss_id > $signature_service_index);
 		next if $ss_id == $signature_service_index;
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		if ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) {
+		if ( $$s_specs{'txtImposition'.$qty_index} and ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) ) {
 			$max_imposition = $$s_specs{'txtImposition'.$qty_index};
 		} # end if
 		foreach my $fold_type ( keys %fold_types ) {
@@ -400,6 +400,7 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 
 			# FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 			if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
+$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}");
 				$_ = $Equipment->fits( $Imposition->image_width(), $Imposition->image_height(), $$sig_specs{'txtSpecificStockCalliper'} );
 				if ( $_ ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit: $_<br/>";
@@ -426,6 +427,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					last if ! $I->spreads();
 $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Equipment->name()) if $debug;
 					
+					# See if it fits
 					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height()*$imposition ) : ( $I->image_width()*$imposition, $I->image_height() ), $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 
@@ -446,10 +448,8 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 						} else {
 							$openprint::log->debug(sprintf('Didnt find: %dx%d*%d,%dout Max %dout', $I->spread_columns(), $I->spread_rows(), $I->spread_size(), $I->imposition(), $max_imposition ) ) if $debug;
 						} # end if
-					} else {
-						$openprint::log->debug($_);
-						last;
 					} # end if
+
 					# This tells us whether it's a book or not
 					last if ! $$sig_specs{'PageQuantity'.$qty_index};
 
@@ -531,19 +531,20 @@ $openprint::log->debug('Got fold ' . $F->pages() );
 					$totalPrice += $setupPrice{'Price'};
 				} # end if
 
+				# In hours
+				my $runTime = sprintf( '%.4f', ($$specs{"txtQuantity$qty_index"}/$imposition) / $$RunSpeed{'runspeed'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Folds: %d, QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', scalar @{$folds{$fold_type}}, $$specs{'txtQuantity'.$qty_index}, $imposition, $$RunSpeed{runspeed}, $runTime );
+
 				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
 					last;
 				} # end if
 
-# In hours
-				my $runTime = sprintf( '%.4f', ($$specs{"txtQuantity$qty_index"}/$imposition) / $$RunSpeed{'runspeed'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Folds: %d, QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', scalar @{$folds{$fold_type}}, $$specs{'txtQuantity'.$qty_index}, $imposition, $$RunSpeed{runspeed}, $runTime );
 				if ( lc $servicePrice{'units'} eq 'per hour' ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime * scalar @{$folds{$fold_type}};
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f', scalar @{$folds{$fold_type}}, $fold_type, $setupPrice{'Price'}, @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} ) . "<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $fold_type, $setupPrice{'Price'}, @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per m', 'per 1000'] ) ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( scalar @{$folds{$fold_type}}*($$specs{"txtQuantity$qty_index"}/$imposition) / 1000 );
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d = $%.2f', scalar @{$folds{$fold_type}}, $fold_type, $setupPrice{'Price'}, @servicePrice{'Price','units'}, @{$folds{$fold_type}}*$$specs{"txtQuantity$qty_index"}, $servicePrice{'Total'} ) . "<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $fold_type, $setupPrice{'Price'}, @servicePrice{'Price','units'}, @{$folds{$fold_type}}*$$specs{"txtQuantity$qty_index"}, $servicePrice{'Total'} );
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= qq`No Units ($servicePrice{'units'}) given for $fold_type on `.$Equipment->name().",<br/>";
 					next;
@@ -557,6 +558,7 @@ $openprint::log->debug('Got fold ' . $F->pages() );
 
 			} # end foreach fold
 		} # end foreach fold_type
+
 		$$specs{'hdnBreakdown'.$qty_index} .= "\tTotal: " . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . "<br/>";
 
 		if ( ( $totalPrice < $bestPrice ) or ( ! defined $bestPrice ) ) {
@@ -627,7 +629,7 @@ sub calc {
 		my $price;
 		my $mprice;
 
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( sort $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.<br/>';
@@ -655,8 +657,8 @@ sub calc {
 
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
+$log->debug($$specs{'hdnBreakdown'.$qty_index});
 	} # end foreach qty
-
 	$log->debug(" END FOLDING!!!!!!!!!!!!!!!!!! $status");
 	return $$specs{'Status'} = $status;
 } # end sub calc
