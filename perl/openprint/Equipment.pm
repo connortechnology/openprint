@@ -176,8 +176,9 @@ sub Fold {
 #}
 
 	foreach my $Fold ( @{$$self{'Folds'}} ) {
-		$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
+		#$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
 		next if $$Fold{pages} and $$params{pages} and ($$Fold{pages} != $$params{pages} );
+		$openprint::log->debug("Looking at fold: " . $Fold->name() );
 		$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
 		next if $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} );
 		$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;

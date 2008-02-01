@@ -515,3 +515,6 @@ img {
 .changed {
 	background-color: yellow;
 }
+label {
+	outline: 0;
+}

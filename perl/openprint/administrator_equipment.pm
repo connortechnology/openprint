@@ -159,6 +159,7 @@ sub _fold {
 			$Spec->save();
 		} # end foreach Spec
 		$openprint::variable{'Fold'} = $NewFold;
+		$openprint::param{'id'} = $NewFold->id();
 		
 	} elsif ( $openprint::param{'action'} eq 'save' ) {
 		$Fold->save(\%openprint::param);
