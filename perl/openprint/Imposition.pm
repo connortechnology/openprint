@@ -220,10 +220,26 @@ sub layout_area {
 	my $self = shift;
 	return $$self{'layout_width'} * $$self{'layout_height'};
 }
-#sub page_columns {I
-	#my $self = shift;
-	#return $$self{'columns'} * $$
-#} # end sub page_columns
+sub page_columns {
+	my $self = shift;
+
+	if ( $$self{'spread_size'} == 4 and $$self{'image_orientation'} eq 'Vertical' ) {
+		return $$self{'spread_columns'} * 2;
+	} else {
+		return $$self{'spread_columns'};
+	} # end if
+} # end sub page_columns
+
+sub page_rows {
+	my $self = shift;
+
+	if ( $$self{'spread_size'} == 4 and $$self{'image_orientation'} eq 'Horizontal' ) {
+		return $$self{'spread_rows'} * 2;
+	} else {
+		return $$self{'spread_rows'};
+	} # end if
+} # end sub page_rows
+
 sub sheet_width {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {

@@ -27,7 +27,7 @@ my %defaults = (
 	'interpolate'	=>	0,
 );
 
-my $debug = 0;
+my $debug = 1;
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;

@@ -173,7 +173,8 @@
 </form>
 <? if ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
-		<p><label>Pages:</label><select onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{'Equipment'}->id() ) ?>, pages: this.getValue() } } );"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_, $_ } sql::execute(undef,undef,q{SELECT DISTINCT pages FROM folds WHERE equipment_id=?}, $$variable{'Equipment'}->id() ) ] ); ) ?></select>
+		Select the # of pages of the folds that you would like to edit.  To add a new fold click Add.
+		<p><label>Pages:</label><select style="width: auto;" id="pages" name="pages" onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{'Equipment'}->id() ) ?>, pages: $('pages').getValue() } } );"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_, $_ } sql::execute(undef,undef,q{SELECT DISTINCT pages FROM folds WHERE equipment_id=?}, $$variable{'Equipment'}->id() ) ] ); ) ?></select>
 <? echo ( ssi::writeButton( $log, $dbh, 'AddFold', 'add.gif',"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{'Equipment'}->id() ."', { method: 'get', onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
 		</p>
 		<div id="Folds"> </div>

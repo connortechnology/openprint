@@ -95,7 +95,9 @@ sub no_outputs {
 	'42PageSignatureFold', '42PageSignatureFold',
 	'44PageSignatureFold', '44PageSignatureFold',
 	'48PageSignatureFold', '48PageSignatureFold',
+	'56PageSignatureFold', '56PageSignatureFold',
 	'60PageSignatureFold', '60PageSignatureFold',
+	'64PageSignatureFold', '64PageSignatureFold',
 	'72PageSignatureFold', '72PageSignatureFold',
 	'PerpendicularSoftFold', 'PerpendicularSoftFold',
 	'ParallelSoftFold', 'ParallelSoftFold',
@@ -356,8 +358,8 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 					next if $1 != $pages;
 					$Fold = $Equipment->Fold(
 							'pages'				=>	$pages,
-							'page_columns'		=>	$$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(),
-							'page_rows'			=>	$Imposition->spread_rows(),
+							'page_columns'		=>	$Imposition->page_columns(),
+							'page_rows'			=>	$Imposition->page_rows(),
 							'spine_direction'	=>	$Imposition->image_orientation(),
 							'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
 							'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
@@ -380,8 +382,8 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 
 			my $Fold = $Equipment->Fold(
 					'pages'				=>	$pages,
-					'page_columns'		=>	$$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(),
-					'page_rows'			=>	$Imposition->spread_rows(),
+					'page_columns'		=>	$Imposition->page_columns(),
+					'page_rows'			=>	$Imposition->page_rows(),
 					'spine_direction'	=>	$Imposition->image_orientation(),
 					'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
 					'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
@@ -391,10 +393,10 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 					);
 			if ( $Fold ) {
 				push @{$folds{$pages.'PageSignatureFold'}}, $Fold;
-	$openprint::log->debug(sprintf('Found: %dx%d*%d,%dout Max %dout', $$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Found: %dx%d,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Didnt find fold<br/>';
-	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $max_imposition ) ) if $debug;
 			} # end if
 		} else {
 
@@ -431,8 +433,8 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 
 						my $Fold = $Equipment->Fold(
 								'pages'				=>	$pages,
-								'page_columns'		=>	$$sig_specs{'txtSpreadSize'} == 4 ? $Imposition->spread_columns()*2 : $Imposition->spread_columns(),
-								'page_rows'			=>	$Imposition->spread_rows(),
+								'page_columns'		=>	$Imposition->page_columns(),
+								'page_rows'			=>	$Imposition->page_rows(),
 								'spine_direction'	=>	$Imposition->image_orientation(),
 								'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
 								'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
@@ -441,10 +443,10 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 								);
 						if ( $Fold ) {
 							push @good_folds, $Fold;
-							$openprint::log->debug(sprintf('Found: %dx%d*%d,%dout Max %dout', $I->spread_columns(), $I->spread_rows(), $I->spread_size(), $I->imposition(), $max_imposition ) ) if $debug;
+							$openprint::log->debug(sprintf('Found: %dx%d %s,%dout Max %dout', $I->page_columns(), $I->page_rows(),$I->image_orientation(), $I->imposition(), $max_imposition ) ) if $debug;
 							next;
 						} else {
-							$openprint::log->debug(sprintf('Didnt find: %dx%d*%d,%dout Max %dout', $I->spread_columns(), $I->spread_rows(), $I->spread_size(), $I->imposition(), $max_imposition ) ) if $debug;
+							$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $I->page_columns(), $I->page_rows(), $I->image_orientation(), $I->imposition(), $max_imposition ) ) if $debug;
 						} # end if
 					} else {
 						$openprint::log->debug($_);
