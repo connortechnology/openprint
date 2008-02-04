@@ -135,12 +135,28 @@ sub fits {
 			) {
 		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification('Maximum Sheet Height'));
 		} # end if
-   } # end if
+	} # end if
 
-   if ( $width and $height and $self->specification('Minimum Sheet Width') or $self->specification('Minimum Sheet Length') ) {
-	   my $imp = openprint::imposition::fit( $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length'), $width, $height );
-	   if ( ! $imp->imposition() ) {
-		   return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length') );
+   if ( $width and $height ) {
+	   if ( $self->specification('Minimum Sheet Width') and $self->specification('Minimum Sheet Length') ) {
+		   my $imp = openprint::imposition::fit( $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length'), $width, $height );
+		   if ( ! $imp->imposition() ) {
+			   return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length') );
+		   } # end if
+	   } elsif ( $self->specification('Minimum Sheet Width') ) {
+		   if (
+				   ( $width < $self->specification('Minimum Sheet Width') ) and
+				   ( $height < $self->specification('Minimum Sheet Width') ) 
+			  ) {
+			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification('Maximum Sheet Width'));
+		   } # end if
+	   } elsif ( $self->specification('Minimum Sheet Length') ) {
+		   if (
+				   ( $width < $self->specification('Minimum Sheet Length') ) and
+				   ( $height < $self->specification('Minimum Sheet Length') ) 
+			  ) {
+			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification('Maximum Sheet Width'));
+		   } # end if
 	   } # end if
    } # end if
 
