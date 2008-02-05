@@ -516,6 +516,13 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 		$$specs{'alert'} .= "Please enter Width and Height<br/>";
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+	if ( $$specs{'txtFinalWidth'} and ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) ) {
+		$$specs{'alert'} .= 'Flat Width must be greater than Final Width.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} elsif ( $$specs{'txtFinalHeight'} and ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
+		$$specs{'alert'} .= 'Flat Height must be greater than Final Height.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
