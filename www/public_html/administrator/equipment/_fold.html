@@ -3,7 +3,11 @@
 		@{$$variable{'Folds'}} = ( new openprint::Fold( $openprint::param{'id'} ) );
 	} else {
 		$$variable{'Equipment'} = new openprint::Equipment( $openprint::param{'equipment_id'} );
-		@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'}, 'pages'=>$openprint::param{'pages'} );
+		if ( $openprint::param{'pages'} eq 'all' ) {
+			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'} );
+		} else {
+			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'}, 'pages'=>$openprint::param{'pages'} );
+		} # end if
 	} # end if
 ) ?>
 <? while ( $$variable{'Fold'} = shift @{$$variable{'Folds'}} ) ?>

@@ -286,10 +286,26 @@ sub multipage_signatures {
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
 	} # end if
 
-	my %pages;
-	$pages{'Cover Pages'} = $$param{'OverrideGroupPageQuantity1'} eq 'Y' ? $$param{'GroupPageQuantity1'} : ($$param{'rdbCover'} eq 'Different' ? 4 : 0);
-	$pages{'Gate Folded Spreads'} = $$param{'txtGateFoldedPageQuantity'};
-	$pages{'Interior Pages'} = ( $$param{'txtTotalPageQuantity'} - $pages{'Cover Pages'} ) - $pages{'Gate Folded Spreads'};
+	my $max_group;
+	my %needed_pages;
+	$needed_pages{'Cover Pages'} = $$param{'OverrideGroupPageQuantity1'} eq 'Y' ? $$param{'GroupPageQuantity1'} : ($$param{'rdbCover'} eq 'Different' ? 4 : 0);
+	$needed_pages{'Gate Folded Spreads'} = $$param{'txtGateFoldedPageQuantity'};
+	$needed_pages{'Interior Pages'} = ( $$param{'txtTotalPageQuantity'} - $needed_pages{'Cover Pages'} ) - $needed_pages{'Gate Folded Spreads'};
+
+	my %specified_pages;
+
+	foreach my $k ( keys %$param ) {
+		if ( $k =~ /txtSignatureType(\d*)/ ) {
+			$specified_pages{$$param{$k}} += $$param{'GroupPageQuantity'.$1};
+			if ( $1 > $max_group ) {
+				$max_group = $1;
+			} # end if
+		} # end if
+	} # end foreach param
+
+foreach my $k ( keys %specified_pages ) {
+$openprint::log->debug("$k => $specified_pages{$k}" );
+} # end foreach
 
 	if ( $$param{'rdbCover'} eq 'Different' ) {
 # now add a cover spread if we need one.
@@ -314,7 +330,7 @@ sub multipage_signatures {
 
 		# Prime this for saving later
 		if ( ( ! $$param{'GroupPageQuantity1'} ) and ( $$param{'OverrideGroupPageQuantity1'} ne 'Y' ) ) {
-			$$param{'GroupPageQuantity1'} = $pages{'Cover Pages'};
+			$$param{'GroupPageQuantity1'} = $needed_pages{'Cover Pages'};
 		} # end if
 	} else {
 # Don't need a cover, so get rid of it
@@ -359,7 +375,7 @@ sub multipage_signatures {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 	if ( ( ! $$param{'GroupPageQuantity2'} ) and ( $$param{'OverrideGroupPageQuantity2'} ne 'Y' ) ) {
-		$$param{'GroupPageQuantity2'} = $pages{'Interior Pages'};
+		$$param{'GroupPageQuantity2'} = $needed_pages{'Interior Pages'};
 	} # end if
 
 	foreach my $ss_id ( $Project->signatures() ) {
@@ -401,21 +417,21 @@ sub multipage_signatures {
 				'rdbAqueousSideTwo',
 				'chkVarnishSpotGlossSideTwo','chkVarnishSpotMatteSideTwo','chkVarnishOverallGlossSideTwo','chkVarnishOverallMatteSideTwo','chkVarnishDryTrapSideTwo',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
-				'GroupPageQuantity','OverrideGroupPageQuantity',
+				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
 				) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} ) if defined $$param{$spec.$type};
 		} # end foreach spec
 	} # end foreach
 
-	if ( misc::sum( values %pages ) < $$param{'txtTotalPageQuantity'} ) {
+	if ( misc::sum( values %specified_pages ) < $$param{'txtTotalPageQuantity'} ) {
 # Must have at least 1 interioer signature
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', sets::max( keys %pages ) + 1 );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'GroupPageQuantity', $$param{'txtTotalPageQuantity'} - misc::sum( values %pages ) );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', $max_group + 1 );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'GroupPageQuantity', $needed_pages{'Interior Pages'} - $specified_pages{'Interior Pages'} );
 		$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 		$signature_count += 1;
@@ -424,6 +440,7 @@ sub multipage_signatures {
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
 		sql::end_transaction( $dbh, $ac );
 		$$variable{'Redirect'} = '/main/project/prin/prin_multi.html';
+		return;
 	} # end if
 
 	my %services = $Project->get_services();
@@ -531,7 +548,7 @@ sub publication_pages {
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
-				'SideOneUVCoatingType','SideTwoUVCoatingType',
+				'SideOneUVCoatingType','SideTwoUVCoatingType','txtSignatureType',
 				) {
 			$$variable{$spec.$type} = $$sig_specs{$spec};
 		} # end foreach spec

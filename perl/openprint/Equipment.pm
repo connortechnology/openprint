@@ -195,6 +195,14 @@ sub Fold {
 		#$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
 		next if $$Fold{pages} and $$params{pages} and ($$Fold{pages} != $$params{pages} );
 		$openprint::log->debug("Looking at fold: " . $Fold->name() );
+
+		$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
+		next if $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching};
+		$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
+		next if $$params{perfectbind} and defined $$Fold{perfectbind} and $$params{perfectbind} != $$Fold{perfectbind};
+		$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
+		next if $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste};
+
 		$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
 		next if $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} );
 		$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;
@@ -204,12 +212,6 @@ sub Fold {
 		next if $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition});
 		$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if $debug;
 		next if $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} );
-		$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
-		next if $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching};
-		$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
-		next if $$params{perfectbind} and defined $$Fold{perfectbind} and $$params{perfectbind} != $$Fold{perfectbind};
-		$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
-		next if $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste};
 		if ( $$params{gsm} ) {
 			$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
 			my $RunSpeed = $Fold->Specification( $$params{gsm} );

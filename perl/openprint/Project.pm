@@ -963,11 +963,15 @@ sub signatures {
 		} # end if
 	} # end if
 	if ( @_ ) {
+		my $params = shift;
 		my @sigs;
-		my $type = shift;
+
 		foreach my $s_id ( @{$$self{'signatures'}} ) {
 			my $specs = openprint::service::get_specs_ref( $$self{'id'}, $s_id );
-			push @sigs, $s_id if $$specs{'txtSignatureType'} eq $type;
+
+			if ( $$params{'type'} ) {
+				next if $$specs{'txtSignatureType'} ne $$params{'type'};
+			} # end if
 		} # end foreach signatures
 		return @sigs;
 	} # end if

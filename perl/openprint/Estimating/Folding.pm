@@ -21,7 +21,7 @@ require openprint::Project;
 require openprint::service;
 require sql;
 
-use vars qw( %fold_types );
+use vars qw( @folds %fold_types );
 
 my $debug = 1;
 
@@ -66,6 +66,49 @@ sub no_outputs {
 	return @no_outputs;
 } # end sub outputs
 
+@folds = (
+	'2PanelFold',
+	'3PanelFold',
+	'3PanelZFold',
+	'4PanelFold',
+	'4PanelZFold',
+	'5PanelFold',
+	'5PanelZFold',
+	'6PanelFold',
+	'6PanelZFold',
+	'SingleGateFold',
+	'DoubleGateFold',
+	'4PageSignatureFold',
+	'6PageSignatureFold',
+	'8PageSignatureFold',
+	'10PageSignatureFold',
+	'12PageSignatureFold',
+	'16PageSignatureFold',
+	'18PageSignatureFold',
+	'20PageSignatureFold',
+	'24PageSignatureFold',
+	'28PageSignatureFold',
+	'30PageSignatureFold',
+	'32PageSignatureFold',
+	'36PageSignatureFold',
+	'40PageSignatureFold',
+	'42PageSignatureFold',
+	'44PageSignatureFold',
+	'48PageSignatureFold',
+	'56PageSignatureFold',
+	'60PageSignatureFold',
+	'64PageSignatureFold',
+	'72PageSignatureFold',
+	'PerpendicularSoftFold',
+	'ParallelSoftFold',
+	'2Panel1Pocket',
+	'2Panel2Pocket',
+	'2Panel2PocketGusset',
+	'3Panel2Pocket',
+	'3Panel2PocketGusset',
+	'MapFold',
+);
+
 %fold_types = (
 	'2PanelFold', '2 Panel Fold',
 	'3PanelFold', '3 Panel Fold',
@@ -78,29 +121,29 @@ sub no_outputs {
 	'6PanelZFold', '6 Panel Z Fold',
 	'SingleGateFold', 'Single Gate Fold',
 	'DoubleGateFold', 'Double Gate Fold',
-	'4PageSignatureFold', '4PageSignatureFold',
-	'6PageSignatureFold', '6PageSignatureFold',
-	'8PageSignatureFold', '8PageSignatureFold',
-	'10PageSignatureFold', '10PageSignatureFold',
-	'12PageSignatureFold', '12PageSignatureFold',
-	'16PageSignatureFold', '16PageSignatureFold',
-	'18PageSignatureFold', '18PageSignatureFold',
-	'20PageSignatureFold', '20PageSignatureFold',
-	'24PageSignatureFold', '24PageSignatureFold',
-	'28PageSignatureFold', '28PageSignatureFold',
-	'30PageSignatureFold', '30PageSignatureFold',
-	'32PageSignatureFold', '32PageSignatureFold',
-	'36PageSignatureFold', '36PageSignatureFold',
-	'40PageSignatureFold', '40PageSignatureFold',
-	'42PageSignatureFold', '42PageSignatureFold',
-	'44PageSignatureFold', '44PageSignatureFold',
-	'48PageSignatureFold', '48PageSignatureFold',
-	'56PageSignatureFold', '56PageSignatureFold',
-	'60PageSignatureFold', '60PageSignatureFold',
-	'64PageSignatureFold', '64PageSignatureFold',
-	'72PageSignatureFold', '72PageSignatureFold',
-	'PerpendicularSoftFold', 'PerpendicularSoftFold',
-	'ParallelSoftFold', 'ParallelSoftFold',
+	'4PageSignatureFold', '4 Page Signature Fold',
+	'6PageSignatureFold', '6 Page Signature Fold',
+	'8PageSignatureFold', '8 Page Signature Fold',
+	'10PageSignatureFold', '10 Page Signature Fold',
+	'12PageSignatureFold', '12 Page Signature Fold',
+	'16PageSignatureFold', '16 Page Signature Fold',
+	'18PageSignatureFold', '18 Page Signature Fold',
+	'20PageSignatureFold', '20 Page Signature Fold',
+	'24PageSignatureFold', '24 Page Signature Fold',
+	'28PageSignatureFold', '28 Page Signature Fold',
+	'30PageSignatureFold', '30 Page Signature Fold',
+	'32PageSignatureFold', '32 Page Signature Fold',
+	'36PageSignatureFold', '36 Page Signature Fold',
+	'40PageSignatureFold', '40 Page Signature Fold',
+	'42PageSignatureFold', '42 Page Signature Fold',
+	'44PageSignatureFold', '44 Page Signature Fold',
+	'48PageSignatureFold', '48 Page Signature Fold',
+	'56PageSignatureFold', '56 Page Signature Fold',
+	'60PageSignatureFold', '60 Page Signature Fold',
+	'64PageSignatureFold', '64 Page Signature Fold',
+	'72PageSignatureFold', '72 Page Signature Fold',
+	'PerpendicularSoftFold', 'Perpendicular Soft Fold',
+	'ParallelSoftFold', 'Parallel Soft Fold',
 	'2Panel1Pocket', 'Single Pocket Presentation Folder',
 	'2Panel2Pocket', 'Double Pocket Presentation Folder',
 	'2Panel2PocketGusset', 'Double Pocket Presentation Folder with Gussets',
@@ -234,6 +277,9 @@ sub impositions {
 sub signature_calc {
 	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
 
+	# First step, find out if we are stitching, then find out which equipment is being used for stitching
+	my $services = $Project->services();
+
 	$$specs{"txtQuantity$qty_index"} = int $$specs{"txtQuantity$qty_index"};
 	$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{'txtPressSheetComboItems'} ) {
@@ -254,8 +300,7 @@ $openprint::log->debug("Loading imposition");
 	my $bestEquipment;
 	my $bestFolds;
 
-	@equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' ) if ! @equipment;
-	@stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) if ! @stitchers;
+	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' );
 	
 	my @my_equipment;
 
@@ -269,6 +314,13 @@ $openprint::log->debug("Loading imposition");
 		push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 	} else {
 		@my_equipment = @equipment;
+
+		if ( $$services{'PerfectBound'} ) {
+			push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'}, 'order'=>'lower(strname)' );
+		} # end if
+		if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
+			push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'}, 'order'=>'lower(strname)' );
+		} # end if
 
 		if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
 			my $Press = shift @Press;
@@ -284,13 +336,6 @@ $openprint::log->debug("Loading imposition");
 	
 	# If the stitching is happening on a piece of equipment that can't handle large signatures, then we need to cut them down instead of folding them.
 	# Something like a duplo can do 4pg signatures only, so the cutting service will cut everything down, and we will show the 4pg sigs being folded on the duplo
-
-	# First step, find out if we are stitching, then find out which equipment is being used for stitching
-	my $services = $Project->services();
-	#my $stitching_specs;
-	if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
-		@my_equipment = sets::exclude( \@stitchers, \@my_equipment );
-	} # end if
 
 	if ( ! @my_equipment ) {
 		$$specs{'alert'} .= 'There is no Folding capable equipment.';
@@ -314,6 +359,7 @@ $openprint::log->debug("Loading imposition");
 			} # end if
 		} # end foreach
 	} # end foreach
+
 	if ( ! $max_imposition ) {
 		$$specs{'alert'} .= 'Cannot calculate the maximum imposition to fold at.';
 		return;
@@ -325,9 +371,15 @@ $openprint::log->debug("Loading imposition");
 		if ( $$stitching_specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 			$imposition = $$stitching_specs{'Imposition'.$qty_index};
 		} # end if
+	} elsif ( $$services{'LoopStitching'} ) {
+		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
+		if ( $$stitching_specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
+			$imposition = $$stitching_specs{'Imposition'.$qty_index};
+		} # end if
 	} else {
 		$imposition = 1;
 	} # end if
+
 	if ( ! $imposition ) {
 		if ( $max_imposition % 2 ) {
 			$imposition = 1;
@@ -362,7 +414,7 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 							'page_rows'			=>	$Imposition->page_rows(),
 							'spine_direction'	=>	$Imposition->image_orientation(),
 							'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-							'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
+							'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
 							'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 							'gsm'				=>	$Imposition->Paper()->gsm(),
 							);
@@ -386,7 +438,7 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 					'page_rows'			=>	$Imposition->page_rows(),
 					'spine_direction'	=>	$Imposition->image_orientation(),
 					'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-					'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
+					'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
 					'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 					'gsm'				=>	$Imposition->Paper()->gsm(),
 					'imposition'		=>	$Imposition->imposition(),
@@ -412,15 +464,28 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}");
 							'gsm'				=>	$Imposition->Paper()->gsm(),
 							);
 					if ( $Fold ) {
-					push @{$folds{$$sig_specs{'rdbTemplateType'}}}, $Fold;
+						push @{$folds{$$sig_specs{'rdbTemplateType'}}}, $Fold;
 					} else {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Can't fold that:<br/>";
+						$$specs{'hdnBreakdown'.$qty_index} .= "Can't fold that:<br/>";
 					} # end if
 				} # end if
 
 			} else {
 				# A book
 $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $Equipment->name()) if $debug;
+				if ( $Equipment->specification( 'Folding Capable' ) eq 'When PerfectBound' ) {
+					# Means it's a PerfectBinder, so can only do covers
+					if ( $$sig_specs{'txtSignatureType'} ne 'Cover Pages' ) {
+						$$specs{'hdnBreakdown'.$qty_index} .= "Perfect Binder can only fold 4pg cover:<br/>";
+						next;
+					} # end if
+				} elsif ( $Equipment->specification( 'Folding Capable' ) eq 'When Stitching' ) {
+					# Means it's a PerfectBinder, so can only do covers
+					if ( $$sig_specs{'txtSignatureType'} ne 'Cover Pages' ) {
+						$$specs{'hdnBreakdown'.$qty_index} .= "Stitcher can only fold 4pg cover:<br/>";
+						next;
+					} # end if
+				} # end if
 
 				my @folds = ( $Imposition->copy() );
 				my @good_folds;
@@ -439,7 +504,7 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 								'page_rows'			=>	$Imposition->page_rows(),
 								'spine_direction'	=>	$Imposition->image_orientation(),
 								'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-								'perfectbind'		=>	$$services{'PerfectBind'} ? 1 : 0,
+								'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
 								'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 								'gsm'				=>	$Imposition->Paper()->gsm(),
 								);
@@ -582,10 +647,10 @@ $openprint::log->debug('Got fold ' . $F->pages() );
 
 	foreach my $fold_type ( keys %fold_types ) {
 		$$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
-$openprint::log->debug("Foldtype: $fold_type $$bestFolds{$fold_type} ");
+#$openprint::log->debug("Foldtype: $fold_type $$bestFolds{$fold_type} ");
 		if ( $$bestFolds{$fold_type} ) {
 			$$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = scalar @{$$bestFolds{$fold_type}};
-$openprint::log->debug("$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index : " . scalar @{$$bestFolds{$fold_type}} );
+#$openprint::log->debug("$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index : " . scalar @{$$bestFolds{$fold_type}} );
 			foreach my $Fold ( @{$$bestFolds{$fold_type}} ) {
 				$results{'MakeReadyTime'} += $Fold->makeready_time();
 				if ( $Fold->makeready_overs_units() eq 'Percent' ) {
@@ -646,7 +711,7 @@ sub calc {
 				$mprice += $results{'MPrice'};
 				if ( $results{'Equipment'} ) {
 					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
-					$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'}->id();
+						$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'}->id();
 					} # end if
 				} else {
 					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
@@ -673,8 +738,11 @@ sub display {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
-		@equipment = sets::exclude( [ openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) ], \@equipment );
+	if ( $$services{'PerfectBound'} ) {
+		push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'}, 'order'=>'lower(strname)' );
+	} # end if
+	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
+		push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'}, 'order'=>'lower(strname)' );
 	} # end if
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 

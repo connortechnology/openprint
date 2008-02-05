@@ -94,21 +94,22 @@ $openprint::log->debug("Viewing Project $project_index");
 # do a little sorting, adding services with a service type
 	while ( my ($id, $n, $url ) = splice @service_info,0,3 ) {
 		if ( $id eq 'AdditionalSignature' ) {
-			while ( $services{$id} and @{$services{$id}} ) {
-				my $service_index = shift @{$services{$id}};
+			my @sigs = sort $$variable{'Project'}->signatures();
+			while ( @sigs ) {
+				my $service_index = shift @sigs;
 
 				my $sig_qty = 1;
 
 				if ( $openprint::session{'ShowAllSignatures'} ) {
 					push @services, $n, $url, $service_index;
 				} else {
-					for ( my $i = 0; $i < @{$services{$id}}; $i += 1 ) {
-						if ( openprint::Estimating::Printing::compare_signatures( $project{$service_index}, $project{$services{$id}[$i]} ) ) {
+					for ( my $i = 0; $i < @sigs; $i += 1 ) {
+						if ( openprint::Estimating::Printing::compare_signatures( $project{$service_index}, $project{$sigs[$i]} ) ) {
 							$sig_qty += 1;
-							$project{$service_index}{'txtPrice1'} += $project{$services{$id}[$i]}{'txtPrice1'};
-							$project{$service_index}{'txtPrice2'} += $project{$services{$id}[$i]}{'txtPrice2'};
-							$project{$service_index}{'txtPrice3'} += $project{$services{$id}[$i]}{'txtPrice3'};
-							splice @{$services{$id}}, $i, 1;
+							$project{$service_index}{'txtPrice1'} += $project{$sigs[$i]}{'txtPrice1'};
+							$project{$service_index}{'txtPrice2'} += $project{$sigs[$i]}{'txtPrice2'};
+							$project{$service_index}{'txtPrice3'} += $project{$sigs[$i]}{'txtPrice3'};
+							splice @sigs, $i, 1;
 							$i -= 1;
 						} # end if
 					} # end for

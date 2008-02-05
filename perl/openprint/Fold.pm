@@ -84,7 +84,8 @@ sub find {
 		} # end if
 		if ( defined $params{'pages'} ) {
 			$sql .= q{ AND pages=?};
-			push @values, $params{'pages'};
+			
+			push @values, $params{'pages'} ? $params{'pages'} : undef;
 		} # end if
 
 		if ( $params{'name'} ) {
