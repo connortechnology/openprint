@@ -1870,6 +1870,31 @@ sub calc_price {
 	$$specs{"txtPressSheetQty$qty_index"} = $sheets;
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 
+	if ( ! $$specs{'no_stitching'} ) {
+		if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
+
+			#my $starttime = gettimeofday();
+			my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
+			if ( $$results{'Status'} eq 'uncalculated' ) {
+				$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
+				$price{'Comparison Cost'} += 1000000; # Can't stich this on
+				$price{'Stitching Cost'} = 1000000;
+			} else {
+				$price{'StitchingImposition'} = $$results{'Imposition'};
+				$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
+				$price{'Stitching Cost'} = $$results{'Price'};
+				$price{'Comparison Cost'} += $$results{'Price'};
+			} # end if
+			#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+
+			return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
+		} # end if
+		if ( $$services{'LoopStitching'} ) {
+		} # end if
+
+		# Needed for Cutting & Folding
+		$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
+	} # end if
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
 	my %folding_results;
 
@@ -2052,31 +2077,6 @@ sub calc_price {
 	$price{'Total Cost'} = $total_cost;
 	$price{'Total Cost'} += $price{'Paper Price'} if (! $$services{'Paper'}) and ($$specs{'rdbSuppliedStock'} ne 'Y');
 
-	if ( ! $$specs{'no_stitching'} ) {
-		if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
-
-			#my $starttime = gettimeofday();
-			my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
-			if ( $$results{'Status'} eq 'uncalculated' ) {
-				$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
-				$price{'Comparison Cost'} += 1000000; # Can't stich this on
-				$price{'Stitching Cost'} = 1000000;
-			} else {
-				$price{'StitchingImposition'} = $$results{'Imposition'};
-				$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
-				$price{'Stitching Cost'} = $$results{'Price'};
-				$price{'Comparison Cost'} += $$results{'Price'};
-			} # end if
-			#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-
-			return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
-		} # end if
-		if ( $$services{'LoopStitching'} ) {
-		} # end if
-
-		# Needed for Cutting
-		$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
-	} # end if
 
 # Now add in cutting costs to the comparison
 

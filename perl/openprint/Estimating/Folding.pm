@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -221,13 +221,7 @@ sub impositions {
 } # end sub impositions
 
 sub test_fold {
-	my ( $Equipment, $I, $sig_specs, $foldtype, $max_imposition ) = @_;
-
-$openprint::log->debug( "Foldtype: $foldtype" ) if $debug;
-	if ( $max_imposition and $I->imposition() > $max_imposition ) {
-		$openprint::log->debug("MAX Imposition too large " . $I->imposition() . ' > ' . $max_imposition ) if $debug;
-		return 0;
-	} # end if
+	my ( $Equipment, $I, $sig_specs, $foldtype ) = @_;
 
 	if ( ! $Equipment->specification($foldtype .'RunSpeed', $$sig_specs{'txtStockGSM'} ) ) {
 		$openprint::log->debug("DId not Found $foldtype on " . $Equipment->name() ) if $debug;
@@ -251,8 +245,8 @@ $openprint::log->debug( "Foldtype: $foldtype" ) if $debug;
 			$openprint::log->debug("Fold no good due to Maximum Width " . ( $I->image_orientation() eq 'Vertical' ? $$sig_specs{'txtWidth'} : $$sig_specs{'txtHeight'} ) . ' > ' . $Equipment->specification($foldtype.'MaximumWidth' ) ) if $debug;
 			return 0;
 		} # end if
-		if ( ( $Equipment->specification($foldtype.'MinimumHeight' ) and $Equipment->specification($foldtype.'MinimumHeight') > ( $I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) ) ) {
-			$openprint::log->debug("Fold no good due to Minimum height " . ($I->image_orieintation() eq 'Vertical' ? $$sig_specs{'txtWidth'} : $$sig_specs{'txtHeight'} ) . ' < ' . $Equipment->specification($foldtype.'MinimumWidth' ) ) if $debug;
+		if ( ( $Equipment->specification($foldtype.'MinimumHeight' ) and $Equipment->specification($foldtype.'MinimumHeight') > ( $I->image_orientation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) ) ) {
+			$openprint::log->debug("Fold no good due to Minimum height " . ($I->image_orieintation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) . ' < ' . $Equipment->specification($foldtype.'MinimumWidth' ) ) if $debug;
 			return 0;
 		} # end if
 		if ( ( $Equipment->specification($foldtype.'MaximumHeight' ) and $Equipment->specification($foldtype.'MaximumHeight') < ( $I->image_orientation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) ) ) {
@@ -335,46 +329,35 @@ sub signature_calc {
 
 	#$openprint::log->debug("Makereadies...");
 	my %makereadies;
-	my $max_imposition = $Imposition->imposition();
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		next if $Paper and $signature_service_index and ($ss_id > $signature_service_index);
 		next if $ss_id == $signature_service_index;
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		if ( $$s_specs{'txtImposition'.$qty_index} and ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) ) {
-			$max_imposition = $$s_specs{'txtImposition'.$qty_index};
-		} # end if
 		foreach my $fold_type ( keys %fold_types ) {
 			if ( $$specs{$fold_type."-Qty-$$s_specs{'SignatureIndex'}-$qty_index"} > 0 ) {
 				push @{$makereadies{$$specs{"ddmEquipment-$$s_specs{'SignatureIndex'}-$qty_index"}}}, $fold_type;
 			} # end if
 		} # end foreach
 	} # end foreach
-	if ( ! $max_imposition ) {
-		$$specs{'alert'} .= 'Cannot calculate the maximum imposition to fold at.';
-		return;
-	} # end if
 
 	my $imposition;
-	if ( $$services{'SaddleStitching'} ) {
+	if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
+		$imposition = $$sig_specs{'StitchingImposition'.$qty_index};
+$openprint::log->debug("Got impo from StitchingImposition");
+	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
-		if ( $$stitching_specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
-			$imposition = $$stitching_specs{'Imposition'.$qty_index};
-		} # end if
-	} else {
-		$imposition = 1;
+		$imposition = $$stitching_specs{'Imposition'.$qty_index};
+$openprint::log->debug("Got impo from SaddleStitching");
+	} elsif ( $$services{'LoopStitching'} ) {
+		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
+		$imposition = $$stitching_specs{'Imposition'.$qty_index};
+$openprint::log->debug("Got impo from LoopStitching");
 	} # end if
-	if ( ! $imposition ) {
-		if ( $max_imposition % 2 ) {
-			$imposition = 1;
-		} else {
-			$imposition = 2;
-		} # end if
-	} # end if
+	$imposition = 1 if ! $imposition;
 
-	#$openprint::log->debug("Sign info: $$sig_specs{'SpreadCols'.$qty_index}*$$sig_specs{'SpreadRows'.$qty_index}*$$sig_specs{'txtSpreadSize'} Max $max_imposition out") if $debug;
 	my $pages = $Imposition->pages();
-	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $imposition ) ) if $debug;
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
@@ -643,6 +626,7 @@ sub display {
 } # end sub display
 
 sub summary {
+	return '';
 } # end sub summary
 
 sub runtime {
