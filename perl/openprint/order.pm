@@ -555,9 +555,9 @@ sub store_order_info {
 	$Order->address1( $r->param('txtAddress1') );
 	$Order->address2( $r->param('txtAddress2') );
 	$Order->city( $r->param('txtCity') );
-	$Order->state( $openprint::param{'ddmStateProvince'} ? $openprint::param{'ddmStateProvince'} : $openprint::param{'txtOtherStateProvince'} );
-	$Order->city( $openprint::param{'txtPostalCode'} );
-	$Order->country( $openprint::param{'ddmStateProvince'} ? $openprint::param{'ddmStateProvince'} : $openprint::param{'txtOtherStateProvince'} );
+	$Order->state( $openprint::param{'ddmStateProvince'} );
+	$Order->city( $openprint::param{'txtCity'} );
+	$Order->country( $openprint::param{'ddmCountry'} );
 	$Order->phone( $openprint::param{'txtPhone'} );
 	$Order->extension( $openprint::param{'txtExtension'} );
 	$Order->fax( $openprint::param{'txtFax'} );
