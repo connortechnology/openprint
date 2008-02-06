@@ -566,7 +566,7 @@ sub summary {
 				$side_one_coatings .= '+Varnish (Overall Matte)';
 				$side_one_colours -= 1;
 			} # end if
-			if ( $$specs{'SideOneUVCoatingType'} and $$specs{'SideOneUVCoatingType'} ne 'None' ) {
+			if ( $$specs{'SideOneUVCoatingType'} and ($$specs{'SideOneUVCoatingType'} ne 'None') ) {
 				$side_one_coatings .= '+' . $$specs{'SideOneUVCoatingType'} . 'UV';
 			} # end if
 

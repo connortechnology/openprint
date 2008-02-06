@@ -146,7 +146,7 @@ function gsm_to_mweight( form ) {
 				<label for="grade">Grade:</label>
 				<select id="grade" name="grade" size="1">
 				<? echo (
-					my @options = ( '', 'select one',1,'Gloss-coated paper',2,'Matt-coated paper',3,'Gloss-coated, web paper', 4, 'Uncoated, white paper', 5, 'Uncoated, yellow paper' );
+					my @options = ( '', 'select one',1,'1 Gloss-coated paper',2,'2 Matte-coated paper',3,'3 Gloss-coated, web paper', 4, '4 Uncoated, white paper', 5, '5 Uncoated, yellow paper' );
 					return ssi::make_drop_down( \@options, $$variable{'Paper'}->grade() );
 				) ?>
 				</select>

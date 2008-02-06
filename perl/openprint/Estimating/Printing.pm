@@ -653,10 +653,14 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 	
 	my @Ps;
 
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity( $qty_index );
+	if (
+			( $$specs{'chkOverrideSheetSize1'} eq 'Y' ) or
+			( $$specs{'chkOverrideSheetSize2'} eq 'Y' ) or
+			( $$specs{'chkOverrideSheetSize3'} eq 'Y' )
+	   ) {
+		foreach my $qty_index ( 1 .. 3 ) {
+			next if ! $Project->quantity( $qty_index );
 
-		if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) {
 			if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
 				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
 			} # end if
@@ -679,7 +683,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 						#next if $P->start_width() and ($P->start_width() < $$specs{'OverrideStockWidth'.$qty_index });
 					} elsif ( $P->type() eq 'Sheet' ) {
 						# Don't cut sheets into rolls
-						next if ! $$specs{'OverrideStockHeight'.$qty_index };
+						next if ! $$specs{'OverrideStockHeight'.$qty_index};
 						# Must be big enough to cut
 						next if ( $P->start_width() < $$specs{'OverrideStockWidth'.$qty_index} or $P->start_height() < $$specs{'OverrideStockHeight'.$qty_index} ) and ( $P->start_width() < $$specs{'OverrideStockHeight'.$qty_index} or $P->start_height() < $$specs{'OverrideStockWidth'.$qty_index} );
 					} # end if
@@ -697,8 +701,12 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 					push @Ps, $P2;
 				} # end foreach paper
 			} # end if found
-		} # end if override
-	} # end foreach qty_index
+		} # end foreach qty_index
+	} # end if override
+
+#foreach my $P ( @Papers ) {
+#$openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
+#} 
 
 	push @Papers, @Ps;
 
@@ -1446,7 +1454,7 @@ $openprint::log->debug("# of elevated impositions: " . @{$$impositions{''}} );
 			$SpreadLayout = $$specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
 		} # end if
 	} # end if
-	if ( 1 ) {
+	if ( 0 ) {
 		foreach my $imp ( @impositions ) {
 			$imp->display();
 		} # end foreach
@@ -1465,6 +1473,7 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 	my $pms_prices = get_special_colours_price( $Press, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
 	if ( 0 ) {
+$openprint::log->debug("QTY: $qty_index");
 		foreach my $imp ( @impositions ) {
 			$imp->display();
 		} # end foreach

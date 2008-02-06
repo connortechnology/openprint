@@ -6,7 +6,7 @@ require openprint::pricelist;
 require openprint::priceset;
 require openprint::price;
 
-my $debug = 1;
+my $debug = 0;
 
 my %price_cache;
 
@@ -19,22 +19,23 @@ sub get_pricelist_id {
 	if ( $openprint::session{'Pricelist_id'} ) {
 		my $Pricelist = new openprint::Pricelist( $openprint::session{'Pricelist_id'} );
 		if ( $Pricelist->id() ) {
+$openprint::log->debug("openprint::pricing::get_pricelist_id returning cached Pricelist " . $Pricelist->id() . ' ' . $Pricelist->name() ) if $debug;
 			return $Pricelist->id();
 		} # end if
 	} # end if
 
 	my $list_id;
 
-	if ( $openprint::session{'Country'} ) {
-		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
-	} elsif ( $openprint::session{'Country'} ) {
-		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
-	} elsif ( $openprint::session{'company_id'} > 0 ) {
+	if ( $openprint::session{'company_id'} > 0 ) {
 		my $Company = new openprint::Company( $openprint::session{'company_id'} );
 		$list_id = $Company->pricelist_id();
 		if ( (! $list_id ) and $Company->country() ) {
 			$list_id = $openprint::config{'Default'.$Company->country().'Pricelist'};
 		} # end if
+	} elsif ( $openprint::session{'Country'} ) {
+		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
+	} elsif ( $openprint::session{'Country'} ) {
+		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
 	} else {
 		$openprint::log->debug("No pricelist to be had! Country: $openprint::session{'Country'}" );
 	} # end if

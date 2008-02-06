@@ -47,7 +47,7 @@ sub select_company {
 			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 		} # end if
 		foreach my $k ( keys %openprint::session ) {
-			next if sets::isin( $k, [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country','Pricelist_id' ] );
+			next if sets::isin( $k, [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ] );
 			delete $openprint::session{$k};
 		} # end foreach
 	} # end if
@@ -486,7 +486,7 @@ sub logout {
 
 	openprint::logs::insertLogRecord('3',);
 	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id'};
-	openprint::order::delete_unfinished_orders( $openprint::log, $openprint::dbh, $openprint::session{_session_id} );
+	#openprint::order::delete_unfinished_orders( $openprint::log, $openprint::dbh, $openprint::session{_session_id} );
 	#sql::insert( $log, $dbh, 'log', 'action_type', '3', 'user_id', "$user_id", 'date_time', 'NOW()', 'ip_address', $ENV{REMOTE_ADDR},);
 	
 } # sub logout
