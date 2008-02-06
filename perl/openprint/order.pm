@@ -332,7 +332,6 @@ sub save_project_information {
 			if ( ! $services{$openprint::param{'ShippingType'.$project_index}} ) {
 				my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $openprint::param{'ShippingType'.$project_index} );
 				push @{$services{$openprint::param{'ShippingType'.$project_index}}}, $new_service_index;
-				openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, $openprint::param{'ShippingType'.$project_index} );
 			} # end if
 		} # end if
 		foreach my $ShippingType ( keys %ShippingServices ) {
@@ -352,6 +351,7 @@ sub save_project_information {
 	$Project->reference( $openprint::param{"Reference$project_index"} );
 	$Project->save();
 
+	#returns service_index, ServiceType pairs
 	my %shipping_services = openprint::print_project::get_services_in_category( $log, $dbh, $Project->id(), 'Shipping' );
 
 	foreach my $service_id ( keys %shipping_services ) {
@@ -378,6 +378,7 @@ sub save_project_information {
 		foreach my $spec ( keys %shipping_fields ) {
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $openprint::param{"$spec-$project_index-$service_id"} );
 		} # end foreach
+		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, $ServiceType->name() );
 	} # end if
 } # end foreach save_project_information
 
@@ -555,9 +556,9 @@ sub store_order_info {
 	$Order->address1( $r->param('txtAddress1') );
 	$Order->address2( $r->param('txtAddress2') );
 	$Order->city( $r->param('txtCity') );
-	$Order->state( $openprint::param{'ddmStateProvince'} ? $openprint::param{'ddmStateProvince'} : $openprint::param{'txtOtherStateProvince'} );
-	$Order->city( $openprint::param{'txtPostalCode'} );
-	$Order->country( $openprint::param{'ddmStateProvince'} ? $openprint::param{'ddmStateProvince'} : $openprint::param{'txtOtherStateProvince'} );
+	$Order->state( $openprint::param{'ddmStateProvince'} );
+	$Order->postalcode( $openprint::param{'txtPostalCode'} );
+	$Order->country( $openprint::param{'ddmCountry'} );
 	$Order->phone( $openprint::param{'txtPhone'} );
 	$Order->extension( $openprint::param{'txtExtension'} );
 	$Order->fax( $openprint::param{'txtFax'} );

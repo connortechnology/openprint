@@ -52,43 +52,46 @@
 
 		my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $$variable{'ProjectIndex'}, $service_id );
 		next if $specs{'ServiceType'} eq 'CustomerPickUp';
+foreach my $k ( keys %specs ) {
+$openprint::log->debug(" $k => $specs{$k}");
+} # end foreach
+
 		$$variable{'ServiceIndex'} = $service_id;
 		my $ServiceType = new openprint::ServiceType( $shipping_services{$service_id} );	
 		$$variable{'ServiceType'} = $ServiceType->name();
 
-		if ( ! ( $specs{'txtShippingCompanyName'} and $specs{'txtShippingAddress1'} and $specs{'txtShippingCity'} and $specs{'ddmShippingCountry'} ) ) {
+		if ( ! ( $specs{'CompanyName'} and $specs{'Address1'} and $specs{'City'} and $specs{'Country'} ) ) {
 			# Load from customer
+$openprint::log->debug("Loading customer");
 			my $customer = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
+			my $Company = new openprint::Company( $openprint::session{'company_id'} );
+			require openprint::User;
+			my $User = new openprint::User( $openprint::session{'user_id'} );
+			
 			my $shipping_address = $customer->get_shipping_address();
-			my %shipping_specs;
-			@shipping_specs{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
 
-			foreach my $spec ( keys %shipping_fields ) {
-				$specs{$spec} = $shipping_specs{$spec} if ! $specs{$spec};
-			} # end foreach
+			$specs{'CompanyName'} = $shipping_address->get('CompanyName') ? $shipping_address->get('CompanyName') : $Company->name();
+			$specs{'Salutation'} = $shipping_address->get('Salutation') ? $shipping_address->get('Salutation') : $User->salutation();
+			$specs{'FirstName'} = $shipping_address->get('FirstName') ? $shipping_address->get('FirstName') : $User->firstname();
+			$specs{'LastName'} = $shipping_address->get('LastName') ? $shipping_address->get('LastName') : $User->lastname();
+			$specs{'Phone'} = $shipping_address->get('Phone') ? $shipping_address->get('Phone') : $User->phone();
+			$specs{'Extension'} = $shipping_address->get('Extension') ? $shipping_address->get('Extension') : $User->extension();
+			$specs{'Fax'} = $shipping_address->get('Fax') ? $shipping_address->get('Fax') : $User->fax();
+			$specs{'Email'} = $shipping_address->get('Email') ? $shipping_address->get('Email') : $User->email();
+			$specs{'Address1'} = $shipping_address->get('Address1') ? $shipping_address->get('Address1') : $Company->address1();
+			$specs{'Address2'} = $shipping_address->get('Address2') ? $shipping_address->get('Address2') : $Company->address2();
+			$specs{'City'} = $shipping_address->get('City') ? $shipping_address->get('City') : $Company->city();
+			$specs{'StateProvince'} = $shipping_address->get('StateProvince') ? $shipping_address->get('StateProvince') : $Company->state();
+			$specs{'Country'} = $shipping_address->get('Country') ? $shipping_address->get('Country') : $Company->country();
+			$specs{'PostalCode'} = $shipping_address->get('PostalCode') ? $shipping_address->get('PostalCode') : $Company->postalcode();
+
 		} # end if
 
 		foreach my $spec ( keys %shipping_fields ) {
-			$$variable{"$spec-$$variable{'ProjectIndex'}-$service_id"} = $specs{$spec};
+$openprint::log->debug("Loading $spec => $specs{$shipping_fields{$spec}}");
+			$$variable{"$spec-$$variable{'ProjectIndex'}-$service_id"} = ssi::htmlize($specs{$shipping_fields{$spec}});
 		} # end foreach
 
-		my %UserSpecs = (
-				'txtShippingEmail'		=>	'Email',
-				'rdbShippingSalutation'	=>	'Salutation',
-				'txtShippingFirstName'	=>	'FirstName',
-				'txtShippingLastName'	=>	'LastName',
-				'txtShippingPhone'	=>	'Phone',
-				);
-		if ( ! ( $specs{'txtShippingEmail'} and $specs{'txtShippingPhone'} ) ) {
-			require openprint::User;
-			my $User = new openprint::User( $openprint::session{'user_id'} );
-			foreach my $spec ( keys %UserSpecs ) {
-				$specs{$spec} = $User->get($UserSpecs{$spec}) if ! $specs{$spec};
-			} # end foreach
-        } # end if
-        foreach my $spec ( keys %UserSpecs ) {
-            $$variable{"$spec-$$variable{'ProjectIndex'}-$service_id"} = $specs{$spec};
-        } # end foreach
 		my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_project_shipping_address.html');
 		$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
     } # end foreach
