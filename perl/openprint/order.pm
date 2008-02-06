@@ -351,6 +351,7 @@ sub save_project_information {
 	$Project->reference( $openprint::param{"Reference$project_index"} );
 	$Project->save();
 
+	#returns service_index, ServiceType pairs
 	my %shipping_services = openprint::print_project::get_services_in_category( $log, $dbh, $Project->id(), 'Shipping' );
 
 	foreach my $service_id ( keys %shipping_services ) {
@@ -378,7 +379,6 @@ sub save_project_information {
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $shipping_fields{$spec}, $openprint::param{"$spec-$project_index-$service_id"} );
 		} # end foreach
 		my $service_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, $ServiceType->name() );
-$openprint::log->debug("Status: $$service_specs{'Status'}" );
 		if ( $$service_specs{'Status'} ne 'calculated' ) {
 			return 'Unable to calculate shipping: ' . $$service_specs{'alert'};
 		} # end if
@@ -560,9 +560,9 @@ sub store_order_info {
 	$Order->address1( $r->param('txtAddress1') );
 	$Order->address2( $r->param('txtAddress2') );
 	$Order->city( $r->param('txtCity') );
-	$Order->state( $openprint::param{'ddmStateProvince'} ? $openprint::param{'ddmStateProvince'} : $openprint::param{'txtOtherStateProvince'} );
-	$Order->city( $openprint::param{'txtPostalCode'} );
-	$Order->country( $openprint::param{'ddmStateProvince'} ? $openprint::param{'ddmStateProvince'} : $openprint::param{'txtOtherStateProvince'} );
+	$Order->state( $openprint::param{'ddmStateProvince'} );
+	$Order->postalcode( $openprint::param{'txtPostalCode'} );
+	$Order->country( $openprint::param{'ddmCountry'} );
 	$Order->phone( $openprint::param{'txtPhone'} );
 	$Order->extension( $openprint::param{'txtExtension'} );
 	$Order->fax( $openprint::param{'txtFax'} );
