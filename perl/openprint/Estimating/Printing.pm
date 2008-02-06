@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 use strict;
@@ -657,19 +657,24 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 
 	# If Stock size is overridden, check the list of stocks to see if the specified on is in the list.  If it isn't, then add duplicates, cut to size
 	
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity( $qty_index );
 
-		if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) {
+	if (
+			( $$specs{'chkOverrideSheetSize1'} eq 'Y' ) or
+			( $$specs{'chkOverrideSheetSize2'} eq 'Y' ) or
+			( $$specs{'chkOverrideSheetSize3'} eq 'Y' )
+	   ) {
+		my @Ps = @Papers;
+		@Papers = ();
+		foreach my $qty_index ( 1 .. 3 ) {
+			next if ! $Project->quantity( $qty_index );
+
 			if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
 				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
 			} # end if
 			my $found = 0;
-			my @Ps = @Papers;
-			@Papers = ();
 			
 			foreach my $P ( @Ps ) {
-				if ( $P->width() == $$specs{'OverrideStockWidth'.$qty_index } and $P->height() == $$specs{'OverrideStockHeight'.$qty_index} ) {
+				if ( $P->width() == $$specs{'OverrideStockWidth'.$qty_index} and $P->height() == $$specs{'OverrideStockHeight'.$qty_index} ) {
 					$found = 1;
 					push @Papers, $P;
 				} # end if
@@ -684,7 +689,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 						#next if $P->start_width() and ($P->start_width() < $$specs{'OverrideStockWidth'.$qty_index });
 					} elsif ( $P->type() eq 'Sheet' ) {
 						# Don't cut sheets into rolls
-						next if ! $$specs{'OverrideStockHeight'.$qty_index };
+						next if ! $$specs{'OverrideStockHeight'.$qty_index};
 						# Must be big enough to cut
 						next if ( $P->start_width() < $$specs{'OverrideStockWidth'.$qty_index } or $P->start_height() < $$specs{'OverrideStockHeight'.$qty_index } ) and ( $P->start_width() < $$specs{'OverrideStockHeight'.$qty_index } or $P->start_height() < $$specs{'OverrideStockWidth'.$qty_index } );
 					} # end if
@@ -702,8 +707,12 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 					push @Papers, $P2;
 				} # end foreach paper
 			} # end if found
-		} # end if override
-	} # end foreach qty_index
+		} # end foreach qty_index
+	} # end if override
+
+#foreach my $P ( @Papers ) {
+#$openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
+#} 
 
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
@@ -975,7 +984,6 @@ $openprint::log->debug("No spread layout for you!");
 				next;
 			} # end if
 
-
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 			my $do_perfecting = 1;
 			if ( $Press->specification('Perfecting Press') ne 'Y' ) {
@@ -1131,32 +1139,40 @@ $openprint::log->debug("No spread layout for you!");
 							foreach my $imp ( @imps ) {
 								my $add = -1;
 #$imp->display();
-								if ( $imps{$imp->imposition().$imp->runstyle()} ) {
-#$openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}} );
-									for ( my $j = 0; $j < @{$imps{$imp->imposition().$imp->runstyle()}}; $j += 1 ) {
+								foreach my $qty_index ( 1 .. 3 ) {
+									if ( $$specs{'chkOverrideSheetSize'.$qty_index} ) {
+										$add = 1;
+										last;
+									} # end if
+								} # end foreach
+								if ( $add != 1 ) {
+									if ( $imps{$imp->imposition().$imp->runstyle()} ) {
+	#$openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}} );
+										for ( my $j = 0; $j < @{$imps{$imp->imposition().$imp->runstyle()}}; $j += 1 ) {
 
-										my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
-										my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-										my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
-										if ( $I->Paper()->area() > $P->area() ) {
-											if ( (1*$BiggerPrice{'100lb'}) == (1*$SmallerPrice{'100lb'}) ) {
-												splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
-												$j -= 1;
-											} # end if
-											$add = 1;
-										} else { # same or smaller area
-											$add = 0;
-											if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
-												splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
-												$j -= 1;
+											my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
+											my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
+											my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+											if ( $I->Paper()->area() > $P->area() ) {
+												if ( (1*$BiggerPrice{'100lb'}) == (1*$SmallerPrice{'100lb'}) ) {
+													splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
+													$j -= 1;
+												} # end if
 												$add = 1;
-											} elsif ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
-												$add = 1;
+											} else { # same or smaller area
+												$add = 0;
+												if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
+													splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
+													$j -= 1;
+													$add = 1;
+												} elsif ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
+													$add = 1;
+												} # end if
 											} # end if
-										} # end if
-									} # end for
-								} else {
-									$add = 1;
+										} # end for
+									} else {
+										$add = 1;
+									} # end if
 								} # end if
 								push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp if $add > 0;
 							} # end foreach
@@ -1179,10 +1195,6 @@ $openprint::log->debug("No spread layout for you!");
 					next;
 				} # end if
 
-#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' before convert:' . @impositions);
-#foreach my $imp ( @impositions ) {
-#$imp->display();
-#}
 
 				$imposition_count += scalar @impositions;
 				$impositions{$Press->id()} = \@impositions;
@@ -1417,6 +1429,10 @@ sub get_project_price {
 		} # end if
 		if ( $SpreadLayout > 0 ) {
 			#$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
+#$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
+#foreach my $imp ( @impositions ) {
+#$imp->display();
+#}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
 #$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
 		} # end if
@@ -1429,6 +1445,7 @@ sub get_project_price {
 		my $pms_prices = get_special_colours_price( $openprint::log, $openprint::dbh, $openprint::variable, $P, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
 		if ( 0 ) {
+$openprint::log->debug("QTY: $qty_index");
 		foreach my $imp ( @impositions ) {
 $imp->display();
 		} # end foreach
