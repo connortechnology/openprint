@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 use strict;
@@ -710,6 +710,10 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 		} # end foreach qty_index
 	} # end if override
 
+#foreach my $P ( @Papers ) {
+#$openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
+#} 
+
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -1191,10 +1195,6 @@ $openprint::log->debug("No spread layout for you!");
 					next;
 				} # end if
 
-#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' before convert:' . @impositions);
-#foreach my $imp ( @impositions ) {
-#$imp->display();
-#}
 
 				$imposition_count += scalar @impositions;
 				$impositions{$Press->id()} = \@impositions;
@@ -1429,6 +1429,10 @@ sub get_project_price {
 		} # end if
 		if ( $SpreadLayout > 0 ) {
 			#$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
+#$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
+#foreach my $imp ( @impositions ) {
+#$imp->display();
+#}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
 #$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
 		} # end if

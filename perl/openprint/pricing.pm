@@ -6,7 +6,7 @@ require openprint::pricelist;
 require openprint::priceset;
 require openprint::price;
 
-my $debug = 1;
+my $debug = 0;
 
 my %price_cache;
 
@@ -19,6 +19,7 @@ sub get_pricelist_id {
 	if ( $openprint::session{'Pricelist_id'} ) {
 		my $Pricelist = new openprint::Pricelist( $openprint::session{'Pricelist_id'} );
 		if ( $Pricelist->id() ) {
+$openprint::log->debug("openprint::pricing::get_pricelist_id returning cached Pricelist " . $Pricelist->id() . ' ' . $Pricelist->name() ) if $debug;
 			return $Pricelist->id();
 		} # end if
 	} # end if
