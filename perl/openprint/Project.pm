@@ -972,6 +972,7 @@ sub signatures {
 			if ( $$params{'type'} ) {
 				next if $$specs{'txtSignatureType'} ne $$params{'type'};
 			} # end if
+			push @sigs, $s_id;
 		} # end foreach signatures
 		return @sigs;
 	} # end if

@@ -78,7 +78,7 @@ sub new {
 	my $child_id = 0;
 	my $parent_sig_id = 0;
 
-	my ( $cover_sig_id ) = $P->signatures('Cover Pages' );
+	my ( $cover_sig_id ) = $P->signatures({'type'=>'Cover Pages'});
 	my @signatures = $P->signatures();
 	$cover_sig_id = shift @signatures if ! $cover_sig_id;
 	@signatures = sets::exclude([$cover_sig_id], \@signatures );

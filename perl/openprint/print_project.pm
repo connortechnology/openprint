@@ -259,7 +259,7 @@ sub continue_project {
 			foreach my $qty_index ( 1 .. 3 ) {
 				next if ! $Project->quantity($qty_index);
 				if ( $_ = openprint::Estimating::Multipage::status( $project_index, undef, $qty_index ) ) {
-					my @sigs = $Project->signatures($_);
+					my @sigs = $Project->signatures({'type'=>$_});
 					my $src_id = pop @sigs;
 					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
 					$service_index = openprint::Estimating::Multipage::copy_signature( $project_index, $src_specs );

@@ -208,8 +208,8 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
-
 	my $Project = new openprint::Project( $project_index );
+
 	my $services = $Project->services();
 	if ( ! $$services{'Folding'} ) {
 		$$specs{'alert'} .= 'Project must be folded.<br/>';
@@ -224,7 +224,7 @@ sub calc {
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
 		foreach my $qty_index ( 1 .. 3 ) {
 			$$specs{'txtCalliper'} = 0;
-			foreach my $signature_service_index ( $Project->signatures('Interior Pages') ) {
+			foreach my $signature_service_index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 				my $calliper = $$sig_specs{'PageQuantity'.$qty_index} ? ($$sig_specs{'PageQuantity'.$qty_index}/2) * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
 				$$specs{'txtCalliper'} += $calliper;
@@ -233,19 +233,34 @@ sub calc {
 		} # end foreach
 	} # end if
 
+# Need to figure out which dimension the spine bisects
+	@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
+		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+	} # end if
+
+
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 		$$specs{'txtPrice'.$qty_index} = '0.00';
 		$$specs{'txtUnitPrice'.$qty_index} = '0.00';
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
+		my $imposition = 2;
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
 			foreach my $pages ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
 				$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = '';
 			} # end foreach
+
+			$$specs{"txtPockets$qty_index"} = 0;
+
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+				next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
+				if ( ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 ) ) {
+					$imposition = 1
+				} # end if
 
 				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
@@ -260,22 +275,40 @@ sub calc {
 					next;
 				} # end if
 
+				my %pages;
+				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
 				if ( $folding_specs ) {
 					foreach my $pages ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
-						my $pockets = $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index};
-						$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} += $pockets;
-						$$specs{"txtPockets$qty_index"} += $pockets;
+						$pages{$pages} += $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'
+							.$qty_index};
 					} # end foreach
-				} else {
-					my $sig_size = $$sig_specs{'PageQuantity'.$qty_index};
-					$$specs{'txtSignatureQty'.$sig_size.'Page-'.$qty_index} += 1;
-					$$specs{"txtPockets$qty_index"} += 1;
 				} # end if
+
+# If not all pages have been folde, then revert to just pull from the sig.
+				if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
+					$$specs{"txtPockets$qty_index"} += 1;
+					$$specs{'txtSignatureQty'.$sig_pages.'Page-'.$qty_index} += 1;
+				} else {
+					foreach my $page ( keys %pages ) {
+						$$specs{"txtPockets$qty_index"} += $pages{$page};
+						$$specs{'txtSignatureQty'.$page.'Page-'.$qty_index} += $pages{$page};
+					} # end foreach
+				} # end if
+
 			} # end foreach signature
 		} else { # Override Pockets
 			foreach my $pages ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
 				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
 			} # end foreach
+		} # end if
+
+		if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
+			$openprint::log->debug("Overriding imposiion");
+			if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
+				$$specs{'alert'} .= "Can't bind $$specs{'Imposition'.$qty_index} out";
+			} # end if
+		} else {
+			$$specs{'Imposition'.$qty_index} = $imposition;
 		} # end if
 	} # end foreach qty_index
 
@@ -309,6 +342,17 @@ $openprint::log->debug("calc");
 			if ( ( ! defined $bestPrice ) or ( $$bestPrice{'Price'} > $$Price{'Price'} ) ) {
 				$bestPrice = $Price;
 			} # end if
+
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ", Equipment: ".$Equipment->strid() ."<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$Price{'RunTime'} ) . ",<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$Price{'Passes'} ) . ",<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$Price{'Imposition'} ) . ",<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%<br/>', @$Price{'RunCost Discount','Imposition Discount'} );
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', @$Price{'Calliper Markup'} );
+		$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$Price{'MakeReady'}).",<br/>";
+		my $servicePrice = $$Price{'ServicePrice'};
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'txtPrice'}))."<br/><br/>";
 		} # end foreach
 
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'Price'} );

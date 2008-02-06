@@ -344,15 +344,11 @@ $openprint::log->debug("Loading imposition");
 
 	#$openprint::log->debug("Makereadies...");
 	my %makereadies;
-	my $max_imposition = $Imposition->imposition();
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		next if $Paper and $signature_service_index and ($ss_id > $signature_service_index);
 		next if $ss_id == $signature_service_index;
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		if ( $$s_specs{'txtImposition'.$qty_index} and ( $$s_specs{'txtImposition'.$qty_index} < $max_imposition ) ) {
-			$max_imposition = $$s_specs{'txtImposition'.$qty_index};
-		} # end if
 		foreach my $fold_type ( keys %fold_types ) {
 			if ( $$specs{$fold_type."-Qty-$$s_specs{'SignatureIndex'}-$qty_index"} > 0 ) {
 				push @{$makereadies{$$specs{"ddmEquipment-$$s_specs{'SignatureIndex'}-$qty_index"}}}, $fold_type;
@@ -360,38 +356,23 @@ $openprint::log->debug("Loading imposition");
 		} # end foreach
 	} # end foreach
 
-	if ( ! $max_imposition ) {
-		$$specs{'alert'} .= 'Cannot calculate the maximum imposition to fold at.';
-		return;
-	} # end if
-
 	my $imposition;
-	if ( $$services{'SaddleStitching'} ) {
+	if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
+		$imposition = $$sig_specs{'StitchingImposition'.$qty_index};
+$openprint::log->debug("Got impo from StitchingImposition");
+	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
-		if ( $$stitching_specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
-			$imposition = $$stitching_specs{'Imposition'.$qty_index};
-		} # end if
+		$imposition = $$stitching_specs{'Imposition'.$qty_index};
+$openprint::log->debug("Got impo from SaddleStitching");
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
-		if ( $$stitching_specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
-			$imposition = $$stitching_specs{'Imposition'.$qty_index};
-		} # end if
-	} else {
-		$imposition = 1;
+		$imposition = $$stitching_specs{'Imposition'.$qty_index};
+$openprint::log->debug("Got impo from LoopStitching");
 	} # end if
+	$imposition = 1 if ! $imposition;
 
-	if ( ! $imposition ) {
-		if ( $max_imposition % 2 ) {
-			$imposition = 1;
-		} else {
-			$imposition = 2;
-		} # end if
-	} # end if
-#$Imposition->display();
-
-	#$openprint::log->debug("Sign info: $$sig_specs{'SpreadCols'.$qty_index}*$$sig_specs{'SpreadRows'.$qty_index}*$$sig_specs{'txtSpreadSize'} Max $max_imposition out") if $debug;
 	my $pages = $Imposition->pages();
-	$openprint::log->debug(sprintf('Sign info: %dx%d %s,%dout Max %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $imposition ) ) if $debug;
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
@@ -445,10 +426,10 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 					);
 			if ( $Fold ) {
 				push @{$folds{$pages.'PageSignatureFold'}}, $Fold;
-	$openprint::log->debug(sprintf('Found: %dx%d,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Found: %dx%d,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition(), $imposition ) ) if $debug;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Didnt find fold<br/>';
-	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $max_imposition ) ) if $debug;
+	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $imposition ) ) if $debug;
 			} # end if
 		} else {
 
@@ -510,10 +491,10 @@ $openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Eq
 								);
 						if ( $Fold ) {
 							push @good_folds, $Fold;
-							$openprint::log->debug(sprintf('Found: %dx%d %s,%dout Max %dout', $I->page_columns(), $I->page_rows(),$I->image_orientation(), $I->imposition(), $max_imposition ) ) if $debug;
+							$openprint::log->debug(sprintf('Found: %dx%d %s,%dout Max %dout', $I->page_columns(), $I->page_rows(),$I->image_orientation(), $I->imposition(), $imposition ) ) if $debug;
 							next;
 						} else {
-							$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $I->page_columns(), $I->page_rows(), $I->image_orientation(), $I->imposition(), $max_imposition ) ) if $debug;
+							$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $I->page_columns(), $I->page_rows(), $I->image_orientation(), $I->imposition(), $imposition ) ) if $debug;
 						} # end if
 					} # end if
 
@@ -760,6 +741,7 @@ sub display {
 } # end sub display
 
 sub summary {
+	return '';
 } # end sub summary
 
 sub runtime {

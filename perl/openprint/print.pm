@@ -310,7 +310,7 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 	if ( $$param{'rdbCover'} eq 'Different' ) {
 # now add a cover spread if we need one.
 # First, see if we have one.
-		if ( ! $Project->signatures('Cover Pages') ) {
+		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 			my ($cover_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
@@ -334,7 +334,7 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 		} # end if
 	} else {
 # Don't need a cover, so get rid of it
-		foreach ( $Project->signatures('Cover Pages') ) {
+		foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
 			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 		} # end foreach
 	} # end if Self or Different Cover
@@ -342,7 +342,7 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 # On each call to this, we save, then check to see if there are any unspecified signatures
 
 	# Now, make sure that we have all the gate spreads that we need
-	my @gate_spread_services = $Project->signatures('GateFolded Spreads');
+	my @gate_spread_services = $Project->signatures({'type'=>'GateFolded Spreads'});
 	my $need_gate_spreads = int($$param{'txtGateFoldedSpreadQuantity'}) - scalar @gate_spread_services;
 	while ( $need_gate_spreads > 0 ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -359,7 +359,7 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 		$need_gate_spreads -= 1;
 	} # end while need_gate_spreads
 
-	if ( ! $Project->signatures('Interior Pages') ) {
+	if ( ! $Project->signatures({'type'=>'Interior Pages'}) ) {
 # Must have at least 1 interioer signature
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );

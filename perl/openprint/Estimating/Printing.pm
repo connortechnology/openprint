@@ -205,7 +205,7 @@ sub get_unspecified_pages {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index ) = @_;
 
 	my $specified_pages = 0;
-	foreach my $ssid ( $Project->signatures( $$specs{'txtSignatureType'} ) ) {
+	foreach my $ssid ( $Project->signatures( {'type'=>$$specs{'txtSignatureType'}} ) ) {
 		next if $service_index and ( $ssid >= $service_index );
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 #$openprint::log->debug("Group: $$sig_specs{'Group'} != $$specs{'Group'}");
@@ -506,6 +506,13 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 
 	if ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) {
 		$$specs{'alert'} .= "Please enter Width and Height<br/>";
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	if ( $$specs{'txtFinalWidth'} and ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) ) {
+		$$specs{'alert'} .= 'Flat Width must be greater than Final Width.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} elsif ( $$specs{'txtFinalHeight'} and ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
+		$$specs{'alert'} .= 'Flat Height must be greater than Final Height.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
@@ -826,7 +833,7 @@ $openprint::log->debug("Grabbing UV Specs");
 
 			if ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
 # FIgure out printing types
-				foreach my $index ( $Project->signatures('Interior Pages') ) {
+				foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
 						$$specs{'PrintingTypes'} = ['Digital'];
@@ -846,7 +853,7 @@ $openprint::log->debug("Grabbing UV Specs");
 # if the cover is offset, then we need offset
 # if the cover is waterless, then we can do waterless, or offset
 				my $cover_specs;
-				foreach my $index ( $Project->signatures('Cover Pages') ) {
+				foreach my $index ( $Project->signatures({'type'=>'Cover Pages'}) ) {
 					$cover_specs = openprint::service::get_specs_ref( $project_index, $index );
 					last;
 				} # end foreach
@@ -859,7 +866,7 @@ $openprint::log->debug("Grabbing UV Specs");
 				} # end if
 				if ( ! $$specs{'PrintingTypes'} ) {
 
-					foreach my $index ( $Project->signatures('Interior Pages') ) {
+					foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
 						next if $index == $service_index;
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 						if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
@@ -1511,7 +1518,7 @@ $imp->display();
 
 			while ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} > 0 ) {
 				if ( $s_id ) {
-					foreach ( sort $Project->signatures($$specs{'txtSignatureType'}) ) {
+					foreach ( sort $Project->signatures({'type'=>$$specs{'txtSignatureType'}}) ) {
 						if ( $_ > $s_id ) {
 							$s_id = $_;
 							%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
@@ -1788,6 +1795,32 @@ sub calc_price {
 
 	my $base_impressions = ceil($qty / $imposition);
 	$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
+
+	if ( ! $$specs{'no_stitching'} ) {
+		if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
+
+			#my $starttime = gettimeofday();
+			my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
+			if ( $$results{'Status'} eq 'uncalculated' ) {
+				$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
+				$price{'Comparison Cost'} += 1000000; # Can't stich this on
+				$price{'Stitching Cost'} = 1000000;
+			} else {
+				$price{'StitchingImposition'} = $$results{'Imposition'};
+				$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
+				$price{'Stitching Cost'} = $$results{'Price'};
+				$price{'Comparison Cost'} += $$results{'Price'};
+			} # end if
+			#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+
+			return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
+		} # end if
+		if ( $$services{'LoopStitching'} ) {
+		} # end if
+
+		# Needed for Cutting & Folding
+		$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
+	} # end if
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
 	my %folding_results;
@@ -2114,31 +2147,6 @@ sub calc_price {
 	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Totals' );
 	$price{'Total Cost'} = $total_cost;
 	$price{'Total Cost'} += $price{'Paper Price'} if (! $$services{'Paper'}) and ($$specs{'rdbSuppliedStock'} ne 'Y');
-
-	if ( ! $$specs{'no_stitching'} ) {
-		if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Pages') {
-			#my $starttime = gettimeofday();
-			my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'} );
-			if ( $$results{'Status'} eq 'uncalculated' ) {
-				$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
-				$price{'Comparison Cost'} += 1000000; # Can't stich this on
-				$price{'Stitching Cost'} = 1000000;
-			} else {
-				$price{'StitchingImposition'} = $$results{'Imposition'};
-				$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
-				$price{'Stitching Cost'} = $$results{'Price'};
-				$price{'Comparison Cost'} += $$results{'Price'};
-			} # end if
-			#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-
-			return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
-		} # end if
-		if ( $$services{'LoopStitching'} ) {
-		} # end if
-
-		# Needed for Cutting
-		$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
-	} # end if
 
 # Now add in cutting costs to the comparison
 
