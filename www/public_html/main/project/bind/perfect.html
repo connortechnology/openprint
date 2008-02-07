@@ -46,7 +46,24 @@
 			</p>
 		</fieldset>
 		<fieldset><legend>Results</legend>
-			  <!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<p>
+			<label>Imposition</label>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<span class="<?Columns?>Columns">
+			<input type="text" name="Imposition<?QTYIndex?>" value="<? echo ( $$variable{'Imposition'.$$variable{'QTYIndex'}} ) ?>" size="4" onkeyup="calc(this.form.name);" />out
+<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<input type="checkbox" id="OverrideImposition<?QTYIndex?>" name="OverrideImposition<?QTYIndex?>" value="Y" onclick="if(!this.checked)calc(this.form.name);" <? echo ( $$variable{'OverrideImposition'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+<label class="radio" for="OverrideImposition<?QTYIndex?>">Override</label>
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+</span>
+<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		</p>
+
+        <!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
 		</fieldset>
 		<hr/>
 

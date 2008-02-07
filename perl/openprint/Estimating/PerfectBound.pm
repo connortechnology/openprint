@@ -84,8 +84,6 @@ sub signature_calc {
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	my $plusCover = $$printing_specs{'rdbCover'} eq 'Different' ? 1 : 0;
-
 	# Need to figure out which dimension the spine bisects
 	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
@@ -118,6 +116,7 @@ sub signature_calc {
 	my $error;
 	# THe Equipment::find call gets cached... and the rest is impo-specific... so we can't really cache this.
 	my @possible_equipment = get_equipment( $specs, \$error );
+
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
@@ -154,8 +153,8 @@ $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_in
 			} # end if
 		} # end if
 
-		my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
-		if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
+		my $price = get_price( $Equipment, $specs, $qty_index );
+		if ( ( ! $bestPrice ) or $$price{'Price'} < $$bestPrice{'Price'} ) {
 			$bestEquipment = $Equipment;
 			$bestPrice = $price;
 		} # end if
@@ -163,13 +162,13 @@ $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_in
 
 	my %results;
 	$results{'alert'} = $error;
-	$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . ($bestEquipment ? $bestEquipment->strid() : '' ) . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets ';
+	$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . ($bestEquipment ? $bestEquipment->strid() : '') . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets ';
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
 #$openprint::log->debug( "PerfectBind Impo REsults: " . $results{'Imposition'} ) if $debug;
 	if ( $$bestPrice{'Imposition'} ) {
 		$results{'Status'} = 'calculated';
-		$results{'Price'} = $$bestPrice{'txtPrice'};
+		$results{'Price'} = $$bestPrice{'Price'};
 	} else {
 		$results{'Status'} = 'uncalculated';
 	} # end if
@@ -181,6 +180,7 @@ sub get_equipment {
 
 	my @possible_equipment;
 	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	$$error .= 'There are no perfect binders in the system.<br/>' if ! @all_equipment;
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
@@ -218,8 +218,6 @@ sub calc {
 	my $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-
-	my $plusCover = $$printing_specs{'rdbCover'} eq 'Different' ? 1 : 0;
 
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
 		foreach my $qty_index ( 1 .. 3 ) {
@@ -338,7 +336,7 @@ $openprint::log->debug("calc");
 		my $bestPrice;
 
 		foreach my $Equipment ( @Equipment ) {
-			my $Price = get_price( $Equipment, $specs, $plusCover, $qty_index );
+			my $Price = get_price( $Equipment, $specs, $qty_index );
 			if ( ( ! defined $bestPrice ) or ( $$bestPrice{'Price'} > $$Price{'Price'} ) ) {
 				$bestPrice = $Price;
 			} # end if
@@ -364,7 +362,7 @@ $openprint::log->debug("calc");
 } # end sub calc
 
 sub get_price {
-	my ( $Equipment, $specs, $plusCover, $qty_index ) = @_;
+	my ( $Equipment, $specs, $qty_index ) = @_;
 
 	my %price = (
 		'MakeReady' => 0,
@@ -388,7 +386,7 @@ sub get_price {
 
 	my $makeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
 	my $pocketMakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-	$price{'MakeReady'} = $makeReady + $pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + $plusCover );
+	$price{'MakeReady'} = $makeReady + $pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 );
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $neededPockets = $$specs{"txtPockets$qty_index"};

@@ -624,6 +624,7 @@ $openprint::log->debug('Got fold ' . $F->pages() );
 		'Equipment'		=> $bestEquipment,
 		'Imposition'	=> $imposition,
 		'Status'		=> $bestEquipment ? 'calculated' : 'uncalculated',
+		'Folds'			=> $bestFolds,
 		);
 
 	foreach my $fold_type ( keys %fold_types ) {

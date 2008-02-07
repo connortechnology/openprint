@@ -84,7 +84,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 				} # end if
 				return '';
 			) ?>
-			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price1?></b><br/>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?><?price1?></b><br/>
 			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 ); ) ?>
 			</td>
 	<? endif ( $$variable{'Quantity1'} ) ?>
@@ -97,7 +97,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 				} # end if
 				return '';
 			) ?>
-			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price2?></b><br/>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?><?price2?></b><br/>
 			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 2 ); ) ?>
 			</td>
 	<? endif ( $$variable{'Quantity2'} ) ?>
@@ -110,7 +110,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 				} # end if
 				return '';
 			) ?>
-			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price3?></b><br/>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?><?price3?></b><br/>
 			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 3 ); ) ?>
 			</td>
 	<? endif ( $$variable{'Quantity3'} ) ?>
@@ -133,17 +133,17 @@ if ( $$variable{'HiddenSignatures'} ) {
 	<? endif ( @{$$variable{'SERVICES'}} ) ?>
 		<tr class="totals"> 
 			<td align="left">Unit Prices:</td>
-	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice1?></td><? endif ( $$variable{'Quantity1'} ) ?>
-	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice2?></td><? endif ( $$variable{'Quantity2'} ) ?>
-	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?><?UnitPrice1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?><?UnitPrice2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?><?UnitPrice3?></td><? endif ( $$variable{'Quantity3'} ) ?>
 			<td align="right">&nbsp;</td>
 			<td class="unprintable" align="right">&nbsp;</td>
 		</tr>
 		<tr> 
 			<td align="left">Total Before Taxes:</td>
-	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total1?></td><? endif ( $$variable{'Quantity1'} ) ?>
-	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total2?></td><? endif ( $$variable{'Quantity2'} ) ?>
-	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?><?Total1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?><?Total2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?><?Total3?></td><? endif ( $$variable{'Quantity3'} ) ?>
 			<td align="right">&nbsp;</td>
 			<td class="unprintable" align="right">&nbsp;</td>
 		</tr>

@@ -803,6 +803,7 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
 	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )} if $$services{'SaddleStitching'};
 	%{$project{'SpinePasteSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SpinePaste'}[0] )} if $$services{'SpinePaste'};
+	%{$project{'PerfectBoundSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] )} if $$services{'PerfectBound'};
 
 	if ( $$services{'UVCoating'} ) {
 $openprint::log->debug("Grabbing UV Specs");
@@ -1412,6 +1413,7 @@ sub breakdown {
 	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
 	$breakdown .= $$price{'Stitching Breakdown'};
 	$breakdown .= $$price{'SpinePaste Breakdown'};
+	$breakdown .= $$price{'PerfectBound Breakdown'};
 	$breakdown .= $$price{'AdditionalSignature Breakdown'};
 	$breakdown .= sprintf("Comparison Cost: \%.2f<br/>", $$price{'Comparison Cost'});
 	return $breakdown;
@@ -1560,8 +1562,10 @@ $imp->display();
 
 					if ( $$sig_price{'Comparison Cost'} == $last_sig_price ) {
 						$additional_price -= $$sig_price{'Stitching Cost'};
+						$additional_price -= $$sig_price{'PerfectBound Cost'};
 						$additional_price *= int($$specs{'txtUnspecifiedPageQuantity'.$qty_index}/$imp->pages());
 						$additional_price += $$sig_price{'Stitching Cost'};
+						$additional_price += $$sig_price{'PerfectBound Cost'};
 						#last if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} % $imp->pages() >= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 						$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index} % $imp->pages();
 					} else {
@@ -1633,12 +1637,18 @@ $openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedPageQuantity'.$qty
 				} # end if
 
 				$additional_price -= $$sig_price{'Stitching Cost'};
+				$additional_price -= $$sig_price{'PerfectBound Cost'};
 				$$price{'Comparison Cost'} -= $$price{'Stitching Cost'};
+				$$price{'Comparison Cost'} -= $$price{'PerfectBound Cost'};
 				$$price{'Stitching Cost'} = $$sig_price{'Stitching Cost'};
+				$$price{'PerfectBound Cost'} = $$sig_price{'PerfectBound Cost'};
 				$$price{'Comparison Cost'} += $$price{'Stitching Cost'};
+				$$price{'Comparison Cost'} += $$price{'PerfectBound Cost'};
 
 				$$price{'StitchingImposition'} = $$sig_price{'StitchingImposition'};
 				$$price{'Stitching Breakdown'} = $$sig_price{'Stitching Breakdown'};
+				$$price{'PerfectBoundImposition'} = $$sig_price{'PerfectBoundImposition'};
+				$$price{'PerfectBound Breakdown'} = $$sig_price{'PerfectBound Breakdown'};
 
 				if ( ! $$sig_price{complete} ) {
 #$openprint::log->debug("Unable to calculated");
@@ -1805,30 +1815,43 @@ sub calc_price {
 	my $base_impressions = ceil($qty / $imposition);
 	$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
 
-	if ( ! $$specs{'no_stitching'} ) {
-		if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
-
-			#my $starttime = gettimeofday();
-			my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
-			if ( $$results{'Status'} eq 'uncalculated' ) {
-				$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
-				$price{'Comparison Cost'} += 1000000; # Can't stich this on
+	if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$specs{'txtSignatureType'} ne 'Cover Spreads') ) {
+#my $starttime = gettimeofday();
+		my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
+		if ( $$results{'Status'} eq 'uncalculated' ) {
+			$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
+			$price{'Comparison Cost'} += 1000000; # Can't stich this on
 				$price{'Stitching Cost'} = 1000000;
-			} else {
-				$price{'StitchingImposition'} = $$results{'Imposition'};
-				$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
-				$price{'Stitching Cost'} = $$results{'Price'};
-				$price{'Comparison Cost'} += $$results{'Price'};
-			} # end if
-			#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-
-			return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
+		} else {
+			$price{'StitchingImposition'} = $$results{'Imposition'};
+			$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
+			$price{'Stitching Cost'} = $$results{'Price'};
+			$price{'Comparison Cost'} += $$results{'Price'};
 		} # end if
-		if ( $$services{'LoopStitching'} ) {
-		} # end if
+#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 
-		# Needed for Cutting & Folding
+		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
+# Needed for Cutting & Folding
 		$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
+	} # end if
+
+	if ( $$services{'PerfectBound'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
+
+		#my $starttime = gettimeofday();
+		my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $service_index, $Imposition, $$project{'PerfectBoundSpecs'}, $qty_index );
+		if ( $$results{'Status'} eq 'uncalculated' ) {
+			$price{'PerfectBound Breakdown'} .= "PerfectBound error: $$results{'alert'}<br/>";
+			$price{'Comparison Cost'} += 1000000; # Can't stich this on
+			$price{'PerfectBound Cost'} = 1000000;
+		} else {
+			$price{'PerfectBoundImposition'} = $$results{'Imposition'};
+			$price{'PerfectBound Breakdown'} .= sprintf('PerfectBound (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
+			$price{'PerfectBound Cost'} = $$results{'Price'};
+			$price{'Comparison Cost'} += $$results{'Price'};
+		} # end if
+		#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+
+		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'PerfectBound' );
 	} # end if
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
@@ -1851,7 +1874,11 @@ sub calc_price {
 				$run_speed = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
 			} # end if
 
-			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) %d/hr Price: $%.2f on %s', @folding_results{'Imposition','RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+			foreach my $k ( keys %{$folding_results{'Folds'}} ) {
+				foreach my $Fold ( @{$folding_results{'Folds'}{$k}} ) {
+			$price{'Folding Breakdown'} .= sprintf('Folding %s (%d out) %d/hr Price: $%.2f on %s', $Fold->name(), @folding_results{'Imposition','RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+				} # end foreach
+			} # end foreach
 			if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 			$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
 			} # end if
