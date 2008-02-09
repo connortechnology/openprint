@@ -285,7 +285,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::PerfectBound::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $services{'PerfectBound'} ) {
 			push @{$services{'PerfectBound'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'PerfectBound' );
 		} # end if
@@ -566,7 +566,7 @@ sub summary {
 				$side_one_coatings .= '+Varnish (Overall Matte)';
 				$side_one_colours -= 1;
 			} # end if
-			if ( $$specs{'SideOneUVCoatingType'} and $$specs{'SideOneUVCoatingType'} ne 'None' ) {
+			if ( $$specs{'SideOneUVCoatingType'} and ($$specs{'SideOneUVCoatingType'} ne 'None') ) {
 				$side_one_coatings .= '+' . $$specs{'SideOneUVCoatingType'} . 'UV';
 			} # end if
 

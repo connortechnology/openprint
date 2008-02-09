@@ -56,13 +56,22 @@ foreach my $session ( sql::execute( $log, $dbh, q{SELECT id FROM sessions} ) ) {
 
 if ( 1 ) {
 # Clean out uncalculated projects
-	my @Projects = openprint::Project::find('status'=>'uncalculated','order'=>'index desc','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	my @Projects = openprint::Project::find(
+'status'=>'uncalculated',
+'order'=>'index desc',
+'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+ );
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of uncalculated projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'uncalculated' ) {
-				$log->error('WTF!');
+				$log->error('WTF! status was supposed to be uncalculated');
+				next;
+			} # end if
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
+				$log->error('Quoted!' . $Project->id());
 				next;
 			} # end if
 			$Project->delete();
@@ -70,38 +79,51 @@ if ( 1 ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 
-	@Projects = openprint::Project::find('status'=>'Unordered','order'=>'index desc','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	@Projects = openprint::Project::find(
+'status'=>'Unordered',
+'order'=>'index desc',
+'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+ );
 	if ( @Projects ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
 			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
-				$log->error('Quoted!' . $Project->id());
+				$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
 			if ( $Project->status() ne 'Unordered' ) {
-				$log->error('WTF!' . $Project->id());
+				$log->error('WTF! Was supposed to be Unordered' . $Project->id());
 				next;
 			} # end if
 			if ( $Project->order_id() ) {
-				$log->error('WTF!');
+				$log->error('WTF! Project has an order_id bu is Unordered');
 				next;
 			} # end if
 			if ( $Project->docket() ) {
-				$log->error('WTF!');
+				$log->error('WTF! has docket, but is not ordered');
 				next;
 			} # end if
 			$Project->delete();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} # end if
-	@Projects = openprint::Project::find('status'=>'Deleted','order'=>'index desc','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) );
+	@Projects = openprint::Project::find(
+'status'=>'Deleted','order'=>'index desc',
+'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+ );
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of Deleted projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'Deleted' ) {
 				$log->error('WTF!');
+				next;
+			} # end if
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
+				$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
 			$Project->delete();

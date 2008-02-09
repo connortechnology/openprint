@@ -1,37 +1,35 @@
-	a.buttonImageOff {
-		text-decoration: none;
+a.buttonImageOff {
+	text-decoration: none;
 	background-color: #004EA2;
-		border: none;
-		color: #ffffff;
-		padding: 0px;
-		margin: 2px;
-		margin-right: 5px;
-		display: -moz-inline-box;
-		display: inline-block;
-		outline: 0;
-		cursor: default;
-	}
-	a.buttonImageOn {
-		text-decoration: none;
-	background-color: #004EA2;
-		border: none;
-		color: #FE0F0B;
-		padding: 0px;
-		margin: 2px;
-		margin-right: 5px;
-		display: -moz-inline-box;
-		display: inline-block;
-		outline:0;
-		cursor: default;
-	}
-	a.buttonImageOn:hover {
-		color: #FE0F0B;
-		text-decoration: none;
-	}
-	a.buttonImageOn:active {
-		color: #FE0F0B;
-		text-decoration: none;
-	}
+	border: none;
+	color: #ffffff;
+	padding: 0px;
+	margin: 2px 2px 2px 4px;
+	display: -moz-inline-box;
+	display: inline-block;
+	outline: 0;
+	cursor: default;
+}
+a.buttonImageOn {
+	text-decoration: none;
+background-color: #004EA2;
+	border: none;
+	color: #FE0F0B;
+	padding: 0px;
+	margin: 2px 2px 2px 4px;
+	display: -moz-inline-box;
+	display: inline-block;
+	outline:0;
+	cursor: default;
+}
+a.buttonImageOn:hover {
+	color: #FE0F0B;
+	text-decoration: none;
+}
+a.buttonImageOn:active {
+	color: #FE0F0B;
+	text-decoration: none;
+}
 @media print {
 	a.button {
 		display: none;
@@ -67,7 +65,7 @@ a.buttonImageOff .c {
     display: inline-block;
     float: none;
     margin: 0px;
-    padding: 3px 10px 4px 10px;
+    padding: 2px 8px 2px 8px;
     color: white;
 }
 
@@ -88,6 +86,6 @@ a.buttonImageOn .c {
     display: inline-block;
     float: none;
     margin: 0px;
-    padding: 3px 10px 4px 10px;
+    padding: 2px 8px 2px 8px;
 	color: #FE0F0B;
 }

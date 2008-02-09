@@ -17,8 +17,40 @@
 	clear: both;
 }
 
-.Service div.templates {
-	padding-right: 0px;
+div.Service div.templates {
+    padding-right: 0px;
+}
+div.Service div.templates:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Service div.templates {height: 1%;}
+* div.Service div.templates {display:block;}
+/* End hide from IE-mac */
+
+div.Service div.templates p {
+	float: left;
+	width: 165px;
+	height: 180px;
+	text-align: center;
+	margin: 0px 5px 10px 5px;
+	padding: 0px;
+}
+div.Service div.templates p label {
+	clear: none;
+	float: none;
+	margin: 0px;
+}
+div.Service div.templates p img {
+    clear: both;
+    width: 130px;
+    height: 130px;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 .templateOption {
 	float: left;
@@ -124,3 +156,55 @@ div.ProjectCreateEdit ul:after {
 /* Hides from IE-mac \*/
 * html div.ProjectCreateEdit ul {height: 1%;}
 /* End hide from IE-mac */
+
+#QuickLogin {
+	float: right;
+	margin: 0px;
+	padding: 0px;
+}
+#QuickLogin fieldset {
+	margin: 0px;
+	padding: 0px;
+	border: none;
+}
+#QuickLogin fieldset legend {
+	display: none;
+}
+#QuickLogin p {
+	padding-left: 80px;
+}
+#QuickLogin p label {
+	width: 75px;
+	margin-left: -80px;
+}
+#QuickLogin p input {
+	width: 95%;
+}
+
+/* Menu Styles */
+
+ul#menubar li#Account a {
+	width: 120px;
+}
+ul#menubar li#Projects a {
+	width: 90px;
+}
+ul#menubar li#Quotes a {
+	width: 90px;
+}
+ul#menubar li#Orders a {
+	width: 90px;
+}
+
+#Certifications {
+}
+#Certifications p {
+	float: left;
+	width: 230px;
+	font-weight: bold;
+	margin: 0px 10px 0px 10px;
+}
+#Certifications img {
+	height: 85px;
+	float: left;
+}

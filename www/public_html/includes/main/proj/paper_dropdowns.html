@@ -58,11 +58,12 @@
 			<p>
 				<label>Price:</label><input type="text" name="CustomStockPrice<?Signature?>" size="9" value="<? echo ( $$variable{'CustomStockPrice'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
 				<select name="CustomStockPriceUnits<?Signature?>" onchange="calc(this.form.name);">
-					<option value="Per 100lbs">Per 100lbs</option>
-					<option value="Per M">Per M</option>
+					<? echo (
+						ssi::make_drop_down( [ map { $_, $_ } ( 'Per 100lbs', 'Per M' ) ], $$variable{'CustomStockPriceUnits'.$$variable{'Signature'}} );
+					) ?>
 				</select>
 			</p>
-			<p id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} ne 'Sheet' ) ?>>
+			<p id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>>
 			<label>MWeight:</label><input type="text" name="txtCustomMWeight<?Signature?>" size="9" value="<? echo ( $$variable{'txtCustomMWeight'.$$variable{'Signature'}} ) ?>" onkeyup="mweight_to_gsm(this.form,'<?Signature?>');calc(this.form.name);" />
 			</p>
 			<p id="BasisSize<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ) ?>>
@@ -81,7 +82,7 @@
 				<label for="StockGrade<?Signature?>">Grade:</label>
 				<select id="StockGrade<?Signature?>" name="StockGrade<?Signature?>" size="1" onchange="calc(this.form.name);">
 				<? echo (
-						my @options = ( '', 'select one',1,'Gloss-coated paper',2,'Matte-coated paper',3,'Gloss-coated, web paper', 4, 'Uncoated, white paper', 5, 'Uncoated, yellow paper' );
+						my @options = ( '', 'select one',1,'1 Gloss-coated paper',2,'2 Matte-coated paper',3,'3 Gloss-coated, web paper', 4, '4 Uncoated, white paper', 5, '5 Uncoated, yellow paper' );
 						return ssi::make_drop_down( \@options, $$variable{'StockGrade'.$$variable{'Signature'}} );
 						) ?>
 				</select>

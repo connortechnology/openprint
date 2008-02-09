@@ -256,13 +256,8 @@ sub signature_calc {
 
 		my @impositions = ();
 		if ( $Equipment->specification('Type') eq 'Press' ) {
-			if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Must be printed on same press.<br/>';
-				next;
-			} else {
-				@impositions = ($imposition);
-			} # end if
-			if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
+			@impositions = ($imposition);
+			if ( ( $Equipment->specification('WTPerforation') ne 'Y' ) and sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant do an inline perf when W&T.<br/>';
 				next;
 			} # end if

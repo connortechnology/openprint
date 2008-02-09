@@ -39,7 +39,7 @@ Only logged in customers have a quote history.
 	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 		<p>
 			<label for="QuoteID">Quote ID:</label>
-			<input type="text" size="10" id="QuoteID" name="QuoteID" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
+			<input type="text" size="10" id="QuoteID" name="QuoteID" value="<? echo ( $openprint::param{'QuoteID'} ) ?>" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
 		</p>
 		<p>
 			<label for="QuotedFor">Quoted For:</label>

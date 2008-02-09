@@ -20,7 +20,7 @@ body {
 
 .Header {
 }
-.Header :after {
+.Header:after {
     content: ".";
     display: block;
     height: 0;
@@ -56,6 +56,14 @@ A:hover {
 
 input, select, textarea, option {
     font-size: x-small;
+	padding: 0px;
+}
+input {
+	margin: 1px;
+	padding: 1px;
+}
+select {
+	vertical-align: top;
 }
 input[type="text"], input[type="password"]  {
 }
@@ -189,11 +197,12 @@ fieldset:after {
 fieldset legend {
 	color: #FE0F0B;
 	font-weight: bold;
+	outline: 0;
 }
 
 fieldset p {
 	margin: 0px;
-    margin-top: .4em;
+    margin-top: 2px;
     display: inline-block;
     padding: 0px;
     padding-left: 185px;
@@ -253,10 +262,8 @@ fieldset p input {
 fieldset p input[type="text"], fieldset p input[type="password"]  {
     width: 40%;
 }
-fieldset p input[type="radio"] {
-/*
-    margin-top: 3px;
-*/
+fieldset p input[type="radio"], fieldset p input[type="checkbox"] {
+    margin-top: 1px;
 }
 fieldset p select {
     width: 40%;
@@ -318,7 +325,7 @@ hr {
 	font-size: medium;
 }
 
-.colRow {
+.colRow,.roweven {
 	background-color: #ddddff;
 }					/* alternating row color in generated tables */
 .colRowRed {
@@ -490,8 +497,8 @@ div#logActions
 }
 
 span.DateSelector {
-	display: inline-block;
 	float: left;
+	width: 255px;
 }
 
 div.Service span.ThreeColumns {
@@ -504,4 +511,10 @@ div.Service span.TwoColumns {
 }
 img {
 	border: none;
+}
+.changed {
+	background-color: yellow;
+}
+label {
+	outline: 0;
 }

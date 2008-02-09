@@ -141,7 +141,10 @@ sub signature_calc_stock_cutting {
 	return if ($Paper->width() == $Paper->start_width()) and ($Paper->height() == $Paper->start_height() );
 	return if ( exists $$sig_specs{'PageQuantity'.$qty_index} and ! $$sig_specs{'PageQuantity'.$qty_index} );
 
-	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @equipment;
+	if ( ! @equipment ) {
+		@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+		push @equipment, openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'When Printing'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	} # end if
 	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @stitchers;
 	my @my_equipment;
 
@@ -176,7 +179,7 @@ sub signature_calc_stock_cutting {
 	if ( ! ($$sig_specs{'hdnImpositionRows'.$qty_index} and $$sig_specs{'hdnImpositionColumns'.$qty_index}) ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "No Imposition:<br/>";
 		$$specs{'alert'} .= "No imposition for signature $signature_index";	
-		$$specs{'Status'} = 'uncalculated';
+		$$specs{'Status'} = 'calculated';
 		return;
 	} # end if
 
@@ -254,6 +257,7 @@ sub signature_calc_folding_cutting {
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
 	if ( ! $I ) {
 		$I = new openprint::Imposition();
+		$I->paper( $Paper );
 		$I->load( $sig_specs, $qty_index );
 	} # end if
 	return %results if ! $I->imposition();
@@ -349,10 +353,14 @@ sub signature_calc {
 
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
 	if ( ! $I ) {
-	$I = new openprint::Imposition();
-	$I->load( $sig_specs, $qty_index );
+		$I = new openprint::Imposition();
+		$I->paper( $Paper );
+		$I->load( $sig_specs, $qty_index );
 	} # end if
-	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @equipment;
+	if ( ! @equipment ) {
+		@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+		push @equipment, openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'When Printing'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	} # end if
 	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @stitchers;
 
 # acts as flag to tell whether we can use the stitcher to do book cuts
@@ -406,6 +414,7 @@ sub signature_calc {
 
 	if ( ! ( $$sig_specs{'txtImposition'.$qty_index} and $$sig_specs{'hdnImpositionRows'.$qty_index} and $$sig_specs{'hdnImpositionColumns'.$qty_index}) ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "No Imposition:<br/>";
+		$$specs{'Status'} = 'calculated';
 		return;
 	} # end if
 
@@ -504,6 +513,11 @@ $openprint::log->error('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 	foreach my $Equipment ( @my_equipment ) {
 		next if ! $Equipment->id();
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $Equipment->name() .':';
+		if ( $Equipment->specification('Cutting Capable') eq 'When Printing' and $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on ' . $Equipment->strid();
+			next;
+		} # end if
+			
 
 		my $liftDepth;
 		if ( $$services{'UVCoating'} and (
@@ -636,6 +650,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	push @equipment, openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'When Printing'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 
 	foreach my $qty_index ( 1 .. 3 ) {
@@ -705,6 +720,7 @@ sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	push @possible_equipment, openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'When Printing'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @possible_equipment;
 
 	my @stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');

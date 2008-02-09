@@ -55,6 +55,8 @@ sub make_quote_from_quote {
 		my $NewQuote = new openprint::Quote( $new_quote_id );
 		$NewQuote->store_user_by_info( \%by );
 		$NewQuote->store_user_for_info( \%for );
+		$NewQuote->add_log( 'Copied from quote ' . $quote_id );
+		$Quote->add_log( 'Copied to quote ' . $new_quote_id );
 		return $new_quote_id;
 	} # end if
 	return 0;
@@ -69,6 +71,8 @@ sub details {
 		$quote_id = make_quote_from_quote( $r, $log, $dbh, @openprint::session{'company_id','user_id'}, $openprint::param{'quote_id'} );
 	} elsif ( $openprint::param{'remove'} ) {
 		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?', @openprint::param{'quote_id','remove'} );
+		my $Quote = new openprint::Quote( $openprint::param{'quote_id'} );	
+		$Quote->add_log( 'Remove project ' . $openprint::param{'remove'} );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Process Quote' ) {
 		$quote_id = add_project_to_quote( $r, $log, $dbh, $variable );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Continue' ) {
@@ -104,12 +108,15 @@ sub history {
 sub history_details {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
+
 	my $quote_id = $openprint::param{'quote_id'};
+	$quote_id =~ s/\D//g;
 	$$variable{'Quote'} = new openprint::Quote( $quote_id );
 	if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) or ( $$variable{'Quote'}->company_id() == $openprint::session{'company_id'} ) ) {
 		openprint::quote::get_finished_quote_contents( $log, $dbh, $variable, $quote_id );
 		if ( $openprint::param{'btnFunction'} eq 'Resend' ) {
 			$$variable{'Quote'}->send();
+			$$variable{'Quote'}->add_log('Resent');
 		} # end if
 	} # end if
 } # end sub history_details
@@ -136,20 +143,21 @@ sub add_project_to_quote {
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 
 	$quote_id = $openprint::session{'quote_id'} if ! $quote_id;
-$openprint::log->debug("QI: $quote_id");
 	$quote_id = new openprint::Quote( $quote_id )->id() if $quote_id;
-$openprint::log->debug("QI: $quote_id");
 	$quote_id = create_quote( $log, $dbh, $variable ) if ! $quote_id;
-$openprint::log->debug("QI: $quote_id");
 	$openprint::session{'quote_id'} = $quote_id;
+
+	my $Quote = new openprint::Quote( $quote_id );
 
 	# check to make sure project isn't already in the quote.
 	$_ = q{SELECT ProjectIndex FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?};
 	if ( ! sql::execute( $log, $dbh, $_, $quote_id, $project_index ) ) {
-		sql::insert( $log, $dbh, 'tbl_Quote_Details', 
-				'QuoteIndex',		$quote_id,
-				'ProjectIndex',		$project_index,
-				);
+		if ( ! sql::insert( $log, $dbh, 'tbl_Quote_Details', [
+					'QuoteIndex',		$quote_id,
+					'ProjectIndex',		$project_index,
+					] ) ) {
+			$Quote->add_log( 'Added project ' . $project_index );
+		} # end if
 	} # end if
 	return $quote_id;
 } # end sub add_project_to_quote
@@ -309,6 +317,7 @@ sub confirmation {
 		$Quote->administrator_comments( $openprint::param{'AdministratorComments'} ) if exists $openprint::param{'AdministratorComments'};
 		$Quote->save();
 		$Quote->send();
+		$Quote->add_log( 'Submitted' );
 	} # end if
 	delete $openprint::session{'quote_id'};
 } # end sub finalise_quote

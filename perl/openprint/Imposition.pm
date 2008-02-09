@@ -9,7 +9,7 @@ my @fields = (
 	'layout_width','layout_height',
 	'runstyle',
 	'spread_rows','spread_columns','spreads','spread_size',
-	'gutters',
+	'grip','gutters',
 	'image_orientation',
 	'paper',
 	'Press',
@@ -82,7 +82,7 @@ sub AUTOLOAD {
 
 sub display {
 	my $self = shift;
-	$openprint::log->debug("Imp: $$self{'columns'}x$$self{'rows'}+$$self{'dutch_columns'}x$$self{'dutch_rows'}:$$self{imposition}out spreads:$$self{'spread_columns'}x$$self{'spread_rows'}=$$self{'spreads'} $$self{runstyle} on: $self->{paper}->{width}x$self->{paper}->{height} $$self{Press}->{strid}");
+	$openprint::log->debug("Imp: $$self{'columns'}x$$self{'rows'}+$$self{'dutch_columns'}x$$self{'dutch_rows'}:$$self{imposition}out spreads:$$self{'spread_columns'}x$$self{'spread_rows'}=$$self{'spreads'} $$self{runstyle} on: $self->{paper}->{width}x$self->{paper}->{height} $$self{Press}->{strid} I: $$self{image_width}x$$self{image_height} L:$$self{layout_width}x$$self{layout_height} $$self{image_orientation}");
 } # end sub display
 
 sub set {
@@ -207,6 +207,10 @@ sub used_width {
 	my $self = shift;
 	return $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'};
 }
+sub used_height {
+	my $self = shift;
+	return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'};
+}
 
 sub object_area {
 	my $self = shift;
@@ -216,10 +220,26 @@ sub layout_area {
 	my $self = shift;
 	return $$self{'layout_width'} * $$self{'layout_height'};
 }
-#sub page_columns {I
-	#my $self = shift;
-	#return $$self{'columns'} * $$
-#} # end sub page_columns
+sub page_columns {
+	my $self = shift;
+
+	if ( $$self{'spread_size'} == 4 and $$self{'image_orientation'} eq 'Vertical' ) {
+		return $$self{'spread_columns'} * 2;
+	} else {
+		return $$self{'spread_columns'};
+	} # end if
+} # end sub page_columns
+
+sub page_rows {
+	my $self = shift;
+
+	if ( $$self{'spread_size'} == 4 and $$self{'image_orientation'} eq 'Horizontal' ) {
+		return $$self{'spread_rows'} * 2;
+	} else {
+		return $$self{'spread_rows'};
+	} # end if
+} # end sub page_rows
+
 sub sheet_width {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
@@ -240,6 +260,18 @@ sub sheet_height {
 sub pages {
 	my $self = shift;
 	return $$self{'spreads'} * $$self{'spread_size'};
+}
+
+sub equals {
+	my ( $i1, $i2 ) = @_;
+	return 0 if $i1->Press()->id() != $i2->Press()->id();
+	return 0 if $$i1{'runstyle'} ne $$i2{'runstyle'};
+	return 0 if $$i1{'imposition'} != $$i2{'imposition'};
+	return 0 if $$i1{'columns'} != $$i2{'columns'};
+	return 0 if $$i1{'spreads'} != $$i2{'spreads'};
+	return 0 if $$i1{'paper'}->width() != $$i2{'paper'}->width();
+	return 0 if $$i1{'paper'}->height() != $$i2{'paper'}->height();
+	return 1;
 }
 
 1;

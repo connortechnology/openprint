@@ -74,6 +74,9 @@
 			<th align="left" width="75">Project #</th>
 			<th align="left">Company</th>
 			<th align="left">Reference</th>
+			<th align="center" width="75">Price 1</th>
+			<th align="center" width="75">Price 2</th>
+			<th align="center" width="75">Price 3</th>
 			<th align="center" width="75">Created</th>
 			<th align="right" width="100">Status</th>
 		</tr>
@@ -81,7 +84,15 @@
 		<tr<?rowclass?>> 
 			<td><a href="../project/view.html?ProjectIndex=<?proj_index?>">&nbsp;<?proj_index?></a></td>
 			<td><a href="../project/view.html?ProjectIndex=<?proj_index?>">&nbsp;<?cust_name?></a></td>
-			<td><a href="../project/view.html?ProjectIndex=<?proj_index?>">&nbsp;<?proj_ref?></a></td>
+			<td><a href="../project/view.html?ProjectIndex=<?proj_index?>">&nbsp;<?proj_ref?>
+<? echo ( 
+	$$variable{'Project'} = new openprint::Project( $$variable{'proj_index'} );
+	return $$variable{'Project'}->summary();
+) ?>
+			</a></td>
+			<td align="center">&nbsp;<? echo ( $$variable{'Project'}->price1() ) ?></td>
+			<td align="center">&nbsp;<? echo ( $$variable{'Project'}->price2() ) ?></td>
+			<td align="center">&nbsp;<? echo ( $$variable{'Project'}->price3() ) ?></td>
 			<td align="center">&nbsp;<?date?></td>
 			<td align="right">&nbsp;<?status?></td>
 		</tr>

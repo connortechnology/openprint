@@ -61,6 +61,26 @@ sub session_init {
 		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
 	} # end if
 
+	if ( sets::isin( $session{'user_type'}, ['E','A'] ) and ($r->param('btnFunction') eq 'SelectCompany') ) {
+$openprint::log->debug('Selecting company');
+		my $Company = new openprint::Company( $r->param('ddmCompany') );
+		$openprint::session{'company_id'} = $Company->id();
+		openprint::logs::insertLogRecord('79',);
+
+		if ( $Company->currency_id() ) {
+			$openprint::session{'Currency_id'} = $Company->currency_id();
+		} elsif ( $Company->country() eq 'US' ) {
+			my @currencies = openprint::Currency::find('short'=>'USD');
+			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
+		} elsif ( $Company->country() eq 'CA' ) {
+			my @currencies = openprint::Currency::find('short'=>'CDN');
+			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
+		} # end if
+		delete $openprint::session{'OrderID'};
+		delete $openprint::session{'quote_id'};
+		delete $openprint::session{'project_id'};
+	} # end if
+
 	if ( ! $session{'Country'} ) {
 		$session{'Country'} = $r->dir_config('Country');
 		$log->debug("Setting Country to " . $r->dir_config('Country') );

@@ -12,6 +12,15 @@
 <h1>Order History</h1>
 <h2>Viewing Order <?OrderID?></h2>
 </div>
+<span style="float: right;">
+<? echo ( my $html = '';
+		$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
+		if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
+			$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?order_id=".$$variable{'Order'}->id()."', 800 );", '', 'View Log' );
+		} # end if
+		return $html;
+	) ?>
+</span>
 <? if ( sets::isin( $$variable{'Order'}->status(), ['Complete','Paid'] ) ) ?>
 To make another order from this one, please click on the ReOrder button below.<br/>
 <? endif ( sets::isin( $$variable{'Order'}->status(), ['Complete','Paid'] ) ) ?>
@@ -62,7 +71,7 @@ Projects listed in red have changed price from the time this order was originall
 <br class="spacer"/>
 	<span class="Currency">All prices listed in <?CurrencyName?>.</span>
 <br class="spacer"/><br/>
-<!--#include virtual="/skins/<?SiteTitle?>/includes/order_disclaimer.html"-->
+<? echo ( ssi::include( $config{'SkinPath'}.'/includes/order_disclaimer.html'); ) ?>
 <br class="spacer"/>
 	<form name="f1" method="post" action="history_details.html">
 <span style="float: right;">

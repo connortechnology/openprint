@@ -1,4 +1,4 @@
-	<script type="text/javascript" src="/administrator/production/pricing.js"></script>
+<script type="text/javascript" src="/administrator/production/pricing.js"></script>
 <script type="text/javascript">
 function mweight_to_gsm( form ) {
     var mweight;
@@ -47,7 +47,6 @@ function gsm_to_mweight( form ) {
 		width: auto;
 		margin: 0px;
 	}
-	
 </style>
 <div class="error"><?error?></div>
 <div class="information"><?information?></div>
@@ -66,13 +65,13 @@ function gsm_to_mweight( form ) {
 		</p>
 	<br class="spacer"/>
 	<fieldset><legend>Paper Information: (<? echo ( $$variable{'Paper'}->id(); ) ?>)</legend>
-		<div class="column">
+		<div class="leftColumn">
 			<p>
 				<label for="ddmOwner">Owner:</label>
 				<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() ); ) ?></select>
 			</p>
 			<p>
-				<label for="txtManufacturer" onclick="f1.ddmManufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
+				<label for="txtManufacturer" onclick="$('ddmManufacturer').toggle();$('txtManufacturer').toggle();">Manufacturer:</label>
 				<select id="ddmManufacturer" name="ddmManufacturer" size="1">
 				<? echo (
 						my @options = ( '', 'select one',
@@ -84,8 +83,8 @@ function gsm_to_mweight( form ) {
 				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
 			</p>
 			<p>
-				<label for="txtName" onclick="f1.txtName.toggle();f1.ddmName.toggle();">Name:</label>
-				<select id="ddmName" name="ddmName" size="1" onChange="f1.txtName.value='';">
+				<label for="txtName" onclick="$('txtName').toggle();$('ddmName').toggle();">Name:</label>
+				<select id="ddmName" name="ddmName" size="1" onchange="f1.txtName.value='';">
 					<? echo (
 						my @options = ( '', 'select one',
 							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
@@ -96,8 +95,8 @@ function gsm_to_mweight( form ) {
 				<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="ddm_select_by_index( f1.ddmName, 0 );" />
 			</p>
 			<p>
-				<label for="txtFinish" onclick="f1.txtFinish.toggle();f1.ddmFinish.toggle();">Finish:</label>
-				<select id="ddmFinish" name="ddmFinish" size="1" onChange="f1.txtFinish.value='';">
+				<label for="txtFinish" onclick="$('txtFinish').toggle();$('ddmFinish').toggle();">Finish:</label>
+				<select id="ddmFinish" name="ddmFinish" size="1" onchange="f1.txtFinish.value='';">
 				<? echo (
 					my @options = ( '', 'select one',
 						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperFinishes ORDER BY lower(longname)} )
@@ -108,8 +107,8 @@ function gsm_to_mweight( form ) {
 				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.ddmFinish, 0 );" />
 			</p>
 			<p>
-				<label for="txtColour" onclick="f1.txtColour.toggle();f1.ddmColour.toggle();">Colour:</label>
-				<select id="ddmColour" name="ddmColour" size="1" onChange="f1.txtColour.value='';">
+				<label for="txtColour" onclick="$('txtColour').toggle();$('ddmColour').toggle();">Colour:</label>
+				<select id="ddmColour" name="ddmColour" size="1" onchange="f1.txtColour.value='';">
 					<? echo (
 						my @options = ( '', 'select one',
 							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperColours ORDER BY lower(longname)} )
@@ -120,8 +119,8 @@ function gsm_to_mweight( form ) {
 				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.ddmColour, 0 );" />
 			</p>
 			<p>
-				<label for="txtWeight" onclick="f1.txtWeight.toggle();f1.ddmWeight.toggle();">Weight:</label>
-				<select id="ddmWeight" name="ddmWeight" size="1" onChange="f1.txtWeight.value='';">
+				<label for="txtWeight" onclick="$('txtWeight').toggle();$('ddmWeight').toggle();">Weight:</label>
+				<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';">
 				<? echo (
 						my @options = ( '', 'select one',
 							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
@@ -132,7 +131,7 @@ function gsm_to_mweight( form ) {
 				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
 			</p>
 			<p>
-				<label for="txtQuality" onclick="f1.txtQuality.toggle();f1.ddmQuality.toggle();">Quality:</label>
+				<label for="txtQuality" onclick="$('txtQuality').toggle();$('ddmQuality').toggle();">Quality:</label>
 				<select id="ddmQuality" name="ddmQuality" size="1">
 				<? echo (
 						my @options = ( '', 'select one',
@@ -147,7 +146,7 @@ function gsm_to_mweight( form ) {
 				<label for="grade">Grade:</label>
 				<select id="grade" name="grade" size="1">
 				<? echo (
-					my @options = ( '', 'select one',1,'Gloss-coated paper',2,'Matt-coated paper',3,'Gloss-coated, web paper', 4, 'Uncoated, white paper', 5, 'Uncoated, yellow paper' );
+					my @options = ( '', 'select one',1,'1 Gloss-coated paper',2,'2 Matte-coated paper',3,'3 Gloss-coated, web paper', 4, '4 Uncoated, white paper', 5, '5 Uncoated, yellow paper' );
 					return ssi::make_drop_down( \@options, $$variable{'Paper'}->grade() );
 				) ?>
 				</select>
@@ -158,9 +157,9 @@ function gsm_to_mweight( form ) {
 			</p>
 			<p>
 				<label>Type:</label>
-				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('BasisSize').hide();$('MWeight').show();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() ne 'Roll'; ) ?> />
+				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('BasisSize').hide();$('MWeight').show();$('SPP').innerHTML='Sheets Per Package:';" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() ne 'Roll'; ) ?> />
                 <label class="radio" for="typeSheet">Sheet</label>
-                <input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('BasisSize').show();$('MWeight').hide();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() eq 'Roll'; ) ?> />
+                <input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('BasisSize').show();$('MWeight').hide();$('SPP').innerHTML='lbs Per Roll:';" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() eq 'Roll'; ) ?> />
                 <label class="radio" for="typeRoll">Roll</label>
 			<p>
 				<label>Size:</label>
@@ -201,14 +200,29 @@ function gsm_to_mweight( form ) {
 				<label class="radio" for="supplied">Both</label>
 			</p>
 			<p> 
-				<label>Sheets Per Package:</label>
+				<label id="SPP"><? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs Per Roll' : 'Sheets Per Package' ) ?>:</label>
 				<input type="text" name="sheets_per_package" value="<? echo ( $$variable{'Paper'}->sheets_per_package(); ) ?>"  size="12" style="width: auto;"> 
 			</p>
 	</div><!--left-->
-	<div class="column">
+	<div class="rightColumn">
+		<p> 
+			<label>Order Full Packages:</label>
+			<input type="radio" name="full_packages" id="full_packages1" value="1" <? echo ( $$variable{'Paper'}->full_packages() ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="full_packages1">Yes</label>
+			<input type="radio" name="full_packages" id="full_packages0" value="0" <? echo ( $$variable{'Paper'}->full_packages()eq '0' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="full_packages0">No</label>
+		</p>
+		<p> 
+			<label>Minimum Order (lbs):</label>
+			<input type="text" name="minimum_order" value="<? echo ( $$variable{'Paper'}->minimum_order(); ) ?>"  size="13" style="width: auto;">
+		</p>
 		<p> 
 			<label>FSC Code:</label>
 			<input type="text" name="fsc_code" value="<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>"  size="13" style="width: auto;"> 
+		</p>
+		<p> 
+			<label>Inventory #:</label>
+			<input type="text" name="inventory_number" value="<? echo ( $$variable{'Paper'}->inventory_number(); ) ?>"  size="13" style="width: auto;"> 
 		</p>
 		<p> 
 			<span class="input">

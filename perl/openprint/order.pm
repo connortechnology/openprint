@@ -351,6 +351,7 @@ sub save_project_information {
 	$Project->reference( $openprint::param{"Reference$project_index"} );
 	$Project->save();
 
+	#returns service_index, ServiceType pairs
 	my %shipping_services = openprint::print_project::get_services_in_category( $log, $dbh, $Project->id(), 'Shipping' );
 
 	foreach my $service_id ( keys %shipping_services ) {
@@ -378,7 +379,6 @@ sub save_project_information {
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $shipping_fields{$spec}, $openprint::param{"$spec-$project_index-$service_id"} );
 		} # end foreach
 		my $service_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, $ServiceType->name() );
-$openprint::log->debug("Status: $$service_specs{'Status'}" );
 		if ( $$service_specs{'Status'} ne 'calculated' ) {
 			return 'Unable to calculate shipping: ' . $$service_specs{'alert'};
 		} # end if
@@ -420,6 +420,7 @@ sub information {
 			$error = 'No OrderID given to Re-Open.';
 		} # end if OrderID
 	} elsif ( $openprint::param{'btnFunction'} eq 'Process Order' ) {
+$openprint::log->debug("Making order from quote");
 		if ( $openprint::param{'quote_id'} ) {
 			( $order_id, $error ) = make_order_from_quote( $r, $log, $dbh, $cookie, $openprint::param{'quote_id'}, $variable );
 		} else {
@@ -434,6 +435,7 @@ sub information {
 			( $order_id, $error ) = add_project_to_order( $log, $dbh, $cookie, $variable, $openprint::param{'ProjectIndex'} );
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Continue') { # saving projcet information
+		$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
 		foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
 			$$variable{'error'} .= save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
 		} # end foreach
@@ -459,13 +461,13 @@ sub information {
 		my @data = sql::execute( $log, $dbh, q{SELECT intQuantityIndex, ShippingType, lngProjectIndex, (SELECT strProjectReference FROM tbl_Projects WHERE Index=lngProjectIndex) FROM Order_Contents WHERE OrderIndex=?}, $order_id );
 		while ( my ( $qty, $shipping, $project_index, $ref ) = splice @data, 0, 4 ) {
 			if ( ! $qty ) {
-				push @errors, "Please select the quantity to order for project $project_index";
+				push @errors, "Please select the quantity to order for project $project_index<br/>";
 			} # end if
 			if ( ! $ref ) {
-				push @errors, "Please give project $project_index a reference";
+				push @errors, "Please give project $project_index a reference<br/>";
 			} # end if
 			if ( ! $shipping ) {
-				push @errors, "Please select a shipping type for project $project_index";
+				push @errors, "Please select a shipping type for project $project_index<br/>";
 			} # end if
 
 		} # end while
@@ -515,6 +517,7 @@ sub information {
 
 	$$variable{'OrderID'} = $order_id;
 	$$variable{'Order'} = new openprint::Order( $order_id );
+$openprint::log->debug("Order id: " . $$variable{'Order'}->id() );
 
 } # end sub information
 
@@ -528,13 +531,14 @@ sub store_order_info {
 	$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
 
 	my $error = '';
-	$error .= "Company Name is a required field.<br>" if $openprint::param{'txtCompanyName'} eq '';
-	$error .= "Address is a required field.<br>" if $openprint::param{'txtAddress1'} eq '';
-	$error .= "City is a required field.<br>" if $openprint::param{'txtCity'} eq '';
-	$error .= "State/Province is a required field.<br>" if $openprint::param{'ddmStateProvince'} eq '';
-	$error .= "PostalCode is a required field.<br>" if $openprint::param{'txtPostalCode'} eq '';
-	$error .= "Country is a required field.<br>" if $openprint::param{'ddmCountry'} eq '';
-	$error .= "Email is a required field.<br>" if	$openprint::param{'txtEmail'} eq '';
+	$error .= 'Company Name is a required field.<br/>' if $openprint::param{'txtCompanyName'} eq '';
+	$error .= 'Address is a required field.<br/>' if $openprint::param{'txtAddress1'} eq '';
+	$error .= 'City is a required field.<br/>' if $openprint::param{'txtCity'} eq '';
+	$error .= 'State/Province is a required field.<br/>' if $openprint::param{'ddmStateProvince'} eq '';
+	$error .= 'PostalCode is a required field.<br/>' if $openprint::param{'txtPostalCode'} eq '';
+	$error .= 'Country is a required field.<br/>' if $openprint::param{'ddmCountry'} eq '';
+	$error .= 'Email is a required field.<br/>' if	$openprint::param{'txtEmail'} eq '';
+	$error .= 'Please select a company.<br/>' if exists $openprint::param{'company_id'} and ! $openprint::param{'company_id'};
 
 	if ( ! Email::Valid->address($openprint::param{'txtEmail'}) ) {
 		$error .= "Email is not a valid email address.<br>";
@@ -544,33 +548,28 @@ sub store_order_info {
 		return $error;
 	} # end if
 
-	foreach my $key ( $r->param() ) {
-		$$variable{$key} = $r->param($key);
-	} # end foreach
-
-	my $rc = sql::update( $log, $dbh, 'Orders', ['Index=?', $order_id],
-		#'strTitle',				 $openprint::param{'txtTitle'},
-		'strCompanyName',			$$variable{'txtCompanyName'},
-		'strFirstName',				$$variable{'txtFirstName'},
-		'strLastName',				$$variable{'txtLastName'},
-		'strSalutation',			$$variable{'rdbSalutation'},
-		'strAddress1',				$$variable{'txtAddress1'},
-		'strAddress2',				$$variable{'txtAddress2'},
-		'strCity',					$$variable{'txtCity'},
-		'strState',					( $$variable{'ddmStateProvince'} ? $$variable{'ddmStateProvince'} : $$variable{'txtOtherStateProvince'} ),
-		'strPostalCode',			$$variable{'txtPostalCode'},
-		'strCountry',				( $$variable{'ddmCountry'} ? $$variable{'ddmCountry'} : $$variable{'txtOtherCountry'} ),
-		'strPhone',					$$variable{'txtPhone'},
-		'strExt',					$$variable{'txtExtension'},
-		'strFax',					$$variable{'txtFax'},
-		'strEmail',				 	$$variable{'txtEmail'},
-		'strAlsoNotify',			$$variable{'txtAlsoNotify'},
-		'strPONumber',				$$variable{'txtPurchaseOrder'},
-	);
-
 	my $Order = new openprint::Order( $order_id );
-	$Order->load();
-	return $rc;
+	if ( $openprint::param{'company_id'} ) {
+		$Order->company_id( $openprint::param{'company_id'} );
+		$openprint::session{'company_id'} = $openprint::param{'company_id'};
+	} # end if
+	$Order->company_name( $r->param('txtCompanyName') );
+	$Order->first_name( $r->param('txtFirstName') );
+	$Order->last_name( $r->param('txtLastName') );
+	$Order->salutation( $r->param('rdbSalutation') );
+	$Order->address1( $r->param('txtAddress1') );
+	$Order->address2( $r->param('txtAddress2') );
+	$Order->city( $r->param('txtCity') );
+	$Order->state( $openprint::param{'ddmStateProvince'} );
+	$Order->postalcode( $openprint::param{'txtPostalCode'} );
+	$Order->country( $openprint::param{'ddmCountry'} );
+	$Order->phone( $openprint::param{'txtPhone'} );
+	$Order->extension( $openprint::param{'txtExtension'} );
+	$Order->fax( $openprint::param{'txtFax'} );
+	$Order->email( $openprint::param{'txtEmail'} );
+	$Order->alsonotify( $openprint::param{'txtAlsoNotify'} );
+	$Order->po( $openprint::param{'txtPurchaseOrder'} );
+	return $Order->save();
 } # end sub store_order_info
 
 sub get_invoice_to {
@@ -638,9 +637,13 @@ sub verify_order {
 			$Product->quantity( $openprint::param{'ProductQuantity'.$Product->id()} );
 			my %price = $Product->Product()->get_price( $Product->quantity() );
 			$Product->price( $price{Price} );
+			if ( Date::Calc::check_date( @openprint::param{'ProductDueDateYear'.$Product->id(),'ProductDueDateMonth'.$Product->id(),'ProductDueDateDay'.$Product->id()} ) ) {
 			$Product->requested_for( join('-', @openprint::param{'ProductDueDateYear'.$Product->id(),'ProductDueDateMonth'.$Product->id(),'ProductDueDateDay'.$Product->id()} ) );
 			$Product->shipping_type( $openprint::param{'ProductShippingType'.$Product->id()} );
 			$$variable{'Error'} .= $Product->save();
+			} else {
+			$$variable{'Error'} .= 'Invalid date<br/>';
+			} # end if
 		} # end foreach Product
 
 		$$variable{'Error'} .= store_order_info( $r, $log, $dbh, $cookie, $variable );
@@ -1401,7 +1404,7 @@ sub add_to_log {
 	my ( $log, $dbh, $order_id, $cust_id, $user_id, $message ) = @_;
 	sql::insert( $log, $dbh, 'Order_Log', [
 				'Order_Id',	$order_id,
-				'Company_Id',	$cust_id,
+				'Company_Id',	$cust_id ? $cust_id : undef,
 				'User_Id',	$user_id,
 				'Description',	$message,
 				] 

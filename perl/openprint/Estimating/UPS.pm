@@ -33,7 +33,8 @@ my @variables = (
 	'chkOverridePackageQuantity',
 	'txtTotalWeight1', 'txtTotalWeight2', 'txtTotalWeight3',
 	'txtPackageWeight',
-	'Address1','Address2','City','StateProvince','Country','PostalCode','Phone','Fax',
+	'CompanyName','Salutation','FirstName','LastName','Email',
+	'Address1','Address2','City','StateProvince','Country','PostalCode','Phone','Extension','Fax',
 	'ddmPickupType','ddmServiceType',
 );
 

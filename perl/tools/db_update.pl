@@ -9,11 +9,14 @@ require openprint::Paper;
 require openprint::Equipment;
 require openprint::ServicePrice;
 require openprint::Service;
+require openprint::Project;
+require openprint::service;
 
 use openprint ();
 use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+$openprint::Object::no_cache = 1;
 
 $log = new logger( 'warn' );
 
@@ -291,7 +294,205 @@ if ( $version < 1901 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1901;
 } # end if
+if ( $version < 1902 ) {
+	print "Updating to version 1902\n";
+	my $ac = sql::start_transaction( $dbh );
+	my @projects;
+	push @projects, openprint::Project::find( 'order'=>'index desc', 'created_on_start'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) );
 
+	foreach my $Project ( @projects ) {
+		my $services = $Project->services();
+		foreach my $sig_id ( $Project->signatures() ) {
+
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			#if ( ! exists $$sig_specs{'Group'} ) {
+			if ( $$sig_specs{'txtSignatureType'} ) {
+				if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Cover Pages' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '1' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
+			
+				} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' ) {
+					my $p_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
+				
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Interior Pages' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '2' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$p_specs{'txtInteriorSpreadQuantity'} * $$sig_specs{'txtSpreadSize'} );
+				} else {
+					# Gate Fold?
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '3' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
+				} # end if
+			} # end if
+
+			foreach my $qty_index ( 1 .. 3 ) {
+				if ( $$sig_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' and $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkOverridePageQuantity'.$qty_index, 'Y' );
+					if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'PageQuantity'.$qty_index, $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} * $$sig_specs{'txtSpreadSize'} );
+					} # end if
+					openprint::service::delete_service_spec( $Project->id(), $sig_id, 'chkOverrideSignatureSpreadQuantity'.$qty_index );
+				} # end if
+				openprint::service::delete_service_spec( $Project->id(), $sig_id, 'txtSignatureSpreadQuantity'.$qty_index );
+		
+			} # end foreach qty_index
+			#} # end if
+		} # end foreach
+	} # end foreach
+	sql::insert( undef, undef, 'database_info', 'version', 1902, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1902;
+} # end if
+if ( $version < 1903 ) {
+	print "Updating to version 1903\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter table papers add minimum_order integer});
+$dbh->do(q{alter table papers add inventory_number	text});
+	sql::insert( undef, undef, 'database_info', 'version', 1903, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1903;
+} # end if
+if ( $version < 1904 ) {
+	print "Updating to version 1904\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter table papers add full_packages boolean});
+	sql::insert( undef, undef, 'database_info', 'version', 1904, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1904;
+} # end if
+if ( $version < 1905 ) {
+	print "Updating to version 1905\n";
+	my $ac = sql::start_transaction( $dbh );
+$_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
+foreach my $st ( split(';', $_ ) ) {
+$dbh->do($st);
+}
+foreach my $E ( openprint::Equipment::find('Specification'=>{'Folding Capable'=>'When Printing'}) ) {
+	foreach my $Spec ( $E->Specifications() ) {
+		if ( $Spec->name() =~ /^(\d*)PageSignatureFoldRunSpeed$/ ) {
+			my $pages = $1;
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $pages.'PageSignatureFold' );
+			$Fold->type( $pages . 'PageSignatureFold' );
+			$Fold->pages( $pages );
+			$_ = $Fold->save();
+			die $_ if $_;
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
+
+		} elsif ( $Spec->name() =~ /(\d)x(\d)-(\d*)Page-(\w*)FoldDescription/ ) {
+			my ( $columns, $rows, $pages, $spine_direction ) = ( $1, $2, $3, $4 );
+			my $spread_size = $pages/($columns*$rows);
+$spread_size /= 2;
+			my $fold = sprintf('%dx%d-%dPage-%sFold', $columns, $rows, $pages, $spine_direction );
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $Spec->value() );
+			$Fold->type( $pages . 'PageSignatureFold' );
+			$Fold->pages( $pages );
+			$Fold->page_columns( $columns );
+			$Fold->page_rows( $rows );
+			$Fold->spine_direction( $spine_direction );
+			if ( $_ = $E->Specification( $fold.'MinimumWidth' ) ) {
+				$Fold->min_width( sprintf( '%.3f', ($_->value()/$columns)/$spread_size ) );
+				$_->delete();
+			} #end if
+			if ( $_ = $E->Specification( $fold.'MaximumWidth' ) ) {
+				$Fold->max_width( sprintf('%.3f', ($_->value()/$columns)/$spread_size ) );
+				$_->delete();
+			} # en dif
+			if ( $_ = $E->Specification( $fold.'MinimumHeight' ) ) {
+				$Fold->min_height( sprintf('%.3f', ($_->value()/$rows)/$spread_size ) );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification( $fold.'MaximumHeight' ) ) {
+				$Fold->max_height( sprintf('%.3f', ($_->value()/$rows)/$spread_size ) );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification( $fold.'MaximumImposition' ) ) {
+				$Fold->max_imposition( $_->value() );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification( $fold.'MinimumImposition' ) ) {
+				$Fold->min_imposition( $_->value() );
+				$_->delete();
+			} # end if
+			$_ = $Fold->save();
+			die $_ if $_;
+			while ( my $S = $E->Specification( $fold.'RunSpeed' ) ) {
+				my $FS = new openprint::FoldSpecification();
+				$FS->fold_id( $Fold->id() );
+				$FS->min_weight( $S->min() );
+				$FS->max_weight( $S->max() );
+				$FS->weight_units( $S->units() );
+				$FS->runspeed( $S->value() );
+				$FS->interpolate( $S->interpolate() );
+				$_ =  $FS->save();
+				die $_ if $_;
+				$S->delete();
+				delete $$E{'Specifications'};
+			} # end while
+			$Spec->delete();
+		} elsif ( $Spec->name() =~ /^(\w*)FoldRunSpeed/ ) {
+			my $type = $1;
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $type.'Fold' );
+			$Fold->type( $type.'Fold' );
+			$_ = $Fold->save();
+			die $_ if $_;
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
+		} # end if
+	} # end foreach
+} # end foreach
+die if sql::insert( undef, undef, 'database_info', 'version', 1905, 'backup', $backup );
+sql::end_transaction( $dbh, $ac );
+$version = 1905;
+} # end if
+if ( $version < 1906 ) {
+	print "Updating to version 1906\n";
+	my $ac = sql::start_transaction( $dbh );
+	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_Log LIMIT 1', {} );
+	if ( ( ! $blah ) or ( $$blah{'dtmwhen'} ) ) {
+		$dbh->do(q{alter table quote_log rename column dtmwhen to created_on});
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1906, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1906;
+} # end if
+if ( $version < 1907 ) {
+	print "Updating to version 1907\n";
+	my $ac = sql::start_transaction( $dbh );
+foreach my $E ( openprint::Equipment::find('Specification'=>{'Type'=>'Press'}) ) {
+	my $Spec = $E->Specification('Feed');
+	if ( ! $Spec ) {
+		$Spec = new openprint::EquipmentSpecification();
+		$Spec->equipment_id( $E->id() );
+		$Spec->name( 'Feed' );
+		$Spec->value('Sheet');
+		$Spec->save();
+	} elsif ( $Spec->value() eq 'Web' ) {
+		$Spec->value('Roll');
+		$Spec->save();
+	} # end if
+} # end foreach
+	sql::insert( undef, undef, 'database_info', 'version', 1907, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1907;
+} # end if
 
 
 $dbh->disconnect();

@@ -146,7 +146,7 @@ sub specification {
 	}
 
 	return $$self{'Specifications'}{$name}[0]->value() if ! defined $range;
-$openprint::log->debug("Looking for $name : $range") if $debug;
+#$openprint::log->debug("Looking for $name : $range") if $debug;
 
 	$range = 1*$range;
 	my $i = 0;
@@ -154,17 +154,17 @@ $openprint::log->debug("Looking for $name : $range") if $debug;
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
-	$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
-		return $Spec->value() if ( 1*$Spec->min() == $range ) or ( 1*$Spec->max() == $range );
+	#$openprint::log->debug("Examining: ($$Spec{min}) ($$Spec{max}) ($$Spec{value}) ($$Spec{interpolate}") if $debug;
+		return $$Spec{value} if ( 1*$$Spec{min} == $range ) or ( 1*$$Spec{max} == $range );
 
-		return $Spec->value() if (
-				( ($Spec->min() eq '') or ($Spec->min() <= $range))
-				and
-				( ($Spec->max() eq '') or ($Spec->max() >= $range))
-				and ! (1*$Spec->interpolate()) );
+		return $$Spec{value} if (
+				( ! $$Spec{interpolate} )
+				and (($$Spec{min} eq '') or ($$Spec{min} <= $range))
+				and (($$Spec{max} eq '') or ($$Spec{max} >= $range))
+				);
 
 		# first step, find one less than the min
-		last if ( $Spec->min() > $range );
+		last if $$Spec{min} > $range;
 		#last if ( $Spec->max() eq '' and ! $Spec->interpolate() );
 	} # end if
 	
@@ -172,20 +172,20 @@ $openprint::log->debug("Looking for $name : $range") if $debug;
 		$i -= 1;
 		# back up
 		$x = $$self{'Specifications'}{$name}[$i];
-$openprint::log->debug("Found spec " . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
-		return if ( (1*$x->max()) and ( $x->max() < $range ) and ! $x->interpolate() );
+#$openprint::log->debug("Found spec " . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+		return if ( ( ! $$x{interpolate} ) and (1*$$x{max}) and ( $$x{max} < $range ) );
 	} else {
 $openprint::log->debug("Couldn't find monimum") if $debug;
 		return;	
-	}
+	} # end if
 	
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
 		
-		return $Spec->value() if ( $Spec->max() == $range ) or ($Spec->max() eq '' and ! $Spec->interpolate() );
+		return $$Spec{value} if ( ( ! $$Spec{interpolate} ) and ( $$Spec{max} == $range or $$Spec{max} eq '' ));
 
 		# first step, find one less than the min
-		last if ( $Spec->max() > $range );
+		last if $$Spec{max} > $range;
 	} # end foreach
 	if ( $i and $i < @{$$self{'Specifications'}{$name}} ) {
 		# back up

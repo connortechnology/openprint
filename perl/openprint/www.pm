@@ -84,6 +84,9 @@ sub handler {
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	openprint::session_init();
 	openprint::usergroup::init_cache();
+	openprint::Material::init_cache();
+	openprint::Service::init_cache();
+	openprint::Equipment::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -109,13 +112,15 @@ $openprint::log->debug("Page: $page");
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
-		my $content;
-		if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
-			$content = misc::load_file( $log, $_ );
-		} else {
-			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+		if ( ! $variable{'PageContent'} ) {
+			my $content;
+			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+				$content = misc::load_file( $log, $_ );
+			} else {
+				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+			} # end if
+			$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		} # end if
-		$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		my $template;
 		my @page_path = split('/', $page );
 		my $filename = pop @page_path;
@@ -123,13 +128,13 @@ $openprint::log->debug("Page: $page");
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
 				my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
-				#$log->debug("Looking for $file");
+				$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
 				$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
-				#$log->debug("Looking for $file");
+				$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
@@ -155,9 +160,6 @@ $openprint::log->debug("Page: $page");
 
 	$session{'lastupdated'} = time;
 	untie %session;
-	openprint::Material::init_cache();
-	openprint::Service::init_cache();
-	openprint::Equipment::init_cache();
 	$dbh->disconnect();
 	$log->warn( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
@@ -334,10 +336,6 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
-
-		if ( $r->param('SelectCustomer') and ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ) {
-			$session{'company_id'} = $r->param('SelectCustomer');
-		} # end if
 
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.

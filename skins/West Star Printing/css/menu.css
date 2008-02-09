@@ -60,6 +60,14 @@ ul#menubar li a {
 	border-right: 1px solid #ffffff;
 
 }
+ul#menubar li label {
+    color: #ffffff;
+	padding: 3px 0px 0px 0px;
+	font-family: arial, helvetica, sans-serif;
+	font-weight: bold;
+	font-size: 11px;
+    margin: 0px;
+}
 ul#menubar li.off ul {
     /*put the subnavs below and hide them all*/
     display: none;

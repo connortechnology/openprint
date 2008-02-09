@@ -33,6 +33,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
+		'minimum_order','inventory_number','full_packages',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -40,6 +41,7 @@ my @fields = (
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;
+$openprint::log->debug("Paper find?!");
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
 	my $sql = 'SELECT *, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id) AS weight FROM Papers WHERE 1>0';
@@ -455,7 +457,6 @@ sub width {
     if ( defined $width ) {
         $width =~ s/[^\d\.]//g;
         $$self{'width'} = $width;
-		#$$self{'start_width'} = $$self{'width'} if ! $$self{'start_width'};
     } # end if
     return $$self{'width'};
 } # end if
@@ -464,7 +465,6 @@ sub height {
     if ( defined $height ) {
         $height =~ s/[^\d\.]//g;
         $$self{'height'} = $height;
-		#$$self{'start_height'} = $$self{'height'} if ! $$self{'start_height'};
     } # end if
     return $$self{'height'};
 } # end if
@@ -685,7 +685,7 @@ sub get_price {
 		} # end if
 		foreach my $Price ( @Prices ) {
 			if ( 
-					( $Price->PricelistIndex() == $list_id ) and 
+					( $Price->pricelist_id() == $list_id ) and 
 					( $Price->Min() eq '' or $Price->Min() <= $qty ) and
 					( $Price->Max() eq '' or $Price->Max() >= $qty )
 			   ) {
@@ -983,6 +983,20 @@ sub area {
 	my $self = shift;
 	return $$self{width}*$$self{height};
 }
+
+sub gsm_to_mweight {
+	my ( $gsm ) = @_;
+
+	my $wpsi = $gsm/703064.5;
+	return sprintf('%.0f', $wpsi * 25 * 38 * 1000);
+} # end sub gsm_to_mweight
+sub gsm_to_weight {
+	my ( $gsm ) = @_;
+
+	my $wpsi = $gsm/703064.5;
+	return sprintf('%.0f', $wpsi * 25 * 38 * 500 );
+} # end sub gsm_to_mweight
+
 
 1;
 __END__

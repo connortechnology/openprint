@@ -131,10 +131,7 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-	
-
 	return 'calculated';
-
 } # end sub calc
 
 sub calculate_signatures {
@@ -149,9 +146,9 @@ sub calculate_signatures {
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 	return if ! $$printing_specs{'txtTotalPageQuantity'};
 
-	my @signatures = sort $Project->signatures('Interior Pages');
-	push @signatures, sort $Project->signatures('Cover Pages');
-	push @signatures, sort $Project->signatures('GateFolded Spreads');
+	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
+	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
+	push @signatures, sort $Project->signatures({'type'=>'GateFolded Spreads'});
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {

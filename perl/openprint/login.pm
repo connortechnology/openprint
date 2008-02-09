@@ -136,6 +136,7 @@ sub verify_login {
 	} # end if
 
 	@openprint::session{'company_id','user_id','email','user_type'} = ( $cust_id, $user_id, $email, $user_type );
+	delete $openprint::session{'Pricelist_id'};
 	openprint::logs::insertLogRecord('2','Success');
 
 	if ( $openprint::param{'rdbRememberMe'} eq 'Y' ) {

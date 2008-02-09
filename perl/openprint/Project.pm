@@ -30,7 +30,10 @@ sub delete {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM paper_allocations WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_files WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Order_Contents WHERE lngprojectindex=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Quote_Details WHERE projectindex=?}, $$self{'id'} );
+	foreach my $quote_id ( sql::execute( undef, undef, q{SELECT QuoteIndex FROM tbl_Quote_Details WHERE projectindex=?}, $$self{'id'} ) ) {
+		my $Quote = new openprint::Quote( $quote_id );
+		$Quote->add_log('Deleted Project ' . $$self{'id'} );
+	} # end foreach
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_projects WHERE Index=?}, $$self{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
@@ -69,10 +72,10 @@ sub JDF_ProductIntent {
 	$doc->setXMLDecl( $doc->createXMLDecl( '1.0' ) );
 	foreach my $sig_id ( $self->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $$self{'id'}, $sig_id );
-		$doc->appendChild( openprint::Estimating::Printing::jdf( $doc, $self, $sig_id, $sig_specs ) );
+		$doc->appendChild( openprint::Estimating::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
 	} # end foreach
 	return $doc;
-} # end sub jdf
+} # end sub JDF_ProductIntent
 
 sub jdf {
 	my ( $self, $version ) = @_;
@@ -847,10 +850,10 @@ sub summary {
 			$summary .= sprintf('%d%s%s/%d%s%s ',
 					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideOne' ),
 					$specs{'rdbAqueousSideOne'} ne 'None' ? '+AQ' : '',
-					$specs{'SideOneUVCoatingType'} ne 'None' ? '+UV' : '',
+					($specs{'SideOneUVCoatingType'} and $specs{'SideOneUVCoatingType'} ne 'None' ? '+UV' : ''),
 					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideTwo' ),
 					$specs{'rdbAqueousSideTwo'} ne 'None' ? '+AQ' : '',
-					$specs{'SideTwoUVCoatingType'} ne 'None' ? '+UV' : '',
+					($specs{'SideTwoUVCoatingType'} and $specs{'SideTwoUVCoatingType'} ne 'None' ? '+UV' : ''),
  );
 			if ( $specs{'rdbSuppliedStock'} eq 'Y' ) {
 				$summary .= 'Customer Supplied Stock';
@@ -875,6 +878,9 @@ sub summary {
 	} # end if
 	if ( $services{'SaddleStitching'} or $services{'LoopStitching'} ) {
 		$summary .= ' Stitch ';
+	} # end if
+	if ( $services{'SpinePaste'} ) {
+		$summary .= ' Spine Paste ';
 	} # end if
 	if ( $services{'PlainCartons'} ) {
 		$summary .= ' Boxes';
@@ -957,11 +963,16 @@ sub signatures {
 		} # end if
 	} # end if
 	if ( @_ ) {
+		my $params = shift;
 		my @sigs;
-		my $type = shift;
+
 		foreach my $s_id ( @{$$self{'signatures'}} ) {
 			my $specs = openprint::service::get_specs_ref( $$self{'id'}, $s_id );
-			push @sigs, $s_id if $$specs{'txtSignatureType'} eq $type;
+
+			if ( $$params{'type'} ) {
+				next if $$specs{'txtSignatureType'} ne $$params{'type'};
+			} # end if
+			push @sigs, $s_id;
 		} # end foreach signatures
 		return @sigs;
 	} # end if
