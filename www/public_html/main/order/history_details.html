@@ -71,7 +71,7 @@ Projects listed in red have changed price from the time this order was originall
 <br class="spacer"/>
 	<span class="Currency">All prices listed in <?CurrencyName?>.</span>
 <br class="spacer"/><br/>
-<? echo ( ssi::include( $config{'SkinPath'}.'/includes/order_disclaimer.html'); ) ?>
+<? echo ( $config{'OrderViewDisclaimer'} ) ?>
 <br class="spacer"/>
 	<form name="f1" method="post" action="history_details.html">
 <span style="float: right;">
