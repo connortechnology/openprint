@@ -493,7 +493,17 @@ foreach my $E ( openprint::Equipment::find('Specification'=>{'Type'=>'Press'}) )
 	sql::end_transaction( $dbh, $ac );
 	$version = 1907;
 } # end if
+if ( $version < 1908 ) {
+	print "Updating to version 1908\n";
+	my $ac = sql::start_transaction( $dbh );
+	sql::insert( undef, undef, 'configuration', { 'name'=>'ProjectViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the project view page', 'category'=>'Disclaimers'} );
+	sql::insert( undef, undef, 'configuration', { 'name'=>'OrderViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the order view page', 'category'=>'Disclaimers'});
+	sql::insert( undef, undef, 'configuration', { 'name'=>'QuoteViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the quote view page', 'category'=>'Disclaimers'});
 
+	sql::insert( undef, undef, 'database_info', 'version', 1908, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1908;
+} # end if
 
 $dbh->disconnect();
 1;

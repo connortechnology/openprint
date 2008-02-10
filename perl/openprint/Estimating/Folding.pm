@@ -417,6 +417,8 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 					'pages'				=>	$pages,
 					'page_columns'		=>	$Imposition->page_columns(),
 					'page_rows'			=>	$Imposition->page_rows(),
+					'page_width'		=>	$Imposition->page_width(),
+					'page_height'		=>	$Imposition->page_height(),
 					'spine_direction'	=>	$Imposition->image_orientation(),
 					'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
 					'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
