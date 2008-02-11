@@ -1,12 +1,11 @@
-function body_onLoad() {
-	var form = getFormObj('f1');
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, '', '' ) );
-} // end function body_onLoad();
-
 function get_parameters( form, id, selected ) {
 
-    var parameters = new Array ( selected, id );
+    var parameters = new Array ( 'Selected', selected, 'ID', id );
 
+	if ( form.elements['Owner'+id] ) 
+		parameters.push( 'Owner', get_ddm_value( form.elements['Owner'+id] ) ); 
+	if ( form.elements['Manufacturer'+id] ) 
+		parameters.push( 'Manufacturer', get_ddm_value( form.elements['Manufacturer'+id] ) ); 
 	if ( form.elements['Name'+id] ) 
 		parameters.push( 'Name', get_ddm_value( form.elements['Name'+id] ) ); 
 	if ( form.elements['Finish'+id] ) 
@@ -18,137 +17,81 @@ function get_parameters( form, id, selected ) {
 	return parameters;
 } // end function get_parameters( form )
 
-function Name_onChange( element, id ) {
+function filter_onChange( element, id, selected ) {
 	var form = element.form;
-	form.elements['Name'+id].disabled = true;
-	form.elements['Finish'+id].disabled = true;
-	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, 'Name') );
 
+	if ( form.elements['Owner'+id] ) form.elements['Owner'+id].disabled = true;
+	if ( form.elements['Manufacturer'+id] ) form.elements['Manufacturer'+id].disabled = true;
+	if ( form.elements['Name'+id] ) form.elements['Name'+id].disabled = true;
+	if ( form.elements['Finish'+id] ) form.elements['Finish'+id].disabled = true;
+	if ( form.elements['Colour'+id] ) form.elements['Colour'+id].disabled = true;
+	if ( form.elements['Weight'+id] ) form.elements['Weight'+id].disabled = true;
+
+	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, selected ) );
+
+} // end function Name_onChange()
+function Manufacturer_onChange( element, id ) {
+	filter_onChange( element, id, 'Manufacturer' );
+} // end function Name_onChange()
+
+function Name_onChange( element, id ) {
+	filter_onChange( element, id, 'Name' );
 } // end function Name_onChange()
 
 function Finish_onChange( element, id ) {
-	var form = element.form;
-	form.elements['Name'+id].disabled = true;
-	form.elements['Finish'+id].disabled = true;
-	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, 'Finish') );
+	filter_onChange( element, id, 'Finish' );
 } // end function Finish_onChange();
 
 function Colour_onChange( element, id ) {
-	var form = element.form;
-	form.elements['Name'+id].disabled = true;
-	form.elements['Finish'+id].disabled = true;
-	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id,'Colour') );
-
+	filter_onChange( element, id, 'Colour' );
 } // end function Colour_onChange();
 
 function Weight_onChange( element, id ) {
-	var form = element.form;
-	form.elements['Name'+id].disabled = true;
-	form.elements['Finish'+id].disabled = true;
-	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, 'Weight') );
+	filter_onChange( element, id, 'Weight' );
 } // end function Weight_onChange();
 
 function fill_drop_down( results ) {
 	var form = getFormObj('f1');
 	var id;
 
-    var BrandOptions = new Array();
-    BrandOptions[BrandOptions.length] = create_option( '', 'Please select one' );
-    var FinishOptions = new Array();
-    FinishOptions[FinishOptions.length] = create_option( '', 'Please select one' );
-    var ColourOptions = new Array();
-    ColourOptions[ColourOptions.length] = create_option( '', 'Please select one' );
-    var WeightOptions = new Array();
-    WeightOptions[WeightOptions.length] = create_option( '', 'Please select one' );
-    var SheetSizeOptions = new Array();
-    SheetSizeOptions[SheetSizeOptions.length] = create_option( '', 'Please select one' );
-
     var aOptionPairs = results.split('|');
+
+	var Options = new Array();
     for ( var i = 0; i < aOptionPairs.length; i++ ){
         if ( aOptionPairs[i].indexOf('~') != -1 ) {
             var aOptions = aOptionPairs[i].split('~');
             switch ( aOptions[0] ) {
-                case 'Brand':
-                    BrandOptions[BrandOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
-                case 'Finish':
-                    FinishOptions[FinishOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
-                case 'Colour':
-                    ColourOptions[ColourOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
-                case 'Weight':
-                    WeightOptions[WeightOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
-                case 'SheetSize':
-                    SheetSizeOptions[SheetSizeOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
 				case 'id':
 					id = aOptions[1];
+					break;
+				default:
+					if ( ! Options[aOptions[0]] ) {
+						Options[aOptions[0]] = new Array();
+						Options[aOptions[0]][Options[aOptions[0]].length] = create_option( '', 'Please select one' );
+					} // end if
+					Options[aOptions[0]][Options[aOptions[0]].length] = create_option( aOptions[1], aOptions[2] );
 					break;
             } // end switch
         } // end if
     } // end for
-	if ( form.elements['Name'+id] ) {
-		if ( BrandOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['Name'+id] );
-			fill_ddm( form.elements['Name'+id], BrandOptions, form.elements['Name'+id].onchange );
+
+	var fields = new Array ( 'Owner','Manufacturer','Name','Finish','Colour','Weight' );
+	for ( var i = 0; i < fields.length; i+=1 ) {
+		var field = fields[i];
+		if ( ! form.elements[field+id] ) continue;
+
+		if ( Options[field] && ( Options[field].length > 1 ) ) {
+			var selectedValue = get_ddm_value( form.elements[field+id] );
+			fill_ddm( form.elements[field+id], Options[field], form.elements[field+id].onchange );
 			
-			if ( BrandOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['Name'+id], 1 );
+			if ( Options[field].length == 2 ) {
+				ddm_select_by_index( form.elements[field+id], 1 );
 			} else {
-				ddm_select_by_value( form.elements['Name'+id], selectedValue, 0 );
+				ddm_select_by_value( form.elements[field+id], selectedValue, 0 );
 			} // end if
 		} // end if
-		form.elements['Name'+id].disabled = false;
-	} // end if
-
-	if ( form.elements['Finish'+id] ) {
-		if ( FinishOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['Finish'+id] );
-			fill_ddm( form.elements['Finish'+id], FinishOptions, form.elements['Finish'+id].onchange );
-			if ( FinishOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['Finish'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['Finish'+id], selectedValue, 0 );
-			} // end if
-		} // end if
-		form.elements['Finish'+id].disabled = false;
-	} // end if
-
-	if ( form.elements['Colour'+id] ) {
-		if ( ColourOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['Colour'+id] );
-			fill_ddm( form.elements['Colour'+id], ColourOptions, form.elements['Colour'+id].onchange );
-			if ( ColourOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['Colour'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['Colour'+id], selectedValue, 0 );
-			} // end if
-		} // end if
-		form.elements['Colour'+id].disabled = false;
-	} // end if
-
-	if ( form.elements['Weight'+id] ) {
-		if ( WeightOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['Weight'+id] );
-			fill_ddm( form.elements['Weight'+id], WeightOptions, form.elements['Weight'+id].onchange );
-			if ( WeightOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['Weight'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['Weight'+id], selectedValue, 0 );
-			} // end if
-		} // end if
-		form.elements['Weight'+id].disabled = false;
-	} // end if
+		form.elements[field+id].disabled = false;
+	} // end for each field in fields
 
 } // end function fill_drop_down( results ) {
 

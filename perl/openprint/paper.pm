@@ -10,7 +10,7 @@ require openprint::Paper;
 require openprint::StockName;
 
 sub get_paper {
-	my ( $r, $log, $dbh, $variable, $selected, $id, %specs ) = @_;
+	my ( $r, $log, $dbh, $variable, %specs ) = @_;
 
 	my @types = ('Sheet');
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
@@ -18,15 +18,15 @@ sub get_paper {
 	} # end if
 
 	my @papers = openprint::Paper::find( 
-			( $selected eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
-			( sets::isin( $selected, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'	=> $specs{'Finish'} ) : () ),
-			( sets::isin( $selected, [ 'Colour','Weight' ] ) ? ( 'colour_id'	=> $specs{'Colour'} ) : () ),
-			( sets::isin( $selected, [ 'Weight' ] ) ? ( 'weight_id'	=> $specs{'Weight'} ) : () ),
+			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
+			( sets::isin( $specs{'Selected'}, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'	=> $specs{'Finish'} ) : () ),
+			( sets::isin( $specs{'Selected'}, [ 'Colour','Weight' ] ) ? ( 'colour_id'	=> $specs{'Colour'} ) : () ),
+			( sets::isin( $specs{'Selected'}, [ 'Weight' ] ) ? ( 'weight_id'	=> $specs{'Weight'} ) : () ),
 			'type'=>\@types,
 				);
 	if ( ! @papers ) {
 		@papers = openprint::Paper::find( 
-			( $selected eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
+			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
 			'type'=>\@types,
 				);
 	} # end if
@@ -44,10 +44,10 @@ sub get_paper {
 
 
 	my @results;
-	push @results, jsrs::encode_array( 'Brand', map {$names{$_}, $_ } sort keys %names ) if ! $selected;
-	push @results, jsrs::encode_array( 'Finish', map { $finishes{$_}, $_ } sort keys %finishes ) if ( ! $specs{'Finish'} ) or ! sets::isin( $selected, [ 'Finish', 'Colour', 'Weight' ] );
-	push @results, jsrs::encode_array( 'Colour', map { $colours{$_}, $_ } sort keys %colours ) if ( ! $specs{'Colour'} ) or ! sets::isin( $selected, [ 'Finish','Weight' ] );
-	if ( $selected ne 'Weight' ) {
+	push @results, jsrs::encode_array( 'Brand', map {$names{$_}, $_ } sort keys %names ) if ! $specs{'Selected'};
+	push @results, jsrs::encode_array( 'Finish', map { $finishes{$_}, $_ } sort keys %finishes ) if ( ! $specs{'Finish'} ) or ! sets::isin( $specs{'Selected'}, [ 'Finish', 'Colour', 'Weight' ] );
+	push @results, jsrs::encode_array( 'Colour', map { $colours{$_}, $_ } sort keys %colours ) if ( ! $specs{'Colour'} ) or ! sets::isin( $specs{'Selected'}, [ 'Finish','Weight' ] );
+	if ( $specs{'Selected'} ne 'Weight' ) {
 		my @weights;
 		my %results;
 		foreach my $weight ( keys %weights ) {
@@ -60,7 +60,7 @@ sub get_paper {
 		push @results, jsrs::encode_array( 'Weight', map { $weights{$_}, $_ } @weights )
 	} # end if
 	#push @results, select_sheetsize( $r, $log, $dbh, $variable, $project_index, $name, $spfinish, $colour, $weight, $press );
-	push @results, "id~$id~$id";
+	push @results, "id~$specs{id}~$specs{id}";
 
 	return join('|', @results ); 
 } # end sub get_paper

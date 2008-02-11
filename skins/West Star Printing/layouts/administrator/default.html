@@ -16,7 +16,7 @@
         <script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
         <script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
         <script type="text/javascript" src="/javascripts/fastinit.js"></script>
-        <script type="text/javascript" src="/javascripts/tablesort.js"></script>
+        <script type="text/javascript" src="/javascripts/tablekit.js"></script>
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
 		<script type="text/javascript">
 <!--
@@ -50,9 +50,7 @@
 		<div class="ContentInner"> 
 			<div class="Header">
 				<a style="float: left;" href="/index.html"><img src="/images/logo.gif" alt="West Star Printing"/></a>
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['E'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['E'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
 				<br class="spacer"/>
 			</div>
