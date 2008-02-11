@@ -13,10 +13,14 @@
 			my $html;
 			my $services = $$variable{'Project'}->services();
 
-			foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
+			foreach my $ss_id ( sort $$variable{'Project'}->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}->id(), $ss_id );
 				$html .= qq{
-					<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:</legend>
+					<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:
+};
+				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
+				$html .= qq{
+</legend>
 						<p>
 							<label>Fold Types:</label>
 							};
@@ -26,7 +30,7 @@
 					foreach my $foldtype ( @openprint::Estimating::Folding::folds ) {
 						next if ( ( $foldtype =~ /Pocket/ ) and ! ($$variable{'Project'}->Type()->name() =~ /Presentation/ ) );
 						next if ( ( ! ( $foldtype =~ /Signature/ or $foldtype =~ /Gate/ ) ) and ($$services{'SaddleStitching'} or $$services{'LoopStitching'} or $$services{'PerfectBound'} ) );
-						$html .= sprintf( '<input style="width: auto;" type="text" size="2" name="%1$s-Qty-%2$d-%3$d" value="%4$d" onkeyup="calc(this.form.name);" %6$s />%5$s<br/>',
+						$html .= sprintf( '<input style="width: auto;" type="text" size="2" name="%1$s-Qty-%2$d-%3$d" value="%4$d" onkeyup="calc(this.form.name);" %6$s /> %5$s<br/>',
 						$foldtype,$$sig_specs{'SignatureIndex'},$qty_index,
 						$$variable{$foldtype.'-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index},
 						$openprint::Estimating::Folding::fold_types{$foldtype},

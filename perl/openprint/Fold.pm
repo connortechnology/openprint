@@ -7,6 +7,8 @@ use openprint::Fold;
 use openprint::FoldSpecification;
 require sql;
 
+my $debug = 0;
+
 my %fields = (
 	'id'					=>	'id',
 	'equipment_id'			=>	'equipment_id',
@@ -63,7 +65,6 @@ my %defaults = (
 	'spinepaste'	=> undef,
 );
 
-my $debug = 1;
 
 sub find {
 	my %params = @_;
@@ -199,7 +200,7 @@ sub Specification {
 	} # end if
 
 	if ( $$self{'Specifications'}[0]{weight_units} eq 'lbs' )  {
-$openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $range ) );
+$openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $range ) ) if $debug;
 		$range = openprint::Paper::gsm_to_weight( $range );
 	} # end if
 

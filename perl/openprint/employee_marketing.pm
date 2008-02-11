@@ -101,6 +101,8 @@ sub surveys {
     $$variable{'Survey'} = new openprint::Survey( $openprint::param{'survey_id'} );
     if ( $openprint::param{'btnFunction'} eq 'Save' ) {
         $$variable{'error'} = $$variable{'Survey'}->save( \%openprint::param );
+    } elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
+        $$variable{'error'} = $$variable{'Survey'}->delete();
     } elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
         $$variable{'Survey'} = $$variable{'Survey'}->copy();
     } # end if

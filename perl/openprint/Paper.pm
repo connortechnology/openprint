@@ -159,8 +159,12 @@ $openprint::log->debug("Paper find?!");
 	} # end if
 	if ( $params{'type'} ) {
 		if ( ref $params{'type'} eq 'ARRAY' ) {
+			if ( @{$params{'type'}} ) {
 			$sql .= ' AND type IN (' . join(',', map { '?' } @{$params{'type'}} ) . ')';
 			push @values, @{$params{'type'}};
+			} else {
+			$sql .= ' AND type IS NULL';
+			} # end if
 		} else {
 			$sql .= ' AND type=?';
 			push @values, $params{'type'};

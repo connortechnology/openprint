@@ -4,9 +4,9 @@
 			$openprint::session{'/administrator/paper/list.html?'.$key} = $openprint::param{$key};
 		} # end foreach
 		if ( ref $openprint::param{'Types'} eq 'ARRAY' ) {
-		$openprint::session{'/administrator/paper/list.html?Types'} = join(';', @{$openprint::param{'Types'}} );
+			$openprint::session{'/administrator/paper/list.html?Types'} = join(';', @{$openprint::param{'Types'}} );
 		} else {
-		$openprint::session{'/administrator/paper/list.html?Types'} = $openprint::param{'Types'}; 
+			$openprint::session{'/administrator/paper/list.html?Types'} = $openprint::param{'Types'}; 
 		} # end if
 	} # end if
     @{$$variable{'Papers'}} = openprint::Paper::find( 
@@ -22,22 +22,10 @@
 		);
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
-<table class="List">
-	<tr>
-		<th align="left">Manufacturer</th>
-		<th align="left">Name</th>
-		<th align="left">Finish</th>
-		<th align="left">Colour</th>
-		<th align="left">Weight</th>
-		<th align="left" width="80">Size</th>
-		<th align="left" width="50">Calliper</th>
-		<th align="left" width="50">MWeight</th>
-		<th align="left" width="50">GSM</th>
-		<th align="left" width="20">SPP</th>
-		<th style="text-align:center;" width="20"><input type="checkbox" onClick="select_all(document.f1, 'chkPaper', this.checked );"/></th>
-	</tr>
 <? while ( $$variable{'Paper'} = shift @{$$variable{'Papers'}} ) ?>
-	<tr<?rowclass?>>
+	<tr>
+		<td style="text-align:center;"><input type="checkbox" id="chkPaper<? echo ( $$variable{'Paper'}{id} ) ?>" name="chkPaper" value="<? echo ( $$variable{'Paper'}{'id'} ) ?>"/></td>
+		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? hecho ( $$variable{'Paper'}->inventory_number() ) ?></a></td>
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->manufacturer() ) ?></a></td>
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->name() ) ?></a></td>
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->finish() ) ?></a></td>
@@ -48,11 +36,8 @@
 		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Paper'}->mweight() ); ) ?></a></td>
 		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Paper'}->gsm() ); ) ?></a></td>
 		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->sheets_per_package() ) ?></a></td>
-		<td style="text-align:center;"><input type="checkbox" id="chkPaper" name="chkPaper" value="<? echo ( $$variable{'Paper'}{'id'} ) ?>"/></td>
 	</tr>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 <? endwhile ( $$variable{'Paper'} = shift @{$$variable{'Papers'}} ) ?>
-</table>
 <? else ( @{$$variable{'Papers'}} ) ?>
 There were no matching papers.
 <? endif ( @{$$variable{'Papers'}} ) ?>
