@@ -1236,6 +1236,8 @@ $openprint::log->debug("Loaing old imp");
 		my $Varnish = $$b_price{'Varnish'};
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
+$Imposition->display();
+$openprint::log->debug( breakdown( $b_price, $specs ) );
 
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 		$$specs{'ddmBleedSize'.$qty_index} = $best_price{'ddmBleedSize'};
@@ -1494,7 +1496,7 @@ $imp->display();
 
 				while ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 0 ) {
 					if ( $s_id ) {
-$openprint::log->debug("Services: " . join(',', sort $Project->signatures($$specs{'txtSignatureType'}) ) );
+#$openprint::log->debug("Services: " . join(',', sort $Project->signatures($$specs{'txtSignatureType'}) ) );
 						foreach ( sort $Project->signatures($$specs{'txtSignatureType'}) ) {
 							if ( $_ > $s_id ) {
 								$s_id = $_;
@@ -1516,8 +1518,8 @@ $openprint::log->debug("Services: " . join(',', sort $Project->signatures($$spec
 					my $sig_price;
 					if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} >= $imp->spreads() ) {
 # Going to just re-use the same impo
-$openprint::log->warn("Doing half calc qtyi: $qty_index unspec: $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > " . $imp->spreads() . ' imp spreads');
-$imp->display();
+#$openprint::log->warn("Doing half calc qtyi: $qty_index unspec: $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > " . $imp->spreads() . ' imp spreads');
+#$imp->display();
 
 #my $time = gettimeofday();
 #n$new_specs{'no_stitching'} = 1; # unneccessary calculation
@@ -1689,11 +1691,11 @@ sub check_price {
 		#$p *= ( 1 + $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$Imposition->spreads() );
 	#} # end if
 
-#$openprint::log->debug("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 	#if ( $price_to_beat > $p ) {
 	if ( $price_to_beat > $$price{'Comparison Cost'} ) {
 		return 0;
 	} # end if
+$openprint::log->warn("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 	return 1;
 } # end sub
 
@@ -1894,31 +1896,35 @@ sub calc_price {
 	$$specs{"txtPressSheetQty$qty_index"} = $sheets;
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 
-	if ( ! $$specs{'no_stitching'} ) {
-		if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
-
-			#my $starttime = gettimeofday();
-			my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
-			if ( $$results{'Status'} eq 'uncalculated' ) {
-				$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
-				$price{'Comparison Cost'} += 1000000; # Can't stich this on
-				$price{'Stitching Cost'} = 1000000;
-			} else {
-				$price{'StitchingImposition'} = $$results{'Imposition'};
-				$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
-				$price{'Stitching Cost'} = $$results{'Price'};
-				$price{'Comparison Cost'} += $$results{'Price'};
-			} # end if
-			#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-
-			return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
-		} # end if
-		if ( $$services{'LoopStitching'} ) {
-		} # end if
-
-		# Needed for Cutting & Folding
-		$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
+	if ( ( ! $Imposition->StitchingImposition() ) and $$specs{'StitchingImposition'.$qty_index} ) {
+		$Imposition->StitchingImposition( $$specs{'StitchingImposition'.$qty_index} );
 	} # end if
+
+	if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
+
+		#my $starttime = gettimeofday();
+		my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
+		if ( $$results{'Status'} eq 'uncalculated' ) {
+			$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
+			$price{'Comparison Cost'} += 10000000; # Can't stich this on
+			$price{'Stitching Cost'} = 10000000;
+		} else {
+			$price{'StitchingImposition'} = $$results{'Imposition'};
+			$$Imposition{StitchingImposition} = $$results{'Imposition'} if $$results{'Imposition'} < $$Imposition{StitchingImposition};
+			$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
+			$price{'Stitching Cost'} = $$results{'Price'};
+			$price{'Comparison Cost'} += $$results{'Price'};
+		} # end if
+		#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+
+		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
+	} # end if
+	if ( $$services{'LoopStitching'} ) {
+	} # end if
+
+	# Needed for Cutting & Folding
+	$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
+
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
 	my %folding_results;
 

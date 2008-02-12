@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -237,12 +237,12 @@ sub test_fold {
 			$openprint::log->debug("Fold no good due to imposition " . $I->columns() . "> ".$Equipment->specification($foldtype.'MaximumColumns' ) ) if $debug;
 			return 0;
 		} # end if
-		if ( ( $Equipment->specification($foldtype.'MinimumWidth' ) and $Equipment->specification($foldtype.'MinimumWidth' ) > ( $I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) ) ) {
-			$openprint::log->debug("Fold no good due to Minimum Width " . ($I->image_orientation() eq 'Vertical' ? $$sig_specs{'txtWidth'} : $$sig_specs{'txtHeight'} ) . ' < ' . $Equipment->specification($foldtype.'MinimumWidth' ) ) if $debug;
+		if ( ( $Equipment->specification($foldtype.'MinimumWidth') and $Equipment->specification($foldtype.'MinimumWidth' ) > ( $I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) ) ) {
+			$openprint::log->debug("Fold no good due to Minimum Width " . ($I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) . ' < ' . $Equipment->specification($foldtype.'MinimumWidth' ) ) if $debug;
 			return 0;
 		}
 		if ( ( $Equipment->specification($foldtype.'MaximumWidth' ) and $Equipment->specification($foldtype.'MaximumWidth' ) < ( $I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) ) ) {
-			$openprint::log->debug("Fold no good due to Maximum Width " . ( $I->image_orientation() eq 'Vertical' ? $$sig_specs{'txtWidth'} : $$sig_specs{'txtHeight'} ) . ' > ' . $Equipment->specification($foldtype.'MaximumWidth' ) ) if $debug;
+			$openprint::log->debug("Fold no good due to Maximum Width " . ( $I->image_orientation() eq 'Vertical' ? $I->image_width() : $I->image_height() ) . ' > ' . $Equipment->specification($foldtype.'MaximumWidth' ) ) if $debug;
 			return 0;
 		} # end if
 		if ( ( $Equipment->specification($foldtype.'MinimumHeight' ) and $Equipment->specification($foldtype.'MinimumHeight') > ( $I->image_orientation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) ) ) {
@@ -342,17 +342,17 @@ sub signature_calc {
 	} # end foreach
 
 	my $imposition;
-	if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
+	if ( exists $$sig_specs{'StitchingImposition'.$qty_index} ) {
 		$imposition = $$sig_specs{'StitchingImposition'.$qty_index};
-$openprint::log->debug("Got impo from StitchingImposition");
+$openprint::log->debug("Got impo from StitchingImposition") if $debug;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from SaddleStitching");
+$openprint::log->debug("Got impo from SaddleStitching") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from LoopStitching");
+$openprint::log->debug("Got impo from LoopStitching") if $debug;
 	} # end if
 	$imposition = 1 if ! $imposition;
 
