@@ -1,4 +1,24 @@
 
+function SpecialColour_onchange( element, side, index, signature ) {
+	var spec = 'SpecialSide'+side+'Colour'+index+signature;
+
+	element.form.elements['chk'+spec].checked=true;
+
+	if( ! $('SpecialSide'+side+'Colour'+(1+parseInt(index))+signature) ) {
+		// Add another colour
+		new Ajax.Request('/includes/main/proj/_additional_colour_coating.html', { 
+			method: 'get', 
+			parameters: { 
+				'Side': side, 
+				'index' : 1+parseInt(index),
+				'Signature' : signature 
+			},
+			onSuccess: function(response){
+				new Insertion.After($(spec), response.responseText);
+				}
+		} );
+	} // end if
+} // end function
 
 function chkSpecial_onClick(chkBox) {
 	var name = 'txt' + chkBox.name.substr(3);

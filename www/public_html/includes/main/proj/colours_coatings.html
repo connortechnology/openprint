@@ -24,19 +24,15 @@
 			<br class="spacer"/>
 			<? echo ( 
 				my $html;
+				$$variable{'Side'} = 'One';
+				my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_additional_colour_coating.html' );
 				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
-					$html .= qq`<span class="SpecialColour">
-						<span class="checkOption">
-							<input type="checkbox" name="chkSpecialSideOneColour$index$$variable{'Signature'}" value="Y" onclick="calc(this.form.name);" `;
-					$html .= 'checked="checked"' if $$variable{'chkSpecialSideOneColour'.$index.$$variable{'Signature'}} eq 'Y';
-					$html .= qq` /> Colour #$index
-							</span>
-							<input type="text" name="txtSpecialSideOneColour$index$$variable{'Signature'}" value="$$variable{'txtSpecialSideOneColour'.$index.$$variable{'Signature'}}" size="9"  onkeyup="this.form.elements['chkSpecialSideOneColour$index$$variable{'Signature'}'].checked=true;calc(this.form.name);"/> 
-							<input type="text" name="txtSpecialSideOneColourInkPercent$index$$variable{'Signature'}" value="$$variable{'txtSpecialSideOneColourInkPercent'.$index.$$variable{'Signature'}}" size="4"  onkeyup="this.form.elements['chkSpecialSideOneColour$index$$variable{'Signature'}'].checked=true;calc(this.form.name);"/> %
-							
-						</span>
-				`;
+					next if ! $$variable{"chkSpecialSideOneColour$index$$variable{Signature}"};
+					$$variable{index} = $index;
+					$html .= ssi::variable_substitution( \$fragment, $variable );
 				} # end foreach
+				$$variable{index} += 1;
+				$html .= ssi::variable_substitution( \$fragment, $variable );
 				return $html;
 			) ?>
 		</div>
@@ -153,19 +149,16 @@
 			<br class="spacer"/>
 			<? echo ( 
 				my $html;
+				my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_additional_colour_coating.html' );
+				$$variable{'Side'} = 'Two';
+				$$variable{index} = 0;
 				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
-					$html .= qq`<span class="SpecialColour">
-						<span class="checkOption">
-							<input type="checkbox" name="chkSpecialSideTwoColour$index$$variable{'Signature'}" value="Y" onclick="calc(this.form.name);" `;
-					$html .= 'checked="checked"' if $$variable{'chkSpecialSideTwoColour'.$index.$$variable{'Signature'}} eq 'Y';
-					$html .= qq` /> Colour #$index
-						</span>
-						<input type="text" name="txtSpecialSideTwoColour$index$$variable{'Signature'}" value="$$variable{'txtSpecialSideTwoColour'.$index.$$variable{'Signature'}}" size="9"  onkeyup="this.form.elements['chkSpecialSideTwoColour$index$$variable{'Signature'}'].checked=true;calc(this.form.name);"/> 
-						<input type="text" name="txtSpecialSideTwoColourInkPercent$index$$variable{'Signature'}" value="$$variable{'txtSpecialSideTwoColourInkPercent'.$index.$$variable{'Signature'}}" size="4"  onkeyup="this.form.elements['chkSpecialSideTwoColour$index$$variable{'Signature'}'].checked=true;calc(this.form.name);"/> %
-						
-					</span>
-		`;
+					next if ! $$variable{"chkSpecialSideTwoColour$index$$variable{Signature}"};
+					$$variable{index} = $index;
+					$html .= ssi::variable_substitution( \$fragment, $variable );
 				} # end foreach
+				$$variable{index} += 1;
+				$html .= ssi::variable_substitution( \$fragment, $variable );
 				return $html;
 			) ?>
 		</div>
