@@ -724,3 +724,21 @@ function Country_onchange( country_ddm, state ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @provinces::provinces )", jsrs_cbFillDDM );
 	} // end if
 } // end function
+
+function countLines(strtocount, cols) {
+    var hard_lines = 1;
+    var last = 0;
+    while ( true ) {
+        last = strtocount.indexOf("\n", last+1);
+        hard_lines ++;
+        if ( last == -1 ) break;
+    }
+    var soft_lines = Math.round(strtocount.length / (cols-1));
+    var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");
+    if ( hard ) soft_lines = hard_lines;
+    return soft_lines;
+}
+
+function textarea_resize( element ) {
+	element.rows = countLines(element.value,element.cols) + 1;
+} // end function textarea_resize
