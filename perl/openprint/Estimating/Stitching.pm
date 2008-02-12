@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-my $debug = 1;
+my $debug = 0;
 
 require openprint::project;
 require openprint::Equipment;
@@ -131,8 +131,14 @@ sub signature_calc {
 #$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
 
 #$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
+	
+	if ( $I->StitchingImposition() ) {
+		# This is supposed to be hte stitching imposition passed in from the previous signature
+		$imposition = $I->StitchingImposition() if $I->StitchingImposition() < $imposition;
+	} else {
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		next if $service_index and ($signature_service_index >= $service_index);
+
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -140,6 +146,8 @@ sub signature_calc {
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
 		$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 );
 	} # end foreach
+	} # end if
+
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
