@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -342,17 +342,17 @@ sub signature_calc {
 	} # end foreach
 
 	my $imposition;
-	if ( exists $$sig_specs{'StitchingImposition'.$qty_index} ) {
-		$imposition = $$sig_specs{'StitchingImposition'.$qty_index};
-$openprint::log->debug("Got impo from StitchingImposition") if $debug;
+	if ( $Imposition->StitchingImposition() ) {
+		$imposition = $Imposition->StitchingImposition();
+$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from SaddleStitching") if $debug;
+$openprint::log->debug("Got impo from SaddleStitching: $imposition out") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from LoopStitching") if $debug;
+$openprint::log->debug("Got impo from LoopStitching: $imposition out") if $debug;
 	} # end if
 	$imposition = 1 if ! $imposition;
 
@@ -408,7 +408,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					my $I = shift @folds;
 					last if ! $I->spreads();
 					
-					$_ = $Equipment->fits( $I->image_width(), $I->image_height()*$imposition, $$sig_specs{'txtSpecificStockCalliper'} );
+					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height()*$imposition ) : ( $I->image_width()*$imposition, $I->image_height() ), $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 						my $fold_type = $I->pages().'PageSignatureFold';
 						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type ) ) {

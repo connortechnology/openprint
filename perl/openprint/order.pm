@@ -507,7 +507,20 @@ $openprint::log->debug("Making order from quote");
 	} # end if
 
 	if ( $$variable{'txtEmail'} eq '' ) {
-		openprint::user::load( $log, $dbh, $openprint::session{'user_id'}, $variable );
+		my $User = new openprint::User( $openprint::session{user_id} );
+		# Assume that we are acting on someone else's behalf
+		if ( sets::isin( $openprint::session{'user_type'}, [ 'A','E'] ) ) {
+		
+			# WE ARE logged in as someone else
+			if ( $User->company_id() != $openprint::session{'company_id'} ) {
+				my @Users = openprint::User::find( 
+						'company_id'=>$openprint::param{'company_id'} ? $openprint::param{'company_id'} : $openprint::session{'company_id'}, 
+						'order'=>'lower(strLastName),lower(strFirstName)'
+						);
+				$User = $Users[0] if @Users;
+			} # end if
+		} # end if
+		openprint::user::load( $log, $dbh, $User->id(), $variable );
 	} # end if
 
 	$$variable{'OrderID'} = $order_id;
