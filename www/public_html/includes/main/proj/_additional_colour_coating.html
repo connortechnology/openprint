@@ -1,0 +1,17 @@
+<? eval (
+	foreach my $p ( 'Side','index','Signature' ) {
+		if ( $openprint::param{$p} and ! $$variable{$p} ) {
+			$$variable{$p} = $openprint::param{$p};
+		} # end if
+	} # end foreach
+) ?>
+<span id="SpecialSide<?Side?>Colour<?index?><?Signature?>" class="SpecialColour">
+	<span class="checkOption">
+		<input type="checkbox" name="chkSpecialSide<?Side?>Colour<?index?><?Signature?>" value="Y" onclick="if (this.checked){SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );};calc(this.form.name);"
+		<? echo ( $$variable{"chkSpecialSide$$variable{Side}Colour$$variable{index}$$variable{Signature}"} eq 'Y' ? 'checked="checked"' : '' ) ?>
+		/> Colour #<?index?>
+	</span>
+	<input type="text" name="txtSpecialSide<?Side?>Colour<?index?><?Signature?>" value="<? echo ( $$variable{"txtSpecialSide$$variable{Side}Colour$$variable{index}$$variable{Signature}"} ) ?>" size="9" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" />
+
+	<input type="text" name="txtSpecialSide<?Side?>ColourInkPercent<?index?><?Signature?>" value="<? echo ( $$variable{"txtSpecialSide$$variable{Side}ColourInkPercent$$variable{index}$$variable{Signature}"} ) ?>" size="4"  onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" /> %
+</span>

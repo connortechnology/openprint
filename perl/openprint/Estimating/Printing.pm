@@ -1395,10 +1395,10 @@ sub breakdown {
 		$$price{'Paper 1000 Price'} = ($$price{'Sheet Price'}*1000/$Imposition->imposition());
 	#} elsif ( $Paper->width() ) {
 	} else {
-		$breakdown .= sprintf("\tPaper: \%sx\%s * \%.6flbs/sq inch = \%.6f lbs per sheet (%d gsm)<br/>", $Paper->width(), $Paper->height(), $Paper->wpsi(), $Paper->width() * $Paper->height()* $Paper->wpsi(), $Paper->gsm() );
+		$breakdown .= sprintf('Paper: %sx%s -> %sx%s (%d gsm)<br/>', $Paper->start_width(), $Paper->start_height(), $Paper->width(), $Paper->height(), $Paper->gsm() );
 		$$price{'Paper 1000 Price'} = (($Paper->mweight()/$Imposition->imposition())/100)*$$price{'100lb'};
 
-		$breakdown .= sprintf("\tPaper: %.0f lbs * \$%.2f/100lb = \$%.2f<br/>", @$price{'Stock Weight','100lb','Paper Price'});
+		$breakdown .= sprintf('Paper: %.0f lbs * $%.2f/100lb (%.2f/M) = $%.2f<br/>', @$price{'Stock Weight','100lb','Paper 1000 Price','Paper Price'});
 	} # end if
 	if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
 		$breakdown .= 'Paper Price not included in total<br/>';

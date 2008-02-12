@@ -32,6 +32,8 @@
             $html .= qq{<input type="radio" id="}.$name.qq{N" name="$name" value="N"};
             $html .= ' checked' if $value eq 'N';
             $html .= qq{ /><label class="radio" for="}.$name.qq{N">No</label>\n};
+        } elsif ( $type eq 'textarea' ) {
+            $html .= sprintf('<textarea name="%s" cols="80" onkeyup="textarea_resize(this);" />%s</textarea>', ssi::htmlize($name, $value) );
         } else {
             $html .= sprintf('<input type="text" name="%s" value="%s" />', ssi::htmlize($name, $value) );
         } # end if
