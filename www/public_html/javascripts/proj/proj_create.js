@@ -173,7 +173,7 @@ function checkSelections (form){
 	} // end if
 
 	if ( projectType == 'PresentationFolders' ) {
-		if ( ! form.chkServicesDieCutting.checked ) {
+		if ( form.chkServicesDieCutting && ! form.chkServicesDieCutting.checked ) {
 			if (confirm ("Your project requires a die cutting service in order for us to fufill your request for Presentation Folders.\n\nIf you would like to add die cutting to your project please click OK, otherwise click Cancel.")){
 				form.chkServicesDieCutting.checked = true;
 			} // end if			
