@@ -1,4 +1,3 @@
-<script type="text/javascript" src="/administrator/production/pricing.js"></script>
 <script type="text/javascript">
 function mweight_to_gsm( form ) {
     var mweight;
@@ -33,6 +32,71 @@ function gsm_to_mweight( form ) {
     mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
     form.elements['mweight'].value = mweight;
 }
+
+function calc_price( element ) {
+	var matches;
+	if ( matches = element.name.match( /costcwt-(.*)/ ) ) {
+		var index = matches[1];
+		var costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		var markup = parseFloat(1*element.form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
+		var pricecwt = costcwt * ( 1 + markup );
+		element.form.elements['pricecwt-'+index].value = do_decimals( pricecwt, 2 ); 
+
+		if ( element.form.elements['mweight'].value ) {
+			element.form.elements['priceperm-'+index].value = do_decimals( pricecwt * element.form.elements['mweight'].value / 100, 2 );
+		} else {
+			element.form.elements['priceperm-'+index].value = do_decimals( pricecwt * element.form.elements['wpsi'].value * element.form.elements['width'].value * element.form.elements['height'].value * 1000, 2);
+		} // end if
+	} else if ( matches = element.name.match( /costperm-(.*)/ ) ) {
+		var index = matches[1];
+		var costperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		var markup = parseFloat(1*element.form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
+		var priceperm = costperm * ( 1 + markup );
+		element.form.elements['priceperm-'+index].value = do_decimals( priceperm, 2 ); 
+
+		if ( element.form.elements['mweight'].value ) {
+			element.form.elements['costcwt-'+index].value = do_decimals( costperm / (element.form.elements['mweight'].value / 100), 2 );
+			element.form.elements['pricecwt-'+index].value = do_decimals( priceperm / (element.form.elements['mweight'].value / 100), 2 );
+		} else {
+			element.form.elements['costcwt-'+index].value = do_decimals( costperm / (element.form.elements['wpsi'].value * element.form.elements['width'].value * element.form.elements['height'].value * 1000), 2);
+			element.form.elements['pricecwt-'+index].value = do_decimals( priceperm / (element.form.elements['wpsi'].value * element.form.elements['width'].value * element.form.elements['height'].value * 1000), 2);
+		} // end if
+	} else if ( matches = element.name.match( /markup-(.*)/ ) ) {
+		var index = matches[1];
+
+		var markup = parseFloat( 1*(element.value.replace(/[^\d\-\.]/g, '' ) ) );
+
+		var costcwt = parseFloat( element.form.elements['costcwt-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+		if ( costcwt != '' ) {
+			var newvalue = costcwt * ( markup/100 + 1 );
+			element.form.elements['pricecwt-'+index].value = do_decimals( newvalue, 2 );
+		} // end if
+		var costperm = parseFloat( element.form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+		if ( costperm != '' ) {
+			var newvalue = costperm * ( markup/100 + 1 );
+			element.form.elements['priceperm-'+index].value = do_decimals( newvalue, 2 );
+		} // end if
+	} else if ( matches = element.name.match( /pricecwt-(.*)/ ) ) {
+		var index = matches[1];
+
+		var costcwt = parseFloat(element.form.elements['costcwt-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+		var price = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		if ( costcwt ) {
+			element.form.elements['markup-'+index].value = do_decimals( ((price / costcwt)-1)*100, 2 );
+		
+			element.form.elements['priceperm-'+index].value = do_decimals( element.form.elements['costperm-'+index].value * ( 1 + element.form.elements['markup-'+index].value/100), 2 );
+		} // end if
+	} else if ( matches = element.name.match( /priceperm-(.*)/ ) ) {
+		var index = matches[1];
+
+		var priceperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		var costperm = parseFloat(element.form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+		if ( costperm ) {
+			element.form.elements['markup-'+index].value = do_decimals( ((price / costperm)-1)*100, 2 );
+			element.form.elements['pricecwt-'+index].value = do_decimals( element.form.elements['costcwt-'+index].value * ( 1 + element.form.elements['markup-'+index].value/100), 2 );
+		} // end if
+	} // end if
+} // end function
 </script>
 
 <style type="text/css">
@@ -222,7 +286,7 @@ function gsm_to_mweight( form ) {
 		</p>
 		<p> 
 			<label>Inventory #:</label>
-			<input type="text" name="inventory_number" value="<? echo ( $$variable{'Paper'}->inventory_number(); ) ?>"  size="13" style="width: auto;"> 
+			<input type="text" name="inventory_number" value="<? echo ( $$variable{'Paper'}->inventory_number(); ) ?>"  size="40" style="width: auto;"> 
 		</p>
 		<p> 
 			<span class="input">

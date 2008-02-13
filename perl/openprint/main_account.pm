@@ -482,13 +482,7 @@ sub login {
 } # end sub login
 
 sub logout {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-	openprint::logs::insertLogRecord('3',);
-	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id'};
-	#openprint::order::delete_unfinished_orders( $openprint::log, $openprint::dbh, $openprint::session{_session_id} );
-	#sql::insert( $log, $dbh, 'log', 'action_type', '3', 'user_id', "$user_id", 'date_time', 'NOW()', 'ip_address', $ENV{REMOTE_ADDR},);
-	
+	openprint::login::logout();
 } # sub logout
 
 sub reseller_application {

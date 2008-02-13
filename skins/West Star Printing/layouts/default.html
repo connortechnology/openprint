@@ -1,3 +1,12 @@
+	<? eval (
+		if ( $param{'btnFunction'} eq 'Agree' ) {
+			$session{'AgreedToDisclaimer'} = 1;
+		} elsif ( $param{'btnFunction'} eq 'Disagree' ) {
+$openprint::log->debug("Logout");
+			openprint::login::logout();
+$openprint::log->debug("$session{user_type}");
+		} # end if
+	) ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
@@ -60,7 +69,7 @@
 				<div class="Header">
 					<a style="float: left;" href="/index.html"><img src="/images/logo.gif" alt="West Star Printing"/></a>
 					<img style="float: left;" src="/images/main_banner.gif" alt="West Star Printing"/>
-  <? if ( ! $openprint::session{'user_id'} ) ?>
+  <? if ( ! $session{'user_id'} ) ?>
                 <div id="QuickLogin">
                     <form name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
                         <fieldset><legend>Quick Login:</legend>
@@ -78,21 +87,35 @@
                         <input type="hidden" name="btnFunction" />
                     </form>
                 </div>
-    <? else ( ! $openprint::session{'user_id'} ) ?>
+    <? else ( ! $session{'user_id'} ) ?>
 
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+				<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+				<? if ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdministrator', 'administrator.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
 					<br class="spacer"/>
-    <? endif ( ! $openprint::session{'user_id'} ) ?>
+    <? endif ( ! $session{'user_id'} ) ?>
 				</div><!--Header-->
 				<? echo ( ssi::include( $config{'SkinPath'}.'/includes/customer_menu.html' ); ) ?>
 		<div class="Content">
 			<div class="ContentInner">
+<? if ( ( $session{'user_type'} eq 'C' ) and ! $session{'AgreedToDisclaimer'} ) ?>
+<form name="DisclaimerForm" method="post" action="/main/account/login.html">
+	<fieldset><legend>Disclaimer</legend>
+<? echo ( $config{'LoginDisclaimer'} ) ?>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'DisclaimerAgree','agree.gif',"DisclaimerForm.btnFunction.value='Agree';DisclaimerForm.submit();",'','Agree' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'DisclaimerDisagree','disagree.gif',"DisclaimerForm.btnFunction.value='Disagree';DisclaimerForm.submit();",'','Disagree' ); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+<? else ( ( $session{'user_type'} eq 'C' ) and ! $session{'AgreedToDisclaimer'} ) ?>
+<? eval ( $openprint::log->debug("$session{user_type} ($session{'AgreedToDisclaimer'})"); ) ?>
 				<?PageContent?>
+<? endif ( ( $session{'user_type'} eq 'C' ) and ! $session{'AgreedToDisclaimer'} ) ?>
 				<span class="unprintable">
 				<br class="spacer"/>
 				<br class="spacer"/>
