@@ -185,7 +185,7 @@ sub load {
 			$$self{'layout_width'} += $dutch_width;
 		} # end if
 	} # end if
-	if ( $$specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
+	if ( $$specs{'txtSignatureType'} ) {
 		$$self{'spreads'} = $$specs{'txtSignatureSpreadQuantity'.$qty_index};
 		$$self{'spread_rows'} = $$specs{'SpreadRows'.$qty_index};
 		$$self{'spread_columns'} = $$specs{'SpreadCols'.$qty_index};

@@ -83,10 +83,10 @@
 					<!--#include virtual="/includes/drilling.html"-->
 					<!--#include virtual="/includes/scoring.html"-->
 					<!--#include virtual="/includes/perfing.html"-->
-		<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards'] ); ) ?>
+		<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
 					<!--#include virtual="/includes/shrinkwrapping.html"-->
 					<!--#include virtual="/includes/bundling.html"-->
-		<? endif ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards'] ); ) ?>
+		<? endif ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
 
 					<!--#include virtual="/includes/turnaround.html"-->
 					<br class="spacer"/>

@@ -958,7 +958,7 @@ sub calc {
 					my $folds = $specs{'FoldType'};
 					$folds =~ s/\D//g;
 					$folds += 1;
-					$specs{'txtFinalWidth'} = $specs{'txtWidth'} / $folds;
+					$specs{'txtFinalWidth'} = sprintf('%.3f', $specs{'txtWidth'} / $folds );
 					$specs{'txtFinalHeight'} = $specs{'txtHeight'};
 				} # end if
 			} else {
@@ -1251,6 +1251,8 @@ sub calc {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'chkOverrideQty-0', $specs{'chkOverrideScoreQty'} );
 				if ( $specs{'chkOverrideScoreQty'} eq 'Y' ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtVerticalQty-0', $specs{'txtScoreQty'} );
+				} else {
+					$specs{'txtScoreQty'} = '';
 				} # end if
 			} # end foreach
 		} else {
@@ -1337,10 +1339,13 @@ sub calc {
 
 		if ( $services{'Scoring'} ) {
 			my $score_specs = openprint::service::get_specs_ref( $$project{'id'}, $services{'Scoring'}[0] );
-			foreach my $ss_id ( $project->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $$project{'id'}, $ss_id );
-				$specs{'txtScoreQty'} += $$score_specs{'txtVerticalQty-'.$$sig_specs{'SignatureIndex'}} + $$score_specs{'txtHorizontalQty-'.$$sig_specs{'SignatureIndex'}};
-			} # end foreach
+			if ( $specs{'chkOverrideScoreQty'} ne 'Y' ) {
+				$specs{'txtScoreQty'} = 0;
+				foreach my $ss_id ( $project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $$project{'id'}, $ss_id );
+					$specs{'txtScoreQty'} += $$score_specs{'txtVerticalQty-'.$$sig_specs{'SignatureIndex'}} + $$score_specs{'txtHorizontalQty-'.$$sig_specs{'SignatureIndex'}};
+				} # end foreach
+			} # end if
 			if ( ! $specs{'txtScoreQty'} ) {
 				$specs{'alert'} .= 'Please enter the # of scores.';
 				$specs{'Status'} = 'uncalculated';
@@ -1385,7 +1390,7 @@ sub calc {
 		delete $specs{$key};
 	} # end foreach
 
-	$specs{'Status'} = $project->update_status( $variable ) if ! $specs{'Status'};
+	$specs{'Status'} = $project->update_status( $variable );
 	return jsrs::encode_pairs(%specs);
 } # end sub calc
 

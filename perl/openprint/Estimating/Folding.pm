@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -425,7 +425,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					my $I = shift @folds;
 					last if ! $I->spreads();
 					
-					$_ = $Equipment->fits( $I->image_width(), $I->image_height()*$imposition, $$sig_specs{'txtSpecificStockCalliper'} );
+					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height()*$imposition ) : ( $I->image_width()*$imposition, $I->image_height() ), $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 						my $fold_type = $I->pages().'PageSignatureFold';
 						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type ) ) {
@@ -607,6 +607,9 @@ sub calc {
 				} # end if
 			}# # end if
 		} # end foreach signature
+		if ( $status eq 'uncalculated' and ! $$specs{'alert'} ) {
+			$$specs{'alert'} = 'Unable to fold.';
+		} # end if
 
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
