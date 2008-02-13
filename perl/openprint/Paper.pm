@@ -314,8 +314,8 @@ sub save {
 	} # end foreach
 
 	foreach my $Price ( $self->prices() ) {
-		if ( $$Price{'PaperIndex'} != $$self{'id'} ) {
-			$$Price{'PaperIndex'} = $$self{'id'};
+		if ( $$Price{'paper_id'} != $$self{'id'} ) {
+			$$Price{'paper_id'} = $$self{'id'};
 			$$Price{'id'} = undef;
 		} # end if
 		$Price->save();
@@ -665,6 +665,8 @@ sub get_price {
 	my ( $self, $qty ) = @_;
     my %price;
 
+	$qty = $qty if ! $qty;
+
 	if ( $$self{'width'} and $$self{'height'} and $$self{'start_width'} and $$self{'start_height'} ) {
 		# It's a sheet
 		if ( $$self{'start_width'} != $$self{'width'} or $$self{'start_height'} != $$self{'height'} ) {
@@ -728,8 +730,10 @@ sub get_price {
 			$price{'Cost'} *= $$self{'mweight'} / 100000;
 			$price{'Price'} *= $$self{'mweight'} / 100000;
 		} # end if
+$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'}) ($price{'100lb Cost'}) ($price{'Price'})");
 	} elsif ( ( lc $price{'units'} ) eq 'per m' ) {
 		$price{'100lb'} = $price{'Price'} * $price{'mweight'} / 100;
+		$price{'100lb Cost'} = $price{'Cost'} * $price{'mweight'} / 100;
 		$price{'Cost'} /= 1000;
 		$price{'Price'} /= 1000;
 	} else {

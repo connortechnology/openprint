@@ -32,8 +32,8 @@ sub find {
 	if ( ! $data ) {
 		$openprint::log->warn("Error loading PaperPrices: ($sql) (@values)" . $openprint::dbh->errstr );
 		return;
-	} elsif ($debug ) {
-		$openprint::log->debug("openprint::PaperPrice::find($sql) (@values)");
+	} elsif ($debug) {
+		$openprint::log->debug("openprint::PaperPrice::find($sql) (@values) " . @$data );
 	} # end if
 	return map { new openprint::PaperPrice( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -86,6 +86,32 @@ sub copy {
 	$$new{'id'} = undef;
 	return $new;
 } # end sub
+
+sub Paper {
+	my $self = shift;
+	return new openprint::Paper( $$self{paper_id} );
+} # end sub Paper
+
+sub costperm {
+	my $self = shift;
+	my $Paper = $self->Paper();
+	if ( ! $Paper->mweight() ) {
+		# ROll papers won't have an mweight
+		return sprintf('%.2f', $$self{'Cost'} *= $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000 );
+	} else {
+		return sprintf('%.2f', $$self{'Cost'} *= $Paper->mweight() / 100 );
+	} # end if
+} # end sub costperm
+sub priceperm {
+	my $self = shift;
+	my $Paper = $self->Paper();
+	if ( ! $Paper->mweight() ) {
+		# ROll papers won't have an mweight
+		return sprintf('%.2f', $$self{'Price'} *= $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000 );
+	} else {
+		return sprintf('%.2f', $$self{'Price'} *= $Paper->mweight() / 100 );
+	} # end if
+} # end sub priceperm
 
 1;
 

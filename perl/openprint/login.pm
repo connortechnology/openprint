@@ -163,14 +163,11 @@ sub verify_login {
 } # sub verify_login
 
 sub logout {
-	my ( $log, $dbh, $variable, $cookie, $site ) = @_;
-
 	openprint::logs::insertLogRecord('3',);
 	foreach my $k ( keys %openprint::session ) {
-		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country','Pricelist_id' ] );
+		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country' ] );
 		delete $openprint::session{$k};
 	} # end foreach
-	
 } # sub logout
 
 sub email_password {

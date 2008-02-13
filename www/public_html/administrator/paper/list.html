@@ -127,7 +127,7 @@ function body_onLoad() {
 			); ) ?>
 		</p>
 	</fieldset>
-	<table id="PapersTable" class="List sortable">
+	<table id="PapersTable" class="List sortable" style="table-layout: auto;">
 		<thead>
 			<tr>
 				<th style="text-align:center;" width="20"><input type="checkbox" onclick="select_all(document.f1, 'chkPaper', this.checked );"/></th>
@@ -142,6 +142,7 @@ function body_onLoad() {
 				<th align="right" width="50">MWeight</th>
 				<th align="right" width="50">GSM</th>
 				<th align="left" width="25">SPP</th>
+				<th align="left" width="25">Cost</th>
 			</tr>
 		</thead>
 		<tbody id="Papers">

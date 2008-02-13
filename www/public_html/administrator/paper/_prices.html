@@ -11,10 +11,11 @@
 		<table class="List">
 			<tr> 
 				<th class="Range">Quantity Range</th>
-				<th class="Units">Units</th>
-				<th class="Cost">Cost</th>
+				<th class="Cost">Cost CWT</th>
+				<th class="Cost">Cost /M</th>
 				<th class="Markup">Mark up</th>
-				<th class="Price">Price</th>
+				<th class="Price">Price CWT</th>
+				<th class="Price">Price /M</th>
 				<th class="Discount">Discount?</th>
 				<th>&nbsp;</th>
 			</tr>
@@ -25,14 +26,11 @@
 		<input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Min() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
 		<input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Max() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
 	</td>
-    <td class="Units">
-		<select name="units-<? echo ( $$variable{'Price'}->id() ) ?>">
-			<? echo ( ssi::make_drop_down( [ 'Per 100lbs','Per 100lbs','Per M', 'Per M' ], $$variable{'Price'}->Units() ); ) ?>
-		</select>
-	</td>
-    <td class="Cost"><input class="text" type="text" name="cost-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_cost(this);"/></td>
+    <td class="Cost"><input class="text" type="text" name="costcwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_cost(this);"/></td>
+    <td class="Cost"><input class="text" type="text" name="costperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->costperm() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_cost(this);"/></td>
     <td class="Markup"><input class="text" type="text" name="markup-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Markup() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_markup(this);"/></td>
-    <td class="Price"><input class="text" type="text" name="price-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_price(this);"/></td>
+    <td class="Price"><input class="text" type="text" name="pricecwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_price(this);"/></td>
+    <td class="Price"><input class="text" type="text" name="priceperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->priceperm() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_price(this);"/></td>
     <td class="Discount">
     <input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='Y'
     <? echo ( 'checked' if $$variable{'Price'}->Discountable() eq 'Y' ) ?>
