@@ -5,8 +5,8 @@
 		) ?>
 	<input type="hidden" name="width" value="<? echo ( $$variable{'Paper'}->width() ) ?>" />
 	<input type="hidden" name="height" value="<? echo ( $$variable{'Paper'}->height() ) ?>" />
-	<input type="hidden" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight() ) ?>" />
-	<input type="hidden" name="wpsi" value="<? echo ( $$variable{'Paper'}->wpsi() ) ?>" />
+	<input type="hidden" name="mweight" value="<? echo ( sprintf('%.3f', $$variable{'Paper'}->mweight() ); ) ?>" />
+	<input type="hidden" name="wpsi" value="<? echo ( sprintf('%.3f', $$variable{'Paper'}->wpsi() ); ) ?>" />
 	<input type="hidden" name="paper_id" value="<? echo ( $openprint::param{'paper_id'} ) ?>"/>
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
     <div class="Pricelist">

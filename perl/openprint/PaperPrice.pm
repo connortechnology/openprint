@@ -3,9 +3,38 @@ package openprint::PaperPrice;
 
 my $debug = 1;
 
+use vars qw( %fields %transforms %defaults );
+
 use strict;
 
 require sql;
+
+%fields = (
+	'id'			=>	'id',
+	'pricelist_id'	=>	'lnglistindex',
+	'paper_id'		=>	'lngpaperindex',	
+	'Min'			=>	'lngmin',
+	'Max'			=>	'lngmax',
+	'Units'			=>	'strunits',
+	'Cost'			=>	'dblcost',
+	'Markup'		=>	'dblmarkup',
+	'Price'			=>	'dblprice',
+	'Discountable'	=>	'ysndiscountable',
+);
+%transforms = (
+	'Min' => [ 's/(\d*)/$1/g' ],
+	'Max' => [ 's/(\d*)/$1/g' ],
+	'Cost' => [ 's/[^\d\.]//g' ],
+	'Price' => [ 's/[^\d\.]//g' ],
+	'Markup' => [ 's/[^\d\.]//g' ],
+);
+%defaults = (
+	'Min' => undef,
+	'Max' => undef,
+	'Cost' => 0,
+	'Price' => 0,
+	'Markup' => 0,
+);
 
 sub find {
 	my %params = @_;
@@ -73,9 +102,13 @@ sub save {
 			);
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_prices_id_seq')});
-		sql::insert( undef, undef, 'Paper_Prices', [ 'id', $$self{'id'}, @sql ] );
+		if ( my $error = sql::insert( undef, undef, 'Paper_Prices', [ 'id', $$self{'id'}, @sql ] ) ) {
+			return $error;
+		} # end if
 	} else {
-		sql::update( undef, undef, 'Paper_Prices', ['id=?', $$self{'id'}], \@sql );
+		if ( my $error = sql::update( undef, undef, 'Paper_Prices', ['id=?', $$self{'id'}], \@sql ) ) {
+			return $error;
+		} # end if
 	} # end if
 } # end sub save
 

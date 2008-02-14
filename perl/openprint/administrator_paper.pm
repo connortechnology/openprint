@@ -194,17 +194,25 @@ sub jsrs_save_price {
 
 }
 
-sub jsrs_save_prices {
-	my ( $r, $log, $dbh, $variable, %specs ) = @_;
+sub _prices {
+	my ( $r, $log, $dbh, $variable ) = @_;
 
-	foreach my $key ( keys %specs ) {
+	foreach my $key ( keys %openprint::param ) {
 		if ( $key =~ /min-(\d*)/ ) {
-			jsrs_save_price( $r, $log, $dbh, $variable, $1, @specs{"min-$1","max-$1","units-$1", "cost-$1", "markup-$1", "price-$1","discount-$1"} );
+			my $Price = new openprint::PaperPrice( $1 );
+			$Price->set( {
+				'Min'	=>	$openprint::param{"min-$1"},
+				'Max'	=>	$openprint::param{"max-$1"},
+				'Units'	=>	$openprint::param{"units-$1"},
+				'Cost'	=>	$openprint::param{"costcwt-$1"},
+				'Markup'	=>	$openprint::param{"markup-$1"},
+				'Price'	=>	$openprint::param{"pricecwt-$1"},
+				'Discountable'	=>	$openprint::param{"discount-$1"},
+} );
+			$$variable{'error'} .= $Price->save();
+			#jsrs_save_price( $r, $log, $dbh, $variable, $1, @openprint::param{"min-$1","max-$1","units-$1", "costcwt-$1", "markup-$1", "pricecwt-$1","discount-$1"} );
 		} # end if
 	} # end foreach
-	$openprint::param{'paper_id'} = $specs{'paper_id'};
-	return jsrs_get_prices( $r, $log, $dbh, $variable, $specs{'paper_id'} );
-
 } # end sub jsrs_save_prices
 
 sub import_export {

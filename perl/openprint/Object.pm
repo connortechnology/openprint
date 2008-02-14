@@ -77,19 +77,21 @@ sub set {
 	my ( $self, $params ) = @_;
 	my @set_fields = ();
 
+	my $type = ref $self;
+
 	foreach my $field ( keys %{$params} ) {
 		
-		if ( eval( 'defined $' . ref $self . '::fields{$field}') ) {
+		if ( eval( 'defined $' . $type . '::fields{$field}') ) {
 $openprint::log->debug("Blah: $!") if $!;
 
-			my @transforms = eval('@{$'.ref $self.'::transforms{$field}}');
+			my @transforms = eval('@{$'.$type.'::transforms{$field}}');
 $openprint::log->debug("Transforms: @transforms");
 
 			foreach my $transform ( @transforms ) {
 				eval '$params->{$field} =~ ' . $transform;
 			} # end foreach
 
-			if ( $params->{$field} eq '' and eval('exists $'.ref $self . '::defaults{$field}') ) {
+			if ( $params->{$field} eq '' and eval('exists $'.$type.'::defaults{$field}') ) {
 				$params->{$field} = $defaults{$field};
 			} # end if
 
@@ -97,10 +99,10 @@ $openprint::log->debug("Transforms: @transforms");
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
 				$$self{$field} = $$params{$field};
-				push @set_fields, eval('$'.ref $self.'::fields{$field}'), $$params{$field};	#mark for sql updating
+				push @set_fields, eval('$'.$type.'::fields{$field}'), $$params{$field};	#mark for sql updating
 			} # end if
 		} else {
-			$openprint::log->warn("User::Set::Invalid field requested: ($field)." );
+			$openprint::log->warn( $type."::Set::Invalid field requested: ($field)." );
 		} # end if
 	} # end foreach
 	return @set_fields;

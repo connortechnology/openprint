@@ -43,8 +43,10 @@ function calc_price( element ) {
 		element.form.elements['pricecwt-'+index].value = do_decimals( pricecwt, 2 ); 
 
 		if ( element.form.elements['mweight'].value ) {
+			element.form.elements['costperm-'+index].value = do_decimals( costcwt * element.form.elements['mweight'].value / 100, 2 );
 			element.form.elements['priceperm-'+index].value = do_decimals( pricecwt * element.form.elements['mweight'].value / 100, 2 );
 		} else {
+			element.form.elements['costperm-'+index].value = do_decimals( costcwt * element.form.elements['wpsi'].value * element.form.elements['width'].value * element.form.elements['height'].value * 1000, 2);
 			element.form.elements['priceperm-'+index].value = do_decimals( pricecwt * element.form.elements['wpsi'].value * element.form.elements['width'].value * element.form.elements['height'].value * 1000, 2);
 		} // end if
 	} else if ( matches = element.name.match( /costperm-(.*)/ ) ) {

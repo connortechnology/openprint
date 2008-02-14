@@ -384,9 +384,12 @@ sub get_price {
 		$price{'Imposition'} = 1;
 	} # end if
 
-	my $makeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+	my %MakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{'Imposition'}, $Equipment );
+	if ( ! %MakeReady ) {
+		%MakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+	} # end if
 	my $pocketMakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-	$price{'MakeReady'} = $makeReady + $pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 );
+	$price{'MakeReady'} = $MakeReady{'Price'} + $pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 );
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $neededPockets = $$specs{"txtPockets$qty_index"};
@@ -448,7 +451,7 @@ sub get_price {
 	my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
 	if ( $$specs{'rdbGateFoldFit'} eq 'Exact' and $gateFolds > 0 ) {
 		$price{'Service'} += openprint::service::get_price( $$specs{'ServiceType'}, $gateFolds, $Equipment );
-		$price{'MakeReady'} += $makeReady + ( $pocketMakeReady * ( $gateFolds + 1 ) );
+		$price{'MakeReady'} += $MakeReady{'Price'} + ( $pocketMakeReady * ( $gateFolds + 1 ) );
 	} # end if
 
 	$price{'Calliper Markup'} = $Equipment->specification( 'Calliper Price Adjustment', $$specs{'txtCalliper'} );

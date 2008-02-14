@@ -10,7 +10,7 @@
 	}
 
 	function savePrices( form ) {
-		jsrsExecute( '/jsrs.htm', cbFillPrices, 'openprint::administrator_paper::jsrs_save_prices', Serialize( form ) ); 
+	new Ajax.Updater('Prices','/administrator/paper/_prices.html', { method: 'get', parameters : Form.serialize( form ) } );
 	
 	}
 	function cbFillPrices( results ) {
