@@ -1,6 +1,6 @@
 package openprint::paper;
 
-my $debug = 0;
+my $debug = 1;
 
 use strict;
 
@@ -339,17 +339,11 @@ sub select_by_weight {
 sub select_sheetsize {
 	my ( $r, $log, $dbh, $variable, $project_index, $name, $finish, $colour, $weight, $supplied, $press, $type ) = @_;
 
-	return join( '|', map { 'SheetSize~'.$_.'~'.$_ } get_sheetsizes( $type, $name, $finish, $colour, $weight, $supplied ) );
-
-} # end sub select_sheetsize
-
-sub get_sheetsizes {
-	my ( $type, $name, $finish, $colour, $weight, $supplied ) = @_;
 	my @results;
 	$openprint::log->debug("************* START OF select_sheetsize: $name, $finish, $colour, $weight ********************");
 	
 	my @types = ('Sheet');
-	if ( openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
+	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
 	my @papers = openprint::Paper::find( 'name', $name, 'finish', $finish, 'colour', $colour, 'weight', $weight, 'type'=>\@types,
@@ -384,6 +378,9 @@ sub get_sheetsizes {
 	my @sheets;
 	my %results;
 	foreach my $Paper ( @papers ) {
+		if ( $Paper->type() eq 'Roll' ) {
+			$results{$Paper->width()} = $Paper->width().'"';
+		} else {
 		my ( $width, $height ) = ( $Paper->width(), $Paper->height() );
 # cuts paper until it fits
 		if ( $max_width and $max_height ) {
@@ -415,7 +412,7 @@ sub get_sheetsizes {
 				  ) {
 
 				last if $results{$width.'x'.$height};
-				$results{$width.'x'.$height} = 1;
+				$results{$width.'x'.$height} = sprintf('%s" x %s"', $width, $height );
 
 				$openprint::log->debug("Cut: $width x $height") if $debug;
 				if ( $height > $width ) {
@@ -425,9 +422,19 @@ sub get_sheetsizes {
 				} # end if
 			} # end while
 		} # end if
+		} # end if type
 	} # end foreach Paper
 
-	return sort keys %results;
+	return join( '|', map { 'SheetSize~'.$_.'~'.$results{$_} }
+	sort { 
+		my ( $w1, $h1 ) = split('x', $a );
+		my ( $w2, $h2 ) = split('x', $b );
+		return -1 if $w1 < $w2;
+		return 1 if $w1 > $w2;
+		return -1 if $h1 < $h2;
+		return 1 if $h1 > $h2;
+		return 0;
+	} keys %results );
 
 } # end sub get_sheetsize 
 

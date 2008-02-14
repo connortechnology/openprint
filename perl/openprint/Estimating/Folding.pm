@@ -475,10 +475,11 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				while ( @folds ) {
 					my $I = shift @folds;
 					last if ! $I->spreads();
-$openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Equipment->name()) if $debug;
-					
-					# See if it fits
-					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height()*$imposition ) : ( $I->image_width()*$imposition, $I->image_height() ), $$sig_specs{'txtSpecificStockCalliper'} );
+					$openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Equipment->name()) if $debug;
+
+# See if it fits
+					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width() * $imposition, $I->image_height() ) : ( $I->image_width(), $I->image_height() * $imposition ), $$sig_specs{'txtSpecificStockCalliper'} );
+
 					if ( ! $_ )  {
 
 						my $Fold = $Equipment->Fold(
