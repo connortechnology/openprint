@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -344,15 +344,15 @@ sub signature_calc {
 	my $imposition;
 	if ( $Imposition->StitchingImposition() ) {
 		$imposition = $Imposition->StitchingImposition();
-$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug;
+#$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from SaddleStitching: $imposition out") if $debug;
+#$openprint::log->debug("Got impo from SaddleStitching: $imposition out") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from LoopStitching: $imposition out") if $debug;
+#$openprint::log->debug("Got impo from LoopStitching: $imposition out") if $debug;
 	} # end if
 	$imposition = 1 if ! $imposition;
 
@@ -377,18 +377,12 @@ $openprint::log->debug("Got impo from LoopStitching: $imposition out") if $debug
 
 			if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $imposition ) ) {
 				$folds{$pages.'PageSignatureFold'} += 1;
-			} else {
-				$foldtype = $pages.'PageSignatureFoldRunSpeed';
-				if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $imposition ) ) {
-#$folds{$pages.'PageSignatureFold'} = $Imposition->imposition();
-					$folds{$pages.'PageSignatureFold'} += 1;
-				} # end if
 			} # end if
 		} else {
 
 			# FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 			if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
-$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}");
+#$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}");
 				$_ = $Equipment->fits( $Imposition->image_width(), $Imposition->image_height(), $$sig_specs{'txtSpecificStockCalliper'} );
 				if ( $_ ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit: $_<br/>";
@@ -408,7 +402,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					my $I = shift @folds;
 					last if ! $I->spreads();
 					
-					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height()*$imposition ) : ( $I->image_width()*$imposition, $I->image_height() ), $$sig_specs{'txtSpecificStockCalliper'} );
+					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width() * $imposition, $I->image_height() ) : ( $I->image_width(), $I->image_height() * $imposition ), $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 						my $fold_type = $I->pages().'PageSignatureFold';
 						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type ) ) {
@@ -421,6 +415,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 							next;
 						} # end if
 					} else {
+						$$specs{'hdnBreakdown'.$qty_index} .= 'Spreads ' . $I->spreads() . ' : ' . $_ . '<br/>';
 						#$openprint::log->debug($_);
 						next;
 					} # end if
@@ -521,7 +516,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 			} # end if
 		
 		} # end foreach fold
-		$$specs{'hdnBreakdown'.$qty_index} .= "\tTotal: " . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . "<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Total: ' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . '<br/>';
 
 		if ( ( $totalPrice < $bestPrice ) or ( ! defined $bestPrice ) ) {
 			$bestPrice = $totalPrice;
@@ -537,10 +532,8 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		'Equipment'		=> $bestEquipment,
 		'Imposition'	=> $imposition,
 		'Status'		=> $bestEquipment ? 'calculated' : 'uncalculated',
+		'BestFolds'		=>	$bestFolds,
 		);
-	foreach ( keys %fold_types ) {
-		$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = $$bestFolds{$_};
-	} # end foreach
 	$$specs{'Status'} = $bestEquipment ? 'calculated' : 'uncalculated';
 	return %results;
 } # end sub signature_calc
@@ -588,6 +581,9 @@ sub calc {
 					} # end if
 					$status = 'uncalculated';
 				} # end if
+				foreach ( keys %fold_types ) {
+					$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'BestFolds'}{$_};
+				} # end foreach
 			}# # end if
 		} # end foreach signature
 

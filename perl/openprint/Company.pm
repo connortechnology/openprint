@@ -51,6 +51,7 @@ require openprint::Object;
 		'bank_phone'				=>	'strbankphone',
 		'bank_fax'					=>	'strbankfax',
 		'bank_email'				=>	'strbankemail',
+		'detail_level'				=>	'detail_level',
 		);
 %transforms = (
 	'name' => [ 's/\.//g' ],

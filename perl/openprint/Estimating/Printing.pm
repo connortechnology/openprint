@@ -138,7 +138,7 @@ my %variables = (
 		'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
 		'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
 		'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
-		'StitchingImposition1' => ['save','output'], 'StitchingImposition2' => ['save','output'], 'StitchingImposition3' => ['save','output'],
+		'StitchingImposition1' => ['output'], 'StitchingImposition2' => ['output'], 'StitchingImposition3' => ['output'],
 		'FoldingImposition1' => ['save','output'], 'FoldingImposition2' => ['save','output'], 'FoldingImposition3' => ['save','output'],
 		'txtImageWidth1' => ['save','output'], 'txtImageWidth2' => ['save','output'], 'txtImageWidth3' => ['save','output'],
 		'txtImageHeight1' => ['save','output'], 'txtImageHeight2' => ['save','output'], 'txtImageHeight3' => ['save','output'],
@@ -1222,6 +1222,9 @@ $openprint::log->debug("Loaing old imp");
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
+		# CLean out cruft
+		delete $$specs{'StitchingImposition'.$qty_index};
+
 		my $b_price = get_project_price( $Project, $service_index, \@side_one_colours, \@side_two_colours, \@filtered_colours, \%special_colours, \%inkCoverage, \%mixed_colours, \%washed_colours, \%project, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \%impositions );
 		if ( ! $b_price ) {
 			$$specs{'alert'} .= 'Unable to calculate a price';
@@ -1480,6 +1483,7 @@ $imp->display();
 #$imp->display();
 
 #my $time = gettimeofday();
+			$imp = $imp->copy();
 			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 						#$openprint::log->debug( breakdown( $price, $specs ) );
@@ -1488,8 +1492,12 @@ $imp->display();
 				my $usq = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 				my $pp = $$specs{'PreviousPlates'.$qty_index};
 				my $pbp = $$specs{'PreviousBlankPlates'.$qty_index};
+				my $si = $$specs{'StitchingImposition'.$qty_index};
+#$openprint::log->warn("Saving Stitching Imposition $si : " . $$price{'StitchingImposition'});
 
 				$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $imp->spreads();
+#$openprint::log->warn('Setting Stitching Imposition after initial calc to : ' . $$price{'StitchingImposition'});
+$$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 
 				my $s_id = $service_index;
 				my %new_specs = %$specs;
@@ -1512,10 +1520,14 @@ $imp->display();
 					$new_specs{'PreviousPlates'.$qty_index} += $$price{'txtPlateQuantity'};
 					$new_specs{'PreviousBlankPlates'.$qty_index} += $$price{'txtBlankPlateQuantity'};
 
+#$openprint::log->warn('Setting Stitching Imposition of new speacs to : ' . $$price{'StitchingImposition'});
+					$new_specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
+
 					my $last_sig_price = $$price{'Comparison Cost'};
 
 					my $additional_price;
 					my $sig_price;
+					my $sigs = 1;
 					if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} >= $imp->spreads() ) {
 # Going to just re-use the same impo
 #$openprint::log->warn("Doing half calc qtyi: $qty_index unspec: $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > " . $imp->spreads() . ' imp spreads');
@@ -1530,7 +1542,8 @@ $imp->display();
 
 						if ( $$sig_price{'Comparison Cost'} == $last_sig_price ) {
 							$additional_price -= $$sig_price{'Stitching Cost'};
-							$additional_price *= int($$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads());
+							$sigs = int($$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}/$imp->spreads());
+							$additional_price *= $sigs;
 							$additional_price += $$sig_price{'Stitching Cost'};
 							#last if $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads() >= $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads();
@@ -1547,7 +1560,7 @@ $imp->display();
 						if ( $additional_signature_cache{$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index}} ) {
 #$openprint::log->debug("Using cache: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
 							#$sig_price = $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}};
-$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index}}, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
+							$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index}}, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
 						} else {
 							my $services = $Project->services();
 							my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -1555,29 +1568,31 @@ $sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs
 							$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
 							$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}*$$specs{'txtSpreadSize'};
 	#$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
-							$new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} = 'Y';
+							#$new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} = 'Y';
 							$new_specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$new_specs{'chkOverridePress'.$qty_index} = 'Y';
 							$new_specs{'chkOverrideSheetSize'.$qty_index} = '';
 							$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 							$new_specs{'chkOverrideImposition'.$qty_index} = '';
-$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
+#$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 							if ( ! $$sig_price{'complete'} ) {
 								$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
 								$new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} = '';
-$openprint::log->warn("Doing full calc without page override $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
+#$openprint::log->warn("Doing full calc without page override $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 								$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 							} # end if
+if ( 0 ) {
 							if ( ! $$sig_price{'complete'} ) {
-$openprint::log->warn("Doing full calc without Press Override" . $imp->spreads() );
+#$openprint::log->warn("Doing full calc without Press Override" . $imp->spreads() );
 								$new_specs{'chkOverridePress'.$qty_index} = '';
 								$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 							} # end if
+} # end if
 							if ( ! $$sig_price{'complete'} ) {
 $openprint::log->warn('Couldnt calculate full price');
 							} else {
-$openprint::log->debug("Caching: " . $new_specs{'txtSignatureSpreadQuantity'.$qty_index} . ' : ' . $$sig_price{'Imposition'} );
+#$openprint::log->debug("Caching: " . $new_specs{'txtSignatureSpreadQuantity'.$qty_index} . ' : ' . $$sig_price{'Imposition'} );
 							#$additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} = $sig_price;
 							$additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}} = $$sig_price{'Imposition'};
 
@@ -1599,7 +1614,7 @@ $openprint::log->debug("Caching: " . $new_specs{'txtSignatureSpreadQuantity'.$qt
 #$openprint::log->debug("Additional sig cost: $additional_price.");
 							$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $$sig_price{'Imposition'}->spreads();
 						} # end if
-#$openprint::log->warn("Done full calc $sig_price{'Comparison Cost'} :". $$specs{'txtSignatureSpreadQuantity'.$qty_index});
+#$openprint::log->warn("Done full calc $$sig_price{'Comparison Cost'} :". $$specs{'txtSignatureSpreadQuantity'.$qty_index});
 					} # end if
 
 					$additional_price -= $$sig_price{'Stitching Cost'};
@@ -1607,26 +1622,22 @@ $openprint::log->debug("Caching: " . $new_specs{'txtSignatureSpreadQuantity'.$qt
 					$$price{'Stitching Cost'} = $$sig_price{'Stitching Cost'};
 					$$price{'Comparison Cost'} += $$price{'Stitching Cost'};
 
+#$openprint::log->warn('Updating Stitching Imposition of price to : ' . $$sig_price{'StitchingImposition'});
 					$$price{'StitchingImposition'} = $$sig_price{'StitchingImposition'};
 					$$price{'Stitching Breakdown'} = $$sig_price{'Stitching Breakdown'};
 
-					if ( ! $$sig_price{complete} ) {
+					if ( (! $$sig_price{complete}) or ($additional_price < 0) ) {
 #$openprint::log->debug("Unable to calculated");
 						$$price{'complete'} = 0;
 						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 						last;
 					} # end if
 
-					if ( $additional_price < 0 ) {
-						$$price{'complete'} = 0;
-						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
-						last;
-					} # end if	
 					$last_sig_price = $$sig_price{'Comparison Cost'};
 
 					$$price{'Comparison Cost'} += $additional_price;
 					if ( $$sig_price{'Imposition'} ) {
-						$$price{'AdditionalSignature Breakdown'} .= sprintf('Additional Sig %dpages %dout %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $additional_price ) . '<br/>';
+						$$price{'AdditionalSignature Breakdown'} .= sprintf($sigs . ' Additional Sig %dpages %dout %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $additional_price ) . '<br/>';
 						#`:w
 						#$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
 					} else {
@@ -1635,10 +1646,12 @@ $openprint::log->debug("Caching: " . $new_specs{'txtSignatureSpreadQuantity'.$qt
 					#$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Cutting Breakdown'};
 					#$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Stitching Breakdown'};
 					last if check_price( $best_price{'Comparison Cost'}, $price, $specs, $qty_index, $imp, 'Sig' );
-				} # end while
+				} # end while Unspecified Spreads
 				$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $usq;
 				$$specs{'PreviousPlates'.$qty_index} = $pp;
 				$$specs{'PreviousBlankPlates'.$qty_index} = $pbp;
+#$openprint::log->warn('Restoring Stitching Imposition of specs to : ' . $si);
+				$$specs{'StitchingImposition'.$qty_index} = $si;
 			} # end if UnspecifiedSpreadQuanitty
 #$openprint::log->debug( 'calc_price: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) . ' Complete: ' . $price{complete} );
 
@@ -1896,34 +1909,42 @@ sub calc_price {
 	$$specs{"txtPressSheetQty$qty_index"} = $sheets;
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 
-	if ( ( ! $Imposition->StitchingImposition() ) and $$specs{'StitchingImposition'.$qty_index} ) {
-		$Imposition->StitchingImposition( $$specs{'StitchingImposition'.$qty_index} );
-	} # end if
 
 	if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
 
+		# This should only happen on second signature in calc
+		if ( ( ! $Imposition->StitchingImposition() ) and $$specs{'StitchingImposition'.$qty_index} ) {
+#$openprint::log->warn("Prepping Imposition Stitching Imposition to ".$$specs{'StitchingImposition'.$qty_index});
+			$Imposition->StitchingImposition( $$specs{'StitchingImposition'.$qty_index} );
+		} # end if
+
 		#my $starttime = gettimeofday();
+#$Imposition->display();
 		my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
+				#$openprint::log->error( "Stitching alert: $$results{alert}" );
 		if ( $$results{'Status'} eq 'uncalculated' ) {
 			$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
 			$price{'Comparison Cost'} += 10000000; # Can't stich this on
 			$price{'Stitching Cost'} = 10000000;
 		} else {
 			$price{'StitchingImposition'} = $$results{'Imposition'};
-			$$Imposition{StitchingImposition} = $$results{'Imposition'} if $$results{'Imposition'} < $$Imposition{StitchingImposition};
+			if ( $$results{'Imposition'} < $$Imposition{StitchingImposition} ) {
+				$openprint::log->error( "New StitchingImposition is less than old!" );
+			} # end if
+			$$Imposition{StitchingImposition} = $$results{'Imposition'};
 			$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
 			$price{'Stitching Cost'} = $$results{'Price'};
 			$price{'Comparison Cost'} += $$results{'Price'};
 		} # end if
 		#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 
-		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
+		#return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
 	} # end if
 	if ( $$services{'LoopStitching'} ) {
 	} # end if
 
 	# Needed for Cutting & Folding
-	$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
+	#$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
 	my %folding_results;
