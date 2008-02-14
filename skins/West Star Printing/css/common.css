@@ -54,7 +54,7 @@ A:hover {
 	color: #687796;
 }
 
-input, select, textarea, option {
+input, select, textarea {
     font-size: x-small;
 	padding: 0px;
 }
@@ -279,6 +279,7 @@ fieldset p option {
 }
 fieldset.filters p select {
     width: auto;
+	max-width: 100%;
 }
 fieldset.filters p input[type="text"] {
     width: auto;
@@ -500,6 +501,11 @@ span.DateSelector {
 	float: left;
 	width: 255px;
 }
+span.DateSelector select {
+    width: auto;
+    max-width: none;
+}
+
 
 div.Service span.ThreeColumns {
 	width: 32%;
