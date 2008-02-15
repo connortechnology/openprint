@@ -38,7 +38,7 @@
 		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->sheets_per_package() ) ?></a></td>
 		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( 
 my @Price = $$variable{'Paper'}->prices();
-return sprintf('%.0f%s', $Price[0]{'Cost'},$Price[0]{'Units'} );
+return sprintf('%.0f/cwt', $Price[0]{'Cost'} );
  ) ?></a></td>
 	</tr>
 <? endwhile ( $$variable{'Paper'} = shift @{$$variable{'Papers'}} ) ?>

@@ -158,26 +158,10 @@ sub get_finishes {
 	} # end if
 	my @papers = openprint::Paper::find( 
 		'project_type_name'=>$type,
-		'name'=>$name, 'colour'=>$colour, 'weight'=>$weight,
-			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
-		'type'=>\@types,
-		);
-	if ( ! @papers ) {
-	@papers = openprint::Paper::find( 
-		'project_type_name'=>$type,
-		'name'=>$name, 'colour'=>$colour,
-			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
-		'type'=>\@types,
-		);
-	} # end if
-	if ( ! @papers ) {
-	@papers = openprint::Paper::find( 
-		'project_type_name'=>$type,
 		'name'=>$name,
-			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
+		'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 		'type'=>\@types,
 		);
-	} # end if
 	my %finishes;
 	foreach my $Paper ( @papers ) {
 		$finishes{$Paper->finish()} = $Paper->finish_id();
