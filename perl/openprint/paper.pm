@@ -339,8 +339,18 @@ sub select_by_weight {
 sub select_sheetsize {
 	my ( $r, $log, $dbh, $variable, $project_index, $name, $finish, $colour, $weight, $supplied, $press, $type ) = @_;
 
+	my @sheets = get_sheetsizes( $type, $name, $finish, $colour, $weight, $supplied );
 	my @results;
-	$openprint::log->debug("************* START OF select_sheetsize: $name, $finish, $colour, $weight ********************");
+	while ( @sheets ) {
+		push @results, join('~', 'SheetSize', shift @sheets, shift @sheets);
+	} # end while
+	return join( '|', @results );
+} # end sub select_sheetsize
+
+sub get_sheetsizes {
+	my ( $type, $name, $finish, $colour, $weight, $supplied ) = @_;
+	my @results;
+	$openprint::log->debug("************* START OF select_sheetsize: $type, $name, $finish, $colour, $weight, $supplied ********************");
 	
 	my @types = ('Sheet');
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
@@ -425,7 +435,7 @@ sub select_sheetsize {
 		} # end if type
 	} # end foreach Paper
 
-	return join( '|', map { 'SheetSize~'.$_.'~'.$results{$_} }
+	return map { 'SheetSize~'.$_.'~'.$results{$_} }
 	sort { 
 		my ( $w1, $h1 ) = split('x', $a );
 		my ( $w2, $h2 ) = split('x', $b );
@@ -434,7 +444,7 @@ sub select_sheetsize {
 		return -1 if $h1 < $h2;
 		return 1 if $h1 > $h2;
 		return 0;
-	} keys %results );
+	} keys %results;
 
 } # end sub get_sheetsize 
 

@@ -23,6 +23,8 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
+my $debug = 1;
+
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
 	'txtFinalWidth'=>['save'],'txtFinalHeight'=>['save'], 
@@ -51,6 +53,7 @@ sub no_outputs {
     } # end foreach;
     return @v;
 }
+
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
@@ -163,11 +166,13 @@ sub calculate_signatures {
 
 		if ( $$printing_specs{'PrintingType'} ) {
 			$log->debug("PrintingType: $$printing_specs{'PrintingType'}");
-			if ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} 
-					or $$sig_specs{'PrintingType2'} ne $$printing_specs{'PrintingType'}
-					or $$sig_specs{'PrintingType3'} ne $$printing_specs{'PrintingType'} ) {
+			if ( 
+				 ( $Project->quantity1() and ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} ) )
+				 or ( $Project->quantity2() and ( $$sig_specs{'PrintingType2'} ne $$printing_specs{'PrintingType'} ) )
+					or ( $Project->quantity3() and ( $$sig_specs{'PrintingType3'} ne $$printing_specs{'PrintingType'}  ) )
+) {
 # delete any similar signs
-				$log->debug("Getting rid of extra sigs");
+				#$log->debug("Getting rid of extra sigs");
 				for ( my $j = $i+1; $j < @signatures; $j += 1 ) {
 					my $specs2 = openprint::service::get_specs_ref( $project_index, $signatures[$j] );
 					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $specs2 ) ) {
@@ -181,120 +186,151 @@ $openprint::log->warn('Deleting due to incorrect printing type');
 		} # end if
 	} # end for
 
+	foreach my $type ( 'Cover Pages','Interior Pages' ) {
+		my @sigs = sort $Project->signatures( {'type'=>$type} );
+		next if ! @sigs;
+		my $ss_id = shift @sigs;
 
-# the loop_count stuff is to prevent endless loops
-	my $loop_count = 0;
-	while ( ( $loop_count < @signatures ) and ( $status ne 'calculated' ) ) {
-		foreach my $ss_id ( @signatures ) {
-$openprint::log->debug("Loop Count: $loop_count Sig: $ss_id: " . @signatures . ' Status: ' . $status); 
-			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
-$openprint::log->debug( "XXXXXXXXXXXXX$$sig_specs{PageQuantity1} $$sig_specs{PageQuantity2} $$sig_specs{PageQuantity3} $$sig_specs{Status} $$sig_specs{alert}" );
-			# If we couldn't calculate, then delete all the other printing types and retry.
-			if ( $$sig_specs{'Status'} eq 'uncalculated' ) {
-				if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) {
-					$openprint::log->debug("Retrying after changing Printing Type");
-					foreach my $ss_id2 ( @signatures ) {
-						openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType1', '' ) if $$sig_specs{'txtQuantity1'};
-						openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType2', '' ) if $$sig_specs{'txtQuantity2'};
-						openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType3', '' ) if $$sig_specs{'txtQuantity3'};
-					} # end foreach Signature
-					my $sig_specs2 = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
-					if ( $$sig_specs2{'Status'} eq 'uncalculated' ) {
-# Fix PrintingTypes
-						foreach my $ss_id2 ( @signatures ) {
-							openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id2, 'Printing' );
-						} # end foreach
+		my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
+# If we couldn't calculate, then delete all the other printing types and retry.
+		if ( $$sig_specs{'Status'} eq 'uncalculated' ) {
+			if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) {
+				$openprint::log->debug("Retrying after changing Printing Type");
+				foreach my $ss_id2 ( @signatures ) {
+					openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType1', '' ) if $$sig_specs{'txtQuantity1'};
+					openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType2', '' ) if $$sig_specs{'txtQuantity2'};
+					openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType3', '' ) if $$sig_specs{'txtQuantity3'};
+				} # end foreach Signature
+				my $sig_specs2 = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
+				if ( $$sig_specs2{'Status'} eq 'uncalculated' ) {
 # Despite removing printing type restrictions, we were still unable to calculate, so give up.
-						return 'uncalculated';
-					} else {
-						$status = $$sig_specs2{'Status'};
-					} # end if
-				} else {
 					return 'uncalculated';
-				} # end if
-			} elsif ( $$sig_specs{'Status'} eq 'calculated' ) {
-				$status = $$sig_specs{'Status'};
-				if ( ( @signatures > 1 ) and $$printing_specs{'txtTotalPageQuantity'} and $$sig_specs{'txtSignatureType'} ne 'Cover Pages' and ! ( $$sig_specs{'PageQuantity1'}
-							or $$sig_specs{'PageQuantity2'}
-							or $$sig_specs{'PageQuantity3'} ) ) {
-$openprint::log->warn('Deleting due to no pages');
-					openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
-					@signatures = sets::exclude( [ $ss_id ], \@signatures );
+				} else {
+					$status = $$sig_specs2{'Status'};
 				} # end if
 			} else {
-$openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
-				$status = $$sig_specs{'Status'};
+				return 'uncalculated';
 			} # end if
-		} # end foreach Interior Signature
-		$loop_count += 1;
-	} # end while
+		} elsif ( $$sig_specs{'Status'} eq 'calculated' ) {
+			$status = $$sig_specs{'Status'};
+			# Successfully calculated the first sig
+			# In sig_specs should be an array of Impositions to apply to other signatures, so let's add/delete/apply
+			my @additional_impositions = @{$$sig_specs{'Additional Impositions'}} if $$sig_specs{'Additional Impositions'};
+
+if ( $debug ) {
+$openprint::log->warn("Pages chosen: $$sig_specs{'PageQuantity1'} $$sig_specs{'PageQuantity2'} $$sig_specs{'PageQuantity3'}" );
+	$openprint::log->warn("# of Additional Impositions: " . @additional_impositions );
+	foreach my $I ( @additional_impositions ) {
+		$I->display();
+	} # end foreach
+} # end if
+
+			while ( my $Imposition = shift @additional_impositions ) {
+				if ( ! @sigs ) {
+					push @sigs, copy_signature( $project_index, $sig_specs );
+				} # endif
+				my $a_ss_id = shift @sigs;
+				my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
+				my %specs = %{$new_sig_specs};
+				openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, $new_sig_specs, $Imposition );
+
+				my $ac = sql::start_transaction( $openprint::dbh );
+				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
+
+				foreach my $key ( eval( 'openprint::Estimating::Printing::variables( $project_index )') ) {
+					$log->debug("Internal Calc:: looking at $key $specs{$key} :". $$new_sig_specs{$key}) if $debug;
+
+					openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $$new_sig_specs{$key} );
+				} # end foreach
+				sql::end_transaction( $openprint::dbh, $ac );
+
+			} # end while Imposition
+
+			# Clean up any leftovers
+			while ( my $ss_id = shift @sigs ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
+				@signatures = sets::exclude( [ $ss_id ], \@signatures );
+			} # end while sigs
+
+		} else {
+			$openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
+			$status = $$sig_specs{'Status'};
+		} # end if
+	} # end foreach type
 
 #So all signatures were able to be calculated... which is good, but we may have too many, or not enough signatures
-$openprint::log->debug("after initial recalc");
+#$openprint::log->debug("after initial recalc");
+				#if ( ( @sigs > 1 ) and $$printing_specs{'txtTotalPageQuantity'} and $$sig_specs{'txtSignatureType'} ne 'Cover Pages' and ! ( $$sig_specs{'PageQuantity1'}
+							##or $$sig_specs{'PageQuantity2'}
+							#or $$sig_specs{'PageQuantity3'} ) ) {
+#$openprint::log->warn('Deleting due to no pages');
+					#openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
+					#@signatures = sets::exclude( [ $ss_id ], \@signatures );
+				#} # end if
 
 	# Chekc for unspecified pages
-		foreach my $ss_id ( @signatures ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$sig_specs{'txtQuantity'.$qty_index};
-				$unspecified_pages = openprint::Estimating::Printing::get_unspecified_pages( $Project, undef, $printing_specs, $sig_specs, $qty_index );
-				last if $unspecified_pages;
-			} # end foreach
-
-	$openprint::log->warn("Unspecified: for $$sig_specs{'txtSignatureType'} $unspecified_pages pages");
-			if ( $unspecified_pages == 0 ) {
-				if ( ! ( $$sig_specs{'PageQuantity1'} or $$sig_specs{'PageQuantity2'} or $$sig_specs{'PageQuantity3'} ) ) {
-					openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
-					@signatures = sets::exclude( [ $ss_id ], \@signatures );
-				} # end if
-			} elsif ( ( $unspecified_pages > 0 ) and ( $$sig_specs{'txtSignatureType'} ne 'Cover Pages' ) ) {
-	# Need to add signatures
-				my $check_unspecified_pages = $unspecified_pages;
-				while ( $unspecified_pages > 0 ) {
-					if ( $service_index ) {
-						$sig_specs = openprint::service::get_specs_ref( $Project, $service_index );
-					} # end if
-					my $new_service_index = copy_signature( $project_index, $sig_specs );
-					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $new_service_index );
-
-					# Need to dro poverrides on the last sig so that we don't get more spreads than we need
-					foreach my $qty_index ( 1 .. 3 ) {
-						next if ! $Project->quantity($qty_index);
-						if ( $$new_sig_specs{'PageQuantity'.$qty_index} > $unspecified_pages ) {
-							openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverridePageQuantity'.$qty_index, '' );
-							openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverrideImposition'.$qty_index, '' );
-						} # end if
-					} # end foreach
-					$new_sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, 'Printing' );
-					last if $$new_sig_specs{'Status'} eq 'uncalculated';
-
-					foreach my $qty_index ( 1 .. 3 ) {
-						next if ! $Project->quantity($qty_index);
-						$unspecified_pages = $$new_sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
-						last if $unspecified_pages;
-					} # end foreach
-					last if $unspecified_pages == $check_unspecified_pages;
-					$check_unspecified_pages = $unspecified_pages;
-				} # end while unspecified_pages
-			} elsif ( $unspecified_pages < 0 ) {
-	# Need to remove spreads
-				while ( @signatures ) {
-					my $ss_id = pop @signatures;
-					my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
-					foreach my $qty_index ( 1 .. 3 ) {
-						$unspecified_pages = openprint::Estimating::Printing::get_unspecified_pages( $Project, undef, $printing_specs, $sig_specs, $qty_index );
-						last if $unspecified_pages >= 0;
-					} # end foreach
-					if ( (@signatures > 1 ) and ( $unspecified_pages < 0 ) ) {
-						openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
-						@signatures = sets::exclude( [ $ss_id ], \@signatures );
-					} else {
-						last;
-					} # end if
-
-				} # end while
-			} # end if
-		} # end foreach signature
+		#foreach my $ss_id ( @signatures ) {
+			#my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
+			#foreach my $qty_index ( 1 .. 3 ) {
+				#next if ! $$sig_specs{'txtQuantity'.$qty_index};
+				#$unspecified_pages = openprint::Estimating::Printing::get_unspecified_pages( $Project, undef, $printing_specs, $sig_specs, $qty_index );
+				#last if $unspecified_pages;
+			#} # end foreach
+#
+	#$openprint::log->warn("Unspecified: for $$sig_specs{'txtSignatureType'} $unspecified_pages pages");
+			#if ( $unspecified_pages == 0 ) {
+				#if ( ! ( $$sig_specs{'PageQuantity1'} or $$sig_specs{'PageQuantity2'} or $$sig_specs{'PageQuantity3'} ) ) {
+					#openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
+					#@signatures = sets::exclude( [ $ss_id ], \@signatures );
+				#} # end if
+			#} elsif ( ( $unspecified_pages > 0 ) and ( $$sig_specs{'txtSignatureType'} ne 'Cover Pages' ) ) {
+	## Need to add signatures
+				#my $check_unspecified_pages = $unspecified_pages;
+				#while ( $unspecified_pages > 0 ) {
+					#if ( $service_index ) {
+						#$sig_specs = openprint::service::get_specs_ref( $Project, $service_index );
+					#} # end if
+					#my $new_service_index = copy_signature( $project_index, $sig_specs );
+					#my $new_sig_specs = openprint::service::get_specs_ref( $Project, $new_service_index );
+#
+					## Need to dro poverrides on the last sig so that we don't get more spreads than we need
+					#foreach my $qty_index ( 1 .. 3 ) {
+						#next if ! $Project->quantity($qty_index);
+						#if ( $$new_sig_specs{'PageQuantity'.$qty_index} > $unspecified_pages ) {
+							#openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverridePageQuantity'.$qty_index, '' );
+							#openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverrideImposition'.$qty_index, '' );
+						#} # end if
+					#} # end foreach
+					#$new_sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, 'Printing' );
+					#last if $$new_sig_specs{'Status'} eq 'uncalculated';
+#
+					#foreach my $qty_index ( 1 .. 3 ) {
+						#next if ! $Project->quantity($qty_index);
+						#$unspecified_pages = $$new_sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
+						#last if $unspecified_pages;
+					#} # end foreach
+					#last if $unspecified_pages == $check_unspecified_pages;
+					#$check_unspecified_pages = $unspecified_pages;
+				#} # end while unspecified_pages
+			#} elsif ( $unspecified_pages < 0 ) {
+	## Need to remove spreads
+				#while ( @signatures ) {
+					#my $ss_id = pop @signatures;
+					#my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
+					#foreach my $qty_index ( 1 .. 3 ) {
+						#$unspecified_pages = openprint::Estimating::Printing::get_unspecified_pages( $Project, undef, $printing_specs, $sig_specs, $qty_index );
+						#last if $unspecified_pages >= 0;
+					#} # end foreach
+					#if ( (@signatures > 1 ) and ( $unspecified_pages < 0 ) ) {
+						#openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
+						#@signatures = sets::exclude( [ $ss_id ], \@signatures );
+					#} else {
+						#last;
+					#} # end if
+#
+				#} # end while
+			#} # end if
+		#} # end foreach signature
 
 	return 'calculated';
 } # end sub calculate_signatures

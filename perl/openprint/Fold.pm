@@ -215,8 +215,8 @@ $openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_we
 
 		return $Spec if (
 				(! $$Spec{interpolate})
-				and (($$Spec{min_weight} eq '') or ($$Spec{min_weight} <= $range))
-				and (($$Spec{max_weight} eq '') or ($$Spec{max_weight} >= $range))
+				and (( ! $$Spec{min_weight} ) or ($$Spec{min_weight} <= $range))
+				and (( ! $$Spec{max_weight} ) or ($$Spec{max_weight} >= $range))
 				);
 
 # first step, find one less than the min

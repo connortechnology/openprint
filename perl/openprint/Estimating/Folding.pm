@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -359,15 +359,15 @@ $openprint::log->debug("Loading imposition");
 	my $imposition;
 	if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
 		$imposition = $$sig_specs{'StitchingImposition'.$qty_index};
-$openprint::log->debug("Got impo from StitchingImposition");
+$openprint::log->debug("Got impo from StitchingImposition") if $debug;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from SaddleStitching");
+$openprint::log->debug("Got impo from SaddleStitching") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from LoopStitching");
+$openprint::log->debug("Got impo from LoopStitching") if $debug;
 	} # end if
 	$imposition = 1 if ! $imposition;
 
@@ -545,7 +545,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					next;
 				} else {
 					foreach my $F ( @good_folds ) {
-$openprint::log->debug('Got fold ' . $F->pages() );
+#$openprint::log->debug('Got fold ' . $F->pages() );
 						push @{$folds{$F->pages().'PageSignatureFold'}}, $F;
 					} # end foreach
 				} # end if able to fold all

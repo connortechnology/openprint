@@ -228,15 +228,15 @@ sub Fold {
 			$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
 			my $RunSpeed = $Fold->Specification( $$params{gsm} );
 			if ( ! $RunSpeed ) {
-$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name());
+$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
 				next;
 			} else {
-$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}");
+$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
 			} # end if
 		} # end if
-$openprint::log->debug("Got fold" . $Fold->description());
+$openprint::log->debug("Got fold" . $Fold->description()) if $debug;
 		return $Fold;
-$openprint::log->debug("NEVER Got fold" . $Fold->description());
+$openprint::log->debug("NEVER Got fold" . $Fold->description()) if $debug;
 	} # end foreach Fold
 	return;
 } # end sub Fold

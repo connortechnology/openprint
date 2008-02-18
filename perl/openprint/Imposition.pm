@@ -201,7 +201,25 @@ sub load {
 	} # end if
 	$$self{'spread_size'} = $$specs{'txtSpreadSize'};
 
-}
+} # end sub load
+
+sub save {
+	my ( $self, $specs, $qty_index ) = @_;
+	$$specs{'txtImposition'.$qty_index} = $self->imposition();
+	$$specs{'hdnImpositionRows'.$qty_index} = $self->rows();
+	$$specs{'hdnImpositionColumns'.$qty_index} = $self->columns();
+	$$specs{'hdnImpositionDutchRows'.$qty_index} = $self->dutch_rows();
+	$$specs{'hdnImpositionDutchColumns'.$qty_index} = $self->dutch_columns();
+	$$specs{'hdnImageOrientation'.$qty_index} = $self->image_orientation();
+	$$specs{'SpreadRows'.$qty_index} = $self->spread_rows();
+	$$specs{'SpreadCols'.$qty_index} = $self->spread_columns();
+	$$specs{'ddmRunStyle'.$qty_index} = $self->runstyle();
+	$$specs{'txtImageWidth'.$qty_index} = $self->image_width();
+	$$specs{'txtImageHeight'.$qty_index} = $self->image_height();
+	$$specs{'txtLayoutWidth'.$qty_index} = $self->layout_width();
+	$$specs{'txtLayoutHeight'.$qty_index} = $self->layout_height();
+	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction();
+} # end sub Save
 
 sub used_width {
 	my $self = shift;
