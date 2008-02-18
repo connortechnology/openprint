@@ -186,8 +186,9 @@ $openprint::log->warn('Deleting due to incorrect printing type');
 		} # end if
 	} # end for
 
-	foreach my $type ( 'Cover Pages','Interior Pages' ) {
-		my @sigs = sort $Project->signatures( {'type'=>$type} );
+	my @groups = sql::execute(undef, undef, 'SELECT distinct strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
+	foreach my $group ( @groups ) {
+		my @sigs = sort $Project->signatures( {'Group'=>$group} );
 		next if ! @sigs;
 		my $ss_id = shift @sigs;
 

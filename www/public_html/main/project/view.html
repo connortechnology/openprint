@@ -111,7 +111,10 @@ if ( $$variable{'HiddenSignatures'} ) {
 				return '';
 			) ?>
 			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?><?price1?></b><br/>
-			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 ); ) ?>
+			<? echo ( my $summary = openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 );
+				$summary =~ s/\n/<br\/>/g;
+				return $summary;
+			 ) ?>
 			</td>
 	<? endif ( $$variable{'Quantity1'} ) ?>
 	<? if ( $$variable{'Quantity2'} ) ?>

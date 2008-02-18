@@ -211,6 +211,8 @@ sub save {
 	$$specs{'hdnImpositionDutchRows'.$qty_index} = $self->dutch_rows();
 	$$specs{'hdnImpositionDutchColumns'.$qty_index} = $self->dutch_columns();
 	$$specs{'hdnImageOrientation'.$qty_index} = $self->image_orientation();
+	$$specs{'page_columns'.$qty_index} = $self->page_columns();
+	$$specs{'page_rows'.$qty_index} = $self->page_rows();
 	$$specs{'SpreadRows'.$qty_index} = $self->spread_rows();
 	$$specs{'SpreadCols'.$qty_index} = $self->spread_columns();
 	$$specs{'ddmRunStyle'.$qty_index} = $self->runstyle();

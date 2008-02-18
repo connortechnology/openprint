@@ -561,20 +561,8 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 
 			foreach my $Fold ( @{$folds{$fold_type}} ) {
 		
-				$openprint::log->debug("Pricing fold $fold_type") if $debug;
+				$openprint::log->debug("Pricing fold $fold_type on " . $Equipment->name()) if $debug;
 
-				my $RunSpeed = $Fold->Specification( $Imposition->Paper()->gsm() );
-				if ( ! $RunSpeed ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "No runspeed for $fold_type on " . $Equipment->name() .'<br/>';
-					next;
-				} # end if
-
-# We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
-				my %servicePrice = openprint::service::get_price_object( $Fold->type(), scalar @{$folds{$fold_type}} * $$specs{"txtQuantity$qty_index"}/$imposition, $Equipment );
-				if ( ! %servicePrice ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "No price assigned for $fold_type on ".$Equipment->name().". <br/>";
-					next;
-				} # end if
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', undef, $Equipment );
 				if ( $setupPrice{'units'} eq 'Per Form' ) {
@@ -583,13 +571,21 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					$totalPrice += $setupPrice{'Price'};
 				} # end if
 
-				# In hours
-				my $runTime = sprintf( '%.4f', ($$specs{"txtQuantity$qty_index"}/$imposition) / $$RunSpeed{'runspeed'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Folds: %d, QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', scalar @{$folds{$fold_type}}, $$specs{'txtQuantity'.$qty_index}, $imposition, $$RunSpeed{runspeed}, $runTime );
-
 				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
 					last;
 				} # end if
+
+				# In hours
+				my $RunSpeed = $Fold->Specification( $Imposition->Paper()->gsm() );
+                if ( ! ( $RunSpeed and $$RunSpeed{'runspeed'} ) ) {
+                    $$specs{'hdnBreakdown'.$qty_index} .= "No runspeed for $fold_type on " . $Equipment->name() .'<br/>';
+                    last;
+                } # end if
+
+				my $runTime = sprintf( '%.4f', ($$specs{"txtQuantity$qty_index"}/$imposition) / $$RunSpeed{'runspeed'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Folds: %d, QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', scalar @{$folds{$fold_type}}, $$specs{'txtQuantity'.$qty_index}, $imposition, $$RunSpeed{runspeed}, $runTime );
+# We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
+				my %servicePrice = openprint::service::get_price_object( $Fold->type(), scalar @{$folds{$fold_type}} * $$specs{"txtQuantity$qty_index"}/$imposition, $Equipment );
 
 				if ( lc $servicePrice{'units'} eq 'per hour' ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime * scalar @{$folds{$fold_type}};
@@ -620,7 +616,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		} # end if
 
 		# Dunno about this last line, the idea is that if we find a price on the press, then we are done, cuz nothing else will be better.... 
-		#last if $totalPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
+		last if $totalPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 	} # end foreach Equipment
 
 	my %results = (
