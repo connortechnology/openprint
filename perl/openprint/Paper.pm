@@ -41,7 +41,6 @@ my @fields = (
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;
-$openprint::log->debug("Paper find?!") if $debug;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
 	my $sql = 'SELECT *, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id) AS weight FROM Papers WHERE 1>0';
@@ -201,6 +200,7 @@ $openprint::log->debug("Paper find?!") if $debug;
 	} elsif ( ! @$data ) {
 		$openprint::log->debug('No papers loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
+		$openprint::log->debug("Debug loaded papers ($sql) (@values) :" . @$data ) if $debug;
 		#$openprint::log->debug("Debug loaded papers ($sql) (@values) in " . sprintf('%.4f', tv_interval( [$starttime])*1000) . 'usecs records:' . @$data );
 	} # end if
 	return map { new openprint::Paper( $_->{id}, $_ ) } @$data;
@@ -715,33 +715,22 @@ sub get_price {
 
 # Don't need to cut it because the mweight has already byeen cut
 	$price{'mweight'} = $self->mweight();
-	if ( (lc $price{'units'}) eq 'per 100lbs' ) {
-		if ( ! $self->mweight() ) {
-			# ROll papers won't have an mweight
-			$price{'100lb'} = $price{'Price'};
-			$price{'100lb Cost'} = $price{'Cost'};
-			$price{'100lb Price'} = $price{'Price'};
-			$price{'Cost'} *= $$self{'wpsi'} * $self->width() * $self->height();
-			$price{'Price'} *= $$self{'wpsi'} * $self->width() * $self->height();
-		} else {
-			$price{'100lb'} = $price{'Price'};
-			$price{'100lb Cost'} = $price{'Cost'};
-			$price{'100lb Price'} = $price{'Price'};
-			$price{'Cost'} *= $$self{'mweight'} / 100000;
-			$price{'Price'} *= $$self{'mweight'} / 100000;
-		} # end if
-#$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'}) ($price{'100lb Cost'}) ($price{'Price'})");
-	} elsif ( ( lc $price{'units'} ) eq 'per m' ) {
-		$price{'100lb'} = $price{'Price'} * $price{'mweight'} / 100;
-		$price{'100lb Cost'} = $price{'Cost'} * $price{'mweight'} / 100;
-		$price{'Cost'} /= 1000;
-		$price{'Price'} /= 1000;
-	} else {
-$openprint::log->warn("Invalid units in Paper.");
+	# Prices are always stored in cwt now
+	if ( ! $self->mweight() ) {
+		# ROll papers won't have an mweight
 		$price{'100lb'} = $price{'Price'};
+		$price{'100lb Cost'} = $price{'Cost'};
+		$price{'100lb Price'} = $price{'Price'};
+		$price{'Cost'} *= $$self{'wpsi'} * $self->width() * $self->height();
+		$price{'Price'} *= $$self{'wpsi'} * $self->width() * $self->height();
+	} else {
+		$price{'100lb'} = $price{'Price'};
+		$price{'100lb Cost'} = $price{'Cost'};
+		$price{'100lb Price'} = $price{'Price'};
 		$price{'Cost'} *= $$self{'mweight'} / 100000;
 		$price{'Price'} *= $$self{'mweight'} / 100000;
 	} # end if
+$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'}) ($price{'100lb Cost'}) ($price{'Price'})") if $debug;
 	return %price;
 
 } # end sub get_price

@@ -535,10 +535,12 @@ sub summary {
 				} # end if
 			} # end if
 			return '' if ! $$specs{'txtImposition'.$qty_index};
-			return sprintf(qq{%s %dout %s\n\%s},
+			return sprintf(qq{%s %dout %s on %s\n\%s},
 					$$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
 					$$specs{'txtImposition'.$qty_index},
 					($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index} ),
+					$$specs{'ddmPress'.$qty_index},
+		
 					'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index} . ($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? '' : sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index}) ),
 					);
 		} else {
