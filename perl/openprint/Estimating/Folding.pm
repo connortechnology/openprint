@@ -46,6 +46,7 @@ sub variables {
 			push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 			push @v, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index";
+			push @v, "Imposition-$$sig_specs{'SignatureIndex'}-$qty_index";
 			foreach my $fold_type ( keys %fold_types ) {
 				push @v, "$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index";
 			} # end foreach
@@ -698,6 +699,7 @@ sub calc {
 					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 						$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'}->id();
 					} # end if
+					$$specs{"Imposition-$$sig_specs{SignatureIndex}-$qty_index"} = $results{'Imposition'};
 				} else {
 					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 						$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
