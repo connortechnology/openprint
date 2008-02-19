@@ -217,24 +217,18 @@ $openprint::log->debug("Sigs in group $group : " . scalar @sigs );
 			$status = $$sig_specs{'Status'};
 			# Successfully calculated the first sig
 			# In sig_specs should be an array of Impositions to apply to other signatures, so let's add/delete/apply
-			my @additional_impositions = @{$$sig_specs{'Additional Impositions'}} if $$sig_specs{'Additional Impositions'};
 
-			if ( $debug ) {
-				$openprint::log->warn("Pages chosen: $$sig_specs{'PageQuantity1'} $$sig_specs{'PageQuantity2'} $$sig_specs{'PageQuantity3'}" );
-				$openprint::log->warn("# of Additional Impositions: " . @additional_impositions );
-				foreach my $I ( @additional_impositions ) {
-					$I->display();
-				} # end foreach
-			} # end if
-
-			while ( my $Imposition = shift @additional_impositions ) {
+			while ( 
+				( $$sig_specs{'Additional Impositions1'} and @{$$sig_specs{'Additional Impositions1'}} ) or
+				( $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}} ) or
+				( $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}} ) ) {
 				if ( ! @sigs ) {
 					push @sigs, copy_signature( $project_index, $sig_specs );
 				} # endif
 				my $a_ss_id = shift @sigs;
 				my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
 				my %specs = %{$new_sig_specs};
-				openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $Imposition );
+				openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $$sig_specs );
 
 				my $ac = sql::start_transaction( $openprint::dbh );
 				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );

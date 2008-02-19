@@ -396,9 +396,8 @@ sub get_inkcoverage {
 
 # Calculates, given the imposition
 sub calc_from_imposition {
-	my ( $Project, $service_id, $specs, $Imposition ) = @_;
+	my ( $Project, $service_id, $specs, $source_specs ) = @_;
 $openprint::log->debug(" calc_from_imposition ");
-$Imposition->display();
 
 	my $services = $Project->services();
 
@@ -413,25 +412,28 @@ $Imposition->display();
 
 	my $project = setup_project( $Project, $services, $specs );
 
+# Caches
+	my %mixed_colours;
+	my %washed_colours;
+	foreach my $index ( $Project->signatures() ) {
+		next if $index >= $service_id;
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+		foreach my $colour ( @side_one_colours, @side_two_colours ) {
+			$mixed_colours{$colour} = 1;
+			foreach my $qty_index ( 1 ..3 ) {
+				$washed_colours{$colour.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} = 1;
+			} # end foreach
+		} # end foreach
+	} # end for each
+
 	foreach my $qty_index ( 1 .. 3 ) {
 		my $qty = $Project->quantity($qty_index);
 		next if ! defined $qty;
 		next if ! int $qty;
 
-# Caches
-		my %mixed_colours;
-		my %washed_colours;
-
-		foreach my $index ( $Project->signatures() ) {
-			next if $index >= $service_id;
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-			foreach my $colour ( @side_one_colours, @side_two_colours ) {
-				$mixed_colours{$colour} = 1;
-				foreach my $qty_index ( 1 ..3 ) {
-					$washed_colours{$colour.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} = 1;
-				} # end foreach
-			} # end foreach
-		} # end for each
+		next if ! ( $$source_specs{'Additional Impositions'.$qty_index} and @{$$source_specs{'Additional Impositions'.$qty_index}} );
+		my $Imposition = shift @{$$source_specs{'Additional Impositions'.$qty_index}};
+$Imposition->display();
 
 		my $pms_prices = get_special_colours_price( $Imposition->Press(), \@filtered_colours, \%mixed_colours, \%washed_colours, \%special_colours, $qty_index );
 
