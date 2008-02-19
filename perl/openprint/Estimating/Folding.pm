@@ -379,7 +379,7 @@ $openprint::log->debug("Loading imposition");
 	foreach my $Equipment ( @my_equipment ) {
 		my %folds;
 		$$specs{'hdnBreakdown'.$qty_index} .= '<b>Equipment '.$Equipment->name().':</b><br/>';
-		$openprint::log->debug('Equipment '.$Equipment->name());
+		#$openprint::log->debug('Equipment '.$Equipment->name());
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -435,7 +435,7 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $imposition ) ) if $debug;
 			} # end if
 		} else { # Not overriden, and not a press
-$openprint::log->debug("Not overriden not a press");
+#$openprint::log->debug("Not overriden not a press");
 
 			# FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 			if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {

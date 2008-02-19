@@ -419,7 +419,7 @@ sub get_sheetsizes {
 		} # end if type
 	} # end foreach Paper
 
-	return map { 'SheetSize~'.$_.'~'.$results{$_} }
+	return map { $_, $results{$_} }
 	sort { 
 		my ( $w1, $h1 ) = split('x', $a );
 		my ( $w2, $h2 ) = split('x', $b );
