@@ -141,7 +141,7 @@ sub calculate_signatures {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $status;
-
+$openprint::log->debug("Starting Multipage::calculate_signatures");
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
@@ -189,6 +189,7 @@ $openprint::log->warn('Deleting due to incorrect printing type');
 	my @groups = sql::execute(undef, undef, 'SELECT distinct strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
 	foreach my $group ( @groups ) {
 		my @sigs = sort $Project->signatures( {'Group'=>$group} );
+$openprint::log->debug("Sigs in group $group : " . scalar @sigs );
 		next if ! @sigs;
 		my $ss_id = shift @sigs;
 

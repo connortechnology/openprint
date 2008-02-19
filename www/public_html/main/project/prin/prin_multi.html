@@ -100,6 +100,7 @@
 						} # end while
 					} # end if
 					$$variable{'txtServiceDescription1'} = 'Cover Pages';
+					$$variable{'txtSignatureType1'} = 'Cover Pages';
 				} # end if
 				if ( ! sets::isin( 2, \@Groups ) ) {
 					# Ensure 1 interior pages
@@ -113,6 +114,7 @@
 						} # end while
 					} # end if
 					$$variable{'txtServiceDescription2'} = 'Interior Pages';
+					$$variable{'txtSignatureType2'} = 'Interior Pages';
 				} # end if
 				my $html = '';
 				foreach my $Group ( @Groups ) {

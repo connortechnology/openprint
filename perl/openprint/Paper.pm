@@ -921,24 +921,30 @@ sub load_from_signature {
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 
 	} else {
-
-		my @Papers = openprint::Paper::find(
+		my %params = (
 				'name'      => $$specs{'ddmStockBrand'},
 				'finish'    => $$specs{'ddmStockFinish'},
 				'colour'    => $$specs{'ddmStockColour'},
 				'weight'    => $$specs{'ddmStockWeight'},
-				'width'     => $$specs{'StockType'.$qty_index} eq 'Roll' ? undef : $$specs{'hdnSuppliedStockWidth'.$qty_index},
-				'height'    => $$specs{'StockType'.$qty_index} eq 'Roll' ? undef : $$specs{'hdnSuppliedStockHeight'.$qty_index},
-				'type'		=>	$$specs{'StockType'.$qty_index},
 				'project_type_id'=> $Project ? $Project->Type()->id() : undef,
-				);
+		);
+		if ( $qty_index ) {
+			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
+				$params{'width'} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
+				$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
+			} # end if
+			$params{'type'}	= $$specs{'StockType'.$qty_index};
+		} # end if
+		my @Papers = find( %params );
 		$Paper = shift @Papers;
 		$Paper = new openprint::Paper() if ! $Paper;
-		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
-			$Paper = $Paper->clone();
-			$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			$Paper->height( $$specs{'StockHeight'.$qty_index} );
-			$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
+		if ( $qty_index ) {
+			if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
+				$Paper = $Paper->clone();
+				$Paper->width( $$specs{'StockWidth'.$qty_index} );
+				$Paper->height( $$specs{'StockHeight'.$qty_index} );
+				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
+			} # end if
 		} # end if
 	} # end if
 	return $Paper;
