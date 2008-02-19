@@ -228,7 +228,7 @@ $openprint::log->debug("Sigs in group $group : " . scalar @sigs );
 				my $a_ss_id = shift @sigs;
 				my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
 				my %specs = %{$new_sig_specs};
-				openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $$sig_specs );
+				openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $sig_specs );
 
 				my $ac = sql::start_transaction( $openprint::dbh );
 				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );

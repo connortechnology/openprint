@@ -431,7 +431,20 @@ $openprint::log->debug(" calc_from_imposition ");
 		next if ! defined $qty;
 		next if ! int $qty;
 
-		next if ! ( $$source_specs{'Additional Impositions'.$qty_index} and @{$$source_specs{'Additional Impositions'.$qty_index}} );
+		if ( ! ( $$source_specs{'Additional Impositions'.$qty_index} and @{$$source_specs{'Additional Impositions'.$qty_index}} ) ) {
+			$$specs{'ddmPress'.$qty_index} = '';
+			$$specs{'PageQuantity'.$qty_index} = '';
+			$$specs{'txtImposition'.$qty_index} = '';
+			$$specs{'StockType'.$qty_index} = '';
+			$$specs{'StockWidth'.$qty_index} = '';
+			$$specs{'StockHeight'.$qty_index} = '';
+			$$specs{'txtPressSheetQty'.$qty_index} = 0;
+			$$specs{'hdnNetSheetCount'.$qty_index} = 0;
+			$$specs{'SheetQuantity'.$qty_index} = 0;
+		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', 0 );
+			next;
+		} # end if
 		my $Imposition = shift @{$$source_specs{'Additional Impositions'.$qty_index}};
 $Imposition->display();
 
@@ -1382,7 +1395,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 
 		$Imposition->save( $specs, $qty_index );
-		$$specs{'Additional Impositions'} = $$b_price{'Additional Impositions'};
+		$$specs{'Additional Impositions'.$qty_index} = $$b_price{'Additional Impositions'};
 
 		$$specs{'ddmBleedSize'.$qty_index} = $best_price{'ddmBleedSize'};
 		$$specs{'ddmPress'.$qty_index} = $Press->strid();
