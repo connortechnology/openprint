@@ -128,13 +128,13 @@ $openprint::log->debug("Page: $page");
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
 				my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
-				$log->debug("Looking for $file");
+				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
 				$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
-				$log->debug("Looking for $file");
+				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
