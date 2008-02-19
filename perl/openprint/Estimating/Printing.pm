@@ -502,7 +502,7 @@ $Imposition->display();
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 #my $master_time = gettimeofday();
-
+$openprint::log->debug("Starting Printing::calc");
 	if ( ! $project_index or ! $service_index ) {
 		$log->debug("No Project Index ($project_index) or Service_index ($service_index)" );
 		return $$specs{'Status'} = 'uncalculated';
@@ -887,7 +887,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-if ( $debug ) {
+if ( $debug or 1 ) {
 	foreach my $P ( @Papers ) {
 $openprint::log->debug("Paper: " . $P->to_string() );
 	} # end foreach
@@ -913,7 +913,7 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 		foreach my $colour ( get_colours( $sig_specs, 'SideOne' ), get_colours( $sig_specs, 'SideTwo' ) ) {
 			$mixed_colours{$colour} = 1;
-			foreach my $qty_index ( 1 ..3 ) {
+			foreach my $qty_index ( 1 .. 3 ) {
 				$washed_colours{$colour.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} = 1;
 			} # end foreach
 		} # end foreach
@@ -1543,7 +1543,7 @@ sub get_project_price {
 			@impositions = @{$$impositions{$Press->id()}} if $$impositions{$Press->id()};
 		} # end if
 		if ( ! $Press ) {
-			$openprint::log->debug("No Press");
+			#$openprint::log->debug("No Press");
 			next;
 		} # end if
 
@@ -1628,7 +1628,8 @@ $openprint::log->debug("QTY: $qty_index");
 
 			while ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} > 0 ) {
 				if ( $s_id ) {
-					foreach ( sort $Project->signatures({'type'=>$$specs{'txtSignatureType'}}) ) {
+					#foreach ( sort $Project->signatures({'type'=>$$specs{'txtSignatureType'}}) ) {
+					foreach ( sort $Project->signatures({'Group'=>$$specs{'Group'}}) ) {
 						if ( $_ > $s_id ) {
 							$s_id = $_;
 							%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
@@ -1685,6 +1686,7 @@ $openprint::log->debug("QTY: $qty_index");
 					if ( $additional_signature_cache{$new_specs{'txtUnspecifiedPageQuantity'.$qty_index}} ) {
 #$openprint::log->debug("Using cache: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
 						$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtUnspecifiedPageQuantity'.$qty_index}}, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, ( %best_price ? $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'} : 0 ), $pms_prices, $inkCoverage, $special_colours );
+						push @{$$imp{'Additional Impositions'}}, $$sig_price{'Imposition'};
 					} else {
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedPageQuantity'.$qty_index} <= " . $imp->spreads() );
 						my $services = $Project->services();

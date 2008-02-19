@@ -63,13 +63,12 @@ sub variables {
 }
 
 sub signature_needs {
-	my ( $log, $dbh, $project_index, $specs ) = @_;
+	my ( $Project, $specs ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
     if ( $$services{'NoBindery'} ) {
-        $log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
+        $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
         return 0;
     } # end if
 
@@ -121,7 +120,7 @@ sub neccessary {
 	foreach my $signature_service_index ( $Project->signatures() ) {
 
 		my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		if ( signature_needs( $log, $dbh, $project_index, $specs ) ) {
+		if ( signature_needs( $Project, $specs ) ) {
 			return 1;
 		} # end if
 	} # end foreach
@@ -132,6 +131,7 @@ sub neccessary {
 sub signature_calc_stock_cutting {
 	my ( $log, $dbh, $variable, $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper ) = @_;
 
+#$openprint::log->debug("Loading Paper from signature in signature_calc_stock_cutting");
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
 
 # Have an imposition, so can do all calculations
@@ -254,6 +254,7 @@ sub signature_calc_folding_cutting {
 	my $services = $Project->services();
 	return %results if ! $$services{'Folding'};
 
+#$openprint::log->debug("Loading Paper from signature in signature_calc_folding_cutting");
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
 	if ( ! $I ) {
 		$I = new openprint::Imposition();
@@ -351,6 +352,7 @@ sub signature_calc_folding_cutting {
 sub signature_calc {
 	my ( $log, $dbh, $variable, $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I ) = @_;
 
+#$openprint::log->debug("Loading Paper from signature in Cutting signature_calc_");
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
 	if ( ! $I ) {
 		$I = new openprint::Imposition();

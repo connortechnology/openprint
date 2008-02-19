@@ -360,15 +360,15 @@ $openprint::log->debug("Loading imposition");
 	my $imposition;
 	if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
 		$imposition = $$sig_specs{'StitchingImposition'.$qty_index};
-$openprint::log->debug("Got impo from StitchingImposition") if $debug;
+#$openprint::log->debug("Got impo from StitchingImposition") if $debug;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from SaddleStitching") if $debug;
+#$openprint::log->debug("Got impo from SaddleStitching") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-$openprint::log->debug("Got impo from LoopStitching") if $debug;
+#$openprint::log->debug("Got impo from LoopStitching") if $debug;
 	} # end if
 	$imposition = 1 if ! $imposition;
 
@@ -379,7 +379,7 @@ $openprint::log->debug("Got impo from LoopStitching") if $debug;
 	foreach my $Equipment ( @my_equipment ) {
 		my %folds;
 		$$specs{'hdnBreakdown'.$qty_index} .= '<b>Equipment '.$Equipment->name().':</b><br/>';
-		#$openprint::log->debug('Equipment '.$Equipment->name());
+		$openprint::log->debug('Equipment '.$Equipment->name());
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -435,11 +435,12 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $imposition ) ) if $debug;
 			} # end if
 		} else { # Not overriden, and not a press
+$openprint::log->debug("Not overriden not a press");
 
 			# FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 			if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
 $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}");
-				$_ = $Equipment->fits( $Imposition->image_width(), $Imposition->image_height(), $$sig_specs{'txtSpecificStockCalliper'} );
+				$_ = $Equipment->fits( $Imposition->image_width(), $Imposition->image_height() );
 				if ( $_ ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit: $_<br/>";
 				} else {
@@ -479,7 +480,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					$openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Equipment->name()) if $debug;
 
 # See if it fits
-					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width() * $imposition, $I->image_height() ) : ( $I->image_width(), $I->image_height() * $imposition ), $$sig_specs{'txtSpecificStockCalliper'} );
+					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width() * $imposition, $I->image_height() ) : ( $I->image_width(), $I->image_height() * $imposition ) );
 
 					if ( ! $_ )  {
 
@@ -500,6 +501,8 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 						} else {
 							$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $I->page_columns(), $I->page_rows(), $I->image_orientation(), $I->imposition(), $imposition ) ) if $debug;
 						} # end if
+					} elsif ( @my_equipment == 1 ) {
+						$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit $_.<br/>";
 					} # end if
 
 					# This tells us whether it's a book or not
