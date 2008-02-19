@@ -7,7 +7,7 @@ use openprint::Fold;
 use openprint::FoldSpecification;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
 
 my %fields = (
 	'id'					=>	'id',

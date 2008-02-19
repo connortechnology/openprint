@@ -219,13 +219,13 @@ $openprint::log->debug("Sigs in group $group : " . scalar @sigs );
 			# In sig_specs should be an array of Impositions to apply to other signatures, so let's add/delete/apply
 			my @additional_impositions = @{$$sig_specs{'Additional Impositions'}} if $$sig_specs{'Additional Impositions'};
 
-if ( $debug ) {
-$openprint::log->warn("Pages chosen: $$sig_specs{'PageQuantity1'} $$sig_specs{'PageQuantity2'} $$sig_specs{'PageQuantity3'}" );
-	$openprint::log->warn("# of Additional Impositions: " . @additional_impositions );
-	foreach my $I ( @additional_impositions ) {
-		$I->display();
-	} # end foreach
-} # end if
+			if ( $debug ) {
+				$openprint::log->warn("Pages chosen: $$sig_specs{'PageQuantity1'} $$sig_specs{'PageQuantity2'} $$sig_specs{'PageQuantity3'}" );
+				$openprint::log->warn("# of Additional Impositions: " . @additional_impositions );
+				foreach my $I ( @additional_impositions ) {
+					$I->display();
+				} # end foreach
+			} # end if
 
 			while ( my $Imposition = shift @additional_impositions ) {
 				if ( ! @sigs ) {
@@ -234,21 +234,22 @@ $openprint::log->warn("Pages chosen: $$sig_specs{'PageQuantity1'} $$sig_specs{'P
 				my $a_ss_id = shift @sigs;
 				my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
 				my %specs = %{$new_sig_specs};
-				openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, $new_sig_specs, $Imposition );
+				openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $Imposition );
 
 				my $ac = sql::start_transaction( $openprint::dbh );
 				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
 
 				foreach my $key ( eval( 'openprint::Estimating::Printing::variables( $project_index )') ) {
-					$log->debug("Internal Calc:: looking at $key $specs{$key} :". $$new_sig_specs{$key}) if $debug;
+					$log->debug("Multipage Calc:: looking at $key $specs{$key} : $$new_sig_specs{$key}") if $debug;
 
-					openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $$new_sig_specs{$key} );
+					openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $specs{$key} );
 				} # end foreach
 				sql::end_transaction( $openprint::dbh, $ac );
 
-			} # end while Imposition
+			} # end while Additional Imposition
 
 			# Clean up any leftovers
+$openprint::log->debug("Remaining sigs " . @sigs);
 			while ( my $ss_id = shift @sigs ) {
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
 				@signatures = sets::exclude( [ $ss_id ], \@signatures );

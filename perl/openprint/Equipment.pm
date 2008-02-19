@@ -7,7 +7,7 @@ require openprint::EquipmentSpecification;
 require openprint::Fold;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
 my %find_cache;
 my %fields = (
 	'id'	=>	'lngindex',
@@ -160,10 +160,10 @@ sub fits {
 	   } # end if
    } # end if
 
-   if ( $self->specification('Minimum Calliper') and 1*$calliper < 1*$self->specification('Minimum Calliper') ) {
+   if ( $self->specification('Minimum Calliper') and $calliper and ( 1*$calliper < 1*$self->specification('Minimum Calliper') ) ) {
 	   return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification('Minimum Calliper') .' Inches.';
    } # end if
-   if ( $self->specification('Maximum Calliper') and 1*$calliper > 1*$self->specification('Maximum Calliper') ) {
+   if ( $self->specification('Maximum Calliper') and $calliper and ( 1*$calliper > 1*$self->specification('Maximum Calliper') ) ) {
 	   return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specifications('Maximum Calliper') .' Inches.';
    } # end if
 
