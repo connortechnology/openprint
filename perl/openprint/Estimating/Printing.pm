@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $threading = 1;
+my $threading = 0;
 my $debug = 0;
 my $master_time;
 
@@ -1380,7 +1380,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 
 		$Imposition->save( $specs, $qty_index );
-		$$specs{'Additional Impositions'} = $$Imposition{'Additional Impositions'};
+		$$specs{'Additional Impositions'} = $$b_price{'Additional Impositions'};
 
 		$$specs{'ddmBleedSize'.$qty_index} = $best_price{'ddmBleedSize'};
 		$$specs{'ddmPress'.$qty_index} = $Press->strid();
@@ -1667,14 +1667,14 @@ $openprint::log->debug("QTY: $qty_index");
 
 						$additional_price *= $sigs;
 						foreach ( 0 .. $sigs ) {
-							push @{$$imp{'Additional Impositions'}},$imp;
+							push @{$$price{'Additional Impositions'}},$imp;
 						} # end foreach
 						$additional_price += $$sig_price{'Stitching Cost'};
 						$additional_price += $$sig_price{'PerfectBound Cost'};
 						#last if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} % $imp->pages() >= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 						$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index} % $imp->pages();
 					} else {
-						push @{$$imp{'Additional Impositions'}},$imp;
+						push @{$$price{'Additional Impositions'}},$imp;
 						$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $imp->pages();
 					} # end if
 					# This is crucial because we might fall through to the next case on the next iteration, and New_specs needs to be uptodate
@@ -1686,7 +1686,7 @@ $openprint::log->debug("QTY: $qty_index");
 					if ( $additional_signature_cache{$new_specs{'txtUnspecifiedPageQuantity'.$qty_index}} ) {
 #$openprint::log->debug("Using cache: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
 						$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtUnspecifiedPageQuantity'.$qty_index}}, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, ( %best_price ? $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'} : 0 ), $pms_prices, $inkCoverage, $special_colours );
-						push @{$$imp{'Additional Impositions'}}, $$sig_price{'Imposition'};
+						push @{$$price{'Additional Impositions'}}, $$sig_price{'Imposition'};
 					} else {
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedPageQuantity'.$qty_index} <= " . $imp->spreads() );
 						my $services = $Project->services();
@@ -1718,7 +1718,8 @@ $openprint::log->debug("QTY: $qty_index");
 							$additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}} = $$sig_price{'Imposition'};
 
 # get_project_price is recursive so we are done
-							push @{$$imp{'Additional Impositions'}}, $$sig_price{'Imposition'};
+							push @{$$price{'Additional Impositions'}}, $$sig_price{'Imposition'};
+							push @{$$price{'Additional Impositions'}}, @{$$sig_price{'Additional Impositions'}} if $$sig_price{'Additional Impositions'};
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0;
 							$new_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 						} # end if
