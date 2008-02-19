@@ -7,7 +7,7 @@ require openprint::EquipmentSpecification;
 require openprint::Fold;
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 my %find_cache;
 my %fields = (
 	'id'	=>	'lngindex',
