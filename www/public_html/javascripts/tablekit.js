@@ -143,6 +143,7 @@ Object.extend(TableKit, {
 	heads : {},
 	options : {
 		autoLoad : true,
+		reloadAfterAjax: true,
 		stripe : true,
 		sortable : true,
 		resizable : true,
@@ -170,27 +171,42 @@ Object.extend(TableKit, {
 	_cellcount : 0,
 	load : function() {
 		if(TableKit.options.autoLoad) {
-			if(TableKit.options.sortable) {
-				$A(TableKit.options.sortableSelector).each(function(s){
-					$$(s).each(function(t) {
-						TableKit.Sortable.init(t);
-					});
+			TableKit._autoload();
+		}
+
+		if (TableKit.options.reloadAfterAjax) {
+			Ajax.Responders.register({
+onComplete : function() { 
+setTimeout(TableKit._autoload, 10);
+}
+});
+}
+},
+
+  _autoload: function() {
+   if(TableKit.options.sortable) {
+			$A(TableKit.options.sortableSelector).each(function(s){
+				$$(s).each(function(t) {
+					TableKit.Sortable.init(t);
+
 				});
-			}
-			if(TableKit.options.resizable) {
-				$A(TableKit.options.resizableSelector).each(function(s){
-					$$(s).each(function(t) {
-						TableKit.Resizable.init(t);
-					});
+			});
+		}
+		if(TableKit.options.resizable) {
+			$A(TableKit.options.resizableSelector).each(function(s){
+				$$(s).each(function(t) {
+				TableKit.Resizable.init(t);
+
 				});
-			}
-			if(TableKit.options.editable) {
-				$A(TableKit.options.editableSelector).each(function(s){
-					$$(s).each(function(t) {
-						TableKit.Editable.init(t);
-					});
+			});
+		}
+		if(TableKit.options.editable) {
+			$A(TableKit.options.editableSelector).each(function(s){
+				$$(s).each(function(t) {
+					TableKit.Editable.init(t);
+
 				});
-			}
+			});
 		}
 	}
 });
@@ -398,14 +414,15 @@ TableKit.Sortable.Type.compare = function(a,b) {
 
 TableKit.Sortable.addSortType(
 	new TableKit.Sortable.Type('area', {
-		pattern : /^[\d]*\.?[\d]+"(?: x [\d]*\.?[\d]+")?/,
-		normal : function(v) {
-			if ( ! v )
-				return 0;
-			// This will grab the first thing that looks like a number from a string, so you can use it to order a column of various srings containing numbers.
+        pattern : /^[\d]*\.?[\d]+"(?: x [\d]*\.?[\d]+")?/,
+        normal : function(v) {
+            if ( ! v )
+                return 0;
+            // This will grab the first thing that looks like a number from a string, so you can use it to order a column of various srings containing numbers.
 			v = parseFloat(v.replace(/^.*?([\d]*\.?[\d]+"(?: x [\d]*\.?[\d]+")?).*$/,"$1"));
 			return isNaN(v) ? 0 : v;
 		}}),
+
 	new TableKit.Sortable.Type('number', {
 		pattern : /^[-+]?[\d]*\.?[\d]+(?:[eE][-+]?[\d]+)?/,
 		normal : function(v) {
@@ -849,9 +866,12 @@ TableKit.Bench = {
 		TableKit.Bench.bench = [];
 	}
 } */
-
+/*
 if(window.FastInit) {
 	FastInit.addOnLoad(TableKit.load);
 } else {
 	Event.observe(window, 'load', TableKit.load);
 }
+*/
+$(document).observe('dom:loaded', TableKit.load);
+

@@ -5,6 +5,35 @@ function body_onLoad() {
 	calc('f1');
 } // end function body_onLoad();
 
+function paper_price_calc( element, group ) {
+	if ( element.name.match( /^StockPricePerM/ ) ) {
+		var costperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		if ( get_value( element.form.elements['StockType'+group] ) == 'Roll' ) {
+			var wpsi = element.form.elements['basis_mweight'+group].value / (element.form.elements['basis_width'+group]*element.form.elements['basis_height'+group]);
+			var area = element.form.elements['txtSpecificStockWidth'+group].value * element.form.elements['txtSpecificStockHeight'+group].value;
+			element.form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (wpsi * area * 1000), 2);
+		} else {
+			if ( element.form.elements['txtCustomMWeight'+group].value ) {
+				element.form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (element.form.elements['txtCustomMWeight'].value / 100), 2 );
+			} // end if
+		} // end if
+	} else {
+		var costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+
+		if ( get_value( element.form.elements['StockType'+group] ) == 'Roll' ) {
+			return;
+		} else {
+			if ( ! element.form.elements['txtCustomMWeight'+group].value ) {
+				$('PaperAlert'+group).innerHTML = 'Please enter MWeight';
+				return;
+			} // end if
+
+			element.form.elements['StockPricePerM'+group].value = do_decimals( costcwt * element.form.elements['txtCustomMWeight'].value / 100, 2 );
+		} // end if
+	} // end if
+} // end function
+
+
 function mweight_to_gsm( form, signature ) {
 	var width;
 	var height;

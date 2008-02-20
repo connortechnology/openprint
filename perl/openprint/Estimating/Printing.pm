@@ -118,7 +118,6 @@ my %variables = (
 		'txtSpecificStockCalliper' => ['save','output'], 'txtSpecificStockWidth' => ['save'], 'txtSpecificStockHeight' => ['save'], 'CustomSheetDoubleSided' => ['save'], 'CustomStockPrice' => ['save'],'txtCustomMWeight' => ['save'],'txtStockGSM' => ['save','output'],
 		'basis_width'=>['save'],'basis_height'=>['save'],'basis_mweight'=>['save'],
 		'StockGrade'	=> ['save'],	
-		'CustomStockPriceUnits' => ['save'],
 		'txtUnspecifiedPageQuantity1' => ['output'], 'PageQuantity1' => ['save','output'],
 		'txtUnspecifiedPageQuantity2' => ['output'], 'PageQuantity2' => ['save','output'],
 		'txtUnspecifiedPageQuantity3' => ['output'], 'PageQuantity3' => ['save','output'],
@@ -730,10 +729,6 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 			$$specs{'alert'} .= 'Please enter the stock cost in order to achieve an accurate imposition.';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
-		if ( ! $$specs{'CustomStockPriceUnits'} ) {
-			$$specs{'alert'} .= 'Please select the units for the stock price';
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
 		if ( ( ! $$specs{'StockGrade'} ) and $$specs{'txtSpecificStockFinish'} ) {
 			if ( $$specs{'txtSpecificStockFinish'} =~ /gloss/i ) {
 				$$specs{'StockGrade'} = 1;
@@ -776,14 +771,14 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 		} # end if
 		my $Paper = new openprint::Paper();
 		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',($$specs{'txtSpecificStockBrand'} =~ /offset/i ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
-		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight'};
+		@$Paper{'width','height','mweight','Price','type','basis_width','basis_height','basis_mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','basis_width','basis_height','basis_mweight'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};
 		} # end if
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		push @Papers, $Paper;
 		@$Paper{'start_width','start_height'} = @$Paper{'width','height'};
-		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','CustomStockPriceUnits','basis_mweight' ) {
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','basis_mweight' ) {
 			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
@@ -824,7 +819,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 			$P->prices();
 		} # end foreach
 		$$specs{'txtSpecificStockCalliper'} = $Papers[0]->calliper() if @Papers;
-		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','CustomStockPriceUnits' ) {
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM' ) {
 			$variables{$k} = [ sets::union( 'output', @{$variables{$k}} ) ];
 		} # end foreach
 	} # end if
@@ -1480,7 +1475,12 @@ sub breakdown {
 	$breakdown .= '<b>Setups</b><br/>';
 	#$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
 	$breakdown .= $$price{'Setup Breakdown'};
-	$breakdown .= sprintf("\tImposition Charge:\t\$%1\$.2f + \$%2\$.2f*\%4\$d=\$%3\$.2f<br/>", @$price{'Imposition MakeReady','Imposition Price','Imposition Total'}, $Imposition->imposition() );
+	my $ImpositionCharge = $$price{'Imposition Price'};
+	if ( $$ImpositionCharge{units} eq 'Per Page' ) {
+	$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d pages = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->pages() );
+	} else {
+	$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d out = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$Imposition{Price}, $Imposition->imposition() );
+	} # end if
 	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", $$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
 	$breakdown .= sprintf("\tAqueous Setup:\t\$%.2f<br/>", $$Aqueous{'Setup'}) if $$Aqueous{'Setup'};
@@ -2183,9 +2183,17 @@ sub calc_price {
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
 		$price{'Imposition MakeReady'} = openprint::service::get_price( 'ImpositionMakeReady','',$Press );
-		$price{'Imposition Price'} = openprint::service::get_price( 'Imposition',$Imposition->imposition(),$Press);
+		$price{'Imposition Total'} = $price{'Imposition MakeReady'};
+		my %ImpositionCharge = openprint::service::get_price_object( 'Imposition',undef,$Press);
+		if ( $ImpositionCharge{'units'} eq 'Per Page' ) {
+			%ImpositionCharge = openprint::service::get_price_object( 'Imposition',$Imposition->pages(),$Press);
+			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->pages();
+		} else {
+			%ImpositionCharge = openprint::service::get_price_object( 'Imposition',$Imposition->imposition(),$Press);
+			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->imposition();
+		} # end if
+		$price{'Imposition Price'} = \%ImpositionCharge;
 	} # end if
-	$price{'Imposition Total'} = $price{'Imposition MakeReady'} + $price{'Imposition Price'} * $$Imposition{imposition};
 
 	my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup','',$Press );
 	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
@@ -3007,7 +3015,7 @@ sub compare_signatures {
 #} # end if
 #} # end foreach q_i
 	foreach my $key (
-			'CustomStockPrice','txtCustomMWeight','CustomStockPriceUnits','txtStockGSM',
+			'CustomStockPrice','txtCustomMWeight','txtStockGSM',
 			'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour',
 			'txtSpecificStockWidth', 'txtSpecificStockHeight',
 			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',

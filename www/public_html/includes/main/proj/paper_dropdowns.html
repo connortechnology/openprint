@@ -36,15 +36,15 @@
 			</p>
 <? eval (
 	@{$$variable{'PaperTypes'}} = ('Sheet');
-	if ( openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
-	push @{$$variable{'PaperTypes'}}, 'Roll';
+	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
+		push @{$$variable{'PaperTypes'}}, 'Roll';
 	} # end if
 ) ?>
 <? if ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<p><label>Format:</label>
-				<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( 'checked="checked"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').show();$('BasisSize<?Signature?>').hide();$('MWeight<?Signature?>').show();clear_ddm(f1.elements['CustomStockPriceUnits<?Signature?>']);add_option(f1.elements['CustomStockPriceUnits<?Signature?>'],'Per 100lbs','Per 100lbs','Per 100lbs');add_option(f1.elements['CustomStockPriceUnits<?Signature?>'],'Per M','Per M','Per 100lbs');gsm_to_mweight(this.form,'<?Signature?>');} calc(this.form.name);" />
+				<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( 'checked="checked"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').show();$('BasisSize<?Signature?>').hide();$('MWeight<?Signature?>').show();$('PricePerM').show();gsm_to_mweight(this.form,'<?Signature?>');} calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Sheet">Sheet</label>
-				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( 'checked="checked"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?> onclick="if ( this.checked ) { f1.elements['txtSpecificStockHeight<?Signature?>'].value='';$('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();clear_ddm(f1.elements['CustomStockPriceUnits<?Signature?>']);add_option(f1.elements['CustomStockPriceUnits<?Signature?>'],'Per 100lbs','Per 100lbs','Per 100lbs');gsm_to_mweight(this.form,'<?Signature?>');}calc(this.form.name);" />
+				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( 'checked="checked"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?> onclick="if ( this.checked ) { f1.elements['txtSpecificStockHeight<?Signature?>'].value='';$('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();$('PricePerM').hide();gsm_to_mweight(this.form,'<?Signature?>');paper_price_calc(this,'<?Signature?>');}calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Roll">Roll</label>
 			</p>
 <? else ( @{$$variable{'PaperTypes'}} > 1 ) ?>
@@ -52,16 +52,8 @@
 <? endif ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<p id="SpecificStockSize<?Signature?>">
 				<label>Size:</label>
-				<input type="text" name="txtSpecificStockWidth<?Signature?>" size="9" value="<? echo ( $$variable{'txtSpecificStockWidth'.$$variable{'Signature'}} ) ?>" onkeyup="ddmStockWeight_onchange(this,'<?Signature?>');gsm_to_mweight(this.form,'<?Signature?>');" />
-				<span id="SpecificStockHeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>> x <input type="text" id="txtSpecificStockHeight<?Signature?>" name="txtSpecificStockHeight<?Signature?>" size="9" value="<? echo ( $$variable{'txtSpecificStockHeight'.$$variable{'Signature'}} ) ?>" onkeyup="ddmStockWeight_onchange(this,'<?Signature?>');gsm_to_mweight(this.form,'<?Signature?>');" /></span>
-			</p>
-			<p>
-				<label>Price:</label><input type="text" name="CustomStockPrice<?Signature?>" size="9" value="<? echo ( $$variable{'CustomStockPrice'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
-				<select name="CustomStockPriceUnits<?Signature?>" onchange="calc(this.form.name);">
-					<? echo (
-						ssi::make_drop_down( [ map { $_, $_ } ( 'Per 100lbs', 'Per M' ) ], $$variable{'CustomStockPriceUnits'.$$variable{'Signature'}} );
-					) ?>
-				</select>
+				<input type="text" name="txtSpecificStockWidth<?Signature?>" size="9" value="<? echo ( $$variable{'txtSpecificStockWidth'.$$variable{'Signature'}} ) ?>" onkeyup="ddmStockWeight_onchange(this,'<?Signature?>');gsm_to_mweight(this.form,'<?Signature?>');paper_price_calc(this,'<?Signature?>');" />
+				<span id="SpecificStockHeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>> x <input type="text" id="txtSpecificStockHeight<?Signature?>" name="txtSpecificStockHeight<?Signature?>" size="9" value="<? echo ( $$variable{'txtSpecificStockHeight'.$$variable{'Signature'}} ) ?>" onkeyup="ddmStockWeight_onchange(this,'<?Signature?>');gsm_to_mweight(this.form,'<?Signature?>');paper_price_calc(this,'<?Signature?>');" /></span>
 			</p>
 			<p id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>>
 			<label>MWeight:</label><input type="text" name="txtCustomMWeight<?Signature?>" size="9" value="<? echo ( $$variable{'txtCustomMWeight'.$$variable{'Signature'}} ) ?>" onkeyup="mweight_to_gsm(this.form,'<?Signature?>');calc(this.form.name);" />
@@ -70,6 +62,12 @@
 				<label>Basis MWeight:</label><input type="text" name="basis_mweight<?Signature?>" size="9" value="<? echo ( $$variable{'basis_mweight'.$$variable{'Signature'}} ) ?>" onkeyup="mweight_to_gsm(this.form,'<?Signature?>');calc(this.form.name);" /><br/>
 				<label>Basis Size:</label><input type="text" name="basis_width<?Signature?>" size="9" value="<? echo ( $$variable{'basis_width'.$$variable{'Signature'}} ? $$variable{'basis_width'.$$variable{'Signature'}} : 25 ) ?>" onkeyup="gsm_to_mweight(this.form,'<?Signature?>');calc(this.form.name);" />
 				<input type="text" name="basis_height<?Signature?>" size="9" value="<? echo ( $$variable{'basis_height'.$$variable{'Signature'}} ? $$variable{'basis_height'.$$variable{'Signature'}} : 38 ) ?>" onkeyup="gsm_to_mweight(this.form,'<?Signature?>');calc(this.form.name);" />
+			</p>
+			<p>
+				<label>Price:</label>
+				<input type="text" name="CustomStockPrice<?Signature?>" size="9" value="<? echo ( $$variable{'CustomStockPrice'.$$variable{'Signature'}} ) ?>" onkeyup="paper_price_calc(this,'<?Signature?>');calc(this.form.name);" />/cwt
+				<span id="PricePerM" <? echo ( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ? 'style="display:none;"' : '' ) ?><input type="text" name="StockPricePerM<?Signature?>" size="9" value="<? echo ( $$variable{'StockPricePerM'.$$variable{'Signature'}} ) ?>" onkeyup="paper_price_calc(this,'<?Signature?>');calc(this.form.name);" />/M</span><br/>
+				<span id="PaperAlert<?Signature?>"></span>
 			</p>
 			<p><label>GSM:</label><input type="text" id="txtStockGSM<?Signature?>" name="txtStockGSM<?Signature?>" size="9" value="<? echo ( $$variable{'txtStockGSM'.$$variable{'Signature'}} ) ?>" onkeyup="gsm_to_mweight(this.form,'<?Signature?>');calc(this.form.name);" /></p>
 			<p><label>Double sided?</label>
