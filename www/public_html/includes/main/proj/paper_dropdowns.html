@@ -66,7 +66,7 @@
 			<p>
 				<label>Price:</label>
 				<input type="text" name="CustomStockPrice<?Signature?>" size="9" value="<? echo ( $$variable{'CustomStockPrice'.$$variable{'Signature'}} ) ?>" onkeyup="paper_price_calc(this,'<?Signature?>');calc(this.form.name);" />/cwt
-				<span id="PricePerM" <? echo ( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ? 'style="display:none;"' : '' ) ?><input type="text" name="StockPricePerM<?Signature?>" size="9" value="<? echo ( $$variable{'StockPricePerM'.$$variable{'Signature'}} ) ?>" onkeyup="paper_price_calc(this,'<?Signature?>');calc(this.form.name);" />/M</span><br/>
+				<span id="PricePerM" <? echo ( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ? 'style="display:none;"' : '' ) ?>><input type="text" name="StockPricePerM<?Signature?>" size="9" value="<? echo ( $$variable{'StockPricePerM'.$$variable{'Signature'}} ) ?>" onkeyup="paper_price_calc(this,'<?Signature?>');calc(this.form.name);" />/M</span><br/>
 				<span id="PaperAlert<?Signature?>"></span>
 			</p>
 			<p><label>GSM:</label><input type="text" id="txtStockGSM<?Signature?>" name="txtStockGSM<?Signature?>" size="9" value="<? echo ( $$variable{'txtStockGSM'.$$variable{'Signature'}} ) ?>" onkeyup="gsm_to_mweight(this.form,'<?Signature?>');calc(this.form.name);" /></p>

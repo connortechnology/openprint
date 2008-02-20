@@ -6,29 +6,32 @@ function body_onLoad() {
 } // end function body_onLoad();
 
 function paper_price_calc( element, group ) {
+	var form = element.form;
+	if ( ! form ) 
+		alert( 'no form' );
 	if ( element.name.match( /^StockPricePerM/ ) ) {
 		var costperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
-		if ( get_value( element.form.elements['StockType'+group] ) == 'Roll' ) {
-			var wpsi = element.form.elements['basis_mweight'+group].value / (element.form.elements['basis_width'+group]*element.form.elements['basis_height'+group]);
-			var area = element.form.elements['txtSpecificStockWidth'+group].value * element.form.elements['txtSpecificStockHeight'+group].value;
-			element.form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (wpsi * area * 1000), 2);
+		if ( get_value( form.elements['StockType'+group] ) == 'Roll' ) {
+			var wpsi = form.elements['basis_mweight'+group].value / (form.elements['basis_width'+group]*form.elements['basis_height'+group]);
+			var area = form.elements['txtSpecificStockWidth'+group].value * form.elements['txtSpecificStockHeight'+group].value;
+			form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (wpsi * area * 1000), 2);
 		} else {
-			if ( element.form.elements['txtCustomMWeight'+group].value ) {
-				element.form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (element.form.elements['txtCustomMWeight'].value / 100), 2 );
+			if ( form.elements['txtCustomMWeight'+group].value ) {
+				form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (form.elements['txtCustomMWeight'].value / 100), 2 );
 			} // end if
 		} // end if
 	} else {
 		var costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 
-		if ( get_value( element.form.elements['StockType'+group] ) == 'Roll' ) {
+		if ( get_value( form.elements['StockType'+group] ) == 'Roll' ) {
 			return;
 		} else {
-			if ( ! element.form.elements['txtCustomMWeight'+group].value ) {
+			if ( ! form.elements['txtCustomMWeight'+group].value ) {
 				$('PaperAlert'+group).innerHTML = 'Please enter MWeight';
 				return;
 			} // end if
 
-			element.form.elements['StockPricePerM'+group].value = do_decimals( costcwt * element.form.elements['txtCustomMWeight'].value / 100, 2 );
+			form.elements['StockPricePerM'+group].value = do_decimals( costcwt * form.elements['txtCustomMWeight'+group].value / 100, 2 );
 		} // end if
 	} // end if
 } // end function
