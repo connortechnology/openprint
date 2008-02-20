@@ -93,6 +93,8 @@ $openprint::log->debug("Viewing Project $project_index");
 	my @service_info = sql::execute( $log, $dbh, $_ );
 # do a little sorting, adding services with a service type
 	while ( my ($id, $n, $url ) = splice @service_info,0,3 ) {
+		next if ! $services{$id};
+
 		if ( $id eq 'AdditionalSignature' ) {
 			my @sigs = sort $$variable{'Project'}->signatures();
 			while ( @sigs ) {
