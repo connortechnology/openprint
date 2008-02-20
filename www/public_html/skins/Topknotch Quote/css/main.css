@@ -201,6 +201,10 @@ div#MainBox:after {
 /* Hides from IE-mac \*/
 * html div#MainBox {height: 1%;}
 /* End hide from IE-mac */
+img#Butterfly {
+	width: 160px;
+	float: left;
+}
 ul#ProjectTypes {
     p\osition: relative;
     float: left;
