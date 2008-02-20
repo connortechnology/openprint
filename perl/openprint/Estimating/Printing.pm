@@ -1708,13 +1708,13 @@ $openprint::log->debug("QTY: $qty_index");
 						my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 						# if the new_specs comes from an existing signature, this may not be correct, so update it.
 						$new_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
-						$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
-						$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
+						#$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
+						#$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 #$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
 						#$new_specs{'chkOverridePress'.$qty_index} = 'Y';
-						$new_specs{'chkOverrideSheetSize'.$qty_index} = '';
-						$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
-						$new_specs{'chkOverrideImposition'.$qty_index} = '';
+						#$new_specs{'chkOverrideSheetSize'.$qty_index} = '';
+						#$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
+						#$new_specs{'chkOverrideImposition'.$qty_index} = '';
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 						$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 #$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}}{'Comparison Cost'} );
