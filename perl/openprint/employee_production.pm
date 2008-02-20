@@ -389,16 +389,18 @@ sub project_view {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [new openprint::MXML($Project)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		my $service_index = $openprint::param{'ServiceIndex'};
-		my $status = openprint::service::get_status( $log, $dbh, $service_index, $project_index );
+$openprint::log->warn("Saving");
+		my $status = openprint::service::status( $project_index, $service_index );
 
-		my ( $service_type ) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'ServiceType' );
+		my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $service_index );
+		my $service_type = $specs{'ServiceType'};
 		if ( $service_type eq 'AdditionalSignature' ) {
 			my $complete = is_sig_complete( $r, $log, $dbh, $project_index, $service_index );
 			if ( $complete ) {
 # Run through each of the signatures and if everyone is complete, then set the printing service to complete
 				foreach my $signature_service_index ( $Project->signatures() ) {
 					next if $signature_service_index == $service_index;
-					my $status = openprint::service::get_status( $log, $dbh, $signature_service_index, $project_index );
+					my $status = openprint::service::status( $project_index, $signature_service_index );
 					if ( $status ne 'Complete' ) {
 						$complete = 0;
 					} # end if
@@ -408,16 +410,16 @@ sub project_view {
 			my $services = $Project->services();
 			if ( $$services{''} ) {
 				if ( $complete ) {
-					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Complete' );	
+					openprint::service::status( $project_index, $$services{''}[0], 'Complete' );
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'All signatures complete - marking printing complete.' );
 				} else {
-					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Ordered' );	
+					openprint::service::status( $project_index, $$services{''}[0], 'Ordered' );
 				} # end if
 			} # end if
 
 		} elsif ( sets::isin( $service_type,[ 'Proofs', 'FilmStripping' ] ) ) {
 
-			# Store Usepress
+# Store Usepress
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $signature_service_index );
 				next if ! $openprint::param{'UsePress-'.$printing_specs{'SignatureIndex'}};
@@ -470,7 +472,7 @@ sub project_view {
 							foreach my $signature_service_index ( $Project->signatures() ) {
 								my %sig_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $signature_service_index );
 								if ( my @Equipment = openprint::Equipment::find( 'strid'=>$sig_specs{'UsePress'} ) ) {
-								openprint::employee_schedule::insert( $log, $dbh, $project_index, $signature_service_index, $Equipment[0]->id() );
+									openprint::employee_schedule::insert( $log, $dbh, $project_index, $signature_service_index, $Equipment[0]->id() );
 								} # end if
 							} # end foreach signature_service_index
 						} # end if
@@ -496,19 +498,23 @@ sub project_view {
 						my $ac = sql::start_transaction( $dbh );
 
 						foreach my $s_s_id ( $Project->signatures() ) {
-							my %sig_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $s_s_id );
-							sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ServiceIndex=?}, $s_s_id );
-							my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $s_s_id );
-							if ( my @Equipment = openprint::Equipment::find('strid'=>$sig_specs{'UsePress'}) ) {
-								$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
-								if ( $_ ) {
-									$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
-								} else {
-									$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $sig_specs{'SignatureIndex'} to pending press schedule." );
+							my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+							my @schedule = openprint::press_schedule::find('project_id'=>$project_index, 'service_id'=>$s_s_id );
+							if ( ! @schedule ) {
+								my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $s_s_id );
+								if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'},'use_in_scheduling'=>1) ) {
+									$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
+									if ( $_ ) {
+										$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
+									} else {
+										$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending press schedule." );
 
-								} # end if
-							} # end if
-						} # end foreach
+									} # end if error inserting
+								} else {
+									$$variable{'error'} .= 'Unable to schedule for press ' . $$sig_specs{'UsePress'}.'<br/>';
+								} # end if Foudn the press
+							} # end if on scheudle
+						} # end foreach signature
 						sql::end_transaction( $dbh, $ac );
 					} # end if
 
@@ -559,33 +565,33 @@ sub project_view {
 # Make sure we don't get approved without complete, because they can't unapprove
 					$openprint::param{'rdbApproved' => 'N'};
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Proofs Ordered from $status" );
-					sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$service_index", 'strStatus', 'Ordered' );
+					openprint::service::status( $project_index, $service_index, 'Ordered' );
 				} # end if Complete Or NOT
 
 			} # end if				
 		} else { # A Service, But Not Film Stripping or Proofs
+$openprint::log->warn('A Service');
 			if ( $openprint::param{'rdbComplete'} eq 'Yes' ) {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
+				openprint::service::status( $project_index, $service_index, 'Complete' );
 
 				my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
 				my $category = @ServiceTypes? @ServiceTypes[0]->category():'';
 				if ( $category eq 'Bindery' ) {
 					$_ = q{ SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=?
-						 AND strName='ServiceType'
-						 AND strValue IN ( SELECT name FROM Service_Types WHERE category = 'Bindery' )
-						 AND lngServiceIndex IN ( SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=? AND strStatus != 'Complete' ) };
+						AND strName='ServiceType'
+							AND strValue IN ( SELECT name FROM Service_Types WHERE category = 'Bindery' )
+							AND lngServiceIndex IN ( SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=? AND strStatus != 'Complete' ) };
 					if ( ! sql::execute( $log, $dbh, $_, $project_index, $project_index ) ) {
 # If no more incomplete bindery services, then mark all packaging services complete
 						$_ = q{SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=?  AND strName='ServiceType'
-							 AND strValue IN ( SELECT name FROM Service_Types WHERE category = 'Packaging' )};
+							AND strValue IN ( SELECT name FROM Service_Types WHERE category = 'Packaging' )};
 						foreach my $packaging_service_index ( sql::execute( $log, $dbh, $_, $project_index ) ) {
 							sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $packaging_service_index], 'strStatus', 'Complete' );
 						} # end foreach
 					}  # end if
 				} # end if Bindery
 			} elsif ( $service_type ) { # rdbComplete == No
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Ordered' );
-
+				openprint::service::status( $project_index, $service_index, 'Ordered' );
 			} # end if Complete or NOT
 		} # end if FilmStripping, Proofs or other
 
@@ -601,12 +607,12 @@ sub project_view {
 
 # Save info
 		my $ac = sql::start_transaction( $dbh );
-		my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $service_index );
 		if ( $specs{'ProjectType'} ) {
 			my $complete = 1;
-
+$openprint::log->warn('ProjectType');
 			foreach my $signature_service_index ( $Project->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+$openprint::log->warn("SIgnature $$sig_specs{'SignatureIndex'} ");
 
 				if ( $openprint::param{'TakeOver-'.$$sig_specs{'SignatureIndex'}} ) {
 		# Take Over
@@ -614,7 +620,24 @@ sub project_view {
 				} # end if
 
 				foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockBrand UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
+$openprint::log->warn("$param $$sig_specs{$param} eq ".$openprint::param{"$param-$$sig_specs{'SignatureIndex'}"});
+					next if ! exists $openprint::param{"$param-$$sig_specs{'SignatureIndex'}"};
 					next if $$sig_specs{$param} eq $openprint::param{"$param-$$sig_specs{'SignatureIndex'}"};
+					if ( $param eq 'UsePress' ) {
+$openprint::log->warn("Updating Press Schedule");
+						# Press changed may require schedule updating
+						if ( my @schedule = openprint::press_schedule::find('project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+							if ( my @Equipment = openprint::Equipment::find('strid'=>$openprint::param{"UsePress-$$sig_specs{'SignatureIndex'}"},'use_in_scheduling'=>1) ) {
+					
+								$schedule[0]{equipment_id} = $Equipment[0]->id();
+								openprint::press_schedule::remove( $project_index, $signature_service_index );
+								openprint::press_schedule::add( $schedule[0] );
+							} else {
+								$$variable{'error'} .= sprintf('Unable to schedule signature %d on %s', $$sig_specs{'SignatureIndex'},$openprint::param{"UsePress-$$sig_specs{'SignatureIndex'}"} );
+								next;
+							} # end if
+						} # end if
+					} # end if
 					openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, $param, $openprint::param{"$param-$$sig_specs{'SignatureIndex'}"} );
 				} # end foreach
 
@@ -642,6 +665,7 @@ sub project_view {
 			} # end foreach
 
 			if ( my @Equipment = openprint::Equipment::find( 'strid'=>$specs{'UsePress'} ) ) {
+				# If the runtime of the job had changed, then this would update the schedule
 				$Equipment[0]->update_schedule();
 			} # end if
 		} else {
@@ -673,9 +697,14 @@ sub project_view {
 
 		foreach my $s_s_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			if ( my @schedule = openprint::press_schedule::find('project_id'=>$$variable{'ProjectIndex'}, 'service_id'=>$s_s_id ) ) {
+				my $Equipment = new openprint::Equipment( $schedule[0]{equipment_id} );
+				$$variable{'error'} .= sprintf('Signature %d is already on the schedule on %s.<br/>', $$sig_specs{'SignatureIndex'}, $Equipment->name() );
+				next;
+			} # end if
 			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
 			my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $s_s_id );
-			if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
+			if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}, 'use_in_scheduling'=>1) ) {
 				$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
 				if ( $_ ) {
 					$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
@@ -683,6 +712,8 @@ sub project_view {
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending press schedule." );
 
 				} # end if
+			} else {
+				$$variable{'error'} .= 'Unable to schedule for press ' . $$sig_specs{'UsePress'} . '.  Please select another press first.<br/>';
 			} # end if
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
@@ -1124,7 +1155,7 @@ sub load_press_completion {
 		$$variable{"UsedDutchRows-$$specs{'SignatureIndex'}"} = $$specs{'hdnImpositionDutchRows'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"UsedDutchRows-$$specs{'SignatureIndex'}"};
 		$$variable{"UsedRunStyle-$$specs{'SignatureIndex'}"} = $$specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"UsedRunStyle-$$specs{'SignatureIndex'}"};
 
-		@$variable{"UsePress-$$specs{'SignatureIndex'}"} = $$specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"ddmPress-$$specs{'SignatureIndex'}"};
+		$$variable{"UsePress-$$specs{'SignatureIndex'}"} = $$specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"UsePress-$$specs{'SignatureIndex'}"};
 		if ( ! $$variable{"UsedStockSheetSize-$$specs{'SignatureIndex'}"} ) {
 			if ( $$specs{'StockType'.$$variable{'Project'}->ordered_quantity_index()} eq 'Roll' ) {
 				$$variable{"UsedStockSheetSize-$$specs{'SignatureIndex'}"} = $$specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()};
@@ -1132,8 +1163,6 @@ sub load_press_completion {
 				$$variable{"UsedStockSheetSize-$$specs{'SignatureIndex'}"} = $$specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} .'x'.$$specs{'StockHeight'.$$variable{'Project'}->ordered_quantity_index()};
 			} # end if
 		} # end if
-
-		@$variable{"PressName-$$specs{'SignatureIndex'}"} = sql::execute( $log, $dbh, 'SELECT strName FROM tbl_Equipment WHERE strID=?', $$specs{'UsePress'} );
 	} # end foreach signature_service_index
 
 } # end sub load_press_completion
