@@ -381,11 +381,11 @@ sub get_status {
 sub status {
 	my ( $project_index, $service_index, $new_status ) = @_;
 	if ( defined $new_status ) {
-		sql::update( $openprint::log, $openprint::dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index],
+		sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index],
 				'strStatus',    $new_status );
 		return $new_status;
 	} # end if
-	( $_ ) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
+	( $_ ) = sql::execute( undef, undef, q{SELECT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
 	return $_;
 } # end sub status
 
