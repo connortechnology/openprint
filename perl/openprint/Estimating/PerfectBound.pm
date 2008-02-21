@@ -94,6 +94,7 @@ sub signature_calc {
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 1;
 	$imposition = 1 if ($I->imposition()%2) or ( sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] ) and $I->imposition()%4);
+	$imposition = 1 if $imposition > 1 and ( ($I->image_orientation() eq 'Vertical' and $I->rows() != 2 ) or ($I->image_orientation() eq 'Horizontal' and $I->columns() != 2 ) );
 
 	# Calculate the # of pockets, and the imposition to bind at
 	foreach my $signature_service_index ( $Project->signatures() ) {
@@ -256,7 +257,12 @@ sub calc {
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 				next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
-				if ( ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 ) ) {
+				if ( 
+						($$sig_specs{'txtImposition'.$qty_index} % 2) or 
+						($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'} != 2 ) or 
+						($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and $$sig_specs{'hdnImpositionColumns'} != 2 ) or
+						(sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 ) 
+				   ) {
 					$imposition = 1
 				} # end if
 
