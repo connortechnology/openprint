@@ -510,12 +510,20 @@ if ( $version < 1909 ) {
 	$dbh->do('drop sequence if exists materialcategoriesindex_seq');
 	$dbh->do('drop sequence if exists material_categories_id_seq');
 	$dbh->do('create sequence material_categories_id_seq');
-	$dbh->do('select setval(material_categories_id_seq, (select max(id) from material_categories))');
-	$dbh->do('alter table material_categories alter column id set default nextval(material_categories_id_seq)');
+	$dbh->do(q{select setval('material_categories_id_seq', (select max(id) from material_categories))});
+	$dbh->do(q{alter table material_categories alter column id set default nextval('material_categories_id_seq')});
 
 	sql::insert( undef, undef, 'database_info', 'version', 1909, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1909;
+} # end if
+if ( $version < 1910 ) {
+	print "Updating to version 1910\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('alter table service_types add unique(name);');
+	sql::insert( undef, undef, 'database_info', 'version', 1910, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1910;
 } # end if
 
 $dbh->disconnect();

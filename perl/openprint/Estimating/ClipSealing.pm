@@ -6,7 +6,7 @@ use POSIX            qw(ceil);
 require openprint::service;
 
 my @variables = (
-	'SealQuantity',
+	'SealQuantity','SealType',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 );
@@ -75,6 +75,15 @@ sub calc {
 } # end sub calc
 
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	if ( $qty_index ) {
+		return '';
+	} # end if
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ( ! $specs );
+
+	my @Materials = openprint::Material::find('name'=>$$specs{'SealType'});
+	return $$specs{'SealQuantity'} . ' ' . ( @Materials ? $Materials[0]->description() : ' Clip Seal');
 } # end sub summary
 
 1;

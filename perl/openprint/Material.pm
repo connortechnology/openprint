@@ -217,7 +217,7 @@ sub find {
 	my $sql = 'SELECT * FROM Materials WHERE 1>0';
 	my @values;
 
-	if ( $params{'name'} ) {
+	if ( exists $params{'name'} ) {
 		# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
 		if ( ( keys %params ) == 1 ) {
 			if ( $cache{$params{name}} ) {

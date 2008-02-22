@@ -275,7 +275,6 @@ fieldset p table.List {
     width: 67%;
 }
 fieldset p option {
-    width: 70%;
 }
 fieldset.filters p select {
     width: auto;
