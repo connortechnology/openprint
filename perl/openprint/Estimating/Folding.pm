@@ -332,7 +332,7 @@ sub signature_calc {
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		next if $Paper and $signature_service_index and ($ss_id > $signature_service_index);
-		next if $ss_id == $signature_service_index;
+		next if $ss_id >= $signature_service_index;
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		foreach my $fold_type ( keys %fold_types ) {
 			if ( $$specs{$fold_type."-Qty-$$s_specs{'SignatureIndex'}-$qty_index"} > 0 ) {
