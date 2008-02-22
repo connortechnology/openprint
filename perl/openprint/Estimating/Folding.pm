@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -429,7 +429,7 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 					);
 			if ( $Fold ) {
 				push @{$folds{$pages.'PageSignatureFold'}}, $Fold;
-	$openprint::log->debug(sprintf('Found: %dx%d,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition(), $imposition ) ) if $debug;
+$openprint::log->debug(sprintf('Found: %dx%d,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition(), $imposition ) ) if $debug;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Didnt find fold<br/>';
 	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $imposition ) ) if $debug;
@@ -575,6 +575,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				} # end if
 
 				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
+$openprint::log->debug("Already have a better price $bestPrice < $totalPrice");
 					last;
 				} # end if
 
