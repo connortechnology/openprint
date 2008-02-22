@@ -122,23 +122,23 @@ sub signature_calc {
 	} else {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} # end if
-
+$I->display();
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 1;
 	$imposition = 1 if ($I->imposition()%2) or ( sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] ) and $I->imposition()%4);
 $openprint::log->debug(sprintf('%d %s %d %d', $imposition, $I->image_orientation(), $I->columns(), $I->rows() ) );
 	$imposition = 1 if $imposition > 1 and ( ($I->image_orientation() eq 'Vertical' and $I->rows()%2) or ($I->image_orientation() eq 'Horizontal' and $I->columns()%2) );
 
-$openprint::log->debug( 'Imp: ' . $I->imposition() . ' # of signatures: ' . scalar $Project->signatures()) if $debug;
+#$openprint::log->debug( 'Imp: ' . $I->imposition() . ' # of signatures: ' . scalar $Project->signatures()) if $debug;
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		next if $service_index and ($signature_service_index >= $service_index);
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+$openprint::log->debug(sprintf('%d %s %s %d %dx%d', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index} ) );
 		next if $imposition == 1;
 		next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
-$openprint::log->debug(sprintf('%d %s %s %d %dx%d', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index} ) );
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
 		$imposition = 1 if ( 
 				($$sig_specs{'txtImposition'.$qty_index} % 2 ) or 

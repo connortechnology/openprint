@@ -7,7 +7,7 @@ require openprint::EquipmentSpecification;
 require openprint::Fold;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
 my %find_cache;
 my %fields = (
 	'id'	=>	'lngindex',
@@ -209,16 +209,16 @@ sub Fold {
 		$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;
 		next if $$Fold{page_rows} and $$params{page_rows} and ($$Fold{page_rows} != $$params{page_rows} );
 
-		$openprint::log->debug("Wanted Page_width: $$params{page_width}, have $$Fold{min_width} $$Fold{max_width}") if $debug;
-		next if ( $$Fold{min_width} or $$Fold{max_width} ) and $$params{page_width} and (
-				( ( ! $$Fold{min_width} ) or $$Fold{min_width} <= $$params{page_width} ) and
-				( ( ! $$Fold{max_width} ) or $$Fold{max_width} >= $$params{page_width} )
-				);
-		$openprint::log->debug("Wanted Page_height: $$params{page_height}, have $$Fold{min_height} $$Fold{max_height}") if $debug;
-		next if ( $$Fold{min_height} or $$Fold{max_height} ) and $$params{page_height} and (
-				( ( ! $$Fold{min_height} ) or $$Fold{min_height} <= $$params{page_height} ) and
-				( ( ! $$Fold{max_height} ) or $$Fold{max_height} >= $$params{page_height} )
-				);
+		$openprint::log->debug("Wanted Page_width: $$params{page_width}, have min:$$Fold{min_width} max:$$Fold{max_width}") if $debug;
+		next if ( $params{page_width} and (
+				( $$Fold{min_width} and $$Fold{min_width} > $$params{page_width} ) or
+				( $$Fold{max_width} and $$Fold{max_width} < $$params{page_width} )
+				)) ;
+		$openprint::log->debug("Wanted Page_height: $$params{page_height}, have min:$$Fold{min_height} max:$$Fold{max_height}") if $debug;
+		next if ( $$params{page_height} and (
+				( $$Fold{min_height} and $$Fold{min_height} > $$params{page_height} ) or
+				( $$Fold{max_height} and $$Fold{max_height} < $$params{page_height} )
+				) );
 		#$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{'max_imposition}") if $debug;
 		next if $$Fold{min_imposition} and $$params{imposition} and ($$Fold{min_imposition} > $$params{imposition});
 		next if $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition});

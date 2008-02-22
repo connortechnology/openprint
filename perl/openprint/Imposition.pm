@@ -82,7 +82,8 @@ sub AUTOLOAD {
 
 sub display {
 	my $self = shift;
-	$openprint::log->debug("Imp: $$self{'columns'}x$$self{'rows'}+$$self{'dutch_columns'}x$$self{'dutch_rows'}:$$self{imposition}out spreads:$$self{'spread_columns'}x$$self{'spread_rows'}=$$self{'spreads'} $$self{runstyle} on: $self->{paper}->{width}x$self->{paper}->{height} $$self{Press}->{strid} I: $$self{image_width}x$$self{image_height} L:$$self{layout_width}x$$self{layout_height} $$self{image_orientation}");
+	$openprint::log->debug(sprintf('Imp: %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %fx%f %s I: %fx%f L:%fxf %s',
+	@$self{'columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'}) );
 } # end sub display
 
 sub set {
@@ -260,6 +261,12 @@ sub page_rows {
 	} # end if
 } # end sub page_rows
 
+sub page_width {
+	return $_[0]{spread_size} == 4 ? $_[0]{object_width}/2 : $_[0]{object_width};
+}
+sub page_height {
+	return $_[0]{object_height};
+}
 sub sheet_width {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
