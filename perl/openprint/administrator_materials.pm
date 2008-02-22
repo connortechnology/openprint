@@ -28,6 +28,20 @@ sub edit {
 		$Material->delete();
 		$Material = $Material->Next( 'category_id'=>$openprint::param{'ddmSearchCategory'} );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
+		if ( $openprint::param{'new_category'} ) {
+			if ( my @Categories = openprint::MaterialCategory::find('name'=>$openprint::param{'new_category'} ) ) {
+				$openprint::param{'category_id'} = $Categories[0]->id();
+			} else {
+				my $Category = new openprint::MaterialCategory();
+				$Category->name( $openprint::param{'new_category'} );
+				if ( $_ = $Category->save() ) {
+					$$variable{'error'} .= $_;
+					return;
+				} else {
+					$openprint::param{'category_id'} = $Category->id();
+				} # end if
+			} # end if
+		} # end if
 		$Material->save( \%openprint::param );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $List ( openprint::Pricelist::find( 'id'=>$openprint::param{'ddmPriceList'} ) ) {

@@ -303,24 +303,23 @@ $openprint::log->debug("Loading imposition");
 	
 	my @my_equipment;
 
-	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 		$openprint::log->debug("Overriding Folding Equipment for sig $$sig_specs{'SignatureIndex'} to " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
-		if ( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
-			push @my_equipment, new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+		if ( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
+			push @my_equipment, new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
 		} else {
 			$openprint::log->warn("Folding Equipment override to nothing");
 		} # end if
 		push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 	} else {
-		my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' );
-		@my_equipment = @equipment;
+		@my_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'} );
 
 		if ( $$services{'PerfectBound'} ) {
 #$openprint::log->debug('Adding Perfect Bound' . join(',', map { $_->name() } openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'}, 'order'=>'lower(strname)' ) ) );
-			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'}, 'order'=>'lower(strname)' );
+			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'} );
 		} # end if
 		if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
-			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'}, 'order'=>'lower(strname)' );
+			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'} );
 		} # end if
 
 		if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
@@ -328,6 +327,7 @@ $openprint::log->debug("Loading imposition");
 			if ( $Press->specification('Folding Capable') ) {
 				if ( $Press->specification('Sheeter') ne 'Y' ) {
 					@my_equipment = ( $Press );
+$openprint::log->debug("No Sheeter");
 				} else {
 					unshift @my_equipment, $Press;
 				} # end if
@@ -375,6 +375,9 @@ $openprint::log->debug("Loading imposition");
 	my $pages = $Imposition->pages();
 	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $imposition ) ) if $debug;
 
+	foreach my $Equipment ( @my_equipment ) {
+$openprint::log->debug("E: " . $Equipment->name() );
+	} 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
 		my %folds;
@@ -433,6 +436,7 @@ $openprint::log->debug(sprintf('Found: %dx%d,%dout Max %dout', $Imposition->page
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Didnt find fold<br/>';
 	$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition(), $imposition ) ) if $debug;
+				next;
 			} # end if
 		} else { # Not overriden, and not a press
 #$openprint::log->debug("Not overriden not a press");
