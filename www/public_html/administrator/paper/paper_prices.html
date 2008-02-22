@@ -10,7 +10,13 @@
 	}
 
 	function savePrices( form ) {
-	new Ajax.Updater('Prices','/administrator/paper/_prices.html', { method: 'get', parameters : Form.serialize( form ) } );
+		new Ajax.Updater('Prices','/administrator/paper/_prices.html', 
+			{ 
+				method: 'get', 
+				parameters : Form.serialize( form ), 
+				onSuccess: function(){$('Prices').removeClassName('changed');}
+			 }
+		);
 	
 	}
 	function cbFillPrices( results ) {

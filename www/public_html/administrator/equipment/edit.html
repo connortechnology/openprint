@@ -169,6 +169,7 @@
 			<? endwhile ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
 		</table>
 	</fieldset>
+<? endif ( $$variable{'Equipment'}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>
 <? if ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
@@ -180,4 +181,3 @@
 		<div id="Folds"> </div>
 	</fieldset>
 <? endif ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
-<? endif ( $$variable{'Equipment'}->id() ) ?>

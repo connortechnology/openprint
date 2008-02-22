@@ -11,7 +11,7 @@
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
     <div class="Pricelist">
         Prices for Pricelist: <? echo ( ssi::htmlize( $$variable{'Pricelist'}->name() ); ) ?><br/>
-		<? eval ( @{$$variable{'Prices'}} = $$variable{'Paper'}->Prices('Pricelist'=>$$variable{'Pricelist'} ) ) ?>
+		<? eval ( @{$$variable{'Prices'}} = $$variable{'Paper'}->Prices('Pricelist'=>$$variable{'Pricelist'},'order'=>'lngmin,lngmax' ) ) ?>
 		<? if ( @{$$variable{'Prices'}} ) ?>
 		<table class="List">
 			<tr> 
@@ -28,14 +28,14 @@
 			<tr>	
 
     <td class="Range">
-		<input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Min() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
+		<input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Min() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');$('Prices').addClassName('changed');" />
 		<input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Max() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
 	</td>
-    <td class="Cost"><input class="text" type="text" name="costcwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
-    <td class="Cost"><input class="text" type="text" name="costperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->costperm() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
-    <td class="Markup"><input class="text" type="text" name="markup-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Markup() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
-    <td class="Price"><input class="text" type="text" name="pricecwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
-    <td class="Price"><input class="text" type="text" name="priceperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->priceperm() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
+    <td class="Cost"><input class="text" type="text" name="costcwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+    <td class="Cost"><input class="text" type="text" name="costperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->costperm() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+    <td class="Markup"><input class="text" type="text" name="markup-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Markup() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+    <td class="Price"><input class="text" type="text" name="pricecwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+    <td class="Price"><input class="text" type="text" name="priceperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->priceperm() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
     <td class="Discount">
     <input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='Y'
     <? echo ( $$variable{'Price'}->Discountable() ne 'N' ? 'checked="checked"' : '' ) ?>
