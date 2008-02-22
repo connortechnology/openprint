@@ -1684,7 +1684,7 @@ $openprint::log->debug("QTY: $qty_index");
 						my $sigs =int($$specs{'txtUnspecifiedPageQuantity'.$qty_index}/$imp->pages());
 
 						$additional_price *= $sigs;
-						foreach ( 0 .. $sigs ) {
+						foreach ( 1 .. $sigs ) {
 							push @{$$price{'Additional Impositions'}},$imp;
 						} # end foreach
 						$additional_price += $$sig_price{'Stitching Cost'};
