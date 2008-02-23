@@ -7,7 +7,7 @@ require openprint::service;
 
 my @variables = (
 	'SealQuantity','SealType_id',
-	'Equipment1', 'Equipment2', 'Equipment3',
+	'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 );

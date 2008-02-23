@@ -8,12 +8,29 @@ use sql;
 use POSIX           qw(ceil);
 
 my $debug = 1;
-my @variables = (
-	'SetsOfNumbers',
-	'Equipment1', 'Equipment2', 'Equipment3',
-	'txtPrice1', 'txtPrice2', 'txtPrice3',
-	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+
+my %variables = (
+	'SetsOfNumbers' => ['save'],
+	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
+	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
+	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'],
 );
+sub variables {
+    my @v;
+    foreach my $k ( keys %variables ) {
+        push @v, $k if sets::isin( 'save', $variables{$k} );
+    } # end foreach;
+    return @v;
+}
+
+sub no_outputs {
+    my @v;
+    foreach my $k ( keys %variables ) {
+        push @v, $k if ! sets::isin( 'output', $variables{$k} );
+    } # end foreach;
+    return @v;
+}
+
 
 sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
@@ -28,7 +45,7 @@ sub calc {
 
 	my @Equipment = openprint::Equipment::find('Specifications'=>{'Numbering Capable'=>'Y'},'use_in_estimating'=>1);
 	if ( ! @Equipment ) {
-		$$specs{'alert'} = 'Please enter the # of sets of numbers.';
+		$$specs{'alert'} = 'We have no numbering equipment.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
@@ -45,21 +62,20 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
 			my $heads = $Equipment->specification('Heads');
 			if ( ! $heads ) {
-				$$specs{'hdnBreakdown'.$qty_index} = 'No numbering heads specified.<br/>';
+				$$specs{'hdnBreakdown'.$qty_index} = 'No numbering heads specified.<br/></fieldset>';
 				next;
 			} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Heads: %d<br/>',$heads);
 
 			my $runs = ceil($$specs{'SetsOfNumbers'} / $heads);
-
 			my $last_run = $$specs{'SetsOfNumbers'} % $heads;
-
-
 			my $total = 0;
 
 			my %MakeReady = openprint::service::get_price_object('NumberingMakeReady', undef, $Equipment );
 			if ( ! %MakeReady ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$.2f%2$s<br/>', @MakeReady{'Price','units'} );
 				$total += $MakeReady{'Price'};
 			} # end if
 
@@ -67,7 +83,9 @@ sub calc {
 			if ( ! %HeadMakeReady ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No HeadMakeReady price.<br/>';
 			} else {
-				$total += $HeadMakeReady{'Price'} * $$specs{'SetsOfNumbers'};
+				$HeadMakeReady{'Total'} = $HeadMakeReady{'Price'} * $$specs{'SetsOfNumbers'};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('HeadMakeReady Price: $%1$.2f%2$s * %4$d sets = $%3$.2f<br/>', @HeadMakeReady{'Price','units','Total'}, $$specs{'SetsOfNumbers'},  );
+				$total += $HeadMakeReady{'Total'};
 			} # end if
 
 			my %ServicePrice = openprint::service::get_price_object('Numbering',$heads, $Equipment ); 
@@ -76,23 +94,31 @@ sub calc {
 			} else {
 				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs * $$specs{'txtQuantity'.$qty_index} / 1000;
 				$total += $ServicePrice{'Total'};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: %4$d runs of %5$d numbers : $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs, $heads );
 			} # end if
 
-			my %LastServicePrice = openprint::service::get_price_object('Numbering',$last_run, $Equipment );
-			if ( ! %LastServicePrice ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-			} else {
-				$LastServicePrice{'Total'} += $LastServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
-				$total += $LastServicePrice{'Total'};
+			my %LastServicePrice;
+			if ( $last_run ) {
+				%LastServicePrice = openprint::service::get_price_object('Numbering',$last_run, $Equipment );
+				if ( ! %LastServicePrice ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
+				} else {
+					$LastServicePrice{'Total'} += $LastServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: 1 run of %4$d numbers : $%1$.2f%2$s = $%3$.2f<br/>', @LastServicePrice{'Price','units','Total'}, $last_run );
+					$total += $LastServicePrice{'Total'};
+				} # end if
 			} # end if
 			
 			if ( my $minimumcharge = openprint::service::get_price('NumberingMinimumCharge', undef, $Equipment ) ) {
 				$total = $minimumcharge if $total < $minimumcharge;
 			} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $total );
 			
 			if ( ( ! defined $BestPrice{'Total'} ) or $total < $BestPrice{'Total'} ) {
 				$BestPrice{'Total'} = $total;
 				$BestPrice{'Equipment'} = $Equipment;
+				$BestPrice{'ServicePrice'} = \%ServicePrice;
+				$BestPrice{'LastServicePrice'} = \%LastServicePrice;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
         } # end foreach Equipment
@@ -100,10 +126,10 @@ sub calc {
 		if ( ! defined $BestPrice{'Total'} ) {
 			$status = 'uncalculated';
 		} else {
-			$$specs{'Equipment'.$qty_index} = $BestPrice{'Equipment'}->id();
+			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
 		} # end if
 
-        #$$specs{"txtUnitPrice$qty_index"} = sprintf('%.2f', ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} );
+        $$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'LastServicePrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} );
 		$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} );
 
     } # end foreach qty_index
@@ -113,12 +139,16 @@ sub calc {
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	if ( $qty_index ) {
+		if ( $$specs{'ddmEquipment'.$qty_index} ) {
+			my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
+			return ' on ' . $Equipment->name();
+		} # end if
 		return '';
 	} # end if
-	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ( ! $specs );
 
-	return '';
+	return sprintf( '%d sets of numbers', $$specs{'SetsOfNumbers'} );;
 } # end sub summary
 
 sub display {
