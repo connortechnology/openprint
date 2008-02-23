@@ -26,7 +26,7 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @Equipment = openprint::Equipment::find('Numbering Capable'=>'Y');
+	my @Equipment = openprint::Equipment::find('Specifications'=>{'Numbering Capable'=>'Y'},'use_in_estimating'=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'Please enter the # of sets of numbers.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -39,6 +39,7 @@ sub calc {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		my %BestPrice;
+		$$specs{'hdnBreakdown'.$qty_index} = '';
 
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
@@ -91,11 +92,13 @@ sub calc {
 			
 			if ( ( ! defined $BestPrice{'Total'} ) or $total < $BestPrice{'Total'} ) {
 				$BestPrice{'Total'} = $total;
+				$BestPrice{'Equipment'} = $Equipment;
 			} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
         } # end foreach Equipment
 
 		if ( ! defined $BestPrice{'Total'} ) {
-			$status = 'calculated';
+			$status = 'uncalculated';
 		} else {
 			$$specs{'Equipment'.$qty_index} = $BestPrice{'Equipment'}->id();
 		} # end if

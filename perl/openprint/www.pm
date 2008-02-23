@@ -409,9 +409,6 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 					} elsif ( $filename eq 'cutting.html' ) {
 						require openprint::Estimating::Cutting;
 						openprint::Estimating::Cutting::display( $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename eq 'ClipSealing.html' ) {
-						require openprint::Estimating::ClipSealing;
-						openprint::Estimating::ClipSealing::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename eq 'die_cutting.html' or $filename eq 'bind_kiss_cutt.html' ) {
 						require openprint::Estimating::DieCutting;
 						openprint::Estimating::DieCutting::display( $log, $dbh, \%variable, $project_index, $service_index );
@@ -429,6 +426,10 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 					} elsif ( $filename eq 'collating.html' ) {
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
+					} elsif ( $filename =~ /(\w*).html/ ) {
+						eval sprintf('require openprint::Estimating::%1$s;
+						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
+					
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename eq 'lamination.html' ) {
