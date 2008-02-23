@@ -118,8 +118,7 @@ sub summary {
 	} # end if
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ( ! $specs );
 
-	my @Materials = openprint::Material::find('name'=>$$specs{'SealType'});
-	return $$specs{'SealQuantity'} . ' ' . ( @Materials ? $Materials[0]->description() : ' Clip Seal');
+	return $$specs{'SealQuantity'} . ' ' . ( $$specs{'SealType_id'} ? new openprint::Material( $$specs{'SealType_id'} )->description() : ' Clip Seal');
 } # end sub summary
 
 sub display {
