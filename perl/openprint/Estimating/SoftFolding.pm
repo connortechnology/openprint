@@ -1,4 +1,4 @@
-package openprint::Estimating::Numbering;
+package openprint::Estimating::SoftFolding;
 use strict;
 use warnings;
 no warnings qw(uninitialized);
@@ -9,7 +9,7 @@ use POSIX           qw(ceil);
 
 my $debug = 1;
 my @variables = (
-	'SetsOfNumbers',
+	'Folds',
 	'Equipment1', 'Equipment2', 'Equipment3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -20,15 +20,15 @@ sub calc {
 
 	my $Project = new openprint::Project( $pid );
 
-	$$specs{'SetsOfNumbers'} =~ s/\D//g;
-	if ( ! $$specs{'SetsOfNumbers'} ) {
-		$$specs{'alert'} = 'Please enter the # of sets of numbers.';
+	$$specs{'Folds'} =~ s/\D//g;
+	if ( ! $$specs{'Folds'} ) {
+		$$specs{'alert'} = 'Please enter the # of folds.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @Equipment = openprint::Equipment::find('Numbering Capable'=>'Y');
+	my @Equipment = openprint::Equipment::find('SoftFolding Capable'=>'Y');
 	if ( ! @Equipment ) {
-		$$specs{'alert'} = 'Please enter the # of sets of numbers.';
+		$$specs{'alert'} = 'Please enter the # of folds.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
@@ -42,34 +42,17 @@ sub calc {
 
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
-			my $heads = $Equipment->specification('Heads');
-			if ( ! $heads ) {
-				$$specs{'hdnBreakdown'.$qty_index} = 'No numbering heads specified.<br/>';
-				next;
-			} # end if
-
-			my $runs = ceil($$specs{'SetsOfNumbers'} / $heads);
-
-			my $last_run = $$specs{'SetsOfNumbers'} % $heads;
-
 
 			my $total = 0;
 
-			my %MakeReady = openprint::service::get_price_object('NumberingMakeReady', undef, $Equipment );
+			my %MakeReady = openprint::service::get_price_object('SoftFoldingMakeReady', undef, $Equipment );
 			if ( ! %MakeReady ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
 				$total += $MakeReady{'Price'};
 			} # end if
 
-			my %HeadMakeReady = openprint::service::get_price_object('NumberingHeadMakeReady', undef, $Equipment );
-			if ( ! %HeadMakeReady ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'No HeadMakeReady price.<br/>';
-			} else {
-				$total += $HeadMakeReady{'Price'} * $$specs{'SetsOfNumbers'};
-			} # end if
-
-			my %ServicePrice = openprint::service::get_price_object('Numbering',$heads, $Equipment ); 
+			my %ServicePrice = openprint::service::get_price_object('SoftFolding',$heads, $Equipment ); 
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 			} else {
@@ -77,15 +60,7 @@ sub calc {
 				$total += $ServicePrice{'Total'};
 			} # end if
 
-			my %LastServicePrice = openprint::service::get_price_object('Numbering',$last_run, $Equipment );
-			if ( ! %LastServicePrice ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-			} else {
-				$LastServicePrice{'Total'} += $LastServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
-				$total += $LastServicePrice{'Total'};
-			} # end if
-			
-			if ( my $minimumcharge = openprint::service::get_price('NumberingMinimumCharge', undef, $Equipment ) ) {
+			if ( my $minimumcharge = openprint::service::get_price('SoftFoldingMinimumCharge', undef, $Equipment ) ) {
 				$total = $minimumcharge if $total < $minimumcharge;
 			} # end if
 			
@@ -121,7 +96,7 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Numbering Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'SoftFolding Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 	#my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
