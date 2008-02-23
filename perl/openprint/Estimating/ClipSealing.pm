@@ -32,7 +32,7 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-    foreach my $qty_index (1 .. 3) {
+    foreach my $qty_index ( 1 .. 3 ) {
         next if ! $Project->quantity($qty_index);
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity() if ! $$specs{'txtQuantity'.$qty_index};
 
@@ -97,11 +97,12 @@ sub calc {
 		if ( ! defined $BestPrice{'Total'} ) {
 			$$specs{'alert'} .= 'Unable to calculate a price for quantity ' . $qty_index . '.<br/>';
 			$status = 'uncalculated';
+		} else {
+			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
 		} # end if
 
         $$specs{"txtUnitPrice$qty_index"} = sprintf('%.2f', ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} );
 		$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} );
-		$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
 
     } # end foreach qty_index
     
