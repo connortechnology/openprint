@@ -21,6 +21,8 @@
 <? echo (
 	if ( $$variable{"ddmEquipment$$variable{'QTYIndex'}"} ) {
 		return $$variable{"ddmEquipment$$variable{'QTYIndex'}"};
+	} elsif ( $$variable{'Equipment'} ) {
+		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $$variable{'Equipment'.$$variable{'QTYIndex'}} );
 	} elsif ( $$variable{'EquipmentArray'} ) {
 		return ssi::fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ); 
 	} elsif ( $$variable{'ddmEquipment'} ) {

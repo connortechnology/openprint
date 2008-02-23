@@ -15,10 +15,10 @@
 			</p>
 			<p><label>Seal type:</label>
 				<select id="SealType" name="SealType" onchange="calc(this.form.name);">
-<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Material::find( 'category'=>'Clip Seal Types', 'order'=>'lower(name)' ) ], $$variable{'SealType'} ); ) ?>
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::Material::find( 'category'=>'Clip Seal Types', 'order'=>'lower(name)' ) ], $$variable{'SealType_id'} ); ) ?>
 				</select>
 			</p>
-			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
 		</fieldset>
 		<hr/>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->

@@ -409,6 +409,9 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 					} elsif ( $filename eq 'cutting.html' ) {
 						require openprint::Estimating::Cutting;
 						openprint::Estimating::Cutting::display( $log, $dbh, \%variable, $project_index, $service_index );
+					} elsif ( $filename eq 'ClipSealing.html' ) {
+						require openprint::Estimating::ClipSealing;
+						openprint::Estimating::ClipSealing::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename eq 'die_cutting.html' or $filename eq 'bind_kiss_cutt.html' ) {
 						require openprint::Estimating::DieCutting;
 						openprint::Estimating::DieCutting::display( $log, $dbh, \%variable, $project_index, $service_index );
