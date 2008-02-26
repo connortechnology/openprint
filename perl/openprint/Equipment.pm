@@ -219,6 +219,11 @@ sub Fold {
 				( $$Fold{min_height} and $$Fold{min_height} > $$params{page_height} ) or
 				( $$Fold{max_height} and $$Fold{max_height} < $$params{page_height} )
 				) );
+		$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
+		next if ( $$params{calliper} and (
+				( $$Fold{min_calliper} and $$Fold{min_calliper} > $$params{calliper} ) or
+				( $$Fold{max_calliper} and $$Fold{max_calliper} < $$params{calliper} )
+				) );
 		#$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{'max_imposition}") if $debug;
 		next if $$Fold{min_imposition} and $$params{imposition} and ($$Fold{min_imposition} > $$params{imposition});
 		next if $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition});

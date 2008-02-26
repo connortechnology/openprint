@@ -402,11 +402,13 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 							'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
 							'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 							'gsm'				=>	$Imposition->Paper()->gsm(),
+							'calliper'			=>	$Imposition->Paper()->calliper(),
 							);
 				} else {
 					$Fold = $Equipment->Fold(
 							'type'				=>	$_,
 							'gsm'				=>	$Imposition->Paper()->gsm(),
+							'calliper'			=>	$Imposition->Paper()->calliper(),
 							);
 				} # end if
 
@@ -429,6 +431,7 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 					'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 					'gsm'				=>	$Imposition->Paper()->gsm(),
 					'imposition'		=>	$Imposition->imposition(),
+					'calliper'			=>	$Imposition->Paper()->calliper(),
 					);
 			if ( $Fold ) {
 				push @{$folds{$pages.'PageSignatureFold'}}, $Fold;
@@ -451,6 +454,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}");
 					my $Fold = $Equipment->Fold(
 							'type'				=>	$$sig_specs{'rdbTemplateType'},
 							'gsm'				=>	$Imposition->Paper()->gsm(),
+							'calliper'			=>	$Imposition->Paper()->calliper(),
 							);
 					if ( $Fold ) {
 						push @{$folds{$$sig_specs{'rdbTemplateType'}}}, $Fold;
@@ -497,6 +501,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 								'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
 								'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 								'gsm'				=>	$Imposition->Paper()->gsm(),
+								'calliper'			=>	$Imposition->Paper()->calliper(),
 								);
 						if ( $Fold ) {
 							push @good_folds, $Fold;

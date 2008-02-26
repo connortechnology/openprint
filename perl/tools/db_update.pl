@@ -525,6 +525,15 @@ if ( $version < 1910 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1910;
 } # end if
+if ( $version < 1911 ) {
+	print "Updating to version 1911\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('alter table folds add min_calliper float;');
+	$dbh->do('alter table folds add max_calliper float;');
+	sql::insert( undef, undef, 'database_info', 'version', 1911, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1911;
+} # end if
 
 $dbh->disconnect();
 1;

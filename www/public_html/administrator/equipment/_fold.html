@@ -4,9 +4,9 @@
 	} else {
 		$$variable{'Equipment'} = new openprint::Equipment( $openprint::param{'equipment_id'} );
 		if ( $openprint::param{'pages'} eq 'all' ) {
-			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'} );
+			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'},'order'=>'lower(name)' );
 		} else {
-			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'}, 'pages'=>$openprint::param{'pages'} );
+			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'}, 'pages'=>$openprint::param{'pages'},'order'=>'lower(name)' );
 		} # end if
 	} # end if
 ) ?>
@@ -55,6 +55,11 @@
 			<label>Page Height:</label>
 			Min: <input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_height" name="min_height" value="<? echo ( $$variable{'Fold'}->min_height() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="7" style="width:auto;" />inches
 			Max: <input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_height" name="max_height" value="<? echo ( $$variable{'Fold'}->max_height() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="7" style="width:auto;" />inches
+		</p>
+		<p>
+			<label>Calliper:</label>
+			Min: <input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-min_calliper" name="min_calliper" value="<? echo ( $$variable{'Fold'}->min_calliper() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="7" style="width:auto;" />inches
+			Max: <input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_calliper" name="max_calliper" value="<? echo ( $$variable{'Fold'}->max_calliper() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="7" style="width:auto;" />inches
 		</p>
 		<p>
 			<label>Make Ready Time:</label>
