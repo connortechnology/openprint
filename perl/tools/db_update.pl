@@ -528,8 +528,9 @@ if ( $version < 1910 ) {
 if ( $version < 1911 ) {
 	print "Updating to version 1911\n";
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do('alter table folds add min_calliper float;');
-	$dbh->do('alter table folds add max_calliper float;');
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Folds LIMIT 1', {} );
+	$dbh->do('alter table folds add min_calliper float') if ! exists $$data{'min_calliper'};
+	$dbh->do('alter table folds add max_calliper float') if ! exists $$data{'max_calliper'};
 	sql::insert( undef, undef, 'database_info', 'version', 1911, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1911;
