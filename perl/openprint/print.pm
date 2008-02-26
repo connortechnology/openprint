@@ -422,7 +422,7 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
 				) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} ) if defined $$param{$spec.$type};
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
 		} # end foreach spec
 	} # end foreach
 
