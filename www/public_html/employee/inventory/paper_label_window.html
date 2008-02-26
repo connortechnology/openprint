@@ -44,7 +44,7 @@
                 my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/inventory/paper_label.html' );
                 $html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
             } # end if
-            $html .= '<br class="pagebreak"/>';
+			$html .= '<br class="pagebreak"/>';
         } # end foreach skid_id
         if ( $openprint::param{'Manifest'} ) {
             @{$$variable{'Skids'}} = @skid_ids;

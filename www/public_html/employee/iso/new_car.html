@@ -1,0 +1,180 @@
+<div class="PageTitle">
+<h1>CORRECTIVE ACTION REQUEST (CAR)</h1>
+<h2>(Re-print Job Request)</h2>
+</div>
+<style type="text/css">
+	#CAR {
+	}
+#CAR table {
+		background-color: white;
+		border: 1px solid black;
+		table-layout: fixed;
+	}
+	#CAR table td {
+		border: 1px solid black;
+		width: 10%;
+		vertical-align: top;
+	}
+</style>
+<div id="CAR">
+<h3>Part 1 (To be completed by issuer)</h3>
+<form name="f1" id="f1" method="post">
+<table>
+	<tr>
+		<td width="10%" colspan="1">Issued To:</td>
+		<td width="40%" colspan="4"><select name="issued_to"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+		</td>
+		<td width="10%" colspan="1">Issued By:</td>
+		<td width="40%" colspan="4"><select name="issued_by"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select></td>
+	</tr>
+	<tr>
+		<td width="10%" colspan="1">Issue Date:</td>
+		<td width="40%" colspan="4">
+<? eval (
+@$variable{'issued_on_years','issued_on_months','issued_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+) ?>
+            <select name="issued_on_year" onchange="setDaysDropDown(this.value,this.form.issued_on_month.value,this.form.issued_on_day,this.form.issued_on_day.value);"><?issued_on_years?></select>
+            <select name="issued_on_month" onchange="setDaysDropDown(this.form.issued_on_year.value,this.value,this.form.issued_on_day,this.form.issued_on_day.value);"><?issued_on_months?></select>
+            <select name="issued_on_day"><?issued_on_days?></select>
+</td>
+		<td width="10%" colspan="1">Reply Due By:</td>
+		<td width="40%" colspan="4">
+<? eval (
+@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+) ?>
+            <select name="reply_by_year" onchange="setDaysDropDown(this.value,this.form.reply_by_month.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_years?></select>
+            <select name="reply_by_month" onchange="setDaysDropDown(this.form.reply_by_year.value,this.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_months?></select>
+            <select name="reply_by_day"><?reply_by_days?></select>
+	</tr>
+	<tr>
+		<td>Docket No:</td>
+		<td><input type="text" name="docket" size="6"/></td>
+		<td>Customer:</td><td width="30%" colspan="3">
+<select name="company_id" style="width: 100%;">
+<? echo ( openprint::Company::get_dropdown() ) ?>
+</select>
+		</td>
+		<td>Printed on:</td><td width="30%" colspan="3">
+<? eval (
+@$variable{'printed_on_years','printed_on_months','printed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+) ?>
+            <select name="printed_on_year" onchange="setDaysDropDown(this.value,this.form.printed_on_month.value,this.form.printed_on_day,this.form.printed_on_day.value);"><?printed_on_years?></select>
+            <select name="printed_on_month" onchange="setDaysDropDown(this.form.printed_on_year.value,this.value,this.form.printed_on_day,this.form.printed_on_day.value);"><?printed_on_months?></select>
+            <select name="printed_on_day"><?printed_on_days?></select>
+</td></tr>
+	<tr><td width="100%" colspan="10">PROBLEM/NONCONFORMANCE DESCRIPTION</td></tr>
+	<tr><td width="100%" colspan="10"><textarea name="problem" rows="5" style="width:99%;"></textarea></td></tr>
+	<tr><td width="10%" colspan="1">Press:</td><td width="90%" colspan="9">
+<? echo ( 
+	my $html = '';
+	foreach my $Press ( openprint::Equipment::find('category'=>'Printing','use_in_scheduling'=>1) ) {
+$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d"/><label for="presses%1$d">%2$s</abel>', $Press->id(), $Press->strid() );
+	} # end foreach
+	return $html;
+) ?>
+	</td></tr>
+	<tr>
+		<td colspan="1" width="10%">Originator:</td>
+		<td colspan="4" width="40%">
+<select name="part1_user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+</td>
+		<td colspan="1" width="10%">Date:</td>
+		<td colspan="4" width="40%">
+<? eval (
+@$variable{'part1_signed_on_years','part1_signed_on_months','part1_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+) ?>
+            <select name="part1_signed_on_year" onchange="setDaysDropDown(this.value,this.form.part1_signed_on_month.value,this.form.part1_signed_on_day,this.form.part1_signed_on_day.value);"><?part1_signed_on_years?></select>
+            <select name="part1_signed_on_month" onchange="setDaysDropDown(this.form.part1_signed_on_year.value,this.value,this.form.part1_signed_on_day,this.form.part1_signed_on_day.value);"><?part1_signed_on_months?></select>
+            <select name="part1_signed_on_day"><?part1_signed_on_days?></select>
+</td>
+	</tr>
+</table>
+<h3>Part 2 (To be completed by recipient)</h3>
+<table>
+	<tr><td width="100%" colspan="10">ROOT CAUSE OF PROBLEM (Why did the problem occur?)</td></tr>
+	<tr><td width="100%" colspan="10"><textarea name="cause" rows="5" style="width:99%;"></textarea></td></tr>
+	<tr>
+		<td width="10%" colspan="1">Recipient:</td>
+		<td width="40%" colspan="4">
+<select name="recipient_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+</td>
+		<td width="10%" colspan="1">Date:</td>
+		<td width="40%" colspan="4">
+<? eval (
+@$variable{'part2_signed_on_years','part2_signed_on_months','part2_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+) ?>
+            <select name="part2_signed_on_year" onchange="setDaysDropDown(this.value,this.form.part2_signed_on_month.value,this.form.part2_signed_on_day,this.form.part2_signed_on_day.value);"><?part2_signed_on_years?></select>
+            <select name="part2_signed_on_month" onchange="setDaysDropDown(this.form.part2_signed_on_year.value,this.value,this.form.part2_signed_on_day,this.form.part2_signed_on_day.value);"><?part2_signed_on_months?></select>
+            <select name="part2_signed_on_day"><?part2_signed_on_days?></select>
+		</td>
+	</tr>
+</table>
+<h3>Part 3 (To be completed by recipient)</h3>
+<table>
+	<tr><td width="100%" colspan="10">CORRECTIVE/PREVENTATIVE ACTION</td></tr>
+	<tr>
+		<td width="20%" colspan="2" rowspan="2">Re-print Job Request</td>
+		<td width="10%" colspan="1">Reprint for:</td>
+		<td width="30%" colspan="3">
+			<input type="radio" name="reprint" value="Charge" id="reprintCharge"/><label class="radio" for="reprintCharge">Charge</label>
+			<input type="radio" name="reprint" value="No Charge" id="reprintNoCharge"/><label class="radio" for="reprintNoCharge">No Charge</label>
+			</td>
+		<td width="10%" colspan="1">Expected Reprint On</td>
+		<td width="30%" colspan="3">
+<? eval (
+@$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+) ?>
+            <select name="reprint_on_year" onchange="setDaysDropDown(this.value,this.form.reprint_on_month.value,this.form.reprint_on_day,this.form.reprint_on_day.value);"><?reprint_on_years?></select>
+            <select name="reprint_on_month" onchange="setDaysDropDown(this.form.reprint_on_year.value,this.value,this.form.reprint_on_day,this.form.reprint_on_day.value);"><?reprint_on_months?></select>
+            <select name="reprint_on_day"><?reprint_on_days?></select>
+		</td>
+	</tr>
+	<tr>
+		<td width="20%" colspan="2">Art Work:</td>
+		<td width="20%" colspan="2">
+			<input type="radio" name="artwork" value="Change" id="artworkChange"/><label class="radio" for="artworkChange">Change</label>
+			<input type="radio" name="artwork" value="No Change" id="artworkNoChange"/><label class="radio" for="artworkNoChange">No Change</label>
+		</td>
+		<td width="10%" colspan="1">Approved by:</td>
+		<td width="30%" colspan="3">
+		<select name="approved_by"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+		</td>
+	</tr>
+	<tr><td width="100%" colspan="10"><textarea name="RootCause" rows="5" style="width:99%;"></textarea></td></tr>
+	<tr>
+		<td width="20%" colspan="1">Recipient:</td>
+		<td width="20%" colspan="4">
+		<select name="part3_recipient_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+		</td>
+		<td width="10%" colspan="1">Date</td>
+		<td width="40%" colspan="4">
+<? eval (
+@$variable{'part3_signed_on_years','part3_signed_on_months','part3_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+) ?>
+            <select name="part3_signed_on_year" onchange="setDaysDropDown(this.value,this.form.part3_signed_on_month.value,this.form.part3_signed_on_day,this.form.part3_signed_on_day.value);"><?part3_signed_on_years?></select>
+            <select name="part3_signed_on_month" onchange="setDaysDropDown(this.form.part3_signed_on_year.value,this.value,this.form.part3_signed_on_day,this.form.part3_signed_on_day.value);"><?part3_signed_on_months?></select>
+            <select name="part3_signed_on_day"><?part3_signed_on_days?></select>
+		</td>
+	</tr>
+</table>
+<h3>Part 4 (To be complete by Quality System Management Representative)</h3>
+<table>
+	<tr><td colspan="10">VERIFICATION OF CORRECTIVE ACTION EFFECTIVENESS</td></tr>
+	<tr><td width="100%" colspan="10"><textarea name="RootCause" rows="5" style="width:99%;"></textarea></td></tr>
+	<tr><td width="10%" colspan="1">Q.S. Mgt. Rep.:</td>
+		<td width="40%" colspan="4">
+		<select name="part4_recipient_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+	</td>
+	<td width="10%" colspan="1">Date:</td>
+	<td width="40%" colspan="4">
+<? eval (
+@$variable{'part4_signed_on_years','part4_signed_on_months','part4_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+) ?>
+            <select name="part4_signed_on_year" onchange="setDaysDropDown(this.value,this.form.part4_signed_on_month.value,this.form.part4_signed_on_day,this.form.part4_signed_on_day.value);"><?part4_signed_on_years?></select>
+            <select name="part4_signed_on_month" onchange="setDaysDropDown(this.form.part4_signed_on_year.value,this.value,this.form.part4_signed_on_day,this.form.part4_signed_on_day.value);"><?part4_signed_on_months?></select>
+            <select name="part4_signed_on_day"><?part4_signed_on_days?></select>
+	</td>
+	</tr>
+</table>
+</form>
+</div>
