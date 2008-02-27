@@ -149,14 +149,14 @@ sub calculate_signatures {
 		} # end foreach
 
 		if ( $$printing_specs{'PrintingType'} ) {
-			$log->debug("PrintingType: $$printing_specs{'PrintingType'}");
+			#$log->debug("PrintingType: $$printing_specs{'PrintingType'}");
 			if ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} 
 					or $$sig_specs{'PrintingType2'} ne $$printing_specs{'PrintingType'}
 					or $$sig_specs{'PrintingType3'} ne $$printing_specs{'PrintingType'} ) {
 # delete any similar signs
-				$log->debug("Getting rid of extra sigs");
+			#	$log->debug("Getting rid of extra sigs");
 				for ( my $j = $i+1; $j < @signatures; $j += 1 ) {
-					my $specs2 = openprint::service::get_specs_ref( $project_index, $signatures[$j] );
+					my $specs2 = openprint::service::get_specs_ref( $Project, $signatures[$j] );
 					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $specs2 ) ) {
 $openprint::log->warn('Deleting due to incorrect printing type');
 						openprint::print_project::delete_service( $log, $dbh, $project_index, $signatures[$j] );
@@ -212,24 +212,24 @@ $openprint::log->warn('Deleting due to no spreads');
 $openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
 				$status = $$sig_specs{'Status'};
 			} # end if
-		} # end foreach Interior Signature
+		} # end foreach Signature
 		$loop_count += 1;
 	} # end while
 
 #So all signatures were able to be calculated... which is good, but we may have too many, or not enough signatures
-$openprint::log->debug("after initial recalc");
+	$openprint::log->debug("after initial recalc");
 
-	# Chekc for unspecified spreads
-		foreach my $ss_id ( @signatures ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$sig_specs{'txtQuantity'.$qty_index};
-				$unspecified_spreads = openprint::Estimating::Printing::get_unspecified_spreads( $Project, undef, $printing_specs, $sig_specs, $qty_index );
-				last if $unspecified_spreads;
-			} # end foreach
+# Chekc for unspecified spreads
+	foreach my $ss_id ( @signatures ) {
+		my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
+		foreach my $qty_index ( 1 .. 3 ) {
+			next if ! $$sig_specs{'txtQuantity'.$qty_index};
+			$unspecified_spreads = openprint::Estimating::Printing::get_unspecified_spreads( $Project, undef, $printing_specs, $sig_specs, $qty_index );
+			last if $unspecified_spreads;
+		} # end foreach
 
-	$openprint::log->warn("Unspecified: for $$sig_specs{'txtSignatureType'} $unspecified_spreads");
-			if ( $unspecified_spreads == 0 ) {
+		$openprint::log->warn("Unspecified: for $$sig_specs{'txtSignatureType'} $unspecified_spreads");
+		if ( $unspecified_spreads == 0 ) {
 				if ( ! ( $$sig_specs{'txtSignatureSpreadQuantity1'}
 							or $$sig_specs{'txtSignatureSpreadQuantity2'}
 							or $$sig_specs{'txtSignatureSpreadQuantity3'} ) ) {

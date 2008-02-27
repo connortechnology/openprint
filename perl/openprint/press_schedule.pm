@@ -65,25 +65,24 @@ sub find {
 	return @$data;
 } # end sub find
 
+# Takes an array of hash pointers.  Each hash is an item to schedule assumes that the item is not already on the schedule.  Code should determine that prior to calling add
 sub add {
-	my ( $p_id, $s_id, $s_type ) = @_;
+	my $error = '';
+	foreach my $item ( @_ ) {
+		my ( $start_time ) = sql::execute( undef, undef, 'SELECT MAX(starttime+runtime) FROM Schedule WHERE equipment_id=?', $$item{equipment_id} );
+		( $start_time ) = sql::execute( undef, undef, 'SELECT NOW()' ) if ! $start_time;
 
-	my ( $service_type_id ) = sql::execute( undef, undef, 'SELECT id FROM Service_Types WHERE name=?', $s_type );
-	my ( $start_time ) = sql::execute( undef, undef, 'SELECT MAX(starttime+runtime) FROM Schedule WHERE servicetype_id=?', $service_type_id );
-	( $start_time ) = sql::execute( undef, undef, 'SELECT NOW()' ) if ! $start_time;
+		my $runtime = openprint::service::get_runtime( $openprint::log, $openprint::dbh, @$item{'projectindex','serviceindex'} );
 
-	my $runtime = openprint::service::get_runtime( $openprint::log, $openprint::dbh, $p_id, $s_id );
-
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'RunTime', $runtime );
-
-	sql::insert( $openprint::log, $openprint::dbh, 'Schedule',
-			'ProjectIndex', $p_id,
-			'ServiceIndex',	$s_id,
-			'ServiceType_id',	$service_type_id,
-			'StartTime',		$start_time,
-			'RunTime',			join(':', misc::seconds_to_interval( $runtime ) ),
-			);
-
+		$error .= sql::insert( undef, undef, 'Schedule',
+				'ProjectIndex', $$item{projectindex},
+				'ServiceIndex',	$$item{serviceindex},
+				'equipment_id',	$$item{equipment_id},
+				'StartTime',		$start_time,
+				'RunTime',			join(':', misc::seconds_to_interval( $runtime ) ),
+				);
+	} # end foreach item
+	return $error;
 } # end sub add
 
 sub remove {

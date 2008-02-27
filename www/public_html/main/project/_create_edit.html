@@ -158,7 +158,7 @@
 <fieldset>
 <? eval ( 
 	@{$$variable{'design_options'}} = ( 'ElectronicFile', 'Electronic File' );
-	if ( openprint::ServiceType::find('strid'=>'FilmStripping') ) {
+	if ( openprint::ServiceType::find('name'=>'FilmStripping') ) {
 		push @{$$variable{'design_options'}}, 'FinalFilm', 'Final Film';
 	} # end if
 ) ?>	

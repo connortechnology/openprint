@@ -1,17 +1,30 @@
 <div class="Press">
 	<p>
 		<label>Press:</label>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
 		<select name="UsePress-<?SignatureIndex?>">
 			<option value=""> select </option>
 		<? echo ( 
-			ssi::make_drop_down( [ map { $_->strid(), $_->strid() } openprint::Equipment::find('category'=>'Printing','order'=>'lower(strname)') ], $$variable{"UsePress-$$variable{SignatureIndex}"} );
+			ssi::make_drop_down( [ map { $_->strid(), $_->strid() } openprint::Equipment::find('category'=>'Printing','order'=>'lower(strname)','use_in_scheduling'=>1) ], $$variable{"UsePress-$$variable{SignatureIndex}"} );
 			) ?>
 		</select>
+<? else ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+<? echo ( $$variable{"UsePress-$$variable{SignatureIndex}"} ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
 	</p>
 	<p>
 		<label>Operator:</label>
 		<? echo (
-			@$variable{'operator_id'} = sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$variable{'Project'}->id(), $$variable{'service_id'} );
+			my $sig_id;
+			foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
+				if ( $$sig_specs{'SignatureIndex'} == $$variable{'SignatureIndex'} ) {
+					$sig_id = $ss_id;
+					last;
+				} # end if
+			} # end foreach
+			
+			@$variable{'operator_id'} = sql::execute( undef, undef, 'SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?', $$variable{'Project'}->id(), $sig_id );
 			$$variable{'Operator'} = new openprint::User( $$variable{'operator_id'} );
 			return $$variable{'Operator'}->name();
 		) ?>
@@ -22,6 +35,8 @@
 	</p>
 	<p>
 		<label>Completed:</label>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) or ( ! $$variable{'Operator'} ) or ( $$variable{'Operator'}->id() == $openprint::session{user_id} ) ) ?>
+
 		<? eval ( 
 		my ( $y, $m, $d ) = Date::Calc::Today();
 		@$variable{'years','months','days'} = ssi::get_dates( undef, undef, 
@@ -32,13 +47,20 @@
 		<select name="ddmPressCompletionDateMonth-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, this.value, document.f1.elements['ddmPressCompletionDateDay-<?SignatureIndex?>'], document.f1.elements['ddmPressCompletionDateDay-<?SignatureIndex?>'].value);"><?months?></select>
 		<select name="ddmPressCompletionDateDay-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, document.f1.elements['ddmPressCompletionDateMonth-<?SignatureIndex?>'],this, this.value);"><?days?></select>
 		<select name="ddmPressCompletionDateYear-<?SignatureIndex?>" size="1"><?years?></select>
+<? else ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) or ( ! $$variable{'Operator'} ) or ( $$variable{'Operator'}->id() == $openprint::session{user_id} ) ) ?>
+	<? echo ( join('-', @$variable{"ddmPressCompletionDateYear-$$variable{'SignatureIndex'}", "ddmPressCompletionDateMonth-$$variable{'SignatureIndex'}", "ddmPressCompletionDateDay-$$variable{'SignatureIndex'}"} ) ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) or ( ! $$variable{'Operator'} ) or ( $$variable{'Operator'}->id() == $openprint::session{user_id} ) ) ?>
 	</p>
 	<p>
 		<label>Complete:</label>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) or ( ! $$variable{'Operator'} ) or ( $$variable{'Operator'}->id() == $openprint::session{user_id} ) ) ?>
 		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>Y" name="rdbPressComplete-<?SignatureIndex?>" value="Yes" <? echo ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq 'Yes' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPressComplete-<?SignatureIndex?>Y">Yes</label>
 		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>N" name="rdbPressComplete-<?SignatureIndex?>" value="No" <? echo ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} ne 'Yes' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPressComplete-<?SignatureIndex?>N">No</label>
+<? else ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) or ( ! $$variable{'Operator'} ) or ( $$variable{'Operator'}->id() == $openprint::session{user_id} ) ) ?>
+		<? echo ( $$variable{"rdbPressComplete-$$variable{SignatureIndex}"} eq 'Y' ? 'Yes' : 'No' ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) or ( ! $$variable{'Operator'} ) or ( $$variable{'Operator'}->id() == $openprint::session{user_id} ) ) ?>
 	</p>
 </div>
 <? echo ( 

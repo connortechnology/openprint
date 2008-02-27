@@ -1,0 +1,87 @@
+<style type="text/css">
+	<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/project.css' ); ) ?>
+</style>
+<? eval (
+	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
+	$$variable{'OrderStatus'} = $$variable{'Project'}->Order()->status();
+) ?>
+
+<div id="ProjectView">
+	<!--#include virtual="/includes/project_header.html" -->
+	<table class="List" style="table-layout: auto;">
+		<tr> 
+			<th align="left">Services</th>
+			<? if ( $$variable{'Quantity1'} ) ?><th align="right"><?Quantity1?></th><? endif ( $$variable{'Quantity1'} ) ?>
+			<? if ( $$variable{'Quantity2'} ) ?><th align="right"><?Quantity2?></th><? endif ( $$variable{'Quantity2'} ) ?>
+			<? if ( $$variable{'Quantity3'} ) ?><th align="right"><?Quantity3?></th><? endif ( $$variable{'Quantity3'} ) ?>
+		</tr>
+		<? if ( @{$$variable{'SERVICES'}} ) ?>
+		<? while ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
+		<tr <?rowclass?>> 
+			<td>
+				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
+			</td>
+	<? if ( $$variable{'Quantity1'} ) ?>
+			<td align="right">
+			<? echo ( 
+				my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
+				if ( $$specs{txtQuantity1} and $$specs{txtQuantity1} != $$variable{Quantity1} ) {
+					return "($$specs{txtQuantity1}) ";
+				} # end if
+				return '';
+			) ?>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price1?></b><br/>
+			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 ); ) ?>
+			</td>
+	<? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?>
+			<td align="right">
+			<? echo ( 
+				my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
+				if ( $$specs{txtQuantity2} and $$specs{txtQuantity2} != $$variable{Quantity2} ) {
+					return "($$specs{txtQuantity2}) ";
+				} # end if
+				return '';
+			) ?>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price2?></b><br/>
+			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 2 ); ) ?>
+			</td>
+	<? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?>
+			<td align="right">
+			<? echo ( 
+				my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
+				if ( $$specs{txtQuantity3} and $$specs{txtQuantity3} != $$variable{Quantity3} ) {
+					return "($$specs{txtQuantity3}) ";
+				} # end if
+				return '';
+			) ?>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price3?></b><br/>
+			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 3 ); ) ?>
+			</td>
+	<? endif ( $$variable{'Quantity3'} ) ?>
+		</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq 'class="colRow"' ? '' : 'class="colRow"' ) ?>
+	<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
+	<? endif ( @{$$variable{'SERVICES'}} ) ?>
+		<tr class="totals"> 
+			<td align="left">Unit Prices:</td>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+		</tr>
+		<tr> 
+			<td align="left">Total Before Taxes:</td>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+		</tr>
+	</table>
+<br/>
+<? if ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
+<? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+<span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
+<br class="spacer"/>
+<!--#include virtual="/skins/<? echo ( $openprint::config{'SiteTitle'} ) ?>/includes/projectview_disclaimer.html"-->
+</div>

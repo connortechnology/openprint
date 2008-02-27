@@ -43,7 +43,7 @@
 		<label>*State/Province:</label>
 		<select name="ddmShippingStateProvince-<?ProjectIndex?>-<?ServiceIndex?>">
 			<option value=""> Select </option>
-			<? echo (  join('',
+			<? echo ( join('',
 				ssi::make_drop_down( \@states::states, $$variable{"ddmShippingStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
 				ssi::make_drop_down( \@provinces::provinces, $$variable{"ddmShippingStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
 				);
