@@ -1,0 +1,65 @@
+<div class="PageTitle">
+<h1>CORRECTIVE ACTION REQUEST (CAR)</h1>
+<h2>(Re-print Job Request)</h2>
+</div>
+<style type="text/css">
+	#CAR {
+	}
+#CAR table {
+		background-color: white;
+		border: 1px solid black;
+		table-layout: fixed;
+	}
+	#CAR table td {
+		border: 1px solid black;
+		width: 10%;
+		vertical-align: top;
+	}
+</style>
+<div id="CAR">
+		<? echo (
+			my $html;
+			if ( (!$openprint::param{'car_id'}) ) {
+				$html .= '<div id="Part1">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_edit_part1.html' );
+				$html .= '</div>';
+			} else {
+				$html .= '<div id="Part1">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part1.html' );
+				$html .= '</div>';
+			} # end if
+
+			if ( (!$openprint::param{'car_id'}) ) {
+				#$html .= '<div id="Part2">';
+				#$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_edit_part2.html' );
+				#$html .= '</div>';
+			} else {
+				$html .= '<div id="Part2">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part2.html' );
+				$html .= '</div>';
+			} # end if
+
+			if ( (!$openprint::param{'car_id'}) ) {
+				#$html .= '<div id="Part3">';
+				#$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_edit_part3.html' );
+				#$html .= '</div>';
+			} else {
+				$html .= '<div id="Part3">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part3.html' );
+				$html .= '</div>';
+			} # end if
+
+			if ( (!$openprint::param{'car_id'}) and ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ) {
+					#$html .= '<div id="Part4">';
+					#$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_edit_part4.html' );
+					#$html .= '</div>';
+			} elsif ( $$variable{'CAR'}->part4_user_id() ) {
+				$html .= '<div id="Part4">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part4.html' );
+				$html .= '</div>';
+			} # end if
+			return ssi::variable_substitution( $r, $log, $dbh, \$html, $variable );
+		) ?>
+		<input type="hidden" name="btnFunction" />
+	</form>
+</div>
