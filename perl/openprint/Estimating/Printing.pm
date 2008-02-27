@@ -50,6 +50,12 @@ my %variables = (
 		'txtPrice1' => ['save','output'],
 		'txtPrice2' => ['save','output'],
 		'txtPrice3' => ['save','output'],
+		'StockPrice1'=>['save','output'],
+		'StockPrice2'=>['save','output'],
+		'StockPrice3'=>['save','output'],
+		'OverrideStockPrice1'=>['save'],
+		'OverrideStockPrice2'=>['save'],
+		'OverrideStockPrice3'=>['save'],
 		'MPrice1' => ['save','output'],
 		'MPrice2' => ['save','output'],
 		'MPrice3' => ['save','output'],
@@ -495,6 +501,10 @@ $Imposition->display();
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $$price{'Impressions'};
 #$$specs{'RunTime'.$qty_index} = $best_price{'RunTime'};
 
+		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
+		$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $$price{'100lb Price'} );
+		} else {
+		} # end if
 		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'} );
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $$price{'Total Cost'} / $qty );
 		my $mprice = $$price{'Impression Price'};
@@ -1265,7 +1275,7 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 								my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 #$openprint::log->debug("Comparing $$I{imposition}$$I{runstyle} " . join('x',$I->Paper()->width(),$I->Paper()->height(),$I->Paper()->area()) . " $BiggerPrice{'100lb'} to $$imp{imposition}$$imp{runstyle} " . join('x',$imp->Paper()->width(),$imp->Paper()->height(),$imp->Paper()->area() ) . " $SmallerPrice{'100lb'}" );
 								if ( $I->Paper()->area() > $imp->Paper()->area() ) {
-									if ( (1*$BiggerPrice{'100lb'}) == (1*$SmallerPrice{'100lb'}) ) {
+									if ( (1*$BiggerPrice{'100lb Price'}) == (1*$SmallerPrice{'100lb Price'}) ) {
 #$openprint::log->debug("Junking " . $I->Paper()->width() . 'x' . $I->Paper()->height() . ' for ' . $imp->Paper()->width() . 'x' . $imp->Paper()->height() );
 										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 										$j -= 1;
@@ -1279,7 +1289,7 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 										$j -= 1;
 										$add = 1;
-									} elsif ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
+									} elsif ( (1*$BiggerPrice{'100lb Price'}) < (1*$SmallerPrice{'100lb Price'}) ) {
 										$add = 1;
 									} # end if
 								} # end if
@@ -1430,6 +1440,10 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $best_price{'Impressions'};
 #$$specs{'RunTime'.$qty_index} = $best_price{'RunTime'};
+		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
+		$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $best_price{'100lb Price'} );
+		} else {
+		} # end if
 
 		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'} );
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $best_price{'Total Cost'} / $qty );
@@ -1504,15 +1518,14 @@ sub breakdown {
 	if ( $Paper->type() ne 'Roll' ) {
 		#$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
 		$breakdown .= "\tStock: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
-		$breakdown .= "(\$ $$Paper{'Per M'} Per M) " if $$Paper{'Per M'};
-		$breakdown .= " (\$ $$price{'100lb'}/100lb) = \$ $$price{'Paper Price'}<br/>";
+		$breakdown .= " (\$ $$price{'100lb Price'}/100lb) = \$ $$price{'Paper Price'}<br/>";
 		$$price{'Paper 1000 Price'} = ($$price{'Sheet Price'}*1000/$Imposition->imposition());
 	#} elsif ( $Paper->width() ) {
 	} else {
 		$breakdown .= sprintf('Paper: %sx%s -> %sx%s (%d gsm)<br/>', $Paper->start_width(), $Paper->start_height(), $Paper->width(), $Paper->height(), $Paper->gsm() );
-		$$price{'Paper 1000 Price'} = (($Paper->mweight()/$Imposition->imposition())/100)*$$price{'100lb'};
+		$$price{'Paper 1000 Price'} = (($Paper->mweight()/$Imposition->imposition())/100)*$$price{'100lb Price'};
 
-		$breakdown .= sprintf('Paper: %.0f lbs * $%.2f/100lb (%.2f/M) = $%.2f<br/>', @$price{'Stock Weight','100lb','Paper 1000 Price','Paper Price'});
+		$breakdown .= sprintf('Paper: %.0f lbs * $%.2f/100lb (%.2f/M) = $%.2f<br/>', @$price{'Stock Weight','100lb Price','Paper 1000 Price','Paper Price'});
 	} # end if
 	if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
 		$breakdown .= 'Paper Price not included in total<br/>';
@@ -2149,8 +2162,12 @@ sub calc_price {
 	$price{'Plate Price'} = $plate_setup{'Plate Price'} * $plate_setup{'Plate Count'};
 
 	$price{'Stock Weight'} = $sheet_qty{'Weight'};
-	my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
-	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb'};
+	if ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) {
+		$Paper = $Paper->copy();
+		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
+	} # end if
+	my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
+	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb Cost', '100lb Price'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb Cost', '100lb Price'};
 
 	$price{'Comparison Cost'} += $price{'Paper Price'};
 

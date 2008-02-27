@@ -53,27 +53,21 @@ sub neccessary {
 } # end sub neccessary
 
 sub sheet_calc {
-	my ( $log, $dbh, $variable, $Paper, $quantity ) = @_;
+	my ( $Paper, $quantity ) = @_;
 	my %price;
 
-	if ( $$Paper{'Sheet Price'} ) {
-		$price{'Sheet Price'} = $$Paper{'Sheet Price'};
-	} elsif ( $$Paper{'Per M'} ) {
-		$price{'Sheet Price'} = $$Paper{'Per M'}/1000;
-	} else {
-		my %paper_price = $Paper->get_price( $quantity );
-		$price{'100lb Cost'} = $paper_price{'100lb Cost'};
-		$price{'100lb Price'} = $paper_price{'100lb Price'};
-		$price{'Sheet Cost'} = $paper_price{Cost};
-		$price{'Sheet Price'} = $paper_price{Price};
-		$price{'100lb'} = $paper_price{'100lb'};
-	} # end if
+	my %paper_price = $Paper->get_price( $quantity );
+	$price{'100lb Cost'} = $paper_price{'100lb Cost'};
+	$price{'100lb Price'} = $paper_price{'100lb Price'};
+	$price{'Sheet Cost'} = $paper_price{Cost};
+	$price{'Sheet Price'} = $paper_price{Price};
+
 	if ( $Paper->type() eq 'Roll' ) {
-	$price{'Paper Cost'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Cost'} );
-	$price{'Paper Price'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Price'} );
+		$price{'Paper Cost'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Cost'} );
+		$price{'Paper Price'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Price'} );
 	} else {
-	$price{'Paper Cost'} = sprintf( '%.2f', $quantity * $price{'Sheet Cost'} );
-	$price{'Paper Price'} = sprintf( '%.2f', $quantity * $price{'Sheet Price'} );
+		$price{'Paper Cost'} = sprintf( '%.2f', $quantity * $price{'Sheet Cost'} );
+		$price{'Paper Price'} = sprintf( '%.2f', $quantity * $price{'Sheet Price'} );
 	} # end if
 	return %price;
 } # end sub sheet_calc
@@ -110,7 +104,7 @@ $openprint::log->debug("Paper Signature Calc");
 		} # end if
 	} # end if
 
-	return sheet_calc( $log, $dbh, $variable, $Paper, $$specs{'txtPressSheetQty'.$qty_index} );
+	return sheet_calc( $Paper, $$specs{'txtPressSheetQty'.$qty_index} );
 } # end sub
 
 sub calc {

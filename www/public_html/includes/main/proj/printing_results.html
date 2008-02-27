@@ -306,6 +306,20 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 </p>
 
 <p>
+    <label><b>Stock Price:</b></label>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+        <input id="StockPrice<?QTYIndex?>" name="StockPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'StockPrice'.$$variable{'QTYIndex'}} ) ?>" onkeyup="calc(this.form.name);" /> Per 100lbs
+        <input type="checkbox" id="OverrideStockPrice<?QTYIndex?>" name="OverrideStockPrice<?QTYIndex?>" value="Y" <? echo ( $$variable{'OverrideStockPrice'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if ( ! this.checked ) calc('f1');" />
+        <label for="OverrideStockPrice<?QTYIndex?>" class="radio">Override</label>
+	</span>
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+<p>
     <label><b>Unit Price:</b></label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
