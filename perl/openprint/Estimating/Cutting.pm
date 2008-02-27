@@ -411,18 +411,32 @@ sub signature_calc {
 		$$specs{'Status'} = 'calculated';
 		return;
 	} # end if
-
+	my $stitching_imposition;
+	if ( $I->StitchingImposition() ) {
+		$stitching_imposition = $I->StitchingImposition();
+	} elsif ( $$services{'SaddleStitching'} ) {
+		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
+		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
+	} elsif ( $$services{'LoopStitching'} ) {
+		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
+		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
+	} elsif ( $$services{'PerfectBound'} ) {
+		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] );
+		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
+	} # end if
+	
 	my ( $sheet_width, $sheet_height ) = ($Paper->width(), $Paper->height() );
 
 # calculate cuts
 	my $vertical_cuts = 0;
-	$$specs{'hdnBreakdown'.$qty_index} .= "\tRegular Cuts: " . $calliper."<br/>";
+	$$specs{'hdnBreakdown'.$qty_index} .= 'Regular Cuts: ' . $calliper.'<br/>';
 # interior vertical cuts = $sig_specs{'hdnImpositionColumns'}-1
 	if ( exists $$sig_specs{'txtSignatureType'} ) {
 		# Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 		# but if we are cutting into smaller signatures, then we need more cutting
-		if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
-			$vertical_cuts += int ($$sig_specs{'txtImposition'.$qty_index} / $$sig_specs{'StitchingImposition'.$qty_index})-1;
+#$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
+		if ( $stitching_imposition and ( $I->image_orientation() eq 'Horizontal' ) ) {
+			$vertical_cuts += int ($$sig_specs{'hdnImpositionColumns'.$qty_index} / $stitching_imposition)-1;
 		} else {
 			$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
 		} # end if
@@ -449,8 +463,8 @@ $openprint::log->error('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
 # interior horizontal cuts = $sig_specs{'hdnImpositionRows'}-1 with bleeds
 	my $horizontal_cuts = 0;
 	if ( exists $$sig_specs{'txtSignatureType'} ) {
-		if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
-			$horizontal_cuts += int ($$sig_specs{'txtImposition'.$qty_index} / $$sig_specs{'StitchingImposition'.$qty_index})-1; 
+		if ( $stitching_imposition and ( $I->image_orientation() eq 'Vertical' ) ) {
+			$horizontal_cuts += int ($$sig_specs{'hdnImpositionRows'.$qty_index} / $stitching_imposition)-1; 
 		} else {
 			$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
 		} # end if
@@ -485,7 +499,6 @@ $openprint::log->error('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 			$dutch_horizontal_cuts += $$sig_specs{'hdnImpositionDutchRows'.$qty_index}; # +1 - 1
 			if ( ( $$sig_specs{'chkBleedTop'} and $$sig_specs{'chkBleedBottom'} ) or ($$sig_specs{'chkBleedLeft'} and $$sig_specs{'chkBleedRight'} ) ) {
 				$dutch_horizontal_cuts += 1;
-				
 			} # end if
 			if ( 
 					( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) or
