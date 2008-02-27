@@ -16,7 +16,7 @@ sub import_specs {
 
 	my $error = '';
 	if ( $openprint::param{'fileSpecifications'} ) {
-		sql::start_transaction( $dbh );
+		my $ac = sql::start_transaction( $openprint::dbh );
 
 		sql::execute( undef, undef, 'DELETE FROM tbl_Equipment_Specifications' . ( $Equipment->id()?' WHERE lngEquipmentIndex=' . $Equipment->id():''));
 
@@ -38,7 +38,7 @@ sub import_specs {
 				if ( ! $equipment{$equip_id} ) {
 					$error .= "Equipment $equip_id not found.<br>";
 				} else {
-					sql::insert( $log, $dbh, 'tbl_Equipment_Specifications', [
+					$error .= sql::insert( $log, $dbh, 'tbl_Equipment_Specifications', [
 							'lngEquipmentIndex',    $equipment{$equip_id},
 							'dblMin',               ( $min ne '' ? $min : undef ),
 							'dblMax',               ( $max ne '' ? $max : undef ),
@@ -47,13 +47,15 @@ sub import_specs {
 							'strValue',             $value,
 							'interpolate',			$interpolate,
 							] );
-					openprint::logs::insertLogRecord('37', "Equipment ID: " . $equipment{$equip_id} . " Name: " . $name . " Value: " . $value . " Units: " . $units,);
+					#openprint::logs::insertLogRecord('37', "Equipment ID: " . $equipment{$equip_id} . " Name: " . $name . " Value: " . $value . " Units: " . $units,);
 				} # end if
+				last if $error;
 			} # end for each
-		} # end foreach
-		sql::end_transaction( $openprint::dbh );
+			last if $error;
+		} # end while
+		sql::end_transaction( $openprint::dbh, $ac );
 	} else {
-		$error .= "No file given to upload.<br>";
+		$error .= 'No file given to upload.<br>';
 	} # end if
 	return $error;
 
