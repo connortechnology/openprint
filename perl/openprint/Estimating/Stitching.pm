@@ -36,6 +36,7 @@ my %variables = (
 		'alert'=>['output'],
 		'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
 		'txtCalliper'=>['save','output'],
+		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
 		'Imposition1'=>['save','output'], 'Imposition2'=>['save','output'], 'Imposition3'=>['save','output'],
 		'ddmEquipment1'=>['save','output'], 'ddmEquipment2'=>['save','output'], 'ddmEquipment3'=>['save','output'],
 		'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],

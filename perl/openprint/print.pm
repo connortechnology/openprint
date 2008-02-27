@@ -112,6 +112,7 @@ sub view_services {
 				my $CurrentCurrency = openprint::Currency::get_current();
 				my $ProjectCurrency = $Project->Currency();
 				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
+$openprint::log->debug("Converting from " . $CurrentCurrency->name() . ' to ' . $ProjectCurrency->name() . ' rate: ' . $conversion_rate );
 
 				if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
 					my $ac = sql::start_transaction( $dbh );
