@@ -1,0 +1,65 @@
+<form name="part3form" id="part3form">
+<h3>Part 3 (To be completed by recipient)</h3>
+<table>
+	<tr><td width="100%" colspan="10">CORRECTIVE/PREVENTATIVE ACTION</td></tr>
+	<tr>
+		<td width="20%" colspan="2" rowspan="2">Re-print Job Request</td>
+		<td width="10%" colspan="1">Reprint for:</td>
+		<td width="30%" colspan="3">
+			<input type="radio" name="reprint" value="Charge" id="reprintCharge"/><label class="radio" for="reprintCharge">Charge</label>
+			<input type="radio" name="reprint" value="No Charge" id="reprintNoCharge"/><label class="radio" for="reprintNoCharge">No Charge</label>
+			</td>
+		<td width="10%" colspan="1">Expected Reprint On</td>
+		<td width="30%" colspan="3">
+<? eval (
+if ( $$variable{'CAR'}->reprint_on() ) {
+@$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{'CAR'}->reprint_on() ) );
+} else {
+@$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+} # end if
+) ?>
+            <select name="reprint_on_year" onchange="setDaysDropDown(this.value,this.form.reprint_on_month.value,this.form.reprint_on_day,this.form.reprint_on_day.value);"><?reprint_on_years?></select>
+            <select name="reprint_on_month" onchange="setDaysDropDown(this.form.reprint_on_year.value,this.value,this.form.reprint_on_day,this.form.reprint_on_day.value);"><?reprint_on_months?></select>
+            <select name="reprint_on_day"><?reprint_on_days?></select>
+		</td>
+	</tr>
+	<tr>
+		<td width="20%" colspan="2">Art Work:</td>
+		<td width="20%" colspan="2">
+			<input type="radio" name="artwork" value="Change" id="artworkChange"/><label class="radio" for="artworkChange">Change</label>
+			<input type="radio" name="artwork" value="No Change" id="artworkNoChange"/><label class="radio" for="artworkNoChange">No Change</label>
+		</td>
+		<td width="10%" colspan="1">Approved by:</td>
+		<td width="30%" colspan="3">
+		<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+		</td>
+	</tr>
+	<tr><td width="100%" colspan="10"><textarea name="action" rows="5" style="width:99%;"></textarea></td></tr>
+	<tr>
+		<td width="20%" colspan="1">Recipient:</td>
+		<td width="20%" colspan="4">
+		<select name="part3_user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+		</td>
+		<td width="10%" colspan="1">Date</td>
+		<td width="40%" colspan="4">
+<? eval (
+if ( $$variable{'CAR'}->part3_signed_on() ) {
+@$variable{'part3_signed_on_years','part3_signed_on_months','part3_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{'CAR'}->part3_signed_on() ) );
+} else {
+@$variable{'part3_signed_on_years','part3_signed_on_months','part3_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+} # end if
+) ?>
+            <select name="part3_signed_on_year" onchange="setDaysDropDown(this.value,this.form.part3_signed_on_month.value,this.form.part3_signed_on_day,this.form.part3_signed_on_day.value);"><?part3_signed_on_years?></select>
+            <select name="part3_signed_on_month" onchange="setDaysDropDown(this.form.part3_signed_on_year.value,this.value,this.form.part3_signed_on_day,this.form.part3_signed_on_day.value);"><?part3_signed_on_months?></select>
+            <select name="part3_signed_on_day"><?part3_signed_on_days?></select>
+		</td>
+	</tr>
+</table>
+	<input type="hidden" name="car_id" value="<? echo ( $$variable{'CAR'}->id() ) ?>" />
+	<input type="hidden" name="btnFunction" value="Save" />
+</form>
+<p class="buttons">
+	<? echo ( join('',
+		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "new Ajax.Updater('Part3','_car_view_part3.html', {method:'get',parameters: Form.serialize( \$('part3form') ) } );", '','Save' ),
+		); ) ?>
+</p>

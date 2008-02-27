@@ -1,7 +1,7 @@
 <? eval (
-	foreach my $k ( 'txtCompanyName', 'txtAddress1', 'txtAddress2', 'txtCity', 'ddmStateProvince', 'txtPostalCode', 'ddmCountry', 'txtPhone', 'txtExtension', 'txtFax', 'rdbSalutation', 'txtFirstName','txtLastName','txtEmail' ) {
+	#foreach my $k ( 'txtCompanyName', 'txtAddress1', 'txtAddress2', 'txtCity', 'ddmStateProvince', 'txtPostalCode', 'ddmCountry', 'txtPhone', 'txtExtension', 'txtFax', 'rdbSalutation', 'txtFirstName','txtLastName','txtEmail' ) {
 		#$$variable{$k} = $openprint::param{$k};
-	} # end foreach
+	#} # end foreach
 
 	if ( $openprint::param{'company_id'} ) {
 		my $Company = new openprint::Company( $openprint::param{'company_id'} );

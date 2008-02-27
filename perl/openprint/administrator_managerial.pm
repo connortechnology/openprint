@@ -383,6 +383,7 @@ if ( 0 ) {
 			$params{$fields{$field}} = $openprint::param{$field} if defined $openprint::param{$field};
 		} # end foreach
 		if ( $openprint::param{'txtStartYear'} ) {
+			$openprint::param{'ddmStartMonth'} = '01' if ! $openprint::param{'ddmStartMonth'};
 			$params{'BusinessStartDate'} = $openprint::param{'txtStartYear'} . '-' . $openprint::param{'ddmStartMonth'} . '-01';
 		} # end if
 		$customer->set( \%params );

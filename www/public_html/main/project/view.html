@@ -199,9 +199,6 @@ if ( $$variable{'HiddenSignatures'} ) {
 <span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
 <? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
 <span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
-<br class="spacer"/>
-<br/>
-	<br class="spacer"/>
 </form>
 <br class="spacer"/>
 <? if ( $$variable{'Project'}->docket() ) ?>

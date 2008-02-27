@@ -348,7 +348,7 @@ $openprint::log->debug("No Sheeter");
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		next if $Paper and $signature_service_index and ($ss_id > $signature_service_index);
-		next if $ss_id == $signature_service_index;
+		next if $ss_id >= $signature_service_index;
 		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		foreach my $fold_type ( keys %fold_types ) {
 			if ( $$specs{$fold_type."-Qty-$$s_specs{'SignatureIndex'}-$qty_index"} > 0 ) {
@@ -358,17 +358,17 @@ $openprint::log->debug("No Sheeter");
 	} # end foreach
 
 	my $imposition;
-	if ( $$sig_specs{'StitchingImposition'.$qty_index} ) {
-		$imposition = $$sig_specs{'StitchingImposition'.$qty_index};
-#$openprint::log->debug("Got impo from StitchingImposition") if $debug;
+	if ( $Imposition->StitchingImposition() ) {
+		$imposition = $Imposition->StitchingImposition();
+#$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-#$openprint::log->debug("Got impo from SaddleStitching") if $debug;
+#$openprint::log->debug("Got impo from SaddleStitching: $imposition out") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-#$openprint::log->debug("Got impo from LoopStitching") if $debug;
+#$openprint::log->debug("Got impo from LoopStitching: $imposition out") if $debug;
 	} # end if
 	$imposition = 1 if ! $imposition;
 
