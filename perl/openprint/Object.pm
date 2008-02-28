@@ -64,9 +64,12 @@ sub get {
     my $self = shift;
     my @requested_fields = @_;
 
+	my $type = ref $self;
+	my %fields = eval ('%'.$type.'::fields');
+
     foreach my $field ( @requested_fields ) {
         if ( ! defined $fields{$field} ) {
-            $openprint::log->warn( ref $self . ": Invalid field requested: ($field)." );
+            $openprint::log->warn( $type . ": Invalid field requested: ($field)." );
         } # end if
     } # end foreach
 

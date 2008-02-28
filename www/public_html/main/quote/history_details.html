@@ -165,7 +165,7 @@ Projects listed in red have changed price from the time this quote was originall
 			my $html;
 			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'deleteFromHist.gif', "f1.action='/main/quote/history.html';delete_confirm(f1);", '', 'Delete' );
 			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy' );
+				$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy' );
 				$html .= ssi::writeButton( $log, $dbh, 'Resend', 'reSendQuote.gif', "f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", '', 'Resend' );
 				$html .= ssi::writeButton( $log, $dbh, 'Order', 'processOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Order' );
 			} else {
