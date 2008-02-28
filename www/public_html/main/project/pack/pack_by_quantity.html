@@ -11,6 +11,17 @@
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<!--#include virtual="/includes/main/proj/items_per_package.html"-->
+		<? eval ( 
+			@{$$variable{'Materials'}} = openprint::Material::find('category'=>$$variable{'ServiceType'},'order'=>'lower(name)' );
+		) ?>
+		<? if ( @{$$variable{'Materials'}} ) ?>
+		<p>
+			<label>Type:</label>
+			<select name="type_id" onchange="calc(this.form.name);">
+				<? echo ( ssi::make_drop_down( [ map{ $_->id(), $_->name() } @{$$variable{'Materials'}} ], $$variable{'type_id'} ); ) ?>
+			</select>
+		</p>
+		<? endif ( @{$$variable{'Materials'}} ) ?>
 		<!--#include virtual="/includes/main/proj/cardboard_backing.html"-->
 		</fieldset>
 		<fieldset><legend>Results</legend>

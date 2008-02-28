@@ -79,6 +79,9 @@ sub set {
 
 	my $type = ref $self;
 	my %fields = eval ('%'.$type.'::fields');
+	if ( ! %fields ) {
+$openprint::log->warn('Object::set called on an object with no fields');
+	} # end if
 
 	foreach my $field ( keys %fields ) {
 		
@@ -100,11 +103,11 @@ sub set {
 		my %defaults = eval('%'.$type . '::defaults');
 
 		if ( (!$$self{$field})  and exists $defaults{$field} ) {
-#$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
+		} else {
+$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 		} # end if
-		#} else {
-			#$openprint::log->warn("Object::Set::Invalid field requested: $type ($field)." );
 	} # end foreach
 	return @set_fields;
 } # end sub set

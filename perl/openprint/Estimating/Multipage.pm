@@ -287,6 +287,7 @@ sub status {
 sub copy_signature {
 	my ( $project_index, $sig_specs ) = @_;
 $openprint::log->debug("ADding signature");
+	my $Project = new openprint::Project( $project_index );
 	my $new_service_index = openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'AdditionalSignature' );
 	my $new_specs = openprint::service::get_specs_ref( $Project, $new_service_index );
 	my $ac = sql::start_transaction( $openprint::dbh );
