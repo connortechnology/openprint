@@ -5,6 +5,7 @@ use MIME::QuotedPrint;
 
 require openprint::Company;
 require openprint::logs;
+require openprint::Usergroup;
 use openprint ();
 use strict;
 
@@ -377,6 +378,11 @@ sub csr_ids {
 	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
 } # end sub
 
+sub Groups {
+	my ( $self ) = @_;
+
+    return openprint::Usergroup::find('user_id'=>$$self{id} );
+} # end sub groups
 1;
 
 __END__
