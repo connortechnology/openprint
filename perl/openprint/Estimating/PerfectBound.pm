@@ -347,18 +347,26 @@ $openprint::log->debug("calc");
 				$bestPrice = $Price;
 			} # end if
 
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ", Equipment: ".$Equipment->strid() ."<br/>";
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$Price{'RunTime'} ) . ",<br/>";
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$Price{'Passes'} ) . ",<br/>";
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$Price{'Imposition'} ) . ",<br/>";
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%<br/>', @$Price{'RunCost Discount','Imposition Discount'} );
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', @$Price{'Calliper Markup'} );
-		$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$Price{'MakeReady'}).",<br/>";
-		my $servicePrice = $$Price{'ServicePrice'};
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'txtPrice'}))."<br/><br/>";
-		} # end foreach
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Quantity: %d on %s with %d pockets<br/>',$$specs{"txtQuantity$qty_index"},$Equipment->name(), $Equipment->specification('Number of Pockets') );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$Price{'RunTime'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$Price{'Passes'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$Price{'Imposition'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%<br/>', @$Price{'RunCost Discount','Imposition Discount'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', @$Price{'Calliper Markup'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$Price{'MakeReady'}).",<br/>";
+			if ( my $servicePrice = $$Price{'ServicePrice'} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %d passes at $%.2f%s=$%.2f<br/>', $$Price{'Passes'} - 1, @$servicePrice{'Price','units','Total'});
+			} # end if
+			my $servicePrice = $$Price{'LastPassServicePrice'};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: last pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'txtPrice'}))."<br/><br/>";
+		} # end foreach Equipment
 
+		if ( $$bestPrice{'Equipment'} ) {
+		$$specs{'ddmEquipment'.$qty_index} = $$bestPrice{'Equipment'}->id();
+		} else {
+		$$specs{'ddmEquipment'.$qty_index} = '';
+		} # end if
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'Price'} );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $$bestPrice{'Price'} / $qty );
     } # end foreach
@@ -371,6 +379,7 @@ sub get_price {
 	my ( $Equipment, $specs, $qty_index ) = @_;
 
 	my %price = (
+		'Equipment'	=> $Equipment,
 		'MakeReady' => 0,
 		'Service'	=> 0,
 		'Insert'	=> 0,
@@ -402,12 +411,13 @@ sub get_price {
 	$price{'RunTime'} += $neededPockets * $Equipment->specification( 'Pocket Make Ready' );
 
 # Calculate Full Passes
-	if ( $neededPockets > $maxPockets ) {
+	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
 		my %servicePrice;
 		if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
 			%servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $maxPockets, $Equipment );
 		} # end if
+		$price{'ServicePrice'} = \%servicePrice;
 		
 		my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
@@ -415,14 +425,17 @@ sub get_price {
 		my $loopbreak_pockets = $neededPockets;
 		while ( $neededPockets > $maxPockets ) {
 			if ( $servicePrice{'units'} eq 'Per M' ) {
-				$price{'Service'} += $servicePrice{'Price'} * $qty/1000;
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
+				$price{'Service'} += $servicePrice{'Total'};
 			} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
-				$price{'Service'} += $servicePrice{'Price'} * $runtime;
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
+				$price{'Service'} += $servicePrice{'Total'}
 			} else {
 				$openprint::log->debug("Unknown Unit Type: ($servicePrice{'units'}) on $$specs{'ServiceType'}");
 			} # end if
 
-			$neededPockets -= $maxPockets;
+			# The minus 1 is because the result of the first pass, takes up one pocket
+			$neededPockets -= ( $maxPockets - 1 );
 			last if $neededPockets == $loopbreak_pockets;
 			$price{'Passes'} += 1;
 		} # end while
@@ -433,7 +446,7 @@ sub get_price {
 	if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}.$neededPockets.'Pockets', $qty, $Equipment ) ) ) {
 		%servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $neededPockets, $Equipment );
 	} # end if
-	$price{'ServicePrice'} = \%servicePrice;
+	$price{'LastPassServicePrice'} = \%servicePrice;
 	my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
 	my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 	$price{'RunTime'} += $runtime * 360;
@@ -473,6 +486,13 @@ sub get_price {
 $openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
 	return \%price;
 } # end sub get_price
+
+sub display {
+	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+
+	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+
+} # end sub display
 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;

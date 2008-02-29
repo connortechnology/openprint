@@ -5,7 +5,9 @@ use openprint ();
 use openprint::Fold;
 require sql;
 
-my %fields = (
+use vars qw( %fields %transforms %defaults );
+
+%fields = (
 	'id'			=>	'id',
 	'fold_id'		=>	'fold_id',
 	'min_weight'	=>	'min_weight',
@@ -14,12 +16,12 @@ my %fields = (
 	'runspeed'		=>	'runspeed',
 	'interpolate'	=>	'interpolate',
 );
-my %transforms = (
+%transforms = (
 	'min_weight'	=> [ 's/[^\d\.]//g' ],
 	'max_weight'	=> [ 's/[^\d\.]//g' ],
 	'runspeed'		=> [ 's/\D//g' ],
 );
-my %defaults = (
+%defaults = (
 	'min_weight'	=>	undef,
 	'max_weight'	=>	undef,
 	'weight_units'	=>	'gsm',

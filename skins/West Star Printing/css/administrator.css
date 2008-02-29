@@ -31,10 +31,10 @@ div.row .buttons {
 	padding: 5px;
 }
 
-fieldset.leftColumn p input {
+fieldset.leftColumn p input, fieldset .leftColumn p input {
 	width: 90%;
 }
-fieldset.leftColumn p select {
+fieldset.leftColumn p select, fieldset .leftColumn p select {
 	width: 90%;
 }
 .Add {
@@ -75,3 +75,24 @@ table.List tr td.Range input, table.List tr td.Range input[type="text"] {
 	background-color: #f1eee5;
 	border: 1px solid;
 }
+
+#UserProfile ul {
+    list-style: none;
+	width: auto;
+	float: left;
+}
+#UserProfile ul li {
+    float: left;
+    width: 200px;
+}
+#UserProfile ul:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html #UserProfile ul {height: 1%;}
+*     #UserProfile ul {display:block;}
+/* End hide from IE-mac */
