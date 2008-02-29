@@ -721,7 +721,7 @@ sub load_press_completion {
 		$$variable{"UsedDutchRows-$$specs{'SignatureIndex'}"} = $$specs{'hdnImpositionDutchRows'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"UsedDutchRows-$$specs{'SignatureIndex'}"};
 		$$variable{"UsedRunStyle-$$specs{'SignatureIndex'}"} = $$specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"UsedRunStyle-$$specs{'SignatureIndex'}"};
 
-		@$variable{"UsePress-$$specs{'SignatureIndex'}"} = $$specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"ddmPress-$$specs{'SignatureIndex'}"};
+		$$variable{"UsePress-$$specs{'SignatureIndex'}"} = $$specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"UsePress-$$specs{'SignatureIndex'}"};
 		if ( ! $$variable{"UsedStockSheetSize-$$specs{'SignatureIndex'}"} ) {
 			if ( $$specs{'StockType'.$$variable{'Project'}->ordered_quantity_index()} eq 'Roll' ) {
 				$$variable{"UsedStockSheetSize-$$specs{'SignatureIndex'}"} = $$specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()};
@@ -729,8 +729,6 @@ sub load_press_completion {
 				$$variable{"UsedStockSheetSize-$$specs{'SignatureIndex'}"} = $$specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} .'x'.$$specs{'StockHeight'.$$variable{'Project'}->ordered_quantity_index()};
 			} # end if
 		} # end if
-
-		@$variable{"PressName-$$specs{'SignatureIndex'}"} = sql::execute( $log, $dbh, 'SELECT strName FROM tbl_Equipment WHERE strID=?', $$specs{'UsePress'} );
 	} # end foreach signature_service_index
 
 } # end sub load_press_completion

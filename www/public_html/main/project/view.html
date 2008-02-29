@@ -42,7 +42,7 @@ There is no current project.
 		<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
 	<? endif ( $$variable{'ProjectStatus'} eq 'Unordered' ) ?>
 	<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>
 	<? endif ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
 	<? echo ( 
@@ -199,9 +199,6 @@ if ( $$variable{'HiddenSignatures'} ) {
 <span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
 <? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
 <span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
-<br class="spacer"/>
-<br/>
-	<br class="spacer"/>
 </form>
 <br class="spacer"/>
 <? if ( $$variable{'Project'}->docket() ) ?>

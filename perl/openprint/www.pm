@@ -143,7 +143,7 @@ $openprint::log->debug("Page: $page");
 			} # end while
 		} # end if _
 		if ( $template ) {
-			$log->warn("parsing template!");
+			$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			$log->warn("No template!");
@@ -161,7 +161,7 @@ $openprint::log->debug("Page: $page");
 	$session{'lastupdated'} = time;
 	untie %session;
 	$dbh->disconnect();
-	$log->warn( "Elapsed seconds: " . ( time - $starttime ) );
+	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();
 	openprint::pricing::clear_cache( );

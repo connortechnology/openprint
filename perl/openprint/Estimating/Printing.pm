@@ -144,7 +144,7 @@ my %variables = (
 		'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
 		'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
 		'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
-		'StitchingImposition1' => ['save','output'], 'StitchingImposition2' => ['save','output'], 'StitchingImposition3' => ['save','output'],
+		#'StitchingImposition1' => ['output'], 'StitchingImposition2' => ['output'], 'StitchingImposition3' => ['output'],
 		'FoldingImposition1' => ['save','output'], 'FoldingImposition2' => ['save','output'], 'FoldingImposition3' => ['save','output'],
 		'txtImageWidth1' => ['save','output'], 'txtImageWidth2' => ['save','output'], 'txtImageWidth3' => ['save','output'],
 		'txtImageHeight1' => ['save','output'], 'txtImageHeight2' => ['save','output'], 'txtImageHeight3' => ['save','output'],
@@ -1396,6 +1396,8 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		my $Varnish = $$b_price{'Varnish'};
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
+$Imposition->display();
+$openprint::log->debug( breakdown( $b_price, $specs ) );
 
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 
@@ -1640,6 +1642,7 @@ $openprint::log->debug("QTY: $qty_index");
 #$imp->display();
 
 #my $time = gettimeofday();
+		$imp = $imp->copy();
 		my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, (%best_price ? $best_price{'Comparison Cost'} : 0), $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 						#$openprint::log->debug( breakdown( $price, $specs ) );
@@ -1648,11 +1651,13 @@ $openprint::log->debug("QTY: $qty_index");
 			my $upq = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 			my $pp = $$specs{'PreviousPlates'.$qty_index};
 			my $pbp = $$specs{'PreviousBlankPlates'.$qty_index};
+			my $si = $$specs{'StitchingImposition'.$qty_index};
 
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $imp->pages();
 
 			my $s_id = $service_index;
 			my %new_specs = %$specs;
+#$openprint::log->warn('Setting Stitching Imposition of new speacs to : ' . $$price{'StitchingImposition'});
 
 			while ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} > 0 ) {
 				if ( $s_id ) {
@@ -1674,11 +1679,13 @@ $openprint::log->debug("QTY: $qty_index");
 
 				# When new_specs refers to a different service, we need to update it
 				$new_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
+				$new_specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 
 				my $last_sig_price = $$price{'Comparison Cost'};
 
 				my $additional_price;
 				my $sig_price;
+				my $sigs = 1;
 				if ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} >= $imp->pages() ) {
 # Going to just re-use the same impo
 #$openprint::log->warn("Doing half calc qtyi: $qty_index unspec: $$specs{'txtUnspecifiedPageQuantity'.$qty_index} > " . $imp->spreads() . ' imp spreads');
@@ -1694,8 +1701,7 @@ $openprint::log->debug("QTY: $qty_index");
 					if ( $$sig_price{'Comparison Cost'} == $last_sig_price ) {
 						$additional_price -= $$sig_price{'Stitching Cost'};
 						$additional_price -= $$sig_price{'PerfectBound Cost'};
-						my $sigs =int($$specs{'txtUnspecifiedPageQuantity'.$qty_index}/$imp->pages());
-
+						$sigs =int($$specs{'txtUnspecifiedPageQuantity'.$qty_index}/$imp->pages());
 						$additional_price *= $sigs;
 						foreach ( 1 .. $sigs ) {
 							push @{$$price{'Additional Impositions'}},$imp;
@@ -1775,24 +1781,18 @@ $openprint::log->debug("Using cache: ".$new_specs{'txtUnspecifiedPageQuantity'.$
 				$$price{'PerfectBoundImposition'} = $$sig_price{'PerfectBoundImposition'};
 				$$price{'PerfectBound Breakdown'} = $$sig_price{'PerfectBound Breakdown'};
 
-				if ( ! $$sig_price{complete} ) {
+				if ( (! $$sig_price{complete}) or ($additional_price < 0) ) {
 #$openprint::log->debug("Unable to calculated");
 					$$price{'complete'} = 0;
 					$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 					last;
 				} # end if
 
-				if ( $additional_price < 0 ) {
-					$$price{'complete'} = 0;
-					$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
-					last;
-				} # end if	
 				$last_sig_price = $$sig_price{'Comparison Cost'};
 
 				$$price{'Comparison Cost'} += $additional_price;
 				if ( $$sig_price{'Imposition'} ) {
-					$$price{'AdditionalSignature Breakdown'} .= sprintf('Additional Sig %dpages %dout %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $additional_price ) . '<br/>';
-					#`:w
+					$$price{'AdditionalSignature Breakdown'} .= sprintf($sigs . ' Additional Sig %dpages %dout %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $additional_price ) . '<br/>';
 					$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
 				} else {
 					$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
@@ -1804,6 +1804,7 @@ $openprint::log->debug("Using cache: ".$new_specs{'txtUnspecifiedPageQuantity'.$
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = $upq;
 			$$specs{'PreviousPlates'.$qty_index} = $pp;
 			$$specs{'PreviousBlankPlates'.$qty_index} = $pbp;
+			$$specs{'StitchingImposition'.$qty_index} = $si;
 		} # end if UnspecifiedPageQuanitty
 #$openprint::log->debug( 'calc_price: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) . ' Complete: ' . $price{complete} );
 
@@ -1854,12 +1855,12 @@ sub check_price {
 		#$p *= ( 1 + $$specs{'txtUnspecifiedPageQuantity'.$qty_index}/$Imposition->spreads() );
 	#} # end if
 
-#$openprint::log->debug("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 	#if ( $price_to_beat > $p ) {
 #$openprint::log->debug("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 	if ( $price_to_beat > $$price{'Comparison Cost'} ) {
 		return 0;
 	} # end if
+$openprint::log->warn("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 	return 1;
 } # end sub
 
@@ -1941,14 +1942,23 @@ sub calc_price {
 	$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
 
 	if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$specs{'txtSignatureType'} ne 'Cover Spreads') ) {
+		# This should only happen on second signature in calc
+		if ( ( ! $Imposition->StitchingImposition() ) and $$specs{'StitchingImposition'.$qty_index} ) {
+#$openprint::log->warn("Prepping Imposition Stitching Imposition to ".$$specs{'StitchingImposition'.$qty_index});
+			$Imposition->StitchingImposition( $$specs{'StitchingImposition'.$qty_index} );
+		} # end if
 #my $starttime = gettimeofday();
 		my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
 		if ( $$results{'Status'} eq 'uncalculated' ) {
 			$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
-			$price{'Comparison Cost'} += 1000000; # Can't stich this on
-				$price{'Stitching Cost'} = 1000000;
+			$price{'Comparison Cost'} += 10000000; # Can't stich this on
+			$price{'Stitching Cost'} = 10000000;
 		} else {
 			$price{'StitchingImposition'} = $$results{'Imposition'};
+			if ( $$results{'Imposition'} < $$Imposition{StitchingImposition} ) {
+				$openprint::log->error( "New StitchingImposition is less than old!" );
+			} # end if
+			$$Imposition{StitchingImposition} = $$results{'Imposition'};
 			$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
 			$price{'Stitching Cost'} = $$results{'Price'};
 			$price{'Comparison Cost'} += $$results{'Price'};

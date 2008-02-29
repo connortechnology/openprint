@@ -104,6 +104,10 @@ sub view_services {
 				if ( $service_name eq '' ) {
 					$service_name = 'Adjust';
 				} # end if
+				my $CurrentCurrency = openprint::Currency::get_current();
+				my $ProjectCurrency = $Project->Currency();
+				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
+$openprint::log->debug("Converting from " . $CurrentCurrency->name() . ' to ' . $ProjectCurrency->name() . ' rate: ' . $conversion_rate );
 
 				if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
 					my $ac = sql::start_transaction( $dbh );
@@ -126,21 +130,21 @@ sub view_services {
 								'lngProjectIndex',  $project_index,
 								'lngServiceIndex',  $service_index,
 								'strName',          'txtPrice1',
-								'strValue',         misc::moneyfilter($r->param('txtPrice1') )]);
+								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice1') )]);
 					} # end if
 					if ( defined $r->param('txtPrice2') ) {
 					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 								'lngProjectIndex',  $project_index,
 								'lngServiceIndex',  $service_index,
 								'strName',          'txtPrice2',
-								'strValue',         misc::moneyfilter($r->param('txtPrice2') )]);
+								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice2') )]);
 					} # end if
 					if ( defined $r->param('txtPrice3') ) {
 					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 								'lngProjectIndex',  $project_index,
 								'lngServiceIndex',  $service_index,
 								'strName',          'txtPrice3',
-								'strValue',         misc::moneyfilter($r->param('txtPrice3') )]);
+								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice3') )]);
 					} # end if
 					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 								'lngProjectIndex',  $project_index,

@@ -844,11 +844,8 @@ $openprint::log->debug("After load from signature");
 	my $TopResourcePool = openprint::JDF::getNode( $doc, 'ResourcePool' );
 
     my $project = $doc->createElement('JDF');
-    $project->setAttribute('xmlns','http://www.cip4.org/JDFSchema_1_1');
     $project->setAttribute('Status','Waiting');
     $project->setAttribute('Activation','Active');
-    $project->setAttribute('Version',$openprint::JDF::version);
-    $project->setAttribute('JobID',$Project->docket());
 	# Printing Part # is project + sig, cuz a docket can have multiple projects, and we are talking about printing a sig
 	# This is so that the JMF handler can reference back to the service
     $project->setAttribute('JobPartID',$Project->id() . '#' . $sig_id );
