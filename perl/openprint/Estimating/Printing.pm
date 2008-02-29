@@ -1102,6 +1102,10 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 				$openprint::log->error("Press Plate Type ");
 				next;
 			} # end if
+			if ( (! $$services{'Folding'} ) and ($Press->specification('Sheeter') ne 'Y' ) ) {
+				$openprint::log->error("No Sheeter");
+				next;
+			} # end if
 
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 			my $do_perfecting = 1;
