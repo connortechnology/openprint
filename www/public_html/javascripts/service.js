@@ -73,6 +73,7 @@ function cbFillResults( results ) {
     var pairs = results.split('|');
     var form = getFormObj('f1');
 	remove_div('AlertDiv');
+alert(results);
 
     for ( var i = 0; i < pairs.length; i += 1 ){
         if ( pairs[i].indexOf('~') != -1 ) {

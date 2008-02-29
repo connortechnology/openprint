@@ -42,14 +42,14 @@ div.QuoteInformation fieldset p label.radio {
 }
 
 div.QuoteInformation fieldset p input {
-    width: expression( (this.type=="text" || this.type=="password") ?'94%':'auto');
+    width: expression( (this.type=="text" || this.type=="password") ?'90%':'auto');
 	margin: 0px;
 }
 div.QuoteInformation fieldset p input[type="text"] {
-    width: 95%;
+    width: 90%;
 }
 div.QuoteInformation fieldset p select {
-    width: 95%;
+    width: 90%;
 }
 div#Quote table {
 	font-size: 10px;

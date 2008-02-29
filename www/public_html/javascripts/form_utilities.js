@@ -244,6 +244,8 @@ function filterDDM( filter, ddm ) {
 		ddm.selectedIndex = 0;
 		return;
 	} // end if
+	var old_selected = ddm.selectedIndex;
+
 	var chunk1 = filter.value.toLowerCase();
 	if ( ddm.selectedIndex > 0 ) {
 		for ( var index = ddm.selectedIndex; index; index -= 1 ) {
@@ -256,6 +258,7 @@ function filterDDM( filter, ddm ) {
 	} // end if
 	if ( ddm.selectedIndex == 0 && ddm.options.length ) 
 		ddm.selectedIndex = 1;
+
     for ( var index = ddm.selectedIndex; index < ddm.options.length; index += 1 ) {
         var chunk2 = ddm.options[index].text.toLowerCase();
         if ( chunk1 <= chunk2 ) {
@@ -742,3 +745,93 @@ function countLines(strtocount, cols) {
 function textarea_resize( element ) {
 	element.rows = countLines(element.value,element.cols) + 1;
 } // end function textarea_resize
+
+function do_decimals( number, precision ) {
+	var a = number.toString();
+	number = parseFloat( 1* a.replace(/[^\d\-\.]/g, '' ) );
+	if ( ! precision ) {
+		precision = 2;
+	} else {
+		var a = precision.toString();
+		precision = parseFloat( 1* a.replace(/\D/g, '' ) );
+	} // end if
+	var result1 = number * Math.pow(10, precision);
+	var result2 = Math.round(result1);
+	var result3 = result2 / Math.pow(10, precision);
+	return pad_with_zeros(result3, precision);
+} // end function do_decimals
+
+function pad_with_zeros(rounded_value, decimal_places) {
+	var value_string = rounded_value.toString();
+	var decimal_location = value_string.indexOf(".");
+	if (decimal_location == -1) {
+		decimal_part_length = 0;
+		value_string += decimal_places > 0 ? "." : "";
+	} else {
+		decimal_part_length = value_string.length - decimal_location - 1;
+	} // end if
+	var pad_total = decimal_places - decimal_part_length;
+	if (pad_total > 0) {
+		for (var counter = 1; counter <= pad_total; counter++) {
+			value_string += "0";
+		} // end for
+	} // end if
+	return value_string;
+}
+
+function fill_form_from_xml( form, xmlResponse ) {
+	var results = xmlResponse.getElementsByTagName('row')[0];
+	for(var i=0;i<results.childNodes.length;i++) {
+		var el = $(results.childNodes[i].nodeName);
+		switch(el.type) {
+			case 'text':
+				el.value = results.childNodes[i].firstChild.data;
+				break;
+			case 'select-one':
+				for(var j=0; j<el.length;j++) {
+					if (el.options[j].value == results.childNodes[i].firstChild.data) {
+						el.selectedIndex = j;
+					}
+				}
+				break;
+			case 'select-multiple':
+				var values = results.childNodes[i].firstChild.data.split(',');
+				for(var j=0; j<el.length;j++) {
+					el.options[j].selected = false;
+					for(var k=0;k<values.length;k++){
+						if (el.options[j].value == values[k]) {
+							el.options[j].selected = true;
+						}
+					}
+				}
+				break;
+			case 'checkbox':
+				var values = results.childNodes[i].firstChild.data.split(',');
+				var checkbox = Form.getInputs(FORMNAME, 'checkbox', results.childNodes[i].nodeName);
+				for(var j=0;j<checkbox.length;j++) {
+					checkbox[j].checked = false;
+					for(var k=0;k<values.length;k++){
+						if ( checkbox[j].value == values[k]) {
+							checkbox[j].checked = true;
+						}
+					}
+				}
+				break;
+			case 'radio':
+				var radio = Form.getInputs(FORMNAME, 'radio', results.childNodes[i].nodeName);
+				for(var j=0;j<radio.length;j++) {
+					if(radio[j].value == results.childNodes[i].firstChild.data) {
+						radio[j].checked = true;
+					}
+				}
+				break;
+			case 'textarea':
+				el.value = results.childNodes[i].firstChild.data;
+				break;
+			case 'hidden':
+				el.value = results.childNodes[i].firstChild.data;
+				break;
+		}
+	}
+}
+
