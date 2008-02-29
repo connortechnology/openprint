@@ -344,5 +344,9 @@ sub CSR {
 	return new openprint::User( $$self{'salesrep_id'} );
 }
 
+sub Users {
+	my $self = shift;
+	return new openprint::User::find('company_id'=>$$self{id} );
+} # end sub Users
 1;
 __END__

@@ -66,55 +66,15 @@ function getFormObj( formName ) {
 	return form;
 }
 
-function do_decimals( number, precision ) {
-	var a = number.toString();
-	number = parseFloat( 1* a.replace(/[^\d\-\.]/g, '' ) );
-	if ( ! precision ) {
-		precision = 2;
-	} else {
-		var a = precision.toString();
-		precision = parseFloat( 1* a.replace(/\D/g, '' ) );
-	} // end if
-	var result1 = number * Math.pow(10, precision);
-	var result2 = Math.round(result1);
-	var result3 = result2 / Math.pow(10, precision);
-	return pad_with_zeros(result3, precision);
-} // end function do_decimals
 
-function pad_with_zeros(rounded_value, decimal_places) {
-	var value_string = rounded_value.toString();
-	var decimal_location = value_string.indexOf(".");
-	if (decimal_location == -1) {
-		decimal_part_length = 0;
-		value_string += decimal_places > 0 ? "." : "";
-	} else {
-		decimal_part_length = value_string.length - decimal_location - 1;
+function get_page_quantity(form) {
+	var pageQty = 1;
+	if ( form.elements['rdbPageQuantity'] ) {
+		pageQty = get_rdb_value(form,'rdbPageQuantity');
+	} else if ( form.elements['txtNameQuantity'] ) {
+		pageQty = parseInt(1*form.txtNameQuantity.value);
 	} // end if
-	var pad_total = decimal_places - decimal_part_length;
-	if (pad_total > 0) {
-		for (var counter = 1; counter <= pad_total; counter++) {
-			value_string += "0";
-		} // end for
-	} // end if
-	return value_string;
-}
-
-function inkColourObject( ID, inkType, PMS, Name ) {
-	this.serviceId = ID;
-	this.pmsNumber = PMS;
-	this.name = Name;
-	this.inkType = inkType;
+	pageQty = pageQty > 0 ? pageQty : 1;
+	return pageQty;
 } // end function
-
-
-	function get_page_quantity(form) {
-		var pageQty = 1;
-		if ( form.elements['rdbPageQuantity'] ) {
-			pageQty = get_rdb_value(form,'rdbPageQuantity');
-		} else if ( form.elements['txtNameQuantity'] ) {
-			pageQty = parseInt(1*form.txtNameQuantity.value);
-		} // end if
-		pageQty = pageQty > 0 ? pageQty : 1;
-		return pageQty;
-	} // end function
 

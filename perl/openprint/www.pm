@@ -146,7 +146,7 @@ $openprint::log->debug("Page: $page");
 			$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
-			$log->warn("No template!");
+			$log->warn("No template!" . $r->content_type());
 			$log->warn($variable{'PageContent'});
 			$r->print( $variable{'PageContent'} );
 		} # end if
@@ -467,8 +467,10 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			eval( "require $module;" );
 			$log->warn( "Eval error of require, Reason: " . $@ );	# if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
+			if ( $proc ) {
 			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
+			} # end if
 		} # end if main:$second
 	} else {
 		
@@ -477,8 +479,10 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		eval( "require $module;" );
 		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 		my ( $proc ) = $filename =~ /(.*).html/;
-		eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		if ( $proc ) {
+			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+			$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		} # end if
 
 	} # end if $first
 
