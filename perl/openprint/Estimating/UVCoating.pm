@@ -303,6 +303,10 @@ sub signature_calc {
 						} # end if
 
 						$totalPrice = $setupPrice + $MaterialPrice{'Total'} + ( $qty * ( $SideOneServicePrice{'Total'} + $SideTwoServicePrice{'Total'} ) );
+						my %minimum = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'UVCoatingMinimumCharge', undef, $Equipment );
+						if ( $totalPrice < $minimum{Price} ) {
+							$totalPrice = $minimum{Price};
+						} # end if
 						$$specs{'hdnBreakdown'.$qty_index} .= "Setup: \$ $setupPrice, ";
 						$$specs{'hdnBreakdown'.$qty_index} .= "Side One Service: \$ $SideOneServicePrice{'Price'} $SideOneServicePrice{'units'}, ";
 						$$specs{'hdnBreakdown'.$qty_index} .= "Side Two Service: \$ $SideTwoServicePrice{'Price'} $SideTwoServicePrice{'units'}, ";
@@ -334,6 +338,10 @@ sub signature_calc {
 					$ServicePrice{'Total'} /= $imp->imposition() if $imp->imposition();
 
 					$totalPrice = $setupPrice + $MaterialPrice{'Total'} + ( $qty *2* $ServicePrice{'Total'} );
+					my %minimum = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'UVCoatingMinimumCharge', undef, $Equipment );
+					if ( $totalPrice < $minimum{Price} ) {
+						$totalPrice = $minimum{Price};
+					} # end if
 					$$specs{'hdnBreakdown'.$qty_index} .= "Setup: \$ $setupPrice, ";
 					$$specs{'hdnBreakdown'.$qty_index} .= "Service: \$ $ServicePrice{'Price'} $ServicePrice{'units'}, ";
 					$$specs{'hdnBreakdown'.$qty_index} .= "Material: \$ $MaterialPrice{'Price'} $MaterialPrice{'units'}, ";
