@@ -54,10 +54,11 @@ sub import_specs {
 				} # end if
 				last if $error;
 			} # end for each
+			last if $error;
 		} # end while
 		sql::end_transaction( $openprint::dbh, $ac );
 	} else {
-		$error .= "No file given to upload.<br>";
+		$error .= 'No file given to upload.<br>';
 	} # end if
 	return $error;
 
