@@ -263,7 +263,7 @@ function filterDDM( filter, ddm ) {
         var chunk2 = ddm.options[index].text.toLowerCase();
         if ( chunk1 <= chunk2 ) {
             ddm.selectedIndex = index;
-            return;
+            return index != old_selected;
         } // end if
         //} // end if
     } // end for
@@ -272,10 +272,11 @@ function filterDDM( filter, ddm ) {
         var chunk2 = ddm.options[index].text.toLowerCase();
         if ( chunk1 <= chunk2 ) {
             ddm.selectedIndex = index;
-            return;
+            return index != old_selected;
         } // end if
         //} // end if
     } // end for
+	return ddm.selectedIndex != old_selected;
 
 } // end function filterDDM
 
