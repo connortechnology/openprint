@@ -488,7 +488,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					$openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Equipment->name()) if $debug;
 
 # See if it fits
-					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width() * $imposition, $I->image_height() ) : ( $I->image_width(), $I->image_height() * $imposition ) );
+					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height() * $imposition ) : ( $I->image_width() * $imposition, $I->image_height() ) );
 
 					if ( ! $_ )  {
 
@@ -721,6 +721,9 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 			}# # end if
 		} # end foreach signature
+		if ( $status eq 'uncalculated' and ! $$specs{'alert'} ) {
+			$$specs{'alert'} = 'Unable to fold.';
+		} # end if
 
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );

@@ -9,7 +9,7 @@ body {
     margin: 0px;
 	padding: 0px;
     background-color: #ffffff;
-	min-width: 760px;
+	min-width: 975px;
 }
 
 @media print {
@@ -393,7 +393,7 @@ div.row:after {
 }
 span.DateSelector {
     float: left;
-	width: 200px;
+	width: 205px;
 }
 
 div.Popup {
