@@ -164,7 +164,7 @@
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<p> 
 				<label>&nbsp;Company:</label>
-				<input type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.company_id);" onkeydown="if(event.keyCode == 13){company_onchange($('company_id'));}" size="4"/>
+				<input type="text" style="width: auto;" onkeyup="if ( filterDDM(this, this.form.company_id) ) company_onchange($('company_id'));" onkeydown="if(event.keyCode == 13){company_onchange($('company_id'));}" size="4"/>
 				<select id="company_id" name="company_id" onchange="company_onchange(this);">
 					<option value="">select</option>
 					<? echo ( openprint::Company::get_dropdown( ) ) ?>
@@ -172,7 +172,7 @@
 			</p>
 			<p> 
 				<label>&nbsp;Contact:</label>
-				<input type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.user_id);" onkeydown="if(event.keyCode == 13){user_onchange($('user_id'));}" size="4"/>
+				<input type="text" style="width: auto;" onkeyup="if(filterDDM(this, this.form.user_id))user_onchange($('user_id'));;" onkeydown="if(event.keyCode == 13){user_onchange($('user_id'));}" size="4"/>
 				<select id="user_id" name="user_id" onchange="user_onchange(this);">
 					<option value="">select</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id'=>$session{'company_id'},'order'=>'lower(strfirstname),lower(strlastname)' ) ] ); ) ?>
