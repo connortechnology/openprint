@@ -342,7 +342,7 @@ sub auto_calculate {
 			} elsif ( sets::isin( $type, [ 'LoopStitching', 'SaddleStitching'] ) ) {
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Stitching' );
 				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type , [ 'Bundling', 'KraftWrap', 'ShrinkWrap' ] ) ) {
+			} elsif ( sets::isin( $type , [ 'Bundling', 'KraftWrap', 'ShrinkWrap','Banding' ] ) ) {
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Packaging' );
 				$alert .= $$specs{'alert'};
 			} elsif ( sets::isin( $type, ['BulkSkids', 'PlainCartons'] ) ) {
