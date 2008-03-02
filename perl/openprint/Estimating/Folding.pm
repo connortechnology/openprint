@@ -334,7 +334,7 @@ $openprint::log->debug("No Sheeter");
 			} # end if
 		} # end if
 	} # end if
-	
+
 	# If the stitching is happening on a piece of equipment that can't handle large signatures, then we need to cut them down instead of folding them.
 	# Something like a duplo can do 4pg signatures only, so the cutting service will cut everything down, and we will show the 4pg sigs being folded on the duplo
 
@@ -375,9 +375,6 @@ $openprint::log->debug("No Sheeter");
 	my $pages = $Imposition->pages();
 	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout %dout', $Imposition->spread_columns(), $Imposition->spread_rows(), $Imposition->spread_size(), $Imposition->imposition(), $imposition ) ) if $debug;
 
-	foreach my $Equipment ( @my_equipment ) {
-$openprint::log->debug("E: " . $Equipment->name() );
-	} 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
 		my %folds;
@@ -680,6 +677,10 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	#my @signature_service_indices = openprint::print::get_signature_indices( $log, $dbh, $project_index );
+	if ( ! neccessary( $project_index ) ) {
+		$$specs{'alert'} .= 'Folding is not needed.';
+	} # end if
+
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, openprint::project::get_project_type_service_index( $log, $dbh, $project_index ) );
 
 	foreach my $qty_index ( 1 .. 3 ) {
@@ -696,6 +697,9 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.<br/>';
 				next;
 			} # endif
+
+			next if (! signature_needs( $sig_specs ) ) 
+				and ( $$sig_specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' );
 
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtServiceDescription'}:</legend>";
