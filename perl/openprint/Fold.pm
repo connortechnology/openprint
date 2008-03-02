@@ -25,6 +25,7 @@ my %fields = (
 	'page_rows'				=>	'page_rows',
 	'min_imposition'		=>	'min_imposition',
 	'max_imposition'		=>	'max_imposition',
+	'cutting'				=>	'cutting',
 	'stitching'				=>	'stitching',
 	'perfectbind'			=>	'perfectbind',
 	'spinepaste'			=>	'spinepaste',

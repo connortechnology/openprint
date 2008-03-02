@@ -92,6 +92,13 @@
 	<div class="rightColumn">
 		<fieldset><legend>Binding Options</legend>
 		<p>
+			<label>Inline Cutting:</label>
+			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-cutting1" name="cutting" value="1" <? echo ( $$variable{'Fold'}->cutting() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');"/>
+			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-cutting1">Yes</label>
+			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-cutting0" name="cutting" value="0" <? echo ( ! $$variable{'Fold'}->cutting() eq '0' ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');" />
+			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-cutting0">No</label>
+		</p>
+		<p>
 			<label>Stitching:</label>
 			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching1" name="stitching" value="1" <? echo ( $$variable{'Fold'}->stitching() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');"/>
 			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching1">Yes</label>

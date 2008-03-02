@@ -535,6 +535,15 @@ if ( $version < 1911 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1911;
 } # end if
+if ( $version < 1912 ) {
+	print "Updating to version 1912\n";
+	my $ac = sql::start_transaction( $dbh );
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Folds LIMIT 1', {} );
+	$dbh->do('alter table folds add cutting boolean') if ! exists $$data{'cutting'};
+	sql::insert( undef, undef, 'database_info', 'version', 1912, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1912;
+} # end if
 
 $dbh->disconnect();
 1;
