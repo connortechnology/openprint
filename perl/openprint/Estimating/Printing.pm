@@ -1503,6 +1503,10 @@ sub breakdown {
 	} else {
 		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d out = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$Imposition{Price}, $Imposition->imposition() );
 	} # end if
+
+	if ( my $PageCharge = $$price{'Page Charge'} ) {
+		$breakdown .= sprintf('Page Charge: $%1$.2f%2$s * %4$d pages = $%3$.2f<br/>', @$PageCharge{'Price','units','Total'}, $Imposition->pages() );
+	} # end if
 	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", $$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
 	$breakdown .= sprintf("\tAqueous Setup:\t\$%.2f<br/>", $$Aqueous{'Setup'}) if $$Aqueous{'Setup'};
@@ -2213,9 +2217,18 @@ sub calc_price {
 	$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
-		$price{'Imposition MakeReady'} = openprint::service::get_price( 'ImpositionMakeReady','',$Press );
+		my %ImpositionMakeReady;
+		if ( ! ( %ImpositionMakeReady = openprint::service::get_price_object( 'ImpositionMakeReady'.$Project->Type()->name(),'',$Press ) ) ) {
+			%ImpositionMakeReady = openprint::service::get_price_object( 'ImpositionMakeReady','',$Press );
+		} # end if
+
+		$price{'Imposition MakeReady'} = $ImpositionMakeReady{'Price'};
+
 		$price{'Imposition Total'} = $price{'Imposition MakeReady'};
-		my %ImpositionCharge = openprint::service::get_price_object( 'Imposition',undef,$Press);
+		my %ImpositionCharge;
+		if ( ! (%ImpositionCharge = openprint::service::get_price_object( 'Imposition'.$Project->Type()->name(),undef,$Press) ) ) {
+		%ImpositionCharge = openprint::service::get_price_object( 'Imposition',undef,$Press);
+		} # end if
 		if ( $ImpositionCharge{'units'} eq 'Per Page' ) {
 			%ImpositionCharge = openprint::service::get_price_object( 'Imposition',$Imposition->pages(),$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->pages();
@@ -2230,11 +2243,20 @@ sub calc_price {
 		$price{'Imposition Price'} = \%ImpositionCharge;
 	} # end if
 
+
 	my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup','',$Press );
 	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
 
 	$price{'Ink Mix Charge'} = $$pms_prices{'Ink Mix Charge'};
-	my $setup_cost = $price{'Imposition Total'} + $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $$pms_prices{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'};
+	my $setup_cost = $price{'Imposition Total'} + $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $$pms_prices{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'} ;
+	if ( $Imposition->pages() ) {
+		my %PageCharge = openprint::service::get_price_object( 'Page Charge',$Imposition->pages(),$Press);
+		if ( $PageCharge{'units'} eq 'Per Page' ) {
+			$PageCharge{'Total'} = $PageCharge{'Price'} * $Imposition->pages();
+		} # end if
+		$price{'Page Charge'} = \%PageCharge;
+		$setup_cost += $PageCharge{'Total'};
+	} # end if
 	$price{'Comparison Cost'} += $setup_cost;
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	$setup_cost += $press_setup;
