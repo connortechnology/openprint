@@ -1493,7 +1493,6 @@ sub breakdown {
 	my $breakdown = '';
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
 	$breakdown .= '<b>Setups</b><br/>';
-	#$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
 	$breakdown .= $$price{'Setup Breakdown'};
 	my $ImpositionCharge = $$price{'Imposition Price'};
 	if ( $$ImpositionCharge{units} eq 'Per Page' ) {
@@ -1501,7 +1500,7 @@ sub breakdown {
 	} elsif ( $$ImpositionCharge{units} eq 'Per Square Inch' ) {
 		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$s x %5$s = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->layout_width(), $Imposition->layout_height() );
 	} else {
-		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d out = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$Imposition{Price}, $Imposition->imposition() );
+		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d out = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->imposition() );
 	} # end if
 
 	if ( my $PageCharge = $$price{'Page Charge'} ) {
@@ -2218,7 +2217,7 @@ sub calc_price {
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
 		my %ImpositionMakeReady;
-		if ( ! ( %ImpositionMakeReady = openprint::service::get_price_object( 'ImpositionMakeReady'.$Project->Type()->name(),'',$Press ) ) ) {
+		if ( ! ( %ImpositionMakeReady = openprint::service::get_price_object( 'ImpositionMakeReady'.$Project->Type()->strid(),'',$Press ) ) ) {
 			%ImpositionMakeReady = openprint::service::get_price_object( 'ImpositionMakeReady','',$Press );
 		} # end if
 
@@ -2226,18 +2225,22 @@ sub calc_price {
 
 		$price{'Imposition Total'} = $price{'Imposition MakeReady'};
 		my %ImpositionCharge;
-		if ( ! (%ImpositionCharge = openprint::service::get_price_object( 'Imposition'.$Project->Type()->name(),undef,$Press) ) ) {
-		%ImpositionCharge = openprint::service::get_price_object( 'Imposition',undef,$Press);
+		my $service = 'Imposition'.$Project->Type()->strid();
+
+		if ( ! (%ImpositionCharge = openprint::service::get_price_object( $service,undef,$Press) ) ) {
+			$service = 'Imposition';
+			%ImpositionCharge = openprint::service::get_price_object( $service,undef,$Press);
 		} # end if
+$openprint::log->debug("units : $ImpositionCharge{'units'} " );
 		if ( $ImpositionCharge{'units'} eq 'Per Page' ) {
-			%ImpositionCharge = openprint::service::get_price_object( 'Imposition',$Imposition->pages(),$Press);
+			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->pages(),$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->pages();
 		} elsif ( $ImpositionCharge{'units'} eq 'Per Square Inch' ) {
-			%ImpositionCharge = openprint::service::get_price_object( 'Imposition',$Imposition->layout_area(),$Press);
+			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->layout_area();
 
 		} else {
-			%ImpositionCharge = openprint::service::get_price_object( 'Imposition',$Imposition->imposition(),$Press);
+			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->imposition(),$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->imposition();
 		} # end if
 		$price{'Imposition Price'} = \%ImpositionCharge;
