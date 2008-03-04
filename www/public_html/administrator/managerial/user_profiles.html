@@ -62,6 +62,7 @@ Please select a company or user to obtain login information.<br/>
 			</p>
 		</fieldset>
 		<fieldset><legend>User Information:</legend>
+			<div class="leftColumn">
 			<p> 
 				<label>Company Name:</label>
 				<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" style="width: auto;" />
@@ -110,6 +111,8 @@ Please select a company or user to obtain login information.<br/>
 				<label>Fax:</label>
 				<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 			</p>
+		</div>
+		<div class="rightColumn">
 			<p> 
 				<label>Add to our Mailing List</label>
 				<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
@@ -149,6 +152,8 @@ Please select a company or user to obtain login information.<br/>
 					<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{'User'}->type() ); ) ?>
 				</select>
 			</p>
+		</div>
+		<br class="spacer"/>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<p> 
 			<label>Commission Rate</label>
@@ -164,9 +169,15 @@ Please select a company or user to obtain login information.<br/>
 		<? eval ( @{$$variable{'Groups'}} = openprint::user::groups( $log, $dbh, $$variable{'UserIndex'} ); )?>
 		<p>
 			<label>Groups:</label>
-			<select name="UserGroups" multiple="multiple" size="4">
-				<? echo ( ssi::make_select( [openprint::usergroup::find( $log, $dbh )], $$variable{'Groups'} ) ) ?>
-			</select>
+			<? echo (
+				require openprint::Usergroup;
+				my $html = '<ul>';
+				my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
+				foreach my $Group ( openprint::Usergroup::find( 'order'=>'lower(name)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label>%2$s</label></li>', $Group->id(), $Group->name(), sets::isin( $Group->id(), \@UserGroups ) ? 'checked="checked"' : '' );
+				} # end foreach
+				return $html . '</ul>';
+			) ?>
 		</p>
 		<p> 
 			<label>User Category:</label>

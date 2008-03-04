@@ -1,18 +1,11 @@
 <link href="/css/quote.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
-	function do_decimals( number ) {
-		var myStr = new String(Math.round(number*100)/100);
-		var decPos = myStr.indexOf(".");
-
-		// test for no decimals
-		if (decPos==-1) {
-			myStr += ".00";
-		} else if (decPos==myStr.length-2) {
-			// test for one decimal
-			myStr += "0";
-		} // end if
-		return myStr;
-	}
+	function company_onchange( e ) {
+		new Ajax.Request( '_company_information.json', { method: 'get', parameters: { company_id: e.value }, onSUccess: function(response){fill_form_from_xml($('f1'), response.responseXML);} } );
+	} // end function
+	function user_onchange( e ) {
+		new Ajax.Request( '_user_information.json', { method: 'get', parameters: { user_id: e.value } } );
+	} // end function
 
 	function get_element_index( form, elem ) {
 		for ( var i=0; i < form.elements.length; i+= 1 ) {
@@ -27,7 +20,7 @@
 		var index = get_element_index( form, elem );
 		var newprice = form.elements[index+1].value * ((elem.value/100)+1);
 
-		form.elements[index+2].value = do_decimals( newprice );
+		form.elements[index+2].value = do_decimals( newprice,2 );
 		calc_subtotal( form );
 	} // end function calc_from_markup( elem ) 
 
@@ -35,7 +28,7 @@
 		var index = get_element_index( form, elem );
 		var markup = ( elem.value*100 / form.elements[index-1].value ) - 100;
 
-		form.elements[index-2].value = do_decimals( markup );
+		form.elements[index-2].value = do_decimals( markup,2 );
 		calc_subtotal( form );
 	} // end function calc_from_price( elem ) 
 
@@ -54,7 +47,7 @@
 			} // end if
 		} // end for
 		for ( var i = 0; i < subTotals.length; i += 1 ) {
-			form.elements['subTotal'+(i+1)].value = do_decimals( subTotals[i] );
+			form.elements['subTotal'+(i+1)].value = do_decimals( subTotals[i],2 );
 		} // end for
 	} // end function recalculate_quote(form)
 </script>
@@ -69,7 +62,7 @@
 	For&quot; fields blank.<br/>
 	<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <br/>
-<form method="post" name="f1" action="submit.html"/>
+<form method="post" id="f1" name="f1" action="submit.html"/>
 	<div class="QuoteInformation"/>
 <? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset style="float: left; width: 49%;"/>
@@ -168,9 +161,28 @@
 		</fieldset>
 <? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset style="float:right; width: 49%;"/><legend>Prepared For:</legend>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+			<p> 
+				<label>&nbsp;Company:</label>
+				<input type="text" style="width: auto;" onkeyup="if ( filterDDM(this, this.form.company_id) ) company_onchange($('company_id'));" onkeydown="if(event.keyCode == 13){company_onchange($('company_id'));}" size="4"/>
+				<select id="company_id" name="company_id" onchange="company_onchange(this);">
+					<option value="">select</option>
+					<? echo ( openprint::Company::get_dropdown( ) ) ?>
+				</select>	
+			</p>
+			<p> 
+				<label>&nbsp;Contact:</label>
+				<input type="text" style="width: auto;" onkeyup="if(filterDDM(this, this.form.user_id))user_onchange($('user_id'));;" onkeydown="if(event.keyCode == 13){user_onchange($('user_id'));}" size="4"/>
+				<select id="user_id" name="user_id" onchange="user_onchange(this);">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id'=>$session{'company_id'},'order'=>'lower(strfirstname),lower(strlastname)' ) ] ); ) ?>
+				</select>	
+			</p>
+			<br/>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<p> 
 				<label>&nbsp;Company Name:</label>
-				<input type="text" name="ForCompanyName" value="<?ForCompanyName?>" />
+				<input type="text" id="ForCompanyName" name="ForCompanyName" value="<?ForCompanyName?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Salutation:</label>
@@ -185,27 +197,27 @@
 			</p>
 			<p> 
 				<label>*First Name:</label>
-				<input type="text" name="ForFirstName" value="<?ForFirstName?>" />
+				<input type="text" id="ForFirstName" name="ForFirstName" value="<?ForFirstName?>" />
 			</p>
 			<p> 
 				<label>*Last Name:</label>
-				<input type="text" name="ForLastName" value="<?ForLastName?>" />
+				<input type="text" id="ForLastName" name="ForLastName" value="<?ForLastName?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Title:</label>
-				<input type="text" name="ForTitle" value="<?ForTitle?>" />
+				<input type="text" id="ForTitle" name="ForTitle" value="<?ForTitle?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Address:</label>
-				<input type="text" name="ForAddress1" value="<?ForAddress1?>" />
+				<input type="text" id="ForAddress1" name="ForAddress1" value="<?ForAddress1?>" />
 			</p>
 			<p> 
 				<label>&nbsp;</label>
-				<input type="text" name="ForAddress2" value="<?ForAddress2?>" />
+				<input type="text" id="ForAddress2" name="ForAddress2" value="<?ForAddress2?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Country:</label>
-				<select name="ForCountry" onchange="Country_onchange( this, this.form.ForStateProvince );">
+				<select id="ForCountry" name="ForCountry" onchange="Country_onchange( this, this.form.ForStateProvince );">
 					<option value=""> Select </option>
 					<? echo ( ssi::return_countries($$variable{'ForCountry'}); ) ?>
 				</select>
@@ -221,14 +233,14 @@
 					return 'State/Province';
 				} # end if
 				) ?>:</label>
-				<select name="ForStateProvince" >
+				<select id="ForStateProvince" name="ForStateProvince" >
 					<option value=""> Select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'ForStateProvince'}); ) ?>
 				</select>
 			</p>
 			<p> 
 				<label>&nbsp;City:</label>
-				<input type="text" name="ForCity" value="<?ForCity?>" />
+				<input type="text" id="ForCity" name="ForCity" value="<?ForCity?>" />
 			</p>
 			<p> 
 				<label>&nbsp;
@@ -241,20 +253,20 @@
 					return 'Zip/Postal Code';
 				} # end if
 				) ?>:</label>
-				<input type="text" name="ForPostalCode" value="<?ForPostalCode?>" />
+				<input type="text" id="ForPostalCode" name="ForPostalCode" value="<?ForPostalCode?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Phone:</label>
-				<input type="text" name="ForPhone" value="<?ForPhone?>" size="15" style="width:auto;"/> ext:
-				<input type="text" name="ForExtension" value="<?ForExtension?>" size="4" style="width: auto;"/>
+				<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" size="15" style="width:auto;"/> ext:
+				<input type="text" id="ForExtension" name="ForExtension" value="<?ForExtension?>" size="4" style="width: auto;"/>
 			</p>
 			<p> 
 				<label>&nbsp;Fax:</label>
-				<input type="text" name="ForFax" value="<?ForFax?>" />
+				<input type="text" id="ForFax" name="ForFax" value="<?ForFax?>" />
 			</p>
 			<p> 
 				<label>*E-mail Address:</label>
-				<input type="text" name="ForEmail" value="<?ForEmail?>" />
+				<input type="text" id="ForEmail" name="ForEmail" value="<?ForEmail?>" />
 			</p>
 		</fieldset>
 		<br class="spacer"/>

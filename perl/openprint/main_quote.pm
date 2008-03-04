@@ -311,6 +311,7 @@ sub confirmation {
 	delete $openprint::session{'quote_id'};
 } # end sub finalise_quote
 
+
 1;
 
 __END__

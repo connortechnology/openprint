@@ -7,6 +7,7 @@ use vars qw( %fields %defaults %transforms );
 
 require sql;
 require openprint::Object;
+require openprint::User;
 
 %fields = (
 		'id'						=>	'index',
@@ -343,6 +344,11 @@ sub CSR {
 	my $self = shift;
 	return new openprint::User( $$self{'salesrep_id'} );
 }
+
+sub Users {
+	my $self = shift;
+	return openprint::User::find('company_id'=>$$self{'id'} );
+} # end sub Users
 
 1;
 __END__

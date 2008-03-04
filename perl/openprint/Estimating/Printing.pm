@@ -1102,6 +1102,10 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 				$openprint::log->error("Press Plate Type ");
 				next;
 			} # end if
+			if ( (! $$services{'Folding'} ) and ($Press->specification('Sheeter') ne 'Y' ) ) {
+				$openprint::log->error("No Sheeter");
+				next;
+			} # end if
 
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 			my $do_perfecting = 1;
@@ -1489,13 +1493,18 @@ sub breakdown {
 	my $breakdown = '';
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
 	$breakdown .= '<b>Setups</b><br/>';
-	#$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
 	$breakdown .= $$price{'Setup Breakdown'};
 	my $ImpositionCharge = $$price{'Imposition Price'};
 	if ( $$ImpositionCharge{units} eq 'Per Page' ) {
-	$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d pages = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->pages() );
+		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d pages = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->pages() );
+	} elsif ( $$ImpositionCharge{units} eq 'Per Square Inch' ) {
+		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$s x %5$s = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->layout_width(), $Imposition->layout_height() );
 	} else {
-	$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d out = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$Imposition{Price}, $Imposition->imposition() );
+		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d out = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->imposition() );
+	} # end if
+
+	if ( my $PageCharge = $$price{'Page Charge'} ) {
+		$breakdown .= sprintf('Page Charge: $%1$.2f%2$s * %4$d pages = $%3$.2f<br/>', @$PageCharge{'Price','units','Total'}, $Imposition->pages() );
 	} # end if
 	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", $$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
@@ -1503,6 +1512,7 @@ sub breakdown {
 	$breakdown .= sprintf("\tPMS Ink Mix Charge:\t\$%.2f<br/>", $$price{'Ink Mix Charge'} ) if $$price{'Ink Mix Charge'};
 	$breakdown .= sprintf("\tInline Varnish Setup Charge: \$%.2f<br/>", $$Varnish{'Setup'} ) if $$Varnish{'Setup'};
 	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
+	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
 	$breakdown .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
@@ -2096,17 +2106,21 @@ sub calc_price {
 		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_one_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
+		$price{'Plate Total'} += $_->{'Plate Total'};
 		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_two_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
+		$price{'Plate Total'} += $_->{'Plate Total'};
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) ) {
 		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
+		$price{'Plate Total'} += $_->{'Plate Total'};
 	} else  {
 		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
+		$price{'Plate Total'} += $_->{'Plate Total'};
 	} # end if
 	$price{'Plate Costs'} = \%plate_setup;
 	$price{'Comparison Cost'} += $press_setup + ($plate_setup{'Plate Price'} * $plate_setup{'Plate Count'}) + ( $plate_setup{'Blank Price'} * $plate_setup{'Blank Plates'});
@@ -2202,24 +2216,50 @@ sub calc_price {
 	$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
-		$price{'Imposition MakeReady'} = openprint::service::get_price( 'ImpositionMakeReady','',$Press );
+		my %ImpositionMakeReady;
+		if ( ! ( %ImpositionMakeReady = openprint::service::get_price_object( 'ImpositionMakeReady'.$Project->Type()->strid(),'',$Press ) ) ) {
+			%ImpositionMakeReady = openprint::service::get_price_object( 'ImpositionMakeReady','',$Press );
+		} # end if
+
+		$price{'Imposition MakeReady'} = $ImpositionMakeReady{'Price'};
+
 		$price{'Imposition Total'} = $price{'Imposition MakeReady'};
-		my %ImpositionCharge = openprint::service::get_price_object( 'Imposition',undef,$Press);
+		my %ImpositionCharge;
+		my $service = 'Imposition'.$Project->Type()->strid();
+
+		if ( ! (%ImpositionCharge = openprint::service::get_price_object( $service,undef,$Press) ) ) {
+			$service = 'Imposition';
+			%ImpositionCharge = openprint::service::get_price_object( $service,undef,$Press);
+		} # end if
+$openprint::log->debug("units : $ImpositionCharge{'units'} " );
 		if ( $ImpositionCharge{'units'} eq 'Per Page' ) {
-			%ImpositionCharge = openprint::service::get_price_object( 'Imposition',$Imposition->pages(),$Press);
+			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->pages(),$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->pages();
+		} elsif ( $ImpositionCharge{'units'} eq 'Per Square Inch' ) {
+			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
+			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->layout_area();
+
 		} else {
-			%ImpositionCharge = openprint::service::get_price_object( 'Imposition',$Imposition->imposition(),$Press);
+			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->imposition(),$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->imposition();
 		} # end if
 		$price{'Imposition Price'} = \%ImpositionCharge;
 	} # end if
 
+
 	my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup','',$Press );
 	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
 
 	$price{'Ink Mix Charge'} = $$pms_prices{'Ink Mix Charge'};
-	my $setup_cost = $price{'Imposition Total'} + $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $$pms_prices{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'};
+	my $setup_cost = $price{'Imposition Total'} + $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $$pms_prices{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'} ;
+	if ( $Imposition->pages() ) {
+		my %PageCharge = openprint::service::get_price_object( 'Page Charge',$Imposition->pages(),$Press);
+		if ( $PageCharge{'units'} eq 'Per Page' ) {
+			$PageCharge{'Total'} = $PageCharge{'Price'} * $Imposition->pages();
+		} # end if
+		$price{'Page Charge'} = \%PageCharge;
+		$setup_cost += $PageCharge{'Total'};
+	} # end if
 	$price{'Comparison Cost'} += $setup_cost;
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	$setup_cost += $press_setup;
@@ -2852,7 +2892,10 @@ sub press_setup_cost {
 			$time /= 60;
 			#$time /= 2;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
-			$Price{'Total'} += $PlateSetupPrice{'Price'} * $time;
+		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
+			my $plates = $setup_count + $plate_change_qty;
+			$plates *= $plate_runs if $plate_runs;
+			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
 		} else {
 			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
 		} # end if

@@ -2,6 +2,7 @@
 	<legend>What type of project would you like to have printed?</legend>
 	<ul>
 	<? while ( @$variable{'index','name'} = splice @{$$variable{'ProjectTypes'}},0,2; ) ?>
+<? if ( $$variable{'name'} ne 'Envelopes' ) ?>
 		<li>
 			<input type="radio" id="<?index?>" name="rdbProjectType" value="<?index?>" onclick="project_type_alert(f1, this);calc('f1');"
 			<? echo ( $$variable{'SelectedProjectType'} eq $$variable{'index'} ? 'checked="checked"' : '' ) ?>
@@ -9,6 +10,7 @@
 			/>
 			<label for="<?index?>"><?name?></label>
 		</li>
+<? endif ( $$variable{'name'} ne 'Envelopes' ) ?>
 	<? endwhile ( @$variable{'index','name'} = splice @{$$variable{'ProjectTypes'}},0,2; ) ?>
 	</ul>
 </fieldset>

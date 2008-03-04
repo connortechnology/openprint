@@ -59,6 +59,7 @@
 			'8PageSignatureFold','8 Page Fold',
 			'12pg3PanelZFold','Half + 3 Panel Z Fold',
 			'12pg3PanelRollFold','Half + 3 Panel Roll Fold',
+			'MapFold', 'Map Fold',
 ], $$variable{'FoldType'} ); ) ?>
 
 							</select>
@@ -83,10 +84,10 @@
 					<!--#include virtual="/includes/drilling.html"-->
 					<!--#include virtual="/includes/scoring.html"-->
 					<!--#include virtual="/includes/perfing.html"-->
-		<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards'] ); ) ?>
+		<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
 					<!--#include virtual="/includes/shrinkwrapping.html"-->
 					<!--#include virtual="/includes/bundling.html"-->
-		<? endif ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards'] ); ) ?>
+		<? endif ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
 
 					<!--#include virtual="/includes/turnaround.html"-->
 					<br class="spacer"/>
