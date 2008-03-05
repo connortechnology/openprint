@@ -139,6 +139,9 @@ sub signature_calc {
 	if ( $$specs{'txtPressSheetComboItems'} ) {
 		$qty *= $$specs{'txtPressSheetComboItems'};
 	} # end if
+	if ( $$sig_specs{'Versions'} ) {
+		$qty *= $$sig_specs{'Versions'};
+	} # end if
 
 	@outputs = sets::union( @outputs, 
 			"chkOverrideQty-$$sig_specs{'SignatureIndex'}", "txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}",
@@ -250,6 +253,8 @@ sub signature_calc {
 						} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
 							$ServicePrice{'Total'} = $ServicePrice{'Price'} *$qty*2/ $Equipment->specfication('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
 						} # end if
+# Div by imposition
+						$ServicePrice{'Total'} /= $imp->imposition() if $imp->imposition();
 
 						if ( my @Materials = openprint::Material::find('name'=>'UVCoating') ) {
 							%MaterialPrice = $Materials[0]->get_price( $qty*2/$imp->imposition(), $Equipment );
@@ -258,12 +263,10 @@ sub signature_calc {
 							$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $qty;
 						} # end if
 
-# Div by imposition
-						$ServicePrice{'Total'} /= $imp->imposition() if $imp->imposition();
 
 						$totalPrice = $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'};
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $setupPrice );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s=$%.2f<br/>', @ServicePrice{'Price','units','Total'});
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f%2$s * %4$d/%5$dout =$%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty*2, $imp->imposition() );
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s=$%.2f<br/>', @MaterialPrice{'Price','units','Total'});
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 					} else { # not W & T
@@ -343,7 +346,7 @@ sub signature_calc {
 						$totalPrice = $minimum{Price};
 					} # end if
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $setupPrice);
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s=$%.2f<br/>', @ServicePrice{'Price','units','Total'});
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f%2$s * %4$d * 2sides/%5$dout = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty, $imp->imposition() );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s=$%.2f<br/>', @MaterialPrice{'Price','units','Total'});
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 				} # end if sides the same or different
@@ -386,7 +389,7 @@ sub signature_calc {
 					$totalPrice = $minimum{Price};
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $setupPrice);
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s=$%.2f<br/>', @ServicePrice{'Price','units','Total'});
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f%2$s * %4$d 1sided/%5$dout =$%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty, $imp->imposition() );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s=$%.2f<br/>', @MaterialPrice{'Price','units','Total'} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum: $%.2f<br/>', $minimum{'Price'});
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );

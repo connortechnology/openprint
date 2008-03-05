@@ -455,7 +455,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					next;
 				} else {
 					foreach my $I ( @good_folds ) {
-						$folds{$I->spreads()*$$sig_specs{'txtSpreadSize'}.'PageSignatureFold'} += 1;
+						$folds{$I->pages().'PageSignatureFold'} += 1;
 					}
 				} # end if
 			} # end if
