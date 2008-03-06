@@ -499,8 +499,6 @@ $openprint::log->error('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 
 		# Now consider Dutch cuts
 		if ( $$sig_specs{'hdnImpositionDutchColumns'.$qty_index} and $$sig_specs{'hdnImpositionDutchRows'.$qty_index} ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
-
 			$dutch_vertical_cuts += 1 + $$sig_specs{'hdnImpositionDutchColumns'.$qty_index};
 			$dutch_horizontal_cuts += $$sig_specs{'hdnImpositionDutchRows'.$qty_index}; # +1 - 1
 			if ( ( $$sig_specs{'chkBleedTop'} and $$sig_specs{'chkBleedBottom'} ) or ($$sig_specs{'chkBleedLeft'} and $$sig_specs{'chkBleedRight'} ) ) {
@@ -589,8 +587,8 @@ $openprint::log->error('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 			$totalPrice += $price;
 		} # end if
 
-		
 		if ( $dutch_vertical_cuts or $dutch_horizontal_cuts ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
 
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$sig_specs{'txtImposition'.$qty_index} );
 			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
