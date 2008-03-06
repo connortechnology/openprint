@@ -544,6 +544,17 @@ if ( $version < 1912 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1912;
 } # end if
+if ( $version < 1913 ) {
+	print "Updating to version 1913\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('create sequence service_categories_id_seq;');
+	$dbh->do(q`alter table service_categories alter id set default nextval('service_categories_id_seq')`);
+	$dbh->do(q`select setval('service_categories_id_seq', (select max(id) from service_categories) )`);
+	$dbh->do(q`drop sequence if exists servicecategoriesindex_seq`);
+	sql::insert( undef, undef, 'database_info', 'version', 1913, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1913;
+} # end if
 
 $dbh->disconnect();
 1;

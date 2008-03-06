@@ -84,33 +84,9 @@ my %variables = (
 		'YellowSideTwoCoverage'	=>	['save'],
 		'BlackSideTwoCoverage'	=>	['save'],
 
-		'chkSpecialSideOneColour1' => ['save'], 'txtSpecialSideOneColour1' => ['save'], 'txtSpecialSideOneColourInkPercent1' => ['save'],
-		'chkSpecialSideOneColour2' => ['save'], 'txtSpecialSideOneColour2' => ['save'], 'txtSpecialSideOneColourInkPercent2' => ['save'],
-		'chkSpecialSideOneColour3' => ['save'], 'txtSpecialSideOneColour3' => ['save'], 'txtSpecialSideOneColourInkPercent3' => ['save'],
-		'chkSpecialSideOneColour4' => ['save'], 'txtSpecialSideOneColour4' => ['save'], 'txtSpecialSideOneColourInkPercent4' => ['save'],
-		'chkSpecialSideOneColour5' => ['save'], 'txtSpecialSideOneColour5' => ['save'], 'txtSpecialSideOneColourInkPercent5' => ['save'],
-		'chkSpecialSideOneColour6' => ['save'], 'txtSpecialSideOneColour6' => ['save'], 'txtSpecialSideOneColourInkPercent6' => ['save'],
-		'chkSpecialSideOneColour7' => ['save'], 'txtSpecialSideOneColour7' => ['save'], 'txtSpecialSideOneColourInkPercent7' => ['save'],
-		'chkSpecialSideOneColour8' => ['save'], 'txtSpecialSideOneColour8' => ['save'], 'txtSpecialSideOneColourInkPercent8' => ['save'],
-		'rdbAqueousSideOne' => ['save'],
-		'chkVarnishSpotGlossSideOne' => ['save'],'chkVarnishSpotMatteSideOne' => ['save'],'chkVarnishOverallGlossSideOne' => ['save'],'chkVarnishOverallMatteSideOne' => ['save'],'chkVarnishDryTrapSideOne' => ['save'],
-		'VarnishSpotGlossSideOneCoverage'=> ['save'],
-		'VarnishSpotMatteSideOneCoverage'=> ['save'],
 		'SideOneUVCoatingType'=>['save'],
 		'chkCyanSideTwo' => ['save'],'chkMagentaSideTwo' => ['save'],'chkYellowSideTwo' => ['save'],'chkBlackSideTwo' => ['save'],
 		'chkProcessColourSideTwo' => ['save'],
-		'chkSpecialSideTwoColour1' => ['save'], 'txtSpecialSideTwoColour1' => ['save'], 'txtSpecialSideTwoColourInkPercent1' => ['save'],
-		'chkSpecialSideTwoColour2' => ['save'], 'txtSpecialSideTwoColour2' => ['save'], 'txtSpecialSideTwoColourInkPercent2' => ['save'],
-		'chkSpecialSideTwoColour3' => ['save'], 'txtSpecialSideTwoColour3' => ['save'], 'txtSpecialSideTwoColourInkPercent3' => ['save'],
-		'chkSpecialSideTwoColour4' => ['save'], 'txtSpecialSideTwoColour4' => ['save'], 'txtSpecialSideTwoColourInkPercent4' => ['save'],
-		'chkSpecialSideTwoColour5' => ['save'], 'txtSpecialSideTwoColour5' => ['save'], 'txtSpecialSideTwoColourInkPercent5' => ['save'],
-		'chkSpecialSideTwoColour6' => ['save'], 'txtSpecialSideTwoColour6' => ['save'], 'txtSpecialSideTwoColourInkPercent6' => ['save'],
-		'chkSpecialSideTwoColour7' => ['save'], 'txtSpecialSideTwoColour7' => ['save'], 'txtSpecialSideTwoColourInkPercent7' => ['save'],
-		'chkSpecialSideTwoColour8' => ['save'], 'txtSpecialSideTwoColour8' => ['save'], 'txtSpecialSideTwoColourInkPercent8' => ['save'],
-		'rdbAqueousSideTwo' => ['save'],
-		'chkVarnishSpotGlossSideTwo' => ['save'],'chkVarnishSpotMatteSideTwo' => ['save'],'chkVarnishOverallGlossSideTwo' => ['save'],'chkVarnishOverallMatteSideTwo' => ['save'],'chkVarnishDryTrapSideTwo' => ['save'],
-		'VarnishSpotGlossSideTwoCoverage'=> ['save'],
-		'VarnishSpotMatteSideTwoCoverage'=> ['save'],
 		'SideTwoUVCoatingType'=>['save'],
 		'chkBleedLeft' => ['save'],'chkBleedRight' => ['save'],'chkBleedTop' => ['save'],'chkBleedBottom' => ['save'],
 		'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
@@ -191,12 +167,27 @@ my %variables = (
 		);
 
 sub variables {
+	my ( $project_index, $service_index, $specs, $new_specs ) = @_;
+
 	my @v;
 	foreach my $k ( keys %variables ) {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
+
+	foreach my $side ( 'SideOne','SideTwo' ) {
+		foreach my $k ( keys %$new_specs ) {
+#$openprint::log->debug("Variables: $side $k old: $$specs{$k} new: $$new_specs{$k}");
+			if ( my ( $index ) = $k =~ /ColourCoating$side(\d+)/ ) {
+#$openprint::log->debug("Saving $side $k $$new_specs{$k} $index");
+				push @v, 'ColourCoating'.$side.$index;
+				push @v, 'ColourCoatingType'.$side.$index;
+				push @v, 'ColourCoatingColour'.$side.$index;
+				push @v, 'ColourCoatingCoverage'.$side.$index;
+			} # end if
+		} # end foreach k
+	} # end foreach side
 	return @v;
-}
+} # end sub variables
 
 sub no_outputs {
 	my @v;
@@ -223,7 +214,7 @@ sub get_unspecified_pages {
 } # end sub get_unspecified_pages
 
 sub setup_project {
-	my ( $Project, $services, $specs ) = @_;
+	my ( $Project, $services, $specs, $side_one_colours, $side_two_colours ) = @_;
 
 	my %project = (
 			'Add Grip Width',	$$specs{'GripWidth'},
@@ -262,15 +253,16 @@ sub setup_project {
 	@$specs{'NeedFolding','NeedCutting','NeedScoring'} = @project{'NeedFolding','NeedCutting','NeedScoring'};
 
 	# Need UVCoating
-	if ( 
-			($$specs{'SideOneUVCoatingType'} and ($$specs{'SideOneUVCoatingType'} ne 'None' )) or
-			($$specs{'SideTwoUVCoatingType'} and ($$specs{'SideTwoUVCoatingType'} ne 'None' )) ) {
-		$project{'NeedUVCoating'} = 1;
-		if ( ! $$services{'UVCoating'} ) {
-			push @{$$services{'UVCoating'}}, openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $Project->id(), 'UVCoating' );
-		} # end if	
-		$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
-	} # end if
+	foreach my $c ( @$side_one_colours, @$side_two_colours ) {
+		if ( $c =~ /UV/ ) {
+			$project{'NeedUVCoating'} = 1;
+			if ( ! $$services{'UVCoating'} ) {
+				push @{$$services{'UVCoating'}}, openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $Project->id(), 'UVCoating' );
+			} # end if	
+			$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
+			last;
+		} # end if
+	} # end foreach colour
 
 	%{$project{'FoldingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasFolding'} )} if $project{'HasFolding'};
 	%{$project{'CuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasCutting'} )} if $project{'HasCutting'};
@@ -283,8 +275,8 @@ sub setup_project {
 	if ( $$services{'UVCoating'} ) {
 $openprint::log->debug("Grabbing UV Specs");
 		%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )};
-		$project{'UVCoatingSpecs'}{'SideOneCoatingType-'.$$specs{SignatureIndex}} = $$specs{'SideOneUVCoatingType'};
-		$project{'UVCoatingSpecs'}{'SideTwoCoatingType-'.$$specs{SignatureIndex}} = $$specs{'SideTwoUVCoatingType'};
+		#$project{'UVCoatingSpecs'}{'SideOneCoatingType-'.$$specs{SignatureIndex}} = $$specs{'SideOneUVCoatingType'};
+		#$project{'UVCoatingSpecs'}{'SideTwoCoatingType-'.$$specs{SignatureIndex}} = $$specs{'SideTwoUVCoatingType'};
 	} # end if
 	return \%project;
 } # end sub setup_project
@@ -306,31 +298,27 @@ sub get_colours {
 		push @colours, 'Cyan','Magenta','Yellow','Black';
 	} # end if
 
-	foreach my $index ( 1 .. 8 ) {
-		if ( $$specs{'chkSpecial'.$side.'Colour'.$index.$signature} ) {
-			if ( ! $$specs{'txtSpecial'.$side.'Colour'.$index.$signature} ) {
-				$$specs{'txtSpecial'.$side.'Colour'.$index.$signature} = "PMS $index";
-				$$v{'txtSpecial'.$side.'Colour'.$index.$signature} = [ sets::union( 'output', @{$$v{'txtSpecial'.$side.'Colour'.$index.$signature}} ) ];
-			} # end if
-			push @colours, $$specs{'txtSpecial'.$side.'Colour'.$index.$signature};
-		} else {
-			$$specs{'txtSpecial'.$side.'Colour'.$index.$signature} = '';
-			$$v{'txtSpecial'.$side.'Colour'.$index.$signature} = [ sets::union( 'output', @{$$v{'txtSpecial'.$side.'Colour'.$index.$signature}} ) ];
+	foreach my $k ( keys %$specs ) {
+# checked on
+#$openprint::log->debug("Looking at $k $$specs{$k}");
+		if ( my ( $index ) = $k =~ /ColourCoating$side(\d+)$signature/ ) {
+			my $type = $$specs{"ColourCoatingType$side$index$signature"};
+$openprint::log->debug("Found Colour $side $index $signature $type");
+			if ( $type =~ /PMS/ ) {
+				if ( ! $$specs{'ColourCoatingColour'.$side.$index.$signature} ) {
+					$$specs{'ColourCoatingColour'.$side.$index.$signature} = "PMS $index";
+					$$v{'ColourCoatingColour'.$side.$index.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$side.$index.$signature}} ) ];
+				} #end if
+				push @colours, $$specs{'ColourCoatingColour'.$side.$index.$signature};
+			} else {
+# Non-PMS doesn't enter the Colour NAME
+				$$specs{'ColourCoatingColour'.$side.$index.$signature} = '';
+				$$v{'ColourCoatingColour'.$side.$index.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$side.$index.$signature}} ) ];
+				push @colours, $type;
+			} # end if type eq PMS
 		} # end if
 	} # end foreach
 
-	if ( $$specs{'chkVarnishOverallGloss'.$side.$signature} ) {
-		push @colours, 'Overall Varnish Gloss';
-	} # end if
-	if ( $$specs{'chkVarnishOverallMatte'.$side.$signature} ) {
-		push @colours, 'Overall Varnish Matte';
-	} # end if
-	if ( $$specs{'chkVarnishSpotGloss'.$side.$signature} ) {
-		push @colours, 'Spot Varnish Gloss';
-	} # end if
-	if ( $$specs{'chkVarnishSpotMatte'.$side.$signature} ) {
-		push @colours, 'Spot Varnish Matte';
-	} # end if
 	return @colours;
 } # end sub get_colours
 
@@ -351,8 +339,6 @@ sub get_inkcoverage {
 					$$v{$colour.'Spot'.$side.'Coverage'.$signature} = [ sets::exclude( ['output'], $$v{$colour.'Spot'.$side.'Coverage'.$signature} ) ];
 				} # end if
 				$inkCoverage{$colour.' Spot Colour'} += $$specs{$colour.'Spot'.$side.'Coverage'.$signature};
-#} else {
-#$$v{$colour.'Spot'.$side.'Coverage'.$signature} = [ sets::exclude( ['output'], $$v{$colour.'Spot'.$side.'Coverage'.$signature} ) ];
 			} # end if
 		} # end foreach
 		if ( $$specs{'chkProcessColour'.$side.$signature} ) {
@@ -371,30 +357,27 @@ sub get_inkcoverage {
 				$inkCoverage{$colour} += $$specs{$key};
 			} # end foreach
 		} # end if
-		foreach my $index ( 1 .. 8 ) {
-			if ( $$specs{'chkSpecial'.$side.'Colour'.$index.$signature} ) {
-				if ( ! int($$specs{'txtSpecial'.$side.'ColourInkPercent'.$index.$signature}) ) {
-					$$specs{'txtSpecial'.$side.'ColourInkPercent'.$index.$signature} = $openprint::config{'DefaultInkCoverage'};
-					$$v{'txtSpecial'.$side.'ColourInkPercent'.$index.$signature} = [ sets::union( 'output', @{$$v{'txtSpecial'.$side.'ColourInkPercent'.$index.$signature}} ) ];
+
+		foreach my $k ( keys %$specs ) {
+# checked on
+			if ( my ( $index ) = $k =~ /ColourCoating$side(\d+)$signature/ ) {
+				my $type = $$specs{"ColourCoatingType$side$index$signature"};
+				if ( $type =~ /Overall/ ) {
+# Nothing cuz coverage is 100%
+					$$specs{'ColourCoatingCoverage'.$side.$index.$signature} = 100;
+				} elsif ( ! int($$specs{'ColourCoatingCoverage'.$side.$index.$signature}) ) {
+					$$specs{'ColourCoatingCoverage'.$side.$index.$signature} = $openprint::config{'DefaultInkCoverage'};
+					$$v{'ColourCoatingCoverage'.$side.$index.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingCoverage'.$side.$index.$signature}} ) ];
 				} # end if
-				$$specs{'txtSpecial'.$side.'ColourInkPercent'.$index.$signature} =~ s/[^\d\.]//g;
-				$inkCoverage{$$specs{'txtSpecial'.$side.'Colour'.$index.$signature}} += $$specs{'txtSpecial'.$side.'ColourInkPercent'.$index.$signature};
-			} else {	
-				$$specs{'txtSpecial'.$side.'ColourInkPercent'.$index.$signature} = '';
-			} # end if
-		} # end foreach
-		foreach my $type ( 'Gloss','Matte' ) {
-			if ( $$specs{'chkVarnishSpot'.$type.$side.$signature} ) {
-				if ( ! $$specs{'VarnishSpot'.$type.$side.'Coverage'.$signature} ) {
-					$$specs{'VarnishSpot'.$type.$side.'Coverage'.$signature} = $openprint::config{'DefaultInkCoverage'};
-					$$v{'VarnishSpot'.$type.$side.'Coverage'.$signature} = [ sets::union( 'output', @{$$v{'VarnishSpot'.$type.$side.'Coverage'.$signature}} ) ];
+				$$specs{'ColourCoatingCoverage'.$side.$index.$signature} =~ s/[^\d\.]//g;
+				if ( $type =~ /PMS/ ) {
+					$inkCoverage{$$specs{'ColourCoatingColour'.$side.$index.$signature}} += $$specs{'ColourCoatingCoverage'.$side.$index.$signature};
 				} else {
-					$$v{'VarnishSpot'.$type.$side.'Coverage'.$signature} = [ sets::exclude( ['output'], $$v{'VarnishSpot'.$type.$side.'Coverage'.$signature} ) ];
+					$inkCoverage{$type} += $$specs{'ColourCoatingCoverage'.$side.$index.$signature};
 				} # end if
-				$$specs{'VarnishSpot'.$type.$side.'Coverage'.$signature} =~ s/[^\d\.]//g;
-				$inkCoverage{$type.'Varnish'} += $$specs{'VarnishSpot'.$type.$side.'Coverage'.$signature};
 			} # end if
-		} # end foreach type
+
+		} # end foreach k
 	} # end foreach Side
 	return %inkCoverage;
 } # end sub get_inkcoverage
@@ -402,7 +385,7 @@ sub get_inkcoverage {
 # Calculates, given the imposition
 sub calc_from_imposition {
 	my ( $Project, $service_id, $specs, $source_specs ) = @_;
-$openprint::log->debug(" calc_from_imposition ");
+	$openprint::log->debug(" calc_from_imposition ");
 
 	my $services = $Project->services();
 
@@ -415,7 +398,7 @@ $openprint::log->debug(" calc_from_imposition ");
 	my $s = $openprint::dbh->selectall_arrayref(q{SELECT * FROM Inks}, { Slice => {} } );
 	my %special_colours = map { $_->{pmsid}, $_ } @$s;
 
-	my $project = setup_project( $Project, $services, $specs );
+	my $project = setup_project( $Project, $services, $specs, \@side_one_colours, \@side_two_colours );
 
 # Caches
 	my %mixed_colours;
@@ -825,9 +808,11 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 				'project_type_id'=>$Project->type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
+		if ( $debug ) {
 		foreach my $P ( @Papers ) {
 			$P->prices();
 		} # end foreach
+		} # end if
 		$$specs{'txtSpecificStockCalliper'} = $Papers[0]->calliper() if @Papers;
 		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM' ) {
 			$variables{$k} = [ sets::union( 'output', @{$variables{$k}} ) ];
@@ -912,7 +897,7 @@ if ( $debug or 1 ) {
 $openprint::log->debug("Paper: " . $P->to_string() );
 	} # end foreach
 } # end if
-	my @possible_presses = sort { $a->strid() <=> $b->strid() } select_presses( $project_index, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
+	my @possible_presses = sort { $a->strid() <=> $b->strid() } select_presses( $Project, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
 	if ( ! @possible_presses ) {
 		$$specs{'alert'} = 'There were no possible presses. Your project may be too large for us.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
@@ -920,7 +905,7 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 		$openprint::log->debug( "Presses: " . join(',', map { $_->strid() } @possible_presses ) );
 	} # end if
 
-	my $project = setup_project( $Project, $services, $specs );
+	my $project = setup_project( $Project, $services, $specs, \@side_one_colours, \@side_two_colours );
 
 # Do this once now, so we don't do it many times in calc_print_price
 	my @filtered_colours = filter_colours( @side_one_colours, @side_two_colours );
@@ -1400,8 +1385,8 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		my $Varnish = $$b_price{'Varnish'};
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
-$Imposition->display();
-$openprint::log->debug( breakdown( $b_price, $specs ) );
+#$Imposition->display();
+#$openprint::log->debug( breakdown( $b_price, $specs ) );
 
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 
@@ -1454,7 +1439,7 @@ $openprint::log->debug( breakdown( $b_price, $specs ) );
 		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'} );
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $best_price{'Total Cost'} / $qty );
 		my $mprice = $best_price{'Impression Price'};
-		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if %$Varnish;
+		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
 		$mprice += $$Aqueous{'Total'} if %$Aqueous;
 		
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', ((($mprice + $best_price{'Ink Price'} )/ $qty)*1000 ) + $best_price{'Paper 1000 Price'} );
@@ -1808,7 +1793,7 @@ $openprint::log->debug("Using cache: ".$new_specs{'txtUnspecifiedPageQuantity'.$
 				$$price{'Comparison Cost'} += $additional_price;
 				if ( $$sig_price{'Imposition'} ) {
 					$$price{'AdditionalSignature Breakdown'} .= sprintf($sigs . ' Additional Sig %dpages %dout %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $additional_price ) . '<br/>';
-					$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
+					#$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
 				} else {
 					$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 				} # end if
@@ -2205,22 +2190,13 @@ sub calc_price {
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 
 	my %run_price;
-	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ); 
-	my %varnish_price;
 	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
 		%run_price = get_run_price( $impressions, scalar(@colours), 0, $Imposition, $Press, $run_speed ); 
-		%varnish_price = get_varnish_run_price( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$project{print_sides}, $impressions, $specs, \@colours, undef, $qty_index, $Imposition, $Project, $service_index, $inkCoverage );
 	} else {
 		%run_price = get_run_price( $impressions, scalar @$side_one_colours, scalar @$side_two_colours, $Imposition, $Press, $run_speed ); 
-		%varnish_price = get_varnish_run_price( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$project{print_sides}, $impressions, $specs, $side_one_colours, $side_two_colours, $qty_index, $Imposition, $Project, $service_index, $inkCoverage);
 	} # end if
 
-	$price{'Press Washes'} += $$pms_prices{'Press Washes'};
-	$price{'Press Washes'} += $varnish_price{'Press Washes'};
-	$price{'Press Wash Price'} = openprint::service::get_price( 'WashUp', undef, $Press );
-	$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
-
-	my $setup_cost = $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $$pms_prices{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'} ;
+	my $setup_cost = $price{'WorkTurn Dry Charge'} + $$pms_prices{'Ink Mix Charge'} + $price{'Runstyle Charge'};
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
 		my %ImpositionMakeReady;
@@ -2238,7 +2214,6 @@ sub calc_price {
 			$service = 'Imposition';
 			%ImpositionCharge = openprint::service::get_price_object( $service,undef,$Press);
 		} # end if
-$openprint::log->debug("units : $ImpositionCharge{'units'} " );
 		if ( $ImpositionCharge{'units'} eq 'Per Page' ) {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->pages(),$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->pages();
@@ -2290,7 +2265,6 @@ $openprint::log->debug("units : $ImpositionCharge{'units'} " );
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	$setup_cost += $press_setup;
 
-	$price{'Setup Total'} = $setup_cost;
 	$price{'Press Setup'} = $press_setup;
 
 	my $run_cost = $run_price{'Price'};
@@ -2300,13 +2274,6 @@ $openprint::log->debug("units : $ImpositionCharge{'units'} " );
 	$price{'Impression Units'} = $run_price{'units'};
 	$price{'Impression Price'} = $run_price{'Price'};
 
-	$price{'Varnish'} = \%varnish_price;
-	$run_cost += $varnish_price{'Run Total'};
-
-	$price{'Aqueous'} = \%aqueous;
-	if ( $aqueous{'Total'} ) {
-		$run_cost += $aqueous{'Total'};
-	} # end if
 	$price{'Minimum Run Charge'} = openprint::service::get_price( 'PressRunChargeMinimum',undef,$Press );
 
 	if ( $run_cost < $price{'Minimum Run Charge'} ) {
@@ -2321,29 +2288,59 @@ $openprint::log->debug("units : $ImpositionCharge{'units'} " );
 	$price{'Ink Price'} = 0;
 	foreach my $real_colour ( @colours ) {
 		my $colour;
-		if ( $real_colour =~ /Varnish/ ) {
+		if ( $real_colour =~ /Varnish/ or $real_colour =~ /Aqueous/ ) {
+			$price{'Press Washes'} += 1;
+			$colour = $real_colour;
+			$colour =~ s/ ?Overall ?//;
+			$colour =~ s/ ?Spot ?//;
+		} elsif ( $real_colour =~ /UV/ ) {
 			next;
 		} elsif ( $real_colour =~ /(\w*) Spot Colour/ ) {
-			$colour = $1;
+			$colour = $1.'Ink';
 		} elsif ( $real_colour =~ /PMS/ ) {
-			$colour = 'PMS';
+			$colour = 'PMSInk';
 		} else { 
-			$colour = $real_colour;
+			$colour = $real_colour . 'Ink';
 		} # end if
+
+		$price{'Ink breakdown'} .= $real_colour;
+
+		# Each Ink/Coating has MakeReady, Mix, Material, Service
+		my %InkMakeReady = openprint::service::get_price_object( $real_colour.' MakeReady', undef, $Press );
+		if ( %InkMakeReady ) {
+			$price{'Ink breakdown'} .= sprintf(' MR: %.2f', $InkMakeReady{'Price'} );
+			$price{'Ink Price'} += $InkMakeReady{'Price'};
+		} # end if
+		my %InkService = openprint::service::get_price_object( $real_colour, $qty, $Press );
+		if ( %InkService ) {
+			if ( lc $InkService{'units'} eq 'per m' ) {
+				$InkService{'Total'} = $InkService{'Price'} * $qty/1000;
+			} # end if
+			$price{'Ink breakdown'} .= sprintf(' Run: $%.2f%s = $%.2f', @InkService{'Price','units','Total'} );
+			$price{'Ink Price'} += $InkService{'Total'};
+		} # end if
+
 		my %ink_price;
 		my $InkMaterial;
+
 		if ( $$special_colours{$real_colour} ) {
-#$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
+$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
 			$InkMaterial = new openprint::Material( $$special_colours{$real_colour}->{material_id} );
 			%ink_price = $InkMaterial->get_price( undef, $Press );
 		} # end if
 		if ( ! %ink_price ) {
-#$openprint::log->debug("Getting price for $colour Ink");
-			if ( my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
-				%ink_price = $materials[0]->get_price( undef, $Press );
+$openprint::log->debug("Getting price for $colour");
+			if ( my @Materials = openprint::Material::find('name'=>$colour) ) {
+$openprint::log->debug("Got price for $colour");
+				$InkMaterial = $Materials[0];
+				%ink_price = $Materials[0]->get_price( undef, $Press );
 			} # end if
 		} # end if
-		next if ! %ink_price;
+		if ( ! ( $InkMaterial and %ink_price ) ) {
+			$price{'Ink breakdown'} .= '<br/>';
+			next;
+		} # end if
+			
 		my $area = $Imposition->object_area() * $impressions * ($$inkCoverage{$real_colour}/100);
 		my $grade = $Imposition->Paper()->grade();
 		$grade = 4 if ! $grade;
@@ -2353,22 +2350,17 @@ $openprint::log->debug("units : $ImpositionCharge{'units'} " );
 			if ( sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) ) {
 				$area /= 2;
 			} # end if
-			if ( (! $InkMaterial ) and my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
-				$InkMaterial = $materials[0];
-			} # end if
-			if ( $InkMaterial ) {
-				my $coverage = $InkMaterial->specification('Coverage', $grade);
-				my $qty = sprintf('%.2f', $area/$coverage ) if $coverage;
-				my %ink_price = $InkMaterial->get_price( $qty, $Press );
-				$price{'Ink Price'} += $ink_price{'Price'} * $qty;
-				$price{'Ink breakdown'} .= sprintf('%s : mileage: %d, %s * $%s%s=$%.2f<br/>', $real_colour, $coverage,$qty, $ink_price{'Price'},$ink_price{'units'},$ink_price{'Price'} * $qty);
-			} # end if
+			my $coverage = $InkMaterial->specification('Coverage', $grade);
+			my $qty = sprintf('%.2f', $area/$coverage ) if $coverage;
+			my %ink_price = $InkMaterial->get_price( $qty, $Press );
+			$price{'Ink Price'} += $ink_price{'Price'} * $qty;
+			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $coverage,$qty, $ink_price{'Price'},$ink_price{'units'},$ink_price{'Price'} * $qty);
 
 		} elsif ( lc $ink_price{'units'} eq 'per square foot' ) {
 			$area /= 144;
 			my $p = $ink_price{'Price'} * $area;
 			$price{'Ink Price'} += $p;
-			$price{'Ink breakdown'} .= sprintf('%s breakdown: Grade: %d, %.2f sq feet  * $%s%s = $%.2f<br/>', $real_colour, $grade, $area, @ink_price{'Price','units'}, $p );
+			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %.2f sq feet * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units'}, $p );
 		} elsif ( lc $ink_price{'units'} eq 'per unit' ) {
 			if ( sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) ) {
 				$area /= 2;
@@ -2376,22 +2368,30 @@ $openprint::log->debug("units : $ImpositionCharge{'units'} " );
 			my $sheets_per_ink_unit = 750000;
 			my $p = $ink_price{'Price'} * ($area/$sheets_per_ink_unit) / $$project{'print_sides'};
 			$price{'Ink Price'} += $p;
-			$price{'Ink breakdown'} .= sprintf('%s breakdown: %.2f sq feet * $%s%s / %d sheets per unit = $%.2f<br/>', $real_colour, $area, @ink_price{'Price','units'}, $sheets_per_ink_unit, $p );
+			$price{'Ink breakdown'} .= sprintf(' %.2f sq feet * $%s%s / %d sheets per unit = $%.2f', $area, @ink_price{'Price','units'}, $sheets_per_ink_unit, $p );
 		} elsif ( lc $ink_price{'units'} eq 'per square inch' ) {
 			my $p = $ink_price{'Price'} * $area;
 			$price{'Ink Price'} += $p;
-			$price{'Ink breakdown'} .= sprintf('%s breakdown: Grade: %d, %d sq inches * $%s%s = $%.2f<br/>', $real_colour, $grade, $area, @ink_price{'Price','units'}, $p );
+			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %d sq inches * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units'}, $p );
 		} elsif ( lc $ink_price{'units'} eq 'per m' ) {
 			$price{'Ink Price'} += $ink_price{'Price'} * $impressions/1000;
-			$price{'Ink breakdown'} .= "\t".$real_colour . ' breakdown: ' . $impressions . " * $ink_price{'Price'}$ink_price{'units'} = " . $ink_price{'Price'} * $impressions/1000 . "<br/>";
+			$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @ink_price{'Price','units'}, $ink_price{'Price'} * $impressions/1000 );
 		} else {
 			#$run_price = 0;
-			$openprint::log->error("Unknown units for Ink $colour: $ink_price{'units'}" . $Press->strid() );
+			$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $Press->strid() );
 		} # end if
-	} # end foreach
+		$price{'Ink breakdown'} .= '<br/>';
+	} # end foreach colour/coating
 
-	my $total_cost = $run_cost + $setup_cost + $plate_setup{'Plate Price'} * $plate_setup{'Plate Count'} + $price{'Ink Price'} + $varnish_price{'run_price'} + $varnish_price{'Material Total'} + $plate_setup{'Blank Price'} * $plate_setup{'Blank Plates'};
-	$price{'Comparison Cost'} += $price{'Film Cost'} + $price{'Ink Price'} + $varnish_price{'run_price'} + $varnish_price{'Material Total'};
+	$price{'Press Washes'} += $$pms_prices{'Press Washes'};
+	#$price{'Press Washes'} += $varnish_price{'Press Washes'};
+	$price{'Press Wash Price'} = openprint::service::get_price( 'WashUp', undef, $Press );
+	$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
+	$setup_cost += $price{'Press Wash Total'};
+	$price{'Setup Total'} = $setup_cost;
+
+	my $total_cost = $run_cost + $setup_cost + $plate_setup{'Plate Price'} * $plate_setup{'Plate Count'} + $price{'Ink Price'} + $plate_setup{'Blank Price'} * $plate_setup{'Blank Plates'};
+	$price{'Comparison Cost'} += $price{'Film Cost'} + $price{'Ink Price'};
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Totals' );
 	$price{'Total Cost'} = $total_cost;
@@ -2468,7 +2468,7 @@ sub select_presses {
 # this function should return an list of the possible press for the job
 # by elminating the presses that are not appropriate.
 
-	my ( $project_index, $Paper, $specs, $side_one_colours, $side_two_colours ) = @_;
+	my ( $Project, $Paper, $specs, $side_one_colours, $side_two_colours ) = @_;
 	#$log->debug("**** Start of select_press. Inputs: Project $project_index ****");
 
 # we do not have to check Image Size here because the the imposition code will take care of that later on.
@@ -2480,15 +2480,18 @@ sub select_presses {
 
 	my @good_presses;
 	my $varnish = 0;
-#$log->debug(" *** CHKECKING FOR VANISH *** ");
+	my $aqueous = 0;
+#$log->debug(" *** CHECKING FOR VANISH *** ");
 	foreach my $colour (@$side_one_colours, @$side_two_colours) {
 		if ( $colour =~ /Varnish/ ) {
 #$log->debug(" ** HAVE VARNISH **" );
 			$varnish = 1;
+		} elsif ( $colour =~ /Aqueous/ ) {
+			$aqueous = 1;
 		} # end if
 	} # end if
 
-	my ($project_type) = openprint::project::get_project_type( $openprint::log, $openprint::dbh, $project_index );
+	my $project_type = $Project->Type()->strid();
 #$log->debug(" ** Current Project Types is: $project_type ** ");
 
 	my @presses = openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y', 'order'=>'strid' );
@@ -2510,12 +2513,7 @@ sub select_presses {
 			next;
 		} # end if
 
-		if ( 
-				(
-				 ( $$specs{'rdbAqueousSideOne'} and ( $$specs{'rdbAqueousSideOne'} ne 'None' ) ) or
-				 ( $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' ) ) 
-				) and ( $Press->specification('Aqueous Coating') ne 'Y' )
-		   ) {
+		if ( $aqueous and ( $Press->specification('Aqueous Coating') ne 'Y' ) ) {
 			$openprint::log->debug(" ** Press $press_id Failed Aqueous Check (".$Press->specification('Aqueous Coating').")**");
 			next;
 		} # end if
@@ -2570,118 +2568,6 @@ sub select_presses {
 	return @good_presses;
 } # end sub
 
-sub get_varnish_run_price {
-	my ( $log, $dbh, $variable, $Press, $print_sides, $impressions, $specs, $side_one_colours, $side_two_colours, $qty_index, $Imposition, $Project, $service_index, $inkCoverage ) = @_;
-
-	my %varnish_price;
-	my $varnish_sides;
-#$log->debug("***************** START OF GET VARNISH PRICE *********************");
-
-# How many varnishes we have per sheet...
-	foreach my $colour (@$side_one_colours, @$side_two_colours) {
-		if ( $colour =~ /Varnish/ ) {
-#$log->debug("***************** VARNISH CHECK: $colour DT: $dry_trap **********************");
-			$varnish_sides += 1;
-		} # end if
-	} # end for each
-	return if ! $varnish_sides;
-		
-	my %price = openprint::service::get_price_object( 'VarnishMakeReady', 1, $Press);
-	if ( $price{'units'} eq 'Per Form' ) {
-		my $previous_forms = 0;
- #$$specs{'PreviousForms'};
-# Need to figure out how many similar forms we have
-		foreach my $ss_id ( $Project->signatures() ) {
-			next if $service_index and ($ss_id >= $service_index);
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-			$previous_forms += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
-		} # end foreach
-		#$openprint::log->debug("Previous Forms $previous_forms");
-		#$$specs{'PreviousForms'} = $previous_forms;
-
-		%price = openprint::service::get_price_object( 'VarnishMakeReady', $previous_forms + 1, $Press);
-	} # end if
-	$varnish_price{'Setup'} = $price{'Price'};
-
-
-	if ( $$specs{'chkVarnishDryTrapSideOne'} or $$specs{'chkVarnishDryTrapSideTwo'} ) {
-		%price = openprint::service::get_price_object( 'VarnishDryTrap', $impressions, $Press);
-	} else {
-		%price = openprint::service::get_price_object( 'VarnishInLine', $impressions, $Press);
-	} # end if
-	if ( sets::isin( lc $price{'units'}, [ 'per m', 'per 1000' ] ) ) {
-		$price{'Run Price'} = $price{'Price'};
-		$price{'Total'} = $price{'Price'} * $impressions/1000;
-		$price{'Total'} /= 2 if ($varnish_sides == 1);
-	} # end if
-	$varnish_price{'run_price'} = $price{'Run Price'};
-	$varnish_price{'Run Total'} = $price{'Total'};
-	$varnish_price{'Run Units'} = $price{'units'};
-
-	foreach my $c ( @$side_one_colours, @$side_two_colours) {
-		my $colour = $c;
-		next if ! ( $colour =~ /Varnish/ );
-
-		my $area ;
-		if ( $colour =~ /Spot/ ) {
-			if ( $colour =~ /Gloss/ ) {
-				$colour = 'GlossVarnish';
-			} elsif ( $colour =~ /Matte/ ) {
-				$colour = 'MatteVarnish';
-			} # end if
-			$area = $Imposition->object_area() * $$inkCoverage{$colour}/100;
-			if ( sets::isin( $c, $side_one_colours ) and sets::isin( $c, $side_two_colours ) ) {
-				$area /= 2;
-			} # end if
-		} else { # Overall
-			if ( $colour =~ /Gloss/ ) {
-				$colour = 'GlossVarnish';
-			} elsif ( $colour =~ /Matte/ ) {
-				$colour = 'MatteVarnish';
-		} # end if
-			$area = $Imposition->layout_area();
-		} # end if
-		if ( my @materials = openprint::Material::find('name'=>$colour) ) {
-			%price = $materials[0]->get_price( undef, $Press );
-		} # end if
-		if ( ! %price ) {
-			$colour = 'Varnish';
-			if ( my @materials = openprint::Material::find('name'=>$colour) ) {
-				%price = $materials[0]->get_price( undef, $Press );
-			} # end if
-		} # end if
-
-		$varnish_price{'Material Units'} = $price{'units'};
-
-		if ( lc $price{'units'} eq 'per square foot' ) {
-			my $p = $price{'Price'} * $area/144;
-			$varnish_price{'Material Price'} += $p;
-			$varnish_price{'Material Total'} += $p * $impressions;
-		} elsif ( lc $price{'units'} eq 'per square inch' ) {
-			my $p = $price{'Price'} * $area;
-			$varnish_price{'Material Price'} += $p;
-			$varnish_price{'Material Total'} += $p * $impressions;
-		} elsif ( lc $price{'units'} eq 'per kg' ) {
-			my $grade = $Imposition->Paper()->grade();
-			$grade = 4 if ! $grade;
-
-			if ( my @Materials = openprint::Material::find('name'=>$colour) ) {
-				my $Material = $Materials[0];
-				my $coverage = $Material->specification('Coverage', $grade);
-				my $qty = ceil( $area*$impressions/$coverage ) if $coverage;
-				my %price = $Material->get_price( $qty, $Press );
-				$varnish_price{'Material Price'} += $price{'Price'} * $qty;
-				$varnish_price{'Material Total'} += $price{'Price'} * $qty;
-			} # end if
-		} # end if
-	} # end foreach
-
-#$log->debug(" **************** VARNISH RUN PRICE: $run_price * VS: $varnish_sides PS: $print_sides *********************");
-	$varnish_price{'Press Washes'} = $varnish_sides;
-	return %varnish_price;
-} # end if
-
-
 # Returns a price per image, which will later need to be multiplied by the imposition
 sub get_special_colours_price {
 	my ( $Press, $colours, $mixed_colours, $washed_colours, $special_colours, $qty_index ) = @_;
@@ -2689,11 +2575,13 @@ sub get_special_colours_price {
 
 	my %metallic_mix_price = openprint::service::get_price_object( 'MetallicInkMix','',$Press);
 	my %pms_mix_price = openprint::service::get_price_object( 'PMSInkMix','',$Press);
-	#my %wash_price = openprint::service::get_price_object( 'WashUp','',$Press);
 
 	foreach my $key ( @{$colours} ) {
 		next if sets::isin( $key, ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour'] );
 		next if $key =~ /Varnish/;
+		next if $key =~ /Aqueous/;
+		next if $key =~ /UV/;
+
 		my $mix_price = \%pms_mix_price;
 
 		if ( $$special_colours{$key} ) {
@@ -2718,50 +2606,6 @@ sub get_special_colours_price {
 
 	return \%price;
 } # end sub get_special_colours_price
-
-sub get_aqueous_price {
-	my ( $log, $dbh, $variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ) = @_;
-
-	my %aqueous_price;
-
-	my $aqueous_sides = 0;
-	$aqueous_sides += 1 if $$specs{'rdbAqueousSideOne'} and ( $$specs{'rdbAqueousSideOne'} ne 'None' );
-	$aqueous_sides += 1 if $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' );
-
-	if ( $aqueous_sides > 0 ) {
-		my $do_setup = 1;
-# FInd out if there has been an aqueous setup already for a similar spread
-		foreach my $index ( $Project->signatures() ) {
-			next if $service_index and ($index >= $service_index);
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-			if ( 
-					( $$sig_specs{'rdbAqueousSideOne'} eq $$specs{'rdbAqueousSideOne'} )
-					and ( $$sig_specs{'rdbAqueousSideTwo'} eq $$specs{'rdbAqueousSideTwo'} )
-					and ( $$sig_specs{'ddmPress'.$qty_index} eq $Press->strid() )
-			   ) {
-				$do_setup = 0;
-				last;
-			} # end if
-		} # end foreach
-		if ( $do_setup ) {
-			$aqueous_price{'Setup'} = openprint::service::get_price( 'AqueousMakeReady','',$Press);
-			if ( $aqueous_sides == 1 and ! $is_sheetwork ) {
-				$aqueous_price{'Setup'} += openprint::service::get_price( 'AqueousBlanketCut','',$Press);
-			} # end if
-		} # end if
-# This will be * impressions /1000 later
-		my %Price = openprint::service::get_price_object( 'Aqueous', $impressions, $Press);
-		$aqueous_price{'Run Cost'} = $Price{'Price'};
-		$aqueous_price{'Units'} = $Price{'units'};
-		if ( sets::isin( lc $Price{'units'}, ['per m', 'per 1000','per 1000 impressions'] ) ) {
-			$aqueous_price{'Total'} = $Price{'Price'} * ($impressions/1000);
-		} else {
-			$openprint::log->debug("Unknown units in Aqueous");
-			$aqueous_price{'Total'} = $Price{'Price'};
-		} # end if
-	} # end if
-	return %aqueous_price;
-} # end sub get_aqueous_price
 
 sub get_run_price {
 	my ( $impressions, $side_one_colours, $side_two_colours, $Imposition, $Press, $run_speed ) = @_;
@@ -3029,14 +2873,14 @@ sub filter_colours {
 				if ( ! sets::isin('Black', \@filtered_colours) and ! sets::isin('Black Spot Colour', \@filtered_colours ) ) {
 					push @filtered_colours, $colour;
 				} # end if
-			} elsif ( $colour eq 'Overall Varnish Gloss' ) {
+			} elsif ( $colour eq 'Overall Gloss Varnish' ) {
 # Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				if ( ! sets::isin('Spot Varnish Gloss', \@colours ) ) {
+				if ( ! sets::isin('Spot Gloss Varnish', \@colours ) ) {
 					push @filtered_colours, $colour;
 				} # end if
-			} elsif ( $colour eq 'Overall Varnish Matte' ) {
+			} elsif ( $colour eq 'Overall Matte Varnish' ) {
 # Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				if ( ! sets::isin('Spot Varnish Matte', \@colours ) ) {
+				if ( ! sets::isin('Spot Matte Varnish', \@colours ) ) {
 					push @filtered_colours, $colour;
 				} # end if
 			} else {
@@ -3067,24 +2911,22 @@ sub compare_signatures_runstyle {
 			'chkProcessColourSideOne', 'chkProcessColourSideTwo',
 			'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne',
 			'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo',
-			'txtSpecialSideOneColour1', 'txtSpecialSideOneColourInkPercent1',
-			'txtSpecialSideOneColour2', 'txtSpecialSideOneColourInkPercent2',
-			'txtSpecialSideOneColour3', 'txtSpecialSideOneColourInkPercent3',
-			'txtSpecialSideOneColour4', 'txtSpecialSideOneColourInkPercent4',
-			'txtSpecialSideOneColour5', 'txtSpecialSideOneColourInkPercent5',
-			'txtSpecialSideOneColour6', 'txtSpecialSideOneColourInkPercent6',
-			'txtSpecialSideOneColour7', 'txtSpecialSideOneColourInkPercent7',
-			'txtSpecialSideOneColour8', 'txtSpecialSideOneColourInkPercent8',
-			'txtSpecialSideTwoColour1', 'txtSpecialSideTwoColourInkPercent1',
-			'txtSpecialSideTwoColour2', 'txtSpecialSideTwoColourInkPercent2',
-			'txtSpecialSideTwoColour3', 'txtSpecialSideTwoColourInkPercent3',
-			'txtSpecialSideTwoColour4', 'txtSpecialSideTwoColourInkPercent4',
-			'txtSpecialSideTwoColour5', 'txtSpecialSideTwoColourInkPercent5',
-			'txtSpecialSideTwoColour6', 'txtSpecialSideTwoColourInkPercent6',
-			'txtSpecialSideTwoColour7', 'txtSpecialSideTwoColourInkPercent7',
-			'txtSpecialSideTwoColour8', 'txtSpecialSideTwoColourInkPercent8',
-			'rdbAqueousSideOne',
-			'rdbAqueousSideTwo',
+			'ColourCoatingTypeSideOne1', 'ColourCoatingColourSideOne1', 'ColourCoatingCoverageSideOne1',
+			'ColourCoatingTypeSideOne2', 'ColourCoatingColourSideOne2', 'ColourCoatingCoverageSideOne2',
+			'ColourCoatingTypeSideOne3', 'ColourCoatingColourSideOne3', 'ColourCoatingCoverageSideOne3',
+			'ColourCoatingTypeSideOne4', 'ColourCoatingColourSideOne4', 'ColourCoatingCoverageSideOne4',
+			'ColourCoatingTypeSideOne5', 'ColourCoatingColourSideOne5', 'ColourCoatingCoverageSideOne5',
+			'ColourCoatingTypeSideOne6', 'ColourCoatingColourSideOne6', 'ColourCoatingCoverageSideOne6',
+			'ColourCoatingTypeSideOne7', 'ColourCoatingColourSideOne7', 'ColourCoatingCoverageSideOne7',
+			'ColourCoatingTypeSideOne8', 'ColourCoatingColourSideOne8', 'ColourCoatingCoverageSideOne8',
+			'ColourCoatingTypeSideTwo1', 'ColourCoatingColourSideTwo1', 'ColourCoatingCoverageSideTwo1',
+			'ColourCoatingTypeSideTwo2', 'ColourCoatingColourSideTwo2', 'ColourCoatingCoverageSideTwo2',
+			'ColourCoatingTypeSideTwo3', 'ColourCoatingColourSideTwo3', 'ColourCoatingCoverageSideTwo3',
+			'ColourCoatingTypeSideTwo4', 'ColourCoatingColourSideTwo4', 'ColourCoatingCoverageSideTwo4',
+			'ColourCoatingTypeSideTwo5', 'ColourCoatingColourSideTwo5', 'ColourCoatingCoverageSideTwo5',
+			'ColourCoatingTypeSideTwo6', 'ColourCoatingColourSideTwo6', 'ColourCoatingCoverageSideTwo6',
+			'ColourCoatingTypeSideTwo7', 'ColourCoatingColourSideTwo7', 'ColourCoatingCoverageSideTwo7',
+			'ColourCoatingTypeSideTwo8', 'ColourCoatingColourSideTwo8', 'ColourCoatingCoverageSideTwo8',
 			'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','ddmBleedSize',
 			) {
 				if ($$sig1{$key} ne $$sig2{$key} ) {
@@ -3128,8 +2970,8 @@ sub runtime {
 
 	my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'UsePress'} );
 	my $Equipment = shift @Equipment;
-	my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
-	my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
+	my @side_one_colours = get_colours( $specs, 'SideOne' );
+	my @side_two_colours = get_colours( $specs, 'SideTwo' );
 	my @colours;
 	if ( sets::isin( $$specs{'ddmRunStyle'.$qty_index}, ['Work & Turn', 'Work & Tumble'] ) ) {
 		@colours = openprint::Estimating::Printing::filter_colours( @side_one_colours, @side_two_colours );
@@ -3161,7 +3003,6 @@ sub runtime {
 sub get_weight {
 	my ( $Project, $specs, $qty_index ) = @_;
 
-$openprint::log->debug("Load from get_weight");
 	my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
 	my $sig_weight = $$specs{'txtWidth'} * $$specs{'txtHeight'} * $Paper->wpsi();
 	if ( $$specs{'PageQuantity'.$qty_index} ) {
