@@ -36,8 +36,9 @@
 			<input type="text" name="name" value="<? echo ( $$variable{'Service'}->name(); ) ?>" />
 		</p>
 		<p> 
-			<label>Category:</label>
-			<select name="category_id">
+			<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category:</label>
+			<input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
+			<select id="category_id" name="category_id">
 				<option value="">Select a category</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory::find('order'=>'lower(name)') ], $$variable{'Service'}->category_id() ); ) ?>
 			</select>

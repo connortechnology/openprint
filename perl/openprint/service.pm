@@ -114,7 +114,7 @@ sub save_service {
 		$service_type = 'Prepress';
 	} # end if
 	eval ( 'require openprint::Estimating::'.$service_type.';' );
-	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs )');
+	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
 	# make this fast by doing it in one transaction
 	my $ac = sql::start_transaction( $dbh );
