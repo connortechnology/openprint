@@ -2267,12 +2267,17 @@ $openprint::log->debug("units : $ImpositionCharge{'units'} " );
 		} # end if
 
 		if ( $Imposition->pages() ) {
-			my %PageCharge = openprint::service::get_price_object( 'Page Charge',$Imposition->pages(),$Press);
-			if ( $PageCharge{'units'} eq 'Per Page' ) {
-				$PageCharge{'Total'} = $PageCharge{'Price'} * $Imposition->pages();
+			my %PageCharge;
+			if ( ! ( %PageCharge = openprint::service::get_price_object( 'Page Charge'.$Project->Type()->strid(),$Imposition->pages(),$Press) ) ) {
+				%PageCharge = openprint::service::get_price_object( 'Page Charge', $Imposition->pages(), $Press );
 			} # end if
-			$price{'Page Charge'} = \%PageCharge;
-			$setup_cost += $PageCharge{'Total'};
+			if ( %PageCharge ) {
+				if ( $PageCharge{'units'} eq 'Per Page' ) {
+					$PageCharge{'Total'} = $PageCharge{'Price'} * $Imposition->pages();
+				} # end if
+				$price{'Page Charge'} = \%PageCharge;
+				$setup_cost += $PageCharge{'Total'};
+			} # end if
 		} # end if
 	} # end if
 
