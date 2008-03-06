@@ -206,6 +206,10 @@ sub used_width {
 	my $self = shift;
 	return $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'};
 }
+sub used_height {
+    my $self = shift;
+    return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'};
+}
 
 sub object_area {
 	my $self = shift;
