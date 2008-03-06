@@ -927,6 +927,7 @@ sub calc {
 
 # FIrst thing: Normalize the inputs
 	$specs{'Help'} = '';
+	$specs{'alert'} = '';
 	$specs{'txtQuantity1'} =~ s/\D//g;
 
 	my @project_types = openprint::ProjectType::find( 'strid' => $specs{'ProjectType'} );
@@ -977,11 +978,15 @@ sub calc {
 				@specs{'txtFinalWidth','txtFinalHeight'} = sql::execute( $log, $dbh, $_, @args );
 				@specs{'txtWidth','txtHeight'} = ($width, $height);
 				if ( ! $specs{'txtFinalWidth'} ) {
-					my $folds = $specs{'FoldType'};
-					$folds =~ s/\D//g;
-					$folds += 1;
-					$specs{'txtFinalWidth'} = sprintf('%.3f', $specs{'txtWidth'} / $folds );
-					$specs{'txtFinalHeight'} = $specs{'txtHeight'};
+					if ( ( my ( $pages, $folds ) = $specs{'FoldType'} =~ /^(\d+)pg(\d)Panel/ ) ) {
+						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'} * 1000 / $folds)/1000 );
+						$specs{'txtFinalHeight'} = $specs{'txtHeight'} / (($pages/2)/$folds);
+					} elsif ( ( my ( $folds ) = $specs{'FoldType'} =~ /^(\d)Panel/ ) ) {
+						#$folds =~ s/\D//g;
+						#$folds += 1;
+						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'} *1000/ $folds)/1000 );
+						$specs{'txtFinalHeight'} = $specs{'txtHeight'};
+					} # end if
 				} # end if
 			} else {
 				$_ = q{SELECT dblFlatWidth::float, dblFlatHeight::float FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?) AND dblFinishedWidth=? AND dblFinishedHeight=?};
@@ -1235,9 +1240,12 @@ sub calc {
 
 		push @{$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Proofs' ) if ! $services{'Proofs'};
 
-		if ( $specs{'FoldType'} and $specs{'FoldType'} ne 'NoFold' ) {
+		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
 			push @{$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $services{'Folding'};
-		} elsif ($services{'Folding'} and ! openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
+			if ( (! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' ) ) {
+				$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';
+			} # end if
+		} elsif ( $services{'Folding'} ) {
 			foreach ( @{$services{'Folding'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
 			} # end foreach
@@ -1360,7 +1368,7 @@ sub calc {
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 
-		$specs{'alert'} = openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$project{'id'} );
+		$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$project{'id'} );
 
 		if ( $services{'Scoring'} ) {
 			my $score_specs = openprint::service::get_specs_ref( $$project{'id'}, $services{'Scoring'}[0] );

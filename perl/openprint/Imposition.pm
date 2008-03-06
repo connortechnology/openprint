@@ -193,14 +193,15 @@ sub load {
 		$$self{'spread_columns'} = $$specs{'SpreadCols'.$qty_index};
 		$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
 		$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
+		$$self{'spread_size'} = $$specs{'txtSpreadSize'};
 	} else {
 		$$self{'spread_rows'} = int($$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
 		$$self{'spread_columns'} = int($$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
-		#$$self{'spread_rows'} = 1;
-		#$$self{'spread_columns'} = 1;
-		$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
+		$$self{'spread_size'} = $$self{'spread_rows'} * $$self{'spread_columns'} * 2;
+		$$self{'spread_rows'} = 1;
+		$$self{'spread_columns'} = 1;
+		$$self{'spreads'} = 1;
 	} # end if
-	$$self{'spread_size'} = $$specs{'txtSpreadSize'};
 
 } # end sub load
 
