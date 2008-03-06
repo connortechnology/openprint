@@ -388,6 +388,11 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
 				@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
+$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+if ( ! $variable{'ServiceIndex'} ) {
+$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+$variable{'ServiceIndex'} = $service_index;
+} # end if
 
 				if ( $third eq 'prin' ) {
 					$log->debug("** START OF MAIN:PROJ:PRIN * ($project_index) ($service_index)");

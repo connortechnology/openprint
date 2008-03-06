@@ -14,12 +14,13 @@ body {
 	background: none;
 	height: auto;
 }
-#Header #Logo {
+body #Header #Logo {
 	background: none;
 	color: #000000;
 	float: none;
+	padding: 0px;
 }
-#Header #Logo a {
+body #Header #Logo a {
 	background: none;
 	color: #000000;
 }

@@ -1,0 +1,69 @@
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript">
+	 function load_cars( form ) {
+		 $('Results').innerHTML = 'Please wait...';
+		 new Ajax.Updater('Results','_car_results.html', {method:'get',parameters:Form.serialize(form)});
+	 } // end function
+</script>
+<? if ( $$variable{'information'} ) ?>
+<p class="information"><?information?></p>
+<hr/>
+<? endif ( $$variable{'information'} ) ?>
+Please select a CAR to view/edit.<br>
+<form id="f1" name="f1" method="post" action="car.html">
+	<fieldset class="filters"><legend>Choose CAR</legend>
+		<p>
+			<label for="car_id">CAR ID #</label>
+			<input type="text" id="car_id" name="car_id" size="10" onkeypress="return input_handler( this, event);"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="cars.html">
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<? eval (
+			if ( ! $openprint::session{'/employee/iso/cars.html?StartYear'} ) {
+				@openprint::session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
+			} # end if
+			if ( ! $openprint::session{'/employee/iso/cars.html?EndYear'} ) {
+				@openprint::session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'} = Date::Calc::Today();
+			} # end if
+			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, 
+				@openprint::session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'}
+				);
+			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, 
+				@openprint::session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'}
+				);
+		) ?>
+		<p>
+			<label>Date Issued:</label>
+			<span class="DateSelector">
+			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartYears?></select>
+			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartMonths?></select>
+			<select name="StartDay"><option value="">select</option><?StartDays?></select>
+			to 
+			</span>
+			<span class="DateSelector">
+			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndYears?></select>
+			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndMonths?></select>
+			<select name="EndDay"><option value="">select</option><?EndDays?></select>
+			</span>
+		</p>
+		<p>
+			<label>Docket:</label>
+			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/iso/cars.html?Docket'} ) ?>"  />
+		</p>
+		<p>
+			<label>FSC Code:</label>
+			<input type="text" name="fsc_code" size="13" value="<? echo ( $openprint::session{'/employee/iso/cars.html?fsc_code'} ) ?>"  />
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_cars(f2);", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'car.html', 'Add New CAR' ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">document.f1.car_id.focus();</script>
+<div id="Results"><!--#include virtual="_car_results.html"--></div>

@@ -1,0 +1,61 @@
+<? eval (
+   if ( $openprint::param{StartYear} ) {
+		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
+			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
+				$openprint::session{'/employee/iso/cars.html?'.$key} = join(';', @{$openprint::param{$key}} );
+			} else {
+				$openprint::session{'/employee/iso/cars.html?'.$key} = $openprint::param{$key};
+			}
+		} # end foreach
+	} # end if
+
+	if ( ! $openprint::session{'/employee/iso/cars.html?StartYear'} ) {
+		@openprint::session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
+		@openprint::session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'} = Date::Calc::Today();
+	} # end if
+	@{$$variable{'CARs'}} = openprint::CAR::find( 
+		'issued_on_start'	=>	sprintf('%.4d-%.2d-%.2d', @openprint::session{
+			'/employee/iso/cars.html?StartYear',
+			'/employee/iso/cars.html?StartMonth',
+			'/employee/iso/cars.html?StartDay'} ),
+		'issued_on_end'	=>	sprintf('%.4d-%.2d-%.2d', @openprint::session{
+			'/employee/iso/cars.html?EndYear',
+			'/employee/iso/cars.html?EndMonth',
+			'/employee/iso/cars.html?EndDay'} ),
+		'docket'	=>	$openprint::session{'/employee/iso/cars.html/Docket'},
+		'order'		=>	'id',
+		);
+) ?>
+<? if ( @{$$variable{'CARs'}} ) ?>
+<form id="CARResults" name="CARResults" action="cars.html" method="post">
+	<table class="List">
+		<tr>
+			<th align="left" width="75">CAR ID</th>
+			<th align="left" width="75">Issued On</th>
+			<th align="left" width="60">Docket</th>
+			<th align="left">Problem</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $CAR ( @{$$variable{'CARs'}} ) {
+				$html .= "<tr$rowclass>";
+				$html .= sprintf( '<td><a href="car.html?car_id=%d">%d</a></td>', $$CAR{'id'}, $$CAR{'id'}, );
+				$html .= sprintf( '<td><a href="car.html?car_id=%d">%s</a></td>', $$CAR{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($CAR->issued_on()) ), );
+				$html .= '<td>';
+				$html .= $CAR->docket();
+				$html .= '</td>';	
+				$html .= '<td>';
+				$html .= $CAR->problem();
+				$html .= '</td>';	
+				$html .= '</tr>';
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach CAR
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<? else ( @{$$variable{'CARs'}} ) ?>
+There were no CARs matching your search criteria.
+<? endif ( @{$$variable{'CARs'}} ) ?>

@@ -41,7 +41,7 @@ Projects listed in red have changed price from the time this quote was originall
 	</tr>
 	<? while ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 	<tr<?rowclass?>> 
-		<td><font color="<?colour?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?project_name?></a></font></td>
+		<td><font color="<?colour?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? hecho ( new openprint::Project( $$variable{'project_index'} )->reference() ) ?></a></font></td>
 		<td colspan="5">
 			<table>
 				<? while ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>

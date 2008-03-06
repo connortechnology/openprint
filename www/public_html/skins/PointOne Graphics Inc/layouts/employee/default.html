@@ -41,17 +41,16 @@
 				<td><a href="/index.html"><span id="PointOne">PointOne</span><br/><span id="GraphicsInc">GRAPHICS INC</span></a></td>
 				</tr></table>
 			</div>
- <div id="CurrencySelection">
-                    Currently selected currency:
-                    <form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
-                        <select name="select_currency_id" onchange="this.form.submit();">
-                            <? echo (
-                                ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
-                            ) ?>
-                        </select>
-                    </form>
-                </div>
-
+			<div id="CurrencySelection">
+				Currently selected currency:
+				<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
+					<select name="select_currency_id" onchange="this.form.submit();">
+					<? echo (
+							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
+							) ?>
+					</select>
+				</form>
+			</div>
 			<div class="Menu">
 					<ul id="menubar">
 						<li class="off"><a href="/employee/index.html">HOME</a></li>
@@ -122,6 +121,11 @@
 							</ul>
 						</li>
 						<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+						<li id="ISOMenu" class="<? echo ( $r->uri() =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ISOMenu'), 'off', 'on');return false;">ISO</a>
+							<ul>
+								<li><a href="/employee/iso/cars.html;NOSSL">&raquo; Corrective Action Requests</a></li>
+							</ul>
+						</li>
 						<li id="SupportMenu" class="<? echo ( $r->uri() =~ /employee\/support/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SupportMenu'), 'off', 'on');return false;">SUPPORT</a>
 							<ul>
 								<li><a href="/employee/support/helpdesk_search.html;NOSSL">&raquo; Help Desk</a></li>

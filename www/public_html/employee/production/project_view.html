@@ -106,11 +106,12 @@ function open_window( page ) {
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
 	</table>
-<? if ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
-<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
-<? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
-<span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
-
+<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
+	<? if ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+	<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
+	<? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+	<span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
+<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
 	<br/>
 	<span style="float: left;">
 		<? echo ( join('',

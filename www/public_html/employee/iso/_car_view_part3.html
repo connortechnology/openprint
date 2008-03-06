@@ -1,0 +1,34 @@
+<h3>Part 3 (To be completed by recipient)</h3>
+<table class="View">
+	<tr><td width="100%" colspan="10">CORRECTIVE/PREVENTATIVE ACTION</td></tr>
+	<tr>
+		<td width="20%" colspan="2" rowspan="2">Re-print Job Request</td>
+		<td width="10%" colspan="1">Reprint for:</td>
+		<td width="20%" colspan="2"><? hecho ( $$variable{'CAR'}->reprint() ) ?></td>
+		<td width="20%" colspan="2">Expected Reprint On</td>
+		<td width="30%" colspan="3"><? hecho ( $$variable{'CAR'}->reprint_on() ) ?></td>
+	</tr>
+	<tr>
+		<td width="10%" colspan="1">Art Work:</td>
+		<td width="20%" colspan="2"><? hecho ( $$variable{'CAR'}->artwork() ) ?></td>
+		<td width="20%" colspan="2">Approved by:</td>
+		<td width="30%" colspan="3"><? hecho ( new openprint::User( $$variable{'CAR'}->approved_by_id())->name() ) ?></td>
+	</tr>
+	<tr><td width="100%" colspan="10"><? hecho ( $$variable{'CAR'}->action() ) ?></td></tr>
+	<tr>
+		<td width="20%" colspan="1">Recipient:</td>
+		<td width="20%" colspan="4"><? hecho ( new openprint::User( $$variable{'CAR'}->part3_user_id())->name() ) ?></td>
+		<td width="10%" colspan="1">Date</td>
+		<td width="40%" colspan="4"><? hecho ( $$variable{'CAR'}->part3_signed_on() ) ?></td>
+	</tr>
+</table>
+<? if ( ($$variable{'CAR'}->part2_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+	<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart3', 'edit.gif', sprintf(q`new Ajax.Updater('Part3', '_car_edit_part3.html', { method: 'get', parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), '', 'Edit' ); ) ?>.
+	</p>
+<? endif ( ($$variable{'CAR'}->part2_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<? if ( ( ! $$variable{'CAR'}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<div id="Part4">
+<!--#include virtual="_car_edit_part4.html"-->
+</div>
+<? endif ( ( ! $$variable{'CAR'}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
