@@ -644,10 +644,11 @@ sub get_price {
 	my ( $self, $qty ) = @_;
     my %price;
 
+	my $factor = 1;
 	if ( $$self{'width'} and $$self{'height'} and $$self{'start_width'} and $$self{'start_height'} ) {
 		# It's a sheet
 		if ( $$self{'start_width'} != $$self{'width'} or $$self{'start_height'} != $$self{'height'} ) {
-			my $factor = ( $$self{'start_width'} / $$self{'width'} ) * ( $$self{'start_height'} / $$self{'height'} );
+			$factor = ( $$self{'start_width'} / $$self{'width'} ) * ( $$self{'start_height'} / $$self{'height'} );
 			$qty /= $factor;
 			$qty = int( $qty );
 		} # endif
@@ -708,9 +709,11 @@ sub get_price {
 			$price{'Price'} *= $$self{'mweight'} / 100000;
 		} # end if
 	} elsif ( ( lc $price{'units'} ) eq 'per m' ) {
-		$price{'100lb'} = $price{'Price'} * $price{'mweight'} / 100;
+		$price{'100lb'} = ($price{'Price'} * $price{'mweight'} /$factor) / 100;
 		$price{'Cost'} /= 1000;
+		$price{'Cost'} /= $factor;
 		$price{'Price'} /= 1000;
+		$price{'Price'} /= $factor;
 	} else {
 $openprint::log->warn("Invalid units in Paper.");
 		$price{'100lb'} = $price{'Price'};

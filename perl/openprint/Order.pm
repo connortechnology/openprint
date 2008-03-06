@@ -161,7 +161,7 @@ $openprint::log->debug("Loaded order: " . $$self{'id'} );
 		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
-$openprint::log->debug("Loaded order: " . $$self{'id'} );
+$openprint::log->debug("Loaded order: " . $$self{'id'} . ', company_id: ' . $$self{'company_id'} );
 } # end sub load
 
 sub save {

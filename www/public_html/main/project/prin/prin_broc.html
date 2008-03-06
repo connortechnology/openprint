@@ -28,6 +28,9 @@
 <script type="text/javascript" src="/javascripts/templates/brochures.js?version=1.0"></script>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
+		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
+		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
+		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 		<fieldset><legend><?ProjectTypeName?></legend>
 <? if ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
                 <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
@@ -159,10 +162,8 @@
 <hr/>
 		<!--#include virtual="/includes/main/proj/press_approval.html"-->
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-
-		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
-		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
-		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 	</form>
 </div><!-- Service -->
-<script type="text/javascript"> selectProjectTemplate( 'f1' );</script>
+<script type="text/javascript">
+addLoadEvent( function () {selectProjectTemplate( 'f1' )});
+</script>

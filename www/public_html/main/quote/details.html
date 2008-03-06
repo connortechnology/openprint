@@ -81,7 +81,7 @@
 			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 			<? eval ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
 			<tr<?rowclass?>> 
-				<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?>&nbsp;</a></td>
+				<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? hecho ( $$variable{'reference'} ) ?>&nbsp;</a></td>
 				<td align="center"> 
 					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6"  value="<?markup?>" onkeyup="calc_from_markup(f1, this);"/>
 				</td>
