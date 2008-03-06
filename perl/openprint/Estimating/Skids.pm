@@ -103,7 +103,7 @@ sub calc {
 		$$specs{'alert'} .= "Dimensions of project are not known. Please enter them.";
 		return 'uncalculated';
 	} # end if
-	$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $log, $dbh, $project_index );
+	$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	if ( ! $$specs{'txtFinishedCalliper'} ) {
 		return 'uncalculated';
 	} # end if
