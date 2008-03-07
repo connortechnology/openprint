@@ -1008,12 +1008,14 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 
 		$$specs{'PreviousPlates'.$qty_index} = 0;
 		$$specs{'PreviousBlankPlates'.$qty_index} = 0;
+		$$specs{'PreviousForms'.$qty_index} = 0;
 		foreach my $index ( $Project->signatures() ) {
 	# Get plates in each previous signature, so we can get qty discounts
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$$specs{'PreviousPlates'.$qty_index} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$$specs{'PreviousBlankPlates'.$qty_index} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
+			$$specs{'PreviousForms'} += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
 		} # end foreach $index
 
 		$$project{print_sides} = 1;
@@ -1651,6 +1653,7 @@ $openprint::log->debug("QTY: $qty_index");
 			my $upq = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 			my $pp = $$specs{'PreviousPlates'.$qty_index};
 			my $pbp = $$specs{'PreviousBlankPlates'.$qty_index};
+			my $pf = $$specs{'PreviousForms'.$qty_index};
 			my $si = $$specs{'StitchingImposition'.$qty_index};
 
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $imp->pages();
@@ -1676,6 +1679,7 @@ $openprint::log->debug("QTY: $qty_index");
 				# Need to update these too. 
 				$new_specs{'PreviousPlates'.$qty_index} += $$price{'txtPlateQuantity'};
 				$new_specs{'PreviousBlankPlates'.$qty_index} += $$price{'txtBlankPlateQuantity'};
+				$new_specs{'PreviousForms'.$qty_index} += 1;
 
 				# When new_specs refers to a different service, we need to update it
 				$new_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
@@ -1802,6 +1806,7 @@ $openprint::log->debug("Using cache: ".$new_specs{'txtUnspecifiedPageQuantity'.$
 				last if %best_price and check_price( $best_price{'Comparison Cost'}, $price, $specs, $qty_index, $imp, 'Sig' );
 			} # end while
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = $upq;
+			$$specs{'PreviousForms'.$qty_index} = $pf;
 			$$specs{'PreviousPlates'.$qty_index} = $pp;
 			$$specs{'PreviousBlankPlates'.$qty_index} = $pbp;
 			$$specs{'StitchingImposition'.$qty_index} = $si;
@@ -2200,8 +2205,13 @@ sub calc_price {
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
 		my %ImpositionMakeReady;
-		if ( ! ( %ImpositionMakeReady = openprint::service::get_price_object( 'ImpositionMakeReady'.$Project->Type()->strid(),'',$Press ) ) ) {
-			%ImpositionMakeReady = openprint::service::get_price_object( 'ImpositionMakeReady','',$Press );
+		my $service = 'ImpositionMakeReady'.$Project->Type()->strid();
+		if ( ! ( %ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press ) ) ) {
+			$service = 'ImpositionMakeReady';
+			%ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press );
+		} # end if
+		if ( $ImpositionMakeReady{units} eq 'Per Form' ) {
+			%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'} + 1, $Press );
 		} # end if
 
 		$price{'Imposition MakeReady'} = $ImpositionMakeReady{'Price'};
@@ -2730,18 +2740,7 @@ sub press_setup_cost {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press);
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
 	} elsif ( $Price{'units'} eq 'Per Form' ) {
-
-		my $previous_forms = 0;
-# Need to figure out how many similar forms we have
-		foreach my $ss_id ( $Project->signatures() ) {
-#$openprint::log->debug("Previous Forms: $previous_forms, $ss_id, $service_index ");
-			next if $service_index and ($ss_id >= $service_index);
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-			$previous_forms += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
-#$openprint::log->debug("Previous Forms: $previous_forms");
-		} # end foreach
-
-		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $previous_forms + 1, $Press);
+		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'} + 1, $Press);
 		$Price{'Total'} = $Price{'Price'};
 	} else { # Per Unit
 		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
