@@ -491,8 +491,8 @@ $Imposition->display();
 		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'} );
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $$price{'Total Cost'} / $qty );
 		my $mprice = $$price{'Impression Price'};
-		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if %$Varnish;
-		$mprice += $$Aqueous{'Total'} if %$Aqueous;
+		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
+		$mprice += $$Aqueous{'Total'} if $Aqueous;
 		
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', ((($mprice + $$price{'Ink Price'} )/ $qty)*1000 ) + $$price{'Paper 1000 Price'} );
 
@@ -1440,7 +1440,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $best_price{'Total Cost'} / $qty );
 		my $mprice = $best_price{'Impression Price'};
 		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
-		$mprice += $$Aqueous{'Total'} if %$Aqueous;
+		$mprice += $$Aqueous{'Total'} if $Aqueous;
 		
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', ((($mprice + $best_price{'Ink Price'} )/ $qty)*1000 ) + $best_price{'Paper 1000 Price'} );
 
@@ -1793,7 +1793,7 @@ $openprint::log->debug("Using cache: ".$new_specs{'txtUnspecifiedPageQuantity'.$
 				$$price{'Comparison Cost'} += $additional_price;
 				if ( $$sig_price{'Imposition'} ) {
 					$$price{'AdditionalSignature Breakdown'} .= sprintf($sigs . ' Additional Sig %dpages %dout %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $additional_price ) . '<br/>';
-					#$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
+					$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
 				} else {
 					$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 				} # end if
@@ -2324,14 +2324,14 @@ sub calc_price {
 		my $InkMaterial;
 
 		if ( $$special_colours{$real_colour} ) {
-$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
+#$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
 			$InkMaterial = new openprint::Material( $$special_colours{$real_colour}->{material_id} );
 			%ink_price = $InkMaterial->get_price( undef, $Press );
 		} # end if
 		if ( ! %ink_price ) {
-$openprint::log->debug("Getting price for $colour");
+#$openprint::log->debug("Getting price for $colour");
 			if ( my @Materials = openprint::Material::find('name'=>$colour) ) {
-$openprint::log->debug("Got price for $colour");
+#$openprint::log->debug("Got price for $colour");
 				$InkMaterial = $Materials[0];
 				%ink_price = $Materials[0]->get_price( undef, $Press );
 			} # end if
