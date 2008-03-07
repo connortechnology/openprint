@@ -429,12 +429,23 @@ sub calc_from_imposition {
 			$$specs{'txtPressSheetQty'.$qty_index} = 0;
 			$$specs{'hdnNetSheetCount'.$qty_index} = 0;
 			$$specs{'SheetQuantity'.$qty_index} = 0;
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
-		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', 0 );
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+			$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', 0 );
 			next;
 		} # end if
 		my $Imposition = shift @{$$source_specs{'Additional Impositions'.$qty_index}};
 $Imposition->display();
+		$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
+		$$specs{'ddmPress'.$qty_index} = $Imposition->Press()->strid();
+		$$specs{'PageQuantity'.$qty_index} = $Imposition->pages();
+
+		$$specs{'PreviousForms'.$qty_index} = 0;
+		foreach my $index ( $Project->signatures() ) {
+			next if $service_id and ($index >= $service_id);
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			$$specs{'PreviousForms'.$qty_index} += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
+		} # end foreach $index
+$openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} );
 
 		my $pms_prices = get_special_colours_price( $Imposition->Press(), \@filtered_colours, \%mixed_colours, \%washed_colours, \%special_colours, $qty_index );
 
@@ -1008,14 +1019,12 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 
 		$$specs{'PreviousPlates'.$qty_index} = 0;
 		$$specs{'PreviousBlankPlates'.$qty_index} = 0;
-		$$specs{'PreviousForms'.$qty_index} = 0;
 		foreach my $index ( $Project->signatures() ) {
 	# Get plates in each previous signature, so we can get qty discounts
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$$specs{'PreviousPlates'.$qty_index} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$$specs{'PreviousBlankPlates'.$qty_index} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
-			$$specs{'PreviousForms'} += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
 		} # end foreach $index
 
 		$$project{print_sides} = 1;
@@ -1643,6 +1652,18 @@ $openprint::log->debug("QTY: $qty_index");
 #my $starttime = gettimeofday();
 #$imp->display();
 
+		$$specs{'ddmRunStyle'.$qty_index} = $imp->runstyle();
+		$$specs{'ddmPress'.$qty_index} = $Press->strid();
+		$$specs{'PageQuantity'.$qty_index} = $imp->pages();
+
+		$$specs{'PreviousForms'.$qty_index} = 0;
+		foreach my $index ( $Project->signatures() ) {
+			next if $service_index and ($index >= $service_index);
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			$$specs{'PreviousForms'.$qty_index} += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
+		} # end foreach $index
+$openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} );
+
 #my $time = gettimeofday();
 		$imp = $imp->copy();
 		my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, (%best_price ? $best_price{'Comparison Cost'} : 0), $pms_prices, $inkCoverage, $special_colours );
@@ -2206,12 +2227,18 @@ sub calc_price {
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
 		my %ImpositionMakeReady;
 		my $service = 'ImpositionMakeReady'.$Project->Type()->strid();
-		if ( ! ( %ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press ) ) ) {
+		if ( ! ( %ImpositionMakeReady = openprint::service::get_price_object( $service, '', $Press ) ) ) {
 			$service = 'ImpositionMakeReady';
 			%ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press );
 		} # end if
+		if ( ! %ImpositionMakeReady ) {
+			$openprint::log->debug("$service no price found");
+		} # end if
 		if ( $ImpositionMakeReady{units} eq 'Per Form' ) {
-			%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'} + 1, $Press );
+#$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
+			%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'.$qty_index} + 1, $Press );
+		} else {
+$openprint::log->debug("Make Ready iunts " . $ImpositionMakeReady{units} );
 		} # end if
 
 		$price{'Imposition MakeReady'} = $ImpositionMakeReady{'Price'};
@@ -2740,7 +2767,7 @@ sub press_setup_cost {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press);
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
 	} elsif ( $Price{'units'} eq 'Per Form' ) {
-		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'} + 1, $Press);
+		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
 		$Price{'Total'} = $Price{'Price'};
 	} else { # Per Unit
 		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
@@ -2899,7 +2926,7 @@ sub compare_signatures_runstyle {
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
 		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity' ) {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
-				#$openprint::log->debug("Not the same $key $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
+				$openprint::log->debug("Not the same $key $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
 				return 0;
 
 			} # end if
@@ -2929,7 +2956,7 @@ sub compare_signatures_runstyle {
 			'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','ddmBleedSize',
 			) {
 				if ($$sig1{$key} ne $$sig2{$key} ) {
-#$openprint::log->debug("Not the same $key");
+$openprint::log->debug("Not the same $key $$sig1{$key} ne $$sig2{$key}");
 					return 0;
 				} # end if
 			} # end foreach

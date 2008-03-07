@@ -20,7 +20,7 @@ use strict;
 require openprint::service;
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 
 my %variables = (
         'ProjectIndex'=>[],'ServiceIndex'=>[],
