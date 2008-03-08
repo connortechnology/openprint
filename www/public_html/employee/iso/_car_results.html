@@ -10,8 +10,8 @@
 	} # end if
 
 	if ( ! $openprint::session{'/employee/iso/cars.html?StartYear'} ) {
+		@openprint::session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
 		@openprint::session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'} = Date::Calc::Today();
-		@openprint::session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'} = Date::Calc::Today();
 	} # end if
 	@{$$variable{'CARs'}} = openprint::CAR::find( 
 		'issued_on_start'	=>	sprintf('%.4d-%.2d-%.2d', @openprint::session{

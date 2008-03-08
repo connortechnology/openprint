@@ -37,9 +37,9 @@
 	</tr>
 	<tr>
 		<td>Docket No:</td>
-		<td><input type="text" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" size="6"/></td>
+		<td><input type="text" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" size="6" onkeyup="this.value=this.value.replace(/\D/, '' );new Ajax.Request('_select_customer_from_docket.json', {method:'get', parameters: {docket:this.value}} );" /></td>
 		<td>Customer:</td><td width="30%" colspan="3">
-<select name="company_id" style="width: 100%;">
+<select id="company_id" name="company_id" style="width: 100%;">
 <? echo ( openprint::Company::get_dropdown( $$variable{'CAR'}->company_id() ) ) ?>
 </select>
 		</td>
@@ -62,7 +62,7 @@
 	my $html = '';
 	my @presses = split(';', $$variable{'CAR'}->presses());
 	foreach my $Press ( openprint::Equipment::find('category'=>'Printing','use_in_scheduling'=>1) ) {
-$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d" %3$s/><label for="presses%1$d">%2$s</abel>', $Press->id(), $Press->strid(), sets::isin( $Press->id(), @presses ) ? 'checked="checked"' : '' );
+$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d" %3$s/><label for="presses%1$d">%2$s</abel>', $Press->id(), $Press->name(), sets::isin( $Press->id(), @presses ) ? 'checked="checked"' : '' );
 	} # end foreach
 	return $html;
 ) ?>

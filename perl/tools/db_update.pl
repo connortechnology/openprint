@@ -243,6 +243,13 @@ $dbh->do(q{insert into stockpurposes (name) values ('House Stock')});
 $dbh->do(q{insert into stockpurposes (name) values ('Job Stock')});
 $dbh->do(q{insert into stockpurposes (name) values ('Sample')});
 
+$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on});
+$dbh->do(q{alter table paper_inventory add id integer});
+$dbh->do(q{create sequence paperinventory_id_seq});
+$dbh->do(q{alter table paper_inventory alter id set nextval('paperinventory_id_seq')});
+$dbh->do(q{update paper_inventory set id=nextval('paperinventory_id_seq')});
+$dbh->do(q{alter table paper_inventory alter id set not null});
+$dbh->do(q{alter table paper_inventory add primary key(id)});
 	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1898;

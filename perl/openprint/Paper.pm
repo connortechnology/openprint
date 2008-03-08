@@ -665,12 +665,11 @@ sub get_price {
 	my ( $self, $qty ) = @_;
     my %price;
 
-	$qty = $qty if ! $qty;
-
+	my $factor = 1;
 	if ( $$self{'width'} and $$self{'height'} and $$self{'start_width'} and $$self{'start_height'} ) {
 		# It's a sheet
 		if ( $$self{'start_width'} != $$self{'width'} or $$self{'start_height'} != $$self{'height'} ) {
-			my $factor = ( $$self{'start_width'} / $$self{'width'} ) * ( $$self{'start_height'} / $$self{'height'} );
+			$factor = ( $$self{'start_width'} / $$self{'width'} ) * ( $$self{'start_height'} / $$self{'height'} );
 			$qty /= $factor;
 			$qty = int( $qty );
 		} # endif

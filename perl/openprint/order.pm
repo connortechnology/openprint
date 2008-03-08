@@ -17,6 +17,7 @@ require openprint::service;
 require openprint::Order;
 require openprint::OrderedProduct;
 require openprint::usergroup;
+require openprint::press_schedule;
 
 sub delete_order {
 	my ( $log, $dbh, $order_id ) = @_;
@@ -915,6 +916,8 @@ sub finalise_order {
 			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
 			$Project->save();	
 			$Project->update_status();
+
+			openprint::press_schedule::add_project_to_press_schedule( $Project );
 		} # end foreach
 		update_order_status( $r, $log, $dbh, $order_id );
 # send out email notifications
@@ -1379,6 +1382,7 @@ sub cancel_order {
 		$Project->docket( undef );
 		$Project->save();
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
+		openprint::press_schedule::remove( $Project->id() );
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );
 } # end sub cancel_order

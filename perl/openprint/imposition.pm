@@ -233,7 +233,6 @@ sub calc_setup_object {
 		$bindery_gutters = $Press->specification('PerfectBindGutter');
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
 	} # end if
-
 	my @bleed_locations =  split(',', $$specs{'BleedLocations'} );
 	my $bleed_width  = 2*$bindery_bleed;
 	my $bleed_height  = 2*$bindery_bleed;
@@ -255,6 +254,7 @@ sub calc_setup_object {
 	} # end if
 	$bleed_width = 0 if $bleed_width < 0;
 	$bleed_height = 0 if $bleed_height < 0;
+#$openprint::log->debug("BleedSize: $$specs{'BleedSize'} bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
 	$setup1->image_width( $image_width + $bleed_width );
 	$setup1->image_height( $image_height );
@@ -276,6 +276,7 @@ sub calc_setup_object {
 	if ( sets::isin( 'Left', \@bleed_locations ) ) {
 		$gutters -= $$specs{'BleedSize'};
 	} # end if
+#$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
 #$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 
 	$gutters = 0 if $gutters < 0;
@@ -315,7 +316,7 @@ sub calc_setup_object {
 		# On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 		if ( ( ! $paper_height ) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
 			$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
-			#$openprint::log->debug("*** Using Max Image Length1: $adjusted_paper_height ***") if $debug;
+			$openprint::log->debug("*** Using Max Image Length1: $adjusted_paper_height ***") if $debug;
 		} # end if
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};

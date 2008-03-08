@@ -141,23 +141,7 @@ sub view {
 					} # end if completion date has changed
 
 					if ( $openprint::param{'ScheduleForPress'} eq 'Y' ) {
-						my $ac = sql::start_transaction( $dbh );
-
-						foreach my $s_s_id ( $Project->signatures() ) {
-							my %sig_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $s_s_id );
-							sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ServiceIndex=?}, $s_s_id );
-							my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $s_s_id );
-							if ( my @Equipment = openprint::Equipment::find('strid'=>$sig_specs{'UsePress'}) ) {
-								$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
-								if ( $_ ) {
-									$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
-								} else {
-									$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $sig_specs{'SignatureIndex'} to pending press schedule." );
-
-								} # end if
-							} # end if
-						} # end foreach
-						sql::end_transaction( $dbh, $ac );
+						$$variable{'error'} .= openprint::press_schedule::add_project_to_press_schedule( $Project );
 					} # end if
 
 					if ( (! exists $openprint::param{'rdbApproved'} ) or ($openprint::param{'rdbApproved'}  eq 'Y') ) {
@@ -312,23 +296,7 @@ sub view {
 	} elsif ( $openprint::param{'btnFunction'} eq 'AddToBinderySchedule' ) {
 		openprint::bindery_schedule::add_project( $Project );
 	} elsif ( $openprint::param{'btnFunction'} eq 'AddToPressSchedule' ) {
-		my $ac = sql::start_transaction( $dbh );
-
-		foreach my $s_s_id ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
-			my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $s_s_id );
-			if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
-				$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
-				if ( $_ ) {
-					$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
-				} else {
-					$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending press schedule." );
-
-				} # end if
-			} # end if
-		} # end foreach
-		sql::end_transaction( $dbh, $ac );
+		$$variable{'error'} = openprint::press_schedule::add_project_to_press_schedule( $Project );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Add Service' ) {
 
 		if ( $openprint::param{'NewServiceType'} ) {

@@ -14,6 +14,7 @@ require openprint::employee_project;
 require openprint::employee_schedule;
 require openprint::bindery_schedule;
 require openprint::press_schedule;
+require openprint::employee_project;
 
 require sql;
 require openprint::MXML;
@@ -372,7 +373,7 @@ sub projects {
 } # end sub list_current
 
 sub project_view {
-	openprint::employee_project::view( @_ );
+	return openprint::employee_project::view( @_ );
 } # end sub view_project
 
 sub send_additional_charges_notifications {

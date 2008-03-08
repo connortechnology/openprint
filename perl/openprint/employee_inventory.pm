@@ -10,6 +10,7 @@ require openprint::pricelist;
 require openprint::paper_price;
 require openprint::paper_priceset;
 require openprint::StockPurpose;
+require openprint::PaperInventory;
 
 sub skids {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -63,10 +64,40 @@ sub skids {
 sub paper {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	if ( $openprint::param{'btnFunction'} eq 'Download Log' ) {
+	if ( $openprint::param{'btnFunction'} eq 'Consumption Report' ) {
+		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
+		my @data;
+		my @inventory = openprint::PaperInventory::find(
+				'updated_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'StartYear','StartMonth','StartDay'} ),
+				'updated_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} ),
+				'order'=>'updated_on',
+		);
+		foreach my $I ( @inventory ) {
+			my $Paper = $I->Paper();
+			push @data, 
+Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())),
+				$I->User()->name(),
+				$Paper->Owner()->name(),
+				$Paper->name(),
+				$Paper->finish(),
+				$Paper->colour(),
+				$Paper->weight(),
+				$Paper->width(),
+				$Paper->height(),
+				$Paper->quality(),
+				$Paper->mweight(),
+				$Paper->gsm(),
+				$I->skid_id(),
+				$I->delta . $I->units,
+				$I->comment;
+		} # end while
+		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+		push @data, ( 'Report generated',$date,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef );
+		misc::export_csv( $r, $log, $variable, "PaperConsumption $date.csv", \@header, \@data );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Download Log' ) {
 
 		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
-		my @info = sql::execute( $log, $dbh, q{SELECT paper_id, skid_id, user_id, delta, units, updatetime, comment FROM paper_inventory ORDER BY updatetime DESC} );
+		my @info = sql::execute( $log, $dbh, q{SELECT paper_id, skid_id, user_id, delta, units, updated_on, comment FROM paper_inventory ORDER BY updated_on DESC} );
 		my @data;
 		while ( my ( $paper_id, $skid_id, $user_id, $delta, $units, $time, $comment ) = splice @info, 0, 7 ) {
 			my $Paper = new openprint::Paper( $paper_id );
@@ -90,7 +121,7 @@ sub paper {
 		misc::export_csv( $r, $log, $variable, "PaperInventoryLog $date.csv", \@header, \@data );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Download Inventory' ) {
 
-		my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Date Added','Location', 'InStock');
+		my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','Date Added','Location', 'InStock');
 		my @papers = openprint::Paper::find(
 				'owner_id'	=>	( defined $openprint::param{'Owner'} ? $openprint::param{'Owner'} : '' ),
 				'manufacturer_id'	=>	( defined $openprint::param{'PaperManufacturer'} ? $openprint::param{'PaperManufacturer'} : undef ),
@@ -98,7 +129,11 @@ sub paper {
 				'finish_id' =>	( defined $openprint::param{'PaperFinish'} ? $openprint::param{'PaperFinish'} : undef ),
 				'colour_id' =>	( defined $openprint::param{'PaperColour'} ? $openprint::param{'PaperColour'} : undef ),
 				'weight_id' =>	( defined $openprint::param{'PaperWeight'} ? $openprint::param{'PaperWeight'} : undef ),
-				'type'		=>	$openprint::param{'type'},
+				'type'		=>	$openprint::param{'Type'},
+				'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'StartYear','StartMonth','StartDay'} ),
+				'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} ),
+				'allocated_to_docket'   => $openprint::param{'Docket'},
+				'fsc_code'  =>  $openprint::param{'fsc_code'},
 				'order_by'	=> 'owner_id,manufacturer_id,name_id,finish_id,colour_id,weight_id,width,height',
 				);
 		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );

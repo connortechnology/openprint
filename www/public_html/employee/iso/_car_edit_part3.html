@@ -24,8 +24,8 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 		</td>
 	</tr>
 	<tr>
-		<td width="20%" colspan="2">Art Work:</td>
-		<td width="20%" colspan="2">
+		<td width="10%" colspan="1">Art Work:</td>
+		<td width="30%" colspan="3">
 			<input type="radio" name="artwork" value="Change" id="artworkChange"/><label class="radio" for="artworkChange">Change</label>
 			<input type="radio" name="artwork" value="No Change" id="artworkNoChange"/><label class="radio" for="artworkNoChange">No Change</label>
 		</td>
@@ -34,7 +34,7 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 		<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
 		</td>
 	</tr>
-	<tr><td width="100%" colspan="10"><textarea name="action" rows="5" style="width:99%;"></textarea></td></tr>
+	<tr><td width="100%" colspan="10"><textarea name="action" rows="5" style="width:99%;"><? hecho ( $$variable{'CAR'}->action(); ) ?></textarea></td></tr>
 	<tr>
 		<td width="20%" colspan="1">Recipient:</td>
 		<td width="20%" colspan="4">

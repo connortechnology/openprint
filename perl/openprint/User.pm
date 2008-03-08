@@ -338,6 +338,13 @@ sub find {
 		$sql .= ' AND ysnaccountactivation=?';
 		push @values, $param{'web_active'};
 	} # end if
+	if ( exists $param{'deleted'} ) {
+		$sql .= ' AND deleted=?';
+		push @values, $param{'deleted'};
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
+	} # end if
 	if ( $param{'order'} ) {
 		$sql .= " ORDER BY $param{'order'}";
 	} # end if
