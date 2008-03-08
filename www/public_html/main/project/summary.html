@@ -40,6 +40,11 @@ There is no current project.
 	</fieldset>
 	<? while ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>
 		<? eval ( 
+foreach my $k ( keys %$variable ) {
+	if ( $k =~ /^chk/ ) {
+	delete $$variable{$k};
+	} # end if
+} # end foreach
 openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
 $$variable{'ServiceSpecifications'} = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
  ) ?>

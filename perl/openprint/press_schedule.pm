@@ -86,7 +86,15 @@ sub add {
 } # end sub add
 
 sub remove {
-	sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, @_ );
+	my ( $p_id, $s_id ) = @_;
+	if ( ! $s_id ) {
+		my $Project = new openprint::Project( $p_id );
+		foreach $s_id ( $Project->signatures() ) {
+			sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $p_id, $s_id );
+		} # end foreach
+	} else {
+		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $p_id, $s_id );
+	} # end if
 }
 
 sub get_li {
@@ -373,6 +381,34 @@ sub set_runtime {
 	sql::update( undef, undef, 'Schedule', ['id=?', $id], 'runtime', $runtime );
 } # end sub set_runtime
 
+sub add_project_to_press_schedule {
+	my ( $Project ) = @_;
+
+	my $error = '';
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+
+	foreach my $s_s_id ( $Project->signatures() ) {
+		next if find('project_id'=>$Project->id(), 'service_id'=>$s_s_id );
+
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
+		my $runtime = openprint::service::get_runtime( $openprint::log, $openprint::dbh, $Project->id(), $s_s_id );
+		if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'},'use_in_estimating'=>1) ) {
+			$_ = sql::insert( undef, undef, 'Schedule', 'ProjectIndex', $Project->id(), 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
+			if ( $_ ) {
+				$error .= 'Error adding to press schedule: ' . $_;
+			} else {
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending press schedule." );
+
+			} # end if
+		} else {
+			$error .= 'Error adding to press schedule: Press not found for signature ' . $_;
+		} # end if
+	} # end foreach
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
+} # end sub add_order_to_press_schedule
 
 1;
 __END__
