@@ -1,0 +1,55 @@
+<style>
+	@media print {
+		input {
+			border: none;
+		}
+		textarea {
+			border: none;
+			overflow: auto;
+		}
+		.titleCSS{
+display: none;
+		}
+		.contentCSS {
+margin: 5px;
+border: none;
+top: 0px;
+left: 0px;
+		}
+
+		body {
+margin: 0px;
+		font-size: 9pt;
+		}
+
+		.menubar {
+		}
+
+		.menu {
+display: none;
+		}
+
+		.Header {
+display: none;
+		}
+
+	}
+	textarea{
+		overflow: auto;
+	}
+</style>
+<form name="f1">
+<fieldset class="filter"><legend>Select Label</legend>
+	<div class="row">
+		<span class="label">Label:</span>
+		<span class="input">
+			<select name="Label" size="1" onChange="LoadContent('Label','/labels/_'+this.options[this.selectedIndex].value+'.html');">
+				<option value=""> select </option>
+				<option value="Ballantine" selected>Ballantine</option>
+			</select>
+		</span>
+	</div>
+</fieldset>
+</form>
+<br/><br/>
+<div id="Label"><!--#include virtual="/labels/_Ballantine.html"--></div>

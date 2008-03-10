@@ -1,0 +1,52 @@
+8
+
+dir
+1293
+svn+ssh://iconnor@cvs.penultima.org/var/lib/subversion/pointone/www.point-one.com/labels
+svn+ssh://iconnor@cvs.penultima.org/var/lib/subversion/pointone
+
+
+
+2006-08-03T02:43:21.562257Z
+797
+iconnor
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+b3fed701-3efb-0310-a9c7-c44689e3d65f
+
+index.html
+file
+
+
+
+
+2006-06-27T15:34:42.000000Z
+7705cdb2d3eac3be063f84115bd2f754
+2006-06-21T16:12:06.179708Z
+662
+iconnor
+
+_Ballantine.html
+file
+
+
+
+
+2006-06-27T15:34:42.000000Z
+95f318003db65a53b2fdeaf891bacd82
+2006-08-03T02:43:21.562257Z
+797
+iconnor
+
