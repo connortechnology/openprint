@@ -1,5 +1,5 @@
 		<style type="text/css">
-		<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/quote.css' ); ) ?>
+		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?>
 		</style>
 		<br class="spacer"/>
 		<!--#include virtual="/includes/quote_header.html"-->
@@ -71,4 +71,4 @@ return $html;
 				<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name:</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
 				<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments:</b><?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
 		<br class="spacer"/>
-		<!--#include virtual="/skins/<? echo ( $openprint::confnig{SiteTitle} ) ?>/includes/quote_disclaimer.html"-->
+		<? hecho ( $config{'QuoteViewDisclaimer'} ) ?>

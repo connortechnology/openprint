@@ -1,5 +1,5 @@
 		<style type="text/css">
-		<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/quote.css' ); ) ?>
+		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?>
 		</style>
 		<br class="spacer"/>
 		<!--#include virtual="/email_content/quote_header.html" -->
@@ -59,4 +59,4 @@
 		<br/>
 		<span class="Currency">All prices are in <b><? echo ( $$variable{'Quote'}->Currency()->name() ) ?></b> and are subject to applicable taxes.</span><br/>
 		<br/>
-		<!--#include virtual="/skins/<?SiteTitle?>/includes/quote_disclaimer.html"-->
+		<? hecho ( $config{'QuoteViewDisclaimer'} ) ?>

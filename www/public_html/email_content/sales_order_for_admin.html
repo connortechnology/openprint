@@ -1,10 +1,10 @@
 <style type="text/css">
-<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/order.css' ); ) ?>
+<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/order.css' ); ) ?>
 </style>
 <table class="Title">
 	<tr>
 		<td><?SiteTitle?> - Sales Order</td>
-		<td align="right"><a href="<? echo ( $openprint::confi{ExternalSecureSiteURL} ) ?>/employee/production/projects.html?order_id=<?OrderID?>" target="_blank"><?OrderID?></a></td>
+		<td align="right"><a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/employee/production/projects.html?order_id=<?OrderID?>" target="_blank"><?OrderID?></a></td>
 	</tr>
 </table>
 <!--#include virtual="/includes/order_header.html"-->

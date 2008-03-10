@@ -1,5 +1,5 @@
 <style type="text/css">
-	<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/project.css' ); ) ?>
+	<? echo ( misc::load_file( $log, $config{'SKinPath'} . '/css/project.css' ); ) ?>
 </style>
 <? eval (
 	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
@@ -83,5 +83,5 @@
 <? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
 <span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
 <br class="spacer"/>
-<!--#include virtual="/skins/<? echo ( $openprint::config{'SiteTitle'} ) ?>/includes/projectview_disclaimer.html"-->
+<? hecho ( $config{'ProjectViewDisclaimer'} ) ?>
 </div>
