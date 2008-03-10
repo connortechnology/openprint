@@ -4,14 +4,15 @@ use Text::Unaccent;
 use MIME::QuotedPrint;
 
 require openprint::Company;
-require logs;
+require openprint::logs;
 require openprint::Usergroup;
 use openprint ();
 use strict;
-use vars qw(%variable $log $dbh);
+use vars qw(%variable $log $dbh %config);
 *variable = \%openprint::variable;
-*log = \$log;
-*dbh = \$dbh;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
 my $debug = 1;
 
@@ -227,7 +228,7 @@ sub delete {
 
 	sql::end_transaction( $dbh, $ac );
 
-	logs::insertLogRecord('14', "User ID: " . $$self{'id'},);
+	openprint::logs::insertLogRecord('14', "User ID: " . $$self{'id'},);
 } # end sub delete
 
 sub next {

@@ -6,10 +6,11 @@ use MIME::Base64;
 use openprint::Currency;
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh);
+use vars qw(%variable $log $dbh %config);
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
 require sql;
 require openprint::logs;
