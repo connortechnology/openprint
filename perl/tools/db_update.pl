@@ -149,8 +149,10 @@ $dbh->do(q{alter table tbl_Materials drop column strdetails});
 $dbh->do(q{alter table tbl_Materials drop column strdescription});
 $dbh->do(q{alter table tbl_Materials rename column lngsupplierindex to supplier_id});
 $dbh->do(q{alter table tbl_Materials rename column lngcategoryindex to category_id});
-$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt1 to taxexempt1});
-$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt2 to taxexempt2});
+
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Materials LIMIT 1', {} );
+$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt1 to taxexempt1}) if exists $$data{ysntaxexempt1};
+$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt2 to taxexempt2}) if exists $$data{ysntaxexempt2};
 $dbh->do(q{alter table tbl_Materials rename to Materials});
 	sql::insert( undef, undef, 'database_info', 'version', 1586, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
@@ -251,7 +253,7 @@ if ( $version < 1899 ) {
 	print "Updating to version 1899\n";
 	my $ac = sql::start_transaction( $dbh );
 $dbh->do(q{alter table skid_contents add primary key (skid_id, paper_id)});
-$dbh->do(q{drop index "skid_contents_skid_id_index"});
+$dbh->do(q{drop index if exists "skid_contents_skid_id_index"});
 	sql::insert( undef, undef, 'database_info', 'version', 1899, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1899;

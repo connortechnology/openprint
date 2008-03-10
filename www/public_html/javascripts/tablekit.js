@@ -92,8 +92,17 @@ Object.extend(TableKit, {
 		}
 		return data.textContent;
 	},
+	deregister: function(){ 
+					TableKit.tables={}; 
+					TableKit.rows={}; 
+					TableKit.cells={}; 
+					TableKit.heads={}; 
+					TableKit._opcache={}; 
+					TableKit._tblcount = 0; 
+					TableKit._cellcount = 0; 
+				}, 
 	register : function(table, options) {
-		if(!table.id) {
+			   if(!table.id) {
 			TableKit._tblcount += 1;
 			table.id = "tablekit-table-" + TableKit._tblcount;
 		}
@@ -184,6 +193,7 @@ setTimeout(TableKit._autoload, 10);
 },
 
   _autoload: function() {
+ TableKit.deregister(); 
    if(TableKit.options.sortable) {
 			$A(TableKit.options.sortableSelector).each(function(s){
 				$$(s).each(function(t) {
