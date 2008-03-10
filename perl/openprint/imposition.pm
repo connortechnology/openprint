@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -94,7 +94,7 @@ sub fix_height {
 # Take the smallest available cut off
 			foreach my $cut_off ( sort split(',', $$specs{'Cut Off'} ) ) {
 				$openprint::log->debug("dutch Cut Off $cut_off " . $imp->used_height() );
-				if ( $cut_off > $imp->used_height() ) {
+				if ( $cut_off >= $imp->used_height() ) {
 					$imp->paper()->height( $cut_off );
 					last;
 				} # end if
@@ -309,6 +309,8 @@ sub calc_setup_object {
 		# For Work & TUmble, the grip happens on the head and tail, but we can print on the backside of the grip so to speak.  So we can tuck the colour bar into the second grip space.
 		$$specs{'Grip Size'} -= $$specs{'colour_bar_size'};
 	} # end if
+	$setup1->grip( $$specs{'Grip Size'} );
+	$setup2->grip( $$specs{'Grip Size'} );
 
 	if ( 
 			( ! $grain_direction )
@@ -358,7 +360,7 @@ sub calc_setup_object {
 		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 
 		my $adjusted_paper_width = $paper_width; 
-#$openprint::log->debug("P Width: $adjusted_paper_width");
+$openprint::log->debug("P Width: $adjusted_paper_width") if $debug;
 		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Left', \@bleed_locations );
 		$cropmarkspace = 0 if $cropmarkspace < 0;
@@ -385,7 +387,7 @@ sub calc_setup_object {
 		$adjusted_paper_width -= $setup1->cropmark_right();
 
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
-#$openprint::log->debug("P Width gutters: $adjusted_paper_width");
+$openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 
 		if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 			calc_setup( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height );
@@ -625,9 +627,9 @@ sub get_imposition {
 		push @styles, 'Perfecting' if $do_perfecting;
 	} # end if
 	if ( $$project{'Runstyles'} ) {
-	#$openprint::log->debug(" *1* Run Styles to consider: @styles ** $$project{'Runstyles'} $do_perfecting") if $debug;
+	$openprint::log->debug(" *1* Run Styles to consider: @styles ** $$project{'Runstyles'} $do_perfecting") if $debug;
 		@styles = sets::intersection( @styles, misc::trim(split(',', $$project{'Runstyles'} ) ) );
-	#$openprint::log->debug(" *2* Run Styles to consider: @styles **") if $debug;
+	$openprint::log->debug(" *2* Run Styles to consider: @styles **") if $debug;
 	} # end if
 
 	return add_imposition( $project, $Paper, $versions, $override_grain_direction, $Press, @styles );
@@ -640,7 +642,7 @@ sub add_imposition {
 
 	#$openprint::log->debug(" ** Run Styles to consider: @styles **") if $debug;
 	foreach my $run_style ( @styles ) {
-		#$openprint::log->debug(" ** Processing Run Style: $run_style on $$Paper{'width'} x $$Paper{'height'} $override_grain_direction**") if $debug;
+		$openprint::log->debug(" ** Processing Run Style: $run_style on $$Paper{'width'} x $$Paper{'height'} $override_grain_direction**") if $debug;
 
 		if ( ! $Paper->cuttable() ) {
 			next if ! sets::isin( $run_style, ['Web','Sheet Work','Perfecting'] );
