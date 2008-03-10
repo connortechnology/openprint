@@ -133,38 +133,7 @@
 			); ) ?>
 		</p>
 	</fieldset>
-	<table id="PapersTable" class="List sortable" style="table-layout: auto;">
-		<thead>
-			<tr>
-				<th style="text-align:center;" width="20"><input type="checkbox" onclick="select_all(document.f1, 'chkPaper', this.checked );"/></th>
-				<th align="left">Inventory #</th>
-				<th align="left">Manufacturer</th>
-				<th align="left">Name</th>
-				<th align="left">Finish</th>
-				<th align="left">Colour</th>
-				<th align="left">Weight</th>
-				<th align="left" width="80" class="area">Size</th>
-				<th align="left" width="50">Calliper</th>
-				<th align="right" width="50">MWeight</th>
-				<th align="right" width="50">GSM</th>
-				<th align="left" width="25">SPP</th>
-				<th align="left" width="25">Cost</th>
-			</tr>
-		</thead>
-		<tbody id="Papers">
-	<!--#include virtual="_papers.html"-->
-		</tbody>
-	</table>
 	<br/>
-	<fieldset>
-		<p class="buttons">
-			<? echo ( join('',
-				ssi::writeButton($log, $dbh, 'New2','new.gif',"",'paper.html','Add A New Paper'),
-				ssi::writeButton($log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete Checked Papers'),
-				#ssi::writeButton($log, $dbh, 'Save2','blah.gif',"show_div('PaperRecommendations', event );",'','Set Paper Recommendations'),
-				ssi::writeButton( $log, $dbh, "Copy2", 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
-			); ) ?>
-		</p>
-	</fieldset>
+	<div id="Papers"><!--#include virtual="_papers.html"--></div>
 	<input type="hidden" name="btnFunction"/>
 </form>
