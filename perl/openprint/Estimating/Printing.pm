@@ -1315,6 +1315,8 @@ $openprint::log->debug("No spread layout for you!");
 				$$specs{'txtSignatureSpreadQuantity'.$qty_index} = $best_price{'txtSignatureSpreadQuantity'};
 				$$specs{'PageQuantity'.$qty_index} = $$specs{'txtSignatureSpreadQuantity'.$qty_index} * $$specs{'txtSpreadSize'};
 			} # end if
+				$$specs{'page_columns'.$qty_index} = $Imposition->page_columns();
+				$$specs{'page_rows'.$qty_index} = $Imposition->page_rows();
 			$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} -= $$specs{'txtSignatureSpreadQuantity'.$qty_index};
 			if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} < 0 ) {
 				$$specs{'alert'} .= "There are more spreads specified than are required.  Please correct this situation.";
