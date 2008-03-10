@@ -1361,7 +1361,7 @@ sub breakdown {
 	$breakdown .= sprintf( "\tPlates: \%d plates * \$%.2f per plate = \$%.2f<br/>", @$price{'txtPlateQuantity','Plate Cost','Plate Price'});
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 	my $stock_qty = $$price{'Stock Quantity'};
-	$breakdown .= sprintf( 'Overs: Base:%s Run:%s FM:%s Additional Plate:%s Total:%s<br/>', @$stock_qty{'Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Total Overs'} );
+	$breakdown .= sprintf( 'Overs: Base:%s Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
 	if ( $Paper->type() ne 'Roll' ) {
 		$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
 		$breakdown .= "\tPaper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
@@ -1861,61 +1861,6 @@ sub calc_price {
 
 	$price{'rdbPlates'} = $plate_setup{'Plate Type'};
 
-	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
-	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
-	$setup_rate = $Press->specification( 'Press Run Overs Rate', $plate_setup{'Plate Count'} );
-	$setup_overs = $setup_rate * ( $plate_setup{'Plate Count'} );
-	$setup_overs += $fm_overs;
-	$setup_overs = $min_overs if $setup_overs < $min_overs;
-
-	$run_overs = $base_impressions * $over_rate;
-	#my $gross_qty = $impressions;
-	my $gross_qty = sprintf( '%.0f', $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
-	my $additional_overs=0;
-	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
-		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
-		my $minimum = $Press->specification('Additional Plate Overs Minimum');
-		$additional_overs = $minimum if $minimum > $additional_overs;
-		$gross_qty += $additional_overs;
-	} # end if
-	$impressions = $gross_qty;
-	my $sheets_per_package = $Paper->sheets_per_package();
-	if ( $sheets_per_package ) {
-		$gross_qty = $sheets_per_package * ( ceil( $gross_qty / $sheets_per_package ) );
-	} # end if
-	my %sheet_qty = (
-			'Impressions'				=> $impressions, 
-			'Gross Sheet Count'			=> $gross_qty, 
-			'Net Sheet Count'			=> $base_impressions,
-			'Setup Overs'				=> $setup_rate * $plate_setup{'Plate Count'},
-			'Run Overs'					=> $run_overs,
-			'Additional Plate Overs'	=> $additional_overs,
-			'Total Overs'				=> $impressions,
-			'Weight'					=> ( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() ),
-			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$fm_overs : 0,
-			);
-	$price{'Stock Quantity'} = \%sheet_qty;
-
-	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
-	$price{'Net Sheet Count'} = $sheet_qty{'Net Sheet Count'};
-	$price{'Film Cost'} =  $plate_setup{'Film Cost'};
-	$price{'Plate Cost'} =  $plate_setup{'Plate Price'};
-	$price{'txtPlateQuantity'} = $plate_setup{'Plate Count'};
-	$price{'txtBlankPlateQuantity'} = $plate_setup{'Blank Plates'};
-	$price{'Plate Price'} = $plate_setup{'Plate Price'} * $plate_setup{'Plate Count'};
-
-	$price{'Stock Weight'} = $sheet_qty{'Weight'};
-	my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
-	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb'};
-
-	$price{'Comparison Cost'} += $price{'Paper Price'};
-	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Paper' );
-
-	my $sheets = $impressions;
-	$$specs{"txtPressSheetQty$qty_index"} = $sheets;
-	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
-
-
 	if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
 
 		# This should only happen on second signature in calc
@@ -2002,10 +1947,11 @@ sub calc_price {
 		if ( $$results{'Status'} eq 'uncalculated' ) {
 			$price{'SpinePaste Breakdown'} .= "SpinePaste error: $$results{'alert'}<br/>";
 			$price{'Comparison Cost'} += 1000000; # Can't SP this on
-				$price{'SpinePaste Cost'} = 1000000;
+			$price{'SpinePaste Cost'} = 1000000;
 		} else {
-			$price{'SpinePaste Breakdown'} .= sprintf('SpinePaste MR: %dminutes RS: %d/hr Price: $%.2f<br/>%s<br/>', @$results{'MakeReadyTime','RunSpeed','Price','alert'} );
+			$price{'SpinePaste Breakdown'} .= sprintf('SpinePaste MR: %dminutes RS: %d/hr Overs: %d Price: $%.2f<br/>%s<br/>', @$results{'MakeReadyTime','RunSpeed','MakeReadyOvers','Price','alert'} );
 			$price{'SpinePaste Cost'} = $$results{'Price'};
+			$price{'SpinePaste MakeReady Overs'} = $$results{'MakeReadyOvers'};
 			$price{'Comparison Cost'} += $$results{'Price'};
 #$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 			if ( $$results{'Equipment'}->id() == $Press->id() ) {
@@ -2016,7 +1962,62 @@ sub calc_price {
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'SpinePaste' );
 	} # end if
 	$price{'Run Speed'} = $run_speed;
+	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
+	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
+	$setup_rate = $Press->specification( 'Press Run Overs Rate', $plate_setup{'Plate Count'} );
+	$setup_overs = $setup_rate * ( $plate_setup{'Plate Count'} );
+	$setup_overs += $fm_overs;
+	$setup_overs += $price{'SpinePaste MakeReady Overs'};
+	$setup_overs = $min_overs if $setup_overs < $min_overs;
 
+	$run_overs = $base_impressions * $over_rate;
+	#my $gross_qty = $impressions;
+	my $gross_qty = sprintf( '%.0f', $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
+	my $additional_overs=0;
+	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
+		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
+		my $minimum = $Press->specification('Additional Plate Overs Minimum');
+		$additional_overs = $minimum if $minimum > $additional_overs;
+		$gross_qty += $additional_overs;
+	} # end if
+	$impressions = $gross_qty;
+	my $sheets_per_package = $Paper->sheets_per_package();
+	if ( $sheets_per_package ) {
+		$gross_qty = $sheets_per_package * ( ceil( $gross_qty / $sheets_per_package ) );
+	} # end if
+	my %sheet_qty = (
+			'Impressions'				=> $impressions, 
+			'Gross Sheet Count'			=> $gross_qty, 
+			'Net Sheet Count'			=> $base_impressions,
+			'Setup Overs'				=> $setup_rate * $plate_setup{'Plate Count'},
+			'Bindery Overs'				=> $price{'SpinePaste MakeReady Overs'},
+			'Run Overs'					=> $run_overs,
+			'Additional Plate Overs'	=> $additional_overs,
+			'Total Overs'				=> $impressions,
+			'Weight'					=> ( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() ),
+			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$fm_overs : 0,
+			);
+	$price{'Stock Quantity'} = \%sheet_qty;
+
+	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
+	$price{'Net Sheet Count'} = $sheet_qty{'Net Sheet Count'};
+	$price{'Film Cost'} =  $plate_setup{'Film Cost'};
+	$price{'Plate Cost'} =  $plate_setup{'Plate Price'};
+	$price{'txtPlateQuantity'} = $plate_setup{'Plate Count'};
+	$price{'txtBlankPlateQuantity'} = $plate_setup{'Blank Plates'};
+	$price{'Plate Price'} = $plate_setup{'Plate Price'} * $plate_setup{'Plate Count'};
+
+	$price{'Stock Weight'} = $sheet_qty{'Weight'};
+	my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
+	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb'};
+
+	$price{'Comparison Cost'} += $price{'Paper Price'};
+	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Paper' );
+
+	my $sheets = $impressions;
+	$$specs{"txtPressSheetQty$qty_index"} = $sheets;
+	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+	
 	my %run_price;
 	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ); 
 	my %varnish_price;

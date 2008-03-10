@@ -9,6 +9,18 @@
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
+			<p><label>Trimming:</label>
+				<input type="radio" id="TrimmingY" name="Trimming" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{'Trimming'} ne 'N' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="TrimmingY">Yes</label>
+				<input type="radio" id="TrimmingN" name="Trimming" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{'Trimming'} eq 'N' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="TrimmingN">No</label>
+			</p>
+			<p><label>Gluing:</label>
+				<input type="radio" id="GluingY" name="Gluing" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{'Gluing'} ne 'N' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="GluingY">Yes</label>
+				<input type="radio" id="GluingN" name="Gluing" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{'Gluing'} eq 'N' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="GlueingN">No</label>
+			</p>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			  <!--#include virtual="/includes/main/proj/quantities_prices.html"-->
