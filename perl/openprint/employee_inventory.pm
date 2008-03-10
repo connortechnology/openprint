@@ -753,7 +753,7 @@ sub send_paper_arrival_notification {
 			if ( $to ) {
 # Send notification to maybe CSR's
 				my $From = new openprint::User( $openprint::session{'user_id'} );
-				my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+				my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
 				$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
 				$_ = encode_qp( ssi::variable_substitution( $email_template, \%info ) );

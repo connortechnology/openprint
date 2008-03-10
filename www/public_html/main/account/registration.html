@@ -187,7 +187,7 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
                     use Authen::Captcha;
                     my $Captcha = new Authen::Captcha(
                         'data_folder'   =>  '/tmp',
-                        'output_folder' =>  $ENV{'DOCUMENT_ROOT'}.'/skins/'.$openprint::config{'SiteTitle'}.'/images/captcha',
+                        'output_folder' =>  $config{'SkinPath'}.'/images/captcha',
                     );
                     my $md5sum = $Captcha->generate_code( $openprint::config{'RegistrationCaptchaLength'} );
                     $html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};
