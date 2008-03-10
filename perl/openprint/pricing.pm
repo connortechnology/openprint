@@ -50,10 +50,16 @@ $openprint::log->debug("openprint::pricing::get_pricelist_id returning cached Pr
 sub find_price {
 	my $qty = shift;
 	for ( my $index = 0; $index < @_; $index += 1 ) {
- 		if ( $qty ne '' and ( $qty <= $_[$index]->{max} or $_[$index]->{max} eq '' ) ) {
+ 		if ( $qty ne '' ) {
+			if ( $qty <= $_[$index]->{max} or $_[$index]->{max} eq '' ) {
+				return $index;
+			} # end if
+		} else {
+# Do this the ugly way as an optimisation when we don't care about the quantity and there are lots of options
 			return $index;
 		} # end if
 	} # end for
+	
 	return @_ - 1;
 } # end sub find_price
 
@@ -208,7 +214,13 @@ sub get_best_price_object {
 	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment ) = @_;
 	my $prices = get_best_prices( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty );
 	foreach my $price ( @$prices ) {
-		if ( $price and ( (!defined $price->{min} or $price->{min} eq '' ) or 1*$price->{min} <= $qty ) and ( $price->{max} >= $qty or $price->{max} eq '' ) ) {
+		if ( $price and ( 
+					( (!defined $qty) or $qty eq '' ) or
+					( 
+					 ( ( $price->{min} eq '' or ! defined $price->{min} ) or 1*$price->{min} <= $qty ) and 
+					 ( ( $price->{max} eq '' or ! defined $price->{max} ) or 1*$price->{max} >= $qty )
+					)
+) ) {
 			return %$price;
 		} # end if
 	} # end foreach

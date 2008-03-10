@@ -10,6 +10,9 @@ require openprint::pricelist;
 require openprint::paper_price;
 require openprint::paper_priceset;
 
+sub _papers {
+} # end sub _papers
+
 sub jsrs_actions {
 	my ( $r, $log, $dbh, $variable, $action, $paper_id ) = splice @_, 0, 6;
 	if ( $action eq 'Delete' ) {

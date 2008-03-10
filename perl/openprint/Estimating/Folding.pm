@@ -581,7 +581,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				} # end if
 
 				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
-$openprint::log->debug("Already have a better price $bestPrice < $totalPrice");
+#$openprint::log->debug("Already have a better price $bestPrice < $totalPrice");
 					last;
 				} # end if
 
