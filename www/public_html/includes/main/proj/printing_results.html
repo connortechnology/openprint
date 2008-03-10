@@ -267,7 +267,8 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
 		<input type="hidden" name="txtSignatureSpreadQuantity<?QTYIndex?>" />
-		<input type="text" id="PageQuantity<?QTYIndex?>" name="PageQuantity<?QTYIndex?>" value="<? echo ( $$variable{'PageQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9"  onkeyup="calc('f1');" /> Pages
+		<input type="text" id="PageQuantity<?QTYIndex?>" name="PageQuantity<?QTYIndex?>" value="<? echo ( $$variable{'PageQuantity'.$$variable{'QTYIndex'}} ) ?>" size="3" onkeyup="calc('f1');" /> Pages
+		<input type="text" name="page_columns<?QTYIndex?>" readonly="readonly" size="2"/>x<input type="text" name="page_rows<?QTYIndex?>" readonly="readonly" size="2"/>
 		<input type="checkbox" id="chkOverridePageQuantity<?QTYIndex?>" name="chkOverridePageQuantity<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');" <? echo ( 'checked' if $$variable{"chkOverridePageQuantity$$variable{'QTYIndex'}"} eq 'Y' ) ?> />
 		<label class="radio" for="chkOverridePageQuantity<?QTYIndex?>">Override</label>
 	</span>
