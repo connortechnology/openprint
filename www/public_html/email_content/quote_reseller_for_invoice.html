@@ -2,8 +2,8 @@
 	<head>
 		<title><?SiteTitle?> - Quote</title>
 		<style type="text/css">
-		<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/email.css' ); ) ?>
-		<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/quote.css' ); ) ?>
+		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/email.css' ); ) ?>
+		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?>
 		</style>
 	</head>
 	<body>
@@ -82,6 +82,6 @@ return $html;
 			<? endwhile ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 		</table>
 		<span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span><br/>
-		<!--#include virtual="/skins/<?SiteTitle?>/includes/quote_disclaimer.html"-->
+		<? hecho ( $config{'QuoteViewDisclaimer'} ) ?>
 	</body>
 </html>

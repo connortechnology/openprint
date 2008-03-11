@@ -211,7 +211,7 @@ sub send_email {
 	my ($self, $replacements) = @_;
 
 	# Load the email template
-	my $email_template = misc::load_file( $self->{log}, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $self->{log}, $openprint::config{'SkinPath'} . '/email_template.html' );
 
 	# Do the appropriate variable substitutions
 	# - The first substitution replaces the 'ReplacementText' field

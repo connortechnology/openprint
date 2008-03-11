@@ -1273,10 +1273,8 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 								my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
 								my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 								my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
-#$openprint::log->debug("Comparing $$I{imposition}$$I{runstyle} " . join('x',$I->Paper()->width(),$I->Paper()->height(),$I->Paper()->area()) . " $BiggerPrice{'100lb'} to $$imp{imposition}$$imp{runstyle} " . join('x',$imp->Paper()->width(),$imp->Paper()->height(),$imp->Paper()->area() ) . " $SmallerPrice{'100lb'}" );
 								if ( $I->Paper()->area() > $imp->Paper()->area() ) {
 									if ( (1*$BiggerPrice{'100lb Price'}) == (1*$SmallerPrice{'100lb Price'}) ) {
-#$openprint::log->debug("Junking " . $I->Paper()->width() . 'x' . $I->Paper()->height() . ' for ' . $imp->Paper()->width() . 'x' . $imp->Paper()->height() );
 										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 										$j -= 1;
 									} # end if
@@ -1285,7 +1283,6 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 									$add = 0;
 									if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
 										#Prefer non-dutch
-#$openprint::log->debug("Junking dutch " . $I->Paper()->width() . 'x' . $I->Paper()->height() . ' for ' . $imp->Paper()->width() . 'x' . $imp->Paper()->height() );
 										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 										$j -= 1;
 										$add = 1;
@@ -1297,10 +1294,9 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 						} else {
 							$add = 1;
 						} # end if
-#$openprint::log->debug("Adding $$imp{imposition}$$imp{runstyle} " . join('x',$imp->Paper()->width(),$imp->Paper()->height(),$imp->Paper()->area() ) ) if $add > 0;
 						push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp if $add > 0;
 					} # end foreach imp
-				} # end if
+				} # end if Override
 
 				#@impositions = values %imps;
 				#push @impositions, map {@{$_}} values %imps;
@@ -2235,7 +2231,7 @@ sub calc_price {
 			$openprint::log->debug("$service no price found");
 		} # end if
 		if ( $ImpositionMakeReady{units} eq 'Per Form' ) {
-#$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
+$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
 			%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'.$qty_index} + 1, $Press );
 		} else {
 $openprint::log->debug("Make Ready iunts " . $ImpositionMakeReady{units} );

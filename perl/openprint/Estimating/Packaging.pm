@@ -34,6 +34,7 @@ my @variables = (
 	'txtPackageQuantity2',
 	'txtPackageQuantity3',
 	'rdbCardboardBacking',
+	'type_id',
 );
 sub variables {
     return @variables;

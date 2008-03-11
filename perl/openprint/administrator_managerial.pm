@@ -321,7 +321,7 @@ sub company_profiles {
 		if ( $Company->activation() ne $openprint::param{'rdbAccountActivation'} ) {
 			my %info;
 			$info{'Company'} = $Company;
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
 			$_ = $openprint::param{'rdbAccountActivation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
@@ -340,7 +340,7 @@ sub company_profiles {
 		} # end if
 		if ( $Company->reseller() and ( $Company->reseller() ne $openprint::param{'rdbReseller'} ) ) {
 			my %info;
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 			$info{'Company'} = $Company;
 			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
 
@@ -360,7 +360,7 @@ sub company_profiles {
 if ( 0 ) {
 		if ( $Company->supplier() ne $openprint::param{'rdbSupplier'} ) {
 			my %info;
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 			$info{'Company'} = $Company;
 			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
 
@@ -553,7 +553,7 @@ sub credit_applications {
 
 				$params{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
 				$params{'ReplacementText'} = ssi::variable_substitution( \$params{'ReplacementText'}, \%params );
-				$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+				my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 				my $template = ssi::variable_substitution( \$_, \%params );
 				my %mail = (
 						SMTP	=> $openprint::config{'Mail Server'},

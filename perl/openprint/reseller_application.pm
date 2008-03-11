@@ -95,7 +95,7 @@ sub reseller_application_process {
     $info{'SecureSiteURL'} = $r->dir_config('SecureSiteURL');
     $info{'siteURL'} = $r->dir_config('siteURL');
 
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 
 	my @fields = keys %fields;
 	@info{ @fields } = $customer->get( @fields{@fields} );

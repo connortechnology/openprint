@@ -8,6 +8,11 @@ require openprint::logs;
 require openprint::Usergroup;
 use openprint ();
 use strict;
+use vars qw(%variable $log $dbh %config);
+*variable = \%openprint::variable;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
 my $debug = 1;
 
@@ -67,9 +72,9 @@ sub load {
 
 	my @fields = keys %fields;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users WHERE Index=?', {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( 'SELECT * FROM Users WHERE Index=?', {}, $$self{'id'} );
 		if ( ! $data ) {
-			$openprint::log->error( "Error loading User( $$self{'id'} ): " . $openprint::dbh->errstr() );
+			$log->error( "Error loading User( $$self{'id'} ): " . $dbh->errstr() );
 		} # end if
 	} # end if
 	@$self{@fields} = @$data{@fields{@fields}};
@@ -100,7 +105,7 @@ sub set {
 				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
 			} # end if
 		} else {
-			$openprint::log->warn("User::Set::Invalid field requested: ($field)." );
+			$log->warn("User::Set::Invalid field requested: ($field)." );
 		} # end if
 	} # end foreach
 	return @set_fields;
@@ -118,10 +123,10 @@ sub save {
 		$info{'User'} = $self;
 		@info{'UserFirstName','UserLastName','UserType'} = @$params{'firstname','lastname','type'};
 
-		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/usertype_system_notification.html' );
+		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/usertype_system_notification.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-		my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 		my %mail = (
@@ -130,16 +135,16 @@ sub save {
 				TO      => $openprint::config{'LoginEmail'},
 				SUBJECT => join(' ', @$params{'firstname','lastname'})."'s User Type has changed!"
 				);
-		misc::send_email_with_attachment( $openprint::log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
 	if ( $params and (defined $$params{'web_active'}) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
 		my %info;
 		$info{'User'} = $self;
 		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		#$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 		my %mail = (
@@ -148,7 +153,7 @@ sub save {
 				TO      => sprintf( '"%s %s" <%s>', @$params{'firstame','lastname','email'} ),
 				SUBJECT => 'User account status has changed!',
 				);
-		misc::send_email_with_attachment( $openprint::log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
     } # end if
 
 	$self->set( $params ) if $params;
@@ -165,17 +170,17 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $self->{id} ) {
-		@$self{id} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('Users_Index_seq')} );
+		@$self{id} = sql::execute( $log, $dbh, q{SELECT nextval('Users_Index_seq')} );
 		$sql{index} = $$self{id};
-		if ( my $error = sql::insert( $openprint::log, $openprint::dbh, 'Users', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+		if ( my $error = sql::insert( $log, $dbh, 'Users', \%sql ) ) {
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 	} else {
-		if ( my $error = sql::update( $openprint::log, $openprint::dbh, 'Users', ['Index=?',$$self{id}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+		if ( my $error = sql::update( $log, $dbh, 'Users', ['Index=?',$$self{id}], \%sql ) ) {
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 	} # end if
@@ -186,15 +191,15 @@ sub save {
 	if ( $$params{'csr_ids'} ) {
 		$self->csr_ids( ref $$params{'csr_ids'} eq 'ARRAY' ? @{$$params{'csr_ids'}} : $$params{'csr_ids'} );
 	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	return;
 } # end sub save
 
 sub delete {
 	my $self = shift;
 
-	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
+	my $ac = sql::start_transaction( $dbh );
+	sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
 
 	foreach my $Quote ( openprint::Quote::find('user_id'=>$$self{'id'}) ) {
 		$Quote->delete();
@@ -205,13 +210,13 @@ sub delete {
 	foreach my $Project ( openprint::Project::find('user_id'=>$$self{'id'}) ) {
 		$Project->delete();
 	} # end foreach
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{'id'} );
+	sql::execute( $log, $dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{'id'} );
+	sql::execute( $log, $dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{'id'} );
 	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{'id'} ], 'operator_id', undef );
 	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
 
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{'id'} );
+	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{'id'} );
+	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Assistants WHERE csr_id=? OR assistant_id=?', @$self{'id','id'} );
 	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{'id'} );
@@ -219,9 +224,9 @@ sub delete {
 	sql::execute( undef, undef, 'DELETE FROM paper_purchase_orders WHERE userindex=?', $$self{'id'} );
 
 
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Users WHERE Index=?', $$self{'id'} );
+	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE Index=?', $$self{'id'} );
 
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 
 	openprint::logs::insertLogRecord('14', "User ID: " . $$self{'id'},);
 } # end sub delete
@@ -242,7 +247,7 @@ sub next {
 	} # end if
 
 	$sql = qq{SELECT Index FROM Users WHERE strFirstName = ($sql)};
-	( $_ ) = sql::execute( $openprint::log, $openprint::dbh, $sql, @values );
+	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
 sub Next {
@@ -266,7 +271,7 @@ sub prev {
 	} # end if
 
 	$sql = qq{SELECT Index FROM Users WHERE strFirstName = ($sql)};
-	( $_ ) = sql::execute( $openprint::log, $openprint::dbh, $sql, @values );
+	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
 sub Prev {
@@ -348,12 +353,12 @@ sub find {
 	if ( $param{'order'} ) {
 		$sql .= " ORDER BY $param{'order'}";
 	} # end if
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->error( "Error loading Users: ($sql) (@values)" );
+		$log->error( "Error loading Users: ($sql) (@values)" );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug( "loading Users: ($sql) (@values)" );
+		$log->debug( "loading Users: ($sql) (@values)" );
 	} # end if
 	return map { new openprint::User( $_->{index}, $_ ) } @$data;
 } # end sub find
@@ -361,12 +366,12 @@ sub find {
 sub assistant_ids {
 	my $self = shift;
 	if ( @_ ) {
-		my $ac = sql::start_transaction( $openprint::dbh );
+		my $ac = sql::start_transaction( $dbh );
 		sql::execute( undef, undef, 'DELETE FROM Assistants WHERE csr_id=?', $$self{id} );
 		foreach ( @_ ) {
 			sql::insert( undef, undef, 'Assistants', ['csr_id', $$self{id}, 'assistant_id', $_] );
 		} # end foreach
-		sql::end_transaction( $openprint::dbh, $ac );
+		sql::end_transaction( $dbh, $ac );
 		return @_;
 	} # end if
 	return sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
@@ -374,12 +379,12 @@ sub assistant_ids {
 sub csr_ids {
 	my $self = shift;
 	if ( @_ ) {
-		my $ac = sql::start_transaction( $openprint::dbh );
+		my $ac = sql::start_transaction( $dbh );
 		sql::execute( undef, undef, 'DELETE FROM Assistants WHERE assistant_id=?', $$self{id} );
 		foreach ( @_ ) {
 			sql::insert( undef, undef, 'Assistants', ['assistant_id', $$self{id}, 'csr_id', $_] );
 		} # end foreach
-		sql::end_transaction( $openprint::dbh, $ac );
+		sql::end_transaction( $dbh, $ac );
 		return @_;
 	} # end if
 	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
