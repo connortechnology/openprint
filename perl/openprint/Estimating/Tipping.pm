@@ -42,7 +42,11 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
+	my $services = $Project->services();
+
 	my @Equipment = openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'Y'},'use_in_estimating'=>1);
+	push @Equipment, openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'When PerfectBound'},'use_in_estimating'=>1) if $$services{'PerfectBind'};
+	push @Equipment, openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'When Stitching'},'use_in_estimating'=>1) if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no round cornering equipment.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -127,8 +131,11 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
+	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
-	#my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	push @possible_equipment, openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>'When Stitching'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+	push @possible_equipment, openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>'When PerfectBound'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'PerfectBound'};
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 
