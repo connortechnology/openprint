@@ -90,6 +90,26 @@ sub edit {
 		$Equipment = $Equipment->copy();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		$Equipment->save( \%openprint::param );
+		my $ac = sql::start_transaction( $openprint::dbh );
+		sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $Equipment->id() );
+		foreach my $key ( keys %openprint::param ) {
+			if ( $key =~ /txtSpecificationName(.*)/ and $openprint::param{$key} ne '' ) {
+				my $i = $1;
+				$openprint::param{'txtSpecificationMin'.$i} =~ s/[^\d\.]//g;
+				$openprint::param{'txtSpecificationMax'.$i} =~ s/[^\d\.]//g;
+				sql::insert( undef, undef, 'tbl_Equipment_Specifications', [
+						'lngEquipmentIndex',    $Equipment->id(),
+						'dblMin',               ( $openprint::param{'txtSpecificationMin'.$1} ne '' ? $openprint::param{'txtSpecificationMin'.$1} : undef ),
+						'dblMax',               ( $openprint::param{'txtSpecificationMax'.$1} ne '' ? $openprint::param{'txtSpecificationMax'.$1} : undef ),
+						'strUnits',             $openprint::param{'txtSpecificationUnits'.$1},
+						'strName',              $openprint::param{'txtSpecificationName'.$1},
+						'strValue',             $openprint::param{'txtSpecificationValue'.$1},
+						'interpolate',          $openprint::param{'interpolate'.$1},
+						] );
+			} # end if
+		} # end foreach
+
+		sql::end_transaction( $openprint::dbh, $ac );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		$Equipment->delete();
 		$Equipment = $Equipment->Next();

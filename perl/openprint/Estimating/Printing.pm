@@ -895,6 +895,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 #foreach my $P ( @Papers ) {
 #$openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
 #} 
+	push @Papers, @Ps;
 
 	push @Papers, @Ps;
 
@@ -1211,7 +1212,7 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 
 					my $P = $Paper->clone();
 
-					# Cut to fit on press
+# Cut to fit on press
 					if ( 
 							( $P->width() > $Press->specification('Maximum Sheet Width') or $P->height() > $Press->specification('Maximum Sheet Length') )
 							and
@@ -1255,7 +1256,7 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 						$P = $P->clone();
 						$P->cut();
 					} # end while cutting it
-				}# end if Web or Sheet
+				} # end if Web or Sheet
 
 				if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) {
 					foreach my $imp ( @imps ) {
@@ -1282,7 +1283,7 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 								} else { # same or smaller area
 									$add = 0;
 									if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
-										#Prefer non-dutch
+										# Prefer non-dutch
 										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 										$j -= 1;
 										$add = 1;
@@ -1293,14 +1294,12 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 							} # end for
 						} else {
 							$add = 1;
-						} # end if
+						} # end if cached
 						push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp if $add > 0;
 					} # end foreach imp
 				} # end if Override
 
-				#@impositions = values %imps;
-				#push @impositions, map {@{$_}} values %imps;
-			} # end foreach $Paper
+			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
 			if ( ! @impositions ) {
@@ -2288,7 +2287,6 @@ $openprint::log->debug("Make Ready iunts " . $ImpositionMakeReady{units} );
 			} # end if
 		} # end if
 	} # end if
-
 
 	my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup','',$Press );
 	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};

@@ -108,7 +108,6 @@ sub view_services {
 				my $CurrentCurrency = openprint::Currency::get_current();
 				my $ProjectCurrency = $Project->Currency();
 				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
-$openprint::log->debug("Converting from " . $CurrentCurrency->name() . ' to ' . $ProjectCurrency->name() . ' rate: ' . $conversion_rate );
 
 				if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
 					my $ac = sql::start_transaction( $dbh );
@@ -605,14 +604,14 @@ sub get_finished_weight {
 
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
-	my ( $project_index, $folding_service_index, $project_type ) = @_; 
-	#$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE $project_type *********************************");
+	my ( $project_index ) = @_; 
+	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE *********************************");
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
 	my $folding_specs;	
-	$folding_service_index = $$services{'Folding'}[0] if ( ! $folding_service_index ) and $$services{'Folding'};
+	my $folding_service_index = $services{'Folding'}[0] if $services{'Folding'};
 	if ( $folding_service_index ) {
 		$folding_specs = openprint::service::get_specs_ref( $project_index, $folding_service_index );
 	} # end if
