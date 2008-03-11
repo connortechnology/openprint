@@ -243,7 +243,7 @@ sub get_li {
 } # end sub get_li
 
 sub get_ul {
-	my ( $start_time_start, $start_time_end, $equipment_id, $shift ) = @_;
+	my ( $start_time_start, $start_time_end, $equipment_id, $shift, $filters ) = @_;
 	my $total_impressions;
 
 	my ( $s, $min, $h, $day, $month, $year );
@@ -275,13 +275,20 @@ sub get_ul {
 	for ( my $index = 0; $index < @schedule; $index += 1 ) {
 		my $current_row = $schedule[$index];
 
+		if ( $filters ) {
+			if ( $$filters{'Status'} ) {
+				my $Project = new openprint::Project($$current_row{'projectindex'});
+				next if ! sets::isin( $Project->status(), $$filters{'Status'} );
+			} # end if
+		} # end if
+		
 		$html .= get_li( $previous_row, $current_row, $ul_id );
-		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, @$current_row{'projectindex','serviceindex'} );
-		$total_impressions += $specs{'ImpressionQuantity'};
+		my $specs = openprint::service::get_specs_ref( @$current_row{'projectindex','serviceindex'} );
+		$total_impressions += $$specs{'ImpressionQuantity'};
 		$previous_row = $current_row;
 	} # end for
 
-	if ( $$shift{'name'} ) {
+	if ( $$shift{'name'} and Date::Calc::check_date( $year, $month, $day ) ) {
 		my $Operator = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents,Schedule WHERE lngProjectIndex=ProjectIndex AND lngServiceIndex=ServiceIndex AND strStatus != 'Complete' AND equipment_id=? AND ( schedule.starttime between ? AND ? ) LIMIT 1}, $equipment_id, $start_time_start, $start_time_end ) );
 		
 		if ( openprint::usergroup::is_user_in( ['PressManager'], $openprint::session{'user_id'} ) ) {

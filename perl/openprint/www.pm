@@ -111,13 +111,15 @@ $openprint::log->debug("Page: $page");
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
-		my $content;
-		if ( -e join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) ) {
-			$content = misc::load_file( $log, join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) );
-		} else {
-			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+		if ( ! $variable{'PageContent'} ) {
+			my $content;
+			if ( -e join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) ) {
+				$content = misc::load_file( $log, join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) );
+			} else {
+				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+			} # end if
+			$variable{'PageContent'} = ssi::variable_substitution( $r, $r->log, $dbh, \$content, \%variable );
 		} # end if
-		$variable{'PageContent'} = ssi::variable_substitution( $r, $r->log, $dbh, \$content, \%variable );
 		my $template;
 		my @page_path = split('/', $page );
 		my $filename = pop @page_path;
@@ -184,6 +186,7 @@ sub parse_page {
 	my @thing = split( '/', $uri );
 	my $filename = pop @thing;
 	shift @thing; # get rid of element before leading slash
+	my @path = @thing;
 	my $first = shift @thing if @thing;
 	my $second = shift @thing if @thing;
 	my $third = shift @thing if @thing;
@@ -334,10 +337,10 @@ $openprint::log->debug("Getfile");
 				return;
 			} # endif
 		} else {
-			eval( "require openprint::$first".'_'.$second );
+			eval( 'require openprint::'.join('_', @path ) );
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
-			eval( 'openprint::'.$first.'_'.$second.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		} # end if
 

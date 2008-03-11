@@ -13,6 +13,7 @@ CREATE TABLE Labels (
 	type_id	INTEGER NOT NULL, FOREIGN KEY (type_id) REFERENCES LabelTypes (id),
 	docket	INTEGER NOT NULL,
 	content	text,
+	data	text,
 	created_on	timestamp with time zone NOT NULL default NOW(),
 	PRIMARY KEY (id,version)
 );
