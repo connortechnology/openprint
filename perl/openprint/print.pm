@@ -386,6 +386,8 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
 		my $type = $$sig_specs{'Group'};
+
+		# We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec ( 
 				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',

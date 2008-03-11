@@ -483,7 +483,11 @@ sub find {
 	} elsif ( $params{'id_end'} ) {
             $sql .= ' AND Index <= ?';
             push @values, $params{'id_end'};
-    } # end if
+	} # end if
+	if ( $params{'id_like'} ) {
+		$sql .= " AND index LIKE '$params{'id_like'}%'";
+	} # end if
+
 	if ( $params{'reference'} ) {
 		$sql .= q{ AND strprojectreference LIKE ?};
 		push @values, '%'.$params{'reference'}.'%';

@@ -1242,8 +1242,9 @@ sub calc {
 
 		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
 			push @{$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $services{'Folding'};
-			if ( (! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' ) ) {
+			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {
 				$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';
+				$specs{'Status'} = 'uncalculated';
 			} # end if
 		} elsif ( $services{'Folding'} ) {
 			foreach ( @{$services{'Folding'}} ) {
@@ -1280,12 +1281,22 @@ sub calc {
 			if ( ! $services{'Scoring'} ) {
 				push @{$services{'Scoring'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Scoring' );
 			} # end if
+			my $scoring_specs = openprint::service::get_specs_ref( $project, $services{'Scoring'}[0] );
+			my @sigs = $project->signatures();
+			my $sig_specs = openprint::service::get_specs_ref( $project, $sigs[0] );
+
+			# Preload auto-calc # of scores, so we can determine if we need to override
+			openprint::Estimating::Scoring::get_scores( $project, $scoring_specs, $sig_specs );
+
 			foreach my $sid ( @{$services{'Scoring'}} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'chkOverrideQty-0', $specs{'chkOverrideScoreQty'} );
+				if ( ! ( $specs{'chkOverrideScoreQty'} or $$scoring_specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$scoring_specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) ) {
+					$specs{'chkOverrideScoreQty'} = 'Y';
+					$specs{'txtScoreQty'} = 1;
+				} # end if
+				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, "chkOverrideQty-$$sig_specs{SignatureIndex}", $specs{'chkOverrideScoreQty'} );
 				if ( $specs{'chkOverrideScoreQty'} eq 'Y' ) {
-					openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtVerticalQty-0', $specs{'txtScoreQty'} );
-				} else {
-					$specs{'txtScoreQty'} = '';
+					openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, "txtVerticalQty-$$sig_specs{SignatureIndex}", $specs{'txtScoreQty'} );
+					openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, "txtHorizontalQty-$$sig_specs{SignatureIndex}", 0 );
 				} # end if
 			} # end foreach
 		} else {
@@ -1392,10 +1403,12 @@ sub calc {
 		$specs{'txtPrice1'} = 0;
 		$specs{'txtUnitPrice1'} = 0;
 # add up the prices
-		foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$project{'id'} ) ) {
-			my $service_specs = openprint::service::get_specs_ref( $$project{'id'}, $service_index );
-			$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
-		} # end foreach
+		if ( $specs{'Status'} ne 'uncalculated' ) {
+			foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$project{'id'} ) ) {
+				my $service_specs = openprint::service::get_specs_ref( $$project{'id'}, $service_index );
+				$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
+			} # end foreach
+		} # end if
 		$specs{'txtPrice1'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $specs{'txtPrice1'} );
 		$specs{'txtUnitPrice1'} = sprintf( '%.2f', $specs{'txtPrice1'}/$specs{'txtQuantity1'} );	
 		$project->price1( $specs{'txtPrice1'} );

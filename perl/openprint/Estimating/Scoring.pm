@@ -121,16 +121,14 @@ sub calc {
 	# juts for efficeincy
 	my $cutting_service_index = $$services{'Cutting'};
 
-	if ( ! @all_equipment ) {
-		@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'Y'} );
-		if ( $stitching_service_index and $$services{'Folding'} ) {
-			push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Folding'} );
-		} # end if
+	@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'Y'} );
+	if ( $stitching_service_index and $$services{'Folding'} ) {
+		push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Folding'} );
+	} # end if
 
-		my @stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'} );
-		if ( ! $stitching_service_index ) {
-			@all_equipment = sets::exclude( \@stitchers, \@all_equipment );
-		} # end if
+	my @stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'} );
+	if ( ! $stitching_service_index ) {
+		@all_equipment = sets::exclude( \@stitchers, \@all_equipment );
 	} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
