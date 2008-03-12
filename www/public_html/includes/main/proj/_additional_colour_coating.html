@@ -7,9 +7,9 @@
 ) ?>
 <span id="ColourCoating<?Side?><?index?><?Signature?>" class="SpecialColour">
 	<span class="checkOption">
-		<input type="checkbox" name="ColourCoating<?Side?><?index?><?Signature?>" value="Y" onclick="if (this.checked){SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );};calc(this.form.name);"
+		<input type="checkbox" id="chkColourCoating<?Side?><?index?><?Signature?>" name="ColourCoating<?Side?><?index?><?Signature?>" value="Y" onclick="if (this.checked){SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );};calc(this.form.name);"
 		<? echo ( $$variable{"ColourCoating$$variable{Side}$$variable{index}$$variable{Signature}"} eq 'Y' ? 'checked="checked"' : '' ) ?>
-		/> Colour/Coating <?index?>
+		/><label class="radio" for="chkColourCoating<?Side?><?index?><?Signature?>">Colour/Coating <?index?></label>
 	</span>
 <select id="ColourCoatingType<?Side?><?index?><?Signature?>" name="ColourCoatingType<?Side?><?index?><?Signature?>" onchange="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );">
 	<option value=""> select type </option>

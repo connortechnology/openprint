@@ -23,6 +23,11 @@ require openprint::Material;
 require openprint::imposition;
 require openprint::Imposition;
 
+
+# Offline UVCoating
+# Let's assume that each piece of equipment can do 1 coat at a time
+# This service doesn't store it's own data, other than price.  It gets the info from the printing service.
+#
 my @variables = (
 	'txtQuantity1','txtQuantity2','txtQuantity3',
 	'txtPrice1','txtPrice2','txtPrice3',
@@ -71,6 +76,17 @@ sub neccessary {
 
 	return 0;
 } # end sub neccessary
+sub signature_needs {
+	my ( $Project, $specs ) = @_;
+
+	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideOne' ) ) {
+		return 1 if $_ =~ /UV/;
+	} # end foreach colour
+
+	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' ) ) {
+		return 1 if $_ =~ /UV/;
+	} # end foreach colour
+} # end sub signature_needs
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
@@ -88,25 +104,19 @@ sub calc {
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} = '';
 		$$specs{'txtPrice'.$qty_index} = '';
-$openprint::log->debug("Signatures: " . $Project->signatures() );
+		$openprint::log->debug("Signatures: " . $Project->signatures() );
 
-	my $qty = $$specs{"txtQuantity$qty_index"};
-	if ( $$specs{'txtPressSheetComboItems'} ) {
-		$qty *= $$specs{'txtPressSheetComboItems'};
-	} # end if
+		my $qty = $$specs{"txtQuantity$qty_index"};
+		if ( $$specs{'txtPressSheetComboItems'} ) {
+			$qty *= $$specs{'txtPressSheetComboItems'};
+		} # end if
 
 		my $GrandTotal;
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-			if ( ! ( $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} or $$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"} ) ) {
-				$$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} = $$sig_specs{'SideOneUVCoatingType'};
-				$$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"} = $$sig_specs{'SideTwoUVCoatingType'};
-			} # end if
-	
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
 			$GrandTotal += $results{'Total'};
 			$status = 'uncalculated' if $results{'Status'} eq 'uncalculated';
-
 		} # end foreach signature
 
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $GrandTotal / $qty );
@@ -123,14 +133,24 @@ sub signature_calc {
 	my %bestPrice;
 	$bestPrice{'Status'} = 'uncalculated';
 
-	$openprint::log->debug("Signatuer : $signature_service_index");
-	if ( ! ( $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} or $$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"} ) ) {
+
+	my @front_uv;
+	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) ) {
+		push @front_uv, $_ if $_ =~ /UV/;
+$openprint::log->debug("Side one colour: $_");
+	} # end foreach colour
+
+	my @back_uv;
+	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) ) {
+		push @back_uv, $_ if $_ =~ /UV/;
+$openprint::log->debug("Side two colour: $_");
+	} # end foreach colour
+
+	my @different_types = sets::union( @front_uv, @back_uv );
+
+	$openprint::log->debug("Signature : $signature_service_index");
+	if ( ! ( @front_uv or @back_uv ) ) {
 		$$specs{'alert'} .= 'Please select the coating types.<br/>';
-		return %bestPrice;
-	} # end if
-	if ( ( $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} eq 'None' ) and ( $$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"} eq 'None' ) ) {
-		$bestPrice{'Status'} = 'calculated';
-#$openprint::log->debug("Both are none");	
 		return %bestPrice;
 	} # end if
 
@@ -183,9 +203,9 @@ sub signature_calc {
 	my @impositions = ();
 	my $services = $Project->services();
 	if ( $$services{'Cutting'} ) {
-		$openprint::log->debug('Cutting');
+		#$openprint::log->debug('Cutting');
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
-		$openprint::log->debug('After get all Cutting' . @imps);
+		#$openprint::log->debug('After get all Cutting' . @imps);
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
 			$openprint::log->debug("Imposition: " . $imps[$i]{'Imposition'});
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
@@ -225,181 +245,72 @@ sub signature_calc {
 			} # end if
 
 			my $totalPrice = 0;
-			my %ServicePrice;
-			my %MaterialPrice;
-			my $setupPrice;
 
-			if ( 
-					( $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} and $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} ne 'None' ) and 
-					( $$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"} and $$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"} ne 'None' ) ) {
+			my @types;
+			if ( sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
+# need to merge any overalls into spots
+				foreach my $type ( @different_types ) {
+					if ( sets::isin( $type, \@front_uv ) and sets::isin( $type, \@back_uv ) ) {
+						push @types, $type;
+					} else {
+						$type =~ s/Overall/Spot/;
+					} # end if
+					push @types, $type;
+				} # end foreach
+			} else {
+				@types = @different_types;
+			} # end if
+
+			foreach my $type ( @types ) {
+	
+				if ( sets::isin( $type, \@front_uv ) and sets::isin( $type, \@back_uv ) ) {
+				} else {
+					if ( $type =~ /Overall/ and sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
+						$type =~ s/Overall/Spot/;
+						# Has to be a spot
+					} # end if
+				} # end if type is in both
+			} # end foreach type
 # Two sided job
-				if ( $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} ne $$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"} ) {
-					if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn', 'Work & Tumble'] ) ) {
 # Just a spot colour then.
-						my $type = 'Spot';
-						$setupPrice = openprint::service::get_price( 'UVCoating'.$type.'MakeReady', $qty*2, $Equipment );
-						%ServicePrice = openprint::service::get_price_object( 'UVCoating'.$type, $qty*2/$imp->imposition(), $Equipment );
-						if ( ! %ServicePrice ) {
-# Don't have Spot
-							if ( $$sig_specs{'txtImposition'.$qty_index} == $imp->imposition() ) {
-								$$specs{'hdnBreakdown'.$qty_index} .= "Has to be cut in half, we don't support Spot UV.<br/>";
+			foreach my $type ( @types ) {
+				my $setupPrice += openprint::service::get_price( $type.' MakeReady', $qty/$imp->imposition(), $Equipment );
 
-# Has to be cut in half at least.
-								next;
-							} # end if
-						} # endif
-						if ( lc $ServicePrice{'units'} eq 'per m' ) {
-							$ServicePrice{'Total'} = $ServicePrice{'Price'} *$qty*2/ 1000;
-						} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
-							$ServicePrice{'Total'} = $ServicePrice{'Price'} *$qty*2/ $Equipment->specfication('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
-						} # end if
-# Div by imposition
-						$ServicePrice{'Total'} /= $imp->imposition() if $imp->imposition();
-
-						if ( my @Materials = openprint::Material::find('name'=>'UVCoating') ) {
-							%MaterialPrice = $Materials[0]->get_price( $qty*2/$imp->imposition(), $Equipment );
-						} # end if
-						if ( $MaterialPrice{'units'} eq 'Per Square Inch' ) {
-							$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $qty;
-						} # end if
-
-
-						$totalPrice = $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'};
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $setupPrice );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f%2$s * %4$d/%5$dout =$%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty*2, $imp->imposition() );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s=$%.2f<br/>', @MaterialPrice{'Price','units','Total'});
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );
-					} else { # not W & T
-# Two separate runs
-						$setupPrice = openprint::service::get_price( 'UVCoating'.$$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"}.'MakeReady', $qty/$imp->imposition(), $Equipment );
-						$setupPrice += openprint::service::get_price( 'UVCoating'.$$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"}.'MakeReady', $qty/$imp->imposition(), $Equipment );
-						my %SideOneServicePrice = openprint::service::get_price_object( 'UVCoating'.$$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"}, $qty/$imp->imposition(), $Equipment );
-						if ( ! %SideOneServicePrice ) {
-							%SideOneServicePrice = openprint::service::get_price_object( 'UVCoating',$qty*2/$imp->imposition(), $Equipment );
-						} # end if
-						if ( lc $SideOneServicePrice{'units'} eq 'per m' ) {
-							$SideOneServicePrice{'Total'} = $SideOneServicePrice{'Price'} * $qty / 1000;
-						} elsif ( lc $SideOneServicePrice{'units'} eq 'per hour' ) {
-							$SideOneServicePrice{'Total'} = $SideOneServicePrice{'Price'} * $qty / $Equipment->specification('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
-						} # end if
-# Div by imposition
-						$SideOneServicePrice{'Total'} /= $imp->imposition() if $imp->imposition();
-						my %SideTwoServicePrice = openprint::service::get_price_object( 'UVCoating'.$$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"}, $qty/$imp->imposition(), $Equipment );
-						if ( ! %SideTwoServicePrice ) {
-							%SideTwoServicePrice = openprint::service::get_price_object( 'UVCoating',$qty*2/$imp->imposition(), $Equipment );
-						} # end if
-						if ( lc $SideTwoServicePrice{'units'} eq 'per m' ) {
-							$SideTwoServicePrice{'Total'} = $SideTwoServicePrice{'Price'} * $qty / 1000;
-						} elsif ( lc $SideTwoServicePrice{'units'} eq 'per hour' ) {
-							$SideTwoServicePrice{'Total'} = $SideTwoServicePrice{'Price'} * $qty / $Equipment->specification('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
-						} # end if
-# Div by imposition
-						$SideTwoServicePrice{'Total'} /= $imp->imposition() if $imp->imposition();
-
-						$ServicePrice{'Total'} = $SideOneServicePrice{'Total'} + $SideTwoServicePrice{'Total'};
-
-						if ( my @Materials = openprint::Material::find('name'=>'UVCoating') ) {
-							%MaterialPrice = $Materials[0]->get_price( $qty*2/$imp->imposition(), $Equipment );
-						} # end if
-						if ( $MaterialPrice{'units'} eq 'Per Square Inch' ) {
-							$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $qty;
-						} # end if
-
-						$totalPrice = $setupPrice + $MaterialPrice{'Total'} + $SideOneServicePrice{'Total'} + $SideTwoServicePrice{'Total'};
-						my %minimum = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'UVCoatingMinimumCharge', undef, $Equipment );
-						if ( $totalPrice < $minimum{Price} ) {
-							$totalPrice = $minimum{Price};
-						} # end if
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $setupPrice );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Side One Service: $%.2f%s=%.2f<br/>', @SideOneServicePrice{'Price','units','Total'} );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Side Two Service: $%.2f%s=%.2f<br/>', @SideTwoServicePrice{'Price','units','Total'} );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s = $%.2f<br/>', @MaterialPrice{'Price','units','Total'} );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );
-					} # end if together as W&T or Sheet Work
-				} else { # both sides the same
-					my $type = $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"};
-					my $setupPrice = openprint::service::get_price( 'UVCoating'.$type.'MakeReady', $qty/$imp->imposition(), $Equipment );
-					my %ServicePrice = openprint::service::get_price_object( 'UVCoating'.$type, $qty/$imp->imposition(), $Equipment );
-					if ( ! %ServicePrice ) {
-						%ServicePrice = openprint::service::get_price_object( 'UVCoating',$qty/$imp->imposition(), $Equipment );
-					} # end if
-					if ( lc $ServicePrice{'units'} eq 'per m' ) {
-						$ServicePrice{'Total'} = $ServicePrice{'Price'} *$qty*2/ 1000;
-					} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
-						$ServicePrice{'Total'} = $ServicePrice{'Price'} *$qty*2/ $Equipment->specification('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
-					} # end if
-
-					my %MaterialPrice;
-					if ( my @Materials = openprint::Material::find('name'=>'UVCoating') ) {
-						%MaterialPrice = $Materials[0]->get_price( $qty*2/$imp->imposition(), $Equipment );
-					} # end if
-					if ( $MaterialPrice{'units'} eq 'Per Square Inch' ) {
-						$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $qty*2;
-					} # end if
-
-# Div by imposition
-					$ServicePrice{'Total'} /= $imp->imposition() if $imp->imposition();
-
-					$totalPrice = $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'};
-					my %minimum = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'UVCoatingMinimumCharge', undef, $Equipment );
-					if ( $totalPrice < $minimum{Price} ) {
-						$totalPrice = $minimum{Price};
-					} # end if
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $setupPrice);
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f%2$s * %4$d * 2sides/%5$dout = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty, $imp->imposition() );
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s=$%.2f<br/>', @MaterialPrice{'Price','units','Total'});
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );
-				} # end if sides the same or different
-
-			} else { 
-# Single sided
-				my $type;
-				if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and ($$sig_specs{'txtImposition'.$qty_index} == $imp->imposition() ) ) {
-					$type = 'Spot';
-				} elsif ( $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} and $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} ne 'None' ) {
-					$type = $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"};
-				} else { 
-					$type = $$specs{"SideTwoCoatingType-$$sig_specs{'SignatureIndex'}"};
-				} # end if
-				my $setupPrice = openprint::service::get_price( 'UVCoating'.$type.'MakeReady', $qty, $Equipment );
-				my %ServicePrice = openprint::service::get_price_object( 'UVCoating'.$type, $qty/$imp->imposition(), $Equipment );
-				if ( ! %ServicePrice ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "$type UV not supported.<br/>";
-					next;
-				} # end if
+				my %ServicePrice = openprint::service::get_price_object( $type, $qty/$imp->imposition(), $Equipment );
 				if ( lc $ServicePrice{'units'} eq 'per m' ) {
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} *$qty/ 1000;
+					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
 				} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} *$qty/ $Equipment->specification('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
+					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / $Equipment->specification('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
 				} # end if
 # Div by imposition
-				$ServicePrice{'Total'} /= $imp->imposition() if $imp->imposition();
+				$ServicePrice{'Total'} /= $imp->imposition();
 
 				my %MaterialPrice;
-				if ( my @Materials = openprint::Material::find('name'=>'UVCoating') ) {
-					%MaterialPrice = $Materials[0]->get_price( $qty/$imp->imposition(), $Equipment );
+				my $material_name = $type;
+				$material_name =~ s/ ?Spot ?//;
+				$material_name =~ s/ ?Overall ?//;
+				if ( my @Materials = openprint::Material::find('name'=>$material_name) ) {
+					%MaterialPrice = $Materials[0]->get_price( $qty*2/$imp->imposition(), $Equipment );
 				} # end if
 				if ( lc $MaterialPrice{'units'} eq 'per square inch' ) {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $qty;
 				} # end if
 
-				$totalPrice = $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'};
-				my %minimum = openprint::service::get_price_object( 'UVCoatingMinimumCharge', undef, $Equipment );
-				if ( $totalPrice < $minimum{Price} ) {
-					$totalPrice = $minimum{Price};
-				} # end if
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $setupPrice);
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f%2$s * %4$d 1sided/%5$dout =$%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty, $imp->imposition() );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s=$%.2f<br/>', @MaterialPrice{'Price','units','Total'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum: $%.2f<br/>', $minimum{'Price'});
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );
+				$totalPrice += $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f<br/>', $setupPrice );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + Service: $%.2f%s=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
+					$setupPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $totalPrice );
+			} # end foreach type
+			my %minimum = openprint::service::get_price_object( 'UVCoatingMinimumCharge', undef, $Equipment );
+			if ( $totalPrice < $minimum{Price} ) {
+				$totalPrice = $minimum{Price};
 			} # end if
 
 			if ( $totalPrice < $bestPrice{'Total'} or ( ! defined $bestPrice{'Total'} ) ) {
 				$bestPrice{'Total'} = $totalPrice;
-				$bestPrice{'Setup'} = $setupPrice;
-				$bestPrice{'Material'} = $MaterialPrice{'Total'};
-				$bestPrice{'Service'} = $ServicePrice{'Total'};
+				#$bestPrice{'Setup'} = $setupPrice;
+				#$bestPrice{'Material'} = $MaterialPrice{'Total'};
+				#$bestPrice{'Service'} = $ServicePrice{'Total'};
 				$bestPrice{'Equipment'} = $Equipment;
 				$bestPrice{'Imposition'} = $imp;
 			} # end if
@@ -411,14 +322,6 @@ sub signature_calc {
 		$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $bestPrice{'Imposition'}->imposition();
 		$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $bestPrice{'Imposition'}->layout_width();
 		$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $bestPrice{'Imposition'}->layout_height();
-
-#if ( $bestPrice{'Imposition'}->{'Orientation'} eq 'Vertical' ) {
-#$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $$specs{"txtWidth-$$sig_specs{'SignatureIndex'}"} * $bestPrice{'Imposition'}->columns();
-#$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $$specs{"txtHeight-$$sig_specs{'SignatureIndex'}"} * $bestPrice{'Imposition'}->rows();
-#} else {
-#$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $$specs{"txtWidth-$$sig_specs{'SignatureIndex'}"} * $bestPrice{'Imposition'}->rows();
-#$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $$specs{"txtHeight-$$sig_specs{'SignatureIndex'}"} * $bestPrice{'Imposition'}->columns();
-#} # end if
 	} else {
 		$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
 		$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
@@ -431,8 +334,8 @@ sub signature_calc {
 		} else {
 			$$specs{'alert'} = "No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.";
 		} # end if
-	$bestPrice{'Status'} = 'uncalculated';
-	return %bestPrice;
+		$bestPrice{'Status'} = 'uncalculated';
+		return %bestPrice;
 	} else {
 		$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $bestPrice{'Equipment'}->strid();
 	} # end if
@@ -446,17 +349,7 @@ sub display {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@{$$variable{'Signatures'}} = ();
-
-	$_ = "SELECT lngEquipmentIndex FROM tbl_Equipment_Specifications WHERE strName='UVCoating Capable' AND strValue='Y'";
-	@{$$variable{'EquipmentArray'}} = sql::execute( $log, $dbh, $_ );
-
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		push @{$$variable{'Signatures'}}, @$sig_specs{'SignatureIndex','txtServiceDescription'};
-		$$variable{'SideOneCoatingType-'.$$sig_specs{'SignatureIndex'}} = $$sig_specs{'SideOneUVCoatingType'};
-		$$variable{'SideTwoCoatingType-'.$$sig_specs{'SignatureIndex'}} = $$sig_specs{'SideTwoUVCoatingType'};
-	} # end foreach
+	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 } # end sub display
 
 # Copies the UV settings back into the printing service, because that is where we have chosen to store them.
@@ -465,8 +358,8 @@ sub save {
 	my $Project = new openprint::Project( $p_id );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $p_id, $ss_id );
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $ss_id, 'SideOneUVCoatingType', $$params{'SideOneCoatingType-'.$$sig_specs{'SignatureIndex'}} );
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $ss_id, 'SideTwoUVCoatingType', $$params{'SideTwoCoatingType-'.$$sig_specs{'SignatureIndex'}} );
+		#openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $ss_id, 'SideOneUVCoatingType', $$params{'SideOneCoatingType-'.$$sig_specs{'SignatureIndex'}} );
+		#openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $ss_id, 'SideTwoUVCoatingType', $$params{'SideTwoCoatingType-'.$$sig_specs{'SignatureIndex'}} );
 	} # end foreach
 } # end sub
 

@@ -84,10 +84,8 @@ my %variables = (
 		'YellowSideTwoCoverage'	=>	['save'],
 		'BlackSideTwoCoverage'	=>	['save'],
 
-		'SideOneUVCoatingType'=>['save'],
 		'chkCyanSideTwo' => ['save'],'chkMagentaSideTwo' => ['save'],'chkYellowSideTwo' => ['save'],'chkBlackSideTwo' => ['save'],
 		'chkProcessColourSideTwo' => ['save'],
-		'SideTwoUVCoatingType'=>['save'],
 		'chkBleedLeft' => ['save'],'chkBleedRight' => ['save'],'chkBleedTop' => ['save'],'chkBleedBottom' => ['save'],
 		'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
 		'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
@@ -244,6 +242,8 @@ sub setup_project {
 		$project{'NeedFolding'} = 0;
 		$project{'NeedCutting'} = 0;
 	} # end if
+	$project{'NeedUVCoating'} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
+
 	$project{'HasFolding'} = $$services{'Folding'} ? $$services{'Folding'}[0] : 0;
 	$project{'HasScoring'} = $$services{'Scoring'} ? $$services{'Scoring'}[0] : 0;
 	$project{'HasPerforating'} = $$services{'Perforating'} ? $$services{'Perforating'}[0] : 0;
@@ -252,17 +252,12 @@ sub setup_project {
 	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
 	@$specs{'NeedFolding','NeedCutting','NeedScoring'} = @project{'NeedFolding','NeedCutting','NeedScoring'};
 
-	# Need UVCoating
-	foreach my $c ( @$side_one_colours, @$side_two_colours ) {
-		if ( $c =~ /UV/ ) {
-			$project{'NeedUVCoating'} = 1;
-			if ( ! $$services{'UVCoating'} ) {
-				push @{$$services{'UVCoating'}}, openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $Project->id(), 'UVCoating' );
-			} # end if	
-			$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
-			last;
-		} # end if
-	} # end foreach colour
+	if ( $project{'NeedUVCoating'} ) {
+		if ( ! $$services{'UVCoating'} ) {
+			push @{$$services{'UVCoating'}}, openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $Project->id(), 'UVCoating' );
+		} # end if	
+		$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
+	} # end if	
 
 	%{$project{'FoldingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasFolding'} )} if $project{'HasFolding'};
 	%{$project{'CuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasCutting'} )} if $project{'HasCutting'};
@@ -275,8 +270,6 @@ sub setup_project {
 	if ( $$services{'UVCoating'} ) {
 $openprint::log->debug("Grabbing UV Specs");
 		%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )};
-		#$project{'UVCoatingSpecs'}{'SideOneCoatingType-'.$$specs{SignatureIndex}} = $$specs{'SideOneUVCoatingType'};
-		#$project{'UVCoatingSpecs'}{'SideTwoCoatingType-'.$$specs{SignatureIndex}} = $$specs{'SideTwoUVCoatingType'};
 	} # end if
 	return \%project;
 } # end sub setup_project
@@ -1549,6 +1542,7 @@ sub breakdown {
 	$breakdown .= $$price{'Stitching Breakdown'};
 	$breakdown .= $$price{'SpinePaste Breakdown'};
 	$breakdown .= $$price{'PerfectBound Breakdown'};
+	$breakdown .= $$price{'UVCoating Breakdown'};
 	$breakdown .= $$price{'AdditionalSignature Breakdown'};
 	$breakdown .= sprintf("Comparison Cost: \%.2f<br/>", $$price{'Comparison Cost'});
 	return $breakdown;
@@ -2230,10 +2224,10 @@ sub calc_price {
 			$openprint::log->debug("$service no price found");
 		} # end if
 		if ( $ImpositionMakeReady{units} eq 'Per Form' ) {
-$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
+#$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
 			%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'.$qty_index} + 1, $Press );
 		} else {
-$openprint::log->debug("Make Ready iunts " . $ImpositionMakeReady{units} );
+#$openprint::log->debug("Make Ready iunts " . $ImpositionMakeReady{units} );
 		} # end if
 
 		$price{'Imposition MakeReady'} = $ImpositionMakeReady{'Price'};
@@ -2482,13 +2476,12 @@ $openprint::log->debug("Perforating");
 	if ( $$project{'HasUVCoating'} ) {
 		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 		if ( $uv_results{'Status'} eq 'uncalculated' ) {
-			$price{'UV Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} else {
-			$price{'UVCoating Breakdown'} .= "UVCoating Price: $uv_results{'Total'}<br/>";
+			$price{'UVCoating Breakdown'} = sprintf('UVCoating Price: $%.2f on %s<br/>', $uv_results{'Total'}, $uv_results{'Equipment'}->name() );
 			$price{'Comparison Cost'} += $uv_results{'Total'};
 		} # end if
-
 	} # end if UVCoating
 
 	$price{'complete'} = 1;

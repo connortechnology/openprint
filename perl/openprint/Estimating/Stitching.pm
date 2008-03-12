@@ -130,7 +130,7 @@ sub signature_calc {
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 1;
 	$imposition = 1 if ($I->imposition()%2) or ( sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] ) and $I->imposition()%4);
-$openprint::log->debug(sprintf('%d %s %d %d', $imposition, $I->image_orientation(), $I->columns(), $I->rows() ) );
+#$openprint::log->debug(sprintf('%d %s %d %d', $imposition, $I->image_orientation(), $I->columns(), $I->rows() ) );
 	$imposition = 1 if $imposition > 1 and ( ($I->image_orientation() eq 'Vertical' and $I->rows()%2) or ($I->image_orientation() eq 'Horizontal' and $I->columns()%2) );
 
 #$openprint::log->debug( 'Imp: ' . $I->imposition() . ' # of signatures: ' . scalar $Project->signatures()) if $debug;
