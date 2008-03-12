@@ -1,0 +1,35 @@
+package openprint::employee_production_labels;
+use strict;
+use Date::Calc qw(Add_Delta_Days Date_to_Days check_date );
+use MIME::QuotedPrint;
+
+use openprint ();
+use vars qw{ $log $dbh %config %variable %param };
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+*variable = \%openprint::variable;
+*param = \%openprint::param;
+
+require sql;
+require openprint::Label;
+require openprint::LabelType;
+
+sub index {
+} # end sub index
+
+sub _label {
+	my $Label = new openprint::Label( $param{'id'} );
+	if ( $param{'action'} eq 'update' ) {
+		$Label->set_data($param{'field'}=>$param{'value'});
+		$Label->save();
+		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
+	} elsif ( $param{'action'} eq 'get' ) {
+		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
+	} # end if
+} # end sub _label
+
+1;
+
+__END__
+~	   

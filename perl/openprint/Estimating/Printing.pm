@@ -3026,9 +3026,9 @@ sub get_weight {
 	my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
 	my $sig_weight = $$specs{'txtWidth'} * $$specs{'txtHeight'} * $Paper->wpsi();
 	if ( $$specs{'PageQuantity'.$qty_index} ) {
-		# 
 		$sig_weight *= $$specs{'PageQuantity'.$qty_index}/$$specs{'txtSpreadSize'};
 	} # end if
+	# This is business cards, etc.
 	if ( $$specs{'PageQuantity'} ) {
 		# For Scratch Pads
 		$sig_weight *= $$specs{'PageQuantity'};

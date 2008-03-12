@@ -589,14 +589,16 @@ sub get_finished_weight {
 	# We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
 
 # calculate project weight
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $$specs{'txtQuantity'.$qty_index};
-			$project_weight += openprint::Estimating::Printing::get_weight( $Project, $specs, $qty_index );
-			last;
-		} # end foreach
-	} # end foreach
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $Project->quantity($qty_index);
+
+		foreach my $signature_service_index ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			next if $$sig_specs{'txtSignatureType'} and ! $$sig_specs{'PageQuantity'.$qty_index};
+			$project_weight += openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
+		} # end foreach signature_service_index
+		last;
+	} # end foreach qty_index
 	#$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{'WeightMarkup'}/100));
 	
 	# This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.

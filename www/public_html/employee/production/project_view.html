@@ -118,6 +118,7 @@ function open_window( page ) {
 		ssi::writeButton( $log, $dbh, 'Docket', 'Docket.gif', "open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket' ),
 		ssi::writeButton( $log, $dbh, 'DocketLabel', 'label.gif', "open_window('/employee/production/label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket Label' ),
 		ssi::writeButton( $log, $dbh, 'SkidLabel', 'label.gif', "open_window('/employee/production/skid_label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Skid Label' ),
+		ssi::writeButton( $log, $dbh, 'Labels', 'labels.gif', '', '/employee/production/labels/index.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Labels' ),
 		ssi::writeButton( $log, $dbh, 'Summary', 'summary.gif', '', "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Summary' ),
 		 ssi::writeButton( $log, $dbh, 'UploadPDFs', 'uploadFiles.gif', "open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", '', 'Upload PDFs' ),
 		 ssi::writeButton( $log, $dbh, 'ExportJDF', 'exportjdf.gif', "f1.btnFunction.value='Export JDF';f1.submit();", '', 'JDF' ),
