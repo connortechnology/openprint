@@ -893,7 +893,6 @@ sub load_from_signature {
 		$Paper->start_width( $$specs{'txtSpecificStockWidth'} );
 		$Paper->start_height( $$specs{'txtSpecificStockHeight'} );
 		$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
-		$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		$Paper->gsm( $$specs{'txtStockGSM'} );
 		$Paper->type( $$specs{'StockType'} );
 
@@ -908,7 +907,9 @@ sub load_from_signature {
 		$Paper->basis_height( $$specs{'basis_height'} );
 		$Paper->basis_mweight( $$specs{'basis_mweight'} );
 		$Paper->score_required( $Paper->calliper() > 0.008 );
-
+		if ( $$specs{'StockType'} ne 'Roll' ) {
+		$Paper->mweight( $$specs{'txtCustomMWeight'} );
+		} # end if
 	} else {
 
 		my @Papers = openprint::Paper::find(

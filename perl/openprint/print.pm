@@ -559,13 +559,15 @@ sub get_finished_weight {
 	# We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
 
 # calculate project weight
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		foreach my $qty_index ( 1 ..3 ) {
-			next if ! $$specs{'txtQuantity'.$qty_index};
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $Project->quantity($qty_index);
+
+		foreach my $signature_service_index ( $Project->signatures() ) {
+			my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			next if $$specs{'txtSignatureType'} and ! $$specs{'PageQuantity'.$qty_index};
 			$project_weight += openprint::Estimating::Printing::get_weight( $Project, $specs, $qty_index );
-			last;
 		} # end foreach
+		last;
 	} # end foreach
 	$log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{'WeightMarkup'}/100));
 	
