@@ -2313,13 +2313,31 @@ sub calc_price {
 	$price{'Ink Price'} = 0;
 	foreach my $real_colour ( @colours ) {
 		my $colour;
+		next if $real_colour =~ /UV/;
+
+		$price{'Ink breakdown'} .= $real_colour;
+
+
 		if ( $real_colour =~ /Varnish/ or $real_colour =~ /Aqueous/ ) {
 			$price{'Press Washes'} += 1;
 			$colour = $real_colour;
+			if ( sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble'] ) ) {
+				if ( ( $real_colour =~ /Overall/ ) and ! ( sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) ) ) {
+					$real_colour =~ s/Overall/Spot/;
+				} # end if
+			} # end if
 			$colour =~ s/ ?Overall ?//;
 			$colour =~ s/ ?Spot ?//;
-		} elsif ( $real_colour =~ /UV/ ) {
-			next;
+			if ( $real_colour =~ /Spot/ ) {
+				# Add Blanket Cut
+				my %BlanketCut = openprint::service::get_price_object( $real_colour.' BlanketCut', undef, $Press );
+				%BlanketCut = openprint::service::get_price_object( 'BlanketCut', undef, $Press ) if ! %BlanketCut;
+				if ( %BlanketCut ) {
+					$price{'Ink breakdown'} .= sprintf(' Blanket: $%.2f', $BlanketCut{'Price'} );
+					$price{'Ink Price'} += $BlanketCut{'Price'};
+				} # end if
+			} # end if
+
 		} elsif ( $real_colour =~ /(\w*) Spot Colour/ ) {
 			$colour = $1.'Ink';
 		} elsif ( $real_colour =~ /PMS/ ) {
@@ -2327,8 +2345,6 @@ sub calc_price {
 		} else { 
 			$colour = $real_colour . 'Ink';
 		} # end if
-
-		$price{'Ink breakdown'} .= $real_colour;
 
 		# Each Ink/Coating has MakeReady, Mix, Material, Service
 		my %InkMakeReady = openprint::service::get_price_object( $real_colour.' MakeReady', undef, $Press );
