@@ -125,7 +125,7 @@ sub summary {
 		return '';
 	} # end if
 
-	return sprintf( '%d tip ins', $$specs{'Quantity'} );;
+	return sprintf( '%d tip in%s', $$specs{'Quantity'}, $$specs{'Quantity'} == 1 ? '' : 's' );
 } # end sub summary
 
 sub display {

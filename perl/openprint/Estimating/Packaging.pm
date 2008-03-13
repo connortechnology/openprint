@@ -157,6 +157,8 @@ sub summary {
             $text .= ' wrap' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
         } elsif ( $$specs{'ServiceType'} =~ /Bundling/i ) {
             $text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
+        } elsif ( $$specs{'ServiceType'} =~ /Banding/i ) {
+            $text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
         } # end if
     } else {
         $text .= $$specs{'txtItemsPerPackage'} . ' items';
@@ -164,6 +166,8 @@ sub summary {
             $text .= ' per wrap';
         } elsif ( $$specs{'ServiceType'} =~ /Bundling/i ) {
             $text .= ' per bundle';
+        } elsif ( $$specs{'ServiceType'} =~ /Banding/i ) {
+            $text .= ' per band';
         } # end if
         $text .= $$specs{'rdbCardboardBacking'} eq 'Y' ? ' with cardboard backing.' : '';
     } # end if

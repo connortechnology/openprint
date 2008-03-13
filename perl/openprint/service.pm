@@ -544,68 +544,31 @@ sub summary {
 					'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index} . ($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? '' : sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index}) ),
 					);
 		} else {
-			my $side_one_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideOne'));
+			my $front_colours = 0;
+			my $front_coatings;
+			foreach my $c ( openprint::Estimating::Printing::get_colours( $specs, 'SideOne') ) {
+				if ( $c =~ /Aqueous/ or $c =~ /Varnish/ or $c =~ /UV/ ) {
+					$front_coatings .= '+'.$c;
+				} else {
+					$front_colours += 1;
+				} # end if
+			} # end foreach	
+			my $back_colours = 0;
+			my $back_coatings;
+			foreach my $c ( openprint::Estimating::Printing::get_colours( $specs, 'SideTwo') ) {
+				if ( $c =~ /Aqueous/ or $c =~ /Varnish/ or $c =~ /UV/ ) {
+					$back_coatings .= '+'.$c;
+				} else {
+					$back_colours += 1;
+				} # end if
+			} # end foreach	
 			
-			my $side_one_coatings;
-			$side_one_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideOne'} eq 'Gloss';
-			$side_one_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideOne'} eq 'Matte';
-			if ( $$specs{'chkVarnishSpotGlossSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Spot Gloss)';
-				$side_one_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishSpotMatteSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Spot Matte)';
-				$side_one_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishDryTrapSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Dry Trap)';
-			} # end if
-			if ( $$specs{'chkVarnishOverallGlossSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Overall Gloss)';
-				$side_one_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishOverallMatteSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Overall Matte)';
-				$side_one_colours -= 1;
-			} # end if
-			if ( $$specs{'SideOneUVCoatingType'} and ($$specs{'SideOneUVCoatingType'} ne 'None') ) {
-				$side_one_coatings .= '+' . $$specs{'SideOneUVCoatingType'} . 'UV';
-			} # end if
-
-			my $side_two_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideTwo'));
-			my $side_two_coatings;
-			$side_two_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideTwo'} eq 'Gloss';
-			$side_two_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideTwo'} eq 'Matte';
-			if ( $$specs{'chkVarnishSpotGlossSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Spot Gloss)' ;
-				$side_two_colours -= 1;
-			} # end if
-
-			if ( $$specs{'chkVarnishSpotMatteSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Spot Matte)';
-				$side_two_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishDryTrapSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Dry Trap)';;
-			} # end if
-			if ( $$specs{'chkVarnishOverallGlossSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Overall Gloss)';
-				$side_two_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishOverallMatteSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Overall Matte)';
-				$side_two_colours -= 1;
-			} # end if
-			if ( $$specs{'SideTwoUVCoatingType'} and $$specs{'SideTwoUVCoatingType'} ne 'None' ) {
-				$side_two_coatings .= '+' . $$specs{'SideTwoUVCoatingType'} . 'UV';
-			} # end if
-
 			return sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s}, 
 					@$specs{'txtServiceDescription','txtWidth','txtHeight'}, 
-					$side_one_colours,
-					$side_one_coatings,
-					$side_two_colours,
-					$side_two_coatings,
+					$front_colours,
+					$front_coatings,
+					$back_colours,
+					$back_coatings,
 					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
 					$$specs{'rdbSpecificStock'} eq 'Y' ? 
 					join(',', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
