@@ -74,7 +74,7 @@ sub display {
 					'Status',				'Received',
 					);
 
-			my @papers = sql::execute( $log, $dbh, 'SELECT Paper_Id, Quantity, (SELECT InStock FROM Paper_Inventory WHERE Paper_Inventory.Paper_Id=Paper_Purchase_Order_Contents.Paper_Id AND UpdateTime = (SELECT MAX(UpdateTime) FROM Paper_Inventory WHERE Paper_Inventory.Paper_Id=Paper_Purchase_Order_Contents.Paper_Id)) FROM Paper_Purchase_Order_Contents WHERE PaperPurchaseOrder_Id=?', $ppo_index );
+			my @papers = sql::execute( $log, $dbh, 'SELECT Paper_Id, Quantity, (SELECT InStock FROM Paper_Inventory WHERE Paper_Inventory.Paper_Id=Paper_Purchase_Order_Contents.Paper_Id AND updated_on = (SELECT MAX(updated_on) FROM Paper_Inventory WHERE Paper_Inventory.Paper_Id=Paper_Purchase_Order_Contents.Paper_Id)) FROM Paper_Purchase_Order_Contents WHERE PaperPurchaseOrder_Id=?', $ppo_index );
 			while ( @papers ) {
 				my ( $paper_index, $quantity, $instock ) = splice @papers, 0, 3;
 	
@@ -84,7 +84,7 @@ sub display {
 						'PO_Id',		$ppo_index,
 						'Delta',		$quantity,
 						'InStock',		$instock + $quantity,
-						'UpdateTime',	'NOW()',
+						'updated_on',	'NOW()',
 						'Comment',		'Received Paper',
 						);
 			} # end while

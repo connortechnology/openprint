@@ -253,7 +253,7 @@ sub add_inventory {
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
         'InStock',  ($skid_id? $$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
-        'UpdateTime',   'NOW()',
+        'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
         'skid_id',  $skid_id,

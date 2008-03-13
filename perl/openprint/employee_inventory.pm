@@ -183,7 +183,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 			if ( $key =~ /txtInStock(\d*)/ ) {
 				my $paper_index = $1;
 				my $delta = 0;
-				my ( $instock ) = sql::execute( $log, $dbh, 'SELECT InStock FROM Paper_Inventory WHERE PaperIndex=? AND UpdateTime = (SELECT MAX(UpdateTime) FROM Paper_Inventory WHERE PaperIndex=?)', $paper_index, $paper_index );
+				my ( $instock ) = sql::execute( $log, $dbh, 'SELECT InStock FROM Paper_Inventory WHERE PaperIndex=? AND updated_on = (SELECT MAX(updated_on) FROM Paper_Inventory WHERE PaperIndex=?)', $paper_index, $paper_index );
 				if ( $openprint::param{$key} =~ /[\-\+]\d*/ ) {
 					$delta = $openprint::param{$key};
 				} else {
@@ -195,7 +195,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 						'InStock',		$instock + $delta,
 						'Delta',		$delta,
 						'UserIndex',	$openprint::session{'user_id'},
-						'UpdateTime',	'NOW()',
+						'updated_on',	'NOW()',
 						'Comment',		'Stock Check',
 						] );
 				} # end if
