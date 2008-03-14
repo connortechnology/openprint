@@ -20,6 +20,7 @@ my $debug = 1;
 %fields = (
 	'id'			=>	'id',
 	'type_id'		=>	'type_id',
+	'reference'		=>	'reference',
 	'content'		=>	'content',
 	'docket'		=>	'docket',
 	'data'			=>	'data',
@@ -42,7 +43,7 @@ sub find {
 		$sql .= ' AND version=?';
 		push @values, $params{'version'};
 	} else {
-		$sql .= ' AND version IS NULL';
+		#$sql .= ' AND version IS NULL';
 	} # end if
 
 	if ( exists $params{'id'} ) {
@@ -159,6 +160,8 @@ sub set_data {
 
 sub get_data {
 	my $self = shift;
+$openprint::log->debug("get_data @_ ");
+$openprint::log->debug("data: $$self{'data'} ");
 	my %data = map { split( '~', $_ ) } split( ';', $$self{'data'} );
 	return @data{@_};
 } # end sub get_data

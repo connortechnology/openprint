@@ -91,6 +91,7 @@ sub calc {
 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+$openprint::log->debug("Customer Pickup Summary $Project, $service_id, $specs, $qty_index");
 	if ( $qty_index ) {
 		return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 	} # end if

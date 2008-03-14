@@ -538,12 +538,20 @@ sub summary {
 				$$specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtSignatureSpreadQuantity'};
 			} # end if
 			return '' if ! $$specs{'txtImposition'.$qty_index};
-			return sprintf(qq{%s %dout %s\n\%s},
+			my $html = sprintf(qq{%s %dout %s\n},
 					($$specs{'txtSignatureSpreadQuantity'.$qty_index} and $$specs{'txtSpreadSize'} ) ? ($$specs{'txtSignatureSpreadQuantity'.$qty_index} * $$specs{'txtSpreadSize'}) . 'pp' : '',
-					$$specs{'txtImposition'.$qty_index},
-					($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index} ),
-					'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index} . ($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? '' : sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index}) ),
-					);
+					$$specs{'txtImposition'.$qty_index} );
+			$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
+
+			$html .= 'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
+			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
+				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
+					$html .= sprintf( ' of %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+				} # end if
+			} else {
+				$html .= sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+			} # end if
+			return $html;
 		} else {
 			my $side_one_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideOne'));
 			

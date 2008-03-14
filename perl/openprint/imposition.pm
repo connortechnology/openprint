@@ -92,13 +92,19 @@ sub fix_height {
 	if ( ! $imp->paper()->start_height() ) {
 		if ( $$specs{'Cut Off'} ) {
 # Take the smallest available cut off
+			my $found = 0;
 			foreach my $cut_off ( sort split(',', $$specs{'Cut Off'} ) ) {
 				$openprint::log->debug("dutch Cut Off $cut_off " . $imp->used_height() );
 				if ( $cut_off >= $imp->used_height() ) {
 					$imp->paper()->height( $cut_off );
+					$found = 1;
 					last;
 				} # end if
 			} # end foreach
+			if ( ! $found ) {
+				$imp->imposition(0);
+			} # end if
+			
 		} else {
 			$imp->paper()->height( $imp->used_height() );
 		} # end if

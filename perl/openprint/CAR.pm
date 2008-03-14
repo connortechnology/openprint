@@ -20,6 +20,8 @@ require sql;
 	'cause'			=> 'cause',
 	'action'		=> 'action',	
 	'effectiveness'	=> 'effectiveness',
+	'area'			=> 'area',
+	'reason'		=> 'reason',
 	'presses'		=> 'presses',
 	'part1_user_id'	=> 'part1_user_id',
 	'part1_signed_on'	=> 'part1_signed_on',

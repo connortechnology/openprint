@@ -8,9 +8,10 @@
 	} elsif ( $openprint::param{'project_id'} ) {
 		$$variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} );
 		$$variable{'docket'} = $$variable{'Project'}->docket();
-	} else {
-		$$variable{'docket'} = 'Hello';
+	} elsif ( $$variable{'Label'}->id() ) {
+		$$variable{'docket'} = $$variable{'Label'}->docket();
 	} # end if
+
 	if ( $$variable{'Label'}->docket() != $$variable{'docket'} ) {
 		$$variable{'Label'}->docket($$variable{'docket'});
 	} # end if
@@ -19,10 +20,10 @@
 	} # end if
 	if ( ! $$variable{'Label'}->to() ) {
 		if ( $$variable{'Project'} ) {
-			my $services = $$variable{'Project'}->services();
+			#my $services = $$variable{'Project'}->services();
 			if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'Project'}->id(), 'Shipping' ) ) {
 				my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
-				$$variable{'Label'}->set_data('to'=> openprint::service::summary( $$variable{'Project'}, $services[0], $shipping_specs ) );
+				$$variable{'Label'}->set_data('to'=> openprint::service::summary( $$variable{'Project'}, $services[0] ) );
 			} else {
 				my $Order = $$variable{'Project'}->Order();
 				$$variable{'Label'}->set_data('to'=> join("\n", $Order->company_name(),
@@ -35,23 +36,26 @@
 	} # endif
 	$$variable{'Label'}->save();
 ) ?>
-<div style="width: 8.5in; height: 11in; border: none;">
+<div>
 	<form name="PackingSlip">
 	<style type="text/css">
+		
 		table {
 			table-layout: fixed;
+			width: 100%;
 		}
 		#Label {
 			font-size: 20pt;
 		}
 		table tr td {
 			vertical-align: top;
+			font-family: Arial, Helvetica, Sans-Serif;
 		} 
 		table tr td textarea {
 			width: 98%;
 		}
 	</style>
-	<table style="height: 5%;">
+	<table style="height: .5in;">
 		<tr>
 			<td style="font-size: 30PT;">PACKING SLIP</td>
 			<td style="border: 1px solid black;">DATE: 
@@ -62,25 +66,27 @@
 	@$variable{'shipped_on_years','shipped_on_months','shipped_on_days','shipped_start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 	#} # end if
 ) ?>
-            <select name="shipped_on_month" onchange="setDaysDropDown(this.form.shipped_on_year.value,this.value,this.form.shipped_on_day,this.form.shipped_on_day.value);"><?shipped_on_months?></select>
-            <select name="shipped_on_day"><?shipped_on_days?></select>
-            <select name="shipped_on_year" onchange="setDaysDropDown(this.value,this.form.shipped_on_month.value,this.form.shipped_on_day,this.form.shipped_on_day.value);"><?shipped_on_years?></select>
+<? echo ( 
+Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Label'}->created_on() ) );
+) ?>
 			</td>
 		</tr>
 	</table>
-	# <? echo ( $$variable{'docket'} ) ?><br/>
-	<table style="height: 25%;">
+	# <? echo ( $$variable{'docket'} ) ?>&nbsp;&nbsp;
+<img src="/barcode.png?code=D<? echo ( $$variable{'Label'}->docket() ) ?>+&amp;NoText=1&amp;Height=15" alt="<? echo ( $$variable{'Label'}->docket() ) ?>" />
+	<br/>
+	<table style="height: 2.75in;">
 		<tr>
 			<td style="border: 1px solid black;">
 				TO:<br/>
-				<span id="to"><? echo ( $$variable{'Label'}->get_data('to'); ) ?></span>
+				<div id="to" style="height: 2.5in;"><? echo ( $$variable{'Label'}->get_data('to'); ) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'to', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=to',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=to'});
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				FROM:<br/>
-				<span id="from"><? echo (
+				<div id="from" style="height: 2.5in;"><? echo (
 						if ( $$variable{'Project'} ) {
 								my $Company = $$variable{'Project'}->Company();
 								return join('<br/>', $Company->name(),
@@ -92,7 +98,7 @@ new Ajax.InPlaceEditor( 'to', '/employee/production/labels/_label.html?id=<? ech
 						} # end if
 						return 'unable to guess From:';
 					) ?>
-<br/><br/></span>
+<br/><br/></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'from', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=from',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5});   
 </script>
@@ -100,11 +106,11 @@ new Ajax.InPlaceEditor( 'from', '/employee/production/labels/_label.html?id=<? e
 		</tr>
 	</table>
 	<br/>
-	<table style="height: 45%;">
+	<table style="height: 4in;">
 		<tr>
 			<td style="border: 1px solid black;">
 				DESCRIPTION:<br/>
-				<span id="description"><? echo (
+				<div id="description" style="height:3.75in;"><? echo (
 					my $html;
 					if ( $$variable{'Project'} ) {
 						$html .= $$variable{'Project'}->reference();
@@ -116,14 +122,14 @@ new Ajax.InPlaceEditor( 'from', '/employee/production/labels/_label.html?id=<? e
 						} # end if
 					} # end if
 					return $html;
-				) ?><br/><br/></span>
+				) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'description', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5});   
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				QUANTITY:<br/>
-				<span id="quantity"><? echo (
+				<div id="quantity" style="height: 3.75in;"><? echo (
 					my $html;
 					if ( $$variable{'Project'} ) {
 						my $services = $$variable{'Project'}->services();
@@ -151,7 +157,7 @@ new Ajax.InPlaceEditor( 'description', '/employee/production/labels/_label.html?
 					} else {	
 					} # end if
 					return $html;
-				) ?></span>
+				) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'quantity', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5});   
 </script>
@@ -159,18 +165,20 @@ new Ajax.InPlaceEditor( 'quantity', '/employee/production/labels/_label.html?id=
 		</tr>
 	</table>
 	<br/>
-	<table style="height: 7%;">
+	<table style="height: .75in;">
 		<tr>
 			<td style="border: 1px solid black;">
-				SIGNATURE:
+				SIGNATURE:<br/>
+				<br/>
 			</td>
 			<td style="border: 1px solid black;">
-				PRINT (please print your name):
+				PRINT (please print your name):<br/>
+				<br/>
 			</td>
 		</tr>
 	</table>
 	<br/>
-	<table style="height: 7%;">
+	<table style="height: .75in;">
 		<tr>
 			<td style="border: 1px solid black;">
 				DATE:

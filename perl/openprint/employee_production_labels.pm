@@ -24,6 +24,7 @@ sub _label {
 		$Label->set_data($param{'field'}=>$param{'value'});
 		$Label->save();
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
+$openprint::log->debug("_label get " . join('',$Label->get_data($param{'field'})));
 	} elsif ( $param{'action'} eq 'get' ) {
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
 	} # end if

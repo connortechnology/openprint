@@ -118,7 +118,6 @@ function open_window( page ) {
 		ssi::writeButton( $log, $dbh, 'Docket', 'Docket.gif', "open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket' ),
 		ssi::writeButton( $log, $dbh, 'DocketLabel', 'label.gif', "open_window('/employee/production/label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket Label' ),
 		ssi::writeButton( $log, $dbh, 'SkidLabel', 'label.gif', "open_window('/employee/production/skid_label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Skid Label' ),
-		ssi::writeButton( $log, $dbh, 'Labels', 'labels.gif', '', '/employee/production/labels/index.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Labels' ),
 		ssi::writeButton( $log, $dbh, 'Summary', 'summary.gif', '', "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Summary' ),
 		 ssi::writeButton( $log, $dbh, 'UploadPDFs', 'uploadFiles.gif', "open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", '', 'Upload PDFs' ),
 		 ssi::writeButton( $log, $dbh, 'ExportJDF', 'exportjdf.gif', "f1.btnFunction.value='Export JDF';f1.submit();", '', 'JDF' ),
@@ -184,6 +183,7 @@ function open_window( page ) {
 	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 </form>
 <br/>
+<div class="leftColumn">
 <fieldset><legend>Inventory</legend>
 <table class="List">
     <tr><th align="left">Stock</th><th align="right" width="100">Required</th><th align="right" width="100">Allocated</th><th align="right" width="100">Checked Out</th></tr>
@@ -203,7 +203,16 @@ function open_window( page ) {
     ) ?>
 </table>
 </fieldset>
-<br/>
+</div>
+<div class="rightColumn">
+	<form name="LabelForm" id="LabelForm" method="post" action="/employee/production/labels/label.html">
+		<input type="hidden" name="project_id" value="<? echo ( $$variable{'ProjectIndex'} ) ?>"/>
+		<fieldset><legend>Labels &amp; Packing Slips</legend>
+			<div id="Labels"><!--#include virtual="_labels.html"--></div>
+		</fieldset>
+	</form>
+</div>
+<br class="spacer"/>
 <fieldset><legend>Modification History</legend>
 	<table class="List">
 	<tr>
