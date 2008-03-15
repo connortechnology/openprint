@@ -106,7 +106,7 @@ sub save_service {
 		$service_type = 'Stitching';
 	} elsif ( sets::isin( $service_type, [ '', 'AdditionalSignature' ] ) ) {
 		$service_type = 'Printing';
-	} elsif ( sets::isin( $service_type, ['KraftWrap','ShrinkWrap','Bundling','Bundle','Banding'] ) ) {
+	} elsif ( sets::isin( $service_type, ['KraftWrap','ShrinkWrap','Bundling','Bundle','Banding','CrossBanding'] ) ) {
 		$service_type = 'Packaging';
 	} elsif ( sets::isin( $service_type, ['BulkSkids','PlainCartons'] ) ) {
 		$service_type = 'Skids';
@@ -342,7 +342,7 @@ sub auto_calculate {
 			} elsif ( sets::isin( $type, [ 'LoopStitching', 'SaddleStitching'] ) ) {
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Stitching' );
 				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type , [ 'Bundling', 'KraftWrap', 'ShrinkWrap','Banding' ] ) ) {
+			} elsif ( sets::isin( $type , [ 'Bundling', 'KraftWrap', 'ShrinkWrap','Banding','CrossBanding' ] ) ) {
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Packaging' );
 				$alert .= $$specs{'alert'};
 			} elsif ( sets::isin( $type, ['BulkSkids', 'PlainCartons'] ) ) {

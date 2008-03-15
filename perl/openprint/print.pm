@@ -609,7 +609,6 @@ sub get_finished_weight {
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
 	my ( $project_index ) = @_; 
-	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE *********************************");
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
@@ -624,13 +623,13 @@ sub get_finished_calliper {
     foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		my $calliper = $$sig_specs{'txtSpecificStockCalliper'};
-		if ( $$sig_specs{'PageQuantity1'} ) {
-			$calliper *= $$sig_specs{'PageQuantity1'}/2;
-		} # end if
 
 		if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
+			if ( $$sig_specs{'PageQuantity1'} ) {
+				$calliper *= $$sig_specs{'PageQuantity1'}/2;
+			} # end if
 			$finished_calliper += $calliper;
-		} elsif ( $$sig_specs{'ProjectType'} eq 'ScratchPads' ) {
+		} elsif ( $Project->Type()->strid() eq 'ScratchPads' ) {
 			$finished_calliper += $$sig_specs{'PageQuantity'} * $calliper;
 		} else {
 				my $pages = 1;
@@ -651,10 +650,10 @@ sub get_finished_calliper {
 				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
 					$pages = 6;
 				} #// end if
-				$finished_calliper += $pages * $$sig_specs{'txtSpecificStockCalliper'};
+				$finished_calliper += $pages * $calliper;
 		} # end if
 	} # end foreach
-#$openprint::log->debug("Calliper: $finished_calliper");
+	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER $finished_calliper *********************************");
 	return $finished_calliper;
 } # end sub get_finished_calliper
 

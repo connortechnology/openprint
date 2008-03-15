@@ -10,7 +10,7 @@ require openprint::MaterialSpecification;
 
 use vars qw{ %fields %transforms %defaults };
 
-my $debug = 0;
+my $debug = 1;
 
 %fields = (
 		'id'				=>	'id',
