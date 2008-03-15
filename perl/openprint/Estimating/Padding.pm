@@ -31,6 +31,7 @@ my @variables = (
 		'PageQuantity',
 		'rdbCardboardBacking',
 		'rdbDTape',
+		'glue_id',
 );
 
 sub variables {
@@ -89,6 +90,7 @@ sub calc {
 		} # end foreach
 	} # end if
 
+
 	my $minimumCharge = openprint::service::get_price( 'PaddingChargeMinimum' );
 
 	foreach my $qty_index ( 1 .. 3 ) {
@@ -129,6 +131,9 @@ sub calc {
 				$price += $dtape_price;
 			} # end if
 		} # end if
+		if ( my @Materials = openprint::Material::find('category'=>'Padding Glues') ) {
+
+		} # end if Glues
 
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $price );
 	

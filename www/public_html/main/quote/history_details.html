@@ -14,15 +14,27 @@ function delete_confirm(form) {
 To save, process a new quote or process an order from this quotation, please click on the appropriate button below.<br>
 <br>
 </span>
-<span style="float: right;">
+<div style="float: right;">
+	<form name="f1" method="post" action="/main/quote/quote_history.html">
+		<input type="hidden" name="btnFunction" value="Delete Quote"/>
+		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id(); ) ?>"/>
 	<? echo ( my $html = '';
 			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?quote_id=".$$variable{'Quote'}->id()."', 800 );", '', 'View Log' );
 			} # end if
+			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'deleteFromHist.gif', "f1.action='/main/quote/history.html';delete_confirm(f1);", '', 'Delete' );
+			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy' );
+				$html .= ssi::writeButton( $log, $dbh, 'Resend', 'reSendQuote.gif', "f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", '', 'Resend' );
+				$html .= ssi::writeButton( $log, $dbh, 'Order', 'processOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Order' );
+			} else {
+				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' );
+			} # end if
 			return $html;
 		) ?>
-	</span>
+	</form>
+</div>
 <b>Attention:</b> <br>
 Projects listed in red have changed price from the time this quote was originally generated.<br>
 <br>
@@ -156,22 +168,3 @@ Projects listed in red have changed price from the time this quote was originall
 		</td>
 	</tr>
 </table>
-<br/>
-<div style="float: right;">
-	<form name="f1" method="post" action="/main/quote/quote_history.html">
-		<input type="hidden" name="btnFunction" value="Delete Quote"/>
-		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id(); ) ?>"/>
-		<? echo ( 
-			my $html;
-			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'deleteFromHist.gif', "f1.action='/main/quote/history.html';delete_confirm(f1);", '', 'Delete' );
-			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy' );
-				$html .= ssi::writeButton( $log, $dbh, 'Resend', 'reSendQuote.gif', "f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", '', 'Resend' );
-				$html .= ssi::writeButton( $log, $dbh, 'Order', 'processOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Order' );
-			} else {
-				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' );
-			} # end if
-			return $html;
-		) ?>
-	</form>
-</div>
