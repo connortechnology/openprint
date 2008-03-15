@@ -18,13 +18,13 @@
 	<legend><? echo ( $$variable{'sig_specs'}{'Reference'} ) ?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','signature_service_id'} ); ) ?></p>
 	<? endif ( $$variable{'sig_specs'}{'Reference'} ) ?>
 			<p><label># of DTapes on Front:</label>
-				<select id="front_quantity" name="front_quantity" onchange="calc(this.form.name);">
+				<select id="front_quantity" name="front_quantity-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
 					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 1,2,3,4) ], $$variable{"front_quantity-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
 				</select>
 			</p>
 			<p><label># of DTapes on Back:</label>
-				<select id="front_quantity" name="front_quantity" onchange="calc(this.form.name);">
-					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 1,2,3,4) ], $$variable{"front_quantity-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
+				<select id="back_quantity" name="back_quantity-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
+					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 1,2,3,4) ], $$variable{"back_quantity-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
 				</select>
 			</p>
 </fieldset>

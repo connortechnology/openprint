@@ -578,7 +578,7 @@ sub summary {
 		} # end if
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['PlainCartons','BulkSkids'] ) ) {
 		return openprint::Estimating::Skids::summary($Project->id(), $service_id, $specs, $qty_index );
-	} elsif ( sets::isin( $$specs{'ServiceType'}, ['ShrinkWrap','KraftWrap','Bundling','Banding'] ) ) {
+	} elsif ( sets::isin( $$specs{'ServiceType'}, ['ShrinkWrap','KraftWrap','Bundling','Banding','CrossBanding'] ) ) {
 		return openprint::Estimating::Packaging::summary($Project->id(), $service_id, $specs, $qty_index );
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['SaddleStitching','LoopStitching'] ) ) {
 		return openprint::Estimating::Stitching::summary($Project->id(), $service_id, $specs, $qty_index );

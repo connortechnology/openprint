@@ -29,7 +29,7 @@ sub no_outputs {
         push @v, $k if ! sets::isin( 'output', $variables{$k} );
     } # end foreach;
     return @v;
-}
+} # end sub no_outputs
 
 
 sub calc {
@@ -37,17 +37,25 @@ sub calc {
 
 	my $Project = new openprint::Project( $pid );
 
-	$$specs{'Folds'} =~ s/\D//g;
-	if ( ! $$specs{'Folds'} ) {
-		$$specs{'alert'} = 'Please enter the # of folds.';
+	if ( $Project->Type()->strid() ne 'MultiPagePublication' ) {
+		$$specs{'alert'} = 'Soft Folding is only relevant for multi-page publications.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+
+	$$specs{'Folds'} =~ s/\D//g;
+	#if ( ! $$specs{'Folds'} ) {
+		#$$specs{'alert'} = 'Please enter the # of folds.';
+		#return $$specs{'Status'} = 'uncalculated';
+	#} # end if
 
 	my @Equipment = openprint::Equipment::find('Specifications'=>{'SoftFolding Capable'=>'Y'},'use_in_estimating'=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no soft folding equipment.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+
+	my $services = $Project->services();
+	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
 	my $status = 'calculated';
 
@@ -71,14 +79,16 @@ sub calc {
 				$total += $MakeReady{'Price'};
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object('SoftFolding',$$specs{'Folds'}, $Equipment ); 
+			my %ServicePrice = openprint::service::get_price_object( 'SoftFolding', $$project_specs{'txtTotalPageQuantity'}, $Equipment ); 
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
+			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
+				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
 			} else {
-				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $$specs{'Folds'} * $$specs{'txtQuantity'.$qty_index} / 1000;
-				$total += $ServicePrice{'Total'};
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: %4$d folds : $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $$specs{'Folds'} );
+				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index};
 			} # end if
+			$total += $ServicePrice{'Total'};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'} );
 
 			if ( my $minimumcharge = openprint::service::get_price('SoftFoldingMinimumCharge', undef, $Equipment ) ) {
 				$total = $minimumcharge if $total < $minimumcharge;
@@ -124,9 +134,12 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'SoftFolding Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
-	#my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
-	@{$$variable{'Equipment'}} = @possible_equipment;
+	@{$$variable{'Equipment'}} = openprint::Equipment::find( 
+			'Specifications'	=>	{'SoftFolding Capable'=>'Y'},
+			'use_in_estimating'	=>	1,
+			'order'				=>	'lower(strName)'
+			);
+$openprint::log->warn("SoftFolding Equipment: " . @{$$variable{'Equipment'}} );
 } # end sub display
 
 1;

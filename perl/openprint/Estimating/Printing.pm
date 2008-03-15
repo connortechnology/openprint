@@ -47,15 +47,10 @@ require openprint::Material;
 my %variables = (
 		'txtSignatureType' => ['save'],
 		'txtServiceDescription'	=> ['save'],
-		'txtPrice1' => ['save','output'],
-		'txtPrice2' => ['save','output'],
-		'txtPrice3' => ['save','output'],
-		'StockPrice1'=>['save','output'],
-		'StockPrice2'=>['save','output'],
-		'StockPrice3'=>['save','output'],
-		'OverrideStockPrice1'=>['save'],
-		'OverrideStockPrice2'=>['save'],
-		'OverrideStockPrice3'=>['save'],
+		'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
+		'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
+		'StockPrice1'=>['save','output'], 'StockPrice2'=>['save','output'], 'StockPrice3'=>['save','output'],
+		'OverrideStockPrice1'=>['save'], 'OverrideStockPrice2'=>['save'], 'OverrideStockPrice3'=>['save'],
 		'MPrice1' => ['save','output'],
 		'MPrice2' => ['save','output'],
 		'MPrice3' => ['save','output'],
@@ -492,7 +487,9 @@ $openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} 
 		$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $$price{'100lb Price'} );
 		} else {
 		} # end if
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'} );
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'} );
+		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $$price{'Total Cost'} / $qty );
 		my $mprice = $$price{'Impression Price'};
 		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
@@ -939,7 +936,9 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 	my @blah = ( 1 .. 3 );
 
 	foreach my $qty_index ( reverse @blah ) {
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 		$$specs{"txtPrice$qty_index"} = 0;
+		} # end if
 		my $qty = $Project->quantity($qty_index);
 		next if ! defined $qty;
 		next if ! int $qty;
@@ -1435,7 +1434,9 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		} else {
 		} # end if
 
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'} );
+		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $best_price{'Total Cost'} / $qty );
 		my $mprice = $best_price{'Impression Price'};
 		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;

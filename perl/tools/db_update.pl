@@ -564,6 +564,14 @@ if ( $version < 1913 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1913;
 } # end if
+if ( $version < 1914 ) {
+	print "Updating to version 1914\n";
+	my $ac = sql::start_transaction( $dbh );
+	sql::update( undef, undef, 'service_types',['strdetailedurl=?','bind/padding.html'], 'strdetailedurl', 'bind/Padding.html' );
+	sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1914;
+} # end if
 
 $dbh->disconnect();
 1;

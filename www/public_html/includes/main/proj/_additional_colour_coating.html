@@ -17,7 +17,16 @@
 		my @options = (
 			'PMS', 'PMS Colour',
 		);
-		push @options, map { $_->name(), $_->description() } openprint::Service::find('category'=>'Coating','order'=>'lower(name)');
+		my @Services = openprint::Service::find('category'=>'Coating','order'=>'lower(name)');
+		foreach my $index ( 1 .. $$variable{index}-1 ) {
+			for ( my $j = 0; $j < @Services; $j += 1 ) {
+				if ( $$variable{"ColourCoatingType$$variable{Side}$index$$variable{Signature}"} eq $Services[$j]->name() ) {
+					splice @Services, $j, 1;
+					last;
+				} # end if
+			} # end for
+		} # end foreach
+		push @options, map { $_->name(), $_->description() } @Services;
 		return ssi::make_drop_down( \@options, $$variable{"ColourCoatingType$$variable{Side}$$variable{index}$$variable{Signature}"} );
 	) ?>
 </select>
