@@ -924,8 +924,8 @@ sub calc {
 	$project->design( 'ElectronicFile' );
 	$project->save();
 
-	my %services = $project->get_services();
-	push @{$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Cutting' ) if ! $services{'Cutting'};
+	my $services = $project->services();
+	push @{$$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Cutting' ) if ! $$services{'Cutting'};
 
 	if ( $$project{'id'} ) {
 		$openprint::session{'project_id'} = $project->id();
@@ -1160,17 +1160,17 @@ sub calc {
 				return jsrs::encode_pairs(%specs);
 			} # end if
 
-			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $services{''}[0], 'SideOneUVCoatingType', $specs{'SideOneCoatingType'} );
-			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $services{''}[0], 'SideTwoUVCoatingType', $specs{'SideTwoCoatingType'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $$services{''}[0], 'SideOneUVCoatingType', $specs{'SideOneCoatingType'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $$services{''}[0], 'SideTwoUVCoatingType', $specs{'SideTwoCoatingType'} );
 			if ( 
 					( $specs{'SideOneCoatingType'} and ( $specs{'SideOneCoatingType'} ne 'None' ) ) or
 					( $specs{'SideTwoCoatingType'} and ( $specs{'SideTwoCoatingType'} ne 'None' ) ) 
 			   ) {
-				if ( ! $services{'UVCoating'} ) {
-					push @{$services{'UVCoating'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'UVCoating' );
+				if ( ! $$services{'UVCoating'} ) {
+					push @{$$services{'UVCoating'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'UVCoating' );
 				} # end if
-			} elsif ( $services{'UVCoating'} ) {
-				foreach ( @{$services{'UVCoating'}} ) {
+			} elsif ( $$services{'UVCoating'} ) {
+				foreach ( @{$$services{'UVCoating'}} ) {
 					openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
 				} # end foreach
 			} # end if
@@ -1211,27 +1211,34 @@ sub calc {
 			return jsrs::encode_pairs(%specs);
 		} # end if
 
-		%services = $project->get_services();
+		$log->debug("Adding Required Services");
+		foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $project->type_id() ) ) {
+			if ( ! $$services{$servicetype_id} ) {
+				push @{$$services{$servicetype_id}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, $servicetype_id );
+			} # end if
+		} # end foreach
 
-		push @{$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Proofs' ) if ! $services{'Proofs'};
+		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Proofs' ) if ! $$services{'Proofs'};
 
 		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
-			push @{$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $services{'Folding'};
+$openprint::log->error('Adding Folding');
+			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {
 				$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';
 				$specs{'Status'} = 'uncalculated';
 			} # end if
-		} elsif ( $services{'Folding'} ) {
-			foreach ( @{$services{'Folding'}} ) {
+		} elsif ( $$services{'Folding'} ) {
+			foreach ( @{$$services{'Folding'}} ) {
+$openprint::log->debug('Deleting Folding');
 				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
 			} # end foreach
-			delete $services{'Folding'};
+			delete $$services{'Folding'};
 		} # end if
 
 		if ( $specs{'HoleDrilling'} eq 'Y' ) {
-			push @{$services{'Drilling'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Drilling' ) if ! $services{'Drilling'};
+			push @{$$services{'Drilling'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Drilling' ) if ! $$services{'Drilling'};
 			my $ac = sql::start_transaction( $dbh );
-			foreach my $sid ( @{$services{'Drilling'}} ) {
+			foreach my $sid ( @{$$services{'Drilling'}} ) {
 				foreach my $spec ( 'txtHoleQty','txtHoleSize' ) {
 					if ( $specs{$spec} ne '' ) {
 						openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, $spec, $specs{$spec} ) 
@@ -1241,29 +1248,29 @@ sub calc {
 				} # end foreach
 			} # end foreach
 			sql::end_transaction( $dbh, $ac );
-		} elsif ( $services{'Drilling'} ) {
-			foreach ( @{$services{'Drilling'}} ) {
+		} elsif ( $$services{'Drilling'} ) {
+			foreach ( @{$$services{'Drilling'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
 			} # end if
-			delete $services{'Drilling'};
+			delete $$services{'Drilling'};
 		} # end if
 
-		if ( openprint::Estimating::Scoring::neccessary( $project ) ) {
+		if ( ($specs{'Scoring'} ne 'Y') and openprint::Estimating::Scoring::neccessary( $project ) ) {
 			$specs{'Scoring'} = 'Y';
 		} # end if
 
 		if ( $specs{'Scoring'} eq 'Y' ) {
-			if ( ! $services{'Scoring'} ) {
-				push @{$services{'Scoring'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Scoring' );
+			if ( ! $$services{'Scoring'} ) {
+				push @{$$services{'Scoring'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Scoring' );
 			} # end if
-			my $scoring_specs = openprint::service::get_specs_ref( $project, $services{'Scoring'}[0] );
+			my $scoring_specs = openprint::service::get_specs_ref( $project, $$services{'Scoring'}[0] );
 			my @sigs = $project->signatures();
 			my $sig_specs = openprint::service::get_specs_ref( $project, $sigs[0] );
 
 			# Preload auto-calc # of scores, so we can determine if we need to override
 			openprint::Estimating::Scoring::get_scores( $project, $scoring_specs, $sig_specs );
 
-			foreach my $sid ( @{$services{'Scoring'}} ) {
+			foreach my $sid ( @{$$services{'Scoring'}} ) {
 				if ( ! ( $specs{'chkOverrideScoreQty'} or $$scoring_specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$scoring_specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) ) {
 					$specs{'chkOverrideScoreQty'} = 'Y';
 					$specs{'txtScoreQty'} = 1;
@@ -1275,89 +1282,84 @@ sub calc {
 				} # end if
 			} # end foreach
 		} else {
-			foreach ( @{$services{'Scoring'}} ) {
+			foreach ( @{$$services{'Scoring'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
 			} # end foreach
-			delete $services{'Scoring'};
+			delete $$services{'Scoring'};
 		} # end if
 
 		if ( $specs{'Perfing'} eq 'Y' ) {
-			push @{$services{'Perforating'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Perforating' ) if ! $services{'Perforating'};
-			foreach my $sid ( @{$services{'Perforating'}} ) {
+			push @{$$services{'Perforating'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Perforating' ) if ! $$services{'Perforating'};
+			foreach my $sid ( @{$$services{'Perforating'}} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'txtVerticalQty-0', $specs{'txtPerfQty'} );
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, 'chkOverrideQty-0', 'Y' );
 			} # end foreach
 		} else {
-			foreach ( @{$services{'Perforating'}} ) {
+			foreach ( @{$$services{'Perforating'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
 			} # end foreach
-			delete $services{'Perforating'};
+			delete $$services{'Perforating'};
 		} # end if
 
-		$log->debug("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-		foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $project->type_id() ) ) {
-			if ( ! $services{$servicetype_id} ) {
-				push @{$services{$servicetype_id}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, $servicetype_id );
-			} # end if
-		} # end foreach
 
 # Handle cartons
-		push @{$services{'PlainCartons'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'PlainCartons' ) if ! $services{'PlainCartons'};
+		push @{$$services{'PlainCartons'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'PlainCartons' ) if ! $$services{'PlainCartons'};
 		if ( $specs{'UPSShipping'} eq 'Y' ) {
-			push @{$services{'UPS'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'UPS' ) if ! $services{'UPS'};
+			push @{$$services{'UPS'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'UPS' ) if ! $$services{'UPS'};
 			my $ac = sql::start_transaction( $dbh );
-			foreach my $sid ( @{$services{'UPS'}} ) {
+			foreach my $sid ( @{$$services{'UPS'}} ) {
 				foreach my $spec ( 'txtShippingPostalCode' ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, $spec, $specs{$spec} );
 				} # end foreach
 			} # end foreach
 			sql::end_transaction( $dbh, $ac );
 		} else {
-			foreach my $sid ( @{$services{'UPS'}} ) {
+			foreach my $sid ( @{$$services{'UPS'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $sid );
 			} # end foreach
-			delete $services{'UPS'};
+			delete $$services{'UPS'};
 		} # end if
 
-		push @{$services{'Turnaround'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Turnaround' ) if ! $services{'Turnaround'};
+		push @{$$services{'Turnaround'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Turnaround' ) if ! $$services{'Turnaround'};
 
 
 		if ( $specs{'ShrinkWrapping'} eq 'Y' ) {
-			if ( ! $services{'ShrinkWrap'} ) {
-				push @{$services{'ShrinkWrap'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'ShrinkWrap' );
+			if ( ! $$services{'ShrinkWrap'} ) {
+				push @{$$services{'ShrinkWrap'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'ShrinkWrap' );
 			} # end if
-			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $services{'ShrinkWrap'}[0], 'txtItemsPerPackage', $specs{'txtItemsPerShrinkWrap'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $$services{'ShrinkWrap'}[0], 'txtItemsPerPackage', $specs{'txtItemsPerShrinkWrap'} );
 
 		} else {
-			foreach ( @{$services{'ShrinkWrap'}} ) {
+			foreach ( @{$$services{'ShrinkWrap'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
 			} # end foreach
 		} # end if
 
 		if ( $specs{'Bundling'} eq 'Y' ) {
-			if ( ! $services{'Bundling'} ) {
-				push @{$services{'Bundling'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Bundling' );
+			if ( ! $$services{'Bundling'} ) {
+				push @{$$services{'Bundling'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Bundling' );
 			} # end if
-			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $services{'Bundling'}[0], 'txtItemsPerPackage', $specs{'txtItemsPerBundle'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $$services{'Bundling'}[0], 'txtItemsPerPackage', $specs{'txtItemsPerBundle'} );
 
 		} else {
-			foreach ( @{$services{'Bundling'}} ) {
+			foreach ( @{$$services{'Bundling'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
 			} # end foreach
 		} # end if
 
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $sid ( @{$services{'Turnaround'}} ) {
+		foreach my $sid ( @{$$services{'Turnaround'}} ) {
 			foreach my $spec ( 'TurnaroundDays' ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $sid, $spec, $specs{$spec} );
 			} # end foreach
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
-
+$openprint::log->warn("Before auto");
 		$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$project{'id'} );
+$openprint::log->warn("Aftere auto");
 
-		if ( $services{'Scoring'} ) {
-			my $score_specs = openprint::service::get_specs_ref( $$project{'id'}, $services{'Scoring'}[0] );
+		if ( $$services{'Scoring'} ) {
+			my $score_specs = openprint::service::get_specs_ref( $$project{'id'}, $$services{'Scoring'}[0] );
 			if ( $specs{'chkOverrideScoreQty'} ne 'Y' ) {
 				$specs{'txtScoreQty'} = 0;
 				foreach my $ss_id ( $project->signatures() ) {
@@ -1370,8 +1372,8 @@ sub calc {
 				$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end if
-		if ( $services{'Drilling'} ) {
-			my $drill_specs = openprint::service::get_specs_ref( $$project{'id'}, $services{'Drilling'}[0] );
+		if ( $$services{'Drilling'} ) {
+			my $drill_specs = openprint::service::get_specs_ref( $$project{'id'}, $$services{'Drilling'}[0] );
 			$specs{'txtHoleQty'} = $$drill_specs{'txtHoleQty'};
 		} # end if
 

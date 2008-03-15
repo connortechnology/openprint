@@ -109,11 +109,12 @@ sub signature_needs {
 	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
+		$openprint::log->warn("FOLDING NEEDED templatetype!") if $debug;
 		return 1;
 	} # end if
 
 	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
-		#$openprint::log->debug("FOLDING NEEDED dimensions do not match!");
+		$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
 		return 1;
 	} # end if
 	return 0;
@@ -156,7 +157,7 @@ sub neccessary {
 			return 1;
 		} # end if
 	} # end foreach
-	$log->debug("FOLDING NOT NEEDED!");
+	$log->debug("FOLDING NOT NEEDED! $$services{Folding}");
 	return 0;	
 } # end sub neccessary
 

@@ -82,14 +82,14 @@ sub neccessary {
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 
-	my %services = $Project->get_services( );
-	if ( $services{'NoBindery'} ) {
+	my $services = $Project->services( );
+	if ( $$services{'NoBindery'} ) {
         #$log->debug(" ** Project is marked as No bindery, Scoring not needed ! ** ");
         return 0;
     } # end if
 
 	# Only need scoring if it's being folded.
-	if ( $services{'Folding'} ) {
+	if ( $$services{'Folding'} ) {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $specs = openprint::service::get_specs_ref( $Project->id(), $signature_service_index );
 
@@ -97,8 +97,6 @@ sub neccessary {
 				return 1;
 			} # end if
 		} # end foreach
-	} else {
-		$openprint::log->debug("No Folding");
 	} # end if
 
 	return 0;

@@ -1153,7 +1153,9 @@ $openprint::log->debug("No spread layout for you!");
 											my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
 											my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 											my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
-											if ( $I->Paper()->area() > $P->area() ) {
+											if ( $I->Paper()->gsm() != $P->gsm() ) {
+												$add = 1;
+											} elsif ( $I->Paper()->area() > $P->area() ) {
 												if ( (1*$BiggerPrice{'100lb'}) == (1*$SmallerPrice{'100lb'}) ) {
 													splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 													$j -= 1;
