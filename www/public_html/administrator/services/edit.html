@@ -33,7 +33,7 @@
 	<fieldset class="leftColumn"><legend>Service Information</legend>
 		<p> 
 			<label>Service Name:</label>
-			<input type="text" name="name" value="<? echo ( $$variable{'Service'}->name(); ) ?>" />
+			<input type="text" name="name" value="<? echo ( $$variable{'Service'}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
 		</p>
 		<p> 
 			<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category:</label>
@@ -45,7 +45,7 @@
 		</p>
 		<p> 
 			<label>Description:</label>
-			<input type="text" name="description" value="<? echo ( $$variable{'Service'}->description(); ) ?>" />
+			<input type="text" id="description" name="description" value="<? echo ( $$variable{'Service'}->description(); ) ?>" />
 		</p>
 	</fieldset>
 	<fieldset class="rightColumn"><legend>Purchasing Information</legend>
