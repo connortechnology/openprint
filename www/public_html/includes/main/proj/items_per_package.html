@@ -1,13 +1,13 @@
 <p>
 	<label>
 <? echo (
-	if ( $$variable{'ServiceTypeName'} eq 'Banding' ) {
+	if ( sets::isin( $$variable{'ServiceTypeName'}, ['Banding','Cross Banding'] ) ) {
 		return 'Items per band:';
 	} else {
 		return 'Items per ' . $$variable{'ServiceTypeName'};
 	} # end if
 ) ?>
 </label>
-	<input name="txtItemsPerPackage" value="<?txtItemsPerPackage?>" type="text" onkeyup="calc(this.form.name);" />
+	<input name="txtItemsPerPackage" value="<?txtItemsPerPackage?>" type="text" onkeyup="calc(this.form.name);" size="4" />
 </p>
 
