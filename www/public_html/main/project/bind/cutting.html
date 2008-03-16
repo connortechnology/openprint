@@ -98,12 +98,12 @@
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 	<p>
-		<label>Stock cutting price:</label>
+		<label>Stock cutting price (<?CurrencySymbol?>):</label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="<?Columns?>Columns">
-		$<input name="txtStockCutPrice-<?SignatureIndex?>-<?QTYIndex?>" size="9" readonly="readonly" />
+		<input name="txtStockCutPrice-<?SignatureIndex?>-<?QTYIndex?>" size="9" readonly="readonly" />
 		</span>
 		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -156,12 +156,12 @@
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 	<p>
-		<label>Post-press price:</label>
+		<label>Post-press price (<?CurrencySymbol?>):</label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="<?Columns?>Columns">
-			$<input name="txtRegularCutPrice-<?SignatureIndex?>-<?QTYIndex?>" size="9" readonly="readonly" />
+			<input name="txtRegularCutPrice-<?SignatureIndex?>-<?QTYIndex?>" size="9" readonly="readonly" />
 		</span>
 		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -171,24 +171,29 @@
 <? endwhile ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
 <fieldset>
 	<p> 
-		<label><b>Unit Price:</b></label>
+		<label><b>Unit Price (<?CurrencySymbol?>):</b></label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="<?Columns?>Columns">
-		$<input name="txtUnitPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" /> <b><?CurrencyName?></b>
+		<input name="txtUnitPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
 		</span>
 		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 	<p> 
-		<label><b>Service Price:</b></label>
+		<label><b>Service Price (<?CurrencySymbol?>):</b></label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="<?Columns?>Columns">
-		$<input name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" /> <b><?CurrencyName?></b>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ); ) ?>
+		<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" onchange="calc(this.form.name);" />
+		<input type="checkbox" name="OverridePrice<?QTYIndex?>" value="Y" <? echo ( $$variable{'OverridePrice'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?>
+<? else ( sets::isin( $session{'user_type'}, ['A','E'] ); ) ?>
+		<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" readonly="readonly" onfocus="this.blur();" />
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ); ) ?>
 		</span>
 		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>

@@ -417,7 +417,9 @@ sub calc_from_imposition {
 			$$specs{'txtPressSheetQty'.$qty_index} = 0;
 			$$specs{'hdnNetSheetCount'.$qty_index} = 0;
 			$$specs{'SheetQuantity'.$qty_index} = 0;
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+			if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+			} # end if
 			$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', 0 );
 			next;
 		} # end if
@@ -489,6 +491,8 @@ $openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} 
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'} );
+		} else {
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $$price{'Total Cost'} / $qty );
 		my $mprice = $$price{'Impression Price'};
@@ -937,7 +941,9 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 
 	foreach my $qty_index ( reverse @blah ) {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-		$$specs{"txtPrice$qty_index"} = 0;
+			$$specs{"txtPrice$qty_index"} = 0;
+		} else {
+			$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		} # end if
 		my $qty = $Project->quantity($qty_index);
 		next if ! defined $qty;
@@ -1435,7 +1441,9 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		} # end if
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'} );
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'} );
+		} else {
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $best_price{'Total Cost'} / $qty );
 		my $mprice = $best_price{'Impression Price'};
