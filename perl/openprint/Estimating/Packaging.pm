@@ -23,7 +23,7 @@ require openprint::service;
 require sql;
 
 my @variables = (
-	'txtItemsPerPackage',
+	'txtItemsPerPackage','bands_per_package',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
@@ -73,10 +73,12 @@ sub calc {
         return $$specs{'Status'} = 'uncalculated';
     } # end if
 
+	$$specs{'bands_per_package'} =~ s/[^\d\.]//g;
 	my $makeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', undef, undef );
 	my $minCharge = openprint::service::get_price( $$specs{'ServiceType'}.'Minimum', undef, undef );
 
 	foreach my $qty_index ( 1 .. 3 ) {
+
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -126,14 +128,17 @@ sub calc {
 			} else {
 				my $Material = new openprint::Material( $$specs{'type_id'} );
 				my %MaterialPrice = $Material->get_price( $package_qty );
+
+				my $material_qty = $package_qty;
+				$material_qty *= $$specs{'bands_per_package'} if $$specs{'bands_per_package'};
 				if ( lc $MaterialPrice{units} eq 'per m' ) {
-					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $package_qty / 1000;
+					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $material_qty / 1000;
 				} elsif ( lc $MaterialPrice{units} eq 'each' ) {
-					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $package_qty;
+					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $material_qty;
 				} # end if
 				$price += $MaterialPrice{'Total'};
 				$unitPrice += $MaterialPrice{'Total'};
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{'bands_per_package'} );
 			} # end if
 		} # end if Materials
 		$price = $minCharge if $price < $minCharge;
@@ -172,6 +177,7 @@ sub summary {
             $text .= ' per bundle';
         } elsif ( $$specs{'ServiceType'} =~ /Banding/i ) {
             $text .= ' per band';
+			$text .= sprintf(' %d bands each', $$specs{'bands_per_package'} ) if $$specs{'bands_per_package'};
         } # end if
         $text .= $$specs{'rdbCardboardBacking'} eq 'Y' ? ' with cardboard backing.' : '';
     } # end if

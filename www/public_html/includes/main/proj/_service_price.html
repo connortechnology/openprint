@@ -10,12 +10,12 @@
 		<label class="radio" for="OverridePrice<?QTYIndex?>">Override</label>
 <? else ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 		<input name="txtPrice<?QTYIndex?>" size="9" onfocus="this.blur();" readonly="readonly" />
-		<? if ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
+		<? if ( $$variable{'OverridePrice'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
 		<input type="hidden" name="OverridePrice<?QTYIndex?>" value="Y" />
 		Overridden
-		<? else ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
-		<input type="hidden" name="OverridePrice<?QTYIndex?>" value="Y" />
-		<? endif ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
+		<? else ( $$variable{'OverridePrice'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
+		<input type="hidden" name="OverridePrice<?QTYIndex?>" value="N" />
+		<? endif ( $$variable{'OverridePrice'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
 <? endif ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 	</span>
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
