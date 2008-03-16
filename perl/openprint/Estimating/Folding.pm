@@ -163,12 +163,13 @@ sub signature_needs {
 	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
+		#$openprint::log->warn("FOLDING NEEDED templatetype!") if $debug;
 		return 1;
 	} # end if
 
 	# This works for books because sigs don't have a txtFinalWidth, etc.
 	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
-		#$openprint::log->debug("FOLDING NEEDED dimensions do not match!");
+		#$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
 		return 1;
 	} # end if
 	return 0;

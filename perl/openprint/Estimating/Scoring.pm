@@ -97,8 +97,6 @@ sub neccessary {
 				return 1;
 			} # end if
 		} # end foreach
-	} else {
-		$openprint::log->debug("No Folding");
 	} # end if
 
 	return 0;

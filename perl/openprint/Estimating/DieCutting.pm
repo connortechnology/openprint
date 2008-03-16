@@ -26,7 +26,7 @@ require sql;
 
 my @variables = (
 	'txtQuantity1','txtQuantity2','txtQuantity3',
-	'txtSteelRuleLength','txtDieCutBends',
+	'txtSteelRuleLength','txtDieCutBends','txtHoleClearingHoles',
 	'rdbSuppliedDie','txtDieCutPunches',
 	'rdbDieCutting',
 	'OverridePrice1','OverridePrice2','OverridePrice3',

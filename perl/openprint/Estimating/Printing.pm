@@ -1270,9 +1270,11 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 							for ( my $j = 0; $j < @{$imps{$imp->imposition().$imp->runstyle()}}; $j += 1 ) {
 
 								my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
-								my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-								my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
-								if ( $I->Paper()->area() > $imp->Paper()->area() ) {
+								if ( $I->Paper()->gsm() != $P->gsm() ) {
+									$add = 1;
+								} elsif ( $I->Paper()->area() > $imp->Paper()->area() ) {
+									my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
+									my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 									if ( (1*$BiggerPrice{'100lb Price'}) == (1*$SmallerPrice{'100lb Price'}) ) {
 										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 										$j -= 1;
