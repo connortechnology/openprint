@@ -755,7 +755,7 @@ function countLines(strtocount, cols) {
 }
 
 function textarea_resize( element ) {
-	element.rows = countLines(element.value,element.cols) + 1;
+	element.rows = countLines(element.value,element.cols);
 } // end function textarea_resize
 
 function do_decimals( number, precision ) {

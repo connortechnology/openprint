@@ -20,6 +20,7 @@ my $debug = 0;
 my $master_time;
 
 use strict;
+#use warnings;
 use POSIX qw(ceil);
 
 require sql;
@@ -1270,11 +1271,11 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 							for ( my $j = 0; $j < @{$imps{$imp->imposition().$imp->runstyle()}}; $j += 1 ) {
 
 								my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
-								if ( $I->Paper()->gsm() != $P->gsm() ) {
+								my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
+								my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+								if ( $I->Paper()->gsm() != $imp->Paper()->gsm() ) {
 									$add = 1;
 								} elsif ( $I->Paper()->area() > $imp->Paper()->area() ) {
-									my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-									my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 									if ( (1*$BiggerPrice{'100lb Price'}) == (1*$SmallerPrice{'100lb Price'}) ) {
 										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 										$j -= 1;
@@ -2245,7 +2246,7 @@ sub calc_price {
 
 		$price{'Imposition Total'} = $price{'Imposition MakeReady'};
 		my %ImpositionCharge;
-		my $service = 'Imposition'.$Project->Type()->strid();
+		$service = 'Imposition'.$Project->Type()->strid();
 
 		if ( ! (%ImpositionCharge = openprint::service::get_price_object( $service,undef,$Press) ) ) {
 			$service = 'Imposition';

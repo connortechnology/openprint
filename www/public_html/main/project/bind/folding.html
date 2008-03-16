@@ -77,17 +77,7 @@ if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 			</p>
-			<p>
-				<label><b>Service Price:</b></label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">$<input name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" onchange="calc(this.form.name);" />
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-			</p>
+<!--#include virtual="/includes/main/proj/_service_price.html"-->
 			<p>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] ); ) ?>
 			</p>

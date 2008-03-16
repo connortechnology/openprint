@@ -11,6 +11,7 @@ my $debug = 1;
 my %variables = (
 	'Quantity' => ['save'],
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
+	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'],
 );
@@ -55,6 +56,8 @@ sub calc {
 	my $status = 'calculated';
 
 	foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
+		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity( $qty_index ) if ! $$specs{'txtQuantity'.$qty_index};
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
@@ -63,6 +66,11 @@ sub calc {
 
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
+			my $max_tip_ins = $Equipment->specification('Maximum Tip-ins');
+			if ( $max_tip_ins and ( $max_tip_ins < $$specs{'Quantity'} ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Maximum tip-ins: ' . $max_tip_ins.'<br/>';
+				next;
+			} # end if
 
 			my $total = 0;
 
@@ -106,8 +114,12 @@ sub calc {
 			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
 		} # end if
 
-        $$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $BestPrice{'ServicePrice'}{'Total'} / $$specs{'txtQuantity'.$qty_index} );
-		$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $BestPrice{'ServicePrice'}{'Total'} / $$specs{'txtQuantity'.$qty_index} );
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} );
+		} else {
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
+		} # end if
 
     } # end foreach qty_index
     return $status;

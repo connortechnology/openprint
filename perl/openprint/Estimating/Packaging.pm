@@ -24,12 +24,9 @@ require sql;
 
 my @variables = (
 	'txtItemsPerPackage',
-	'txtQuantity1',
-	'txtPrice1',
-	'txtQuantity2',
-	'txtPrice2',
-	'txtQuantity3',
-	'txtPrice3',
+	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'txtPackageQuantity1',
 	'txtPackageQuantity2',
 	'txtPackageQuantity3',
@@ -41,6 +38,7 @@ sub variables {
 }
 
 my @no_outputs = (
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'txtQuantity1','txtQuantity2','txtQuantity3',
 	'txtItemsPerPackage',
 	'rdbCardboardBacking',
@@ -79,6 +77,8 @@ sub calc {
 	my $minCharge = openprint::service::get_price( $$specs{'ServiceType'}.'Minimum', undef, undef );
 
 	foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{'txtPressSheetComboItems'} ? $$specs{'txtQuantity'.$qty_index} * $$specs{'txtPressSheetComboItems'} : $$specs{'txtQuantity'.$qty_index};
 		next if ! $qty;
@@ -140,7 +140,11 @@ sub calc {
 
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>',$price );
 		$$specs{'txtPackageQuantity'.$qty_index} = $package_qty;
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # endif
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice/$qty );
 	} # end foreach
 

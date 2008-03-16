@@ -572,6 +572,15 @@ if ( $version < 1914 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1914;
 } # end if
+if ( $version < 1915 ) {
+	print "Updating to version 1915\n";
+	my $ac = sql::start_transaction( $dbh );
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
+	$dbh->do(q`alter table users add deleted boolean`) if ! exists $$data{'deleted'};
+	sql::insert( undef, undef, 'database_info', 'version', 1915, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1915;
+} # end if
 
 $dbh->disconnect();
 1;

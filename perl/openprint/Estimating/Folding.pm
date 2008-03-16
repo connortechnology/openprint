@@ -29,6 +29,7 @@ my @equipment;
 my @stitchers;
 
 my @variables = (
+		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'MPrice1', 'MPrice2', 'MPrice3',
 		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -685,6 +686,8 @@ sub calc {
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, openprint::project::get_project_type_service_index( $log, $dbh, $project_index ) );
 
 	foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! int $$specs{"txtQuantity$qty_index"};
 		$$specs{'hdnBreakdown'.$qty_index} = '';
@@ -730,7 +733,11 @@ sub calc {
 			$$specs{'alert'} = 'Unable to fold.';
 		} # end if
 
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
 	} # end foreach qty
 	$log->debug(" END FOLDING!!!!!!!!!!!!!!!!!! $status");
