@@ -409,6 +409,7 @@ $variable{'ServiceIndex'} = $service_index;
 					} # end if
 
 				} elsif ($third eq 'bind') {
+$openprint::log->warn('bind');
 					if ( $filename eq 'folding.html' ) {
 						require openprint::Estimating::Folding;
 						openprint::Estimating::Folding::display( $log, $dbh, \%variable, $project_index, $service_index );
@@ -432,9 +433,11 @@ $variable{'ServiceIndex'} = $service_index;
 					} elsif ( $filename eq 'collating.html' ) {
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename =~ /(\w*).html/ ) {
+					} elsif ( $filename =~ /^(\w*).html$/ ) {
+$openprint::log->debug("$1");
 						eval sprintf('require openprint::Estimating::%1$s;
 						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
+						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 					
 					} # end if
 				} elsif ($third eq 'spec') {
