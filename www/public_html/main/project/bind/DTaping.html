@@ -17,17 +17,29 @@
 	<? if ( $$variable{'sig_specs'}{'Reference'} ) ?>
 	<legend><? echo ( $$variable{'sig_specs'}{'Reference'} ) ?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','signature_service_id'} ); ) ?></p>
 	<? endif ( $$variable{'sig_specs'}{'Reference'} ) ?>
-			<p><label># of DTapes on Front:</label>
-				<select id="front_quantity" name="front_quantity-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
+			<p><label>Top edge:</label>
+				<select id="top-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" name="top-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"front_quantity-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
-				</select>
+					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"top-strips-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
+				</select> tapes
 			</p>
-			<p><label># of DTapes on Back:</label>
-				<select id="back_quantity" name="back_quantity-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
+			<p><label>Bottom edge:</label>
+				<select id="bottom-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" name="bottom-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"back_quantity-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
-				</select>
+					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"bottom-strips-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
+				</select> tapes
+			</p>
+			<p><label>Left edge:</label>
+				<select id="left-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" name="left-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"left-strips-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
+				</select> tapes
+			</p>
+			<p><label>Right edge:</label>
+				<select id="right-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" name="right-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"right-strips-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
+				</select> tapes
 			</p>
 </fieldset>
 <? endwhile ( $$variable{'signature_service_id'} = shift @{$$variable{'Signatures'}} ) ?>

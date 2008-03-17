@@ -11,6 +11,7 @@ my $debug = 1;
 
 my %variables = (
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
+	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'],
 );
@@ -24,8 +25,10 @@ sub variables {
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $p_id, $s_s_id );
-		push @v, "front_quantity-$$sig_specs{SignatureIndex}";
-		push @v, "back_quantity-$$sig_specs{SignatureIndex}";
+		push @v, "top-strips-$$sig_specs{SignatureIndex}";
+		push @v, "bottom-strips-$$sig_specs{SignatureIndex}";
+		push @v, "left-strips-$$sig_specs{SignatureIndex}";
+		push @v, "right-strips-$$sig_specs{SignatureIndex}";
 	} # end foreach signature
     return @v;
 }
@@ -52,28 +55,24 @@ sub calc {
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		if ( $$specs{"front_quantity-$$sig_specs{SignatureIndex}"} eq '' ) {
-			$$specs{'alert'} .= 'Please select the # of DTapes on the front';
-			if ( $Project->signatures() > 1 ) {
-				$$specs{'alert'} .= ' of signature '.$$sig_specs{'SignatureIndex'};
-			} else {
-				$$specs{'alert'} .= '.';
+		foreach my $side ( 'top','bottom','left','right' ) {
+			if ( $$specs{"$side-strips-$$sig_specs{SignatureIndex}"} eq '' ) {
+				$$specs{'alert'} .= "Please select the # of DTapes on the $side";
+				if ( $Project->signatures() > 1 ) {
+					$$specs{'alert'} .= ' of signature '.$$sig_specs{'SignatureIndex'};
+				} else {
+					$$specs{'alert'} .= '.';
+				} # end if
+				return $$specs{'Status'} = 'uncalculated';
 			} # end if
-			return $$specs{'Status'} = 'uncalculated';
-		} elsif ( $$specs{"back_quantity-$$sig_specs{SignatureIndex}"} eq '' ) {
-			$$specs{'alert'} .= 'Please select the # of DTapes on the back';
-			if ( $Project->signatures() > 1 ) {
-				$$specs{'alert'} .= ' of signature '.$$sig_specs{'SignatureIndex'};
-			} else {
-				$$specs{'alert'} .= '.';
-			} # end if
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
+		} # end foreach side
 	} # end foreach
 
 	my $status = 'calculated';
 
 	foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
+		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity( $qty_index ) if ! $$specs{'txtQuantity'.$qty_index};
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
@@ -102,57 +101,34 @@ sub calc {
 			foreach my $ss_id ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 
-				my $runs = int($$specs{"front_quantity-$$sig_specs{SignatureIndex}"} / $dtapes_per_run);
-				my $last_run = $$specs{"front_quantity-$$sig_specs{SignatureIndex}"} % $dtapes_per_run;
+				foreach my $side ( 'top','bottom','left','right' ) {
+					my $runs = int($$specs{"$side-strips-$$sig_specs{SignatureIndex}"} / $dtapes_per_run);
+					my $last_run = ($$specs{"$side-strips-$$sig_specs{SignatureIndex}"} - ( $dtapes_per_run * $runs) ) % $dtapes_per_run;
 
-				if ( $runs ) {
-					my %ServicePrice = openprint::service::get_price_object('DTaping',$dtapes_per_run, $Equipment ); 
-					if ( ! %ServicePrice ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-					} else {
-						$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs * $$specs{'txtQuantity'.$qty_index} / 1000;
-						$total += $ServicePrice{'Total'};
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Front Service Price: %4$d runs of %5$d tapes : $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs, $dtapes_per_run );
+					if ( $runs ) {
+						my %ServicePrice = openprint::service::get_price_object('DTaping',$dtapes_per_run, $Equipment ); 
+						if ( ! %ServicePrice ) {
+							$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
+						} else {
+							$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs * $$specs{'txtQuantity'.$qty_index} / 1000;
+							$total += $ServicePrice{'Total'};
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%6$s Service Price: %4$d runs of %5$d tapes : $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs, $dtapes_per_run, $side );
+						} # end if
 					} # end if
-				} # end if
 
-				if ( $last_run ) {
-					my %LastServicePrice;
-					%LastServicePrice = openprint::service::get_price_object('DTaping',$last_run, $Equipment );
-					if ( ! %LastServicePrice ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-					} else {
-						$LastServicePrice{'Total'} += $LastServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Front Service Price: 1 run of %4$d numbers : $%1$.2f%2$s = $%3$.2f<br/>', @LastServicePrice{'Price','units','Total'}, $last_run );
-						$total += $LastServicePrice{'Total'};
+					if ( $last_run ) {
+						my %LastServicePrice;
+						%LastServicePrice = openprint::service::get_price_object('DTaping',$last_run, $Equipment );
+						if ( ! %LastServicePrice ) {
+							$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
+						} else {
+							$LastServicePrice{'Total'} += $LastServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%5$s Service Price: 1 run of %4$d tapes : $%1$.2f%2$s = $%3$.2f<br/>', @LastServicePrice{'Price','units','Total'}, $last_run, $side );
+							$total += $LastServicePrice{'Total'};
+						} # end if
 					} # end if
-				} # end if
+				} # end foreach side
 
-				$runs = int($$specs{"back_quantity-$$sig_specs{SignatureIndex}"} / $dtapes_per_run);
-				$last_run = $$specs{"back_quantity-$$sig_specs{SignatureIndex}"} % $dtapes_per_run;
-
-				if ( $runs ) {
-					my %ServicePrice = openprint::service::get_price_object('DTaping',$dtapes_per_run, $Equipment ); 
-					if ( ! %ServicePrice ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-					} else {
-						$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs * $$specs{'txtQuantity'.$qty_index} / 1000;
-						$total += $ServicePrice{'Total'};
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Back Service Price: %4$d runs of %5$d tapes : $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs, $dtapes_per_run );
-					} # end if
-				} # end if
-
-				if ( $last_run ) {
-					my %LastServicePrice;
-					%LastServicePrice = openprint::service::get_price_object('DTaping',$last_run, $Equipment );
-					if ( ! %LastServicePrice ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-					} else {
-						$LastServicePrice{'Total'} += $LastServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Back Service Price: 1 run of %4$d numbers : $%1$.2f%2$s = $%3$.2f<br/>', @LastServicePrice{'Price','units','Total'}, $last_run );
-						$total += $LastServicePrice{'Total'};
-					} # end if
-				} # end if
 			} # end foreach signature
 			
 			if ( my $minimumcharge = openprint::service::get_price('DTapingMinimumCharge', undef, $Equipment ) ) {
@@ -173,7 +149,11 @@ sub calc {
 			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
 		} # end if
 
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 		$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} );
+		} else {
+		$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
+		} # end if
         $$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $BestPrice{'Total'}/ $$specs{'txtQuantity'.$qty_index} );
 
     } # end foreach qty_index
@@ -198,8 +178,9 @@ sub summary {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
 		my $text = '';
 
-		$text .= $$specs{"front_quantity-$$sig_specs{'SignatureIndex'}"}." on the front\n" if $$specs{"front_quantity-$$sig_specs{SignatureIndex}"};
-		$text .= $$specs{"back_quantity-$$sig_specs{'SignatureIndex'}"}." on the back\n" if $$specs{"back_quantity-$$sig_specs{SignatureIndex}"};
+		foreach my $side ( 'top','bottom','left','right' ) {
+		$text .= $$specs{"$side-strips-$$sig_specs{'SignatureIndex'}"}." on the $side\n" if $$specs{"$side-strips-$$sig_specs{SignatureIndex}"};
+		} # end foreach
 		return $text;
 	} # end if
 
