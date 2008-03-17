@@ -680,7 +680,7 @@ sub add_imposition {
 sub convert_impositions {
 	my ( $desired_signature_size, $spread_size, $impositions ) = @_;
 	my @good_impositions;
-
+$openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, Spread size: $spread_size,") if $debug;
 # The various way we can group these spreads
 	my %blocks = (
 			1	=>	[ [1,1] ],
@@ -717,7 +717,7 @@ sub convert_impositions {
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;
 		#foreach my $signature_size ( reverse 1 .. $start ) {
-		foreach my $signature_size ( reverse int($start/2) .. $start ) {
+		foreach my $signature_size ( reverse (int($start/2)-1) .. $start ) {
 			next if ! $blocks{$signature_size};
 #Now figure out how to cut up the imposition
 #$openprint::log->debug("Considering sig size: $signature_size") if $debug;
@@ -726,9 +726,9 @@ sub convert_impositions {
 			my $imp_cols = $imp->columns();
 			foreach my $block ( @{$blocks{$signature_size}} ) {
 				my ( $col, $row ) = @$block;
-				$cols = int ( $imp_cols / $col );
+				$cols = int( $imp_cols / $col );
 				$rows = int( $imp_rows / $row );
-				$openprint::log->debug("Trying $col x $row Got $cols x $rows") if $debug;
+				$openprint::log->debug("Trying $signature_size: IMP: $imp_cols x $imp_rows BLOCK: $col x $row Got $cols x $rows") if $debug;
 				#$log->debug("Trying $col x $row Got $cols x $rows") if $debug;
 				next if ! ( $rows and $cols );
 				next if ( $cols % 2 and $imp->runstyle() eq 'Work & Turn' );
