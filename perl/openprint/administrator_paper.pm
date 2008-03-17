@@ -90,6 +90,8 @@ sub paper {
 		$Paper->gsm( $openprint::param{'gsm'} );
 		$Paper->calliper( $openprint::param{'calliper'} );
 		$Paper->sheets_per_package( $openprint::param{'sheets_per_package'} );
+		$Paper->full_packages( $openprint::param{'full_packages'} );
+		$Paper->minimum_order( $openprint::param{'minimum_order'} );
 		$Paper->cuttable( $openprint::param{'cuttable'} );
 		$Paper->doublesided( $openprint::param{'doublesided'} );
 		$Paper->multipart( $openprint::param{'multipart'} );

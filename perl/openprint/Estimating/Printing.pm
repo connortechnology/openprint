@@ -1875,10 +1875,33 @@ sub calc_price {
 		$gross_qty += $additional_overs;
 	} # end if
 	$impressions = $gross_qty;
-	my $sheets_per_package = $Paper->sheets_per_package();
-	if ( $sheets_per_package ) {
-		$gross_qty = $sheets_per_package * ( ceil( $gross_qty / $sheets_per_package ) );
-	} # end if
+    my $weight = $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi();
+    my $sheets_per_package = $Paper->sheets_per_package();
+    if ( $sheets_per_package and $Paper->full_packages() ) {
+        if ( $Paper->type() eq 'Sheet' ) {
+            $gross_qty = $sheets_per_package * ceil( $gross_qty / $sheets_per_package );
+        } elsif ( $Paper->type() eq 'Roll' ) {
+            $weight = $sheets_per_package * ceil( $weight/$sheets_per_package);
+            $gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
+        } else {
+            $openprint::log->error('Unknown paper type.');
+        } # end if
+    } # end if
+    if ( $Paper->minimum_order() ) {
+		# Assume sheets for sheets, lbs for Rolls
+        if ( $Paper->type() eq 'Sheet' ) {
+			if ( $Paper->minimum_order() > $gross_qty ) {
+				$gross_qty = $Paper->minimum_order();
+			} # end if
+        } elsif ( $Paper->type() eq 'Roll' ) {
+			if ( $Paper->minimum_order() > $weight ) {
+				$weight = $Paper->minimum_order();
+				$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
+			} # end if
+		} # end if
+        $openprint::log->debug('Minimum Order Requirement not met');
+    } # end if
+
 	my %sheet_qty = (
 			'Impressions'				=> $impressions, 
 			'Gross Sheet Count'			=> $gross_qty, 

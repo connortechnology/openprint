@@ -1,37 +1,37 @@
 	<script type="text/javascript" src="/administrator/production/pricing.js"></script>
 <script type="text/javascript">
 function mweight_to_gsm( form ) {
-    var mweight;
-    var width;
-    var height;
+	var mweight;
+	var width;
+	var height;
 	if ( get_value( form.elements['type'] ) == 'Roll' ) {
-        mweight = parseFloat(1*form.elements['basis_mweight'].value);
-        width = parseFloat(1*form.elements['basis_width'].value);
-        height = parseFloat(1*form.elements['basis_height'].value);
-    } else { // sheet
-        mweight = parseFloat(1*form.elements['mweight'].value);
-        width = parseFloat(1*form.elements['width'].value);
-        height = parseFloat(1*form.elements['height'].value);
-    } //e nd if
+		mweight = parseFloat(1*form.elements['basis_mweight'].value);
+		width = parseFloat(1*form.elements['basis_width'].value);
+		height = parseFloat(1*form.elements['basis_height'].value);
+	} else { // sheet
+		mweight = parseFloat(1*form.elements['mweight'].value);
+		width = parseFloat(1*form.elements['width'].value);
+		height = parseFloat(1*form.elements['height'].value);
+	} //e nd if
 
 	var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
-    form.elements['gsm'].value = gsm;
+	form.elements['gsm'].value = gsm;
 }
 function gsm_to_mweight( form ) {
-    var gsm = parseFloat(1*form.elements['gsm'].value);
-    var width;
-    var height;
-    var mweight;
+	var gsm = parseFloat(1*form.elements['gsm'].value);
+	var width;
+	var height;
+	var mweight;
 
-    width = parseFloat(1*form.elements['basis_width'].value);
-    height = parseFloat(1*form.elements['basis_height'].value);
-    mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
-    form.elements['basis_mweight'].value = mweight;
+	width = parseFloat(1*form.elements['basis_width'].value);
+	height = parseFloat(1*form.elements['basis_height'].value);
+	mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
+	form.elements['basis_mweight'].value = mweight;
 
-    width = parseFloat(1*form.elements['width'].value);
-    height = parseFloat(1*form.elements['height'].value);
-    mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
-    form.elements['mweight'].value = mweight;
+	width = parseFloat(1*form.elements['width'].value);
+	height = parseFloat(1*form.elements['height'].value);
+	mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
+	form.elements['mweight'].value = mweight;
 }
 </script>
 
@@ -158,10 +158,10 @@ function gsm_to_mweight( form ) {
 			</p>
 			<p>
 				<label>Type:</label>
-				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('BasisSize').hide();$('MWeight').show();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() ne 'Roll'; ) ?> />
-                <label class="radio" for="typeSheet">Sheet</label>
-                <input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('BasisSize').show();$('MWeight').hide();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() eq 'Roll'; ) ?> />
-                <label class="radio" for="typeRoll">Roll</label>
+				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('BasisSize').hide();$('MWeight').show();$('MinimumOrderUnits').innerHTML='sheets';$('QuantityPerPackageUnits').innerHTML='sheets';" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() ne 'Roll'; ) ?> />
+				<label class="radio" for="typeSheet">Sheet</label>
+				<input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('BasisSize').show();$('MWeight').hide();$('MinimumOrderUnits').innerHTML='lbs';$('QuantityPerPackageUnits').innerHTML='lbs';" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() eq 'Roll'; ) ?> />
+				<label class="radio" for="typeRoll">Roll</label>
 			<p>
 				<label>Size:</label>
 				<input type="text" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
@@ -175,11 +175,11 @@ function gsm_to_mweight( form ) {
 				<input type="text" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm( this.form );" />
 			</p>
 			<p id="BasisSize" <? echo ( 'style="display: none;"' if $$variable{Paper}->type() ne 'Roll' ) ?>>
-                <label>Basis MWeight:</label><input type="text" name="basis_mweight" size="9" value="<? echo ( $$variable{Paper}->basis_mweight() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm(this.form);" style="width: auto;" /><br/>
-                <label>Basis Size:</label>
+				<label>Basis MWeight:</label><input type="text" name="basis_mweight" size="9" value="<? echo ( $$variable{Paper}->basis_mweight() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm(this.form);" style="width: auto;" /><br/>
+				<label>Basis Size:</label>
 				<input type="text" name="basis_width" size="9" value="<? echo ( $$variable{Paper}->basis_width() ? $$variable{Paper}->basis_width() : 25 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
 				<input type="text" name="basis_height" size="9" value="<? echo ( $$variable{Paper}->basis_height() ?  $$variable{Paper}->basis_height() : 38 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
-            </p>
+			</p>
 			<p> 
 				<label>GSM:</label>
 				<input type="text" name="gsm" value="<? echo ( $$variable{'Paper'}->gsm(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );" />
@@ -201,11 +201,23 @@ function gsm_to_mweight( form ) {
 				<label class="radio" for="supplied">Both</label>
 			</p>
 			<p> 
-				<label>Sheets Per Package:</label>
+				<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>):</label>
 				<input type="text" name="sheets_per_package" value="<? echo ( $$variable{'Paper'}->sheets_per_package(); ) ?>"  size="12" style="width: auto;"> 
 			</p>
 	</div><!--left-->
 	<div class="column">
+		<p>
+			<label>Order Full Packages:</label>
+			<input type="radio" name="full_packages" id="full_packages1" value="1" <? echo ( $$variable{'Paper'}->full_packages() ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="full_packages1">Yes</label>
+			<input type="radio" name="full_packages" id="full_packages0" value="0" <? echo ( $$variable{'Paper'}->full_packages()eq '0' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="full_packages0">No</label>
+		</p>
+		<p>
+			<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>):</label>
+			<input type="text" name="minimum_order" value="<? echo ( $$variable{'Paper'}->minimum_order(); ) ?>"  size="13" style="width: auto;">
+		</p>
+
 		<p> 
 			<label>FSC Code:</label>
 			<input type="text" name="fsc_code" value="<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>"  size="13" style="width: auto;"> 
