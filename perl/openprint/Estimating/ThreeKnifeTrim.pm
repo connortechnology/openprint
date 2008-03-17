@@ -1,4 +1,4 @@
-package openprint::Estimating::SoftFolding;
+package openprint::Estimating::ThreeKnifeTrim;
 use strict;
 use warnings;
 no warnings qw(uninitialized);
@@ -10,7 +10,7 @@ use POSIX           qw(ceil);
 my $debug = 1;
 
 my %variables = (
-	'Folds' => ['save'],
+	'Sides' => ['save'],
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
@@ -38,20 +38,15 @@ sub calc {
 
 	my $Project = new openprint::Project( $pid );
 
-	if ( $Project->Type()->strid() ne 'MultiPagePublication' ) {
-		$$specs{'alert'} = 'Soft Folding is only relevant for multi-page publications.';
+	$$specs{'Sides'} =~ s/\D//g;
+	if ( ! $$specs{'Sides'} ) {
+		$$specs{'alert'} = 'Please enter the # of sides to be trimmed.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	$$specs{'Folds'} =~ s/\D//g;
-	#if ( ! $$specs{'Folds'} ) {
-		#$$specs{'alert'} = 'Please enter the # of folds.';
-		#return $$specs{'Status'} = 'uncalculated';
-	#} # end if
-
-	my @Equipment = openprint::Equipment::find('Specifications'=>{'SoftFolding Capable'=>'Y'},'use_in_estimating'=>1);
+	my @Equipment = openprint::Equipment::find('Specifications'=>{'ThreeKnifeTrim Capable'=>'Y'},'use_in_estimating'=>1);
 	if ( ! @Equipment ) {
-		$$specs{'alert'} = 'We have no soft folding equipment.';
+		$$specs{'alert'} = 'We have no three knife trimmers.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
@@ -68,14 +63,13 @@ sub calc {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		my %BestPrice;
-		$$specs{'hdnBreakdown'.$qty_index} = sprintf( '%d pages<br/>', $$project_specs{'txtTotalPageQuantity'} );
 
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
 
 			my $total = 0;
 
-			my %MakeReady = openprint::service::get_price_object('SoftFoldingMakeReady', undef, $Equipment );
+			my %MakeReady = openprint::service::get_price_object('ThreeKnifeTrimMakeReady', undef, $Equipment );
 			if ( ! %MakeReady ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
@@ -83,10 +77,7 @@ sub calc {
 				$total += $MakeReady{'Price'};
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object( 'SoftFolding'.$$project_specs{'txtTotalPageQuantity'}.'Page', $finished_calliper, $Equipment ); 
-			if ( ! %ServicePrice ) {
-				%ServicePrice = openprint::service::get_price_object( 'SoftFolding', $finished_calliper, $Equipment ); 
-			} # end if
+			my %ServicePrice = openprint::service::get_price_object( 'ThreeKnifeTrim', $finished_calliper, $Equipment ); 
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
@@ -97,7 +88,7 @@ sub calc {
 			$total += $ServicePrice{'Total'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'} );
 
-			if ( my $minimumcharge = openprint::service::get_price('SoftFoldingMinimumCharge', undef, $Equipment ) ) {
+			if ( my $minimumcharge = openprint::service::get_price('ThreeKnifeTrimMinimumCharge', undef, $Equipment ) ) {
 				$total = $minimumcharge if $total < $minimumcharge;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $total );
@@ -139,18 +130,18 @@ sub summary {
 	} # end if
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-	return '';
+	return $$specs{'Sides'} . 'side' . ($$specs{'Sides'} == 1 ? '' : 's');
 } # end sub summary
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	@{$$variable{'Equipment'}} = openprint::Equipment::find( 
-			'Specifications'	=>	{'SoftFolding Capable'=>'Y'},
+			'Specifications'	=>	{'ThreeKnifeTrim Capable'=>'Y'},
 			'use_in_estimating'	=>	1,
 			'order'				=>	'lower(strName)'
 			);
-$openprint::log->warn("SoftFolding Equipment: " . @{$$variable{'Equipment'}} );
+$openprint::log->warn("ThreeKnifeTrim Equipment: " . @{$$variable{'Equipment'}} );
 } # end sub display
 
 1;

@@ -50,6 +50,27 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		if ( $$specs{"front_quantity-$$sig_specs{SignatureIndex}"} eq '' ) {
+			$$specs{'alert'} .= 'Please select the # of DTapes on the front';
+			if ( $Project->signatures() > 1 ) {
+				$$specs{'alert'} .= ' of signature '.$$sig_specs{'SignatureIndex'};
+			} else {
+				$$specs{'alert'} .= '.';
+			} # end if
+			return $$specs{'Status'} = 'uncalculated';
+		} elsif ( $$specs{"back_quantity-$$sig_specs{SignatureIndex}"} eq '' ) {
+			$$specs{'alert'} .= 'Please select the # of DTapes on the back';
+			if ( $Project->signatures() > 1 ) {
+				$$specs{'alert'} .= ' of signature '.$$sig_specs{'SignatureIndex'};
+			} else {
+				$$specs{'alert'} .= '.';
+			} # end if
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+	} # end foreach
+
 	my $status = 'calculated';
 
 	foreach my $qty_index ( 1 .. 3 ) {
