@@ -3,7 +3,7 @@ package openprint::Order;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh);
+use vars qw(%variable $log $dbh %fields);
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -12,7 +12,7 @@ require sql;
 require openprint::logs;
 require openprint::OrderedProduct;
 
-my %fields = (
+%fields = (
 	'id'						=> 'index',
 	'company_id'				=> 'companyindex',
 	'user_id'					=> 'userindex',

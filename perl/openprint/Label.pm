@@ -23,7 +23,6 @@ my $debug = 1;
 	'reference'		=>	'reference',
 	'content'		=>	'content',
 	'docket'		=>	'docket',
-	'data'			=>	'data',
 );
 
 %transforms = (
@@ -58,6 +57,10 @@ sub find {
 	if ( $params{'name_id'} ) {
 		$sql .= ' AND name_id=?';
 		push @values, $params{'name_id'};
+	} # end if
+	if ( $params{'docket'} ) {
+		$sql .= ' AND docket=?';
+		push @values, $params{'docket'};
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
@@ -101,6 +104,8 @@ sub load {
 #$openprint::log->debug("Loading label $$self{id} $$data{data}") if $debug;
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
+	delete $$self{'data'};
+	%{$$self{'data'}} = sql::execute( undef, undef, 'SELECT name, value FROM label_Data WHERE label_id=?', $$self{'id'} );
 } # end sub load
 
 sub save {
@@ -110,11 +115,17 @@ sub save {
 		$self->set( $hash );
 	} # end if
 
+	my %sql;
+	foreach my $k ( keys %fields ) {
+		$sql{$k} = $$self{$k};
+	} # end foreach
+
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('labels_id_seq')} );
+		$sql{'id'} = $$self{'id'};
 
-		if ( my $error = sql::insert( undef, undef, 'Labels', [map { $_, $$self{$_} } keys %fields ] ) ) {
+		if ( my $error = sql::insert( undef, undef, 'Labels', \%sql ) ) {
 			$$self{'id'} = undef;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
@@ -128,6 +139,11 @@ sub save {
 		} # end if
     } # end if
 
+	sql::execute(undef,undef,'DELETE FROM Label_Data WHERE label_id=?', $$self{'id'} );
+	foreach my $k ( keys %{$$self{'data'}} ) {
+		sql::insert( undef, undef, 'Label_data', 'label_id', $$self{'id'}, 'name', $k, 'value', $$self{'data'}{$k} );
+	} # end foreach
+
 	sql::end_transaction( $openprint::dbh, $ac );
 	$self->load();
 	return;
@@ -136,6 +152,7 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
+    sql::execute( undef, undef, q{DELETE FROM Label_data WHERE label_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Labels WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
@@ -151,20 +168,26 @@ sub Type {
 sub set_data {
 	my $self = shift;
 	my %new_data = @_;	
-	my %data = map { split( '~', $_ ) } split( ';', $$self{'data'} );
 	foreach my $k ( keys %new_data ) {
-		$data{$k} = $new_data{$k};
+		$$self{'data'}{$k} = $new_data{$k};
 	} # end foreach
-	$$self{'data'} = join( ';', map { join('~', $_, $data{$_} ) } keys %data );
 } # end sub set_data
 
 sub get_data {
 	my $self = shift;
-$openprint::log->debug("get_data @_ ");
-$openprint::log->debug("data: $$self{'data'} ");
-	my %data = map { split( '~', $_ ) } split( ';', $$self{'data'} );
-	return @data{@_};
+	return @{$$self{'data'}}{@_};
 } # end sub get_data
+
+sub copy {
+	my $self = shift;
+	my $new = new openprint::Label();
+	@$new{keys %fields} = @$self{keys %fields};
+	delete $$new{'id'};
+	foreach my $k ( keys %{$$self{'data'}} ) {
+		$$new{'data'}{$k} = $$self{'data'}{$k};
+	} # end foreach
+	return $new;
+} # end sub copy
 
 1;
 __END__

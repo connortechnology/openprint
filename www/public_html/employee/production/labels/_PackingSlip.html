@@ -1,32 +1,14 @@
 <? eval (
-	$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} );
-	if ( $openprint::param{'docket'} ) {
-		$$variable{'docket'} = $openprint::param{'docket'};
-	} elsif ( $openprint::param{'ProjectIndex'} ) {
-		$$variable{'Project'} = new openprint::Project( $openprint::param{'ProjectIndex'} );
-		$$variable{'docket'} = $$variable{'Project'}->docket();
-	} elsif ( $openprint::param{'project_id'} ) {
-		$$variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} );
-		$$variable{'docket'} = $$variable{'Project'}->docket();
-	} elsif ( $$variable{'Label'}->id() ) {
-		$$variable{'docket'} = $$variable{'Label'}->docket();
-	} # end if
-
-	if ( $$variable{'Label'}->docket() != $$variable{'docket'} ) {
-		$$variable{'Label'}->docket($$variable{'docket'});
-	} # end if
-	if ( $$variable{'Label'}->type_id() != $openprint::param{'type_id'} ) {
-		$$variable{'Label'}->type_id($openprint::param{'type_id'});
-	} # end if
-	if ( ! $$variable{'Label'}->to() ) {
+	$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} ) if ! $$variable{'Label'};
+	if ( ! $$variable{'Label'}->get_data('from') ) {
 		if ( $$variable{'Project'} ) {
 			#my $services = $$variable{'Project'}->services();
 			if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'Project'}->id(), 'Shipping' ) ) {
 				my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
-				$$variable{'Label'}->set_data('to'=> openprint::service::summary( $$variable{'Project'}, $services[0] ) );
+				$$variable{'Label'}->set_data('from'=> openprint::service::summary( $$variable{'Project'}, $services[0] ) );
 			} else {
 				my $Order = $$variable{'Project'}->Order();
-				$$variable{'Label'}->set_data('to'=> join("\n", $Order->company_name(),
+				$$variable{'Label'}->set_data('from'=> join("\n", $Order->company_name(),
 						join(',', $Order->get('address1','address2') ),
 						join(',', $Order->get('city','state','country') ),
 						$Order->get('postalcode'),
@@ -34,6 +16,58 @@
 			} # end if
 		} # end if
 	} # endif
+	if ( ! $$variable{'Label'}->get_data('to') ) {
+		if ( $$variable{'Project'} ) {
+			my $Company = $$variable{'Project'}->Company();
+			$$variable{'Label'}->set_data('to'=> join("\n", $Company->name(),
+						join(',', $Company->get('address1','address2') ),
+						join(',', $Company->get('city','state','country') ),
+						$Company->get('postalcode'),
+						) );
+		} # end if
+	} # end if
+	if ( ! $$variable{'Label'}->get_data('description') ) {
+		my $html;
+		if ( $$variable{'Project'} ) {
+			$html .= $$variable{'Project'}->reference();
+		} elsif( $$variable{'docket'} ) {	
+			if ( my @Orders = openprint::Order::find('docket'=>$$variable{'docket'}) ) {
+				foreach my $Project ( $Orders[0]->Projects() ) {
+					$html .= $Project->reference() ."\n";
+				} # end foreach Project
+			} # end if
+		} # end if
+		$$variable{'Label'}->set_data('description'=>$html);
+	} # end if
+	if ( ! $$variable{'Label'}->get_data('quantity') ) {
+		my $html;
+		if ( $$variable{'Project'} ) {
+			my $services = $$variable{'Project'}->services();
+			my $carton_total = 0;
+			my $item_total = 0;
+				
+			if ( $$services{'PlainCartons'} ) {
+				$html .= '<table>';
+				foreach my $s_id ( @{$$services{'PlainCartons'}} ) {
+					my $carton_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'PlainCartons'}[0] );
+					$html .= sprintf('<tr><td>%d boxes @</td><td>%d</td></tr>', @$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index(),'txtItemsPerPackage'} );
+					$carton_total += $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()};
+					my $items = $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$carton_specs{'txtItemsPerPackage'};
+					$item_total += $items;
+				} # end foreach
+				$html .= sprintf('<tr><td>&nbsp;</td><td>%d</td></tr>', $item_total );
+				$html .= '</table>';
+			} # end if
+			if ( $$services{'BulkSkids'} ) {
+				my $skid_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'BulkSkids'}[0] );
+				$html .= sprintf('Total: %d skid%s', $$skid_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$skid_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()} == 0 ? '' : 's' );
+			} else {
+				$html .= sprintf('Total: %d BOXES', $carton_total );
+			} # end if
+		} else {	
+		} # end if
+		$$variable{'Label'}->set_data('quantity'=>$html);
+	} # end if
 	$$variable{'Label'}->save();
 ) ?>
 <div>
@@ -45,11 +79,13 @@
 			width: 100%;
 		}
 		#Label {
-			font-size: 20pt;
+			font-size: 22pt;
 		}
 		table tr td {
 			vertical-align: top;
 			font-family: Arial, Helvetica, Sans-Serif;
+			padding: 5px;
+			font-size: 20pt;
 		} 
 		table tr td textarea {
 			width: 98%;
@@ -79,28 +115,16 @@ Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($
 		<tr>
 			<td style="border: 1px solid black;">
 				TO:<br/>
-				<div id="to" style="height: 2.5in;"><? echo ( $$variable{'Label'}->get_data('to'); ) ?></div>
+				<div id="to" style="height: 2.5in;"><? hecho ( $$variable{'Label'}->get_data('to'); ) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'to', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=to',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=to'});
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				FROM:<br/>
-				<div id="from" style="height: 2.5in;"><? echo (
-						if ( $$variable{'Project'} ) {
-								my $Company = $$variable{'Project'}->Company();
-								return join('<br/>', $Company->name(),
-									join(',', $Company->get('address1','address2') ),
-									join(',', $Company->get('city','state','country') ),
-									$Company->get('postalcode'),
-									);
-
-						} # end if
-						return 'unable to guess From:';
-					) ?>
-<br/><br/></div>
+				<div id="from" style="height: 2.5in;"><? hecho ( $$variable{'Label'}->get_data('from');) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'from', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=from',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5});   
+new Ajax.InPlaceEditor( 'from', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=from',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=from'});
 </script>
 			</td>
 		</tr>
@@ -110,54 +134,14 @@ new Ajax.InPlaceEditor( 'from', '/employee/production/labels/_label.html?id=<? e
 		<tr>
 			<td style="border: 1px solid black;">
 				DESCRIPTION:<br/>
-				<div id="description" style="height:3.75in;"><? echo (
-					my $html;
-					if ( $$variable{'Project'} ) {
-						$html .= $$variable{'Project'}->reference();
-					} elsif( $$variable{'docket'} ) {	
-						if ( my @Orders = openprint::Order::find('docket'=>$$variable{'docket'}) ) {
-							foreach my $Project ( $Orders[0]->Projects() ) {
-								$html .= $Project->reference() .'<br/>';
-							} # end foreach Project
-						} # end if
-					} # end if
-					return $html;
-				) ?></div>
+				<div id="description" style="height:3.75in;"><? hecho ( $$variable{'Label'}->get_data('description'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'description', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5});   
+new Ajax.InPlaceEditor( 'description', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=description'});
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				QUANTITY:<br/>
-				<div id="quantity" style="height: 3.75in;"><? echo (
-					my $html;
-					if ( $$variable{'Project'} ) {
-						my $services = $$variable{'Project'}->services();
-						my $carton_total = 0;
-						my $item_total = 0;
-							
-						if ( $$services{'PlainCartons'} ) {
-							$html .= '<table>';
-							foreach my $s_id ( @{$$services{'PlainCartons'}} ) {
-								my $carton_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'PlainCartons'}[0] );
-								$html .= sprintf('<tr><td>%d boxes @</td><td>%d</td></tr>', @$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index(),'txtItemsPerPackage'} );
-								$carton_total += $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()};
-								my $items = $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$carton_specs{'txtItemsPerPackage'};
-								$item_total += $items;
-							} # end foreach
-							$html .= sprintf('<tr><td>&nbsp;</td><td>%d</td></tr>', $item_total );
-							$html .= '</table>';
-						} # end if
-						if ( $$services{'BulkSkids'} ) {
-							my $skid_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'BulkSkids'}[0] );
-							$html .= sprintf('Total: %d skid%s', $$skid_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$skid_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()} == 0 ? '' : 's' );
-						} else {
-							$html .= sprintf('Total: %d BOXES', $carton_total );
-						} # end if
-					} else {	
-					} # end if
-					return $html;
-				) ?></div>
+				<div id="quantity" style="height: 3.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'quantity', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5});   
 </script>
