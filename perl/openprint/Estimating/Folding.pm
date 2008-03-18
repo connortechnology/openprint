@@ -324,7 +324,7 @@ $openprint::log->debug("Loading imposition");
 			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'} );
 		} # end if
 
-		if ( ! @leftover_colours ) {
+		#if ( ! @leftover_colours ) {
 			if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
 				my $Press = shift @Press;
 				if ( $Press->specification('Folding Capable') ) {
@@ -335,7 +335,7 @@ $openprint::log->debug("Loading imposition");
 					} # end if
 				} # end if
 			} # end if
-		} # end if
+		#} # end if
 	} # end if
 
 	# If the stitching is happening on a piece of equipment that can't handle large signatures, then we need to cut them down instead of folding them.

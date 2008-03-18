@@ -2506,7 +2506,7 @@ $openprint::log->debug("Perforating");
 		if ( $uv_results{'Status'} eq 'uncalculated' ) {
 			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
-		} else {
+		} elsif ( $uv_results{'Equipment'} ) {
 			$price{'UVCoating Breakdown'} = sprintf('UVCoating Price: $%.2f on %s<br/>', $uv_results{'Total'}, $uv_results{'Equipment'}->name() );
 			$price{'Comparison Cost'} += $uv_results{'Total'};
 		} # end if
