@@ -329,7 +329,6 @@ $openprint::log->debug("Loading imposition");
 			if ( $Press->specification('Folding Capable') ) {
 				if ( $Press->specification('Sheeter') ne 'Y' ) {
 					@my_equipment = ( $Press );
-$openprint::log->debug("No Sheeter");
 				} else {
 					unshift @my_equipment, $Press;
 				} # end if

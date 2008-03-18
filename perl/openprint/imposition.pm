@@ -739,7 +739,9 @@ sub convert_impositions {
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;
 		#foreach my $signature_size ( reverse 1 .. $start ) {
-		foreach my $signature_size ( reverse int($start/2) .. $start ) {
+		my $a = int($start/2);
+		$a -= 1 if $a % 2;
+		foreach my $signature_size ( reverse $a .. $start ) {
 			next if ! $blocks{$signature_size};
 #Now figure out how to cut up the imposition
 #$openprint::log->debug("Considering sig size: $signature_size") if $debug;

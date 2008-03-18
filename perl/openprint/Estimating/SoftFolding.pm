@@ -68,10 +68,18 @@ sub calc {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		my %BestPrice;
-		$$specs{'hdnBreakdown'.$qty_index} = sprintf( '%d pages<br/>', $$project_specs{'txtTotalPageQuantity'} );
+		$$specs{'hdnBreakdown'.$qty_index} = sprintf( '%d pages, %.3f"<br/>', $$project_specs{'txtTotalPageQuantity'}, $finished_calliper );
 
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
+
+			if ( $_ = $Equipment->fits( @$project_specs{'txtFinalWidth','txtFinalHeight'}, $finished_calliper, 'SoftFolding' ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= $_;
+				if ( @Equipment == 1 ) {
+					$$specs{'alert'} .= $_;
+				} # end if
+				next;
+			} # end if
 
 			my $total = 0;
 
