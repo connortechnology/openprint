@@ -538,12 +538,13 @@ sub summary {
 				$$specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtSignatureSpreadQuantity'};
 			} # end if
 			return '' if ! $$specs{'txtImposition'.$qty_index};
-			my $html = sprintf(qq{%s %dout %s\n},
+			my $html = sprintf(qq{%s %dout %s\n },
 					($$specs{'txtSignatureSpreadQuantity'.$qty_index} and $$specs{'txtSpreadSize'} ) ? ($$specs{'txtSignatureSpreadQuantity'.$qty_index} * $$specs{'txtSpreadSize'}) . 'pp' : '',
 					$$specs{'txtImposition'.$qty_index} );
 			$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
+			$html .= sprintf(' with %d plate changes ', $$specs{'txtPlateChangeQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
 
-			$html .= 'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
+			$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
 			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
 				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
 					$html .= sprintf( ' of %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
@@ -609,7 +610,7 @@ sub summary {
 				$side_two_coatings .= '+' . $$specs{'SideTwoUVCoatingType'} . 'UV';
 			} # end if
 
-			return sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s}, 
+			my $html = sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s}, 
 					@$specs{'txtServiceDescription','txtWidth','txtHeight'}, 
 					$side_one_colours,
 					$side_one_coatings,
@@ -621,6 +622,7 @@ sub summary {
 					join(',', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ) 
 					,
 					);
+			return $html;
 		} # end if
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['PlainCartons','BulkSkids'] ) ) {
 		return openprint::Estimating::Skids::summary($Project->id(), $service_id, $specs, $qty_index );

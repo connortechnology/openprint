@@ -1841,12 +1841,22 @@ sub calc_price {
 
 	my $press_setup = 0;
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
-		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_one_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
-		$press_setup += $_->{'Total'};
-		$price{'Plate Total'} += $_->{'Plate Total'};
-		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_two_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
-		$press_setup += $_->{'Total'};
-		$price{'Plate Total'} += $_->{'Plate Total'};
+		if ( @$side_one_colours and @$side_two_colours ) {
+			$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $side_one_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
+			$press_setup += $_->{'Total'};
+			$price{'Plate Total'} += $_->{'Plate Total'};
+			$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $side_two_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
+			$press_setup += $_->{'Total'};
+			$price{'Plate Total'} += $_->{'Plate Total'};
+		} elsif ( @$side_one_colours ) {
+			$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_one_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
+			$press_setup += $_->{'Total'};
+			$price{'Plate Total'} += $_->{'Plate Total'};
+		} elsif ( @$side_two_colours ) {
+			$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_two_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
+			$press_setup += $_->{'Total'};
+			$price{'Plate Total'} += $_->{'Plate Total'};
+		} # end if
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web', 'Perfecting'] ) ) {
 		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
