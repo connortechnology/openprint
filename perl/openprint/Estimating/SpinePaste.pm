@@ -226,7 +226,7 @@ sub calc {
 		} else {
 			$$specs{'ddmEquipment'.$qty_index} = $best{'Equipment'}->id();
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $best{'Price'}{'Total'} );
-			$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $best{'Price'}{'ServicePrice'}{'Total'} / $qty );
+			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $best{'Price'}{'ServicePrice'}{'Total'} / $qty );
 			$$specs{'Status'} = 'calculated';
 		} # end if
     } # end foreach qty_index

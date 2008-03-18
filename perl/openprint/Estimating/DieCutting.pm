@@ -320,7 +320,7 @@ sub calc {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice );
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $totalUnitPrice );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalUnitPrice );
 
 	} # end foreach qty
 

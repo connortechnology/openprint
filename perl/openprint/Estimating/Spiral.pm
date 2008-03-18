@@ -129,7 +129,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 			$unitPrice = $price / $qty;
 			$$specs{'hdnBreakdown'.$qty_index} .= "Qty: " . $$specs{"txtQuantity$qty_index"} . ": Price: $price\n";
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 	} # end foreach
 

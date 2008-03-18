@@ -52,7 +52,7 @@ sub calc {
 		$$specs{'txtQuantity'} = 0.25;
 	} # end if
 	my $price = openprint::service::get_price( @$specs{'ServiceType','txtQuantity'}, undef );
-	$$specs{"txtUnitPrice"} = sprintf( '%.2f', $price );
+	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price );
 
 	$price *= $$specs{'txtQuantity'};
 	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );

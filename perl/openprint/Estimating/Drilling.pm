@@ -179,7 +179,7 @@ sub calc {
 		my $unitPrice = 0;
 		$unitPrice = $bestPrice / $qty;
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 		$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
 
 	} # end foreach qty_index

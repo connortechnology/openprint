@@ -101,7 +101,7 @@ sub calc {
 			$log->debug('No price');
 			$status = 'uncalculated';
 			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', 0 );
-			$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', 0 );
+			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, 0 );
 			next;
 		} elsif ( lc $ServicePrice{'units'} eq 'each' ) {
 			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $$specs{"txtQuantity$qty_index"};
@@ -150,7 +150,7 @@ sub calc {
 		} # end if Glues
 
 		$price = $minimumCharge if $price < $minimumCharge;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $price/$$specs{"txtQuantity$qty_index"} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 
 	} # end foreach

@@ -483,7 +483,7 @@ $openprint::log->debug("Folding Equipment not same: " . $$folding_specs{"ddmEqui
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $$bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtRunTime$qty_index"} = $$bestPrice{'RunTime'};
 	} # end foreach qty_index
 	$log->debug("END STITCHING!!!!!!!");

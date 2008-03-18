@@ -155,7 +155,7 @@ sub calc {
 			} # end if uncalculated
 		} # end foreach signature
 
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $GrandTotal / $qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $GrandTotal / $qty );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $GrandTotal );
 		} else {

@@ -162,7 +162,7 @@ sub calc {
 			$price = $totalSetupPrice + $totalServicePrice + $totalMaterialPrice;
 			$unitPrice = $price / $qty;
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 	} # end foreach

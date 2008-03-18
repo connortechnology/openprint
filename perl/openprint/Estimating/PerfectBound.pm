@@ -242,7 +242,7 @@ sub calc {
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 		$$specs{'txtPrice'.$qty_index} = '0.00';
-		$$specs{'txtUnitPrice'.$qty_index} = '0.00';
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf( $openprint::config{'UnitPriceFormat'}, 0 );
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
 		my $imposition = 2;
@@ -368,7 +368,7 @@ $openprint::log->debug("calc");
 		$$specs{'ddmEquipment'.$qty_index} = '';
 		} # end if
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'Price'} );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $$bestPrice{'Price'} / $qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'Price'} / $qty );
     } # end foreach
 
 	$log->debug(" END Perfect Bound!!!!!!!!!!!!!!!!!!");
