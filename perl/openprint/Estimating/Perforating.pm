@@ -44,8 +44,8 @@ sub variables {
 		foreach my $qty_index ( 1 .. 3 ) {
 			next if ! $$sig_specs{'txtQuantity'.$qty_index};
 			push @v, (
-				 "txtVerticalQty-$$sig_specs{'SignatureIndex'}", 
-				 "txtHorizontalQty-$$sig_specs{'SignatureIndex'}", 
+				 "txtVerticalQty-$$sig_specs{'SignatureIndex'}", "VerticalTeeth-$$sig_specs{SignatureIndex}",
+				 "txtHorizontalQty-$$sig_specs{'SignatureIndex'}", "HorizontalTeeth-$$sig_specs{SignatureIndex}",
 				 "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
 				 "txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
 				 "txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index", "txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index",
@@ -89,7 +89,7 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 
 	$log->debug("BEGIN PERFING!!!!!!!!!!!!!!!!!!");
-	if ( openprint::project::get_project_type( $log, $dbh, $project_index ) eq 'MultiPagePublication'  ) {
+	if ( $Project->Type()->strid() eq 'MultiPagePublication'  ) {
 		$$specs{'alert'} = 'We are unable to auto-calculate a price for perforation on a multipage publication. Please call for pricing.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if

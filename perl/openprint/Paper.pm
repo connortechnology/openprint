@@ -555,8 +555,9 @@ sub add_inventory {
 	#Skid{Paper}{paper_id} has already been adjusted
 
 	my $in_stock;
+	my $Skid;
 	if ( $skid_id ) {
-		my $Skid = new openprint::Skid( $skid_id );
+		$Skid = new openprint::Skid( $skid_id );
 		foreach my $content ( $Skid->contents( 'Paper'=>$self ) ) {
 			$in_stock += $content->quantity();
 		} # end foreach
@@ -564,14 +565,13 @@ sub add_inventory {
 		$in_stock = $self->in_stock() + $quantity;
 	} # end if
 
-
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
     sql::insert( undef, undef, 'Paper_Inventory',
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  $in_stock,
-        'UpdateTime',   'NOW()',
+        'InStock',  ($skid_id? $$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
+        'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
         'skid_id',  $skid_id,

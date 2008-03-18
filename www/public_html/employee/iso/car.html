@@ -18,6 +18,9 @@
 	table.View tr td {
 	padding: 5px;
 	}
+	table tr td textarea {
+		width: 99%;
+	}
 	table tr td select {
 		padding: 1px;
 	}
@@ -69,6 +72,4 @@
 			} # end if
 			return ssi::variable_substitution( $r, $log, $dbh, \$html, $variable );
 		) ?>
-		<input type="hidden" name="btnFunction" />
-	</form>
 </div>

@@ -535,14 +535,23 @@ sub summary {
 				} # end if
 			} # end if
 			return '' if ! $$specs{'txtImposition'.$qty_index};
-			return sprintf(qq{%s %dout %s on %s\n\%s},
+			my $html = sprintf(qq{%s %dout %s\n},
 					$$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
 					$$specs{'txtImposition'.$qty_index},
 					($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index} ),
-					$$specs{'ddmPress'.$qty_index},
-		
-					'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index} . ($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? '' : sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index}) ),
-					);
+					$$specs{'ddmPress'.$qty_index} );
+
+			$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
+
+			$html .= 'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
+			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
+				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
+					$html .= sprintf( ' of %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+				} # end if
+			} else {
+				$html .= sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+			} # end if
+			return $html;
 		} else {
 			my $front_colours = 0;
 			my $front_coatings;

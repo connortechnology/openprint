@@ -61,6 +61,8 @@ sub drop_project {
 		( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $press_index, $start_time, $end_time );
 	} # end if
 
+	my $Press = new openprint::Equipment( $press_index );
+
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
 	while ( @order ) {
@@ -72,7 +74,7 @@ sub drop_project {
 		next if ! @rows;
 		my $row = shift @rows;
 		if ( $start_time and ! $$row{starttime} ) {
-			my $Project = new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on $start_time" );
+			my $Project = new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Press->strid() . " at $start_time" );
 		} # end if
 
 		sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'Equipment_ID', $press_index );

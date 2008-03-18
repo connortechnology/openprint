@@ -23,11 +23,15 @@ sub _label {
 	if ( $param{'action'} eq 'update' ) {
 		$Label->set_data($param{'field'}=>$param{'value'});
 		$Label->save();
-		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
+		$variable{'PageContent'} = ssi::htmlize(join('',$Label->get_data($param{'field'})));
+$openprint::log->debug("_label get " . join('',$Label->get_data($param{'field'})));
 	} elsif ( $param{'action'} eq 'get' ) {
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
 	} # end if
 } # end sub _label
+
+sub label {
+} # end sub label
 
 1;
 

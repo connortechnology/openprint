@@ -257,12 +257,16 @@ function input_handler( element, e ) {
 			} // end if
 			return true;
 		} else if ( element.name == 'UserID' ) {
-			if ( Users ) {
-				if ( Users['E'+element.value] ) {
-				element.form.email.value = Users['E'+element.value];
-				} else {
-				element.form.email.value = 'User not found: E'+element.value;
-				}
+			if ( element.value.charAt(0) == 'E' ) {
+				element.value = element.value.substr(1,element.value.length-1);
+			} // end if
+
+			if ( emails_by_id[1*element.value] ) {
+				element.form.email.value = emails_by_id[1*element.value];
+				element.form.password.focus();
+			} else {
+				element.form.email.value = 'User not found: ' + element.value;
+
 			} // end if
 			return true;
 		} else {

@@ -278,7 +278,7 @@ sub impositions {
 } # end sub impositions
 
 sub signature_calc {
-	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
+	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition, @leftover_colours ) = @_;
 
 	# First step, find out if we are stitching, then find out which equipment is being used for stitching
 	my $services = $Project->services();
@@ -324,13 +324,15 @@ $openprint::log->debug("Loading imposition");
 			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'} );
 		} # end if
 
-		if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
-			my $Press = shift @Press;
-			if ( $Press->specification('Folding Capable') ) {
-				if ( $Press->specification('Sheeter') ne 'Y' ) {
-					@my_equipment = ( $Press );
-				} else {
-					unshift @my_equipment, $Press;
+		if ( ! @leftover_colours ) {
+			if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
+				my $Press = shift @Press;
+				if ( $Press->specification('Folding Capable') ) {
+					if ( $Press->specification('Sheeter') ne 'Y' ) {
+						@my_equipment = ( $Press );
+					} else {
+						unshift @my_equipment, $Press;
+					} # end if
 				} # end if
 			} # end if
 		} # end if

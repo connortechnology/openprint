@@ -19,6 +19,8 @@ require openprint::employee_project;
 require sql;
 require openprint::MXML;
 require openprint::JDF;
+require openprint::LabelType;
+require openprint::Label;
 
 sub print_overview {
 	press_schedule( @_ );
@@ -1013,6 +1015,17 @@ sub monthly_schedule {
 				);
 	} # end if
 } # end sub monthly_schedule
+
+sub _labels {
+	my $Label = new openprint::Label( $openprint::param{'id'} );
+	if ( $openprint::param{'action'} eq 'delete' ) {
+		$Label->delete();
+	} elsif ( $openprint::param{'action'} eq 'copy' ) {
+		$Label = $Label->copy();
+		$Label->save();
+	} # end if
+	$openprint::variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} );
+} # end sub _labels
 
 1;
 

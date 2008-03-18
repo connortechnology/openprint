@@ -144,6 +144,7 @@ sub htmlize {
 		$_ =~ s/>/&gt;/mg;
 		$_ =~ s/\r\n/<br\/>/mg;
 		$_ =~ s/\n\r/<br\/>/mg;
+		$_ =~ s/\n/<br\/>/mg;
 		return $_;
 	} # end if
 	for( $_ = 0; $_ < @_; $_ += 1 ) {
@@ -154,6 +155,7 @@ sub htmlize {
 		$_[$_] =~ s/>/&gt;/mg;
 		$_[$_] =~ s/\r\n/<br\/>/mg;
 		$_[$_] =~ s/\n\r/<br\/>/mg;
+		$_[$_] =~ s/\n/<br\/>/mg;
 	} # end for
 	return @_;
 } # end sub htmlize

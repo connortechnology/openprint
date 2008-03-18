@@ -444,6 +444,8 @@ $openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} 
 
 		my $Paper = $Imposition->paper();
 		my $Press = $Imposition->Press();
+		my $Aqueous = $$price{'Aqueous'};
+		my $Varnish = $$price{'Varnish'};
 
 		# Neccessary since specs do not neccessarily match the Impo
 		$Imposition->save( $specs, $qty_index );
@@ -495,8 +497,8 @@ $openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} 
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $$price{'Total Cost'} / $qty );
 		my $mprice = $$price{'Impression Price'};
-		#$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
-		#$mprice += $$Aqueous{'Total'} if $Aqueous;
+		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
+		$mprice += $$Aqueous{'Total'} if $Aqueous;
 		
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', ((($mprice + $$price{'Ink Price'} )/ $qty)*1000 ) + $$price{'Paper 1000 Price'} );
 
@@ -1386,8 +1388,8 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		my $Imposition = $$b_price{'Imposition'};
 		my $Paper = $Imposition->paper();
 		my $Press = $Imposition->Press();
-		#my $Aqueous = $$b_price{'Aqueous'};
-		#y $Varnish = $$b_price{'Varnish'};
+		my $Aqueous = $$b_price{'Aqueous'};
+		my $Varnish = $$b_price{'Varnish'};
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
 #$Imposition->display();
@@ -1448,8 +1450,8 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $best_price{'Total Cost'} / $qty );
 		my $mprice = $best_price{'Impression Price'};
-		#$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
-		#$mprice += $$Aqueous{'Total'} if $Aqueous;
+		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
+		$mprice += $$Aqueous{'Total'} if $Aqueous;
 		
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', ((($mprice + $best_price{'Ink Price'} )/ $qty)*1000 ) + $best_price{'Paper 1000 Price'} );
 
@@ -1481,8 +1483,8 @@ sub breakdown {
 	my $Imposition = $$price{'Imposition'};
 	my $Paper = $Imposition->paper();
 	my $Press = $Imposition->Press();
-	#my $Aqueous = $$price{'Aqueous'};
-	#my $Varnish = $$price{'Varnish'};
+	my $Aqueous = $$price{'Aqueous'};
+	my $Varnish = $$price{'Varnish'};
 
 	my $breakdown = '';
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
@@ -1507,16 +1509,16 @@ sub breakdown {
 	} # end if
 	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", $$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
-	#$breakdown .= sprintf("\tAqueous Setup:\t\$%.2f<br/>", $$Aqueous{'Setup'}) if $$Aqueous{'Setup'};
+	$breakdown .= sprintf("\tAqueous Setup:\t\$%.2f<br/>", $$Aqueous{'Setup'}) if $$Aqueous{'Setup'};
 	$breakdown .= sprintf("\tPMS Ink Mix Charge:\t\$%.2f<br/>", $$price{'Ink Mix Charge'} ) if $$price{'Ink Mix Charge'};
-	#$breakdown .= sprintf("\tInline Varnish Setup Charge: \$%.2f<br/>", $$Varnish{'Setup'} ) if $$Varnish{'Setup'};
+	$breakdown .= sprintf("\tInline Varnish Setup Charge: \$%.2f<br/>", $$Varnish{'Setup'} ) if $$Varnish{'Setup'};
 	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
 	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
-	#$breakdown .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
+	$breakdown .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
 # if $$Varnish{'run_price'};
-	#$breakdown .= sprintf("\tAqueous Run Charge: %.2f%s = \$%.2f<br/>", @$Aqueous{'Run Cost','Units','Total'} ) if %$Aqueous;;
+	$breakdown .= sprintf("\tAqueous Run Charge: %.2f%s = \$%.2f<br/>", @$Aqueous{'Run Cost','Units','Total'} ) if %$Aqueous;;
 	$breakdown .= sprintf("\tMinimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} );
 	$breakdown .= sprintf("\tRun Charge Total:\t\$%.2f<br/>", $$price{'Run Total'} );
 	$breakdown .= '<b>Material Charges:</b><br/>';
@@ -1543,7 +1545,7 @@ sub breakdown {
 	} # end if
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf("\tInk Total: \$%.2f<br/>", $$price{'Ink Price'} );
-	#$breakdown .= sprintf("\tVarnish: \$%.4f\%s = \$%.2f<br/>", @$Varnish{'Material Price','Material Units','Material Total'} ) if %$Varnish;
+	$breakdown .= sprintf("\tVarnish: \$%.4f\%s = \$%.2f<br/>", @$Varnish{'Material Price','Material Units','Material Total'} ) if %$Varnish;
 	$breakdown .= "Total: $$price{'Total Cost'}<br/>";
 	$breakdown .= $$price{'Folding Breakdown'};
 	$breakdown .= $$price{'Cutting Breakdown'};
@@ -2321,44 +2323,12 @@ sub calc_price {
 	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Run Cost' );
 
 	$price{'Ink Price'} = 0;
-	my @leftover_colours;
 	foreach my $real_colour ( @colours ) {
 		my $colour;
 		next if $real_colour =~ /UV/;
 
 		$price{'Ink breakdown'} .= $real_colour;
 
-		if ( $real_colour =~ /Varnish/ ) {
-			if ( $Press->specification('Varnish Capable') ne 'Y' ) {
-				push @leftover_colours, $real_colour;
-				next;
-			} # end if
-			$colour = $real_colour;
-		} elsif ( $real_colour =~ /Aqueous/ ) {
-			if ( $Press->specification('Aqueous Coating') ne 'Y' ) {
-				push @leftover_colours, $real_colour;
-				next;
-			} # end if
-			$colour = $real_colour;
-		} elsif ( $real_colour =~ /Moist Glue/ ) {
-			if ( $Press->specification('Moist Glue Capable') ne 'Y' ) {
-				push @leftover_colours, $real_colour;
-				next;
-			} # end if
-			$colour = $real_colour;
-		} elsif ( $real_colour =~ /Scent/ ) {
-			if ( $Press->specification('Scent Capable') ne 'Y' ) {
-				push @leftover_colours, $real_colour;
-				next;
-			} # end if
-			$colour = $real_colour;
-		} elsif ( $real_colour =~ /Latex/ ) {
-			if ( $Press->specification('Latex Capable') ne 'Y' ) {
-				push @leftover_colours, $real_colour;
-				next;
-			} # end if
-			$colour = $real_colour;
-		} # end if
 
 		if ( $real_colour =~ /Varnish/ or $real_colour =~ /Aqueous/ ) {
 			$price{'Press Washes'} += 1;
@@ -2561,6 +2531,18 @@ sub select_presses {
 # Inline Perfing & Scoring is done as a sperate run, so it dosn't affect our printing press choice.
 
 	my @good_presses;
+	my $varnish = 0;
+	my $aqueous = 0;
+#$log->debug(" *** CHECKING FOR VANISH *** ");
+	foreach my $colour (@$side_one_colours, @$side_two_colours) {
+		if ( $colour =~ /Varnish/ ) {
+#$log->debug(" ** HAVE VARNISH **" );
+			$varnish = 1;
+		} elsif ( $colour =~ /Aqueous/ ) {
+			$aqueous = 1;
+		} # end if
+	} # end if
+
 	my $project_type = $Project->Type()->strid();
 #$log->debug(" ** Current Project Types is: $project_type ** ");
 
@@ -2580,6 +2562,11 @@ sub select_presses {
 
 		if ( $Paper->calliper() > $Press->specification('Maximum Calliper', $Paper->grade() ) ) {
 			$openprint::log->debug(" ** Press $press_id Failed Calliper Check **");
+			next;
+		} # end if
+
+		if ( $aqueous and ( $Press->specification('Aqueous Coating') ne 'Y' ) ) {
+			$openprint::log->debug(" ** Press $press_id Failed Aqueous Check (".$Press->specification('Aqueous Coating').")**");
 			next;
 		} # end if
 
@@ -2619,6 +2606,13 @@ sub select_presses {
 			next;
 		} # end if
 
+		if ( $varnish ) {
+			if ( $Press->specification('Varnish Capable') ne 'Y' ) {
+				$openprint::log->debug(" ** Press $press_id Failed Varnish Check **");
+				next;
+			} # end if
+		} # end if
+
 		push @good_presses, $Press;
 	} # end while
 
@@ -2638,9 +2632,6 @@ sub get_special_colours_price {
 		next if sets::isin( $key, ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour'] );
 		next if $key =~ /Varnish/;
 		next if $key =~ /Aqueous/;
-		next if $key =~ /Scent/;
-		next if $key =~ /Latex/;
-		next if $key =~ /Moist Glue/;
 		next if $key =~ /UV/;
 
 		my $mix_price = \%pms_mix_price;

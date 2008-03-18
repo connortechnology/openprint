@@ -1,11 +1,11 @@
 <h3>Part 4 (To be complete by Quality System Management Representative)</h3>
 <table class="View">
-	<tr><td width="100%" colspan="10">VERIFICATION OF CORRECTIVE ACTION EFFECTIVENESS</td></tr>
-	<tr><td width="100%" colspan="10"><? hecho ( $$variable{'CAR'}->effectiveness() ) ?></td></tr>
-	<tr><td width="10%" colspan="1">Q.S. Mgt. Rep.:</td>
-		<td width="40%" colspan="4"><? hecho ( new openprint::User( $$variable{'CAR'}->part4_user_id())->name() ) ?></td>
-		<td width="10%" colspan="1">Date:</td>
-		<td width="40%" colspan="4"><? hecho ( $$variable{'CAR'}->part4_signed_on() ) ?></td>
+	<tr><td colspan="10">VERIFICATION OF CORRECTIVE ACTION EFFECTIVENESS</td></tr>
+	<tr><td colspan="10"><? hecho ( $$variable{'CAR'}->effectiveness() ) ?></td></tr>
+	<tr><td colspan="1">Q.S. Mgt. Rep.:</td>
+		<td colspan="4"><? hecho ( new openprint::User( $$variable{'CAR'}->part4_user_id())->name() ) ?></td>
+		<td colspan="1">Date:</td>
+		<td colspan="4"><? hecho ( $$variable{'CAR'}->part4_signed_on() ) ?></td>
 	</tr>
 </table>
 <? if ( $$variable{'CAR'}->part4_user_id() == $openprint::session{'user_id'} ) ?>
