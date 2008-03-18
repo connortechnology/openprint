@@ -95,13 +95,17 @@ sub calc {
 		if ( %ServicePrice ) {
 			if ( lc $ServicePrice{'units'} eq 'per m' ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 			} elsif ( lc $ServicePrice{'units'} eq 'each' ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
+			} elsif ( lc $ServicePrice{'units'} eq 'per bundle' ) {
+				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $package_qty;
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $package_qty );
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No units set for %s (%s)<br/>', $$specs{'ServiceType'}, $ServicePrice{'units'} );
 			} # end if
 			$unitPrice += $ServicePrice{'Total'};
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 		} # end if
 		$price = $unitPrice + $makeReady;
 
