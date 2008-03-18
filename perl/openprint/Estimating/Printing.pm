@@ -421,7 +421,7 @@ sub calc_from_imposition {
 			if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
 			} # end if
-			$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', 0 );
+			$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 0 );
 			next;
 		} # end if
 		my $Imposition = shift @{$$source_specs{'Additional Impositions'.$qty_index}};
@@ -495,7 +495,7 @@ $openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} 
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
-		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $$price{'Total Cost'} / $qty );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$price{'Total Cost'} / $qty );
 		my $mprice = $$price{'Impression Price'};
 		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
 		$mprice += $$Aqueous{'Total'} if $Aqueous;
@@ -1448,7 +1448,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
-		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $best_price{'Total Cost'} / $qty );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $best_price{'Total Cost'} / $qty );
 		my $mprice = $best_price{'Impression Price'};
 		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
 		$mprice += $$Aqueous{'Total'} if $Aqueous;

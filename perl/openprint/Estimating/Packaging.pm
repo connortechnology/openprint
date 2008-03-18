@@ -154,7 +154,7 @@ sub calc {
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # endif
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice/$qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice/$qty );
 	} # end foreach
 
 	return $$specs{'Status'} = $status;

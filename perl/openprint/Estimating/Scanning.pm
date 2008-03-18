@@ -52,7 +52,7 @@ sub calc {
 	my $runPrice = openprint::service::get_price( 'Scanning', $$specs{'txtQuantity'}, undef );
 	my $price = int( $makeReady + $runPrice * $size );
 
-	$$specs{"txtUnitPrice"} = sprintf( '%.2f', $price );
+	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price );
 	$price *= $$specs{'txtQuantity'};
 
 	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );

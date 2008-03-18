@@ -132,7 +132,7 @@ sub calc {
 			$$specs{'alert'} .= 'Please specify # of perfs';
 			$status = 'uncalculated';
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 	} # end foreach quantities
 

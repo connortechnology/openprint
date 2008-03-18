@@ -739,7 +739,7 @@ if ( 1 ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 		} # end if
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $price/$$specs{"txtQuantity$qty_index"} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
 
 	} # end foreach quantity
 	return $$specs{'Status'};
