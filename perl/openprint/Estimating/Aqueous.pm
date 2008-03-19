@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Aqueous;
 use strict;
-use warnings;
+#use warnings;
 
 require sql;
 require openprint::service;
@@ -83,11 +83,11 @@ sub signature_needs {
 	my ( $Project, $specs ) = @_;
 
 	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideOne' ) ) {
-		return 1 if $_ =~ /UV/;
+		return 1 if $_ =~ /Aqueous/;
 	} # end foreach colour
 
 	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' ) ) {
-		return 1 if $_ =~ /UV/;
+		return 1 if $_ =~ /Aqueous/;
 	} # end foreach colour
 } # end sub signature_needs
 
@@ -252,10 +252,10 @@ sub signature_calc {
 	#$openprint::log->debug('DOne Cutting :' . @impositions);
 
 	foreach my $Equipment ( @equipment ) {
-		$$specs{'hdnBreakdown'.$qty_index} .= "\t\tEquipment: ".$Equipment->strid().",<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().',<br/>';
 
 		foreach my $imp ( @impositions ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tImposition: \%dx\%d+\%dx\%d=\%dout :", @$imp{'columns','rows','dutch_columns','dutch_rows','imposition'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition: %dx%d+%dx%d=%dout :', @$imp{'columns','rows','dutch_columns','dutch_rows','imposition'} );
 			next if ! ( $imp->rows() * $imp->columns() );
 			my $width = $imposition->sheet_width() / ( $imposition->columns()/$imp->columns() );
 			my $height = $imposition->sheet_height() / ( $imposition->rows()/$imp->rows() );
@@ -345,19 +345,14 @@ if ( 0 ) {
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
-
-	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+$openprint::log->debug('Aqueous');
+	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 } # end sub display
 
-# Copies the UV settings back into the printing service, because that is where we have chosen to store them.
+# Copies the AQ settings back into the printing service, because that is where we have chosen to store them.
 sub save {
 	my ( $p_id, $s_id, $params ) = @_;
 	my $Project = new openprint::Project( $p_id );
-	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $p_id, $ss_id );
-		#openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $ss_id, 'SideOneAqueousType', $$params{'SideOneCoatingType-'.$$sig_specs{'SignatureIndex'}} );
-		#openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $ss_id, 'SideTwoAqueousType', $$params{'SideTwoCoatingType-'.$$sig_specs{'SignatureIndex'}} );
-	} # end foreach
 } # end sub
 
 sub summary {

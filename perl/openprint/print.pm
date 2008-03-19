@@ -401,26 +401,26 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
 				'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
-				'ColourCoatingSideOne1', 'ColourCoatingTypeSideOne1', 'ColourCoatingCoverageSideOne1',
-				'ColourCoatingSideOne2', 'ColourCoatingTypeSideOne2', 'ColourCoatingCoverageSideOne2',
-				'ColourCoatingSideOne3', 'ColourCoatingTypeSideOne3', 'ColourCoatingCoverageSideOne3',
-				'ColourCoatingSideOne4', 'ColourCoatingTypeSideOne4', 'ColourCoatingCoverageSideOne4',
-				'ColourCoatingSideOne5', 'ColourCoatingTypeSideOne5', 'ColourCoatingCoverageSideOne5',
-				'ColourCoatingSideOne6', 'ColourCoatingTypeSideOne6', 'ColourCoatingCoverageSideOne6',
-				'ColourCoatingSideOne7', 'ColourCoatingTypeSideOne7', 'ColourCoatingCoverageSideOne7',
-				'ColourCoatingSideOne8', 'ColourCoatingTypeSideOne8', 'ColourCoatingCoverageSideOne8',
-				'ColourCoatingSideOne9', 'ColourCoatingTypeSideOne9', 'ColourCoatingCoverageSideOne9',
+				'ColourCoatingSideOne1', 'ColourCoatingTypeSideOne1', 'ColourCoatingColourSideOne1','ColourCoatingCoverageSideOne1',
+				'ColourCoatingSideOne2', 'ColourCoatingTypeSideOne2', 'ColourCoatingColourSideOne2','ColourCoatingCoverageSideOne2',
+				'ColourCoatingSideOne3', 'ColourCoatingTypeSideOne3', 'ColourCoatingColourSideOne3','ColourCoatingCoverageSideOne3',
+				'ColourCoatingSideOne4', 'ColourCoatingTypeSideOne4', 'ColourCoatingColourSideOne4','ColourCoatingCoverageSideOne4',
+				'ColourCoatingSideOne5', 'ColourCoatingTypeSideOne5', 'ColourCoatingColourSideOne5','ColourCoatingCoverageSideOne5',
+				'ColourCoatingSideOne6', 'ColourCoatingTypeSideOne6', 'ColourCoatingColourSideOne6','ColourCoatingCoverageSideOne6',
+				'ColourCoatingSideOne7', 'ColourCoatingTypeSideOne7', 'ColourCoatingColourSideOne7','ColourCoatingCoverageSideOne7',
+				'ColourCoatingSideOne8', 'ColourCoatingTypeSideOne8', 'ColourCoatingColourSideOne8','ColourCoatingCoverageSideOne8',
+				'ColourCoatingSideOne9', 'ColourCoatingTypeSideOne9', 'ColourCoatingColourSideOne9','ColourCoatingCoverageSideOne9',
 
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
-				'ColourCoatingSideTwo1', 'ColourCoatingTypeSideTwo1', 'ColourCoatingCoverageSideTwo1',
-				'ColourCoatingSideTwo2', 'ColourCoatingTypeSideTwo2', 'ColourCoatingCoverageSideTwo2',
-				'ColourCoatingSideTwo3', 'ColourCoatingTypeSideTwo3', 'ColourCoatingCoverageSideTwo3',
-				'ColourCoatingSideTwo4', 'ColourCoatingTypeSideTwo4', 'ColourCoatingCoverageSideTwo4',
-				'ColourCoatingSideTwo5', 'ColourCoatingTypeSideTwo5', 'ColourCoatingCoverageSideTwo5',
-				'ColourCoatingSideTwo6', 'ColourCoatingTypeSideTwo6', 'ColourCoatingCoverageSideTwo6',
-				'ColourCoatingSideTwo7', 'ColourCoatingTypeSideTwo7', 'ColourCoatingCoverageSideTwo7',
-				'ColourCoatingSideTwo8', 'ColourCoatingTypeSideTwo8', 'ColourCoatingCoverageSideTwo8',
-				'ColourCoatingSideTwo9', 'ColourCoatingTypeSideTwo9', 'ColourCoatingCoverageSideTwo9',
+				'ColourCoatingSideTwo1', 'ColourCoatingTypeSideTwo1', 'ColourCoatingColourSideTwo1','ColourCoatingCoverageSideTwo1',
+				'ColourCoatingSideTwo2', 'ColourCoatingTypeSideTwo2', 'ColourCoatingColourSideTwo2','ColourCoatingCoverageSideTwo2',
+				'ColourCoatingSideTwo3', 'ColourCoatingTypeSideTwo3', 'ColourCoatingColourSideTwo3','ColourCoatingCoverageSideTwo3',
+				'ColourCoatingSideTwo4', 'ColourCoatingTypeSideTwo4', 'ColourCoatingColourSideTwo4','ColourCoatingCoverageSideTwo4',
+				'ColourCoatingSideTwo5', 'ColourCoatingTypeSideTwo5', 'ColourCoatingColourSideTwo5','ColourCoatingCoverageSideTwo5',
+				'ColourCoatingSideTwo6', 'ColourCoatingTypeSideTwo6', 'ColourCoatingColourSideTwo6','ColourCoatingCoverageSideTwo6',
+				'ColourCoatingSideTwo7', 'ColourCoatingTypeSideTwo7', 'ColourCoatingColourSideTwo7','ColourCoatingCoverageSideTwo7',
+				'ColourCoatingSideTwo8', 'ColourCoatingTypeSideTwo8', 'ColourCoatingColourSideTwo8','ColourCoatingCoverageSideTwo8',
+				'ColourCoatingSideTwo9', 'ColourCoatingTypeSideTwo9', 'ColourCoatingColourSideTwo9','ColourCoatingCoverageSideTwo9',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
 				) {
@@ -457,29 +457,12 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 		delete $services{$old_bindery_type};
 	} # end if
 
-	if ( $$param{'rdbTemplateType'} eq 'NoBindery' ) {
-		foreach ( openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' ) ) {
-			if ( $_ ne 'NoBindery' ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
-				@{$services{$_}} = sets::exclude( [ $_ ], $services{$_} );
-			} # end if
-		} # end foreach
-		
-		push @{$services{'NoBindery'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'NoBindery' ) if ! $services{'NoBindery'};
-	} elsif ( $$param{'rdbTemplateType'} ) {
-		# Delete No Bindery Service
-		if ( $services{'NoBindery'} ) {
-			foreach ( @{$services{'NoBindery'}} ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
-			} # end foreach
-			delete $services{'NoBindery'};
-		} # end if
-
+	if ( $$param{'rdbTemplateType'} ) {
 		# Insert the desired Bindery Type
 		push @{$services{$$param{'rdbTemplateType'}}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $$param{'rdbTemplateType'} ) if ! $services{$$param{'rdbTemplateType'}};
 	} # end if
 
-	if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound') ) ) {
+	if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound','Unbound') ) ) {
 		# Saddle and Loop Stitching requires Folding
 		push @{$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' ) if ! $services{'Folding'};
 		push @{$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' ) if ! $services{'Cutting'};
@@ -526,25 +509,25 @@ sub publication_pages {
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
 				'basis_width','basis_height','basis_mweight','StockGrade',
 				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
-				'ColourCoatingSideOne1', 'ColourCoatingTypeSideOne1', 'ColourCoatingCoverageSideOne1',
-				'ColourCoatingSideOne2', 'ColourCoatingTypeSideOne2', 'ColourCoatingCoverageSideOne2',
-				'ColourCoatingSideOne3', 'ColourCoatingTypeSideOne3', 'ColourCoatingCoverageSideOne3',
-				'ColourCoatingSideOne4', 'ColourCoatingTypeSideOne4', 'ColourCoatingCoverageSideOne4',
-				'ColourCoatingSideOne5', 'ColourCoatingTypeSideOne5', 'ColourCoatingCoverageSideOne5',
-				'ColourCoatingSideOne6', 'ColourCoatingTypeSideOne6', 'ColourCoatingCoverageSideOne6',
-				'ColourCoatingSideOne7', 'ColourCoatingTypeSideOne7', 'ColourCoatingCoverageSideOne7',
-				'ColourCoatingSideOne8', 'ColourCoatingTypeSideOne8', 'ColourCoatingCoverageSideOne8',
-				'ColourCoatingSideOne9', 'ColourCoatingTypeSideOne9', 'ColourCoatingCoverageSideOne9',
+				'ColourCoatingSideOne1', 'ColourCoatingTypeSideOne1', 'ColourCoatingColourSideOne1','ColourCoatingCoverageSideOne1',
+				'ColourCoatingSideOne2', 'ColourCoatingTypeSideOne2', 'ColourCoatingColourSideOne2','ColourCoatingCoverageSideOne2',
+				'ColourCoatingSideOne3', 'ColourCoatingTypeSideOne3', 'ColourCoatingColourSideOne3','ColourCoatingCoverageSideOne3',
+				'ColourCoatingSideOne4', 'ColourCoatingTypeSideOne4', 'ColourCoatingColourSideOne4','ColourCoatingCoverageSideOne4',
+				'ColourCoatingSideOne5', 'ColourCoatingTypeSideOne5', 'ColourCoatingColourSideOne5','ColourCoatingCoverageSideOne5',
+				'ColourCoatingSideOne6', 'ColourCoatingTypeSideOne6', 'ColourCoatingColourSideOne6','ColourCoatingCoverageSideOne6',
+				'ColourCoatingSideOne7', 'ColourCoatingTypeSideOne7', 'ColourCoatingColourSideOne7','ColourCoatingCoverageSideOne7',
+				'ColourCoatingSideOne8', 'ColourCoatingTypeSideOne8', 'ColourCoatingColourSideOne8','ColourCoatingCoverageSideOne8',
+				'ColourCoatingSideOne9', 'ColourCoatingTypeSideOne9', 'ColourCoatingColourSideOne9','ColourCoatingCoverageSideOne9',
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
-				'ColourCoatingSideTwo1', 'ColourCoatingTypeSideTwo1', 'ColourCoatingCoverageSideTwo1',
-				'ColourCoatingSideTwo2', 'ColourCoatingTypeSideTwo2', 'ColourCoatingCoverageSideTwo2',
-				'ColourCoatingSideTwo3', 'ColourCoatingTypeSideTwo3', 'ColourCoatingCoverageSideTwo3',
-				'ColourCoatingSideTwo4', 'ColourCoatingTypeSideTwo4', 'ColourCoatingCoverageSideTwo4',
-				'ColourCoatingSideTwo5', 'ColourCoatingTypeSideTwo5', 'ColourCoatingCoverageSideTwo5',
-				'ColourCoatingSideTwo6', 'ColourCoatingTypeSideTwo6', 'ColourCoatingCoverageSideTwo6',
-				'ColourCoatingSideTwo7', 'ColourCoatingTypeSideTwo7', 'ColourCoatingCoverageSideTwo7',
-				'ColourCoatingSideTwo8', 'ColourCoatingTypeSideTwo8', 'ColourCoatingCoverageSideTwo8',
-				'ColourCoatingSideTwo9', 'ColourCoatingTypeSideTwo9', 'ColourCoatingCoverageSideTwo9',
+				'ColourCoatingSideTwo1', 'ColourCoatingTypeSideTwo1', 'ColourCoatingColourSideTwo1','ColourCoatingCoverageSideTwo1',
+				'ColourCoatingSideTwo2', 'ColourCoatingTypeSideTwo2', 'ColourCoatingColourSideTwo2','ColourCoatingCoverageSideTwo2',
+				'ColourCoatingSideTwo3', 'ColourCoatingTypeSideTwo3', 'ColourCoatingColourSideTwo3','ColourCoatingCoverageSideTwo3',
+				'ColourCoatingSideTwo4', 'ColourCoatingTypeSideTwo4', 'ColourCoatingColourSideTwo4','ColourCoatingCoverageSideTwo4',
+				'ColourCoatingSideTwo5', 'ColourCoatingTypeSideTwo5', 'ColourCoatingColourSideTwo5','ColourCoatingCoverageSideTwo5',
+				'ColourCoatingSideTwo6', 'ColourCoatingTypeSideTwo6', 'ColourCoatingColourSideTwo6','ColourCoatingCoverageSideTwo6',
+				'ColourCoatingSideTwo7', 'ColourCoatingTypeSideTwo7', 'ColourCoatingColourSideTwo7','ColourCoatingCoverageSideTwo7',
+				'ColourCoatingSideTwo8', 'ColourCoatingTypeSideTwo8', 'ColourCoatingColourSideTwo8','ColourCoatingCoverageSideTwo8',
+				'ColourCoatingSideTwo9', 'ColourCoatingTypeSideTwo9', 'ColourCoatingColourSideTwo9','ColourCoatingCoverageSideTwo9',
 				'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
 				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
 				'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
