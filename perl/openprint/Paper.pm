@@ -754,7 +754,7 @@ sub sheets_per_package {
 	} # end if
 
 	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} );
-$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
+#$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
 	return $$self{'sheets_per_package'} * $factor;
 }
 
