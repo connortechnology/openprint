@@ -38,6 +38,7 @@ require openprint::Estimating::Cutting;
 require openprint::Estimating::Stitching;
 require openprint::Estimating::SpinePaste;
 require openprint::Estimating::UVCoating;
+require openprint::Estimating::Aqueous;
 require openprint::Equipment;
 require openprint::Material;
 #use Time::HiRes qw{ time gettimeofday tv_interval }; 
@@ -239,6 +240,7 @@ sub setup_project {
 		$project{'NeedCutting'} = 0;
 	} # end if
 	$project{'NeedUVCoating'} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
+	$project{'NeedAqueous'} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
 
 	$project{'HasFolding'} = $$services{'Folding'} ? $$services{'Folding'}[0] : 0;
 	$project{'HasScoring'} = $$services{'Scoring'} ? $$services{'Scoring'}[0] : 0;
@@ -254,6 +256,13 @@ sub setup_project {
 		} # end if	
 		$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
 	} # end if	
+	if ( $project{'NeedAqueous'} ) {
+		if ( ! $$services{'Aqueous'} ) {
+			push @{$$services{'Aqueous'}}, openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $Project->id(), 'Aqueous' );
+		} # end if	
+		$project{'HasAqueous'} = $$services{'Aqueous'}[0];
+	} # end if	
+
 
 	%{$project{'FoldingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasFolding'} )} if $project{'HasFolding'};
 	%{$project{'CuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasCutting'} )} if $project{'HasCutting'};
@@ -263,10 +272,8 @@ sub setup_project {
 	%{$project{'SpinePasteSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SpinePaste'}[0] )} if $$services{'SpinePaste'};
 	%{$project{'PerfectBoundSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] )} if $$services{'PerfectBound'};
 
-	if ( $$services{'UVCoating'} ) {
-$openprint::log->debug("Grabbing UV Specs");
-		%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )};
-	} # end if
+	%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )} if $$services{'UVCoating'};
+	%{$project{'AqueousSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] )} if $$services{'Aqueous'};
 	return \%project;
 } # end sub setup_project
 
@@ -444,8 +451,6 @@ $openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} 
 
 		my $Paper = $Imposition->paper();
 		my $Press = $Imposition->Press();
-		my $Aqueous = $$price{'Aqueous'};
-		my $Varnish = $$price{'Varnish'};
 
 		# Neccessary since specs do not neccessarily match the Impo
 		$Imposition->save( $specs, $qty_index );
@@ -497,8 +502,6 @@ $openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} 
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$price{'Total Cost'} / $qty );
 		my $mprice = $$price{'Impression Price'};
-		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
-		$mprice += $$Aqueous{'Total'} if $Aqueous;
 		
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', ((($mprice + $$price{'Ink Price'} )/ $qty)*1000 ) + $$price{'Paper 1000 Price'} );
 
@@ -1388,8 +1391,6 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		my $Imposition = $$b_price{'Imposition'};
 		my $Paper = $Imposition->paper();
 		my $Press = $Imposition->Press();
-		my $Aqueous = $$b_price{'Aqueous'};
-		my $Varnish = $$b_price{'Varnish'};
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
 #$Imposition->display();
@@ -1450,8 +1451,6 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $best_price{'Total Cost'} / $qty );
 		my $mprice = $best_price{'Impression Price'};
-		$mprice += $$Varnish{'Run Total'} + $$Varnish{'Material Total'} if $Varnish;
-		$mprice += $$Aqueous{'Total'} if $Aqueous;
 		
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', ((($mprice + $best_price{'Ink Price'} )/ $qty)*1000 ) + $best_price{'Paper 1000 Price'} );
 
@@ -1483,8 +1482,6 @@ sub breakdown {
 	my $Imposition = $$price{'Imposition'};
 	my $Paper = $Imposition->paper();
 	my $Press = $Imposition->Press();
-	my $Aqueous = $$price{'Aqueous'};
-	my $Varnish = $$price{'Varnish'};
 
 	my $breakdown = '';
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
@@ -1509,16 +1506,11 @@ sub breakdown {
 	} # end if
 	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", $$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
-	$breakdown .= sprintf("\tAqueous Setup:\t\$%.2f<br/>", $$Aqueous{'Setup'}) if $$Aqueous{'Setup'};
 	$breakdown .= sprintf("\tPMS Ink Mix Charge:\t\$%.2f<br/>", $$price{'Ink Mix Charge'} ) if $$price{'Ink Mix Charge'};
-	$breakdown .= sprintf("\tInline Varnish Setup Charge: \$%.2f<br/>", $$Varnish{'Setup'} ) if $$Varnish{'Setup'};
 	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
 	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
-	$breakdown .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
-# if $$Varnish{'run_price'};
-	$breakdown .= sprintf("\tAqueous Run Charge: %.2f%s = \$%.2f<br/>", @$Aqueous{'Run Cost','Units','Total'} ) if %$Aqueous;;
 	$breakdown .= sprintf("\tMinimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} );
 	$breakdown .= sprintf("\tRun Charge Total:\t\$%.2f<br/>", $$price{'Run Total'} );
 	$breakdown .= '<b>Material Charges:</b><br/>';
@@ -1545,7 +1537,6 @@ sub breakdown {
 	} # end if
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf("\tInk Total: \$%.2f<br/>", $$price{'Ink Price'} );
-	$breakdown .= sprintf("\tVarnish: \$%.4f\%s = \$%.2f<br/>", @$Varnish{'Material Price','Material Units','Material Total'} ) if %$Varnish;
 	$breakdown .= "Total: $$price{'Total Cost'}<br/>";
 	$breakdown .= $$price{'Folding Breakdown'};
 	$breakdown .= $$price{'Cutting Breakdown'};
@@ -1555,6 +1546,7 @@ sub breakdown {
 	$breakdown .= $$price{'SpinePaste Breakdown'};
 	$breakdown .= $$price{'PerfectBound Breakdown'};
 	$breakdown .= $$price{'UVCoating Breakdown'};
+	$breakdown .= $$price{'Aqueous Breakdown'};
 	$breakdown .= $$price{'AdditionalSignature Breakdown'};
 	$breakdown .= sprintf("Comparison Cost: \%.2f<br/>", $$price{'Comparison Cost'});
 	return $breakdown;
@@ -2326,11 +2318,12 @@ sub calc_price {
 	foreach my $real_colour ( @colours ) {
 		my $colour;
 		next if $real_colour =~ /UV/;
+		next if $real_colour =~ /Aqueous/;
 
 		$price{'Ink breakdown'} .= $real_colour;
 
 
-		if ( $real_colour =~ /Varnish/ or $real_colour =~ /Aqueous/ ) {
+		if ( $real_colour =~ /Varnish/ ) {
 			$price{'Press Washes'} += 1;
 			$colour = $real_colour;
 			if ( sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble'] ) ) {
@@ -2511,6 +2504,16 @@ $openprint::log->debug("Perforating");
 			$price{'Comparison Cost'} += $uv_results{'Total'};
 		} # end if
 	} # end if UVCoating
+	if ( $$project{'HasAqueous'} ) {
+		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		if ( $aq_results{'Status'} eq 'uncalculated' ) {
+			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{'alert'} $$project{'AqueousSpecs'}{alert} " . $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} elsif ( $aq_results{'Equipment'} ) {
+			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: $%.2f on %s<br/>', $aq_results{'Total'}, $aq_results{'Equipment'}->name() );
+			$price{'Comparison Cost'} += $aq_results{'Total'};
+		} # end if
+	} # end if Aqueous
 
 	$price{'complete'} = 1;
 	return \%price;
