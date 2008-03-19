@@ -2532,14 +2532,11 @@ sub select_presses {
 
 	my @good_presses;
 	my $varnish = 0;
-	my $aqueous = 0;
 #$log->debug(" *** CHECKING FOR VANISH *** ");
 	foreach my $colour (@$side_one_colours, @$side_two_colours) {
 		if ( $colour =~ /Varnish/ ) {
 #$log->debug(" ** HAVE VARNISH **" );
 			$varnish = 1;
-		} elsif ( $colour =~ /Aqueous/ ) {
-			$aqueous = 1;
 		} # end if
 	} # end if
 
@@ -2562,11 +2559,6 @@ sub select_presses {
 
 		if ( $Paper->calliper() > $Press->specification('Maximum Calliper', $Paper->grade() ) ) {
 			$openprint::log->debug(" ** Press $press_id Failed Calliper Check **");
-			next;
-		} # end if
-
-		if ( $aqueous and ( $Press->specification('Aqueous Coating') ne 'Y' ) ) {
-			$openprint::log->debug(" ** Press $press_id Failed Aqueous Check (".$Press->specification('Aqueous Coating').")**");
 			next;
 		} # end if
 
