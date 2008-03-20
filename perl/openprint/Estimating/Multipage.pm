@@ -33,6 +33,8 @@ my %variables = (
 	'rdbCover'=>['save','output'],
 	'txtGateFoldedSpreadQuantity'=>['save','output'],
 	'txtInsertQuantity'=>['save'],
+	'TippingQuantity'=>['save'],
+	'BlowingQuantity'=>['save'],
 	'txtSpreadSize'=>['save','output'],'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],

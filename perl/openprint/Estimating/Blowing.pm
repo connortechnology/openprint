@@ -1,4 +1,4 @@
-package openprint::Estimating::Tipping;
+package openprint::Estimating::Blowing;
 use strict;
 use warnings;
 
@@ -37,7 +37,7 @@ sub neccessary {
 	my $services = $Project->services( );
 	if ( $$services{''} ) {
 		my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		return 1 if $$project_specs{'TippingQuantity'};
+		return 1 if $$project_specs{'BlowingQuantity'};
 	} # end if
 	return 0;
 } # end sub neccessary
@@ -49,17 +49,17 @@ sub calc {
 
 	$$specs{'Quantity'} =~ s/\D//g;
 	if ( ! $$specs{'Quantity'} ) {
-		$$specs{'alert'} = 'Please enter the number of tip-ins.';
+		$$specs{'alert'} = 'Please enter the number of blow-ins.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	my $services = $Project->services();
 
-	my @Equipment = openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'Y'},'use_in_estimating'=>1);
-	push @Equipment, openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'When PerfectBound'},'use_in_estimating'=>1) if $$services{'PerfectBind'};
-	push @Equipment, openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'When Stitching'},'use_in_estimating'=>1) if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+	my @Equipment = openprint::Equipment::find('Specifications'=>{'Blowing Capable'=>'Y'},'use_in_estimating'=>1);
+	push @Equipment, openprint::Equipment::find('Specifications'=>{'Blowing Capable'=>'When PerfectBound'},'use_in_estimating'=>1) if $$services{'PerfectBind'};
+	push @Equipment, openprint::Equipment::find('Specifications'=>{'Blowing Capable'=>'When Stitching'},'use_in_estimating'=>1) if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 	if ( ! @Equipment ) {
-		$$specs{'alert'} = 'We have no equipment for tip-ins.';
+		$$specs{'alert'} = 'We have no equipment for blow-ins.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
@@ -84,7 +84,7 @@ sub calc {
 
 			my $total = 0;
 
-			my %MakeReady = openprint::service::get_price_object('TippingMakeReady', undef, $Equipment );
+			my %MakeReady = openprint::service::get_price_object('BlowingMakeReady', undef, $Equipment );
 			if ( ! %MakeReady ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
@@ -92,7 +92,7 @@ sub calc {
 				$total += $MakeReady{'Price'};
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object('Tipping', undef, $Equipment ); 
+			my %ServicePrice = openprint::service::get_price_object('Blowing', undef, $Equipment ); 
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
@@ -105,7 +105,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $$specs{'txtQuantity'.$qty_index} );
 			} # end if
 
-			if ( my $minimumcharge = openprint::service::get_price('TippingMinimumCharge', undef, $Equipment ) ) {
+			if ( my $minimumcharge = openprint::service::get_price('BlowingMinimumCharge', undef, $Equipment ) ) {
 				$total = $minimumcharge if $total < $minimumcharge;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $total );
@@ -155,9 +155,9 @@ sub display {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
-	push @possible_equipment, openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>'When Stitching'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
-	push @possible_equipment, openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>'When PerfectBound'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'PerfectBound'};
+	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Blowing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	push @possible_equipment, openprint::Equipment::find( 'Specifications' => {'Blowing Capable'=>'When Stitching'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+	push @possible_equipment, openprint::Equipment::find( 'Specifications' => {'Blowing Capable'=>'When PerfectBound'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'PerfectBound'};
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 

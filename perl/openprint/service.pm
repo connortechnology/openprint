@@ -300,6 +300,16 @@ sub auto_calculate {
 			push @{$services{'SaddleStitching'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'SaddleStitching' );
 		} # end if
 	} # end if
+	if ( openprint::Estimating::Tipping::neccessary( $Project ) ) {
+		if ( ! $services{'Tipping'} ) {
+			push @{$services{'Tipping'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Tipping' );
+		} # end if
+	} # end if
+	if ( openprint::Estimating::Blowing::neccessary( $Project ) ) {
+		if ( ! $services{'Blowing'} ) {
+			push @{$services{'Blowing'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Blowing' );
+		} # end if
+	} # end if
 	if ( openprint::Estimating::Collating::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $services{'Collating'} ) {
 			push @{$services{'Collating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Collating' );
