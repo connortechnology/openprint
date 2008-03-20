@@ -46,14 +46,17 @@ sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
+	my $services = $Project->services();
+	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
+	if ( ! $$specs{'Quantity'} ) {
+		$$specs{'Quantity'} = $$project_specs{'BlowingQuantity'};
+	} # end if
 	$$specs{'Quantity'} =~ s/\D//g;
 	if ( ! $$specs{'Quantity'} ) {
 		$$specs{'alert'} = 'Please enter the number of blow-ins.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-
-	my $services = $Project->services();
 
 	my @Equipment = openprint::Equipment::find('Specifications'=>{'Blowing Capable'=>'Y'},'use_in_estimating'=>1);
 	push @Equipment, openprint::Equipment::find('Specifications'=>{'Blowing Capable'=>'When PerfectBound'},'use_in_estimating'=>1) if $$services{'PerfectBind'};
@@ -76,9 +79,9 @@ sub calc {
 
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
-			my $max_tip_ins = $Equipment->specification('Maximum Tip-ins');
-			if ( $max_tip_ins and ( $max_tip_ins < $$specs{'Quantity'} ) ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Maximum tip-ins: ' . $max_tip_ins.'<br/>';
+			my $max_blow_ins = $Equipment->specification('Maximum Blow-ins');
+			if ( $max_blow_ins and ( $max_blow_ins < $$specs{'Quantity'} ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Maximum blow-ins: ' . $max_blow_ins.'<br/>';
 				next;
 			} # end if
 
@@ -147,8 +150,16 @@ sub summary {
 		return '';
 	} # end if
 
-	return sprintf( '%d tip in%s', $$specs{'Quantity'}, $$specs{'Quantity'} == 1 ? '' : 's' );
+	return sprintf( '%d blow in%s', $$specs{'Quantity'}, $$specs{'Quantity'} == 1 ? '' : 's' );
 } # end sub summary
+
+sub save {
+	my ( $p_id, $s_id, $param ) = @_;
+	my $Project = new openprint::Project( $p_id );
+	my $services = $Project->services();
+	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $$services{''}[0], 'BlowingQuantity', $$param{'Quantity'} );
+	
+} # end sub save
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;

@@ -46,14 +46,17 @@ sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
+	my $services = $Project->services();
+	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
+	if ( ! $$specs{'Quantity'} ) {
+		$$specs{'Quantity'} = $$project_specs{'TippingQuantity'};
+	} # end if
 	$$specs{'Quantity'} =~ s/\D//g;
 	if ( ! $$specs{'Quantity'} ) {
 		$$specs{'alert'} = 'Please enter the number of tip-ins.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-
-	my $services = $Project->services();
 
 	my @Equipment = openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'Y'},'use_in_estimating'=>1);
 	push @Equipment, openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'When PerfectBound'},'use_in_estimating'=>1) if $$services{'PerfectBind'};
@@ -149,6 +152,14 @@ sub summary {
 
 	return sprintf( '%d tip in%s', $$specs{'Quantity'}, $$specs{'Quantity'} == 1 ? '' : 's' );
 } # end sub summary
+
+sub save {
+	my ( $p_id, $s_id, $param ) = @_;
+	my $Project = new openprint::Project( $p_id );
+	my $services = $Project->services();
+	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $$services{''}[0], 'TippingQuantity', $$param{'Quantity'} );
+	
+} # end sub save
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;

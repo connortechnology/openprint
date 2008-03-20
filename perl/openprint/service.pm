@@ -14,6 +14,8 @@ require openprint::Estimating::Drilling;
 require openprint::Estimating::Scanning;
 require openprint::Estimating::Prepress;
 require openprint::Estimating::Stitching;
+require openprint::Estimating::Tipping;
+require openprint::Estimating::Blowing;
 require openprint::Estimating::Packaging;
 require openprint::Estimating::Skids;
 require openprint::Estimating::Lamination;
@@ -129,9 +131,8 @@ sub save_service {
 		} # end if
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
-	if ( $service_type eq 'UVCoating' ) {
-		openprint::Estimating::UVCoating::save( $project_index, $service_index, \%openprint::param );
-	} # end if
+	eval( 'openprint::Estimating::'.$service_type.'::save( $project_index, $service_index, \%openprint::param )');
+	$log->error($@) if $@;
 
 	$log->debug("***** END  OF  save_service ************");
 } # end sub save_service
