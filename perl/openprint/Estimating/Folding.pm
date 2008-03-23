@@ -23,12 +23,13 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
 
 my @variables = (
+		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'MPrice1', 'MPrice2', 'MPrice3',
 		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -163,12 +164,13 @@ sub signature_needs {
 	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
+		#$openprint::log->warn("FOLDING NEEDED templatetype!") if $debug;
 		return 1;
 	} # end if
 
 	# This works for books because sigs don't have a txtFinalWidth, etc.
 	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
-		#$openprint::log->debug("FOLDING NEEDED dimensions do not match!");
+		#$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
 		return 1;
 	} # end if
 	return 0;
@@ -276,7 +278,7 @@ sub impositions {
 } # end sub impositions
 
 sub signature_calc {
-	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
+	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition, @leftover_colours ) = @_;
 
 	# First step, find out if we are stitching, then find out which equipment is being used for stitching
 	my $services = $Project->services();
@@ -322,17 +324,18 @@ $openprint::log->debug("Loading imposition");
 			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'} );
 		} # end if
 
-		if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
-			my $Press = shift @Press;
-			if ( $Press->specification('Folding Capable') ) {
-				if ( $Press->specification('Sheeter') ne 'Y' ) {
-					@my_equipment = ( $Press );
-$openprint::log->debug("No Sheeter");
-				} else {
-					unshift @my_equipment, $Press;
+		#if ( ! @leftover_colours ) {
+			if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
+				my $Press = shift @Press;
+				if ( $Press->specification('Folding Capable') ) {
+					if ( $Press->specification('Sheeter') ne 'Y' ) {
+						@my_equipment = ( $Press );
+					} else {
+						unshift @my_equipment, $Press;
+					} # end if
 				} # end if
 			} # end if
-		} # end if
+		#} # end if
 	} # end if
 
 	# If the stitching is happening on a piece of equipment that can't handle large signatures, then we need to cut them down instead of folding them.
@@ -696,6 +699,8 @@ sub calc {
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, openprint::project::get_project_type_service_index( $log, $dbh, $project_index ) );
 
 	foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! int $$specs{"txtQuantity$qty_index"};
 		$$specs{'hdnBreakdown'.$qty_index} = '';
@@ -741,7 +746,11 @@ sub calc {
 			$$specs{'alert'} = 'Unable to fold.';
 		} # end if
 
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
 	} # end foreach qty
 	$log->debug(" END FOLDING!!!!!!!!!!!!!!!!!! $status");

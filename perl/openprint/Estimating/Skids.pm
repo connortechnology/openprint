@@ -205,7 +205,7 @@ sub calc {
 		my $price = $makeReady + $qty * $unitPrice;
 
 		$$specs{"txtPackageQuantity$qty_index"} = $qty;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.4f', $unitPrice );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 		$$specs{'txtPackageWeight'} = sprintf('%.2f', $$specs{'txtPackageWeight'} );

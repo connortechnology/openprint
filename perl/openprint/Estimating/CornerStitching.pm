@@ -174,7 +174,7 @@ sub calc {
 			$$specs{"ddmEquipment$qty_index"} = $bestEquipment->str();
 		} # end if
 
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'txtPrice'} );
 		$$specs{"txtRunTime$qty_index"} = $bestPrice{'RunTime'};
 	} # end foreach

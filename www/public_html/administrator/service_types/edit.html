@@ -30,22 +30,22 @@
 	<fieldset>
 		<p> 
 			<label>Name:</label>
-			<input type="text" name="name" value="<? echo ( $$variable{'ServiceType'}->name() ) ?>" /> 
+			<input type="text" name="name" value="<? echo ( $$variable{'ServiceType'}->name() ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}" />
 		</p>
 		<p> 
 			<label>Description:</label>
-			<input type="text" name="description" value="<? echo ( $$variable{'ServiceType'}->description() ) ?>" /> 
+			<input type="text" id="description" name="description" value="<? echo ( $$variable{'ServiceType'}->description() ) ?>" /> 
 		</p>
 		<p> 
 			<label>Category:</label>
 			<input type="text" name="category" value="<? echo ( $$variable{'ServiceType'}->category() ) ?>" /> 
 		</p>
-<? if ( $session{'email'} =~ /iconnor/ ) ?>
+<? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p> 
 			<label>URL:</label>
 			<input type="text" name="url" value="<? echo ( $$variable{'ServiceType'}->url() ) ?>" /> 
 		</p>
-<? endif ( $session{'email'} =~ /iconnor/ ) ?>
+<? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p>
 			<label>Visible in Project Create:</label>
 			<input type="radio" id="create_visible1" name="create_visible" value="1"  <? echo ( 'checked="checked"' if $$variable{'ServiceType'}->create_visible(); ) ?> />

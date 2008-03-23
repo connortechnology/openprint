@@ -1,16 +1,29 @@
-<form name="part1form" id="part1form">
+<form name="part1form" id="part1form" action="">
 <h3>Part 1 (To be completed by issuer)</h3>
-<table>
+<table class="View" style="table-layout:fixed;">
 	<tr>
-		<td width="10%" colspan="1">Issued To:</td>
-		<td width="40%" colspan="4"><select name="issued_to_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->issued_to_id() ? $$variable{'CAR'}->issued_to_id() : $openprint::session{'user_id'} ); ) ?></select>
-		</td>
-		<td width="10%" colspan="1">Issued By:</td>
-		<td width="40%" colspan="4"><select name="issued_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->issued_by_id() ? $$variable{'CAR'}->issued_by_id() : $openprint::session{'user_id'} ); ) ?></select></td>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
 	</tr>
 	<tr>
-		<td width="10%" colspan="1">Issue Date:</td>
-		<td width="40%" colspan="4">
+		<td colspan="1">Issued To:</td>
+		<td colspan="4"><select name="issued_to_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->issued_to_id() ? $$variable{'CAR'}->issued_to_id() : $openprint::session{'user_id'} ); ) ?></select>
+		</td>
+		<td colspan="1">Issued By:</td>
+		<td colspan="4"><select name="issued_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->issued_by_id() ? $$variable{'CAR'}->issued_by_id() : $openprint::session{'user_id'} ); ) ?></select></td>
+	</tr>
+	<tr>
+		<td colspan="1">Issue Date:</td>
+		<td colspan="4">
 <? eval (
 	if ( $$variable{'CAR'}->issued_on() ) {
 	@$variable{'issued_on_years','issued_on_months','issued_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{'CAR'}->issued_on()) );
@@ -22,8 +35,8 @@
             <select name="issued_on_month" onchange="setDaysDropDown(this.form.issued_on_year.value,this.value,this.form.issued_on_day,this.form.issued_on_day.value);"><?issued_on_months?></select>
             <select name="issued_on_day"><?issued_on_days?></select>
 </td>
-		<td width="10%" colspan="1">Reply Due By:</td>
-		<td width="40%" colspan="4">
+		<td colspan="1">Reply By:</td>
+		<td colspan="4">
 <? eval (
 	if ( $$variable{'CAR'}->reply_by() ) {
 @$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{'CAR'}->reply_by() ) );
@@ -34,16 +47,19 @@
             <select name="reply_by_year" onchange="setDaysDropDown(this.value,this.form.reply_by_month.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_years?></select>
             <select name="reply_by_month" onchange="setDaysDropDown(this.form.reply_by_year.value,this.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_months?></select>
             <select name="reply_by_day"><?reply_by_days?></select>
+		</td>
 	</tr>
 	<tr>
-		<td>Docket No:</td>
-		<td><input type="text" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" size="6"/></td>
-		<td>Customer:</td><td width="30%" colspan="3">
-<select name="company_id" style="width: 100%;">
+		<td colspan="1">Docket No:</td>
+		<td colspan="1"><input type="text" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" size="6" onkeyup="this.value=this.value.replace(/\D/, '' );new Ajax.Request('_select_customer_from_docket.json', {method:'get', parameters: {docket:this.value}} );" /></td>
+		<td colspan="1">Customer:</td>
+		<td colspan="3">
+<select id="company_id" name="company_id" style="width: 100%;">
 <? echo ( openprint::Company::get_dropdown( $$variable{'CAR'}->company_id() ) ) ?>
 </select>
 		</td>
-		<td>Printed on:</td><td width="30%" colspan="3">
+		<td colspan="1">Printed on:</td>
+		<td colspan="3">
 <? eval (
 	if ( $$variable{'CAR'}->printed_on() ) {
 @$variable{'printed_on_years','printed_on_months','printed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{'CAR'}->printed_on() ) );
@@ -54,26 +70,49 @@
             <select name="printed_on_year" onchange="setDaysDropDown(this.value,this.form.printed_on_month.value,this.form.printed_on_day,this.form.printed_on_day.value);"><?printed_on_years?></select>
             <select name="printed_on_month" onchange="setDaysDropDown(this.form.printed_on_year.value,this.value,this.form.printed_on_day,this.form.printed_on_day.value);"><?printed_on_months?></select>
             <select name="printed_on_day"><?printed_on_days?></select>
-</td></tr>
-	<tr><td width="100%" colspan="10">PROBLEM/NONCONFORMANCE DESCRIPTION</td></tr>
-	<tr><td width="100%" colspan="10"><textarea name="problem" rows="5" style="width:99%;"></textarea></td></tr>
-	<tr><td width="10%" colspan="1">Press:</td><td width="90%" colspan="9">
+		</td>
+	</tr>
+	<tr><td colspan="10">PROBLEM/NONCONFORMANCE DESCRIPTION</td></tr>
+	<tr>
+		<td colspan="1">Area</td>
+		<td colspan="4">
+			<select name="area">
+				<option value="">select</option>
+				<? echo (
+					my @options = ( 'SALES/CUSTOMER SERVICE','PURCHASING','RECEIVING','PREPRESS','CTP','PRINTING','BINDERY','ADMINISTRATION','PACKING/SHIPPING','SUPPLIER' );
+					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->area() );
+				) ?>
+			</select>
+		</td>
+		<td colspan="1">Reason</td>
+		<td colspan="4">
+			<select name="reason">
+				<option value="">select</option>
+				<? echo (
+					my @options = ( 'INCORRECT SALES ORDER','WRONG QUANTITY','SHIPPING/RECEIVING ERROR','CUTTING ERROR','HICKEYS/SCRATCHES','WRONG STOCK','MISC PREPRESS ERROR','OFFSET/PRINT ERROR','FOLDING ERROR','STAFF PERFORMANCE','COLOUR PROBLEMS','DAMAGE','PLATE ERROR','MISSING IMAGE/TEXT','SLOW RESPONSE TO RFQs','DOCKET ERROR','IMPO ERROR','MISC BINDERY ERROR','NOT REGISTERED(PRESS)','SUB STANDARD STOCK','WRONG ITEM','WRONG QUANTITY','INCORRECT DIMENSIONS','POOR QUALITY','SHELF LIFE','WRONG COLOUR','WRONG BATCH','CONTAMINATION','LATTE DELIVERY','INVOICE ISSUE','OTHER');
+					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->area() );
+				) ?>
+			</select>
+		</td>
+	</tr>
+	<tr><td colspan="10"><textarea name="problem" rows="5"></textarea></td></tr>
+	<tr><td colspan="1">Press:</td><td colspan="9">
 <? echo ( 
 	my $html = '';
 	my @presses = split(';', $$variable{'CAR'}->presses());
 	foreach my $Press ( openprint::Equipment::find('category'=>'Printing','use_in_scheduling'=>1) ) {
-$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d" %3$s/><label for="presses%1$d">%2$s</abel>', $Press->id(), $Press->strid(), sets::isin( $Press->id(), @presses ) ? 'checked="checked"' : '' );
+$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d" %3$s/><label for="presses%1$d">%2$s</label>', $Press->id(), $Press->name(), sets::isin( $Press->id(), @presses ) ? 'checked="checked"' : '' );
 	} # end foreach
 	return $html;
 ) ?>
 	</td></tr>
 	<tr>
-		<td colspan="1" width="10%">Originator:</td>
-		<td colspan="4" width="40%">
+		<td colspan="1">Originator:</td>
+		<td colspan="4">
 <select name="part1_user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->part1_user_id() ? $$variable{'CAR'}->part1_user_id() : $openprint::session{'user_id'} ); ) ?></select>
 </td>
-		<td colspan="1" width="10%">Date:</td>
-		<td colspan="4" width="40%">
+		<td colspan="1">Date:</td>
+		<td colspan="4">
 <? eval (
 if ( $$variable{'CAR'}->part1_signed_on() ) {
 @$variable{'part1_signed_on_years','part1_signed_on_months','part1_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{'CAR'}->part1_signed_on() ) );

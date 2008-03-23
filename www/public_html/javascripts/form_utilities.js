@@ -112,6 +112,23 @@ function create_option( value, text ) {
 	return option;
 }
 
+function sort_ddm(ddm) {
+	var selectedValue = ddm.value;
+    var copyOption = new Array();
+    for (var i=0;i<ddm.options.length;i+=1)
+        copyOption[i] = new Array(ddm.options[i].value,ddm.options[i].text, ddm.options[i]);
+
+    copyOption.sort(function(a,b) { return a[0]!=b[0] ? a[0]<b[0] ? -1 : 1 : 0; });
+
+	clear_ddm( ddm );
+
+    for (var i=0;i<copyOption.length;i++)
+		ddm[i] = copyOption[i][2];
+		//add_option( ddm, copyOption[i][0], copyOption[i][1] );
+	ddm_select_by_value( ddm, selectedValue, 0 );
+}
+
+
 function add_option( ddm, value, text, selectedValue ) {
 	if ( ddm ) {
 		//var optionIndex = get_option_index(ddm.options,value);
@@ -136,15 +153,9 @@ function add_option( ddm, value, text, selectedValue ) {
 } // end function add_option
 
 function isin_ddm ( array, value ) {
-	if ( array ) {
-		for ( var i = 0; i < array.length; i += 1 ) {
-			if ( array[i].value == value )
-				return true;
-		} // end for
-	} else {
-		alert("isin_ddm: null array" );
-	}
-	return false;
+	var index = get_option_index( array, value );
+	if ( index == -1 ) return false;
+	return true;
 } // end function isin_ddm
 
 function get_option_index ( array, value ) {
@@ -744,7 +755,7 @@ function countLines(strtocount, cols) {
 }
 
 function textarea_resize( element ) {
-	element.rows = countLines(element.value,element.cols) + 1;
+	element.rows = countLines(element.value,element.cols);
 } // end function textarea_resize
 
 function do_decimals( number, precision ) {

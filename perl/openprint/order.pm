@@ -17,6 +17,7 @@ require openprint::service;
 require openprint::Order;
 require openprint::OrderedProduct;
 require openprint::usergroup;
+require openprint::press_schedule;
 
 sub delete_order {
 	my ( $log, $dbh, $order_id ) = @_;
@@ -915,6 +916,8 @@ sub finalise_order {
 			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
 			$Project->save();	
 			$Project->update_status();
+
+			openprint::press_schedule::add_project_to_press_schedule( $Project );
 		} # end foreach
 		update_order_status( $r, $log, $dbh, $order_id );
 # send out email notifications
@@ -952,7 +955,7 @@ sub send_completion_notice {
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_completion_notice.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
@@ -995,7 +998,7 @@ sub send_invoice {
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
@@ -1017,7 +1020,7 @@ sub send_invoice {
 	my @attachments = ();
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_for_admin.html' );
@@ -1057,7 +1060,7 @@ sub send_sales_order {
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
@@ -1100,7 +1103,7 @@ sub send_sales_order {
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my @sales_order;
@@ -1379,6 +1382,7 @@ sub cancel_order {
 		$Project->docket( undef );
 		$Project->save();
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
+		openprint::press_schedule::remove( $Project->id() );
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );
 } # end sub cancel_order

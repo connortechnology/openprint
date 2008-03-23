@@ -29,7 +29,7 @@ sub helpdesk {
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_response.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		$_ = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		my $email_template = ssi::variable_substitution( \$_, \%info );
 
 		my %mail = (
@@ -165,7 +165,7 @@ sub returns {
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_response.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 		my %mail = (

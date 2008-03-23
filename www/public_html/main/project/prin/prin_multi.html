@@ -58,33 +58,45 @@
 			<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
 			<!--#include virtual="/includes/main/proj/dimensions.html" -->
-<br class="spacer"/>
-<fieldset><legend>Book Specifications</legend>
-			<!--#include virtual="/includes/main/proj/multipage_printing_type.html" -->
-	<div id="PagesCover">
-	<p>
-		<label>Total pages:</label>
-		<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="calc(this.form.name);" />
-	</p>
-	<p>
-		<label>Cover:</label>
-		<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Self' ) ?> />
-		<label class="radio" for="rdbCoverSelf">Self Cover</label>
-		<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
-		<label class="radio" for="rdbCoverDifferent">Different Cover</label>
-	</p>
-	</div>
-	<div id="GateInsert">
-	<p>
-		<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages:</label>
-		<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="4"  onkeyup="calc(this.form.name);" />
-	</p>
-	<p>
-		<label># of inserts:</label>
-		<input name="txtInsertQuantity" size="4" value="<?txtInsertQuantity?>"/>
-	</p>
-	</div>
-</fieldset>
+			<br class="spacer"/>
+			<fieldset><legend>Book Specifications</legend>
+				<!--#include virtual="/includes/main/proj/multipage_printing_type.html" -->
+				<div id="PagesCover">
+				<p>
+					<label>Total pages:</label>
+					<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="calc(this.form.name);" />
+				</p>
+				<p>
+					<label>Cover:</label>
+					<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Self' ) ?> />
+					<label class="radio" for="rdbCoverSelf">Self Cover</label>
+					<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
+					<label class="radio" for="rdbCoverDifferent">Different Cover</label>
+				</p>
+				</div>
+				<div id="GateInsert">
+				<p>
+					<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages:</label>
+					<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="4"  onkeyup="calc(this.form.name);" />
+				</p>
+				<p>
+					<label># of inserts:</label>
+					<input name="txtInsertQuantity" size="4" value="<?txtInsertQuantity?>"/>
+				</p>
+			<? if ( openprint::ServiceType::find('name'=>'Tipping') ) ?>
+				<p>
+					<label># of tip-ins:</label>
+					<input name="TippingQuantity" size="4" value="<?TippingQuantity?>"/>
+				</p>
+			<? endif ( openprint::ServiceType::find('name'=>'Tipping') ) ?>
+			<? if ( openprint::ServiceType::find('name'=>'Blowing') ) ?>
+				<p>
+					<label># of blow-ins:</label>
+					<input name="BlowingQuantity" size="4" value="<?BlowingQuantity?>"/>
+				</p>
+			<? endif ( openprint::ServiceType::find('name'=>'Blowing') ) ?>
+				</div>
+			</fieldset>
 			<br class="spacer"/>
 			<? echo (
 				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? and strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );

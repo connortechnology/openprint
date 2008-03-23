@@ -113,58 +113,60 @@ sub load {
 } # end sub load
 
 sub fits {
-   my ( $self, $width, $height, $calliper ) = @_;
+   my ( $self, $width, $height, $calliper, $service ) = @_;
 
-   if ( $self->specification('Maximum Sheet Width') and $self->specification('Maximum Sheet Length') ) {
-	   my $imp = openprint::imposition::fit( $width, $height, $self->specification('Maximum Sheet Width'),$self->specification('Maximum Sheet Length') );
+	$service = ' '.$service if $service;
+
+   if ( $self->specification("Maximum$service Sheet Width") and $self->specification("Maximum$service Sheet Length") ) {
+	   my $imp = openprint::imposition::fit( $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
 #$log->debug("Impo: $imp{'Imposition'} $imp{'Rows'}x$imp{'Cols'}");
 	   if ( ! $imp->imposition() ) {
-		   return sprintf('Too big %s x %s on %s x %s', $width, $height, $self->specification('Maximum Sheet Width'),$self->specification('Maximum Sheet Length') );
+		   return sprintf('Too big %s x %s on %s x %s', $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
 	   } # end if
-	} elsif ( $self->specification('Maximum Sheet Width') ) {
+	} elsif ( $self->specification("Maximum$service Sheet Width") ) {
 		if (
-			( $width > $self->specification('Maximum Sheet Width') ) and
-			( $height > $self->specification('Maximum Sheet Width') ) 
+			( $width > $self->specification("Maximum$service Sheet Width") ) and
+			( $height > $self->specification("Maximum$service Sheet Width") ) 
 			) {
-		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification('Maximum Sheet Width'));
+		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
 		} # end if
-	} elsif ( $self->specification('Maximum Sheet Height') ) {
+	} elsif ( $self->specification("Maximum$service Sheet Height") ) {
 		if (
-			( $width > $self->specification('Maximum Sheet Height') ) and
-			( $height > $self->specification('Maximum Sheet Height') ) 
+			( $width > $self->specification("Maximum$service Sheet Height") ) and
+			( $height > $self->specification("Maximum$service Sheet Height") ) 
 			) {
-		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification('Maximum Sheet Height'));
+		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Height"));
 		} # end if
 	} # end if
 
    if ( $width and $height ) {
-	   if ( $self->specification('Minimum Sheet Width') and $self->specification('Minimum Sheet Length') ) {
-		   my $imp = openprint::imposition::fit( $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length'), $width, $height );
+	   if ( $self->specification("Minimum$service Sheet Width") and $self->specification("Minimum$service Sheet Length") ) {
+		   my $imp = openprint::imposition::fit( $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length"), $width, $height );
 		   if ( ! $imp->imposition() ) {
-			   return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length') );
+			   return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length") );
 		   } # end if
-	   } elsif ( $self->specification('Minimum Sheet Width') ) {
+	   } elsif ( $self->specification("Minimum$service Sheet Width") ) {
 		   if (
-				   ( $width < $self->specification('Minimum Sheet Width') ) and
-				   ( $height < $self->specification('Minimum Sheet Width') ) 
+				   ( $width < $self->specification("Minimum$service Sheet Width") ) and
+				   ( $height < $self->specification("Minimum$service Sheet Width") ) 
 			  ) {
-			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification('Maximum Sheet Width'));
+			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
 		   } # end if
-	   } elsif ( $self->specification('Minimum Sheet Length') ) {
+	   } elsif ( $self->specification("Minimum$service Sheet Length") ) {
 		   if (
-				   ( $width < $self->specification('Minimum Sheet Length') ) and
-				   ( $height < $self->specification('Minimum Sheet Length') ) 
+				   ( $width < $self->specification("Minimum$service Sheet Length") ) and
+				   ( $height < $self->specification("Minimum$service Sheet Length") ) 
 			  ) {
-			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification('Maximum Sheet Width'));
+			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
 		   } # end if
 	   } # end if
    } # end if
 
-   if ( $self->specification('Minimum Calliper') and $calliper and ( 1*$calliper < 1*$self->specification('Minimum Calliper') ) ) {
-	   return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification('Minimum Calliper') .' Inches.';
+   if ( $self->specification("Minimum$service Calliper") and $calliper and ( 1*$calliper < 1*$self->specification("Minimum$service Calliper") ) ) {
+	   return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification("Minimum$service Calliper") .' Inches.';
    } # end if
-   if ( $self->specification('Maximum Calliper') and $calliper and ( 1*$calliper > 1*$self->specification('Maximum Calliper') ) ) {
-	   return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specifications('Maximum Calliper') .' Inches.';
+   if ( $self->specification("Maximum$service Calliper") and $calliper and ( 1*$calliper > 1*$self->specification("Maximum$service Calliper") ) ) {
+	   return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
    } # end if
 
 } # end sub fits

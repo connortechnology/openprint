@@ -176,6 +176,7 @@ sub parse_page {
 	my @thing = split( '/', $uri );
 	my $filename = pop @thing;
 	shift @thing; # get rid of element before leading slash
+	my @path = @thing;
 	my $first = shift @thing if @thing;
 	my $second = shift @thing if @thing;
 	my $third = shift @thing if @thing;
@@ -326,10 +327,10 @@ $openprint::log->debug("Getfile");
 				return;
 			} # endif
 		} else {
-			eval( "require openprint::$first".'_'.$second );
+			eval( 'require openprint::'.join('_', @path ) );
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
-			eval( 'openprint::'.$first.'_'.$second.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		} # end if
 
@@ -380,6 +381,11 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
 				@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
+$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+if ( ! $variable{'ServiceIndex'} ) {
+$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+$variable{'ServiceIndex'} = $service_index;
+} # end if
 
 				if ( $third eq 'prin' ) {
 					$log->debug("** START OF MAIN:PROJ:PRIN * ($project_index) ($service_index)");
@@ -403,6 +409,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 					} # end if
 
 				} elsif ($third eq 'bind') {
+$openprint::log->warn('bind');
 					if ( $filename eq 'folding.html' ) {
 						require openprint::Estimating::Folding;
 						openprint::Estimating::Folding::display( $log, $dbh, \%variable, $project_index, $service_index );
@@ -426,18 +433,22 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 					} elsif ( $filename eq 'collating.html' ) {
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename =~ /(\w*).html/ ) {
+					} elsif ( $filename =~ /^(\w*).html$/ ) {
+$openprint::log->debug("$1");
 						eval sprintf('require openprint::Estimating::%1$s;
 						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
+						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 					
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename eq 'lamination.html' ) {
 						require openprint::Estimating::Lamination;
 						openprint::Estimating::Lamination::display( $log, $dbh, \%variable );
-					} elsif ( $filename eq 'UVCoating.html' ) {
-						require openprint::Estimating::UVCoating;
-						openprint::Estimating::UVCoating::display( $log, $dbh, \%variable, $project_index, $service_index );
+					} elsif ( $filename =~ /^(\w*).html$/ ) {
+$openprint::log->debug("$1");
+						eval sprintf('require openprint::Estimating::%1$s;
+						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
+						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 					} # end if
 				} elsif ($third eq 'pack') {
 					if ( $filename eq 'pack_by_weight.html' ) {

@@ -195,8 +195,8 @@ sub load {
 		$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
 		$$self{'spread_size'} = $$specs{'txtSpreadSize'};
 	} else {
-		$$self{'spread_rows'} = int($$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
-		$$self{'spread_columns'} = int($$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
+		$$self{'spread_rows'} = sprintf('%.0f', $$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
+		$$self{'spread_columns'} = sprintf('%.0f',$$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
 		$$self{'spread_size'} = $$self{'spread_rows'} * $$self{'spread_columns'} * 2;
 		$$self{'spread_rows'} = 1;
 		$$self{'spread_columns'} = 1;
@@ -227,7 +227,11 @@ sub save {
 
 sub used_width {
 	my $self = shift;
-	return $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'};
+	return $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'} + ( $$self{'colour_bar_orientation'} eq 'Length' ? $$self{'colour_bar_size'} : 0 );
+}
+sub used_height {
+    my $self = shift;
+    return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'} + ( $$self{'colour_bar_orientation'} eq 'Width' ? $$self{'colour_bar_size'} : 0 );
 }
 sub used_height {
 	my $self = shift;

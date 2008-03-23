@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -51,12 +51,14 @@ $openprint::log->debug("Trying dutch:") if $debug;
 		next if $dutch_imp->imposition() <= $setup->imposition();
 		next if $dutch_imp->imposition() <= $previous_dutch_imp;
 		$dutch_imp->paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->paper()->start_width();
+		fix_height( $dutch_imp, $specs );
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
 			push @dutch_imps, $dutch_imp;
 			$previous_dutch_imp = $dutch_imp->imposition();
 		} # end if
 	} # end foreach
+
 	$previous_dutch_imp = 0;
 	foreach my $row_delta ( 0 .. int ( $setup->rows() / 2 ) ) {
 
@@ -75,6 +77,7 @@ $openprint::log->debug("Trying dutch:") if $debug;
 		next if $dutch_imp->imposition() <= $setup->imposition();
 		next if $dutch_imp->imposition() <= $previous_dutch_imp;
 		$dutch_imp->paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->paper()->start_width();
+		fix_height( $dutch_imp, $specs );
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
 			push @dutch_imps, $dutch_imp;
@@ -84,9 +87,31 @@ $openprint::log->debug("Trying dutch:") if $debug;
 	return @dutch_imps;
 } # end sub calc_dutch
 
+sub fix_height {
+	my ( $imp, $specs ) = @_;
+	if ( ! $imp->paper()->start_height() ) {
+		if ( $$specs{'Cut Off'} ) {
+# Take the smallest available cut off
+			foreach my $cut_off ( sort split(',', $$specs{'Cut Off'} ) ) {
+				$openprint::log->debug("dutch Cut Off $cut_off " . $imp->used_height() );
+				if ( $cut_off >= $imp->used_height() ) {
+					$imp->paper()->height( $cut_off );
+					return;
+				} # end if
+			} # end foreach
+			# We didn't finda valid cut off.  THis makes this imposition invalid.  This should generally only happen when the sheet length is smaller than any available cutoff.
+			$imp->imposition(0);
+		} else {
+			$imp->paper()->height( $imp->used_height() );
+		} # end if
+	} # end if
+} # end sub fix_height
+
 # This function makes sure that the setup is valid.
 sub check_setup {
 	my ( $setup, $specs ) = @_;
+
+	return 0 if ! $setup->imposition();
 
 	my $Equipment = $setup->Press();
 	if ( 0 and $Equipment ) {
@@ -233,7 +258,6 @@ sub calc_setup_object {
 		$bindery_gutters = $Press->specification('PerfectBindGutter');
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
 	} # end if
-
 	my @bleed_locations =  split(',', $$specs{'BleedLocations'} );
 	my $bleed_width  = 2*$bindery_bleed;
 	my $bleed_height  = 2*$bindery_bleed;
@@ -255,6 +279,7 @@ sub calc_setup_object {
 	} # end if
 	$bleed_width = 0 if $bleed_width < 0;
 	$bleed_height = 0 if $bleed_height < 0;
+#$openprint::log->debug("BleedSize: $$specs{'BleedSize'} bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
 	$setup1->image_width( $image_width + $bleed_width );
 	$setup1->image_height( $image_height );
@@ -276,6 +301,7 @@ sub calc_setup_object {
 	if ( sets::isin( 'Left', \@bleed_locations ) ) {
 		$gutters -= $$specs{'BleedSize'};
 	} # end if
+#$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
 #$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 
 	$gutters = 0 if $gutters < 0;
@@ -287,6 +313,8 @@ sub calc_setup_object {
 		# For Work & TUmble, the grip happens on the head and tail, but we can print on the backside of the grip so to speak.  So we can tuck the colour bar into the second grip space.
 		$$specs{'Grip Size'} -= $$specs{'colour_bar_size'};
 	} # end if
+	$setup1->grip( $$specs{'Grip Size'} );
+	$setup2->grip( $$specs{'Grip Size'} );
 
 	if ( 
 			( ! $grain_direction )
@@ -315,7 +343,7 @@ sub calc_setup_object {
 		# On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 		if ( ( ! $paper_height ) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
 			$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
-			#$openprint::log->debug("*** Using Max Image Length1: $adjusted_paper_height ***") if $debug;
+			$openprint::log->debug("*** Using Max Image Length1: $adjusted_paper_height ***") if $debug;
 		} # end if
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
@@ -337,7 +365,7 @@ sub calc_setup_object {
 		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 
 		my $adjusted_paper_width = $paper_width; 
-#$openprint::log->debug("P Width: $adjusted_paper_width");
+$openprint::log->debug("P Width: $adjusted_paper_width") if $debug;
 		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Left', \@bleed_locations );
 		$cropmarkspace = 0 if $cropmarkspace < 0;
@@ -364,52 +392,41 @@ sub calc_setup_object {
 		$adjusted_paper_width -= $setup1->cropmark_right();
 
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
-#$openprint::log->debug("P Width gutters: $adjusted_paper_width");
+$openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 
 		if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 			calc_setup( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height );
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
-			if ( $setup1->imposition() ) {
-				check_setup( $setup1, $specs );
+			fix_height( $setup1, $specs );
+			if ( check_setup( $setup1, $specs ) ) {
 				$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
-				if ( $setup1->imposition() ) {
-					$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? 'height' : 'width' );
+				$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? 'height' : 'width' );
 #$openprint::log->debug( "Imposition: Paper: " . $setup1->paper()->width() . 'x'.$setup1->paper()->height() . ', used: ' . $setup1->used_width() . 'x'.$setup1->used_height() );
-					if ( ! $setup1->paper()->width() ) {
-						$setup1->paper()->width( $setup1->used_width() );
-					} # end if
-					if ( $$specs{'Cut Off'} ) {
-						$setup1->paper()->height( $$specs{'Cut Off'} ); # Cut Off
-					} elsif ( ! $setup1->paper()->height() ) {
-						$setup1->paper()->height( $setup1->used_height() );
-					} # end if
-#$openprint::log->debug( "Imposition: Paper: " . $setup1->paper()->width() . 'x'.$setup1->paper()->height() . ', used: ' . $setup1->used_width() . 'x'.$setup1->used_height() );
-					push @results, $setup1;
-					if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} ) ) {
-						push @results, calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height, $specs );
-					} # end if
+				if ( ! $setup1->paper()->width() ) {
+					$setup1->paper()->width( $setup1->used_width() );
 				} # end if
-			} # end if
+				fix_height( $setup1, $specs );
+				push @results, $setup1;
+				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} ) ) {
+					push @results, calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height, $specs );
+				} # end if
+			} # end if check_setup
 		} elsif ( $run_style eq 'Work & Turn' ) {
 			calc_setup( $setup1, $image_width, $image_height, $adjusted_paper_width/2, $adjusted_paper_height );
 			$openprint::log->debug( sprintf('CHECK 1 Work&Turn Using Paper %sx%s -> %s x %s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $image_width, $image_height, $setup1->imposition(), $setup1->columns(), $setup1->rows() ) ) if $debug;
+			$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? 'height' : 'width' );
+
+			if ( ! $setup1->paper()->width() ) {
+				$setup1->paper()->width( $setup1->used_width()*2 );
+			} # end if
+			fix_height( $setup1, $specs );
 			if ( $setup1->imposition() ) {
-				$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? 'height' : 'width' );
-
-				if ( ! $setup1->paper()->width() ) {
-					$setup1->paper()->width( $setup1->used_width()*2 );
-				} # end if
-				if ( $$specs{'Cut Off'} ) {
-					$setup1->paper()->height( $$specs{'Cut Off'} ); # Cut Off
-				} elsif ( ! $setup1->paper()->height() ) {
-					$setup1->paper()->height( $setup1->used_height() );
-				} # end if
-
 				if ( ! ( $grain_direction or exists ($$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
 					foreach my $imp ( calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 						$imp->columns( $imp->columns() * 2 );
 						$imp->dutch_columns( $imp->dutch_columns() * 2 );
-			$openprint::log->debug( sprintf('CHECK 1 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $image_width, $image_height, $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if $debug;
+						$imp->paper()->width( $imp->used_width() ) if ! $imp->paper()->start_width();
+						$openprint::log->debug( sprintf('CHECK 1 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $image_width, $image_height, $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if $debug;
 						push @results, $imp;
 					} # end foreach
 				} # end if grain_direction
@@ -421,25 +438,25 @@ sub calc_setup_object {
 			$openprint::log->debug( sprintf('CHECK 1 Work&TumbleUsing Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $image_width, $image_height, $setup1->imposition(), $setup1->columns(), $setup1->rows() ) ) if $debug;
 			if ( $setup1->imposition() ) {
 				$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? 'height' : 'width' );
-					if ( ! $setup1->paper()->width() ) {
-						$setup1->paper()->width( $setup1->used_width() );
-					} # end if
-					if ( $$specs{'Cut Off'} ) {
-						$setup1->paper()->height( $$specs{'Cut Off'} ); # Cut Off
-					} elsif ( ! $setup1->paper()->height() ) {
-						$setup1->paper()->height( $setup1->used_height()*2 );
-					} # end if
+
+				if ( ! $setup1->paper()->width() ) {
+					$setup1->paper()->width( $setup1->used_width() );
+				} # end if
 
 				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
 					foreach my $imp ( calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height/2, $specs ) ) {
 						$imp->rows( $imp->rows() * 2 );
 						$imp->dutch_rows( $imp->dutch_rows() * 2 );
+						fix_height( $imp, $specs );
 			$openprint::log->debug( sprintf('CHECK 1 Work&Tumble Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $image_width, $image_height, $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if $debug;
-						push @results, $imp;
+						if ( $setup1->imposition() ) {
+							push @results, $imp;
+						} # end if
 					} # end foreach
 				} # end if grain_direction
 				$setup1->rows( $setup1->rows() * 2 );
-				push @results, $setup1;
+				fix_height( $setup1, $specs );
+				push @results, $setup1 if $setup1->imposition();
 			} # end if imposition
 		} # end if run_style
 	} # end if grain_direction
@@ -529,23 +546,18 @@ sub calc_setup_object {
 		if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 			calc_setup( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height );
 			$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if $debug;
-			if ( $setup2->imposition() ) {
-				check_setup( $setup2, $specs );
+			if ( check_setup( $setup2, $specs ) ) {
 			$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if $debug;
 
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.
 #	if no grain direction is specified, then use the larger imposition
+				$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? 'height' : 'width' );
+				if ( ! $setup2->paper()->width() ) {
+					$setup2->paper()->width( $setup2->used_width() );
+					$openprint::log->debug("Setting paper width: " . $setup2->paper()->width());
+				} # end if
+				fix_height( $setup2, $specs );
 				if ( $setup2->imposition() ) {
-					$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? 'height' : 'width' );
-#$openprint::log->debug( "Imposition: Paper: " . $setup2->paper()->width() . 'x'.$setup2->paper()->height() . ', used: ' . $setup2->used_width() . 'x'.$setup2->used_height() );
-					if ( ! $setup2->paper()->width() ) {
-						$setup2->paper()->width( $setup2->used_width() );
-					} # end if
-					if ( $$specs{'Cut Off'} ) {
-						$setup2->paper()->height( $$specs{'Cut Off'} );
-					} elsif ( ! $setup2->paper()->height() ) {
-						$setup2->paper()->height( $setup2->used_height() );
-					} # end if
 					push @results, $setup2;
 
 					if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
@@ -572,12 +584,17 @@ sub calc_setup_object {
 					foreach my $imp ( calc_dutch( $setup2, $image_height, $image_width, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 						$imp->columns( $imp->columns() * 2 );
 						$imp->dutch_columns( $imp->dutch_columns() * 2 );
+						$imp->paper()->width( $imp->used_width() ) if ! $imp->paper()->start_width();
 			$openprint::log->debug( sprintf('CHECK 2 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $image_height, $image_width, $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if $debug;
 						push @results, $imp;
 					} # end foreach
 				} # end if grain_direction
 				$setup2->columns( $setup2->columns() * 2 );
-				push @results, $setup2;
+				if ( ! $setup2->paper()->width() ) {
+					$setup2->paper()->width( $setup2->used_width() );
+				} # end if
+				fix_height( $setup2, $specs );
+				push @results, $setup2 if $setup2->imposition();
 			} # end if imposition
 		} elsif ( $run_style eq 'Work & Tumble' ) {
 			calc_setup( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height/2 );
@@ -597,12 +614,17 @@ sub calc_setup_object {
 					foreach my $imp ( calc_dutch( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height/2, $specs ) ) {
 						$imp->rows( $imp->rows() * 2 );
 						$imp->dutch_rows( $imp->dutch_rows() * 2 );
+						fix_height( $imp, $specs );
 			$openprint::log->debug( sprintf('CHECK 2 Work&Tumble Dutch Using Paper %sx%s->%sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $image_height, $image_width, $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if $debug;
-						push @results, $imp;
+						push @results, $imp if $setup2->imposition();
 					} # end foreach imposition
 				} # end if grain_direction
 				$setup2->rows( $setup2->rows() * 2 );
-				push @results, $setup2;
+				if ( ! $setup2->paper()->width() ) {
+					$setup2->paper()->width( $setup2->used_width() );
+				} # end if
+				fix_height( $setup2, $specs );
+				push @results, $setup2 if $setup2->imposition();
 			} # end if imposition
 		} # end if run_style
 	} # end if graindirection is unspecified, so do dutch cuts
@@ -629,9 +651,9 @@ sub get_imposition {
 		push @styles, 'Perfecting' if $do_perfecting;
 	} # end if
 	if ( $$project{'Runstyles'} ) {
-	#$openprint::log->debug(" *1* Run Styles to consider: @styles ** $$project{'Runstyles'} $do_perfecting") if $debug;
+	$openprint::log->debug(" *1* Run Styles to consider: @styles ** $$project{'Runstyles'} $do_perfecting") if $debug;
 		@styles = sets::intersection( @styles, misc::trim(split(',', $$project{'Runstyles'} ) ) );
-	#$openprint::log->debug(" *2* Run Styles to consider: @styles **") if $debug;
+	$openprint::log->debug(" *2* Run Styles to consider: @styles **") if $debug;
 	} # end if
 
 	return add_imposition( $project, $Paper, $versions, $override_grain_direction, $Press, @styles );
@@ -644,7 +666,7 @@ sub add_imposition {
 
 	#$openprint::log->debug(" ** Run Styles to consider: @styles **") if $debug;
 	foreach my $run_style ( @styles ) {
-		#$openprint::log->debug(" ** Processing Run Style: $run_style on $$Paper{'width'} x $$Paper{'height'} $override_grain_direction**") if $debug;
+		$openprint::log->debug(" ** Processing Run Style: $run_style on $$Paper{'width'} x $$Paper{'height'} $override_grain_direction**") if $debug;
 
 		if ( ! $Paper->cuttable() ) {
 			next if ! sets::isin( $run_style, ['Web','Sheet Work','Perfecting'] );
@@ -681,7 +703,7 @@ sub add_imposition {
 sub convert_impositions {
 	my ( $desired_signature_size, $spread_size, $impositions ) = @_;
 	my @good_impositions;
-
+$openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, Spread size: $spread_size,") if $debug;
 # The various way we can group these spreads
 	my %blocks = (
 			1	=>	[ [1,1] ],
@@ -719,7 +741,9 @@ sub convert_impositions {
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;
 		#foreach my $signature_size ( reverse 1 .. $start ) {
-		foreach my $signature_size ( reverse int($start/2) .. $start ) {
+		my $a = int($start/2);
+		$a -= 1 if $a % 2;
+		foreach my $signature_size ( reverse $a .. $start ) {
 			next if ! $blocks{$signature_size};
 #Now figure out how to cut up the imposition
 #$openprint::log->debug("Considering sig size: $signature_size") if $debug;
@@ -728,9 +752,9 @@ sub convert_impositions {
 			my $imp_cols = $imp->columns();
 			foreach my $block ( @{$blocks{$signature_size}} ) {
 				my ( $col, $row ) = @$block;
-				$cols = int ( $imp_cols / $col );
+				$cols = int( $imp_cols / $col );
 				$rows = int( $imp_rows / $row );
-				$openprint::log->debug("Trying $col x $row Got $cols x $rows") if $debug;
+				$openprint::log->debug("Trying $signature_size: IMP: $imp_cols x $imp_rows BLOCK: $col x $row Got $cols x $rows") if $debug;
 				#$log->debug("Trying $col x $row Got $cols x $rows") if $debug;
 				next if ! ( $rows and $cols );
 				next if ( $cols % 2 and $imp->runstyle() eq 'Work & Turn' );

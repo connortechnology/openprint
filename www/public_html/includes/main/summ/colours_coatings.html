@@ -24,7 +24,7 @@
 </div>
 <? endif ( $$variable{'chkBlackSideOne'} or $$variable{'chkProcessColourSideOne'} )?>
 
-<? if ( $$variable{'txtSpecialSideOneColour1'} || $$variable{'txtSpecialSideOneColour2'} || $$variable{'txtSpecialSideOneColour3'} || $$variable{'txtSpecialSideOneColour4'} || $$variable{'txtSpecialSideOneColour5'} || $$variable{'txtSpecialSideOneColour6'} || $$variable{'txtSpecialSideOneColour7'} || $$variable{'txtSpecialSideOneColour8'} ) ?>
+<? if ( $$variable{'chkSpecialSideOneColour1'} || $$variable{'chkSpecialSideOneColour2'} || $$variable{'chkSpecialSideOneColour3'} || $$variable{'chkSpecialSideOneColour4'} || $$variable{'chkSpecialSideOneColour5'} || $$variable{'chkSpecialSideOneColour6'} || $$variable{'chkSpecialSideOneColour7'} || $$variable{'chkSpecialSideOneColour8'} ) ?>
 <div class="row"> 
 	<span class="label">Side one special colours:</span>
 <!-- The rest is done for each qty -->
@@ -32,30 +32,30 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="value"> 
-	<? if ( $$variable{'txtSpecialSideOneColour1'} ) ?>
+	<? if ( $$variable{'chkSpecialSideOneColour1'} ) ?>
 	  <?txtSpecialSideOneColour1?> (<?txtSpecialSideOneColourInkPercent1?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideOneColour1'} ) ?>
-	<? if ( $$variable{'txtSpecialSideOneColour2'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideOneColour1'} ) ?>
+	<? if ( $$variable{'chkSpecialSideOneColour2'} ) ?>
 	  <?txtSpecialSideOneColour2?> (<?txtSpecialSideOneColourInkPercent2?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideOneColour2'} ) ?>
-	<? if ( $$variable{'txtSpecialSideOneColour3'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideOneColour2'} ) ?>
+	<? if ( $$variable{'chkSpecialSideOneColour3'} ) ?>
 	  <?txtSpecialSideOneColour3?> (<?txtSpecialSideOneColourInkPercent3?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideOneColour3'} ) ?>
-	<? if ( $$variable{'txtSpecialSideOneColour4'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideOneColour3'} ) ?>
+	<? if ( $$variable{'chkSpecialSideOneColour4'} ) ?>
 	  <?txtSpecialSideOneColour4?> (<?txtSpecialSideOneColourInkPercent4?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideOneColour4'} ) ?>
-	<? if ( $$variable{'txtSpecialSideOneColour5'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideOneColour4'} ) ?>
+	<? if ( $$variable{'chkSpecialSideOneColour5'} ) ?>
 	  <?txtSpecialSideOneColour5?> (<?txtSpecialSideOneColourInkPercent5?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideOneColour5'} ) ?>
-	<? if ( $$variable{'txtSpecialSideOneColour6'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideOneColour5'} ) ?>
+	<? if ( $$variable{'chkSpecialSideOneColour6'} ) ?>
 	  <?txtSpecialSideOneColour6?> (<?txtSpecialSideOneColourInkPercent6?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideOneColour6'} ) ?>
-	<? if ( $$variable{'txtSpecialSideOneColour7'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideOneColour6'} ) ?>
+	<? if ( $$variable{'chkSpecialSideOneColour7'} ) ?>
 	  <?txtSpecialSideOneColour7?> (<?txtSpecialSideOneColourInkPercent7?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideOneColour7'} ) ?>
-	<? if ( $$variable{'txtSpecialSideOneColour8'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideOneColour7'} ) ?>
+	<? if ( $$variable{'chkSpecialSideOneColour8'} ) ?>
 	  <?txtSpecialSideOneColour8?> (<?txtSpecialSideOneColourInkPercent8?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideOneColour8'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideOneColour8'} ) ?>
 	   
 	 </span>
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -64,7 +64,7 @@
 <!-- End of Results -->
 	<br class="spacer"/>
 </div>
-<? endif ( $$variable{'txtSpecialSideOneColour1'} || $$variable{'txtSpecialSideOneColour2'} || $$variable{'txtSpecialSideOneColour3'} || $$variable{'txtSpecialSideOneColour4'} || $$variable{'txtSpecialSideOneColour5'} || $$variable{'txtSpecialSideOneColour6'} || $$variable{'txtSpecialSideOneColour7'} || $$variable{'txtSpecialSideOneColour8'} ) ?>
+<? endif ( $$variable{'chkSpecialSideOneColour1'} || $$variable{'chkSpecialSideOneColour2'} || $$variable{'chkSpecialSideOneColour3'} || $$variable{'chkSpecialSideOneColour4'} || $$variable{'chkSpecialSideOneColour5'} || $$variable{'chkSpecialSideOneColour6'} || $$variable{'chkSpecialSideOneColour7'} || $$variable{'chkSpecialSideOneColour8'} ) ?>
 <? if ( $$variable{'chkVarnishOverallGlossSideOne'} || $$variable{'chkVarnishOverallMatteSideOne'} || $$variable{'chkVarnishOverallMatteSideOne'} || $$variable{'chkVarnishSpotGlossSideOne'}  || $$variable{'chkVarnishSpotMatteSideOne'} || $$variable{'chkVarnishDryTrapSideOne'}  ) ?>
 <div class="row"> 
 	<span class="label">Varnish for side one:</span>
@@ -119,44 +119,44 @@
   </div>
 <? endif ( $$variable{'chkBlackSideTwo'} or $$variable{'chkProcessColourSideTwo'} )?>
 
-<? if ( $$variable{'txtSpecialSideTwoColour1'} || $$variable{'txtSpecialSideTwoColour2'} || $$variable{'txtSpecialSideTwoColour3'} || $$variable{'txtSpecialSideTwoColour4'} || $$variable{'txtSpecialSideTwoColour5'} || $$variable{'txtSpecialSideTwoColour6'} || $$variable{'txtSpecialSideOneTwoColour7'} || $$variable{'txtSpecialSideTwoColour8'} ) ?>
+<? if ( $$variable{'chkSpecialSideTwoColour1'} || $$variable{'chkSpecialSideTwoColour2'} || $$variable{'chkSpecialSideTwoColour3'} || $$variable{'chkSpecialSideTwoColour4'} || $$variable{'chkSpecialSideTwoColour5'} || $$variable{'chkSpecialSideTwoColour6'} || $$variable{'chkSpecialSideOneTwoColour7'} || $$variable{'chkSpecialSideTwoColour8'} ) ?>
 	  <div class="row"> 
 		<span class="label">Side two special colours:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="value"> 
-	<? if ( $$variable{'txtSpecialSideTwoColour1'} ) ?>
+	<? if ( $$variable{'chkSpecialSideTwoColour1'} ) ?>
 	  <?txtSpecialSideTwoColour1?> (<?txtSpecialSideTwoColourInkPercent1?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideTwoColour1'} ) ?>
-	<? if ( $$variable{'txtSpecialSideTwoColour2'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideTwoColour1'} ) ?>
+	<? if ( $$variable{'chkSpecialSideTwoColour2'} ) ?>
 	  <?txtSpecialSideTwoColour2?> (<?txtSpecialSideTwoColourInkPercent2?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideTwoColour2'} ) ?>
-	<? if ( $$variable{'txtSpecialSideTwoColour3'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideTwoColour2'} ) ?>
+	<? if ( $$variable{'chkSpecialSideTwoColour3'} ) ?>
 	  <?txtSpecialSideTwoColour3?> (<?txtSpecialSideTwoColourInkPercent3?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideTwoColour3'} ) ?>
-	<? if ( $$variable{'txtSpecialSideTwoColour4'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideTwoColour3'} ) ?>
+	<? if ( $$variable{'chkSpecialSideTwoColour4'} ) ?>
 	  <?txtSpecialSideTwoColour4?> (<?txtSpecialSideTwoColourInkPercent4?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideTwoColour4'} ) ?>
-	<? if ( $$variable{'txtSpecialSideTwoColour5'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideTwoColour4'} ) ?>
+	<? if ( $$variable{'chkSpecialSideTwoColour5'} ) ?>
 	  <?txtSpecialSideTwoColour5?> (<?txtSpecialSideTwoColourInkPercent5?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideTwoColour5'} ) ?>
-	<? if ( $$variable{'txtSpecialSideTwoColour6'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideTwoColour5'} ) ?>
+	<? if ( $$variable{'chkSpecialSideTwoColour6'} ) ?>
 	  <?txtSpecialSideTwoColour6?> (<?txtSpecialSideTwoColourInkPercent6?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideTwoColour6'} ) ?>
-	<? if ( $$variable{'txtSpecialSideTwoColour7'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideTwoColour6'} ) ?>
+	<? if ( $$variable{'chkSpecialSideTwoColour7'} ) ?>
 	  <?txtSpecialSideTwoColour7?> (<?txtSpecialSideTwoColourInkPercent7?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideTwoColour7'} ) ?>
-	<? if ( $$variable{'txtSpecialSideTwoColour8'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideTwoColour7'} ) ?>
+	<? if ( $$variable{'chkSpecialSideTwoColour8'} ) ?>
 	  <?txtSpecialSideTwoColour8?> (<?txtSpecialSideTwoColourInkPercent8?>%) &nbsp;
-	<? endif ( $$variable{'txtSpecialSideTwoColour8'} ) ?>
+	<? endif ( $$variable{'chkSpecialSideTwoColour8'} ) ?>
 		</span>
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<br class="spacer"/>
 </div>
-<? endif ( $$variable{'txtSpecialSideTwoColour1'} || $$variable{'txtSpecialSideTwoColour2'} || $$variable{'txtSpecialSideTwoColour3'} || $$variable{'txtSpecialSideTwoColour4'} || $$variable{'txtSpecialSideTwoColour5'} || $$variable{'txtSpecialSideTwoColour6'} || $$variable{'txtSpecialSideOneTwoColour7'} || $$variable{'txtSpecialSideTwoColour8'} ) ?>
+<? endif ( $$variable{'chkSpecialSideTwoColour1'} || $$variable{'chkSpecialSideTwoColour2'} || $$variable{'chkSpecialSideTwoColour3'} || $$variable{'chkSpecialSideTwoColour4'} || $$variable{'chkSpecialSideTwoColour5'} || $$variable{'chkSpecialSideTwoColour6'} || $$variable{'chkSpecialSideOneTwoColour7'} || $$variable{'chkSpecialSideTwoColour8'} ) ?>
 
 <? if ( $$variable{'chkVarnishOverallGlossSideTwo'} || $$variable{'chkVarnishOverallMatteSideTwo'} || $$variable{'chkVarnishOverallMatteSideTwo'} || $$variable{'chkVarnishSpotGlossSideTwo'}  || $$variable{'chkVarnishSpotMatteSideTwo'} || $$variable{'chkVarnishDryTrapSideTwo'}  ) ?>
 <div class="row"> 

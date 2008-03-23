@@ -34,6 +34,7 @@ my @stitchers;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
         'MPrice1', 'MPrice2', 'MPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
         'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
@@ -732,9 +733,13 @@ if ( 1 ) {
 			$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 		} # end foreach signature_index
 
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		if ( $$specs{"OverridePrice$qty_index"} eq 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		} # end if
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $price/$$specs{"txtQuantity$qty_index"} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
 
 	} # end foreach quantity
 	return $$specs{'Status'};

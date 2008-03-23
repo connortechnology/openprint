@@ -76,6 +76,7 @@ if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 			</p>
+<!--#include virtual="/includes/main/proj/_service_price.html"-->
 			<p>
 				<label><b>Service Price (<?CurrencySymbol?>):</b></label>
 <? echo ( 

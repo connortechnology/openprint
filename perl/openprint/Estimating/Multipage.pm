@@ -33,6 +33,8 @@ my %variables = (
 	'rdbCover'=>['save','output'],
 	'txtGateFoldedSpreadQuantity'=>['save','output'],
 	'txtInsertQuantity'=>['save'],
+	'TippingQuantity'=>['save'],
+	'BlowingQuantity'=>['save'],
 	'txtSpreadSize'=>['save','output'],'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
@@ -300,7 +302,7 @@ $openprint::log->debug("ADding signature");
 	# Releases the lock
 	$openprint::dbh->commit();
 
-	foreach my $key ( openprint::Estimating::Printing::variables() ) {
+	foreach my $key ( openprint::Estimating::Printing::variables( $project_index, undef, undef, $sig_specs ) ) {
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 	} # end foreach
 

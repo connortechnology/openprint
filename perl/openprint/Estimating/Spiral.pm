@@ -71,7 +71,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 	my $ProjectType = $Project->Type();
 
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
-		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index, undef, $ProjectType->strid() );
+		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	} else {
 		$$specs{'txtFinishedCalliper'} =~ s/[\D\.]//g;
 	} # end if
@@ -129,7 +129,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 			$unitPrice = $price / $qty;
 			$$specs{'hdnBreakdown'.$qty_index} .= "Qty: " . $$specs{"txtQuantity$qty_index"} . ": Price: $price\n";
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 	} # end foreach
 

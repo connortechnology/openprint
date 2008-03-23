@@ -30,10 +30,10 @@
 			) ?>
 		</p>
 	</fieldset>
-	<fieldset style="float: left; width: 47%;"><legend>Material Information</legend>
+	<fieldset class="leftColumn"><legend>Material Information</legend>
 		<p> 
 			<label>Material Name:</label>
-			<input type="text" name="name" value="<? hecho ( $$variable{'Material'}->name(); ) ?>" />
+			<input type="text" name="name" value="<? hecho ( $$variable{'Material'}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
 		</p>
 		<p> 
 			<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category:</label>
@@ -45,10 +45,10 @@
 		</p>
 		<p> 
 			<label>Description:</label>
-			<input type="text" name="description" value="<? hecho ( $$variable{'Material'}->description(); ) ?>" />
+			<input type="text" id="description" name="description" value="<? hecho ( $$variable{'Material'}->description(); ) ?>" />
 		</p>
 	</fieldset>
-	<fieldset style="float: right; width: 47%;"><legend>Purchasing Information</legend>
+	<fieldset class="rightColumn"><legend>Purchasing Information</legend>
 		<p> 
 			<label>Supplier:</label>
 			<select name="ddmSupplier">

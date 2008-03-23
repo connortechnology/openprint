@@ -43,6 +43,7 @@ my %variables = (
 		'chkOverrideEquipment1'=>['save'], 'chkOverrideEquipment2'=>['save'], 'chkOverrideEquipment3'=>['save'],
 		'rdbGateFoldFit'=>['save'],
 		'txtUnitPrice1'=>['output'], 'txtUnitPrice2'=>['output'], 'txtUnitPrice3'=>['output'],
+		'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
 		'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],
 		'txtRunTime1'=>['save'], 'txtRunTime2'=>['save'], 'txtRunTime3'=>['save'],
 		'txtSignatureQty4Page-1'=>['save','output'], 'txtSignatureQty4Page-2'=>['save','output'], 'txtSignatureQty4Page-3'=>['save','output'],
@@ -130,7 +131,7 @@ sub signature_calc {
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 1;
 	$imposition = 1 if ($I->imposition()%2) or ( sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] ) and $I->imposition()%4);
-$openprint::log->debug(sprintf('%d %s %d %d', $imposition, $I->image_orientation(), $I->columns(), $I->rows() ) );
+#$openprint::log->debug(sprintf('%d %s %d %d', $imposition, $I->image_orientation(), $I->columns(), $I->rows() ) );
 	$imposition = 1 if $imposition > 1 and ( ($I->image_orientation() eq 'Vertical' and $I->rows()%2) or ($I->image_orientation() eq 'Horizontal' and $I->columns()%2) );
 
 #$openprint::log->debug( 'Imp: ' . $I->imposition() . ' # of signatures: ' . scalar $Project->signatures()) if $debug;
@@ -262,6 +263,8 @@ sub calc {
 	} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
+		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
@@ -475,8 +478,12 @@ $openprint::log->debug("Folding Equipment not same: " . $$folding_specs{"ddmEqui
 			#} # end foreach
 		#} # end if
 		$$specs{'Imposition'.$qty_index} = $$bestPrice{'Imposition'};
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'txtPrice'} );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $$bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'txtPrice'} );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
+		} # end if
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtRunTime$qty_index"} = $$bestPrice{'RunTime'};
 	} # end foreach qty_index
 	$log->debug("END STITCHING!!!!!!!");

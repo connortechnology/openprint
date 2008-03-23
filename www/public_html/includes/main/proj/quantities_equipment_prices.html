@@ -4,7 +4,7 @@
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-	<input name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc('f1');" /> 
+	<input name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" /> 
 	</span>
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -16,13 +16,13 @@
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<select name="ddmEquipment<?QTYIndex?>" size="1" onchange="calc('f1');">
-		<option value="" >Equipment Options</option>
+		<select name="ddmEquipment<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
+		<option value="">Equipment Options</option>
 <? echo (
-	if ( $$variable{"ddmEquipment$$variable{'QTYIndex'}"} ) {
-		return $$variable{"ddmEquipment$$variable{'QTYIndex'}"};
-	} elsif ( $$variable{'Equipment'} ) {
+	if ( $$variable{'Equipment'} ) {
 		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $$variable{'Equipment'.$$variable{'QTYIndex'}} );
+	} elsif ( $$variable{"ddmEquipment$$variable{'QTYIndex'}"} ) {
+		return $$variable{"ddmEquipment$$variable{'QTYIndex'}"};
 	} elsif ( $$variable{'EquipmentArray'} ) {
 		return ssi::fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ); 
 	} elsif ( $$variable{'ddmEquipment'} ) {
@@ -38,32 +38,8 @@
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<p>
-	<label><b>Unit Price:</b></label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		$<input name="txtUnitPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
-		<b><?CurrencyName?></b>
-	</span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
-<p>
-	<label><b>Service Price:</b></label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		$<input name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
-		<b><?CurrencyName?></b>
-	</span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+<!--#include virtual="/includes/main/proj/_unit_price.html"-->
+<!--#include virtual="/includes/main/proj/_service_price.html"-->
 <? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 <p><label>&nbsp;</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>

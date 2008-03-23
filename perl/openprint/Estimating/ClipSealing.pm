@@ -102,12 +102,13 @@ sub calc {
 			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
 		} # end if
 
-        $$specs{"txtUnitPrice$qty_index"} = sprintf('%.2f', ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} );
-		$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} );
-
+        $$specs{"txtUnitPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} );
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} );
+		} # end if
     } # end foreach qty_index
     
-    return $status;
+    return $$specs{'Status'} = $status;
 } # end sub calc
 
 sub summary {

@@ -245,6 +245,13 @@ $dbh->do(q{insert into stockpurposes (name) values ('House Stock')});
 $dbh->do(q{insert into stockpurposes (name) values ('Job Stock')});
 $dbh->do(q{insert into stockpurposes (name) values ('Sample')});
 
+$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on});
+$dbh->do(q{alter table paper_inventory add id integer});
+$dbh->do(q{create sequence paperinventory_id_seq});
+$dbh->do(q{alter table paper_inventory alter id set nextval('paperinventory_id_seq')});
+$dbh->do(q{update paper_inventory set id=nextval('paperinventory_id_seq')});
+$dbh->do(q{alter table paper_inventory alter id set not null});
+$dbh->do(q{alter table paper_inventory add primary key(id)});
 	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1898;
@@ -556,6 +563,23 @@ if ( $version < 1913 ) {
 	sql::insert( undef, undef, 'database_info', 'version', 1913, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1913;
+} # end if
+if ( $version < 1914 ) {
+	print "Updating to version 1914\n";
+	my $ac = sql::start_transaction( $dbh );
+	sql::update( undef, undef, 'service_types',['strdetailedurl=?','bind/padding.html'], 'strdetailedurl', 'bind/Padding.html' );
+	sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1914;
+} # end if
+if ( $version < 1915 ) {
+	print "Updating to version 1915\n";
+	my $ac = sql::start_transaction( $dbh );
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
+	$dbh->do(q`alter table users add deleted boolean`) if ! exists $$data{'deleted'};
+	sql::insert( undef, undef, 'database_info', 'version', 1915, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1915;
 } # end if
 
 if ( $version < 1914 ) {

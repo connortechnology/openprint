@@ -1,8 +1,33 @@
 
+function filter_colours( side, signature ) {
+	// For each of the colours
+	for ( var index = 1; index < 10; index += 1 ) {
+		var type_element = $('ColourCoatingType'+side+index+signature);
+		if ( ! type_element ) continue;
+		var type = type_element.value;
+		if ( ! type ) continue;
+		// we can have many PMS's
+		if ( type == 'PMS' ) continue;
+
+		// clear my selected type out of the other dropdowns
+		for ( var j = index+1; j <= 10; j += 1 ) {
+			var t = $('ColourCoatingType'+side+j+signature);
+			if ( ! t ) continue;
+
+			var option_index = get_option_index( t, type );
+			if ( -1 != option_index ) {
+				t.options[option_index] = null;
+				continue;
+			} // end if
+		} // end for each colour
+	} // end for each colour index
+} // end function filter_colours
+
 function SpecialColour_onchange( element, side, index, signature ) {
 	var spec = 'ColourCoating'+side+index+signature;
 
-	var type = $('ColourCoatingType'+side+index+signature).value;
+	var type_element = $('ColourCoatingType'+side+index+signature);
+	var type = type_element.value;
 	if ( type ) {
 		element.form.elements[spec].checked=true;
 
@@ -17,15 +42,39 @@ function SpecialColour_onchange( element, side, index, signature ) {
 				},
 				onSuccess: function(response){
 					new Insertion.After($(spec), response.responseText);
+					filter_colours(side,signature);
+					
 					}
 			} );
-			
+		} else {
+			filter_colours(side,signature);
 		} // end if
 	} else {
 		element.form.elements[spec].checked=false;
+
+		if ( type != 'PMS' ) {
+			for ( var i = 1; i < 10; i += 1 ) {
+				if ( i == index ) continue;
+
+				// if the colour exists
+				var t = $('ColourCoatingType'+side+i+signature);
+				if ( t ) {
+
+					for ( var m = 0; m < type_element.options.length; m += 1 ) {
+						var v = type_element.options[m].value;
+						// see if it is in there
+						if ( ! isin_ddm( t, v ) ) {
+							add_option( t, v, type_element.options[m].text );
+							sort_ddm( t );
+							// need tos ort, add later FIXME
+						} // end if
+					} // end for each colour
+				} // end if
+			} // end for each option in type_element
+		} // end if
 	} // end if
 
-	if ( -1 != type.indexOf('Overall') ) {
+	if ( (!type) || ( -1 != type.indexOf('Overall') ) ) {
 		$('ColourCoatingCoverage'+side+index+signature).hide();
 	} else {
 		$('ColourCoatingCoverage'+side+index+signature).show();
@@ -130,7 +179,7 @@ function clear_price_data( form ) {
 	for ( var qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
 		if ( quantities[qtyNum-1] > 0 ) {
 			if ( form.elements['StockType'+qtyNum] ) form.elements["StockType"+qtyNum].value = '';
-			if ( form.elements['txtPrice'+qtyNum] ) form.elements["txtPrice"+qtyNum].value = '';
+			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! form.elements['OverridePrice'+qtyNum].checked ) form.elements["txtPrice"+qtyNum].value = '';
 			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
 			if ( form.elements["txtPressSheetQty"+qtyNum] ) form.elements["txtPressSheetQty"+qtyNum].value = '';
 			if ( form.elements["txtPlateQuantity"+qtyNum] ) form.elements["txtPlateQuantity"+qtyNum].value = '';

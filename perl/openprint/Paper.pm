@@ -279,7 +279,7 @@ sub save {
 		if ( ! $error ) {
 
 			$variable{'Paper'} = $self;
-			if ( my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' ) ) {
+			if ( my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}. '/email_template.html' ) ) {
 				$variable{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/new_paper_notification.html' );
 				$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
 				my $body = ssi::variable_substitution( \$email_template, \%variable );
@@ -555,8 +555,9 @@ sub add_inventory {
 	#Skid{Paper}{paper_id} has already been adjusted
 
 	my $in_stock;
+	my $Skid;
 	if ( $skid_id ) {
-		my $Skid = new openprint::Skid( $skid_id );
+		$Skid = new openprint::Skid( $skid_id );
 		foreach my $content ( $Skid->contents( 'Paper'=>$self ) ) {
 			$in_stock += $content->quantity();
 		} # end foreach
@@ -564,14 +565,13 @@ sub add_inventory {
 		$in_stock = $self->in_stock() + $quantity;
 	} # end if
 
-
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
     sql::insert( undef, undef, 'Paper_Inventory',
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  $in_stock,
-        'UpdateTime',   'NOW()',
+        'InStock',  ($skid_id? $$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
+        'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
         'skid_id',  $skid_id,
@@ -665,12 +665,11 @@ sub get_price {
 	my ( $self, $qty ) = @_;
     my %price;
 
-	$qty = $qty if ! $qty;
-
+	my $factor = 1;
 	if ( $$self{'width'} and $$self{'height'} and $$self{'start_width'} and $$self{'start_height'} ) {
 		# It's a sheet
 		if ( $$self{'start_width'} != $$self{'width'} or $$self{'start_height'} != $$self{'height'} ) {
-			my $factor = ( $$self{'start_width'} / $$self{'width'} ) * ( $$self{'start_height'} / $$self{'height'} );
+			$factor = ( $$self{'start_width'} / $$self{'width'} ) * ( $$self{'start_height'} / $$self{'height'} );
 			$qty /= $factor;
 			$qty = int( $qty );
 		} # endif
@@ -745,9 +744,23 @@ sub cut {
         $$self{'width'} /= 2;
     } # end if
     $$self{'mweight'} /= 2;
-    $$self{'sheets_per_package'} *= 2;
 	$$self{'grain_direction'} = undef; # force recalc of gd
 } # end sub cut
+
+sub sheets_per_package {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{sheets_per_package} = shift;
+	} # end if
+
+	my $factor = 1;
+	if ( $$self{'width'} and $$self{'height'} ) {
+		$factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} );
+	} # end if
+	$factor = 1 if ! $factor;
+#$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
+	return $$self{'sheets_per_package'} * $factor;
+}
 
 sub gsm {
 	my $self = shift;
@@ -904,7 +917,6 @@ sub load_from_signature {
 		$Paper->start_width( $$specs{'txtSpecificStockWidth'} );
 		$Paper->start_height( $$specs{'txtSpecificStockHeight'} );
 		$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
-		$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		$Paper->gsm( $$specs{'txtStockGSM'} );
 		$Paper->type( $$specs{'StockType'} );
 
@@ -919,7 +931,9 @@ sub load_from_signature {
 		$Paper->basis_height( $$specs{'basis_height'} );
 		$Paper->basis_mweight( $$specs{'basis_mweight'} );
 		$Paper->score_required( $Paper->calliper() > 0.008 );
-
+		if ( $$specs{'StockType'} ne 'Roll' ) {
+		$Paper->mweight( $$specs{'txtCustomMWeight'} );
+		} # end if
 	} else {
 		my %params = (
 				'name'      => $$specs{'ddmStockBrand'},

@@ -173,11 +173,11 @@
 <? endif ( @{$$variable{'design_options'}} > 2 ) ?>
 	<p> 
 		<label>Please provide a reference:</label>
-		<textarea name="txtProjectReference" rows="4"><?txtProjectReference?></textarea>
+		<textarea name="txtProjectReference" rows="2" onkeyup="textarea_resize( this );"><?txtProjectReference?></textarea>
 	</p>
 	<p>
 		<label>Additional comments or instructions:</label>
-		<textarea name="txtComments" rows="5"><?txtComments?></textarea>
+		<textarea name="txtComments" rows="2" onkeyup="textarea_resize( this );"><?txtComments?></textarea>
 	</p>
 </fieldset>
 <? if ( sets::isin( $openprint::session{'user_type'}, [ 'E', 'A' ] ); ) ?>
