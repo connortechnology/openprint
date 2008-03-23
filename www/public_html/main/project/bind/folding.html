@@ -77,24 +77,20 @@ if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 			</p>
 <!--#include virtual="/includes/main/proj/_service_price.html"-->
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<p>
-				<label><b>Service Price (<?CurrencySymbol?>):</b></label>
 <? echo ( 
 	my $html = '';
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $$variable{'Project'}->quantity( $qty_index );
-		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-			$html .= sprintf('<span class="%sColumns"><input name="txtPrice%d" size="9" onchange="calc(this.form.name);" />', $$variable{'Columns'}, $qty_index );
-			$html .= sprintf('<input type="checkbox" id="OverridePrice%1$d" name="OverridePrice%1$d" value="Y" onclick="if(!this.checked){calc(this.form.name);};" %s/><label class="radio" for="OverridePrice%1$d">Override</label>', $qty_index, $$variable{'OverridePrice'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
-			$html .= ssi::writeButton( $log, $dbh, 'Breakdown'.$qty_index, 'price_breakdown.gif', "show_breakdown($qty_index);", '', 'Breakdown' );
-		} else {
-		$html .= sprintf('<span class="%sColumns"><input name="txtPrice%d" size="9" readonly="readonly" onfocus="this.blur();" />', $$variable{'Columns'}, $qty_index );
-
-		} # end if
+		$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
+		$html .= ssi::writeButton( $log, $dbh, 'Breakdown'.$qty_index, 'price_breakdown.gif', "show_breakdown($qty_index);", '', 'Breakdown' );
 		$html .= '</span>';
 	} # end foreach qty_index
+	return $html;
 ) ?>
 			</p>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 		</fieldset>
 		<br class="spacer"/>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->

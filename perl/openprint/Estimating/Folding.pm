@@ -607,15 +607,15 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( scalar @{$folds{$fold_type}}*($$specs{"txtQuantity$qty_index"}/$imposition) / 1000 );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, @{$folds{$fold_type}}*$$specs{"txtQuantity$qty_index"}, $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per m'] ) ) {
-					my $width_folds = sprintf('%.0f', $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} );
-					my $height_folds = sprintf('%.0f', $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'} );
+					my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+					my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $width_folds * $$sig_specs{'txtWidth'} + $height_folds * $$sig_specs{'txtHeight'} ) * $$specs{"txtQuantity$qty_index"} / 1000;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d folds * %s&quot; + %d folds * %s&quote = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per hour'] ) ) {
-					my $width_folds = sprintf('%.0f', $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} );
-					my $height_folds = sprintf('%.0f', $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'} );
+					my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+					my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1 );
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $width_folds * $$sig_specs{'txtWidth'} + $height_folds * $$sig_specs{'txtHeight'} ) * $runTime;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d folds * %s&quot; + %d folds * %s&quote = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
 				
 				} else {
 				
