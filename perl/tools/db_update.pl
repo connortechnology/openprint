@@ -558,6 +558,21 @@ if ( $version < 1913 ) {
 	$version = 1913;
 } # end if
 
+if ( $version < 1914 ) {
+	print "Updating to version 1914\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
+	if ( ! $data ) {
+		my $ac = sql::start_transaction( $dbh );
+		$_ = misc::load_file( $log, q{../openprint/sql/Labels.sql});
+		foreach my $st ( split(';', $_ ) ) {
+			$dbh->do($st);
+		}
+		sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+	$version = 1914;
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

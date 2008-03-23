@@ -186,24 +186,24 @@ sub neccessary {
 		return 0;
 	} # end if
 	if ( $$services{'NoBindery'} ) {
-        $openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
-        return 0;
-    } # end if
+		$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
+		return 0;
+	} # end if
 	if ( $$services{'MetalCoil'} ) {
-        return 0;
-    } # end if
+		return 0;
+	} # end if
 	if ( $$services{'PlasticCoil'} ) {
-        return 0;
+		return 0;
 	} # end if
 	if ( $$services{'Cerlox'} ) {
-        return 0;
-    } # end if
+		return 0;
+	} # end if
 	if ( $$services{'DoubleLoopWire'} ) {
-        return 0;
-    } # end if
+		return 0;
+	} # end if
 	if ( $$services{'SaddleStitching'} ) {
-        return 1;
-    } # end if
+		return 1;
+	} # end if
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
@@ -587,10 +587,10 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 
 				# In hours
 				my $RunSpeed = $Fold->Specification( $Imposition->Paper()->gsm() );
-                if ( ! ( $RunSpeed and $$RunSpeed{'runspeed'} ) ) {
-                    $$specs{'hdnBreakdown'.$qty_index} .= "No runspeed for $fold_type on " . $Equipment->name() .'<br/>';
-                    last;
-                } # end if
+				if ( ! ( $RunSpeed and $$RunSpeed{'runspeed'} ) ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "No runspeed for $fold_type on " . $Equipment->name() .'<br/>';
+					last;
+				} # end if
 
 				my $runTime = sprintf( '%.4f', ($$specs{"txtQuantity$qty_index"}/$imposition) / $$RunSpeed{'runspeed'} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Folds: %d, QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', scalar @{$folds{$fold_type}}, $$specs{'txtQuantity'.$qty_index}, $imposition, $$RunSpeed{runspeed}, $runTime );
@@ -603,7 +603,19 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per m', 'per 1000'] ) ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( scalar @{$folds{$fold_type}}*($$specs{"txtQuantity$qty_index"}/$imposition) / 1000 );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, @{$folds{$fold_type}}*$$specs{"txtQuantity$qty_index"}, $servicePrice{'Total'} );
+				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per m'] ) ) {
+					my $width_folds = sprintf('%.0f', $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} );
+					my $height_folds = sprintf('%.0f', $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'} );
+					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $width_folds * $$sig_specs{'txtWidth'} + $height_folds * $$sig_specs{'txtHeight'} ) * $$specs{"txtQuantity$qty_index"} / 1000;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d folds * %s&quot; + %d folds * %s&quote = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
+				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per hour'] ) ) {
+					my $width_folds = sprintf('%.0f', $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} );
+					my $height_folds = sprintf('%.0f', $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'} );
+					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $width_folds * $$sig_specs{'txtWidth'} + $height_folds * $$sig_specs{'txtHeight'} ) * $runTime;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d folds * %s&quot; + %d folds * %s&quote = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
+				
 				} else {
+				
 					$$specs{'hdnBreakdown'.$qty_index} .= qq`No Units ($servicePrice{'units'}) given for `.$Fold->name().' on '.$Equipment->name().',<br/>';
 					next;
 				} # end if
@@ -758,24 +770,24 @@ sub summary {
 } # end sub summary
 
 sub runtime {
-    my ( $p_id, $s_id, $specs, $qty_index ) = @_;
-    return 0 if ! $$specs{'ddmEquipment'.$qty_index};
+	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
+	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
 	my $Equipment = new openprint::Equipment($$specs{'ddmEquipment'.$qty_index});
 
-    my $runTime = $Equipment->specification( 'Station Make Ready' ) * 60;
-    foreach my $name ( keys %$specs ) {
-        if ( $name =~ /^txt(\w*)Qty$/ ) {
-            my $type = $1;
-            my $quantity = $$specs{$name} * $$specs{'txtQuantity'.$qty_index};
-            if ( $quantity > 0 ) {
-                my $runSpeed = $Equipment->specification( $type.'RunSpeed' );
-                if ( $runSpeed ) {
-                    $runTime += $quantity * 3600 / $runSpeed; # Convert to seconds
-                } # end if
-            } # end if
-        } # end if
-    } # end foreach
-    return $runTime;
+	my $runTime = $Equipment->specification( 'Station Make Ready' ) * 60;
+	foreach my $name ( keys %$specs ) {
+		if ( $name =~ /^txt(\w*)Qty$/ ) {
+			my $type = $1;
+			my $quantity = $$specs{$name} * $$specs{'txtQuantity'.$qty_index};
+			if ( $quantity > 0 ) {
+				my $runSpeed = $Equipment->specification( $type.'RunSpeed' );
+				if ( $runSpeed ) {
+					$runTime += $quantity * 3600 / $runSpeed; # Convert to seconds
+				} # end if
+			} # end if
+		} # end if
+	} # end foreach
+	return $runTime;
 } # end sub runtime
 
 1;

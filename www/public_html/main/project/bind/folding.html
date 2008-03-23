@@ -19,11 +19,25 @@
 					<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:
 };
 				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
-				$html .= qq{
-</legend>
-						<p>
-							<label>Fold Types:</label>
-							};
+				$html .= '</legend>';
+				$html .= '<p><label>Equipment:</label>';
+				foreach my $qty_index ( 1 .. 3 ) {
+					next if ! $$sig_specs{'txtQuantity'.$qty_index};
+					$html .= '<span class="'.$$variable{Columns}.'Columns">';
+					$html .= sprintf('<select name="ddmEquipment-%1$d-%2$d" size="1" onchange="calc(this.form.name);">', $$sig_specs{'SignatureIndex'}, $qty_index );
+					$html .= '<option value="">Equipment Options</option>';
+					$html .= make_drop_down( $$variable{'EquipmentArray'}, $$variable{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+					$html .= '</select>';
+if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
+					$html .= sprintf('<input type="checkbox" id="chkOverrideEquipment-%1$d-%2$d" name="chkOverrideEquipment-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideEquipment-%1$d-%2$d">Override</label>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
+} elsif ( $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ) {
+					$html .= sprintf('<input type="hidden" name="chkOverrideEquipment-%1$d-%2$d" value="Y" />Overriden', $$sig_specs{'SignatureIndex'}, $qty_index );
+
+} # end if
+					$html .= '</span>';
+				} # end foreach qty_index
+				$html .= '</p>';
+				$html .= '<p><label>Fold Types:</label>';
 				foreach my $qty_index ( 1 .. 3 ) {
 					next if ! $$sig_specs{'txtQuantity'.$qty_index};
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
@@ -44,25 +58,10 @@ if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 } # end if
 					$html .= '</span>';
 				} # end foreach qty_index
-				$html .= '</p><p><label>Equipment:</label>';
-				foreach my $qty_index ( 1 .. 3 ) {
-					next if ! $$sig_specs{'txtQuantity'.$qty_index};
-					$html .= '<span class="'.$$variable{Columns}.'Columns">';
-					$html .= sprintf('<select name="ddmEquipment-%1$d-%2$d" size="1" onchange="calc(this.form.name);">', $$sig_specs{'SignatureIndex'}, $qty_index );
-					$html .= '<option value="">Equipment Options</option>';
-					$html .= make_drop_down( $$variable{'EquipmentArray'}, $$variable{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-					$html .= '</select>';
-if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
-					$html .= sprintf('<input type="checkbox" id="chkOverrideEquipment-%1$d-%2$d" name="chkOverrideEquipment-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideEquipment-%1$d-%2$d">Override</label>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
-} elsif ( $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ) {
-					$html .= sprintf('<input type="hidden" name="chkOverrideEquipment-%1$d-%2$d" value="Y" />Overriden', $$sig_specs{'SignatureIndex'}, $qty_index );
-
-} # end if
-					$html .= '</span>';
-				} # end foreach qty_index
-				$html .= '</p></fieldset>';
+				$html .= '</p>';
+				$html .= '</fieldset>';
 			} # end foreach signature
-				return $html;
+			return $html;
 			) ?>
 			<hr/>
 			<p>
@@ -78,16 +77,22 @@ if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 			</p>
 			<p>
-				<label><b>Service Price:</b></label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">$<input name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
-				<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] ); ) ?>
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<label><b>Service Price (<?CurrencySymbol?>):</b></label>
+<? echo ( 
+	my $html = '';
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $$variable{'Project'}->quantity( $qty_index );
+		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+			$html .= sprintf('<span class="%sColumns"><input name="txtPrice%d" size="9" onchange="calc(this.form.name);" />', $$variable{'Columns'}, $qty_index );
+			$html .= sprintf('<input type="checkbox" id="OverridePrice%1$d" name="OverridePrice%1$d" value="Y" onclick="if(!this.checked){calc(this.form.name);};" %s/><label class="radio" for="OverridePrice%1$d">Override</label>', $qty_index, $$variable{'OverridePrice'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
+			$html .= ssi::writeButton( $log, $dbh, 'Breakdown'.$qty_index, 'price_breakdown.gif', "show_breakdown($qty_index);", '', 'Breakdown' );
+		} else {
+		$html .= sprintf('<span class="%sColumns"><input name="txtPrice%d" size="9" readonly="readonly" onfocus="this.blur();" />', $$variable{'Columns'}, $qty_index );
+
+		} # end if
+		$html .= '</span>';
+	} # end foreach qty_index
+) ?>
 			</p>
 		</fieldset>
 		<br class="spacer"/>
