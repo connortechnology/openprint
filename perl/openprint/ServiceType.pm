@@ -8,6 +8,7 @@ my %fields = (
 	'name'				=> 'name',
 	'description'		=> 'description',
 	'url'				=> 'strdetailedurl',
+	'type'				=> 'type',
 	'category'			=> 'category',
 	'sorting'			=> 'sorting',
 	'create_visible'	=> 'create_visible',
@@ -119,7 +120,7 @@ sub delete {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_servicetype_defaults WHERE lngServiceTypeIndex=?}, $$self{'id'} );
+	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_service_defaults WHERE lngServiceTypeIndex=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Service_Types WHERE id=?}, $$self{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
