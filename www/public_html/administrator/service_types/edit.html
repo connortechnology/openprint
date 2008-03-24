@@ -42,6 +42,10 @@
 		</p>
 <? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p> 
+			<label>Type:</label>
+			<input type="text" name="type" value="<? echo ( $$variable{'ServiceType'}->type() ) ?>" /> 
+		</p>
+		<p> 
 			<label>URL:</label>
 			<input type="text" name="url" value="<? echo ( $$variable{'ServiceType'}->url() ) ?>" /> 
 		</p>
