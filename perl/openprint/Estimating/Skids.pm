@@ -86,13 +86,14 @@ sub calc {
 	$log->debug( " ********************** START OF CALC SKIDS type:($$specs{'ServiceType'})**********************");
 	my $status = 'calculated';
 
-	my $makeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', undef, undef );
-	my $serviceCharge = openprint::service::get_price( $$specs{'ServiceType'}, undef, undef );
-	my $packingCharge = openprint::service::get_price( $$specs{'ServiceType'}.'Packing', undef, undef );
-
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $project_index, $service_index ) );
+
+	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
+	my $serviceCharge = openprint::service::get_price( $ServiceType->name(), undef, undef );
+	my $packingCharge = openprint::service::get_price( $ServiceType->name().'Packing', undef, undef );
+
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 	@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
@@ -218,9 +219,6 @@ sub calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	if ( $$variable{'ServiceType'} eq 'PlainCartons' ) {
-		$$variable{'PackageTypes'} = ssi::make_drop_down( [ map { $_->name(), $_->name() } openprint::Material::find('name_like'=>'Plain Carton%' ) ] );
-	} # end if
 }
 
 sub summary {
