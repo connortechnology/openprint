@@ -278,7 +278,7 @@ sub impositions {
 } # end sub impositions
 
 sub signature_calc {
-	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition, @leftover_colours ) = @_;
+	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $uv_specs, $aq_specs ) = @_;
 
 	# First step, find out if we are stitching, then find out which equipment is being used for stitching
 	my $services = $Project->services();
@@ -324,18 +324,32 @@ $openprint::log->debug("Loading imposition");
 			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'} );
 		} # end if
 
-		#if ( ! @leftover_colours ) {
 			if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
 				my $Press = shift @Press;
+				my $add = 1;
 				if ( $Press->specification('Folding Capable') ) {
-					if ( $Press->specification('Sheeter') ne 'Y' ) {
-						@my_equipment = ( $Press );
-					} else {
-						unshift @my_equipment, $Press;
+
+					if ( $$services{'UVCoating'} ) {
+						$uv_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] ) if ! $uv_specs;
+						if ( $$uv_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Press->id() ) {
+							$add = 0;
+						} # end if
+					} # end if
+					if ( $$services{'Aqueous'} ) {
+						$aq_specs = openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] ) if ! $aq_specs;
+						if ( $$aq_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Press->id() ) {
+							$add = 0;
+						} # end if
+					} # end if
+					if ( $add ) {
+						if ( $Press->specification('Sheeter') ne 'Y' ) {
+							@my_equipment = ( $Press );
+						} else {
+							unshift @my_equipment, $Press;
+						} # end if
 					} # end if
 				} # end if
 			} # end if
-		#} # end if
 	} # end if
 
 	# If the stitching is happening on a piece of equipment that can't handle large signatures, then we need to cut them down instead of folding them.
@@ -691,12 +705,16 @@ sub calc {
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 	#my @signature_service_indices = openprint::print::get_signature_indices( $log, $dbh, $project_index );
 	if ( ! neccessary( $project_index ) ) {
 		$$specs{'alert'} .= 'Folding is not needed.';
 	} # end if
 
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, openprint::project::get_project_type_service_index( $log, $dbh, $project_index ) );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
+	my $uv_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] ) if $$services{'UVCoating'};
+	my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] ) if $$services{'Aqueous'};
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
@@ -721,7 +739,7 @@ sub calc {
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtServiceDescription'}:</legend>";
 				$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
-				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index );
+				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, undef, undef, $uv_specs, $aq_specs );
 
 				$price += $results{'Price'};
 				$mprice += $results{'MPrice'};

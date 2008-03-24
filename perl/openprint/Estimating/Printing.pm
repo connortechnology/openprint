@@ -2026,6 +2026,26 @@ sub calc_price {
 
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'PerfectBound' );
 	} # end if
+	if ( $$project{'HasUVCoating'} ) {
+		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		if ( $uv_results{'Status'} eq 'uncalculated' ) {
+			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} elsif ( $uv_results{'Equipment'} ) {
+			$price{'UVCoating Breakdown'} = sprintf('UVCoating Price: $%.2f on %s<br/>', $uv_results{'Total'}, $uv_results{'Equipment'}->name() );
+			$price{'Comparison Cost'} += $uv_results{'Total'};
+		} # end if
+	} # end if UVCoating
+	if ( $$project{'HasAqueous'} ) {
+		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		if ( $aq_results{'Status'} eq 'uncalculated' ) {
+			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{'alert'} $$project{'AqueousSpecs'}{alert} " . $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} elsif ( $aq_results{'Equipment'} ) {
+			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: $%.2f on %s<br/>', $aq_results{'Total'}, $aq_results{'Equipment'}->name() );
+			$price{'Comparison Cost'} += $aq_results{'Total'};
+		} # end if
+	} # end if Aqueous
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
 	my %folding_results;
@@ -2033,7 +2053,7 @@ sub calc_price {
 	# Has to be NEED because they always leave folding out, and it chooses dumb impositions
 	if ( $$project{'NeedFolding'} ) {
 #my $time = gettimeofday();
-		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
+		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs'} );
 #$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		if ( $$project{'FoldingSpecs'}{'Status'} eq 'uncalculated' or ! $folding_results{'Equipment'} ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
@@ -2334,13 +2354,15 @@ sub calc_price {
 	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Run Cost' );
 
 	$price{'Ink Price'} = 0;
+	my @left_over_colours;
 	foreach my $real_colour ( @colours ) {
 		my $colour;
-		next if $real_colour =~ /UV/;
-		next if $real_colour =~ /Aqueous/;
+		if ( ( $real_colour =~ /UV/ ) or ( $real_colour =~ /Aqueous/ ) ) {
+			push @left_over_colours, $real_colour;
+			next;
+		} # end if
 
 		$price{'Ink breakdown'} .= $real_colour;
-
 
 		if ( $real_colour =~ /Varnish/ ) {
 			$price{'Press Washes'} += 1;
@@ -2513,26 +2535,6 @@ $openprint::log->debug("Perforating");
 		} # end if
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if
-	if ( $$project{'HasUVCoating'} ) {
-		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
-		if ( $uv_results{'Status'} eq 'uncalculated' ) {
-			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
-			$price{'Comparison Cost'} += 1000000; 
-		} elsif ( $uv_results{'Equipment'} ) {
-			$price{'UVCoating Breakdown'} = sprintf('UVCoating Price: $%.2f on %s<br/>', $uv_results{'Total'}, $uv_results{'Equipment'}->name() );
-			$price{'Comparison Cost'} += $uv_results{'Total'};
-		} # end if
-	} # end if UVCoating
-	if ( $$project{'HasAqueous'} ) {
-		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
-		if ( $aq_results{'Status'} eq 'uncalculated' ) {
-			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{'alert'} $$project{'AqueousSpecs'}{alert} " . $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
-			$price{'Comparison Cost'} += 1000000; 
-		} elsif ( $aq_results{'Equipment'} ) {
-			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: $%.2f on %s<br/>', $aq_results{'Total'}, $aq_results{'Equipment'}->name() );
-			$price{'Comparison Cost'} += $aq_results{'Total'};
-		} # end if
-	} # end if Aqueous
 
 	$price{'complete'} = 1;
 	return \%price;
