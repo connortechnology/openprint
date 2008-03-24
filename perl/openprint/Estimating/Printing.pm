@@ -117,6 +117,7 @@ my %variables = (
 		'basis_width'=>['save'],'basis_height'=>['save'],'basis_mweight'=>['save'],
 		'StockGrade'	=> ['save'],	
 		'CustomStockPriceUnits' => ['save'],
+		'minimum_order'=>['save'],
 		'txtSignatureSpreadQuantity1' => ['save','output'], 'txtUnspecifiedSpreadQuantity1' => ['output'], 'PageQuantity1' => ['save','output'],
 		'txtSignatureSpreadQuantity2' => ['save','output'], 'txtUnspecifiedSpreadQuantity2' => ['output'], 'PageQuantity2' => ['save','output'],
 		'txtSignatureSpreadQuantity3' => ['save','output'], 'txtUnspecifiedSpreadQuantity3' => ['output'], 'PageQuantity3' => ['save','output'],
@@ -598,7 +599,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 		} # end if
 		my $Paper = new openprint::Paper();
 		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',($$specs{'txtSpecificStockBrand'} =~ /offset/i ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
-		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight'};
+		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight','minimum_order'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight','minimum_order'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};
 		} # end if
