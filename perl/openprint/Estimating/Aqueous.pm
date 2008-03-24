@@ -175,14 +175,18 @@ sub signature_calc {
 
 	my @front_aq;
 	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) ) {
-		push @front_aq, $_ if $_ =~ /Aqueous/;
-#$openprint::log->debug("Side one colour: $_");
+		if ( $_ =~ /Aqueous/ ) {
+			push @front_aq, $_;
+			$openprint::log->debug("Side one Aqueous: $_");
+		} # end if
 	} # end foreach colour
 
 	my @back_aq;
 	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) ) {
-		push @back_aq, $_ if $_ =~ /Aqueous/;
-#$openprint::log->debug("Side two colour: $_");
+		if ( $_ =~ /Aqueous/ ) {
+			push @back_aq, $_;
+			$openprint::log->debug("Side two Aqueous: $_");
+		} # end if
 	} # end foreach colour
 
 	my @different_types = sets::union( @front_aq, @back_aq );
@@ -277,25 +281,16 @@ sub signature_calc {
 					} # end if
 					push @types, $type;
 				} # end foreach
+				@types = ( @types, @types );
 			} else {
-				@types = @different_types;
+				@types = (@front_aq, @back_aq);
 			} # end if
-
-if ( 0 ) {
+$openprint::log->debug("Types: @types");
+$openprint::log->debug("Front: @front_aq");
+$openprint::log->debug("Back: @back_aq");
+$imp->display();
 			foreach my $type ( @types ) {
-	
-				if ( sets::isin( $type, \@front_aq ) and sets::isin( $type, \@back_aq ) ) {
-				} else {
-					if ( $type =~ /Overall/ and sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
-						$type =~ s/Overall/Spot/;
-						# Has to be a spot
-					} # end if
-				} # end if type is in both
-			} # end foreach type
-} # end if
-# Two sided job
-# Just a spot colour then.
-			foreach my $type ( @types ) {
+$openprint::log->debug("Starting Type: $type, $totalPrice");
 				my $setupPrice += openprint::service::get_price( $type.' MakeReady', $qty/$imp->imposition(), $Equipment );
 
 				my %ServicePrice = openprint::service::get_price_object( $type, $qty/$imp->imposition(), $Equipment );
