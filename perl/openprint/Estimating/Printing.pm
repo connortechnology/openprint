@@ -116,6 +116,7 @@ my %variables = (
 		'txtUnspecifiedPageQuantity1' => ['output'], 'PageQuantity1' => ['save','output'],
 		'txtUnspecifiedPageQuantity2' => ['output'], 'PageQuantity2' => ['save','output'],
 		'txtUnspecifiedPageQuantity3' => ['output'], 'PageQuantity3' => ['save','output'],
+		'minimum_order'=>['save'],
 		'chkOverridePageQuantity1' => ['save'], 'chkOverridePageQuantity2' => ['save'], 'chkOverridePageQuantity3' => ['save'],
 		'SpreadRows1' => ['save','output'],'SpreadCols1' => ['save','output'],
 		'SpreadRows2' => ['save','output'],'SpreadCols2' => ['save','output'],
@@ -791,7 +792,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 		} # end if
 		my $Paper = new openprint::Paper();
 		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',($$specs{'txtSpecificStockBrand'} =~ /offset/i ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
-		@$Paper{'width','height','mweight','Price','type','basis_width','basis_height','basis_mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','basis_width','basis_height','basis_mweight'};
+		@$Paper{'width','height','mweight','Price','type','basis_width','basis_height','basis_mweight','minimum_order'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','basis_width','basis_height','basis_mweight','minimum_order'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};
 		} # end if
