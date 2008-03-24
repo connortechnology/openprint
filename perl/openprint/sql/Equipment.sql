@@ -15,7 +15,8 @@ CREATE TABLE tbl_Equipment (
 	useinestimation		boolean,
 	jmf_enabled			boolean,
 	instantgate_enabled	boolean,
-	cost_center				TEXT, 
+	cost_center			TEXT, 
+	jdf_name			TEXT,
 	PRIMARY KEY (lngIndex)
 );
 

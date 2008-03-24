@@ -591,10 +591,22 @@ if ( $version < 1914 ) {
 		foreach my $st ( split(';', $_ ) ) {
 			$dbh->do($st);
 		}
-		sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
 		sql::end_transaction( $dbh, $ac );
 	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
 	$version = 1914;
+} # end if
+if ( $version < 1915 ) {
+	print "Updating to version 1915\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'jdf_name'} ) {
+	$dbh->do(q`alter table tbl_equipment add jdf_name text`);
+		
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1915, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1915;
 } # end if
 
 $dbh->disconnect();

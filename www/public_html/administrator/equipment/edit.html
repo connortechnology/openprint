@@ -99,11 +99,17 @@
 			<input type="radio" id="instantgate_enabledfalse" name="instantgate_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').hide();" />
 			<label class="radio" for="instantgate_enabledfalse">No</label>
 		</p>
+<? endif ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
+<? if ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
 		<p id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{'Equipment'}->instantgate_enabled() ) ?>>
 			<label>Cost Center:</label>
 			<input type="text" name="cost_center" value="<? hecho ( $$variable{'Equipment'}->cost_center(); ) ?>"  />
 		</p>
-<? endif ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
+<? endif ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
+		<p>
+			<label>JDF Friendly Name:</label>
+			<input type="text" name="jdf_name" value="<? hecho ( $$variable{'Equipment'}->jdf_name(); ) ?>"  />
+		</p>
 		</div>
 	</fieldset>
 <? if ( $$variable{'Equipment'}->id() ) ?>
