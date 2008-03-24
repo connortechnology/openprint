@@ -116,10 +116,13 @@ function cbFillResults( results ) {
 						} // end if
 					} // end for
 				} // end if
-			} else if ( div = document.getElementById(data[0]) ) {
-				div.style.visible = 'hidden';
+			} else if ( div = $(data[0]) ) {
+alert('filling: ' + data[0] + ' with: ' + data[1] );
+				div.hide();
 				div.innerHTML = data[1];
-				div.style.visible = 'visible';
+				div.show();
+			} else {
+alert('didnt find: ' + data[0]);
 			} // end if
         } // end if
     } // end for
