@@ -184,6 +184,7 @@ sub signature_calc {
 		push @back_uv, $_ if $_ =~ /UV/;
 #$openprint::log->debug("Side two colour: $_");
 	} # end foreach colour
+	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $sig_specs );
 
 	my @different_types = sets::union( @front_uv, @back_uv );
 
@@ -267,6 +268,7 @@ sub signature_calc {
 			} # end if
 
 			my $totalPrice = 0;
+			my $run_qty = $qty;
 
 			my @types;
 			if ( sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
@@ -277,32 +279,20 @@ sub signature_calc {
 					} # end if
 					push @types, $type;
 				} # end foreach
+				$run_qty *= 2;
 			} else {
-				@types = @different_types;
+				@types = ( @front_uv, @back_uv );
 			} # end if
 
-if ( 0 ) {
-			foreach my $type ( @types ) {
-	
-				if ( sets::isin( $type, \@front_uv ) and sets::isin( $type, \@back_uv ) ) {
-				} else {
-					if ( $type =~ /Overall/ and sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
-						$type =~ s/Overall/Spot/;
-						# Has to be a spot
-					} # end if
-				} # end if type is in both
-			} # end foreach type
-} # end if
 # Two sided job
-# Just a spot colour then.
 			foreach my $type ( @types ) {
-				my $setupPrice += openprint::service::get_price( $type.' MakeReady', $qty/$imp->imposition(), $Equipment );
+				my $setupPrice += openprint::service::get_price( $type.' MakeReady', $run_qty/$imp->imposition(), $Equipment );
 
-				my %ServicePrice = openprint::service::get_price_object( $type, $qty/$imp->imposition(), $Equipment );
+				my %ServicePrice = openprint::service::get_price_object( $type, $run_qty/$imp->imposition(), $Equipment );
 				if ( lc $ServicePrice{'units'} eq 'per m' ) {
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
+					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / 1000;
 				} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / $Equipment->specification('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
+					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / $Equipment->specification('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
 				} # end if
 # Div by imposition
 				$ServicePrice{'Total'} /= $imp->imposition();
@@ -312,17 +302,19 @@ if ( 0 ) {
 				$material_name =~ s/ ?Spot ?//;
 				$material_name =~ s/ ?Overall ?//;
 				if ( my @Materials = openprint::Material::find('name'=>$material_name) ) {
-					%MaterialPrice = $Materials[0]->get_price( $qty/$imp->imposition(), $Equipment );
+					%MaterialPrice = $Materials[0]->get_price( $run_qty/$imp->imposition(), $Equipment );
 				} # end if
 				if ( lc $MaterialPrice{'units'} eq 'per square inch' ) {
-					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $qty * $imp->image_area();
+					my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100);
+					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty * $area;
 				} elsif ( lc $MaterialPrice{'units'} eq 'per m' ) {
-					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $qty / 1000;
+					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty / 1000;
 				} # end if
 
-				$totalPrice += $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'};
+				my $colour_total = $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'};
+				$totalPrice += $colour_total;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + Service: $%.2f%s=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
-					$setupPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $totalPrice );
+					$setupPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
 			} # end foreach type
 			my %minimum = openprint::service::get_price_object( 'UVCoatingMinimumCharge', undef, $Equipment );
 			if ( $totalPrice < $minimum{Price} ) {

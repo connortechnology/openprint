@@ -29,7 +29,8 @@
 					<? echo (
 						my $html;
 						foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
-							next if ! $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} =~ /UV/;
+							next if ! $$variable{'sig_specs'}{"ColourCoatingSideOne$index"};
+							next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} =~ /UV/ );
 							$html .= $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} . '<br/>';
 						} # end foreach
 						$html = 'None' if ! $html;
@@ -43,7 +44,8 @@
 					<? echo (
 						my $html;
 						foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
-							next if ! $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} =~ /UV/;
+							next if ! $$variable{'sig_specs'}{"ColourCoatingSideTwo$index"};
+							next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} =~ /UV/ );
 							$html .= $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} . '<br/>';
 						} # end foreach
 						$html = 'None' if ! $html;
