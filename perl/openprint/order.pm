@@ -53,7 +53,8 @@ sub get_unfinished_order {
 
 		if ( $order_id ) {
 			if ( $cust_id != $openprint::session{'company_id'} ) {
-				sql::update( $log, $dbh, 'Orders', "Index = '$order_id'", 'CompanyIndex', $openprint::session{'company_id'} );
+				my ( $emp_id ) = sql::execute( $log, $dbh, q{SELECT lngSalesPerson FROM Company WHERE Index=?}, $openprint::session{'company_id'} );
+				sql::update( $log, $dbh, 'Orders', ['Index=?', $order_id ], 'CompanyIndex', $openprint::session{'company_id'}, 'EmployeeIndex', $emp_id );
 			} # end if
 			if ( $user_id != $openprint::session{'user_id'} ) {
 				sql::update( $log, $dbh, 'Orders', "Index = '$order_id'", 'UserIndex', $openprint::session{'user_id'} );
