@@ -97,9 +97,9 @@ sub save_service {
 	} # end if
 	my $specs = $specs_cache{$service_index};
 
-	my $service_type = $$specs{'ServiceType'};
+	my $service_type = $openprint::param{'ServiceType'};
 	if ( ! $service_type ) {
-		$service_type = $openprint::param{'ServiceType'};
+		$service_type = $$specs{'ServiceType'};
 	} # end if
 	if ( (! $service_type) and (! $$specs{'ProjectType'}) ) {
 		$log->error( "No serviceType in params for service $service_index.  Trying to recover" );
@@ -430,6 +430,11 @@ $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 	} # end foreach
 	return join( '|', @results );
 } # end sub external_calc
+
+sub get_type_id {
+	( $_ ) = sql::execute( undef, undef, q{SELECT servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @_ );
+	return $_;
+} # end sub get_type_id
 
 sub get_type {
 	my ( $log, $dbh, $project_index, $service_index ) = @_;

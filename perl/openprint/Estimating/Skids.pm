@@ -92,6 +92,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+	my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $project_index, $service_index ) );
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 	@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
@@ -127,15 +128,18 @@ sub calc {
 			my $Material = new openprint::Material( $$specs{'ddmPackageType'} );
 			@Materials = ( $Material );
 		} else {
-			@Materials = openprint::Material::find('category'=>$$specs{'ServiceType'} );
+			@Materials = openprint::Material::find('category'=>$ServiceType->name() );
 		} # end if
 
 		foreach my $Material ( @Materials ) {
 			my ( $items_by_weight, $items_by_size, $items_per_package );
 
+			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Material->name().'</legend>';
+
 			if ( $$specs{'chkOverrideItemsPerPackage'} ne 'Y'  ) {
 # Make sure it's not too heavy
 				$items_by_weight = int ( $Material->specification('Maximum Weight') / $$specs{'txtFinishedWeight'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by weight: %d<br/>', $items_by_weight );
 
 				my $width = $Material->specification('Width');
 				my $height = $Material->specification('Height');
@@ -153,6 +157,7 @@ sub calc {
 					next if ! $imposition;
 
 					$items_by_size = int ( $depth/$$specs{'txtFinishedCalliper'} * $imposition );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %d<br/>', $items_by_size );
 # Make sure it's not too heavy
 					if ( $items_by_size > $items_by_weight ) {
 						$items_per_package = $items_by_weight;
@@ -167,8 +172,12 @@ sub calc {
 			} else {
 				$items_per_package = int $$specs{'txtItemsPerPackage'};
 			} # end if
-
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items per: %d<br/>', $items_per_package );
 			next if ! $items_per_package;
+
+			$qty = ceil($qty/$items_per_package);
+
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('# of packages: %d<br/>', $qty );
 			
 			my $price;
 			my %MaterialPrice = $Material->get_price( undef, undef );
@@ -179,6 +188,7 @@ sub calc {
 				$best_price = $compare_price;
 				@$specs{'ddmPackageType','txtItemsPerPackage'} = ( $Material->id(), $items_per_package );
 			} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: %.2f, Packing Charge: %.2f: Service Charge: %.2f, Material Charge: %.2f<br/>', $makeReady, $packingCharge, $serviceCharge, $material_charge );
 		} # end foreach Material
 
 		$$specs{'txtPackageWeight'} = sprintf('%.2f', $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'} );
@@ -187,8 +197,6 @@ sub calc {
 			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'} ) * $$specs{'txtPackageWeight'}) + (($qty % $$specs{'txtItemsPerPackage'} ) * $$specs{'txtFinishedWeight'}) );
 		} # end if
 		$qty = ceil( $$specs{'txtItemsPerPackage'} ? $qty/$$specs{'txtItemsPerPackage'} : 0 );
-
-		$$specs{'hdnBreakdown'.$qty_index} .= "Qty $qty_index : Package Qty: $qty, MakeReady: $makeReady, Packing Charge: $packingCharge: Service Charge: $serviceCharge, Material Charge: $material_charge<br/>";
 
 		my $unitPrice = $material_charge + $serviceCharge + $packingCharge;
 		my $price = $makeReady + $qty * $unitPrice;
@@ -224,6 +232,8 @@ sub summary {
 		my $summary;
 		my $Project = new openprint::Project( $project_id );
 		my $services = $Project->services();
+		my $Material = new openprint::Material( $$specs{'ddmPackageType'} );
+
 		if ( $$services{'BulkSkids'} ) {
 			if ( $$services{'BulkSkids'}[0] == $service_id ) {
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' skid' : ' skids' );
