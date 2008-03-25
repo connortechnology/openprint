@@ -99,21 +99,14 @@ sub save_service {
 
 	my $service_type = $openprint::param{'ServiceType'};
 	if ( ! $service_type ) {
-		$service_type = $$specs{'ServiceType'};
+		my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
+		$service_type = $ServiceType->type();
 	} # end if
 	if ( (! $service_type) and (! $$specs{'ProjectType'}) ) {
 		$log->error( "No serviceType in params for service $service_index.  Trying to recover" );
 	} # end if
-	if ( sets::isin( $service_type, ['SaddleStitching', 'LoopStitching'] ) ) {
-		$service_type = 'Stitching';
-	} elsif ( sets::isin( $service_type, [ '', 'AdditionalSignature' ] ) ) {
+	if ( sets::isin( $service_type, [ '', 'AdditionalSignature' ] ) ) {
 		$service_type = 'Printing';
-	} elsif ( sets::isin( $service_type, ['KraftWrap','ShrinkWrap','Bundling','Bundle','Banding','CrossBanding'] ) ) {
-		$service_type = 'Packaging';
-	} elsif ( sets::isin( $service_type, ['BulkSkids','PlainCartons'] ) ) {
-		$service_type = 'Skids';
-	} elsif ( sets::isin( $service_type, ( 'PhotoRetouching', 'ColourCorrection', 'PhotoPlacement', 'CDBurning' ) ) ) {
-		$service_type = 'Prepress';
 	} # end if
 	eval ( 'require openprint::Estimating::'.$service_type.';' );
 	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
@@ -348,27 +341,13 @@ sub auto_calculate {
 
 	foreach my $type ( keys %services ) {
 		foreach my $service_index ( @{$services{$type}} ) {
-			if ( sets::isin( $type, [ 'PhotoRetouching', 'ColourCorrection', 'PhotoPlacement', 'CDBurning' ] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Prepress' );
-			} elsif ( sets::isin( $type, [ 'LoopStitching', 'SaddleStitching'] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Stitching' );
-				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type , [ 'Bundling', 'KraftWrap', 'ShrinkWrap','Banding','CrossBanding' ] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Packaging' );
-				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type, ['BulkSkids', 'PlainCartons'] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Skids' );
-				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type, ['MetalCoil', 'PlasticCoil','PlasticComb','Cerlox','DoubleLoopWire'] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Spiral' );
-				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type, ['', 'AdditionalSignature'] ) ) {
-			} else {
-				eval "require openprint::Estimating::$type";
-				$openprint::log->error('Error requiring openAprint::Estimating::$type: ' . $@ ) if $@;
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $type );
-				$alert .= $$specs{'alert'};
-			} # end if
+			my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
+			my $service_type = $ServiceType->type();
+			next if sets::isin( $service_type, ['','AdditionalSignature'] );
+			eval "require openprint::Estimating::$type";
+			$openprint::log->error('Error requiring openAprint::Estimating::$type: ' . $@ ) if $@;
+			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
+			$alert .= $$specs{'alert'};
 		} # end foreach service_index
 	} # end while service_type
 	return $alert;
@@ -452,11 +431,8 @@ sub internal_calc {
 	my %specs = %{$specs_cache{$service_index}};
 
 	if ( ! $service_type ) {
-		if ( $specs{'ServiceType'} ) {
-			$service_type = $specs{'ServiceType'};
-		} else {
-			$service_type = get_type( $log, $dbh, $project_index, $service_index );
-		} # end if
+		my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
+		$service_type = $ServiceType->type();
 	} # end if
 
 	my $status;

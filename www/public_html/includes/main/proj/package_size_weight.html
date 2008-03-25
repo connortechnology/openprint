@@ -4,13 +4,21 @@
 <? if ( @{$$variable{'PackageTypes'}} ) ?>
 <p>
 	<label><?ServiceTypeName?> dimensions:</label>
-	<select name="ddmPackageType" size="1" onchange="calc(this.form.name);">
+		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<span class="<?Columns?>Columns">
+	<select name="ddmPackageType<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'PackageTypes'}} ], $$variable{'ddmPackageType'} ); ) ?>
 	</select>
-	<input type="checkbox" id="chkOverridePackageType" name="chkOverridePackageType" value="Y" onclick="if (!this.checked) calc(this.form.name);"
-	<? echo ( $$variable{'chkOverridePackageType'} eq 'Y' ? 'checked="checked"' : '' ) ?>
+	<input type="checkbox" id="OverridePackageType<?QTYIndex?>" name="OverridePackageType<?QTYIndex?>" value="Y" onclick="if (!this.checked) calc(this.form.name);"
+	<? echo ( $$variable{'OverridePackageType'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?>
 	/> 
-	<label class="radio" for="chkOverridePackageType">Override</label>
+	<label class="radio" for="OverridePackageType<?QTYIndex?>">Override</label>
+		</span>
+		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <? endif ( @{$$variable{'PackageTypes'}} ) ?>
 <input type="hidden" name="txtPackageWidth" />
@@ -18,13 +26,29 @@
 <input type="hidden" name="txtPackageDepth" />
 <p>
 	<label>Weight of <?ServiceTypeName?>:</label>
-	<input name="txtPackageWeight" value="<?txtPackageWeight?>" type="text" size="9" readonly="readonly" /> lbs
+		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<span class="<?Columns?>Columns">
+		<input name="txtPackageWeight<?QTYIndex?>" value="<? echo ( $$variable{'txtPackageWeight'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" readonly="readonly" /> lbs
+		</span>
+		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <p>
     <label>Maximum Quantity per <?ServiceTypeName?>:</label>
-	<input name="txtItemsPerPackage" value="<?txtItemsPerPackage?>" type="text" size="9" onkeyup="calc(this.form.name);" />
-	<input type="checkbox" id="chkOverrideItemsPerPackage" name="chkOverrideItemsPerPackage" value="Y" onclick="if (this.checked == false) calc(this.form.name);" 
-	<? echo ( $$variable{'chkOverrideItemsPerPackage'} eq 'Y' ? 'checked="checked"' : '' ) ?>
+		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<span class="<?Columns?>Columns">
+	<input name="txtItemsPerPackage<?QTYIndex?>" value="<? echo ( $$variable{'txtItemsPerPackage'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" />
+	<input type="checkbox" id="OverrideItemsPerPackage<?QTYIndex?>" name="OverrideItemsPerPackage<?QTYIndex?>" value="Y" onclick="if (this.checked == false) calc(this.form.name);" 
+	<? echo ( $$variable{'OverrideItemsPerPackage'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?>
 	/>
-	<label class="radio" for="chkOverrideItemsPerPackage">Override</label>
+	<label class="radio" for="OverrideItemsPerPackage<?QTYIndex?>">Override</label>
+		</span>
+		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>

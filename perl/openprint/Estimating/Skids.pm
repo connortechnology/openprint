@@ -28,17 +28,17 @@ my $debug = 0;
 
 my %variables = (
 	'txtFinalWidth'=>['output'],'txtFinalHeight'=>['output'],
-	'txtPackageQuantity1' => ['save','output'],
-	'txtPackageQuantity2' => ['save','output'],
-	'txtPackageQuantity3' => ['save','output'],
+	'txtPackageQuantity1' => ['save','output'], 'txtPackageQuantity2' => ['save','output'], 'txtPackageQuantity3' => ['save','output'],
 	'txtUnitPrice1' => ['output'], 'txtUnitPrice2' => ['output'], 'txtUnitPrice3' => ['output'],
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 	'txtFinishedCalliper' => ['save','output'],
 	'txtFinishedWeight' => ['save','output'],
-	'txtPackageWidth' => ['save','output'],'txtPackageHeight' => ['save','output'],'txtPackageDepth' => ['save','output'],
-	'ddmPackageType' => ['save','output'], 'chkOverridePackageType'=>['save'],
-	'txtItemsPerPackage' => ['save','output'], 'chkOverrideItemsPerPackage'=>['save'],
-	'txtPackageWeight' => ['save','output'],
+	'ddmPackageType1' => ['save','output'], 'OverridePackageType1'=>['save'],
+	'ddmPackageType2' => ['save','output'], 'OverridePackageType2'=>['save'],
+	'ddmPackageType3' => ['save','output'], 'OverridePackageType3'=>['save'],
+	'txtItemsPerPackage1' => ['save','output'], 'txtItemsPerPackage2' => ['save','output'], 'txtItemsPerPackage3' => ['save','output'], 
+	'OverrideItemsPerPackage1'=>['save'], 'OverrideItemsPerPackage2'=>['save'], 'OverrideItemsPerPackage3'=>['save'],
+	'txtPackageWeight1' => ['save','output'], 'txtPackageWeight2' => ['save','output'], 'txtPackageWeight3' => ['save','output'],
 	'totalWeight1' => ['save','output'],'totalWeight2' => ['save','output'],'totalWeight3' => ['save','output'],
 	'alert'=>['output'], 
 	'hdnBreakdown1'=>['output'], 'hdnBreakdown2'=>['output'], 'hdnBreakdown3'=>['output'],
@@ -101,15 +101,15 @@ sub calc {
 	} # end if
 	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} .= "Dimensions of project are not known. Please enter them.";
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	if ( ! $$specs{'txtFinishedCalliper'} ) {
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	$$specs{'txtFinishedWeight'} = 1 * openprint::print::get_finished_weight( $project_index, 1 );
 	if ( ! $$specs{'txtFinishedWeight'} ) {
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	
     foreach my $qty_index ( 1 .. 3 ) {
@@ -125,8 +125,8 @@ sub calc {
 		my $material_charge = 0;
 		my $best_price = 0;
 		my @Materials;
-		if ( $$specs{'chkOverridePackageType'} eq 'Y' ) {
-			my $Material = new openprint::Material( $$specs{'ddmPackageType'} );
+		if ( $$specs{'OverridePackageType'.$qty_index} eq 'Y' ) {
+			my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
 			@Materials = ( $Material );
 		} else {
 			@Materials = openprint::Material::find('category'=>$ServiceType->name() );
@@ -137,7 +137,7 @@ sub calc {
 
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Material->name().'</legend>';
 
-			if ( $$specs{'chkOverrideItemsPerPackage'} ne 'Y'  ) {
+			if ( $$specs{'OverrideItemsPerPackage'.$qty_index} ne 'Y'  ) {
 # Make sure it's not too heavy
 				$items_by_weight = int ( $Material->specification('Maximum Weight') / $$specs{'txtFinishedWeight'} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by weight: %d<br/>', $items_by_weight );
@@ -165,13 +165,11 @@ sub calc {
 					} else {
 						$items_per_package = $items_by_size;
 					} # end if
-					@$specs{'txtPackageWidth','txtPackageHeight','txtPackageDepth'} = ( $width, $height, $depth );
 				} else {
-					@$specs{'txtPackageWidth','txtPackageHeight','txtPackageDepth'} = ( '','','' );
 					$items_per_package = $items_by_weight;
 				} # end if
 			} else {
-				$items_per_package = int $$specs{'txtItemsPerPackage'};
+				$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items per: %d<br/>', $items_per_package );
 			next if ! $items_per_package;
@@ -187,17 +185,17 @@ sub calc {
 			if ( $best_price == 0 or $compare_price < $best_price ) {
 				$material_charge = $price;
 				$best_price = $compare_price;
-				@$specs{'ddmPackageType','txtItemsPerPackage'} = ( $Material->id(), $items_per_package );
+				@$specs{'ddmPackageType'.$qty_index,'txtItemsPerPackage'.$qty_index} = ( $Material->id(), $items_per_package );
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: %.2f, Packing Charge: %.2f: Service Charge: %.2f, Material Charge: %.2f<br/>', $makeReady, $packingCharge, $serviceCharge, $material_charge );
 		} # end foreach Material
 
-		$$specs{'txtPackageWeight'} = sprintf('%.2f', $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'} );
+		$$specs{'txtPackageWeight'.$qty_index} = sprintf('%.2f', $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'.$qty_index} );
 
-		if ( $$specs{'txtItemsPerPackage'} ) {
-			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'} ) * $$specs{'txtPackageWeight'}) + (($qty % $$specs{'txtItemsPerPackage'} ) * $$specs{'txtFinishedWeight'}) );
+		if ( $$specs{'txtItemsPerPackage'.$qty_index} ) {
+			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
 		} # end if
-		$qty = ceil( $$specs{'txtItemsPerPackage'} ? $qty/$$specs{'txtItemsPerPackage'} : 0 );
+		$qty = ceil( $$specs{'txtItemsPerPackage'.$qty_index} ? $qty/$$specs{'txtItemsPerPackage'.$qty_index} : 0 );
 
 		my $unitPrice = $material_charge + $serviceCharge + $packingCharge;
 		my $price = $makeReady + $qty * $unitPrice;
@@ -213,7 +211,7 @@ sub calc {
 	} # end foreach qty
 	$$specs{'txtFinishedWeight'} = sprintf( '%.4f', $$specs{'txtFinishedWeight'} );
 
-	return $status;
+	return $$specs{'Status'} = $status;
 } # end sub calc
 
 sub display {
