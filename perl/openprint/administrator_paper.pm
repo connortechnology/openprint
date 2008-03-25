@@ -111,6 +111,7 @@ sub paper {
 		$Paper->inventory_number( $openprint::param{'inventory_number'} );
 		$Paper->minimum_order( $openprint::param{'minimum_order'} );
 		$Paper->full_packages( $openprint::param{'full_packages'} );
+		$Paper->message( $openprint::param{'message'} );
 
 		my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
 		@{$$Paper{'recommendations'}} = ();

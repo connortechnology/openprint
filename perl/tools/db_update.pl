@@ -608,6 +608,18 @@ if ( $version < 1915 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1915;
 } # end if
+if ( $version < 1916 ) {
+	print "Updating to version 1916\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM papers LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'message'} ) {
+	$dbh->do(q`alter table papers add message text`);
+		
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1916, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1916;
+} # end if
 
 $dbh->disconnect();
 1;

@@ -547,9 +547,9 @@ sub get_price {
 
 	my $qty = $$specs{'txtQuantity'.$qty_index};
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition')) if $debug;
-	if ( $Equipment->specification('Maximum Imposition') and ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty_index} ) ) {
+	if ( $Equipment->specification("Maximum $$specs{'ServiceType'} Imposition") and ( $Equipment->specification("Maximum $$specs{'ServiceType'} Imposition") < $$specs{'Imposition'.$qty_index} ) ) {
 		$price{'Imposition'} = 1;
-		$openprint::log->debug("Maximum Imposition: " . $Equipment->specification('Maximum Imposition')  ) if $debug;
+		$openprint::log->debug("Maximum Imposition: " . $Equipment->specification("Maximum $$specs{'ServiceType'} Imposition")  ) if $debug;
 	} elsif ( $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) and $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) < $$specs{'Height'} ) {
 		$openprint::log->debug("Maximum Spine Length: $$specs{'Height'} > " . $Equipment->specification('Maximum Spine Length',$price{'Imposition'})  ) if $debug;
 		$price{'Imposition'} = 1;
@@ -639,7 +639,7 @@ sub get_price {
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 
 	$price{'txtPrice'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'};
-$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'txtPrice'} ) if $debug;
+$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification("Maximum $$specs{ServiceType} Imposition") . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'txtPrice'} ) if $debug;
 	return \%price;
 } # end sub get_price
 

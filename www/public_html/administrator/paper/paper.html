@@ -291,6 +291,10 @@ function calc_price( element ) {
 			<input type="text" name="inventory_number" value="<? echo ( $$variable{'Paper'}->inventory_number(); ) ?>"  size="40" style="width: auto;"> 
 		</p>
 		<p> 
+			<label>Message:</label>
+			<textarea name="message" rows="2" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Paper'}->message(); ) ?></textarea>
+		</p>
+		<p> 
 			<span class="input">
 				<input type="radio" id="cuttableY" name="cuttable" value="1" <? echo ( 'checked' if $$variable{'Paper'}->cuttable() ) ?> />
 				<label class="radio" for="cuttableY">Yes</label>

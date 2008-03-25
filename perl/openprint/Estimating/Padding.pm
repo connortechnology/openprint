@@ -29,7 +29,7 @@ my @variables = (
 		'PageQuantity',
 		'rdbCardboardBacking',
 		'rdbDTape',
-		'glue_id',
+		'glue_id','override_glue_id',
 );
 
 sub variables {
@@ -41,7 +41,7 @@ my @no_output = (
 	'PageQuantity',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'rdbCardboardBacking',
-	'rdbDTape',
+	'rdbDTape','override_glue_id',
 );
 
 sub no_outputs {
@@ -85,6 +85,23 @@ sub calc {
 		} # end foreach
 	} # end if
 
+	my @Materials = openprint::Material::find('category'=>'Padding Glue');
+	if ( $$specs{'override_glue_id'} eq 'Y' ) {
+	} else {
+		my $Paper;
+		foreach my $qty_index ( 1 .. 3 ) {
+			next if ! $Project->quantity( $qty_index );
+			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
+			last;
+		} # end foreach
+$openprint::log->debug("Paper Grade: " . $Paper->grade() );
+$openprint::log->debug("Paper Grade: " . $Paper->name() );
+		foreach my $Material ( @Materials ) {
+			if ( sets::isin( $Paper->grade(), misc::trim(split(',',$Material->specification('Recommended For Stock Grade'))) ) ) {	
+				$$specs{'glue_id'} = $Material->id();
+			} # end if
+		} # end foreach Material
+	} # end if
 
 	my $minimumCharge = openprint::service::get_price( 'PaddingChargeMinimum' );
 
@@ -133,20 +150,15 @@ sub calc {
 				$price += $DTapePrice{'Total'};
 			} # end if
 		} # end if
-		if ( my @Materials = openprint::Material::find('category'=>'Padding Glue') ) {
+		if ( $$specs{'glue_id'} ) {
 			my $calliper = openprint::print::get_finished_calliper( $Project->id() );
-			foreach my $Material ( @Materials ) {
-				if ( $Material->id() == $$specs{'glue_id'} ) {
-					my %GluePrice = $Material->get_price( $$specs{"txtQuantity$qty_index"}, undef );
-					if ( $GluePrice{units} eq 'Per Square Inch' ) {
-						$GluePrice{'Total'} = $GluePrice{Price} * $$sig_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"};
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$sig_specs{'txtFinalWidth'}, $calliper );
-					} # end if
-					$price += $GluePrice{'Total'};
-					last;
-				} # end if
-			} # end foreach
-
+			my $Material = new openprint::Material( $$specs{'glue_id'} );
+			my %GluePrice = $Material->get_price( $$specs{"txtQuantity$qty_index"}, undef );
+			if ( $GluePrice{units} eq 'Per Square Inch' ) {
+				$GluePrice{'Total'} = $GluePrice{Price} * $$sig_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$sig_specs{'txtFinalWidth'}, $calliper );
+			} # end if
+			$price += $GluePrice{'Total'};
 		} # end if Glues
 
 		$price = $minimumCharge if $price < $minimumCharge;

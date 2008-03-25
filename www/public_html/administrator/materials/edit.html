@@ -30,7 +30,7 @@
 			) ?>
 		</p>
 	</fieldset>
-	<fieldset class="leftColumn"><legend>Material Information</legend>
+	<fieldset class="leftColumn"><legend>Material Information (<? echo ( $$variable{'Material'}->id() ) ?>)</legend>
 		<p> 
 			<label>Material Name:</label>
 			<input type="text" name="name" value="<? hecho ( $$variable{'Material'}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
