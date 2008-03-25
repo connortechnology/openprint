@@ -48,18 +48,7 @@ function validate_data(formName) {
 				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 			</p>
 			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
-			<p>
-				<label><b>Price:</b></label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-				$<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" <? echo ( 'readonly="readonly" onFocus="this.blur();"' if ! sets::isin($openprint::session{'user_type'},['E','A']); ) ?> />
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-			</p>
+			<!--#include virtual="/includes/main/proj/_service_price.html"-->
 		</fieldset>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>

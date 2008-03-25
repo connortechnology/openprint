@@ -29,7 +29,9 @@ my %variables = (
 	'txtPackageQuantity1'=>['save','output'], 'txtPackageQuantity2'=>['save','output'], 'txtPackageQuantity3'=>['save','output'],
     'chkOverridePackageQuantity' => ['save'],
     'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],
-    'txtPackageWeight'=>['save','output'],
+    'txtPackageWeight1'=>['save','output'],
+    'txtPackageWeight2'=>['save','output'],
+    'txtPackageWeight3'=>['save','output'],
     'Address1'=>['save'],'Address2'=>['save'],'City'=>['save'],'StateProvince'=>['save'],'Country'=>['save'],'PostalCode'=>['save'],'Phone'=>['save'],'Fax'=>['save'],
 
 );
@@ -71,24 +73,25 @@ sub calc {
 	if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
 		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $carton_service_index, 'Skids' );
 	} # end if
-	my $carton_specs = openprint::service::get_specs_ref( $project_index, $carton_service_index );
+	my $carton_specs = openprint::service::get_specs_ref( $Project, $carton_service_index );
 
-	if ( $$specs{'chkOverridePackageWeight'} ne 'Y' ) {
-# Load from skids or cartons
-		$$specs{"txtPackageWeight"} = $$carton_specs{"txtPackageWeight"};
-	} # end if
-	if ( ! $$carton_specs{'txtItemsPerPackage'} ) {
-		$$specs{'alert'} = 'Unable to determine how many items per carton.';
-		return 'uncalculated';
-	} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
+
+	if ( $$specs{'chkOverridePackageWeight'.$qty_index} ne 'Y' ) {
+# Load from skids or cartons
+		$$specs{"txtPackageWeight".$qty_index} = $$carton_specs{"txtPackageWeight".$qty_index};
+	} # end if
+	if ( ! $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
+		$$specs{'alert'} = 'Unable to determine how many items per carton for qty '. $qty_index;
+	} # end if
+
 		if ( $$specs{'chkOverridePackageQuantity'} ne 'Y' ) {
 			$$specs{'txtPackageQuantity'.$qty_index} = $$carton_specs{'txtPackageQuantity'.$qty_index};
 		} # end if
-		$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'} ) * $$specs{'txtPackageWeight'}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'} ) * $$carton_specs{'txtFinishedWeight'}) );
+		$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$carton_specs{'txtFinishedWeight'}) );
 	} # end foreach
 	return $status;
 } # end sub calc
