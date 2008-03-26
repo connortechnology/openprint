@@ -27,6 +27,11 @@
 		</p>
 		<p>
 			<label>Pages:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-folds" name="folds" value="<? echo ( $$variable{'Fold'}->folds() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="4" style="width: auto;" /> folds + 
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-angles" name="angles" value="<? echo ( $$variable{'Fold'}->angles() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="4" style="width: auto;" /> angles
+		</p>
+		<p>
+			<label>Pages:</label>
 			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-pages" name="pages" value="<? echo ( $$variable{'Fold'}->pages() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="4" style="width: auto;" />
 			:
 			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-page_columns" name="page_columns" value="<? echo ( $$variable{'Fold'}->page_columns() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="4" style="width: auto;" />

@@ -35,6 +35,8 @@ my %fields = (
 	'makeready_overs_units'	=>	'makeready_overs_units',
 	'run_overs_units'		=>	'run_overs_units',
 	'run_overs'				=>	'run_overs',
+	'folds'					=>	'folds',
+	'angles'				=>	'angles',
 );
 my %transforms = (
 	'min_width' => [ 's/[^\d\.]//g' ],
@@ -51,6 +53,8 @@ my %transforms = (
 	'makeready_time' => [ 's/\D//g' ],
 	'makeready_overs' => [ 's/\D//g' ],
 	'run_overs' => [ 's/\D//g' ],
+	'folds' => [ 's/\D//g' ],
+	'angles' => [ 's/\D//g' ],
 );
 my %defaults = (
 	'min_width'			=>	undef,
@@ -70,6 +74,8 @@ my %defaults = (
 	'stitching'	=> undef,
 	'perfectbind'	=> undef,
 	'spinepaste'	=> undef,
+	'folds'			=> undef,
+	'angles'		=> undef,
 );
 
 

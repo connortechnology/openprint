@@ -48,8 +48,13 @@ sub variables {
 			push @v, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index";
 			push @v, "Imposition-$$sig_specs{'SignatureIndex'}-$qty_index";
+			foreach my $fold_index ( 1 .. 4 ) {
+				push @v, "FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+			} # end foreach
 			foreach my $fold_type ( keys %fold_types ) {
-				push @v, "$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index";
 			} # end foreach
 		} # end foreach
 	} # end foreach
@@ -80,27 +85,27 @@ sub no_outputs {
 	'6PanelZFold',
 	'SingleGateFold',
 	'DoubleGateFold',
-	'4PageSignatureFold',
-	'6PageSignatureFold',
-	'8PageSignatureFold',
-	'10PageSignatureFold',
-	'12PageSignatureFold',
-	'16PageSignatureFold',
-	'18PageSignatureFold',
-	'20PageSignatureFold',
-	'24PageSignatureFold',
-	'28PageSignatureFold',
-	'30PageSignatureFold',
-	'32PageSignatureFold',
-	'36PageSignatureFold',
-	'40PageSignatureFold',
-	'42PageSignatureFold',
-	'44PageSignatureFold',
-	'48PageSignatureFold',
-	'56PageSignatureFold',
-	'60PageSignatureFold',
-	'64PageSignatureFold',
-	'72PageSignatureFold',
+	'4PageFold',
+	'6PageFold',
+	'8PageFold',
+	'10PageFold',
+	'12PageFold',
+	'16PageFold',
+	'18PageFold',
+	'20PageFold',
+	'24PageFold',
+	'28PageFold',
+	'30PageFold',
+	'32PageFold',
+	'36PageFold',
+	'40PageFold',
+	'42PageFold',
+	'44PageFold',
+	'48PageFold',
+	'56PageFold',
+	'60PageFold',
+	'64PageFold',
+	'72PageFold',
 	'PerpendicularSoftFold',
 	'ParallelSoftFold',
 	'2Panel1Pocket',
@@ -123,34 +128,32 @@ sub no_outputs {
 	'6PanelZFold', '6 Panel Z Fold',
 	'SingleGateFold', 'Single Gate Fold',
 	'DoubleGateFold', 'Double Gate Fold',
-	'4PageSignatureFold', '4 Page Signature Fold',
-	'6PageSignatureFold', '6 Page Signature Fold',
-	'8PageSignatureFold', '8 Page Signature Fold',
-	'10PageSignatureFold', '10 Page Signature Fold',
-	'12PageSignatureFold', '12 Page Signature Fold',
-	'16PageSignatureFold', '16 Page Signature Fold',
-	'18PageSignatureFold', '18 Page Signature Fold',
-	'20PageSignatureFold', '20 Page Signature Fold',
-	'24PageSignatureFold', '24 Page Signature Fold',
-	'28PageSignatureFold', '28 Page Signature Fold',
-	'30PageSignatureFold', '30 Page Signature Fold',
-	'32PageSignatureFold', '32 Page Signature Fold',
-	'36PageSignatureFold', '36 Page Signature Fold',
-	'40PageSignatureFold', '40 Page Signature Fold',
-	'42PageSignatureFold', '42 Page Signature Fold',
-	'44PageSignatureFold', '44 Page Signature Fold',
-	'48PageSignatureFold', '48 Page Signature Fold',
-	'56PageSignatureFold', '56 Page Signature Fold',
-	'60PageSignatureFold', '60 Page Signature Fold',
-	'64PageSignatureFold', '64 Page Signature Fold',
-	'72PageSignatureFold', '72 Page Signature Fold',
-	'PerpendicularSoftFold', 'Perpendicular Soft Fold',
-	'ParallelSoftFold', 'Parallel Soft Fold',
-	'2Panel1Pocket', 'Single Pocket Presentation Folder',
-	'2Panel2Pocket', 'Double Pocket Presentation Folder',
-	'2Panel2PocketGusset', 'Double Pocket Presentation Folder with Gussets',
-	'3Panel2Pocket', '3 Panel Double Pocket Presentation Folder',
-	'3Panel2PocketGusset', '3 Panel Double Pocket Presentation Folder with Gussets',
+	'4PageFold', '4 Page Fold',
+	'6PageFold', '6 Page Fold',
+	'8PageFold', '8 Page Fold',
+	'10PageFold', '10 Page Fold',
+	'12PageFold', '12 Page Fold',
+	'16PageFold', '16 Page Fold',
+	'18PageFold', '18 Page Fold',
+	'20PageFold', '20 Page Fold',
+	'24PageFold', '24 Page Fold',
+	'28PageFold', '28 Page Fold',
+	'30PageFold', '30 Page Fold',
+	'32PageFold', '32 Page Fold',
+	'36PageFold', '36 Page Fold',
+	'40PageFold', '40 Page Fold',
+	'42PageFold', '42 Page Fold',
+	'44PageFold', '44 Page Fold',
+	'48PageFold', '48 Page Fold',
+	'56PageFold', '56 Page Fold',
+	'60PageFold', '60 Page Fold',
+	'64PageFold', '64 Page Fold',
+	'72PageFold', '72 Page Fold',
+	'2Panel1Pocket', 'Single Pocket Folder',
+	'2Panel2Pocket', '2 Pocket Folder',
+	'2Panel2PocketGusset', '2 Pocket Folder w/Gussets',
+	'3Panel2Pocket', '3 Panel 2 Pocket Folder',
+	'3Panel2PocketGusset', '3 Panel 2 Pocket Folder w/Gussets',
 	'MapFold','Map Fold',
 );
 
@@ -401,12 +404,15 @@ $openprint::log->debug("Loading imposition");
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 $openprint::log->debug("OVerriding Fold Types") if $debug;
-			foreach ( keys %fold_types ) {
-				$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = int $$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"};
+			foreach my $index ( 1 .. 4 ) {
+				$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ s/\D//g;
+				$$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ s/\D//g;
+				$$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ s/\D//g;
+				my $type = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
 
 				my $Fold;
-				if ( $_ =~ /^(\d*)PageSignatureFold$/ ) {
-					next if $1 != $pages;
+				if ( $type =~ /^(\d*)PageFold$/ ) {
+					#next if $1 != $pages;
 					$Fold = $Equipment->Fold(
 							'pages'				=>	$pages,
 							'page_columns'		=>	$Imposition->page_columns(),
@@ -420,13 +426,14 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 							);
 				} else {
 					$Fold = $Equipment->Fold(
-							'type'				=>	$_,
+							'type'				=>	$type,
 							'gsm'				=>	$Imposition->Paper()->gsm(),
 							'calliper'			=>	$Imposition->Paper()->calliper(),
 							);
 				} # end if
-
-				foreach $_ ( 1 .. $$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+				$Fold->folds( $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
+				$Fold->angles( $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
+				foreach $_ ( 1 .. $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ) {
 					push @{$folds{$_}}, $Fold if $Fold;
 				} # end foreach
 			} # end foreach fold type
@@ -448,7 +455,7 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 					'calliper'			=>	$Imposition->Paper()->calliper(),
 					);
 			if ( $Fold ) {
-				push @{$folds{$pages.'PageSignatureFold'}}, $Fold;
+				push @{$folds{$pages.'PageFold'}}, $Fold;
 $openprint::log->debug(sprintf('Found: %dx%d,%dout Max %dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition(), $imposition ) ) if $debug;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Didnt find fold<br/>';
@@ -573,7 +580,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				} else {
 					foreach my $F ( @good_folds ) {
 #$openprint::log->debug('Got fold ' . $F->pages() );
-						push @{$folds{$F->pages().'PageSignatureFold'}}, $F;
+						push @{$folds{$F->pages().'PageFold'}}, $F;
 					} # end foreach
 				} # end if able to fold all
 			} # end if
@@ -589,13 +596,41 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		
 				$openprint::log->debug("Pricing fold $fold_type on " . $Equipment->name()) if $debug;
 
-
-				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', undef, $Equipment );
-				if ( $setupPrice{'units'} eq 'Per Form' ) {
-					$totalPrice += $setupPrice{'Price'};
-				} elsif ( ! sets::isin( $fold_type, $makereadies{$Equipment->id()} ) ) {
-					$totalPrice += $setupPrice{'Price'};
+				my $width_folds;
+				my $height_folds;
+				if ( $$sig_specs{'txtFinalWidth'} ) {
+					$width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} )-1 );
+					$height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+				} else {
+					$width_folds = sprintf('%.0f', ($Imposition->image_width() / $Imposition->object_width())-1 );
+					$height_folds = sprintf('%.0f', ($Imposition->image_height()/$Imposition->object_height()) -1 );
 				} # end if
+
+				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
+				if ( ! %setupPrice ) {
+					%setupPrice = openprint::service::get_price_object( 'FoldMakeReady', $imposition, $Equipment );
+				} # end if
+				if ( $setupPrice{'units'} eq 'Per Form' ) {
+					$setupPrice{'Total'} = $setupPrice{'Price'};
+				} elsif ( $setupPrice{'units'} eq 'Per Imposition' ) {
+					$setupPrice{'Total'} = $setupPrice{'Price'} * $imposition;
+				} elsif ( ! sets::isin( $fold_type, $makereadies{$Equipment->id()} ) ) {
+					$setupPrice{'Total'} = $setupPrice{'Price'};
+				} # end if
+				$totalPrice += $setupPrice{'Total'};
+
+				my %FoldMakeReady = openprint::service::get_price_object( 'FoldingFoldMakeReady', undef, $Equipment );
+				if ( $FoldMakeReady{'units'} eq 'Per Fold' ) {
+					$FoldMakeReady{'Total'} = $FoldMakeReady{'Price'} * ($width_folds);
+					$totalPrice += $FoldMakeReady{'Total'};
+				} # end if
+
+				my %AngleMakeReady = openprint::service::get_price_object( 'FoldingAngleMakeReady', undef, $Equipment );
+				if ( $AngleMakeReady{'units'} eq 'Per Angle' ) {
+					$AngleMakeReady{'Total'} = $AngleMakeReady{'Price'} * ($height_folds);
+					$totalPrice += $AngleMakeReady{'Total'};
+				} # end if
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'MR: ($%1$.2f%2$s=$%3$.2f) + FMR: ($%4$.2f%5$s=$%6$.2f)+ AMR: ($%7$.2f%8$s=$%9$.2f) = $%10$.2f<br/>', @setupPrice{'Price','units','Total'}, @FoldMakeReady{'Price','units','Total'}, @AngleMakeReady{'Price','units','Total'}, $totalPrice );
 
 				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
 #$openprint::log->debug("Already have a better price $bestPrice < $totalPrice");
@@ -621,24 +656,12 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( scalar @{$folds{$fold_type}}*($$specs{"txtQuantity$qty_index"}/$imposition) / 1000 );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, @{$folds{$fold_type}}*$$specs{"txtQuantity$qty_index"}, $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per m'] ) ) {
-					my $width_folds ;
-					my $height_folds;
-					if ( $$sig_specs{'txtFinalWidth'} ) {
-					 $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} )-1 );
-					 $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
-					} else {
-					 $width_folds = sprintf('%.0f', ($Imposition->image_width() / $Imposition->object_width())-1 );
-					 $height_folds = sprintf('%.0f', ($Imposition->image_height()/$Imposition->object_height()) -1 );
-					} # end if
-					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $width_folds * $$sig_specs{'txtWidth'} + $height_folds * $$sig_specs{'txtHeight'} ) * $$specs{"txtQuantity$qty_index"} / 1000;
+					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $$sig_specs{'txtWidth'} ) * $$specs{"txtQuantity$qty_index"} / 1000;
 					
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per hour'] ) ) {
-					my $width_folds = sprintf('%.0f', ($Imposition->image_width() / $Imposition->object_width())-1 );
-					my $height_folds = sprintf('%.0f', ($Imposition->image_height()/$Imposition->object_height()) -1 );
-					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $width_folds * $$sig_specs{'txtWidth'} + $height_folds * $$sig_specs{'txtHeight'} ) * $runTime;
+					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $$sig_specs{'txtWidth'} ) * $runTime;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
-				
 				} else {
 				
 					$$specs{'hdnBreakdown'.$qty_index} .= qq`No Units ($servicePrice{'units'}) given for `.$Fold->name().' on '.$Equipment->name().',<br/>';
@@ -675,26 +698,36 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		'Folds'			=> $bestFolds,
 		);
 
-	foreach my $fold_type ( keys %fold_types ) {
-		$$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
+	my $index = 1;
+	foreach my $fold_type ( keys %$bestFolds ) {
+
 #$openprint::log->debug("Foldtype: $fold_type $$bestFolds{$fold_type} ");
-		if ( $$bestFolds{$fold_type} ) {
-			$$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = scalar @{$$bestFolds{$fold_type}};
+		$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $fold_type;
+		$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = scalar @{$$bestFolds{$fold_type}};
+		$$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $$bestFolds{$fold_type}[0]->folds();
+		$$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $$bestFolds{$fold_type}[0]->angles();
 #$openprint::log->debug("$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index : " . scalar @{$$bestFolds{$fold_type}} );
-			foreach my $Fold ( @{$$bestFolds{$fold_type}} ) {
-				$results{'MakeReadyTime'} += $Fold->makeready_time();
-				if ( $Fold->makeready_overs_units() eq 'Percent' ) {
-					$results{'MakeReadyOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$Imposition->imposition()) * $Fold->makeready_overs() /100;
-				} else {
-					$results{'MakeReadyOvers'} += $Fold->makeready_overs();
-				} # end if
-				my $RunSpeed = $Fold->Specification( $Imposition->Paper()->gsm() );
-				$results{'RunSpeed'} = $$RunSpeed{'runspeed'};
-				$results{'RunOvers'} += $Fold->run_overs();
-				$results{'RunOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$Imposition->imposition()) * $Fold->run_overs() /100;
-			} # end foreach Fold
-		} # end if
+		foreach my $Fold ( @{$$bestFolds{$fold_type}} ) {
+			$results{'MakeReadyTime'} += $Fold->makeready_time();
+			if ( $Fold->makeready_overs_units() eq 'Percent' ) {
+				$results{'MakeReadyOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$Imposition->imposition()) * $Fold->makeready_overs() /100;
+			} else {
+				$results{'MakeReadyOvers'} += $Fold->makeready_overs();
+			} # end if
+			my $RunSpeed = $Fold->Specification( $Imposition->Paper()->gsm() );
+			$results{'RunSpeed'} = $$RunSpeed{'runspeed'};
+			$results{'RunOvers'} += $Fold->run_overs();
+			$results{'RunOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$Imposition->imposition()) * $Fold->run_overs() /100;
+		} # end foreach Fold
+		$index += 1;
 	} # end foreach
+	for ( ; $index <= 4; $index += 1 ) {
+		$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
+		$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = 0;
+		$$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
+		$$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
+	} # end for
+	
 	$$specs{'Status'} = $bestEquipment ? 'calculated' : 'uncalculated';
 #$openprint::log->debug("Return from folding");
 	return %results;

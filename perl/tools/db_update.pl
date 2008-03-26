@@ -620,6 +620,32 @@ if ( $version < 1916 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1916;
 } # end if
+if ( $version < 1917 ) {
+	print "Updating to version 1917\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM folds LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'folds'} ) {
+	$dbh->do(q`alter table folds add folds integer`);
+	} # end if
+	if ( ! exists $$data{'angles'} ) {
+	$dbh->do(q`alter table folds add angles integer`);
+	} # end if
+foreach my $E ( openprint::Equipment::find() ) {
+	foreach my $Fold ( $E->Folds() ) {
+		if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
+			$Fold->type( "$1PageFold" );
+			$Fold->save();
+		} # end if
+	} # end foreach
+} # end foreach
+	sql::insert( undef, undef, 'database_info', 'version', 1917, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1917;
+} # end if
+
+$dbh->disconnect();
+1;
+__END__
 
 $dbh->disconnect();
 1;
