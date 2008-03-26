@@ -44,7 +44,7 @@ sub details {
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $param{'btnFunction'} eq 'Send' ) {
-		openprint::order::send_invoice( $r, $log, $dbh, $order_id );
+		openprint::order::send_sales_order( $r, $log, $dbh, $order_id );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $payment_index = $param{'PaymentIndex'};
 		$payment_index =~ s/\D//g;
