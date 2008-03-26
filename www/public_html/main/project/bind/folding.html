@@ -6,8 +6,12 @@ function Fold_onchange( element, signature, qty_index, index ) {
 	if ( element.type == 'select-one' ) {
 		if ( ! element.value ) {
 			$('FoldQty-'+spec).value = '';
-		} else if ( ! $('FoldQty-'+spec).value ) {
-			$('FoldQty-'+spec).value = 1;
+		} else {
+			$('FoldFolds-'+spec).value = '';
+			$('FoldAngles-'+spec).value = '';
+			if ( ! $('FoldQty-'+spec).value ) {
+				$('FoldQty-'+spec).value = 1;
+			} // end if
 		} // end if
 	} else { // must be the qty field
 	} // end if

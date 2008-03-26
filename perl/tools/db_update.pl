@@ -630,18 +630,40 @@ if ( $version < 1917 ) {
 	if ( ! exists $$data{'angles'} ) {
 	$dbh->do(q`alter table folds add angles integer`);
 	} # end if
-foreach my $E ( openprint::Equipment::find() ) {
-	foreach my $Fold ( $E->Folds() ) {
-		if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
-			$Fold->type( "$1PageFold" );
-			$Fold->save();
-		} # end if
+	foreach my $E ( openprint::Equipment::find() ) {
+		foreach my $Fold ( $E->Folds() ) {
+			if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
+				$Fold->type( "$1PageFold" );
+				$Fold->save();
+			} # end if
+		} # end foreach
 	} # end foreach
-} # end foreach
 	sql::insert( undef, undef, 'database_info', 'version', 1917, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1917;
 } # end if
+if ( $version < 1918 ) {
+	print "Updating to version 1918\n";
+	my $ac = sql::start_transaction( $dbh );
+foreach my $E ( openprint::Equipment::find() ) {
+	foreach my $Fold ( $E->Folds() ) {
+		if ( $Fold->type() =~ /(\d*)PageFold/ ) {
+			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFold"], 'name', "$1PageFold" );
+		} # end if
+	} # end foreach
+} # end foreach
+	sql::insert( undef, undef, 'database_info', 'version', 1918, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1918;
+} # end if
+
+$dbh->disconnect();
+1;
+__END__
+
+$dbh->disconnect();
+1;
+__END__
 
 $dbh->disconnect();
 1;

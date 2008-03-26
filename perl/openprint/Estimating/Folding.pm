@@ -409,6 +409,7 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 				$$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ s/\D//g;
 				$$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ s/\D//g;
 				my $type = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
+				next if ! ( $type and $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
 
 				my $Fold;
 				if ( $type =~ /^(\d*)PageFold$/ ) {
@@ -431,11 +432,15 @@ $openprint::log->debug("OVerriding Fold Types") if $debug;
 							'calliper'			=>	$Imposition->Paper()->calliper(),
 							);
 				} # end if
-				$Fold->folds( $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
-				$Fold->angles( $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
-				foreach $_ ( 1 .. $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ) {
-					push @{$folds{$_}}, $Fold if $Fold;
-				} # end foreach
+				if ( $Fold ) {
+					if ( $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} or $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ) {
+						$Fold->folds( $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
+						$Fold->angles( $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
+					} # end if
+					foreach $_ ( 1 .. $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ) {
+						push @{$folds{$Fold->type()}}, $Fold;
+					} # end foreach
+				} # end if Fold
 			} # end foreach fold type
 		} elsif ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) {
 # Special case because we can't cut it in the middle of printing.  This case is basically for web presses
@@ -605,6 +610,16 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					$width_folds = sprintf('%.0f', ($Imposition->image_width() / $Imposition->object_width())-1 );
 					$height_folds = sprintf('%.0f', ($Imposition->image_height()/$Imposition->object_height()) -1 );
 				} # end if
+				if ( $Fold->folds() or $Fold->angles() ) {
+					if ( $width_folds == $Fold->folds() and $height_folds == $Fold->angles() ) {
+					} elsif ( $width_folds == $Fold->angles() and $height_folds == $Fold->folds() ) {
+						$width_folds = $Fold->angles();
+						$height_folds = $Fold->folds();
+					} else {
+						$width_folds = $Fold->folds();
+						$height_folds = $Fold->angles();
+					} # end if
+				} # end if
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
@@ -648,20 +663,23 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Folds: %d, QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', scalar @{$folds{$fold_type}}, $$specs{'txtQuantity'.$qty_index}, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
 				my %servicePrice = openprint::service::get_price_object( $Fold->type(), scalar @{$folds{$fold_type}} * $$specs{"txtQuantity$qty_index"}/$imposition, $Equipment );
+				if ( ! %servicePrice ) {
+					%servicePrice = openprint::service::get_price_object( 'Folding', $imposition, $Equipment );
+				} # end if
 
 				if ( lc $servicePrice{'units'} eq 'per hour' ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime * scalar @{$folds{$fold_type}};
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per m', 'per 1000'] ) ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( scalar @{$folds{$fold_type}}*($$specs{"txtQuantity$qty_index"}/$imposition) / 1000 );
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.2f%s * %d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, @{$folds{$fold_type}}*$$specs{"txtQuantity$qty_index"}, $servicePrice{'Total'} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Run: $%.2f%s * %d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), @servicePrice{'Price','units'}, @{$folds{$fold_type}}*$$specs{"txtQuantity$qty_index"}, $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per m'] ) ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $$sig_specs{'txtWidth'} ) * $$specs{"txtQuantity$qty_index"} / 1000;
 					
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per hour'] ) ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $$sig_specs{'txtWidth'} ) * $runTime;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Setup: %.2f, Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), $setupPrice{'Price'}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
 				} else {
 				
 					$$specs{'hdnBreakdown'.$qty_index} .= qq`No Units ($servicePrice{'units'}) given for `.$Fold->name().' on '.$Equipment->name().',<br/>';
@@ -701,7 +719,9 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 	my $index = 1;
 	foreach my $fold_type ( keys %$bestFolds ) {
 
-#$openprint::log->debug("Foldtype: $fold_type $$bestFolds{$fold_type} ");
+my $Fold = $$bestFolds{$fold_type}[0];
+
+$openprint::log->debug("Foldtype: $fold_type $$bestFolds{$fold_type} $$Fold{name} $$Fold{folds} $$Fold{angles}" );
 		$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $fold_type;
 		$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = scalar @{$$bestFolds{$fold_type}};
 		$$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $$bestFolds{$fold_type}[0]->folds();
