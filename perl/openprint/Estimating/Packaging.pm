@@ -57,7 +57,9 @@ sub calc {
 		$$specs{'alert'} .= 'Unable to find project service.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+	my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $project_index, $service_index ) );
 	my $status = 'calculated';
+	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
 
 	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
 	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
@@ -74,8 +76,8 @@ sub calc {
     } # end if
 
 	$$specs{'bands_per_package'} =~ s/[^\d\.]//g;
-	my $makeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', undef, undef );
-	my $minCharge = openprint::service::get_price( $$specs{'ServiceType'}.'Minimum', undef, undef );
+	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
+	my $minCharge = openprint::service::get_price( $ServiceType->name().'Minimum', undef, undef );
 
 	foreach my $qty_index ( 1 .. 3 ) {
 
@@ -91,7 +93,7 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Makeready: $%.2f<br/>', $makeReady );
 		my $price = 0;
 		my $unitPrice = 0;
-		my %ServicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $qty, undef );
+		my %ServicePrice = openprint::service::get_price_object( $ServiceType->name(), $qty, undef );
 		if ( %ServicePrice ) {
 			if ( lc $ServicePrice{'units'} eq 'per m' ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
@@ -110,7 +112,6 @@ sub calc {
 		$price = $unitPrice + $makeReady;
 
 		if ( $$specs{'rdbCardboardBacking'} eq 'Y' ) {
-			my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
 
 			if ( my @Materials = openprint::Material::find('name'=>'CardboardBacking') ) {
 				my %CardboardPrice = $Materials[0]->get_price( $package_qty, undef );
@@ -125,9 +126,9 @@ sub calc {
 				$price += $CardboardPrice{'Total'} * $package_qty;
 			} # end if
 		} # end if
-		if ( my @Materials = openprint::Material::find('category'=>$$specs{'ServiceType'}) ) {
+		if ( my @Materials = openprint::Material::find('category'=>$ServiceType->name()) ) {
 			if ( ! $$specs{'type_id'} ) {
-				$$specs{'alert'} .= 'Please select the type of ' . $$specs{'ServiceType'} . '<br/>';
+				$$specs{'alert'} .= 'Please select the type of ' . $ServiceType->name() . '<br/>';
 				$status = 'uncalculated';
 			} else {
 				my $Material = new openprint::Material( $$specs{'type_id'} );
@@ -139,6 +140,10 @@ sub calc {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $material_qty / 1000;
 				} elsif ( lc $MaterialPrice{units} eq 'each' ) {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $material_qty;
+				} elsif ( lc $MaterialPrice{units} eq 'per inch' ) {
+					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $material_qty;
+				} elsif ( lc $MaterialPrice{units} eq 'per foot' ) {
+					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $material_qty / 144;
 				} # end if
 				$price += $MaterialPrice{'Total'};
 				$unitPrice += $MaterialPrice{'Total'};

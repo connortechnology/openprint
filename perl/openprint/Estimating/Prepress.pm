@@ -45,13 +45,14 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+	my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $project_index, $service_index ) );
 
 	if ( $$specs{'txtQuantity'} eq '' ) {	# a zero value is still calculated, just with a zero price.
 		$status = 'uncalculated';
 	} elsif ( $$specs{'txtQuantity'} < 0.25 and $$specs{'txtQuantity'} > 0 ) {
 		$$specs{'txtQuantity'} = 0.25;
 	} # end if
-	my $price = openprint::service::get_price( @$specs{'ServiceType','txtQuantity'}, undef );
+	my $price = openprint::service::get_price( $ServiceType->name(), $$specs{'txtQuantity'}, undef );
 	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price );
 
 	$price *= $$specs{'txtQuantity'};

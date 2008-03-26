@@ -115,7 +115,7 @@ if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 				<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 				<span class="<?Columns?>Columns">
-					&nbsp;<input name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" />
+					<input name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" />
 				</span>
 				<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
