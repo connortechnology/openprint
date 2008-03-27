@@ -72,9 +72,9 @@ function check_input( form, signature_index ) {
 				<? eval (
 					 @$variable{'years','months','days'} = ssi::get_dates( $log, $dbh, @$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ); 
 ) ?>
-				<select style="width: auto;" name="ddmDueDateMonth" size="1"><?months?></select>
+				<select style="width: auto;" name="ddmDueDateMonth" size="1" onchange="setDaysDropDown(this.form.ddmDueDateYear.value,this.value,this.form.ddmDueDateDay,this.form.ddmDueDateDay.value);"><?months?></select>
 				<select style="width: auto;" name="ddmDueDateDay" size="1"><?days?></select>
-				<select style="width: auto;" name="ddmDueDateYear" size="1"><?years?></select>
+				<select style="width: auto;" name="ddmDueDateYear" size="1" onchange="setDaysDropDown(this.value,this.form.ddmDueDateMonthvalue,this.form.ddmDueDateDay,this.form.ddmDueDateDay.value);"><?years?></select>
 			</p>
 			<p class="buttons">
 			<? echo (

@@ -65,14 +65,14 @@ sub get_project_type_service_index {
 sub JDF_ProductIntent {
 	my ( $self ) = @_;
 
-	my %services = $self->get_services();
-	my $printing_specs = openprint::service::get_specs_ref( $$self{'id'}, $services{''}[0] );
+	my $services = $self->services();
+	my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
 	
 	my $doc = new XML::DOM::Document;
 	$doc->setXMLDecl( $doc->createXMLDecl( '1.0' ) );
 	foreach my $sig_id ( $self->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $$self{'id'}, $sig_id );
-		$doc->appendChild( openprint::Estimating::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
+		$doc->appendChild( openprint::JDF::PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
 	} # end foreach
 	return $doc;
 } # end sub JDF_ProductIntent
@@ -167,7 +167,8 @@ if ( 0 ) {
 		$Product->appendChild( $SignatureIntent );
 
 # Add the printing Process for this sig
-		$SignatureIntent->appendChild( openprint::JDF::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs, $version ) );
+		$SignatureIntent->appendChild( openprint::JDF::JDF_PrintingGreyBox( $doc, $self, $sig_id, $sig_specs, $version ) );
+		#$SignatureIntent->appendChild( openprint::JDF::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs, $version ) );
 		#openprint::JDF::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs );
 		my $SI_ResourceLinkPool = openprint::JDF::getNode( $SignatureIntent, 'ResourceLinkPool' );
 
@@ -187,7 +188,7 @@ if ( 0 ) {
 		$SigInk->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 
 		my $SigInkSheetName = $SigInk->appendChild( $doc->createElement('Ink') );
-		$SigInkSheetName->setAttribute('SheetName','Sig#'.$$sig_specs{'SignatureIndex'}.'Sheet#1');
+		$SigInkSheetName->setAttribute('SheetName','Sheet 1');
 
 		foreach my $side ( 'Front','Back' ) {
 			if ( @{$SideColours{$side}} ) {

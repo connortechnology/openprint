@@ -427,10 +427,10 @@ $openprint::log->debug("leaveing JDF StrippingParams");
 sub Layout {
     my ( $doc, $Project, $sig_id, $sig_specs, $Imposition, $version ) = @_;
 
-
 	my $Layout = $doc->createElement('Layout');
 	$Layout->setAttribute('Class','Parameter');
 	$Layout->setAttribute('Status','Unavailable');
+	# Layouts are Partitions
 	$Layout->setAttribute('ID','Layout'.$Project->id());
 	$Layout->setAttribute('Name','Layout'.$Project->id());
 	if ( $version == 1.3 ) {
@@ -591,7 +591,7 @@ sub JDF_ImpositionIntent {
 	my $ResourcePool = $ImpositionIntent->appendChild( $doc->createElement('ResourcePool') );
 
 # Layout
-	my $Layout = openprint::JDF::getNode( $doc, 'Layout' );
+	my $Layout = openprint::JDF::getNode( $doc, 'Layout','ID'=>'Layout'.$Project->id() );
 	my $LayoutSignature = $Layout->appendChild( openprint::JDF::Layout_Signature( $doc, $Project, $sig_id, $sig_specs, $Imposition, $version ) );
 
 	my $ResourceLinkPool = $ImpositionIntent->appendChild( $doc->createElement('ResourceLinkPool') );
@@ -672,10 +672,10 @@ sub JDF_SignatureIntent {
     $project->setAttribute('Type', 'Product' );
     $project->setAttribute('xsi:type', 'Product' );
     $project->setAttribute('ID', 'Signature'.$sig_id );
-	my $summary = openprint::service::summary( $Project->id(), $sig_id );
-	$summary .= openprint::service::summary( $Project->id(), $sig_id, $Project->ordered_quantity_index() );
-	$summary =~ s/<br\/>/ /g;
-	$project->setAttribute('DescriptiveName', $summary );
+	#my $summary = openprint::service::summary( $Project->id(), $sig_id );
+	#$summary .= openprint::service::summary( $Project->id(), $sig_id, $Project->ordered_quantity_index() );
+	#$summary =~ s/<br\/>/ /g;
+	$project->setAttribute('DescriptiveName', $$sig_specs{'txtServiceDescription'} );
 
     my $ResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
     my $ResourceLinkPool = $project->appendChild( $doc->createElement('ResourceLinkPool') );
@@ -838,46 +838,78 @@ if ( 0 ) {
 } # end sub SignatureIntent
 
 # Generates JDF for a signature...
-sub JDF_PrintingProcess {
-
+sub JDF_PrintingGreyBox {
     my ( $doc, $Project, $sig_id, $sig_specs, $version ) = @_;
-$openprint::log->debug("Start JDF_PrintingProcess");
-
-    my %services = $Project->get_services();
-    my $printing_specs = openprint::service::get_specs_ref( $Project->id(), $services{''}[0] );
-$openprint::log->debug("Before load from signature");
-	my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
-$openprint::log->debug("After load from signature");
-
-	my @Equipment = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
-	my $Equipment = shift @Equipment if @Equipment;
-	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-	my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
-
-	my $TopResourcePool = openprint::JDF::getNode( $doc, 'ResourcePool' );
-
+$openprint::log->debug("Start JDF_PrintingGreyBox");
     my $project = $doc->createElement('JDF');
     $project->setAttribute('Status','Waiting');
-    $project->setAttribute('Activation','Active');
-	# Printing Part # is project + sig, cuz a docket can have multiple projects, and we are talking about printing a sig
-	# This is so that the JMF handler can reference back to the service
     $project->setAttribute('JobPartID',$Project->id() . '#' . $sig_id );
-    $project->setAttribute('Type', 'ConventionalPrinting' );
+    $project->setAttribute('Type', 'ProcessGroup' );
+    $project->setAttribute('Types', 'InkZoneCalculation ConventionalPrinting' );
     $project->setAttribute('ID', 'CP'.$sig_id );
-	my $summary = openprint::service::summary( $Project->id(), $sig_id );
-	$project->setAttribute('DescriptiveName', $summary );
+	$project->setAttribute('Category','Printing');
+	$project->setAttribute('DescriptiveName','Printing ' . $$sig_specs{'txtServiceDescription'} );
+
+
+	my $TopResourcePool = openprint::JDF::getNode( $doc, 'ResourcePool' );
     my $ResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
     my $ResourceLinkPool = $project->appendChild( $doc->createElement('ResourceLinkPool') );
+	my $NodeInfo = JDF_NodeInfo( $doc, $Project, $sig_id, $sig_specs, $version, $project, $ResourcePool, $ResourceLinkPool );
+	my $PrintingParam = JDF_ConventionalPrintingParams( $doc, $Project, $sig_id, $sig_specs, $version, $ResourcePool, $ResourceLinkPool );
+	my $Component = JDF_Component( $doc, $Project, $sig_id, $sig_specs, $version, $TopResourcePool, $ResourceLinkPool );
 
-	my $NodeInfo;
-	if ( $version == 1.3 ) {
-	$NodeInfo = $ResourcePool->appendChild( $doc->createElement('NodeInfo') );
-$NodeInfo->setAttribute('ID','NI'.$sig_id);
-my $NodeInfoLink = $ResourceLinkPool->appendChild( $doc->createElement('NodeInfoLink') );
-$NodeInfoLink->setAttribute('rRef','NI'.$sig_id);
-$NodeInfoLink->setAttribute('Usage','Input');
+	my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+	if ( $Paper ) {
+# Paper
+		JDF_PaperIntent( $doc, $sig_specs, $Paper, $version, $TopResourcePool, $ResourceLinkPool );
+	} # end if
+	my $PlateIntent = JDF_PlateIntent( $doc, $Project, $sig_id, $sig_specs, $version, $TopResourcePool, $ResourceLinkPool );
+	my $ExposedMedia = JDF_ExposedMedia( $doc, $Project, $sig_id, $sig_specs, $version, $TopResourcePool, $ResourceLinkPool );
+	
+	# Add Press?
+	my $Equipment;
+	if ( $$sig_specs{'UsePress'} ) {
+		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'});
+		$Equipment = shift @Equipment if @Equipment;
 	} else {
-	$NodeInfo = $project->appendChild( $doc->createElement('NodeInfo') );
+		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+		$Equipment = shift @Equipment if @Equipment;
+	} # end if
+	if ( $Equipment ) {
+		my $Device = JDF_Device( $doc, $Equipment, $version, $TopResourcePool, $ResourceLinkPool );
+	} # end if
+	
+	my $ColorantControl = JDF_ColorantControl( $doc, $Project, $sig_id, $sig_specs, $version, $TopResourcePool, $ResourceLinkPool );
+	# Ink
+	my $InkLink = $ResourceLinkPool->appendChild( $doc->createElement('InkLink'));
+	$InkLink->setAttribute('Usage','Input' );
+	$InkLink->setAttribute('rRef','INK');
+	my $Part = $InkLink->appendChild( $doc->createElement('Part'));
+	$Part->setAttribute('SheetName','Sheet 1');
+	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
+
+	my $Layout = openprint::JDF::getNode( $doc, 'Layout', 'ID'=>'Layout'.$Project->id() );
+	my $LayoutLink = $ResourceLinkPool->appendChild( $doc->createElement('LayoutLink') );
+	$LayoutLink->setAttribute('Usage','Input');
+	$LayoutLink->setAttribute('rRef',$Layout->getAttribute('ID') );
+	if ( $version == 1.3 ) {
+		my $Part = $LayoutLink->appendChild( $doc->createElement('Part'));
+		$Part->setAttribute('SheetName','Sheet 1');
+		$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
+	} # end if
+	return $project;
+} # end sub JDF_PrintingGreyBox
+
+sub JDF_NodeInfo {
+	my ( $doc, $Project, $sig_id, $sig_specs, $version, $Parent, $ResourcePool, $ResourceLinkPool ) = @_;
+	my $NodeInfo = $doc->createElement('NodeInfo');;
+	if ( $version == 1.3 ) {
+		$NodeInfo = $ResourcePool->appendChild( $doc->createElement('NodeInfo') );
+	$NodeInfo->setAttribute('ID','NI'.$sig_id);
+	$NodeInfo->setAttribute('Class','Parameter');
+	$NodeInfo->setAttribute('Status','Available');
+	} else {
+		$NodeInfo = $Parent->appendChild( $doc->createElement('NodeInfo') );
 	} # end if
 	my $time = openprint::Estimating::Printing::runtime( $Project,$sig_specs );
 	
@@ -886,19 +918,44 @@ $NodeInfoLink->setAttribute('Usage','Input');
 	#$NodeInfo->setAttribute('Class','Parameter');
 	#$NodeInfo->setAttribute('Status','Available');
 	$NodeInfo->setAttribute('JobPriority','50');
-	my $JMF = $NodeInfo->appendChild( JMF::JMFNode($doc));
-	my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Status', {'ID'=>$sig_id} ) );
-	my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Notification', {'ID'=>$sig_id} ) );
 
-#my $NodeInfo = $ProductResourcePool->appendChild( $doc->createElement('NodeInfo') );
-#my $JMF = $NodeInfo->appendChild( JMF::QuerySetupPersistentChannel( $doc ) );
-#
-#
+	if ( $version == 1.3 ) {
+		my $NodeInfoLink = $ResourceLinkPool->appendChild( $doc->createElement('NodeInfoLink') );
+		$NodeInfoLink->setAttribute('rRef','NI'.$sig_id);
+		$NodeInfoLink->setAttribute('Usage','Input');
+	} # end if
+	return $NodeInfo;
+} # end sub JF_NodeInfo
 
+sub JDF_ConventionalPrintingParams {
+    my ( $doc, $Project, $sig_id, $sig_specs, $version, $ResourcePool, $ResourceLinkPool ) = @_;
+	
+	my $PrintingParam = $ResourcePool->appendChild( $doc->createElement('ConventionalPrintingParams' ) );
+	$PrintingParam->setAttribute('Class','Parameter');
+	$PrintingParam->setAttribute('DescriptiveName','Printing Setup');
+	$PrintingParam->setAttribute('ID','PP'.$sig_id);
+	#$PrintingParam->setAttribute( 'Locked', 'false' );
+	$PrintingParam->setAttribute('PrintingType','SheetFed');
+	if ( ! $$sig_specs{'ddmRunStyle'.$Project->ordered_quantity_index()} ) {
+		$PrintingParam->setAttribute('WorkStyle', $openprint::JDF::runstyles{$$sig_specs{'ddmRunStyle'}} );
+	} else {
+		$PrintingParam->setAttribute('WorkStyle', $openprint::JDF::runstyles{$$sig_specs{'ddmRunStyle'.$Project->ordered_quantity_index()}} );
+	} # end if
+	$PrintingParam->setAttribute( 'Status', 'Incomplete' );
 
-	my $Component = openprint::JDF::getNode($TopResourcePool, 'Component', 'ID'=>'PS'.$Project->id());
+	my $ConventionalPrintingParamsLink = $ResourceLinkPool->appendChild( $doc->createElement('ConventionalPrintingParamsLink'));
+	$ConventionalPrintingParamsLink->setAttribute('Usage','Input' );
+	$ConventionalPrintingParamsLink->setAttribute('rRef','PP'.$sig_id);
+
+	return $PrintingParam;
+} # end sub JDF_ConventionalPrintingParams
+
+sub JDF_Component {
+    my ( $doc, $Project, $sig_id, $sig_specs, $version, $ResourcePool, $ResourceLinkPool ) = @_;
+
+	my $Component = openprint::JDF::getNode($ResourcePool, 'Component', 'ID'=>'PS'.$Project->id());
 	if ( ! $Component ) {
-		$Component = $TopResourcePool->appendChild( $doc->createElement('Component') );
+		$Component = $ResourcePool->appendChild( $doc->createElement('Component') );
 		$Component->setAttribute('ID', 'PS'.$$sig_specs{'SignatureIndex'} );
 		$Component->setAttribute('Class', 'Quantity');
 		$Component->setAttribute('ComponentType', 'Sheet');
@@ -924,238 +981,7 @@ $NodeInfoLink->setAttribute('Usage','Input');
 	my $ComponentConditionWaste = $ComponentSheetName->appendChild( $doc->createElement('Component') );
 	$ComponentConditionWaste->setAttribute('IsWaste','true');
 	$ComponentConditionWaste->setAttribute('Condition','Waste');
-# Dont' forget the wasts, tec
 
-	my $PrintingParam = $ResourcePool->appendChild( $doc->createElement('ConventionalPrintingParams' ) );
-	$PrintingParam->setAttribute('Class','Parameter');
-	$PrintingParam->setAttribute('DescriptiveName','Printing Setup');
-	$PrintingParam->setAttribute('ID','PP'.$sig_id);
-	#$PrintingParam->setAttribute( 'Locked', 'false' );
-	$PrintingParam->setAttribute('PrintingType','SheetFed');
-	if ( ! $$sig_specs{'ddmRunStyle'.$Project->ordered_quantity_index()} ) {
-	$PrintingParam->setAttribute('WorkStyle', $openprint::JDF::runstyles{$$sig_specs{'ddmRunStyle'}} );
-} else {
-	$PrintingParam->setAttribute('WorkStyle', $openprint::JDF::runstyles{$$sig_specs{'ddmRunStyle'.$Project->ordered_quantity_index()}} );
-} # end if
-	$PrintingParam->setAttribute( 'Status', 'Available' );
-
-	if ( $Paper ) {
-# Paper
-		my $PaperIntent = openprint::JDF::getNode( $doc, 'Media','MediaType'=>'Paper' );
-		if ( ! $PaperIntent ) {
-			$PaperIntent = $TopResourcePool->appendChild( $doc->createElement('Media'));
-			#$PaperIntent = $TopResourcePool->appendChild( $Paper->JDF_Media( $doc ) );
-			$PaperIntent->setAttribute('Class','Consumable');
-			$PaperIntent->setAttribute('MediaType','Paper');
-			$PaperIntent->setAttribute('PartUsage','Implicit');
-			$PaperIntent->setAttribute('Status','Available');
-			$PaperIntent->setAttribute('ID','Paper');
-			$PaperIntent->setAttribute('PartIDKeys','SignatureName SheetName');
-		} # end if
-		my $SignaturePaperIntent = $PaperIntent->appendChild( $doc->createElement('Media') );
-		$SignaturePaperIntent->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
-		my $SheetPaperIntent = $SignaturePaperIntent->appendChild( $Paper->JDF_Media( $doc ) );
-		$SheetPaperIntent->setAttribute('SheetName', 'Sheet 1' );
-
-		my $MediaLink = $ResourceLinkPool->appendChild( $doc->createElement('MediaLink'));
-		$MediaLink->setAttribute('Usage','Input' );
-		$MediaLink->setAttribute('rRef','Paper' );
-		my $Part = $MediaLink->appendChild( $doc->createElement('Part'));
-		$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
-		$Part->setAttribute('SheetName','Sheet 1' );
-	} # end if
-
-	my $PlateIntent = openprint::JDF::getNode( $doc, 'Media','MediaType'=>'Plate','ID'=>'PLM'.$Project->id() );
-	if ( ! $PlateIntent ) {
-	# PLates
-		$PlateIntent = $TopResourcePool->appendChild( $doc->createElement('Media') );
-		$PlateIntent->setAttribute('ID','PLM'.$Project->id());
-	#$PlateIntent->setAttribute('Brand','Agfa' );
-		$PlateIntent->setAttribute('ProductID','PLM'.$Project->id() );
-		$PlateIntent->setAttribute('Class','Consumable' );
-	#$PlateIntent->setAttribute('Dimension',join(' ', (1*$Equipment->specification('Plate Size'))*72, 28*72 ) );
-	#$PlateIntent->setAttribute('Locked','false' );
-		$PlateIntent->setAttribute('MediaType','Plate' );
-		$PlateIntent->setAttribute('Status','Available' );
-		$PlateIntent->setAttribute('PartIDKeys','SignatureName SheetName');
-	} # end if
-	my $PlateIntentSignatureName = $PlateIntent->appendChild( $doc->createElement('Media' ));
-	$PlateIntentSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
-	my $PlateIntentSheetName = $PlateIntentSignatureName->appendChild( $doc->createElement('Media' ));
-	$PlateIntentSheetName->setAttribute('SheetName','Sheet 1' );
-
-	
-	my $ExposedMedia = openprint::JDF::getNode( $TopResourcePool, 'ExposedMedia', 'ID'=>'PL'.$Project->id() );
-	if ( ! $ExposedMedia ) {	
-		$ExposedMedia = $TopResourcePool->appendChild( $doc->createElement( 'ExposedMedia' ) );
-		$ExposedMedia->setAttribute('ID','PL'.$Project->id());
-		$ExposedMedia->setAttribute('Class','Handling');
-		#$ExposedMedia->setAttribute('Locked','true');
-		$ExposedMedia->setAttribute('Status','Available');
-		$ExposedMedia->setAttribute('DescriptiveName','Plates');
-		$ExposedMedia->setAttribute('PartIDKeys','SignatureName SheetName Side Separation');
-	} # end if
-	#my $ExposedMediaSignatureName = $ExposedMedia->appendChild( $doc->createElement( 'ExposedMedia' ) );
-	#$ExposedMediaSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
-	#my $ExposedMediaSheetName = $ExposedMediaSignatureName->appendChild( $doc->createElement( 'ExposedMedia' ) );
-	#$ExposedMediaSheetName->setAttribute('SheetName','Sig#'.$$sig_specs{'SignatureIndex'}.'Sheet#1' );
-
-
-	my $ExposedMediaSignatureName = $ExposedMedia->appendChild( $doc->createElement( 'ExposedMedia' ) );
-	$ExposedMediaSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
-	my $ExposedMediaSheetName = $ExposedMediaSignatureName->appendChild( $doc->createElement( 'ExposedMedia' ) );
-	$ExposedMediaSheetName->setAttribute('SheetName','Sheet 1' );
-	#$ExposedMediaSheetName->setAttribute('Locked','false');
-	if ( @side_one_colours ) {
-		my $ExposedMediaFront = $ExposedMediaSheetName->appendChild( $doc->createElement( 'ExposedMedia' ) );	
-		$ExposedMediaFront->setAttribute('Side','Front');
-		foreach my $colour ( @side_one_colours ) {
-			my $Colour = $ExposedMediaFront->appendChild( $doc->createElement( 'ExposedMedia' ) );
-			$Colour->setAttribute('Separation',$colour);
-			$Colour->setAttribute('ProductID','pl1');
-		} # end foreach
-	my $MediaRef = $ExposedMediaFront->appendChild( $doc->createElement('MediaRef' ));
-	$MediaRef->setAttribute('rRef','PLM'.$Project->id());
-	my $Part = $MediaRef->appendChild($doc->createElement('Part'));
-	$Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
-	$Part->setAttribute('SheetName', 'Sheet 1' );
-	} # end if
-	if ( @side_two_colours ) {
-		my $ExposedMediaBack = $ExposedMediaSheetName->appendChild( $doc->createElement( 'ExposedMedia' ) );	
-		$ExposedMediaBack->setAttribute('Side','Back');
-		foreach my $colour ( @side_two_colours ) {
-			my $Colour = $ExposedMediaBack->appendChild( $doc->createElement( 'ExposedMedia' ) );
-			$Colour->setAttribute('Separation',$colour);
-			$Colour->setAttribute('ProductID','pl1');
-		} # end foreach
-	my $MediaRef = $ExposedMediaBack->appendChild( $doc->createElement('MediaRef' ));
-	$MediaRef->setAttribute('rRef','PLM'.$Project->id());
-	my $Part = $MediaRef->appendChild($doc->createElement('Part'));
-	$Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
-	$Part->setAttribute('SheetName', 'Sheet 1' );
-	} # end if
-	
-	# Add Press?
-	my $Equipment;
-	if ( ! $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} ) {
-		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'});
-		$Equipment = shift @Equipment if @Equipment;
-	} else {
-		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
-		$Equipment = shift @Equipment if @Equipment;
-	} # end if
-	if ( $Equipment ) {
-		my $Device = openprint::JDF::getNode( $doc, 'Device','DeviceID'=>$Equipment->strid() );
-		if ( ! $Device ) {
-			$Device = $TopResourcePool->appendChild( $doc->createElement('Device') );
-			$Device->setAttribute('Class','Implementation' );
-			$Device->setAttribute('DescriptiveName',$Equipment->name() );
-			$Device->setAttribute('FriendlyName',$Equipment->name() );
-			$Device->setAttribute('DeviceID', $Equipment->strid() );
-			$Device->setAttribute('ID', 'E'.$Equipment->id() );
-			#$Device->setAttribute('Locked', 'false' );
-			$Device->setAttribute('Status', 'Available' );
-		} # end if
-		my $DeviceLink = $ResourceLinkPool->appendChild( $doc->createElement('DeviceLink'));
-		$DeviceLink->setAttribute('Usage','Input' );
-		$DeviceLink->setAttribute('rRef','E'.$Equipment->id() );
-	} # end if
-	
-	my $ColorantControl = $ResourcePool->appendChild( $doc->createElement( 'ColorantControl') );
-	$ColorantControl->setAttribute('Class','Parameter');
-	#$ColorantControl->setAttribute('Locked','false');
-	$ColorantControl->setAttribute('PartIDKeys','Side');
-	$ColorantControl->setAttribute('Status','Available');
-	$ColorantControl->setAttribute('ID','CC'.$$sig_specs{'SignatureIndex'} );
-
-
-	my $ColourPoolRef = $ColorantControl->appendChild( $doc->createElement( 'ColorPoolRef') );
-	$ColourPoolRef->setAttribute('rRef','CP' );
-	my $ColorantParams = $ColorantControl->appendChild( $doc->createElement( 'ColorantParams') );
-	foreach my $colour (@side_one_colours, @side_two_colours) {
-		my $SeparationSpec = $ColorantParams->appendChild( $doc->createElement( 'SeparationSpec') );
-		$SeparationSpec->setAttribute('Name',$colour);
-	} # end foreach
-	
-	my %SideColours = (
-		'Front'=>\@side_one_colours,
-		'Back'=>\@side_two_colours,
-		);
-	foreach my $side ( 'Front','Back' ) {
-		my $ColorantControlSide = $ColorantControl->appendChild( $doc->createElement( 'ColorantControl') );
-		$ColorantControlSide->setAttribute('Side',$side);
-		my $ColorantOrder = $ColorantControlSide->appendChild( $doc->createElement( 'ColorantOrder') );
-		foreach my $colour (@{$SideColours{$side}}) {
-			my $SeparationSpec = $ColorantOrder->appendChild( $doc->createElement( 'SeparationSpec') );
-			$SeparationSpec->setAttribute('Name',$colour);
-		} # end foreach
-	} # end foreach
-
-	if ( 1 ) {
-	my $ColorPool = openprint::JDF::getNode( $doc, 'ColorPool' );
-	if ( ! $ColorPool ) {
-		my $TopResourcePool = openprint::JDF::getNode( $doc, 'ResourcePool' );
-		# Node hasn't been added yet, so add it.
-		$ColorPool = $TopResourcePool->appendChild( $doc->createElement( 'ColorPool' ) );
-		$ColorPool->setAttribute('Class','Parameter');
-		$ColorPool->setAttribute('Status','Available');
-		$ColorPool->setAttribute('ID','CP' );
-	} # end if
-	
-	my %colors;
-	my $colors = $ColorPool->getElementsByTagName('Color');
-#$openprint::log->debug("Colours: " . $colors->getLength() );
-
-	for ( my $i = 0; $i < $colors->getLength() ; $i += 1 ) {
-#$openprint::log->debug("Adding color : " . $colors->item($i)->getAttribute('Name') );
-		$colors{$colors->item($i)->getAttribute('Name')} = 1;
-	} # end foreach
-	
-	foreach my $color ( @side_one_colours, @side_two_colours ) {
-		if ( ! $colors{$color} ) {
-			my $Color = $ColorPool->appendChild( $doc->createElement( 'Color' ) );
-			$Color->setAttribute('Name',$color);
-			if ( $color eq 'Black' ) {
-				$Color->setAttribute('CMYK','0 0 0 1');
-			} elsif ( $color eq 'Cyan' ) {
-				$Color->setAttribute('CMYK','1 0 0 0');
-			} elsif ( $color eq 'Magenta' ) {
-				$Color->setAttribute('CMYK','0 1 0 0');
-			} elsif ( $color eq 'Yellow' ) {
-				$Color->setAttribute('CMYK','0 0 1 0');
-			} # end if
-			$colors{$color} = 1;
-		} # end if
-	} # end foreach
-
-	my $ExposedMediaLink = $ResourceLinkPool->appendChild( $doc->createElement('ExposedMediaLink') );
-	$ExposedMediaLink->setAttribute('ProcessUsage','Plate');
-	$ExposedMediaLink->setAttribute('Usage','Input');
-	$ExposedMediaLink->setAttribute('rRef','PL'.$Project->id());
-	my $Part = $ExposedMediaLink->appendChild( $doc->createElement('Part') );
-	$Part->setAttribute('SheetName','Sheet 1');
-	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
-
-	# Ink
-	my $InkLink = $ResourceLinkPool->appendChild( $doc->createElement('InkLink'));
-	$InkLink->setAttribute('Usage','Input' );
-	$InkLink->setAttribute('rRef','INK');
-	my $Part = $InkLink->appendChild( $doc->createElement('Part'));
-	$Part->setAttribute('SheetName','Sheet 1');
-	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
-	
-	my $ConventionalPrintingParamsLink = $ResourceLinkPool->appendChild( $doc->createElement('ConventionalPrintingParamsLink'));
-	$ConventionalPrintingParamsLink->setAttribute('Usage','Input' );
-	$ConventionalPrintingParamsLink->setAttribute('rRef','PP'.$sig_id);
-
-
-	my $ColorantControlLink = $ResourceLinkPool->appendChild( $doc->createElement('ColorantControlLink'));
-	$ColorantControlLink->setAttribute('Usage','Input' );
-	$ColorantControlLink->setAttribute('rRef','CC'.$$sig_specs{'SignatureIndex'} );
-
-	
-	} # end if
-	
 	my $ComponentLink = $ResourceLinkPool->appendChild( $doc->createElement('ComponentLink'));
 	$ComponentLink->setAttribute('Usage','Output');
 	$ComponentLink->setAttribute('rRef','PS'.$$sig_specs{'SignatureIndex'});
@@ -1188,7 +1014,300 @@ $NodeInfoLink->setAttribute('Usage','Input');
 	$WastePart->setAttribute('SheetName','Sheet 1');
 	$WastePart->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	$WastePart->setAttribute('Condition','Waste');
-$openprint::log->debug("Leave JDF_PrintingProcess");
+
+	return $Component;
+} # end sub JDF_Component
+
+sub JDF_PlateIntent {
+    my ( $doc, $Project, $sig_id, $sig_specs, $version, $ResourcePool ) = @_;
+
+	my $PlateIntent = openprint::JDF::getNode( $doc, 'Media','MediaType'=>'Plate','ID'=>'PLM'.$Project->id() );
+	if ( ! $PlateIntent ) {
+	# PLates
+		$PlateIntent = $ResourcePool->appendChild( $doc->createElement('Media') );
+		$PlateIntent->setAttribute('ID','PLM'.$Project->id());
+	#$PlateIntent->setAttribute('Brand','Agfa' );
+		$PlateIntent->setAttribute('ProductID','PLM'.$Project->id() );
+		$PlateIntent->setAttribute('Class','Consumable' );
+	#$PlateIntent->setAttribute('Dimension',join(' ', (1*$Equipment->specification('Plate Size'))*72, 28*72 ) );
+	#$PlateIntent->setAttribute('Locked','false' );
+		$PlateIntent->setAttribute('MediaType','Plate' );
+		$PlateIntent->setAttribute('Status','Available' );
+		$PlateIntent->setAttribute('PartIDKeys','SignatureName SheetName');
+	} # end if
+	my $PlateIntentSignatureName = $PlateIntent->appendChild( $doc->createElement('Media' ));
+	$PlateIntentSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
+	my $PlateIntentSheetName = $PlateIntentSignatureName->appendChild( $doc->createElement('Media' ));
+	$PlateIntentSheetName->setAttribute('SheetName','Sheet 1' );
+
+	return $PlateIntent;
+} # end sub JDF_PlateIntent
+
+sub JDF_ExposedMedia {
+    my ( $doc, $Project, $sig_id, $sig_specs, $version, $ResourcePool, $ResourceLinkPool ) = @_;
+
+	my $ExposedMedia = openprint::JDF::getNode( $ResourcePool, 'ExposedMedia', 'ID'=>'PL'.$Project->id() );
+	if ( ! $ExposedMedia ) {	
+		$ExposedMedia = $ResourcePool->appendChild( $doc->createElement( 'ExposedMedia' ) );
+		$ExposedMedia->setAttribute('ID','PL'.$Project->id());
+		$ExposedMedia->setAttribute('Class','Handling');
+		#$ExposedMedia->setAttribute('Locked','true');
+		$ExposedMedia->setAttribute('Status','Available');
+		$ExposedMedia->setAttribute('DescriptiveName','Plates');
+		$ExposedMedia->setAttribute('PartIDKeys','SignatureName SheetName Side Separation');
+	} # end if
+	#my $ExposedMediaSignatureName = $ExposedMedia->appendChild( $doc->createElement( 'ExposedMedia' ) );
+	#$ExposedMediaSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
+	#my $ExposedMediaSheetName = $ExposedMediaSignatureName->appendChild( $doc->createElement( 'ExposedMedia' ) );
+	#$ExposedMediaSheetName->setAttribute('SheetName','Sig#'.$$sig_specs{'SignatureIndex'}.'Sheet#1' );
+
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+	my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
+
+	my $ExposedMediaSignatureName = $ExposedMedia->appendChild( $doc->createElement( 'ExposedMedia' ) );
+	$ExposedMediaSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
+	my $ExposedMediaSheetName = $ExposedMediaSignatureName->appendChild( $doc->createElement( 'ExposedMedia' ) );
+	$ExposedMediaSheetName->setAttribute('SheetName','Sheet 1' );
+	#$ExposedMediaSheetName->setAttribute('Locked','false');
+	if ( @side_one_colours ) {
+		my $ExposedMediaFront = $ExposedMediaSheetName->appendChild( $doc->createElement( 'ExposedMedia' ) );	
+		$ExposedMediaFront->setAttribute('Side','Front');
+		foreach my $colour ( @side_one_colours ) {
+			my $Colour = $ExposedMediaFront->appendChild( $doc->createElement( 'ExposedMedia' ) );
+			$Colour->setAttribute('Separation',$colour);
+			$Colour->setAttribute('ProductID','pl1');
+		} # end foreach
+		my $MediaRef = $ExposedMediaFront->appendChild( $doc->createElement('MediaRef' ));
+		$MediaRef->setAttribute('rRef','PLM'.$Project->id());
+		my $Part = $MediaRef->appendChild($doc->createElement('Part'));
+		$Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
+		$Part->setAttribute('SheetName', 'Sheet 1' );
+	} # end if
+	if ( @side_two_colours ) {
+		my $ExposedMediaBack = $ExposedMediaSheetName->appendChild( $doc->createElement( 'ExposedMedia' ) );	
+		$ExposedMediaBack->setAttribute('Side','Back');
+		foreach my $colour ( @side_two_colours ) {
+			my $Colour = $ExposedMediaBack->appendChild( $doc->createElement( 'ExposedMedia' ) );
+			$Colour->setAttribute('Separation',$colour);
+			$Colour->setAttribute('ProductID','pl1');
+		} # end foreach
+		my $MediaRef = $ExposedMediaBack->appendChild( $doc->createElement('MediaRef' ));
+		$MediaRef->setAttribute('rRef','PLM'.$Project->id());
+		my $Part = $MediaRef->appendChild($doc->createElement('Part'));
+		$Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
+		$Part->setAttribute('SheetName', 'Sheet 1' );
+	} # end if
+
+	my $ExposedMediaLink = $ResourceLinkPool->appendChild( $doc->createElement('ExposedMediaLink') );
+	$ExposedMediaLink->setAttribute('ProcessUsage','Plate');
+	$ExposedMediaLink->setAttribute('Usage','Input');
+	$ExposedMediaLink->setAttribute('rRef','PL'.$Project->id());
+	my $Part = $ExposedMediaLink->appendChild( $doc->createElement('Part') );
+	$Part->setAttribute('SheetName','Sheet 1');
+	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
+	return $ExposedMedia;
+} # end sub JDF_ExposedMedia
+
+sub JDF_ColorantControl {
+    my ( $doc, $Project, $sig_id, $sig_specs, $version, $ResourcePool, $ResourceLinkPool ) = @_;
+
+	my $ColorantControl = $ResourcePool->appendChild( $doc->createElement( 'ColorantControl') );
+	$ColorantControl->setAttribute('Class','Parameter');
+	#$ColorantControl->setAttribute('Locked','false');
+	$ColorantControl->setAttribute('PartIDKeys','Side');
+	$ColorantControl->setAttribute('Status','Available');
+	$ColorantControl->setAttribute('ID','CC'.$$sig_specs{'SignatureIndex'} );
+
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+	my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
+
+	my $ColourPoolRef = $ColorantControl->appendChild( $doc->createElement( 'ColorPoolRef') );
+	$ColourPoolRef->setAttribute('rRef','CP' );
+	my $ColorantParams = $ColorantControl->appendChild( $doc->createElement( 'ColorantParams') );
+	foreach my $colour (@side_one_colours, @side_two_colours) {
+		my $SeparationSpec = $ColorantParams->appendChild( $doc->createElement( 'SeparationSpec') );
+		$SeparationSpec->setAttribute('Name',$colour);
+	} # end foreach
+	
+	my %SideColours = (
+		'Front'=>\@side_one_colours,
+		'Back'=>\@side_two_colours,
+		);
+	foreach my $side ( 'Front','Back' ) {
+		my $ColorantControlSide = $ColorantControl->appendChild( $doc->createElement( 'ColorantControl') );
+		$ColorantControlSide->setAttribute('Side',$side);
+		my $ColorantOrder = $ColorantControlSide->appendChild( $doc->createElement( 'ColorantOrder') );
+		foreach my $colour (@{$SideColours{$side}}) {
+			my $SeparationSpec = $ColorantOrder->appendChild( $doc->createElement( 'SeparationSpec') );
+			$SeparationSpec->setAttribute('Name',$colour);
+		} # end foreach
+	} # end foreach
+
+	my $ColorPool = openprint::JDF::getNode( $doc, 'ColorPool' );
+	if ( ! $ColorPool ) {
+		# Node hasn't been added yet, so add it.
+		$ColorPool = $ResourcePool->appendChild( $doc->createElement( 'ColorPool' ) );
+		$ColorPool->setAttribute('Class','Parameter');
+		$ColorPool->setAttribute('Status','Available');
+		$ColorPool->setAttribute('ID','CP' );
+	} # end if
+	
+	my %colors;
+	my $colors = $ColorPool->getElementsByTagName('Color');
+#$openprint::log->debug("Colours: " . $colors->getLength() );
+
+	for ( my $i = 0; $i < $colors->getLength() ; $i += 1 ) {
+#$openprint::log->debug("Adding color : " . $colors->item($i)->getAttribute('Name') );
+		$colors{$colors->item($i)->getAttribute('Name')} = 1;
+	} # end foreach
+	
+	foreach my $color ( @side_one_colours, @side_two_colours ) {
+		if ( ! $colors{$color} ) {
+			my $Color = $ColorPool->appendChild( $doc->createElement( 'Color' ) );
+			$Color->setAttribute('Name',$color);
+			if ( $color eq 'Black' ) {
+				$Color->setAttribute('CMYK','0 0 0 1');
+			} elsif ( $color eq 'Cyan' ) {
+				$Color->setAttribute('CMYK','1 0 0 0');
+			} elsif ( $color eq 'Magenta' ) {
+				$Color->setAttribute('CMYK','0 1 0 0');
+			} elsif ( $color eq 'Yellow' ) {
+				$Color->setAttribute('CMYK','0 0 1 0');
+			} # end if
+			$colors{$color} = 1;
+		} # end if
+	} # end foreach
+	my $ColorantControlLink = $ResourceLinkPool->appendChild( $doc->createElement('ColorantControlLink'));
+	$ColorantControlLink->setAttribute('Usage','Input' );
+	$ColorantControlLink->setAttribute('rRef','CC'.$$sig_specs{'SignatureIndex'} );
+	return $ColorantControl;
+
+} # end sub JDF_ColorantControl
+sub JDF_Device {
+    my ( $doc, $Equipment, $version, $ResourcePool, $ResourceLinkPool ) = @_;
+
+	my $Device = openprint::JDF::getNode( $ResourcePool, 'Device','DeviceID'=>$Equipment->jdf_id() );
+	if ( ! $Device ) {
+		$Device = $ResourcePool->appendChild( $doc->createElement('Device') );
+		$Device->setAttribute('Class','Implementation' );
+		$Device->setAttribute('DescriptiveName',$Equipment->jdf_name() );
+		$Device->setAttribute('FriendlyName',$Equipment->jdf_name() );
+		$Device->setAttribute('DeviceID', $Equipment->jdf_id() );
+		$Device->setAttribute('ID', 'E'.$Equipment->id() );
+		#$Device->setAttribute('Locked', 'false' );
+		$Device->setAttribute('Status', 'Available' );
+	} # end if
+	my $DeviceLink = $ResourceLinkPool->appendChild( $doc->createElement('DeviceLink'));
+	$DeviceLink->setAttribute('Usage','Input' );
+	$DeviceLink->setAttribute('rRef','E'.$Equipment->id() );
+
+	return $Device;
+} # end sub JDF_Equipment
+
+sub JDF_PaperIntent {
+    my ( $doc, $sig_specs, $Paper, $version, $ResourcePool, $ResourceLinkPool ) = @_;
+
+	my $PaperIntent = openprint::JDF::getNode( $doc, 'Media','MediaType'=>'Paper' );
+	if ( ! $PaperIntent ) {
+		$PaperIntent = $ResourcePool->appendChild( $doc->createElement('Media'));
+#$PaperIntent = $TopResourcePool->appendChild( $Paper->JDF_Media( $doc ) );
+		$PaperIntent->setAttribute('Class','Consumable');
+		$PaperIntent->setAttribute('MediaType','Paper');
+		$PaperIntent->setAttribute('PartUsage','Implicit');
+		$PaperIntent->setAttribute('Status','Available');
+		$PaperIntent->setAttribute('ID','Paper');
+		$PaperIntent->setAttribute('PartIDKeys','SignatureName SheetName');
+	} # end if
+	my $SignaturePaperIntent = $PaperIntent->appendChild( $doc->createElement('Media') );
+	$SignaturePaperIntent->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
+	my $SheetPaperIntent = $SignaturePaperIntent->appendChild( $Paper->JDF_Media( $doc ) );
+	$SheetPaperIntent->setAttribute('SheetName', 'Sheet 1' );
+
+	my $MediaLink = $ResourceLinkPool->appendChild( $doc->createElement('MediaLink'));
+	$MediaLink->setAttribute('Usage','Input' );
+	$MediaLink->setAttribute('rRef','Paper' );
+	my $Part = $MediaLink->appendChild( $doc->createElement('Part'));
+	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
+	$Part->setAttribute('SheetName','Sheet 1' );
+	return $PaperIntent;
+
+} # end sub JDF_PaperIntent
+
+# Generates JDF for a signature...
+sub JDF_PrintingProcess {
+
+	my ( $doc, $Project, $sig_id, $sig_specs, $version ) = @_;
+	$openprint::log->debug("Start JDF_PrintingProcess");
+
+	my $services = $Project->services();
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+
+
+	my $TopResourcePool = openprint::JDF::getNode( $doc, 'ResourcePool' );
+
+	my $project = $doc->createElement('JDF');
+	$project->setAttribute('Status','Waiting');
+	$project->setAttribute('Activation','Active');
+# Printing Part # is project + sig, cuz a docket can have multiple projects, and we are talking about printing a sig
+# This is so that the JMF handler can reference back to the service
+	$project->setAttribute('JobPartID',$Project->id() . '#' . $sig_id );
+	$project->setAttribute('Type', 'ConventionalPrinting' );
+	$project->setAttribute('ID', 'CP'.$sig_id );
+	my $summary = openprint::service::summary( $Project->id(), $sig_id );
+	$project->setAttribute('DescriptiveName', $summary );
+	my $ResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
+	my $ResourceLinkPool = $project->appendChild( $doc->createElement('ResourceLinkPool') );
+
+	my $NodeInfo = JDF_NodeInfo( $doc, $Project, $sig_id, $sig_specs, $version, $project, $ResourcePool, $ResourceLinkPool );
+	my $JMF = $NodeInfo->appendChild( JMF::JMFNode($doc));
+	my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Status', {'ID'=>$sig_id} ) );
+	my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Notification', {'ID'=>$sig_id} ) );
+
+#my $NodeInfo = $ProductResourcePool->appendChild( $doc->createElement('NodeInfo') );
+#my $JMF = $NodeInfo->appendChild( JMF::QuerySetupPersistentChannel( $doc ) );
+#
+#
+# Dont' forget the wasts, tec
+
+	my $Component = JDF_Component( $doc, $Project, $sig_id, $sig_specs, $version, $TopResourcePool, $ResourceLinkPool );
+	my $PrintingParam = JDF_ConventionalPrintingParams( $doc, $Project, $sig_id, $sig_specs, $version, $ResourcePool, $ResourceLinkPool );
+
+	if ( $Paper ) {
+# Paper
+		JDF_PaperIntent( $doc, $sig_specs, $Paper, $version, $TopResourcePool, $ResourceLinkPool );
+	} # end if
+
+	my $PlateIntent = JDF_PlateIntent( $doc, $Project, $sig_id, $sig_specs, $version, $TopResourcePool, $ResourceLinkPool );
+	my $ExposedMedia = JDF_ExposedMedia( $doc, $Project, $sig_id, $sig_specs, $version, $TopResourcePool, $ResourceLinkPool );
+
+# Add Press?
+	my $Equipment;
+	if ( $$sig_specs{'UsePress'} ) {
+		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'});
+		$Equipment = shift @Equipment if @Equipment;
+	} else {
+		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+		$Equipment = shift @Equipment if @Equipment;
+	} # end if
+	if ( $Equipment ) {
+		my $Device = JDF_Device( $doc, $Equipment, $version, $TopResourcePool, $ResourceLinkPool );
+	} # end if
+
+	my $ColorantControl = JDF_ColorantControl( $doc, $Project, $sig_id, $sig_specs, $version, $TopResourcePool, $ResourceLinkPool );
+
+# Ink
+	my $InkLink = $ResourceLinkPool->appendChild( $doc->createElement('InkLink'));
+	$InkLink->setAttribute('Usage','Input' );
+	$InkLink->setAttribute('rRef','INK');
+	my $Part = $InkLink->appendChild( $doc->createElement('Part'));
+	$Part->setAttribute('SheetName','Sheet 1');
+	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
+
+	$openprint::log->debug("Leave JDF_PrintingProcess");
 	return $project;
 
 } # end sub JDF_PrintingProcess
+
+1;
+__END__
