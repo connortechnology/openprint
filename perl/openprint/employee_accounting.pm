@@ -95,7 +95,7 @@ sub details {
 			} # end if
 			$Order->save();
 		} # end if
-		openprint::order::send_invoice( $r, $log, $dbh, $order_id );
+		#openprint::order::send_invoice( $r, $log, $dbh, $order_id );
     } elsif ( $param{'btnFunction'} eq 'Cancel' ) {
        openprint::order::cancel_order( $log, $dbh, $order_id );
 	} # end if
