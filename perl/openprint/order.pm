@@ -887,6 +887,7 @@ sub finalise_order {
 		} # end if
 
 		$Order->company_id( $openprint::session{'company_id'} );
+		$Order->salesrep_id( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() );
 		$Order->federal_tax( $gst_total );
 		$Order->state_tax( $pst_total );
 		$Order->harmonized_tax( $hst_total );
