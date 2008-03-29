@@ -108,13 +108,11 @@ sub verify_login {
 	} # end if
 
 	if ( $user_type ne 'C' ) {
-		my $company_name = $openprint::config{'companyname'};
-		my ( $master_cust_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE strName=?}, $company_name );
-		if ( $cust_id != $master_cust_id ) {
+		if ( $cust_id != $openprint::config{'Owner'} ) {
 # Send an email notification
 			my %info;
-			$_ = 'SELECT strFirstName, strLastName, strEmail FROM Users WHERE Index=?';
-			@info{'UserFirstName','UserLastName','UserEmail'} = sql::execute( $log, $dbh, $_, $user_id );
+			my $User = new openprint::User( $user_id );
+			@info{'UserFirstName','UserLastName','UserEmail'} = $User->get('firstname','lastname','email');
 			$info{'Site'} = $site;
 			$info{'UserType'} = $user_type;
 

@@ -66,13 +66,13 @@ sub JDF_ProductIntent {
 	my ( $self ) = @_;
 
 	my $services = $self->services();
-	my $printing_specs = openprint::service::get_specs_ref( $$self{'id'}, $$services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
 	
 	my $doc = new XML::DOM::Document;
 	$doc->setXMLDecl( $doc->createXMLDecl( '1.0' ) );
 	foreach my $sig_id ( $self->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $$self{'id'}, $sig_id );
-		$doc->appendChild( openprint::Estimating::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
+		$doc->appendChild( openprint::JDF::PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
 	} # end foreach
 	return $doc;
 } # end sub JDF_ProductIntent
@@ -80,11 +80,10 @@ sub JDF_ProductIntent {
 sub jdf {
 	my ( $self, $version ) = @_;
 	$version = 1.3 if ! $version;
-	$openprint::JDF::version = $version;
 	my $ppi = 1;
 
 	my $services = $self->services();
-	my $printing_specs = openprint::service::get_specs_ref( $$self{'id'}, $$services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
 	
 	my $doc = new XML::DOM::Document;
 	$doc->setXMLDecl( $doc->createXMLDecl( '1.0' ) );
@@ -93,8 +92,8 @@ sub jdf {
 	$project->setAttribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance');
 	$project->setAttribute('xsi:type','Product');
 	$project->setAttribute('Status','Waiting');
-	$project->setAttribute('Version',$version);
-	$project->setAttribute('MaxVersion',$version);
+	$project->setAttribute('Version', $version );
+	$project->setAttribute('MaxVersion', $version );
 	$project->setAttribute('JobID',$self->docket());
 	$project->setAttribute('JobPartID',$self->id());
 	$project->setAttribute('Type', 'Product' );
@@ -132,9 +131,9 @@ sub jdf {
 			);
 	$Component->setAttribute('ResourceWeight',openprint::print::get_finished_weight( $self->id() ) );
 
-	my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self ) );
-
-#$Component->setAttribute('ReaderPageCount','2');
+	my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
+	
+	#$Component->setAttribute('ReaderPageCount','2');
 
 	my $ComponentLink = $ProductResourceLinkPool->appendChild( $doc->createElement('ComponentLink') );
 	$ComponentLink->setAttribute('Usage','Output');
@@ -172,21 +171,18 @@ sub jdf {
 		$Component->setAttribute('DescriptiveName', $self->Type()->name() );
 		$Component->setAttribute('ID', 'SUB'.$$sig_specs{'SignatureIndex'} );
 		$Component->setAttribute('Status','Unavailable');
-		$Component->setAttribute('isWaste','false');
-		$Component->setAttribute('ProductType', openprint::JDF::ProductType( $self, $sig_specs ) );
-		$Component->setAttribute('Dimensions', join(' ', $$sig_specs{'txtWidth'}*72, $$sig_specs{'txtHeight'} * 72, 
-				$$sig_specs{'txtSpecificStockCalliper'}
-			) );
+		$Component->setAttribute('ProductType', openprint::JDF::ProductType( $self, $sig_specs, $version ) );
 
 		my $Pages = $$sig_specs{'PageQuantity'.$self->ordered_quantity_index()};
 		$Pages = 2 if ! $Pages;
 		$Component->setAttribute('ReaderPageCount',$Pages );
-		my $SignatureIntent = openprint::JDF::JDF_SignatureIntent( $doc, $self, $sig_id, $sig_specs );
+		my $SignatureIntent = openprint::JDF::JDF_SignatureIntent( $doc, $self, $sig_id, $sig_specs, $version );
 		$Product->appendChild( $SignatureIntent );
 
 # Add the printing Process for this sig
-		$SignatureIntent->appendChild( openprint::JDF::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
-#openprint::JDF::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs );
+		$SignatureIntent->appendChild( openprint::JDF::JDF_PrintingGreyBox( $doc, $self, $sig_id, $sig_specs, $version ) );
+		#$SignatureIntent->appendChild( openprint::JDF::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs, $version ) );
+		#openprint::JDF::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs );
 		my $SI_ResourceLinkPool = openprint::JDF::getNode( $SignatureIntent, 'ResourceLinkPool' );
 
 		my $FinalInputComponentLink = $ProductResourceLinkPool->appendChild( $doc->createElement('ComponentLink') );
@@ -205,7 +201,7 @@ sub jdf {
 		$SigInk->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 
 		my $SigInkSheetName = $SigInk->appendChild( $doc->createElement('Ink') );
-		$SigInkSheetName->setAttribute('SheetName','Sig#'.$$sig_specs{'SignatureIndex'}.'Sheet#1');
+		$SigInkSheetName->setAttribute('SheetName','Sheet 1');
 
 		foreach my $side ( 'Front','Back' ) {
 			if ( @{$SideColours{$side}} ) {
@@ -217,20 +213,20 @@ sub jdf {
 				} # end foreach
 			} # end if
 		} # end foreach Side
-#$SignatureIntent->appendChild( openprint::JDF::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
-#$SignatureIntent->appendChild( openprint::JDF::JDF_ImpositionIntent( $doc, $self, $sig_id, $sig_specs ) );
-		$SignatureIntent->appendChild( openprint::JDF::Prepress( $doc, $self, $sig_id, $sig_specs ) );
-#my $ImpositionIntentLink = $SI_ResourceLinkPool->appendChild( $doc->createElement( 'ImpositionLink' ) );
-#$ImpositionIntentLink->setAttribute('Usage','Input');
-#$ImpositionIntentLink->setAttribute('rRef','Imposition'.$sig_id);
-
+		#$SignatureIntent->appendChild( openprint::JDF::JDF_PrintingProcess( $doc, $self, $sig_id, $sig_specs ) );
+		#$SignatureIntent->appendChild( openprint::JDF::JDF_ImpositionIntent( $doc, $self, $sig_id, $sig_specs ) );
+		$SignatureIntent->appendChild( openprint::JDF::Prepress( $doc, $self, $sig_id, $sig_specs, $version ) );
+		#my $ImpositionIntentLink = $SI_ResourceLinkPool->appendChild( $doc->createElement( 'ImpositionLink' ) );
+		#$ImpositionIntentLink->setAttribute('Usage','Input');
+		#$ImpositionIntentLink->setAttribute('rRef','Imposition'.$sig_id);
+		
 	} # end foreach Signature
 
-# Add Binding Info
+	# Add Binding Info
 	if ( my $binding = openprint::print::get_book_type( $self->id() ) ) {
 		my $BindingIntent = $ProductResourcePool->appendChild( $doc->createElement('BindingIntent') );
 		$BindingIntent->setAttribute('ID','BI'.$self->id() ); # FInal Binding
-			$BindingIntent->setAttribute('Class','Intent' );
+		$BindingIntent->setAttribute('Class','Intent' );
 		$BindingIntent->setAttribute('Status','Available' );
 		my $BindingType = $BindingIntent->appendChild( $doc->createElement('BindingType') );
 		$BindingType->setAttribute('DataType','EnumerationSpan');
@@ -243,66 +239,64 @@ sub jdf {
 	} # end if
 
 
-	if ( 1 ) {
-		require XML::DOM;
-		require JMF;
-# THis is where we stick JMF Subscriptions
-#my $NodeInfo = $ProductResourcePool->appendChild( $doc->createElement('NodeInfo') );
-#$NodeInfo->setAttribute('ID','NI'.$self->id());
-#$NodeInfo->setAttribute('Class','Parameter');
-##$NodeInfo->setAttribute('Status','Available');
-#$NodeInfo->setAttribute('JobPriority','50');
-#my $JMF = $NodeInfo->appendChild( JMF::QuerySetupPersistentChannel( $doc ) );
-#my $NodeInfoLink = $ProductResourceLinkPool->appendChild( $doc->createElement('NodeInfoLink') );
-#$NodeInfoLink->setAttribute('rRef','NI'.$self->id());
-#$NodeInfoLink->setAttribute('Usage','Input');
+if ( 1 ) {
+	require XML::DOM;
+	require JMF;
+	# THis is where we stick JMF Subscriptions
+	#my $NodeInfo = $ProductResourcePool->appendChild( $doc->createElement('NodeInfo') );
+	#$NodeInfo->setAttribute('ID','NI'.$self->id());
+	#$NodeInfo->setAttribute('Class','Parameter');
+	##$NodeInfo->setAttribute('Status','Available');
+	#$NodeInfo->setAttribute('JobPriority','50');
+	#my $JMF = $NodeInfo->appendChild( JMF::QuerySetupPersistentChannel( $doc ) );
+	#my $NodeInfoLink = $ProductResourceLinkPool->appendChild( $doc->createElement('NodeInfoLink') );
+	#$NodeInfoLink->setAttribute('rRef','NI'.$self->id());
+	#$NodeInfoLink->setAttribute('Usage','Input');
 
-#my $JMF = $NodeInfo->appendChild( JMF::JMFNode($doc));
-#my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Status') );
-#my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Notification') );
+	#my $JMF = $NodeInfo->appendChild( JMF::JMFNode($doc));
+	#my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Status') );
+	#my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Notification') );
 
-# Add Company Information
-#my $ResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
-		my $CustomerInfo;
-		if ( $version == 1.3 ) {
-			$CustomerInfo = $ProductResourcePool->appendChild( $doc->createElement('CustomerInfo') );
-			$CustomerInfo->setAttribute('ID', 'CustInfo' );
-			my $CustomerInfoLink = $ProductResourceLinkPool->appendChild( $doc->createElement('CustomerInfoLink') );
-			$CustomerInfoLink->setAttribute('Usage','Input');
-			$CustomerInfoLink->setAttribute('rRef','CustInfo');
-		} else { # 1.1, 1.2
-			$CustomerInfo = $project->appendChild( $doc->createElement('CustomerInfo') );
-		} # end if
-		$CustomerInfo->setAttribute('CustomerID',$self->Company->id() );
-		$CustomerInfo->setAttribute('Class', 'Parameter' );
-		$CustomerInfo->setAttribute('Status', 'Available' );
-		$CustomerInfo->setAttribute('DescriptiveName', $self->Company->name() );
-		$CustomerInfo->setAttribute('CustomerJobName', $self->reference() );
-
-
-		my $Contact = $CustomerInfo->appendChild( $doc->createElement('Contact') );
-		$Contact->setAttribute('ContactTypes', 'Customer' );
-		my $Person = $Contact->appendChild( $doc->createElement('Person') );
-		$Person->setAttribute('FamilyName', $self->Order()->last_name() );
-		$Person->setAttribute('FirstName', $self->Order()->first_name() );
-		$Person->setAttribute('NamePrefix', $self->Order()->salutation() );
-		if ( $self->Order()->email() ) {
-			my $ComChannel = $Person->appendChild( $doc->createElement('ComChannel') );
-			$ComChannel->setAttribute('ChannelType','Email');
-			$ComChannel->setAttribute('Locator',$self->Order()->email());
-		} # end if
-		if ( $self->Order()->phone() ) {
-			my $ComChannel = $Person->appendChild( $doc->createElement('ComChannel') );
-			$ComChannel->setAttribute('ChannelType','Phone');
-			$ComChannel->setAttribute('Locator',$self->Order()->phone());
-		} # end if
-		if ( $self->Order()->fax() ) {
-			my $ComChannel = $Person->appendChild( $doc->createElement('ComChannel') );
-			$ComChannel->setAttribute('ChannelType','Fax');
-			$ComChannel->setAttribute('Locator',$self->Order()->fax());
-		} # end if
+	# Add Company Information
+	#my $ResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
+	my $CustomerInfo;
+	if ( $version == 1.3 ) {
+		$CustomerInfo = $ProductResourcePool->appendChild( $doc->createElement('CustomerInfo') );
+		$CustomerInfo->setAttribute('ID', 'CustInfo' );
+		my $CustomerInfoLink = $ProductResourceLinkPool->appendChild( $doc->createElement('CustomerInfoLink') );
+		$CustomerInfoLink->setAttribute('Usage','Input');
+		$CustomerInfoLink->setAttribute('rRef','CustInfo');
+	} else {
+		$CustomerInfo = $project->appendChild( $doc->createElement('CustomerInfo') );
 	} # end if
+	$CustomerInfo->setAttribute('CustomerID',$self->Company->id() );
+	#$CustomerInfo->setAttribute('Class', 'Parameter' );
+	#$CustomerInfo->setAttribute('Status', 'Available' );
+	#$CustomerInfo->setAttribute('DescriptiveName', $self->Company->name() );
+	$CustomerInfo->setAttribute('CustomerJobName', $self->reference() );
 
+
+	my $Contact = $CustomerInfo->appendChild( $doc->createElement('Contact') );
+	$Contact->setAttribute('ContactTypes', 'Customer' );
+	my $Person = $Contact->appendChild( $doc->createElement('Person') );
+	$Person->setAttribute('FamilyName', $self->Order()->last_name() );
+	$Person->setAttribute('FirstName', $self->Order()->first_name() );
+	if ( $self->Order()->email() ) {
+		my $ComChannel = $Person->appendChild( $doc->createElement('ComChannel') );
+		$ComChannel->setAttribute('ChannelType','Email');
+		$ComChannel->setAttribute('Locator',$self->Order()->email());
+	} # end if
+	if ( $self->Order()->phone() ) {
+		my $ComChannel = $Person->appendChild( $doc->createElement('ComChannel') );
+		$ComChannel->setAttribute('ChannelType','Phone');
+		$ComChannel->setAttribute('Locator',$self->Order()->phone());
+	} # end if
+	if ( $self->Order()->fax() ) {
+		my $ComChannel = $Person->appendChild( $doc->createElement('ComChannel') );
+		$ComChannel->setAttribute('ChannelType','Fax');
+		$ComChannel->setAttribute('Locator',$self->Order()->fax());
+	} # end if
+} # end if
 
 	my $AuditPool = $project->appendChild( $doc->createElement('AuditPool') );
 	my $Created = $AuditPool->appendChild( $doc->createElement('Created') );

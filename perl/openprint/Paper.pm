@@ -369,8 +369,10 @@ sub to_string {
 sub name {
     my ( $self, $name ) = @_;
 
+	$name =~ s/^\s*(.*)\s*$/$1/;
+
     if ( defined $name ) {
-        @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE longname=?}, $name );
+        @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE lower(longname)=?}, lc $name );
         if ( ! $$self{'name_id'} ) {
             sql::insert( undef, undef, 'PaperNames', [ 'shortname', $name, 'longname', $name ] );
             @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE longname=?}, $name );
@@ -384,8 +386,10 @@ sub name {
 sub manufacturer {
     my ( $self, $manufacturer ) = @_;
 
+	$manufacturer =~ s/^\s*(.*)\s*$/$1/;
+
     if ( defined $manufacturer ) {
-        @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $manufacturer );
+        @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE lower(longname)=?}, lc $manufacturer );
         if ( ! $$self{'manufacturer_id'} ) {
             sql::insert( undef, undef, 'Manufacturers', 'shortname', $manufacturer, 'longname', $manufacturer );
             @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $manufacturer );
@@ -399,8 +403,10 @@ sub manufacturer {
 sub finish {
     my ( $self, $finish ) = @_;
 
+	$finish =~ s/^\s*(.*)\s*$/$1/;
+
     if ( defined $finish ) {
-        @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE longname=?}, $finish );
+        @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE lower(longname)=?}, lc $finish );
         if ( ! $$self{'finish_id'} ) {
             sql::insert( undef, undef, 'PaperFinishes', 'shortname', $finish, 'longname', $finish );
             @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE longname=?}, $finish );
@@ -414,8 +420,10 @@ sub finish {
 sub colour {
     my ( $self, $colour ) = @_;
 
+	$colour =~ s/^\s*(.*)\s*$/$1/;
+
     if ( defined $colour ) {
-        @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE longname=?}, $colour );
+        @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE (longname)=?}, lc $colour );
         if ( ! $$self{'colour_id'} ) {
             sql::insert( undef, undef, 'PaperColours', 'shortname', $colour, 'longname', $colour );
             @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE longname=?}, $colour );
@@ -429,8 +437,10 @@ sub colour {
 sub weight {
     my ( $self, $weight ) = @_;
 
+	$weight =~ s/^\s*(.*)\s*$/$1/;
+
     if ( defined $weight ) {
-        @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE longname=?}, $weight );
+        @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE (longname)=?}, lc $weight );
         if ( ! $$self{'weight_id'} ) {
             sql::insert( undef, undef, 'PaperWeights', 'shortname', $weight, 'longname', $weight );
             @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE longname=?}, $weight );
@@ -444,8 +454,10 @@ sub weight {
 sub quality {
     my ( $self, $quality ) = @_;
 
+	$quality =~ s/^\s*(.*)\s*$/$1/;
+
     if ( defined $quality ) {
-        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE longname=?}, $quality );
+        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
         if ( ! $$self{'quality_id'} ) {
             sql::insert( undef, undef, 'PaperQualities', 'shortname', $quality, 'longname', $quality );
             @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE longname=?}, $quality );

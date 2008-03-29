@@ -107,7 +107,11 @@
 		</p>
 <? endif ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
 		<p>
-			<label>JDF Friendly Name:</label>
+			<label>JDF ID:</label>
+			<input type="text" name="jdf_id" value="<? hecho ( $$variable{'Equipment'}->jdf_id(); ) ?>"  />
+		</p>
+		<p>
+			<label>JDF Name:</label>
 			<input type="text" name="jdf_name" value="<? hecho ( $$variable{'Equipment'}->jdf_name(); ) ?>"  />
 		</p>
 		</div>

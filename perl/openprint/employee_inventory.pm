@@ -11,6 +11,9 @@ require openprint::paper_price;
 require openprint::paper_priceset;
 require openprint::StockPurpose;
 require openprint::PaperInventory;
+require openprint::StockName;
+require openprint::StockFinish;
+require openprint::StockColour;
 
 sub skids {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -314,7 +317,7 @@ sub save_skid {
 		if ( $openprint::param{'txtWeight'} ) {
 			$weight = $openprint::param{'txtWeight'};
 		} elsif ( $openprint::param{'weight'} ) {
-			$weight = $openprint::param{'weight'} . 'lbs';
+			$weight = $openprint::param{'weight'} . 'lb';
 		} elsif ( $openprint::param{'calliper'} ) {
 			$weight = $openprint::param{'calliper'} . 'PT';
 		} # end if

@@ -127,6 +127,10 @@ sub save_service {
 	eval( 'openprint::Estimating::'.$service_type.'::save( $project_index, $service_index, \%openprint::param )');
 	$log->error($@) if $@;
 
+	if ( $openprint::param{'Additional'} eq 'Y' ) {
+		openprint::print_project::insert_service( $log, $dbh, $project_index, $service_type );
+	} # end if
+
 	$log->debug("***** END  OF  save_service ************");
 } # end sub save_service
 
@@ -534,8 +538,9 @@ sub summary {
 					$$specs{'ddmPress'.$qty_index} );
 
 			$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
+			$html .= sprintf(' with %d plate changes ', $$specs{'txtPlateChangeQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
 
-			$html .= 'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
+			$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
 			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
 				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
 					$html .= sprintf( ' of %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
@@ -576,6 +581,7 @@ sub summary {
 					join(',', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ) 
 					,
 					);
+			return $html;
 		} # end if
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['PlainCartons','BulkSkids'] ) ) {
 		return openprint::Estimating::Skids::summary($Project->id(), $service_id, $specs, $qty_index );

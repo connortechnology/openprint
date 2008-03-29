@@ -22,7 +22,8 @@ my %fields = (
 	'jmf_enabled'		=>	'jmf_enabled',
 	'instantgate_enabled'		=>	'instantgate_enabled',
 	'cost_center'		=>	'cost_center',
-	'jdf_name'			=>	'jdf_name',
+	'jdf_id'			=> 	'jdf_id',
+	'jdf_name'			=> 	'jdf_name',
 );
 
 sub init_cache {

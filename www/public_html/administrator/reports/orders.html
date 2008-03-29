@@ -64,7 +64,7 @@ ssi::fill_drop_down( $log, $dbh, q{SELECT id, name FROM Marketing_Categories ORD
 			<select name="ddmEmployee" size="1">
 				<option value="">All Employees</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ] , $openprint::param{'ddmEmployees'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ] , $openprint::param{'ddmEmployee'} );
 ) ?>
 			</select>
 		</p>

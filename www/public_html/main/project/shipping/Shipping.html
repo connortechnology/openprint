@@ -34,7 +34,13 @@ function validate_data(formName) {
 	<form name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend>Shipping Services</legend>
-			<!--#include virtual="/includes/main/proj/shipping_address.html"-->
+			<div class="leftColumn">
+						<!--#include virtual="/includes/main/proj/shipping_from_address.html"-->
+			</div>
+			<div class="rightColumn">
+						<!--#include virtual="/includes/main/proj/shipping_to_address.html"-->
+			</div>
+			<fieldset>
 			<p>
 				<label># of items to ship:</label>
 				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -49,6 +55,12 @@ function validate_data(formName) {
 			</p>
 			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
 			<!--#include virtual="/includes/main/proj/_service_price.html"-->
+			</fieldset>
+			<p><label>More Shipping?</label>
+				<input type="radio" id="AdditionalY" name="Additional" value="Y" /><label class="radio" for="AdditionalY">Yes</label>
+				<input type="radio" id="AdditionalN" name="Additional" value="N" checked="checked" /><label class="radio" for="AdditionalN">No</label>
+			</p>
+			
 		</fieldset>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
