@@ -133,6 +133,10 @@ sub save_service {
 		openprint::Estimating::UVCoating::save( $project_index, $service_index, \%openprint::param );
 	} # end if
 
+	if ( $openprint::param{'Additional'} eq 'Y' ) {
+		openprint::print_project::insert_service( $log, $dbh, $project_index, $service_type );
+	} # end if
+
 	$log->debug("***** END  OF  save_service ************");
 } # end sub save_service
 

@@ -322,31 +322,51 @@ sub save_project_information {
 		$Project->requested_date( sprintf('%.4d-%.2d-%.2d', @openprint::param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
 	} # end if
 
-	my %services = $Project->get_services();
+	my $services = $Project->services();
+	my %ShippingServices = map { $_->name(), $_->id() } openprint::ServiceType::find('category'=>'Shipping');
+
 	# If we are specifying the Shipping Type
 	if ( $openprint::param{'ShippingType'.$project_index} ) {
-		$sql{'ShippingType'}=$openprint::param{'ShippingType'.$project_index};	
-
-		my $ac = sql::start_transaction( $dbh );
-		my %ShippingServices = map { $_->name(), $_->id() } openprint::ServiceType::find('category'=>'Shipping');
-# If it's something we can auto-calc, then auto-calc
-		if ( $ShippingServices{$openprint::param{'ShippingType'.$project_index}} ) {
-			if ( ! $services{$openprint::param{'ShippingType'.$project_index}} ) {
-				my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $openprint::param{'ShippingType'.$project_index} );
-				push @{$services{$openprint::param{'ShippingType'.$project_index}}}, $new_service_index;
-				openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, $openprint::param{'ShippingType'.$project_index} );
-			} # end if
-		} # end if
-		foreach my $ShippingType ( keys %ShippingServices ) {
-			if ( $ShippingType ne $openprint::param{'ShippingType'.$project_index} ) {
-				if ( $services{$ShippingType} ) {
-					foreach ( @{$services{$ShippingType}} ) {
-						openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
-					} # end foreach
+		foreach my $ShippingType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+			if ( sets::isin( $ShippingType->name(), $openprint::param{'ShippingType'.$project_index} ) ) {
+				if ( ! $$services{$ShippingType->name()} ) {
+					my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $ShippingType->name() );
+					push @{$$services{$ShippingType->name()}}, $new_service_index;
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, $ShippingType->name() );
 				} # end if
+			} elsif ( $$services{$ShippingType->name()} ) {
+				foreach ( @{$$services{$ShippingType->name()}} ) {
+					openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+				} # end foreach
 			} # end if
-		} # end foreach
-		sql::end_transaction( $dbh, $ac );
+
+			next if $ShippingType->name() eq 'CustomerPickUp';
+
+			if ( $$services{$ShippingType->name()} ) {
+			my %shipping_fields = (
+					'ToCompanyName'		=>	'ToCompanyName',
+					'ToSalutation'		=>	'ToSalutation',
+					'ToFirstName'		=>	'ToFirstName',
+					'ToLastName'		=>	'ToLastName',
+					'ToAddress1'		=>	'ToAddress1',
+					'ToAddress2'		=>	'ToAddress2',
+					'ToCity'			=>	'ToCity',
+					'ToStateProvince'	=>	'ToStateProvince',
+					'ToCountry'			=>	'ToCountry',
+					'ToPostalCode'		=>	'ToPostalCode',
+					'ToPhone'			=>	'ToPhone',
+					'ToExtension'		=>	'ToExtension',
+					'ToFax'				=>	'ToFax',
+					'ToEmail'			=>	'ToEmail',
+					);
+				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
+
+					foreach my $spec ( keys %shipping_fields ) {
+						openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $shipping_fields{$spec}, $openprint::param{"$spec-$project_index-$service_id"} );
+					} # end foreach field
+				} # end foreach service_id
+			} # end if
+		} # end foreach ShippingType
 	} # end if
 
 	sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $order_id, $project_index], \%sql );
@@ -354,33 +374,6 @@ sub save_project_information {
 	$Project->reference( $openprint::param{"Reference$project_index"} );
 	$Project->save();
 
-	my %shipping_services = openprint::print_project::get_services_in_category( $log, $dbh, $Project->id(), 'Shipping' );
-
-	foreach my $service_id ( keys %shipping_services ) {
-		my $ServiceType = new openprint::ServiceType( $shipping_services{$service_id} );
-		next if $ServiceType->name() eq 'CustomerPickUp';
-
-		my %shipping_fields = (
-				'txtShippingCompanyName'	=>	'CompanyName',
-				'rdbShippingSalutation'		=>	'Salutation',
-				'txtShippingFirstName'		=>	'FirstName',
-				'txtShippingLastName'		=>	'LastName',
-				'txtShippingAddress1'		=>	'Address1',
-				'txtShippingAddress2'		=>	'Address2',
-				'txtShippingCity'			=>	'City',
-				'ddmShippingStateProvince'	=>	'StateProvince',
-				'ddmShippingCountry'		=>	'Country',
-				'txtShippingPostalCode'		=>	'PostalCode',
-				'txtShippingPhone'			=>	'Phone',
-				'txtShippingExtension'		=>	'Extension',
-				'txtShippingFax'			=>	'Fax',
-				'txtShippingEmail'			=>	'Email',
-				);
-
-		foreach my $spec ( keys %shipping_fields ) {
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $openprint::param{"$spec-$project_index-$service_id"} );
-		} # end foreach
-	} # end if
 } # end foreach save_project_information
 
 # displays the order_info page
@@ -572,6 +565,7 @@ sub store_order_info {
 	$Order->city( $r->param('txtCity') );
 	$Order->state( $openprint::param{'ddmStateProvince'} );
 	$Order->city( $openprint::param{'txtCity'} );
+	$Order->postalcode( $openprint::param{'txtPostalCode'} );
 	$Order->country( $openprint::param{'ddmCountry'} );
 	$Order->phone( $openprint::param{'txtPhone'} );
 	$Order->extension( $openprint::param{'txtExtension'} );
@@ -940,7 +934,6 @@ sub send_completion_notice {
 	get_projects( $log, $dbh, \%order, $order_id );
 
 	$order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'txtCity','txtStateProvince','txtCountry'} );
-	$order{'FCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'txtShippingCity','txtShippingStateProvince','txtShippingCountry'} );
 	$order{'OrderID'} = $order_id;
 
 	$order{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
@@ -982,7 +975,6 @@ sub send_invoice {
 	@order{$credit->fields()} = $credit->get($credit->fields());
 
 	$order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'txtCity','txtStateProvince','txtCountry'} );
-	$order{'FCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'txtShippingCity','txtShippingStateProvince','txtShippingCountry'} );
 	$order{'OrderID'} = $order_id;
 
 	$order{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
@@ -1250,7 +1242,6 @@ sub display_order {
 		get_misc( $log, $dbh, $variable, $order_id );
 		get_projects( $log, $dbh, $variable, $order_id );
 		$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'txtCity','txtStateProvince','txtCountry'} );
-		#$$variable{'FCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'txtShippingCity','txtShippingStateProvince','txtShippingCountry'} );
 		$$variable{'OrderID'} = $order_id;
 		if ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) {
 			$_ = q{SELECT id, to_char(dtmDate,'MM/DD/YYYY'), strMethod, strDescription, curAmount, currency_id FROM Payments WHERE strSessionID IS NULL AND Order_Id=? ORDER BY dtmDate};
