@@ -202,8 +202,8 @@ sub find {
 		# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
 		if ( ( keys %params ) == 1 ) {
 			#if ( ( exists $cache{$params{name}} ) and $cache{$params{name}} ) {
-			if ( %cache ) {
-				return ( new openprint::Material( $cache{$params{name}} ) );
+			if ( %cache and exists $cache{$params{'name'}} ) {
+				return ( new openprint::Material( $cache{$params{'name'}} ) );
 			} # end if
 		} # end if
 		$sql .= ' AND name=?';
