@@ -117,6 +117,7 @@ sub insert_service {
 	sql::end_transaction( $dbh, $ac );
 	my $Project = new openprint::Project( $project_index );
 	delete $$Project{'Services'};
+	delete $$Project{'service_types'};
 	delete $$Project{'signatures'};
 	return $service_index;
 } # end sub insert_service
@@ -796,6 +797,7 @@ sub delete_service {
 	my $Project = new openprint::Project( $project_index );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
+	delete $$Project{'service_types'};
 	sql::end_transaction( $dbh, $ac );
 	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
 } # end sub delete_service

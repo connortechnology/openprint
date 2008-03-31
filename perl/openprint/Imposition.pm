@@ -194,6 +194,9 @@ sub load {
 		$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
 		$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
 		$$self{'spread_size'} = $$specs{'txtSpreadSize'};
+		#$$self{'image_width'} = $$self{'spread_columns'} * $$self{'image_width'};
+		#$$self{'image_height'} = $$self{'spread_rows'} * $$self{'image_height'};
+
 	} else {
 		$$self{'spread_rows'} = sprintf('%.0f', $$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
 		$$self{'spread_columns'} = sprintf('%.0f',$$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};

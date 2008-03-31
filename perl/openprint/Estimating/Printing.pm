@@ -287,7 +287,15 @@ sub setup_project {
 	%{$project{'CuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasCutting'} )} if $project{'HasCutting'};
 	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
 	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
-	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )} if $$services{'SaddleStitching'};
+
+	if ( $$services{'SaddleStitching'} ) {
+	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )};
+	$project{'HasStitching'} = $$services{'SaddleStitching'}[0];
+	} elsif ( $$services{'LoopStitching'} ) {
+	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] )};
+	$project{'HasStitching'} = $$services{'LoopStitching'}[0];
+	} # end if
+
 	%{$project{'SpinePasteSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SpinePaste'}[0] )} if $$services{'SpinePaste'};
 	%{$project{'PerfectBoundSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] )} if $$services{'PerfectBound'};
 
@@ -451,7 +459,7 @@ sub calc_from_imposition {
 			next;
 		} # end if
 		my $Imposition = shift @{$$source_specs{'Additional Impositions'.$qty_index}};
-$Imposition->display();
+#$Imposition->display();
 		$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
 		$$specs{'ddmPress'.$qty_index} = $Imposition->Press()->strid();
 		$$specs{'PageQuantity'.$qty_index} = $Imposition->pages();
@@ -462,7 +470,7 @@ $Imposition->display();
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$$specs{'PreviousForms'.$qty_index} += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
 		} # end foreach $index
-$openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} );
+#$openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} );
 
 		my $pms_prices = get_special_colours_price( $Imposition->Press(), \@filtered_colours, \%mixed_colours, \%washed_colours, \%special_colours, $qty_index );
 
@@ -1506,6 +1514,7 @@ sub breakdown {
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
 	$breakdown .= '<b>Setups</b><br/>';
 	$breakdown .= $$price{'Setup Breakdown'};
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f<br/>', $$price{'Roll2SheetCharge'} ) if $$price{'Roll2SheetCharge'};
 	my $ImpositionCharge = $$price{'Imposition Price'};
 	if ( $$ImpositionCharge{units} eq 'Per Page' ) {
 		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d pages = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->pages() );
@@ -1608,13 +1617,13 @@ sub get_project_price {
 			$SpreadLayout = $$specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
 		} # end if
 	} # end if
-	if ( 0 ) {
+	if ( 1 ) {
 		foreach my $imp ( @impositions ) {
 			$imp->display();
 		} # end foreach
 	} # end if
 	if ( $SpreadLayout > 0 ) {
-		$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
+		$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
 		@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
 $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
 	} # end if
@@ -1626,10 +1635,10 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 
 	my $pms_prices = get_special_colours_price( $Press, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
-	if ( 0 ) {
+	if ( 1 ) {
 $openprint::log->debug("QTY: $qty_index");
 		foreach my $imp ( @impositions ) {
-			#$imp->display();
+			$imp->display();
 		} # end foreach
 	} # end if
 	$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions) if $debug;
@@ -1674,7 +1683,7 @@ $openprint::log->debug("QTY: $qty_index");
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$$specs{'PreviousForms'.$qty_index} += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
 		} # end foreach $index
-$openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} );
+#$openprint::log->debug("Previous Forms: " . $$specs{'PreviousForms'.$qty_index} );
 
 #my $time = gettimeofday();
 		$imp = $imp->copy();
@@ -1986,7 +1995,7 @@ sub calc_price {
 			$Imposition->StitchingImposition( $$specs{'StitchingImposition'.$qty_index} );
 		} # end if
 #my $starttime = gettimeofday();
-		my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
+		my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
 		if ( $$results{'Status'} eq 'uncalculated' ) {
 			$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
 			$price{'Comparison Cost'} += 10000000; # Can't stich this on
@@ -2240,6 +2249,11 @@ sub calc_price {
 	} # end if
 	my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
 	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb Cost', '100lb Price'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb Cost', '100lb Price'};
+
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+	$price{'Roll2SheetCharge'} = openprint::service::get_price( 'Roll2Sheet', undef, $Press );
+	$price{'Comparison Cost'} += $price{'Roll2SheetCharge'};
+	} # end if
 
 	$price{'Comparison Cost'} += $price{'Paper Price'};
 
@@ -2957,7 +2971,7 @@ sub compare_signatures_runstyle {
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
 		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity' ) {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
-				$openprint::log->debug("Not the same $key $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
+				#$openprint::log->debug("Not the same $key $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
 				return 0;
 
 			} # end if

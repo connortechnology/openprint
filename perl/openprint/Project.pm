@@ -795,6 +795,15 @@ sub get_services {
 	return %{$$self{'Services'}};
 } # end sub get_service_hash
 
+sub ServiceType {
+	my ( $self, $s_id ) = @_;
+	if ( ! exists $$self{'service_types'} ) {
+		my %results;
+		%{$$self{'service_types'}} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+	} # end if
+	return new openprint::ServiceType( $$self{'service_types'}{$s_id} );
+} # end sub ServiceType
+
 sub services {
 	my $self = shift;
 	if ( ! exists $$self{'Services'} ) {
