@@ -1506,6 +1506,7 @@ sub breakdown {
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
 	$breakdown .= '<b>Setups</b><br/>';
 	$breakdown .= $$price{'Setup Breakdown'};
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f<br/>', $$price{'Roll2SheetCharge'} ) if $$price{'Roll2SheetCharge'};
 	my $ImpositionCharge = $$price{'Imposition Price'};
 	if ( $$ImpositionCharge{units} eq 'Per Page' ) {
 		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d pages = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->pages() );
@@ -2240,6 +2241,11 @@ sub calc_price {
 	} # end if
 	my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
 	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb Cost', '100lb Price'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb Cost', '100lb Price'};
+
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+	$price{'Roll2SheetCharge'} = openprint::service::get_price( 'Roll2Sheet', undef, $Press );
+	$price{'Comparison Cost'} += $price{'Roll2SheetCharge'};
+	} # end if
 
 	$price{'Comparison Cost'} += $price{'Paper Price'};
 

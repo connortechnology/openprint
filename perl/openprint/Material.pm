@@ -43,6 +43,9 @@ sub load {
 
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Materials WHERE id=?', {}, $$self{'id'} );
+		#if ( ! exists $cache{$$data{name}} ) {
+			#$cache{$$data{name}} = $$data{id};
+		#} # end if
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 } # end sub load_values
@@ -198,7 +201,8 @@ sub find {
 	if ( exists $params{'name'} ) {
 		# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
 		if ( ( keys %params ) == 1 ) {
-			if ( $cache{$params{name}} ) {
+			#if ( ( exists $cache{$params{name}} ) and $cache{$params{name}} ) {
+			if ( %cache ) {
 				return ( new openprint::Material( $cache{$params{name}} ) );
 			} # end if
 		} # end if

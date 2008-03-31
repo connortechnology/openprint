@@ -10,6 +10,7 @@ my $debug = 1;
 
 my %variables = (
 	'Quantity' => ['save'],
+	'chkOverrideEquipment1'	=> ['save'], 'chkOverrideEquipment2'	=> ['save'], 'chkOverrideEquipment3'	=> ['save'],
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
@@ -77,7 +78,14 @@ sub calc {
 		my %BestPrice;
 		$$specs{'hdnBreakdown'.$qty_index} = '';
 
-		foreach my $Equipment ( @Equipment ) {
+		my @my_equipment;
+		if ( $$specs{'chkOverrideEquipment'.$qty_index} eq 'Y' ) {
+			@my_equipment = ( new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} ) );
+		} else {
+			@my_equipment = @Equipment;
+		} # end if
+
+		foreach my $Equipment ( @my_equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
 			my $max_tip_ins = $Equipment->specification('Maximum Tip-ins');
 			if ( $max_tip_ins and ( $max_tip_ins < $$specs{'Quantity'} ) ) {

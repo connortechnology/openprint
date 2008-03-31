@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -511,7 +511,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				while ( @folds ) {
 					my $I = shift @folds;
 					last if ! $I->spreads();
-					$openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' on ' . $Equipment->name()) if $debug;
+					$openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' ' . join('x',$I->image_width(), $I->image_height()).' on ' . $Equipment->name()) if $debug;
 
 # See if it fits
 					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height() * $imposition ) : ( $I->image_width() * $imposition, $I->image_height() ) );
@@ -601,6 +601,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		
 				$openprint::log->debug("Pricing fold $fold_type on " . $Equipment->name()) if $debug;
 
+				my $width = $Imposition->image_width();
 				my $width_folds;
 				my $height_folds;
 				if ( $$sig_specs{'txtFinalWidth'} ) {
@@ -666,6 +667,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				if ( ! %servicePrice ) {
 					%servicePrice = openprint::service::get_price_object( 'Folding', $imposition, $Equipment );
 				} # end if
+				my %AnglePrice = openprint::service::get_price_object( 'FoldingAngle', $height_folds, $Equipment );
 
 				if ( lc $servicePrice{'units'} eq 'per hour' ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime * scalar @{$folds{$fold_type}};
@@ -674,9 +676,16 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( scalar @{$folds{$fold_type}}*($$specs{"txtQuantity$qty_index"}/$imposition) / 1000 );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Run: $%.2f%s * %d = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), @servicePrice{'Price','units'}, @{$folds{$fold_type}}*$$specs{"txtQuantity$qty_index"}, $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per m'] ) ) {
-					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $$sig_specs{'txtWidth'} ) * $$specs{"txtQuantity$qty_index"} / 1000;
+					$servicePrice{'Total'} = $servicePrice{'Price'} * $width * $$specs{"txtQuantity$qty_index"} / 1000;
+					if ( $height_folds ) {
+						if ( ! %AnglePrice ) {
+							%AnglePrice = %servicePrice;
+						} # end if
+						$AnglePrice{'Total'} = $AnglePrice{'Price'} * $width * $$specs{"txtQuantity$qty_index"} / 1000;
+					} # end if
 					
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$d %2$s: Run: ($%3$.4f%4$s * %6$s&quot;=$%5$.2f) + (%7$.4f%8$s * %6$s&quot;=%9$.2f) = $%10$.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), @servicePrice{'Price','units','Total'}, $width, @AnglePrice{'Price','units','Total'}, $servicePrice{'Total'} );
+					$servicePrice{'Total'} += $AnglePrice{'Total'};
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per hour'] ) ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $$sig_specs{'txtWidth'} ) * $runTime;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d %s: Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; = $%.2f<br/>', scalar @{$folds{$fold_type}}, $Fold->name(), @servicePrice{'Price','units'}, $width_folds, $$sig_specs{'txtWidth'}, $height_folds, $$sig_specs{'txtHeight'}, $servicePrice{'Total'} );
@@ -719,7 +728,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 	my $index = 1;
 	foreach my $fold_type ( keys %$bestFolds ) {
 
-my $Fold = $$bestFolds{$fold_type}[0];
+		my $Fold = $$bestFolds{$fold_type}[0];
 
 $openprint::log->debug("Foldtype: $fold_type $$bestFolds{$fold_type} $$Fold{name} $$Fold{folds} $$Fold{angles}" );
 		$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $fold_type;
