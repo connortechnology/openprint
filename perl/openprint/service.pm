@@ -581,7 +581,6 @@ sub summary {
 					join(',', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ) 
 					,
 					);
-			return $html;
 		} # end if
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['PlainCartons','BulkSkids'] ) ) {
 		return openprint::Estimating::Skids::summary($Project->id(), $service_id, $specs, $qty_index );
