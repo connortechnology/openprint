@@ -30,7 +30,7 @@ sub calc_setup {
 
 sub calc_dutch {
 	my ( $setup, $object_width, $object_height, $space_width, $space_height, $specs ) = @_;
-$openprint::log->debug("Trying dutch:") if $debug;
+#$openprint::log->debug("Trying dutch:") if $debug;
 	my @dutch_imps;
 	my $previous_dutch_imp = 0;
 	# So now we have a non-dutch imp, now
@@ -93,7 +93,7 @@ sub fix_height {
 		if ( $$specs{'Cut Off'} ) {
 # Take the smallest available cut off
 			foreach my $cut_off ( sort split(',', $$specs{'Cut Off'} ) ) {
-				$openprint::log->debug("dutch Cut Off $cut_off " . $imp->used_height() );
+				#$openprint::log->debug("dutch Cut Off $cut_off " . $imp->used_height() );
 				if ( $cut_off >= $imp->used_height() ) {
 					$imp->paper()->height( $cut_off );
 					return;
@@ -164,7 +164,7 @@ sub check_setup {
 # This uses two rollers, on non-offset paper so need more gutter space, which works out to be 0.25 
 #$setup->display();
 				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} > $setup->stock_width() ) {
-			$openprint::log->debug(' CHECK 3 Using Paper ' . $setup->paper()->width() . ' x' . $setup->paper()->height() .' ' . $setup->image_width() . ' x ' . $setup->image_height() . ' Imposition: ' . $setup->imposition(). ":".$setup->columns() . 'x' . $setup->rows(). '+'.$setup->dutch_columns() . 'x'.$setup->dutch_rows() . ' ' . $setup->layout_width() . 'x' . $setup->layout_height() ) if $debug;
+			#$openprint::log->debug(' CHECK 3 Using Paper ' . $setup->paper()->width() . ' x' . $setup->paper()->height() .' ' . $setup->image_width() . ' x ' . $setup->image_height() . ' Imposition: ' . $setup->imposition(). ":".$setup->columns() . 'x' . $setup->rows(). '+'.$setup->dutch_columns() . 'x'.$setup->dutch_rows() . ' ' . $setup->layout_width() . 'x' . $setup->layout_height() ) if $debug;
 					$setup->rows(0);
 					$setup->columns(0);
 					return 0;
@@ -737,6 +737,7 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 	foreach my $imp ( @$impositions ) {
 		my $impo = $imp->imposition();
 		#$impo /= 2 if sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble' ] );
+		$$imp{'start_imposition'} = $impo;
 
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;

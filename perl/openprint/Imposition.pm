@@ -1,7 +1,9 @@
 package openprint::Imposition;
 use vars qw( $AUTOLOAD );
 
+
 my @fields = (
+	'start_imposition',
 	'imposition','rows','columns',
 	'dutch_rows','dutch_columns', 'dutch_orientation',
 	'image_width','image_height', # dimensions + bleed
@@ -82,8 +84,8 @@ sub AUTOLOAD {
 
 sub display {
 	my $self = shift;
-	$openprint::log->debug(sprintf('Imp: %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %fx%f %s I: %fx%f L:%fx%f %s',
-	@$self{'columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'}) );
+	$openprint::log->debug(sprintf('Imp: %dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s',
+	@$self{'start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'}) );
 } # end sub display
 
 sub set {

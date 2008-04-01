@@ -198,32 +198,32 @@ sub Fold {
 	foreach my $Fold ( @{$$self{'Folds'}} ) {
 		#$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
 		next if $$params{pages} and ($$Fold{pages} != $$params{pages} );
-		$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
+		#$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
 		next if $$params{type} and ( $$Fold{type} ne $$params{type} );
 
-		$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
+		#$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
 		next if $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching};
-		$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
+		#$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
 		next if $$params{perfectbind} and defined $$Fold{perfectbind} and $$params{perfectbind} != $$Fold{perfectbind};
-		$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
+		#$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
 		next if $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste};
 
-		$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
+		#$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
 		next if $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} );
-		$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;
+		#$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;
 		next if $$Fold{page_rows} and $$params{page_rows} and ($$Fold{page_rows} != $$params{page_rows} );
 
-		$openprint::log->debug("Wanted Page_width: $$params{page_width}, have min:$$Fold{min_width} max:$$Fold{max_width}") if $debug;
+		#$openprint::log->debug("Wanted Page_width: $$params{page_width}, have min:$$Fold{min_width} max:$$Fold{max_width}") if $debug;
 		next if ( $params{page_width} and (
 				( $$Fold{min_width} and $$Fold{min_width} > $$params{page_width} ) or
 				( $$Fold{max_width} and $$Fold{max_width} < $$params{page_width} )
 				)) ;
-		$openprint::log->debug("Wanted Page_height: $$params{page_height}, have min:$$Fold{min_height} max:$$Fold{max_height}") if $debug;
+		#$openprint::log->debug("Wanted Page_height: $$params{page_height}, have min:$$Fold{min_height} max:$$Fold{max_height}") if $debug;
 		next if ( $$params{page_height} and (
 				( $$Fold{min_height} and $$Fold{min_height} > $$params{page_height} ) or
 				( $$Fold{max_height} and $$Fold{max_height} < $$params{page_height} )
 				) );
-		$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
+		#$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
 		next if ( $$params{calliper} and (
 				( $$Fold{min_calliper} and $$Fold{min_calliper} > $$params{calliper} ) or
 				( $$Fold{max_calliper} and $$Fold{max_calliper} < $$params{calliper} )
@@ -231,21 +231,21 @@ sub Fold {
 		#$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{'max_imposition}") if $debug;
 		next if $$Fold{min_imposition} and $$params{imposition} and ($$Fold{min_imposition} > $$params{imposition});
 		next if $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition});
-		$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if $debug;
+		#$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if $debug;
 		next if $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} );
 		if ( $$params{gsm} ) {
-			$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
+			#$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
 			my $RunSpeed = $Fold->Specification( $$params{gsm} );
 			if ( ! $RunSpeed ) {
-$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
+#$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
 				next;
 			} else {
-$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
+#$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
 			} # end if
 		} # end if
-$openprint::log->debug("Got fold" . $Fold->description()) if $debug;
+#$openprint::log->debug("Got fold" . $Fold->description()) if $debug;
 		return $Fold;
-$openprint::log->debug("NEVER Got fold" . $Fold->description()) if $debug;
+#$openprint::log->debug("NEVER Got fold" . $Fold->description()) if $debug;
 	} # end foreach Fold
 	return;
 } # end sub Fold
