@@ -99,7 +99,7 @@ sub calc {
 			} # end if
 
 			my %ServicePrice = openprint::service::get_price_object( 'ThreeKnifeTrim'.$$specs{'Sides'}.'Sides', $finished_calliper, $Equipment ); 
-			if ( ! %ServicePrice} ) {
+			if ( ! %ServicePrice ) {
 				%ServicePrice = openprint::service::get_price_object( 'ThreeKnifeTrim', $finished_calliper, $Equipment ); 
 			} # end if
 
