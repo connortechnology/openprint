@@ -14,6 +14,7 @@ require openprint::Estimating::Drilling;
 require openprint::Estimating::Scanning;
 require openprint::Estimating::Prepress;
 require openprint::Estimating::Stitching;
+require openprint::Estimating::ThreeKnifeTrim;
 require openprint::Estimating::Tipping;
 require openprint::Estimating::Blowing;
 require openprint::Estimating::Packaging;
@@ -296,6 +297,11 @@ sub auto_calculate {
 	if ( openprint::Estimating::Stitching::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! ( $services{'SaddleStitching'} or $services{'LoopStitching'} ) ) {
 			push @{$services{'SaddleStitching'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'SaddleStitching' );
+		} # end if
+	} # end if
+	if ( openprint::Estimating::ThreeKnifeTrim::neccessary( $log, $dbh, $project_index ) ) {
+		if ( ! $services{'ThreeKnifeTrim'} ) {
+			push @{$services{'ThreeKnifeTrim'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'ThreeKnifeTrim' );
 		} # end if
 	} # end if
 	if ( openprint::Estimating::Tipping::neccessary( $Project ) ) {

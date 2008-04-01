@@ -32,6 +32,27 @@ sub no_outputs {
     return @v;
 } # end sub no_outputs
 
+# A function that is smart enough to return true if the project needs folding, and false if it doesn't.
+sub neccessary {
+	my ( $log, $dbh, $Project ) = @_;
+
+	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+
+	my $services = $Project->services();
+
+	if ( $$services{'NoBindery'} ) {
+		$log->debug(" ** Project is marked as No bindery, ThreeKnifeTrim not needed ! ** ");
+		return 0;
+	} # end if
+
+	my $printing_service_index = $$services{''}[0] if $$services{''};
+	my $specs = openprint::service::get_specs_ref( $Project->id(), $printing_service_index );
+	if ( sets::isin( $$specs{'rdbTemplateType'},[ 'SpinePasting','Unbound','NoBindery'] ) ) {
+		return 1;
+	} # end if
+
+	return 0;
+} # end sub neccessary
 
 sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
@@ -69,7 +90,7 @@ sub calc {
 
 			my $total = 0;
 
-			my %MakeReady = openprint::service::get_price_object('ThreeKnifeTrimMakeReady', undef, $Equipment );
+			my %MakeReady = openprint::service::get_price_object('ThreeKnifeTrimMakeReady', $$specs{'Sides'}, $Equipment );
 			if ( ! %MakeReady ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
@@ -77,7 +98,11 @@ sub calc {
 				$total += $MakeReady{'Price'};
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object( 'ThreeKnifeTrim', $finished_calliper, $Equipment ); 
+			my %ServicePrice = openprint::service::get_price_object( 'ThreeKnifeTrim'.$$specs{'Sides'}.'Sides', $finished_calliper, $Equipment ); 
+			if ( ! %ServicePrice} ) {
+				%ServicePrice = openprint::service::get_price_object( 'ThreeKnifeTrim', $finished_calliper, $Equipment ); 
+			} # end if
+
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {

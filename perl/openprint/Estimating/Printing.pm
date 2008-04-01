@@ -178,6 +178,7 @@ my %variables = (
 		'txtPressSheetComboItems'=>['save'],
 		'txtSpreadSize' => ['save'],
 		'Group' => ['save'], 'GroupPageQuantity' => ['save'],
+		'PaperMessage1'=>['output'], 'PaperMessage2'=>['output'], 'PaperMessage3'=>['output'],
 		);
 
 sub variables {
@@ -1500,6 +1501,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 				$$specs{'alert'} .= "There are more pages specified than are required.  Please correct this situation.";
 			} # end if
 		} # end if
+		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
 #$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	} # end foreach quantity
 
