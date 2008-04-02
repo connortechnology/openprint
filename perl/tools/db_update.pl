@@ -645,29 +645,32 @@ if ( $version < 1917 ) {
 if ( $version < 1918 ) {
 	print "Updating to version 1918\n";
 	my $ac = sql::start_transaction( $dbh );
-foreach my $E ( openprint::Equipment::find() ) {
-	foreach my $Fold ( $E->Folds() ) {
-		if ( $Fold->type() =~ /(\d*)PageFold/ ) {
-			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFold"], 'name', "$1PageFold" );
-		} # end if
+	foreach my $E ( openprint::Equipment::find() ) {
+		foreach my $Fold ( $E->Folds() ) {
+			if ( $Fold->type() =~ /(\d*)PageFold/ ) {
+				sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFold"], 'name', "$1PageFold" );
+			} # end if
+		} # end foreach
 	} # end foreach
-} # end foreach
 	sql::insert( undef, undef, 'database_info', 'version', 1918, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1918;
 } # end if
 
-$dbh->disconnect();
-1;
-__END__
-
-$dbh->disconnect();
-1;
-__END__
-
-$dbh->disconnect();
-1;
-__END__
+if ( $version < 1919 ) {
+	print "Updating to version 1919\n";
+	my $ac = sql::start_transaction( $dbh );
+		$_ = misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql});
+		foreach my $st ( split(';', $_ ) ) {
+			$dbh->do($st);
+		}
+sql::insert( undef, undef, 'QuoteLevels', 'name', 'Simple' );
+	$dbh->do(q`alter table Users add quote_level integer`);
+	$dbh->do(q`alter table Users add foreign key (quote_level) REFERENCES QuoteLevels (id)`);
+	sql::insert( undef, undef, 'database_info', 'version', 1919, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1919;
+} # end if
 
 $dbh->disconnect();
 1;

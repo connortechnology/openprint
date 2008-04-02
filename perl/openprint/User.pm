@@ -41,6 +41,7 @@ my %fields = (
 	'web_active'		=>	'ysnaccountactivation',
 	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
+	'quote_level'		=>	'quote_level',
 ); # end %fields
 
 my %transforms = (
