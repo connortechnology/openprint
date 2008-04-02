@@ -424,7 +424,7 @@
 		foreach my $id ( sort keys %presses ) {
 			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $id, 1900, 1, 0, 'NotApproved' );
 			$html .= '<div class="PressColumn">';
-			$html .= openprint::press_schedule::get_ul( undef, undef, $id, {'name'=>'NotApproved'}, {'Status'=>['In Prepress','Proofs Out'] } );
+			$html .= openprint::press_schedule::get_ul( undef, undef, $id, {'name'=>'NotApproved'}, {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval'] } );
 			$html .= '</div>';
 		} # end foreach press
 		$html .= '</div>';

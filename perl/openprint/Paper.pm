@@ -35,7 +35,7 @@ sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
-	my $sql = 'SELECT *, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id) AS weight FROM Papers WHERE 1>0';
+	my $sql = 'SELECT *, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id LIMIT 1) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id LIMIT 1) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id LIMIT 1) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id LIMIT 1) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id LIMIT 1) AS weight FROM Papers WHERE 1>0';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -292,6 +292,10 @@ sub save {
        # Add record to audit log - action "Update Paper".
        openprint::logs::insertLogRecord('64', "Paper ID: " . $$self{'id'},);
     } # end if
+    sql::execute( undef, undef, q{DELETE FROM PaperNames WHERE id NOT IN (SELECT DISTINCT name_id FROM Papers)} );
+    sql::execute( undef, undef, q{DELETE FROM PaperFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM Papers)} );
+    sql::execute( undef, undef, q{DELETE FROM PaperColours WHERE id NOT IN (SELECT DISTINCT colour_id FROM Papers)} );
+    sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE id NOT IN (SELECT DISTINCT weight_id FROM Papers)} );
 
     my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
 	my @recommendations = $self->recommendations();
@@ -408,7 +412,7 @@ sub colour {
 
     if ( defined $colour ) {
 		$colour =~ s/^\s*(.*)\s*$/$1/;
-        @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE (longname)=?}, lc $colour );
+        @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE lower(longname)=?}, lc $colour );
         if ( ! $$self{'colour_id'} ) {
             sql::insert( undef, undef, 'PaperColours', 'shortname', $colour, 'longname', $colour );
             @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE longname=?}, $colour );
@@ -425,7 +429,7 @@ sub weight {
 
     if ( defined $weight ) {
 		$weight =~ s/^\s*(.*)\s*$/$1/;
-        @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE (longname)=?}, lc $weight );
+        @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE lower(longname)=?}, lc $weight );
         if ( ! $$self{'weight_id'} ) {
             sql::insert( undef, undef, 'PaperWeights', 'shortname', $weight, 'longname', $weight );
             @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE longname=?}, $weight );
