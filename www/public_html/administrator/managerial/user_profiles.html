@@ -114,7 +114,7 @@ Please select a company or user to obtain login information.<br/>
 		</div>
 		<div class="rightColumn">
 			<p> 
-				<label>Add to our Mailing List</label>
+				<label>Add to our Mailing List:</label>
 				<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
 				<label class="radio" for="MailingListY">Yes</label>
 				<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
@@ -143,20 +143,29 @@ Please select a company or user to obtain login information.<br/>
 				<label class="radio" for="ftp_active0">No</label>
 			</p>
 			<p> 
-				<label>Custom Greeting</label>
+				<label>Custom Greeting:</label>
 				<input type="text" name="greeting" value="<? hecho ( $$variable{'User'}->greeting() ) ?>" />
 			</p>
 			<p> 
-				<label>User Type</label>
+				<label>User Type:</label>
 				<select name="type">
 					<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{'User'}->type() ); ) ?>
 				</select>
 			</p>
+<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY lower(name)' );
+<? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
+			<p> 
+				<label>Quote Level:</label>
+				<select name="quote_level">
+					<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ); ) ?>
+				</select>
+			</p>
+<? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 		</div>
 		<br class="spacer"/>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<p> 
-			<label>Commission Rate</label>
+			<label>Commission Rate:</label>
 			<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" />
 		</p>
 		<p>
