@@ -17,6 +17,11 @@ require openprint::Skid;
 require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
+require openprint::StockName;
+require openprint::StockFinish;
+require openprint::StockColour;
+require openprint::StockWeight;
+
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 my $debug = 1;
@@ -369,7 +374,8 @@ sub name {
             @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE longname=?}, $name );
         } # end if
     } elsif ( $$self{'name_id'} and ! $$self{'name'} ) {
-        @$self{'name'} = sql::execute( undef, undef, q{SELECT longname FROM PaperNames WHERE id=?}, $$self{'name_id'} );
+		my $Name = new openprint::StockName( $$self{'name_id'} );
+		$$self{'name'} = $Name->longname();
     } # end if
     return $$self{'name'};
 } # end sub name
@@ -385,7 +391,8 @@ sub manufacturer {
             @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $manufacturer );
         } # end if
     } elsif ( $$self{'manufacturer_id'} and ! $$self{'manufacturer'} ) {
-        @$self{'manufacturer'} = sql::execute( undef, undef, q{SELECT longname FROM Manufacturers WHERE id=?}, $$self{'manufacturer_id'} );
+		my $Manufacturer = new openprint::Manufacturer( $$self{'manufacturer_id'} );
+		$$self{'manufacturer'} = $Manufacturer->longname();
     } # end if
     return $$self{'manufacturer'};
 } # end sub manufacturer
@@ -401,7 +408,8 @@ sub finish {
             @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE longname=?}, $finish );
         } # end if
     } elsif ( $$self{'finish_id'} and ! $$self{'finish'} ) {
-        @$self{'finish'} = sql::execute( undef, undef, q{SELECT longname FROM PaperFinishes WHERE id=?}, $$self{'finish_id'} );
+		my $Finish = new openprint::StockFinish( $$self{'finish_id'} );
+		$$self{'finish'} = $Finish->longname();
     } # end if
     return $$self{'finish'};
 } # end sub finish
@@ -418,7 +426,8 @@ sub colour {
             @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE longname=?}, $colour );
         } # end if
     } elsif ( $$self{'colour_id'} and ! $$self{'colour'} ) {
-        @$self{'colour'} = sql::execute( undef, undef, q{SELECT longname FROM PaperColours WHERE id=?}, $$self{'colour_id'} );
+		my $Colour = new openprint::StockColour( $$self{'colour_id'} );
+		$$self{'colour'} = $Colour->longname();
     } # end if
     return $$self{'colour'};
 } # end sub colour
@@ -435,7 +444,8 @@ sub weight {
             @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE longname=?}, $weight );
         } # end if
     } elsif ( $$self{'weight_id'} and ! $$self{'weight'} ) {
-        @$self{'weight'} = sql::execute( undef, undef, q{SELECT longname FROM PaperWeights WHERE id=?}, $$self{'weight_id'} );
+		my $Weight = new openprint::StockWeight( $$self{'weight_id'} );
+		$$self{'weight'} = $Weight->longname();
     } # end if
     return $$self{'weight'};
 } # end sub weight
