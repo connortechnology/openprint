@@ -15,7 +15,6 @@ require sql;
 	'reply_by'		=> 'reply_by',
 	'docket'		=> 'docket',
 	'company_id'	=> 'company_id',
-	'printed_on'	=> 'printed_on',
 	'problem'		=> 'problem',
 	'cause'			=> 'cause',
 	'action'		=> 'action',	
@@ -32,12 +31,14 @@ require sql;
 	'part4_user_id'		=> 'part4_user_id',
 	'part4_signed_on'	=> 'part4_signed_on',
 	'reprint'			=> 'reprint',
+	'reprint_approval'	=> 'reprint_approval',
 	'artwork'			=> 'artwork',
 	'reprint_on'		=> 'reprint_on',
 	'approved_by_id'	=> 'approved_by_id',
 	'created_on'		=> 'created_on',
 	'approved_on'		=> 'approved_on',
 	'updated_on'		=> 'updated_on',
+	'deleted'			=> 'deleted',
 );
 
 %transforms = (
@@ -54,6 +55,7 @@ require sql;
 	'approved_by_id'	=> undef,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
+	'deleted'		=> 0,
 );
 
 sub find {
@@ -96,6 +98,13 @@ sub find {
 		$sql .= ' AND docket=?';
 		push @values, $params{'docket'};
 	} # end if
+	if ( $params{'deleted'} ) {
+		$sql .= ' AND deleted=?';
+		push @values, $params{'deleted'};
+	} else {
+		$sql .= ' AND deleted=?';
+		push @values, 0;
+	} # end if
 
 	if ( $params{'order'} ) {
 		$sql .= " ORDER BY $params{'order'}";
@@ -123,8 +132,13 @@ sub load {
 
 sub delete {
 	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM CAR WHERE id=?}, $$self{'id'} );
+	return sql::update( undef, undef, 'CAR', ['id=?', $$self{'id'} ], 'deleted', 1 );
 } # end sub delete
+
+sub destroy {
+	my $self = shift;
+    return sql::execute( undef, undef, q{DELETE FROM CAR WHERE id=?}, $$self{'id'} );
+} # end sub destroy
 
 sub save {
 	my ( $self, $param ) = @_;

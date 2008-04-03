@@ -1,19 +1,15 @@
+<div class="error"><?error?></div>
 <h3>Part 3 (To be completed by recipient)</h3>
 <table class="View">
-	<tr><td colspan="10">CORRECTIVE/PREVENTATIVE ACTION</td></tr>
+	<tr><td colspan="10">CORRECTIVE ACTION</td></tr>
+<? if ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
 	<tr>
-		<td colspan="2" rowspan="2">Re-print Job Request</td>
-		<td colspan="1">Reprint for:</td>
-		<td colspan="2"><? hecho ( $$variable{'CAR'}->reprint() ) ?></td>
-		<td colspan="2">Expected Reprint On</td>
-		<td colspan="3"><? hecho ( $$variable{'CAR'}->reprint_on() ) ?></td>
-	</tr>
-	<tr>
-		<td colspan="1">Art Work:</td>
-		<td colspan="2"><? hecho ( $$variable{'CAR'}->artwork() ) ?></td>
+		<td colspan="2">Reprint Approval:</td>
+		<td colspan="3"><? echo ( $$variable{'CAR'}->reprint_approval() ) ?></td>
 		<td colspan="2">Approved by:</td>
 		<td colspan="3"><? hecho ( new openprint::User( $$variable{'CAR'}->approved_by_id())->name() ) ?></td>
 	</tr>
+<? endif ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
 	<tr><td colspan="10"><? hecho ( $$variable{'CAR'}->action() ) ?></td></tr>
 	<tr>
 		<td colspan="1">Recipient:</td>
@@ -28,7 +24,7 @@
 	</p>
 <? endif ( ($$variable{'CAR'}->part2_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <? if ( ( ! $$variable{'CAR'}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
-<div id="Part4">
-<!--#include virtual="_car_edit_part4.html"-->
-</div>
+<script type="text/javascript">
+	new Ajax.Updater( 'Part4', '_car_edit_part4.html', { method: 'get', parameters: {car_id:<? echo ( $$variable{'CAR'}->id() ) ?>} } );
+</script>
 <? endif ( ( ! $$variable{'CAR'}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>

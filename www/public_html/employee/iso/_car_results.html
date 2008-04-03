@@ -24,12 +24,14 @@
 			'/employee/iso/cars.html?EndDay'} ),
 		'docket'	=>	$openprint::session{'/employee/iso/cars.html/Docket'},
 		'order'		=>	'id',
+		'deleted'	=>	0,
 		);
 ) ?>
 <? if ( @{$$variable{'CARs'}} ) ?>
 <form id="CARResults" name="CARResults" action="cars.html" method="post">
 	<table class="List">
 		<tr>
+			<th width="30" class="unprintable"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f1);" /></th>
 			<th align="left" width="75">CAR ID</th>
 			<th align="left" width="75">Issued On</th>
 			<th align="left" width="60">Docket</th>
@@ -40,6 +42,7 @@
 			my $rowclass;
 			foreach my $CAR ( @{$$variable{'CARs'}} ) {
 				$html .= "<tr$rowclass>";
+				$html .= sprintf( '<td class="unprintable"><input type="checkbox" name="cars" value="%d"/></td>', $$CAR{'id'} );
 				$html .= sprintf( '<td><a href="car.html?car_id=%d">%d</a></td>', $$CAR{'id'}, $$CAR{'id'}, );
 				$html .= sprintf( '<td><a href="car.html?car_id=%d">%s</a></td>', $$CAR{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($CAR->issued_on()) ), );
 				$html .= '<td>';
@@ -56,6 +59,9 @@
 	</table>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<span class="unprintable" style="float: left;">
+<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.CARResults);",'','Delete Checked' ); ) ?>
+</span>
 <? else ( @{$$variable{'CARs'}} ) ?>
 There were no CARs matching your search criteria.
 <? endif ( @{$$variable{'CARs'}} ) ?>

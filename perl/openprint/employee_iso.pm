@@ -11,6 +11,15 @@ use vars qw( %variable %session %param %config $log $dbh );
 require openprint::CAR;
 
 
+sub cars {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		foreach my $car_id ( ref $param{'cars'} eq 'ARRAY' ? @{$param{'cars'}} : $param{'cars'} ) {
+			my $CAR = new openprint::CAR( $car_id );
+			$$variable{'error'} .= $CAR->delete();
+		} # end foreach car_id
+	} # end if
+} # end sub cars
+
 sub car {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
 } # end sub view_car
@@ -18,8 +27,8 @@ sub _car_view_part1 {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'issued_on'} = sprintf('%.4d-%.2d-%.2d', @param{'issued_on_year','issued_on_month','issued_on_day'} );
+		$param{'reprint_on'} = sprintf('%.4d-%.2d-%.2d', @param{'reprint_on_year','reprint_on_month','reprint_on_day'} );
 		$param{'reply_by'} = sprintf('%.4d-%.2d-%.2d', @param{'reply_by_year','reply_by_month','reply_by_day'} );
-		$param{'printed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'printed_on_year','printed_on_month','printed_on_day'} );
 		$param{'presses'} = ref $param{'presses'} eq 'ARRAY' ? join(';', @{$param{'presses'}} ) : $param{'presses'};
 		$param{'part1_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part1_signed_on_year','part1_signed_on_month','part1_signed_on_day'} );
 		$$variable{'error'} .= $variable{'CAR'}->save( \%param );
@@ -36,7 +45,6 @@ sub _car_view_part3 {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'part3_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part3_signed_on_year','part3_signed_on_month','part3_signed_on_day'} );
-		$param{'reprint_on'} = sprintf('%.4d-%.2d-%.2d', @param{'reprint_on_year','reprint_on_month','reprint_on_day'} );
 		$$variable{'error'} .= $variable{'CAR'}->save( \%param );
 	} # end if
 } # end sub _car_view_part3

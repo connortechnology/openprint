@@ -53,49 +53,36 @@
 		<td colspan="1">Docket No:</td>
 		<td colspan="1"><input type="text" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" size="6" onkeyup="this.value=this.value.replace(/\D/, '' );new Ajax.Request('_select_customer_from_docket.json', {method:'get', parameters: {docket:this.value}} );" /></td>
 		<td colspan="1">Customer:</td>
-		<td colspan="3">
+		<td colspan="7">
 <select id="company_id" name="company_id" style="width: 100%;">
 <? echo ( openprint::Company::get_dropdown( $$variable{'CAR'}->company_id() ) ) ?>
 </select>
 		</td>
-		<td colspan="1">Printed on:</td>
-		<td colspan="3">
-<? eval (
-	if ( $$variable{'CAR'}->printed_on() ) {
-@$variable{'printed_on_years','printed_on_months','printed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{'CAR'}->printed_on() ) );
-	} else {
-@$variable{'printed_on_years','printed_on_months','printed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
-	} # end if
-) ?>
-            <select name="printed_on_year" onchange="setDaysDropDown(this.value,this.form.printed_on_month.value,this.form.printed_on_day,this.form.printed_on_day.value);"><?printed_on_years?></select>
-            <select name="printed_on_month" onchange="setDaysDropDown(this.form.printed_on_year.value,this.value,this.form.printed_on_day,this.form.printed_on_day.value);"><?printed_on_months?></select>
-            <select name="printed_on_day"><?printed_on_days?></select>
-		</td>
 	</tr>
 	<tr><td colspan="10">PROBLEM/NONCONFORMANCE DESCRIPTION</td></tr>
 	<tr>
-		<td colspan="1">Area</td>
+		<td colspan="1">Area:</td>
 		<td colspan="4">
 			<select name="area">
 				<option value="">select</option>
 				<? echo (
-					my @options = ( 'SALES/CUSTOMER SERVICE','PURCHASING','RECEIVING','PREPRESS','CTP','PRINTING','BINDERY','ADMINISTRATION','PACKING/SHIPPING','SUPPLIER' );
+					my @options = ( 'SALES/CUSTOMER SERVICE','PURCHASING','RECEIVING','PREPRESS','CTP','PRINTING','BINDERY','ADMINISTRATION','PACKING/SHIPPING','SUPPLIER','OTHER' );
 					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->area() );
 				) ?>
 			</select>
 		</td>
-		<td colspan="1">Reason</td>
+		<td colspan="1">Reason:</td>
 		<td colspan="4">
 			<select name="reason">
 				<option value="">select</option>
 				<? echo (
-					my @options = ( 'INCORRECT SALES ORDER','WRONG QUANTITY','SHIPPING/RECEIVING ERROR','CUTTING ERROR','HICKEYS/SCRATCHES','WRONG STOCK','MISC PREPRESS ERROR','OFFSET/PRINT ERROR','FOLDING ERROR','STAFF PERFORMANCE','COLOUR PROBLEMS','DAMAGE','PLATE ERROR','MISSING IMAGE/TEXT','SLOW RESPONSE TO RFQs','DOCKET ERROR','IMPO ERROR','MISC BINDERY ERROR','NOT REGISTERED(PRESS)','SUB STANDARD STOCK','WRONG ITEM','WRONG QUANTITY','INCORRECT DIMENSIONS','POOR QUALITY','SHELF LIFE','WRONG COLOUR','WRONG BATCH','CONTAMINATION','LATTE DELIVERY','INVOICE ISSUE','OTHER');
+					my @options = ( 'INCORRECT SALES ORDER','WRONG QUANTITY','SHIPPING/RECEIVING ERROR','CUTTING ERROR','HICKEYS/SCRATCHES','WRONG STOCK','MISC PREPRESS ERROR','OFFSET/PRINT ERROR','FOLDING ERROR','STAFF PERFORMANCE','COLOUR PROBLEMS','DAMAGE','PLATE ERROR','MISSING IMAGE/TEXT','SLOW RESPONSE TO RFQs','DOCKET ERROR','IMPO ERROR','MISC BINDERY ERROR','NOT REGISTERED(PRESS)','SUB STANDARD STOCK','WRONG ITEM','WRONG QUANTITY','INCORRECT DIMENSIONS','POOR QUALITY','SHELF LIFE','WRONG COLOUR','WRONG BATCH','CONTAMINATION','LATTE DELIVERY','INVOICE ISSUE','INTERNAL AUDIT','EXTERNAL AUDIT','OTHER');
 					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->area() );
 				) ?>
 			</select>
 		</td>
 	</tr>
-	<tr><td colspan="10"><textarea name="problem" rows="5"></textarea></td></tr>
+	<tr><td colspan="10"><textarea name="problem" rows="5"><? echo ( $$variable{'CAR'}->problem() ) ?></textarea></td></tr>
 	<tr><td colspan="1">Press:</td><td colspan="9">
 <? echo ( 
 	my $html = '';
@@ -106,6 +93,32 @@ $html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="
 	return $html;
 ) ?>
 	</td></tr>
+	<tr>
+		<td colspan="1">Reprint:</td>
+		<td colspan="2">
+			<input type="radio" name="reprint" value="No" id="reprintNo"/><label class="radio" for="reprintNo">No</label>
+			<input type="radio" name="reprint" value="Charge" id="reprintCharge"/><label class="radio" for="reprintCharge">Charge</label>
+			<input type="radio" name="reprint" value="No Charge" id="reprintNoCharge"/><label class="radio" for="reprintNoCharge">No Charge</label>
+			</td>
+		<td width="10%" colspan="1">Art Work:</td>
+		<td width="30%" colspan="2">
+			<input type="radio" name="artwork" value="Change" id="artworkChange"/><label class="radio" for="artworkChange">Change</label>
+			<input type="radio" name="artwork" value="No Change" id="artworkNoChange"/><label class="radio" for="artworkNoChange">No Change</label>
+		</td>
+		<td width="10%" colspan="1">Reprint On</td>
+		<td width="30%" colspan="3">
+<? eval (
+if ( $$variable{'CAR'}->reprint_on() ) {
+@$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{'CAR'}->reprint_on() ) );
+} else {
+@$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+} # end if
+) ?>
+            <select name="reprint_on_year" onchange="setDaysDropDown(this.value,this.form.reprint_on_month.value,this.form.reprint_on_day,this.form.reprint_on_day.value);"><?reprint_on_years?></select>
+            <select name="reprint_on_month" onchange="setDaysDropDown(this.form.reprint_on_year.value,this.value,this.form.reprint_on_day,this.form.reprint_on_day.value);"><?reprint_on_months?></select>
+            <select name="reprint_on_day"><?reprint_on_days?></select>
+		</td>
+	</tr>
 	<tr>
 		<td colspan="1">Originator:</td>
 		<td colspan="4">
@@ -135,6 +148,7 @@ if ( $$variable{'CAR'}->part1_signed_on() ) {
 		{
 			method:'get',
 			parameters: Form.serialize( \$('part1form') ),
+			evalScripts: true,
 		} );", '','Save' ),
 		); ) ?>
 </p>

@@ -7,7 +7,6 @@ CREATE TABLE CAR (
 	reply_by	date not null default NOW(),
 	docket			INTEGER,
 	company_id		INTEGER, FOREIGN KEY (company_id) REFERENCES Company (Index),
-	printed_on	date not null default NOW(),
 	problem		text,
 	cause		text,
 	action		text,
@@ -22,6 +21,7 @@ CREATE TABLE CAR (
 	part4_user_id	INTEGER, FOREIGN KEY (part3_user_id) REFERENCES Users (index),
 	part4_signed_on	date,
 	reprint			text,
+	reprint_approval	text,
 	artwork			text,
 	reprint_on	date,
 	approved_by_id	INTEGER, FOREIGN KEY (approved_by_id) REFERENCES Users (index),
@@ -29,5 +29,6 @@ CREATE TABLE CAR (
 
 	created_on	timestamp with time zone NOT NULL default NOW(),
 	updated_on	timestamp with time zone NOT NULL default NOW(),
+	deleted		boolean default false,
 	PRIMARY KEY (id)
 );
