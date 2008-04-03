@@ -389,15 +389,14 @@ function isLeapYear(year) {
  *	if specified it will set the default selection to the passed selected day.
  */
 function setDaysDropDown(year, month, dayDropDown, selectedDay) {
-
 	var numberOfDays = returnNumberOfDays(month,year);
 	if ( numberOfDays < selectedDay ) {
 		selectedDay = numberOfDays;
 	} // end if
 
 	if ( dayDropDown.options[0].value == '' ) {
-		numberOfDays += 1;
-		selectedDay += 1;
+		numberOfDays = parseInt( numberOfDays ) + 1;
+		selectedDay = parseInt( selectedDay ) + 1;
 	} // end if
 
 	if ( dayDropDown.options.length > numberOfDays ) {
