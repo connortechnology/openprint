@@ -76,6 +76,41 @@ function check_inputs(form ) {
 		alert('Please select the stock Name');
 		return false;
 	} // end if
+	if ( (form.Finish && form.txtFinish) && ! ( form.Finish.value || form.txtFinish.value ) ) {
+		alert('Please select the stock Finish');
+		return false;
+	} // end if
+	if ( (form.Finish && form.txtColour) && ! ( form.Colour.value || form.txtColour.value ) ) {
+		alert('Please select the stock Colour');
+		return false;
+	} // end if
+	if ( (form.Quality && form.txtQuality) && ! ( form.Quality.value || form.txtQuality.value ) ) {
+		alert('Please select the stock Quality');
+		return false;
+	} // end if
+	if ( form.type && ! get_rdb_value( form.type ) ) {
+		alert('Please select the stock type Roll/Sheet');
+		return false;
+	} // end if
+	if ( ( form.weight && form.calliper) && ! ( form.weight.value || form.calliper.value ) ) {
+		alert('Please enter either the weight or calliper');
+		return false;
+	} // end if
+	if ( get_rdb_value( form.type ) == 'Roll' ) {
+		if ( ! form.width.value ) {
+			alert('Please enter either the width');
+			return false;
+		} // end if
+	} else {
+		if ( ! ( form.width.value && form.height.value ) ) {
+			alert('Please enter either the width and height');
+			return false;
+		} // end if
+	} // end if
+	if ( form.Quantity && ! form.Quantity.value ) {
+		alert('Please enter the quantity of stock');
+		return false;
+	} // end if
 
 	if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
 		alert( 'Skids cannot contain more than 10000lbs' );
