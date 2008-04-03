@@ -1,35 +1,35 @@
 <? eval ( $$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} ) if ! $$variable{'Paper'}; ) ?>
 <p>
-	<label for="txtManufacturer" onclick="f1.txtManufacturer.value='';f1.ddmManufacturer.selectedIndex=0;f1.ddmManufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
-	<select id="ddmManufacturer" name="ddmManufacturer" size="1">
+	<label for="txtManufacturer" onclick="f1.txtManufacturer.value='';f1.Manufacturer.selectedIndex=0;f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
+	<select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
 		<option value="">select</option>
 	<? echo (
-			return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::Manufacturer::find('order'=>'lower(longname)') ], $openprint::param{'ddmManufacturer'} ? $openprint::param{'ddmManufacturer'} : $$variable{'Paper'}->manufacturer_id() );
+			return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::Manufacturer::find('order'=>'lower(longname)') ], $openprint::param{'Manufacturer'} ? $openprint::param{'Manufacturer'} : $$variable{'Paper'}->manufacturer_id() );
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
 </p>
 <p>
-	<label for="txtName" onclick="f1.txtName.value='';f1.ddmName.selectedIndex=0;f1.ddmName.toggle();f1.txtName.toggle();">Name:</label>
-	<select id="ddmName" name="ddmName" size="1">
+	<label for="txtName" onclick="f1.txtName.value='';f1.Name.selectedIndex=0;f1.Name.toggle();f1.txtName.toggle();">Name:</label>
+	<select id="Name" name="Name" size="1">
 		<option value="">select</option>
 	<? echo (
-			return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockName::find('order'=>'lower(longname)') ], $openprint::param{'ddmName'} ? $openprint::param{'ddmName'} : $$variable{'Paper'}->name_id() );
+			return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockName::find('order'=>'lower(longname)') ], $openprint::param{'Name'} ? $openprint::param{'Name'} : $$variable{'Paper'}->name_id() );
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtName" name="txtName" />
 </p><p>
-	<label for="txtFinish" onclick="f1.txtFinish.value='';f1.ddmFinish.selectedIndex=0;f1.ddmFinish.toggle();f1.txtFinish.toggle();">Finish:</label>
-	<select id="ddmFinish" name="ddmFinish" size="1">
+	<label for="txtFinish" onclick="f1.txtFinish.value='';f1.Finish.selectedIndex=0;f1.Finish.toggle();f1.txtFinish.toggle();">Finish:</label>
+	<select id="Finish" name="Finish" size="1">
 		<option value="">select</option>
 	<? echo (
-			return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockFinish::find('order'=>'lower(longname)') ], $openprint::param{'ddmFinish'} ? $openprint::param{'ddmFinish'} : $$variable{'Paper'}->finish_id() );
+			return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockFinish::find('order'=>'lower(longname)') ], $openprint::param{'Finish'} ? $openprint::param{'Finish'} : $$variable{'Paper'}->finish_id() );
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtFinish" name="txtFinish" />
 </p><p>
-	<label for="txtColour" onclick="f1.txtColour.value='';f1.ddmColour.selectedIndex=0;f1.ddmColour.toggle();f1.txtColour.toggle();">Colour:</label>
-	<select id="ddmColour" name="ddmColour" size="1">
+	<label for="txtColour" onclick="f1.txtColour.value='';f1.Colour.selectedIndex=0;f1.Colour.toggle();f1.txtColour.toggle();">Colour:</label>
+	<select id="Colour" name="Colour" size="1">
 	<? echo (
 		my @options = ( '', 'select one',
 			sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperColours ORDER BY lower(longname)} )
@@ -37,7 +37,7 @@
 		if ( @options == 4 ) {
 			return ssi::make_drop_down( \@options, $options[2] );
 		} else {
-			return ssi::make_drop_down( \@options, $openprint::param{'ddmColour'} ? $openprint::param{'ddmColour'} : $$variable{'Paper'}->colour_id() );
+			return ssi::make_drop_down( \@options, $openprint::param{'Colour'} ? $openprint::param{'Colour'} : $$variable{'Paper'}->colour_id() );
 		} # end if
 		) ?>
 	</select>
@@ -46,13 +46,13 @@
 <p>
 	<label for="weight">Weight:</label>
 <!--
-	<label for="txtWeight" onclick="f1.txtWeight.value='';f1.ddmWeight.selectedIndex=0;f1.ddmWeight.toggle();f1.txtWeight.toggle();">Weight:</label>
-	<select id="ddmWeight" name="ddmWeight" size="1">
+	<label for="txtWeight" onclick="f1.txtWeight.value='';f1.Weight.selectedIndex=0;f1.Weight.toggle();f1.txtWeight.toggle();">Weight:</label>
+	<select id="Weight" name="Weight" size="1">
 	<? echo (
 			my @options = ( '', 'select one',
 				sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
 				);
-			return ssi::make_drop_down( \@options, $openprint::param{'ddmWeight'} ? $openprint::param{'ddmWeight'} : $$variable{'Paper'}->weight_id() );
+			return ssi::make_drop_down( \@options, $openprint::param{'Weight'} ? $openprint::param{'Weight'} : $$variable{'Paper'}->weight_id() );
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtWeight" name="txtWeight" />
@@ -61,12 +61,12 @@
 </p>
 <p>
 	<label for="txtQuality" onclick="toggleInput('PaperQuality');">Quality:</label>
-	<select id="ddmQuality" name="ddmQuality" size="1">
+	<select id="Quality" name="Quality" size="1">
 	<? echo (
 			my @options = ( '', 'select one',
 				sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperQualities ORDER BY lower(longname)} )
 				);
-			return ssi::make_drop_down( \@options, $openprint::param{'ddmQuality'} ? $openprint::param{'ddmQuality'} : $$variable{'Paper'}->quality_id() );
+			return ssi::make_drop_down( \@options, $openprint::param{'Quality'} ? $openprint::param{'Quality'} : $$variable{'Paper'}->quality_id() );
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtQuality" name="txtQuality" />

@@ -1,4 +1,5 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript">
 var allocateWin;
 function allocate_window(paper_id, skid_id, quantity ) {
@@ -104,12 +105,13 @@ function loadPaper(results) {
 	} // end for
 
 	ddm_select_by_value( form.Owner, Paper['owner_id'] );
-	ddm_select_by_value( form.ddmManufacturer, Paper['manufacturer_id'] );
-	ddm_select_by_value( form.ddmName, Paper['name_id'] );
-	ddm_select_by_value( form.ddmFinish, Paper['finish_id'] );
-	ddm_select_by_value( form.ddmColour, Paper['colour_id'] );
-	ddm_select_by_value( form.ddmWeight, Paper['weight_id'] );
-	ddm_select_by_value( form.ddmQuality, Paper['quality_id'] );
+	ddm_select_by_value( form.Manufacturer, Paper['manufacturer_id'] );
+	ddm_select_by_value( form.Name, Paper['name_id'] );
+	ddm_select_by_value( form.Finish, Paper['finish_id'] );
+	ddm_select_by_value( form.Colour, Paper['colour_id'] );
+	if ( form.Weight )
+		ddm_select_by_value( form.Weight, Paper['weight_id'] );
+	ddm_select_by_value( form.Quality, Paper['quality_id'] );
 	form.mweight.value = Paper['mweight'];
 	form.gsm.value = Paper['gsm'];
 	form.width.value = Paper['width'];
@@ -146,7 +148,7 @@ function gsm_to_mweight( form ) {
 	input.text {
 		width: 70%;
 	}
-	select#ddmManufacturer, select#Owner, select#ddmName, select#ddmFinish, select#ddmColour, select#ddmWeight {
+	select#Manufacturer, select#Owner, select#Name, select#Finish, select#Colour, select#Weight {
 		width: 70%;
 	}
 </style>
