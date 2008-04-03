@@ -69,7 +69,7 @@ function Name_onChange( element, id ) {
 	form.elements['Name'+id].disabled = true;
 	form.elements['Finish'+id].disabled = true;
 	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
+	if ( form.elements['Weight'+id] ) form.elements['Weight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, 'Name') );
 
 } // end function Name_onChange()
@@ -79,7 +79,7 @@ function Finish_onChange( element, id ) {
 	form.elements['Name'+id].disabled = true;
 	form.elements['Finish'+id].disabled = true;
 	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
+	if ( form.elements['Weight'+id] ) form.elements['Weight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, 'Finish') );
 } // end function Finish_onChange();
 
@@ -88,7 +88,7 @@ function Colour_onChange( element, id ) {
 	form.elements['Name'+id].disabled = true;
 	form.elements['Finish'+id].disabled = true;
 	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
+	if ( form.elements['Weight'+id] ) form.elements['Weight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id,'Colour') );
 
 } // end function Colour_onChange();
@@ -98,7 +98,7 @@ function Weight_onChange( element, id ) {
 	form.elements['Name'+id].disabled = true;
 	form.elements['Finish'+id].disabled = true;
 	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
+	if ( form.elements['Weight'+id] ) form.elements['Weight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, 'Weight') );
 } // end function Weight_onChange();
 
