@@ -665,6 +665,7 @@ if ( $version < 1919 ) {
 			$dbh->do($st);
 		}
 sql::insert( undef, undef, 'QuoteLevels', 'name', 'Simple' );
+sql::insert( undef, undef, 'QuoteLevels', 'name', 'Advanced' );
 	$dbh->do(q`alter table Users add quote_level integer`);
 	$dbh->do(q`alter table Users add foreign key (quote_level) REFERENCES QuoteLevels (id)`);
 	sql::insert( undef, undef, 'database_info', 'version', 1919, 'backup', $backup );

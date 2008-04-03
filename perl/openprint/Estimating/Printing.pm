@@ -497,7 +497,7 @@ sub calc_from_imposition {
 		} elsif ( $Paper->type() eq 'Sheet' ) {
 			$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Gross Sheet Count'} .'sheets';
 			$$specs{'hdnNetSheetCount'.$qty_index} = $$price{'Net Sheet Count'};
-			$$specs{'SheetQuantity'.$qty_index} = $$price{'Gross Sheet Quantity'};
+			$$specs{'SheetQuantity'.$qty_index} = $$price{'Gross Sheet Count'};
 		} else {
 			$$specs{'txtPressSheetQty'.$qty_index} = 0;
 			$$specs{'hdnNetSheetCount'.$qty_index} = 0;
@@ -1450,7 +1450,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		} elsif ( $Paper->type() eq 'Sheet' ) {
 			$$specs{'txtPressSheetQty'.$qty_index} = $best_price{'Gross Sheet Count'} .'sheets';
 			$$specs{'hdnNetSheetCount'.$qty_index} = $best_price{'Net Sheet Count'};
-			$$specs{'SheetQuantity'.$qty_index} = $best_price{'Gross Sheet Quantity'};
+			$$specs{'SheetQuantity'.$qty_index} = $best_price{'Gross Sheet Count'};
 		} else {
 			$$specs{'txtPressSheetQty'.$qty_index} = 0;
 			$$specs{'hdnNetSheetCount'.$qty_index} = 0;

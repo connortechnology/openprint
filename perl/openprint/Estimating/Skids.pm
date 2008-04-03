@@ -254,12 +254,6 @@ sub summary {
 		} # end if
 		return $summary;
 	} else {
-		my $g = Math::Units::convert( $$specs{'txtPackageWeight'}, 'lbs','g');
-		if ( $g > 1000 ) {
-			return sprintf( 'Weight: %.1flbs (%.0fkg)', $$specs{'txtPackageWeight'}, $g/1000 );
-		} else {
-			return sprintf( 'Weight: %.1flbs (%.0fg)', $$specs{'txtPackageWeight'},  $g );
-		} # end if
 	} # end if
 } # end sub summary
 

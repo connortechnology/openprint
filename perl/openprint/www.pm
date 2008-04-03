@@ -119,7 +119,8 @@ $openprint::log->debug("Page: $page");
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 			} # end if
-			$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
+			#$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
+			$variable{'PageContent'} = $content;
 		} # end if
 		my $template;
 		my @page_path = split('/', $page );
@@ -148,7 +149,7 @@ $openprint::log->debug("Page: $page");
 		} else {
 			$log->warn("No template!" . $r->content_type());
 			$log->warn($variable{'PageContent'});
-			$r->print( $variable{'PageContent'} );
+			$r->print( ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) );
 		} # end if
 	} # end if
 
