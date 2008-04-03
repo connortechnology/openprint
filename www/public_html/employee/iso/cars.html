@@ -77,10 +77,6 @@ Please select a CAR to view/edit.<br>
 			<label>Docket:</label>
 			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/iso/cars.html?Docket'} ) ?>"  />
 		</p>
-		<p>
-			<label>FSC Code:</label>
-			<input type="text" name="fsc_code" size="13" value="<? echo ( $openprint::session{'/employee/iso/cars.html?fsc_code'} ) ?>"  />
-		</p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_cars(f2);", '', 'Show Results' ),

@@ -123,6 +123,7 @@
 						<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 						<li id="ISOMenu" class="<? echo ( $r->uri() =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ISOMenu'), 'off', 'on');return false;">ISO</a>
 							<ul>
+								<li><a href="/employee/iso/pars.html;NOSSL">&raquo; Preventive Action Requests</a></li>
 								<li><a href="/employee/iso/cars.html;NOSSL">&raquo; Corrective Action Requests</a></li>
 							</ul>
 						</li>
