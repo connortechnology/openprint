@@ -71,6 +71,12 @@ onDestroy: function(eventName, win) {
 } // end function checkout_window
 
 function check_inputs(form ) {
+
+	if ( (form.Name && form.txtName) && ! ( form.Name.value || form.txtName.value ) ) {
+		alert('Please select the stock Name');
+		return false;
+	} // end if
+
 	if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
 		alert( 'Skids cannot contain more than 10000lbs' );
 		return false;
