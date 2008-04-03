@@ -68,10 +68,12 @@ foreach my $file ( @filenames ) {
 			my $fileM = $file_base.'M';
 			while ( <A> ) {
 				my $line = $_;
+				next if $line =~ /^CIP3EndSheet/;
 				$line =~ s/$fileA/$fileM/g;
+
 				if ( $line =~ /CIP3EndOfFile/ ) {
 					foreach ( @Back ) {
-						last if $_ =~ /CIP3EndOfFile/;
+						last if $_ =~ /^CIP3EndOfFile/;
 						print M $_;
 					} # end foreach
 				} # end if
