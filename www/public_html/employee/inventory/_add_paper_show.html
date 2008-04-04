@@ -60,7 +60,7 @@
 	<input type="text" id="weight" name="weight" value="<? echo ( $openprint::param{'weight'} ? $openprint::param{'weight'} : $$variable{'Paper'}->weight() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lbs
 </p>
 <p>
-	<label for="txtQuality" onclick="toggleInput('PaperQuality');">Quality:</label>
+	<label for="txtQuality" onclick="toggleInput('Quality');">Quality:</label>
 	<select id="Quality" name="Quality" size="1">
 	<? echo (
 			my @options = ( '', 'select one',
