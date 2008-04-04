@@ -18,6 +18,7 @@ sub get_paper {
 	} # end if
 
 	my @papers = openprint::Paper::find( 
+			( $specs{'Selected'} eq 'Manufacturer' ? ( 'manufacturer_id'=>$specs{'Manufacturer'} ) : () ),
 			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
 			( sets::isin( $specs{'Selected'}, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'	=> $specs{'Finish'} ) : () ),
 			( sets::isin( $specs{'Selected'}, [ 'Colour','Weight' ] ) ? ( 'colour_id'	=> $specs{'Colour'} ) : () ),
@@ -44,7 +45,7 @@ sub get_paper {
 
 
 	my @results;
-	push @results, jsrs::encode_array( 'Brand', map {$names{$_}, $_ } sort keys %names ) if ! $specs{'Selected'};
+	push @results, jsrs::encode_array( 'Brand', map {$names{$_}, $_ } sort keys %names ) if ($specs{'Selected'} eq 'Manufacturer') or ! $specs{'Selected'};
 	push @results, jsrs::encode_array( 'Finish', map { $finishes{$_}, $_ } sort keys %finishes ) if ( ! $specs{'Finish'} ) or ! sets::isin( $specs{'Selected'}, [ 'Finish', 'Colour', 'Weight' ] );
 	push @results, jsrs::encode_array( 'Colour', map { $colours{$_}, $_ } sort keys %colours ) if ( ! $specs{'Colour'} ) or ! sets::isin( $specs{'Selected'}, [ 'Finish','Weight' ] );
 	if ( $specs{'Selected'} ne 'Weight' ) {

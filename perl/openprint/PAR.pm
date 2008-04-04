@@ -1,4 +1,4 @@
-package openprint::CAR;
+package openprint::PAR;
 @ISA = qw(openprint::Object);
 
 my $debug = 1;
@@ -13,15 +13,12 @@ require sql;
 	'issued_on'		=> 'issued_on',
 	'issued_by_id'	=> 'issued_by_id',
 	'reply_by'		=> 'reply_by',
-	'docket'		=> 'docket',
-	'company_id'	=> 'company_id',
 	'problem'		=> 'problem',
 	'cause'			=> 'cause',
 	'action'		=> 'action',	
 	'effectiveness'	=> 'effectiveness',
 	'area'			=> 'area',
 	'reason'		=> 'reason',
-	'presses'		=> 'presses',
 	'part1_user_id'	=> 'part1_user_id',
 	'part1_signed_on'	=> 'part1_signed_on',
 	'part2_user_id'		=> 'part1_user_id',
@@ -30,13 +27,7 @@ require sql;
 	'part3_signed_on'	=> 'part3_signed_on',
 	'part4_user_id'		=> 'part4_user_id',
 	'part4_signed_on'	=> 'part4_signed_on',
-	'reprint'			=> 'reprint',
-	'reprint_approval'	=> 'reprint_approval',
-	'artwork'			=> 'artwork',
-	'reprint_on'		=> 'reprint_on',
-	'approved_by_id'	=> 'approved_by_id',
 	'created_on'		=> 'created_on',
-	'approved_on'		=> 'approved_on',
 	'updated_on'		=> 'updated_on',
 	'deleted'			=> 'deleted',
 );
@@ -46,13 +37,10 @@ require sql;
 %defaults = (
 	'issued_to_id'	=> undef,
 	'issued_by_id'	=> undef,
-	'docket'		=> undef,
-	'company_id'	=> undef,
 	'part1_user_id'	=> undef,
 	'part2_user_id'	=> undef,
 	'part3_user_id'	=> undef,
 	'part4_user_id'	=> undef,
-	'approved_by_id'	=> undef,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 	'deleted'		=> 0,
@@ -61,7 +49,7 @@ require sql;
 sub find {
 	my %params = @_;
 
-	my $sql = q{SELECT * FROM CAR WHERE 1>0};
+	my $sql = q{SELECT * FROM PAR WHERE 1>0};
 	my @values;
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
@@ -94,10 +82,6 @@ sub find {
 		push @values, $params{'issued_on_end'};
 	} # end if
 
-	if ( $params{'docket'} ) {
-		$sql .= ' AND docket=?';
-		push @values, $params{'docket'};
-	} # end if
 	if ( $params{'deleted'} ) {
 		$sql .= ' AND deleted=?';
 		push @values, $params{'deleted'};
@@ -112,19 +96,19 @@ sub find {
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->warn("Error loading CARs: ($sql) (@values)" . $openprint::dbh->errstr );
+		$openprint::log->warn("Error loading PARs: ($sql) (@values)" . $openprint::dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$openprint::log->debug("openprint::CAR::find($sql) (@values)");
+		$openprint::log->debug("openprint::PAR::find($sql) (@values)");
 	} # end if
-	return map { new openprint::CAR( $_->{id}, $_ ); } @$data;
+	return map { new openprint::PAR( $_->{id}, $_ ); } @$data;
 } # end sub find
 
 sub load {
 	my ( $self, $data ) = @_;
 
 	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CAR WHERE id=?', {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM PAR WHERE id=?', {}, $$self{'id'} );
 		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
@@ -132,12 +116,12 @@ sub load {
 
 sub delete {
 	my $self = shift;
-	return sql::update( undef, undef, 'CAR', ['id=?', $$self{'id'} ], 'deleted', 1 );
+	return sql::update( undef, undef, 'PAR', ['id=?', $$self{'id'} ], 'deleted', 1 );
 } # end sub delete
 
 sub destroy {
 	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM CAR WHERE id=?}, $$self{'id'} );
+    return sql::execute( undef, undef, q{DELETE FROM PAR WHERE id=?}, $$self{'id'} );
 } # end sub destroy
 
 sub save {
@@ -152,14 +136,14 @@ sub save {
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('car_id_seq')});
+		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('par_id_seq')});
 		$sql{'id'} = $$self{id};
-		if ( my $error = sql::insert( undef, undef, 'CAR', \%sql ) ) {
+		if ( my $error = sql::insert( undef, undef, 'PAR', \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
 	} else {
-		if ( my $error = sql::update( undef, undef, 'CAR', ['id=?', $$self{'id'}], \%sql ) ) {
+		if ( my $error = sql::update( undef, undef, 'PAR', ['id=?', $$self{'id'}], \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
@@ -171,15 +155,11 @@ sub save {
 
 sub copy {
 	my $self = shift;
-	my $new = new openprint::CAR();
+	my $new = new openprint::PAR();
 	@$new{keys %$self} = @$self{keys %$self};
 	$$new{'id'} = undef;
 	return $new;
 } # end sub
-
-sub Company {
-	return new openprint::Company( $_[0]{'company_id'} );
-} # end sub Company
 
 1;
 

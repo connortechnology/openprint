@@ -1,9 +1,33 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript">
+<!--
+    function delete_confirm(form) {
+        var number_of_deleted_cars = 0;
+        for ( var index = 0; index < form.elements['cars'].length; index += 1 ) {
+            if ( form.elements['cars'][index].checked ) {
+                number_of_deleted_cars += 1;
+            } // end if
+        } // end for
+        if ( number_of_deleted_cars == 0 ) {
+            alert("To Delete Cars, click the checkbox beside the CAR.");
+        } else if ( number_of_deleted_cars == 1 ) {
+            if ( confirm("Are you sure you wish to delete this CAR?") ) {
+				form.btnFunction.value='Delete';
+                form.submit();
+            } // end if
+        } else {
+            if ( confirm("Are you sure you wish to delete these " + number_of_deleted_cars + " CARS?") ) {
+				form.btnFunction.value='Delete';
+                form.submit();
+            } // end if
+        } // end if
+    }
+
 	 function load_cars( form ) {
 		 $('Results').innerHTML = 'Please wait...';
 		 new Ajax.Updater('Results','_car_results.html', {method:'get',parameters:Form.serialize(form)});
 	 } // end function
+-->
 </script>
 <? if ( $$variable{'information'} ) ?>
 <p class="information"><?information?></p>
@@ -52,10 +76,6 @@ Please select a CAR to view/edit.<br>
 		<p>
 			<label>Docket:</label>
 			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/iso/cars.html?Docket'} ) ?>"  />
-		</p>
-		<p>
-			<label>FSC Code:</label>
-			<input type="text" name="fsc_code" size="13" value="<? echo ( $openprint::session{'/employee/iso/cars.html?fsc_code'} ) ?>"  />
 		</p>
 		<p class="buttons">
 			<? echo ( join('',

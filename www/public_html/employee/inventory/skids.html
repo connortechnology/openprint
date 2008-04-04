@@ -1,17 +1,4 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
-<script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f2.StartYear.value,document.f2.StartMonth.value,document.f2.StartDay,document.f2.StartDay.value);
-            setDaysDropDown(document.f2.EndYear.value,document.f2.EndMonth.value,document.f2.EndDay,document.f2.EndDay.value);
-            setDaysDropDown(document.f2.UpdatedStartYear.value,document.f2.UpdatedStartMonth.value,document.f2.UpdatedStartDay,document.f2.UpdatedStartDay.value);
-            setDaysDropDown(document.f2.UpdatedEndYear.value,document.f2.UpdatedEndMonth.value,document.f2.UpdatedEndDay,document.f2.UpdatedEndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-</script>
 <? if ( $$variable{'information'} ) ?>
 <p class="information"><?information?></p>
 <hr/>

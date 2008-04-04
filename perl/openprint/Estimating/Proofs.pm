@@ -294,7 +294,7 @@ sub insert_press_proof {
 			$quantity += 1;
 		} # end if
 	} else {
-		if ( openprint::Estimating::Printing::get_colours( \%signature_specs, 'SideOne' ) or openprint::print_printing::get_colours( \%signature_specs, 'SideTwo' ) ) {
+		if ( openprint::Estimating::Printing::get_colours( \%signature_specs, 'SideOne' ) or openprint::Estimating::Printing::get_colours( \%signature_specs, 'SideTwo' ) ) {
 			$quantity += 1;
 		} # end if
 	} # end if
@@ -362,7 +362,7 @@ sub insert_layout_proof {
 			$quantity += 1;
 		} # end if
 	} else {
-		if ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) or openprint::print_printing::get_colours( $sig_specs, 'SideTwo' ) ) {
+		if ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) or openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) ) {
 			$quantity += 1;
 		} # end if
 	} # end if

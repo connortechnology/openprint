@@ -1,18 +1,19 @@
+<div class="error"><?error?></div>
 <form name="part2form" id="part2form">
 <h3>Part 2 (To be completed by recipient)</h3>
 <table>
-	<tr><td width="100%" colspan="10">ROOT CAUSE OF PROBLEM (Why did the problem occur?)</td></tr>
-	<tr><td width="100%" colspan="10"><textarea name="cause" rows="5" style="width:99%;"><? hecho ( $$variable{'CAR'}->cause() ) ?></textarea></td></tr>
+	<tr><td width="100%" colspan="10">ROOT CAUSE OF PROBLEM (Why will the problem occur?)</td></tr>
+	<tr><td width="100%" colspan="10"><textarea name="cause" rows="5" style="width:99%;"><? hecho ( $$variable{'PAR'}->cause() ) ?></textarea></td></tr>
 	<tr>
 		<td width="10%" colspan="1">Recipient:</td>
 		<td width="40%" colspan="4">
-<select name="part2_user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->part2_user_id() ? $$variable{'CAR'}->part2_user_id() : $openprint::session{'user_id'} ); ) ?></select>
+<select name="part2_user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'PAR'}->part2_user_id() ? $$variable{'PAR'}->part2_user_id() : $openprint::session{'user_id'} ); ) ?></select>
 </td>
 		<td width="10%" colspan="1">Date:</td>
 		<td width="40%" colspan="4">
 <? eval (
-if ( $$variable{'CAR'}->part2_signed_on() ) {
-@$variable{'part2_signed_on_years','part2_signed_on_months','part2_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{'CAR'}->part2_signed_on() ) );
+if ( $$variable{'PAR'}->part2_signed_on() ) {
+@$variable{'part2_signed_on_years','part2_signed_on_months','part2_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{'PAR'}->part2_signed_on() ) );
 } else {
 @$variable{'part2_signed_on_years','part2_signed_on_months','part2_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 } # end if
@@ -23,12 +24,12 @@ if ( $$variable{'CAR'}->part2_signed_on() ) {
 		</td>
 	</tr>
 </table>
-	<input type="hidden" name="car_id" value="<? echo ( $$variable{'CAR'}->id() ) ?>" />
+	<input type="hidden" name="par_id" value="<? echo ( $$variable{'PAR'}->id() ) ?>" />
 	<input type="hidden" name="btnFunction" value="Save" />
 </form>
 <p class="buttons">
 	<? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "new Ajax.Updater('Part2','_car_view_part2.html', {method:'get',
+		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "new Ajax.Updater('Part2','_par_view_part2.html', {method:'get',
 			parameters: Form.serialize( \$('part2form') ),
 			evalScripts: true,
  } );", '','Save' ),

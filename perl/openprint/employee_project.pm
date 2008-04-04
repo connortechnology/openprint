@@ -37,7 +37,7 @@ sub view {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [new openprint::MXML($Project)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		my $service_index = $openprint::param{'ServiceIndex'};
-		my $status = openprint::service::get_status( $log, $dbh, $service_index, $project_index );
+		my $status = openprint::service::status( $project_index, $service_index );
 
 		my ( $service_type ) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'ServiceType' );
 		if ( $service_type eq 'AdditionalSignature' ) {
@@ -46,7 +46,7 @@ sub view {
 # Run through each of the signatures and if everyone is complete, then set the printing service to complete
 				foreach my $signature_service_index ( $Project->signatures() ) {
 					next if $signature_service_index == $service_index;
-					my $status = openprint::service::get_status( $log, $dbh, $signature_service_index, $project_index );
+					my $status = openprint::service::status( $project_index, $signature_service_index );
 					if ( $status ne 'Complete' ) {
 						$complete = 0;
 					} # end if

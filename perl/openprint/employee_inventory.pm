@@ -219,19 +219,19 @@ sub paper_details {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Next' ) {
 		$Paper = $Paper->next();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
-		$Paper->owner_id( $openprint::param{'ddmOwner'} );
+		$Paper->owner_id( $openprint::param{'Owner'} );
 		$Paper->manufacturer( $openprint::param{'txtManufacturer'} ) if $openprint::param{'txtManufacturer'};
-		$Paper->manufacturer_id( $openprint::param{'ddmManufacturer'} ) if $openprint::param{'ddmManufacturer'};
+		$Paper->manufacturer_id( $openprint::param{'Manufacturer'} ) if $openprint::param{'Manufacturer'};
 		$Paper->name( $openprint::param{'txtName'} ) if $openprint::param{'txtName'};
-		$Paper->name_id( $openprint::param{'ddmName'} ) if $openprint::param{'ddmName'};
+		$Paper->name_id( $openprint::param{'Name'} ) if $openprint::param{'Name'};
 		$Paper->finish( $openprint::param{'txtFinish'} ) if $openprint::param{'txtFinish'};
-		$Paper->finish_id( $openprint::param{'ddmFinish'} ) if $openprint::param{'ddmFinish'};
+		$Paper->finish_id( $openprint::param{'Finish'} ) if $openprint::param{'Finish'};
 		$Paper->colour( $openprint::param{'txtColour'} ) if $openprint::param{'txtColour'};
-		$Paper->colour_id( $openprint::param{'ddmColour'} ) if $openprint::param{'ddmColour'};
+		$Paper->colour_id( $openprint::param{'Colour'} ) if $openprint::param{'Colour'};
 		$Paper->weight( $openprint::param{'txtWeight'} ) if $openprint::param{'txtWeight'};
-		$Paper->weight_id( $openprint::param{'ddmWeight'} ) if $openprint::param{'ddmWeight'};
+		$Paper->weight_id( $openprint::param{'Weight'} ) if $openprint::param{'Weight'};
 		$Paper->quality( $openprint::param{'txtQuality'} ) if $openprint::param{'txtQuality'};
-		$Paper->quality_id( $openprint::param{'ddmQuality'} ) if $openprint::param{'ddmQuality'};
+		$Paper->quality_id( $openprint::param{'Quality'} ) if $openprint::param{'Quality'};
 		$Paper->type( $openprint::param{'type'} );
 		if ( $openprint::param{'type'} eq 'Roll' ) {
 			$Paper->width( $openprint::param{'width'} );
@@ -246,21 +246,21 @@ sub paper_details {
 		$Paper->fsc_code( $openprint::param{'fsc_code'} );
 		if ( ! $openprint::param{'paper_id'} ) {
 			my @papers = openprint::Paper::find(
-					'owner_id'	=>	$openprint::param{'ddmOwner'},
+					'owner_id'	=>	$openprint::param{'Owner'},
 					'manufacturer'		=>	$openprint::param{'txtManufacturer'},
-					'manufacturer_id'	=>	$openprint::param{'ddmManufacturer'},
+					'manufacturer_id'	=>	$openprint::param{'Manufacturer'},
 					'name'		=>	$openprint::param{'txtName'},
-					'name_id'	=>	$openprint::param{'ddmName'},
+					'name_id'	=>	$openprint::param{'Name'},
 					'finish'	=>	$openprint::param{'txtFinish'},
-					'finish_id' =>	$openprint::param{'ddmFinish'},
+					'finish_id' =>	$openprint::param{'Finish'},
 					'colour'	=>	$openprint::param{'txtColour'},
-					'colour_id' =>	$openprint::param{'ddmColour'},
+					'colour_id' =>	$openprint::param{'Colour'},
 					'weight'	=>	$openprint::param{'txtWeight'},
-					'weight_id' =>	$openprint::param{'ddmWeight'},
+					'weight_id' =>	$openprint::param{'Weight'},
 					'width'	=> $openprint::param{'width'},
 					'height'	=>	$openprint::param{'height'},
 					'quality'	=>	$openprint::param{'txtQuality'},
-					'quality_id'	=>	$openprint::param{'ddmQuality'},
+					'quality_id'	=>	$openprint::param{'Quality'},
 					);
 			if ( @papers ) {
 				$$variable{'error'} .= qq`A paper matching those parameters already exists. Click here to edit it: <a href="paper_details.html?paper_id=$papers[0]{id}">paper $papers[0]{id}</a>`;
@@ -312,7 +312,7 @@ sub save_skid {
 	$Skid->location( $openprint::param{'txtLocation'} ) if $openprint::param{'txtLocation'};
 	$Skid->save();
 
-	if ( $openprint::param{'ddmName'} or $openprint::param{'txtName'} ) {
+	if ( $openprint::param{'Name'} or $openprint::param{'txtName'} ) {
 		my $weight;
 		if ( $openprint::param{'txtWeight'} ) {
 			$weight = $openprint::param{'txtWeight'};
@@ -324,17 +324,17 @@ sub save_skid {
 
 		my @papers = openprint::Paper::find(
 				'owner_id'	=>	$openprint::param{'Owner'},
-				'manufacturer_id'	=>	$openprint::param{'ddmManufacturer'},
+				'manufacturer_id'	=>	$openprint::param{'Manufacturer'},
 				'manufacturer'		=>	$openprint::param{'txtManufacturer'},
-				'name_id'	=>	$openprint::param{'ddmName'},
+				'name_id'	=>	$openprint::param{'Name'},
 				'name'		=>	$openprint::param{'txtName'},
-				'finish_id' =>	$openprint::param{'ddmFinish'},
+				'finish_id' =>	$openprint::param{'Finish'},
 				'finish'	=>	$openprint::param{'txtFinish'},
-				'colour_id' =>	$openprint::param{'ddmColour'},
+				'colour_id' =>	$openprint::param{'Colour'},
 				'colour'	=>	$openprint::param{'txtColour'},
-				'weight_id' =>	$openprint::param{'ddmWeight'},
+				'weight_id' =>	$openprint::param{'Weight'},
 				'weight'	=>	$weight,
-				'quality_id' => $openprint::param{'ddmQuality'},
+				'quality_id' => $openprint::param{'Quality'},
 				'quality'	=>	$openprint::param{'txtQuality'},
 				'width'	=> $openprint::param{'width'},
 				'height'	=>	$openprint::param{'type'} ne 'Roll' ? $openprint::param{'height'} : undef,
@@ -347,17 +347,17 @@ sub save_skid {
 			$Paper = new openprint::Paper( );
 			$Paper->owner_id( $openprint::param{'Owner'} );
 			$Paper->manufacturer( $openprint::param{'txtManufacturer'} ) if $openprint::param{'txtManufacturer'};
-			$Paper->manufacturer_id( $openprint::param{'ddmManufacturer'} ) if $openprint::param{'ddmManufacturer'};
+			$Paper->manufacturer_id( $openprint::param{'Manufacturer'} ) if $openprint::param{'Manufacturer'};
 			$Paper->name( $openprint::param{'txtName'} ) if $openprint::param{'txtName'};
-			$Paper->name_id( $openprint::param{'ddmName'} ) if $openprint::param{'ddmName'};
+			$Paper->name_id( $openprint::param{'Name'} ) if $openprint::param{'Name'};
 			$Paper->finish( $openprint::param{'txtFinish'} ) if $openprint::param{'txtFinish'};
-			$Paper->finish_id( $openprint::param{'ddmFinish'} ) if $openprint::param{'ddmFinish'};
+			$Paper->finish_id( $openprint::param{'Finish'} ) if $openprint::param{'Finish'};
 			$Paper->colour( $openprint::param{'txtColour'} ) if $openprint::param{'txtColour'};
-			$Paper->colour_id( $openprint::param{'ddmColour'} ) if $openprint::param{'ddmColour'};
+			$Paper->colour_id( $openprint::param{'Colour'} ) if $openprint::param{'Colour'};
 			$Paper->weight( $weight ) if $weight;
-			$Paper->weight_id( $openprint::param{'ddmWeight'} ) if $openprint::param{'ddmWeight'};
+			$Paper->weight_id( $openprint::param{'Weight'} ) if $openprint::param{'Weight'};
 			$Paper->quality( $openprint::param{'txtQuality'} ) if $openprint::param{'txtQuality'};
-			$Paper->quality_id( $openprint::param{'ddmQuality'} ) if $openprint::param{'ddmQuality'};
+			$Paper->quality_id( $openprint::param{'Quality'} ) if $openprint::param{'Quality'};
 			$Paper->type( $openprint::param{'type'} );
 			$Paper->fsc_code( $openprint::param{'fsc_code'} );
 			if ( $openprint::param{'type'} eq 'Roll' ) {
