@@ -557,7 +557,7 @@ sub summary {
 				} # end if
 			} # end foreach key
 		} # end foreach signature
-		my $summary = '<table>';
+		my $summary = '<table style="width:auto;table-layout:auto;">';
 		foreach my $k ( keys %proof_totals ) {
 			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'</td>'.$k.'</td></tr>';
 		} # end foreach
