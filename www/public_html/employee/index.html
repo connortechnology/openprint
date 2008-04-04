@@ -23,34 +23,34 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 	<fieldset>
 		<p>
 			<label>Docket #</label>
-			<input type="text" name="StartDocket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){sumbit_handler(f1);}" />
+			<input type="text" name="StartDocket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
 	<fieldset>
 		<p>
 			<label>Order #</label>
-			<input type="text" name="OrderID" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){sumbit_handler(f1);}" />
+			<input type="text" name="OrderID" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
 	<fieldset>
 		<p>
 			<label>Project #</label>
-			<input type="text" name="Project" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){sumbit_handler(f1);}"/>
+			<input type="text" name="Project" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
 	<fieldset>
 		<p>
 			<label>Skid #</label>
-			<input type="text" name="skid_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){sumbit_handler(f1);}" />
+			<input type="text" name="skid_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go4', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
 	<fieldset>
 		<p><label>Paper #</label>
-			<input type="text" name="paper_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){sumbit_handler(f1);}" />
+			<input type="text" name="paper_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go5', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
