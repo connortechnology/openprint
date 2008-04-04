@@ -3067,11 +3067,11 @@ sub runtime {
 	} # end if
 
 	$time{'Setup'} = 0;
-	
+
 	$time{'Setup'} += 60*$Equipment->specification('Setup Time') if @side_one_colours;
 	$time{'Setup'} += 60*$Equipment->specification('Setup Time') if @side_two_colours;
 	$time{'Setup'} += 60*$Equipment->specification('Wash Up Time Per Colour') * @colours;
-	#$time{'Setup'} += 60*$Equipment->specification('Plate Setup Time') ;
+#$time{'Setup'} += 60*$Equipment->specification('Plate Setup Time') ;
 
 	my $run_speed = $Equipment->specification( 'Press Additional Run Speed',$$specs{'txtSpecificStockCalliper'} );
 	my $std_runspeed = $Equipment->specification('Press Standard Run Speed');
@@ -3095,13 +3095,80 @@ sub get_weight {
 	if ( $$specs{'PageQuantity'.$qty_index} ) {
 		$sig_weight *= $$specs{'PageQuantity'.$qty_index}/$$specs{'txtSpreadSize'};
 	} # end if
-	# This is business cards, etc.
+# This is business cards, etc.
 	if ( $$specs{'PageQuantity'} ) {
-		# For Scratch Pads
+# For Scratch Pads
 		$sig_weight *= $$specs{'PageQuantity'};
 	} # end if
 	return $sig_weight;
 } # end sub get_weight
+
+sub summary {
+	my ( $Project, $service_index, $specs, $qty_index ) = @_;
+
+	my $services = $Project->services();
+
+	if ( $qty_index ) {
+		if ( ! $$specs{'txtSpreadSize'} ) {
+			if ( $$services{''} ) {
+				my $printing_specs = get_specs_ref( $Project, $$services{''}[0] );
+				$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
+			} # end if
+		} # end if
+		return '' if ! $$specs{'txtImposition'.$qty_index};
+		my $html = sprintf(qq{%s %dout %s\n},
+				$$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
+				$$specs{'txtImposition'.$qty_index},
+				($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index} ),
+				$$specs{'ddmPress'.$qty_index} );
+
+		$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
+		$html .= sprintf(' with %d plate changes ', $$specs{'txtPlateChangeQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
+
+		$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
+		if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
+			if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
+				$html .= sprintf( ' of %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+			} # end if
+		} else {
+			$html .= sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+		} # end if
+		return $html;
+	} else {
+		my $front_colours = 0;
+		my $front_coatings;
+		foreach my $c ( get_colours( $specs, 'SideOne') ) {
+			if ( $c =~ /Aqueous/ or $c =~ /Varnish/ or $c =~ /UV/ ) {
+				$front_coatings .= '+'.$c;
+			} else {
+				$front_colours += 1;
+			} # end if
+		} # end foreach
+		my $back_colours = 0;
+		my $back_coatings;
+		foreach my $c ( get_colours( $specs, 'SideTwo') ) {
+			if ( $c =~ /Aqueous/ or $c =~ /Varnish/ or $c =~ /UV/ ) {
+				$back_coatings .= '+'.$c;
+			} else {
+				$back_colours += 1;
+			} # end if
+		} # end foreach
+		return sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s},
+				@$specs{'txtServiceDescription','txtWidth','txtHeight'},
+				$front_colours,
+				$front_coatings,
+				$back_colours,
+				$back_coatings,
+				$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
+				$$specs{'rdbSpecificStock'} eq 'Y' ?
+				join(',', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
+				join(',', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} )
+				,
+				);
+	} # end if
+
+
+} # end sub summary
 
 1;
 

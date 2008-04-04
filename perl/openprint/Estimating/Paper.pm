@@ -181,5 +181,40 @@ sub display {
 
 } # end sub display
 
+sub summary {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my %totals;
+    my %sheets;
+	foreach my $ss_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+		my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
+        if ( $Paper->type() eq 'Roll' ) {
+			$string .= sprintf(' %s&quot; Roll', $Paper->width() );
+        } else {
+			$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
+        } # end if
+		foreach my $qty_index ( 1 .. 3 ) {
+            next if ! $Project->quantity( $qty_index );
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			if ( $Paper->type() eq 'Roll' ) {
+				$totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'hdnImpressionQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi());
+			} else {
+                $totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'SheetQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi() );
+                $sheets{$string}[$qty_index] += $$sig_specs{'SheetQuantity'.$qty_index};
+            } # end if
+        } # end foreach qty_index
+
+    } # end foreach
+	if ( $qty_index ) {
+		return join('<br/>', map { $sheets{$_} ? $sheets{$_}[$qty_index] .'sheets '. $totals{$_}[$qty_index] : $totals{$_}[$qty_index].'lbs' } sort keys %totals );
+	} else {
+		return join('<br/>', sort keys %totals );
+	} # end if
+} # end sub summary
+
 1;
 __END__

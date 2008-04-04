@@ -167,7 +167,7 @@ sub calc {
 
 sub summary {
     my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project->id(), $service_id ) if ! $specs;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
     my $text = '';
     if ( $qty_index ) {
         $text .= $$specs{'txtPackageQuantity'.$qty_index};

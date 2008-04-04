@@ -842,8 +842,9 @@ sub jdf {
 } # end sub jdf
 
 sub summary {
-	my ( $project_id, $service_id, $specs, $qty_index ) = @_;
-	$specs = openprint::service::get_specs_ref( $project_id, $service_id ) if ! $specs;
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	#$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	return '';
 } # end sub summary
 
 sub runtime {

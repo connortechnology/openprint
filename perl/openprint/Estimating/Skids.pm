@@ -221,9 +221,8 @@ sub display {
 }
 
 sub summary {
-	my ( $project_id, $service_id, $specs, $qty_index ) = @_;
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
-	my $Project = new openprint::Project( $project_id );
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
 	if ( $qty_index ) {
