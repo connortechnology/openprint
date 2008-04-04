@@ -82,6 +82,6 @@ return $html;
 			<? endwhile ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 		</table>
 		<span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span><br/>
-		<? hecho ( $config{'QuoteViewDisclaimer'} ) ?>
+		<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
 	</body>
 </html>

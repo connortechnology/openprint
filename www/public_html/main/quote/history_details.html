@@ -2,7 +2,6 @@
 	<h1>QUOTE</h1>
 	<h2>View Quote <? echo ( $$variable{'Quote'}->id(); ) ?></h2>
 </div>
-<link href="/css/quote.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
 function delete_confirm(form) {
 	if ( confirm("Are you sure you wish to delete this quote from history?\nClicking OK will take you back to the quote history page.") ) {
@@ -11,8 +10,8 @@ function delete_confirm(form) {
 }
 </script>
 <span class="unprintable">
-To save, process a new quote or process an order from this quotation, please click on the appropriate button below.<br>
-<br>
+To save, process a new quote or process an order from this quotation, please click on the appropriate button below.<br/>
+<br/>
 </span>
 <div style="float: right;">
 	<form name="f1" method="post" action="/main/quote/quote_history.html">
@@ -29,15 +28,15 @@ To save, process a new quote or process an order from this quotation, please cli
 				$html .= ssi::writeButton( $log, $dbh, 'Resend', 'reSendQuote.gif', "f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", '', 'Resend' );
 				$html .= ssi::writeButton( $log, $dbh, 'Order', 'processOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Order' );
 			} else {
-				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' );
+				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' );
 			} # end if
 			return $html;
 		) ?>
 	</form>
 </div>
-<b>Attention:</b> <br>
-Projects listed in red have changed price from the time this quote was originally generated.<br>
-<br>
+<b>Attention:</b> <br/>
+Projects listed in red have changed price from the time this quote was originally generated.<br/>
+<br/>
 <!--#include virtual="/includes/quote_header.html" -->
 <!--#include virtual="/includes/quote_information.html" -->
 <br class="spacer"/>
