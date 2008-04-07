@@ -1,15 +1,19 @@
+/* Begin Menu Styles
+ * */
 
 ul#menubar {
-    display: block;
-	min-width: 640px;
-	height: 22px;
-
+    left:0px;
 	background-color: #ded9c2;
 	background: url(/images/menu_fill_blue.png) repeat-x top;
+	list-style: none;
     margin: 3px 0px 12px 0px;
-	margin-left: 100px;
-    padding: 0px 20px 0px 20px;
+margin-left: 100px;
+    padding: 0px;
+padding-left: 20px;
     z-index: 6000;
+    min-width: 600px;
+    display: block;
+	height: 22px;
 }
 @media print {
     .menubar {
@@ -28,15 +32,18 @@ ul#menubar:after {
 }
 /* Hides from IE-mac \*/
 * html ul#menubar {height: 1%;}
-* *     ul#menubar{display:block;}
-* */* End hide from IE-mac */
+*     ul#menubar{display:block;}
+/* End hide from IE-mac */
 ul#menubar li {
+background: url(/images/menu_fill_blue.png) repeat top;
     float: left;
     list-style: none;
     margin: 0px;
 	padding: 0px;
 	border: none;
     display: block;
+	height: 22px;
+	border-right: 1px solid #ffffff;
 }
 
 ul#menubar li a {
@@ -46,15 +53,18 @@ ul#menubar li a {
     padding: 3px 10px 3px 10px;
     text-decoration: none;
 	font-family: arial, helvetica, sans-serif;
-	font-size: 1em;
+	font-weight: bold;
+	font-size: 11px;
     margin: 0px;
     overflow: hidden;
     text-align: left;
     outline: 0;
-	border-left: 1px solid #9c9c9c;
-	border-right: 1px solid #9c9c9c;
-
+height: 16px;
 }
+ul#menubar li ul {
+	border-top: 1px solid black;
+}
+
 ul#menubar li.off ul {
     /*put the subnavs below and hide them all*/
     display: none;
@@ -62,11 +72,9 @@ ul#menubar li.off ul {
     margin: 0px;
     list-style: none;
     position: absolute;
-	border-bottom: 1px solid #ffffff;
-	margin-top: 0px;
 }
 
-ul#menubar li.on ul {
+ul#menubar li.on ul, ul#menubar li.over ul {
     /*display the current topic*/
     display: block;
     padding: 0px;
@@ -77,31 +85,31 @@ ul#menubar li.on ul {
 
 ul#menubar li.on a {
     /*change border color for active topic area*/
-	color: #ff7f00; 
+	color: #5a95d6; 
+	background-color: #ffffff;
 }
 
 ul#menubar li ul li {
-background: url(/images/menu_fill_blue.png) repeat top;
+    background-color: #ffffff;
     border: 0;
-	border-top: 1px solid white;
     float: none;
     padding: 0px;
     margin:0px;
     list-style: none;
     text-align: center;
-	
 }
 
 ul#menubar li.on ul li a, #menubar li.off ul li a {
     /*ie doesn't inherit the float*/
-    color: #ffffff;
-    margin: 0px;
-    outline: 0;
-	border-left: 1px solid white;
-	border-right: 1px solid white;
+	background-color: #5a95d6;
+    color: #134984;
+    margin: -1px 0px 0px 0px;
+	border-bottom: 1px solid white;
+	border-top: 1px solid #ffffff;
 }
 ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
-    color: #ff7f00;
+	background-color: #5a95d6;
+    color: #FEE00F;
 }
 
 ul#menubar li.off:hover ul, ul#menubar li.over ul {
@@ -111,17 +119,19 @@ ul#menubar li.off:hover ul, ul#menubar li.over ul {
     z-index: 6000;
 }
 
-/* Sub meny entry color */
 #menubar li.off:hover a {
+/*
+    color: #5a95d6;
+*/
     color: #ffffff;
 }
 #menubar li.off a:hover {
-    color: #ff7f00;
+    color: #FEE00F;
 }
 #menubar li:hover a {
-    color: #ff7f00;
+    color: #FEE00F;
 }
 #menubar li.over a {
-    color: #ff7f00;
+    color: #FEE00F;
 }
 

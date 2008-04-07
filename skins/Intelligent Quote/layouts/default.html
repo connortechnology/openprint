@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><?PageTitle?></title>	
 		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
@@ -60,36 +60,33 @@
 			<div class="ContentInner">
 				<div class="Header">
 					<img style="float: left;" src="/images/IQ_logo.png" alt="Intelligent Quote Demo"/>
-					<div style="float: left;">
-						<img src="/images/IQ_text.png" alt="Intelligent Quote Demo"/>
-					</div>
-
-					<span style="float: right;p\osition: relative;">
+					<img style="float: left;" src="/images/IQ_text.png" alt="Intelligent Quote Demo"/>
+					<div style="float: right; p\osition: relative;">
 							<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 							<? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?>
 							<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 							<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 							<? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?>
 							<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
-					</span>
+					</div>
 					<br/>
 					<br/>
 					<span style="float: right;">
-							<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
-								Currently selected currency:
-								<select name="select_currency_id" onchange="this.form.submit();">
-									<? echo (
-										ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
-									) ?>
-								</select>
-							</form>
+						<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
+							Currently selected currency:
+							<select name="select_currency_id" onchange="this.form.submit();">
+								<? echo (
+									ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
+								) ?>
+							</select>
+						</form>
 					</span>
 					<br/>
-					<br/>
-				<!--#include virtual="/skins/<?SiteTitle?>/includes/customer_menu.html"-->
+<? echo ( include( $config{'SkinPath'}.'/includes/customer_menu.html' ); ) ?>
 					<br class="spacer"/>
 				</div><!--Header-->
 				<br class="spacer"/>
+					<br class="spacer"/>
 				<?PageContent?>
 				<span class="unprintable">
 				<br class="spacer"/>

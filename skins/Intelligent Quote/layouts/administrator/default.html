@@ -31,7 +31,7 @@
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
 			</div>
 			<br/>
-				<!--#include virtual="/includes/administrator_menu.html"-->
+			<? echo ( include($ENV{'DOCUMENT_ROOT'}.'/includes/administrator_menu.html' ); ) ?>
 			<?PageContent?>
 			<br class="spacer"/>
 		</div><!--ContentInner-->
