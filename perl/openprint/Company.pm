@@ -7,6 +7,7 @@ use vars qw( %fields %defaults %transforms );
 
 require sql;
 require openprint::Object;
+require openprint::User;
 
 %fields = (
 		'id'						=>	'index',
@@ -51,6 +52,8 @@ require openprint::Object;
 		'bank_phone'				=>	'strbankphone',
 		'bank_fax'					=>	'strbankfax',
 		'bank_email'				=>	'strbankemail',
+		'detail_level'				=>	'detail_level',
+		'quote_project_breakdown'	=>	'quote_project_breakdown',
 		);
 %transforms = (
 	'name' => [ 's/\.//g' ],
@@ -61,6 +64,8 @@ require openprint::Object;
 	'updated_on'	=> 'NOW()',
 	'currency_id'	=>	undef,
 	'pricelist_id'	=>	undef,
+	'activation'	=>	'N',
+	'mailinglist'	=>	'N',
 );
 
 my $debug = 1;
@@ -86,6 +91,10 @@ sub find {
 	if ( $params{'Name'} ) {
 		$sql .= q{ AND strName=?};
 		push @values, $params{'Name'};
+	} # end if
+	if ( $params{'name'} ) {
+		$sql .= q{ AND strName=?};
+		push @values, $params{'name'};
 	} # end if
 	if ( $params{'SalesPerson'} ) {
 		if ( ref $params{'SalesPerson'} eq 'ARRAY' ) {
@@ -335,6 +344,11 @@ sub CSR {
 	my $self = shift;
 	return new openprint::User( $$self{'salesrep_id'} );
 }
+
+sub Users {
+	my $self = shift;
+	return openprint::User::find('company_id'=>$$self{'id'} );
+} # end sub Users
 
 1;
 __END__

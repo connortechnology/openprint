@@ -1,7 +1,7 @@
 <? eval ( 
 	require Authen::Captcha;
 	if ( $openprint::param{'btnFunction'} eq 'Approve Project' ) {
-		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $ENV{'DOCUMENT_ROOT'}.'/skins/'.$openprint::config{'SiteTitle'}.'/images/captcha');
+		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
 		if ( 1 == $Captcha->check_code( $openprint::param{'Captcha'}, $openprint::param{'MD5SUM'} ) ) {
 			$$variable{'Approved'} = 1;
 			# Transitions from Waiting for Customer Approval to Waiting for QA Approval
@@ -110,7 +110,7 @@ I hereby give POGI consent for this job to be printed.<br/>
 					use Authen::Captcha;
 					my $Captcha = new Authen::Captcha( 
 						'data_folder'	=>	'/tmp',
-						'output_folder'	=>	$ENV{'DOCUMENT_ROOT'}.'/skins/'.$openprint::config{'SiteTitle'}.'/images/captcha',
+						'output_folder'	=>	$config{'SkinPath'}.'/images/captcha',
 					);
 					my $md5sum = $Captcha->generate_code( $openprint::config{'SignOffCaptchaLength'} );
 					$html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};

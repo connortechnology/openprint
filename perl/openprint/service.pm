@@ -14,6 +14,9 @@ require openprint::Estimating::Drilling;
 require openprint::Estimating::Scanning;
 require openprint::Estimating::Prepress;
 require openprint::Estimating::Stitching;
+require openprint::Estimating::ThreeKnifeTrim;
+require openprint::Estimating::Tipping;
+require openprint::Estimating::Blowing;
 require openprint::Estimating::Packaging;
 require openprint::Estimating::Skids;
 require openprint::Estimating::Lamination;
@@ -95,26 +98,19 @@ sub save_service {
 	} # end if
 	my $specs = $specs_cache{$service_index};
 
-	my $service_type = $$specs{'ServiceType'};
+	my $service_type = $openprint::param{'ServiceType'};
 	if ( ! $service_type ) {
-		$service_type = $openprint::param{'ServiceType'};
+		my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
+		$service_type = $ServiceType->type();
 	} # end if
 	if ( (! $service_type) and (! $$specs{'ProjectType'}) ) {
 		$log->error( "No serviceType in params for service $service_index.  Trying to recover" );
 	} # end if
-	if ( sets::isin( $service_type, ['SaddleStitching', 'LoopStitching'] ) ) {
-		$service_type = 'Stitching';
-	} elsif ( sets::isin( $service_type, [ '', 'AdditionalSignature' ] ) ) {
+	if ( sets::isin( $service_type, [ '', 'AdditionalSignature' ] ) ) {
 		$service_type = 'Printing';
-	} elsif ( sets::isin( $service_type, ['KraftWrap','ShrinkWrap','Bundling','Bundle'] ) ) {
-		$service_type = 'Packaging';
-	} elsif ( sets::isin( $service_type, ['BulkSkids','PlainCartons'] ) ) {
-		$service_type = 'Skids';
-	} elsif ( sets::isin( $service_type, ( 'PhotoRetouching', 'ColourCorrection', 'PhotoPlacement', 'CDBurning' ) ) ) {
-		$service_type = 'Prepress';
 	} # end if
 	eval ( 'require openprint::Estimating::'.$service_type.';' );
-	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs )');
+	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
 	# make this fast by doing it in one transaction
 	my $ac = sql::start_transaction( $dbh );
@@ -129,8 +125,11 @@ sub save_service {
 		} # end if
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
-	if ( $service_type eq 'UVCoating' ) {
-		openprint::Estimating::UVCoating::save( $project_index, $service_index, \%openprint::param );
+	eval( 'openprint::Estimating::'.$service_type.'::save( $project_index, $service_index, \%openprint::param )');
+	$log->error($@) if $@;
+
+	if ( $openprint::param{'Additional'} eq 'Y' ) {
+		openprint::print_project::insert_service( $log, $dbh, $project_index, $service_type );
 	} # end if
 
 	$log->debug("***** END  OF  save_service ************");
@@ -285,7 +284,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::PerfectBound::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $services{'PerfectBound'} ) {
 			push @{$services{'PerfectBound'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'PerfectBound' );
 		} # end if
@@ -298,6 +297,21 @@ sub auto_calculate {
 	if ( openprint::Estimating::Stitching::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! ( $services{'SaddleStitching'} or $services{'LoopStitching'} ) ) {
 			push @{$services{'SaddleStitching'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'SaddleStitching' );
+		} # end if
+	} # end if
+	if ( openprint::Estimating::ThreeKnifeTrim::neccessary( $log, $dbh, $project_index ) ) {
+		if ( ! $services{'ThreeKnifeTrim'} ) {
+			push @{$services{'ThreeKnifeTrim'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'ThreeKnifeTrim' );
+		} # end if
+	} # end if
+	if ( openprint::Estimating::Tipping::neccessary( $Project ) ) {
+		if ( ! $services{'Tipping'} ) {
+			push @{$services{'Tipping'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Tipping' );
+		} # end if
+	} # end if
+	if ( openprint::Estimating::Blowing::neccessary( $Project ) ) {
+		if ( ! $services{'Blowing'} ) {
+			push @{$services{'Blowing'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Blowing' );
 		} # end if
 	} # end if
 	if ( openprint::Estimating::Collating::neccessary( $log, $dbh, $project_index ) ) {
@@ -337,27 +351,13 @@ sub auto_calculate {
 
 	foreach my $type ( keys %services ) {
 		foreach my $service_index ( @{$services{$type}} ) {
-			if ( sets::isin( $type, [ 'PhotoRetouching', 'ColourCorrection', 'PhotoPlacement', 'CDBurning' ] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Prepress' );
-			} elsif ( sets::isin( $type, [ 'LoopStitching', 'SaddleStitching'] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Stitching' );
-				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type , [ 'Bundling', 'KraftWrap', 'ShrinkWrap' ] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Packaging' );
-				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type, ['BulkSkids', 'PlainCartons'] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Skids' );
-				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type, ['MetalCoil', 'PlasticCoil','PlasticComb','Cerlox','DoubleLoopWire'] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Spiral' );
-				$alert .= $$specs{'alert'};
-			} elsif ( sets::isin( $type, ['', 'AdditionalSignature'] ) ) {
-			} else {
-				eval "require openprint::Estimating::$type";
-				$openprint::log->error('Error requiring openAprint::Estimating::$type: ' . $@ ) if $@;
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $type );
-				$alert .= $$specs{'alert'};
-			} # end if
+			my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
+			my $service_type = $ServiceType->type();
+			next if sets::isin( $service_type, ['','AdditionalSignature'] );
+			eval "require openprint::Estimating::$type";
+			$openprint::log->error('Error requiring openAprint::Estimating::$type: ' . $@ ) if $@;
+			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
+			$alert .= $$specs{'alert'};
 		} # end foreach service_index
 	} # end while service_type
 	return $alert;
@@ -381,11 +381,11 @@ sub get_status {
 sub status {
 	my ( $project_index, $service_index, $new_status ) = @_;
 	if ( defined $new_status ) {
-		sql::update( $openprint::log, $openprint::dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index],
+		sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index],
 				'strStatus',    $new_status );
 		return $new_status;
 	} # end if
-	( $_ ) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
+	( $_ ) = sql::execute( undef, undef, q{SELECT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
 	return $_;
 } # end sub status
 
@@ -420,6 +420,11 @@ $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 	return join( '|', @results );
 } # end sub external_calc
 
+sub get_type_id {
+	( $_ ) = sql::execute( undef, undef, q{SELECT servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @_ );
+	return $_;
+} # end sub get_type_id
+
 sub get_type {
 	my ( $log, $dbh, $project_index, $service_index ) = @_;
 	( $_ ) = sql::execute( $log, $dbh, q{SELECT name FROM Service_Types WHERE id=(select servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
@@ -436,11 +441,8 @@ sub internal_calc {
 	my %specs = %{$specs_cache{$service_index}};
 
 	if ( ! $service_type ) {
-		if ( $specs{'ServiceType'} ) {
-			$service_type = $specs{'ServiceType'};
-		} else {
-			$service_type = get_type( $log, $dbh, $project_index, $service_index );
-		} # end if
+		my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
+		$service_type = $ServiceType->type();
 	} # end if
 
 	my $status;
@@ -457,7 +459,7 @@ sub internal_calc {
 	my $ac = sql::start_transaction( $dbh );
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', $status );
 
-	foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index )') ) {
+	foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
 $log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
 
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
@@ -525,103 +527,21 @@ sub summary {
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
 
-	my $specs = get_specs_ref( $Project->id(), $service_id );
+	my $specs = get_specs_ref( $Project, $service_id );
 	if ( $$specs{'ServiceType'} eq 'AdditionalSignature' or ( $$specs{'ServiceType'} eq '' and ! $$specs{'txtTotalPageQuantity'}  ) ) {
-		if ( $qty_index ) {
-			if ( ! $$specs{'txtSpreadSize'} ) {
-				if ( $$services{''} ) {
-					my $printing_specs = get_specs_ref( $Project, $$services{''}[0] );
-					$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
-				} # end if
-			} # end if
-			return '' if ! $$specs{'txtImposition'.$qty_index};
-			return sprintf(qq{%s %dout %s\n\%s},
-					$$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
-					$$specs{'txtImposition'.$qty_index},
-					($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index} ),
-					'Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index} . ($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? '' : sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index}) ),
-					);
-		} else {
-			my $side_one_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideOne'));
-			
-			my $side_one_coatings;
-			$side_one_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideOne'} eq 'Gloss';
-			$side_one_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideOne'} eq 'Matte';
-			if ( $$specs{'chkVarnishSpotGlossSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Spot Gloss)';
-				$side_one_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishSpotMatteSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Spot Matte)';
-				$side_one_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishDryTrapSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Dry Trap)';
-			} # end if
-			if ( $$specs{'chkVarnishOverallGlossSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Overall Gloss)';
-				$side_one_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishOverallMatteSideOne'} ) {
-				$side_one_coatings .= '+Varnish (Overall Matte)';
-				$side_one_colours -= 1;
-			} # end if
-			if ( $$specs{'SideOneUVCoatingType'} and $$specs{'SideOneUVCoatingType'} ne 'None' ) {
-				$side_one_coatings .= '+' . $$specs{'SideOneUVCoatingType'} . 'UV';
-			} # end if
-
-			my $side_two_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideTwo'));
-			my $side_two_coatings;
-			$side_two_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideTwo'} eq 'Gloss';
-			$side_two_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideTwo'} eq 'Matte';
-			if ( $$specs{'chkVarnishSpotGlossSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Spot Gloss)' ;
-				$side_two_colours -= 1;
-			} # end if
-
-			if ( $$specs{'chkVarnishSpotMatteSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Spot Matte)';
-				$side_two_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishDryTrapSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Dry Trap)';;
-			} # end if
-			if ( $$specs{'chkVarnishOverallGlossSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Overall Gloss)';
-				$side_two_colours -= 1;
-			} # end if
-			if ( $$specs{'chkVarnishOverallMatteSideTwo'} ) {
-				$side_two_coatings .= '+Varnish (Overall Matte)';
-				$side_two_colours -= 1;
-			} # end if
-			if ( $$specs{'SideTwoUVCoatingType'} and $$specs{'SideTwoUVCoatingType'} ne 'None' ) {
-				$side_two_coatings .= '+' . $$specs{'SideTwoUVCoatingType'} . 'UV';
-			} # end if
-
-			return sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s}, 
-					@$specs{'txtServiceDescription','txtWidth','txtHeight'}, 
-					$side_one_colours,
-					$side_one_coatings,
-					$side_two_colours,
-					$side_two_coatings,
-					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
-					$$specs{'rdbSpecificStock'} eq 'Y' ? 
-					join(',', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
-					join(',', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ) 
-					,
-					);
-		} # end if
-	} elsif ( sets::isin( $$specs{'ServiceType'}, ['PlainCartons','BulkSkids'] ) ) {
-		return openprint::Estimating::Skids::summary($Project->id(), $service_id, $specs, $qty_index );
-	} elsif ( sets::isin( $$specs{'ServiceType'}, ['ShrinkWrap','KraftWrap','Bundling'] ) ) {
-		return openprint::Estimating::Packaging::summary($Project->id(), $service_id, $specs, $qty_index );
+		return openprint::Estimating::Printing::summary($Project, $service_id, $specs, $qty_index );
+	} elsif ( sets::isin( $$specs{'ServiceType'}, ['ShrinkWrap','KraftWrap','Bundling','Banding','CrossBanding'] ) ) {
+		return openprint::Estimating::Packaging::summary($Project, $service_id, $specs, $qty_index );
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['SaddleStitching','LoopStitching'] ) ) {
-		return openprint::Estimating::Stitching::summary($Project->id(), $service_id, $specs, $qty_index );
-	} elsif ( $$specs{'ServiceType'} ) {
-		eval('require openprint::Estimating::'.$$specs{'ServiceType'}.';' );
-		$openprint::log->error("ERror requiring openprint::Estimating::$$specs{'ServiceType'}.'::summary: $@)") if $@;
-		my $summary = eval('openprint::Estimating::'.$$specs{'ServiceType'}.'::summary( $Project, $service_id, $specs, $qty_index );' );
-	$openprint::log->error("ERror evalling openprint::Estimating::$$specs{'ServiceType'}.'::summary: $@)") if $@;
+		return openprint::Estimating::Stitching::summary($Project, $service_id, $specs, $qty_index );
+	} else {
+		my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $Project->id(), $service_id ) );
+		my $ServiceTypeType = $ServiceType->type();
+		
+		eval('require openprint::Estimating::'.$ServiceTypeType.';' );
+		$openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)") if $@;
+		my $summary = eval('openprint::Estimating::'.$ServiceTypeType.'::summary( $Project, $service_id, $specs, $qty_index );' );
+		$openprint::log->error("ERror evalling openprint::Estimating:: $ServiceTypeType ::summary: $@)") if $@;
 		return $summary;
 	} # end if
 	return;

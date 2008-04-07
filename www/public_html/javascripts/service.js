@@ -6,17 +6,18 @@ function body_onLoad() {
 }
 
 function calc( formName ) {
-	if ( gettingNewPrice ) {
-		if ( timeout )
-			clearTimeout( timeout );
-		timeout = setTimeout( "calc('" + formName + "');", 1000 );
-	} else {
-		timeout = null;
-		remove_div('AlertDiv');
-		gettingNewPrice = true;
-		var form = getFormObj( formName );
-		if ( form ) 
+	var form = getFormObj( formName );
+	if ( form && form.ServiceType ) {
+		if ( gettingNewPrice ) {
+			if ( timeout )
+				clearTimeout( timeout );
+			timeout = setTimeout( "calc('" + formName + "');", 1000 );
+		} else {
+			timeout = null;
+			remove_div('AlertDiv');
+			gettingNewPrice = true;
 			jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+		} // end if
 	} // end if
 } // end calc()
 
@@ -53,10 +54,6 @@ function get_variables( formName, service_type ) {
            if (
                 ( form.elements[index].name == 'hdnBreakdown' )
                 || ( form.elements[index].name == 'ContinueProject' )
-                || ( form.elements[index].name == 'txtPrice' )
-                || ( form.elements[index].name == 'txtPrice1' )
-                || ( form.elements[index].name == 'txtPrice2' )
-                || ( form.elements[index].name == 'txtPrice3' )
                 || ( form.elements[index].name == 'btnFunction' )
 ) {
             } else if ( form.elements[index].name && form.elements[index].value != '' ) {
@@ -119,10 +116,13 @@ function cbFillResults( results ) {
 						} // end if
 					} // end for
 				} // end if
-			} else if ( div = document.getElementById(data[0]) ) {
-				div.style.visible = 'hidden';
+			} else if ( div = $(data[0]) ) {
+//alert('filling: ' + data[0] + ' with: ' + data[1] );
+				//div.hide();
 				div.innerHTML = data[1];
-				div.style.visible = 'visible';
+				//d//iv.show();
+			} else {
+//alert('didnt find: ' + data[0]);
 			} // end if
         } // end if
     } // end for

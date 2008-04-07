@@ -106,6 +106,12 @@ function open_window( page ) {
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
 	</table>
+<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
+	<? if ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+	<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
+	<? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+	<span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
+<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
 	<br/>
 	<span style="float: left;">
 		<? echo ( join('',
@@ -177,6 +183,7 @@ function open_window( page ) {
 	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 </form>
 <br/>
+<div class="leftColumn">
 <fieldset><legend>Inventory</legend>
 <table class="List">
     <tr><th align="left">Stock</th><th align="right" width="100">Required</th><th align="right" width="100">Allocated</th><th align="right" width="100">Checked Out</th></tr>
@@ -196,7 +203,16 @@ function open_window( page ) {
     ) ?>
 </table>
 </fieldset>
-<br/>
+</div>
+<div class="rightColumn">
+	<form name="LabelForm" id="LabelForm" method="post" action="/employee/production/labels/label.html">
+		<input type="hidden" name="project_id" value="<? echo ( $$variable{'ProjectIndex'} ) ?>"/>
+		<fieldset><legend>Labels &amp; Packing Slips</legend>
+			<div id="Labels"><!--#include virtual="_labels.html"--></div>
+		</fieldset>
+	</form>
+</div>
+<br class="spacer"/>
 <fieldset><legend>Modification History</legend>
 	<table class="List">
 	<tr>

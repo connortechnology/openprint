@@ -1,0 +1,37 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<? eval (
+    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+    $$variable{'Columns'} = 'Three';
+    } else {
+    $$variable{'Columns'} = 'Two';
+    } # end if
+) ?>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<p><label># of seals:</label>
+				<input type="text" id="SealQuantity" name="SealQuantity" value="<?SealQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+			</p>
+			<p><label>Seal type:</label>
+				<select id="SealType_id" name="SealType_id" onchange="calc(this.form.name);">
+					<option value=""> select </option>
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::Material::find( 'category'=>'Clip Seal Types', 'order'=>'lower(name)' ) ], $$variable{'SealType_id'} ); ) ?>
+				</select>
+			</p>
+			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
+		</fieldset>
+		<hr/>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceType?>">
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="Status" />
+		<div id="hdnBreakdown1" style="display: none;"></div>
+		<div id="hdnBreakdown2" style="display: none;"></div>
+		<div id="hdnBreakdown3" style="display: none;"></div>
+	</form>
+</div>
+

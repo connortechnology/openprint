@@ -1,4 +1,5 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript">
 var allocateWin;
 function allocate_window(paper_id, skid_id, quantity ) {
@@ -70,6 +71,47 @@ onDestroy: function(eventName, win) {
 } // end function checkout_window
 
 function check_inputs(form ) {
+
+	if ( (form.Name && form.txtName) && ! ( form.Name.value || form.txtName.value ) ) {
+		alert('Please select the stock Name');
+		return false;
+	} // end if
+	if ( (form.Finish && form.txtFinish) && ! ( form.Finish.value || form.txtFinish.value ) ) {
+		alert('Please select the stock Finish');
+		return false;
+	} // end if
+	if ( (form.Finish && form.txtColour) && ! ( form.Colour.value || form.txtColour.value ) ) {
+		alert('Please select the stock Colour');
+		return false;
+	} // end if
+	if ( (form.Quality && form.txtQuality) && ! ( form.Quality.value || form.txtQuality.value ) ) {
+		alert('Please select the stock Quality');
+		return false;
+	} // end if
+	if ( form.type && ! get_rdb_value( form.type ) ) {
+		alert('Please select the stock type Roll/Sheet');
+		return false;
+	} // end if
+	if ( ( form.weight && form.calliper) && ! ( form.weight.value || form.calliper.value ) ) {
+		alert('Please enter either the weight or calliper');
+		return false;
+	} // end if
+	if ( get_rdb_value( form.type ) == 'Roll' ) {
+		if ( ! form.width.value ) {
+			alert('Please enter either the width');
+			return false;
+		} // end if
+	} else {
+		if ( ! ( form.width.value && form.height.value ) ) {
+			alert('Please enter either the width and height');
+			return false;
+		} // end if
+	} // end if
+	if ( form.Quantity && ! form.Quantity.value ) {
+		alert('Please enter the quantity of stock');
+		return false;
+	} // end if
+
 	if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
 		alert( 'Skids cannot contain more than 10000lbs' );
 		return false;
@@ -104,12 +146,13 @@ function loadPaper(results) {
 	} // end for
 
 	ddm_select_by_value( form.Owner, Paper['owner_id'] );
-	ddm_select_by_value( form.ddmManufacturer, Paper['manufacturer_id'] );
-	ddm_select_by_value( form.ddmName, Paper['name_id'] );
-	ddm_select_by_value( form.ddmFinish, Paper['finish_id'] );
-	ddm_select_by_value( form.ddmColour, Paper['colour_id'] );
-	ddm_select_by_value( form.ddmWeight, Paper['weight_id'] );
-	ddm_select_by_value( form.ddmQuality, Paper['quality_id'] );
+	ddm_select_by_value( form.Manufacturer, Paper['manufacturer_id'] );
+	ddm_select_by_value( form.Name, Paper['name_id'] );
+	ddm_select_by_value( form.Finish, Paper['finish_id'] );
+	ddm_select_by_value( form.Colour, Paper['colour_id'] );
+	if ( form.Weight )
+		ddm_select_by_value( form.Weight, Paper['weight_id'] );
+	ddm_select_by_value( form.Quality, Paper['quality_id'] );
 	ddm_select_by_value( form.purpose_id, Paper['purpose_id'] );
 	form.mweight.value = Paper['mweight'];
 	form.gsm.value = Paper['gsm'];
@@ -147,7 +190,7 @@ function gsm_to_mweight( form ) {
 	input.text {
 		width: 70%;
 	}
-	select#ddmManufacturer, select#Owner, select#ddmName, select#ddmFinish, select#ddmColour, select#ddmWeight {
+	select#Manufacturer, select#Owner, select#Name, select#Finish, select#Colour, select#Weight {
 		width: 70%;
 	}
 </style>

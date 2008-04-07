@@ -1,0 +1,48 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<? eval (
+    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+    $$variable{'Columns'} = 'Three';
+    } else {
+    $$variable{'Columns'} = 'Two';
+    } # end if
+) ?>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+		<p>
+			<label>Pages per pad:</label>
+			<input type="text" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
+		</p>
+		<!--#include virtual="/includes/main/proj/cardboard_backing.html"-->
+		<!--#include virtual="/includes/main/proj/padding.html"-->
+<? eval ( 
+	@{$$variable{'GlueTypes'}} = openprint::Material::find('category'=>'Padding Glue');
+) ?>
+<? if ( @{$$variable{'GlueTypes'}} > 1 ) ?>
+		<p>
+			<label>Glue Type:</label>
+			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
+			</select>
+			<input type="checkbox" id="override_glue_id" name="override_glue_id" value="Y" <? echo ( $$variable{'override_glue_id'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+			<label class="label" for="override_glue_id">Override</label>
+<? else ( @{$$variable{'GlueTypes'}} > 1 ) ?>
+	<input type="hidden" name="glue_id" value="<?glue_id?>" />
+<? endif ( @{$$variable{'GlueTypes'}} > 1 ) ?>
+				
+		</fieldset>
+		<fieldset><legend>Results</legend>
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<div id="hdnBreakdown1" style="display:none;"></div>
+		<div id="hdnBreakdown2" style="display:none;"></div>
+		<div id="hdnBreakdown3" style="display:none;"></div>
+	</form>
+</div>

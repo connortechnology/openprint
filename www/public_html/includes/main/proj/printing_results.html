@@ -25,7 +25,7 @@
         <select name="ddmStockSheetSize<?QTYIndex?>" size="1" onchange="this.form.OverrideStockWidth<?QTYIndex?>.value='';this.form.OverrideStockHeight<?QTYIndex?>.value='';ddmStockSheetSize_onchange();">
             <option value="">Please select one</option>
          <? echo (
-                    ssi::make_drop_down( [ map { $_,$_ } openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
+                    ssi::make_drop_down( [ openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
                             'ddmStockBrand'.$$variable{'Signature'},
                             'ddmStockFinish'.$$variable{'Signature'},
                             'ddmStockColour'.$$variable{'Signature'},
@@ -47,6 +47,15 @@
 <input type="hidden" name="StockWidth<?QTYIndex?>" />
 <input type="hidden" name="StockHeight<?QTYIndex?>" />
 <input type="hidden" name="StockType<?QTYIndex?>" />
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+<p>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span id="PaperMessage<?QTYIndex?>" class="<?Columns?>Columns"> </span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -266,7 +275,10 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input type="text" id="PageQuantity<?QTYIndex?>" name="PageQuantity<?QTYIndex?>" value="<? echo ( $$variable{'PageQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9"  onkeyup="calc('f1');" /> Pages
+		<input type="text" id="PageQuantity<?QTYIndex?>" name="PageQuantity<?QTYIndex?>" value="<? echo ( $$variable{'PageQuantity'.$$variable{'QTYIndex'}} ) ?>" size="3"  onkeyup="calc(this.form.name);" /> Pages
+<input type="text" name="page_columns<?QTYIndex?>" readonly="readonly" size="2"/>x<input type="text" name="page_rows<?QTYIndex?>" readonly="readonly" size="2"/>
+<input type="hidden" name="SpreadRows<?QTYIndex?>" value="<? echo ( $$variable{'SpreadRows'.$$variable{'QTYIndex'}} ) ?>"/>
+<input type="hidden" name="SpreadCols<?QTYIndex?>" value="<? echo ( $$variable{'SpreadCols'.$$variable{'QTYIndex'}} ) ?>"/>
 		<input type="checkbox" id="chkOverridePageQuantity<?QTYIndex?>" name="chkOverridePageQuantity<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');" <? echo ( 'checked' if $$variable{"chkOverridePageQuantity$$variable{'QTYIndex'}"} eq 'Y' ) ?> />
 		<label class="radio" for="chkOverridePageQuantity<?QTYIndex?>">Override</label>
 		<input type="hidden" name="GroupPageQuantity" value="<?GroupPageQuantity?>" />
@@ -295,8 +307,6 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
         <input type="text" name="txtLayoutHeight<?QTYIndex?>" readonly="readonly" size="9" onkeyup="calc('f1');" />
         (W x H)
 	</span>
-<input type="hidden" name="SpreadRows<?QTYIndex?>" value="<? echo ( $$variable{'SpreadRows'.$$variable{'QTYIndex'}} ) ?>" />
-<input type="hidden" name="SpreadCols<?QTYIndex?>" value="<? echo ( $$variable{'SpreadCols'.$$variable{'QTYIndex'}} ) ?>" />
 <input type="hidden" name="txtImageWidth<?QTYIndex?>" value="<? echo ( $$variable{'txtImageWidth'.$$variable{'QTYIndex'}} ) ?>" />
 <input type="hidden" name="txtImageHeight<?QTYIndex?>" value="<? echo ( $$variable{'txtImageHeight'.$$variable{'QTYIndex'}} ) ?>" />
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -305,13 +315,27 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 </p>
 
 <p>
+    <label><b>Stock Price:</b></label>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+        <input id="StockPrice<?QTYIndex?>" name="StockPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'StockPrice'.$$variable{'QTYIndex'}} ) ?>" onkeyup="calc(this.form.name);" /> Per 100lbs
+        <input type="checkbox" id="OverrideStockPrice<?QTYIndex?>" name="OverrideStockPrice<?QTYIndex?>" value="Y" <? echo ( $$variable{'OverrideStockPrice'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if ( ! this.checked ) calc('f1');" />
+        <label for="OverrideStockPrice<?QTYIndex?>" class="radio">Override</label>
+	</span>
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+<p>
     <label><b>Unit Price:</b></label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<input name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="hidden" />
 	<span class="<?Columns?>Columns">
-        <input name="txtUnitPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" /> <?CurrencyName?>
+        <input name="txtUnitPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
 	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -323,7 +347,11 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-        <input name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" /> <?CurrencyName?>
+        <input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" onchange="calc(this.form.name);" />
+		<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+		<input type="checkbox" id="OverridePrice<?QTYIndex?>" name="OverridePrice<?QTYIndex?>" value="Y" <? echo ( $$variable{'OverridePrice'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+		<label for="OverridePrice<?QTYIndex?>" class="radio">Override</label>
+		<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>

@@ -1,13 +1,14 @@
 package openprint::Service;
 @ISA = qw( openprint::Object );
 use strict;
+use vars qw(%fields %transforms %defaults);
 
 require sql;
 require openprint::Object;
 require openprint::pricing;
 require openprint::logs;
 
-my %fields = (
+%fields = (
 		'id'				=>	'id',
 		'name'				=>	'name',
 		'description'		=>	'description',
@@ -17,10 +18,10 @@ my %fields = (
 		'taxexempt2'		=>	'taxexempt2',
 		);	
 
-my %transforms = (
+%transforms = (
 		);
 
-my %defaults = (
+%defaults = (
 		'supplier_id'	=>	undef,
 		'category_id'	=>	undef,
 		'taxexempt1'	=>	'N',
@@ -46,53 +47,33 @@ sub load {
 sub save {
 	my ( $self, $params ) = @_;
 
-	my $change = 1;
-
 	if ( $params ) {
-		$change = 0;
-		foreach my $field ( keys %fields ) {
-			foreach my $transform ( @{$transforms{$field}} ) {
-				eval '$params->{$field} =~ ' . $transform;
-			} # end foreach
-$openprint::log->debug("FIeld: $field" );
-			if ( ( ( ! defined $$params{$field} ) or ( $$params{$field} eq '' ) ) and exists $defaults{$field} ) {
-$openprint::log->debug("Setting default for $field to $defaults{$field}" );
-				$$params{$field} = $defaults{$field};
-			} # end if
-
-# if valid db field
-			if ( ( ! defined $$self{$field} ) or ( (defined $$params{$field}) and ( $$self{$field} ne $$params{$field} ) ) ) {
-# Only make changes to fields that have changed
-				$$self{$field} = $$params{$field};  # update cache
-				$change = 1;
-			} # end if
-		} # end foreach
+		$self->set( $params );
+		$openprint::log->debug("Set params");
 	} # end if
 
-	if ( $change ) {
-		my %sql;
-		foreach my $k ( keys %fields ) {
-			$sql{$k} = $$self{$k};
-		} # end foreach
+	my %sql;
+	foreach my $k ( keys %fields ) {
+		$sql{$k} = $$self{$k};
+	} # end foreach
 
-		my $ac = sql::start_transaction( $openprint::dbh );
-		if ( ! $$self{'id'} ) {
-			@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('ServiceIndex_seq')} );
-			$sql{id} = $$self{id};
-			if ( my $error = sql::insert( undef, undef, 'Services', \%sql ) ) {
-				sql::end_transaction( $openprint::dbh, $ac );
-				return $error;
-			} # end if
-			openprint::logs::insertLogRecord('25', "Service Index: ". $$self{id},);
-		} else {
-			if ( my $error = sql::update( undef, undef, 'Services', ['id=?',$$self{id}], \%sql ) ) {
-				sql::end_transaction( $openprint::dbh, $ac );
-				return $error;
-			} # end if
-			openprint::logs::insertLogRecord('26', "Service Index: ". $self->{index},);
+	my $ac = sql::start_transaction( $openprint::dbh );
+	if ( ! $$self{'id'} ) {
+		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('ServiceIndex_seq')} );
+		$sql{id} = $$self{id};
+		if ( my $error = sql::insert( undef, undef, 'Services', \%sql ) ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return $error;
 		} # end if
-		sql::end_transaction( $openprint::dbh, $ac );
+		openprint::logs::insertLogRecord('25', "Service Index: ". $$self{id},);
+	} else {
+		if ( my $error = sql::update( undef, undef, 'Services', ['id=?',$$self{id}], \%sql ) ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return $error;
+		} # end if
+		openprint::logs::insertLogRecord('26', "Service Index: ". $self->{index},);
 	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
 	$self->load();
 	return;
 

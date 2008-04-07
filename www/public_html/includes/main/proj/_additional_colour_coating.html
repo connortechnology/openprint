@@ -1,0 +1,36 @@
+<? eval (
+	foreach my $p ( 'Side','index','Signature' ) {
+		if ( $openprint::param{$p} and ! $$variable{$p} ) {
+			$$variable{$p} = $openprint::param{$p};
+		} # end if
+	} # end foreach
+) ?>
+<span id="ColourCoating<?Side?><?index?><?Signature?>" class="SpecialColour">
+	<span class="checkOption">
+		<input type="checkbox" id="chkColourCoating<?Side?><?index?><?Signature?>" name="ColourCoating<?Side?><?index?><?Signature?>" value="Y" onclick="if (this.checked){SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );};calc(this.form.name);"
+		<? echo ( $$variable{"ColourCoating$$variable{Side}$$variable{index}$$variable{Signature}"} eq 'Y' ? 'checked="checked"' : '' ) ?>
+		/><label class="radio" for="chkColourCoating<?Side?><?index?><?Signature?>">Colour/Coating <?index?></label>
+	</span>
+<select id="ColourCoatingType<?Side?><?index?><?Signature?>" name="ColourCoatingType<?Side?><?index?><?Signature?>" onchange="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );">
+	<option value=""> select type </option>
+	<? echo ( 
+		my @options = (
+			'PMS', 'PMS Colour',
+		);
+		my @Services = openprint::Service::find('category'=>'Coating','order'=>'lower(name)');
+		foreach my $index ( 1 .. $$variable{index}-1 ) {
+			for ( my $j = 0; $j < @Services; $j += 1 ) {
+				if ( $$variable{"ColourCoatingType$$variable{Side}$index$$variable{Signature}"} eq $Services[$j]->name() ) {
+					splice @Services, $j, 1;
+					last;
+				} # end if
+			} # end for
+		} # end foreach
+		push @options, map { $_->name(), $_->description() } @Services;
+		return ssi::make_drop_down( \@options, $$variable{"ColourCoatingType$$variable{Side}$$variable{index}$$variable{Signature}"} );
+	) ?>
+</select>
+	<input type="text" id="ColourCoatingColour<?Side?><?index?><?Signature?>" name="ColourCoatingColour<?Side?><?index?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingColour$$variable{Side}$$variable{index}$$variable{Signature}"} ) ?>" size="9" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" <? echo ( $$variable{"ColourCoatingType$$variable{Side}$$variable{index}$$variable{Signature}"} =~ /PMS/ ? '' : 'style="display:none;"' ) ?> />
+	<span id="ColourCoatingCoverage<?Side?><?index?><?Signature?>" <? echo ( $$variable{"ColourCoatingType$$variable{Side}$$variable{index}$$variable{Signature}"} =~ /Overall/ ? 'style="display:none;"' : '' ) ?> >
+	<input type="text" name="ColourCoatingCoverage<?Side?><?index?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingCoverage$$variable{Side}$$variable{index}$$variable{Signature}"} ) ?>" size="4" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" /> %</span>
+</span>

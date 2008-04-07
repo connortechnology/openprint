@@ -10,6 +10,9 @@ require openprint::pricelist;
 require openprint::paper_price;
 require openprint::paper_priceset;
 
+sub _papers {
+} # end sub _papers
+
 sub jsrs_actions {
 	my ( $r, $log, $dbh, $variable, $action, $paper_id ) = splice @_, 0, 6;
 	if ( $action eq 'Delete' ) {
@@ -19,7 +22,6 @@ sub jsrs_actions {
 		$Paper = $Paper->copy();
 		$Paper->save( $r );
 	} # end if
-
 } # end sub jsrs_actions
 
 sub list {
@@ -90,6 +92,8 @@ sub paper {
 		$Paper->gsm( $openprint::param{'gsm'} );
 		$Paper->calliper( $openprint::param{'calliper'} );
 		$Paper->sheets_per_package( $openprint::param{'sheets_per_package'} );
+		$Paper->full_packages( $openprint::param{'full_packages'} );
+		$Paper->minimum_order( $openprint::param{'minimum_order'} );
 		$Paper->cuttable( $openprint::param{'cuttable'} );
 		$Paper->doublesided( $openprint::param{'doublesided'} );
 		$Paper->multipart( $openprint::param{'multipart'} );
@@ -104,6 +108,10 @@ sub paper {
 		$Paper->taxexempt1( $openprint::param{'taxexempt1'} );
 		$Paper->taxexempt2( $openprint::param{'taxexempt2'} );
 		$Paper->fsc_code( $openprint::param{'fsc_code'} );
+		$Paper->inventory_number( $openprint::param{'inventory_number'} );
+		$Paper->minimum_order( $openprint::param{'minimum_order'} );
+		$Paper->full_packages( $openprint::param{'full_packages'} );
+		$Paper->message( $openprint::param{'message'} );
 
 		my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
 		@{$$Paper{'recommendations'}} = ();
@@ -155,12 +163,26 @@ sub jsrs_del_price {
 	return jsrs_get_prices( $r, $log, $dbh, $variable, $paper_index );
 }
 sub jsrs_add_price {
-	my ( $r, $log, $dbh, $variable, $paper_index, $pricelist_index ) = @_;
-	sql::insert( $log, $dbh, 'Paper_Prices',
-			'lngpaperindex', $paper_index, 
-			'lngListIndex', $pricelist_index );
-	$openprint::param{'paper_id'} = $paper_index;
-	return jsrs_get_prices( $r, $log, $dbh, $variable, $paper_index );
+	my ( $r, $log, $dbh, $variable, $paper_id, $pricelist_id ) = @_;
+
+	my $PaperPrice = new openprint::PaperPrice( );
+	$PaperPrice->paper_id( $paper_id );
+	$PaperPrice->pricelist_id( $pricelist_id );
+	$PaperPrice->save();
+
+	$openprint::param{'paper_id'} = $paper_id;
+	return jsrs_get_prices( $r, $log, $dbh, $variable, $paper_id );
+} # end sub jsrs_add_price
+
+sub jsrs_copy_price {
+	my ( $r, $log, $dbh, $variable, $paper_id, $price_id ) = @_;
+
+	my $PaperPrice = new openprint::PaperPrice( $price_id );
+	my $NewPrice = $PaperPrice->copy();
+	$NewPrice->save();
+
+	$openprint::param{'paper_id'} = $paper_id;
+	return jsrs_get_prices( $r, $log, $dbh, $variable, $paper_id );
 } # end sub jsrs_get_price
 
 sub jsrs_save_price {
@@ -178,28 +200,36 @@ sub jsrs_save_price {
 
 }
 
-sub jsrs_save_prices {
-	my ( $r, $log, $dbh, $variable, %specs ) = @_;
+sub _prices {
+	my ( $r, $log, $dbh, $variable ) = @_;
 
-	foreach my $key ( keys %specs ) {
+	foreach my $key ( keys %openprint::param ) {
 		if ( $key =~ /min-(\d*)/ ) {
-			jsrs_save_price( $r, $log, $dbh, $variable, $1, @specs{"min-$1","max-$1","units-$1", "cost-$1", "markup-$1", "price-$1","discount-$1"} );
+			my $Price = new openprint::PaperPrice( $1 );
+			$Price->set( {
+				'Min'	=>	$openprint::param{"min-$1"},
+				'Max'	=>	$openprint::param{"max-$1"},
+				'Units'	=>	$openprint::param{"units-$1"},
+				'Cost'	=>	$openprint::param{"costcwt-$1"},
+				'Markup'	=>	$openprint::param{"markup-$1"},
+				'Price'	=>	$openprint::param{"pricecwt-$1"},
+				'Discountable'	=>	$openprint::param{"discount-$1"},
+} );
+			$$variable{'error'} .= $Price->save();
+			#jsrs_save_price( $r, $log, $dbh, $variable, $1, @openprint::param{"min-$1","max-$1","units-$1", "costcwt-$1", "markup-$1", "pricecwt-$1","discount-$1"} );
 		} # end if
 	} # end foreach
-	$openprint::param{'paper_id'} = $specs{'paper_id'};
-	return jsrs_get_prices( $r, $log, $dbh, $variable, $specs{'paper_id'} );
-
 } # end sub jsrs_save_prices
 
 sub import_export {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	if ( $openprint::param{'btnFunction'} eq 'Export Paper' ) {
-		my @header = ( 'ID', 'Owner','Manufacturer','Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Recommendations');
+		my @header = ( 'ID', 'Owner','Manufacturer','Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Recommendations');
 		my @data;
 
 		foreach my $Paper ( openprint::Paper::find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
-			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package(), $Paper->supplied();
+			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package(), $Paper->supplied(), $Paper->digital(), $Paper->full_packages(), $Paper->minimum_order(), $Paper->inventory_number();
 			push @data, join(',', $Paper->recommendations());
 		} # end foreach
 		misc::export_csv( $r, $log, $variable, 'paper.csv', \@header, \@data );
@@ -221,7 +251,7 @@ sub import_export {
 			my $csv = Text::CSV_XS->new();
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
-				my ( $paper_id, $owner, $manufacturer, $name, $finish, $colour, $weight, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $recommendations ) = misc::trim($csv->fields());
+				my ( $paper_id, $owner, $manufacturer, $name, $finish, $colour, $weight, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $digital, $full_packages, $minimum_order, $inventory_number, $recommendations ) = misc::trim($csv->fields());
 
 				next if ! $paper_id;
 
@@ -256,6 +286,10 @@ sub import_export {
 				$Paper->bladecleaning( $scoring );
 				$Paper->grade( $scoring );
 				$Paper->supplied( $supplied );
+				$Paper->digital( $digital );
+				$Paper->full_packages( $full_packages );
+				$Paper->minimum_order( $minimum_order );
+				$Paper->inventory_number( $inventory_number );
 				$Paper->recommendations( misc::trim(split(',', $recommendations)));
 				my $rc = $Paper->save();	
 				if ( $rc ) {

@@ -1,0 +1,26 @@
+DROP TABLE IF EXISTS PAR;
+CREATE TABLE PAR (
+	id serial NOT NULL,
+	issued_to_id	INTEGER NOT NULL, FOREIGN KEY (issued_to_id) REFERENCES Users (index),
+	issued_on	date not null default NOW(),
+	issued_by_id	INTEGER NOT NULL, FOREIGN KEY (issued_by_id) REFERENCES Users (index),
+	reply_by	date not null default NOW(),
+	problem		text,
+	cause		text,
+	action		text,
+	effectiveness		text,
+	part1_user_id	INTEGER, FOREIGN KEY (part1_user_id) REFERENCES Users (index),
+	part1_signed_on	date,
+	part2_user_id	INTEGER, FOREIGN KEY (part2_user_id) REFERENCES Users (index),
+	part2_signed_on	date,
+	part3_user_id	INTEGER, FOREIGN KEY (part3_user_id) REFERENCES Users (index),
+	part3_signed_on	date,
+	part4_user_id	INTEGER, FOREIGN KEY (part3_user_id) REFERENCES Users (index),
+	part4_signed_on	date,
+	created_on	timestamp with time zone NOT NULL default NOW(),
+	updated_on	timestamp with time zone NOT NULL default NOW(),
+	deleted		boolean default false,
+	area		TEXT,
+	reason		TEXT,
+	PRIMARY KEY (id)
+);

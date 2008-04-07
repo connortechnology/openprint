@@ -122,7 +122,7 @@ my %services = $Project->get_services();
 		$bestPrice{'Price'} = $MinimumCharge{Price} if $bestPrice{'Price'} < $MinimumCharge{Price};
 
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'Price'} );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $bestPrice{'Price'}/$qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'Price'}/$qty );
 	} # end foreach qty_index
 	return 'calculated';
 } # end sub calc

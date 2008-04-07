@@ -30,24 +30,25 @@
 			) ?>
 		</p>
 	</fieldset>
-	<fieldset style="float: left; width: 47%;"><legend>Material Information</legend>
+	<fieldset class="leftColumn"><legend>Material Information (<? echo ( $$variable{'Material'}->id() ) ?>)</legend>
 		<p> 
 			<label>Material Name:</label>
-			<input type="text" name="name" value="<? hecho ( $$variable{'Material'}->name(); ) ?>" />
+			<input type="text" name="name" value="<? hecho ( $$variable{'Material'}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
 		</p>
 		<p> 
-			<label>Category:</label>
-				<select name="ddmCategory">
-					<option value="">Select a category</option>
+			<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category:</label>
+			<input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
+			<select id="category_id" name="category_id">
+				<option value="">Select a category</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MaterialCategory::find('order'=>'lower(name)') ], $$variable{'Material'}->category_id() ); ) ?>
-				</select>
+			</select>
 		</p>
 		<p> 
 			<label>Description:</label>
-			<input type="text" name="description" value="<? hecho ( $$variable{'Material'}->description(); ) ?>" />
+			<input type="text" id="description" name="description" value="<? hecho ( $$variable{'Material'}->description(); ) ?>" />
 		</p>
 	</fieldset>
-	<fieldset style="float: right; width: 47%;"><legend>Purchasing Information</legend>
+	<fieldset class="rightColumn"><legend>Purchasing Information</legend>
 		<p> 
 			<label>Supplier:</label>
 			<select name="ddmSupplier">

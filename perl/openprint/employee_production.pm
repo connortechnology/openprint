@@ -14,10 +14,13 @@ require openprint::employee_project;
 require openprint::employee_schedule;
 require openprint::bindery_schedule;
 require openprint::press_schedule;
+require openprint::employee_project;
 
 require sql;
 require openprint::MXML;
 require openprint::JDF;
+require openprint::LabelType;
+require openprint::Label;
 
 sub print_overview {
 	press_schedule( @_ );
@@ -372,7 +375,7 @@ sub projects {
 } # end sub list_current
 
 sub project_view {
-	openprint::employee_project::view( @_ );
+	return openprint::employee_project::view( @_ );
 } # end sub view_project
 
 sub send_additional_charges_notifications {
@@ -396,7 +399,7 @@ sub send_additional_charges_notifications {
 	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
 	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
 
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
 #$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_csr_notification.html\"-->";
 #$_ = encode_qp( ssi::variable_substitution( $email_template, \%info ) );
@@ -530,7 +533,7 @@ sub send_proofs_complete_email {
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_complete.html' );
 	$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	$_ = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
@@ -587,7 +590,7 @@ sub send_proofs_approved_email {
 	if ( $sales_person_email ne '  <>' ) {
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_approved-sales_rep.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		$_ = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
@@ -617,7 +620,7 @@ sub send_duedate_change_notification {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() ) {
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
@@ -721,7 +724,7 @@ sub load_press_completion {
 		$$variable{"UsedDutchRows-$$specs{'SignatureIndex'}"} = $$specs{'hdnImpositionDutchRows'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"UsedDutchRows-$$specs{'SignatureIndex'}"};
 		$$variable{"UsedRunStyle-$$specs{'SignatureIndex'}"} = $$specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"UsedRunStyle-$$specs{'SignatureIndex'}"};
 
-		@$variable{"UsePress-$$specs{'SignatureIndex'}"} = $$specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"ddmPress-$$specs{'SignatureIndex'}"};
+		$$variable{"UsePress-$$specs{'SignatureIndex'}"} = $$specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$variable{"UsePress-$$specs{'SignatureIndex'}"};
 		if ( ! $$variable{"UsedStockSheetSize-$$specs{'SignatureIndex'}"} ) {
 			if ( $$specs{'StockType'.$$variable{'Project'}->ordered_quantity_index()} eq 'Roll' ) {
 				$$variable{"UsedStockSheetSize-$$specs{'SignatureIndex'}"} = $$specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()};
@@ -729,8 +732,6 @@ sub load_press_completion {
 				$$variable{"UsedStockSheetSize-$$specs{'SignatureIndex'}"} = $$specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} .'x'.$$specs{'StockHeight'.$$variable{'Project'}->ordered_quantity_index()};
 			} # end if
 		} # end if
-
-		@$variable{"PressName-$$specs{'SignatureIndex'}"} = sql::execute( $log, $dbh, 'SELECT strName FROM tbl_Equipment WHERE strID=?', $$specs{'UsePress'} );
 	} # end foreach signature_service_index
 
 } # end sub load_press_completion
@@ -824,7 +825,7 @@ sub barcode {
 
 		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_index, 'rdbComplete', 'Yes' );
 		$Project->add_to_log( $openprint::session{'company_id'}, $openprint::param{'Operator'}, "Marked Proofs Proofs Out from $status via barcode" );
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $service_index], 'strStatus', 'Proofs Out' );
+		openprint::service::status( $Project->id(), $service_index, 'Proofs Out' );
 		$message = sprintf( 'Marked project %d Proofs Out from %s', $Project->id(), $status );
 
 #send_proofs_complete_email( $r, $log, $dbh, $variable, $project_index, $order_id );
@@ -1014,6 +1015,17 @@ sub monthly_schedule {
 				);
 	} # end if
 } # end sub monthly_schedule
+
+sub _labels {
+	my $Label = new openprint::Label( $openprint::param{'id'} );
+	if ( $openprint::param{'action'} eq 'delete' ) {
+		$Label->delete();
+	} elsif ( $openprint::param{'action'} eq 'copy' ) {
+		$Label = $Label->copy();
+		$Label->save();
+	} # end if
+	$openprint::variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} );
+} # end sub _labels
 
 1;
 

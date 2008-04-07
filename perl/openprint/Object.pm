@@ -64,9 +64,12 @@ sub get {
     my $self = shift;
     my @requested_fields = @_;
 
+	my $type = ref $self;
+	my %fields = eval ('%'.$type.'::fields');
+
     foreach my $field ( @requested_fields ) {
         if ( ! defined $fields{$field} ) {
-            $openprint::log->warn( ref $self . ": Invalid field requested: ($field)." );
+            $openprint::log->warn( $type . ": Invalid field requested: ($field)." );
         } # end if
     } # end foreach
 
@@ -77,30 +80,36 @@ sub set {
 	my ( $self, $params ) = @_;
 	my @set_fields = ();
 
-	foreach my $field ( keys %{$params} ) {
+	my $type = ref $self;
+	my %fields = eval ('%'.$type.'::fields');
+	if ( ! %fields ) {
+$openprint::log->warn('Object::set called on an object with no fields');
+	} # end if
+
+	foreach my $field ( keys %fields ) {
 		
-		if ( eval( 'defined $' . ref $self . '::fields{$field}') ) {
-$openprint::log->debug("Blah: $!") if $!;
-
-			my @transforms = eval('@{$'.ref $self.'::transforms{$field}}');
-$openprint::log->debug("Transforms: @transforms");
-
-			foreach my $transform ( @transforms ) {
-				eval '$params->{$field} =~ ' . $transform;
-			} # end foreach
-
-			if ( $params->{$field} eq '' and eval('exists $'.ref $self . '::defaults{$field}') ) {
-				$params->{$field} = $defaults{$field};
-			} # end if
-
-# if valid db field
+		if ( exists $$params{$field} ) {
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
 				$$self{$field} = $$params{$field};
-				push @set_fields, eval('$'.ref $self.'::fields{$field}'), $$params{$field};	#mark for sql updating
+				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
 			} # end if
+		} # end if
+
+#$openprint::log->debug("Transforms: @transforms");
+		my @transforms = eval('@{$'.$type.'::transforms{$field}}');
+
+		foreach my $transform ( @transforms ) {
+			eval '$$self{$field} =~ ' . $transform;
+		} # end foreach
+
+		my %defaults = eval('%'.$type . '::defaults');
+
+		if ( (!$$self{$field})  and exists $defaults{$field} ) {
+$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+			$$self{$field} = $defaults{$field};
 		} else {
-			$openprint::log->warn("User::Set::Invalid field requested: ($field)." );
+$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 		} # end if
 	} # end foreach
 	return @set_fields;

@@ -97,6 +97,7 @@ CREATE TABLE Papers (
 	grain_direction	text,
 	grade			integer,	
 	fsc_code		text,
+	message			text,
 	purpose_id		integer, foreign key (purpose_id) REFERENCES stockpurposes (id),
 	PRIMARY KEY (id)
 );

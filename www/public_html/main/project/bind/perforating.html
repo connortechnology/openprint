@@ -18,10 +18,18 @@
 					<? endif ( $$variable{'Reference'} ne '' ) ?>
 					<p> 
 						<label>Perforation Quantity:</label>
+						Vertical:
 						<input name="txtVerticalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="4" onkeyup="calc(this.form.name);" />
-						Vertical +
+						<select name="VerticalTeeth-<?SignatureIndex?>">
+							<option value="">select</option>
+							<? echo ( ssi::make_drop_down( [ ( 3,'3 Tooth',4,'4 Tooth',5,'5 Tooth',6,'6 Tooth',7,'7 Tooth',8,'8 Tooth',9,'9 Tooth',10,'10 Tooth',11,'11 Tooth',12,'12 Tooth',13,'13 Tooth',14,'14 Tooth',15,'15 Tooth',16,'16 Tooth',17,'17 Tooth') ], $$variable{'VerticalTeeth-'.$$variable{'SignatureIndex'}} ) ) ?>
+						</select><br/>
+						Horizontal:
 						<input name="txtHorizontalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="4" onkeyup="calc(this.form.name);" />
-						Horizontal
+						<select name="HorizontalTeeth-<?SignatureIndex?>">
+							<option value="">select</option>
+							<? echo ( ssi::make_drop_down( [ ( 3,'3 Tooth',4,'4 Tooth',5,'5 Tooth',6,'6 Tooth',7,'7 Tooth',8,'8 Tooth',9,'9 Tooth',10,'10 Tooth',11,'11 Tooth',12,'12 Tooth',13,'13 Tooth',14,'14 Tooth',15,'15 Tooth',16,'16 Tooth',17,'17 Tooth') ], $$variable{'HorizontalTeeth-'.$$variable{'SignatureIndex'}} ) ) ?>
+						</select><br/>
 					</p>
 				</div>
 			<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>

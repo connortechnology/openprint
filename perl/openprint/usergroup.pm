@@ -34,6 +34,11 @@ sub is_user_in {
 	if ( ! %groups_cache ) {
 		%groups_cache = sql::execute( undef, undef, q{SELECT name, id FROM usergroups} );
 	} # end if
+
+	# If the groups don't exist, then default to true
+	if ( ! @groups_cache{@$groups} ) {
+		return @$groups;
+	} # end if
 	
     return sets::intersection( @{$cache{$user_id}}, @groups_cache{@$groups} );
 } # end if

@@ -1,0 +1,4 @@
+<? eval (
+	$$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+) ?>
+<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->

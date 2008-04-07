@@ -22,24 +22,40 @@
 	$$variable{'price'} = $$variable{'Project'}->ordered_price();
 	my ( $html, $shipping_html );
 	my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
-	my %services = $$variable{'Project'}->get_services();
+	my $services = $$variable{'Project'}->services();
 	foreach my $ServiceType ( @ShippingServices ) {
-		if ( $services{$ServiceType->name()} ) {
-			foreach my $service_index ( @{$services{$ServiceType->name()}} ) {
-				my $specs = openprint::service::get_specs_ref( $$variable{'Project'}->id(), $service_index );
-				my $price = $$specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
-				$$variable{'price'} -= $price;
-				if ( $$variable{'Project'}->currency_id() != $$variable{'CurrencyIndex'} ) {
-					my $rate = $$variable{'Currency'}->conversions( $$variable{'Project'}->currency_id() );
-					$price *= $rate;
-				} # end if
-				eval(' require openprint::Estimating::'.$ServiceType->name().';' );
-				my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs, $$variable{Project}->ordered_quantity_index() );') . ' to<br/>'.eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs );');
-				$openprint::log->error("Error ". $@) if $@;
+		next if ! $$services{$ServiceType->name()};
 
-				$shipping_html .= sprintf('<tr%s><td rowspan="2" colspan="3">%s %s</td><td rowspan="2" colspan="2">%s</td><td rowspan="2" align="left">&nbsp;</td><td align="right">%s%.2f</td></tr><tr><td align="right"><a href="/main/order/%s?ProjectIndex=%d&amp;ServiceIndex=%d">Change</a></td></tr>',$$variable{'rowclass'}, $ServiceType->description(), $summary, $$specs{'alert'}, $$variable{'Currency'}->symbol(), $price, $ServiceType->url(), $$variable{'Project'}->id(), $service_index );
-			} # end foreach
-		} # end if
+		foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
+			my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_index );
+			my $price = $$specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
+			$$variable{'price'} -= $price;
+			if ( $$variable{'Project'}->currency_id() != $$variable{'CurrencyIndex'} ) {
+				my $rate = $$variable{'Currency'}->conversions( $$variable{'Project'}->currency_id() );
+				$price *= $rate;
+			} # end if
+			eval(' require openprint::Estimating::'.$ServiceType->name().';' );
+			my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs, $$variable{Project}->ordered_quantity_index() );') . '<br/>';
+
+			if ( $$specs{'FromAddress1'} or $$specs{'FromCity'} or $$specs{'FromStateProvince'} or $$specs{'FromCountry'} ) {
+            $summary .= 'From: ' . join("\n",
+                    join(',', $$specs{'FromCompany'} ) ,
+                    join(',', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
+                        @$specs{'FromCity','FromStateProvince','FromCountry'},
+                        @$specs{'FromPostalCode'} ),
+                    ) . '<br/>';
+			} # end if
+			if ( $$specs{'ToAddress1'} or $$specs{'ToCity'} or $$specs{'ToStateProvince'} or $$specs{'ToCountry'} ) {
+            $summary .= 'To: ' . join("\n",
+                    join(',', $$specs{'ToCompany'} ) ,
+                    join(',', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
+                        @$specs{'ToCity','ToStateProvince','ToCountry'},
+                        @$specs{'ToPostalCode'} ),
+                    ).'<br/>';
+			} # end if
+
+			$shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td colspan="2">$summary</td><td colspan="2">$$specs{'alert'}</td><td align="left">&nbsp;</td><td align="right">`.sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $price).'</td></tr>';
+		} # end foreach
 	} # end foreach
 	$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
 	$html .= sprintf( '%s%.2f</td></tr>', $$variable{'Currency'}->symbol(), $$variable{'price'} );

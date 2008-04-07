@@ -65,29 +65,36 @@ sub find {
 	return @$data;
 } # end sub find
 
+# Takes an array of hash pointers.  Each hash is an item to schedule assumes that the item is not already on the schedule.  Code should determine that prior to calling add
 sub add {
-	my ( $p_id, $s_id, $s_type ) = @_;
+	my $error = '';
+	foreach my $item ( @_ ) {
+		my ( $start_time ) = sql::execute( undef, undef, 'SELECT MAX(starttime+runtime) FROM Schedule WHERE equipment_id=?', $$item{equipment_id} );
+		( $start_time ) = sql::execute( undef, undef, 'SELECT NOW()' ) if ! $start_time;
 
-	my ( $service_type_id ) = sql::execute( undef, undef, 'SELECT id FROM Service_Types WHERE name=?', $s_type );
-	my ( $start_time ) = sql::execute( undef, undef, 'SELECT MAX(starttime+runtime) FROM Schedule WHERE servicetype_id=?', $service_type_id );
-	( $start_time ) = sql::execute( undef, undef, 'SELECT NOW()' ) if ! $start_time;
+		my $runtime = openprint::service::get_runtime( $openprint::log, $openprint::dbh, @$item{'projectindex','serviceindex'} );
 
-	my $runtime = openprint::service::get_runtime( $openprint::log, $openprint::dbh, $p_id, $s_id );
-
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'RunTime', $runtime );
-
-	sql::insert( $openprint::log, $openprint::dbh, 'Schedule',
-			'ProjectIndex', $p_id,
-			'ServiceIndex',	$s_id,
-			'ServiceType_id',	$service_type_id,
-			'StartTime',		$start_time,
-			'RunTime',			join(':', misc::seconds_to_interval( $runtime ) ),
-			);
-
+		$error .= sql::insert( undef, undef, 'Schedule',
+				'ProjectIndex', $$item{projectindex},
+				'ServiceIndex',	$$item{serviceindex},
+				'equipment_id',	$$item{equipment_id},
+				'StartTime',		$start_time,
+				'RunTime',			join(':', misc::seconds_to_interval( $runtime ) ),
+				);
+	} # end foreach item
+	return $error;
 } # end sub add
 
 sub remove {
-	sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, @_ );
+	my ( $p_id, $s_id ) = @_;
+	if ( ! $s_id ) {
+		my $Project = new openprint::Project( $p_id );
+		foreach $s_id ( $Project->signatures() ) {
+			sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $p_id, $s_id );
+		} # end foreach
+	} else {
+		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $p_id, $s_id );
+	} # end if
 }
 
 sub get_li {
@@ -236,7 +243,7 @@ sub get_li {
 } # end sub get_li
 
 sub get_ul {
-	my ( $start_time_start, $start_time_end, $equipment_id, $shift ) = @_;
+	my ( $start_time_start, $start_time_end, $equipment_id, $shift, $filters ) = @_;
 	my $total_impressions;
 
 	my ( $s, $min, $h, $day, $month, $year );
@@ -268,13 +275,20 @@ sub get_ul {
 	for ( my $index = 0; $index < @schedule; $index += 1 ) {
 		my $current_row = $schedule[$index];
 
+		if ( $filters ) {
+			if ( $$filters{'Status'} ) {
+				my $Project = new openprint::Project($$current_row{'projectindex'});
+				next if ! sets::isin( $Project->status(), $$filters{'Status'} );
+			} # end if
+		} # end if
+		
 		$html .= get_li( $previous_row, $current_row, $ul_id );
-		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, @$current_row{'projectindex','serviceindex'} );
-		$total_impressions += $specs{'ImpressionQuantity'};
+		my $specs = openprint::service::get_specs_ref( @$current_row{'projectindex','serviceindex'} );
+		$total_impressions += $$specs{'ImpressionQuantity'};
 		$previous_row = $current_row;
 	} # end for
 
-	if ( $$shift{'name'} ) {
+	if ( $$shift{'name'} and Date::Calc::check_date( $year, $month, $day ) ) {
 		my $Operator = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents,Schedule WHERE lngProjectIndex=ProjectIndex AND lngServiceIndex=ServiceIndex AND strStatus != 'Complete' AND equipment_id=? AND ( schedule.starttime between ? AND ? ) LIMIT 1}, $equipment_id, $start_time_start, $start_time_end ) );
 		
 		if ( openprint::usergroup::is_user_in( ['PressManager'], $openprint::session{'user_id'} ) ) {
@@ -374,6 +388,34 @@ sub set_runtime {
 	sql::update( undef, undef, 'Schedule', ['id=?', $id], 'runtime', $runtime );
 } # end sub set_runtime
 
+sub add_project_to_press_schedule {
+	my ( $Project ) = @_;
+
+	my $error = '';
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+
+	foreach my $s_s_id ( $Project->signatures() ) {
+		next if find('project_id'=>$Project->id(), 'service_id'=>$s_s_id );
+
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
+		my $runtime = openprint::service::get_runtime( $openprint::log, $openprint::dbh, $Project->id(), $s_s_id );
+		if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'},'use_in_estimating'=>1) ) {
+			$_ = sql::insert( undef, undef, 'Schedule', 'ProjectIndex', $Project->id(), 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
+			if ( $_ ) {
+				$error .= 'Error adding to press schedule: ' . $_;
+			} else {
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending press schedule." );
+
+			} # end if
+		} else {
+			$error .= 'Error adding to press schedule: Press not found for signature ' . $_;
+		} # end if
+	} # end foreach
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
+} # end sub add_order_to_press_schedule
 
 1;
 __END__

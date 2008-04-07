@@ -12,46 +12,56 @@
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Ultra Violet Coating</legend>
-		<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'Signatures'}} ) ?>
-		<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
-			<? if ( $$variable{'Reference'} ) ?>
-				Information for <?Reference?>:<br/>
-			<? endif ( $$variable{'Reference'} ) ?>
-			<div class="Front">
+		<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures() ) ?>
+		<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}} ) ?>
+			<? eval ( 
+				$$variable{'sig_specs'} = openprint::service::get_specs_ref( @$variable{'Project','SignatureServiceIndex'} ); 
+				$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
+				$$variable{'Reference'} = ssi::htmlize( $$variable{'Reference'} );
+				$$variable{'SignatureIndex'} = $$variable{'sig_specs'}{'SignatureIndex'};
+			) ?>
+			<fieldset><legend>Signature <? echo ( $$variable{'sig_specs'}{'SignatureIndex'} ) ?></legend>
+			
+			Information for <?Reference?>:<br/><br/>
+			<div class="Front leftColumn">
 				<p>
-					<label>Coating on Front:</label>
+					<label>Coatings on Front:</label>
 					<? echo (
 						my $html;
-						foreach my $type ( @{$$variable{'uvoptions'}} ) {
-							$html .= qq`<input type="radio" id="SideOneCoatingType$type-$$variable{'SignatureIndex'}" name="SideOneCoatingType-$$variable{SignatureIndex}" value="$type" onclick="calc(this.form.name);" ` . ( $$variable{"SideOneCoatingType-$$variable{'SignatureIndex'}"} eq $type ? 'checked="checked"' : '' ) . " />\n";
-							$html .= qq`<label class="radio" for="SideOneCoatingType$type-$$variable{SignatureIndex}">$type</label>\n`;
+						foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
+							next if ! $$variable{'sig_specs'}{"ColourCoatingSideOne$index"};
+							next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} =~ /UV/ );
+							$html .= $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} . '<br/>';
 						} # end foreach
+						$html = 'None' if ! $html;
 						return $html;
 					) ?>
 				</p>
 			</div>
-			<div class="Back">
+			<div class="Back rightColumn">
 				<p>
-					<label>Coating on Back:</label>
+					<label>Coatings on Back:</label>
 					<? echo (
 						my $html;
-						foreach my $type ( @{$$variable{'uvoptions'}} ) {
-							$html .= qq`<input type="radio" id="SideTwoCoatingType$type-$$variable{'SignatureIndex'}" name="SideTwoCoatingType-$$variable{SignatureIndex}" value="$type" onclick="\$('Results-$$variable{SignatureIndex}').show();calc(this.form.name);" ` . ( $$variable{"SideTwoCoatingType-$$variable{'SignatureIndex'}"} eq $type ? 'checked="checked"' : '' ) . " />\n";
-							$html .= qq`<label class="radio" for="SideTwoCoatingType$type-$$variable{SignatureIndex}">$type</label>\n`;
+						foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
+							next if ! $$variable{'sig_specs'}{"ColourCoatingSideTwo$index"};
+							next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} =~ /UV/ );
+							$html .= $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} . '<br/>';
 						} # end foreach
+						$html = 'None' if ! $html;
 						return $html;
 					) ?>
 				</p>
 			</div>
-			<br class="spacer"/>
-			<br class="spacer"/>
 			<br class="spacer"/>
 			<div id="Results-<?SignatureIndex?>" >
 				<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
 				<!--#include virtual="/includes/main/proj/signature_equipment.html"-->
 			</div>
+			<br class="spacer"/>
 		</fieldset>
-		<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
+		<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}} ) ?>
+		</fieldset>
 		<fieldset><legend>Results</legend>
 			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
 		</fieldset>

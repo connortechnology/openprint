@@ -4,6 +4,7 @@ use strict;
 require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
+require openprint::Fold;
 require sql;
 
 my $debug = 0;
@@ -21,7 +22,13 @@ my %fields = (
 	'jmf_enabled'		=>	'jmf_enabled',
 	'instantgate_enabled'		=>	'instantgate_enabled',
 	'cost_center'		=>	'cost_center',
+	'jdf_id'			=> 	'jdf_id',
+	'jdf_name'			=> 	'jdf_name',
 );
+
+sub init_cache {
+	%find_cache = ();
+} # end sub init_cache
 
 # Returns a paper object specified by the parameters
 sub find {
@@ -34,7 +41,7 @@ sub find {
 	my @values;
 	$sql = q{SELECT * FROM tbl_Equipment WHERE 1>0};
 
-	if ( $params{'id'} ) {
+	if ( exists $params{'id'} ) {
 		if ( ref $params{id} eq 'ARRAY' ) {
 			if ( @{$params{id}} > 1 ) {
 			$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}  ) . ')';
@@ -108,38 +115,155 @@ sub load {
 } # end sub load
 
 sub fits {
-   my ( $self, $width, $height, $calliper ) = @_;
+   my ( $self, $width, $height, $calliper, $service ) = @_;
 
-   if ( $self->specification('Maximum Sheet Width') or $self->specification('Maximum Sheet Length') ) {
-	   my $imp = openprint::imposition::fit( $width, $height, $self->specification('Maximum Sheet Width'),$self->specification('Maximum Sheet Length') );
+	$service = ' '.$service if $service;
+
+   if ( $self->specification("Maximum$service Sheet Width") and $self->specification("Maximum$service Sheet Length") ) {
+	   my $imp = openprint::imposition::fit( $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
 #$log->debug("Impo: $imp{'Imposition'} $imp{'Rows'}x$imp{'Cols'}");
 	   if ( ! $imp->imposition() ) {
-		   return sprintf('Too big %s x %s on %s x %s', $width, $height, $self->specification('Maximum Sheet Width'),$self->specification('Maximum Sheet Length') );
+		   return sprintf('Too big %s x %s on %s x %s', $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
+	   } # end if
+	} elsif ( $self->specification("Maximum$service Sheet Width") ) {
+		if (
+			( $width > $self->specification("Maximum$service Sheet Width") ) and
+			( $height > $self->specification("Maximum$service Sheet Width") ) 
+			) {
+		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
+		} # end if
+	} elsif ( $self->specification("Maximum$service Sheet Height") ) {
+		if (
+			( $width > $self->specification("Maximum$service Sheet Height") ) and
+			( $height > $self->specification("Maximum$service Sheet Height") ) 
+			) {
+		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Height"));
+		} # end if
+	} # end if
+
+   if ( $width and $height ) {
+	   if ( $self->specification("Minimum$service Sheet Width") and $self->specification("Minimum$service Sheet Length") ) {
+		   my $imp = openprint::imposition::fit( $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length"), $width, $height );
+		   if ( ! $imp->imposition() ) {
+			   return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length") );
+		   } # end if
+	   } elsif ( $self->specification("Minimum$service Sheet Width") ) {
+		   if (
+				   ( $width < $self->specification("Minimum$service Sheet Width") ) and
+				   ( $height < $self->specification("Minimum$service Sheet Width") ) 
+			  ) {
+			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
+		   } # end if
+	   } elsif ( $self->specification("Minimum$service Sheet Length") ) {
+		   if (
+				   ( $width < $self->specification("Minimum$service Sheet Length") ) and
+				   ( $height < $self->specification("Minimum$service Sheet Length") ) 
+			  ) {
+			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
+		   } # end if
 	   } # end if
    } # end if
 
-   if ( $self->specification('Minimum Sheet Width') or $self->specification('Minimum Sheet Length') ) {
-	   my $imp = openprint::imposition::fit( $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length'), $width, $height );
-	   if ( ! $imp->imposition() ) {
-		   return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification('Minimum Sheet Width'),$self->specification('Minimum Sheet Length') );
-	   } # end if
+   if ( $self->specification("Minimum$service Calliper") and $calliper and ( 1*$calliper < 1*$self->specification("Minimum$service Calliper") ) ) {
+	   return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification("Minimum$service Calliper") .' Inches.';
    } # end if
-
-   if ( $self->specification('Minimum Calliper') and 1*$calliper < 1*$self->specification('Minimum Calliper') ) {
-	   return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification('Minimum Calliper') .' Inches.';
-   } # end if
-   if ( $self->specification('Maximum Calliper') and 1*$calliper > 1*$self->specification('Maximum Calliper') ) {
-	   return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specifications('Maximum Calliper') .' Inches.';
+   if ( $self->specification("Maximum$service Calliper") and $calliper and ( 1*$calliper > 1*$self->specification("Maximum$service Calliper") ) ) {
+	   return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
    } # end if
 
 } # end sub fits
 
+sub Folds {
+	my $self = shift;
+
+	if ( ! $$self{'Folds'} ) {
+		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'pages,page_columns' );
+	} # end if
+	return @{$$self{'Folds'}};
+} # end sub Folds
+
+sub Fold {
+	my $self = shift;
+	my %params = @_;
+	my $params = \%params;
+
+	if ( ! $$self{'Folds'} ) {
+		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'lower(name)' );
+	} # end if
+#$openprint::log->debug("Param" . ref $params );
+#foreach my $k ( keys %params ) {
+#$openprint::log->debug("Param: $k => $$params{$k}");
+#}
+
+	foreach my $Fold ( @{$$self{'Folds'}} ) {
+		#$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
+		next if $$params{pages} and ($$Fold{pages} != $$params{pages} );
+		#$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
+		next if $$params{type} and ( $$Fold{type} ne $$params{type} );
+
+		#$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
+		next if $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching};
+		#$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
+		next if $$params{perfectbind} and defined $$Fold{perfectbind} and $$params{perfectbind} != $$Fold{perfectbind};
+		#$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
+		next if $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste};
+
+		#$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
+		next if $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} );
+		#$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;
+		next if $$Fold{page_rows} and $$params{page_rows} and ($$Fold{page_rows} != $$params{page_rows} );
+
+		#$openprint::log->debug("Wanted Page_width: $$params{page_width}, have min:$$Fold{min_width} max:$$Fold{max_width}") if $debug;
+		next if ( $params{page_width} and (
+				( $$Fold{min_width} and $$Fold{min_width} > $$params{page_width} ) or
+				( $$Fold{max_width} and $$Fold{max_width} < $$params{page_width} )
+				)) ;
+		#$openprint::log->debug("Wanted Page_height: $$params{page_height}, have min:$$Fold{min_height} max:$$Fold{max_height}") if $debug;
+		next if ( $$params{page_height} and (
+				( $$Fold{min_height} and $$Fold{min_height} > $$params{page_height} ) or
+				( $$Fold{max_height} and $$Fold{max_height} < $$params{page_height} )
+				) );
+		#$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
+		next if ( $$params{calliper} and (
+				( $$Fold{min_calliper} and $$Fold{min_calliper} > $$params{calliper} ) or
+				( $$Fold{max_calliper} and $$Fold{max_calliper} < $$params{calliper} )
+				) );
+		#$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{'max_imposition}") if $debug;
+		next if $$Fold{min_imposition} and $$params{imposition} and ($$Fold{min_imposition} > $$params{imposition});
+		next if $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition});
+		#$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if $debug;
+		next if $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} );
+		if ( $$params{gsm} ) {
+			#$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
+			my $RunSpeed = $Fold->Specification( $$params{gsm} );
+			if ( ! $RunSpeed ) {
+#$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
+				next;
+			} else {
+#$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
+			} # end if
+		} # end if
+#$openprint::log->debug("Got fold" . $Fold->description()) if $debug;
+		return $Fold;
+#$openprint::log->debug("NEVER Got fold" . $Fold->description()) if $debug;
+	} # end foreach Fold
+	return;
+} # end sub Fold
+
 sub Specifications {
 	my $self = shift;
 	return openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'strname, dblmin' );
-}
+} # end sub Specifications
 
 sub specification {
+	my $Specification = Specification( @_ );
+	if ( ! $Specification ) {
+		return;
+	} # end if
+	return $$Specification{'value'};
+} # end sub specification
+
+sub Specification {
 	my ( $self, $name, $range ) = @_;
 
 	if ( ! $$self{'Specifications'} ) {
@@ -151,19 +275,19 @@ sub specification {
 	if ( ! $$self{'Specifications'} ) {
 		#$openprint::log->warn("No specfications for " . $self->name() );
 		return;
-	}
+	} # end if
 	if ( ! $$self{'Specifications'}{$name} ) {
 		#$openprint::log->warn("No specfications for ($name) " . $self->name() );
 		return;
-	}
+	} # end if
 
 if ( ! defined $range ) {
 	if ( $$self{'Specifications'}{$name} and @{$$self{'Specifications'}{$name}} ) {
-		return $$self{'Specifications'}{$name}[0]->value() 
-	}
+		return $$self{'Specifications'}{$name}[0];
+	} # end if
 	return;
 } # end if
-$openprint::log->debug("Looking for $name : $range") if $debug;
+#$openprint::log->debug("Looking for $name : $range") if $debug;
 
 	$range = 1*$range;
 	my $i = 0;
@@ -171,17 +295,17 @@ $openprint::log->debug("Looking for $name : $range") if $debug;
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
-	$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
-		return $Spec->value() if ( 1*($Spec->min()) == $range ) or (1*($Spec->max()) == $range );
+	#$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
+		return $Spec if ( 1*($$Spec{min}) == $range ) or (1*($$Spec{max}) == $range );
 
-		return $Spec->value() if ( 
-			( ($Spec->min() eq '') or ($Spec->min() <= $range))
-			and
-			( ($Spec->max() eq '') or ($Spec->max() >= $range) )
-			and ! (1*$Spec->interpolate()) );
+		return $Spec if ( 
+			(! $$Spec{interpolate})
+			and (($$Spec{min} eq '') or ($$Spec{min} <= $range))
+			and (($$Spec{max} eq '') or ($$Spec{max} >= $range))
+			);
 
 		# first step, find one less than the min
-		last if ( 1*$Spec->min() > $range );
+		last if 1*$$Spec{min} > $range;
 		#last if ( $Spec->max() eq '' and ! $Spec->interpolate() );
 	} # end if
 	
@@ -189,38 +313,39 @@ $openprint::log->debug("Looking for $name : $range") if $debug;
 		$i -= 1;
 		# back up
 		$x = $$self{'Specifications'}{$name}[$i];
-$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
-		return if ( (1*$x->max()) and ( $x->max() < $range ) and ! $x->interpolate() );
+#$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-$openprint::log->debug("Couldn't find monimum") if $debug;
+$openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
 		return;	
 	}
 	
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
-		return $Spec->value() if ( $Spec->max() == $range ) or ( !(1*$Spec->max()) and ! (1*$Spec->interpolate()) );
+		return $Spec if ( $$Spec{max} == $range ) or ( !(1*$$Spec{max}) and ! (1*$$Spec{interpolate}) );
 
 		# first step, find one less than the min
-		last if ( $Spec->max() > $range );
+		last if $$Spec{max} > $range;
 	} # end foreach
 	if ( $i and $i < @{$$self{'Specifications'}{$name}} ) {
 		# back up
 		$y = $$self{'Specifications'}{$name}[$i];
-$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+#$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
-$openprint::log->debug("Couldn't find maximum") if $debug;
+#$openprint::log->debug("Couldn't find maximum") if $debug;
 		return;
 	} # end if
 
-	my $value;
 	if ( $x == $y ) {
-		$value = $x->value();
-	} elsif ( $x->interpolate() ) {
-		$value = $x->value() + ($range - $x->min())*($y->value()-$x->value())/($y->min()-$x->min());
+		return $x;
+	} elsif ( $$x{interpolate} ) {
+		my $S = $x->copy();
+		$$S{min} = $$S{max} = $range;
+		$$S{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
+		return $S;
 	} # end if
 #$openprint::log->debug("Returning " . $value) if $debug;
-
-	return $value;
+	return;
 } # end sub specification
 
 sub copy {
@@ -323,6 +448,7 @@ sub save {
 		openprint::logs::insertLogRecord('35', "Equipment: " . $self->strid(). ' - ' . $self->name(),);
 	} # end if
 
+if ( 0 ) {
 	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
 	foreach my $key ( keys %$param ) {
 		if ( $key =~ /SName(.*)/ and $$param{$key} ne '' ) {
@@ -340,6 +466,7 @@ sub save {
 					] );
 		} # end if
 	} # end foreach
+} # end if
 
 	sql::end_transaction( $openprint::dbh, $ac );
 	$self->load();

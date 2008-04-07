@@ -17,7 +17,11 @@
             $description = $name;
         } # end if
         $html .= qq{<p><label>$description</label>\n};
-        if ( $type eq 'pricelist' ) {
+        if ( $type eq 'Supplier' ) {
+            $html .= qq{<select name="$name"><option value=""> select one </option>};
+            $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('supplier'=>'Y','order'=>'lower(strname)') ], $value );
+            $html .= qq{</select>};
+        } elsif ( $type eq 'pricelist' ) {
             $html .= qq{<select name="$name"><option value=""> select one </option>};
             $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist::find('order'=>'lower(name)') ], $value );
             $html .= qq{</select>};
@@ -32,6 +36,9 @@
             $html .= qq{<input type="radio" id="}.$name.qq{N" name="$name" value="N"};
             $html .= ' checked' if $value eq 'N';
             $html .= qq{ /><label class="radio" for="}.$name.qq{N">No</label>\n};
+        } elsif ( $type eq 'textarea' ) {
+			my @rows = split "\n", $value;
+            $html .= sprintf('<textarea name="%s" cols="80" rows="%d" onkeyup="textarea_resize(this);" />%s</textarea>', ssi::htmlize($name), scalar @rows, $value );
         } else {
             $html .= sprintf('<input type="text" name="%s" value="%s" />', ssi::htmlize($name, $value) );
         } # end if

@@ -1,17 +1,7 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
-<script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f1.StartYear.value,document.f1.StartMonth.value,document.f1.StartDay,document.f1.StartDay.value);
-            setDaysDropDown(document.f1.EndYear.value,document.f1.EndMonth.value,document.f1.EndDay,document.f1.EndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-</script>
+<script type="text/javascript" src="/javascripts/paper.js"></script>
 <? eval ( 
-	foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code', 'width','height','OrLarger' ) {
+	foreach my $key ( 'Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code', 'width','height','OrLarger' ) {
 		$openprint::session{'/employee/inventory/paper.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
 	} # end foreach
 	$openprint::session{'/employee/inventory/paper.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/employee/inventory/paper.html?Owner'};
@@ -35,56 +25,46 @@ Please select a Paper to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Manufacturer:</label>
-			<select id="PaperManufacturer" name="PaperManufacturer" size="1">
+			<select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
+				<option value="">select</option>
 			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM Manufacturers ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::param{'PaperManufacturer'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Manufacturer'} );
 					) ?>
 			</select>
 		</p>
 		<p>
 			<label>Brand:</label>
-			<select name="PaperBrand" size="1">
+			<select id="Name" name="Name" size="1" onchange="Name_onChange(this,'');">
+				<option value="">select</option>
 			<? echo ( 
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?PaperBrand'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Name'} );
 				) ?>
 			</select>
 		</p>
 		<p>
 			<label>Finish:</label>
-			<select name="PaperFinish" size="1">
+			<select name="Finish" size="1" onchange="Finish_onChange(this,'');">
+				<option value="">select</option>
 			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperFinishes ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?PaperFinish'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Finish'} );
 				) ?>
 			</select>
 		</p>
 		<p>
 			<label>Colour:</label>
-			<select name="PaperColour" size="1">
+			<select name="Colour" size="1" onchange="Colour_onChange(this,'');">
+				<option value="">select</option>
 			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperColours ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?PaperColour'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Colour'} );
 				) ?>
 			</select>
 		</p>
 		<p>
 			<label>Weight:</label>
-			<select name="PaperWeight" size="1">
+			<select name="Weight" size="1" onchange="Weight_onChange(this,'');">
+				<option value="">select</option>
 			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?PaperWeight'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Weight'} );
 				) ?>
 			</select>
 		</p>
@@ -151,13 +131,17 @@ Please select a Paper to view/edit.<br>
         </p>
 
 		<p class="buttons">
-			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent('Results','/employee/inventory/_paper_results.html', Serialize(f1) );", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'DownloadInventory', 'download.gif', "f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", '', 'Download Inventory' ),
-				ssi::writeButton( $log, $dbh, 'DownloadLog', 'download.gif', "f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", '', 'Download Log' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'paper_details.html', 'Add New Paper' ),
-				); ) ?>
+			<? echo (
+				my $html = '';
+				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent('Results','/employee/inventory/_paper_results.html', Serialize(f1) );", '', 'Show Results' );
+				$html .= ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'paper_details.html', 'Add New Paper' );
+				if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'DownloadInventory', 'download.gif', "f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", '', 'Download Inventory' );
+					$html .= ssi::writeButton( $log, $dbh, 'DownloadLog', 'download.gif', "f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", '', 'Download Log' );
+					$html .= ssi::writeButton( $log, $dbh, 'Consumption', 'consumption.gif', "f1.btnFunction.value='Consumption Report';f1.action='paper.html?Download';f1.submit();", '', 'Consumption Report' ) if $openprint::session{'email'} =~ /iconnor/;
+				} # end if
+				return $html;
+			) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>

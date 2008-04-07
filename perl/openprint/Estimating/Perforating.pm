@@ -44,8 +44,8 @@ sub variables {
 		foreach my $qty_index ( 1 .. 3 ) {
 			next if ! $$sig_specs{'txtQuantity'.$qty_index};
 			push @v, (
-				 "txtVerticalQty-$$sig_specs{'SignatureIndex'}", 
-				 "txtHorizontalQty-$$sig_specs{'SignatureIndex'}", 
+				 "txtVerticalQty-$$sig_specs{'SignatureIndex'}", "VerticalTeeth-$$sig_specs{SignatureIndex}",
+				 "txtHorizontalQty-$$sig_specs{'SignatureIndex'}", "HorizontalTeeth-$$sig_specs{SignatureIndex}",
 				 "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
 				 "txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
 				 "txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index", "txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index",
@@ -89,7 +89,7 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 
 	$log->debug("BEGIN PERFING!!!!!!!!!!!!!!!!!!");
-	if ( openprint::project::get_project_type( $log, $dbh, $project_index ) eq 'MultiPagePublication'  ) {
+	if ( $Project->Type()->strid() eq 'MultiPagePublication'  ) {
 		$$specs{'alert'} = 'We are unable to auto-calculate a price for perforation on a multipage publication. Please call for pricing.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -132,7 +132,7 @@ sub calc {
 			$$specs{'alert'} .= 'Please specify # of perfs';
 			$status = 'uncalculated';
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 	} # end foreach quantities
 
@@ -256,13 +256,8 @@ sub signature_calc {
 
 		my @impositions = ();
 		if ( $Equipment->specification('Type') eq 'Press' ) {
-			if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Must be printed on same press.<br/>';
-				next;
-			} else {
-				@impositions = ($imposition);
-			} # end if
-			if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
+			@impositions = ($imposition);
+			if ( ( $Equipment->specification('WTPerforation') ne 'Y' ) and sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant do an inline perf when W&T.<br/>';
 				next;
 			} # end if

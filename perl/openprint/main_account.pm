@@ -47,7 +47,7 @@ sub select_company {
 			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 		} # end if
 		foreach my $k ( keys %openprint::session ) {
-			next if sets::isin( $k, [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country','Pricelist_id' ] );
+			next if sets::isin( $k, [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ] );
 			delete $openprint::session{$k};
 		} # end foreach
 	} # end if
@@ -91,7 +91,7 @@ sub registration {
 	$error .= 'Passwords do not match.<br/>' if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
 	if ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) {
 		require Authen::Captcha;
-        my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $ENV{'DOCUMENT_ROOT'}.'/skins/'.$openprint::config{'SiteTitle'}.'/images/captcha');
+        my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $openprint::config{'SkinPath'}.'/images/captcha');
 		if ( 1 != $Captcha->check_code( $openprint::param{'Captcha'}, $openprint::param{'MD5SUM'} ) ) {
 			$error .= 'Validation Code incorrect.  Please try again.';
 		} # end if
@@ -172,7 +172,7 @@ sub registration {
 		# Send confirmation
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		my %mail = (
 				SMTP	=> $openprint::config{'Mail Server'},
 				FROM	=> $agent,
@@ -222,7 +222,7 @@ sub registration {
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;
 
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 
 		if ( $openprint::config{'NewNonFirstUserAccountActivation'} ne 'Y') {
 			# send notifications
@@ -454,7 +454,7 @@ sub login {
 			return;
 		} # end if
 
-		if ( my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' ) ) {
+		if ( my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' ) ) {
 			my %info = (
 					'User' =>$Users[0],	
 					);
@@ -482,13 +482,7 @@ sub login {
 } # end sub login
 
 sub logout {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-	openprint::logs::insertLogRecord('3',);
-	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id'};
-	openprint::order::delete_unfinished_orders( $openprint::log, $openprint::dbh, $openprint::session{_session_id} );
-	#sql::insert( $log, $dbh, 'log', 'action_type', '3', 'user_id', "$user_id", 'date_time', 'NOW()', 'ip_address', $ENV{REMOTE_ADDR},);
-	
+	openprint::login::logout();
 } # sub logout
 
 sub reseller_application {
@@ -533,7 +527,7 @@ sub reseller_application {
 			my %info;
 			$info{'Company'} = $Company;
 			$info{'User'} = new openprint::User( $session{'user_id'} );
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/reseller_application_notification.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
@@ -623,7 +617,7 @@ sub credit_application {
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		my $template = ssi::variable_substitution( \$email_template, \%info );
 
 		my %mail = (

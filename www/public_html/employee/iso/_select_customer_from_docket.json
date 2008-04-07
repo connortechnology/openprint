@@ -1,0 +1,11 @@
+<? echo (
+	my @Orders = openprint::Order::find('docket'=>$openprint::param{'docket'});
+	if ( @Orders == 1 ) {
+#$openprint::log->debug("Found unique docket, company is:" . $Orders[0]->company_id() );
+		$r->content_type('text/javascript');
+		return sprintf(q{ddm_select_by_value( $('company_id'), %d );}, $Orders[0]->company_id() );
+	#} else {
+		#$openprint::log->debug("No unique docket found");
+	} # end if
+	return;
+) ?>

@@ -149,8 +149,10 @@ $dbh->do(q{alter table tbl_Materials drop column strdetails});
 $dbh->do(q{alter table tbl_Materials drop column strdescription});
 $dbh->do(q{alter table tbl_Materials rename column lngsupplierindex to supplier_id});
 $dbh->do(q{alter table tbl_Materials rename column lngcategoryindex to category_id});
-$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt1 to taxexempt1});
-$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt2 to taxexempt2});
+
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Materials LIMIT 1', {} );
+$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt1 to taxexempt1}) if exists $$data{ysntaxexempt1};
+$dbh->do(q{alter table tbl_Materials rename column ysntaxexempt2 to taxexempt2}) if exists $$data{ysntaxexempt2};
 $dbh->do(q{alter table tbl_Materials rename to Materials});
 	sql::insert( undef, undef, 'database_info', 'version', 1586, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
@@ -243,6 +245,13 @@ $dbh->do(q{insert into stockpurposes (name) values ('House Stock')});
 $dbh->do(q{insert into stockpurposes (name) values ('Job Stock')});
 $dbh->do(q{insert into stockpurposes (name) values ('Sample')});
 
+$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on});
+$dbh->do(q{alter table paper_inventory add id integer});
+$dbh->do(q{create sequence paperinventory_id_seq});
+$dbh->do(q{alter table paper_inventory alter id set nextval('paperinventory_id_seq')});
+$dbh->do(q{update paper_inventory set id=nextval('paperinventory_id_seq')});
+$dbh->do(q{alter table paper_inventory alter id set not null});
+$dbh->do(q{alter table paper_inventory add primary key(id)});
 	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1898;
@@ -251,7 +260,7 @@ if ( $version < 1899 ) {
 	print "Updating to version 1899\n";
 	my $ac = sql::start_transaction( $dbh );
 $dbh->do(q{alter table skid_contents add primary key (skid_id, paper_id)});
-$dbh->do(q{drop index "skid_contents_skid_id_index"});
+$dbh->do(q{drop index if exists "skid_contents_skid_id_index"});
 	sql::insert( undef, undef, 'database_info', 'version', 1899, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1899;
@@ -298,7 +307,7 @@ if ( $version < 1902 ) {
 	print "Updating to version 1902\n";
 	my $ac = sql::start_transaction( $dbh );
 	my @projects;
-	push @projects, openprint::Project::find( 'order'=>'index desc');
+	push @projects, openprint::Project::find( 'order'=>'index desc', 'created_on_start'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) );
 
 	foreach my $Project ( @projects ) {
 		my $services = $Project->services();
@@ -347,11 +356,321 @@ if ( $version < 1902 ) {
 if ( $version < 1903 ) {
 	print "Updating to version 1903\n";
 	my $ac = sql::start_transaction( $dbh );
-$dbh->do(q{alter paper add minimum_order integer});
-$dbh->do(q{alter paper add inventory_number	text});
+$dbh->do(q{alter table papers add minimum_order integer});
+$dbh->do(q{alter table papers add inventory_number	text});
 	sql::insert( undef, undef, 'database_info', 'version', 1903, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1903;
+} # end if
+if ( $version < 1904 ) {
+	print "Updating to version 1904\n";
+	my $ac = sql::start_transaction( $dbh );
+$dbh->do(q{alter table papers add full_packages boolean});
+	sql::insert( undef, undef, 'database_info', 'version', 1904, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1904;
+} # end if
+if ( $version < 1905 ) {
+	print "Updating to version 1905\n";
+	my $ac = sql::start_transaction( $dbh );
+$_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
+foreach my $st ( split(';', $_ ) ) {
+$dbh->do($st);
+}
+foreach my $E ( openprint::Equipment::find('Specification'=>{'Folding Capable'=>'When Printing'}) ) {
+	foreach my $Spec ( $E->Specifications() ) {
+		if ( $Spec->name() =~ /^(\d*)PageSignatureFoldRunSpeed$/ ) {
+			my $pages = $1;
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $pages.'PageSignatureFold' );
+			$Fold->type( $pages . 'PageSignatureFold' );
+			$Fold->pages( $pages );
+			$_ = $Fold->save();
+			die $_ if $_;
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
+
+		} elsif ( $Spec->name() =~ /(\d)x(\d)-(\d*)Page-(\w*)FoldDescription/ ) {
+			my ( $columns, $rows, $pages, $spine_direction ) = ( $1, $2, $3, $4 );
+			my $spread_size = $pages/($columns*$rows);
+$spread_size /= 2;
+			my $fold = sprintf('%dx%d-%dPage-%sFold', $columns, $rows, $pages, $spine_direction );
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $Spec->value() );
+			$Fold->type( $pages . 'PageSignatureFold' );
+			$Fold->pages( $pages );
+			$Fold->page_columns( $columns );
+			$Fold->page_rows( $rows );
+			$Fold->spine_direction( $spine_direction );
+			if ( $_ = $E->Specification( $fold.'MinimumWidth' ) ) {
+				$Fold->min_width( sprintf( '%.3f', ($_->value()/$columns)/$spread_size ) );
+				$_->delete();
+			} #end if
+			if ( $_ = $E->Specification( $fold.'MaximumWidth' ) ) {
+				$Fold->max_width( sprintf('%.3f', ($_->value()/$columns)/$spread_size ) );
+				$_->delete();
+			} # en dif
+			if ( $_ = $E->Specification( $fold.'MinimumHeight' ) ) {
+				$Fold->min_height( sprintf('%.3f', ($_->value()/$rows)/$spread_size ) );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification( $fold.'MaximumHeight' ) ) {
+				$Fold->max_height( sprintf('%.3f', ($_->value()/$rows)/$spread_size ) );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification( $fold.'MaximumImposition' ) ) {
+				$Fold->max_imposition( $_->value() );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification( $fold.'MinimumImposition' ) ) {
+				$Fold->min_imposition( $_->value() );
+				$_->delete();
+			} # end if
+			$_ = $Fold->save();
+			die $_ if $_;
+			while ( my $S = $E->Specification( $fold.'RunSpeed' ) ) {
+				my $FS = new openprint::FoldSpecification();
+				$FS->fold_id( $Fold->id() );
+				$FS->min_weight( $S->min() );
+				$FS->max_weight( $S->max() );
+				$FS->weight_units( $S->units() );
+				$FS->runspeed( $S->value() );
+				$FS->interpolate( $S->interpolate() );
+				$_ =  $FS->save();
+				die $_ if $_;
+				$S->delete();
+				delete $$E{'Specifications'};
+			} # end while
+			$Spec->delete();
+		} elsif ( $Spec->name() =~ /^(\w*)FoldRunSpeed/ ) {
+			my $type = $1;
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $type.'Fold' );
+			$Fold->type( $type.'Fold' );
+			$_ = $Fold->save();
+			die $_ if $_;
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
+		} # end if
+	} # end foreach
+} # end foreach
+die if sql::insert( undef, undef, 'database_info', 'version', 1905, 'backup', $backup );
+sql::end_transaction( $dbh, $ac );
+$version = 1905;
+} # end if
+if ( $version < 1906 ) {
+	print "Updating to version 1906\n";
+	my $ac = sql::start_transaction( $dbh );
+	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_Log LIMIT 1', {} );
+	if ( ( ! $blah ) or ( $$blah{'dtmwhen'} ) ) {
+		$dbh->do(q{alter table quote_log rename column dtmwhen to created_on});
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1906, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1906;
+} # end if
+if ( $version < 1907 ) {
+	print "Updating to version 1907\n";
+	my $ac = sql::start_transaction( $dbh );
+foreach my $E ( openprint::Equipment::find('Specification'=>{'Type'=>'Press'}) ) {
+	my $Spec = $E->Specification('Feed');
+	if ( ! $Spec ) {
+		$Spec = new openprint::EquipmentSpecification();
+		$Spec->equipment_id( $E->id() );
+		$Spec->name( 'Feed' );
+		$Spec->value('Sheet');
+		$Spec->save();
+	} elsif ( $Spec->value() eq 'Web' ) {
+		$Spec->value('Roll');
+		$Spec->save();
+	} # end if
+} # end foreach
+	sql::insert( undef, undef, 'database_info', 'version', 1907, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1907;
+} # end if
+if ( $version < 1908 ) {
+	print "Updating to version 1908\n";
+	my $ac = sql::start_transaction( $dbh );
+	sql::insert( undef, undef, 'configuration', { 'name'=>'ProjectViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the project view page', 'category'=>'Disclaimers'} );
+	sql::insert( undef, undef, 'configuration', { 'name'=>'OrderViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the order view page', 'category'=>'Disclaimers'});
+	sql::insert( undef, undef, 'configuration', { 'name'=>'QuoteViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the quote view page', 'category'=>'Disclaimers'});
+
+	sql::insert( undef, undef, 'database_info', 'version', 1908, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1908;
+} # end if
+if ( $version < 1909 ) {
+	print "Updating to version 1909\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('drop sequence if exists materialcategoriesindex_seq');
+	$dbh->do('drop sequence if exists material_categories_id_seq');
+	$dbh->do('create sequence material_categories_id_seq');
+	$dbh->do(q{select setval('material_categories_id_seq', (select max(id) from material_categories))});
+	$dbh->do(q{alter table material_categories alter column id set default nextval('material_categories_id_seq')});
+
+	sql::insert( undef, undef, 'database_info', 'version', 1909, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1909;
+} # end if
+if ( $version < 1910 ) {
+	print "Updating to version 1910\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('alter table service_types add unique(name);');
+	sql::insert( undef, undef, 'database_info', 'version', 1910, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1910;
+} # end if
+if ( $version < 1911 ) {
+	print "Updating to version 1911\n";
+	my $ac = sql::start_transaction( $dbh );
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Folds LIMIT 1', {} );
+	$dbh->do('alter table folds add min_calliper float') if ! exists $$data{'min_calliper'};
+	$dbh->do('alter table folds add max_calliper float') if ! exists $$data{'max_calliper'};
+	sql::insert( undef, undef, 'database_info', 'version', 1911, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1911;
+} # end if
+if ( $version < 1912 ) {
+	print "Updating to version 1912\n";
+	my $ac = sql::start_transaction( $dbh );
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Folds LIMIT 1', {} );
+	$dbh->do('alter table folds add cutting boolean') if ! exists $$data{'cutting'};
+	sql::insert( undef, undef, 'database_info', 'version', 1912, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1912;
+} # end if
+if ( $version < 1913 ) {
+	print "Updating to version 1913\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('create sequence service_categories_id_seq;');
+	$dbh->do(q`alter table service_categories alter id set default nextval('service_categories_id_seq')`);
+	$dbh->do(q`select setval('service_categories_id_seq', (select max(id) from service_categories) )`);
+	$dbh->do(q`drop sequence if exists servicecategoriesindex_seq`);
+	sql::insert( undef, undef, 'database_info', 'version', 1913, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1913;
+} # end if
+if ( $version < 1914 ) {
+	print "Updating to version 1914\n";
+	my $ac = sql::start_transaction( $dbh );
+	sql::update( undef, undef, 'service_types',['strdetailedurl=?','bind/padding.html'], 'strdetailedurl', 'bind/Padding.html' );
+	sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1914;
+} # end if
+if ( $version < 1915 ) {
+	print "Updating to version 1915\n";
+	my $ac = sql::start_transaction( $dbh );
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
+	$dbh->do(q`alter table users add deleted boolean`) if ! exists $$data{'deleted'};
+	sql::insert( undef, undef, 'database_info', 'version', 1915, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1915;
+} # end if
+
+if ( $version < 1914 ) {
+	print "Updating to version 1914\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
+	if ( ! $data ) {
+		my $ac = sql::start_transaction( $dbh );
+		$_ = misc::load_file( $log, q{../openprint/sql/Labels.sql});
+		foreach my $st ( split(';', $_ ) ) {
+			$dbh->do($st);
+		}
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
+	$version = 1914;
+} # end if
+if ( $version < 1915 ) {
+	print "Updating to version 1915\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'jdf_name'} ) {
+	$dbh->do(q`alter table tbl_equipment add jdf_name text`);
+		
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1915, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1915;
+} # end if
+if ( $version < 1916 ) {
+	print "Updating to version 1916\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM papers LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'message'} ) {
+	$dbh->do(q`alter table papers add message text`);
+		
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1916, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1916;
+} # end if
+if ( $version < 1917 ) {
+	print "Updating to version 1917\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM folds LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'folds'} ) {
+	$dbh->do(q`alter table folds add folds integer`);
+	} # end if
+	if ( ! exists $$data{'angles'} ) {
+	$dbh->do(q`alter table folds add angles integer`);
+	} # end if
+	foreach my $E ( openprint::Equipment::find() ) {
+		foreach my $Fold ( $E->Folds() ) {
+			if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
+				$Fold->type( "$1PageFold" );
+				$Fold->save();
+			} # end if
+		} # end foreach
+	} # end foreach
+	sql::insert( undef, undef, 'database_info', 'version', 1917, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1917;
+} # end if
+if ( $version < 1918 ) {
+	print "Updating to version 1918\n";
+	my $ac = sql::start_transaction( $dbh );
+	foreach my $E ( openprint::Equipment::find() ) {
+		foreach my $Fold ( $E->Folds() ) {
+			if ( $Fold->type() =~ /(\d*)PageFold/ ) {
+				sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFold"], 'name', "$1PageFold" );
+			} # end if
+		} # end foreach
+	} # end foreach
+	sql::insert( undef, undef, 'database_info', 'version', 1918, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1918;
+} # end if
+
+if ( $version < 1919 ) {
+	print "Updating to version 1919\n";
+	my $ac = sql::start_transaction( $dbh );
+		$_ = misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql});
+		foreach my $st ( split(';', $_ ) ) {
+			$dbh->do($st);
+		}
+sql::insert( undef, undef, 'QuoteLevels', 'name', 'Simple' );
+sql::insert( undef, undef, 'QuoteLevels', 'name', 'Advanced' );
+	$dbh->do(q`alter table Users add quote_level integer`);
+	$dbh->do(q`alter table Users add foreign key (quote_level) REFERENCES QuoteLevels (id)`);
+	sql::insert( undef, undef, 'database_info', 'version', 1919, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1919;
 } # end if
 
 $dbh->disconnect();

@@ -1,17 +1,11 @@
 <form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
 	<fieldset class="filters"><legend>Search Information</legend>
 		<p>
-			<label>Project Type ID:</label>
-			<input type="text" name="txtGoProjectTypeID" size="13" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
-		</p>
-		<p>
 			<label>Project Type:</label>
-			<select name="ddmProjectType" onChange="form.btnFunction.value='';f1.submit();"/>
-				<option value="">Select a Project Type</option>
-				<option value="">---------------------</option>
+			<select name="ddmProjectType" onchange="form.btnFunction.value='';f1.submit();"/>
+				<option value="">select one</option>
 				<? echo ( 
-						ssi::make_drop_down( [ map { $_->id(), $_->strid() } openprint::ProjectType::find('order'=>'lower(strid)') ], $openprint::param{'ddmProjectType'} );
+						ssi::make_drop_down( [ map { $_->id(), ssi::htmlize($_->strid()) } openprint::ProjectType::find('order'=>'lower(strid)') ], $openprint::param{'ddmProjectType'} );
 						) ?>
 			</select>
 		</p>
@@ -34,7 +28,7 @@
 	); ) ?>
 		</p>
 	</fieldset>
-	<fieldset style="float: left; width: 47%;"><legend><? echo ( $$variable{'ProjectType'}->id() ? $$variable{'ProjectType'}->strid() : 'New Project Type' ) ?></legend>
+	<fieldset class="leftColumn"><legend><? echo ( $$variable{'ProjectType'}->id() ? $$variable{'ProjectType'}->strid() : 'New Project Type' ) ?></legend>
 		<p> 
 			<label>ID:</label>
 			<input type="text" name="txtID" value="<? echo ( $$variable{'ProjectType'}->strid(); ) ?>" /> 
@@ -61,7 +55,7 @@
 			<input type="text" name="txtSort" value="<? echo ( $$variable{'ProjectType'}->sort(); ) ?>" />
 		</p>
 	</fieldset><!-- Column -->
-	<fieldset style="float: right; width: 47%;"> 
+	<fieldset class="rightColumn"> 
 		<legend>Required Services:</legend>
 		<p> 
 			<select multiple name="RequiredServices" size="4">

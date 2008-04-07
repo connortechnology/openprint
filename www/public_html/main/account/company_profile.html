@@ -101,6 +101,14 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $$variable{'Company'}->currency_id() ); ) ?>
 				</select>
 			</p>
+<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+			<p>
+				<label>Include project breakdown with quote?:</label>
+				<input type="radio" name="quote_project_breakdown" value="Y" <? echo ( $$variable{'Company'}->quote_project_breakdown() eq 'Y' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="quote_project_breakdownY">Yes</label>
+				<input type="radio" name="quote_project_breakdown" value="N" <? echo ( $$variable{'Company'}->quote_project_breakdown() ne 'Y' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="quote_project_breakdownN">No</label>
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 		</fieldset>
 		<fieldset>
 			<p class="buttons">

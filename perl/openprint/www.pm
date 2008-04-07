@@ -84,6 +84,9 @@ sub handler {
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	openprint::session_init();
 	openprint::usergroup::init_cache();
+	openprint::Material::init_cache();
+	openprint::Service::init_cache();
+	openprint::Equipment::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -109,13 +112,16 @@ $openprint::log->debug("Page: $page");
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
-		my $content;
-		if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
-			$content = misc::load_file( $log, $_ );
-		} else {
-			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+		if ( ! $variable{'PageContent'} ) {
+			my $content;
+			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+				$content = misc::load_file( $log, $_ );
+			} else {
+				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+			} # end if
+			#$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
+			$variable{'PageContent'} = $content;
 		} # end if
-		$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		my $template;
 		my @page_path = split('/', $page );
 		my $filename = pop @page_path;
@@ -138,12 +144,12 @@ $openprint::log->debug("Page: $page");
 			} # end while
 		} # end if _
 		if ( $template ) {
-			$log->warn("parsing template!");
+			$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
-			$log->warn("No template!");
+			$log->warn("No template!" . $r->content_type());
 			$log->warn($variable{'PageContent'});
-			$r->print( $variable{'PageContent'} );
+			$r->print( ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) );
 		} # end if
 	} # end if
 
@@ -155,11 +161,8 @@ $openprint::log->debug("Page: $page");
 
 	$session{'lastupdated'} = time;
 	untie %session;
-	openprint::Material::init_cache();
-	openprint::Service::init_cache();
-	openprint::Equipment::init_cache();
 	$dbh->disconnect();
-	$log->warn( "Elapsed seconds: " . ( time - $starttime ) );
+	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();
 	openprint::pricing::clear_cache( );
@@ -174,6 +177,7 @@ sub parse_page {
 	my @thing = split( '/', $uri );
 	my $filename = pop @thing;
 	shift @thing; # get rid of element before leading slash
+	my @path = @thing;
 	my $first = shift @thing if @thing;
 	my $second = shift @thing if @thing;
 	my $third = shift @thing if @thing;
@@ -324,20 +328,16 @@ $openprint::log->debug("Getfile");
 				return;
 			} # endif
 		} else {
-			eval( "require openprint::$first".'_'.$second );
+			eval( 'require openprint::'.join('_', @path ) );
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-			my ( $proc ) = $filename =~ /(.*).html/;
-			eval( 'openprint::'.$first.'_'.$second.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		} # end if
 
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
-
-		if ( $r->param('SelectCustomer') and ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ) {
-			$session{'company_id'} = $r->param('SelectCustomer');
-		} # end if
 
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.
@@ -369,7 +369,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				@variable{'ProjectTypeID','ProjectTypeName'} = ($ProjectType->strid(), $ProjectType->name() );
 				$variable{'ServiceType'} = openprint::print::get_ServiceType( @variable{'ProjectIndex','ServiceIndex'} );
 				
-				@variable{'ServiceTypeID','ServiceTypeName'} = ($variable{'ServiceType'}->name(), $variable{'ServiceType'}->description() ) if $variable{'ServiceType'};
+				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 #, sql::execute( $log, $dbh, q{SELECT currency_id from tbl_Projects where index=?}, $variable{'ProjectIndex'} ) );
@@ -382,6 +382,11 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
 				@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
+$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+if ( ! $variable{'ServiceIndex'} ) {
+$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+$variable{'ServiceIndex'} = $service_index;
+} # end if
 
 				if ( $third eq 'prin' ) {
 					$log->debug("** START OF MAIN:PROJ:PRIN * ($project_index) ($service_index)");
@@ -405,6 +410,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 					} # end if
 
 				} elsif ($third eq 'bind') {
+$openprint::log->warn('bind');
 					if ( $filename eq 'folding.html' ) {
 						require openprint::Estimating::Folding;
 						openprint::Estimating::Folding::display( $log, $dbh, \%variable, $project_index, $service_index );
@@ -428,14 +434,22 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 					} elsif ( $filename eq 'collating.html' ) {
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
+					} elsif ( $filename =~ /^(\w*).html$/ ) {
+$openprint::log->debug("$1");
+						eval sprintf('require openprint::Estimating::%1$s;
+						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
+						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+					
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename eq 'lamination.html' ) {
 						require openprint::Estimating::Lamination;
 						openprint::Estimating::Lamination::display( $log, $dbh, \%variable );
-					} elsif ( $filename eq 'UVCoating.html' ) {
-						require openprint::Estimating::UVCoating;
-						openprint::Estimating::UVCoating::display( $log, $dbh, \%variable, $project_index, $service_index );
+					} elsif ( $filename =~ /^(\w*).html$/ ) {
+$openprint::log->debug("$1");
+						eval sprintf('require openprint::Estimating::%1$s;
+						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
+						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 					} # end if
 				} elsif ($third eq 'pack') {
 					if ( $filename eq 'pack_by_weight.html' ) {
@@ -465,8 +479,10 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			eval( "require $module;" );
 			$log->warn( "Eval error of require, Reason: " . $@ );	# if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
+			if ( $proc ) {
 			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
+			} # end if
 		} # end if main:$second
 	} else {
 		
@@ -475,8 +491,10 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		eval( "require $module;" );
 		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 		my ( $proc ) = $filename =~ /(.*).html/;
-		eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		if ( $proc ) {
+			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+			$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		} # end if
 
 	} # end if $first
 

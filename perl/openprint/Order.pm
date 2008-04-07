@@ -3,7 +3,7 @@ package openprint::Order;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh);
+use vars qw(%variable $log $dbh %fields);
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -12,7 +12,7 @@ require sql;
 require openprint::logs;
 require openprint::OrderedProduct;
 
-my %fields = (
+%fields = (
 	'id'						=> 'index',
 	'company_id'				=> 'companyindex',
 	'user_id'					=> 'userindex',
@@ -155,8 +155,13 @@ sub load {
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref( 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE order_id=Index) AS paid FROM Orders WHERE Index=?', {}, $$self{'id'} );
 $openprint::log->debug("Loaded order: " . $$self{'id'} );
+		if ( ( ! $data ) and $openprint::dbh->errstr() ) {
+			$openprint::log->error('Error loading Order: ' . $openprint::dbh->errstr() );
+			return;
+		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
+$openprint::log->debug("Loaded order: " . $$self{'id'} . ', company_id: ' . $$self{'company_id'} );
 } # end sub load
 
 sub save {
@@ -173,14 +178,20 @@ sub save {
 		
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
-		sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] );
+		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if	
 	} else {
-		sql::update( $log, $dbh, 'Orders', ['Index=?', $$self{'id'}], @sql );
+		if ( ( my $error = sql::update( $log, $dbh, 'Orders', ['Index=?', $$self{'id'}], @sql ) ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if	
 	} # end if
 
 	$self->load();
 	sql::end_transaction( $dbh, $ac );
-
+	return;
 } # end sub save
 
 sub delete {
@@ -336,9 +347,9 @@ sub update_status {
 
 sub add_log {
 	my ( $self, $comment ) = @_;
-	sql::insert( $log, $dbh, 'Order_Log',[
+	sql::insert( undef, undef, 'Order_Log',[
 			'order_id',		$$self{'id'},
-			'company_id',	$openprint::session{'company_id'},
+			'company_id',	$openprint::session{'company_id'} ? $openprint::session{'company_id'} : undef,
 			'user_id',		$openprint::session{'user_id'},
 			'description',	$comment,
 			] );

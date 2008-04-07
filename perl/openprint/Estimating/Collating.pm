@@ -154,7 +154,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 			$status = 'uncalculated';
 		} # end if
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{'Equipment'}->id();
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $bestPrice{'Service'} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'Service'} );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'Total'} );
 	} # end foreach qty_index
 

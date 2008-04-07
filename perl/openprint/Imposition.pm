@@ -1,7 +1,9 @@
 package openprint::Imposition;
 use vars qw( $AUTOLOAD );
 
+
 my @fields = (
+	'start_imposition',
 	'imposition','rows','columns',
 	'dutch_rows','dutch_columns', 'dutch_orientation',
 	'image_width','image_height', # dimensions + bleed
@@ -9,7 +11,7 @@ my @fields = (
 	'layout_width','layout_height',
 	'runstyle',
 	'spread_rows','spread_columns','spreads','spread_size',
-	'gutters',
+	'grip','gutters',
 	'image_orientation',
 	'paper',
 	'Press',
@@ -82,7 +84,8 @@ sub AUTOLOAD {
 
 sub display {
 	my $self = shift;
-	$openprint::log->debug("Imp: $$self{'columns'}x$$self{'rows'}+$$self{'dutch_columns'}x$$self{'dutch_rows'}:$$self{imposition}out spreads:$$self{'spread_columns'}x$$self{'spread_rows'}=$$self{'spreads'} $$self{runstyle} on: $self->{paper}->{width}x$self->{paper}->{height} $$self{Press}->{strid}");
+	$openprint::log->debug(sprintf('Imp: %dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s',
+	@$self{'start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'}) );
 } # end sub display
 
 sub set {
@@ -185,27 +188,59 @@ sub load {
 			$$self{'layout_width'} += $dutch_width;
 		} # end if
 	} # end if
-	if ( $$specs{'PageQuantity'.$qty_index} ) {
+	if ( $$specs{'txtSignatureType'} ) {
 		$$self{'pages'} = $$specs{'PageQuantity'.$qty_index};
 		$$self{'spreads'} = $$specs{'PageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
 		$$self{'spread_rows'} = $$specs{'SpreadRows'.$qty_index};
 		$$self{'spread_columns'} = $$specs{'SpreadCols'.$qty_index};
 		$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
 		$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
-	} else {
-		$$self{'spread_rows'} = int($$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
-		$$self{'spread_columns'} = int($$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
-		#$$self{'spread_rows'} = 1;
-		#$$self{'spread_columns'} = 1;
-		$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
-	} # end if
-	$$self{'spread_size'} = $$specs{'txtSpreadSize'};
+		$$self{'spread_size'} = $$specs{'txtSpreadSize'};
+		#$$self{'image_width'} = $$self{'spread_columns'} * $$self{'image_width'};
+		#$$self{'image_height'} = $$self{'spread_rows'} * $$self{'image_height'};
 
-}
+	} else {
+		$$self{'spread_rows'} = sprintf('%.0f', $$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
+		$$self{'spread_columns'} = sprintf('%.0f',$$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
+		$$self{'spread_size'} = $$self{'spread_rows'} * $$self{'spread_columns'} * 2;
+		$$self{'spread_rows'} = 1;
+		$$self{'spread_columns'} = 1;
+		$$self{'spreads'} = 1;
+	} # end if
+
+} # end sub load
+
+sub save {
+	my ( $self, $specs, $qty_index ) = @_;
+	$$specs{'txtImposition'.$qty_index} = $self->imposition();
+	$$specs{'hdnImpositionRows'.$qty_index} = $self->rows();
+	$$specs{'hdnImpositionColumns'.$qty_index} = $self->columns();
+	$$specs{'hdnImpositionDutchRows'.$qty_index} = $self->dutch_rows();
+	$$specs{'hdnImpositionDutchColumns'.$qty_index} = $self->dutch_columns();
+	$$specs{'hdnImageOrientation'.$qty_index} = $self->image_orientation();
+	$$specs{'page_columns'.$qty_index} = $self->page_columns();
+	$$specs{'page_rows'.$qty_index} = $self->page_rows();
+	$$specs{'SpreadRows'.$qty_index} = $self->spread_rows();
+	$$specs{'SpreadCols'.$qty_index} = $self->spread_columns();
+	$$specs{'ddmRunStyle'.$qty_index} = $self->runstyle();
+	$$specs{'txtImageWidth'.$qty_index} = $self->image_width();
+	$$specs{'txtImageHeight'.$qty_index} = $self->image_height();
+	$$specs{'txtLayoutWidth'.$qty_index} = $self->layout_width();
+	$$specs{'txtLayoutHeight'.$qty_index} = $self->layout_height();
+	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction();
+} # end sub Save
 
 sub used_width {
 	my $self = shift;
-	return $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'};
+	return $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'} + ( $$self{'colour_bar_orientation'} eq 'Length' ? $$self{'colour_bar_size'} : 0 );
+}
+sub used_height {
+    my $self = shift;
+    return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'} + ( $$self{'colour_bar_orientation'} eq 'Width' ? $$self{'colour_bar_size'} : 0 );
+}
+sub used_height {
+	my $self = shift;
+	return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'};
 }
 
 sub object_area {
@@ -216,10 +251,32 @@ sub layout_area {
 	my $self = shift;
 	return $$self{'layout_width'} * $$self{'layout_height'};
 }
-#sub page_columns {I
-	#my $self = shift;
-	#return $$self{'columns'} * $$
-#} # end sub page_columns
+sub page_columns {
+	my $self = shift;
+
+	if ( $$self{'spread_size'} == 4 and $$self{'image_orientation'} eq 'Vertical' ) {
+		return $$self{'spread_columns'} * 2;
+	} else {
+		return $$self{'spread_columns'};
+	} # end if
+} # end sub page_columns
+
+sub page_rows {
+	my $self = shift;
+
+	if ( $$self{'spread_size'} == 4 and $$self{'image_orientation'} eq 'Horizontal' ) {
+		return $$self{'spread_rows'} * 2;
+	} else {
+		return $$self{'spread_rows'};
+	} # end if
+} # end sub page_rows
+
+sub page_width {
+	return $_[0]{spread_size} == 4 ? $_[0]{object_width}/2 : $_[0]{object_width};
+}
+sub page_height {
+	return $_[0]{object_height};
+}
 sub sheet_width {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
@@ -240,6 +297,18 @@ sub sheet_height {
 sub pages {
 	my $self = shift;
 	return $$self{'spreads'} * $$self{'spread_size'};
+}
+
+sub equals {
+	my ( $i1, $i2 ) = @_;
+	return 0 if $i1->Press()->id() != $i2->Press()->id();
+	return 0 if $$i1{'runstyle'} ne $$i2{'runstyle'};
+	return 0 if $$i1{'imposition'} != $$i2{'imposition'};
+	return 0 if $$i1{'columns'} != $$i2{'columns'};
+	return 0 if $$i1{'spreads'} != $$i2{'spreads'};
+	return 0 if $$i1{'paper'}->width() != $$i2{'paper'}->width();
+	return 0 if $$i1{'paper'}->height() != $$i2{'paper'}->height();
+	return 1;
 }
 
 1;

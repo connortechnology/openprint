@@ -55,35 +55,12 @@ sub make_quote_from_quote {
 		my $NewQuote = new openprint::Quote( $new_quote_id );
 		$NewQuote->store_user_by_info( \%by );
 		$NewQuote->store_user_for_info( \%for );
+		$NewQuote->add_log( 'Copied from quote ' . $quote_id );
+		$Quote->add_log( 'Copied to quote ' . $new_quote_id );
 		return $new_quote_id;
 	} # end if
 	return 0;
 } # End sub make_quote_from_quote
-
-
-sub details {
-	my ( $r, $log, $dbh, $variable ) = @_;
-	my $quote_id;
-
-	if ( ($openprint::param{'btnFunction'} eq 'Process New Quote') and $openprint::param{'quote_id'} ) {
-		$quote_id = make_quote_from_quote( $r, $log, $dbh, @openprint::session{'company_id','user_id'}, $openprint::param{'quote_id'} );
-	} elsif ( $openprint::param{'remove'} ) {
-		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?', @openprint::param{'quote_id','remove'} );
-	} elsif ( $openprint::param{'btnFunction'} eq 'Process Quote' ) {
-		$quote_id = add_project_to_quote( $r, $log, $dbh, $variable );
-	} elsif ( $openprint::param{'btnFunction'} eq 'Continue' ) {
-		$quote_id = $openprint::param{'quote_id'};
-	} # end if
-
-# this should only happen if there was an error creating the quote
-	$quote_id = $openprint::session{'quote_id'} if ! $quote_id;
-	$$variable{'Quote'} = new openprint::Quote( $quote_id );
-	$openprint::session{'quote_id'} = $quote_id;
-	if ( $quote_id ) {
-		#get_misc_info( $log, $dbh, $variable, $quote_id );
-		openprint::quote::get_unfinished_quote_contents( $log, $dbh, $variable, $quote_id );
-	} # end if
-} # end sub details
 
 sub history {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -104,12 +81,15 @@ sub history {
 sub history_details {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
+
 	my $quote_id = $openprint::param{'quote_id'};
+	$quote_id =~ s/\D//g;
 	$$variable{'Quote'} = new openprint::Quote( $quote_id );
 	if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) or ( $$variable{'Quote'}->company_id() == $openprint::session{'company_id'} ) ) {
 		openprint::quote::get_finished_quote_contents( $log, $dbh, $variable, $quote_id );
 		if ( $openprint::param{'btnFunction'} eq 'Resend' ) {
 			$$variable{'Quote'}->send();
+			$$variable{'Quote'}->add_log('Resent');
 		} # end if
 	} # end if
 } # end sub history_details
@@ -136,20 +116,21 @@ sub add_project_to_quote {
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 
 	$quote_id = $openprint::session{'quote_id'} if ! $quote_id;
-$openprint::log->debug("QI: $quote_id");
 	$quote_id = new openprint::Quote( $quote_id )->id() if $quote_id;
-$openprint::log->debug("QI: $quote_id");
 	$quote_id = create_quote( $log, $dbh, $variable ) if ! $quote_id;
-$openprint::log->debug("QI: $quote_id");
 	$openprint::session{'quote_id'} = $quote_id;
+
+	my $Quote = new openprint::Quote( $quote_id );
 
 	# check to make sure project isn't already in the quote.
 	$_ = q{SELECT ProjectIndex FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?};
 	if ( ! sql::execute( $log, $dbh, $_, $quote_id, $project_index ) ) {
-		sql::insert( $log, $dbh, 'tbl_Quote_Details', 
-				'QuoteIndex',		$quote_id,
-				'ProjectIndex',		$project_index,
-				);
+		if ( ! sql::insert( $log, $dbh, 'tbl_Quote_Details', [
+					'QuoteIndex',		$quote_id,
+					'ProjectIndex',		$project_index,
+					] ) ) {
+			$Quote->add_log( 'Added project ' . $project_index );
+		} # end if
 	} # end if
 	return $quote_id;
 } # end sub add_project_to_quote
@@ -177,8 +158,23 @@ sub information {
 	my $quote_id;
 	if ( $openprint::param{'btnFunction'} eq 'Process Quote' ) {
 		$quote_id = add_project_to_quote( $r, $log, $dbh, $variable );
+	} elsif ( ($openprint::param{'btnFunction'} eq 'Process New Quote') and $openprint::param{'quote_id'} ) {
+		$quote_id = make_quote_from_quote( $r, $log, $dbh, @openprint::session{'company_id','user_id'}, $openprint::param{'quote_id'} );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Continue' ) {
+		$quote_id = $openprint::param{'quote_id'};
 	} else {
 		$quote_id = $openprint::session{'quote_id'};
+	} # end if
+# this should only happen if there was an error creating the quote
+	$quote_id = $openprint::session{'quote_id'} if ! $quote_id;
+
+	my $Quote = new openprint::Quote( $quote_id );	
+	$$variable{'Quote'} = $Quote;
+	$openprint::session{'quote_id'} = $quote_id;
+
+	if ( $openprint::param{'remove'} ) {
+		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?', @openprint::param{'quote_id','remove'} );
+		$Quote->add_log( 'Remove project ' . $openprint::param{'remove'} );
 	} # end if
 
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
@@ -190,12 +186,11 @@ sub information {
 		} # end if
 	} # end foreach
 
-# This isn't neccessarily the logged in company
-
+	# This isn't neccessarily the logged in company
 	my $cust_id;
 
 	if ( $openprint::session{'user_id'} ) {
-		( $cust_id ) = new openprint::User( $openprint::session{'user_id'} )->company_id();
+		$cust_id = new openprint::User( $openprint::session{'user_id'} )->company_id();
 	} # end if
 
 	my $populated = 0;
@@ -223,21 +218,23 @@ $openprint::log->debug("No for info");
         if ( $openprint::session{'user_id'} ) {
 # pull information to pre-fill input fields
 			my $Company = new openprint::Company( $cust_id );
-			@$variable{'ByCompanyName', 'ByAddress1', 'ByAddress2', 'ByCity', 'ByStateProvince', 'ByPostalCode', 'ByCountry', 'ByPhone', 'ByExtension', 'ByFax'} = (
-				$Company->name(), $Company->address1(), $Company->address2(), $Company->city(), $Company->state(), $Company->postalcode(), $Company->country(), $Company->phone(), $Company->extension(), $Company->fax() );
-$openprint::log->debug( join(',', @$variable{'ByCompanyName', 'ByAddress1', 'ByAddress2', 'ByCity', 'ByStateProvince', 'ByPostalCode', 'ByCountry', 'ByPhone', 'ByExtension', 'ByFax'} ) );
+			@$variable{'ByCompanyName', 'ByAddress1', 'ByAddress2', 'ByCity', 'ByStateProvince', 'ByPostalCode', 'ByCountry', 'ByPhone', 'ByExtension', 'ByFax'} = $Company->get('name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
 		} # end if
 	} # end if
 
 	if ( ! $$variable{'ByEmail'} ) {
 		if ( $openprint::session{'user_id'} ) {
-			$_ = 'SELECT strEmail,strTitle, strFirstName, strLastName, strSalutation FROM Users WHERE Index=?';
-			@$variable{'ByEmail','ByTitle','ByFirstName','ByLastName','BySalutation'} = sql::execute( $log, $dbh, $_, $openprint::session{'user_id'} );
+			my $User = new openprint::User( $openprint::session{'user_id'} );
+			@$variable{'ByEmail','ByTitle','ByFirstName','ByLastName','BySalutation'} = $User->get('email','title','firstname','lastname','salutation');
 		} # end if
 	} # end if
 
 	if ( $openprint::session{'user_id'} ) {
-		$$variable{'ddmUsersOptions'} = ssi::fill_drop_down( $log, $dbh, "SELECT Index, strFirstName || ' ' || strLastName FROM Users WHERE CompanyIndex=$openprint::session{'company_id'} ORDER BY lower(strLastName)" );
+		$$variable{'ddmUsersOptions'} = ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$openprint::session{'company_id'},'order'=>'lower(strlastname)' ) ] );
+	} # end if
+
+	if ( $quote_id ) {
+		openprint::quote::get_unfinished_quote_contents( $log, $dbh, $variable, $quote_id );
 	} # end if
 } # end sub information
 
@@ -309,9 +306,11 @@ sub confirmation {
 		$Quote->administrator_comments( $openprint::param{'AdministratorComments'} ) if exists $openprint::param{'AdministratorComments'};
 		$Quote->save();
 		$Quote->send();
+		$Quote->add_log( 'Submitted' );
 	} # end if
 	delete $openprint::session{'quote_id'};
 } # end sub finalise_quote
+
 
 1;
 

@@ -26,9 +26,10 @@ require sql;
 
 my @variables = (
 	'txtQuantity1','txtQuantity2','txtQuantity3',
-	'txtSteelRuleLength','txtDieCutBends',
+	'txtSteelRuleLength','txtDieCutBends','txtHoleClearingHoles',
 	'rdbSuppliedDie','txtDieCutPunches',
 	'rdbDieCutting',
+	'OverridePrice1','OverridePrice2','OverridePrice3',
 	'txtPrice1','txtPrice2','txtPrice3',
 	'DiePrice1','DiePrice2','DiePrice3',
 	'OverrideDiePrice',
@@ -316,8 +317,10 @@ sub calc {
 
 	
 		$$specs{"DiePrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalDiePrice );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $totalUnitPrice );
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice );
+		} # end if
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalUnitPrice );
 
 	} # end foreach qty
 

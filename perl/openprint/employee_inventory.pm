@@ -10,6 +10,10 @@ require openprint::pricelist;
 require openprint::paper_price;
 require openprint::paper_priceset;
 require openprint::StockPurpose;
+require openprint::PaperInventory;
+require openprint::StockName;
+require openprint::StockFinish;
+require openprint::StockColour;
 
 sub skids {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -63,10 +67,40 @@ sub skids {
 sub paper {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	if ( $openprint::param{'btnFunction'} eq 'Download Log' ) {
+	if ( $openprint::param{'btnFunction'} eq 'Consumption Report' ) {
+		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
+		my @data;
+		my @inventory = openprint::PaperInventory::find(
+				'updated_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'StartYear','StartMonth','StartDay'} ),
+				'updated_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} ),
+				'order'=>'updated_on',
+		);
+		foreach my $I ( @inventory ) {
+			my $Paper = $I->Paper();
+			push @data, 
+Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())),
+				$I->User()->name(),
+				$Paper->Owner()->name(),
+				$Paper->name(),
+				$Paper->finish(),
+				$Paper->colour(),
+				$Paper->weight(),
+				$Paper->width(),
+				$Paper->height(),
+				$Paper->quality(),
+				$Paper->mweight(),
+				$Paper->gsm(),
+				$I->skid_id(),
+				$I->delta . $I->units,
+				$I->comment;
+		} # end while
+		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+		push @data, ( 'Report generated',$date,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef );
+		misc::export_csv( $r, $log, $variable, "PaperConsumption $date.csv", \@header, \@data );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Download Log' ) {
 
 		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
-		my @info = sql::execute( $log, $dbh, q{SELECT paper_id, skid_id, user_id, delta, units, updatetime, comment FROM paper_inventory ORDER BY updatetime DESC} );
+		my @info = sql::execute( $log, $dbh, q{SELECT paper_id, skid_id, user_id, delta, units, updated_on, comment FROM paper_inventory ORDER BY updated_on DESC} );
 		my @data;
 		while ( my ( $paper_id, $skid_id, $user_id, $delta, $units, $time, $comment ) = splice @info, 0, 7 ) {
 			my $Paper = new openprint::Paper( $paper_id );
@@ -90,7 +124,7 @@ sub paper {
 		misc::export_csv( $r, $log, $variable, "PaperInventoryLog $date.csv", \@header, \@data );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Download Inventory' ) {
 
-		my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Date Added','Location', 'InStock');
+		my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','Date Added','Location', 'InStock');
 		my @papers = openprint::Paper::find(
 				'owner_id'	=>	( defined $openprint::param{'Owner'} ? $openprint::param{'Owner'} : '' ),
 				'manufacturer_id'	=>	( defined $openprint::param{'PaperManufacturer'} ? $openprint::param{'PaperManufacturer'} : undef ),
@@ -98,7 +132,11 @@ sub paper {
 				'finish_id' =>	( defined $openprint::param{'PaperFinish'} ? $openprint::param{'PaperFinish'} : undef ),
 				'colour_id' =>	( defined $openprint::param{'PaperColour'} ? $openprint::param{'PaperColour'} : undef ),
 				'weight_id' =>	( defined $openprint::param{'PaperWeight'} ? $openprint::param{'PaperWeight'} : undef ),
-				'type'		=>	$openprint::param{'type'},
+				'type'		=>	$openprint::param{'Type'},
+				'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'StartYear','StartMonth','StartDay'} ),
+				'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} ),
+				'allocated_to_docket'   => $openprint::param{'Docket'},
+				'fsc_code'  =>  $openprint::param{'fsc_code'},
 				'order_by'	=> 'owner_id,manufacturer_id,name_id,finish_id,colour_id,weight_id,width,height',
 				);
 		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
@@ -150,7 +188,7 @@ sub paper {
 			if ( $key =~ /txtInStock(\d*)/ ) {
 				my $paper_index = $1;
 				my $delta = 0;
-				my ( $instock ) = sql::execute( $log, $dbh, 'SELECT InStock FROM Paper_Inventory WHERE PaperIndex=? AND UpdateTime = (SELECT MAX(UpdateTime) FROM Paper_Inventory WHERE PaperIndex=?)', $paper_index, $paper_index );
+				my ( $instock ) = sql::execute( $log, $dbh, 'SELECT InStock FROM Paper_Inventory WHERE PaperIndex=? AND updated_on = (SELECT MAX(updated_on) FROM Paper_Inventory WHERE PaperIndex=?)', $paper_index, $paper_index );
 				if ( $openprint::param{$key} =~ /[\-\+]\d*/ ) {
 					$delta = $openprint::param{$key};
 				} else {
@@ -181,19 +219,19 @@ sub paper_details {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Next' ) {
 		$Paper = $Paper->next();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
-		$Paper->owner_id( $openprint::param{'ddmOwner'} );
+		$Paper->owner_id( $openprint::param{'Owner'} );
 		$Paper->manufacturer( $openprint::param{'txtManufacturer'} ) if $openprint::param{'txtManufacturer'};
-		$Paper->manufacturer_id( $openprint::param{'ddmManufacturer'} ) if $openprint::param{'ddmManufacturer'};
+		$Paper->manufacturer_id( $openprint::param{'Manufacturer'} ) if $openprint::param{'Manufacturer'};
 		$Paper->name( $openprint::param{'txtName'} ) if $openprint::param{'txtName'};
-		$Paper->name_id( $openprint::param{'ddmName'} ) if $openprint::param{'ddmName'};
+		$Paper->name_id( $openprint::param{'Name'} ) if $openprint::param{'Name'};
 		$Paper->finish( $openprint::param{'txtFinish'} ) if $openprint::param{'txtFinish'};
-		$Paper->finish_id( $openprint::param{'ddmFinish'} ) if $openprint::param{'ddmFinish'};
+		$Paper->finish_id( $openprint::param{'Finish'} ) if $openprint::param{'Finish'};
 		$Paper->colour( $openprint::param{'txtColour'} ) if $openprint::param{'txtColour'};
-		$Paper->colour_id( $openprint::param{'ddmColour'} ) if $openprint::param{'ddmColour'};
+		$Paper->colour_id( $openprint::param{'Colour'} ) if $openprint::param{'Colour'};
 		$Paper->weight( $openprint::param{'txtWeight'} ) if $openprint::param{'txtWeight'};
-		$Paper->weight_id( $openprint::param{'ddmWeight'} ) if $openprint::param{'ddmWeight'};
+		$Paper->weight_id( $openprint::param{'Weight'} ) if $openprint::param{'Weight'};
 		$Paper->quality( $openprint::param{'txtQuality'} ) if $openprint::param{'txtQuality'};
-		$Paper->quality_id( $openprint::param{'ddmQuality'} ) if $openprint::param{'ddmQuality'};
+		$Paper->quality_id( $openprint::param{'Quality'} ) if $openprint::param{'Quality'};
 		$Paper->type( $openprint::param{'type'} );
 		if ( $openprint::param{'type'} eq 'Roll' ) {
 			$Paper->width( $openprint::param{'width'} );
@@ -208,21 +246,21 @@ sub paper_details {
 		$Paper->fsc_code( $openprint::param{'fsc_code'} );
 		if ( ! $openprint::param{'paper_id'} ) {
 			my @papers = openprint::Paper::find(
-					'owner_id'	=>	$openprint::param{'ddmOwner'},
+					'owner_id'	=>	$openprint::param{'Owner'},
 					'manufacturer'		=>	$openprint::param{'txtManufacturer'},
-					'manufacturer_id'	=>	$openprint::param{'ddmManufacturer'},
+					'manufacturer_id'	=>	$openprint::param{'Manufacturer'},
 					'name'		=>	$openprint::param{'txtName'},
-					'name_id'	=>	$openprint::param{'ddmName'},
+					'name_id'	=>	$openprint::param{'Name'},
 					'finish'	=>	$openprint::param{'txtFinish'},
-					'finish_id' =>	$openprint::param{'ddmFinish'},
+					'finish_id' =>	$openprint::param{'Finish'},
 					'colour'	=>	$openprint::param{'txtColour'},
-					'colour_id' =>	$openprint::param{'ddmColour'},
+					'colour_id' =>	$openprint::param{'Colour'},
 					'weight'	=>	$openprint::param{'txtWeight'},
-					'weight_id' =>	$openprint::param{'ddmWeight'},
+					'weight_id' =>	$openprint::param{'Weight'},
 					'width'	=> $openprint::param{'width'},
 					'height'	=>	$openprint::param{'height'},
 					'quality'	=>	$openprint::param{'txtQuality'},
-					'quality_id'	=>	$openprint::param{'ddmQuality'},
+					'quality_id'	=>	$openprint::param{'Quality'},
 					);
 			if ( @papers ) {
 				$$variable{'error'} .= qq`A paper matching those parameters already exists. Click here to edit it: <a href="paper_details.html?paper_id=$papers[0]{id}">paper $papers[0]{id}</a>`;
@@ -274,29 +312,29 @@ sub save_skid {
 	$Skid->location( $openprint::param{'txtLocation'} ) if $openprint::param{'txtLocation'};
 	$Skid->save();
 
-	if ( $openprint::param{'ddmName'} or $openprint::param{'txtName'} ) {
+	if ( $openprint::param{'Name'} or $openprint::param{'txtName'} ) {
 		my $weight;
 		if ( $openprint::param{'txtWeight'} ) {
 			$weight = $openprint::param{'txtWeight'};
 		} elsif ( $openprint::param{'weight'} ) {
-			$weight = $openprint::param{'weight'} . 'lbs';
+			$weight = $openprint::param{'weight'} . 'lb';
 		} elsif ( $openprint::param{'calliper'} ) {
 			$weight = $openprint::param{'calliper'} . 'PT';
 		} # end if
 
 		my @papers = openprint::Paper::find(
 				'owner_id'	=>	$openprint::param{'Owner'},
-				'manufacturer_id'	=>	$openprint::param{'ddmManufacturer'},
+				'manufacturer_id'	=>	$openprint::param{'Manufacturer'},
 				'manufacturer'		=>	$openprint::param{'txtManufacturer'},
-				'name_id'	=>	$openprint::param{'ddmName'},
+				'name_id'	=>	$openprint::param{'Name'},
 				'name'		=>	$openprint::param{'txtName'},
-				'finish_id' =>	$openprint::param{'ddmFinish'},
+				'finish_id' =>	$openprint::param{'Finish'},
 				'finish'	=>	$openprint::param{'txtFinish'},
-				'colour_id' =>	$openprint::param{'ddmColour'},
+				'colour_id' =>	$openprint::param{'Colour'},
 				'colour'	=>	$openprint::param{'txtColour'},
-				'weight_id' =>	$openprint::param{'ddmWeight'},
+				'weight_id' =>	$openprint::param{'Weight'},
 				'weight'	=>	$weight,
-				'quality_id' => $openprint::param{'ddmQuality'},
+				'quality_id' => $openprint::param{'Quality'},
 				'quality'	=>	$openprint::param{'txtQuality'},
 				'width'	=> $openprint::param{'width'},
 				'height'	=>	$openprint::param{'type'} ne 'Roll' ? $openprint::param{'height'} : undef,
@@ -309,17 +347,17 @@ sub save_skid {
 			$Paper = new openprint::Paper( );
 			$Paper->owner_id( $openprint::param{'Owner'} );
 			$Paper->manufacturer( $openprint::param{'txtManufacturer'} ) if $openprint::param{'txtManufacturer'};
-			$Paper->manufacturer_id( $openprint::param{'ddmManufacturer'} ) if $openprint::param{'ddmManufacturer'};
+			$Paper->manufacturer_id( $openprint::param{'Manufacturer'} ) if $openprint::param{'Manufacturer'};
 			$Paper->name( $openprint::param{'txtName'} ) if $openprint::param{'txtName'};
-			$Paper->name_id( $openprint::param{'ddmName'} ) if $openprint::param{'ddmName'};
+			$Paper->name_id( $openprint::param{'Name'} ) if $openprint::param{'Name'};
 			$Paper->finish( $openprint::param{'txtFinish'} ) if $openprint::param{'txtFinish'};
-			$Paper->finish_id( $openprint::param{'ddmFinish'} ) if $openprint::param{'ddmFinish'};
+			$Paper->finish_id( $openprint::param{'Finish'} ) if $openprint::param{'Finish'};
 			$Paper->colour( $openprint::param{'txtColour'} ) if $openprint::param{'txtColour'};
-			$Paper->colour_id( $openprint::param{'ddmColour'} ) if $openprint::param{'ddmColour'};
+			$Paper->colour_id( $openprint::param{'Colour'} ) if $openprint::param{'Colour'};
 			$Paper->weight( $weight ) if $weight;
-			$Paper->weight_id( $openprint::param{'ddmWeight'} ) if $openprint::param{'ddmWeight'};
+			$Paper->weight_id( $openprint::param{'Weight'} ) if $openprint::param{'Weight'};
 			$Paper->quality( $openprint::param{'txtQuality'} ) if $openprint::param{'txtQuality'};
-			$Paper->quality_id( $openprint::param{'ddmQuality'} ) if $openprint::param{'ddmQuality'};
+			$Paper->quality_id( $openprint::param{'Quality'} ) if $openprint::param{'Quality'};
 			$Paper->type( $openprint::param{'type'} );
 			$Paper->fsc_code( $openprint::param{'fsc_code'} );
 			if ( $openprint::param{'type'} eq 'Roll' ) {
@@ -753,7 +791,7 @@ sub send_paper_arrival_notification {
 			if ( $to ) {
 # Send notification to maybe CSR's
 				my $From = new openprint::User( $openprint::session{'user_id'} );
-				my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+				my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
 				$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
 				$_ = encode_qp( ssi::variable_substitution( $email_template, \%info ) );

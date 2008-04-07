@@ -18,14 +18,17 @@
 	function copyPaper( id ) {
 		jsrsExecute( '/jsrs.htm', showPapers, 'openprint::admin_paper::jsrs_actions', new Array( 'Copy', id ) );
 	}
-function calc(formName) {
-	var form =document.forms[formName];
-	LoadContent('Papers','/administrator/paper/_papers.html', Serialize(form) );
-}
-function body_onLoad() {
-}
+	function calc(formName) {
+		new Ajax.Updater('Papers','/administrator/paper/_papers.html', {method:'get',
+				onLoading:function(){ $('Papers').innerHTML='Loading...'; },
+				onSuccess:function(){ TableKit.Sortable.reload('PapersTable'); },
+				parameters:Form.serialize($(formName))});
+				//evalScripts:true, 
+	}
+	function body_onLoad() {
+	}
 </script>
-<form name="f1" method="post" action="list.html">
+<form id="f1" name="f1" method="post" action="list.html">
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="column">
 		<p>
@@ -48,7 +51,7 @@ function body_onLoad() {
 		</p>
 		<p>
 			<label>Name:</label>
-			<select name="Name" onchange="Name_onChange(this, '' );">
+			<select name="Name" onchange="calc(this.form.name);">
 			<? echo (
                     my @options = ( '', 'select one',
                         sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
@@ -59,7 +62,7 @@ function body_onLoad() {
 		</p>
 		<p> 
 			<label>Finish:</label>
-			<select name="Finish" size="1" onchange="Finish_onChange(this,'');">
+			<select name="Finish" size="1" onchange="calc(this.form.name);">
 				<option value=""> select one </option>
 			<? echo (
 					my %finishes;
@@ -72,7 +75,7 @@ function body_onLoad() {
 		</p>
 		<p> 
 			<label>Colour:</label>
-			<select name="Colour" size="1" onchange="Colour_onChange(this,'');">
+			<select name="Colour" size="1" onchange="calc(this.form.name);">
 				<option value=""> select one </option>
 			<? echo (
 					my %colours;
@@ -87,7 +90,7 @@ function body_onLoad() {
 		</p>
 		<p> 
 			<label>Weight:</label>
-			<select name="Weight" size="1" onchange="Weight_onChange(this,'');">
+			<select name="Weight" size="1" onchange="calc(this.form.name);">
 				<option value=""> select one </option>
 			<? echo (
 					my %colours;
@@ -105,14 +108,20 @@ function body_onLoad() {
 		<div class="column">
 		<p> 
 			<label>Type:</label>
-			<input type="checkbox" name="Types" value="Sheet" <? echo ( 'checked="checked"' if sets::isin( 'Sheet', split(';', $openprint::session{'/administrator/paper/list.html?Types'} ) ); ) ?> onClick="calc(this.form.name);" />
+			<input type="checkbox" id="TypesSheet" name="Types" value="Sheet" <? echo ( 'checked="checked"' if sets::isin( 'Sheet', split(';', $openprint::session{'/administrator/paper/list.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesSheet">Sheet</label>
-			<input type="checkbox" name="Types" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', split(';', $openprint::session{'/administrator/paper/list.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
+			<input type="checkbox" id="TypesRoll" name="Types" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', split(';', $openprint::session{'/administrator/paper/list.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesRoll">Roll</label>
 		</p>
 		<p>
             <label>FSC Code:</label>
             <input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $openprint::session{'/administrator/paper/list.html?fsc_code'} ) ?>" size="13" style="width: auto;" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_orders('f1');", '', 'Go' ); ) ?>
+        </p>
+		<p>
+            <label>Inventory Code:</label>
+            <input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $openprint::session{'/administrator/paper/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
         </p>
 		</div>
 		<p class="buttons">
@@ -120,20 +129,11 @@ function body_onLoad() {
 				ssi::writeButton($log, $dbh, 'New1','new.gif',"",'paper.html','Add A New Paper'),
 				ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete Checked Papers'),
 				#ssi::writeButton($log, $dbh, 'Save1','blah.gif',"show_div('PaperRecommendations', event );",'','Set Paper Recommendations'),
-				ssi::writeButton( $log, $dbh, "Copy2", 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
+				ssi::writeButton( $log, $dbh, "Copy1", 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
 			); ) ?>
 		</p>
 	</fieldset>
-<div id="Papers"><!--#include virtual="_papers.html"--></div>
-	<fieldset>
-		<p class="buttons">
-			<? echo ( join('',
-				ssi::writeButton($log, $dbh, 'New2','new.gif',"",'paper.html','Add A New Paper'),
-				ssi::writeButton($log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete Checked Papers'),
-				#ssi::writeButton($log, $dbh, 'Save2','blah.gif',"show_div('PaperRecommendations', event );",'','Set Paper Recommendations'),
-				ssi::writeButton( $log, $dbh, "Copy2", 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
-			); ) ?>
-		</p>
-	</fieldset>
+	<br/>
+	<div id="Papers"><!--#include virtual="_papers.html"--></div>
 	<input type="hidden" name="btnFunction"/>
 </form>

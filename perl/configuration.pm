@@ -11,7 +11,7 @@ require sql;
 sub init_cache {
 	my ( $log, $dbh, $apr_table ) = @_;
 	
-	%cache = sql::execute( $log, $dbh, 'SELECT Name, Value FROM Configuration' );
+	%cache = sql::execute( undef, undef, 'SELECT Name, Value FROM Configuration' );
 	# Anything specified in dir_config override configuration
 	foreach my $key (keys %{$apr_table}) {
 		$cache{$key} = $$apr_table{$key};

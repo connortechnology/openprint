@@ -2,6 +2,7 @@
 	<legend>What type of project would you like to have printed?</legend>
 	<ul>
 	<? while ( @$variable{'index','name'} = splice @{$$variable{'ProjectTypes'}},0,2; ) ?>
+<? if ( $$variable{'name'} ne 'Envelopes' ) ?>
 		<li>
 			<input type="radio" id="<?index?>" name="rdbProjectType" value="<?index?>" onclick="project_type_alert(f1, this);calc('f1');"
 			<? echo ( $$variable{'SelectedProjectType'} eq $$variable{'index'} ? 'checked="checked"' : '' ) ?>
@@ -9,6 +10,7 @@
 			/>
 			<label for="<?index?>"><?name?></label>
 		</li>
+<? endif ( $$variable{'name'} ne 'Envelopes' ) ?>
 	<? endwhile ( @$variable{'index','name'} = splice @{$$variable{'ProjectTypes'}},0,2; ) ?>
 	</ul>
 </fieldset>
@@ -156,7 +158,7 @@
 <fieldset>
 <? eval ( 
 	@{$$variable{'design_options'}} = ( 'ElectronicFile', 'Electronic File' );
-	if ( openprint::ServiceType::find('strid'=>'FilmStripping') ) {
+	if ( openprint::ServiceType::find('name'=>'FilmStripping') ) {
 		push @{$$variable{'design_options'}}, 'FinalFilm', 'Final Film';
 	} # end if
 ) ?>	
@@ -171,11 +173,11 @@
 <? endif ( @{$$variable{'design_options'}} > 2 ) ?>
 	<p> 
 		<label>Please provide a reference:</label>
-		<textarea name="txtProjectReference" rows="4"><?txtProjectReference?></textarea>
+		<textarea name="txtProjectReference" rows="2" onkeyup="textarea_resize( this );"><?txtProjectReference?></textarea>
 	</p>
 	<p>
 		<label>Additional comments or instructions:</label>
-		<textarea name="txtComments" rows="5"><?txtComments?></textarea>
+		<textarea name="txtComments" rows="2" onkeyup="textarea_resize( this );"><?txtComments?></textarea>
 	</p>
 </fieldset>
 <? if ( sets::isin( $openprint::session{'user_type'}, [ 'E', 'A' ] ); ) ?>

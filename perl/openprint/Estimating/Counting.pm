@@ -71,7 +71,7 @@ sub calc {
 			$price = $minimumCharge;
 		} # end if
 
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $price / $qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price / $qty );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 	} # end foreach
 	return $$specs{'Status'} = 'calculated';

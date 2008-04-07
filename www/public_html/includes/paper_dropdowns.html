@@ -1,3 +1,8 @@
+<? eval (
+	if ( !$$variable{'ProjectTypeID'} ) {
+		$$variable{'ProjectTypeID'} = $$variable{'ProjectTypeName'};
+	} # end if
+) ?>
 <div class="row">
 	<span class="label">Type:</span>
 	<span class="input">
