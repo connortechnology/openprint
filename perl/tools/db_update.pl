@@ -672,6 +672,16 @@ sql::insert( undef, undef, 'QuoteLevels', 'name', 'Advanced' );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1919;
 } # end if
+if ( $version < 1920 ) {
+	print "Updating to version 1920\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do(q`alter table service_types add type text`);
+	$dbh->do(q`update service_types set type=name`);
+	sql::insert( undef, undef, 'database_info', 'version', 1920, 'backup', $backup );
+
+	sql::end_transaction( $dbh, $ac );
+	$version = 1920;
+} # end if
 
 $dbh->disconnect();
 1;

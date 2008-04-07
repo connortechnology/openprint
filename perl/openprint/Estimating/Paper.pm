@@ -202,7 +202,7 @@ sub summary {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			if ( $Paper->type() eq 'Roll' ) {
 				$totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'hdnImpressionQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi());
-			} else {
+			} elsif ( $Paper->type() eq 'Sheet' ) {
                 $totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'SheetQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi() );
                 $sheets{$string}[$qty_index] += $$sig_specs{'SheetQuantity'.$qty_index};
             } # end if
@@ -210,7 +210,7 @@ sub summary {
 
     } # end foreach
 	if ( $qty_index ) {
-		return join('<br/>', map { $sheets{$_} ? $sheets{$_}[$qty_index] .'sheets '. $totals{$_}[$qty_index] : $totals{$_}[$qty_index].'lbs' } sort keys %totals );
+		return join('<br/>', map { $sheets{$_} ? $sheets{$_}[$qty_index] .'sheets '. $totals{$_}[$qty_index].'lbs' : $totals{$_}[$qty_index].'lbs' } sort keys %totals );
 	} else {
 		return join('<br/>', sort keys %totals );
 	} # end if
