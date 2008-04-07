@@ -273,7 +273,8 @@
 		if ( ! $openprint::session{'/employee/production/print_overview.html?ddmScheduleStartYear'} ) {
 			if ( ($_) = sql::execute( $log, $dbh, q{SELECT date(MIN(StartTime)) FROM Schedule} ) ) {
 				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, split('-', $_ ) );
-			} else {
+			} 
+			if ( ! $$variable{'ScheduleStart'} ) {
 				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 			} # end if
 		} else {
@@ -285,8 +286,8 @@
 			($_) = sql::execute( $log, $dbh, q{SELECT date(MAX(StartTime)) FROM Schedule} );
 			if ( $_ ) {
 				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, split('-',$_) );
-				$log->debug("Start: $$variable{'ScheduleEnd'}");
-			} else {
+			} # end if
+			if ( ! $$variable{'ScheduleEnd'} ) {
 				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 			} # end if
 		} else {
