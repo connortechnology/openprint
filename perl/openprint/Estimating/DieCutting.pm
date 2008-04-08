@@ -344,6 +344,20 @@ sub display {
 	} # end foreach
 
 } # end sub display
+sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	#$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	if ( $qty_index ) {
+			return '';
+	} else {
+		if ( $$specs{'rdbSuppliedDie'} eq 'Y' ) {
+			return 'Customer supplied die';
+		} else {
+			return '';
+		} # end if
+	} # end if
+
+} # end sub summary
 
 1;
 __END__

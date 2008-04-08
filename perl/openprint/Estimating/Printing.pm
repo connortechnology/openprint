@@ -3111,7 +3111,7 @@ sub summary {
 	if ( $qty_index ) {
 		if ( ! $$specs{'txtSpreadSize'} ) {
 			if ( $$services{''} ) {
-				my $printing_specs = get_specs_ref( $Project, $$services{''}[0] );
+				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 				$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
 			} # end if
 		} # end if
@@ -3122,7 +3122,7 @@ sub summary {
 				($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index} ),
 				$$specs{'ddmPress'.$qty_index} );
 
-		$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
+		#$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
 		$html .= sprintf(' with %d plate changes ', $$specs{'txtPlateChangeQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
 
 		$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
