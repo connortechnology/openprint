@@ -50,9 +50,9 @@ my %transforms = (
 	'pages' => [ 's/\D//g' ],
 	'page_columns' => [ 's/\D//g' ],
 	'page_rows' => [ 's/\D//g' ],
-	'makeready_time' => [ 's/\D//g' ],
-	'makeready_overs' => [ 's/\D//g' ],
-	'run_overs' => [ 's/\D//g' ],
+	'makeready_time' => [ 's/[^\d\.]//g' ],
+	'makeready_overs' => [ 's/[^\d\.]//g' ],
+	'run_overs' => [ 's/[^\d\.]//g' ],
 	'folds' => [ 's/\D//g' ],
 	'angles' => [ 's/\D//g' ],
 );

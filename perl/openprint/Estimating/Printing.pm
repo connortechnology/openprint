@@ -2512,7 +2512,9 @@ sub calc_price {
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Totals' );
 	$price{'Total Cost'} = $total_cost;
-	$price{'Total Cost'} += $price{'Paper Price'} if (! $$services{'Paper'}) and ($$specs{'rdbSuppliedStock'} ne 'Y');
+	if ( ( $$specs{'rdbSuppliedStock'} ne 'Y' ) and (! openprint::ServiceType::find('name'=>'Paper')) ) {
+		$price{'Total Cost'} += $price{'Paper Price'} 
+	} # end if
 
 # Now add in cutting costs to the comparison
 
