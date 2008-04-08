@@ -70,7 +70,7 @@ sub calc {
 	} else {
 		$$specs{'NeedPlainCartons'} = 0;
 	} # end if
-	my $carton_status = openprint::service::get_status( $log, $dbh, $carton_service_index, $project_index );
+	my $carton_status = openprint::service::status( $project_index, $carton_service_index );
 	if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
 		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $carton_service_index, 'Skids' );
 	} # end if
@@ -121,7 +121,7 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
         } # end if
 
 		if ( $$specs{'chkOverridePackageQuantity'} ne 'Y' ) {
-			$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'} );
+			$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} );
 		} # end if
 		$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$carton_specs{'txtFinishedWeight'}) );
 

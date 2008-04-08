@@ -26,21 +26,10 @@
 		$('ProjectList').innerHTML = 'Please wait...';
 		new Ajax.Updater('ProjectList','/main/project/_project_list.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
-	function initializeDayDropDowns() {
-		if ( typeof(setDaysDropDown) == 'function' ) {
-			setDaysDropDown(document.f1.CreatedStartYear.value,document.f1.CreatedStartMonth.value,document.f1.CreatedStartDay,document.f1.CreatedStartDay.value);
-			setDaysDropDown(document.f1.CreatedEndYear.value,document.f1.CreatedEndMonth.value,document.f1.CreatedEndDay,document.f1.CreatedEndDay.value);
-			setDaysDropDown(document.f1.UpdatedStartYear.value,document.f1.UpdatedStartMonth.value,document.f1.UpdatedStartDay,document.f1.UpdatedStartDay.value);
-			setDaysDropDown(document.f1.UpdatedEndYear.value,document.f1.UpdatedEndMonth.value,document.f1.UpdatedEndDay,document.f1.UpdatedEndDay.value);
-		} // end if
-	}
-	
-	if ( typeof(initializeDayDropDowns) ) 
-		window.onload = initializeDayDropDowns;
 -->
 </script>	 
 <? if ( $openprint::session{'user_id'} ) ?>
-<form name="f1" method="post" action="/main/project/history.html">
+<form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="ProjectHistory">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 			<div style="float: left; width: 48%;">

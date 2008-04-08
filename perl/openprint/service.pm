@@ -354,8 +354,8 @@ sub auto_calculate {
 			my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
 			my $service_type = $ServiceType->type();
 			next if sets::isin( $service_type, ['','AdditionalSignature'] );
-			eval "require openprint::Estimating::$type";
-			$openprint::log->error('Error requiring openAprint::Estimating::$type: ' . $@ ) if $@;
+			eval "require openprint::Estimating::$service_type";
+			$openprint::log->error('Error requiring openAprint::Estimating::$service_type: ' . $@ ) if $@;
 			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index

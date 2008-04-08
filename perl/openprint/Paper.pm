@@ -26,7 +26,7 @@ require openprint::StockWeight;
 require openprint::StockQuality;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+my $debug = 1;
 
 my @fields = (
 		'owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
@@ -960,10 +960,11 @@ sub load_from_signature {
 				'project_type_id'=> $Project ? $Project->Type()->id() : undef,
 		);
 		if ( $qty_index ) {
-			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
+			#if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
 				$params{'width'} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
 				$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
-			} # end if
+			#} else {
+			#} # end if
 			$params{'type'}	= $$specs{'StockType'.$qty_index};
 		} # end if
 		my @Papers = find( %params );

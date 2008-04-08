@@ -190,19 +190,15 @@ sub summary {
     my %sheets;
 	foreach my $ss_id ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-		my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
-        if ( $Paper->type() eq 'Roll' ) {
-			$string .= sprintf(' %s&quot; Roll', $Paper->width() );
-        } else {
-			$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
-        } # end if
 		foreach my $qty_index ( 1 .. 3 ) {
             next if ! $Project->quantity( $qty_index );
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
 			if ( $Paper->type() eq 'Roll' ) {
+				$string .= sprintf(' %s&quot; Roll', $Paper->width() );
 				$totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'hdnImpressionQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi());
 			} elsif ( $Paper->type() eq 'Sheet' ) {
+				$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
                 $totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'SheetQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi() );
                 $sheets{$string}[$qty_index] += $$sig_specs{'SheetQuantity'.$qty_index};
             } # end if
