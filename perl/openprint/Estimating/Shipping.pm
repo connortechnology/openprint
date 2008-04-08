@@ -76,7 +76,22 @@ sub calc {
 	} # end if
 	my $carton_specs = openprint::service::get_specs_ref( $Project, $carton_service_index );
 
-
+	if ( ! $$specs{'ToCity'} ) {
+		$$specs{'alert'} .= 'Please enter To city<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	if ( !$$specs{'ToPostalCode'} ) {
+		$$specs{'alert'} .= 'Please enter To Postal Code<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	if ( !$$specs{'ToStateProvince'} ) {
+		$$specs{'alert'} .= 'Please enter To State/Province<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	if ( ! $$specs{'ToCountry'} ) {
+		$$specs{'alert'} .= 'Please enter To Country<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 	my @shipping_services;
 	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
 		next if ! $$services{$ServiceType->name()};

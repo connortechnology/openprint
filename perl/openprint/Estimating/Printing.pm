@@ -2130,17 +2130,17 @@ sub calc_price {
 	$price{'Run Speed'} = $run_speed;
 
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
-	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
-	my $setup_rate = $Press->specification( 'Press Run Overs Rate', scalar @colours );
+	my $min_overs = $Press->specification( 'Overs Minimum', scalar @colours );
+	my $setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours );
 	my $setup_overs = $setup_rate * scalar @colours;
 	my $fm_overs = $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
 	$setup_overs += $fm_overs;
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
 
 	my $over_rate = $Press->specification( 'Press Run Overs', $base_impressions );
-	if ( $Press->specification( 'Double Overs For Covers' ) eq 'Yes' ) {
-		$over_rate *= 2;
-	} # end if
+	#if ( $Press->specification( 'Double Overs For Covers' ) eq 'Yes' ) {
+		#$over_rate *= 2;
+	#} # end if
 	my $run_overs = $base_impressions * $over_rate;
 	my $impressions = sprintf( '%.0f', $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $setup_overs + $run_overs );
 
@@ -2201,8 +2201,8 @@ sub calc_price {
 	$price{'rdbPlates'} = $plate_setup{'Plate Type'};
 
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
-	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
-	$setup_rate = $Press->specification( 'Press Run Overs Rate', $plate_setup{'Plate Count'} );
+	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
+	$setup_rate = $Press->specification( 'MakeReady Overs Rate', $plate_setup{'Plate Count'} );
 	$setup_overs = $setup_rate * ( $plate_setup{'Plate Count'} );
 	$setup_overs += $fm_overs;
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
