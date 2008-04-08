@@ -675,8 +675,8 @@ sql::insert( undef, undef, 'QuoteLevels', 'name', 'Advanced' );
 if ( $version < 1920 ) {
 	print "Updating to version 1920\n";
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do(q`alter table service_types add type text`);
-	$dbh->do(q`update service_types set type=name`);
+	$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
+	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
 	sql::insert( undef, undef, 'database_info', 'version', 1920, 'backup', $backup );
 
 	sql::end_transaction( $dbh, $ac );
