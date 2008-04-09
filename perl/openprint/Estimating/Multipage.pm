@@ -105,6 +105,8 @@ sub calc {
 		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
 		if ( $group_id == 1 and $$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) {
 			$$specs{'GroupPageQuantity1'} = $pages{'Cover Pages'};
+		} elsif ( $group_id == 2 and $$specs{'OverrideGroupPageQuantity2'} ne 'Y' ) {
+			$$specs{'GroupPageQuantity'.$group_id} = $$specs{'txtTotalPageQuantity'} - $pages{'Cover Pages'};
 		} elsif ( $$specs{'OverrideGroupPageQuantity'.$group_id} ne 'Y' ) {
 			$$specs{'GroupPageQuantity'.$group_id} = ( ( $$specs{'txtTotalPageQuantity'} - $pages{'Cover Pages'} ) - $override_pages{'Interior Pages'} );
 		} # end if
@@ -147,7 +149,6 @@ $openprint::log->debug("Starting Multipage::calculate_signatures");
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	my $unspecified_pages = 0;
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	return if ! $$printing_specs{'txtTotalPageQuantity'};
 
@@ -188,7 +189,7 @@ $openprint::log->warn('Deleting due to incorrect printing type');
 		} # end if
 	} # end for
 
-	my @groups = sql::execute(undef, undef, 'SELECT distinct strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
+	my @groups = sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
 	foreach my $group ( @groups ) {
 		my @sigs = sort $Project->signatures( {'Group'=>$group} );
 $openprint::log->debug("Sigs in group $group : " . scalar @sigs );
@@ -235,9 +236,7 @@ $openprint::log->debug("Sigs in group $group : " . scalar @sigs );
 				my $ac = sql::start_transaction( $openprint::dbh );
 				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
 
-				foreach my $key ( eval( 'openprint::Estimating::Printing::variables( $project_index )') ) {
-					$log->debug("Multipage Calc:: looking at $key $specs{$key} : $$new_sig_specs{$key}") if $debug;
-
+				foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $sig_specs, \%specs ) ) {
 					openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $specs{$key} );
 				} # end foreach
 				sql::end_transaction( $openprint::dbh, $ac );

@@ -45,7 +45,8 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
-	my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $project_index, $service_index ) );
+	my $Project = new openprint::Project( $project_index );
+	my $ServiceType = $Project->ServiceType( $service_index );
 
 	if ( $$specs{'txtQuantity'} eq '' ) {	# a zero value is still calculated, just with a zero price.
 		$status = 'uncalculated';

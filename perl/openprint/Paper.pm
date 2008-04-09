@@ -26,7 +26,7 @@ require openprint::StockWeight;
 require openprint::StockQuality;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 1;
+my $debug = 0;
 
 my @fields = (
 		'owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',

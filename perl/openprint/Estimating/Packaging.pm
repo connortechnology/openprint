@@ -57,7 +57,7 @@ sub calc {
 		$$specs{'alert'} .= 'Unable to find project service.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $project_index, $service_index ) );
+	my $ServiceType = $Project->ServiceType( $service_index );
 	my $status = 'calculated';
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
 

@@ -75,8 +75,6 @@ sub sheet_calc {
 sub signature_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs, $qty_index, $Paper ) = @_;
 
-$openprint::log->debug("Paper Signature Calc");
-
 	if ( ! $Paper ) {
 		if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
 			$log->debug("Supplied");
@@ -85,13 +83,13 @@ $openprint::log->debug("Paper Signature Calc");
 			@$Paper{'width','height','mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight'};
 			@$Paper{'start_width','start_height'} = @$Paper{'width','height'};
 		} else {
-			$log->debug("Not Supplied $specs $$specs{'ddmStockBrand'}");
+			#$log->debug("Not Supplied $specs $$specs{'ddmStockBrand'}");
 			my @Papers = openprint::Paper::find( 'name'=>$$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'} );
 			foreach my $P ( @Papers ) {
 	#$log->debug("Looking at: " . $Sheet->width() . ' x '. $Sheet->height() . " for ".$$specs{'hdnSuppliedStockWidth'.$qty_index}.'x'.$$specs{'hdnSuppliedStockHeight'.$qty_index});
 				if ( $P->width() == $$specs{'hdnSuppliedStockWidth'.$qty_index} and $P->height() == $$specs{'hdnSuppliedStockHeight'.$qty_index} ) {
 					$Paper = $P;
-					$log->debug("Found sheet");
+					#$log->debug("Found sheet");
 					last;
 				} # end if
 			} # end foreach

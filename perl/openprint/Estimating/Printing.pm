@@ -224,7 +224,7 @@ sub get_unspecified_pages {
 		$specified_pages += $$sig_specs{"PageQuantity$qty_index"};
 	} # end foreach
 
-#$openprint::log->debug("Unspec: $$specs{'GroupPageQuantity'} - $specified_pages = " . ($$specs{'GroupPageQuantity'} - $specified_pages) );
+$openprint::log->debug("Unspec: $$specs{'Group'} $$specs{'GroupPageQuantity'} - $specified_pages = " . ($$specs{'GroupPageQuantity'} - $specified_pages) );
 	return $$specs{'GroupPageQuantity'} - $specified_pages;
 } # end sub get_unspecified_pages
 
@@ -659,8 +659,8 @@ sub calc {
 				} # end if
 			} # end if
 		} elsif ( $$specs{'txtSignatureType'} eq 'Cover Pages' and $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
-#$$specs{'txtSpreadSize'} = $printing_specs{'txtSpreadSize'};
-#$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
+$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
+$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
 			if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
 # Perfect bound requires more width on th cover to conver the calliiper	
 				my $finished_calliper = 0;
@@ -1633,7 +1633,7 @@ sub get_project_price {
 			} # end foreach
 		} # end if
 		if ( $SpreadLayout > 0 ) {
-			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
 			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
 		} # end if
@@ -1795,7 +1795,7 @@ sub get_project_price {
 
 							if ( ! $$sig_price{'complete'} ) {
 								$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
-#$openprint::log->warn("Doing full calc without Page Override" );
+$openprint::log->warn("Doing full calc without Page Override" );
 #$sig_price = $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}};
 								$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 							} # end if

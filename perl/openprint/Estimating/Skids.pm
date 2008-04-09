@@ -89,7 +89,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $project_index, $service_index ) );
+	my $ServiceType = $Project->ServiceType( $service_index );
 
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
 	my $serviceCharge = openprint::service::get_price( $ServiceType->name(), undef, undef );

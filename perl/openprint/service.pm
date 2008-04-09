@@ -100,7 +100,8 @@ sub save_service {
 
 	my $service_type = $openprint::param{'ServiceType'};
 	if ( ! $service_type ) {
-		my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
+		my $Project = new openprint::Project( $project_index );
+		my $ServiceType = $Project->ServiceType( $service_index );
 		$service_type = $ServiceType->type();
 	} # end if
 	if ( (! $service_type) and (! $$specs{'ProjectType'}) ) {
@@ -351,7 +352,7 @@ sub auto_calculate {
 
 	foreach my $type ( keys %services ) {
 		foreach my $service_index ( @{$services{$type}} ) {
-			my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
+			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
 			next if sets::isin( $service_type, ['','AdditionalSignature'] );
 			eval "require openprint::Estimating::$service_type";
@@ -420,11 +421,6 @@ $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 	return join( '|', @results );
 } # end sub external_calc
 
-sub get_type_id {
-	( $_ ) = sql::execute( undef, undef, q{SELECT servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @_ );
-	return $_;
-} # end sub get_type_id
-
 sub get_type {
 	my ( $log, $dbh, $project_index, $service_index ) = @_;
 	( $_ ) = sql::execute( $log, $dbh, q{SELECT name FROM Service_Types WHERE id=(select servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
@@ -441,7 +437,8 @@ sub internal_calc {
 	my %specs = %{$specs_cache{$service_index}};
 
 	if ( ! $service_type ) {
-		my $ServiceType = new openprint::ServiceType( get_type_id( $project_index, $service_index ) );
+		my $Project = new openprint::Project( $project_index );
+		my $ServiceType = $Project->ServiceType( $service_index );
 		$service_type = $ServiceType->type();
 	} # end if
 
@@ -535,8 +532,9 @@ sub summary {
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['SaddleStitching','LoopStitching'] ) ) {
 		return openprint::Estimating::Stitching::summary($Project, $service_id, $specs, $qty_index );
 	} else {
-		my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $Project->id(), $service_id ) );
+		my $ServiceType = $Project->ServiceType( $service_id );
 		my $ServiceTypeType = $ServiceType->type();
+		return if ! $ServiceTypeType;
 		
 		eval('require openprint::Estimating::'.$ServiceTypeType.';' );
 		$openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)") if $@;
