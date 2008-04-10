@@ -659,7 +659,8 @@ sub calc {
 				} # end if
 			} # end if
 		} elsif ( $$specs{'txtSignatureType'} eq 'Cover Pages' and $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
-$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
+$openprint::log->debug("SpreadSize: $$specs{'txtSpreadSize'}");
+$$specs{'txtSpreadSize'} = $$specs{'GroupPageQuantity'};
 $variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
 			if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
 # Perfect bound requires more width on th cover to conver the calliiper	
@@ -681,7 +682,7 @@ $variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSi
 					} # end if
 				} # end foreach signature
 
-				$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'}*2 + $finished_calliper;
+				$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$printing_specs{'txtFinalWidth'}*($$specs{'GroupPageQuantity'}/2) + $finished_calliper)*1000)/1000);
 				$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
 				if ( ! $$specs{'txtHeight'} ) {
 					$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};

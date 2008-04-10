@@ -674,8 +674,11 @@ sql::insert( undef, undef, 'QuoteLevels', 'name', 'Advanced' );
 } # end if
 if ( $version < 1920 ) {
 	print "Updating to version 1920\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM service_types LIMIT 1', {} );
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
+	if ( ! exists $$data{'type'} ) {
+		$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
+	} # end if
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
 	sql::insert( undef, undef, 'database_info', 'version', 1920, 'backup', $backup );
 
