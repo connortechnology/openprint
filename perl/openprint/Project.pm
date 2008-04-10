@@ -839,7 +839,13 @@ sub summary {
 		if ( $specs{'txtTotalPageQuantity'} ) {
 			$summary .= sprintf( '%s&quot;x%s&quot; ', @specs{'txtFinalWidth','txtFinalHeight'});
 			if ( $specs{'rdbCover'} eq 'Different' ) {
-			$summary .= sprintf('%dpg+Cover ', $specs{'txtTotalPageQuantity'}-4 );
+				my $cover_pages = 0;
+				foreach my $ss_id ( $self->signatures({'Group'=>1}) ) {
+					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
+					$cover_pages += $$sig_specs{'GroupPageQuantity'};
+					last;
+				} # end foreach
+			$summary .= sprintf('%dpg+Cover ', $specs{'txtTotalPageQuantity'} - $cover_pages );
 			} else {
 			$summary .= sprintf('%dpg ', $specs{'txtTotalPageQuantity'} );
 			$summary .= $specs{'rdbCover'}.' Cover';
@@ -901,8 +907,8 @@ sub summary {
 		$summary .= ' Skids';
 	} # end if
 	if ( $services{'Turnaround'} ) {
-		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $$self{'id'}, $services{'Turnaround'}[0] );
-		$summary .= sprintf(' in %ddays', $specs{'TurnaroundDays'} );
+		my $specs = openprint::service::get_specs_ref( $self, $services{'Turnaround'}[0] );
+		$summary .= sprintf(' in %ddays', $$specs{'TurnaroundDays'} );
 	} # end if
 	return $summary;
 } # end sub summary
