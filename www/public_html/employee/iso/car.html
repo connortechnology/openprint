@@ -29,6 +29,7 @@
 	}
 </style>
 <div id="CAR">
+		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{'CAR'}->id() ) ?></span></h3>
 		<? echo (
 			my $html;
 			if ( ( ! $openprint::param{'car_id'} ) ) {
