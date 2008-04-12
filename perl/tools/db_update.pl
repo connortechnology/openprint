@@ -686,6 +686,30 @@ if ( $version < 1920 ) {
 	$version = 1920;
 } # end if
 
+if ( $version < 1921 ) {
+	print "Updating to version 1921\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'jdf_name'} ) {
+	$dbh->do(q`alter table tbl_equipment add jdf_name text`);
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1921, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1921;
+} # end if
+if ( $version < 1922 ) {
+	print "Updating to version 1922\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'jdf_id'} ) {
+	$dbh->do(q`alter table tbl_equipment add jdf_id text`);
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1922, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1922;
+} # end if
+
+
 $dbh->disconnect();
 1;
 __END__

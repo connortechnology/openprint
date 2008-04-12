@@ -171,7 +171,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $services{''}[0] );
 
 	if ( ! $$specs{'rdbDieCutting'} ) {
 		if ( $$printing_specs{'rdbTemplateType'} eq 'PresentationFolderStandard2Pocket' ) {
@@ -218,7 +218,7 @@ sub calc {
 		my $totalUnitPrice = 0;
 		my $totalDiePrice = 0;
         foreach my $signature_service_index ( $Project->signatures() ) {
-            my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
             @variables = sets::union( @variables,
                 "txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}",
