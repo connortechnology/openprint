@@ -685,6 +685,40 @@ if ( $version < 1920 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1920;
 } # end if
+my $new_version = 1921;
+if ( $version < $new_version ) {
+	print "Updating to version $new_version\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM service_types LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+	foreach my $E ( openprint::Equipment::find() ) {
+		if ( $E->specification('Double Overs For Covers') eq 'Y' ) {
+			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
+					'lngEquipmentIndex',    $E->id(),
+					'dblMin',               undef,
+					'dblMax',               undef,
+					'strUnits',             'Percent',
+					'strName',              'Covers Overs Percentage',
+					'strValue',             100,
+					'interpolate',          0,
+					] );
+
+		} else {
+			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
+					'lngEquipmentIndex',    $E->id(),
+					'dblMin',               undef,
+					'dblMax',               undef,
+					'strUnits',             'Percent',
+					'strName',              'Covers Overs Percentage',
+					'strValue',             0,
+					'interpolate',          0,
+					] );
+		} # end if
+		sql::execute( undef, undef, 'DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentindex=? AND strname=?', $E->id(), 'Double Overs For Covers' );
+	} # end foreac E
+	sql::end_transaction( $dbh, $ac );
+	$version = $new_version;
+} # end if
 
 if ( $version < 1921 ) {
 	print "Updating to version 1921\n";

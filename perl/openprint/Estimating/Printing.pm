@@ -2139,9 +2139,9 @@ sub calc_price {
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
 
 	my $over_rate = $Press->specification( 'Press Run Overs', $base_impressions );
-	#if ( $Press->specification( 'Double Overs For Covers' ) eq 'Yes' ) {
-		#$over_rate *= 2;
-	#} # end if
+	if ( $_ = $Press->specification( 'Covers Overs Percentage' ) ) {
+		$over_rate *= ( 1 + $_ / 100 );
+	} # end if
 	my $run_overs = $base_impressions * $over_rate;
 	my $impressions = sprintf( '%.0f', $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $setup_overs + $run_overs );
 

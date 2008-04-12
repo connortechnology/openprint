@@ -4,10 +4,36 @@
 	} # end if
 
     $openprint::session{'/administrator/paper/list.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/administrator/paper/list.html?Owner'};
-
 ) ?>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
+<script type="text/javascript" src="/administrator/paper/paper.js"></script>
 <script type="text/javascript">
+	var popupWin;
+	function popup_window( form ) {
+		var paper_ids = $A(form.chkPaper).filter(function(e){return e.checked});
+		if ( ! paper_ids.length ) {
+			alert('Please select papers to apply changes to.');
+			return;
+		} // end if
+		if ( ! popupWin ) {
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:700} );
+			// Set up a windows observer, check ou debug window to get messages
+			myObserver = {
+	onDestroy: function(eventName, win) {
+				   if (win == popupWin) {
+					   popupWin = null;
+					   Windows.removeObserver(this);
+				   }
+			   }
+			}
+			Windows.addObserver(myObserver);
+		} // end if
+		popupWin.setHTMLContent('Loading... please wait');
+		popupWin.showCenter();
+		var url = '/administrator/paper/_popup.html?' + paper_ids.map(function(e){return 'paper_ids=' + e.value}).join('&');
+
+		popupWin.setAjaxContent(url, null , true);
+	} // end function popup_window
 
 	function showPapers( results ) {
 		calc('f1');
@@ -27,6 +53,7 @@
 	}
 	function body_onLoad() {
 	}
+-->
 </script>
 <form id="f1" name="f1" method="post" action="list.html">
 	<fieldset class="filters"><legend>Search Information</legend>
@@ -116,7 +143,7 @@
 		<p>
             <label>FSC Code:</label>
             <input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $openprint::session{'/administrator/paper/list.html?fsc_code'} ) ?>" size="13" style="width: auto;" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_orders('f1');", '', 'Go' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
         </p>
 		<p>
             <label>Inventory Code:</label>
@@ -126,6 +153,7 @@
 		</div>
 		<p class="buttons">
 			<? echo ( join('',
+ssi::writeButton( $log, $dbh, 'applychanges1', 'applychanges.gif', "popup_window(f1);", '', 'Apply Changes' ),
 				ssi::writeButton($log, $dbh, 'New1','new.gif',"",'paper.html','Add A New Paper'),
 				ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete Checked Papers'),
 				#ssi::writeButton($log, $dbh, 'Save1','blah.gif',"show_div('PaperRecommendations', event );",'','Set Paper Recommendations'),
