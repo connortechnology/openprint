@@ -2722,7 +2722,7 @@ sub get_run_price {
 
 	if ( $Imposition->runstyle() eq 'Web' ) {
 # A web does both sides at once, and cannot do multipass
-		my %RunPrice = openprint::service::get_price_object( 'WebImpression', $impressions, $Press );
+		my %RunPrice = openprint::service::get_price_object( 'WebImpression'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press );
 		$run_price{'units'} = $RunPrice{'units'};
 		$running_price = $RunPrice{'Price'};
 #$openprint::log->debug("Price: $running_price");

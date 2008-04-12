@@ -67,7 +67,7 @@ return sprintf('%.0f/cwt', $Price[0]{'Cost'} );
 	<fieldset>
 		<p class="buttons">
 			<? echo ( join('',
-ssi::writeButton( $log, $dbh, 'applychanges', 'applychanges.gif', "popup_window(f1);", '', 'Apply Changes' ),
+ssi::writeButton( $log, $dbh, 'applychanges', 'applychanges.gif', "popup_window(f1);", '', 'Make Changes' ),
 				ssi::writeButton($log, $dbh, 'New2','new.gif',"",'paper.html','Add A New Paper'),
 				ssi::writeButton($log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete Checked Papers'),
 				#ssi::writeButton($log, $dbh, 'Save2','blah.gif',"show_div('PaperRecommendations', event );",'','Set Paper Recommendations'),

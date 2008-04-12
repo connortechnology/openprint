@@ -22,11 +22,11 @@
 			</table>
 		</p>
 		<? endwhile ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?>
-		<p class="buttons">
-			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'apply', 'apply.gif', q`$('f1').submit();`, '', 'Apply' ),
-				ssi::writeButton( $log, $dbh, 'cancel', 'cancel.gif', 'popupWin.destroy();', '', 'Cancel' ),
-			); ) ?>
-		</p>
 	</fieldset>
+	<p class="buttons">
+		<? echo ( join('',
+			ssi::writeButton( $log, $dbh, 'apply', 'apply.gif', q`$('f1').submit();`, '', 'Apply' ),
+			ssi::writeButton( $log, $dbh, 'cancel', 'cancel.gif', 'popupWin.destroy();', '', 'Cancel' ),
+		); ) ?>
+	</p>
 </form>
