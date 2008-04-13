@@ -194,7 +194,10 @@ sub summary {
 			my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
 			if ( $Paper->type() eq 'Roll' ) {
 				$string .= sprintf(' %s&quot; Roll', $Paper->width() );
-				$totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'hdnImpressionQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi());
+				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+				$impressions /= 2 if sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble','Sheet Work'] );
+				$totals{$string}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
+					
 			} elsif ( $Paper->type() eq 'Sheet' ) {
 				$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
                 $totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'SheetQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi() );
