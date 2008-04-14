@@ -157,6 +157,9 @@ $openprint::log->debug("Paper Grade: " . $Paper->name() );
 			if ( $GluePrice{units} eq 'Per Square Inch' ) {
 				$GluePrice{'Total'} = $GluePrice{Price} * $$sig_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$sig_specs{'txtFinalWidth'}, $calliper );
+			} elsif ( $GluePrice{units} eq 'Per Square Foot' ) {
+				$GluePrice{'Total'} = $GluePrice{Price} * $$sig_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"} / 144;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$sig_specs{'txtFinalWidth'}, $calliper );
 			} # end if
 			$price += $GluePrice{'Total'};
 		} # end if Glues
