@@ -102,7 +102,6 @@ sub signature_calc {
 		next if $service_index and ($signature_service_index >= $service_index);
 		$$specs{"txtPockets$qty_index"} += 1;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 		$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 );
 	} # end foreach signature
 
