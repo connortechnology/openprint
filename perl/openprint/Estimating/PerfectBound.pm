@@ -20,7 +20,7 @@ use strict;
 require openprint::service;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
 
 my %variables = (
         'ProjectIndex'=>[],'ServiceIndex'=>[],
@@ -224,8 +224,10 @@ sub calc {
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
 		foreach my $qty_index ( 1 .. 3 ) {
 			$$specs{'txtCalliper'} = 0;
-			foreach my $signature_service_index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
+			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+				# All but the cover
+				next if $$sig_specs{'Group'} == 1;
 				my $calliper = $$sig_specs{'PageQuantity'.$qty_index} ? ($$sig_specs{'PageQuantity'.$qty_index}/2) * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
 				$$specs{'txtCalliper'} += $calliper;
 			} # end foreach
@@ -278,7 +280,7 @@ sub calc {
 
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-				next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
+				next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 				if ( 
 						($$sig_specs{'txtImposition'.$qty_index} % 2) or 
 						($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'} % 2 ) or 
@@ -305,8 +307,7 @@ sub calc {
 				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
 				if ( $folding_specs ) {
 					foreach my $pages ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
-						$pages{$pages} += $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'
-							.$qty_index};
+						$pages{$pages} += $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index};
 					} # end foreach
 				} # end if
 
@@ -427,10 +428,12 @@ sub get_price {
 
 	my %MakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{'Imposition'}, $Equipment );
 	if ( ! %MakeReady ) {
+$openprint::log->debug("Didn't find $$specs{'ServiceType'} makeready price for " . $$specs{"txtPockets$qty_index"} . 'pockets' );
 		%MakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
 	} # end if
+$openprint::log->debug("found $$specs{'ServiceType'} makeready price for " . $$specs{"txtPockets$qty_index"} . 'pockets ' . $MakeReady{'Cost'} );
 	my $pocketMakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-	$price{'MakeReady'} = $MakeReady{'Price'} + $pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 );
+	$price{'MakeReady'} = $MakeReady{'Price'} + ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 ));
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $neededPockets = $$specs{"txtPockets$qty_index"};
