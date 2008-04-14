@@ -1684,24 +1684,6 @@ sub get_project_price {
 #my $starttime = gettimeofday();
 #$imp->display();
 
-			if ( sets::isin( $imp->runstyle(), [ 'Web', 'Sheet Work' ] ) ) {
-				if ( @$side_one_colours > $Press->specification('Number of Colours') ) {
-					next;
-				} elsif ( @$side_two_colours > $Press->specification('Number of Colours') ) {
-					next;
-				} # end if
-			} elsif ( $imp->runstyle() eq 'Perfecting' ) {
-				if ( @$side_one_colours > $Press->specification('Number of Colours')/2 ) {
-					next;
-				} elsif ( @$side_two_colours > $Press->specification('Number of Colours')/2 ) {
-					next;
-				} # end if
-			} elsif ( sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble'] ) ) {
-				if ( scalar @$filtered_colours > $Press->specification('Number of Colours') ) {
-					next;
-				} # end if
-			} # end if
-
 			$$specs{'ddmRunStyle'.$qty_index} = $imp->runstyle();
 			$$specs{'ddmPress'.$qty_index} = $Press->strid();
 			$$specs{'PageQuantity'.$qty_index} = $imp->pages();
@@ -2672,6 +2654,12 @@ sub select_presses {
 		if ( ( @$side_one_colours > $Press->specification('Number of Colours') or @$side_two_colours > $Press->specification('Number of Colours') ) and $Press->specification('Multipass', $Paper->gsm()) eq 'N' ) {
 			$openprint::log->debug("Too many colours and no multipass") if $debug;
 			next;
+		} elsif ( $Press->specification('Web Press') eq 'Y' ) {
+			if ( @$side_one_colours > $Press->specification('Number of Colours') ) {
+				next;
+			} elsif ( @$side_two_colours > $Press->specification('Number of Colours') ) {
+				next;
+			} # end if
 		} # end if
 
 		if ( $varnish ) {
@@ -2745,6 +2733,11 @@ sub get_run_price {
 		$run_price{'units'} = $RunPrice{'units'};
 		$running_price = $RunPrice{'Price'};
 #$openprint::log->debug("Price: $running_price");
+	} elsif ( $Imposition->runstyle() eq 'Perfecting' ) {
+# A web does both sides at once, and cannot do multipass
+		my %RunPrice = openprint::service::get_price_object( 'ImpressionPerfecting'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press );
+		$run_price{'units'} = $RunPrice{'units'};
+		$running_price = $RunPrice{'Price'};
 	} else {
 
 		if ( $side_one_colours ) {

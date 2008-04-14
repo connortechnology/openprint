@@ -145,6 +145,12 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
+			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+				$$specs{'alert'} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
+
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
 			$qtyTotal += $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"};
 			$qtyTotal += $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
@@ -175,20 +181,12 @@ sub signature_calc {
 	my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index ) = @_;
 #$openprint::log->debug("Scoring sign calc");
 
-	my $qty = $$specs{"txtQuantity$qty_index"};
-	if ( $$specs{'txtPressSheetComboItems'} ) {
-		$qty *= $$specs{'txtPressSheetComboItems'};
-	} # end if
-	$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
-	$sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index ) if ! $sig_specs;
+	#$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
+	#$sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index ) if ! $sig_specs;
 
 	my %Results = (
 		'Status' => 'calculated',
 	);
-	my $services = $Project->services();
-
-
-	$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
 
 	if ( $$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"} ne 'Y' ) {
 		get_scores( $Project, $specs, $sig_specs );
@@ -197,12 +195,16 @@ sub signature_calc {
 	} # end if
 
 	my $score_qty = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
-$openprint::log->debug("Scores: $score_qty");
 	@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
 	$$specs{'hdnBreakdown'.$qty_index} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
 	$Results{'Status'} = 'uncalculated';
+	my $services = $Project->services();
+	my $qty = $$specs{"txtQuantity$qty_index"};
+	if ( $$specs{'txtPressSheetComboItems'} ) {
+		$qty *= $$specs{'txtPressSheetComboItems'};
+	} # end if
 
 	# Can only use the stitcher for scoring if we are stitching.  There are also thickness constraints
 	my $stitching_service_index = $$services{'SaddleStitching'} ? $$services{'SaddleStitching'}[0] : undef;
@@ -211,10 +213,6 @@ $openprint::log->debug("Scores: $score_qty");
 	# juts for efficeincy
 	my $cutting_service_index = $$services{'Cutting'} ? $$services{'Cutting'}[0] : undef;
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
-	if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-		$$specs{'alert'} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
-		return %Results;
-	} # end if
 
 	$Results{'Status'} = 'uncalculated';
 
@@ -250,12 +248,12 @@ $openprint::log->debug("Scores: $score_qty");
 	$imposition->load( $sig_specs, $qty_index );
 
 	if ( 1 ) {
-	# IF it's a W&T, we have to cut in half first, so just do it.
-	if ( $imposition->runstyle() eq 'Work & Turn' ) {
-		$imposition->columns( $imposition->columns()/2 );
-	} elsif ( $imposition->runstyle() eq 'Work & Tumble' ) {
-		$imposition->rows( $imposition->rows()/2 );
-	} # end if
+		# IF it's a W&T, we have to cut in half first, so just do it.
+		if ( $imposition->runstyle() eq 'Work & Turn' ) {
+			$imposition->columns( $imposition->columns()/2 );
+		} elsif ( $imposition->runstyle() eq 'Work & Tumble' ) {
+			$imposition->rows( $imposition->rows()/2 );
+		} # end if
 	} # end if
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -267,10 +265,10 @@ $openprint::log->debug("Scores: $score_qty");
 
 	my @cut_impositions = ();
 	if ( $cutting_service_index ) {
-		$imposition->display();
+		#$imposition->display();
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			$imps[$i]->display();
+			#$imps[$i]->display();
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} == $imps[$i]->imposition() )
 			   ) {
