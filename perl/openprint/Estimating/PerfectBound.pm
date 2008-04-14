@@ -537,8 +537,15 @@ sub display {
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
-	if ( $qty_index and $$specs{'Imposition'.$qty_index} ) {
-		return $$specs{'Imposition'.$qty_index} .'out';
+	if ( $qty_index ) {
+		if ( $$specs{'Imposition'.$qty_index} ) {
+			return $$specs{'Imposition'.$qty_index} .'out';
+		} # end if
+	} # end if
+
+	if ( $$specs{'glue_id'} ) {
+		my $Material = new openprint::Material( $$specs{'glue_id'} );
+		return 'Using ' . $Material->description();
 	} # end if
 	return '';
 } # end sub summary
