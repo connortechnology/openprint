@@ -24,7 +24,7 @@
 			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
 			</select>
-			<input type="checkbox" id="override_glue_id" name="override_glue_id" value="Y" <? echo ( $$variable{'override_glue_id'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+			<input type="checkbox" id="override_glue_id" name="override_glue_id" value="Y" onclick="if(!this.checked)calc(this.form.name);" <? echo ( $$variable{'override_glue_id'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 			<label class="label" for="override_glue_id">Override</label>
 <? else ( @{$$variable{'GlueTypes'}} > 1 ) ?>
 	<input type="hidden" name="glue_id" value="<?glue_id?>" />
