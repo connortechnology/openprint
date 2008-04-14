@@ -91,21 +91,24 @@ sub calc {
 
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
-	foreach my $sig_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-		next if $override_pages{$$sig_specs{'Group'}};
-		
-		if ( exists $$specs{'OverrideGroupPageQuantity'.$$sig_specs{'Group'}} ) {
-		$override_pages{$$sig_specs{'Group'}} = $$sig_specs{'GroupPageQuantity'} if $$specs{'OverrideGroupPageQuantity'.$$sig_specs{'Group'}} eq 'Y';
+	foreach my $group_id ( @Groups ) {
+		next if $override_pages{$group_id};
+
+		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
+			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id} if $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y';
 		} else {
-		$override_pages{$$sig_specs{'Group'}} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
+
+			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+				$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
+			} # end foreach signature
 		} # end if
-		$remaining_pages -= $override_pages{$$sig_specs{'Group'}};
-	} # end foreach
+		$remaining_pages -= $override_pages{$group_id};
+	} # end foreach group
 
 	# if there is a cover, then force it to be non-zero
 	if ( (! $override_pages{1} ) and ($$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) and ($$specs{'rdbCover'} eq 'Different') ) {
-		my $new_remaining = int(($remaining_pages-$$specs{'txtSpreadSize'}) / $$specs{'txtSpreadSize'} ) * $$specs{'txtSpreadSize'};
+		my $new_remaining = int(($remaining_pages-4) / $$specs{'txtSpreadSize'} ) * $$specs{'txtSpreadSize'};
 		$override_pages{1} = $remaining_pages - $new_remaining;
 		$remaining_pages = $new_remaining;
 	} # end if
