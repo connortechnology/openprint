@@ -1684,6 +1684,24 @@ sub get_project_price {
 #my $starttime = gettimeofday();
 #$imp->display();
 
+			if ( sets::isin( $imp->runstyle(), [ 'Web', 'Sheet Work' ] ) ) {
+				if ( @$side_one_colours > $Press->specification('Number of Colours') ) {
+					next;
+				} elsif ( @$side_two_colours > $Press->specification('Number of Colours') ) {
+					next;
+				} # end if
+			} elsif ( $imp->runstyle() eq 'Perfecting' ) {
+				if ( @$side_one_colours > $Press->specification('Number of Colours')/2 ) {
+					next;
+				} elsif ( @$side_two_colours > $Press->specification('Number of Colours')/2 ) {
+					next;
+				} # end if
+			} elsif ( sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble'] ) ) {
+				if ( scalar @$filtered_colours > $Press->specification('Number of Colours') ) {
+					next;
+				} # end if
+			} # end if
+
 			$$specs{'ddmRunStyle'.$qty_index} = $imp->runstyle();
 			$$specs{'ddmPress'.$qty_index} = $Press->strid();
 			$$specs{'PageQuantity'.$qty_index} = $imp->pages();
@@ -2460,6 +2478,7 @@ sub calc_price {
 		} # end if
 			
 		my $area = $Imposition->object_area() * $impressions * ($$inkCoverage{$real_colour}/100);
+		$area /= 2 if $Imposition->runstyle() eq 'Sheet Work';
 		my $grade = $Imposition->Paper()->grade();
 		$grade = 4 if ! $grade;
 
@@ -2667,7 +2686,7 @@ sub select_presses {
 
 #$log->debug("**** End of select_press. Selected Presses: @good_presses ****");
 	return @good_presses;
-} # end sub
+} # end sub select_press
 
 # Returns a price per image, which will later need to be multiplied by the imposition
 sub get_special_colours_price {

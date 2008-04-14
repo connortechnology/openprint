@@ -95,7 +95,7 @@ sub calc {
 		$override_pages{$$sig_specs{'txtSignatureType'}} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
 	} # end foreach
 	my %pages;
-	$pages{'Cover Pages'} = $override_pages{'Cover Pages'} ? $override_pages{'Cover Pages'} : ($$specs{'rdbCover'} eq 'Different' ? 4 : 0);
+	$pages{'Cover Pages'} = $override_pages{'Cover Pages'} ? $override_pages{'Cover Pages'} : ($$specs{'rdbCover'} eq 'Different' ? $$specs{'GroupPageQuantity1'} : 0);
 	$pages{'Gate Folded Spreads'} = $$specs{'txtGateFoldedPageQuantity'};
 	$pages{'Interior Pages'} = ( $$specs{'txtTotalPageQuantity'} - $pages{'Cover Pages'} ) - $pages{'Gate Folded Spreads'};
 
