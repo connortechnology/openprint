@@ -272,17 +272,19 @@ sub status {
 
     my $total_pages = $$printing_specs{'txtTotalPageQuantity'};
 	my %specified_pages;
+	my %needed_pages;
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
-		$specified_pages{$$sig_specs{'txtSignatureType'}} += $$sig_specs{"PageQuantity$qty_index"};
+		$specified_pages{$$sig_specs{'Group'}} += $$sig_specs{"PageQuantity$qty_index"};
+		$needed_pages{$$sig_specs{'Group'}} = $$sig_specs{'GroupPageQuantity'.$qty_index};
 	} # end foreach
-
-	if ( $$printing_specs{'rdbCover'} eq 'Different') {
-		return 'Cover Pages' if ! $specified_pages{'Cover Pages'};
-	} # end if
-	my $interior_pages = $$printing_specs{'txtTotalPageQuantity'} - $specified_pages{'Cover Pages'};
-
-	return 'Interior Pages' if $interior_pages > $specified_pages{'Interior Pages'};
+	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
+	foreach my $Group ( @Groups ) {
+		if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
+			return $Group;
+		} # end if
+	} # end foreach
+	return;
 } # end sub status
         
 sub copy_signature {

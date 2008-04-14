@@ -549,7 +549,7 @@ sub summary {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
 					my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"});
 					if ( @Service ) {	
-						my $desc = sprintf('<td align="left">%s&quot;x%s&quot;</td><td align="left">%s', @$specs{
+						my $desc = sprintf('<td align="left"> %s&quot;x%s&quot;</td><td align="left">%s', @$specs{
 								"txtProofWidth-$signature_index-$proof_index-$qty_index",
 								"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service[0]->description() );
 						$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
@@ -559,7 +559,7 @@ sub summary {
 		} # end foreach signature
 		my $summary = '<table style="width:auto;table-layout:auto;">';
 		foreach my $k ( keys %proof_totals ) {
-			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'</td>'.$k.'</td></tr>';
+			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;</td>'.$k.'</td></tr>';
 		} # end foreach
 		return $summary.'</table>';
 	} # end if qty_index
