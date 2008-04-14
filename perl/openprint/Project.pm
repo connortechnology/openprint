@@ -900,6 +900,9 @@ sub summary {
 	if ( $services{'SpinePaste'} ) {
 		$summary .= ' Spine Paste ';
 	} # end if
+	if ( $services{'PerfectBound'} ) {
+		$summary .= ' PerfectBound ';
+	} # end if
 	if ( $services{'PlainCartons'} ) {
 		$summary .= ' Boxes';
 	} # end if

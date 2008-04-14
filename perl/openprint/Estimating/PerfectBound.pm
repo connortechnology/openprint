@@ -426,12 +426,10 @@ sub get_price {
 		$price{'Imposition'} = 1;
 	} # end if
 
-	my %MakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{'Imposition'}, $Equipment );
+	my %MakeReady = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{'Imposition'}, $Equipment );
 	if ( ! %MakeReady ) {
-$openprint::log->debug("Didn't find $$specs{'ServiceType'} makeready price for " . $$specs{"txtPockets$qty_index"} . 'pockets' );
-		%MakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+		%MakeReady = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
 	} # end if
-$openprint::log->debug("found $$specs{'ServiceType'} makeready price for " . $$specs{"txtPockets$qty_index"} . 'pockets ' . $MakeReady{'Cost'} );
 	my $pocketMakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
 	$price{'MakeReady'} = $MakeReady{'Price'} + ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 ));
 
