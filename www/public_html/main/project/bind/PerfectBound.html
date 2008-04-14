@@ -15,6 +15,21 @@
 				<input type="checkbox" id="OverrideSpineWidth" name="chkOverrideCalliper" value="Y" <? echo ( $$variable{'chkOverrideCalliper'} eq 'Y' ? 'checked="checked"' : '' ) ?> />	
 				<label class="radio" for="OverrideSpineWidth">Override</label>
 			</p>
+<? eval ( 
+	@{$$variable{'GlueTypes'}} = openprint::Material::find('category'=>'PerfectBound Glue');
+) ?>
+<? if ( @{$$variable{'GlueTypes'}} > 1 ) ?>
+		<p>
+			<label>Glue Type:</label>
+			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
+			</select>
+			<input type="checkbox" id="override_glue_id" name="override_glue_id" value="Y" <? echo ( $$variable{'override_glue_id'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+			<label class="label" for="override_glue_id">Override</label>
+<? else ( @{$$variable{'GlueTypes'}} > 1 ) ?>
+	<input type="hidden" name="glue_id" value="<?glue_id?>" />
+<? endif ( @{$$variable{'GlueTypes'}} > 1 ) ?>
+			</p>
 			<p>
 				<label>Signatures:</label>
 			<!-- The rest is done for each qty -->

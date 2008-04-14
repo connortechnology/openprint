@@ -38,6 +38,7 @@ my %variables = (
         'txtUnitPrice1'=>['output'], 'txtUnitPrice2'=>['output'], 'txtUnitPrice3'=>['output'],
         'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],
         'txtRunTime1'=>['save'], 'txtRunTime2'=>['save'], 'txtRunTime3'=>['save'],
+		'glue_id' => ['save'], 'override_glue_id' => ['save'],
         );
 
 sub variables {
@@ -238,6 +239,27 @@ sub calc {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} # end if
 
+	my @Materials = openprint::Material::find('category'=>'PerfectBound Glue');
+	if ( $$specs{'override_glue_id'} eq 'Y' ) {
+	} else {
+		foreach my $ss_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
+
+			my $Paper;
+			foreach my $qty_index ( 1 .. 3 ) {
+				next if ! $Project->quantity( $qty_index );
+				$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				last;
+			} # end foreach
+			foreach my $Material ( @Materials ) {
+				if ( sets::isin( $Paper->grade(), misc::trim(split(',',$Material->specification('Recommended For Stock Grade'))) ) ) {
+					$$specs{'glue_id'} = $Material->id();
+					last;
+				} # end if
+			} # end foreach Material
+		} # end foreach sig
+	} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
@@ -359,7 +381,11 @@ $openprint::log->debug("calc");
 			} # end if
 			my $servicePrice = $$Price{'LastPassServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: last pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'txtPrice'}))."<br/><br/>";
+			if ( my $GluePrice = $$Price{'GluePrice'} ) {
+$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $$Price{'Glue'}->description(), @$GluePrice{'Price','units','Total'}, @$specs{'Width','txtCalliper'} );
+
+			} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'Price'})).'<br/><br/>';
 		} # end foreach Equipment
 
 		if ( $$bestPrice{'Equipment'} ) {
@@ -461,6 +487,20 @@ sub get_price {
 	} # end if
 	$price{'Passes'} += 1;
 
+	if ( $$specs{'glue_id'} ) {
+		my $Material = new openprint::Material( $$specs{'glue_id'} );
+		my %GluePrice = $Material->get_price( $$specs{"txtQuantity$qty_index"}, undef );
+		if ( $GluePrice{units} eq 'Per Square Inch' ) {
+			$GluePrice{'Total'} = $GluePrice{Price} * $$specs{'Width'} * $$specs{'txtCalliper'} * $$specs{"txtQuantity$qty_index"};
+			$price{'GluePrice'} = \%GluePrice;
+		} elsif ( $GluePrice{units} eq 'Per Square Foot' ) {
+			$GluePrice{'Total'} = $GluePrice{Price} * $$specs{'Width'} * $$specs{'txtCalliper'} * $$specs{"txtQuantity$qty_index"} / 144;
+			$price{'GluePrice'} = \%GluePrice;
+		} # end if
+
+		$price{'Glue'} = $Material;
+	} # end if Glues
+
 	if ( $$specs{'txtInsertQuantity'} > 0 ) {
 		$price{'Insert'} = openprint::service::get_price( $$specs{'ServiceType'}.'Insert', $$specs{'txtInsertQuantity'}, $Equipment) * $$specs{'txtInsertQuantity'};
 # Convert to cost per thousand
@@ -482,7 +522,7 @@ sub get_price {
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 
-	$price{'Price'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'};
+	$price{'Price'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'} + $price{'GluePrice'}{'Total'};
 $openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
 	return \%price;
 } # end sub get_price
