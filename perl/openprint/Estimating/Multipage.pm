@@ -89,27 +89,36 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
+	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
 	foreach my $sig_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-		$override_pages{$$sig_specs{'txtSignatureType'}} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
+		next if $override_pages{$$sig_specs{'Group'}};
+		
+		if ( exists $$specs{'OverrideGroupPageQuantity'.$$sig_specs{'Group'}} ) {
+		$override_pages{$$sig_specs{'Group'}} = $$sig_specs{'GroupPageQuantity'} if $$specs{'OverrideGroupPageQuantity'.$$sig_specs{'Group'}} eq 'Y';
+		} else {
+		$override_pages{$$sig_specs{'Group'}} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
+		} # end if
+		$remaining_pages -= $override_pages{$$sig_specs{'Group'}};
 	} # end foreach
-	my %pages;
-	$pages{'Cover Pages'} = $override_pages{'Cover Pages'} ? $override_pages{'Cover Pages'} : ($$specs{'rdbCover'} eq 'Different' ? $$specs{'GroupPageQuantity1'} : 0);
-	$pages{'Gate Folded Spreads'} = $$specs{'txtGateFoldedPageQuantity'};
-	$pages{'Interior Pages'} = ( $$specs{'txtTotalPageQuantity'} - $pages{'Cover Pages'} ) - $pages{'Gate Folded Spreads'};
+
+	# if there is a cover, then force it to be non-zero
+	if ( (! $override_pages{1} ) and ($$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) and ($$specs{'rdbCover'} eq 'Different') ) {
+		my $new_remaining = int(($remaining_pages-$$specs{'txtSpreadSize'}) / $$specs{'txtSpreadSize'} ) * $$specs{'txtSpreadSize'};
+		$override_pages{1} = $remaining_pages - $new_remaining;
+		$remaining_pages = $new_remaining;
+	} # end if
 
 	foreach my $group_id ( @Groups ) {
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
-		if ( $group_id == 1 and $$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) {
-			$$specs{'GroupPageQuantity1'} = $pages{'Cover Pages'};
-		} elsif ( $group_id == 2 and $$specs{'OverrideGroupPageQuantity2'} ne 'Y' ) {
-			$$specs{'GroupPageQuantity'.$group_id} = $$specs{'txtTotalPageQuantity'} - $pages{'Cover Pages'};
-		} elsif ( $$specs{'OverrideGroupPageQuantity'.$group_id} ne 'Y' ) {
-			$$specs{'GroupPageQuantity'.$group_id} = ( ( $$specs{'txtTotalPageQuantity'} - $pages{'Cover Pages'} ) - $override_pages{'Interior Pages'} );
+		if ( ! $override_pages{$group_id} ) {
+			$override_pages{$group_id} = $remaining_pages;
+			$remaining_pages = 0;
 		} # end if
+		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 	} # end foreach
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
