@@ -658,39 +658,39 @@ sub calc {
 					$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
 				} # end if
 			} # end if
-		} elsif ( $$specs{'txtSignatureType'} eq 'Cover Pages' and $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
-$openprint::log->debug("SpreadSize: $$specs{'txtSpreadSize'}");
+		} elsif ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
 $$specs{'txtSpreadSize'} = $$specs{'GroupPageQuantity'};
 $variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
+$openprint::log->debug("SpreadSize: $$specs{'txtSpreadSize'}");
 			if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
-# Perfect bound requires more width on th cover to conver the calliiper	
-				my $finished_calliper = 0;
-				$_ = q{SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='txtSignatureType' AND NOT strValue='Cover Pages'};
-				my @signature_service_indices = sql::execute( $log, $dbh, $_, $project_index );
-				foreach my $signature_service_index ( @signature_service_indices ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+	# Perfect bound requires more width on th cover to conver the calliiper	
+					my $finished_calliper = 0;
+					$_ = q{SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='txtSignatureType' AND NOT strValue='Cover Pages'};
+					my @signature_service_indices = sql::execute( $log, $dbh, $_, $project_index );
+					foreach my $signature_service_index ( @signature_service_indices ) {
+						my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
-					my $calliper1 = $$sig_specs{'PageQuantity1'} ? $$sig_specs{'PageQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-					my $calliper2 = $$sig_specs{'PageQuantity2'} ? $$sig_specs{'PageQuantity2'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-					my $calliper3 = $$sig_specs{'PageQuantity3'} ? $$sig_specs{'PageQuantity3'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-					if ( $calliper1 ) {
-						$finished_calliper += $calliper1/2;
-					} elsif ( $calliper2 ) {
-						$finished_calliper += $calliper2/2;
-					} elsif ( $calliper3 ) {
-						$finished_calliper += $calliper3/2;
-					} # end if
-				} # end foreach signature
+						my $calliper1 = $$sig_specs{'PageQuantity1'} ? $$sig_specs{'PageQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
+						my $calliper2 = $$sig_specs{'PageQuantity2'} ? $$sig_specs{'PageQuantity2'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
+						my $calliper3 = $$sig_specs{'PageQuantity3'} ? $$sig_specs{'PageQuantity3'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
+						if ( $calliper1 ) {
+							$finished_calliper += $calliper1/2;
+						} elsif ( $calliper2 ) {
+							$finished_calliper += $calliper2/2;
+						} elsif ( $calliper3 ) {
+							$finished_calliper += $calliper3/2;
+						} # end if
+					} # end foreach signature
 
-				$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$printing_specs{'txtFinalWidth'}*($$specs{'GroupPageQuantity'}/2) + $finished_calliper)*1000)/1000);
-				$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
-				if ( ! $$specs{'txtHeight'} ) {
-					$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
-					$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
+					$openprint::log->debug("Cover size calc: $finished_calliper");
+					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$printing_specs{'txtFinalWidth'}*($$specs{'GroupPageQuantity'}/2) + $finished_calliper)*1000)/1000);
 				} else {
-					$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
+					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$printing_specs{'txtFinalWidth'}*($$specs{'GroupPageQuantity'}/2)*1000)/1000);
 				} # end if
-$openprint::log->debug("Cover size calc: $finished_calliper");
+				$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
+				$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
+				$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
 			} else {
 				$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 				$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
