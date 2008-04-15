@@ -56,7 +56,6 @@ sub calc_price {
 		%MakeReady = openprint::service::get_price_object( 'DieCuttingMakeReady' ,'', $Equipment);
 	} # end if
 	$Total{'MakeReady'} = \%MakeReady;
-	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $MakeReady{'Price'});
 	$Total{'Total'} += $MakeReady{'Price'};
 
 	my %DiePrice;
@@ -108,19 +107,18 @@ sub calc_price {
 		$DiePrice{'Price'} = $$specs{'DiePrice'.$qty_index};
 	} # end if
 	$Total{'Total'} += $DiePrice{'Price'};
-	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $DiePrice{'Price'});
 #$$specs{'hdnBreakdown'.$qty_index} .= 'Materials: $' . sprintf( '%.2f', $price{'MaterialPrice'}->{'Price'})."\n";
 
 	# Why 1.28, overs I assume
 	my $impressions = $$specs{"txtQuantity$qty_index"} / $imposition * 1.28;
-# this is the price for acutal die cutting, priced by impressions.
+	$Total{'Impressions'} = $impressions;
+# this is the price for actual die cutting, priced by impressions.
 	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting'}, $impressions, $Equipment );
 	if ( ! %ServicePrice ) {
 		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
 	} # end if
 
 	$ServicePrice{'Total'} = $impressions * $ServicePrice{'Price'} / 1000;
-	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%.2f %s * %d impressions = $%.2f<br/>', @ServicePrice{'Price','units'}, $impressions, $ServicePrice{'Total'});
 	$Total{'ServicePrice'} = \%ServicePrice;
 	$Total{'Total'} += $ServicePrice{'Total'};
 # the extra services are priced by qty, not impressions.
@@ -140,18 +138,8 @@ sub calc_price {
 		$Total{'Total'} += $HoleClearingPrice{'Total'};
 	} # end if
 
-	#if ( $$specs{'rdbGlued'} eq 'Y' ) {
-		#my $gluing_price =  openprint::service::get_price( 'Gluing'.$$specs{'rdbDieCutting'}, $$specs{"txtQuantity$qty_index"}, '') / 1000; 
-		#$run_price += $$specs{"txtQuantity$qty_index"} * $gluing_price;
-	#} elsif ( $$specs{'rdbGlued'} eq 'M' ) {
-		#my $gluing_price =  openprint::service::get_price( 'GluingMachine', $$specs{"txtQuantity$qty_index"}, '') / 1000; 
-		#$run_price += $$specs{"txtQuantity$qty_index"} * $gluing_price;
-	#} # end if
-	#my $total_price = $make_ready + $run_price;	
-
 	$Total{'txtPrice'} = $Total{'Total'};
 	$Total{'txtUnitPrice'} = $Total{'Total'} / $$specs{"txtQuantity$qty_index"};
-	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f<br/>', $Total{'txtPrice'});
     return %Total;
 
 } # end sub calc_price
@@ -276,15 +264,17 @@ sub calc {
 			} # end if
 
 			foreach my $Equipment ( @equipment ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Equipment: ".$Equipment->strid()."<br/>";
+				#$$specs{'hdnBreakdown'.$qty_index} .= "Equipment: ".$Equipment->strid()."<br/>";
 
 				foreach my $imposition ( @impositions ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "&nbsp;Imposition: $$imposition{'imposition'}";
+					#$$specs{'hdnBreakdown'.$qty_index} .= "&nbsp;Imposition: $$imposition{'imposition'}";
 					my $width = $$specs{"txtWidth-$$sig_specs{'SignatureIndex'}"} * $$imposition{$imposition->image_orientation() eq 'Vertical' ? 'columns' : 'rows'};
 					my $height = $$specs{"txtHeight-$$sig_specs{'SignatureIndex'}"} * $$imposition{$imposition->image_orientation() eq 'Vertical' ? 'rows' : 'columns'};
 #$log->debug(qq` $$imposition{'Orientation'} : $$specs{"txtWidth-$printing_specs{'SignatureIndex'}"}*$$imposition{'Rows'}  x $$specs{"txtHeight-$printing_specs{'SignatureIndex'}"}*$$imposition{'Cols'} ` );
 					if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
+						if ( 1 == @equipment ) {
+							$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
+						} # end if
 						next;
 					} # end if
 
@@ -312,6 +302,11 @@ sub calc {
 				$totalPrice += $bestPrice{'txtPrice'};
 				$totalUnitPrice += $bestPrice{'txtUnitPrice'};
 				$totalDiePrice += $bestPrice{'DiePrice'}{'Price'} if $bestPrice{'DiePrice'};
+
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $bestPrice{'MakeReadyPrice'}{'Price'});
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $bestPrice{'DiePrice'}{'Price'});
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%1$.2f %2$s * %4$d impressions = $%3$.2f<br/>', $bestPrice{'ServicePrice'}{'Price','units','Total'}, $bestPrice{'Impressions'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f<br/>', $bestPrice{'txtPrice'});
 			} # end if
 		} # end foreach Signature
 
@@ -330,18 +325,12 @@ sub calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;	
 
-	my $Project = new openprint::Project( $project_index );
-
-	@{$$variable{'EquipmentArray'}} = sql::execute( $log, $dbh, q{SELECT lngEquipmentIndex FROM tbl_Equipment_Specifications WHERE strName='Die Cutting Capable' and strValue = 'Y'} );
+	@{$$variable{'Equipment'}} = openprint::Equipment::find('order'=>'lower(strname)', 'use_in_estimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} );
+$openprint::log->debug("Equipment: " . @{$$variable{'Equipment'}} );
 
 	if ( $$variable{'rdbTemplateTypePresentationFolderStandard1Pocket'} ne '' or $$variable{'rdbTemplateTypePresentationFolderStandard2Pocket'} ne '' ) {
 		$$variable{'ShowPresentationFolderDieCutting'} = 'Y';
 	} # end if
-
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		push @{$$variable{'SignatureGroups'}}, @$sig_specs{'SignatureIndex','txtServiceDescription'};
-	} # end foreach
 
 } # end sub display
 sub summary {
