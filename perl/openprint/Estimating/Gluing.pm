@@ -90,10 +90,10 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 		if ( $Project->Type()->strid() eq 'PresentationFolders' ) {
 			my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 			if ( $$printing_specs{'chkPocketLeft'} eq 'Left' ) {
-				$$specs{'txtArea'} += .5 * $$printing_specs{'rdbPocketSize'};
+				$$specs{'txtArea'} += .5 * $$printing_specs{'PocketSize'};
 			} # end if
 			if ( $$printing_specs{'chkPocketRight'} eq 'Right' ) {
-				$$specs{'txtArea'} += .5 * $$printing_specs{'rdbPocketSize'};
+				$$specs{'txtArea'} += .5 * $$printing_specs{'PocketSize'};
 			} # end if
 		} # end if
 	} # end if

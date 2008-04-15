@@ -2,23 +2,32 @@
 	<p>
 		<label>Number of panels:</label>
 		<span class="checkOption">
-		<input type="radio" id="rdbPanels2" name="rdbPanels" value="2" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbPanels'} == 2 ) ?> />
+		<input type="radio" id="rdbPanels2" name="rdbPanels" value="2" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbPanels'} == 2 ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPanels2">2</label>
 		</span>
 		<span class="checkOption">
-		<input type="radio" id="rdbPanels3" name="rdbPanels" value="3" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbPanels'} == 3 ) ?> />
+		<input type="radio" id="rdbPanels3" name="rdbPanels" value="3" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbPanels'} == 3 ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPanels3">3</label>
+		</span>
+		<span class="checkOption">
+		<input type="radio" id="rdbPanels4" name="rdbPanels" value="4" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbPanels'} == 4 ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbPanels3">4</label>
 		</span>
 	</p>
 	<p>
 		<label>Pocket size:</label>
 		<span class="checkOption">
-		<input type="radio" id="rdbPocketSize3" name="rdbPocketSize" value="3" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbPocketSize'} == 3 ) ?> />
+		<input type="radio" id="rdbPocketSize3" name="rdbPocketSize" value="3" onclick="calc(this.form.name);" <? echo ( $$variable{'PocketSize'} == 3 ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPocketSize3">3&quot;</label>
 		</span>
 		<span class="checkOption">
-		<input type="radio" id="rdbPocketSize4" name="rdbPocketSize" value="4" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbPocketSize'} == 4 ) ?> />
+		<input type="radio" id="rdbPocketSize4" name="rdbPocketSize" value="4" onclick="calc(this.form.name);" <? echo ( $$variable{'PocketSize'} == 4 ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPocketSize4">4&quot;</label>
+		</span>
+		<span class="checkOption">
+		<input type="radio" id="rdbPocketSizeOther" name="rdbPocketSize" value="Other" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbPocketSize'} eq 'Other' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbPocketSizeOther">Other</label>
+			<input type="text" name="PocketSize" value="<?PocketSize?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '' );$('rdbPocketSizeOther').checked=true;calc(this.form.name);" />
 		</span>
 	</p>
 	<p>

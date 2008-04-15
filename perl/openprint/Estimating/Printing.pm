@@ -164,7 +164,7 @@ my %variables = (
 		'txtFinishedCalliper' => ['save','output'], 
 		'PageQuantity' => ['save'], # for Scratch Pads
 # Presentation Folders
-		'rdbPanels' => ['save'],'rdbPocketSize' => ['save'],'chkPocketLeft' => ['save'],'chkPocketCenter' => ['save'],'chkPocketRight' => ['save'],
+		'rdbPanels' => ['save'],'PocketSize' => ['save'],'chkPocketLeft' => ['save'],'chkPocketCenter' => ['save'],'chkPocketRight' => ['save'],
 		'rdbSuppliedStock' => ['save'], 'rdbSpecificStock' => ['save'],'rdbTemplateType' => ['save'],
 		'chkOverrideRunStyle1' => ['save'], 'chkOverrideRunStyle2' => ['save'], 'chkOverrideRunStyle3' => ['save'],
 		'chkOverrideSheetSize1' => ['save'], 'chkOverrideSheetSize2' => ['save'], 'chkOverrideSheetSize3' => ['save'],
@@ -577,10 +577,16 @@ sub calc {
 	} # end foreach
 
 	if ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
-		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'rdbPocketSize'} ) ) {
+		if ( $$specs{'rdbPocketSize'} and ( $$specs{'rdbPocketSize'} ne 'Other' ) ) {
+			$$specs{'PocketSize'} = $$specs{'rdbPocketSize'};	
+			$variables{'PocketSize'} = [ sets::union( 'output', @{$variables{'PocketSize'}} ) ];
+		} else {
+			$variables{'PocketSize'} = [ sets::exclude( ['output'], $variables{'PocketSize'} ) ];
+		} # end if
+		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'PocketSize'} ) ) {
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
-			$$specs{'alert'} .= 'Please select where you would the pockets.';
+			$$specs{'alert'} .= 'Please select where you would like the pockets.';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
@@ -605,18 +611,20 @@ sub calc {
 				$pockets += 1;
 			} # end if
 			$$specs{'rdbTemplateType'} = sprintf( '%dPanel%dPocket', $$specs{'rdbPanels'}, $pockets );
-			$$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'rdbPocketSize'};
+			$$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'PocketSize'};
+			$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
+			$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
+$openprint::log->debug("WIdth: $$specs{'txtWidth'} ");
+$openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
+		} else {
 			$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 			$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 			$variables{'rdbTemplateType'} = [ sets::exclude( ['output'], $variables{'rdbTemplateType'} ) ];
+		
 		} # end if
 	} # end if
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	if ( $$specs{'txtSignatureType'} ) {
-		if ( ! $$printing_specs{'txtSpreadSize'} ) {
-			$openprint::log->warn('No Spread Size!');
-			$$printing_specs{'txtSpreadSize'} = 4;
-		} # end if
 
 		if ( $$specs{'txtSignatureType'} eq 'GateFolded Spreads' ) {
 			if ( $$specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
@@ -717,8 +725,8 @@ $openprint::log->debug("SpreadSize: $$specs{'txtSpreadSize'}");
 	} else { # not a book
 # If no spreadsize, then we are likely not a book, and the spread size is 2
 		$$specs{'txtSpreadSize'} = 2 if ! $$specs{'txtSpreadSize'};
-		$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
-		$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
+		#$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
+		#$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 	} # end if
 
 	if ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) {
