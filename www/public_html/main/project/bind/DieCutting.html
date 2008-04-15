@@ -47,6 +47,28 @@
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
+<p id="StrippingPrice">
+	<label><b>Stripping Price (<?CurrencySymbol?>):</b></label>
+
+<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+		<input type="checkbox" id="OverrideStrippingPrice" name="OverrideStrippingPrice" value="Y" <? echo ( $$variable{'OverrideStrippingPrice'} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if ( ! this.checked ) { calc(this.form.name); }"/>
+		<label class="radio" for="OverrideStrippingPrice">Override</label>
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+		<input type="text" name="StrippingPrice<?QTYIndex?>" value="<? echo ( $$variable{'StrippingPrice'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
+<? else ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+		<? echo ( $$variable{'StrippingPrice'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+	</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+			<!--#include virtual="/includes/main/proj/_quantities.html"-->
 			<!--#include virtual="/includes/main/proj/_unit_price.html"-->
 			<!--#include virtual="/includes/main/proj/_service_price.html"-->
 <? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>

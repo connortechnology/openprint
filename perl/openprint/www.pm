@@ -418,9 +418,6 @@ $openprint::log->warn('bind');
 					} elsif ( $filename eq 'cutting.html' ) {
 						require openprint::Estimating::Cutting;
 						openprint::Estimating::Cutting::display( $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename eq 'die_cutting.html' or $filename eq 'bind_kiss_cutt.html' ) {
-						require openprint::Estimating::DieCutting;
-						openprint::Estimating::DieCutting::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename eq 'perforating.html' ) {
 						require openprint::Estimating::Perforating;
 						openprint::Estimating::Perforating::get_specs( $log, $dbh, \%variable, $project_index, $service_index );
@@ -436,7 +433,7 @@ $openprint::log->warn('bind');
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename =~ /^(\w*).html$/ ) {
-$openprint::log->debug("$1");
+#$openprint::log->debug("$1");
 						eval sprintf('require openprint::Estimating::%1$s;
 						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
 						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
