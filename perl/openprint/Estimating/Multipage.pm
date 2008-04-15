@@ -77,7 +77,7 @@ sub calc {
 	} # end if
 
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( ! sets::isin( 1, \@Groups ) ) {
+	if ( (! sets::isin( 1, \@Groups ) ) and $$specs{'rdbCover'} eq 'Different' ) {
 		push @Groups, 1;
 	} # end if
 	if ( ! sets::isin( 2, \@Groups ) ) {
@@ -92,6 +92,7 @@ sub calc {
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
 	foreach my $group_id ( @Groups ) {
+$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 		next if $override_pages{$group_id};
 
 		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
@@ -108,12 +109,14 @@ sub calc {
 
 	# if there is a cover, then force it to be non-zero
 	if ( (! $override_pages{1} ) and ($$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) and ($$specs{'rdbCover'} eq 'Different') ) {
+$openprint::log->debug("Doing cover");
 		my $new_remaining = int(($remaining_pages-4) / $$specs{'txtSpreadSize'} ) * $$specs{'txtSpreadSize'};
 		$override_pages{1} = $remaining_pages - $new_remaining;
 		$remaining_pages = $new_remaining;
 	} # end if
 
 	foreach my $group_id ( @Groups ) {
+$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
