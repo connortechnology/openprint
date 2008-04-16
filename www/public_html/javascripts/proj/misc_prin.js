@@ -61,12 +61,6 @@ function cbWindowSaveClose( results ) {
 } 
 
 
-function getFormObj( formName ) {
-	var form = document.forms[formName];
-	return form;
-}
-
-
 function get_page_quantity(form) {
 	var pageQty = 1;
 	if ( form.elements['rdbPageQuantity'] ) {

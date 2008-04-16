@@ -1,5 +1,5 @@
 <? eval (
-	foreach my $key ( 'Manufacturer','Brand','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','outofstock' ) {
+	foreach my $key ( 'Owner','Group','Manufacturer','Brand','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','outofstock' ) {
 		$openprint::session{'/employee/inventory/paper.html?'.$key} = $openprint::param{$key};
 	} # end foreach
 	$openprint::session{'/employee/inventory/paper.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/employee/inventory/paper.html?Owner'};
@@ -10,6 +10,7 @@
 		'finish_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Finish'} ? $openprint::session{'/employee/inventory/paper.html?Finish'} : '' ),
 		'colour_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Colour'} ? $openprint::session{'/employee/inventory/paper.html?Colour'} : '' ),
 		'weight_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Weight'} ? $openprint::session{'/employee/inventory/paper.html?Weight'} : '' ),
+		'group_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Group'} ? $openprint::session{'/employee/inventory/paper.html?Group'} : '' ),
 		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/employee/inventory/paper.html?StartYear','/employee/inventory/paper.html?StartMonth','/employee/inventory/paper.html?StartDay'} ),
 		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/employee/inventory/paper.html?EndYear','/employee/inventory/paper.html?EndMonth','/employee/inventory/paper.html?EndDay'} ),
 		'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
