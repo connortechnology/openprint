@@ -5,23 +5,6 @@ function calc( formName ){
 
 } // end calc
 
-function cbFillResults( results ) {
-    var pairs = results.split('|');
-    var form = getFormObj('f1');
-
-    for ( var i = 0; i < pairs.length; i += 1 ){
-        if ( pairs[i].indexOf('~') != -1 ) {
-            var data = pairs[i].split('~');
-
-			 if ( data[0] == 'txtItemsPerPackage' && form.chkOverrideItemsPerPackage && form.chkOverrideItemsPerPackage.checked ) {
-             } else if ( form.elements[data[0]] ) {
-			 	form.elements[data[0]].value = data[1];
-			 } // end if
-        } // end if
-    } // end for
-	gettingNewPrice = false;
-} // end function cbFillResults
-
 function validate_data(formName) {
     var form = getFormObj(formName);
     var text = '';

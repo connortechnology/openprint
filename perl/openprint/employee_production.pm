@@ -824,7 +824,7 @@ sub barcode {
 
 		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_index, 'rdbComplete', 'Yes' );
 		$Project->add_to_log( $openprint::session{'company_id'}, $openprint::param{'Operator'}, "Marked Proofs Proofs Out from $status via barcode" );
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $service_index], 'strStatus', 'Proofs Out' );
+		openprint::service::status( $Project->id(), $service_index, 'Proofs Out' );
 		$message = sprintf( 'Marked project %d Proofs Out from %s', $Project->id(), $status );
 
 #send_proofs_complete_email( $r, $log, $dbh, $variable, $project_index, $order_id );

@@ -1,16 +1,15 @@
 <div class="PageTitle">
-<h1>CORRECTIVE ACTION REQUEST (CAR)</h1>
-<h2>(Re-print Job Request)</h2>
+<h1>PREVENTATIVE ACTION REQUEST (PAR)</h1>
 </div>
 <style type="text/css">
-	#CAR {
+	#PAR {
 	}
-	#CAR table {
+	#PAR table {
 		background-color: white;
 		border: 1px solid black;
 		table-layout: fixed;
 	}
-	#CAR table td {
+	#PAR table td {
 		border: 1px solid black;
 		width: 10%;
 		vertical-align: top;
@@ -28,13 +27,13 @@
 		padding: 1px;
 	}
 </style>
-<div id="CAR">
-		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{'CAR'}->id() ) ?></span></h3>
+<div id="PAR">
+		<h3>PAR ID: <span id="par_id"><? echo ( $$variable{'PAR'}->id() ) ?></span></h3>
 		<? echo (
 			my $html;
-			if ( ( ! $openprint::param{'car_id'} ) ) {
+			if ( ( ! $openprint::param{'par_id'} ) ) {
 				$html .= '<div id="Part1">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_edit_part1.html' );
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_par_edit_part1.html' );
 				$html .= '</div>';
 				$html .= '<div id="Part1">';
 				$html .= '</div>';
@@ -46,16 +45,16 @@
 				$html .= '</div>';
 			} else {
 				$html .= '<div id="Part1">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part1.html' );
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_par_view_part1.html' );
 				$html .= '</div>';
 				$html .= '<div id="Part2">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part2.html' );
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_par_view_part2.html' );
 				$html .= '</div>';
 				$html .= '<div id="Part3">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part3.html' );
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_par_view_part3.html' );
 				$html .= '</div>';
 				$html .= '<div id="Part4">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part4.html' );
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_par_view_part4.html' );
 				$html .= '</div>';
 			} # end if
 			return ssi::variable_substitution( $r, $log, $dbh, \$html, $variable );

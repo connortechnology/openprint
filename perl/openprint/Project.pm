@@ -116,7 +116,11 @@ sub jdf {
 	$Component->setAttribute('Status','Unavailable');
 	## THese are crucial for Metrix
 	#$Component->setAttribute('ProductType','Body');
-	$Component->setAttribute('Dimensions','0 0 0');
+	$Component->setAttribute('Dimensions',join(' ', 
+				72*$$printing_specs{'txtFinalWidth'},
+				72*$$printing_specs{'txtFinalHeight'}, 
+				72*openprint::print::get_finished_calliper( $$self{'id'} )
+				));
 
 	my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
 	

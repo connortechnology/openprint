@@ -1,4 +1,4 @@
-<? eval (
+<? echo (
 	my @Orders = openprint::Order::find('docket'=>$openprint::param{'docket'});
 	if ( @Orders == 1 ) {
 #$openprint::log->debug("Found unique docket, company is:" . $Orders[0]->company_id() );

@@ -55,6 +55,7 @@ my %variables = (
 		'txtSignatureQty36Page-1'=>['save','output'], 'txtSignatureQty36Page-2'=>['save','output'], 'txtSignatureQty36Page-3'=>['save','output'],
 		'txtSignatureQty40Page-1'=>['save','output'], 'txtSignatureQty40Page-2'=>['save','output'], 'txtSignatureQty40Page-3'=>['save','output'],
 		'txtSignatureQty48Page-1'=>['save','output'], 'txtSignatureQty48Page-2'=>['save','output'], 'txtSignatureQty48Page-3'=>['save','output'],
+		'txtSignatureQty64Page-1'=>['save','output'], 'txtSignatureQty64Page-2'=>['save','output'], 'txtSignatureQty64Page-3'=>['save','output'],
 		);
 sub variables {
 	my ( $p_id, $s_id, $specs ) = @_;
@@ -265,7 +266,7 @@ sub calc {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
-			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
 				$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
 			} # end foreach
 		} # end if
@@ -342,7 +343,7 @@ $openprint::log->debug("Overriding imposiion");
 				my %pages;
 				my $sig_pages = $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index}*$$sig_specs{'txtSpreadSize'};
 				if ( $folding_specs ) {
-					foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+					foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
 						$pages{$pages} += $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index};
 					} # end foreach
 				} # end if
@@ -359,7 +360,7 @@ $openprint::log->debug("Overriding imposiion");
 				} # end if
 			} # end foreach signature
 		} else { # Override Pockets
-			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
 				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
 #$openprint::log->debug("Pckets $qty_index: " . $$specs{"txtPockets$qty_index"} );
 			} # end foreach
