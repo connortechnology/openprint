@@ -316,6 +316,10 @@ $openprint::log->debug("Getfile");
 				openprint::employee_inventory::paper_details( $r, $log, $dbh, \%variable )	if $filename eq 'paper_details.html';
 				openprint::employee_inventory::skids( $r, $log, $dbh, \%variable )		if $filename eq 'skids.html';
 				openprint::employee_inventory::skid_details( $r, $log, $dbh, \%variable )	if $filename eq 'skid_details.html';
+				openprint::employee_inventory::rfidtags( $r, $log, $dbh, \%variable )		if $filename eq 'rfidtags.html';
+				openprint::employee_inventory::rfidtag_details( $r, $log, $dbh, \%variable )	if $filename eq 'rfidtag_details.html';
+				openprint::employee_inventory::rfidscanners( $r, $log, $dbh, \%variable )		if $filename eq 'rfidscanners.html';
+				openprint::employee_inventory::rfidscanner_details( $r, $log, $dbh, \%variable )	if $filename eq 'rfidscanner_details.html';
 				openprint::paper_purchase_order::history( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_orders.html';
 				openprint::paper_purchase_order::display( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_order.html';
 			} else {
