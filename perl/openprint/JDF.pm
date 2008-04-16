@@ -145,8 +145,8 @@ $openprint::log->debug("Starting JDF Prepress");
 	$RunListMarks->setAttribute('Status','Unavailable');
 
 	my $StrippingParams = $ResourcePool->appendChild( StrippingParams( $doc, $Project, $sig_id, $sig_specs ) );
-	my $PrePressPreparation = $Prepress->appendChild( PrePressPreparation( $doc, $Project, $sig_id, $sig_specs ) );
-	my $ImpositionPreparation = $Prepress->appendChild( ImpositionPreparation( $doc, $Project, $sig_id, $sig_specs ) );
+	#my $PrePressPreparation = $Prepress->appendChild( PrePressPreparation( $doc, $Project, $sig_id, $sig_specs ) );
+	#my $ImpositionPreparation = $Prepress->appendChild( ImpositionPreparation( $doc, $Project, $sig_id, $sig_specs ) );
 $openprint::log->debug("Leaveing JDF Prepress");	
 	return $Prepress;
 
@@ -166,6 +166,7 @@ $openprint::log->debug("Starting JDF PrePressPreparation");
 	my $RLP = $PPP->appendChild( $doc->createElement('ResourceLinkPool') );
 	my $InputLink = $RLP->appendChild( $doc->createElement('RunListLink') );
 	$InputLink->setAttribute('Usage','Input');
+	$InputLink->setAttribute('ProcessUsage','Document');
 	$InputLink->setAttribute('rRef','RNL'.$$sig_specs{'SignatureIndex'}.'_File');
 
 
@@ -285,7 +286,7 @@ $openprint::log->debug("Starting JDF StrippingParams");
 	my $SPSignatureName = $StrippingParams->appendChild( $doc->createElement('StrippingParams') );
 	$SPSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
 	my $SPSheetName = $SPSignatureName->appendChild( $doc->createElement('StrippingParams') );
-	$SPSheetName->setAttribute('SheetName','Sheet 1' );
+	$SPSheetName->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$SPSheetName->setAttribute('SectionList','0' );
 
 	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
@@ -354,13 +355,13 @@ $openprint::log->debug("Starting JDF StrippingParams");
 	$MediaPaper->setAttribute('rRef', 'Paper' );
 	my $Part = $MediaPaper->appendChild( $doc->createElement('Part') );
 	$Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
-	$Part->setAttribute('SheetName', 'Sheet 1' );
+	$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 
 	my $MediaPlate = $SPSheetName->appendChild( $doc->createElement('MediaRef') );
 	$MediaPlate->setAttribute('rRef', 'PLM'.$Project->id() );
 	my $Part = $MediaPlate->appendChild( $doc->createElement('Part') );
 	$Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
-	$Part->setAttribute('SheetName', 'Sheet 1' );
+	$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 
 	my $grip = $Equipment->specification('Grip');
 	$grip *= 2 if sets::isin( $Imposition->runstyle(), ['Work & Tumble','Perfecting'] );
@@ -470,7 +471,7 @@ sub Layout_Signature {
 		$Signature = $doc->createElement( 'Layout' );
 		$Sheet = $doc->createElement( 'Layout' );
 		$Signature->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
-		$Sheet->setAttribute('SheetName','Sheet 1' );
+		$Sheet->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	} else {
 		# Signatures and Sheets are deprecated in 1.3
 		$Signature = $doc->createElement( 'Signature' );
@@ -489,7 +490,7 @@ sub Layout_Signature {
     $MediaRef->setAttribute( 'rRef', 'Paper' );
     my $Part = $MediaRef->appendChild( $doc->createElement('Part') );
     $Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
-    $Part->setAttribute('SheetName', 'Sheet 1' );
+	$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 
     my @Equipment = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
     my $Equipment = shift @Equipment;
@@ -516,44 +517,46 @@ sub Layout_Signature {
             $Surface->setAttribute('SurfaceContentsBox',join(' ', 0, 0, $Paper->height()*72, $Paper->width()*72) );
         } # end if
 
-        my $MarkObject = $Surface->appendChild( $doc->createElement('MarkObject') );
-        $MarkObject->setAttribute('CTM',join(' ', 1,0,0,1,0,0) );
-        $MarkObject->setAttribute('Ord', $$sig_specs{'SignatureIndex'}.$Ord);
-        $Ord += 1;
+		if ( $version == 1.3 ) {
+			my $MarkObject = $Surface->appendChild( $doc->createElement('MarkObject') );
+			$MarkObject->setAttribute('CTM',join(' ', 1,0,0,1,0,0) );
+			$MarkObject->setAttribute('Ord', $$sig_specs{'SignatureIndex'}.$Ord);
+			$Ord += 1;
 
-        if ( $Paper->width() > $Paper->height() ) {
-            $MarkObject->setAttribute('ClipBox',join(' ', 0,0,$Paper->width()*72, $Paper->height()*72 ) );
-        } else {
-            $MarkObject->setAttribute('ClipBox',join(' ', 0,0,$Paper->height()*72, $Paper->width()*72 ) );
-        } # end if
+			if ( $Paper->width() > $Paper->height() ) {
+				$MarkObject->setAttribute('ClipBox',join(' ', 0,0,$Paper->width()*72, $Paper->height()*72 ) );
+			} else {
+				$MarkObject->setAttribute('ClipBox',join(' ', 0,0,$Paper->height()*72, $Paper->width()*72 ) );
+			} # end if
 
-        foreach my $column ( 1 .. $Imposition->columns() ) {
-            foreach my $row ( 1 .. $Imposition->rows() ) {
-                my $ContentObject = $Surface->appendChild( $doc->createElement('ContentObject') );
-                $ContentObject->setAttribute('Ord', $$sig_specs{'SignatureIndex'}.$Ord);
-                $Ord += 1;
-# Layouts should generally be centered widthwise for even wear of blanket...
-# # So we need to figure out the side padding...
-# # For now left justify
-                 if ( $Imposition->image_orientation() eq 'Vertical' ) {
-                                     $ContentObject->setAttribute('CTM', '1 0 0 1 0 0');
+			foreach my $column ( 1 .. $Imposition->columns() ) {
+				foreach my $row ( 1 .. $Imposition->rows() ) {
+					my $ContentObject = $Surface->appendChild( $doc->createElement('ContentObject') );
+					$ContentObject->setAttribute('Ord', $$sig_specs{'SignatureIndex'}.$Ord);
+					$Ord += 1;
+	# Layouts should generally be centered widthwise for even wear of blanket...
+	# # So we need to figure out the side padding...
+	# # For now left justify
+					 if ( $Imposition->image_orientation() eq 'Vertical' ) {
+										 $ContentObject->setAttribute('CTM', '1 0 0 1 0 0');
 
-                   my $left = ($column-1) * $Imposition->image_width();
-                    my $top = ( $row-1) * $Imposition->image_height();
-                    my $bottom = $top + $Imposition->image_height();
-                    my $right = $left + $Imposition->image_width();
-                    $ContentObject->setAttribute('ClipBox', join(' ', ($bottom+$grip)*72, $left*72, ($top+$grip)*72, $right*72 ) );
-                } else {
-                    $ContentObject->setAttribute('CTM', '0 1 -1 0 0 0');
-                    my $left = ($column-1) * $Imposition->image_height();
-                    my $top = ( $row-1) * $Imposition->image_width();
-                    my $bottom = $top + $Imposition->image_width();
-                    my $right = $left + $Imposition->image_height();
-                    $ContentObject->setAttribute('ClipBox', join(' ', ($bottom+$grip)*72, $left*72, ($top+$grip)*72, $right*72 ) );
-                } # end if
-                $ContentObject->setAttribute('TrimSize', join(' ', $cell_width*72, $cell_height*72 ) );
-            } # end foreach row
-        } # end foreach column
+					   my $left = ($column-1) * $Imposition->image_width();
+						my $top = ( $row-1) * $Imposition->image_height();
+						my $bottom = $top + $Imposition->image_height();
+						my $right = $left + $Imposition->image_width();
+						$ContentObject->setAttribute('ClipBox', join(' ', ($bottom+$grip)*72, $left*72, ($top+$grip)*72, $right*72 ) );
+					} else {
+						$ContentObject->setAttribute('CTM', '0 1 -1 0 0 0');
+						my $left = ($column-1) * $Imposition->image_height();
+						my $top = ( $row-1) * $Imposition->image_width();
+						my $bottom = $top + $Imposition->image_width();
+						my $right = $left + $Imposition->image_height();
+						$ContentObject->setAttribute('ClipBox', join(' ', ($bottom+$grip)*72, $left*72, ($top+$grip)*72, $right*72 ) );
+					} # end if
+					$ContentObject->setAttribute('TrimSize', join(' ', $cell_width*72, $cell_height*72 ) );
+				} # end foreach row
+			} # end foreach column
+		} # end if version == 1.3
     } # end foreach side
     return $Signature;
 } # end sub Layout_Signature
@@ -808,7 +811,7 @@ if ( 0 ) {
 	my $SignatureNameComponent = $Component->appendChild( $doc->createElement('Component') );
 	$SignatureNameComponent->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
 	my $SheetNameComponent = $SignatureNameComponent->appendChild( $doc->createElement('Component') );
-	$SheetNameComponent->setAttribute('SheetName','Sheet 1' );
+	$SheetNameComponent->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	my $ConditionGoodComponent = $SheetNameComponent->appendChild( $doc->createElement('Component') );
 	$ConditionGoodComponent->setAttribute('Condition','Good');
 	$ConditionGoodComponent->setAttribute('IsWaste','false');
@@ -885,7 +888,7 @@ $openprint::log->debug("Start JDF_PrintingGreyBox");
 	$InkLink->setAttribute('Usage','Input' );
 	$InkLink->setAttribute('rRef','INK');
 	my $Part = $InkLink->appendChild( $doc->createElement('Part'));
-	$Part->setAttribute('SheetName','Sheet 1');
+	$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 
 	my $Layout = openprint::JDF::getNode( $doc, 'Layout', 'ID'=>'Layout'.$Project->id() );
@@ -894,7 +897,7 @@ $openprint::log->debug("Start JDF_PrintingGreyBox");
 	$LayoutLink->setAttribute('rRef',$Layout->getAttribute('ID') );
 	if ( $version == 1.3 ) {
 		my $Part = $LayoutLink->appendChild( $doc->createElement('Part'));
-		$Part->setAttribute('SheetName','Sheet 1');
+		$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 		$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	} # end if
 	return $project;
@@ -974,7 +977,7 @@ sub JDF_Component {
 	$ComponentSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	$ComponentSignatureName->setAttribute('ProductType', openprint::JDF::ProductType( $Project, $sig_specs ) );
 	my $ComponentSheetName = $ComponentSignatureName->appendChild( $doc->createElement('Component') );
-	$ComponentSheetName->setAttribute('SheetName','Sheet 1');
+	$ComponentSheetName->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	my $ComponentConditionGood = $ComponentSheetName->appendChild( $doc->createElement('Component') );
 	$ComponentConditionGood->setAttribute('IsWaste','false');
 	$ComponentConditionGood->setAttribute('Condition','Good');
@@ -987,11 +990,11 @@ sub JDF_Component {
 	$ComponentLink->setAttribute('rRef','PS'.$$sig_specs{'SignatureIndex'});
 	$ComponentLink->setAttribute('Amount',$$sig_specs{'hdnGrossSheetCount'.$Project->ordered_quantity_index()} );
 	my $GoodPart = $ComponentLink->appendChild( $doc->createElement('Part'));
-	$GoodPart->setAttribute('SheetName','Sheet 1');
+	$GoodPart->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$GoodPart->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	$GoodPart->setAttribute('Condition','Good');
 	my $WastePart = $ComponentLink->appendChild( $doc->createElement('Part'));
-	$WastePart->setAttribute('SheetName','Sheet 1');
+	$WastePart->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$WastePart->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	$WastePart->setAttribute('Condition','Waste');
 
@@ -1000,7 +1003,7 @@ sub JDF_Component {
 	$GoodPartAmount->setAttribute('Amount',$$sig_specs{'hdnNetSheetCount'.$Project->ordered_quantity_index()} );
 
 	my $GoodPart = $GoodPartAmount->appendChild( $doc->createElement('Part'));
-	$GoodPart->setAttribute('SheetName','Sheet 1');
+	$GoodPart->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$GoodPart->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	$GoodPart->setAttribute('Condition','Good');
 
@@ -1011,7 +1014,7 @@ sub JDF_Component {
 	 );
 
 	my $WastePart = $WastePartAmount->appendChild( $doc->createElement('Part'));
-	$WastePart->setAttribute('SheetName','Sheet 1');
+	$WastePart->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$WastePart->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	$WastePart->setAttribute('Condition','Waste');
 
@@ -1038,7 +1041,7 @@ sub JDF_PlateIntent {
 	my $PlateIntentSignatureName = $PlateIntent->appendChild( $doc->createElement('Media' ));
 	$PlateIntentSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
 	my $PlateIntentSheetName = $PlateIntentSignatureName->appendChild( $doc->createElement('Media' ));
-	$PlateIntentSheetName->setAttribute('SheetName','Sheet 1' );
+	$PlateIntentSheetName->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 
 	return $PlateIntent;
 } # end sub JDF_PlateIntent
@@ -1052,7 +1055,7 @@ sub JDF_ExposedMedia {
 		$ExposedMedia->setAttribute('ID','PL'.$Project->id());
 		$ExposedMedia->setAttribute('Class','Handling');
 		#$ExposedMedia->setAttribute('Locked','true');
-		$ExposedMedia->setAttribute('Status','Available');
+		$ExposedMedia->setAttribute('Status','Unavailable');
 		$ExposedMedia->setAttribute('DescriptiveName','Plates');
 		$ExposedMedia->setAttribute('PartIDKeys','SignatureName SheetName Side Separation');
 	} # end if
@@ -1067,21 +1070,23 @@ sub JDF_ExposedMedia {
 	my $ExposedMediaSignatureName = $ExposedMedia->appendChild( $doc->createElement( 'ExposedMedia' ) );
 	$ExposedMediaSignatureName->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
 	my $ExposedMediaSheetName = $ExposedMediaSignatureName->appendChild( $doc->createElement( 'ExposedMedia' ) );
-	$ExposedMediaSheetName->setAttribute('SheetName','Sheet 1' );
+	$ExposedMediaSheetName->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	#$ExposedMediaSheetName->setAttribute('Locked','false');
+	my $plate_index = 1;
 	if ( @side_one_colours ) {
 		my $ExposedMediaFront = $ExposedMediaSheetName->appendChild( $doc->createElement( 'ExposedMedia' ) );	
 		$ExposedMediaFront->setAttribute('Side','Front');
 		foreach my $colour ( @side_one_colours ) {
 			my $Colour = $ExposedMediaFront->appendChild( $doc->createElement( 'ExposedMedia' ) );
 			$Colour->setAttribute('Separation',$colour);
-			$Colour->setAttribute('ProductID','pl1');
+			$Colour->setAttribute('ProductID',sprintf('pl%d.%d',, $$sig_specs{'SignatureIndex'}, $plate_index ) );
+			$plate_index += 1;
 		} # end foreach
 		my $MediaRef = $ExposedMediaFront->appendChild( $doc->createElement('MediaRef' ));
 		$MediaRef->setAttribute('rRef','PLM'.$Project->id());
 		my $Part = $MediaRef->appendChild($doc->createElement('Part'));
 		$Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
-		$Part->setAttribute('SheetName', 'Sheet 1' );
+		$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	} # end if
 	if ( @side_two_colours ) {
 		my $ExposedMediaBack = $ExposedMediaSheetName->appendChild( $doc->createElement( 'ExposedMedia' ) );	
@@ -1089,13 +1094,14 @@ sub JDF_ExposedMedia {
 		foreach my $colour ( @side_two_colours ) {
 			my $Colour = $ExposedMediaBack->appendChild( $doc->createElement( 'ExposedMedia' ) );
 			$Colour->setAttribute('Separation',$colour);
-			$Colour->setAttribute('ProductID','pl1');
+			$Colour->setAttribute('ProductID',sprintf('pl%d.%d',, $$sig_specs{'SignatureIndex'}, $plate_index ) );
+			$plate_index += 1;
 		} # end foreach
 		my $MediaRef = $ExposedMediaBack->appendChild( $doc->createElement('MediaRef' ));
 		$MediaRef->setAttribute('rRef','PLM'.$Project->id());
 		my $Part = $MediaRef->appendChild($doc->createElement('Part'));
 		$Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
-		$Part->setAttribute('SheetName', 'Sheet 1' );
+		$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	} # end if
 
 	my $ExposedMediaLink = $ResourceLinkPool->appendChild( $doc->createElement('ExposedMediaLink') );
@@ -1103,7 +1109,7 @@ sub JDF_ExposedMedia {
 	$ExposedMediaLink->setAttribute('Usage','Input');
 	$ExposedMediaLink->setAttribute('rRef','PL'.$Project->id());
 	my $Part = $ExposedMediaLink->appendChild( $doc->createElement('Part') );
-	$Part->setAttribute('SheetName','Sheet 1');
+	$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	return $ExposedMedia;
 } # end sub JDF_ExposedMedia
@@ -1114,8 +1120,9 @@ sub JDF_ColorantControl {
 	my $ColorantControl = $ResourcePool->appendChild( $doc->createElement( 'ColorantControl') );
 	$ColorantControl->setAttribute('Class','Parameter');
 	#$ColorantControl->setAttribute('Locked','false');
-	$ColorantControl->setAttribute('PartIDKeys','Side');
+	$ColorantControl->setAttribute('PartIDKeys','SignatureName SheetName Side');
 	$ColorantControl->setAttribute('Status','Available');
+	$ColorantControl->setAttribute('ProcessColorModel','DeviceCMYK');
 	$ColorantControl->setAttribute('ID','CC'.$$sig_specs{'SignatureIndex'} );
 
 	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
@@ -1125,6 +1132,7 @@ sub JDF_ColorantControl {
 	$ColourPoolRef->setAttribute('rRef','CP' );
 	my $ColorantParams = $ColorantControl->appendChild( $doc->createElement( 'ColorantParams') );
 	foreach my $colour (@side_one_colours, @side_two_colours) {
+		next if sets::isin( $colour , ['Cyan','Magenta','Yellow','Black'] );
 		my $SeparationSpec = $ColorantParams->appendChild( $doc->createElement( 'SeparationSpec') );
 		$SeparationSpec->setAttribute('Name',$colour);
 	} # end foreach
@@ -1133,8 +1141,15 @@ sub JDF_ColorantControl {
 		'Front'=>\@side_one_colours,
 		'Back'=>\@side_two_colours,
 		);
+
+	my $ColorantControlSig = $ColorantControl->appendChild( $doc->createElement( 'ColorantControl') );
+	$ColorantControlSig->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
+
+	my $ColorantControlSheet = $ColorantControlSig->appendChild( $doc->createElement( 'ColorantControl') );
+	$ColorantControlSheet->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
+
 	foreach my $side ( 'Front','Back' ) {
-		my $ColorantControlSide = $ColorantControl->appendChild( $doc->createElement( 'ColorantControl') );
+		my $ColorantControlSide = $ColorantControlSheet->appendChild( $doc->createElement( 'ColorantControl') );
 		$ColorantControlSide->setAttribute('Side',$side);
 		my $ColorantOrder = $ColorantControlSide->appendChild( $doc->createElement( 'ColorantOrder') );
 		foreach my $colour (@{$SideColours{$side}}) {
@@ -1221,14 +1236,14 @@ sub JDF_PaperIntent {
 	my $SignaturePaperIntent = $PaperIntent->appendChild( $doc->createElement('Media') );
 	$SignaturePaperIntent->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
 	my $SheetPaperIntent = $SignaturePaperIntent->appendChild( $Paper->JDF_Media( $doc ) );
-	$SheetPaperIntent->setAttribute('SheetName', 'Sheet 1' );
+	$SheetPaperIntent->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 
 	my $MediaLink = $ResourceLinkPool->appendChild( $doc->createElement('MediaLink'));
 	$MediaLink->setAttribute('Usage','Input' );
 	$MediaLink->setAttribute('rRef','Paper' );
 	my $Part = $MediaLink->appendChild( $doc->createElement('Part'));
 	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'} );
-	$Part->setAttribute('SheetName','Sheet 1' );
+	$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	return $PaperIntent;
 
 } # end sub JDF_PaperIntent
@@ -1301,7 +1316,7 @@ sub JDF_PrintingProcess {
 	$InkLink->setAttribute('Usage','Input' );
 	$InkLink->setAttribute('rRef','INK');
 	my $Part = $InkLink->appendChild( $doc->createElement('Part'));
-	$Part->setAttribute('SheetName','Sheet 1');
+	$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 
 	$openprint::log->debug("Leave JDF_PrintingProcess");

@@ -1,7 +1,7 @@
 <div class="error"><?error?></div>
 <h3>Part 2 (To be completed by recipient)</h3>
 <table class="View">
-	<tr><td colspan="10">ROOT CAUSE OF PROBLEM (Why did the problem occur?)</td></tr>
+	<tr><td colspan="10">FEASIBILITY ANALYSIS</td></tr>
 	<tr><td colspan="10"><? hecho ( $$variable{'PAR'}->cause() ) ?></td></tr>
 	<tr>
 		<td colspan="1">Recipient:</td>
@@ -18,5 +18,6 @@
 <? if ( ( ! $$variable{'PAR'}->part3_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <script type="text/javascript">
 	new Ajax.Updater( 'Part3', '_par_edit_part3.html', { method: 'get', parameters: {par_id:<? echo ( $$variable{'PAR'}->id() ) ?>} } );
+	$('par_id').innerHTML = <? echo ( $$variable{'PAR'}->id() ) ?>;
 </script>
 <? endif ( ( ! $$variable{'PAR'}->part3_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>

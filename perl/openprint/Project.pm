@@ -125,11 +125,14 @@ sub jdf {
 	$Component->setAttribute('Status','Unavailable');
 	$Component->setAttribute('isWaste','false');
 	$Component->setAttribute('AmountRequired',$self->ordered_quantity());
-	my $final_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
-	$Component->setAttribute('Dimensions', join(' ', $$final_specs{'txtWidth'}*72, $$final_specs{'txtHeight'} * 72, 
-				openprint::print::get_finished_calliper( $self->id() ) )
-			);
 	$Component->setAttribute('ResourceWeight',openprint::print::get_finished_weight( $self->id() ) );
+	## THese are crucial for Metrix
+	#$Component->setAttribute('ProductType','Body');
+	$Component->setAttribute('Dimensions',join(' ', 
+				72*$$printing_specs{'txtFinalWidth'},
+				72*$$printing_specs{'txtFinalHeight'}, 
+				72*openprint::print::get_finished_calliper( $$self{'id'} )
+				));
 
 	my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
 	

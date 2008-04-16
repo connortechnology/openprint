@@ -13,7 +13,7 @@
 		<td colspan="2">Reply Due By:</td>
 		<td colspan="3"><? hecho ( $$variable{'PAR'}->reply_by() ) ?></td>
 	</tr>
-	<tr><td colspan="4">PROBLEM/NONCONFORMANCE DESCRIPTION</td>
+	<tr><td colspan="4">POTENTIAL PROBLEM/NONCONFORMANCE</td>
 		<td colspan="1">Area:</td>
 		<td colspan="2"><? echo ( $$variable{'PAR'}->area() ) ?></td>
 		<td colspan="1">Reason:</td>
@@ -35,5 +35,6 @@
 <? if ( ! $$variable{'PAR'}->part2_user_id() ) ?>
 <script type="text/javascript">
 	new Ajax.Updater( 'Part2', '_par_edit_part2.html', { method: 'get', parameters: {par_id:<? echo ( $$variable{'PAR'}->id() ) ?>} } );
+	$('par_id').innerHTML = <? echo ( $$variable{'PAR'}->id() ) ?>;
 </script>
 <? endif ( ! $$variable{'PAR'}->part2_user_id() ) ?>

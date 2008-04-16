@@ -1,6 +1,14 @@
 package openprint::CAR;
 @ISA = qw(openprint::Object);
 
+use MIME::QuotedPrint;
+use MIME::Base64;
+use vars qw( %config $log $dbh %session );
+*session = \%openprint::session;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
 my $debug = 1;
 
 use strict;
@@ -181,7 +189,33 @@ sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 
+sub send_notifications {
+	my ( $self ) = @_;
+
+	my @Users = openprint::User::find('usergroup'=>'Quality Control Notifications');
+
+	if ( @Users ) {
+		my $From = new openprint::User( $session{'user_id'} );
+		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+
+		my %info = (
+			'CAR'	=>	$self,
+		);
+		foreach my $User ( @Users ) {
+			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/iso_car_notification.html\"-->";
+			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+			my @body = ('', $_, 'text/html', 'quoted-printable');
+			my %mail = (
+					SMTP    => $config{'Mail Server'},
+					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+					TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
+					SUBJECT => 'A new CAR has been generated.',
+					);
+			misc::send_email_with_attachment( $log, \%mail, @body );
+		} # end foreach
+	} # end if to
+
+} # end sub send_notification
 1;
 
 __END__
-~       
