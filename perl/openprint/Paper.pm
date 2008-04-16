@@ -24,12 +24,13 @@ require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockWeight;
 require openprint::StockQuality;
+require openprint::StockGroup;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 my $debug = 0;
 
 my @fields = (
-		'owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
+		'group_id','owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
@@ -43,7 +44,7 @@ sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
-	my $sql = 'SELECT *, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id LIMIT 1) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id LIMIT 1) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id LIMIT 1) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id LIMIT 1) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id LIMIT 1) AS weight FROM Papers WHERE 1>0';
+	my $sql = 'SELECT *, (SELECT name FROM StockGroups WHERE id=group_id LIMIT 1) AS group, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id LIMIT 1) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id LIMIT 1) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id LIMIT 1) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id LIMIT 1) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id LIMIT 1) AS weight FROM Papers WHERE 1>0';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -65,6 +66,15 @@ sub find {
 	if ( $params{'manufacturer'} ) {
 		$sql .= ' AND manufacturer_id=(SELECT id FROM Manufacturers WHERE longname=?)';
 		push @values, $params{'manufacturer'};
+	} # end if
+	
+	if ( $params{'group_id'} ) {
+		$sql .= ' AND group_id=?';
+		push @values, $params{'group_id'};
+	} # end if
+	if ( $params{'group'} ) {
+		$sql .= ' AND group_id=(SELECT id FROM StockGroups WHERE name=?)';
+		push @values, $params{'name'};
 	} # end if
 	if ( $params{'name_id'} ) {
 		$sql .= ' AND name_id=?';
@@ -257,6 +267,14 @@ sub save {
 			$$self{$key} = $$hash{$key} if exists $$hash{$key};
 		} # end foreach
 	} # end if
+	
+	if ( $$self{'group'} and ! $$self{'group_id'} ) {
+		my $new_group = new openprint::StockGroup();
+		if ( $_ = $new_group->save( {'name'=>$$self{'group'}} ) ) {
+			return $_;
+		} # end if
+		$$self{'group_id'} = $new_group->id();
+	} # end if name_id
 	if ( $$self{'name'} and ! $$self{'name_id'} ) {
 		sql::insert( undef, undef, 'PaperNames', [ 'shortname', $$self{'name'}, 'longname', $$self{'name'} ] );
 		@$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperNames WHERE longname=?}, $$self{'name'} );
@@ -337,6 +355,7 @@ sub save {
     sql::execute( undef, undef, q{DELETE FROM PaperFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM Papers)} );
     sql::execute( undef, undef, q{DELETE FROM PaperColours WHERE id NOT IN (SELECT DISTINCT colour_id FROM Papers)} );
     sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE id NOT IN (SELECT DISTINCT weight_id FROM Papers)} );
+    sql::execute( undef, undef, q{DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM Papers)} );
 
     my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
 	my @recommendations = $self->recommendations();
@@ -386,6 +405,7 @@ sub delete {
     if ( ! sql::execute( undef, undef, q{SELECT quality_id FROM Papers WHERE quality_id=?}, $$self{'quality_id'} ) ) {
         sql::execute( undef, undef, q{DELETE FROM PaperQualities WHERE Id=?}, $$self{'quality_id'} );
     } # end if
+    sql::execute( undef, undef, q{DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM Papers)} );
     
     # Add record to audit log - action "Delete Paper".
     openprint::logs::insertLogRecord('15', "Paper ID: " . $$self{'id'},);
@@ -397,6 +417,22 @@ sub to_string {
 	my $self = shift;
 	return join('-', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), $self->mweight().'M', $self->quality() ) );
 } # end sub to_string
+
+sub group {
+    my ( $self, $group ) = @_;
+
+	if ( defined $group ) {
+		$group =~ s/^\s*(.*)\s*$/$1/;
+
+        @$self{'group_id','group'} = sql::execute( undef, undef, q{SELECT id, name FROM StockGroups WHERE lower(name)=?}, lc $group );
+        if ( ! $$self{'group_id'} ) {
+			$$self{'group'} = $group;
+        } # end if
+    } elsif ( $$self{'group_id'} and ! $$self{'group'} ) {
+        $$self{'group'} = new openprint::StockGroup( $$self{'group_id'} )->name();
+    } # end if
+    return $$self{'group'};
+} # end sub group
 
 sub name {
     my ( $self, $name ) = @_;

@@ -35,7 +35,6 @@ sub jsrs_actions {
 } # end sub jsrs_actions
 
 sub list {
-$log->debug("List: $param{btnFunction}");
 	my @Papers;
 	if ( $param{'chkPaper'} ) {
 		@Papers = openprint::Paper::find( 'id'=>$param{'chkPaper'} );
@@ -53,9 +52,7 @@ $log->debug("List: $param{btnFunction}");
 			$Paper->save();
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'ApplyChanges' ) {
-$log->debug('Applying Changes');
 		foreach my $Paper ( @Papers ) {
-$log->debug('~Paper: ' . $Paper->id() );
 			my $ac = sql::start_transaction( $dbh );
 			foreach my $Price ( $Paper->prices() ) {
 				$Price->delete();
@@ -104,6 +101,8 @@ sub paper {
 		$Paper->owner_id( $param{'ddmOwner'} );
 		$Paper->manufacturer( $param{'txtManufacturer'} ) if $param{'txtManufacturer'};
 		$Paper->manufacturer_id( $param{'ddmManufacturer'} ) if $param{'ddmManufacturer'};
+		$Paper->group( $param{'txtGroup'} ) if $param{'txtGroup'};
+		$Paper->group_id( $param{'Group'} ) if $param{'Group'};
 		$Paper->name( $param{'txtName'} ) if $param{'txtName'};
 		$Paper->name_id( $param{'ddmName'} ) if $param{'ddmName'};
 		$Paper->finish( $param{'txtFinish'} ) if $param{'txtFinish'};
@@ -262,11 +261,11 @@ sub _prices {
 sub import_export {
 
 	if ( $param{'btnFunction'} eq 'Export Paper' ) {
-		my @header = ( 'ID', 'Owner','Manufacturer','Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Recommendations');
+		my @header = ( 'ID', 'Owner','Manufacturer','Group','Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Recommendations');
 		my @data;
 
 		foreach my $Paper ( openprint::Paper::find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
-			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package(), $Paper->supplied(), $Paper->digital(), $Paper->full_packages(), $Paper->minimum_order(), $Paper->inventory_number();
+			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->group(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package(), $Paper->supplied(), $Paper->digital(), $Paper->full_packages(), $Paper->minimum_order(), $Paper->inventory_number();
 			push @data, join(',', $Paper->recommendations());
 		} # end foreach
 		misc::export_csv( $r, $log, \%variable, 'paper.csv', \@header, \@data );
@@ -288,7 +287,7 @@ sub import_export {
 			my $csv = Text::CSV_XS->new();
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
-				my ( $paper_id, $owner, $manufacturer, $name, $finish, $colour, $weight, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $digital, $full_packages, $minimum_order, $inventory_number, $recommendations ) = misc::trim($csv->fields());
+				my ( $paper_id, $owner, $manufacturer, $group, $name, $finish, $colour, $weight, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $digital, $full_packages, $minimum_order, $inventory_number, $recommendations ) = misc::trim($csv->fields());
 
 				next if ! $paper_id;
 
@@ -302,6 +301,7 @@ sub import_export {
 				my $Paper = $papers{$paper_id} ? $papers{$paper_id} : new openprint::Paper();
 				$Paper->owner_id( $owners{$owner} ? $owners{$owner} : $session{'company_id'} );
 				$Paper->manufacturer( $manufacturer );
+				$Paper->name( $group );
 				$Paper->name( $name );
 				$Paper->finish( $finish );
 				$Paper->colour( $colour );
@@ -368,6 +368,11 @@ sub usage {
 			$param{'ddmEndDay'} );
 
 
+	if ( $param{'ddmStockGroup'} ) {
+		@{$variable{'Groups'}} = ( $param{'ddmStockGroup'} );
+	} else {
+		@{$variable{'Groups'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
+	} # end if
 	if ( $param{'ddmStockBrand'} ) {
 		@{$variable{'Brands'}} = ( $param{'ddmStockBrand'} );
 	} else {

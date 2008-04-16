@@ -11,6 +11,9 @@
 		width: auto;
 		margin: 0px;
 	}
+	fieldset.Paper div.leftColumn p select {
+		width: 70%;
+	}
 </style>
 <div class="error"><?error?></div>
 <div class="information"><?information?></div>
@@ -28,20 +31,28 @@
 ); ) ?>
 		</p>
 	<br class="spacer"/>
-	<fieldset><legend>Paper Information: (<? echo ( $$variable{'Paper'}->id(); ) ?>)</legend>
+	<fieldset class="Paper"><legend>Paper Information: (<? echo ( $$variable{'Paper'}->id(); ) ?>)</legend>
 		<div class="leftColumn">
 			<p>
 				<label for="ddmOwner">Owner:</label>
-				<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() ); ) ?></select>
+				<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( openprint::Company::get_dropdown( $$variable{'Paper'}->owner_id() ); ) ?></select>
+			</p>
+			<p>
+				<label for="txtGroup" onclick="$('Group').toggle();$('txtGroup').toggle();">Group:</label>
+				<select id="Group" name="Group" size="1">
+					<option value="">select</option>
+				<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup::find('order'=>'lower(name)') ], $$variable{'Paper'}->group_id() );
+						) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtGroup" name="txtGroup" />
 			</p>
 			<p>
 				<label for="txtManufacturer" onclick="$('ddmManufacturer').toggle();$('txtManufacturer').toggle();">Manufacturer:</label>
 				<select id="ddmManufacturer" name="ddmManufacturer" size="1">
+					<option value="">select</option>
 				<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM Manufacturers ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->manufacturer_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->manufacturer_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
@@ -49,11 +60,9 @@
 			<p>
 				<label for="txtName" onclick="$('txtName').toggle();$('ddmName').toggle();">Name:</label>
 				<select id="ddmName" name="ddmName" size="1" onchange="f1.txtName.value='';">
+					<option value="">select</option>
 					<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->name_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->name_id() );
 					) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="ddm_select_by_index( f1.ddmName, 0 );" />
@@ -61,11 +70,9 @@
 			<p>
 				<label for="txtFinish" onclick="$('txtFinish').toggle();$('ddmFinish').toggle();">Finish:</label>
 				<select id="ddmFinish" name="ddmFinish" size="1" onchange="f1.txtFinish.value='';">
+					<option value="">select</option>
 				<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperFinishes ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $$variable{'Paper'}->finish_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->finish_id() );
 				) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.ddmFinish, 0 );" />
@@ -73,11 +80,9 @@
 			<p>
 				<label for="txtColour" onclick="$('txtColour').toggle();$('ddmColour').toggle();">Colour:</label>
 				<select id="ddmColour" name="ddmColour" size="1" onchange="f1.txtColour.value='';">
+					<option value="">select</option>
 					<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperColours ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->colour_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->colour_id() );
 					) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.ddmColour, 0 );" />
@@ -85,11 +90,9 @@
 			<p>
 				<label for="txtWeight" onclick="$('txtWeight').toggle();$('ddmWeight').toggle();">Weight:</label>
 				<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';">
+					<option value="">select</option>
 				<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->weight_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->weight_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
@@ -97,11 +100,9 @@
 			<p>
 				<label for="txtQuality" onclick="$('txtQuality').toggle();$('ddmQuality').toggle();">Quality:</label>
 				<select id="ddmQuality" name="ddmQuality" size="1">
+					<option value="">select</option>
 				<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperQualities ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->quality_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockQuality::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->quality_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.ddmQuality, 0 ) ;" />
