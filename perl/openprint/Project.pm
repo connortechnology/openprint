@@ -123,15 +123,9 @@ sub jdf {
 	$Component->setAttribute('DescriptiveName', $self->Type()->name() );
 	$Component->setAttribute('ID', 'Product'.$self->id() );
 	$Component->setAttribute('Status','Unavailable');
-<<<<<<< HEAD:perl/openprint/Project.pm
 	$Component->setAttribute('isWaste','false');
 	$Component->setAttribute('AmountRequired',$self->ordered_quantity());
-	my $final_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
-	$Component->setAttribute('Dimensions', join(' ', $$final_specs{'txtWidth'}*72, $$final_specs{'txtHeight'} * 72, 
-				openprint::print::get_finished_calliper( $self->id() ) )
-			);
 	$Component->setAttribute('ResourceWeight',openprint::print::get_finished_weight( $self->id() ) );
-=======
 	## THese are crucial for Metrix
 	#$Component->setAttribute('ProductType','Body');
 	$Component->setAttribute('Dimensions',join(' ', 
@@ -139,7 +133,6 @@ sub jdf {
 				72*$$printing_specs{'txtFinalHeight'}, 
 				72*openprint::print::get_finished_calliper( $$self{'id'} )
 				));
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/Project.pm
 
 	my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
 	

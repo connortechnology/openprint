@@ -743,6 +743,27 @@ if ( $version < 1922 ) {
 	$version = 1922;
 } # end if
 
+my $new_version = 1923;
+if ( $version < $new_version ) {
+    print "Updating to version $new_version\n";
+    my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockGroups LIMIT 1', {} );
+    if ( ! $data ) {
+        my $ac = sql::start_transaction( $dbh );
+        $_ = misc::load_file( $log, q{../openprint/sql/StockGroups.sql});
+        foreach my $st ( split(';', $_ ) ) {
+            $dbh->do($st);
+        }
+        sql::end_transaction( $dbh, $ac );
+    } # end if
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
+	if ( ! exists $$data{'group_id'} ) {
+		$dbh->do(q`alter table papers add group_id INTEGER`);
+		$dbh->do(q`alter table papers add FOREIGN KEY (group_id) REFERENCS StockGroups (id)`);
+	} # end if
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    $version = $new_version;
+} # end if
+
 
 $dbh->disconnect();
 1;

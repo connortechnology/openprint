@@ -62,29 +62,34 @@
 			<label>Owner:</label>
 			<select id="Owner" name="Owner" size="1" onchange="calc(this.form.name);">
 				<option value=""> All </option>
-				<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'/administrator/paper/list.html?Owner'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $openprint::session{'/administrator/paper/list.html?Owner'} ); ) ?>
+			</select>
+		</p>
+		<p>
+			<label>Group:</label>
+			<select id="Group" name="Group" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>
+				<? echo (
+                    return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup::find('order'=>'lower(name)') ], $openprint::session{'/administrator/paper/list.html?Group'} );
+					) ?>
 			</select>
 		</p>
 		<p>
 			<label>Manufacturer:</label>
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>
 				<? echo (
-						my @options = ( '', 'select one',
-                        sql::execute( $log, $dbh, q{SELECT id, longname FROM Manufacturers ORDER BY lower(longname)} )
-                        );
-                    return ssi::make_drop_down( \@options, $openprint::session{'/administrator/paper/list.html?Manufacturer'} );
+                    return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $openprint::session{'/administrator/paper/list.html?Manufacturer'} );
 					) ?>
 			</select>
 		</p>
 		<p>
 			<label>Name:</label>
 			<select name="Name" onchange="calc(this.form.name);">
-			<? echo (
-                    my @options = ( '', 'select one',
-                        sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
-                        );
-                    return ssi::make_drop_down( \@options, $openprint::session{'/administrator/paper/list.html?Name'} );
-                ) ?>
+				<option value="">select</option>
+				<? echo (
+                    return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $openprint::session{'/administrator/paper/list.html?Name'} );
+					) ?>
 			</select>
 		</p>
 		<p> 
@@ -93,7 +98,11 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %finishes;
-					foreach my $Paper ( openprint::Paper::find( 'name_id'=>$openprint::session{'/administrator/paper/list.html?Name'}) ) {
+					foreach my $Paper ( openprint::Paper::find( 
+							'name_id'=>$openprint::session{'/administrator/paper/list.html?Name'},
+							'manufacturer_id'=>$openprint::session{'/administrator/paper/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/paper/list.html?Group'}
+							) ) {
 						$finishes{$Paper->finish()} = $Paper->finish_id();
 					} # end foreach
                     return ssi::make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], $openprint::session{'/administrator/paper/list.html?Finish'} );
@@ -107,7 +116,9 @@
 			<? echo (
 					my %colours;
 					foreach my $Paper ( openprint::Paper::find( 'name_id'=>$openprint::session{'/administrator/paper/list.html?Name'},
-							'finish_id'=>$openprint::session{'/administrator/paper/list.html?Finish'}
+							'finish_id'=>$openprint::session{'/administrator/paper/list.html?Finish'},
+							'manufacturer_id'=>$openprint::session{'/administrator/paper/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/paper/list.html?Group'},
 							) ) {
 						$colours{$Paper->colour()} = $Paper->colour_id();
 					} # end foreach
@@ -124,6 +135,8 @@
 					foreach my $Paper ( openprint::Paper::find( 'name_id'=>$openprint::session{'/administrator/paper/list.html?Name'},
 							'finish_id'=>$openprint::session{'/administrator/paper/list.html?Finish'},
 							'colour_id'=>$openprint::session{'/administrator/paper/list.html?Colour'},
+							'manufacturer_id'=>$openprint::session{'/administrator/paper/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/paper/list.html?Group'},
 							) ) {
 						$colours{$Paper->weight()} = $Paper->weight_id();
 					} # end foreach

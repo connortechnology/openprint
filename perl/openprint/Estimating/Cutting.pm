@@ -447,13 +447,8 @@ sub signature_calc {
 		} else {
 			$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
 		} # end if
-<<<<<<< HEAD:perl/openprint/Estimating/Cutting.pm
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
-$openprint::log->error('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
-=======
 $openprint::log->warn('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
-		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/Estimating/Cutting.pm
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
 				# Assume head to head at all times - head trim
 				if ( $$sig_specs{'chkBleedTop'} ) {
@@ -480,13 +475,8 @@ $openprint::log->warn('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
 		} else {
 			$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
 		} # end if
-<<<<<<< HEAD:perl/openprint/Estimating/Cutting.pm
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
-$openprint::log->error('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
-=======
 $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
-		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/Estimating/Cutting.pm
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
 				if ( $$sig_specs{'chkBleedTop'} ) {
 					$horizontal_cuts += int( $$sig_specs{'hdnImpositionRows'.$qty_index}/2);

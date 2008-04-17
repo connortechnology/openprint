@@ -1,6 +1,6 @@
 <? eval (
 	if ( %openprint::param and ! $param{'btnFunction'} ) {
-		foreach my $key ( 'Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code' ) {
+		foreach my $key ( 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code' ) {
 			$openprint::session{'/administrator/paper/list.html?'.$key} = $openprint::param{$key};
 		} # end foreach
 		if ( ref $openprint::param{'Types'} eq 'ARRAY' ) {
@@ -10,6 +10,7 @@
 		} # end if
 	} # end if
     @{$$variable{'Papers'}} = openprint::Paper::find( 
+		'group_id'		=> $openprint::session{'/administrator/paper/list.html?Group'},
 		'owner_id'		=> $openprint::session{'/administrator/paper/list.html?Owner'},
 		'manufacturer_id'		=> $openprint::session{'/administrator/paper/list.html?Manufacturer'},
 		'name_id'	=> $openprint::session{'/administrator/paper/list.html?Name'},
@@ -27,6 +28,7 @@
 			<tr>
 				<th style="text-align:center;" width="20"><input type="checkbox" onclick="select_all(document.f1, 'chkPaper', this.checked );"/></th>
 				<th align="left">Inventory #</th>
+				<th align="left">Group</th>
 				<th align="left">Manufacturer</th>
 				<th align="left">Name</th>
 				<th align="left">Finish</th>
@@ -45,6 +47,7 @@
 	<tr>
 		<td style="text-align:center;"><input type="checkbox" id="chkPaper<? echo ( $$variable{'Paper'}{id} ) ?>" name="chkPaper" value="<? echo ( $$variable{'Paper'}{'id'} ) ?>"/></td>
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? hecho ( $$variable{'Paper'}->inventory_number() ) ?></a></td>
+		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->group() ) ?></a></td>
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->manufacturer() ) ?></a></td>
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->name() ) ?></a></td>
 		<td><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->finish() ) ?></a></td>
