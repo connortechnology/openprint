@@ -1,22 +1,26 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 use Net::Server::PreFork;
 
 @ISA = qw(Net::Server::PreFork);
+use strict;
 
 sub process_request {
 	my $self = shift;
 	eval {
-$self->log(1, "My Message with %s in it");
+$self->log(1, 'hello');
 
 		local $SIG{'ALRM'} = sub { die "Timed Out!\n" };
 		my $timeout = 30; # give the user 30 seconds to type some lines
 
 		my $previous_alarm = alarm($timeout);
+		$self->get_client_info();
+
 		# Each tag is 40 chars long
 		my $data;
-		while ( read(STDIN, $data, 40) ) {
+		while ( read(STDIN, $data, 44) ) {
+$self->log(1, sprintf('%s : %s', $self->{server}->{peeraddr}, $data ));
 		open( LOG, ">>/tmp/rfid.log" );
-			print LOG "$data\r\n";
+			print LOG $self->{server}->{peeraddr} . ": $data\r\n";
 		close(LOG);
 			#print "$_\r\n";
 			alarm($timeout);
