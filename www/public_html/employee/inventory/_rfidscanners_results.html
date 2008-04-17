@@ -51,6 +51,7 @@
 			<th width="10"><input type="checkbox" onclick="select_all( this.form, 'rfidscanners', this.checked );"/></th>
 			<th align="left" width="75">ID</th>
 			<th align="left" width="115">Name</th>
+			<th align="left" width="115">IP Address</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
 			<th align="left" width="100">Location</th>
@@ -65,6 +66,7 @@
 				$html .= qq`<td align="center"><input type="checkbox" name="rfidscanners" value="$$RFIDScanner{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%1$d">%1$d</a></td>', $$RFIDScanner{'id'} );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%1$d">%2$s</a></td>', @$RFIDScanner{'id','name'} );
+				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%1$d">%2$s</a></td>', @$RFIDScanner{'id','ipaddr'} );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDScanner->created_on()) ) );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDScanner->updated_on()) ) );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, $RFIDScanner->Location()->name() );
