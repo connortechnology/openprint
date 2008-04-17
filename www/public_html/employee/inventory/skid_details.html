@@ -265,6 +265,13 @@ The following errors occurred:<br/>
 				<input type="text" name="skid_quantity" value="<? echo ( $openprint::param{skid_quantity} ) ?>" />
 			</p>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
+			<p><label>RFID Tag:</label>
+				<? if ( $$variable{'Skid'}->rfidtag_id() ) ?>
+					<a href="rfidtag_details.html?id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>"><? echo ( $$variable{'Skid'}->rfidtag_id() ) ?></a>
+				<? else ( $$variable{'Skid'}->rfidtag_id() ) ?>
+					<input type="text" id="rfidtag_id" name="rfidtag_id" value="" />
+				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
+			</p>
 			<p>
 				<label>Location:</label>
 				<select id="ddmLocation" name="ddmLocation">

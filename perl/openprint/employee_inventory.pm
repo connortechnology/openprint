@@ -325,6 +325,7 @@ sub paper_details {
 sub save_skid {
 	my ( $Skid ) = @_;
 
+	$Skid->rfidtag_id( $param{'rfidtag_id'} ) if exists $param{'rfidtag_id'};
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
 	$Skid->location_id( $param{'ddmLocation'} ) if $param{'ddmLocation'};
 	$Skid->location( $param{'txtLocation'} ) if $param{'txtLocation'};

@@ -49,11 +49,11 @@
 	<table class="List">
 		<tr>
 			<th width="10"><input type="checkbox" onclick="select_all( this.form, 'rfidtags', this.checked );"/></th>
-			<th align="left" width="75">RFIDTag ID</th>
+			<th align="left" width="200">RFIDTag ID</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
 			<th align="left" width="100">Location</th>
-			<th align="left" width="140">Type</th>
+			<th align="left" width="100">Type</th>
 		</tr>
 		<? echo (
 			my $html;
@@ -62,10 +62,10 @@
 
 				$html .= "<tr$rowclass>";
 				$html .= qq`<td align="center"><input type="checkbox" name="rfidtags" value="$$RFIDTag{'id'}"/></td>`;
-				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%1$d">%1$d</a></td>', $$RFIDTag{'id'} );
-				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%d">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->created_on()) ) );
-				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%d">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->updated_on()) ) );
-				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%d">%s</a></td>', $$RFIDTag{'id'}, $RFIDTag->location());
+				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $$RFIDTag{'id'} );
+				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->created_on()) ) );
+				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->updated_on()) ) );
+				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, $RFIDTag->location());
 
 				$html .= '<td>'.$RFIDTag->Type()->name().'</td>';	
 				$html .= '</tr>';

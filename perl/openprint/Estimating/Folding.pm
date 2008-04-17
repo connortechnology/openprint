@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -161,8 +161,10 @@ sub fold_types {
 } # end sub fold_types
 
 sub signature_needs {
-	my $specs = shift;
-	if ( $$specs{'rdbTemplateType'} eq 'NoBindery' ) {
+	my ( $Project, $specs ) = @_;
+
+	my $services = $Project->services();
+	if ( $$services{'NoBindery'} ) {
 		return 0;
 	} # end if
 
@@ -186,10 +188,13 @@ sub neccessary {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services( );
 
+<<<<<<< HEAD:perl/openprint/Estimating/Folding.pm
 	if ( $$services{'DieCutting'} ) {
 		$openprint::log->debug(" ** Project has Die Cutting, This Folding Service is NOT needed ** ");
 		return 0;
 	} # end if
+=======
+>>>>>>> 70e5444db140c0825b196f6444bdfa1ece83291d:perl/openprint/Estimating/Folding.pm
 	if ( $$services{'NoBindery'} ) {
 		$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
 		return 0;
@@ -211,8 +216,8 @@ sub neccessary {
 	} # end if
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		if ( signature_needs( $specs ) ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+		if ( signature_needs( $Project, $specs ) ) {
 			return 1;
 		} # end if
 	} # end foreach

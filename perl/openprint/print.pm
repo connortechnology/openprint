@@ -457,7 +457,26 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 		delete $services{$old_bindery_type};
 	} # end if
 
-	if ( $$param{'rdbTemplateType'} ) {
+	if ( $$param{'rdbTemplateType'} eq 'NoBindery' ) {
+		my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' );
+		foreach my $service_id ( keys %bindery_services ) { 
+			my $ServiceType = new openprint::ServiceType( $bindery_services{$service_id} );
+			if ( $ServiceType->name() ne 'NoBindery' ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				@{$services{$_}} = sets::exclude( [ $service_id ], $services{$service_id} );
+			} # end if
+		} # end foreach
+		
+		push @{$services{'NoBindery'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'NoBindery' ) if ! $services{'NoBindery'};
+	} elsif ( $$param{'rdbTemplateType'} ) {
+		# Delete No Bindery Service
+		if ( $services{'NoBindery'} ) {
+			foreach ( @{$services{'NoBindery'}} ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+			} # end foreach
+			delete $services{'NoBindery'};
+		} # end if
+
 		# Insert the desired Bindery Type
 		push @{$services{$$param{'rdbTemplateType'}}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $$param{'rdbTemplateType'} ) if ! $services{$$param{'rdbTemplateType'}};
 	} # end if

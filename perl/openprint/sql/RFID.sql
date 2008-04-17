@@ -11,7 +11,7 @@ CREATE TABLE RFIDTagTypes (
 );
 
 CREATE TABLE RFIDTags (
-	id	INTEGER NOT NULL,
+	id	TEXT NOT NULL,
 	location_id	INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	type_id		INTEGER, FOREIGN KEY (type_id) REFERENCES RFIDTagTypes (id),
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
@@ -31,7 +31,8 @@ CREATE TABLE RFIDScanners (
 	id	SERIAL NOT NULL,
 	name	TEXT,
 	ipaddr	TEXT,
-	location_id	INTEGER NOT NULL, FOREIGN KEY (location_id) REFERENCES Locations (id),
+	type	TEXT,
+	location_id	INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	PRIMARY KEY (id)
