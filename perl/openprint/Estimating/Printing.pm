@@ -738,7 +738,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 			$project{'NeedFolding'} = 0;
 			$project{'NeedScoring'} = 0;
 		} else {	
-			$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $specs );
+			$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
 			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
 		} # end if
 

@@ -429,10 +429,12 @@ sub multipage_signatures {
 	} # end if
 
 	if ( $$param{'rdbTemplateType'} eq 'NoBindery' ) {
-		foreach ( openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' ) ) {
-			if ( $_ ne 'NoBindery' ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
-				@{$services{$_}} = sets::exclude( [ $_ ], $services{$_} );
+		my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' );
+		foreach my $service_id ( keys %bindery_services ) { 
+			my $ServiceType = new openprint::ServiceType( $bindery_services{$service_id} );
+			if ( $ServiceType->name() ne 'NoBindery' ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				@{$services{$_}} = sets::exclude( [ $service_id ], $services{$service_id} );
 			} # end if
 		} # end foreach
 		
