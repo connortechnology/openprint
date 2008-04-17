@@ -257,6 +257,31 @@ sub save {
 			$$self{$key} = $$hash{$key} if exists $$hash{$key};
 		} # end foreach
 	} # end if
+	if ( $$self{'name'} and ! $$self{'name_id'} ) {
+		sql::insert( undef, undef, 'PaperNames', [ 'shortname', $$self{'name'}, 'longname', $$self{'name'} ] );
+		@$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperNames WHERE longname=?}, $$self{'name'} );
+	} # end if name_id
+	if ( $$self{'finish'} and ! $$self{'finish_id'} ) {
+		sql::insert( undef, undef, 'PaperFinishes', 'shortname', $$self{'finish'}, 'longname', $$self{'finish'} );
+		@$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE longname=?}, $$self{'finish'} );
+	} # end if finish_id
+	if ( $$self{'colour'} and ! $$self{'colour_id'} ) {
+		sql::insert( undef, undef, 'PaperColours', 'shortname', $$self{'colour'}, 'longname', $$self{'colour'} );
+		@$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE longname=?}, $$self{'colour'} );
+	} # end if colour_id
+	if ( $$self{'weight'} and ! $$self{'weight_id'} ) {
+		sql::insert( undef, undef, 'PaperWeights', 'shortname', $$self{'weight'}, 'longname', $$self{'weight'} );
+		@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperWeights WHERE longname=?}, $$self{'weight'} );
+	} # end if weight_id
+	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
+		sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
+		@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
+	} # end if quality_id
+	if ( $$self{'manufacturer'} and ! $$self{'manufacturer_id'} ) {
+		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
+		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
+	} # end if manufacturer
+
 	foreach my $key ( @fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
 	} # end foreach
@@ -381,8 +406,7 @@ sub name {
 
         @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE lower(longname)=?}, lc $name );
         if ( ! $$self{'name_id'} ) {
-            sql::insert( undef, undef, 'PaperNames', [ 'shortname', $name, 'longname', $name ] );
-            @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE longname=?}, $name );
+			$$self{'name'} = $name;
         } # end if
     } elsif ( $$self{'name_id'} and ! $$self{'name'} ) {
         $$self{'name'} = new openprint::StockName( $$self{'name_id'} )->shortname();
@@ -397,8 +421,7 @@ sub manufacturer {
 		$manufacturer =~ s/^\s*(.*)\s*$/$1/;
         @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE lower(longname)=?}, lc $manufacturer );
         if ( ! $$self{'manufacturer_id'} ) {
-            sql::insert( undef, undef, 'Manufacturers', 'shortname', $manufacturer, 'longname', $manufacturer );
-            @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $manufacturer );
+			$$self{'manufacturer'} = $manufacturer;
         } # end if
     } elsif ( $$self{'manufacturer_id'} and ! $$self{'manufacturer'} ) {
         $$self{'manufacturer'} = new openprint::Manufacturer( $$self{'manufacturer_id'} )->shortname();
@@ -413,8 +436,7 @@ sub finish {
 		$finish =~ s/^\s*(.*)\s*$/$1/;
         @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE lower(longname)=?}, lc $finish );
         if ( ! $$self{'finish_id'} ) {
-            sql::insert( undef, undef, 'PaperFinishes', 'shortname', $finish, 'longname', $finish );
-            @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE longname=?}, $finish );
+			$$self{'finish'} = $finish;
         } # end if
     } elsif ( $$self{'finish_id'} and ! $$self{'finish'} ) {
         $$self{'finish'} = new openprint::StockFinish( $$self{'finish_id'} )->shortname();
@@ -425,13 +447,11 @@ sub finish {
 sub colour {
     my ( $self, $colour ) = @_;
 
-
     if ( defined $colour ) {
 		$colour =~ s/^\s*(.*)\s*$/$1/;
         @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE lower(longname)=?}, lc $colour );
         if ( ! $$self{'colour_id'} ) {
-            sql::insert( undef, undef, 'PaperColours', 'shortname', $colour, 'longname', $colour );
-            @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE longname=?}, $colour );
+			$$self{'colour'} = $colour;
         } # end if
     } elsif ( $$self{'colour_id'} and ! $$self{'colour'} ) {
         @$self{'colour'} = new openprint::StockColour( $$self{'colour_id'} )->shortname();
@@ -447,8 +467,7 @@ sub weight {
 		$weight =~ s/^\s*(.*)\s*$/$1/;
         @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE lower(longname)=?}, lc $weight );
         if ( ! $$self{'weight_id'} ) {
-            sql::insert( undef, undef, 'PaperWeights', 'shortname', $weight, 'longname', $weight );
-            @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE longname=?}, $weight );
+			$$self{'weight'} = $weight;
         } # end if
     } elsif ( $$self{'weight_id'} and ! $$self{'weight'} ) {
         $$self{'weight'} = new openprint::StockWeight( $$self{'weight_id'} )->shortname();
@@ -459,13 +478,11 @@ sub weight {
 sub quality {
     my ( $self, $quality ) = @_;
 
-
     if ( defined $quality ) {
 		$quality =~ s/^\s*(.*)\s*$/$1/;
         @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
         if ( ! $$self{'quality_id'} ) {
-            sql::insert( undef, undef, 'PaperQualities', 'shortname', $quality, 'longname', $quality );
-            @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE longname=?}, $quality );
+			$$self{'quality'} = $quality;
         } # end if
     } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
         $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->shortname();

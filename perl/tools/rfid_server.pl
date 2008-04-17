@@ -1,8 +1,20 @@
 #!/usr/bin/perl -w
+use lib '/etc/apache2/lib/perl';
 use Net::Server::PreFork;
 
 @ISA = qw(Net::Server::PreFork);
 use strict;
+require openprint::RFIDScanner;
+require openprint::RFIDTag;
+
+use openprint ();
+use vars qw( $log $dbh );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+$log = new logger( 'warn' );
+$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
+if ( ! $dbh ) { die 'Unable to connect to database'; };
 
 sub process_request {
 	my $self = shift;
@@ -14,6 +26,16 @@ $self->log(1, 'hello');
 
 		my $previous_alarm = alarm($timeout);
 		$self->get_client_info();
+		
+		my $Scanner;
+		my @Scanners = openprint::RFIDScanner::find('ipaddr'=>$self->{server}->{peeraddr});
+		if ( ! @Scanners ) {
+			# Have a new one, add it
+			$Scanner = new openprint::RFIDScanner();
+			$Scanner->save( {'ipaddr'=>$self->{server}->{peeraddr}} );
+		} else {
+			$Scanner = $Scanners[0];
+		} # end if
 
 		# Each tag is 40 chars long
 		my $data;

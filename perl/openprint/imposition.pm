@@ -673,9 +673,11 @@ sub add_imposition {
 			# this is usually evelopes or forms
 			#$log->debug(" ** Creating No Cut Imposition ** ");
 			#push @impositions, {'Imposition' => 1, 'Rows' => 1, 'Cols' => 1 };
+		} elsif ( ($Paper->type() eq 'Roll') and ($Press->specification('W&TonRoll') eq 'N') and sets::isin( $run_style, ['Work & Turn','Work & Tumble'] ) ) {
+			next;
 		} else {
 			foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $override_grain_direction, $Press ) ) {
-				if ( sets::isin( $run_style, [ 'Work & Turn', 'Work & Tumble']) ) {
+				if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
 					if ( ($versions * 2) > $i->imposition() ) {
 #$log->debug("Nixing imposition because W&T needds 2* versions > imposition");
 						next;
@@ -715,8 +717,13 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 			7	=>	[ [7,1] ],
 			8	=>	[ [2,4],[4,2] ],
 			9	=>	[ [3,3] ],
+<<<<<<< HEAD:perl/openprint/imposition.pm
 			10	=>	[ [5,2], [2,5] ],
 			12	=>	[ [3,4], [4,3],[6,2],[2,6] ],
+=======
+			10	=>	[ [5,2], [2,5],[3,4],[4,3] ],
+			12	=>	[ [3,4], [4,3] ],
+>>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/imposition.pm
 			16	=>	[ [4,4] ],
 			);
 	if ( $spread_size == 2 ) {

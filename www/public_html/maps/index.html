@@ -48,7 +48,7 @@
 </script>
 <form name="MapForm" id="MapForm">
 	<input type="hidden" name="location_id" value="<? echo ( $$variable{'Location'}{id}; ) ?>" />
-	<img id="MapImage" src="/maps/<?MapFile?>.png" width="320" alt="<? echo ( $$variable{'Location'}->name(); ) ?>." USEMAP="#Map" />
+	<img id="MapImage" src="/images/maps/<?MapFile?>.png" width="320" alt="<? echo ( $$variable{'Location'}->name(); ) ?>." USEMAP="#Map" />
 	<map name="Map">
 	<? echo (
 		my $html;
@@ -60,7 +60,7 @@
 				$html .= qq`href="/employee/inventory/skid_details.html?skid_id=$openprint::param{'skid_id'}&location_id=$$Region{id}&btnFunction=Save" `;
 			
 			} # end if
-			$html .= qq`coords="`.$Region->coordinates().q`" ALT="`.$Region->name().qq`" TITLE="`.$Region->name().qq`" onMouseOver="mouseOver('MapImage','/maps/`.$$variable{'Location'}->name() . '_' . $Region->name().q`.png');" onMouseOut="mouseOut('MapImage','/maps/`.$$variable{'MapFile'}.q`.png');"/>`;
+			$html .= qq`coords="`.$Region->coordinates().q`" ALT="`.$Region->name().qq`" TITLE="`.$Region->name().qq`" onmouseover="mouseOver('MapImage','/images/maps/`.$$variable{'Location'}->name() . '_' . $Region->name().q`.png');" onmouseout="mouseOut('MapImage','/images/maps/`.$$variable{'MapFile'}.q`.png');"/>`;
 		} # end foreach
 		return $html;
 	) ?>

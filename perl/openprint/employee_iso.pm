@@ -33,6 +33,10 @@ sub _car_view_part1 {
 		$param{'presses'} = ref $param{'presses'} eq 'ARRAY' ? join(';', @{$param{'presses'}} ) : $param{'presses'};
 		$param{'part1_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part1_signed_on_year','part1_signed_on_month','part1_signed_on_day'} );
 		$$variable{'error'} .= $variable{'CAR'}->save( \%param );
+		if ( $variable{'CAR'}->id() and ! $param{'par_id'} ) {
+			# Send out notifications
+			$variable{'CAR'}->send_notifications();
+		} # end if
 	} # end if
 } # end sub _car_view_part1
 sub _car_view_part2 {
@@ -90,6 +94,10 @@ sub _par_view_part1 {
 		$param{'reply_by'} = sprintf('%.4d-%.2d-%.2d', @param{'reply_by_year','reply_by_month','reply_by_day'} );
 		$param{'part1_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part1_signed_on_year','part1_signed_on_month','part1_signed_on_day'} );
 		$$variable{'error'} .= $variable{'PAR'}->save( \%param );
+		if ( $variable{'PAR'}->id() and ! $param{'par_id'} ) {
+			# Send out notifications
+			$variable{'PAR'}->send_notifications();
+		} # end if
 	} # end if
 } # end sub _par_view_part1
 sub _par_view_part2 {

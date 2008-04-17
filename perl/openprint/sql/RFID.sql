@@ -1,0 +1,39 @@
+
+DROP TABLE IF EXISTS RFIDTagHistory;
+DROP TABLE IF EXISTS RFIDTags;
+DROP TABLE IF EXISTS RFIDTagTypes;
+DROP TABLE IF EXISTS RFIDScanners;
+
+CREATE TABLE RFIDTagTypes (
+	id	 SERIAL NOT NULL,
+	name	TEXT,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE RFIDTags (
+	id	INTEGER NOT NULL,
+	location_id	INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
+	type_id		INTEGER, FOREIGN KEY (type_id) REFERENCES RFIDTagTypes (id),
+	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE RFIDTagHistory (
+	id	SERIAL NOT NULL,
+	rfidtag_id	INTEGER NOT NULL, FOREIGN KEY (rfidtag_id) REFERENCES RFIDTags (id),
+	location_id	INTEGER NOT NULL, FOREIGN KEY (location_id) REFERENCES Locations (id),
+	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE RFIDScanners (
+	id	SERIAL NOT NULL,
+	name	TEXT,
+	ipaddr	TEXT,
+	location_id	INTEGER NOT NULL, FOREIGN KEY (location_id) REFERENCES Locations (id),
+	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	PRIMARY KEY (id)
+);
+

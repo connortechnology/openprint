@@ -1,6 +1,14 @@
 package openprint::PAR;
 @ISA = qw(openprint::Object);
 
+use vars qw( %config $log $dbh %session );
+*session = \%openprint::session;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+use MIME::QuotedPrint;
+use MIME::Base64;
+
 my $debug = 1;
 
 use strict;
@@ -161,6 +169,36 @@ sub copy {
 	return $new;
 } # end sub
 
+sub send_notifications {
+	my ( $self ) = @_;
+
+	my @Users = openprint::User::find('usergroup'=>'Quality Control Notifications');
+
+	if ( @Users ) {
+		my $From = new openprint::User( $session{'user_id'} );
+		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/iso_par_notification.html' );
+
+		my %info = (
+			'PAR'	=>	$self,
+		);
+		$info{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$text, \%info );
+$openprint::log->debug( $info{'ReplacementText'} );
+
+		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info );
+$openprint::log->debug( $body );
+		foreach my $User ( @Users ) {
+			my %mail = (
+					SMTP    => $config{'Mail Server'},
+					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+					TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
+					SUBJECT => 'A new PAR has been generated.',
+					);
+			misc::send_email_with_attachment( $log, \%mail, ('', encode_qp($body), 'text/html', 'quoted-printable'));
+		} # end foreach
+	} # end if to
+
+} # end sub send_notification
 1;
 
 __END__
