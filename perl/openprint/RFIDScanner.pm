@@ -58,7 +58,7 @@ sub find {
 	} # end if
 	if ( $params{'ipaddr'} ) {
 		$sql .= ' AND ipaddr=?';
-		push @values, $params{'ipiaddr'};
+		push @values, $params{'ipaddr'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};

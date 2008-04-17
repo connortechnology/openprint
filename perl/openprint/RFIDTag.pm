@@ -20,12 +20,11 @@ require openprint::Location;
 my $debug = 1;
 
 %fields = (
-	'id'		=>	'id',
+	'id'			=>	'id',
 	'location_id'	=>	'location_id',
 	'type_id'		=>	'type_id',
-	'type'			=>	'type',
 	'created_on'	=>	'created_on',
-	'updated_on'	=>	'created_on',
+	'updated_on'	=>	'updated_on',
 );
 
 %transforms = (
@@ -54,9 +53,9 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
-	if ( $params{'name'} ) {
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
+	if ( $params{'type_id'} ) {
+		$sql .= ' AND type_id=?';
+		push @values, $params{'type_id'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
@@ -78,6 +77,14 @@ sub load {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM RFIDTags WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
+	if ( ! $$data{'id'} ) {
+$log->debug("Not found");
+		delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}};
+		delete $$self{'id'};
+	} else {
+		$log->debug("Loaded $$self{'id'} ");
+	} # end if
+#delete $$self{'id'};
 } # end sub load
 
 sub save {
@@ -102,22 +109,18 @@ sub save {
 		} # end if
 	} # end if
 
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$k} = $$self{$k};
-	} # end foreach
-	delete $sql{'type'};
+	delete $$self{'type'};
 	
 	my $ac = sql::start_transaction( $dbh );
 
 	if ( ! sql::execute( undef, undef, 'SELECT * FROM RFIDTags WHERE id=?', $$self{'id'} ) ) {
-		if ( my $error = sql::insert( undef, undef, 'RFIDTags', \%sql ) ) {
+		if ( my $error = sql::insert( undef, undef, 'RFIDTags', map { $_, $$self{$_} } keys %fields ) ) {
 			$$self{'id'} = undef;
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
     } else {
-		if ( my $error = sql::update( undef, undef, 'RFIDTags', ['id=?', $$self{id}], \%sql ) ) {
+		if ( my $error = sql::update( undef, undef, 'RFIDTags', ['id=?', $$self{id}], map { $_, $$self{$_} } keys %fields ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
@@ -133,6 +136,7 @@ sub delete {
     my $ac = sql::start_transaction( );
     sql::execute( undef, undef, q{DELETE FROM RFIDTags WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
+	delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}}
 } # end sub delete
 
 sub Type {
