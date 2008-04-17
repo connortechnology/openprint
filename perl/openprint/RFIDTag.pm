@@ -78,11 +78,8 @@ sub load {
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 	if ( ! $$data{'id'} ) {
-$log->debug("Not found");
 		delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}};
 		delete $$self{'id'};
-	} else {
-		$log->debug("Loaded $$self{'id'} ");
 	} # end if
 #delete $$self{'id'};
 } # end sub load
@@ -98,14 +95,22 @@ sub save {
 		return 'RFID Tag must have an id';
 	} # end if
 
-	if ( $$self{'type'} and ! $$self{'type_id'} ) {
-		my ( $type_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?)', $$self{'type'} );
-		if ( ! $type_id ) {
-			my $Type = new openprint::RFIDTagType();
-			$Type->save( {'name'=>$$self{'type'} } );
-			$$self{'type_id'} = $Type->id();
-		} else {
-			$$self{'type_id'} = $type_id;
+	if ( ! $$self{'type_id'} ) {
+		my $type;
+		if ( $$hash{'type'} ) {
+			$type = $$hash{'type'};
+		} elsif ( $$self{'type'} ) {
+			$type = $$self{'type'};
+		} # end if
+		if ( $type ) {
+			my ( $type_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?)', $type );
+			if ( ! $type_id ) {
+				my $Type = new openprint::RFIDTagType();
+				$Type->save( {'name'=>$type } );
+				$$self{'type_id'} = $Type->id();
+			} else {
+				$$self{'type_id'} = $type_id;
+			} # end if
 		} # end if
 	} # end if
 

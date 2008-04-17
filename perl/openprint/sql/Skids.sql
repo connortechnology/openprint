@@ -6,6 +6,7 @@ CREATE SEQUENCE Skid_id_seq;
 CREATE TABLE Skids (
 	id	INTEGER NOT NULL default nextval('Skid_id_seq'),
 	location	TEXT,
+	rfidtag_id	TEXT,
 	created_on	timestamp with time zone default NOW(),
 	updated_on	timestamp with time zone default NOW(),
 	created_by_id	INTEGER NOT NULL,  FOREIGN KEY (created_by_id) REFERENCES Users (Index),

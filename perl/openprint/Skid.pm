@@ -120,6 +120,7 @@ $$self{'log'}->warn("Saving skid");
 	$$self{'created_by_id'} = $openprint::session{'user_id'} if ! $$self{'created_by_id'};
 	my $ac = sql::start_transaction( $$self{'dbh'} );
 	my @sql = ( 
+		'rfidtag_id',	$$self{'rfidtag_id'} ? $$self{'rfidtag_id'} : undef,
 		'location_id',	$$self{'location_id'} ? $$self{'location_id'} : undef,
 		'created_by_id',$$self{'created_by_id'},	
 		'updated_on',	'NOW()',
