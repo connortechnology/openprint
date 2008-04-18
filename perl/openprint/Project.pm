@@ -412,7 +412,7 @@ sub update_status {
 			} elsif ( $$self{'shipping_type'} eq 'Delivery' ) {
 				$new_status = 'Shipped';
 			} else {
-				if ( $$self{'status'} ne 'Shipped' ) {
+				if ( ! sets::isin( $$self{'status'}, [ 'Shipped', 'Picked Up' ] ) ) {
 					$new_status = 'Complete';
 				} # end if
 			} # end if
