@@ -12,7 +12,7 @@
 	my $html;
 	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
 	$html .= '<table style="float: right; width:50%;">';
-	$html .= sprintf('<tr><td>ID:</td><td align="right"><img style="margin-bottom: 7px;" src="/barcode.png?code=R%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'paper_id'} );
+	$html .= sprintf('<tr><td>ID:</td><td align="right"><img style="margin-bottom: 7px;" src="/barcode.png?code=p%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'paper_id'} );
 	$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} );
 	$html .= '</table>';
 	my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
