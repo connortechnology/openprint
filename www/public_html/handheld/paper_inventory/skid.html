@@ -6,8 +6,7 @@
 	$openprint::param{'Project'} =~ s/\D//g;
 	$openprint::param{'Operator'} =~ s/\D//g;
 
-
-	@$variable{'skid_id','Quantity','Docket','Project','Operator'} = @openprint::param{'skid_id','Quantity','Docket','Project','Operator'};
+	@$variable{'skid_id','rfidtag_id','Quantity','Docket','Project','Operator'} = @openprint::param{'skid_id','rfidtag_id','Quantity','Docket','Project','Operator'};
 	$$variable{'Operator'} = $openprint::session{user_id} if ! $$variable{'Operator'};
 	my $Operator = new openprint::User( $$variable{'Operator'} );
 	$$variable{'OperatorName'} = $Operator->name();
@@ -47,10 +46,14 @@
 
 	if ( $openprint::param{'Quantity'} and ($openprint::param{'Docket'} or $openprint::param{'Project'} ) ) {
 		if ( $openprint::param{'btnFunction'} eq 'CheckIn' ) {
-			openprint::employee_inventory::check_in( $variable, @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
+			openprint::employee_inventory::check_in( @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
 		} elsif ( $openprint::param{'btnFunction'} eq 'CheckOut' ) {
-			openprint::employee_inventory::check_out( $variable, @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
+			openprint::employee_inventory::check_out( @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
 		} # end if CHeckin/CheckOut
+	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
+		my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
+		$Skid->rfidtag_id( $openprint::param{'rfidtag_id'} );
+		$$variable{'error'} .= $Skid->save();
 	} # end if quanitty and docket
 
 ) ?>
@@ -62,6 +65,10 @@
 		<li>
 			<label for="skid_id">Skid #:</label>
 			<input type="text" id="skid_id" name="skid_id" value="<?skid_id?>" onkeypress="return input_handler( this, event);" onchange="change_handler(this);" />
+		</li>
+		<li>
+			<label for="rfidtag_id">RFID #:</label>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<?rfidtag_id?>" onkeypress="return input_handler( this, event);" onchange="change_handler(this);" />
 		</li>
 		<li>
 			<label for="Docket">Docket:</label>
@@ -81,6 +88,7 @@
 		</li>
 		<li class="buttons">
 			<? echo ( join('',
+						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
 						ssi::writeButton( $log, $dbh, 'CheckIn', 'checkin.gif', "f1.btnFunction.value='CheckIn';f1.submit();", '', 'CheckIn' ),
 						ssi::writeButton( $log, $dbh, 'CheckOut', 'checkout.gif', "f1.btnFunction.value='CheckOut';f1.submit();", '', 'CheckOut' ),
 						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),

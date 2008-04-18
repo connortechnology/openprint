@@ -173,13 +173,19 @@ function input_handler( element, e ) {
 			element.form.order_id.value='';
 		} // end if
 		return false;
-	} else if ( character == 80 || character == 112 ) { // P
+	} else if ( character == 80 ) { // P
 		if ( element.form.Project ) {
 			element.form.Project.focus();
 			element.form.Project.value='';
 		} else if ( element.form.project_id ) {
 			element.form.project_id.focus();
 			element.form.project_id.value='';
+		} // end if
+		return false;
+	} else if ( character == 112 ) { // R
+		if ( element.form.paper_id ) {
+			element.form.paper_id.focus();
+			element.form.paper_id.value='';
 		} // end if
 		return false;
 	} else if ( character == 81 || character == 113 ) { // Q
@@ -189,9 +195,9 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 82 || character == 114 ) { // R
-		if ( element.form.paper_id ) {
-			element.form.paper_id.focus();
-			element.form.paper_id.value='';
+		if ( element.form.rfidtag_id ) {
+			element.form.rfidtag_id.focus();
+			element.form.rfidtag_id.value='';
 		} // end if
 		return false;
 	} else if ( character == 87 || character == 119 ) { // W
