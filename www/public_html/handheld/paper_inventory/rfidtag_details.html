@@ -26,6 +26,7 @@
 		} # end if
 	} # end if
 
+	$TAG->location_id( $openprint::param{'location_id'} ) if $openprint::param{'location_id'};
 	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		if ( $openprint::param{'skid_id'} ) {
 			my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
@@ -33,8 +34,17 @@
 			$$variable{'error'} .= $Skid->save();
 		} # end if
 		$$variable{'error'} .= $TAG->save();
+		if ( ! $$variable{'error'} ) {
+$openprint::log->debug("Success");
+			$$variable{'information'} .= 'TAG saved successfully.';	
+			$TAG = new openprint::RFIDTag();
+			delete $$variable{'skid_id'};
+		} else {
+$openprint::log->error($$variable{'error'});
+	
+		} # end if
 	} # end if Save
-
+	$$variable{'RFIDTag'} = $TAG;
 ) ?>
 <div class="error"><?error?></div>
 <div class="information"><?information?></div>
@@ -42,11 +52,20 @@
 	<fieldset>
 		<p>
 			<label for="rfidtag_id">RFID #:</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<?rfidtag_id?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
 		</p>
 		<p>
 			<label for="skid_id">Skid #:</label>
 			<input type="text" id="skid_id" name="skid_id" value="<?skid_id?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
+		</p>
+		<p>
+			<label for="location_id">Location:</label>
+			<select id="location_id" name="location_id">
+				<option value="">select</option>
+				<? echo ( 
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)')], $$variable{'RFIDTag'} ? $$variable{'RFIDTag'}->location_id() : $openprint::param{'location_id'} );
+					) ?>
+			</select>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
@@ -54,6 +73,9 @@
 						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
 						); ) ?>
 		</p>
+		<div class="rightColumn" id="Map">
+			<!--#include virtual="_map.html"-->
+		</div>
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="" />
 </form>
