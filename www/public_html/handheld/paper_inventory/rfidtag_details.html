@@ -33,6 +33,7 @@
 			$Skid->rfidtag_id( $TAG->id() );
 			$$variable{'error'} .= $Skid->save();
 		} # end if
+		$TAG->type() = 'Skid' if ! $TAG->type();
 		$$variable{'error'} .= $TAG->save();
 		if ( ! $$variable{'error'} ) {
 $openprint::log->debug("Success");
