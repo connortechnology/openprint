@@ -20,12 +20,12 @@
 	); ) ?>
 		</p>
 		<p class="buttons">
-				<b>CSV File:</b>
-				<input type="file" name="fileImport" />
-	<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();",'','Import'),
-				ssi::writeButton( $log, $dbh, 'Export','export.gif',"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();",'','Export'),
-	); ) ?>
+			<b>CSV File:</b>
+			<input type="file" name="fileImport" />
+<? echo ( join('',
+			ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();",'','Import'),
+			ssi::writeButton( $log, $dbh, 'Export','export.gif',"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();",'','Export'),
+); ) ?>
 		</p>
 	</fieldset>
 	<fieldset class="leftColumn"><legend><? echo ( $$variable{'ProjectType'}->id() ? $$variable{'ProjectType'}->strid() : 'New Project Type' ) ?></legend>

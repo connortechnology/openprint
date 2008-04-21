@@ -830,9 +830,9 @@ sub summary {
 
 	my $summary = $self->Type()->name() . ' ';
 
-	my %services = $self->get_services();
-	if ( $services{''} ) {
-		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $$self{'id'}, $services{''}[0] );
+	my $services = $self->services();
+	if ( $$services{''} ) {
+		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $$self{'id'}, $$services{''}[0] );
 		if ( $specs{'Versions'} ) {
 			$summary .= $specs{'Versions'} .= ' versions ';
 		} # end if
@@ -858,7 +858,7 @@ sub summary {
 			$specs{'txtWidth'} *= 1;
 			$specs{'txtHeight'} *= 1;
 			if ( $specs{'txtFinalWidth'} != $specs{'txtWidth'} or $specs{'txtFinalHeight'} != $specs{'txtHeight'} ) {
-				if ( $services{'Folding'} ) {
+				if ( $$services{'Folding'} ) {
 				$summary .= sprintf( '%s&quot;x%s&quot; folded to %s&quot;x%s&quot; ',
 						@specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
 				} else {
@@ -894,26 +894,29 @@ sub summary {
 			$summary .= ' printed ' . $specs{'PrintingType3'};
 		} # end if
 	} # end if
-	if ( $services{'Cutting'} ) {
+	if ( $$services{'Cutting'} ) {
 		$summary .= ' Trim ';
 	} # end if
-	if ( $services{'SaddleStitching'} or $services{'LoopStitching'} ) {
+	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		$summary .= ' Stitch ';
 	} # end if
-	if ( $services{'SpinePaste'} ) {
+	if ( $$services{'SpinePaste'} ) {
 		$summary .= ' Spine Paste ';
 	} # end if
-	if ( $services{'PerfectBound'} ) {
+	if ( $$services{'PerfectBound'} ) {
 		$summary .= ' PerfectBound ';
 	} # end if
-	if ( $services{'PlainCartons'} ) {
+	if ( $$services{'NoBindery'} ) {
+		$summary .= ' NoBindery ';
+	} # end if
+	if ( $$services{'PlainCartons'} ) {
 		$summary .= ' Boxes';
 	} # end if
-	if ( $services{'BulkSkids'} ) {
+	if ( $$services{'BulkSkids'} ) {
 		$summary .= ' Skids';
 	} # end if
-	if ( $services{'Turnaround'} ) {
-		my $specs = openprint::service::get_specs_ref( $self, $services{'Turnaround'}[0] );
+	if ( $$services{'Turnaround'} ) {
+		my $specs = openprint::service::get_specs_ref( $self, $$services{'Turnaround'}[0] );
 		$summary .= sprintf(' in %ddays', $$specs{'TurnaroundDays'} );
 	} # end if
 	return $summary;

@@ -67,21 +67,33 @@ sub signature_needs {
 
 	my $services = $Project->services();
 
+	if ( $Project->Type()->strid() eq 'Envelopes' ) {
+        $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
+		return 0;
+	} # end if 
+
     if ( $$services{'NoBindery'} ) {
         $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
         return 0;
     } # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $Project->quantity( $qty_index );
+$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
+$openprint::log->debug("Cutting sig needs: stock: " . join('x', @$specs{'hdnSuppliedStockWidth'.$qty_index,'hdnSuppliedStockHeight'.$qty_index} ) );
+$openprint::log->debug("Cutting sig needs: ssize: " . join('x', @$specs{'txtWidth','txtHeight'} ) );
 		if ( $$specs{'txtImposition'.$qty_index} > 1 ) {
 			return 1;
 		} # end if
-		if (
-			 $$specs{'hdnSuppliedStockWidth'.$qty_index} != $$specs{'txtWidth'} 
-			and $$specs{'hdnSuppliedStockHeight'.$qty_index} != $$specs{'txtHeight'}
-			and $$specs{'hdnSuppliedStockWidth'.$qty_index} != $$specs{'txtHeight'}
-			and $$specs{'hdnSuppliedStockHeight'.$qty_index} != $$specs{'txtWidth'}
-			and $$specs{'txtNumberOfCuts'} != -1 ) {
+		if ( ! (
+			(
+			 $$specs{'hdnSuppliedStockWidth'.$qty_index} == $$specs{'txtWidth'} 
+			and $$specs{'hdnSuppliedStockHeight'.$qty_index} == $$specs{'txtHeight'}
+			) or (
+			$$specs{'hdnSuppliedStockWidth'.$qty_index} == $$specs{'txtHeight'}
+			and $$specs{'hdnSuppliedStockHeight'.$qty_index} == $$specs{'txtWidth'}
+			)
+			) ) {
 			return 1;
 		} # end if
 	} # end foreach
@@ -99,10 +111,6 @@ sub signature_needs {
 sub neccessary {
 	my ( $log, $dbh, $project_index ) = @_;
 	my $Project = new openprint::Project( $project_index );
-	if ( $Project->Type()->strid() eq 'Envelopes' ) {
-        $log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
-		return 0;
-	} # end if 
 
 	my $services = $Project->services();
 
