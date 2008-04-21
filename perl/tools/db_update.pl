@@ -758,7 +758,7 @@ if ( $version < $new_version ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
 	if ( ! exists $$data{'group_id'} ) {
 		$dbh->do(q`alter table papers add group_id INTEGER`);
-		$dbh->do(q`alter table papers add FOREIGN KEY (group_id) REFERENCS StockGroups (id)`);
+		$dbh->do(q`alter table papers add FOREIGN KEY (group_id) REFERENCES StockGroups (id)`);
 	} # end if
     sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
     $version = $new_version;

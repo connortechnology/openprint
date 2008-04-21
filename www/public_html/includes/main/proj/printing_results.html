@@ -290,6 +290,9 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 </p>
 <? endif ( $$variable{'txtSignatureType'} ) ?>
 <? if ( sets::isin( $$variable{'ProjectTypeID'}, [ 'Envelopes' ] ) ) ?>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 <input type="hidden" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" />
 <input type="hidden" name="hdnImpositionColumns<?QTYIndex?>" />
 <input type="hidden" name="hdnImpositionRows<?QTYIndex?>" />
@@ -301,6 +304,9 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 <input type="hidden" name="txtLayoutHeight<?QTYIndex?>" />
 <input type="hidden" name="txtImageWidth<?QTYIndex?>" value="<? echo ( $$variable{'txtImageWidth'.$$variable{'QTYIndex'}} ) ?>" />
 <input type="hidden" name="txtImageHeight<?QTYIndex?>" value="<? echo ( $$variable{'txtImageHeight'.$$variable{'QTYIndex'}} ) ?>" />
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? else ( sets::isin( $$variable{'ProjectTypeID'}, [ 'Envelopes' ] ) ) ?>
 <p>
     <label><? echo ( ssi::writeTip('Imposition'); ) ?>:</label>

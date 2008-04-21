@@ -1167,41 +1167,41 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
 			if ( $Project->Type()->name() ne 'Envelopes' ) {
-			$$project{'Grip'} = $Press->specification('Grip');
-			$$project{'Gutter'} = $Press->specification('Gutter');
-			$$project{'Orientation'} = $Press->specification('Orientation');
-			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
-				$$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
-				$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
-			} else {
-				$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size', 1*$$printing_specs{'txtTotalPageQuantity'} );
-				$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
-			} # end if
-
-			my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Overall Varnish Gloss','Overall Varnish Matte','Spot Varnish Gloss','Spot Varnish Matte'], [ @side_one_colours, @side_two_colours ] );
-
-			if ( ! $$specs{'rdbColourBar'} ) {
-				if ( @c ) {
-					$$project{'Add Colour Bar'} = $Press->specification('Colour Bar Default');
+				$$project{'Grip'} = $Press->specification('Grip');
+				$$project{'Gutter'} = $Press->specification('Gutter');
+				$$project{'Orientation'} = $Press->specification('Orientation');
+				if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
+					$$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
+					$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
 				} else {
-					$$project{'Add Colour Bar'} = $Press->specification('Process Colour Bar Default');
+					$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size', 1*$$printing_specs{'txtTotalPageQuantity'} );
+					$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 				} # end if
-			} # end if
-			if ( $$project{'Add Colour Bar'} eq 'Y' ) {
-				if ( @c ) {
-					$$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
-				} else {
-					$$project{'colour_bar_size'} = $Press->specification('Process Colour Bar Size');
-					if ( !$$project{'colour_bar_size'} ) {
+
+				my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Overall Varnish Gloss','Overall Varnish Matte','Spot Varnish Gloss','Spot Varnish Matte'], [ @side_one_colours, @side_two_colours ] );
+
+				if ( ! $$specs{'rdbColourBar'} ) {
+					if ( @c ) {
+						$$project{'Add Colour Bar'} = $Press->specification('Colour Bar Default');
+					} else {
+						$$project{'Add Colour Bar'} = $Press->specification('Process Colour Bar Default');
+					} # end if
+				} # end if
+				if ( $$project{'Add Colour Bar'} eq 'Y' ) {
+					if ( @c ) {
 						$$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
-					}
+					} else {
+						$$project{'colour_bar_size'} = $Press->specification('Process Colour Bar Size');
+						if ( !$$project{'colour_bar_size'} ) {
+							$$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
+						}
+					} # end if
+				} else {
+					$$project{'colour_bar_size'} = 0;
 				} # end if
-			} else {
-				$$project{'colour_bar_size'} = 0;
-			} # end if
-			$$project{'Colour Bar Orientation'} = $Press->specification('Colour Bar Orientation');
-			$$project{'Perfecting Single Gutter Size'} = $Press->specification('Perfecting Single Gutter Size');
-			$$project{'Perfecting Double Gutter Size'} = $Press->specification('Perfecting Double Gutter Size');
+				$$project{'Colour Bar Orientation'} = $Press->specification('Colour Bar Orientation');
+				$$project{'Perfecting Single Gutter Size'} = $Press->specification('Perfecting Single Gutter Size');
+				$$project{'Perfecting Double Gutter Size'} = $Press->specification('Perfecting Double Gutter Size');
 			} else {
 				$$project{'colour_bar_size'} = 0;
 			} # end if Envelopes
