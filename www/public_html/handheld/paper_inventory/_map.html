@@ -26,7 +26,7 @@
 	my @path;
 	my $Parent = $$variable{'Location'};
 	do {
-		unshift @path, sprintf(q`<a href="#" onclick="ddm_select_by_value($('location_id'), %1$d ); new Ajax.Updater('Map','_map.html', {method:'get',parameters:{location_id:%1$d}} );return false;">%2$s</a>`, $Parent->id(), $Parent->name() );
+		unshift @path, sprintf(q`<a href="rfidtag_details.html?location_id=%1$d&skid_id=%3$d&rfidtag_id=%4$d">%2$s</a>`, $Parent->id(), $Parent->name(), @openprint::param{'skid_id','rfidtag_id'} );
 	} while ( $Parent = $Parent->parent() );
 	$html = join("&nbsp;&gt;\n", @path);
 	return $html;
