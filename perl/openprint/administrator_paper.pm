@@ -54,28 +54,57 @@ sub list {
 	} elsif ( $param{'btnFunction'} eq 'ApplyChanges' ) {
 		foreach my $Paper ( @Papers ) {
 			my $ac = sql::start_transaction( $dbh );
-			foreach my $Price ( $Paper->prices() ) {
-				$Price->delete();
-			} # end foreach Price
-			foreach my $key ( keys %param ) {
-				if ( my ( $pricelist_id, $id ) = $key =~ /min-(\d*)-(\d*)/ ) {
-					next if ! $param{"pricecwt-$pricelist_id-$id"};
-
-					my $Price = new openprint::PaperPrice( );
-					$Price->set( {
-							'pricelist_id'	=>	$pricelist_id,
-							'paper_id'	=> $Paper->id(),
-							'Min'	=>	$param{"min-$pricelist_id-$id"},
-							'Max'	=>	$param{"max-$pricelist_id-$id"},
-							'Units'	=>	$param{"units-$pricelist_id-$id"},
-							'Cost'	=>	$param{"costcwt-$pricelist_id-$id"},
-							'Markup'	=>	$param{"markup-$pricelist_id-$id"},
-							'Price'	=>	$param{"pricecwt-$pricelist_id-$id"},
-							'Discountable'	=>	$param{"discount-$pricelist_id-$id"},
-							} );
+			if ( $param{'mode'} eq 'modify' ) {
+$openprint::log->debug("modify " );
+				foreach my $Price ( $Paper->prices() ) {
+					if ( $param{'amount'} ) {
+						if ( $param{'amount'} =~ /^\+(.*)/ ) {
+							$Price->Cost( $Price->Cost() + $1 );
+						} elsif ( $param{'amount'} =~ /^\-(.*)/ ) {
+							$Price->Cost( $Price->Cost() - $1 );
+						} else {
+$openprint::log->debug("Setting: $param{'amount'} " );
+							$Price->Cost( $param{'amount'} );
+						} # end if
+					} elsif ( $param{'markup'} ) {
+						if ( $param{'markup'} =~ /^\+(.*)/ ) {
+							$Price->Markup( $Price->Markup() + $1 );
+						} elsif ( $param{'markup'} =~ /^\-(.*)/ ) {
+							$Price->Markup( $Price->Markup() - $1 );
+						} else {
+							$Price->Markup( $param{'markup'} );
+						} # end if
+					} # end if
+					$Price->Price( $Price->Cost() * ( 1+($Price->Markup()/100) ) );
 					$variable{'error'} .= $Price->save();
-				} # end if
-			} # end foreach param key
+				} # end foreach Price
+			} elsif ( $param{'mode'} eq 'new' ) {
+				foreach my $Price ( $Paper->prices() ) {
+					$Price->delete();
+				} # end foreach Price
+				foreach my $key ( keys %param ) {
+					if ( my ( $pricelist_id, $id ) = $key =~ /min-(\d*)-(\d*)/ ) {
+						next if ! $param{"pricecwt-$pricelist_id-$id"};
+
+						my $Price = new openprint::PaperPrice( );
+						$Price->set( {
+								'pricelist_id'	=>	$pricelist_id,
+								'paper_id'	=> $Paper->id(),
+								'Min'	=>	$param{"min-$pricelist_id-$id"},
+								'Max'	=>	$param{"max-$pricelist_id-$id"},
+								'Units'	=>	$param{"units-$pricelist_id-$id"},
+								'Cost'	=>	$param{"costcwt-$pricelist_id-$id"},
+								'Markup'	=>	$param{"markup-$pricelist_id-$id"},
+								'Price'	=>	$param{"pricecwt-$pricelist_id-$id"},
+								'Discountable'	=>	$param{"discount-$pricelist_id-$id"},
+								} );
+						
+						$variable{'error'} .= $Price->save();
+						# Force reload
+						delete $$Paper{'Prices'};
+					} # end if
+				} # end foreach param key
+			} # end if
 			sql::end_transaction( $dbh, $ac );
 		} # end foreach Paper
 	} # end if
