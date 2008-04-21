@@ -2,9 +2,14 @@
 	require openprint::employee_inventory;
 
 	$openprint::param{'skid_id'} =~ s/\D//g;
-	$openprint::param{'rfidtag_id'} =~ s/\D//g;
+	$openprint::param{'Docket'} =~ s/\D//g;
+	$openprint::param{'Project'} =~ s/\D//g;
+	$openprint::param{'Operator'} =~ s/\D//g;
 
-	@$variable{'skid_id','rfidtag_id'} = @openprint::param{'skid_id','rfidtag_id'};
+	@$variable{'skid_id','rfidtag_id','Quantity','Docket','Project','Operator'} = @openprint::param{'skid_id','rfidtag_id','Quantity','Docket','Project','Operator'};
+	$$variable{'Operator'} = $openprint::session{user_id} if ! $$variable{'Operator'};
+	my $Operator = new openprint::User( $$variable{'Operator'} );
+	$$variable{'OperatorName'} = $Operator->name();
 
 	if ( ! $openprint::param{'rfidtag_id'} ) {
 		$$variable{'error'} .= 'Please specify the tag id.<br/>';
@@ -14,7 +19,7 @@
 	if ( ! $TAG->id() ) {
 		my $error = $TAG->save({'id'=>$openprint::param{'rfidtag_id'}});
 		if ( ! $error ) {
-			$$variable{'information'} .= 'Tag created.<br/>';
+			$$variable{'error'} .= 'Tag created.<br/>';
 		} else {
 			$$variable{'error'} .= 'Error creating tag: ' . $error . '<br/>';
 			return;
@@ -28,7 +33,7 @@
 			$Skid->rfidtag_id( $TAG->id() );
 			$$variable{'error'} .= $Skid->save();
 		} # end if
-		$TAG->type('Skid') if ! $TAG->type();
+		$TAG->type() = 'Skid' if ! $TAG->type();
 		$$variable{'error'} .= $TAG->save();
 		if ( ! $$variable{'error'} ) {
 $openprint::log->debug("Success");
