@@ -159,6 +159,7 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
+	sql::update( undef, undef, 'Skids', ['rfidtag_id=?', $$self{'id'}], 'rfidtag_id', undef );
     sql::execute( undef, undef, q{DELETE FROM RFIDTags WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 	delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}}
@@ -169,7 +170,11 @@ sub Type {
 } # end sub Type
 
 sub type {
-	my ( $self ) = @_;
+	my ( $self, $new ) = @_;
+	if ( $new and $new ne $$self{'type'} ) {
+		$$self{'type'} = $new;
+		$$self{'type_id'} = '';
+	} # end if
 	if ( $$self{'type_id'} and ! $$self{'type'} ) {
 		$$self{'type'} = $self->Type()->name();
 	} # end if
@@ -179,6 +184,8 @@ sub type {
 sub Location {
 	return new openprint::Location( $_[0]->location_id() );
 } # end sub Location
+
+
 
 1;
 __END__

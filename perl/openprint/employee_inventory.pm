@@ -861,6 +861,13 @@ sub highlight_paper {
 } # end sub highlight_paper
 
 sub rfidtags {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		foreach my $rfidtag_id ( ref $param{'rfidtags'} eq 'ARRAY' ? @{$param{'rfidtags'}} : split(',',$param{'rfidtags'}) ) {
+			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+			$variable{'error'} .= $RFIDTag->delete();
+
+		} # end foreach rfidtag_id
+	} # end if
 } # end sub rfidtags
 
 sub rfidtag_details {
@@ -878,7 +885,7 @@ $log->debug("Loading tag: $param{'rfidtag_id'}");
 
 sub rfidscanners {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		foreach my $id ( ref $param{'rfidscanners'} eq 'ARRAY' ? @{$param{'rfidscanners'}} : $param{'rfidscanners'} ) {
+		foreach my $id ( ref $param{'rfidscanners'} eq 'ARRAY' ? @{$param{'rfidscanners'}} : split(',',$param{'rfidscanners'}) ) {
 			$variable{'error'} .= new openprint::RFIDScanner( $id )->delete();
 		} # end foreach
 	} # end if
