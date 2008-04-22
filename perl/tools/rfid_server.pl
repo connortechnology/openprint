@@ -15,6 +15,7 @@ use vars qw( $log $dbh );
 *dbh = \$openprint::dbh;
 
 $log = new logger( 'warn' );
+$openprint::Object::no_cache = 1;
 
 sub process_request {
 	my $self = shift;
@@ -37,33 +38,65 @@ sub process_request {
 		} else {
 			$Scanner = $Scanners[0];
 		} # end if
-			open( LOG, ">>/tmp/rfid.log" );
+		open( LOG, ">>/tmp/rfid.log" );
 
 		# Each tag is 40 chars long
 		my $data;
-		while ( read(STDIN, $data, 44) ) {
+		my $tag;
+		while ( read(STDIN, $data, 1) ) {
+			$tag .= $data;
 
-			my ( $tag_id ) = $data =~ /^<TAG>\[A0\] (\w*)<\/TAG>$/;
-			$self->log(1, sprintf('%s : %s', $self->{server}->{peeraddr}, $tag_id ));
+			my ( $tag_id, $end ) = $tag =~ /<TAG>\[A0\]\s*(\w*)<\/TAG>(.*)/;
+			if ( ! $tag_id ) {
+				next;
+			} # end if
+			$tag = $end;
+			my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+			$self->log(1, sprintf('%s : %s : %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+
+			# Some scanners add this 3000 at the beginning, but we don't want it.
+			if ( $tag_id =~ /^3000(\w*)$/ ) {
+				$tag_id = $1;
+			} # end if
 			if ( ! $tag_id ) {
 			} else {
 				my $changed = 0;
 				my $Tag = new openprint::RFIDTag( $tag_id );
 				if ( ! $Tag->id() ) {
-					$self->log(1, sprintf('%s : No tag found for %s', $self->{server}->{peeraddr}, $tag_id ));
+					#$self->log(1, sprintf('%s : going to allocate ', $self->{server}->{peeraddr} ));
 					$changed = 1;
-				} else {
-					$self->log(1, sprintf('%s : found for %s', $self->{server}->{peeraddr}, $tag_id ));
 				} # end if
-
-				if ( $Scanner->location_id() != $Tag->location_id() ) {
-					$changed = 1;
-					$Tag->location_id( $Scanner->location_id() );
+				if ( ! $Tag->type() ) {
+					my $ninth = substr( $tag_id, 12, 1 );
+					if ( $ninth == 1 ) {
+					#$self->log(1, sprintf('%s : nineth %s', $self->{server}->{peeraddr}, $ninth ));
+						$Tag->type( 'Location' );
+						$changed = 1;
+					} # end if
+				} # end if
+				if ( $Scanner->type() eq 'Mobile' ) {
+					if ( $Tag->type() eq 'Location' ) {
+						$Scanner->location_id() = $Tag->location_id();
+						$Scanner->save();
+					} elsif ( $Scanner->location_id() != $Tag->location_id() ) {
+						$changed = 1;
+						$Tag->location_id( $Scanner->location_id() );
+					} # end if
+				} elsif ( $Scanner->type() eq 'Fixed' ) {
+					if ( $Scanner->location_id() != $Tag->location_id() ) {
+						$changed = 1;
+						$Tag->location_id( $Scanner->location_id() );
+					} # End if
 				} # End if
-				$Tag->save({'id'=>$tag_id}) if $changed;
+				if ( $changed ) {
+				$self->log(1, sprintf('%s : %s : saving', $date, $self->{server}->{peeraddr} ));
+				my $error = $Tag->save({'id'=>$tag_id});
+				$self->log(1, sprintf('%s : %s : error %s', $date, $self->{server}->{peeraddr}, $error )) if $error;
+				} else {
+				$self->log(1, sprintf('%s : %s : not saving', $date, $self->{server}->{peeraddr} ));
+				} # end if
 			} # end if
 			print LOG $self->{server}->{peeraddr} . ": $data\r\n";
-#print "$_\r\n";
 			alarm($timeout);
 		} # end while
 		close(LOG);

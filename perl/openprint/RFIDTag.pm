@@ -78,17 +78,8 @@ sub load {
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 	if ( ! $$data{'id'} ) {
-<<<<<<< HEAD:perl/openprint/RFIDTag.pm
-$log->debug("Not found");
-=======
->>>>>>> 70e5444db140c0825b196f6444bdfa1ece83291d:perl/openprint/RFIDTag.pm
 		delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}};
 		delete $$self{'id'};
-<<<<<<< HEAD:perl/openprint/RFIDTag.pm
-	} else {
-		$log->debug("Loaded $$self{'id'} ");
-=======
->>>>>>> 70e5444db140c0825b196f6444bdfa1ece83291d:perl/openprint/RFIDTag.pm
 	} # end if
 #delete $$self{'id'};
 } # end sub load
@@ -128,7 +119,7 @@ sub save {
 	my $ac = sql::start_transaction( $dbh );
 
 	if ( ! sql::execute( undef, undef, 'SELECT * FROM RFIDTags WHERE id=?', $$self{'id'} ) ) {
-		if ( my $error = sql::insert( undef, undef, 'RFIDTags', map { $_, $$self{$_} } keys %fields ) ) {
+		if ( my $error = sql::insert( undef, undef, 'RFIDTags', [ map { $_, $$self{$_} } keys %fields ] ) ) {
 			$$self{'id'} = undef;
 			sql::end_transaction( $dbh, $ac );
 			return $error;
@@ -158,7 +149,11 @@ sub Type {
 } # end sub Type
 
 sub type {
-	my ( $self ) = @_;
+	my ( $self, $new ) = @_;
+	if ( $new ) {
+		$$self{'type'} = $new;
+		$$self{'type_id'} = '';
+	} # end if
 	if ( $$self{'type_id'} and ! $$self{'type'} ) {
 		$$self{'type'} = $self->Type()->name();
 	} # end if
