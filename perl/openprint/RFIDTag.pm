@@ -195,7 +195,16 @@ sub location_id {
 	return $$self{'location_id'};
 } # end sub location_id
 
-
+sub location_id {
+    my ( $self, $new, $scanner_id ) = @_;
+    if ( $new ) {
+        if ( $new != $$self{'location_id'} ) {
+            sql::insert( undef, undef, 'RFIDTagHistory', {'rfidtag_id'=>$$self{'id'},'location_id'=>$new, 'scanner_id'=>$scanner_id} );
+            $$self{'location_id'} = $new;
+        } # end if
+    } # end if
+    return $$self{'location_id'};
+} # end sub location_id
 
 1;
 __END__
