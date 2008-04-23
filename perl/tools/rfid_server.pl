@@ -89,12 +89,12 @@ sub process_request {
 						$Scanner->save();
 					} elsif ( $Scanner->location_id() != $Tag->location_id() ) {
 						$changed = 1;
-						$Tag->location_id( $Scanner->location_id() );
+						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					} # end if
 				} elsif ( $Scanner->type() eq 'Fixed' ) {
 					if ( $Scanner->location_id() != $Tag->location_id() ) {
 						$changed = 1;
-						$Tag->location_id( $Scanner->location_id() );
+						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					} # End if
 				} # End if
 				if ( $changed ) {

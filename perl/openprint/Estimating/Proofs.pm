@@ -42,7 +42,7 @@ sub variables {
 	push @v, 'txtPrice3' if $Project->quantity( 3 );
 
 	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $p_id, $ss_id );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $signature_index = $$sig_specs{'SignatureIndex'};
 		foreach my $key ( keys %{$specs} ) {
 			if ( $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
@@ -61,7 +61,7 @@ sub variables {
 		} # end foreach key
 	} # end foreach signature
 	return @v;
-}
+} # end sub variables
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
@@ -73,7 +73,7 @@ sub calc {
 
 	my @signature_service_indices = $Project->signatures();
 
-	foreach my $qty_index ( 1 ..3 ) {
+	foreach my $qty_index ( 1 .. 3 ) {
 		if ( ! $Project->quantity($qty_index) ) {
 			$$specs{"txtPrice$qty_index"} = '';
 			next;
@@ -94,7 +94,7 @@ sub calc {
 
 		# First, build a hash containing the quantities of each proof.  The reason for this is to honour quantity discounts.
 		foreach my $signature_service_index ( @signature_service_indices ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -183,7 +183,7 @@ $openprint::log->debug("setting size Type $type : $$sig_specs{'txtWidth'} $$sig_
 		} # end foreach my $signature_service_index
 
 		foreach my $signature_service_index ( @signature_service_indices ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				next;

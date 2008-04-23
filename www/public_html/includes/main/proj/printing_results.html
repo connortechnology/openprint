@@ -60,7 +60,7 @@
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? if ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} ) ?>
+<? if ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectTypeID'}, ['Envelopes' ] ) ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -68,7 +68,7 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} ) ?>
+<? else ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectTypeID'}, ['Envelopes' ] ) ) ?>
 <p>
     <label>Bleed Size:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -87,7 +87,7 @@
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? endif ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} ) ?>
+<? endif ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectTypeID'}, ['Envelopes' ] ) ) ?>
 
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -234,7 +234,7 @@
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+<? if ( sets::isin( $$variable{'ProjectTypeID'}, [ 'PresentationFolders','Envelopes' ] ) ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -242,7 +242,7 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+<? else ( sets::isin( $$variable{'ProjectTypeID'}, [ 'PresentationFolders','Envelopes' ] ) ) ?>
 <p>
     <label>Grain direction:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -266,7 +266,7 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+<? endif ( sets::isin( $$variable{'ProjectTypeID'}, [ 'PresentationFolders','Envelopes' ] ) ) ?>
 
 <? if ( $$variable{'txtSignatureType'} ) ?>
 <p>
@@ -289,6 +289,25 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <? endif ( $$variable{'txtSignatureType'} ) ?>
+<? if ( sets::isin( $$variable{'ProjectTypeID'}, [ 'Envelopes' ] ) ) ?>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<input type="hidden" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" />
+<input type="hidden" name="hdnImpositionColumns<?QTYIndex?>" />
+<input type="hidden" name="hdnImpositionRows<?QTYIndex?>" />
+<input type="hidden" name="hdnImpositionDutchColumns<?QTYIndex?>" />
+<input type="hidden" name="hdnImpositionDutchRows<?QTYIndex?>" />
+<input type="hidden" name="txtLayoutWidth<?QTYIndex?>" />
+<input type="hidden" name="txtLayoutHeight<?QTYIndex?>" />
+<input type="hidden" name="txtLayoutWidth<?QTYIndex?>" />
+<input type="hidden" name="txtLayoutHeight<?QTYIndex?>" />
+<input type="hidden" name="txtImageWidth<?QTYIndex?>" value="<? echo ( $$variable{'txtImageWidth'.$$variable{'QTYIndex'}} ) ?>" />
+<input type="hidden" name="txtImageHeight<?QTYIndex?>" value="<? echo ( $$variable{'txtImageHeight'.$$variable{'QTYIndex'}} ) ?>" />
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? else ( sets::isin( $$variable{'ProjectTypeID'}, [ 'Envelopes' ] ) ) ?>
 <p>
     <label><? echo ( ssi::writeTip('Imposition'); ) ?>:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -313,6 +332,7 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
+<? endif ( sets::isin( $$variable{'ProjectTypeID'}, [ 'Envelopes' ] ) ) ?>
 
 <p>
     <label><b>Stock Price:</b></label>

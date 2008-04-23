@@ -253,11 +253,9 @@ sub setup_project {
 			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
 		} # end if
 
-		$project{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
 	} else {
 		$project{'NeedScoring'} = 0;
 		$project{'NeedFolding'} = 0;
-		$project{'NeedCutting'} = 0;
 	} # end if
 	$project{'NeedUVCoating'} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{'NeedAqueous'} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
@@ -268,7 +266,7 @@ sub setup_project {
 	$project{'HasDieCutting'} = $$services{'DieCutting'} ? $$services{'DieCutting'}[0] : 0;
 	$project{'HasCutting'} = $$services{'Cutting'} ? $$services{'Cutting'}[0] : 0;
 	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
-	@$specs{'NeedFolding','NeedCutting','NeedScoring'} = @project{'NeedFolding','NeedCutting','NeedScoring'};
+	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
 
 	if ( $project{'NeedUVCoating'} ) {
 		if ( ! $$services{'UVCoating'} ) {
@@ -1222,41 +1220,45 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 			} # end fi
 
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
-			$$project{'Grip'} = $Press->specification('Grip');
-			$$project{'Gutter'} = $Press->specification('Gutter');
-			$$project{'Orientation'} = $Press->specification('Orientation');
-			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
-				$$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
-				$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
-			} else {
-				$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size', 1*$$printing_specs{'txtTotalPageQuantity'} );
-				$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
-			} # end if
-
-			my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Overall Varnish Gloss','Overall Varnish Matte','Spot Varnish Gloss','Spot Varnish Matte'], [ @side_one_colours, @side_two_colours ] );
-
-			if ( ! $$specs{'rdbColourBar'} ) {
-				if ( @c ) {
-					$$project{'Add Colour Bar'} = $Press->specification('Colour Bar Default');
+			if ( $Project->Type()->name() ne 'Envelopes' ) {
+				$$project{'Grip'} = $Press->specification('Grip');
+				$$project{'Gutter'} = $Press->specification('Gutter');
+				$$project{'Orientation'} = $Press->specification('Orientation');
+				if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
+					$$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
+					$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
 				} else {
-					$$project{'Add Colour Bar'} = $Press->specification('Process Colour Bar Default');
+					$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size', 1*$$printing_specs{'txtTotalPageQuantity'} );
+					$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 				} # end if
-			} # end if
-			if ( $$project{'Add Colour Bar'} eq 'Y' ) {
-				if ( @c ) {
-					$$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
-				} else {
-					$$project{'colour_bar_size'} = $Press->specification('Process Colour Bar Size');
-					if ( !$$project{'colour_bar_size'} ) {
+
+				my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Overall Varnish Gloss','Overall Varnish Matte','Spot Varnish Gloss','Spot Varnish Matte'], [ @side_one_colours, @side_two_colours ] );
+
+				if ( ! $$specs{'rdbColourBar'} ) {
+					if ( @c ) {
+						$$project{'Add Colour Bar'} = $Press->specification('Colour Bar Default');
+					} else {
+						$$project{'Add Colour Bar'} = $Press->specification('Process Colour Bar Default');
+					} # end if
+				} # end if
+				if ( $$project{'Add Colour Bar'} eq 'Y' ) {
+					if ( @c ) {
 						$$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
-					}
+					} else {
+						$$project{'colour_bar_size'} = $Press->specification('Process Colour Bar Size');
+						if ( !$$project{'colour_bar_size'} ) {
+							$$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
+						}
+					} # end if
+				} else {
+					$$project{'colour_bar_size'} = 0;
 				} # end if
+				$$project{'Colour Bar Orientation'} = $Press->specification('Colour Bar Orientation');
+				$$project{'Perfecting Single Gutter Size'} = $Press->specification('Perfecting Single Gutter Size');
+				$$project{'Perfecting Double Gutter Size'} = $Press->specification('Perfecting Double Gutter Size');
 			} else {
 				$$project{'colour_bar_size'} = 0;
-			} # end if
-			$$project{'Colour Bar Orientation'} = $Press->specification('Colour Bar Orientation');
-			$$project{'Perfecting Single Gutter Size'} = $Press->specification('Perfecting Single Gutter Size');
-			$$project{'Perfecting Double Gutter Size'} = $Press->specification('Perfecting Double Gutter Size');
+			} # end if Envelopes
 			$$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 			$$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
 			$$project{'Runstyles'} = $Press->specification('Runstyles');
@@ -1565,6 +1567,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 			} # end if
 		} # end if
 		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
+		$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
 #$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	} # end foreach quantity
 
@@ -2672,7 +2675,7 @@ sub select_presses {
 			next;
 		} # end if
 
-		if ( $project_type eq 'Envelopes' and $Press->specification('Envelope Ready') ne 'Y' ) {
+		if ( $project_type eq 'Envelopes' and $Press->specification('Envelope Capable') ne 'Y' ) {
 			$openprint::log->debug(" ** Press $press_id Failed Envelope Check **");
 			next;
 		} # end if
