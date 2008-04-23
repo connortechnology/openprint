@@ -39,7 +39,7 @@
 				<th align="right" width="50">MWeight</th>
 				<th align="right" width="50">GSM</th>
 				<th align="left" width="25">SPP</th>
-				<th align="left" width="25">Cost</th>
+				<th align="left" width="50">Pricing CWT</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -60,7 +60,7 @@
 		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}->sheets_per_package() ) ?></a></td>
 		<td align="right"><a href="paper.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( 
 my @Price = $$variable{'Paper'}->prices();
-return sprintf('%.0f/cwt', $Price[0]{'Cost'} );
+return sprintf('%.0f*%.0f%=%.0f', @{$Price[0]}{'Cost','Markup','Price'} );
  ) ?></a></td>
 	</tr>
 <? endwhile ( $$variable{'Paper'} = shift @{$$variable{'Papers'}} ) ?>

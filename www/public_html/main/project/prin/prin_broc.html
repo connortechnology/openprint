@@ -35,7 +35,7 @@
 <? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Envelopes'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Envelopes'] ) ) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'Door Hangers' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/posters.html" -->

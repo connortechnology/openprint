@@ -57,7 +57,7 @@ sub list {
 			if ( $param{'mode'} eq 'modify' ) {
 $openprint::log->debug("modify " );
 				foreach my $Price ( $Paper->prices() ) {
-					if ( $param{'amount'} ) {
+					if ( $param{'amount'} ne '' ) {
 						if ( $param{'amount'} =~ /^\+(.*)/ ) {
 							$Price->Cost( $Price->Cost() + $1 );
 						} elsif ( $param{'amount'} =~ /^\-(.*)/ ) {
@@ -66,7 +66,7 @@ $openprint::log->debug("modify " );
 $openprint::log->debug("Setting: $param{'amount'} " );
 							$Price->Cost( $param{'amount'} );
 						} # end if
-					} elsif ( $param{'markup'} ) {
+					} elsif ( $param{'markup'} ne '' ) {
 						if ( $param{'markup'} =~ /^\+(.*)/ ) {
 							$Price->Markup( $Price->Markup() + $1 );
 						} elsif ( $param{'markup'} =~ /^\-(.*)/ ) {
