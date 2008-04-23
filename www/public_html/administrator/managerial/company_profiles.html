@@ -9,14 +9,14 @@
 		<p> 
 			<label>Customer:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
-			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
+			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('Buttons1').hide();$('Buttons2');f1.submit();}">
 				<option value=""> Select a Customer</option>
 	 <? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::param{'ddmCustomer'} ); ) ?>
 			</select>
 			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
 		</p>
 	</fieldset>
-	<fieldset>
+	<fieldset id="Buttons1">
 		<p> 
 			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Users<? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
 		
@@ -78,8 +78,12 @@
 			<input type="text" name="txtAccountNum" value="<?txtAccountNum?>" >
 		</p>
 		<p> 
-			<label>Company Name:</label>
+			<label>Internal Name:</label>
 			<input type="text" name="txtCompanyName" value="<?txtCompanyName?>" >
+		</p>
+		<p> 
+			<label>Legal Name:</label>
+			<input type="text" name="txtLegalBusinessName" value="<?txtLegalBusinessName?>" >
 		</p>
 		<p> 
 			<label>Address:</label>
@@ -128,10 +132,6 @@
 	</p>
 	</fieldset>
 	<fieldset><legend>Business Information:</legend>
-		<p> 
-			<label>Legal Name:</label>
-			<input type="text" name="txtLegalBusinessName" value="<?txtLegalBusinessName?>" >
-		</p>
 		<p> 
 			<label>Legal Form:</label>
 			<input type="radio" name="rdbLegalForm" value="Corporation" <?rdbLegalFormCorporation?> > Corporation
@@ -450,7 +450,7 @@
 		<input type="text" name="txtTradeReferenceEmail3" value="<?txtTradeReferenceEmail3?>" >
 	</p>
 </fieldset>
-<fieldset>
+<fieldset id="Buttons2">
 	<p> 
 		<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Users<? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
 		

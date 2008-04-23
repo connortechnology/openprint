@@ -4,6 +4,7 @@ use strict;
 use Text::Unaccent;
 
 use vars qw( %fields %defaults %transforms );
+use openprint ();
 
 require sql;
 require openprint::Object;
@@ -91,9 +92,13 @@ sub find {
 		$sql .= q{ AND strName=?};
 		push @values, $params{'Name'};
 	} # end if
-	if ( $params{'name'} ) {
+	if ( exists $params{'name'} ) {
 		$sql .= q{ AND strName=?};
 		push @values, $params{'name'};
+	} # end if
+	if ( exists $params{'postalcode'} ) {
+		$sql .= q{ AND strPostalCode=?};
+		push @values, $params{'postalcode'};
 	} # end if
 	if ( $params{'SalesPerson'} ) {
 		if ( ref $params{'SalesPerson'} eq 'ARRAY' ) {
@@ -201,6 +206,7 @@ sub save {
 		} # end if
 	} # end foreach
 	$sql{dtmlastmodified} = 'NOW()';
+	$sql{'strname'} = Text::Unaccent::unac_string('LATIN1', $sql{'strname'} );
 
     my $ac = sql::start_transaction( $openprint::dbh );
     if ( ! $$self{'id'} ) {
@@ -318,25 +324,18 @@ sub Credit {
 sub get_dropdown {
 	my $selected = shift;
 
-	my $sql = 'SELECT strName, Index FROM Company';
+	my $sql = 'SELECT Index, strName FROM Company';
 	my @values;
 
 	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) {
 		$sql .= ' WHERE Index=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
+	$sql .= ' ORDER BY lower(strname)';
 
-    my %company = sql::execute( undef, undef, $sql, @values );
+    my @company = sql::execute( undef, undef, $sql, @values );
 
-    my %names;
-    foreach my $key ( keys %company ) {
-        my $unaccented = Text::Unaccent::unac_string('LATIN1', $key );
-        $names{lc($unaccented)} = $unaccented;
-        $company{$unaccented} = $company{$key};
-    } # end foreach
-
-    my @array = map { $company{$names{$_}}, $names{$_} } sort keys %names;
-    return ssi::make_drop_down( \@array, $selected );
+    return ssi::make_drop_down( \@company, $selected );
 } # sub get_customer_dropdown
 
 sub CSR {
