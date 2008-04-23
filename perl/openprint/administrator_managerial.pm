@@ -180,6 +180,24 @@ sub user_profiles {
 			} # end foreach
 		} # end if
 
+		foreach my $service_default_id ( sql::execute( undef, undef, 'SELECT id FROM User_Service_Defaults WHERE user_id=?', $user_id ) ) {
+			if ( 'name'=>$openprint::param{'name-'.$service_default_id} ) {
+			sql::update( undef, undef, 'User_Service_Defaults', ['id=?'=>$service_default_id], {
+					'servicetype_id'=>$openprint::param{'servicetype_id-'.$service_default_id} ? $openprint::param{'servicetype_id-'.$service_default_id} : undef,
+					'name'=>$openprint::param{'name-'.$service_default_id},
+					'value'=>$openprint::param{'value-'.$service_default_id}
+					});
+			} else {
+				sql::execute( undef, undef, 'DELETE FROM User_Service_Defaults WHERE id=?', $service_default_id );
+			} # end if
+		} # end foreach
+		sql::insert( undef, undef, 'User_Service_Defaults', {
+'user_id'=>$user_id,
+'servicetype_id'=>$openprint::param{'servicetype_id-'} ? $openprint::param{'servicetype_id-'} : undef,
+'name'=>$openprint::param{'name-'},
+'value'=>$openprint::param{'value-'} 
+} );
+
 		$$variable{'information'} = "Record saved successfully.";
 	} # end if btnFunction
 
