@@ -4,11 +4,13 @@ function change_handler( element ) {
 	// parse through the input splitting it into commands
 	for ( var i = 0; i < element.value.length; i += 1 ) {
 		var c = element.value.charCodeAt(i);
+		// 57 is '9'. Anything above is not a number
 		if ( c > 57 ) {
 			// Start a command
 			var j;
 			for ( j = i+1; j < element.value.length; j+= 1 ) {
 				var c2 = element.value.charCodeAt(j);
+				// 57 is '9'. Anything above is not a number
 				if ( c2 > 57 ) {
 					break;
 				} // end if
@@ -63,12 +65,15 @@ function change_handler( element ) {
 				newelement = element.form.Project;
 			else if ( element.form.project_id )
 				newelement = element.form.project_id;
+		} else if ( first == 'p' ) { // Paper strangely enough.  Someday I hope to deprecaate project, and use P for paper. Or re-allocate submit
+			if ( element.form.paper_id ) 
+				newelement  = element.form.paper_id;
 		} else if ( first == 'Q' ) { // Q Is reserved for quantity
 			if ( element.form.Quantity )
 				newelement = element.form.Quantity;
-		} else if ( first == 'R' ) { // Paper strangely enough.  Someday I hope to deprecaate project, and use P for paper. Or re-allocate submit
-			if ( element.form.paper_id ) 
-				newelement  = element.form.paper_id;
+		} else if ( first == 'R' || first == 'r' ) { // Paper strangely enough.  Someday I hope to deprecaate project, and use P for paper. Or re-allocate submit
+			if ( element.form.rfidtag_id ) 
+				newelement  = element.form.rfidtag_id;
 		} else if ( first == 'S' ) { // S
 			if ( commands.length ) {
 				commands.push( command );
@@ -173,13 +178,19 @@ function input_handler( element, e ) {
 			element.form.order_id.value='';
 		} // end if
 		return false;
-	} else if ( character == 80 || character == 112 ) { // P
+	} else if ( character == 80 ) { // P
 		if ( element.form.Project ) {
 			element.form.Project.focus();
 			element.form.Project.value='';
 		} else if ( element.form.project_id ) {
 			element.form.project_id.focus();
 			element.form.project_id.value='';
+		} // end if
+		return false;
+	} else if ( character == 112 ) { // p
+		if ( element.form.paper_id ) {
+			element.form.paper_id.focus();
+			element.form.paper_id.value='';
 		} // end if
 		return false;
 	} else if ( character == 81 || character == 113 ) { // Q
@@ -189,9 +200,9 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 82 || character == 114 ) { // R
-		if ( element.form.paper_id ) {
-			element.form.paper_id.focus();
-			element.form.paper_id.value='';
+		if ( element.form.rfidtag_id ) {
+			element.form.rfidtag_id.focus();
+			element.form.rfidtag_id.value='';
 		} // end if
 		return false;
 	} else if ( character == 87 || character == 119 ) { // W

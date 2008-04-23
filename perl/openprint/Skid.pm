@@ -3,13 +3,16 @@ package openprint::Skid;
 
 use strict;
 use openprint ();
-use vars qw(%variable %cache);
+use vars qw( $log $dbh %variable %cache);
 *variable = \%openprint::variable;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 require sql;
 require openprint::Location;
 require openprint::Paper;
 require openprint::SkidContent;
+require openprint::RFIDTag;
 
 my $debug = 0;
 
@@ -65,18 +68,18 @@ sub find {
 		push @values, $params{'purpose_id'};
 	} # end if
 	if ( $params{'created_on'} ) {
-		$openprint::log->debug("Find: Created: $params{'created_on'}");
+		$log->debug("Find: Created: $params{'created_on'}");
 	} # end if
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading skids SQL($sql)" . DBI->errstr );
+		$log->debug("Error loading skids SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
-		$openprint::log->debug('No skidss loaded (' . $sql . ") (@values)" );
+		$log->debug('No skidss loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded skids ($sql) (@values) " );
+		$log->debug("Debug loaded skids ($sql) (@values) " );
 	} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
@@ -87,7 +90,7 @@ sub copy {
 	my $new = new openprint::Skid( );
 	@$new{'location_id'} = @$self{'location_id'};
 	if ( ! $$self{'Paper'} ) {
-		$$self{'log'}->debug("Problem with paper on skid");
+		$log->debug("Problem with paper on skid");
 	} # end if
 	%{$$new{'Paper'}} = %{$$self{'Paper'}};
 	$new->save();
@@ -110,7 +113,7 @@ sub load {
 	my ($self, $data ) = @_;
 
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Skids WHERE id=?}, {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( q{SELECT * FROM Skids WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 
@@ -122,9 +125,8 @@ sub load {
 
 sub save {
 	my $self = shift;
-$openprint::log->warn("Saving skid");
 	$$self{'created_by_id'} = $openprint::session{'user_id'} if ! $$self{'created_by_id'};
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	my @sql = ( 
 		'rfidtag_id',	$$self{'rfidtag_id'} ? $$self{'rfidtag_id'} : undef,
 		'location_id',	$$self{'location_id'} ? $$self{'location_id'} : undef,
@@ -135,9 +137,15 @@ $openprint::log->warn("Saving skid");
 		
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Skid_id_seq')} );
-		sql::insert( undef, undef, 'Skids', @sql, 'id', $$self{'id'} );
+		if ( my $error = sql::insert( undef, undef, 'Skids', @sql, 'id', $$self{'id'} ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} else {
-		sql::update( undef, undef, 'Skids', "id=$$self{'id'}", @sql );
+		if ( my $error = sql::update( undef, undef, 'Skids', ['id=?',$$self{'id'}], \@sql )) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} # end if
 
 	#sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE skid_id=?}, $$self{'id'} );
@@ -145,20 +153,20 @@ $openprint::log->warn("Saving skid");
 		#$$self{'Paper'}{$paper_id}->save();
 		#sql::insert( undef, undef, 'skid_Contents', 'skid_id', $$self{'id'}, 'paper_id', $paper_id, 'quantity', int($$self{'Paper'}{$paper_id}), 'units', $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
 	#} # end foreach paper_id
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
-
+	return;
 } # end sub save
 
 sub delete {
 	my $self = shift;
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_inventory WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skid_contents WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skids WHERE id=?}, $$self{'id'} );
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 } # end sub delete
 
 sub to_string {

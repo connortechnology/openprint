@@ -57,6 +57,26 @@ sub find {
 		$sql .= ' AND type_id=?';
 		push @values, $params{'type_id'};
 	} # end if
+	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
+		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
+		push @values, @params{'created_on_start','created_on_end'};
+	} elsif ( $params{'created_on_start'} ) {
+		$sql .= ' AND created_on >= ?';
+		push @values, $params{'created_on_start'};
+	} elsif ( $params{'created_on_end'} ) {
+		$sql .= ' AND created_on <= ?';
+		push @values, $params{'created_on_end'};
+	} # end if
+	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
+		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
+		push @values, @params{'updated_on_start','updated_on_end'};
+	} elsif ( $params{'updated_on_start'} ) {
+		$sql .= ' AND updated_on >= ?';
+		push @values, $params{'updated_on_start'};
+	} elsif ( $params{'updated_on_end'} ) {
+		$sql .= ' AND updated_on <= ?';
+		push @values, $params{'updated_on_end'};
+	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
@@ -139,6 +159,7 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
+	sql::update( undef, undef, 'Skids', ['rfidtag_id=?', $$self{'id'}], 'rfidtag_id', undef );
     sql::execute( undef, undef, q{DELETE FROM RFIDTags WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 	delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}}
@@ -150,7 +171,7 @@ sub Type {
 
 sub type {
 	my ( $self, $new ) = @_;
-	if ( $new ) {
+	if ( $new and ($new ne $$self{'type'}) ) {
 		$$self{'type'} = $new;
 		$$self{'type_id'} = '';
 	} # end if
@@ -163,6 +184,18 @@ sub type {
 sub Location {
 	return new openprint::Location( $_[0]->location_id() );
 } # end sub Location
+sub location_id {
+	my ( $self, $new ) = @_;
+	if ( $new ) {
+		if ( $new != $$self{'location_id'} ) {
+			sql::insert( undef, undef, 'RFIDTagHistory', {'rfidtag_id'=>$$self{'id'},'location_id'=>$new} );
+			$$self{'location_id'} = $new;
+		} # end if
+	} # end if
+	return $$self{'location_id'};
+} # end sub location_id
+
+
 
 1;
 __END__

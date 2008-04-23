@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 use lib '/etc/apache2/lib/perl';
 use Net::Server::PreFork;
 
@@ -8,6 +8,7 @@ require openprint::Object;
 require openprint::RFIDScanner;
 require openprint::RFIDTag;
 require logger;
+require Date::Format;
 
 use openprint ();
 use vars qw( $log $dbh );
@@ -40,24 +41,30 @@ sub process_request {
 		} # end if
 		open( LOG, ">>/tmp/rfid.log" );
 
+		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+		$self->log(1, sprintf('%s : %s : %s',$date, $self->{server}->{peeraddr}, 'connect' ));
 		# Each tag is 40 chars long
 		my $data;
 		my $tag;
 		while ( read(STDIN, $data, 1) ) {
 			$tag .= $data;
+			$date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+			$self->log(1, sprintf('%s : %s : %s', $date, $self->{server}->{peeraddr}, $tag ));
 
 			my ( $tag_id, $end ) = $tag =~ /<TAG>\[A0\]\s*(\w*)<\/TAG>(.*)/;
 			if ( ! $tag_id ) {
 				next;
 			} # end if
 			$tag = $end;
-			my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-			$self->log(1, sprintf('%s : %s : %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+			$self->log(1, sprintf('%s : %s : hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+			$tag_id = substr( $tag_id, length($tag_id)-16, 16 );
+			my $type_digit = substr( $tag_id, 0, 1 );
+			$tag_id = substr( $tag_id, 1, 15 );
 
-			# Some scanners add this 3000 at the beginning, but we don't want it.
-			if ( $tag_id =~ /^3000(\w*)$/ ) {
-				$tag_id = $1;
-			} # end if
+			$self->log(1, sprintf('%s : %s : short  hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+			$tag_id = hex($tag_id);
+			$tag_id = sprintf('%d%.15d', $type_digit , $tag_id );
+			$self->log(1, sprintf('%s : %s : dec %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			if ( ! $tag_id ) {
 			} else {
 				my $changed = 0;
@@ -67,10 +74,12 @@ sub process_request {
 					$changed = 1;
 				} # end if
 				if ( ! $Tag->type() ) {
-					my $ninth = substr( $tag_id, 12, 1 );
-					if ( $ninth == 1 ) {
+					if ( $type_digit == 1 ) {
 					#$self->log(1, sprintf('%s : nineth %s', $self->{server}->{peeraddr}, $ninth ));
 						$Tag->type( 'Location' );
+						$changed = 1;
+					} elsif ( $type_digit == 2 ) {
+						$Tag->type( 'Skid' );
 						$changed = 1;
 					} # end if
 				} # end if

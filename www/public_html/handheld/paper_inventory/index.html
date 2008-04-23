@@ -1,5 +1,6 @@
 <? eval (
 $$variable{'skid_id'} = $openprint::param{'skid_id'} if ! $$variable{'skid_id'};
+$$variable{'rfidtag_id'} = $openprint::param{'rfidtag_id'} if ! $$variable{'rfidtag_id'};
 ) ?>
 <? if ( $$variable{'error'} ) ?>
 The following errors occurred:<br/>
@@ -7,18 +8,20 @@ The following errors occurred:<br/>
 <? endif ( $$variable{'error'} ) ?>
 <div class="information"><?information?></div>
 <form name="jump" method="get" action="/employee/inventory/skid_details.html">
-	<fieldset class="filter"><legend>Choose Skid</legend>
+	<fieldset class="filter"><legend>Scan Item</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
 			<input type="text" id="skid_id" name="skid_id" size="10" style="width: auto;" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);"/>
 		</p>
+		<p>
+			<label for="rfidtag_id">RFID ID #</label>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" style="width: auto;" value="<?rfidtag_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);"/>
+		</p>
 		<br/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}",'','Go' ),
-				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
-				ssi::writeButton( $log, $dbh, 'Next', 'next.gif', q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,'','&gt;&gt;' ),
-					ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', '/employee/inventory/skid_details.html', 'Add New Skid' ),
+				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(jump.skid_id.value){jump.action='skid.html';jump.submit();} else if ( jump.rfidtag_id.value){jump.action='rfidtag_details.html';jump.submit();}else{jump.skid_id.focus();}",'','Go' ),
+				ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', '/employee/inventory/skid_details.html', 'Add Skid Skid' ),
 			); ) ?>
 		</p>
 	</fieldset>
