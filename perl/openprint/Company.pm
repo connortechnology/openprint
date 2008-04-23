@@ -206,6 +206,7 @@ sub save {
 		} # end if
 	} # end foreach
 	$sql{dtmlastmodified} = 'NOW()';
+	$sql{'strname'} = Text::Unaccent::unac_string('LATIN1', $sql{'strname'} );
 
     my $ac = sql::start_transaction( $openprint::dbh );
     if ( ! $$self{'id'} ) {
