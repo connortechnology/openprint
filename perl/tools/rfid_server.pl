@@ -49,23 +49,24 @@ sub process_request {
 		while ( read(STDIN, $data, 1) ) {
 			$tag .= $data;
 			$date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-			$self->log(1, sprintf('%s : %s : %s', $date, $self->{server}->{peeraddr}, $tag ));
+			#$self->log(1, sprintf('%s : %s : %s', $date, $self->{server}->{peeraddr}, $tag ));
 
 			my ( $tag_id, $end ) = $tag =~ /<TAG>\[A0\]\s*(\w*)<\/TAG>(.*)/;
 			if ( ! $tag_id ) {
 				next;
 			} # end if
 			$tag = $end;
-			$self->log(1, sprintf('%s : %s : hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+			#$self->log(1, sprintf('%s : %s : hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			$tag_id = substr( $tag_id, length($tag_id)-16, 16 );
 			my $type_digit = substr( $tag_id, 0, 1 );
 			$tag_id = substr( $tag_id, 1, 15 );
 
-			$self->log(1, sprintf('%s : %s : short  hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+			#$self->log(1, sprintf('%s : %s : short  hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			$tag_id = hex($tag_id);
 			$tag_id = sprintf('%d%.15d', $type_digit , $tag_id );
 			$self->log(1, sprintf('%s : %s : dec %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			if ( ! $tag_id ) {
+			$self->log(1, sprintf('%s : %s : No tag', $date, $self->{server}->{peeraddr} ));
 			} else {
 				my $changed = 0;
 				my $Tag = new openprint::RFIDTag( $tag_id );
@@ -73,19 +74,23 @@ sub process_request {
 					#$self->log(1, sprintf('%s : going to allocate ', $self->{server}->{peeraddr} ));
 					$changed = 1;
 				} # end if
+					#$self->log(1, sprintf('%s : Type %s', $self->{server}->{peeraddr}, $Tag->type() ));
 				if ( ! $Tag->type() ) {
 					if ( $type_digit == 1 ) {
-					#$self->log(1, sprintf('%s : nineth %s', $self->{server}->{peeraddr}, $ninth ));
+					#$self->log(1, sprintf('%s : Location %s', $self->{server}->{peeraddr}, $type_digit ));
 						$Tag->type( 'Location' );
+					#$self->log(1, sprintf('%s : Type %s', $self->{server}->{peeraddr}, $Tag->type() ));
 						$changed = 1;
 					} elsif ( $type_digit == 2 ) {
 						$Tag->type( 'Skid' );
 						$changed = 1;
+					} else {
+						$self->log(1, sprintf('%s : %s : unknown type %s', $date, $self->{server}->{peeraddr}, $type_digit ));
 					} # end if
 				} # end if
 				if ( $Scanner->type() eq 'Mobile' ) {
 					if ( $Tag->type() eq 'Location' ) {
-						$Scanner->location_id() = $Tag->location_id();
+						$Scanner->location_id( $Tag->location_id() );
 						$Scanner->save();
 					} elsif ( $Scanner->location_id() != $Tag->location_id() ) {
 						$changed = 1;
@@ -96,16 +101,19 @@ sub process_request {
 						$changed = 1;
 						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					} # End if
+				} else {
+					$self->log(1, sprintf('%s : %s : unknown scanner type %s', $date, $self->{server}->{peeraddr}, $Scanner->type() ));
 				} # End if
+					#$self->log(1, sprintf('%s : changed %s', $self->{server}->{peeraddr}, $changed ));
 				if ( $changed ) {
-				$self->log(1, sprintf('%s : %s : saving', $date, $self->{server}->{peeraddr} ));
+				#$self->log(1, sprintf('%s : %s : saving', $date, $self->{server}->{peeraddr} ));
 				my $error = $Tag->save({'id'=>$tag_id});
 				$self->log(1, sprintf('%s : %s : error %s', $date, $self->{server}->{peeraddr}, $error )) if $error;
 				} else {
-				$self->log(1, sprintf('%s : %s : not saving', $date, $self->{server}->{peeraddr} ));
+				#$self->log(1, sprintf('%s : %s : not saving', $date, $self->{server}->{peeraddr} ));
 				} # end if
 			} # end if
-			print LOG $self->{server}->{peeraddr} . ": $data\r\n";
+			#print LOG $self->{server}->{peeraddr} . ": $data\r\n";
 			alarm($timeout);
 		} # end while
 		close(LOG);
