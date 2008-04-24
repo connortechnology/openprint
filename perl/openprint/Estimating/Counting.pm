@@ -46,6 +46,7 @@ $openprint::log->debug("Counting neccessary: ServiceType: " . $ServiceType->name
 		next if ! $$services{$ServiceType->name()};
 		foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
 			my $specs = openprint::service::get_specs_ref( $Project, $s_id );
+$openprint::log->debug("Counting neccessary: Accurate Count: " . $$specs{'AccurateCount'} );
 			return 1 if $$specs{'AccurateCount'} eq 'Y';
 		} # end foreach s_id
 	} # end foreach ServiceType
@@ -77,8 +78,11 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: ' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
 
 		my %ServicePrice = openprint::service::get_price_object( 'Counting', $qty, undef );
-		if ( sets::isin( $ServicePrice{'units'}, ['Per M', 'Per 1000'] ) ) {
+		if ( sets::isin( lc $ServicePrice{'units'}, ['per m', 'per 1000'] ) ) {
 			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServiceCharge: $%.2f%s * %d=$%.2f<br/>' , @ServicePrice{'Price','units'}, $qty, $ServicePrice{'Total'} );
+		} elsif ( sets::isin( lc $ServicePrice{'units'}, ['each'] ) ) {
+			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServiceCharge: $%.2f%s * %d=$%.2f<br/>' , @ServicePrice{'Price','units'}, $qty, $ServicePrice{'Total'} );
 		} else {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Unknown units for Counting service price $%.2f%s<br/>', @ServicePrice{'Price','units'} );
@@ -96,6 +100,7 @@ sub calc {
 
 sub summary {
 } # end sub summary
+
 
 1;
 
