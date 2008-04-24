@@ -23,7 +23,7 @@ require openprint::service;
 require sql;
 
 my @variables = (
-	'txtItemsPerPackage','bands_per_package',
+	'txtItemsPerPackage','AccurateCount','bands_per_package',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',

@@ -34,6 +34,20 @@ my @no_output = (
 
 sub no_outputs { return @no_output; } # end sub no_outputs
 
+sub neccessary {
+	my ( $Project ) = @_;
+
+	my $services = $Project->services();
+	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Packaging') ) {
+$openprint::log->debug("Counting neccessary: ServiceType: " . $ServiceType->name());
+		next if ! $$services{$ServiceType->name()};
+		foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+			my $specs = openprint::service::get_specs_ref( $Project, $s_id );
+			return 1 if $$specs{'AccurateCount'} eq 'Y';
+		} # end foreach s_id
+	} # end foreach ServiceType
+	return 0;
+} # end sub needed
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
