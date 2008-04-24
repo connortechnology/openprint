@@ -2,6 +2,9 @@
 	if ( $$variable{'RFIDTag'} and $$variable{'RFIDTag'}->location_id() ) {
 		$$variable{'Selected'} = $$variable{'RFIDTag'}->Location();
 		$$variable{'Location'} = $$variable{'Selected'}->Parent();
+	} elsif ( $$variable{'RFIDScanner'} and $$variable{'RFIDScanner'}->location_id() ) {
+		$$variable{'Selected'} = $$variable{'RFIDScanner'}->Location();
+		$$variable{'Location'} = $$variable{'Selected'}->Parent();
 	} elsif ( $openprint::param{'selected_name'} ) {
 		my @locations = openprint::Location::find( 'name' => $openprint::param{'selected_name'} );
 		$$variable{'Selected'} = shift @locations;

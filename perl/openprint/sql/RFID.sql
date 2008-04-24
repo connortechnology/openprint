@@ -30,6 +30,13 @@ CREATE TABLE RFIDScanners (
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	PRIMARY KEY (id)
 );
+CREATE TABLE RFIDScannerHistory (
+	id	SERIAL NOT NULL,
+	scanner_id	INTEGER, FOREIGN KEY (scanner_id) REFERENCES RFIDScanners (id),
+	location_id	INTEGER NOT NULL, FOREIGN KEY (location_id) REFERENCES Locations (id),
+	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	PRIMARY KEY (id)
+);
 
 CREATE TABLE RFIDTagHistory (
 	id	SERIAL NOT NULL,

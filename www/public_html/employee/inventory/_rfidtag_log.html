@@ -1,4 +1,6 @@
 <? eval (
+	require openprint::RFIDTagHistory;
+
 	if ( $openprint::param{StartYear} ) {
 		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
@@ -9,7 +11,7 @@
 		} # end foreach
 	} # end if
 
-	@{$$variable{'Entries'}} = openprint::RFIDTagHistoryEntry::find( 
+	@{$$variable{'Entries'}} = openprint::RFIDTagHistory::find( 
 		'rfidtag_id'=>$param{'rfidtag_id'},
 		'created_on_start'	=>	Date::Calc::check_date( @openprint::session{
 			'/employee/inventory/rfidtag_details.html?StartYear',
@@ -31,9 +33,9 @@
 <? if ( @{$$variable{'Entries'}} ) ?>
 <table class="List">
 	<tr>
-		<th>When</th>
-		<th>Scanner</th>
-		<th>Where</th>
+		<th align="left">When</th>
+		<th align="left">Scanner</th>
+		<th align="left">Where</th>
 	</tr>
 	<? while ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
 		<tr>
