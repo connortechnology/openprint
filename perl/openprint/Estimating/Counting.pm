@@ -36,8 +36,11 @@ sub no_outputs { return @no_output; } # end sub no_outputs
 
 sub neccessary {
 	my ( $Project ) = @_;
-
 	my $services = $Project->services();
+	if ( $$services{'NoBindery'} ) {
+		return 0;
+	} # end if
+
 	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Packaging') ) {
 $openprint::log->debug("Counting neccessary: ServiceType: " . $ServiceType->name());
 		next if ! $$services{$ServiceType->name()};
