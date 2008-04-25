@@ -91,7 +91,8 @@ sub process_request {
 				if ( $Scanner->type() eq 'Mobile' ) {
 					if ( $Tag->type() eq 'Location' ) {
 						$Scanner->location_id( $Tag->location_id() );
-						$Scanner->save();
+						my $e = $Scanner->save();
+						$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
 					} elsif ( $Scanner->location_id() != $Tag->location_id() ) {
 						$changed = 1;
 						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );

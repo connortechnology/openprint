@@ -122,5 +122,16 @@ sub Location {
 	return new openprint::Location( $_[0]{'location_id'} );
 } # end sub Location
 
+sub location_id {
+    my ( $self, $new ) = @_;
+    if ( $new ) {
+        if ( $new != $$self{'location_id'} ) {
+            sql::insert( undef, undef, 'RFIDScannerHistory', {'location_id'=>$new, 'scanner_id'=>$$self{id} } );
+            $$self{'location_id'} = $new;
+        } # end if
+    } # end if
+    return $$self{'location_id'};
+} # end sub location_id
+
 1;
 __END__

@@ -68,7 +68,7 @@ foreach my $file ( @filenames ) {
 			my $fileM = $file_base.'M';
 
 			my ( $docket, $ppo, $name, $sig, $side ) = $file =~ /(\d\d\d\d\d)(\w\w)_?(\w*?)Sg(\d\d)Sd.(\w).PPF/i;
-print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
+#print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			while ( <A> ) {
 				my $line = $_;
 				next if $line =~ /^CIP3EndSheet/;

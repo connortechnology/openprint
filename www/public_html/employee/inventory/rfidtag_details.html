@@ -142,7 +142,7 @@ The following errors occurred:<br/>
 			</span>
 			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', "new Ajax.Updater('Log','_rfidtag_log.html', {method:'get', parameters: \$('f2').serialize()} );", '', 'Load' ); ) ?>
 		</p>
-		<div id="Log" style="display: none;"></div>
+		<div id="Log"></div>
 	</fieldset>
 </form>
 <? endif ( $$variable{'RFIDTag'}->id() ) ?>

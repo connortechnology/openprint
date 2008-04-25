@@ -27,6 +27,9 @@
 			my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
 			$Skid->rfidtag_id( $TAG->id() );
 			$$variable{'error'} .= $Skid->save();
+			if ( $Skid->empty() ) {
+				$$variable{'information'} .= sprintf('Skid <a href="/handheld/paper_inventory/skid.html?skid_id=%1$d">%1$d</a> is empty.<br/>', $Skid->id() );
+			} # end if
 		} # end if
 		$TAG->type('Skid') if ! $TAG->type();
 		$$variable{'error'} .= $TAG->save();
