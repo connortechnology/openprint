@@ -13,7 +13,7 @@ require openprint::Location;
 require openprint::Paper;
 require openprint::RFIDTag;
 
-my $debug = 0;
+my $debug = 1;
 
 sub find {
 	my %params = @_;
@@ -231,6 +231,33 @@ sub location {
 	return $$self{'location'};
 } # end if
 
+sub location_id {
+	my ( $self, $new ) = @_;
+
+	if ( $$self{'rfidtag_id'} ) {
+		my $Tag = new openprint::RFIDTag( $$self{'rfidtag_id'} );
+		if ( $new ) {
+			$Tag->location_id( $new );
+			$$self{'location_id'} = $new;
+		} elsif ( $Tag->location_id() != $$self{'location_id'} ) {
+			$$self{'location_id'} = $Tag->location_id();
+		} # end if
+	} elsif ( $new ) {
+		$$self{'location_id'} = $new;
+	} # end if
+	return $$self{'location_id'};
+} # end sub location_id
+
+sub Location {
+	my ( $self ) = @_;
+
+	if ( $$self{'rfidtag_id'} ) {
+		return new openprint::RFIDTag( $$self{'rfidtag_id'} )->Location();
+	} # end if
+
+	return new openprint::Location( $$self{'location_id'} );
+} # end sub Location
+
 sub created_on {
 	my $self = shift;
 	return $$self{'created_on'};
@@ -278,6 +305,15 @@ sub allocate {
 	sql::end_transaction( undef, $ac );
 } # end sub allocate
 
+sub empty {
+	my ( $self ) = @_;
+	foreach my $paper_id ( keys %{$$self{'Paper'}} ) {
+		if ( $$self{'Paper'}{$paper_id} > 0 ) {
+			return 0;
+		} # end if
+	} # end foreach
+	return 1;
+} # end sub empty
 
 1;
 __END__
