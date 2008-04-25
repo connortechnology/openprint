@@ -274,6 +274,15 @@ sub allocation {
 		return $allocated;
 	} # end if
 } # end sub allocatiosn
+
+# Checkout all paper on the skid
+sub checkout {
+	my ( $self ) = @_;
+	foreach my $Paper ( keys %{$$self{'Paper'}} ) {
+		
+	} # end foreach Paper
+} # end sub checkout
+
 sub previous {
 	my $self = shift;
 	if ( ! ( ( $_ ) = sql::execute( undef, undef, q{SELECT MAX(id) FROM Skids WHERE id<?}, $$self{'id'} ) ) ) {
