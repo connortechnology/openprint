@@ -72,6 +72,13 @@ Please select a Skid to view/edit.<br>
             <input type="checkbox" id="notempty" name="notempty" value="Y" <? echo ( 'checked="checked"' if $openprint::session{'/employee/inventory/skids.html?notempty'} eq 'Y' or ! exists $openprint::session{'/employee/inventory/skids.html?notempty'} ) ?> />
             <label class="radio" for="notempty">Not Empty</label>
 		</p>
+		<p>
+            <label>With/Without RFID?</label>
+            <input type="checkbox" id="withrfid" name="withrfid" <? echo ( $openprint::session{'/employee/inventory/skids.html?withrfid'} or ! exists $openprint::session{'/employee/inventory/skids.html?withrfid'} ? 'checked="checked"' : '' ) ?> />
+            <label class="radio" for="withrfid">With RFID</label>
+            <input type="checkbox" id="withoutrfid" name="withoutrfid" <? echo ( $openprint::session{'/employee/inventory/skids.html?withoutrfid'} or ! exists $openprint::session{'/employee/inventory/skids.html?withoutrfid'} ? 'checked="checked"' : '' ) ?> />
+            <label class="radio" for="notempty">Without RFID</label>
+		</p>
 		<p><label>Type:</label>
             <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/skids.html?Type'} ) or sets::isin( 'Sheet', split(';', $openprint::session{'/employee/inventory/skids.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeSheet">Sheet</label>

@@ -274,9 +274,9 @@ The following errors occurred:<br/>
 			<p>
 				<label>Location:</label>
 				<select id="ddmLocation" name="ddmLocation">
+					<option value="">select</option>
 					<? echo ( 
-						my @data = ( '', 'select', sql::execute( $log, $dbh, q{SELECT id, name FROM Locations ORDER BY lower(name)} ) );
-						return ssi::make_drop_down( \@data, $$variable{'Skid'} ? $$variable{'Skid'}->location_id() : $r->param('ddmLocation') );
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $$variable{'Skid'} ? $$variable{'Skid'}->location_id() : $r->param('ddmLocation') );
 						) ?>
 				</select>
 				<? echo ( join('',
