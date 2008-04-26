@@ -784,6 +784,22 @@ if ( $version < $new_version ) {
     $version = $new_version;
 } # end if
 
+my $new_version = 1925;
+if ( $version < $new_version ) {
+    print "Updating to version $new_version\n";
+    my $ac = sql::start_transaction( $dbh );
+    my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM User_Service_Defaults LIMIT 1', {} );
+    if ( ! $data ) {
+        $_ = misc::load_file( $log, q{../openprint/sql/User_Service_Defaults.sql});
+        foreach my $st ( split(';', $_ ) ) {
+            $dbh->do($st);
+        }
+    } # end if
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    sql::end_transaction( $dbh, $ac );
+    $version = $new_version;
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

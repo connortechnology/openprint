@@ -140,9 +140,13 @@
 <!--#include virtual="/includes/main/proj/templates/covers.html" -->
 <!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Covers' ) ?>
-
+<div id="OtherSpecifications">
+<fieldset><legend>Other Specifications</legend>
 		<!--#include virtual="/includes/main/proj/printing_type.html"-->
 		<!--#include virtual="/includes/main/proj/screen_type.html"-->
+</fieldset>
+</div>
+<br class="spacer"/>
 		<!--#include virtual="/includes/main/proj/colours_coatings.html"-->
 <br class="spacer"/>
 <? if ( $$variable{'ProjectTypeID'} ne 'Envelopes' ) ?>

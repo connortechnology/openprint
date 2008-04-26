@@ -8,123 +8,63 @@
 			display = 'none';
 		} // end if
 			
-			if ( div = $('CyanSpotColourSideOne') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('YellowSpotColourSideOne') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('MagentaSpotColourSideOne') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('CyanSpotColourSideTwo') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('YellowSpotColourSideTwo') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('MagentaSpotColourSideTwo') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('SpecialColoursSideOne') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('SpecialColoursSideOneLabel') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('CoatingsSideOne') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('SpecialColoursSideTwo') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('SpecialColoursSideTwoLabel') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('CoatingsSideTwo') ) {
-				div.style.display = display;
-			} // end if
+		if ( div = $('CyanSpotColourSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('YellowSpotColourSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('MagentaSpotColourSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('CyanSpotColourSideTwo') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('YellowSpotColourSideTwo') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('MagentaSpotColourSideTwo') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('SpecialColoursSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('SpecialColoursSideOneLabel') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('CoatingsSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('SpecialColoursSideTwo') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('SpecialColoursSideTwoLabel') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('CoatingsSideTwo') ) {
+			div.style.display = display;
+		} // end if
 
-			for ( var num = 8; num >= 1; num -= 1 ) {
-				if ( form.elements['chkSpecialSideOneColour' + num] ) {
-					form.elements['chkSpecialSideOneColour' + num].checked = false;
-				}
-				if ( form.elements['chkSpecialSideTwoColour' + num] ) {
-					form.elements['chkSpecialSideTwoColour' + num].checked = false;
-				}
-			} // end for
-			if ( div = $('ColourBars') ) {
-				div.style.display = display;
-			} // end if
-			if ( div = $('Plates') ) {
-				div.style.display = display;
-			} // end if
-	
-			if ( form.chkVarnishSpotGlossSideOne.checked ) {
-				form.chkVarnishSpotGlossSideOne.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-			if ( form.chkVarnishSpotMatteSideOne.checked ) {
-				form.chkVarnishSpotMatteSideOne.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-			if ( form.chkVarnishOverallGlossSideOne.checked ) {
-				form.chkVarnishOverallGlossSideOne.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-			if ( form.chkVarnishOverallMatteSideOne.checked ) {
-				form.chkVarnishOverallMatteSideOne.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-			if ( form.chkVarnishDryTrapSideOne.checked ) {
-				form.chkVarnishDryTrapSideOne.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-
-			if ( get_rdb_value( form, 'rdbAqueousSideOne' ) != 'None' ) {
-				set_rdb_value( form.rdbAqueousSideOne, 'None' );
-				alert("Digital Printing cannot do Aqueous Coating");
-			} // end if
-
-			if ( form.chkVarnishSpotGlossSideTwo.checked ) {
-				form.chkVarnishSpotGlossSideTwo.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-			if ( form.chkVarnishSpotMatteSideTwo.checked ) {
-				form.chkVarnishSpotMatteSideTwo.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-			if ( form.chkVarnishOverallGlossSideTwo.checked ) {
-				form.chkVarnishOverallGlossSideTwo.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-			if ( form.chkVarnishOverallMatteSideTwo.checked ) {
-				form.chkVarnishOverallMatteSideTwo.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-			if ( form.chkVarnishDryTrapSideTwo.checked ) {
-				form.chkVarnishDryTrapSideTwo.checked = false;
-				alert("Digital Printing cannot do varnish coatings.");
-			} // end if
-
-			var aqueous = get_rdb_value( form, 'rdbAqueousSideTwo' );
-			if ( aqueous != 'None' && aqueous != '' ) {
-				set_rdb_value( form.rdbAqueousSideTwo, 'None' );
-				alert("Digital Printing cannot do Aqueous Coating");
-			} // end if
-
-		calc('f1');
+		if ( div = $('ColourBars') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('Plates') ) {
+			div.style.display = display;
+		} // end if
+		calc(form.name);
 	}
 /* ]]> */  /* so (X)HTML validators ignore the javascript. */
 </script>
-<? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) ?>
-<p style="display: none;">
-	<label>Which type of printing would you like?</label>
-       <select name="PrintingType">
-            <? echo (
-
-                ssi::make_drop_down( [ '', 'No Preference', sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{'PrintingType'} );
-            ) ?>
-        </select>
+<? eval (
+	@{$$variable{'Types'}} = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} );
+) ?>
+<? if ( 1 < @{$$variable{'Types'}} ) ?>
+<p>
+	<label>Printing type:</label>
+	<select name="PrintingType" onchange="calc(this.form.name);">
+		<? echo (
+			ssi::make_drop_down( [ '', 'No Preference', map { $_, $_ } @{$$variable{'Types'}} ], $$variable{'PrintingType'} );
+		) ?>
+	</select>
 </p>
-<? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) ?>
+<? endif ( 1 < @{$$variable{'Types'}} ) ?>

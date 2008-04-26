@@ -48,6 +48,8 @@ sub insert_project_type {
 		my @defaults = sql::execute( $log, $dbh, $_ );
 		$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex=?};
 		push @defaults, sql::execute( $log, $dbh, $_, $project_type_index );
+		$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
+		push @defaults, sql::execute( $log, $dbh, $_, $openprint::session{'user_id'} );
 		
 		if ( $r->param('txtConventionalPlates') == 1 ) {
 			push @defaults, 'rdbPlates','Conventional';
@@ -106,6 +108,8 @@ sub insert_service {
 	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'ServiceType', $ServiceType->name(), 1 );
 	$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
 	my @defaults = sql::execute( $log, $dbh, $_, $ServiceType->id() );
+	$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
+	push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
 	while ( @defaults ) {
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, shift @defaults, shift @defaults, 1 );
 	} # end while

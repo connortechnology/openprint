@@ -188,6 +188,9 @@ Please select a company or user to obtain login information.<br/>
 				return $html . '</ul>';
 			) ?>
 		</fieldset>
+		<fieldset><legend>Service Defaults</legend>
+			<!--#include virtual="_service_defaults.html"-->
+		</fieldset>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<fieldset><legend>Assistant To</legend>
 			<? echo (

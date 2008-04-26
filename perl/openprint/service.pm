@@ -7,6 +7,7 @@ require openprint::pricing;
 require openprint::project;
 
 require openprint::Estimating::Cutting;
+require openprint::Estimating::Counting;
 require openprint::Estimating::Folding;
 require openprint::Estimating::Proofs;
 require openprint::Estimating::Scoring;
@@ -348,6 +349,10 @@ sub auto_calculate {
 		if ( openprint::Estimating::Scoring::neccessary( $Project ) ) {
 			push @{$services{'Scoring'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Scoring' );
 		} # end if
+	} # end if
+
+	if ( openprint::Estimating::Counting::neccessary( $Project ) ) {
+		push @{$services{'Counting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' ) if ! $services{'Counting'};
 	} # end if
 
 	foreach my $type ( keys %services ) {
