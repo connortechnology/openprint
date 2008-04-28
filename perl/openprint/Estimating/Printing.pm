@@ -964,66 +964,12 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-<<<<<<< HEAD:perl/openprint/Estimating/Printing.pm
 if ( $debug or 0 ) {
 	foreach my $P ( @Papers ) {
 $openprint::log->debug("Paper: " . $P->to_string() );
 	} # end foreach
 } # end if
 	my @possible_presses = sort { $a->strid() <=> $b->strid() } select_presses( $Project, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
-=======
-	my %project = (
-			'Add Grip Width',	$$specs{'GripWidth'},
-			'Add Grip Height',	$$specs{'GripHeight'},
-			'Add Colour Bar',	$$specs{'rdbColourBar'},
-			'image_width',		$$specs{'txtWidth'},
-			'image_height',		$$specs{'txtHeight'},
-			'BleedLocations',	join(',', @$specs{'chkBleedBottom','chkBleedTop','chkBleedLeft','chkBleedRight'}),
-			'Calliper',			$$specs{'txtSpecificStockCalliper'},
-			'CropMarkSpace',	$$specs{'txtCropMarkSpace'},
-			);
-# Paper is now an array ref
-
-	$project{'Binding'} = openprint::print::get_book_type( $Project );
-	if ( ! $$services{'NoBindery'} ) {
-		if ( $$services{'DieCutting'} ) {
-			$project{'NeedFolding'} = 0;
-			$project{'NeedScoring'} = 0;
-		} else {	
-			$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
-			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
-		} # end if
-
-		$project{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $log, $dbh, $project_index, $specs );
-	} else {
-		$project{'NeedScoring'} = 0;
-		$project{'NeedFolding'} = 0;
-		$project{'NeedCutting'} = 0;
-	} # end if
-	$project{'HasFolding'} = $$services{'Folding'} ? $$services{'Folding'}[0] : 0;
-	$project{'HasScoring'} = $$services{'Scoring'} ? $$services{'Scoring'}[0] : 0;
-	$project{'HasPerforating'} = $$services{'Perforating'} ? $$services{'Perforating'}[0] : 0;
-	$project{'HasDieCutting'} = $$services{'DieCutting'} ? $$services{'DieCutting'}[0] : 0;
-	$project{'HasCutting'} = $$services{'Cutting'} ? $$services{'Cutting'}[0] : 0;
-	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
-	@$specs{'NeedFolding','NeedCutting','NeedScoring'} = @project{'NeedFolding','NeedCutting','NeedScoring'};
-
-	# Need UVCoating
-	if ( 
-			($$specs{'SideOneUVCoatingType'} and ($$specs{'SideOneUVCoatingType'} ne 'None' )) or
-			($$specs{'SideTwoUVCoatingType'} and ($$specs{'SideTwoUVCoatingType'} ne 'None' )) ) {
-		$project{'NeedUVCoating'} = 1;
-		if ( ! $$services{'UVCoating'} ) {
-			push @{$$services{'UVCoating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'UVCoating' );
-		} # end if	
-		$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
-	} # end if
-
-# Do this once now, so we don't do it many times in calc_print_price
-	my @filtered_colours = filter_colours( @side_one_colours, @side_two_colours );
-
-	my @possible_presses = sort { $a->strid() <=> $b->strid() } select_presses( $project_index, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
->>>>>>> 70e5444db140c0825b196f6444bdfa1ece83291d:perl/openprint/Estimating/Printing.pm
 	if ( ! @possible_presses ) {
 		$$specs{'alert'} = 'There were no possible presses. Your project may be too large for us.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
