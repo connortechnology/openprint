@@ -763,8 +763,28 @@ if ( $version < $new_version ) {
     sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
     $version = $new_version;
 } # end if
-
 my $new_version = 1924;
+if ( $version < $new_version ) {
+    print "Updating to version $new_version\n";
+    my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM RFIDTags LIMIT 1', {} );
+    if ( ! $data ) {
+        my $ac = sql::start_transaction( $dbh );
+        $_ = misc::load_file( $log, q{../openprint/sql/RFID.sql});
+        foreach my $st ( split(';', $_ ) ) {
+            $dbh->do($st);
+        }
+        sql::end_transaction( $dbh, $ac );
+    } # end if
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skids LIMIT 1', {} );
+	if ( ! exists $$data{'rfidtag_id'} ) {
+		$dbh->do(q`alter table skids add rfidtag_id TEXT`);
+		$dbh->do(q`alter table papers add FOREIGN KEY (rfidtag_id) REFERENCES RFIDTags (id)`);
+	} # end if
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    $version = $new_version;
+} # end if
+
+my $new_version = 1925;
 if ( $version < $new_version ) {
     print "Updating to version $new_version\n";
     my $ac = sql::start_transaction( $dbh );
@@ -779,11 +799,6 @@ if ( $version < $new_version ) {
     sql::end_transaction( $dbh, $ac );
     $version = $new_version;
 } # end if
-
-
-$dbh->disconnect();
-1;
-__END__
 
 $dbh->disconnect();
 1;

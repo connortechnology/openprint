@@ -45,8 +45,8 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 				next;
 			} # end if
 
-			my ( $docket, $ppo, $name, $sig, $side ) = $file_base =~ /(\d\d\d\d\d)(\w\w)_?(\w*?)Sg(\d\d)Sd\.(\w)/i;
-print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
+			my ( $docket, $ppo, $name, $sig, $side ) = $file_base =~ /(\d\d\d\d\d)(\w\w)_?(.*?)Sg(\d\d)Sd\.(\w)/i;
+#print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			while ( <IN> ) {
 				my $line = $_;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
