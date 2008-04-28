@@ -787,7 +787,7 @@ sub calc {
 				next;
 			} # endif
 
-			next if (! signature_needs( $sig_specs ) ) 
+			next if (! signature_needs( $Project, $sig_specs ) ) 
 				and ( $$sig_specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' );
 
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
