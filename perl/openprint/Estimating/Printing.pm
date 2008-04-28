@@ -50,6 +50,7 @@ my %variables = (
 		'txtSignatureType' => ['save'],
 		'txtServiceDescription'	=> ['save'],
 		'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
+		'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
 		'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 		'StockPrice1'=>['save','output'], 'StockPrice2'=>['save','output'], 'StockPrice3'=>['save','output'],
 		'OverrideStockPrice1'=>['save'], 'OverrideStockPrice2'=>['save'], 'OverrideStockPrice3'=>['save'],
@@ -522,7 +523,7 @@ sub calc_from_imposition {
 		} else {
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'} );
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
@@ -559,6 +560,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 	# First, clean up all inputs
 	foreach my $qty_index ( 1 .. 3 ) {
@@ -574,7 +576,7 @@ sub calc {
 		} # end foreach
 	} # end foreach
 
-	if ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
+	if ( ($$specs{'ProjectType'} eq 'PresentationFolders') or (($$variable{'Group'} == 1 ) and sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
 		if ( $$specs{'rdbPocketSize'} and ( $$specs{'rdbPocketSize'} ne 'Other' ) ) {
 			$$specs{'PocketSize'} = $$specs{'rdbPocketSize'};	
 			$variables{'PocketSize'} = [ sets::union( 'output', @{$variables{'PocketSize'}} ) ];
@@ -587,11 +589,13 @@ sub calc {
 			$$specs{'alert'} .= 'Please select where you would like the pockets.';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
+	} # end if
 
+	if ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
 		if ( $$specs{'ddmProjectSize'} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
 # auto calc flat dimensions
-			$$specs{'txtWidth'} = $$specs{'txtFinalWidth'} * $$specs{'rdbPanels'};
+			$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'} * $$specs{'rdbPanels'};
 			my $pockets;
 			if ( $$specs{'rdbPanels'} == 2 ) {
 				$$specs{'chkPocketCenter'} = '';
@@ -609,7 +613,7 @@ sub calc {
 				$pockets += 1;
 			} # end if
 			$$specs{'rdbTemplateType'} = sprintf( '%dPanel%dPocket', $$specs{'rdbPanels'}, $pockets );
-			$$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'PocketSize'};
+			$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'} + $$specs{'PocketSize'};
 			$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
 			$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
 $openprint::log->debug("WIdth: $$specs{'txtWidth'} ");
@@ -621,7 +625,6 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 		
 		} # end if
 	} # end if
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	if ( $$specs{'txtSignatureType'} ) {
 
 		if ( $$specs{'txtSignatureType'} eq 'GateFolded Spreads' ) {
@@ -669,8 +672,35 @@ $$specs{'txtSpreadSize'} = $$specs{'GroupPageQuantity'};
 $variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
 $openprint::log->debug("SpreadSize: $$specs{'txtSpreadSize'}");
 			if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
-			if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
-	# Perfect bound requires more width on th cover to conver the calliiper	
+$openprint::log->debug("TemplateType: $$specs{rdbTemplateType}");
+				if ( sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'} * $$specs{'rdbPanels'};
+					my $pockets = 0;
+					if ( $$specs{'rdbPanels'} == 2 ) {
+						$$specs{'chkPocketCenter'} = '';
+						$variables{'chkPocketCenter'} = [ sets::exclude( ['output'], $variables{'chkPocketCenter'} ) ];
+					} # end if
+					if ( $$specs{'chkPocketLeft'} ) {
+						$$specs{'txtWidth'} += 0.75;
+						$pockets += 1;
+					} # end if
+					if ( $$specs{'chkPocketRight'} ) {
+						$$specs{'txtWidth'} += 0.75;
+						$pockets += 1;
+					} # end if
+					if ( $$specs{'chkPocketCenter'} ) {
+						$pockets += 1;
+					} # end if
+					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'} + $$specs{'PocketSize'};
+$openprint::log->debug("WIdth: $$specs{'txtWidth'} ");
+$openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
+				} else {
+					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'}*$$specs{'GroupPageQuantity'}/2;
+					$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
+				} # end if
+
+				if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+# Perfect bound requires more width on th cover to conver the calliiper	
 					my $finished_calliper = 0;
 					$_ = q{SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='txtSignatureType' AND NOT strValue='Cover Pages'};
 					my @signature_service_indices = sql::execute( $log, $dbh, $_, $project_index );
@@ -690,11 +720,10 @@ $openprint::log->debug("SpreadSize: $$specs{'txtSpreadSize'}");
 					} # end foreach signature
 
 					$openprint::log->debug("Cover size calc: $finished_calliper");
-					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$printing_specs{'txtFinalWidth'}*($$specs{'GroupPageQuantity'}/2) + $finished_calliper)*1000)/1000);
+					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper)*1000)/1000);
 				} else {
-					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$printing_specs{'txtFinalWidth'}*($$specs{'GroupPageQuantity'}/2)*1000)/1000);
+					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$specs{'txtWidth'}*1000)/1000);
 				} # end if
-				$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
 				$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
 				$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
 			} else {
@@ -1491,7 +1520,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		} # end if
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'} );
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if

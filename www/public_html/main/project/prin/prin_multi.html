@@ -92,7 +92,7 @@
 			</fieldset>
 			<br class="spacer"/>
 			<? echo (
-				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? and strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
+				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
 				if ( ! sets::isin( 1, \@Groups ) ) {
 					# Unshift so that cover is always first
 					unshift @Groups, 1;

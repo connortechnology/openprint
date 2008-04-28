@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -31,6 +31,7 @@ my @stitchers;
 my @variables = (
 		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'Markup1', 'Markup2', 'Markup3',
 		'MPrice1', 'MPrice2', 'MPrice3',
 		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
@@ -327,32 +328,32 @@ $openprint::log->debug("Loading imposition");
 			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'} );
 		} # end if
 
-			if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
-				my $Press = shift @Press;
-				my $add = 1;
-				if ( $Press->specification('Folding Capable') ) {
+		if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
+			my $Press = shift @Press;
+			my $add = 1;
+			if ( $Press->specification('Folding Capable') ) {
 
-					if ( $$services{'UVCoating'} ) {
-						$uv_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] ) if ! $uv_specs;
-						if ( $$uv_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Press->id() ) {
-							$add = 0;
-						} # end if
+				if ( $$services{'UVCoating'} ) {
+					$uv_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] ) if ! $uv_specs;
+					if ( $$uv_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Press->id() ) {
+						$add = 0;
 					} # end if
-					if ( $$services{'Aqueous'} ) {
-						$aq_specs = openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] ) if ! $aq_specs;
-						if ( $$aq_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Press->id() ) {
-							$add = 0;
-						} # end if
+				} # end if
+				if ( $$services{'Aqueous'} ) {
+					$aq_specs = openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] ) if ! $aq_specs;
+					if ( $$aq_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Press->id() ) {
+						$add = 0;
 					} # end if
-					if ( $add ) {
-						if ( $Press->specification('Sheeter') ne 'Y' ) {
-							@my_equipment = ( $Press );
-						} else {
-							unshift @my_equipment, $Press;
-						} # end if
+				} # end if
+				if ( $add ) {
+					if ( $Press->specification('Sheeter') ne 'Y' ) {
+						@my_equipment = ( $Press );
+					} else {
+						unshift @my_equipment, $Press;
 					} # end if
 				} # end if
 			} # end if
+		} # end if
 	} # end if
 
 	# If the stitching is happening on a piece of equipment that can't handle large signatures, then we need to cut them down instead of folding them.
@@ -472,7 +473,7 @@ $openprint::log->debug(sprintf('Found: %dx%d,%dout Max %dout', $Imposition->page
 
 			# FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 			if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
-$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}");
+#$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}");
 				$_ = $Equipment->fits( $Imposition->image_width(), $Imposition->image_height() );
 				if ( $_ ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit: $_<br/>";
@@ -772,6 +773,7 @@ sub calc {
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! int $$specs{"txtQuantity$qty_index"};
@@ -840,7 +842,7 @@ sub calc {
 		} # end if
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if

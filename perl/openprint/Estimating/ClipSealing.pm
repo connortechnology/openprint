@@ -9,7 +9,9 @@ my @variables = (
 	'SealQuantity','SealType_id',
 	'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 );
 
 sub variables {
@@ -35,6 +37,8 @@ sub calc {
 
     foreach my $qty_index ( 1 .. 3 ) {
         next if ! $Project->quantity($qty_index);
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
+		$$specs{'Markup'.$qty_index} =~ s/[^\-\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity() if ! $$specs{'txtQuantity'.$qty_index};
 
 		my %BestPrice;
@@ -104,7 +108,9 @@ sub calc {
 
         $$specs{"txtUnitPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{'Markup'.$qty_index}/100) );
+		} else {
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
     } # end foreach qty_index
     

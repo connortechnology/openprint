@@ -308,9 +308,9 @@ sub multipage_signatures {
 		} # end if
 	} # end foreach param
 
-foreach my $k ( keys %specified_pages ) {
-$openprint::log->debug("$k => $specified_pages{$k}" );
-} # end foreach
+#foreach my $k ( keys %specified_pages ) {
+#$openprint::log->debug("$k => $specified_pages{$k}" );
+#} # end foreach
 
 	if ( $$param{'rdbCover'} eq 'Different' ) {
 # now add a cover spread if we need one.
@@ -422,7 +422,8 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 				'ColourCoatingSideTwo8', 'ColourCoatingTypeSideTwo8', 'ColourCoatingColourSideTwo8','ColourCoatingCoverageSideTwo8',
 				'ColourCoatingSideTwo9', 'ColourCoatingTypeSideTwo9', 'ColourCoatingColourSideTwo9','ColourCoatingCoverageSideTwo9',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
-				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
+				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription','rdbTemplateType',
+				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
 		} # end foreach spec
@@ -534,9 +535,11 @@ sub publication_pages {
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
-				'txtSignatureType',
+				'txtSignatureType','rdbTemplateType',
+				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				) {
 			$$variable{$spec.$type} = $$sig_specs{$spec};
+$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");
 		} # end foreach spec
 	} # end foreach ss_id
 

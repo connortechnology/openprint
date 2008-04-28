@@ -32,6 +32,8 @@ my @variables = (
 	'txtQuantity',
 	'txtQuantity1','txtQuantity2','txtQuantity3',
 	'txtPrice1','txtPrice2','txtPrice3',
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1', 'Markup2', 'Markup3',
 );
 
 my @all_equipment;
@@ -130,7 +132,8 @@ sub calc {
 	} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
-		$$specs{'txtPrice'.$qty_index} = '';
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
+		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
 			next;
@@ -170,7 +173,11 @@ sub calc {
 		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 	} # end foreach
 
 	$log->debug("END SCORING!!!!!!!!!!!!!!!!!!");

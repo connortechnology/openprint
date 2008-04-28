@@ -25,6 +25,7 @@ require sql;
 my @variables = (
 	'txtItemsPerPackage','AccurateCount','bands_per_package',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+	'Markup1','Markup2','Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'txtPackageQuantity1',
@@ -39,6 +40,7 @@ sub variables {
 
 my @no_outputs = (
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1','Markup2','Markup3',
 	'txtQuantity1','txtQuantity2','txtQuantity3',
 	'txtItemsPerPackage','AccurateCount',
 	'rdbCardboardBacking',
@@ -81,6 +83,7 @@ sub calc {
 
 	foreach my $qty_index ( 1 .. 3 ) {
 
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -155,7 +158,7 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>',$price );
 		$$specs{'txtPackageQuantity'.$qty_index} = $package_qty;
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # endif

@@ -153,6 +153,24 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 		return 'uncalculated';
 	} # end if
 
+	if ( ($$specs{'rdbCover'} eq 'Different') and sets::isin($$specs{'rdbTemplateType1'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+		if ( $$specs{'rdbPocketSize1'} and ( $$specs{'rdbPocketSize1'} ne 'Other' ) ) {
+			$$specs{'PocketSize1'} = $$specs{'rdbPocketSize1'};	
+		} else {
+			delete $$specs{'PocketSize1'};
+		} # end if
+		if ( ! $$specs{'rdbPanels1'} ) {
+			$$specs{'alert'} .= 'Please select the number of panels.';
+			return $$specs{'Status'} = 'uncalculated';
+		} elsif ( ! $$specs{'rdbPocketSize1'} ) {
+			$$specs{'alert'} .= 'Please select the size of the pockets.';
+			return $$specs{'Status'} = 'uncalculated';
+		} elsif ( ! ( $$specs{'chkPocketCenter1'} or $$specs{'chkPocketLeft1'} or $$specs{'chkPocketRight1'} ) ) {
+			$$specs{'alert'} .= 'Please select where you would like the pockets.';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+	} # end if
+
 	return 'calculated';
 } # end sub calc
 

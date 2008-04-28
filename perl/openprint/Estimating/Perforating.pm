@@ -32,6 +32,8 @@ my @stitchers;
 my @variables = (
 	'txtQuantity1','txtQuantity2','txtQuantity3',
     'txtPrice1','txtPrice2','txtPrice3',
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1', 'Markup2', 'Markup3',
 );
 sub variables {
 	my $p_id = shift;
@@ -89,12 +91,14 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 
 	$log->debug("BEGIN PERFING!!!!!!!!!!!!!!!!!!");
-	if ( $Project->Type()->strid() eq 'MultiPagePublication'  ) {
-		$$specs{'alert'} = 'We are unable to auto-calculate a price for perforation on a multipage publication. Please call for pricing.';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
+	#if ( $Project->Type()->strid() eq 'MultiPagePublication'  ) {
+		#$$specs{'alert'} = 'We are unable to auto-calculate a price for perforation on a multipage publication. Please call for pricing.';
+		#return $$specs{'Status'} = 'uncalculated';
+	#} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
 			next;
@@ -133,7 +137,11 @@ sub calc {
 			$status = 'uncalculated';
 		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 	} # end foreach quantities
 
 	$log->debug("END PERFING!!!!!!!!!!!!!!!!!!");

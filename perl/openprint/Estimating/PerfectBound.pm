@@ -39,6 +39,8 @@ my %variables = (
         'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],
         'txtRunTime1'=>['save'], 'txtRunTime2'=>['save'], 'txtRunTime3'=>['save'],
 		'glue_id' => ['save'], 'override_glue_id' => ['save'],
+		'Markup1'=>['save'], 'Markup2'=>['save'], 'Markup3'=>['save'],
+		'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
         );
 
 sub variables {
@@ -222,6 +224,7 @@ sub calc {
 
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
 		foreach my $qty_index ( 1 .. 3 ) {
+			next if ! $Project->quantity($qty_index);
 			$$specs{'txtCalliper'} = 0;
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -264,7 +267,8 @@ sub calc {
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
-		$$specs{'txtPrice'.$qty_index} = '0.00';
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g; ;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf( $openprint::config{'UnitPriceFormat'}, 0 );
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
@@ -389,11 +393,15 @@ $$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f 
 		} # end foreach Equipment
 
 		if ( $$bestPrice{'Equipment'} ) {
-		$$specs{'ddmEquipment'.$qty_index} = $$bestPrice{'Equipment'}->id();
+			$$specs{'ddmEquipment'.$qty_index} = $$bestPrice{'Equipment'}->id();
 		} else {
-		$$specs{'ddmEquipment'.$qty_index} = '';
+			$$specs{'ddmEquipment'.$qty_index} = '';
 		} # end if
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'Price'} );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'Price'}*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'Price'} / $qty );
     } # end foreach
 

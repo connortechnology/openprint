@@ -34,6 +34,7 @@ my @stitchers;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'Markup1','Markup2','Markup3',
 		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
         'MPrice1', 'MPrice2', 'MPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -744,7 +745,7 @@ if ( 1 ) {
 		if ( $$specs{"OverridePrice$qty_index"} eq 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
 		} # end if
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
