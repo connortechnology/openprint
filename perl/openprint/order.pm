@@ -486,8 +486,7 @@ $openprint::log->debug("Making order from quote");
 	) = sql::execute( $log, $dbh, $_, $order_id );
 
 	if ( $$variable{'txtCompanyName'} eq '' ) {
-		$_ = q{SELECT strName, strAddress1, strAddress2, strCity, strProvState, strPostalCode, strCountry, strPhone, strExt, strFax
-			FROM Company WHERE Index=?};
+		$_ = q{SELECT strLegalBusName, strAddress1, strAddress2, strCity, strProvState, strPostalCode, strCountry, strPhone, strExt, strFax FROM Company WHERE Index=?};
 		 @$variable{'txtCompanyName',
 		 'txtAddress1',
 		 'txtAddress2',

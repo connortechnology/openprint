@@ -1,7 +1,7 @@
 <? eval (
 	require openprint::StockPurpose;
    if ( $openprint::param{StartYear} ) {
-		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','purpose_id' ) {
+		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','purpose_id','withrfid','withoutrfid' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 				$openprint::session{'/employee/inventory/skids.html?'.$key} = join(';', @{$openprint::param{$key}} );
 			} else {
@@ -78,6 +78,9 @@
                     next if ! $empty;
                 } # end if
                 next if ! $iftype;
+
+				next if $Skid->rfidtag_id() and ! $openprint::session{'/employee/inventory/skids.html?withrfid'};
+				next if ( ! $Skid->rfidtag_id() ) and ! $openprint::session{'/employee/inventory/skids.html?withoutrfid'};
 
 				$html .= "<tr$rowclass>";
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );

@@ -52,6 +52,16 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
+		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
+		push @values, @params{'updated_on_start','updated_on_end'};
+	} elsif ( $params{'updated_on_start'} ) {
+		$sql .= ' AND updated_on >= ?';
+		push @values, $params{'updated_on_start'};
+	} elsif ( $params{'updated_on_end'} ) {
+		$sql .= ' AND updated_on <= ?';
+		push @values, $params{'updated_on_end'};
+	} # end if
 	if ( $params{'name'} ) {
 		$sql .= ' AND name=?';
 		push @values, $params{'name'};

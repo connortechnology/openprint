@@ -191,6 +191,7 @@ sub delete {
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Details WHERE QuoteIndex=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE QuoteIndex=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE QuoteIndex=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Quote_Log WHERE quote_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quotes WHERE Index=?', $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
 	openprint::logs::insertLogRecord('11', "Quote Index: " . $$self{'id'},);
