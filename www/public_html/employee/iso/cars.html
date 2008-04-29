@@ -44,6 +44,7 @@ Please select a CAR to view/edit.<br>
 	</fieldset>
 </form>
 <form id="f2" name="f2" method="post" action="cars.html">
+	<input type="hidden" name="btnFunction" />
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<? eval (
 			if ( ! $openprint::session{'/employee/iso/cars.html?StartYear'} ) {
@@ -74,12 +75,20 @@ Please select a CAR to view/edit.<br>
 			</span>
 		</p>
 		<p>
+			<label>Status:</label>
+			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( (( ! exists $openprint::session{'/employee/iso/cars.html?status'} ) or sets::isin( 'Open', split(';',$openprint::session{'/employee/iso/cars.html?status'}) ) ) ? 'checked="checked"' : '' ) ?>
+			<label class="radio" for="statusOpen">Open</label>
+			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( sets::isin( 'Closed', split(';',$openprint::session{'/employee/iso/cars.html?status'}) ) ? 'checked="checked"' : '' ) ?>
+			<label class="radio" for="statusClosed">Closed</label>
+		</p>
+		<p>
 			<label>Docket:</label>
 			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/iso/cars.html?Docket'} ) ?>"  />
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_cars(f2);", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f2.btnFunction.value='Download in CSV Format';f2.submit();", '', 'Download' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'car.html', 'Add New CAR' ),
 				); ) ?>
 		</p>

@@ -42,10 +42,13 @@ require sql;
 	'reprint_approval'	=> 'reprint_approval',
 	'artwork'			=> 'artwork',
 	'reprint_on'		=> 'reprint_on',
+	'reprint_charge'	=> 'reprint_charge',
 	'approved_by_id'	=> 'approved_by_id',
 	'created_on'		=> 'created_on',
 	'approved_on'		=> 'approved_on',
 	'updated_on'		=> 'updated_on',
+	'printed_on'		=> 'printed_on',
+	'identified_by'		=> 'identified_by',
 	'deleted'			=> 'deleted',
 );
 
@@ -63,6 +66,7 @@ require sql;
 	'approved_by_id'	=> undef,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
+	'approved_on'	=> undef,
 	'deleted'		=> 0,
 );
 

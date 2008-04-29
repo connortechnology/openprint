@@ -56,6 +56,26 @@ sub find {
 			push @values, $params{'rfidtag_id'};
 		} # end if
 	} # end if
+	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
+		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
+		push @values, @params{'updated_on_start','updated_on_end'};
+	} elsif ( $params{'updated_on_start'} ) {
+		$sql .= ' AND updated_on >= ?';
+		push @values, $params{'updated_on_start'};
+	} elsif ( $params{'updated_on_end'} ) {
+		$sql .= ' AND updated_on <= ?';
+		push @values, $params{'updated_on_end'};
+	} # end if
+	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
+		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
+		push @values, @params{'created_on_start','created_on_end'};
+	} elsif ( $params{'created_on_start'} ) {
+		$sql .= ' AND created_on >= ?';
+		push @values, $params{'created_on_start'};
+	} elsif ( $params{'created_on_end'} ) {
+		$sql .= ' AND created_on <= ?';
+		push @values, $params{'created_on_end'};
+	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 

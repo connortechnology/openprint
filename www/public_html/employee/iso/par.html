@@ -28,6 +28,7 @@
 	}
 </style>
 <div id="PAR">
+	<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>
 		<h3>PAR ID: <span id="par_id"><? echo ( $$variable{'PAR'}->id() ) ?></span></h3>
 		<? echo (
 			my $html;

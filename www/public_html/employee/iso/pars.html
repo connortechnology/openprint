@@ -44,6 +44,7 @@ Please select a PAR to view/edit.<br>
 	</fieldset>
 </form>
 <form id="f2" name="f2" method="post" action="pars.html">
+	<input type="hidden" name="btnFunction" />
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<? eval (
 			if ( ! $openprint::session{'/employee/iso/pars.html?StartYear'} ) {
@@ -73,9 +74,17 @@ Please select a PAR to view/edit.<br>
 			<select name="EndDay"><option value="">select</option><?EndDays?></select>
 			</span>
 		</p>
+		<p>
+			<label>Status:</label>
+			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( (( ! exists $openprint::session{'/employee/iso/cars.html?status'} ) or sets::isin( 'Open', split(';',$openprint::session{'/employee/iso/cars.html?status'}) ) ) ? 'checked="checked"' : '' ) ?>
+			<label class="radio" for="statusOpen">Open</label>
+			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( sets::isin( 'Closed', split(';',$openprint::session{'/employee/iso/cars.html?status'}) ) ? 'checked="checked"' : '' ) ?>
+			<label class="radio" for="statusClosed">Closed</label>
+		</p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_pars(f2);", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f2.btnFunction.value='Download in CSV Format';f2.submit();", '', 'Download' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'par.html', 'Add New PAR' ),
 				); ) ?>
 		</p>
