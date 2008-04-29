@@ -140,7 +140,8 @@ The following errors occurred:<br/>
 			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidtag_details.html?EndMonth'} ? $openprint::session{'/employee/inventory/rfidtag_details.html?EndMonth'} : $$variable{'Month'} ); ) ?></select>
 			<select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidtag_details.html?EndDay'} ? $openprint::session{'/employee/inventory/rfidtag_details.html?EndDay'} : $$variable{'Day'} ); ) ?></select>
 			</span>
-			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', "new Ajax.Updater('Log','_rfidtag_log.html', {method:'get', parameters: \$('f2').serialize()} );", '', 'Load' ); ) ?>
+			<select name="limit" style="width:auto;"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
+			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', "\$('Log').innerHTML='Loading...';new Ajax.Updater('Log','_rfidtag_log.html', {method:'get', parameters: \$('f2').serialize()} );", '', 'Load' ); ) ?>
 		</p>
 		<div id="Log"></div>
 	</fieldset>
