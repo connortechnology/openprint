@@ -199,7 +199,7 @@ sub calc {
 		$$specs{'txtPackageWeight'.$qty_index} = sprintf('%.2f', $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'.$qty_index} );
 
 		if ( $$specs{'txtItemsPerPackage'.$qty_index} ) {
-			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
+			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{"txtPackageWeight$qty_index"}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
 		} # end if
 		$qty = ceil( $$specs{'txtItemsPerPackage'.$qty_index} ? $qty/$$specs{'txtItemsPerPackage'.$qty_index} : 0 );
 
