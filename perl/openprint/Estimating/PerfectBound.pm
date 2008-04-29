@@ -20,7 +20,7 @@ use strict;
 require openprint::service;
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 
 my %variables = (
         'ProjectIndex'=>[],'ServiceIndex'=>[],
@@ -350,13 +350,13 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $error;
 			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 			my $qty = $$specs{'txtQuantity'.$qty_index};
-$openprint::log->debug("QTY: $qty " . $$specs{'txtPrice'.$qty_index});
+#$openprint::log->debug("QTY: $qty " . $$specs{'txtPrice'.$qty_index});
 			if ( $qty and ! (1*$$specs{'txtPrice'.$qty_index}) ) {
-$openprint::log->debug("uncalc");
+#$openprint::log->debug("uncalc");
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end foreach
-$openprint::log->debug("calc");
+#$openprint::log->debug("calc");
 		return $$specs{'Status'} = 'calculated';
 	} # end if
 	
@@ -531,7 +531,7 @@ sub get_price {
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 
 	$price{'Price'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'} + $price{'GluePrice'}{'Total'};
-$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
+#$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
 	return \%price;
 } # end sub get_price
 
@@ -585,7 +585,7 @@ sub runtime {
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $makereadytime = $Equipment->specification( 'Pocket Make Ready' ) * 60;
-	$openprint::log->debug("MakeReadyTime: $makereadytime");
+	#$openprint::log->debug("MakeReadyTime: $makereadytime");
 	$runTime += $pockets * $makereadytime;
 
 # Calculate Full Passes
