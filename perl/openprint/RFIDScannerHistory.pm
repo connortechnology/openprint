@@ -56,6 +56,25 @@ sub find {
 			push @values, $params{'rfidtag_id'};
 		} # end if
 	} # end if
+	if ( exists $params{'scanner_id'} ) {
+		if ( ref $params{'scanner_id'} eq 'ARRAY' ) {
+			$sql .= ' AND scanner_id IN ('. join(',', map {'?'} @{$params{'scanner_id'}} ) . ')';
+			push @values, @{$params{'scanner_id'}};
+		} else {
+			$sql .= ' AND scanner_id=?';
+			push @values, $params{'scanner_id'};
+		} # end if
+	} # end if
+	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
+		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
+		push @values, @params{'updated_on_start','updated_on_end'};
+	} elsif ( $params{'updated_on_start'} ) {
+		$sql .= ' AND updated_on >= ?';
+		push @values, $params{'updated_on_start'};
+	} elsif ( $params{'updated_on_end'} ) {
+		$sql .= ' AND updated_on <= ?';
+		push @values, $params{'updated_on_end'};
+	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 

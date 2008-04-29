@@ -2,14 +2,6 @@
 <h3>Part 3 (To be completed by recipient)</h3>
 <table class="View">
 	<tr><td colspan="10">CORRECTIVE ACTION</td></tr>
-<? if ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
-	<tr>
-		<td colspan="2">Reprint Approved:</td>
-		<td colspan="3"><? echo ( $$variable{'CAR'}->reprint_approval() ) ?></td>
-		<td colspan="2">Approved by:</td>
-		<td colspan="3"><? hecho ( new openprint::User( $$variable{'CAR'}->approved_by_id())->name() ) ?></td>
-	</tr>
-<? endif ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
 	<tr><td colspan="10"><? hecho ( $$variable{'CAR'}->action() ) ?></td></tr>
 	<tr>
 		<td colspan="1">Recipient:</td>
