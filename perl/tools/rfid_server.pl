@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -w -T
 use lib '/etc/apache2/lib/perl';
 use Net::Server::PreFork;
 
@@ -9,6 +9,8 @@ require openprint::RFIDScanner;
 require openprint::RFIDScannerHistory;
 require openprint::RFIDTag;
 require logger;
+require sets;
+require sql;
 require Date::Format;
 
 use openprint ();
@@ -91,15 +93,12 @@ sub process_request {
 				} # end if
 				if ( $Scanner->type() eq 'Mobile' ) {
 					if ( $Tag->type() eq 'Location' ) {
-						$self->log(1, sprintf('%s : %s : getting histyo', $date, $self->{server}->{peeraddr} ));
-						my @location_ids = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>'10');
-						$self->log(1, sprintf('%s : %s : pastlocations %s', $date, $self->{server}->{peeraddr},join(',', @location_ids) ));
-						if ( ! sets::isin( $Scanner->location_id(), \@location_ids ) ) {
-							$self->log(1, sprintf('%s : %s : saving scanner location', $date, $self->{server}->{peeraddr} ));
+						#$self->log(1, sprintf('%s : %s : getting histyo', $date, $self->{server}->{peeraddr} ));
+						my @location_ids = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>3);
+						$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
+						if ( ! sets::isin( $Tag->location_id(), \@location_ids ) ) {
 							$Scanner->location_id( $Tag->location_id() );
-							$self->log(1, sprintf('%s : %s : saving scanner location_id', $date, $self->{server}->{peeraddr} ));
 							my $e = $Scanner->save();
-							$self->log(1, sprintf('%s : %s : saved scanner location_id', $date, $self->{server}->{peeraddr} ));
 							$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
 						} # end if
 					} elsif ( $Scanner->location_id() != $Tag->location_id() ) {
