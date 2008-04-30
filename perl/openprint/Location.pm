@@ -30,6 +30,9 @@ sub find {
 		if ( $params{'order_by'} ) {
 		$sql .= " ORDER BY $params{'order_by'}";
 		} # en if
+		if ( $params{'order'} ) {
+		$sql .= " ORDER BY $params{'order'}";
+		} # en if
 		my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 		return map { new openprint::Location( $_->{id}, $_ ) } @$data;
 	} # end if

@@ -1,6 +1,6 @@
 <? eval (
    if ( $openprint::param{StartYear} ) {
-		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
+		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','status' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 				$openprint::session{'/employee/iso/cars.html?'.$key} = join(';', @{$openprint::param{$key}} );
 			} else {
@@ -22,7 +22,7 @@
 			'/employee/iso/cars.html?EndYear',
 			'/employee/iso/cars.html?EndMonth',
 			'/employee/iso/cars.html?EndDay'} ),
-		'docket'	=>	$openprint::session{'/employee/iso/cars.html/Docket'},
+		'docket'	=>	$openprint::session{'/employee/iso/cars.html?Docket'},
 		'order'		=>	'id',
 		'deleted'	=>	0,
 		);
@@ -35,22 +35,22 @@
 			<th align="left" width="75">CAR ID</th>
 			<th align="left" width="75">Issued On</th>
 			<th align="left" width="60">Docket</th>
+			<th align="left" width="60">Status</th>
 			<th align="left">Problem</th>
 		</tr>
 		<? echo (
 			my $html;
 			my $rowclass;
 			foreach my $CAR ( @{$$variable{'CARs'}} ) {
+				next if $CAR->part4_signed_on() and ! sets::isin( 'Closed', split(';', $openprint::session{'/employee/iso/cars.html?status'} ) );
+				next if (!$CAR->part4_signed_on()) and ! sets::isin( 'Open', split(';', $openprint::session{'/employee/iso/cars.html?status'} ) );
 				$html .= "<tr$rowclass>";
 				$html .= sprintf( '<td class="unprintable"><input type="checkbox" name="cars" value="%d"/></td>', $$CAR{'id'} );
 				$html .= sprintf( '<td><a href="car.html?car_id=%d">%d</a></td>', $$CAR{'id'}, $$CAR{'id'}, );
 				$html .= sprintf( '<td><a href="car.html?car_id=%d">%s</a></td>', $$CAR{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($CAR->issued_on()) ), );
-				$html .= '<td>';
-				$html .= $CAR->docket();
-				$html .= '</td>';	
-				$html .= '<td>';
-				$html .= $CAR->problem();
-				$html .= '</td>';	
+				$html .= '<td>'. $CAR->docket(). '</td>';	
+				$html .= '<td>'. ( $CAR->part4_signed_on() ? 'Closed' : 'Open' ). '</td>';	
+				$html .= '<td>'.$CAR->problem().'</td>';	
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach CAR

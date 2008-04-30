@@ -53,7 +53,7 @@ $openprint::log->debug('checkdate: ' . Date::Calc::check_date( @openprint::sessi
 <? if ( @{$$variable{'RFIDTags'}} ) ?>
 <form id="RFIDTagResults" name="RFIDTagResults" action="rfidtags.html" method="post">
 	<table class="List">
-		<tr>
+		<tr height="25">
 			<th width="10"><input type="checkbox" onclick="select_all( this.form, 'rfidtags', this.checked );"/></th>
 			<th align="left" width="200">RFIDTag ID</th>
 			<th align="left" width="115">Date Added</th>
