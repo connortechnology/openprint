@@ -18,7 +18,7 @@ $log->debug("skid_id: $openprint::param{'skid_id'}");
 				<th align="left">Comment</th>
 			</tr>
 			};
-			my @data = sql::execute( $log, $dbh, q{SELECT updatetime, user_id, delta, instock, comment, poindex, paper_id FROM Paper_Inventory WHERE skid_id=? AND paper_id=? ORDER BY updatetime},
+			my @data = sql::execute( $log, $dbh, q{SELECT updated_on, user_id, delta, instock, comment, poindex, paper_id FROM Paper_Inventory WHERE skid_id=? AND paper_id=? ORDER BY updated_on},
 			$openprint::param{'skid_id'},
 			$paper_id,
 			);

@@ -30,7 +30,7 @@ sub create_image {
 	if ( ! -e $output_path ) {
 		$r->log->debug("makeing $output_path");
 		if ( ! mkdir $output_path ) {
-			$r->log->error("Unable to mkdir $output_path");
+			$r->log->error("Unable to mkdir $output_path $!");
 			return;
 		}
 	}
@@ -55,8 +55,6 @@ sub handler {
 
 	my @path = split('/', $r->filename);
 	my $filename = pop @path;
-	my $template = pop @path;
-	my $path = join('/', @path);
 
 	my ( $selected ) = $filename =~ /^(.*).png$/;
 	$r->log->debug("Path: ".$r->filename." Filename: $filename, selected: $selected");
@@ -72,6 +70,8 @@ sub handler {
 		
 	my @Locations = openprint::Location::find('name'=>$selected);
 	if ( @Locations and $Locations[0]->parent_id() ) {
+		pop @path;
+		my $path = join('/', @path );
 		my $Location = $Locations[0];
 
 		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size, $atime,$mtime,$ctime,$blksize,$blocks);

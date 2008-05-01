@@ -10,17 +10,18 @@
 		$$variable{'Selected'} = shift @locations;
 	} elsif ( $openprint::param{'selected_id'} ) {
 		$$variable{'Selected'} = new openprint::Location( $openprint::param{'selected_id'} );
+		$$variable{'Location'} = $$variable{'Selected'}->Parent();
 	} # end if
 	if ( ! $$variable{'Location'} ) {
-	if ( $openprint::param{'location_id'} ) {
-		$$variable{'Location'} = new openprint::Location( $openprint::param{'location_id'} );
-	} else {
-		$$variable{'Location'} = new openprint::Location( 1 );
+		if ( $openprint::param{'location_id'} ) {
+			$$variable{'Location'} = new openprint::Location( $openprint::param{'location_id'} );
+		} else {
+			$$variable{'Location'} = new openprint::Location( 1 );
+		} # end if
 	} # end if
-	} # end if
-	if ( defined $openprint::param{'parent'} and $$variable{'Location'}->parent() ) {
-		$$variable{'Location'} = $$variable{'Location'}->parent();
-	} # end if
+	#if ( defined $openprint::param{'parent'} and $$variable{'Location'}->parent() ) {
+		#$$variable{'Location'} = $$variable{'Location'}->parent();
+	#} # end if
 	$$variable{'MapFile'} = $$variable{'Selected'} ? join('/', $$variable{'Location'}->name(), $$variable{'Selected'}->name() ) : $$variable{'Location'}->name();
 
 	my $html;
@@ -43,9 +44,9 @@
 			$html .= sprintf(q{ onmouseover="mouseOver('MapImage','/images/maps/%1$s');"}, $$variable{'Location'}->name() . '/' . $Region->name().'.png' );
 			$html .= sprintf(q{ onmouseout="mouseOut('MapImage','/images/maps/%1$s');"}, $$variable{'MapFile'}.'.png' );
 			if ( $$variable{'Selected'} ) {
-				$html .= sprintf(q` onclick="ddm_select_by_value($('location_id'), %1$d );new Ajax.Updater('Map','_map.html', {method:'get',parameters:{location_id:%2$d,selected_id:%3$d}} );"/>`, $Region->id(), ($Region->children() ? ($Region->id(),'') : ($Region->parent_id(), $$variable{'Selected'}->id() )) );
+				$html .= sprintf(q` onclick="ddm_select_by_value($('location_id'), %1$d );new Ajax.Updater('Map','_map.html', {method:'get',parameters:{location_id:%2$d,selected_id:%3$d}} );"/>`, $Region->id(), ($Region->children() ? ($Region->parent_id(),$Region->id()) : ($Region->parent_id(), $$variable{'Selected'}->id() )) );
 			} else {
-				$html .= sprintf(q` onclick="ddm_select_by_value($('location_id'), %1$d );new Ajax.Updater('Map','_map.html', {method:'get',parameters:{location_id:%2$d}} );"/>`, $Region->id(), $Region->id() );
+				$html .= sprintf(q` onclick="ddm_select_by_value($('location_id'), %1$d );new Ajax.Updater('Map','_map.html', {method:'get',parameters:{location_id:%2$d,selected_id:%3$d}} );"/>`, $Region->id(), $Region->children() ? ($Region->id(), '') : ($Region->parent_id(), $Region->id() ) );
 			} # end if
 		} # end foreach
 		return $html;
