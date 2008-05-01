@@ -28,6 +28,7 @@ my $debug = 1;
 );
 
 %transforms = (
+  'updated_on'    =>  ['s/.*/NOW()/'],
 );
 
 %defaults = (

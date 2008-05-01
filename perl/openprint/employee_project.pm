@@ -632,13 +632,17 @@ sub is_sig_complete {
 	my ( $r, $log, $dbh, $project_index, $signature_service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-	if ( $r->param("rdbPressComplete-$$printing_specs{'SignatureIndex'}") ne 'Yes' ) {
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$printing_specs{'SignatureIndex'} incomplete." );
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+	if ( $r->param("rdbPressComplete-$$sig_specs{'SignatureIndex'}") ne 'Yes' ) {
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} incomplete." );
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Ordered' );
 		return 0;
 	} # end if
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$printing_specs{'SignatureIndex'} complete." );
+	if ( $openprint::session{'user_id'} != $openprint::param{"operator_id-$$sig_specs{'SignatureIndex'}"} ) {
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} complete for " . new openprint::User( $openprint::param{"operator_id-$$sig_specs{'SignatureIndex'}"} )->name() );
+	} else {
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} complete." );
+	} # end if
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
