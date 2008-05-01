@@ -24,7 +24,16 @@ sub create_image {
 	my ($path, $Location) = @_;
 
 	my $image = new Image::Magick;
+	my $output_path = join('/', $path, $Location->parent()->name());
 	$image->Read(join('/', $path, $Location->parent()->name().'.png'));
+	$r->log->debug("$output_path");
+	if ( ! -e $output_path ) {
+		$r->log->debug("makeing $output_path");
+		if ( ! mkdir $output_path ) {
+			$r->log->error("Unable to mkdir $output_path");
+			return;
+		}
+	}
 	$r->log->debug("Drawing location");
 	$image->Draw(stroke=>'red', primitive=>'rectangle', points=>join(',',map{$_-1} split(',',$Location->coordinates())));
 	my $e = $image->Write( join('/', $path, $Location->parent()->name(),$Location->name().'.png' ) );
@@ -50,7 +59,17 @@ sub handler {
 	my $path = join('/', @path);
 
 	my ( $selected ) = $filename =~ /^(.*).png$/;
-	$r->log->debug("Filename: $filename, template: $template selected: $selected");
+	$r->log->debug("Path: ".$r->filename." Filename: $filename, selected: $selected");
+	if ( ! $selected ) {
+		if ( ! -e $r->filename ) {
+	$r->log->debug("Trying to make " . $r->filename );
+			if ( ! mkdir $r->filename ) {
+				$r->log->error("Unable to mkdir ".$r->filename . ':' . $!);
+			}
+			return;
+		}
+	}
+		
 	my @Locations = openprint::Location::find('name'=>$selected);
 	if ( @Locations and $Locations[0]->parent_id() ) {
 		my $Location = $Locations[0];
