@@ -25,6 +25,11 @@ sub create_image {
 
 	my $image = new Image::Magick;
 	my $output_path = join('/', $path, $Location->parent()->name());
+	if ( ! -e join('/', $path, $Location->parent()->name().'.png') ) {
+		$r->log->debug("No template at " . join('/', $path, $Location->parent()->name().'.png') );
+		return;
+	} # en dif
+		
 	$image->Read(join('/', $path, $Location->parent()->name().'.png'));
 	$r->log->debug("$output_path");
 	if ( ! -e $output_path ) {
