@@ -3,7 +3,10 @@
 
 	$openprint::param{'skid_id'} =~ s/\D//g;
 	$openprint::param{'rfidtag_id'} =~ s/\D//g;
-
+	if ( length $openprint::param{'rfidtag_id'} != 15 ) {
+		$$variable{'error'} = 'Invalid RFID Tag # ' . $openprint::param{'rfidtag_id'} . ' : ' . length $openprint::param{'rfidtag_id'};
+		return;
+	} # end if
 	@$variable{'skid_id','rfidtag_id'} = @openprint::param{'skid_id','rfidtag_id'};
 
 	if ( ! $openprint::param{'rfidtag_id'} ) {
@@ -21,8 +24,8 @@
 		} # end if
 	} # end if
 
-	$TAG->location_id( $openprint::param{'location_id'} ) if $openprint::param{'location_id'};
 	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
+		$TAG->location_id( $openprint::param{'location_id'} ) if $openprint::param{'location_id'};
 		if ( $openprint::param{'skid_id'} ) {
 			my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
 			$Skid->rfidtag_id( $TAG->id() );
@@ -51,12 +54,20 @@ $openprint::log->error($$variable{'error'});
 	<fieldset>
 		<p>
 			<label for="rfidtag_id">RFID #:</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);this.form.submit();" onfocus="if(this.value.length>16){this.value='';}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "f1.btnFunction.value='';f1.submit();", '', 'Go' ) ) ?>
 		</p>
+		<hr/>
+		<p>
+			<label>Tag #:</label>
+			<? echo ( $$variable{'RFIDTag'}->id() ) ?>
+		</p>
+		<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 		<p>
 			<label for="skid_id">Skid #:</label>
-			<input type="text" id="skid_id" name="skid_id" value="<?skid_id?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
+			<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
 		</p>
+		<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 		<p>
 			<label for="location_id">Location:</label>
 			<select id="location_id" name="location_id">

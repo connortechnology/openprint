@@ -34,6 +34,10 @@ sub find {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
 	} # end if
+	if ( $params{'rfidtag_id'} ) {
+		$sql .= ' AND rfidtag_id=?';
+		push @values, $params{'rfidtag_id'};
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
 		push @values, @params{'created_on_start','created_on_end'};

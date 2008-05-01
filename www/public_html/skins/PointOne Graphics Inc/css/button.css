@@ -61,6 +61,12 @@
 	}
 
 }
+@media handheld {
+	a.buttonImageOff,  a.buttonImageOn {
+		padding-left: 3px;
+		padding-right: 3px;
+	}
+}
 
 
 a.buttonImageOff .l {

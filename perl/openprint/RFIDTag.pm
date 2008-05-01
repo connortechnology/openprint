@@ -122,6 +122,15 @@ sub save {
 		} elsif ( $$self{'type'} ) {
 			$type = $$self{'type'};
 		} # end if
+		if ( ! $type ) {
+			my $type_digit = substr( $$self{'id'}, 0, 1 );
+			if ( $type_digit == 1 ) {
+				$type='Location';
+			} elsif ( $type_digit == 2 ) {
+				$type='Skid';
+			} # end if
+		} # end if
+                    
 		if ( $type ) {
 			my ( $type_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?)', $type );
 			if ( ! $type_id ) {
@@ -195,6 +204,15 @@ sub location_id {
     } # end if
     return $$self{'location_id'};
 } # end sub location_id
+
+sub skid_id {
+	my ( $self ) = @_;
+	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+	if ( @Skids ) {
+		return $Skids[0]->id();
+	} # end if
+	return;
+} # end sub skid_id
 
 1;
 __END__

@@ -93,6 +93,12 @@ The following errors occurred:<br/>
 				</select>
 				<input type="text" name="type" id="type" style="display:none;" onkeyup="$('type_id').selectedIndex=0;" />
 			</p>
+			<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
+			<p>
+				<label for="skid_id">Skid #:</label>
+				<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
+			</p>
+			<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 			<p>
 				<label>Location:</label>
 				<select id="location_id" name="location_id">
