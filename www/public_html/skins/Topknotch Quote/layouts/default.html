@@ -67,7 +67,7 @@
 					<a href="/index.html"><img style="float: left; height:65px; margin-left: -181px;" src="/images/logo.gif" alt=""/></a>
 					<div style="float: right; margin-right: -170px;">
 						<p><label>Tel:</label>(866) 382-5100</p>
-						<p><label>Tel:</label>(905) 624-4797</p>
+						<p><label>Tel:</label>(905) 624-5100</p>
 						<p><label>Fax:</label>(905) 624-6800</p>
 					</div>
 					<div style="float: left; width: 100%;">
@@ -103,6 +103,19 @@
 						<area shape="rect" coords="72,3,137,47" href="http://www.topknotchquote.ca?Currency=CDN" alt="CA" />
 					</map>
 <? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( ! $openprint::session{'user_id'} ) ?>
+					<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
+						<fieldset><legend>Quick Login</legend>
+						<p><label>Email:</label><input type="text" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/>
+								<? echo ( ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ) ) ?>
+						</p>
+						<p><label>Password:</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/>
+							<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register Now' );) ?>
+						</p>
+						</fieldset>
+						<input type="hidden" name="btnFunction" />
+					</form>
+<? endif ( ! $openprint::session{'user_id'} ) ?>
 						<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 						<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
 						<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>

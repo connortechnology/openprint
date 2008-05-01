@@ -1113,8 +1113,6 @@ sub calc {
 # The adding of signatures will be done automatically by multipage signatures
 # This will add bindery services, and a printing service
 			$specs{'Status'} = openprint::print::multipage_signatures( \%specs, $log, $dbh, $variable, $$project{'id'}, $printing_service_index );
-			#openprint::Estimating::Multipage::calculate_signatures($log, $dbh, $variable, $$project{'id'} );
-
 		} else {
 # Non-book
 
@@ -1211,12 +1209,18 @@ sub calc {
 			return jsrs::encode_pairs(%specs);
 		} # end if
 
+		# Force a reload
+		$services = $project->services();
+
 		$log->debug("Adding Required Services");
 		foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $project->type_id() ) ) {
 			if ( ! $$services{$servicetype_id} ) {
 				push @{$$services{$servicetype_id}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, $servicetype_id );
 			} # end if
 		} # end foreach
+
+		# Force a reload
+		$services = $project->services();
 
 		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Proofs' ) if ! $$services{'Proofs'};
 

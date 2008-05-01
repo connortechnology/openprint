@@ -1815,6 +1815,8 @@ sub calc_price {
 		$impressions += $additional_overs;
 	} # end if
 
+	my $plate_impressions = $impressions;
+	$plate_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Work & Turn','Work & Tumble'] ));
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
@@ -1831,8 +1833,7 @@ sub calc_price {
 
 	# Whya re we doing this here?
 	#$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
-
-	my %plate_setup = plate_setup_cost( $Imposition, $Press, $$Paper{width} * $$Paper{height}, $impressions, \@colours, $specs, $qty_index );
+	my %plate_setup = plate_setup_cost( $Imposition, $Press, $$Paper{width} * $$Paper{height}, $plate_impressions, \@colours, $specs, $qty_index );
 	# THis is here more to take care of multi-version documents as opposed to business cards
 	#if ( ( $$specs{'Versions'} > 1 ) and sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble' ] ) ) {
 		#$plate_setup{'Plate Count'} *= ( $imposition / $$specs{'Versions'} );

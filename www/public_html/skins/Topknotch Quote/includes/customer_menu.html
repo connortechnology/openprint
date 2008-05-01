@@ -20,7 +20,7 @@
 <? endif ( $openprint::session{'user_id'} ) ?>
 		</ul>
 	</li>
-<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) or openprint::usergroup::is_user_in( ['AdvancedQuoting'], $openprint::session{'user_id'} ) ) ?>
 	<li class="off"><a href="#">Custom Quote</a>
 		<ul>
 			<li><a href="/main/project/create_edit.html;NOSSL">Create New</a></li>
@@ -46,5 +46,5 @@
 <? endif ( $openprint::session{'user_id'} ) ?>
 		</ul>
 	</li>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) or openprint::usergroup::is_user_in( ['AdvancedQuoting'], $openprint::session{'user_id'} ) ) ?>
 </ul>

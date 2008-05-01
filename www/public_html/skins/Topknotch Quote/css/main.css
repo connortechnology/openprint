@@ -228,13 +228,41 @@ ul#ProjectTypes {
 .ProjectTypes a:hover {
     color: #ff00ff;
 }
-#CurrencySelection {
+#QuickLogin, #CurrencySelection {
+    float: right;
+    margin: 0px;
+    padding: 0px;
+    width: 400px;
 }
-#CurrencySelection p {
+#QuickLogin fieldset {
+	margin: 0px;
 }
-#CurrencySelection p label {
+#QuickLogin p, #CurrencySelection p {
+    padding: 0px;
+    padding-left: 80px;
+    margin: 0px;
+    vertical-align: top;
+
+}
+#QuickLogin p label, #CurrencySelection p label {
+    width: 75px;
+    margin-left: -80px;
+    text-align: right;
+    float: left;
+    overflow: visible;
+    padding: 0px;
+    vertical-align: top;
 	color: black;
 	font-size: x-small;
 	font-weight: normal;
-	width: 180px;
 }
+#QuickLogin p input, #CurrencySelection p input {
+    margin: 0px;
+    width: 65%;
+    padding: 2px;
+    vertical-align: top;
+}
+#QuickLogin p a.buttonImageOn, #QuickLogin p a.buttonImageOff, #CurrencySelection p a.buttonImageOn, #CurrencySelection p a.buttonImageOff {
+    margin: 0px;
+}
+
