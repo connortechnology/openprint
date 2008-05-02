@@ -115,16 +115,15 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $$sig_specs{'txtQuantity'.$qty_index};
+			next if ! $Project->quantity($qty_index);
 			my %price = signature_calc( $log, $dbh, $variable, $project_index, $signature_service_index, $sig_specs, $qty_index );
 			$$specs{'txtPrice'.$qty_index} += $price{'Paper Price'};
 			
 		} # end foreach qty_index
 	} # end foreach
-	$$specs{'Status'} = 'calculated';
-	return 'calculated';
+	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
 sub display {
