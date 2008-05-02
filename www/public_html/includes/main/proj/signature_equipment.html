@@ -7,7 +7,9 @@
 		<select name="ddmEquipment-<?SignatureIndex?>-<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
 		<option value="">Equipment Options</option>
 <? echo (
+$openprint::log->debug($$variable{'Equipment'});
 	if ( $$variable{'Equipment'} ) {
+$openprint::log->debug($$variable{'Equipment'});
 		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $$variable{"ddmEquipment-$$variable{SignatureIndex}-$$variable{QTYIndex}"} );
 	} else {
 		return ssi::fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} );

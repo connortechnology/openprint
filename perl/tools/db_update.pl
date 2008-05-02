@@ -686,13 +686,130 @@ sql::insert( undef, undef, 'QuoteLevels', 'name', 'Advanced' );
 } # end if
 if ( $version < 1920 ) {
 	print "Updating to version 1920\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM service_types LIMIT 1', {} );
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do(q`alter table service_types add type text`);
-	$dbh->do(q`update service_types set type=name`);
+	if ( ! exists $$data{'type'} ) {
+		$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
+	} # end if
+	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
 	sql::insert( undef, undef, 'database_info', 'version', 1920, 'backup', $backup );
 
 	sql::end_transaction( $dbh, $ac );
 	$version = 1920;
+} # end if
+my $new_version = 1921;
+if ( $version < $new_version ) {
+	print "Updating to version $new_version\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM service_types LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+	foreach my $E ( openprint::Equipment::find() ) {
+		if ( $E->specification('Double Overs For Covers') eq 'Y' ) {
+			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
+					'lngEquipmentIndex',    $E->id(),
+					'dblMin',               undef,
+					'dblMax',               undef,
+					'strUnits',             'Percent',
+					'strName',              'Covers Overs Percentage',
+					'strValue',             100,
+					'interpolate',          0,
+					] );
+
+		} else {
+			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
+					'lngEquipmentIndex',    $E->id(),
+					'dblMin',               undef,
+					'dblMax',               undef,
+					'strUnits',             'Percent',
+					'strName',              'Covers Overs Percentage',
+					'strValue',             0,
+					'interpolate',          0,
+					] );
+		} # end if
+		sql::execute( undef, undef, 'DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentindex=? AND strname=?', $E->id(), 'Double Overs For Covers' );
+	} # end foreac E
+	sql::end_transaction( $dbh, $ac );
+	$version = $new_version;
+} # end if
+
+if ( $version < 1921 ) {
+	print "Updating to version 1921\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'jdf_name'} ) {
+	$dbh->do(q`alter table tbl_equipment add jdf_name text`);
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1921, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1921;
+} # end if
+if ( $version < 1922 ) {
+	print "Updating to version 1922\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'jdf_id'} ) {
+	$dbh->do(q`alter table tbl_equipment add jdf_id text`);
+	} # end if
+	sql::insert( undef, undef, 'database_info', 'version', 1922, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1922;
+} # end if
+
+my $new_version = 1923;
+if ( $version < $new_version ) {
+    print "Updating to version $new_version\n";
+    my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockGroups LIMIT 1', {} );
+    if ( ! $data ) {
+        my $ac = sql::start_transaction( $dbh );
+        $_ = misc::load_file( $log, q{../openprint/sql/StockGroups.sql});
+        foreach my $st ( split(';', $_ ) ) {
+            $dbh->do($st);
+        }
+        sql::end_transaction( $dbh, $ac );
+    } # end if
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
+	if ( ! exists $$data{'group_id'} ) {
+		$dbh->do(q`alter table papers add group_id INTEGER`);
+		$dbh->do(q`alter table papers add FOREIGN KEY (group_id) REFERENCES StockGroups (id)`);
+	} # end if
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    $version = $new_version;
+} # end if
+my $new_version = 1924;
+if ( $version < $new_version ) {
+    print "Updating to version $new_version\n";
+    my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM RFIDTags LIMIT 1', {} );
+    if ( ! $data ) {
+        my $ac = sql::start_transaction( $dbh );
+        $_ = misc::load_file( $log, q{../openprint/sql/RFID.sql});
+        foreach my $st ( split(';', $_ ) ) {
+            $dbh->do($st);
+        }
+        sql::end_transaction( $dbh, $ac );
+    } # end if
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skids LIMIT 1', {} );
+	if ( ! exists $$data{'rfidtag_id'} ) {
+		$dbh->do(q`alter table skids add rfidtag_id TEXT`);
+		$dbh->do(q`alter table papers add FOREIGN KEY (rfidtag_id) REFERENCES RFIDTags (id)`);
+	} # end if
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    $version = $new_version;
+} # end if
+
+my $new_version = 1925;
+if ( $version < $new_version ) {
+    print "Updating to version $new_version\n";
+    my $ac = sql::start_transaction( $dbh );
+    my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM User_Service_Defaults LIMIT 1', {} );
+    if ( ! $data ) {
+        $_ = misc::load_file( $log, q{../openprint/sql/User_Service_Defaults.sql});
+        foreach my $st ( split(';', $_ ) ) {
+            $dbh->do($st);
+        }
+    } # end if
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    sql::end_transaction( $dbh, $ac );
+    $version = $new_version;
 } # end if
 
 $dbh->disconnect();

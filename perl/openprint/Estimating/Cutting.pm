@@ -34,6 +34,7 @@ my @stitchers;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'Markup1','Markup2','Markup3',
 		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
         'MPrice1', 'MPrice2', 'MPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -63,9 +64,14 @@ sub variables {
 }
 
 sub signature_needs {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $sig_specs ) = @_;
 
 	my $services = $Project->services();
+
+	if ( $Project->Type()->strid() eq 'Envelopes' ) {
+        $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
+		return 0;
+	} # end if 
 
     if ( $$services{'NoBindery'} ) {
         $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
@@ -73,15 +79,22 @@ sub signature_needs {
     } # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
-		if ( $$specs{'txtImposition'.$qty_index} > 1 ) {
+		next if ! $Project->quantity( $qty_index );
+#$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
+#$openprint::log->debug("Cutting sig needs: stock: " . join('x', @$specs{'hdnSuppliedStockWidth'.$qty_index,'hdnSuppliedStockHeight'.$qty_index} ) );
+#$openprint::log->debug("Cutting sig needs: ssize: " . join('x', @$specs{'txtWidth','txtHeight'} ) );
+		if ( $$sig_specs{'txtImposition'.$qty_index} > 1 ) {
 			return 1;
 		} # end if
-		if (
-			 $$specs{'hdnSuppliedStockWidth'.$qty_index} != $$specs{'txtWidth'} 
-			and $$specs{'hdnSuppliedStockHeight'.$qty_index} != $$specs{'txtHeight'}
-			and $$specs{'hdnSuppliedStockWidth'.$qty_index} != $$specs{'txtHeight'}
-			and $$specs{'hdnSuppliedStockHeight'.$qty_index} != $$specs{'txtWidth'}
-			and $$specs{'txtNumberOfCuts'} != -1 ) {
+		if ( ! (
+			(
+			 $$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtWidth'} 
+			and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtHeight'}
+			) or (
+			$$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtHeight'}
+			and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtWidth'}
+			)
+			) ) {
 			return 1;
 		} # end if
 	} # end foreach
@@ -99,10 +112,6 @@ sub signature_needs {
 sub neccessary {
 	my ( $log, $dbh, $project_index ) = @_;
 	my $Project = new openprint::Project( $project_index );
-	if ( $Project->Type()->strid() eq 'Envelopes' ) {
-        $log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
-		return 0;
-	} # end if 
 
 	my $services = $Project->services();
 
@@ -212,7 +221,7 @@ sub signature_calc_stock_cutting {
 		my $price = 0;
 		foreach my $cuts ( ( int($$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"}/$sheet_width)-1, int($$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"}/$sheet_height)-1 ) ) {
 			next if ! $cuts;
-$openprint::log->error("Negative CUTS!") if $cuts < 1;
+$openprint::log->warn("Negative CUTS!") if $cuts < 1;
 			my $runs = ceil( $sheets*$calliper/$liftDepth );
 			$price += ( $runs * $cuts * $ServicePrice{'Price'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\tCutting \%d sheets into \%d sheets in %d runs: %.2f<br/>", $sheets, $sheets*($cuts+1), $runs, $price );
@@ -448,7 +457,7 @@ sub signature_calc {
 			$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
 		} # end if
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
-$openprint::log->error('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
+$openprint::log->warn('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
 				# Assume head to head at all times - head trim
 				if ( $$sig_specs{'chkBleedTop'} ) {
@@ -476,7 +485,7 @@ $openprint::log->error('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
 			$horizontal_cuts += $$sig_specs{'hdnImpositionRows'.$qty_index}-1;
 		} # end if
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
-$openprint::log->error('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
+$openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
 				if ( $$sig_specs{'chkBleedTop'} ) {
 					$horizontal_cuts += int( $$sig_specs{'hdnImpositionRows'.$qty_index}/2);
@@ -736,7 +745,7 @@ if ( 1 ) {
 		if ( $$specs{"OverridePrice$qty_index"} eq 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
 		} # end if
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );

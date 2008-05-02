@@ -3,7 +3,7 @@ package openprint::Object;
 use strict;
 use openprint ();
 use vars qw( %variable $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
-
+my $debug;
 $no_cache = 0;
 
 sub init_cache {
@@ -62,18 +62,18 @@ sub AUTOLOAD {
 
 sub get {
     my $self = shift;
-    my @requested_fields = @_;
+	if ( $debug ) {
+		my $type = ref $self;
+		my %fields = eval ('%'.$type.'::fields');
 
-	my $type = ref $self;
-	my %fields = eval ('%'.$type.'::fields');
+		foreach my $field ( @_ ) {
+			if ( ! defined $fields{$field} ) {
+				$openprint::log->warn( $type . ": Invalid field requested: ($field)." );
+			} # end if
+		} # end foreach
+	} # end if
 
-    foreach my $field ( @requested_fields ) {
-        if ( ! defined $fields{$field} ) {
-            $openprint::log->warn( $type . ": Invalid field requested: ($field)." );
-        } # end if
-    } # end foreach
-
-    return @$self{@requested_fields};
+    return @$self{@_};
 } # end sub get
 
 sub set {

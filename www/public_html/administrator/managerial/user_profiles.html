@@ -152,7 +152,7 @@ Please select a company or user to obtain login information.<br/>
 					<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{'User'}->type() ); ) ?>
 				</select>
 			</p>
-<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY lower(name)' );
+<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY lower(name)' ); ) ?>
 <? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 			<p> 
 				<label>Quote Level:</label>
@@ -161,23 +161,23 @@ Please select a company or user to obtain login information.<br/>
 				</select>
 			</p>
 <? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-		</div>
-		<br class="spacer"/>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<p> 
 			<label>Commission Rate:</label>
 			<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" />
 		</p>
-		<p>
-			<label>Assistant to:</label>
-			<select name="csr_ids" size="4" multiple="multiple">
-				<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+		<p> 
+			<label>User Category:</label>
+			<select name="selectUserCategories" size="4" multiple="multiple">
+			<?selectUserCategories?>
 			</select>
 		</p>
-		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+		</div>
+		<br class="spacer"/>
+		</fieldset>
+		<fieldset><legend>Groups</legend>
 		<? eval ( @{$$variable{'Groups'}} = openprint::user::groups( $log, $dbh, $$variable{'UserIndex'} ); )?>
-		<p>
-			<label>Groups:</label>
 			<? echo (
 				require openprint::Usergroup;
 				my $html = '<ul>';
@@ -187,14 +187,23 @@ Please select a company or user to obtain login information.<br/>
 				} # end foreach
 				return $html . '</ul>';
 			) ?>
-		</p>
-		<p> 
-			<label>User Category:</label>
-			<select name="selectUserCategories" size="4" multiple="multiple">
-			<?selectUserCategories?>
-			</select>
-		</p>
 		</fieldset>
+		<fieldset><legend>Service Defaults</legend>
+			<!--#include virtual="_service_defaults.html"-->
+		</fieldset>
+		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+		<fieldset><legend>Assistant To</legend>
+			<? echo (
+				require openprint::Usergroup;
+				my $html = '<ul>';
+				my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
+				foreach my $CSR ( openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" id="csr_ids%1$d" name="csr_ids" value="%1$d" %3$s /><label>%2$s</label></li>', $CSR->id(), $CSR->name(), sets::isin( $CSR->id(), $$variable{'User'}->csr_ids() ) ? 'checked="checked"' : '' );
+				} # end foreach
+				return $html . '</ul>';
+			) ?>
+			</fieldset>
+		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<? if ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<fieldset><legend>Vacation Auto-Responder Settings:</legend>

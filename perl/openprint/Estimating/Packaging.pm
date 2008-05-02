@@ -23,8 +23,9 @@ require openprint::service;
 require sql;
 
 my @variables = (
-	'txtItemsPerPackage','bands_per_package',
+	'txtItemsPerPackage','AccurateCount','bands_per_package',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+	'Markup1','Markup2','Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'txtPackageQuantity1',
@@ -39,8 +40,9 @@ sub variables {
 
 my @no_outputs = (
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1','Markup2','Markup3',
 	'txtQuantity1','txtQuantity2','txtQuantity3',
-	'txtItemsPerPackage',
+	'txtItemsPerPackage','AccurateCount',
 	'rdbCardboardBacking',
 );
 
@@ -57,7 +59,7 @@ sub calc {
 		$$specs{'alert'} .= 'Unable to find project service.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $project_index, $service_index ) );
+	my $ServiceType = $Project->ServiceType( $service_index );
 	my $status = 'calculated';
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
 
@@ -81,6 +83,7 @@ sub calc {
 
 	foreach my $qty_index ( 1 .. 3 ) {
 
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -155,7 +158,7 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>',$price );
 		$$specs{'txtPackageQuantity'.$qty_index} = $package_qty;
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # endif
@@ -193,6 +196,16 @@ sub summary {
     return $text;
 } # end sub summary
 
+sub save {
+	my ( $project_index, $service_index, $param ) = @_;
+
+	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+
+	if ( ($$param{'AccurateCount'} eq 'Y' ) and ! $$services{'Counting'} ) {
+		openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'Counting' );
+	} # end if
+} # end sub save
 
 1;
 __END__

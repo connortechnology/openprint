@@ -22,15 +22,13 @@ require openprint::service;
 require openprint::Material;
 
 my @variables = (
+	'Markup1', 'Markup2', 'Markup3',
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
-	'txtQuantity1',
-	'txtQuantity3',
-	'txtQuantity2',
+	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'ServiceType',
-	'txtRunTime1',
-	'txtRunTime2',
-	'txtRunTime3',
+	'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
 	);
 
 sub variables {
@@ -77,6 +75,9 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 	} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $Project->quantity( $qty_index );
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $price = 0;
 		my $unitPrice = 0;
@@ -130,7 +131,11 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 			$$specs{'hdnBreakdown'.$qty_index} .= "Qty: " . $$specs{"txtQuantity$qty_index"} . ": Price: $price\n";
 		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 	} # end foreach
 
 	$log->debug("END SPIRAL!!!!!!!!!!!!!!!!!!");

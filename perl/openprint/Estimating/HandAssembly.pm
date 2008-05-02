@@ -23,6 +23,8 @@ require openprint::service;
 require sql;
 
 my @variables = (
+		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+		'Markup1', 'Markup2', 'Markup3',
         'txtPrice', 'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
         'txtQuantity',
@@ -35,6 +37,8 @@ sub variables {
 my @no_outputs = (
 	'ProjectIndex','ServiceIndex','ServiceType',
 	'txtQuantity',
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1', 'Markup2', 'Markup3',
 );
 sub no_outputs {
 	return @no_outputs;
@@ -58,7 +62,11 @@ sub calc {
 	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtUnitPrice$qty_index"} = $$specs{"txtUnitPrice"};
-		$$specs{"txtPrice$qty_index"} = $$specs{"txtPrice"};
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = $$specs{"txtPrice"} * (1+$$specs{"Markup$qty_index"}/100);
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 	} # end foreach
 	$$specs{'Status'} = $status;
 	return $status;

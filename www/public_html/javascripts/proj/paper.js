@@ -93,12 +93,10 @@ function get_parameters( form, id, selected ) {
 function rdbSuppliedStock_onchange( element, id ) {
 	var form = element.form;
 	if ( gettingNewPrice ) {
-		if ( timeout )
-			clearTimeout( timeout );
-		setTimeout( 'rdbSuppliedStock_onchange($(' + element.id + '),"' + id + '");', 1000 );
+		if ( timeout ) clearTimeout( timeout );
+		timeout = setTimeout( 'rdbSuppliedStock_onchange($(' + element.id + '),"' + id + '");', 1000 );
 		return;
 	} // end if
-	timeout = null;
 	form.elements['ddmStockBrand'+id].disabled = true;
 	form.elements['ddmStockFinish'+id].disabled = true;
 	form.elements['ddmStockColour'+id].disabled = true;
@@ -117,12 +115,10 @@ function ddmStockBrand_onchange( element, id ) {
 		form.elements['ddmStockWeight'+id].disabled = true;
 
 	if ( gettingNewPrice ) {
-		if ( timeout )
-			clearTimeout( timeout );
-		setTimeout( 'ddmStockBrand_onchange(document.' + element.form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
+		if ( timeout ) clearTimeout( timeout );
+		timeout = setTimeout( 'ddmStockBrand_onchange(document.' + element.form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
-	timeout = null;
 
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Name') );
 
@@ -141,12 +137,10 @@ function ddmStockFinish_onchange( element, id ) {
 	form.elements['ddmStockColour'+id].disabled = true;
 	form.elements['ddmStockWeight'+id].disabled = true;
 	if ( gettingNewPrice ) {
-		if ( timeout )
-			clearTimeout( timeout );
-		setTimeout( 'ddmStockFinish_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
+		if ( timeout ) clearTimeout( timeout );
+		timeout = setTimeout( 'ddmStockFinish_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
-	timeout = null;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Finish') );
 
 } // end function ddmStockFinish_onchange();
@@ -166,12 +160,10 @@ function ddmStockColour_onchange( element, id ) {
 	form.elements['ddmStockColour'+id].disabled = true;
 	form.elements['ddmStockWeight'+id].disabled = true;
 	if ( gettingNewPrice ) {
-		if ( timeout )
-			clearTimeout( timeout );
-		setTimeout( 'ddmStockColour_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
+		if ( timeout ) clearTimeout( timeout );
+		timeout = setTimeout( 'ddmStockColour_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
-	timeout = null;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id,'Colour') );
 
 	//if ( form.txtSpecificStockColour && get_ddm_value(form.ddmStockColour) ) form.txtSpecificStockColour.value='';
@@ -192,15 +184,14 @@ function ddmStockWeight_onchange( element, id ) {
 	form.elements['ddmStockColour'+id].disabled = true;
 	form.elements['ddmStockWeight'+id].disabled = true;
 	if ( gettingNewPrice ) {
-		if ( timeout )
-			clearTimeout( timeout );
-		setTimeout( 'ddmStockWeight_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
+		if ( timeout ) clearTimeout( timeout );
+		timeout = setTimeout( 'ddmStockWeight_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
-	timeout = null;
 
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Weight') );
 } // end function ddmStockWeight_onchange();
+
 function txtSpecificStockWeight_onKeyUp( element ) {
 } // end function txtSpecificStockWieght_onKeyUp()
 

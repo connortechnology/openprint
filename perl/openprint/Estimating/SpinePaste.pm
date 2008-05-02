@@ -21,9 +21,9 @@ require openprint::service;
 require sql;
 
 my @variables = (
-'chkOverrideCalliper',
-'txtCalliper',
-'Trimming','Gluing',
+		'chkOverrideCalliper',
+		'txtCalliper',
+		'Trimming','Gluing',
         'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
@@ -153,6 +153,8 @@ sub calc {
 	} # end if
 
 	foreach my $qty_index ( 1 ..3 ) {
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{'txtQuantity'.$qty_index};
 		next if ! $qty;
@@ -225,7 +227,11 @@ sub calc {
 			$$specs{'Status'} = 'uncalculated';
 		} else {
 			$$specs{'ddmEquipment'.$qty_index} = $best{'Equipment'}->id();
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $best{'Price'}{'Total'} );
+			if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $best{'Price'}{'Total'} * (1+$$specs{"Markup$qty_index"}/100) );
+			} else {
+				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			} # end if
 			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $best{'Price'}{'ServicePrice'}{'Total'} / $qty );
 			$$specs{'Status'} = 'calculated';
 		} # end if

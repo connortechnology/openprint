@@ -38,6 +38,9 @@ my %variables = (
         'txtUnitPrice1'=>['output'], 'txtUnitPrice2'=>['output'], 'txtUnitPrice3'=>['output'],
         'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],
         'txtRunTime1'=>['save'], 'txtRunTime2'=>['save'], 'txtRunTime3'=>['save'],
+		'glue_id' => ['save'], 'override_glue_id' => ['save'],
+		'Markup1'=>['save'], 'Markup2'=>['save'], 'Markup3'=>['save'],
+		'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
         );
 
 sub variables {
@@ -101,7 +104,6 @@ sub signature_calc {
 		next if $service_index and ($signature_service_index >= $service_index);
 		$$specs{"txtPockets$qty_index"} += 1;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 		$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 );
 	} # end foreach signature
 
@@ -222,9 +224,12 @@ sub calc {
 
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
 		foreach my $qty_index ( 1 .. 3 ) {
+			next if ! $Project->quantity($qty_index);
 			$$specs{'txtCalliper'} = 0;
-			foreach my $signature_service_index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
+			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+				# All but the cover
+				next if $$sig_specs{'Group'} == 1;
 				my $calliper = $$sig_specs{'PageQuantity'.$qty_index} ? ($$sig_specs{'PageQuantity'.$qty_index}/2) * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
 				$$specs{'txtCalliper'} += $calliper;
 			} # end foreach
@@ -238,10 +243,32 @@ sub calc {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} # end if
 
+	my @Materials = openprint::Material::find('category'=>'PerfectBound Glue');
+	if ( $$specs{'override_glue_id'} eq 'Y' ) {
+	} else {
+		foreach my $ss_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
+
+			my $Paper;
+			foreach my $qty_index ( 1 .. 3 ) {
+				next if ! $Project->quantity( $qty_index );
+				$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				last;
+			} # end foreach
+			foreach my $Material ( @Materials ) {
+				if ( sets::isin( $Paper->grade(), misc::trim(split(',',$Material->specification('Recommended For Stock Grade'))) ) ) {
+					$$specs{'glue_id'} = $Material->id();
+					last;
+				} # end if
+			} # end foreach Material
+		} # end foreach sig
+	} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
-		$$specs{'txtPrice'.$qty_index} = '0.00';
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g; ;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf( $openprint::config{'UnitPriceFormat'}, 0 );
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
@@ -256,7 +283,7 @@ sub calc {
 
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-				next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
+				next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 				if ( 
 						($$sig_specs{'txtImposition'.$qty_index} % 2) or 
 						($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'} % 2 ) or 
@@ -283,8 +310,7 @@ sub calc {
 				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
 				if ( $folding_specs ) {
 					foreach my $pages ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
-						$pages{$pages} += $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'
-							.$qty_index};
+						$pages{$pages} += $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index};
 					} # end foreach
 				} # end if
 
@@ -324,13 +350,13 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $error;
 			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 			my $qty = $$specs{'txtQuantity'.$qty_index};
-$openprint::log->debug("QTY: $qty " . $$specs{'txtPrice'.$qty_index});
+#$openprint::log->debug("QTY: $qty " . $$specs{'txtPrice'.$qty_index});
 			if ( $qty and ! (1*$$specs{'txtPrice'.$qty_index}) ) {
-$openprint::log->debug("uncalc");
+#$openprint::log->debug("uncalc");
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end foreach
-$openprint::log->debug("calc");
+#$openprint::log->debug("calc");
 		return $$specs{'Status'} = 'calculated';
 	} # end if
 	
@@ -359,15 +385,23 @@ $openprint::log->debug("calc");
 			} # end if
 			my $servicePrice = $$Price{'LastPassServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: last pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'txtPrice'}))."<br/><br/>";
+			if ( my $GluePrice = $$Price{'GluePrice'} ) {
+$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $$Price{'Glue'}->description(), @$GluePrice{'Price','units','Total'}, @$specs{'Width','txtCalliper'} );
+
+			} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'Price'})).'<br/><br/>';
 		} # end foreach Equipment
 
 		if ( $$bestPrice{'Equipment'} ) {
-		$$specs{'ddmEquipment'.$qty_index} = $$bestPrice{'Equipment'}->id();
+			$$specs{'ddmEquipment'.$qty_index} = $$bestPrice{'Equipment'}->id();
 		} else {
-		$$specs{'ddmEquipment'.$qty_index} = '';
+			$$specs{'ddmEquipment'.$qty_index} = '';
 		} # end if
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'Price'} );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'Price'}*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'Price'} / $qty );
     } # end foreach
 
@@ -399,12 +433,12 @@ sub get_price {
 		$price{'Imposition'} = 1;
 	} # end if
 
-	my %MakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{'Imposition'}, $Equipment );
+	my %MakeReady = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{'Imposition'}, $Equipment );
 	if ( ! %MakeReady ) {
-		%MakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+		%MakeReady = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
 	} # end if
 	my $pocketMakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-	$price{'MakeReady'} = $MakeReady{'Price'} + $pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 );
+	$price{'MakeReady'} = $MakeReady{'Price'} + ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 ));
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $neededPockets = $$specs{"txtPockets$qty_index"};
@@ -461,6 +495,20 @@ sub get_price {
 	} # end if
 	$price{'Passes'} += 1;
 
+	if ( $$specs{'glue_id'} ) {
+		my $Material = new openprint::Material( $$specs{'glue_id'} );
+		my %GluePrice = $Material->get_price( $$specs{"txtQuantity$qty_index"}, undef );
+		if ( $GluePrice{units} eq 'Per Square Inch' ) {
+			$GluePrice{'Total'} = $GluePrice{Price} * $$specs{'Width'} * $$specs{'txtCalliper'} * $$specs{"txtQuantity$qty_index"};
+			$price{'GluePrice'} = \%GluePrice;
+		} elsif ( $GluePrice{units} eq 'Per Square Foot' ) {
+			$GluePrice{'Total'} = $GluePrice{Price} * $$specs{'Width'} * $$specs{'txtCalliper'} * $$specs{"txtQuantity$qty_index"} / 144;
+			$price{'GluePrice'} = \%GluePrice;
+		} # end if
+
+		$price{'Glue'} = $Material;
+	} # end if Glues
+
 	if ( $$specs{'txtInsertQuantity'} > 0 ) {
 		$price{'Insert'} = openprint::service::get_price( $$specs{'ServiceType'}.'Insert', $$specs{'txtInsertQuantity'}, $Equipment) * $$specs{'txtInsertQuantity'};
 # Convert to cost per thousand
@@ -482,8 +530,8 @@ sub get_price {
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 
-	$price{'Price'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'};
-$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
+	$price{'Price'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'} + $price{'GluePrice'}{'Total'};
+#$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
 	return \%price;
 } # end sub get_price
 
@@ -497,8 +545,15 @@ sub display {
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
-	if ( $qty_index and $$specs{'Imposition'.$qty_index} ) {
-		return $$specs{'Imposition'.$qty_index} .'out';
+	if ( $qty_index ) {
+		if ( $$specs{'Imposition'.$qty_index} ) {
+			return $$specs{'Imposition'.$qty_index} .'out';
+		} # end if
+	} # end if
+
+	if ( $$specs{'glue_id'} ) {
+		my $Material = new openprint::Material( $$specs{'glue_id'} );
+		return 'Using ' . $Material->description();
 	} # end if
 	return '';
 } # end sub summary
@@ -530,7 +585,7 @@ sub runtime {
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $makereadytime = $Equipment->specification( 'Pocket Make Ready' ) * 60;
-	$openprint::log->debug("MakeReadyTime: $makereadytime");
+	#$openprint::log->debug("MakeReadyTime: $makereadytime");
 	$runTime += $pockets * $makereadytime;
 
 # Calculate Full Passes

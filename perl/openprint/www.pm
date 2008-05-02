@@ -86,7 +86,9 @@ sub handler {
 	openprint::usergroup::init_cache();
 	openprint::Material::init_cache();
 	openprint::Service::init_cache();
+	openprint::ServiceType::init_cache();
 	openprint::Equipment::init_cache();
+	openprint::Paper::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -307,6 +309,10 @@ $openprint::log->debug("Getfile");
 				openprint::employee_inventory::paper_details( $r, $log, $dbh, \%variable )	if $filename eq 'paper_details.html';
 				openprint::employee_inventory::skids( $r, $log, $dbh, \%variable )		if $filename eq 'skids.html';
 				openprint::employee_inventory::skid_details( $r, $log, $dbh, \%variable )	if $filename eq 'skid_details.html';
+				openprint::employee_inventory::rfidtags( $r, $log, $dbh, \%variable )		if $filename eq 'rfidtags.html';
+				openprint::employee_inventory::rfidtag_details( $r, $log, $dbh, \%variable )	if $filename eq 'rfidtag_details.html';
+				openprint::employee_inventory::rfidscanners( $r, $log, $dbh, \%variable )		if $filename eq 'rfidscanners.html';
+				openprint::employee_inventory::rfidscanner_details( $r, $log, $dbh, \%variable )	if $filename eq 'rfidscanner_details.html';
 				openprint::paper_purchase_order::history( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_orders.html';
 				openprint::paper_purchase_order::display( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_order.html';
 			} else {
@@ -417,9 +423,6 @@ $openprint::log->warn('bind');
 					} elsif ( $filename eq 'cutting.html' ) {
 						require openprint::Estimating::Cutting;
 						openprint::Estimating::Cutting::display( $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename eq 'die_cutting.html' or $filename eq 'bind_kiss_cutt.html' ) {
-						require openprint::Estimating::DieCutting;
-						openprint::Estimating::DieCutting::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename eq 'perforating.html' ) {
 						require openprint::Estimating::Perforating;
 						openprint::Estimating::Perforating::get_specs( $log, $dbh, \%variable, $project_index, $service_index );
@@ -435,7 +438,7 @@ $openprint::log->warn('bind');
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename =~ /^(\w*).html$/ ) {
-$openprint::log->debug("$1");
+#$openprint::log->debug("$1");
 						eval sprintf('require openprint::Estimating::%1$s;
 						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
 						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;

@@ -1,0 +1,50 @@
+<? eval (
+	require openprint::RFIDTagHistory;
+
+	if ( $openprint::param{StartYear} ) {
+		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay' ) {
+			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
+				$openprint::session{'/employee/inventory/rfidtag_details.html?'.$key} = join(';', @{$openprint::param{$key}} );
+			} else {
+				$openprint::session{'/employee/inventory/rfidtag_details.html?'.$key} = $openprint::param{$key};
+			}
+		} # end foreach
+	} # end if
+
+	@{$$variable{'Entries'}} = openprint::RFIDTagHistory::find( 
+		'rfidtag_id'=>$param{'rfidtag_id'},
+		'created_on_start'	=>	Date::Calc::check_date( @openprint::session{
+			'/employee/inventory/rfidtag_details.html?StartYear',
+			'/employee/inventory/rfidtag_details.html?StartMonth',
+			'/employee/inventory/rfidtag_details.html?StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
+			'/employee/inventory/rfidtag_details.html?StartYear',
+			'/employee/inventory/rfidtag_details.html?StartMonth',
+			'/employee/inventory/rfidtag_details.html?StartDay'} ) : undef,
+		'created_on_end'	=>	Date::Calc::check_date( @openprint::session{
+			'/employee/inventory/rfidtag_details.html?EndYear',
+			'/employee/inventory/rfidtag_details.html?EndMonth',
+			'/employee/inventory/rfidtag_details.html?EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
+			'/employee/inventory/rfidtag_details.html?EndYear',
+			'/employee/inventory/rfidtag_details.html?EndMonth',
+			'/employee/inventory/rfidtag_details.html?EndDay'} ) : undef,
+		'order'		=>	'updated_on',
+		);
+) ?>
+<? if ( @{$$variable{'Entries'}} ) ?>
+<table class="List">
+	<tr>
+		<th align="left">When</th>
+		<th align="left">Scanner</th>
+		<th align="left">Where</th>
+	</tr>
+	<? while ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
+		<tr>
+			<td><? echo ( $$variable{'Entry'}->updated_on() ) ?></td>
+			<td><? echo ( $$variable{'Entry'}->Scanner()->name() ) ?></td>
+			<td><? echo ( $$variable{'Entry'}->Location()->name() ) ?></td>
+		</tr>
+	<? endwhile ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
+</table>
+<? else ( @{$$variable{'Entries'}} ) ?>
+No results
+<? endif ( @{$$variable{'Entries'}} ) ?>

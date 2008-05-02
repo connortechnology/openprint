@@ -23,6 +23,8 @@ require openprint::Material;
 require sql;
 
 my @variables = (
+		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+		'Markup1', 'Markup2', 'Markup3',
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -42,6 +44,8 @@ my @no_output = (
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'rdbCardboardBacking',
 	'rdbDTape','override_glue_id',
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1', 'Markup2', 'Markup3',
 );
 
 sub no_outputs {
@@ -157,14 +161,20 @@ $openprint::log->debug("Paper Grade: " . $Paper->name() );
 			if ( $GluePrice{units} eq 'Per Square Inch' ) {
 				$GluePrice{'Total'} = $GluePrice{Price} * $$sig_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$sig_specs{'txtFinalWidth'}, $calliper );
+			} elsif ( $GluePrice{units} eq 'Per Square Foot' ) {
+				$GluePrice{'Total'} = $GluePrice{Price} * $$sig_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"} / 144;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$sig_specs{'txtFinalWidth'}, $calliper );
 			} # end if
 			$price += $GluePrice{'Total'};
 		} # end if Glues
 
 		$price = $minimumCharge if $price < $minimumCharge;
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
-
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 	} # end foreach
 	return $status;
 } # end sub calc

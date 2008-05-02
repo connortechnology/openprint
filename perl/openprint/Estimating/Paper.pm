@@ -75,8 +75,6 @@ sub sheet_calc {
 sub signature_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs, $qty_index, $Paper ) = @_;
 
-$openprint::log->debug("Paper Signature Calc");
-
 	if ( ! $Paper ) {
 		if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
 			$log->debug("Supplied");
@@ -85,13 +83,13 @@ $openprint::log->debug("Paper Signature Calc");
 			@$Paper{'width','height','mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight'};
 			@$Paper{'start_width','start_height'} = @$Paper{'width','height'};
 		} else {
-			$log->debug("Not Supplied $specs $$specs{'ddmStockBrand'}");
+			#$log->debug("Not Supplied $specs $$specs{'ddmStockBrand'}");
 			my @Papers = openprint::Paper::find( 'name'=>$$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'} );
 			foreach my $P ( @Papers ) {
 	#$log->debug("Looking at: " . $Sheet->width() . ' x '. $Sheet->height() . " for ".$$specs{'hdnSuppliedStockWidth'.$qty_index}.'x'.$$specs{'hdnSuppliedStockHeight'.$qty_index});
 				if ( $P->width() == $$specs{'hdnSuppliedStockWidth'.$qty_index} and $P->height() == $$specs{'hdnSuppliedStockHeight'.$qty_index} ) {
 					$Paper = $P;
-					$log->debug("Found sheet");
+					#$log->debug("Found sheet");
 					last;
 				} # end if
 			} # end foreach
@@ -117,16 +115,15 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $$sig_specs{'txtQuantity'.$qty_index};
+			next if ! $Project->quantity($qty_index);
 			my %price = signature_calc( $log, $dbh, $variable, $project_index, $signature_service_index, $sig_specs, $qty_index );
 			$$specs{'txtPrice'.$qty_index} += $price{'Paper Price'};
 			
 		} # end foreach qty_index
 	} # end foreach
-	$$specs{'Status'} = 'calculated';
-	return 'calculated';
+	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
 sub display {
@@ -190,19 +187,18 @@ sub summary {
     my %sheets;
 	foreach my $ss_id ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-		my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
-        if ( $Paper->type() eq 'Roll' ) {
-			$string .= sprintf(' %s&quot; Roll', $Paper->width() );
-        } else {
-			$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
-        } # end if
 		foreach my $qty_index ( 1 .. 3 ) {
             next if ! $Project->quantity( $qty_index );
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
 			if ( $Paper->type() eq 'Roll' ) {
-				$totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'hdnImpressionQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi());
+				$string .= sprintf(' %s&quot; Roll', $Paper->width() );
+				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+				$impressions /= 2 if sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble','Sheet Work'] );
+				$totals{$string}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
+					
 			} elsif ( $Paper->type() eq 'Sheet' ) {
+				$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
                 $totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'SheetQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi() );
                 $sheets{$string}[$qty_index] += $$sig_specs{'SheetQuantity'.$qty_index};
             } # end if

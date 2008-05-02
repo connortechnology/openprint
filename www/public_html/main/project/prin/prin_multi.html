@@ -32,18 +32,6 @@
 			alert('The quantity of gate folded spreads can not exceed the total spread quantity.');
 			return 0;
 		} // end if
-		if ( ! form.txtGateFoldedSpreadQuantity.value ) {
-			if ( parseInt(form.txtTotalPageQuantity.value/form.txtSpreadSize.value) != parseFloat(form.txtTotalPageQuantity.value/form.txtSpreadSize.value) ) {
-				alert('The number of pages should be a multiple of ' + form.txtSpreadSize.value );
-				return 0;
-			} // end if
-		} else {
-			if ( parseInt(form.txtTotalPageQuantity.value/2) != parseFloat(form.txtTotalPageQuantity.value/2) ) {
-				alert('The number of pages should be a multiple of ' + 2 );
-				return 0;
-			} // end if
-	
-		} // end if
 
 		return 1;
 	} // end function
@@ -58,9 +46,14 @@
 			<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
 			<!--#include virtual="/includes/main/proj/dimensions.html" -->
+<div id="OtherSpecifications">
+<fieldset><legend>Other Specifications</legend>
+		<!--#include virtual="/includes/main/proj/multipage_printing_type.html"-->
+		<!--#include virtual="/includes/main/proj/screen_type.html"-->
+</fieldset>
+</div>
 			<br class="spacer"/>
 			<fieldset><legend>Book Specifications</legend>
-				<!--#include virtual="/includes/main/proj/multipage_printing_type.html" -->
 				<div id="PagesCover">
 				<p>
 					<label>Total pages:</label>
@@ -99,7 +92,7 @@
 			</fieldset>
 			<br class="spacer"/>
 			<? echo (
-				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? and strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
+				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
 				if ( ! sets::isin( 1, \@Groups ) ) {
 					# Unshift so that cover is always first
 					unshift @Groups, 1;

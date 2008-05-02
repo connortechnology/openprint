@@ -19,6 +19,7 @@ sub get_paper {
 
 	my @papers = openprint::Paper::find( 
 			( $specs{'Selected'} eq 'Manufacturer' ? ( 'manufacturer_id'=>$specs{'Manufacturer'} ) : () ),
+			( $specs{'Selected'} eq 'Group' ? ( 'group_id'=>$specs{'Group'} ) : ()  ),
 			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
 			( sets::isin( $specs{'Selected'}, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'	=> $specs{'Finish'} ) : () ),
 			( sets::isin( $specs{'Selected'}, [ 'Colour','Weight' ] ) ? ( 'colour_id'	=> $specs{'Colour'} ) : () ),

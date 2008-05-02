@@ -69,7 +69,7 @@
 				$$variable{'Side'} = 'SideTwo';
 				$$variable{index} = 0;
 				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
-					next if ! $$variable{"chkSpecialSideTwoColour$index$$variable{Signature}"};
+					next if ! $$variable{"ColourCoating$$variable{Side}$index$$variable{Signature}"};
 					$$variable{index} = $index;
 					$html .= ssi::variable_substitution( \$fragment, $variable );
 				} # end foreach

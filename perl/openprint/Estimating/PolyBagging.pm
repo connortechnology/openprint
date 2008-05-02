@@ -24,9 +24,9 @@ require sql;
 require misc;
 
 my @variables = (
-		'txtPrice1',
-        'txtPrice2',
-        'txtPrice3',
+		'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'Markup1', 'Markup2', 'Markup3',
+		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 		'Inserts',
 );
 
@@ -80,7 +80,11 @@ sub calc {
 		} else {
 			$$specs{'alert'} .= 'Unknown units ('.$Price{'units'}.') on service price.<br/>';
 		} # end if
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $MRPrice{'Price'} + $Price{'Total'} );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, ($MRPrice{'Price'} + $Price{'Total'})*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 	} # end foreach
 	return $$specs{'Status'} = 'calculated';
 } # end sub calc

@@ -4,6 +4,10 @@ function get_parameters( form, id, selected ) {
 
 	if ( form.elements['Owner'+id] ) 
 		parameters.push( 'Owner', get_ddm_value( form.elements['Owner'+id] ) ); 
+
+	if ( form.elements['Group'+id] ) 
+		parameters.push( 'Group', get_ddm_value( form.elements['Group'+id] ) ); 
+
 	if ( form.elements['Manufacturer'+id] ) 
 		parameters.push( 'Manufacturer', get_ddm_value( form.elements['Manufacturer'+id] ) ); 
 	if ( form.elements['Name'+id] ) 
@@ -34,6 +38,10 @@ function filter_onChange( element, id, selected ) {
 
 	if ( form.elements['Manufacturer'+id] ) {
 		form.elements['Manufacturer'+id].disabled = true;
+	} // end if
+
+	if ( form.elements['Group'+id] ) {
+		form.elements['Group'+id].disabled = true;
 	} // end if
 
 	if ( form.elements['Name'+id] ) {
@@ -105,7 +113,7 @@ function fill_drop_down( results ) {
         } // end if
     } // end for
 
-	var fields = new Array ( 'Owner','Manufacturer','Name','Finish','Colour','Weight' );
+	var fields = new Array ( 'Group', 'Owner','Manufacturer','Name','Finish','Colour','Weight' );
 	for ( var i = 0; i < fields.length; i+=1 ) {
 		var field = fields[i];
 		if ( ! form.elements[field+id] ) continue;

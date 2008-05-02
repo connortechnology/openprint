@@ -159,17 +159,16 @@ function calc_print( formName, force ) {
 
 	var form = getFormObj( formName );
 
-	clear_price_data(form);
 
 	if ( gettingNewPrice && ! force ) {
 		// This prevents concurrent price getting
-		if ( timeout )
-			clearTimeout( timeout );
+		if ( timeout ) clearTimeout( timeout );
 		timeout = setTimeout("calc('f1');", 1000 );	
 		return;
 	} // end if
-	timeout = null;
+	//timeout = null;
 
+	clear_price_data(form);
 	jsrsExecute( '/jsrs.htm', cbFillPrintResults, 'openprint::service::external_calc', get_variables(formName,'Printing') );
 	return;
 } // end calc_print

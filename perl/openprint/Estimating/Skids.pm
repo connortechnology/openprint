@@ -32,6 +32,8 @@ my %variables = (
 	'txtPackageQuantity1' => ['save','output'], 'txtPackageQuantity2' => ['save','output'], 'txtPackageQuantity3' => ['save','output'],
 	'txtUnitPrice1' => ['output'], 'txtUnitPrice2' => ['output'], 'txtUnitPrice3' => ['output'],
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
+	'Markup1'=>['save'], 'Markup2'=>['save'], 'Markup3'=>['save'],
+	'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
 	'txtFinishedCalliper' => ['save','output'],
 	'txtFinishedWeight' => ['save','output'],
 	'ddmPackageType1' => ['save','output'], 'OverridePackageType1'=>['save'],
@@ -89,7 +91,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	my $ServiceType = new openprint::ServiceType( openprint::service::get_type_id( $project_index, $service_index ) );
+	my $ServiceType = $Project->ServiceType( $service_index );
 
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
 	my $serviceCharge = openprint::service::get_price( $ServiceType->name(), undef, undef );
@@ -116,6 +118,7 @@ sub calc {
 	} # end if
 	
     foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -196,7 +199,7 @@ sub calc {
 		$$specs{'txtPackageWeight'.$qty_index} = sprintf('%.2f', $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'.$qty_index} );
 
 		if ( $$specs{'txtItemsPerPackage'.$qty_index} ) {
-			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
+			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{"txtPackageWeight$qty_index"}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
 		} # end if
 		$qty = ceil( $$specs{'txtItemsPerPackage'.$qty_index} ? $qty/$$specs{'txtItemsPerPackage'.$qty_index} : 0 );
 
@@ -207,7 +210,7 @@ sub calc {
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
