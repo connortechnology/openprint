@@ -3111,7 +3111,7 @@ sub summary {
 	if ( $qty_index ) {
 		if ( ! $$specs{'txtSpreadSize'} ) {
 			if ( $$services{''} ) {
-				my $printing_specs = get_specs_ref( $Project, $$services{''}[0] );
+				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 				$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
 			} # end if
 		} # end if
