@@ -64,7 +64,7 @@ sub variables {
 }
 
 sub signature_needs {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $sig_specs ) = @_;
 
 	my $services = $Project->services();
 
@@ -80,19 +80,19 @@ sub signature_needs {
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $Project->quantity( $qty_index );
-$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
-$openprint::log->debug("Cutting sig needs: stock: " . join('x', @$specs{'hdnSuppliedStockWidth'.$qty_index,'hdnSuppliedStockHeight'.$qty_index} ) );
-$openprint::log->debug("Cutting sig needs: ssize: " . join('x', @$specs{'txtWidth','txtHeight'} ) );
-		if ( $$specs{'txtImposition'.$qty_index} > 1 ) {
+#$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
+#$openprint::log->debug("Cutting sig needs: stock: " . join('x', @$specs{'hdnSuppliedStockWidth'.$qty_index,'hdnSuppliedStockHeight'.$qty_index} ) );
+#$openprint::log->debug("Cutting sig needs: ssize: " . join('x', @$specs{'txtWidth','txtHeight'} ) );
+		if ( $$sig_specs{'txtImposition'.$qty_index} > 1 ) {
 			return 1;
 		} # end if
 		if ( ! (
 			(
-			 $$specs{'hdnSuppliedStockWidth'.$qty_index} == $$specs{'txtWidth'} 
-			and $$specs{'hdnSuppliedStockHeight'.$qty_index} == $$specs{'txtHeight'}
+			 $$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtWidth'} 
+			and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtHeight'}
 			) or (
-			$$specs{'hdnSuppliedStockWidth'.$qty_index} == $$specs{'txtHeight'}
-			and $$specs{'hdnSuppliedStockHeight'.$qty_index} == $$specs{'txtWidth'}
+			$$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtHeight'}
+			and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtWidth'}
 			)
 			) ) {
 			return 1;

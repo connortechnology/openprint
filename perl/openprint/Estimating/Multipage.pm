@@ -183,11 +183,12 @@ $openprint::log->debug("Starting Multipage::calculate_signatures");
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	return if ! $$printing_specs{'txtTotalPageQuantity'};
+	#return if ! $$printing_specs{'txtTotalPageQuantity'};
 
 	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'GateFolded Spreads'});
+	@signatures = $Project->signatures() if ! @signatures;
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
@@ -223,6 +224,11 @@ $openprint::log->warn('Deleting due to incorrect printing type');
 	} # end for
 
 	my @groups = sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
+	if ( ! @groups ) {
+		foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
+		} # end if
+	} else {
 	foreach my $group ( @groups ) {
 		my @sigs = sort $Project->signatures( {'Group'=>$group} );
 $openprint::log->debug("Sigs in group $group : " . scalar @sigs );
@@ -287,7 +293,8 @@ $openprint::log->debug("Remaining sigs " . @sigs);
 			$openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
 			$status = $$sig_specs{'Status'};
 		} # end if
-	} # end foreach type
+	} # end foreach grooooup
+	} # end if no gorups
 
 	return 'calculated';
 } # end sub calculate_signatures
