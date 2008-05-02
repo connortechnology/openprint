@@ -264,6 +264,9 @@ sub auto_calculate {
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary
 	my $folding_service_index = $services{'Folding'}[0] if $services{'Folding'};
 	if ( ! openprint::Estimating::Folding::neccessary( $project_index ) ) {
+		while ( my $si = shift @{$services{'Folding'}} ) {
+			openprint::print_project::delete_service( $log, $dbh, $project_index, $si );
+		} # end while
 	} else {
 		if ( ! $services{'Folding'} ) {
 			if ( $Project->mode() ne 'Detailed' ) {
