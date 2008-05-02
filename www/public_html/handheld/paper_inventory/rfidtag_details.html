@@ -24,7 +24,11 @@
 		} # end if
 	} # end if
 
-	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
+	#$$TAG{location_id} = $openprint::param{'location_id'} if $openprint::param{'location_id'};
+	
+	if ( $openprint::param{'btnFunction'} eq 'Go' ) {
+		delete $openprint::param{'location_id'};
+	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		$TAG->location_id( $openprint::param{'location_id'} ) if $openprint::param{'location_id'};
 		if ( $openprint::param{'skid_id'} ) {
 			my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
@@ -45,6 +49,7 @@ $openprint::log->debug("Success");
 $openprint::log->error($$variable{'error'});
 	
 		} # end if
+		delete $openprint::param{'location_id'};
 	} # end if Save
 	$$variable{'RFIDTag'} = $TAG;
 ) ?>
@@ -73,7 +78,7 @@ $openprint::log->error($$variable{'error'});
 			<select id="location_id" name="location_id">
 				<option value="">select</option>
 				<? echo ( 
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)')], $$variable{'RFIDTag'} ? $$variable{'RFIDTag'}->location_id() : $openprint::param{'location_id'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)')], $openprint::param{'location_id'} ? $openprint::param{'location_id'} : $$variable{'RFIDTag'}->location_id() );
 					) ?>
 			</select>
 		</p>
