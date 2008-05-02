@@ -844,7 +844,8 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		push @Papers, $Paper;
 		@$Paper{'start_width','start_height'} = @$Paper{'width','height'};
-		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','basis_mweight' ) {
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','basis_mweight',
+'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
 			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
@@ -881,13 +882,14 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 				'project_type_id'=>$Project->type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
-		if ( $debug ) {
+		#if ( $debug ) {
 		foreach my $P ( @Papers ) {
 			$P->prices();
 		} # end foreach
-		} # end if
+		@$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade'} = $Papers[0]->get('name','finish','colour','weight','grade');
+		#} # end if
 		$$specs{'txtSpecificStockCalliper'} = $Papers[0]->calliper() if @Papers;
-		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM' ) {
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade' ) {
 			$variables{$k} = [ sets::union( 'output', @{$variables{$k}} ) ];
 		} # end foreach
 	} # end if
@@ -1612,6 +1614,9 @@ sub breakdown {
 	} # end if
 	if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
 		$breakdown .= 'Paper Price not included in total<br/>';
+		if ( my $SuppliedPaperPrice = $$price{'SuppliedPaperPrice'} ) {
+		$breakdown .= sprintf('SuppliedStock Charge: $%1$.2f%2$s * (%4$dlbs,%5$dsheets) = $%3$.2f<br/>', @$SuppliedPaperPrice{'Price','units','Total'}, @$price{'Stock Weight','Gross Sheet Count'});
+		} # end if
 	} # end if
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf("\tInk Total: \$%.2f<br/>", $$price{'Ink Price'} );
@@ -2306,6 +2311,19 @@ sub calc_price {
 	} # end if
 	my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
 	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb Cost', '100lb Price'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb Cost', '100lb Price'};
+	if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
+		if ( my %SuppliedPaperPrice = openprint::service::get_price_object( 'Supplied'.$Paper->type(), undef, undef ) ) {
+			if ( lc $SuppliedPaperPrice{'units'} eq 'per 100lbs' ) {
+				$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $sheet_qty{'Weight'} / 100;
+			} elsif ( lc $SuppliedPaperPrice{'units'} eq 'per sheet' ) {
+				$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $sheet_qty{'Gross Sheet Count'};
+			} elsif ( lc $SuppliedPaperPrice{'units'} eq 'per m' ) {
+				$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $sheet_qty{'Gross Sheet Count'}/1000;
+			} # end if
+			$price{'SuppliedPaperPrice'} = \%SuppliedPaperPrice;
+			$price{'Comparison Cost'} += $SuppliedPaperPrice{'Total'};
+		} # end if
+	} # end if
 
 	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
 		$price{'Roll2SheetCharge'} = openprint::service::get_price( 'Roll2Sheet', undef, $Press );
