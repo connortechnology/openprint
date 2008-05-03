@@ -15,8 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $threading = 1;
-my $debug = 0;
+my $threading = 0;
+my $debug = 1;
 my $master_time;
 
 use strict;
@@ -1043,6 +1043,8 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 						$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
 						$$specs{'PrintingTypes'} = ['Offset','Waterless'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
 					} else {
 						$openprint::log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
 					} # end if
@@ -1077,6 +1079,10 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
 						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
 							$$specs{'PrintingTypes'} = ['Offset'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+							$$specs{'PrintingTypes'} = ['Web'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+							$$specs{'PrintingTypes'} = ['Sheetfed'];
 						} # end if
 						last if $$specs{'PrintingTypes'};
 					} # end foreach
@@ -1511,8 +1517,8 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		$$specs{'BlankPlateQuantity'.$qty_index} = $$plate_setup{'Blank Plates'};
 		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
 
-		$$specs{'StitchingImposition'.$qty_index} = $best_price{'StitchingImposition'};
-		$$specs{'FoldingImposition'.$qty_index} = $best_price{'FoldingImposition'};
+		#$$specs{'StitchingImposition'.$qty_index} = $best_price{'StitchingImposition'};
+		#$$specs{'FoldingImposition'.$qty_index} = $best_price{'FoldingImposition'};
 
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $best_price{'Impressions'};
 #$$specs{'RunTime'.$qty_index} = $best_price{'RunTime'};
