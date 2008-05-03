@@ -65,10 +65,12 @@ sub calc {
 
 	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
 	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
-		if ( $$specs{'ServiceType'} eq 'Bundling' ) {
+		if ( $ServiceType->name() eq 'Bundling' ) {
 			$$specs{'alert'} .= 'Please enter the # of items in each bundle';
+		} elsif ( $ServiceType->name() eq 'ShrinkWrap' ) {
+			$$specs{'alert'} .= 'Please enter the # of items in each wrap';
 		} else {
-			$$specs{'alert'} .= 'Please enter the # of items in each ' . $$specs{'ServiceType'};
+			$$specs{'alert'} .= 'Please enter the # of items in each ' . $ServiceType->name();
 		} # end if
         return $$specs{'Status'} = 'uncalculated';
 	} # end if
