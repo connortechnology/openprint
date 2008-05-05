@@ -3,10 +3,10 @@
 
 	$openprint::param{'skid_id'} =~ s/\D//g;
 	$openprint::param{'rfidtag_id'} =~ s/\D//g;
-	if ( length $openprint::param{'rfidtag_id'} != 15 ) {
-		$$variable{'error'} = 'Invalid RFID Tag # ' . $openprint::param{'rfidtag_id'} . ' : ' . length $openprint::param{'rfidtag_id'};
-		return;
-	} # end if
+	#if ( length $openprint::param{'rfidtag_id'} != 15 ) {
+		#$$variable{'error'} = 'Invalid RFID Tag # ' . $openprint::param{'rfidtag_id'} . ' : ' . length $openprint::param{'rfidtag_id'};
+		#return;
+	#} # end if
 	@$variable{'skid_id','rfidtag_id'} = @openprint::param{'skid_id','rfidtag_id'};
 
 	if ( ! $openprint::param{'rfidtag_id'} ) {

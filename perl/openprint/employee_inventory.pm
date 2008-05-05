@@ -872,6 +872,7 @@ sub rfidtags {
 
 sub rfidtag_details {
 	my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
+	$RFIDTag->id( $param{'rfidtag_id'} ) if ! $RFIDTag->id();
 	
 $log->debug("Loading tag: $param{'rfidtag_id'}");
 	if ( $param{'btnFunction'} eq 'Save' ) {
