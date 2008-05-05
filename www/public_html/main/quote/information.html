@@ -291,7 +291,7 @@
 			<tr<?rowclass?>> 
 				<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?>&nbsp;</a></td>
 				<td align="center"> 
-					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6" value="<?markup?>" onkeyup="calc_from_markup(f1, this);"/>
+					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
 				</td>
 				<td align="right"><?qty?></td>
 				<td align="right"> 

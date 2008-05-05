@@ -2179,8 +2179,38 @@ sub calc_price {
 
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'SpinePaste' );
 	} # end if
-	$price{'Run Speed'} = $run_speed;
 
+	if ( $$project{'HasScoring'} and $$project{'NeedScoring'} ) {
+		my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		if ( $scoring_results{'Status'} eq 'uncalculated' ) {
+			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{'alert'} $$project{'ScoringSpecs'}{alert} " . $$project{'ScoringSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} else {
+			$price{'Scoring Breakdown'} .= "Scoring Price: $scoring_results{'Price'}<br/>";
+			$price{'Comparison Cost'} += $scoring_results{'Price'};
+		} # end if
+		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
+	} # end if
+	if ( $$project{'HasPerforating'} ) {
+		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
+			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{'alert'} $$project{'PerforatingSpecs'}{alert} " . $perforating_results{'Breakdown'} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} else {
+			$price{'Perforating Breakdown'} .= sprintf('Perforating Price: %.2f speed: %s<br/>', @perforating_results{'Price','Runspeed'} );
+			$price{'Comparison Cost'} += $perforating_results{'Price'};
+			if ( $perforating_results{'Equipment'}->id() == $Press->id() ) {
+				if ( $perforating_results{'Runspeed'} =~ /(.*)\%/ ) {
+					$run_speed *= (1+$1/100);
+				} else {
+					$run_speed = $perforating_results{'Runspeed'} if $run_speed > $perforating_results{'Runspeed'};
+				} # end if
+			} # end if
+		} # end if
+		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
+	} # end if
+
+	$price{'Run Speed'} = $run_speed;
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Overs Minimum', scalar @colours );
 	my $setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours );
@@ -2612,31 +2642,6 @@ sub calc_price {
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Cutting' );
 	} # end if
 
-	if ( $$project{'HasScoring'} and $$project{'NeedScoring'} ) {
-$openprint::log->debug("Scoring");
-		my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $service_index, $specs, $qty_index );
-$openprint::log->debug("Scoring REsults: $scoring_results{'Status'} $scoring_results{'Price'}");
-		if ( $scoring_results{'Status'} eq 'uncalculated' ) {
-			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{'alert'} $$project{'ScoringSpecs'}{alert} " . $$project{'ScoringSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
-			$price{'Comparison Cost'} += 1000000; 
-		} else {
-			$price{'Scoring Breakdown'} .= "Scoring Price: $scoring_results{'Price'}<br/>";
-			$price{'Comparison Cost'} += $scoring_results{'Price'};
-		} # end if
-		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
-	} # end if
-	if ( $$project{'HasPerforating'} ) {
-$openprint::log->debug("Perforating");
-		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index );
-		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
-			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{'alert'} $$project{'PerforatingSpecs'}{alert} " . $$project{'PerforatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
-			$price{'Comparison Cost'} += 1000000; 
-		} else {
-			$price{'Perforating Breakdown'} .= "Perforating Price: $perforating_results{'Price'}<br/>";
-			$price{'Comparison Cost'} += $perforating_results{'Price'};
-		} # end if
-		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
-	} # end if
 
 	$price{'complete'} = 1;
 	return \%price;

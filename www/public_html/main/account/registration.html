@@ -196,6 +196,9 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
                 ) ?>
 				</p>
 <? endif ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) ?>
+<? if ( $config{'RegistrationDisclaimer'} ) ?>
+				<p><? echo ( $config{'RegistrationDisclaimer'} ) ?></p>
+<? endif ( $config{'RegistrationDisclaimer'} ) ?>
 				<p class="buttons">
 					<? echo ( ssi::writeButton( $log, $dbh, 'Submit','submit.gif',"f1.submit();",'','Submit'); ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();",'','Reset'); ) ?>
