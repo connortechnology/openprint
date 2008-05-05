@@ -151,8 +151,8 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-				$$specs{'alert'} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
-				return $$specs{'Status'} = 'uncalculated';
+				$$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
+				next;
 			} # end if
 
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );

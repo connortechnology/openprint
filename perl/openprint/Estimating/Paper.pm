@@ -189,6 +189,7 @@ sub summary {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		foreach my $qty_index ( 1 .. 3 ) {
             next if ! $Project->quantity( $qty_index );
+			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
 			if ( $Paper->type() eq 'Roll' ) {
@@ -206,9 +207,22 @@ sub summary {
 
     } # end foreach
 	if ( $qty_index ) {
-		return join('<br/>', map { $sheets{$_} ? $sheets{$_}[$qty_index] .'sheets '. $totals{$_}[$qty_index].'lbs' : $totals{$_}[$qty_index].'lbs' } sort keys %totals );
+		my $html = '';
+		foreach my $key ( sort keys %totals ) {
+			if ( $totals{$key}[$qty_index] ) {
+				if ( $sheets{$key} ) {
+					$html .= $sheets{$key}[$qty_index].'sheets '.$totals{$key}[$qty_index].'lbs';
+				} else {
+					$html .= $totals{$key}[$qty_index].'lbs';
+				} # end if
+			} else {
+				$html .= 'none';
+			} # end if
+				$html .= '<br/>';
+		} # end foreach key
+		return $html;
 	} else {
-		return join('<br/>', sort keys %totals );
+		return '<br/>'.join('<br/>', sort keys %totals );
 	} # end if
 } # end sub summary
 
