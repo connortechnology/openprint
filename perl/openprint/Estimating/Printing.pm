@@ -2063,9 +2063,10 @@ sub calc_price {
 			$Imposition->StitchingImposition( $$specs{'StitchingImposition'.$qty_index} );
 		} # end if
 #my $starttime = gettimeofday();
-		my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $Imposition, $$project{'StitchingSpecs'}, $qty_index );
+		my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $Imposition, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index );
 		if ( $$results{'Status'} eq 'uncalculated' ) {
-			$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
+			$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
+			#$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>" . $$project{'StitchingSpecs'}{'hdnBreakdown'.$qty_index};
 			$price{'Comparison Cost'} += 10000000; # Can't stich this on
 			$price{'Stitching Cost'} = 10000000;
 		} else {

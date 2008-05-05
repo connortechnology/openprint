@@ -409,6 +409,10 @@ $openprint::log->debug("Loading imposition");
 		my %folds;
 		$$specs{'hdnBreakdown'.$qty_index} .= '<b>Equipment '.$Equipment->name().':</b><br/>';
 		#$openprint::log->debug('Equipment '.$Equipment->name());
+		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+			next;
+		} # end if
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {

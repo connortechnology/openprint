@@ -142,6 +142,7 @@ sub signature_calc_stock_cutting {
 
 #$openprint::log->debug("Loading Paper from signature in signature_calc_stock_cutting");
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
+	my $services = $Project->services();
 
 # Have an imposition, so can do all calculations
 	my ( $sheet_width, $sheet_height ) = ( $Paper->width(), $Paper->height() );
@@ -208,6 +209,10 @@ sub signature_calc_stock_cutting {
 # Has to happen on normal cutters
 	foreach my $Equipment ( @my_equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "\tEquipment: ".$Equipment->name().':';
+		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+			next;
+		} # end if
 
 		my $reason = $Equipment->fits( @$specs{"txtSuppliedStockWidth-$signature_index-$qty_index","txtSuppliedStockHeight-$signature_index-$qty_index","txtStockCalliper-$signature_index"} );
 		$$specs{'hdnBreakdown'.$qty_index} .= $reason . "<br/>";
@@ -318,6 +323,10 @@ sub signature_calc_folding_cutting {
 # Has to happen on normal cutters
 	foreach my $Equipment ( @my_equipment ) {
 		next if $Equipment->specification('Type') eq 'Stitcher';
+		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+			next;
+		} # end if
 
 		$$specs{'hdnBreakdown'.$qty_index} .= "\tEquipment: ".$Equipment->name().':';
 
@@ -534,6 +543,10 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 	foreach my $Equipment ( @my_equipment ) {
 		next if ! $Equipment->id();
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $Equipment->name() .':';
+		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+			next;
+		} # end if
 		if ( $Equipment->specification('Cutting Capable') eq 'When Printing' and $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on ' . $Equipment->strid();
 			next;

@@ -286,6 +286,10 @@ sub signature_calc {
 		} else {
 			@impositions = @cut_impositions;
 		} # end if
+		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+			$Results{'Breakdown'} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+			next;
+		} # end if
 		if ( ($Equipment->specification('Perforating Capable') eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$Results{'Breakdown'} .= "Not printing on $$Equipment{name}.<br/>";
 			next;
@@ -468,6 +472,8 @@ sub fits_on_equipment {
 } # end sub fits_on_equipment
 
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
 	return '';
 } # end sub summary
 
