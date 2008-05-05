@@ -552,6 +552,7 @@ sub calc {
 	} # end if
 	$$specs{'Status'} = 'calculated';
 	$$specs{'alert'} = '';
+	$$specs{'information'} = '';
 
 	if ( ( defined $$specs{'PageQuantity'} ) and $$specs{'PageQuantity'} =~ /[^\d\.]/ ) {
 		$variables{'PageQuantity'} = [ sets::exclude( ['output'], $variables{'PageQuantity'} ) ];
@@ -1146,7 +1147,8 @@ $openprint::log->debug("No spread layout for you!");
 			$$specs{"txtImposition$qty_index"} = '';
 			$$specs{"ddmRunStyle$qty_index"} = '';
 			$$specs{"PageQuantity$qty_index"} = 0;
-			$$specs{'alert'} .= "No more pages need to be specified for quantity $qty_index.";
+			$$specs{'information'} .= "No more pages need to be specified for quantity $qty_index.";
+			$prices{$qty_index} = {};
 			next;
 		} # end if
 
@@ -1430,10 +1432,8 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		} # end if
 
 		# Only thread qtys 2 and 3
-		if ( $threading and $qty_index > 1 ) {
+		if ( $threading and ($qty_index > 1) ) {
 			$threads{$qty_index} = threads->create( sub { 
-				$openprint::log->debug( "Created thread:" . $qty_index );
-
 				$openprint::dbh = sql::open_sql( $openprint::log, 
 					'database'	=> $openprint::r->dir_config('db_name'),
 					'driver'	=> $openprint::r->dir_config('db_driver'), 
@@ -1445,8 +1445,6 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 				} );
 		} else {
 			my $sig_price = get_project_price( $Project, $service_index, \@side_one_colours, \@side_two_colours, \@filtered_colours, \%special_colours, \%inkCoverage, \%mixed_colours, \%washed_colours, $project, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \%impositions );
-
-			
 			$prices{$qty_index} = $sig_price;
 		} # end if
 
@@ -1460,8 +1458,11 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty: ";
 		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
 		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
-		if ( $threading and $qty_index > 1 ) {
-			$prices{$qty_index} = $threads{$qty_index}->join();
+		if ( $threading and ($qty_index > 1) ) {
+			# The thread may not be defined if for example no more spreads needed to be calculated
+			if ( defined $threads{$qty_index} ) {
+				$prices{$qty_index} = $threads{$qty_index}->join();
+			} # end if
 		} # end if
 		my $b_price = $prices{$qty_index};
 
@@ -1472,6 +1473,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 
 		my %best_price = %{$b_price};
 		my $Imposition = $$b_price{'Imposition'};
+		next if ! $Imposition;
 		my $Paper = $Imposition->paper();
 		my $Press = $Imposition->Press();
 
