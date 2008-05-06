@@ -33,8 +33,8 @@ sub variables {
 }
 
 sub signature_needs {
-	my ( $log, $dbh, $project_index, $specs ) = @_;
-	return 1 if $$specs{'rdbSuppliedStock'} ne 'Y';
+	my ( $Project, $sig_specs ) = @_;
+	return 1 if $$sig_specs{'rdbSuppliedStock'} ne 'Y';
 	return 0;
 } # end sub
 
@@ -45,7 +45,7 @@ sub neccessary {
 
     foreach my $signature_service_index ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-        if ( signature_needs( $log, $dbh, $project_index, $sig_specs ) ) {
+        if ( signature_needs( $Project, $sig_specs ) ) {
             return 1;
         } # end if
     } # end foreach
@@ -77,7 +77,7 @@ sub signature_calc {
 
 	if ( ! $Paper ) {
 		if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
-			$log->debug("Supplied");
+			#$log->debug("Supplied");
 			$Paper = new openprint::Paper( );
 			@$Paper{'cut_paper','perfecting','calliper','Per M'} = ( 'Y','N',@$specs{'txtSpecificStockCalliper','txtCustomSheetPrice'});
 			@$Paper{'width','height','mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight'};
@@ -86,10 +86,10 @@ sub signature_calc {
 			#$log->debug("Not Supplied $specs $$specs{'ddmStockBrand'}");
 			my @Papers = openprint::Paper::find( 'name'=>$$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'} );
 			foreach my $P ( @Papers ) {
-$log->debug("Looking at: " . $P->width() . ' x '. $P->height() . " for ".$$specs{'hdnSuppliedStockWidth'.$qty_index}.'x'.$$specs{'hdnSuppliedStockHeight'.$qty_index});
+#$log->debug("Looking at: " . $P->width() . ' x '. $P->height() . " for ".$$specs{'hdnSuppliedStockWidth'.$qty_index}.'x'.$$specs{'hdnSuppliedStockHeight'.$qty_index});
 				if ( $P->width() == $$specs{'hdnSuppliedStockWidth'.$qty_index} and $P->height() == $$specs{'hdnSuppliedStockHeight'.$qty_index} ) {
 					$Paper = $P;
-					$log->debug("Found sheet");
+					#$log->debug("Found sheet");
 					last;
 				} # end if
 			} # end foreach
@@ -108,7 +108,7 @@ $log->debug("Looking at: " . $P->width() . ' x '. $P->height() . " for ".$$specs
 	} # end if
 
 	return sheet_calc( $Paper, $$specs{'txtPressSheetQty'.$qty_index} );
-} # end sub
+} # end sub signature_calc
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
@@ -126,7 +126,6 @@ sub calc {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my %price = signature_calc( $log, $dbh, $variable, $project_index, $signature_service_index, $sig_specs, $qty_index );
 			$$specs{'txtPrice'.$qty_index} += $price{'Paper Price'};
-			
 		} # end foreach qty_index
 	} # end foreach
 	return $$specs{'Status'} = 'calculated';
