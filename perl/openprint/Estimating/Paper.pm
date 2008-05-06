@@ -86,10 +86,10 @@ sub signature_calc {
 			#$log->debug("Not Supplied $specs $$specs{'ddmStockBrand'}");
 			my @Papers = openprint::Paper::find( 'name'=>$$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'} );
 			foreach my $P ( @Papers ) {
-	#$log->debug("Looking at: " . $Sheet->width() . ' x '. $Sheet->height() . " for ".$$specs{'hdnSuppliedStockWidth'.$qty_index}.'x'.$$specs{'hdnSuppliedStockHeight'.$qty_index});
+$log->debug("Looking at: " . $P->width() . ' x '. $P->height() . " for ".$$specs{'hdnSuppliedStockWidth'.$qty_index}.'x'.$$specs{'hdnSuppliedStockHeight'.$qty_index});
 				if ( $P->width() == $$specs{'hdnSuppliedStockWidth'.$qty_index} and $P->height() == $$specs{'hdnSuppliedStockHeight'.$qty_index} ) {
 					$Paper = $P;
-					#$log->debug("Found sheet");
+					$log->debug("Found sheet");
 					last;
 				} # end if
 			} # end foreach
@@ -100,6 +100,11 @@ sub signature_calc {
 				} # end while
 			} # end if
 		} # end if
+	} # end if
+
+	if ( ! $Paper ) {
+		$openprint::log->error("Unable to find paper.");
+		return;
 	} # end if
 
 	return sheet_calc( $Paper, $$specs{'txtPressSheetQty'.$qty_index} );
@@ -118,6 +123,7 @@ sub calc {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		foreach my $qty_index ( 1 .. 3 ) {
 			next if ! $Project->quantity($qty_index);
+			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my %price = signature_calc( $log, $dbh, $variable, $project_index, $signature_service_index, $sig_specs, $qty_index );
 			$$specs{'txtPrice'.$qty_index} += $price{'Paper Price'};
 			
