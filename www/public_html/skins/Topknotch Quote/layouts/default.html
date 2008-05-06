@@ -63,39 +63,39 @@
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div class="Content">
 			<div class="ContentInner">
-				<div class="Header" style="padding-left: 181px; padding-right: 170px; min-width: 300px;">
+				<div class="Header" style="padding-left: 181px; padding-right: 180px; min-width: 300px;">
 					<a href="/index.html"><img style="float: left; height:65px; margin-left: -181px;" src="/images/logo.gif" alt=""/></a>
-					<div style="float: right; margin-right: -170px;">
+					<div style="float: right; margin-right: -180px;">
 						<p><label>Tel:</label>(866) 382-5100</p>
 						<p><label>Tel:</label>(905) 624-5100</p>
 						<p><label>Fax:</label>(905) 624-6800</p>
 					</div>
 					<div style="float: left; width: 100%;">
 <? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
-				<div id="CurrencySelection">
-                    <form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction'] } ); ) ?>" method="post">
-						<p>
-							<label>Currently selected currency:</label>
-							<select name="select_currency_id" onchange="this.form.submit();">
-								<? echo (
-									ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
-								) ?>
-							</select>
-						</p>
-						<p>
-							<label>Currently selected company:</label>
-							<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
-							<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.submit();">
-								<option value="">Select a Company</option>
-				<? echo ( 
-				 openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} );
-				) ?>
-							</select>
-							<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'SelectCurrency.submit();', '', 'Submit' ); ) ?>
-						</p>
-						<input type="hidden" name="btnFunction" value="SelectCompany" />
-                    </form>
-                </div>
+					<div id="CurrencySelection">
+						<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction'] } ); ) ?>" method="post">
+							<p>
+								<label>Currently selected currency:</label>
+								<select name="select_currency_id" onchange="this.form.submit();">
+									<? echo (
+										ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
+									) ?>
+								</select>
+							</p>
+							<p>
+								<label>Currently selected company:</label>
+								<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
+								<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.submit();">
+									<option value="">Select a Company</option>
+					<? echo ( 
+					 openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} );
+					) ?>
+								</select>
+								<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'SelectCurrency.submit();', '', 'Submit' ); ) ?>
+							</p>
+							<input type="hidden" name="btnFunction" value="SelectCompany" />
+						</form>
+					</div>
 <? else ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 					<img style="float: left; margin-left: 15px;" src="/images/main/header/us-ca.jpg" alt="Flags" width="139" height="48" border="1" usemap="#Map" class="unprintable"/>
 					<map name="Map" id="Flags">
