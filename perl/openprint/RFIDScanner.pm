@@ -134,10 +134,10 @@ sub Location {
 } # end sub Location
 
 sub location_id {
-    my ( $self, $new ) = @_;
+    my ( $self, $new, $rfidtag_id ) = @_;
     if ( $new ) {
         if ( $new != $$self{'location_id'} ) {
-            sql::insert( undef, undef, 'RFIDScannerHistory', {'location_id'=>$new, 'scanner_id'=>$$self{id} } );
+            sql::insert( undef, undef, 'RFIDScannerHistory', {'location_id'=>$new, 'scanner_id'=>$$self{id}, 'rfidtag_id'=>$rfidtag_id } );
             $$self{'location_id'} = $new;
         } # end if
     } # end if

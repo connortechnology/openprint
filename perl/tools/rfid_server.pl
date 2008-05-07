@@ -62,11 +62,11 @@ sub process_request {
 			#$self->log(1, sprintf('%s : %s : hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			$tag_id = substr( $tag_id, length($tag_id)-16, 16 );
 			my $type_digit = substr( $tag_id, 0, 1 );
-			$tag_id = substr( $tag_id, 1, 15 );
+			$tag_id = substr( $tag_id, 2, 15 );
 
 			#$self->log(1, sprintf('%s : %s : short  hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			$tag_id = hex($tag_id);
-			$tag_id = sprintf('%d%.15d', $type_digit , $tag_id );
+			$tag_id = sprintf('%d%.14d', $type_digit , $tag_id );
 			$self->log(1, sprintf('%s : %s : dec %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			if ( ! $tag_id ) {
 			$self->log(1, sprintf('%s : %s : No tag', $date, $self->{server}->{peeraddr} ));
@@ -97,7 +97,7 @@ sub process_request {
 						my @location_ids = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>3);
 						$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
 						if ( ! sets::isin( $Tag->location_id(), \@location_ids ) ) {
-							$Scanner->location_id( $Tag->location_id() );
+							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
 							my $e = $Scanner->save();
 							$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
 						} # end if
@@ -112,6 +112,10 @@ sub process_request {
 						$changed = 1;
 						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					} # End if
+				} elsif ( $Scanner->type() eq 'Checkout' ) {
+					if ( $Tag->type() eq 'Skid' ) {
+						my $Skid = $Tag->Skid();
+					} # end if
 				} else {
 					$self->log(1, sprintf('%s : %s : unknown scanner type %s', $date, $self->{server}->{peeraddr}, $Scanner->type() ));
 				} # End if
