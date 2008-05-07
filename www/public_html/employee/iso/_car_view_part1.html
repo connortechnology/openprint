@@ -22,7 +22,7 @@
 		<td colspan="3"><? hecho ( join(' ', map { new openprint::Equipment( $_ )->name() } split(';', $$variable{'CAR'}->presses() ));) ?></td>
 	</tr>
 	<tr>
-		<td colspan="2">Identified By:</td>
+		<td colspan="2">Problem Identified By:</td>
 		<td colspan="3"><? hecho ( $$variable{'CAR'}->identified_by() ) ?></td>
 		<td colspan="2">Printed On:</td>
 		<td colspan="3"><? hecho ( $$variable{'CAR'}->printed_on() ) ?></td>

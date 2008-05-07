@@ -2,6 +2,15 @@
 <h1>CORRECTIVE ACTION REQUEST (CAR)</h1>
 <h2>(Re-print Job Request)</h2>
 </div>
+<script type="text/javascript">
+	function check_part1( form ) {
+		if ( ! get_rdb_value( form.identified_by ) ) {
+			alert('Please select either Internal or Customer for Problem Identification');
+			return 0;
+		} // end if
+		return 1;
+	} // end function check_part1
+</script>
 <style type="text/css">
 	#CAR {
 	}
@@ -27,6 +36,11 @@
 	table tr td select option {
 		padding: 1px;
 	}
+@media print {
+	form#part1form, form#part2form, form#part3form, form#part4form {
+		display: none;
+	}
+}
 </style>
 <div id="CAR">
 	<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>

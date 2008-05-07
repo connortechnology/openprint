@@ -41,9 +41,9 @@
 	</tr>
 	<? while ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
 		<tr height="25">
-			<td><? echo ( $$variable{'Entry'}->updated_on() ) ?></td>
+			<td><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M:%S', Date::Parse::str2time($$variable{'Entry'}->updated_on())) ) ?></td>
 			<td><? echo ( $$variable{'Entry'}->Scanner()->name() ) ?></td>
-			<td><? echo ( $$variable{'Entry'}->rfidtag_id() ) ?></td>
+			<td><? echo ( sprintf('%s (%x)', $$variable{'Entry'}->rfidtag_id(), substr($$variable{'Entry'}->rfidtag_id(),1,15) ); ) ?></td>
 			<td><? echo ( $$variable{'Entry'}->Location()->name() ) ?></td>
 		</tr>
 	<? endwhile ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	

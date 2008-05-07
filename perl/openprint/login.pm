@@ -35,7 +35,7 @@ sub save_destination {
 	} else {
 		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue to the page you requested.};
 	} # end if
-} # end sub login_display
+} # end sub save_destination
 
 # login verification.	called when someone logs in
 sub verify_login {

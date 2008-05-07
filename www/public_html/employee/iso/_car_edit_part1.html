@@ -16,7 +16,11 @@
 	</tr>
 	<tr>
 		<td colspan="1">Assigned To:</td>
-		<td colspan="4"><select name="issued_to_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->issued_to_id() ); ) ?></select>
+		<td colspan="4">
+<? if ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<select name="issued_to_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->issued_to_id() ); ) ?></select>
+<? endif ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+
 		</td>
 		<td colspan="1">Issued By:</td>
 		<td colspan="4"><select name="issued_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->issued_by_id() ? $$variable{'CAR'}->issued_by_id() : $openprint::session{'user_id'} ); ) ?></select></td>
@@ -60,7 +64,7 @@
 		</td>
 	</tr>
 	<tr>
-		<td colspan="1">Identified By:</td>
+		<td colspan="1">Problem Identified By:</td>
 		<td colspan="4">
 			<input type="radio" id="identified_byInternal" name="identified_by" value="Internal" <? echo ( $$variable{'CAR'}->identified_by() eq 'Internal' ? 'checked="checked"' : '' ) ?> />
 			<label for="identified_byInternal">Internal</label>
@@ -71,14 +75,12 @@
 		<td colspan="4">
 <? eval (
 	if ( $$variable{'CAR'}->printed_on() ) {
-@$variable{'printed_on_years','printed_on_months','printed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{'CAR'}->printed_on() ) );
-	} else {
-@$variable{'printed_on_years','printed_on_months','printed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+@$variable{'printed_on_year','printed_on_month','printed_on_day'} = split('-',$$variable{'CAR'}->printed_on() );
 } # end if
 ) ?>
-            <select id="printed_on_year" name="printed_on_year" onchange="setDaysDropDown(this.value,this.form.printed_on_month.value,this.form.printed_on_day,this.form.printed_on_day.value);"><?printed_on_years?></select>
-            <select id="printed_on_month" name="printed_on_month" onchange="setDaysDropDown(this.form.printed_on.value,this.value,this.form.printed_on_day,this.form.printed_on_day.value);"><?printed_on_months?></select>
-            <select id="printed_on_day" name="printed_on_day"><?printed_on_days?></select>
+            <select id="printed_on_year" name="printed_on_year" onchange="setDaysDropDown(this.value,this.form.printed_on_month.value,this.form.printed_on_day,this.form.printed_on_day.value);"><option value="">select</option><? echo ( ssi::return_years( undef, undef, $$variable{'printed_on_year'} ? $$variable{'printed_on_year'} : '' ); ) ?></select>
+            <select id="printed_on_month" name="printed_on_month" onchange="setDaysDropDown(this.form.printed_on.value,this.value,this.form.printed_on_day,this.form.printed_on_day.value);"><option value="">select</option><? echo ( ssi::getmonths( $$variable{'printed_on_month'} ? $$variable{'printed_on_month'} : '' ); ) ?></select>
+            <select id="printed_on_day" name="printed_on_day"><option value="">select</option><? echo ( ssi::getdays( $$variable{'printed_on_day'} ? $$variable{'printed_on_day'} : '' ); ) ?></select>
 	</tr>
 	<tr><td colspan="10">PROBLEM/NONCONFORMANCE DESCRIPTION</td></tr>
 	<tr>
@@ -97,7 +99,7 @@
 			<select name="reason">
 				<option value="">select</option>
 				<? echo (
-					my @options = ( 'INCORRECT SALES ORDER','WRONG QUANTITY','SHIPPING/RECEIVING ERROR','CUTTING ERROR','HICKEYS/SCRATCHES','WRONG STOCK','MISC PREPRESS ERROR','OFFSET/PRINT ERROR','FOLDING ERROR','STAFF PERFORMANCE','COLOUR PROBLEMS','DAMAGE','PLATE ERROR','MISSING IMAGE/TEXT','SLOW RESPONSE TO RFQs','DOCKET ERROR','IMPO ERROR','MISC BINDERY ERROR','NOT REGISTERED(PRESS)','SUB STANDARD STOCK','WRONG ITEM','WRONG QUANTITY','INCORRECT DIMENSIONS','POOR QUALITY','SHELF LIFE','WRONG COLOUR','WRONG BATCH','CONTAMINATION','LATTE DELIVERY','INVOICE ISSUE','INTERNAL AUDIT','EXTERNAL AUDIT','OTHER');
+					my @options = ( 'INCORRECT SALES ORDER','WRONG QUANTITY','SHIPPING/RECEIVING ERROR','CUTTING ERROR','HICKEYS/SCRATCHES','WRONG STOCK','MISC PREPRESS ERROR','OFFSET/PRINT ERROR','FOLDING ERROR','STAFF PERFORMANCE','COLOUR PROBLEMS','DAMAGE','PLATE ERROR','MISSING IMAGE/TEXT','SLOW RESPONSE TO RFQs','DOCKET ERROR','IMPO ERROR','MISC BINDERY ERROR','NOT REGISTERED(PRESS)','SUB STANDARD STOCK','WRONG ITEM','WRONG QUANTITY','INCORRECT DIMENSIONS','POOR QUALITY','SHELF LIFE','WRONG COLOUR','WRONG BATCH','CONTAMINATION','LATE DELIVERY','INVOICE ISSUE','INTERNAL AUDIT','EXTERNAL AUDIT','OTHER');
 					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->reason() );
 				) ?>
 			</select>
@@ -144,6 +146,21 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 		</td>
 	</tr>
 <? if ( openprint::usergroup::is_user_in( ['Reprint Approvals'], $openprint::session{'user_id'} ) ) ?>
+</table>
+<br/>
+<table class="View" style="table-layout:fixed;">
+	<tr>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
 	<tr>
 		<td colspan="2">Re-print Approved:</td>
 		<td colspan="3">
@@ -156,8 +173,8 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 		<td colspan="3">
 			<input type="radio" name="reprint_charge" value="Yes" id="reprint_chargeYes" <? echo ( $$variable{'CAR'}->reprint_charge() eq 'Yes' ? 'checked="checked"' : '' ) ?> />
 			<label class="radio" for="reprint_chargeYes">Yes</label>
-			<input type="radio" name="reprint_charge" value="50%" id="reprint_charge50%" <? echo ( $$variable{'CAR'}->reprint_charge() eq '50%' ? 'checked="checked"' : '' ) ?> />
-			<label class="radio" for="reprint_charge50%">50%</label>
+			<input type="radio" name="reprint_charge" value="Discount" id="reprint_chargeDiscount" <? echo ( $$variable{'CAR'}->reprint_charge() eq 'Discount' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="reprint_chargeDiscount">Discount</label>
 			<input type="radio" name="reprint_charge" value="No" id="reprint_chargeNo" <? echo ( $$variable{'CAR'}->reprint_charge() eq 'No' ? 'checked="checked"' : '' ) ?>/>
 			<label class="radio" for="reprint_chargeNo">No</label>
 		</td>
@@ -181,6 +198,7 @@ if ( $$variable{'CAR'}->reprint_on() ) {
             <select name="approved_on_day"><?approved_on_days?></select>
 </td>
 	</tr>
+</table>
 <? else ( openprint::usergroup::is_user_in( ['Reprint Approvals'], $openprint::session{'user_id'} ) ) ?>
 <? if ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
     <tr>
@@ -195,19 +213,19 @@ if ( $$variable{'CAR'}->reprint_on() ) {
         <td colspan="2">Approved on:</td>
         <td colspan="3"><? echo ( $$variable{'CAR'}->approved_on() ) ?></td>
     </tr>
+</table>
 <? endif ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
 <? endif ( openprint::usergroup::is_user_in( ['Reprint Approvals'], $openprint::session{'user_id'} ) ) ?>
-</table>
 	<input type="hidden" name="car_id" value="<? echo ( $$variable{'CAR'}->id() ) ?>" />
 	<input type="hidden" name="btnFunction" value="Save" />
 </form>
 <p class="buttons">
 	<? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "new Ajax.Updater('Part1','_car_view_part1.html',
+		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','_car_view_part1.html',
 		{
 			method:'get',
 			parameters: Form.serialize( \$('part1form') ),
 			evalScripts: true,
-		} );", '','Save' ),
+		} );}", '','Save' ),
 		); ) ?>
 </p>

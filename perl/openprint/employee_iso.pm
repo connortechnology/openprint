@@ -38,7 +38,7 @@ sub cars {
 					$CAR->Company()->name(),
 					$CAR->identified_by(),
 					$CAR->printed_on(),
-					$CAR->presses(),
+					join( ',', map { new openprint::Equipment($_)->name() } split(';', $CAR->presses()) ),
 					$CAR->area(),
 					$CAR->reason(),
 					$CAR->problem(),
@@ -96,7 +96,7 @@ sub _car_view_part1 {
 		} # end if reprint
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
 		if ( ! $variable{'error'} ) {
-			if ( $variable{'CAR'}->id() and ! $param{'par_id'} ) {
+			if ( $variable{'CAR'}->id() and ( ! $param{'car_id'} ) and ! $send_reprint_request_notification ) {
 	# Send out notifications
 				$variable{'CAR'}->send_notifications();
 			} # end if
@@ -118,6 +118,9 @@ sub _car_view_part2 {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'part2_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part2_signed_on_year','part2_signed_on_month','part2_signed_on_day'} );
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
+		if ( ! $variable{'error'} ) {
+			$variable{'CAR'}->send_changed_notification();
+		} # end if
 	} # end if
 } # end sub _car_view_part2
 sub _car_view_part3 {
@@ -125,6 +128,9 @@ sub _car_view_part3 {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'part3_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part3_signed_on_year','part3_signed_on_month','part3_signed_on_day'} );
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
+		if ( ! $variable{'error'} ) {
+			$variable{'CAR'}->send_changed_notification();
+		} # end if
 	} # end if
 } # end sub _car_view_part3
 
@@ -133,6 +139,9 @@ sub _car_view_part4 {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'part4_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part4_signed_on_year','part4_signed_on_month','part4_signed_on_day'} );
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
+		if ( ! $variable{'error'} ) {
+			$variable{'CAR'}->send_changed_notification();
+		} # end if
 	} # end if
 } # end sub _car_view_part4
 
