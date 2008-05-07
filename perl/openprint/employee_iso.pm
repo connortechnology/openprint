@@ -1,4 +1,5 @@
 package openprint::employee_iso;
+use MIME::QuotedPrint;
 use openprint;
 use vars qw( %variable %session %param %config $log $dbh $r );
 *variable = \%openprint::variable;
@@ -37,7 +38,7 @@ sub cars {
 					$CAR->Company()->name(),
 					$CAR->identified_by(),
 					$CAR->printed_on(),
-					$CAR->presses(),
+					join( ',', map { new openprint::Equipment($_)->name() } split(';', $CAR->presses()) ),
 					$CAR->area(),
 					$CAR->reason(),
 					$CAR->problem(),
@@ -68,6 +69,7 @@ sub cars {
 sub car {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
 } # end sub view_car
+
 sub _car_view_part1 {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
@@ -78,11 +80,37 @@ sub _car_view_part1 {
 		$param{'reply_by'} = sprintf('%.4d-%.2d-%.2d', @param{'reply_by_year','reply_by_month','reply_by_day'} );
 		$param{'presses'} = ref $param{'presses'} eq 'ARRAY' ? join(';', @{$param{'presses'}} ) : $param{'presses'};
 		#$param{'part1_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part1_signed_on_year','part1_signed_on_month','part1_signed_on_day'} );
+		my $send_assignee_notification = 0;
+		my $send_reprint_request_notification = 0;
+		my $send_reprint_approval_notification = 0;
+
+		if ( $param{'issued_to_id'} and ! $variable{'CAR'}->issued_to_id() ) {
+			#This is a brand new CAR.  So email the assignee
+			$send_assignee_notification = 1;
+		} # end if issued_to
+		# if a reprint is requested, but if the approval is already given, then we are the Approver, so don't bother.
+		if ( ( $param{'reprint'} eq 'Yes' ) and ( $variable{'CAR'}->reprint() ne 'Yes' ) and ( ! $param{'reprint_approval'} ) ) {
+			$send_reprint_request_notification = 1;
+		} elsif ( $param{'reprint_approval'} ne $variable{'CAR'}->reprint_approval() ) {
+			$send_reprint_approval_notification = 1;
+		} # end if reprint
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
-		if ( $variable{'CAR'}->id() and ! $param{'par_id'} ) {
-			# Send out notifications
-			$variable{'CAR'}->send_notifications();
+		if ( ! $variable{'error'} ) {
+			if ( $variable{'CAR'}->id() and ( ! $param{'car_id'} ) and ! $send_reprint_request_notification ) {
+	# Send out notifications
+				$variable{'CAR'}->send_notifications();
+			} # end if
+			if ( $send_assignee_notification ) {
+				$variable{'CAR'}->send_assignee_notification();
+			} # end if
+			if ( $send_reprint_request_notification ) {
+				$variable{'CAR'}->send_reprint_request_notification();
+			} # end if
+			if ( $send_reprint_approval_notification ) {
+				$variable{'CAR'}->send_reprint_approval_notification();
+			} # end if
 		} # end if
+		
 	} # end if
 } # end sub _car_view_part1
 sub _car_view_part2 {
@@ -90,6 +118,9 @@ sub _car_view_part2 {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'part2_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part2_signed_on_year','part2_signed_on_month','part2_signed_on_day'} );
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
+		if ( ! $variable{'error'} ) {
+			$variable{'CAR'}->send_changed_notification();
+		} # end if
 	} # end if
 } # end sub _car_view_part2
 sub _car_view_part3 {
@@ -97,6 +128,9 @@ sub _car_view_part3 {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'part3_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part3_signed_on_year','part3_signed_on_month','part3_signed_on_day'} );
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
+		if ( ! $variable{'error'} ) {
+			$variable{'CAR'}->send_changed_notification();
+		} # end if
 	} # end if
 } # end sub _car_view_part3
 
@@ -105,6 +139,9 @@ sub _car_view_part4 {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'part4_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part4_signed_on_year','part4_signed_on_month','part4_signed_on_day'} );
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
+		if ( ! $variable{'error'} ) {
+			$variable{'CAR'}->send_changed_notification();
+		} # end if
 	} # end if
 } # end sub _car_view_part4
 

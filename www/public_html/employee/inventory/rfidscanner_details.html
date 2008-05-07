@@ -91,6 +91,8 @@ The following errors occurred:<br/>
 				<label class="radio" for="typeFixed">Fixed</label>
 				<input type="radio" id="typeMobile" name="type" value="Mobile" <? echo ( $$variable{'RFIDScanner'}->type() eq 'Mobile' ? 'checked="checked"' : '' ) ?> onclick="$('Location').hide();"/>
 				<label class="radio" for="typeMobile">Mobile</label>
+				<input type="radio" id="typeCheckout" name="type" value="Checkout" <? echo ( $$variable{'RFIDScanner'}->type() eq 'Checkout' ? 'checked="checked"' : '' ) ?> onclick="$('Location').show();"/>
+				<label class="radio" for="typeCheckout">Checkout</label>
 			</p>
 			<p id="Location">
 				<label>Location:</label>
@@ -105,24 +107,24 @@ The following errors occurred:<br/>
 	<? echo ( $$variable{'RFIDScanner'}->Location()->name() ) ?>
 <? endif ( $$variable{'RFIDScanner'}->type() ne 'Mobile' ) ?>
 			</p>
+			<p class="buttons">
+				<? echo ( 
+						my $html;
+						$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
+						if ( $$variable{'RFIDScanner'}->id() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.action='rfidscanners.html?rfidscanner_id=$$variable{'rfidscanner_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'RFIDScanner'}->id();
+						$html .= ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', 'rfidscanner_details.html', 'Add New RFIDScanner' );
+						} # end if
+						$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
+						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
+						return $html;
+				) ?>
+			</p>
 		</div><!-- column -->
 		<div class="rightColumn" id="Map">
 			<!--#include virtual="_map.html"-->
 		</div>
 		<br class="spacer"/>
-		<div style="float: right;">
-			<? echo ( 
-					my $html;
-					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
-					if ( $$variable{'RFIDScanner'}->id() ) {
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.action='rfidscanners.html?rfidscanner_id=$$variable{'rfidscanner_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'RFIDScanner'}->id();
-					$html .= ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', 'rfidscanner_details.html', 'Add New RFIDScanner' );
-					} # end if
-					$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
-					#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
-					return $html;
-			) ?>
-		</div>
 	</fieldset>
 </form>
 <? if ( $$variable{'RFIDScanner'}->id() ) ?>

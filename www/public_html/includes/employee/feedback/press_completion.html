@@ -26,11 +26,14 @@
 			
 			@$variable{'operator_id'} = sql::execute( undef, undef, 'SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?', $$variable{'Project'}->id(), $sig_id );
 			$$variable{'Operator'} = new openprint::User( $$variable{'operator_id'} );
-			my $html = $$variable{'Operator'}->name();
-			if ( $$variable{'operator_id'} and
-				( $$variable{'operator_id'} != $openprint::session{user_id} ) and
-				( ! openprint::usergroup::is_user_in( ['Scheduling','PressManager'], $openprint::session{'user_id'} ) ) ) {
-				$html .= '<br/>You are not logged in as the assigned operator.  Only the assigned operator (' . $$variable{'Operator'}->name() . ') can mark this job complete.';
+			if ( openprint::usergroup::is_user_in( ['Scheduling','PressManager'], $openprint::session{'user_id'}) ) {
+				return '<select name="operator_id-'.$$variable{'SignatureIndex'}.'">'. ssi::make_drop_down( [ map {$_->id(), $_->name()} openprint::User::find('usergroups'=>['Press'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'operator_id'} ).'</select>';
+			} else {
+				my $html = $$variable{'Operator'}->name();
+				if ( $$variable{'operator_id'} and ( $$variable{'operator_id'} != $openprint::session{'user_id'} ) ) {
+					$html .= '<br/>You are not logged in as the assigned operator.  Only the assigned operator (' . $$variable{'Operator'}->name() . ') can mark this job complete.';
+				} # end if
+				return $html;
 			} # end if
 		) ?>
 	</p>

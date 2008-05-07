@@ -886,7 +886,7 @@ sub send_paper_arrival_notification {
 		} # end foreach c
 =======
 			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, $email_template, \%info ) );
+			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my %mail = (
 					SMTP	=> $openprint::config{'Mail Server'},
@@ -984,6 +984,7 @@ sub rfidtags {
 
 sub rfidtag_details {
 	my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
+	$RFIDTag->id( $param{'rfidtag_id'} ) if ! $RFIDTag->id();
 	
 $log->debug("Loading tag: $param{'rfidtag_id'}");
 	if ( $param{'btnFunction'} eq 'Save' ) {

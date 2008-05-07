@@ -42,7 +42,7 @@
 	</tr>
 	<? echo (
 		my $html;
-		my @data = sql::execute( $log, $dbh, q{SELECT updatetime, user_id, delta, instock, units, comment, poindex, skid_id FROM Paper_Inventory WHERE paper_id=? AND ( updatetime BETWEEN ? AND ? ) ORDER BY updatetime},
+		my @data = sql::execute( $log, $dbh, q{SELECT updated_on, user_id, delta, instock, units, comment, poindex, skid_id FROM Paper_Inventory WHERE paper_id=? AND ( updated_on BETWEEN ? AND ? ) ORDER BY updated_on},
 		$openprint::param{'paper_id'},
 		$$variable{'Start'} . ' 00:00:00',
 		$$variable{'End'} . ' 23:59:59',

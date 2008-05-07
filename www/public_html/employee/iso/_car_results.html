@@ -42,8 +42,8 @@
 			my $html;
 			my $rowclass;
 			foreach my $CAR ( @{$$variable{'CARs'}} ) {
-				next if $CAR->part4_signed_on() and ! sets::isin( 'Closed', split(';', $openprint::session{'/employee/iso/cars.html?status'} ) );
-				next if (!$CAR->part4_signed_on()) and ! sets::isin( 'Open', split(';', $openprint::session{'/employee/iso/cars.html?status'} ) );
+				next if $CAR->part4_signed_on() and $openprint::session{'/employee/iso/cars.html?status'} and ! sets::isin( 'Closed', split(';', $openprint::session{'/employee/iso/cars.html?status'} ) );
+				next if (!$CAR->part4_signed_on()) and $openprint::session{'/employee/iso/cars.html?status'} and ! sets::isin( 'Open', split(';', $openprint::session{'/employee/iso/cars.html?status'} ) );
 				$html .= "<tr$rowclass>";
 				$html .= sprintf( '<td class="unprintable"><input type="checkbox" name="cars" value="%d"/></td>', $$CAR{'id'} );
 				$html .= sprintf( '<td><a href="car.html?car_id=%d">%d</a></td>', $$CAR{'id'}, $$CAR{'id'}, );

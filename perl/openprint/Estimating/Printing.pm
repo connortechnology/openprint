@@ -1066,6 +1066,10 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 						$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
 						$$specs{'PrintingTypes'} = ['Offset','Waterless'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
 					} else {
 						$openprint::log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
 					} # end if
@@ -1088,6 +1092,10 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 					$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
 				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
 					$$specs{'PrintingTypes'} = ['Offset'];
+				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
 				} # end if
 				if ( ! $$specs{'PrintingTypes'} ) {
 
@@ -1100,6 +1108,10 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
 						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
 							$$specs{'PrintingTypes'} = ['Offset'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+							$$specs{'PrintingTypes'} = ['Web'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+							$$specs{'PrintingTypes'} = ['Sheetfed'];
 						} # end if
 						last if $$specs{'PrintingTypes'};
 					} # end foreach
@@ -1179,7 +1191,11 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 				} # end if
 			} else {
 				if ( $$specs{'PrintingTypes'} and ! sets::isin( $Press->specification('Printing Type'), $$specs{'PrintingTypes'} ) ) {
+<<<<<<< HEAD:perl/openprint/Estimating/Printing.pm
 					$openprint::log->error('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes') if $debug;
+=======
+					$openprint::log->error('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} ));
+>>>>>>> 58c8215b2b0846d6f62d98e0cd73327adf788e80:perl/openprint/Estimating/Printing.pm
 					next;
 				} # end if
 			} # end if

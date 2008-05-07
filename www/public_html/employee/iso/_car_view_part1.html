@@ -22,7 +22,7 @@
 		<td colspan="3"><? hecho ( join(' ', map { new openprint::Equipment( $_ )->name() } split(';', $$variable{'CAR'}->presses() ));) ?></td>
 	</tr>
 	<tr>
-		<td colspan="2">Identified By:</td>
+		<td colspan="2">Problem Identified By:</td>
 		<td colspan="3"><? hecho ( $$variable{'CAR'}->identified_by() ) ?></td>
 		<td colspan="2">Printed On:</td>
 		<td colspan="3"><? hecho ( $$variable{'CAR'}->printed_on() ) ?></td>
@@ -56,18 +56,12 @@
 		<td colspan="3"><? echo ( $$variable{'CAR'}->approved_on() ) ?></td>
 	</tr>
 <? endif ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
-	<tr>
-		<td colspan="1">Originator:</td>
-		<td colspan="4"><? hecho ( new openprint::User( $$variable{'CAR'}->part1_user_id() )->name() ) ?></td>
-		<td colspan="2">Date:</td>
-		<td colspan="3"><? hecho ( $$variable{'CAR'}->part1_signed_on() ) ?></td>
-	</tr>
 </table>
-<? if ( $$variable{'CAR'}->part1_user_id() == $openprint::session{'user_id'} ) ?>
+<? if ( $$variable{'CAR'}->issued_by_id() == $openprint::session{'user_id'} or openprint::usergroup::is_user_in( ['Reprint Approvals','Quality Control'], $openprint::session{'user_id'} ) ) ?>
 	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart1', 'edit.gif', sprintf(q`new Ajax.Updater('Part1', '_car_edit_part1.html', { method: 'get', parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), '', 'Edit' ); ) ?>.
 	</p>
-<? endif ( $$variable{'CAR'}->part1_user_id() == $openprint::session{'user_id'} ) ?>
+<? endif ( $$variable{'CAR'}->issued_by_id() == $openprint::session{'user_id'} or openprint::usergroup::is_user_in( ['Reprint Approvals','Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <? if ( ! $$variable{'CAR'}->part2_user_id() ) ?>
 <script type="text/javascript">
 	new Ajax.Updater( 'Part2', '_car_edit_part2.html', { method: 'get', parameters: {car_id:<? echo ( $$variable{'CAR'}->id() ) ?>} } );
