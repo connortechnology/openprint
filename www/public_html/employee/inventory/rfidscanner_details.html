@@ -91,6 +91,8 @@ The following errors occurred:<br/>
 				<label class="radio" for="typeFixed">Fixed</label>
 				<input type="radio" id="typeMobile" name="type" value="Mobile" <? echo ( $$variable{'RFIDScanner'}->type() eq 'Mobile' ? 'checked="checked"' : '' ) ?> onclick="$('Location').hide();"/>
 				<label class="radio" for="typeMobile">Mobile</label>
+				<input type="radio" id="typeCheckout" name="type" value="Checkout" <? echo ( $$variable{'RFIDScanner'}->type() eq 'Checkout' ? 'checked="checked"' : '' ) ?> onclick="$('Location').show();"/>
+				<label class="radio" for="typeMobile">Mobile</label>
 			</p>
 			<p id="Location">
 				<label>Location:</label>
