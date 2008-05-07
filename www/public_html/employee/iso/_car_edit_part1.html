@@ -62,9 +62,9 @@
 	<tr>
 		<td colspan="1">Identified By:</td>
 		<td colspan="4">
-			<input type="radio" id="identified_byInternal" name="identified_by" value="Internal" />
+			<input type="radio" id="identified_byInternal" name="identified_by" value="Internal" <? echo ( $$variable{'CAR'}->identified_by() eq 'Internal' ? 'checked="checked"' : '' ) ?> />
 			<label for="identified_byInternal">Internal</label>
-			<input type="radio" id="identified_byCustomer" name="identified_by" value="Customer" />
+			<input type="radio" id="identified_byCustomer" name="identified_by" value="Customer" <? echo ( $$variable{'CAR'}->identified_by() eq 'Customer' ? 'checked="checked"' : '' ) ?> />
 			<label for="identified_byCustomer">Customer</label>
 		</td>
 		<td colspan="1">Printed On:</td>
@@ -98,7 +98,7 @@
 				<option value="">select</option>
 				<? echo (
 					my @options = ( 'INCORRECT SALES ORDER','WRONG QUANTITY','SHIPPING/RECEIVING ERROR','CUTTING ERROR','HICKEYS/SCRATCHES','WRONG STOCK','MISC PREPRESS ERROR','OFFSET/PRINT ERROR','FOLDING ERROR','STAFF PERFORMANCE','COLOUR PROBLEMS','DAMAGE','PLATE ERROR','MISSING IMAGE/TEXT','SLOW RESPONSE TO RFQs','DOCKET ERROR','IMPO ERROR','MISC BINDERY ERROR','NOT REGISTERED(PRESS)','SUB STANDARD STOCK','WRONG ITEM','WRONG QUANTITY','INCORRECT DIMENSIONS','POOR QUALITY','SHELF LIFE','WRONG COLOUR','WRONG BATCH','CONTAMINATION','LATTE DELIVERY','INVOICE ISSUE','INTERNAL AUDIT','EXTERNAL AUDIT','OTHER');
-					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->area() );
+					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->reason() );
 				) ?>
 			</select>
 		</td>
@@ -117,13 +117,17 @@ $html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="
 	<tr>
 		<td colspan="1">Reprint Req:</td>
 		<td colspan="2">
-			<input type="radio" name="reprint" value="Yes" id="reprintYes"/><label class="radio" for="reprintYes">Yes</label>
-			<input type="radio" name="reprint" value="No" id="reprintNo"/><label class="radio" for="reprintNo">No</label>
+			<input type="radio" name="reprint" value="Yes" id="reprintYes" <? echo ( $$variable{'CAR'}->reprint() eq 'Yes' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="reprintYes">Yes</label>
+			<input type="radio" name="reprint" value="No" id="reprintNo" <? echo ( $$variable{'CAR'}->reprint() ne 'Yes' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="reprintNo">No</label>
 		</td>
 		<td width="10%" colspan="1">Art Work:</td>
 		<td width="30%" colspan="2">
-			<input type="radio" name="artwork" value="Change" id="artworkChange"/><label class="radio" for="artworkChange">Change</label>
-			<input type="radio" name="artwork" value="No Change" id="artworkNoChange"/><label class="radio" for="artworkNoChange">No Change</label>
+			<input type="radio" name="artwork" value="Change" id="artworkChange" <? echo ( $$variable{'CAR'}->artwork() eq 'Change' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="artworkChange">Change</label>
+			<input type="radio" name="artwork" value="No Change" id="artworkNoChange" <? echo ( $$variable{'CAR'}->artwork() ne 'Change' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="artworkNoChange">No Change</label>
 		</td>
 		<td width="10%" colspan="1">Reprint On</td>
 		<td width="30%" colspan="3">
@@ -139,24 +143,29 @@ if ( $$variable{'CAR'}->reprint_on() ) {
             <select name="reprint_on_day"><?reprint_on_days?></select>
 		</td>
 	</tr>
+<? if ( openprint::usergroup::is_user_in( ['Reprint Approvals'], $openprint::session{'user_id'} ) ) ?>
 	<tr>
 		<td colspan="2">Re-print Approved:</td>
 		<td colspan="3">
-			<input type="radio" name="reprint_approval" value="Yes" id="reprint_approvalYes"/><label class="radio" for="reprint_approvalYes">Yes</label>
-			<input type="radio" name="reprint_approval" value="No" id="reprint_approvalNo"/><label class="radio" for="reprint_approvalNo">No</label>
+			<input type="radio" name="reprint_approval" value="Yes" id="reprint_approvalYes" <? echo ( $$variable{'CAR'}->reprint_approval() eq 'Yes' ? 'checked="checked"' : '' ) ?>/>
+			<label class="radio" for="reprint_approvalYes">Yes</label>
+			<input type="radio" name="reprint_approval" value="No" id="reprint_approvalNo" <? echo ( $$variable{'CAR'}->reprint_approval() eq 'No' ? 'checked="checked"' : '' ) ?>/>
+			<label class="radio" for="reprint_approvalNo">No</label>
 		</td>
 		<td colspan="2">Reprint Charge:</td>
 		<td colspan="3">
-			<input type="radio" name="reprint_charge" value="Yes" id="reprint_chargeYes"/><label class="radio" for="reprint_chargeYes">Yes</label>
-			<input type="radio" name="reprint_charge" value="50%" id="reprint_charge50%"/><label class="radio" for="reprint_charge50%">50%</label>
-			<input type="radio" name="reprint_charge" value="No" id="reprint_chargeNo"/><label class="radio" for="reprint_chargeNo">No</label>
-			
+			<input type="radio" name="reprint_charge" value="Yes" id="reprint_chargeYes" <? echo ( $$variable{'CAR'}->reprint_charge() eq 'Yes' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="reprint_chargeYes">Yes</label>
+			<input type="radio" name="reprint_charge" value="50%" id="reprint_charge50%" <? echo ( $$variable{'CAR'}->reprint_charge() eq '50%' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="reprint_charge50%">50%</label>
+			<input type="radio" name="reprint_charge" value="No" id="reprint_chargeNo" <? echo ( $$variable{'CAR'}->reprint_charge() eq 'No' ? 'checked="checked"' : '' ) ?>/>
+			<label class="radio" for="reprint_chargeNo">No</label>
 		</td>
 	</tr>
 	<tr>
 		<td colspan="2">Approved by:</td>
 		<td colspan="3">
-			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'usergroup'=>'Reprint Approvals','order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
 		</td>
 		<td colspan="1">Approved on:</td>
 		<td colspan="4">
@@ -172,6 +181,22 @@ if ( $$variable{'CAR'}->reprint_on() ) {
             <select name="approved_on_day"><?approved_on_days?></select>
 </td>
 	</tr>
+<? else ( openprint::usergroup::is_user_in( ['Reprint Approvals'], $openprint::session{'user_id'} ) ) ?>
+<? if ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
+    <tr>
+        <td colspan="2">Reprint Approved:</td>
+        <td colspan="3"><? echo ( $$variable{'CAR'}->reprint_approval() ) ?></td>
+        <td colspan="2">Charge:</td>
+        <td colspan="3"><? echo ( $$variable{'CAR'}->reprint_charge() ) ?></td>
+    </tr>
+    <tr>
+        <td colspan="2">Approved by:</td>
+        <td colspan="3"><? hecho ( new openprint::User( $$variable{'CAR'}->approved_by_id())->name() ) ?></td>
+        <td colspan="2">Approved on:</td>
+        <td colspan="3"><? echo ( $$variable{'CAR'}->approved_on() ) ?></td>
+    </tr>
+<? endif ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Reprint Approvals'], $openprint::session{'user_id'} ) ) ?>
 </table>
 	<input type="hidden" name="car_id" value="<? echo ( $$variable{'CAR'}->id() ) ?>" />
 	<input type="hidden" name="btnFunction" value="Save" />

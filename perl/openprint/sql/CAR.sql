@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS CAR;
 CREATE TABLE CAR (
 	id serial NOT NULL,
-	issued_to_id	INTEGER NOT NULL, FOREIGN KEY (issued_to_id) REFERENCES Users (index),
+	issued_to_id	INTEGER, FOREIGN KEY (issued_to_id) REFERENCES Users (index),
 	issued_on	date not null default NOW(),
 	issued_by_id	INTEGER NOT NULL, FOREIGN KEY (issued_by_id) REFERENCES Users (index),
 	reply_by	date not null default NOW(),

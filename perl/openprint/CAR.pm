@@ -220,6 +220,88 @@ sub send_notifications {
 	} # end if to
 
 } # end sub send_notification
+
+sub send_assignee_notification {
+	my ($self) = @_;
+
+	my $From = new openprint::User( $session{'user_id'} );
+	my $To = new openprint::User( $$self{'issued_to_id'} );
+	if ( $To->id() == $session{'user_id'} ) {
+		$log->debug("Not Sending CAR Notifications becuase I am ME to " . $To->email());
+	} else {
+		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my %info = (
+				'CAR'	=>	$self,
+				'To'    =>  $To,
+				'From'  =>  $From,
+				'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_assignee_notification.html\"-->",
+				);
+		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+		my @body = ('', $_, 'text/html', 'quoted-printable');
+		my %mail = (
+				SMTP    => $config{'Mail Server'},
+				FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+				TO      => sprintf( '"%s" <%s>', $To->name(), $To->email() ),
+				SUBJECT => 'NEW CAR',
+				);
+		misc::send_email_with_attachment( $log, \%mail, @body );
+	} # end if
+} # end sub send_assignee_notification
+
+sub send_reprint_request_notification {
+	my ($self) = @_;
+	my $From = new openprint::User( $session{'user_id'} );
+	foreach my $To ( openprint::User::find('usergroups'=>['Reprint Approvals']) ) {
+		if ( $To->id() == $session{'user_id'} ) {
+			$log->debug("Not Sending Reprint Notifications becuase I am ME to " . $To->email());
+			next;
+		} # end if
+		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my %info = (
+				'CAR'   =>  $self,
+				'To'    =>  $To,
+				'From'  =>  $From,
+				'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_reprint_request.html\"-->",
+				);
+		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+		my @body = ('', $_, 'text/html', 'quoted-printable');
+		my %mail = (
+				SMTP    => $config{'Mail Server'},
+                        FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+						TO      => sprintf( '"%s" <%s>', $To->name(), $To->email() ),
+						SUBJECT => 'CAR Reprint Request',
+				);
+		$log->debug("Sending Reprint Notifications to " . $To->email());
+misc::send_email_with_attachment( $log, \%mail, @body );
+	} # end foreach Reprint Approver
+} # end sub send_reprint_request_notification
+sub send_reprint_approval_notification {
+	my ($self) = @_;
+
+	my $From = new openprint::User( $session{'user_id'} );
+	my $To = new openprint::User( $$self{'issued_to_id'} );
+	if ( $To->id() == $session{'user_id'} ) {
+		$log->debug("Not Sending Reprint Approval because I am ME to " . $To->email());
+	} else {
+		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my %info = (
+				'CAR'   =>  $self,
+				'To'    =>  $To,
+				'From'  =>  $From,
+				'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_reprint_approval.html\"-->",
+				);
+		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+		my @body = ('', $_, 'text/html', 'quoted-printable');
+		my %mail = (
+				SMTP    => $config{'Mail Server'},
+				FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+				TO      => sprintf( '"%s" <%s>', $To->name(), $To->email() ),
+				SUBJECT => 'NEW CAR',
+				);
+		misc::send_email_with_attachment( $log, \%mail, @body );
+	} # end if
+
+} # end sub send_reprint_approval_notification
 1;
 
 __END__
