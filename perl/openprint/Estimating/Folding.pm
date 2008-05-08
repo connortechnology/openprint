@@ -188,13 +188,6 @@ sub neccessary {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services( );
 
-<<<<<<< HEAD:perl/openprint/Estimating/Folding.pm
-	if ( $$services{'DieCutting'} ) {
-		$openprint::log->debug(" ** Project has Die Cutting, This Folding Service is NOT needed ** ");
-		return 0;
-	} # end if
-=======
->>>>>>> 70e5444db140c0825b196f6444bdfa1ece83291d:perl/openprint/Estimating/Folding.pm
 	if ( $$services{'NoBindery'} ) {
 		$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
 		return 0;

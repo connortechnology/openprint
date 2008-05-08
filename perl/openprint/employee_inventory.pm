@@ -205,15 +205,6 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 				} # end if
 				if ( $delta != 0 ) {
 					sql::insert($log, $dbh, 'Paper_Inventory', [
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-							'PaperIndex',	$paper_index,
-							'InStock',		$instock + $delta,
-							'Delta',		$delta,
-							'UserIndex',	$openprint::session{'user_id'},
-							'UpdateTime',	'NOW()',
-							'Comment',		'Stock Check',
-							] );
-=======
 						'PaperIndex',	$paper_index,
 						'InStock',		$instock + $delta,
 						'Delta',		$delta,
@@ -221,7 +212,6 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 						'updated_on',	'NOW()',
 						'Comment',		'Stock Check',
 						] );
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
 				} # end if
 
 			} # end if
@@ -423,27 +413,14 @@ sub save_skid {
 			} # end foreach
 		} # end if
 		if ( $Paper ) {
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-			my $delta = $Skid->add( $Paper, @openprint::param{'Quantity','purpose_id'} );
-			$Paper->add_inventory( $Skid->id(), $delta );
-			my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-=======
 			my $delta = $Skid->add( $Paper, @param{'Quantity','Units'} );
-			$Paper->add_inventory( $Skid->id(), $delta, $param{'Units'} );
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
+			my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
+			$Paper->add_inventory( $Skid->id(), $delta, $units );
 #FIXME
 			if ( $delta > 0 ) {
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-				$$variable{'information'} .= "Added $delta $units to inventory.<br/>";
-=======
-				$variable{'information'} .= "Added $delta $param{'Units'} to inventory.<br/>";
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
+				$variable{'information'} .= "Added $delta $units to inventory.<br/>";
 			} elsif ( $delta < 0 ) {
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-				$$variable{'information'} .= "Removed $delta $units from inventory.<br/>";
-=======
-				$variable{'information'} .= "Removed $delta $param{'Units'} from inventory.<br/>";
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
+				$variable{'information'} .= "Removed $delta $units from inventory.<br/>";
 			} else {
 				$variable{'information'} .= "No change was made to inventory.<br/>";
 			}# end if
@@ -457,8 +434,8 @@ sub save_skid {
 					$variable{'error'} .= "Docket $param{'Docket'} not found. No paper allocated. CSR not notified.<br/>";
 				} else {
 					my $Project = shift @Projects if @Projects;
-					$Paper->allocate( $$Skid{'id'}, $Project->id(), $delta, $param{'Units'} );
-					$variable{'information'} .= "Allocated $delta $param{'Units'} to docket $param{'Docket'}.<br/>";
+					$Paper->allocate( $$Skid{'id'}, $Project->id(), $delta, $units );
+					$variable{'information'} .= "Allocated $delta $units to docket $param{'Docket'}.<br/>";
 				} # end if
 			} # end if
 		} # end if Paper
@@ -501,13 +478,8 @@ sub skid_details {
 	my $Skid = new openprint::Skid( $skid_ids[0] );
 	foreach ( @skid_ids ) {
 		my $S = new openprint::Skid( $_ );
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
 		if ( sets::intersection( map {$_->paper_id} ( $S->contents(),$Skid->contents() ) ) != map { $_->paper_id }$S->contents() ) {
-			$$variable{'similar'} = 0;
-=======
-		if ( sets::intersection( keys %{$$S{Paper}}, keys %{$$Skid{Paper}} ) != keys %{$$S{Paper}} ) {
 			$variable{'similar'} = 0;
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
 			last;
 		} # end if
 	} # end foreach
@@ -526,42 +498,27 @@ sub skid_details {
 			return;
 		} # end if
 
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-		if ( ( ! $openprint::param{'skid_quantity'} ) and @skid_ids ) {
+		if ( ( ! $param{'skid_quantity'} ) and @skid_ids ) {
 			foreach my $skid_id ( @skid_ids ) {
-				$openprint::param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
+				$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
 				my $S = new openprint::Skid( $skid_id );
-				save_skid( $r, $variable, $S );
-				if ( ! $$variable{'Paper'} ) {
+				save_skid( $S );
+				if ( ! $variable{'Paper'} ) {
 					if ( my @c = $S->contents() ) {
-						$$variable{'paper_id'} = $c[0]->paper_id();
-						$$variable{'Paper'} = new openprint::Paper( $$variable{'paper_id'} );
+						$variable{'paper_id'} = $c[0]->paper_id();
+						$variable{'Paper'} = new openprint::Paper( $variable{'paper_id'} );
 					} # end of
 				} # end of
 			} # end foreach
 		} else {
-			$openprint::param{'skid_quantity'} = 1 if ! $openprint::param{'skid_quantity'};
-			if ( (@quantities>1) and ( @quantities != $openprint::param{'skid_quantity'} ) ) {
-				$$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
-=======
-		if ( $param{'skid_quantity'} ) {
+			$param{'skid_quantity'} = 1 if ! $param{'skid_quantity'};
 			if ( (@quantities>1) and ( @quantities != $param{'skid_quantity'} ) ) {
 				$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
 				return;
 			} # end if
 			@{$variable{'Skids'}} = ();
 			foreach my $skid_count ( 1 .. $param{'skid_quantity'} ) {
 				my $S = new openprint::Skid();
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-				$openprint::param{'Quantity'} = @quantities > 1 ? $quantities[$skid_count-1] : $quantities[0] if @quantities;
-				save_skid( $r, $variable, $S );
-				push @{$$variable{'Skids'}}, $S;
-				if ( ! $$variable{'Paper'} ) {
-					if ( my @c = $S->contents() ) {
-						$$variable{'paper_id'} = $c[0]->paper_id();
-						$$variable{'Paper'} = new openprint::Paper( $$variable{'paper_id'} );
-=======
 				$param{'Quantity'} = @quantities > 1 ? $quantities[$skid_count-1] : $quantities[0] if @quantities;
 				save_skid( $S );
 				push @{$variable{'Skids'}}, $S;
@@ -569,20 +526,15 @@ sub skid_details {
 					if ( $$S{Paper} ) {
 						my @paper_ids = keys %{$$S{Paper}};
 						$variable{'paper_id'} = $paper_ids[0] if @paper_ids;
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
 					} # end of
 				} # end of
 			} # end foreach
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-			$$variable{'information'} .= "Added $openprint::param{'skid_quantity'} skids.<br/>";
-=======
 			$variable{'information'} .= "Added $param{'skid_quantity'} skids.<br/>";
 		} else {
 			foreach my $skid_id ( @skid_ids ) {
 				$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
 				save_skid( new openprint::Skid( $skid_id ) );
 			} # end foreach
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
 		} # end if
 
 	} elsif ( sets::isin( $param{'btnFunction'}, 'Copy', 'Duplicate' ) ) {
@@ -622,14 +574,9 @@ sub skid_details {
 	} elsif ( $r->param('btnFunction') eq 'DeletePaper' ) {
 		foreach my $skid_id ( @skid_ids ) {
 			my $Skid = new openprint::Skid( $skid_id );
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-			foreach my $c ( $Skid->contents('paper_id'=>$openprint::param{paper_id}) ) {
+			foreach my $c ( $Skid->contents('paper_id'=>$param{paper_id}) ) {
 				$c->delete();
 			} # end foreach
-=======
-			delete $$Skid{Paper}{$param{paper_id}};
-			$Skid->save();
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
 		} # end foreach
 	} # end if
 
@@ -748,14 +695,6 @@ sub check_in {
 	$docket =~ s/\D//g;
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-=======
-	if ( ($Paper->type() eq 'Roll') and ($quantity > 0) and ( $$Skid{Paper}{$Paper->id()} + $quantity > 10000 ) ) {
-		$variable{'error'} .= "Skid cannot hold more than 10000lbs.<br/>";
-		return;
-	} # end if
-
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
 # Default to add
 	if	( $quantity =~ /^\d/ ) {
 		$quantity = '+' . $quantity;
@@ -863,17 +802,11 @@ sub send_paper_arrival_notification {
 
 			if ( $to ) {
 # Send notification to maybe CSR's
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
-				my $From = new openprint::User( $openprint::session{'user_id'} );
-				my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
-=======
-			my $From = new openprint::User( $session{'user_id'} );
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
+				my $From = new openprint::User( $session{'user_id'} );
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
-<<<<<<< HEAD:perl/openprint/employee_inventory.pm
 				$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-				$_ = encode_qp( ssi::variable_substitution( $email_template, \%info ) );
+				$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 				my @body = ('', $_, 'text/html', 'quoted-printable');
 				my %mail = (
 						SMTP	=> $openprint::config{'Mail Server'},
@@ -881,22 +814,9 @@ sub send_paper_arrival_notification {
 						TO		=> $to,
 						SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
 						);
-				misc::send_email_with_attachment( $openprint::log, \%mail, @body );
+				misc::send_email_with_attachment( $log, \%mail, @body );
 			} # end if to
-		} # end foreach c
-=======
-			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
-			my %mail = (
-					SMTP	=> $openprint::config{'Mail Server'},
-					FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO		=> $to,
-					SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
-					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
-		} # end if to
->>>>>>> c9b20bbe7d37fbf5798f5141af7471d9ae4b88b3:perl/openprint/employee_inventory.pm
+		} # end foreach skid content
 	} # end foreach Paper
 } # end sub send_paper_arrival_notification
 
