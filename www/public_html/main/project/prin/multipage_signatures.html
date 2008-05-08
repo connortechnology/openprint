@@ -20,17 +20,29 @@ function calc( formName, force ) {
 		<? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
 
 		<fieldset><legend><?txtSignatureType?></legend>
-<p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
-<p>
-    <label>Spread dimensions:</label>
-        <input name="txtWidth" size="9" value="<?txtWidth?>"  onkeyup="calc('f1');" /> x 
-        <input name="txtHeight" size="9" value="<?txtHeight?>"  onkeyup="calc('f1');"/>
-        (W x H)
-    <? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-    <input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( 'checked="checked"' if $$variable{'chkOverrideDimensions'} eq 'Y' ) ?> />
-    <label class="radio" for="chkOverrideDimensions">Override</label>
-    <? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-</p>
+			<div class="leftColumn">
+				<p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
+				<p>
+					<label>Spread dimensions:</label>
+						<input name="txtWidth" size="9" value="<?txtWidth?>"  onkeyup="calc('f1');" /> x 
+						<input name="txtHeight" size="9" value="<?txtHeight?>"  onkeyup="calc('f1');"/>
+						(W x H)
+					<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+					<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( 'checked="checked"' if $$variable{'chkOverrideDimensions'} eq 'Y' ) ?> />
+					<label class="radio" for="chkOverrideDimensions">Override</label>
+					<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+				</p>
+			</div>
+			<div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+			<? echo (
+				if ( $$variable{'Group'} == 1 ) {
+					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
+					return variable_substitution( \$html, $variable );
+				} # end if
+				return;
+			) ?>
+			</div>
+			<br class="spacer"/>
 
 			<!--#include virtual="/includes/main/proj/screen_type.html"-->
 			<!--#include virtual="/includes/main/proj/colours_coatings.html"-->	
@@ -48,11 +60,13 @@ function calc( formName, force ) {
 		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
 		<input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
 		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>" />
+<!--
 		<input type="hidden" name="StitchingImposition1" />
 		<input type="hidden" name="StitchingImposition2" />
 		<input type="hidden" name="StitchingImposition3" />
 		<input type="hidden" name="FoldingImposition1" />
 		<input type="hidden" name="FoldingImposition2" />
 		<input type="hidden" name="FoldingImposition3" />
+-->
 	</form>
 </div><!--Service-->

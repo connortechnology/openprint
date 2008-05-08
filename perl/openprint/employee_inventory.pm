@@ -523,9 +523,9 @@ sub skid_details {
 				save_skid( $S );
 				push @{$variable{'Skids'}}, $S;
 				if ( ! $variable{'Paper'} ) {
-					if ( $$S{Paper} ) {
-						my @paper_ids = keys %{$$S{Paper}};
-						$variable{'paper_id'} = $paper_ids[0] if @paper_ids;
+					if ( my @c = $S->contents() ) {
+						$variable{'paper_id'} = $c[0]->paper_id();
+						$variable{'Paper'} = new openprint::Paper( $variable{'paper_id'} );
 					} # end of
 				} # end of
 			} # end foreach
@@ -809,7 +809,7 @@ sub send_paper_arrival_notification {
 				$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 				my @body = ('', $_, 'text/html', 'quoted-printable');
 				my %mail = (
-						SMTP	=> $openprint::config{'Mail Server'},
+						SMTP	=> $config{'Mail Server'},
 						FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 						TO		=> $to,
 						SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',

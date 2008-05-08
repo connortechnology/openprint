@@ -1,15 +1,31 @@
 <fieldset id="SignatureGroup<?Group?>" <? echo ( ( $$variable{'Group'} == 1 and $$variable{'rdbCover'} ne 'Different' ) ? 'style="display:none;"' : '' ) ?> >
+<? if ( $$variable{'Group'} == 1 ) ?>
+	<!--#include virtual="/includes/main/proj/templates/signatures.html" -->
+<? endif ( $$variable{'Group'} == 1 ) ?>
+
 	<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ? $$variable{'txtServiceDescription'.$$variable{'Group'}} : ( $$variable{'Group'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
-	<p>
-		<label># of Pages:</label>
-		<input type="text" name="GroupPageQuantity<?Group?>" value="<? echo ( $$variable{'GroupPageQuantity'.$$variable{'Group'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />
-		<input type="checkbox" id="OverrideGroupPageQuantity<?Group?>" name="OverrideGroupPageQuantity<?Group?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{'OverrideGroupPageQuantity'.$$variable{'Group'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="OverrideGroupPageQuantity<?Group?>">Override</label>
-	</p>
-	<p>
-		<label>Description:</label>
-		<input type="text" name="txtServiceDescription<?Group?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ) ?>" />
-	</p>
+	<div class="leftColumn">
+		<p>
+			<label># of Pages:</label>
+			<input type="text" name="GroupPageQuantity<?Group?>" value="<? echo ( $$variable{'GroupPageQuantity'.$$variable{'Group'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />
+			<input type="checkbox" id="OverrideGroupPageQuantity<?Group?>" name="OverrideGroupPageQuantity<?Group?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{'OverrideGroupPageQuantity'.$$variable{'Group'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="OverrideGroupPageQuantity<?Group?>">Override</label>
+		</p>
+		<p>
+			<label>Description:</label>
+			<input type="text" name="txtServiceDescription<?Group?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ) ?>" />
+		</p>
+	</div>
+	<div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{'Group'}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+	<? echo (
+		if ( $$variable{'Group'} == 1 ) {
+			my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
+			return variable_substitution( \$html, $variable );
+		} # end if
+		return;
+	) ?>
+	</div>
+	<br class="spacer"/>
 	<input type="hidden" name="txtSignatureType<?Group?>" value="<? echo ( $$variable{'txtSignatureType'.$$variable{'Group'}} ) ?>" />
 	<? echo (
 		my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );

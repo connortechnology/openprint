@@ -67,6 +67,7 @@ sub handler {
 	openprint::Service::init_cache();
 	openprint::ServiceType::init_cache();
 	openprint::Equipment::init_cache();
+	openprint::Paper::init_cache();
 
 	foreach my $key ( $r->param() ) {
 $log->debug("Paramter: $key => " . $r->param($key) );

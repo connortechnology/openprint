@@ -88,6 +88,7 @@ sub handler {
 	openprint::Service::init_cache();
 	openprint::ServiceType::init_cache();
 	openprint::Equipment::init_cache();
+	openprint::Paper::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();

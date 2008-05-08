@@ -362,15 +362,13 @@ sub send {
 		my @attachments = ();
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
-		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%quote ) );
-		push @attachments, '', $_, 'text/html', 'quoted-printable';
+		push @attachments, '', encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
 
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_invoice.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		push @attachments, "Quote$$self{id}.html", encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
 
 		my %mail = (
-
 				SMTP    => $openprint::config{'Mail Server'},
 				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
@@ -396,7 +394,7 @@ sub send {
 					( $quote{'ByFax'} ne $quote{'ForFax'} ) or
 					( $quote{'ByEmail'} ne $quote{'ForEmail'} )
 					) ) {
-
+$openprint::log->debug('Sending For');
 			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 
 			my @attachments = ();
@@ -410,7 +408,6 @@ sub send {
 				$_ = ssi::variable_substitution( \$_, \%quote );
 				push @attachments, "Quote$$self{id}.html", encode_qp($_), 'text/html', 'quoted-printable';
 			} # end if
-
 
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
@@ -432,16 +429,10 @@ sub send {
 		push @attachments, '', $_, 'text/html', 'quoted-printable';
 
 		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_end_user_body.html' );
-#if ( $_ ) {
-#$_ = ssi::variable_substitution( \$_, \%quote );
-#push @attachments, '', encode_qp($_), 'text/html', 'quoted-printable';
-#} # end if
-#get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_end_user_invoice.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
-		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%quote ) );
-		push @attachments, "Quote$$self{id}.html", $_, 'text/html', 'quoted-printable';
+		push @attachments, "Quote$$self{id}.html", encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
 
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},

@@ -34,6 +34,7 @@ my @stitchers;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'Markup1','Markup2','Markup3',
 		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
         'MPrice1', 'MPrice2', 'MPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -63,7 +64,7 @@ sub variables {
 }
 
 sub signature_needs {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $sig_specs ) = @_;
 
 	my $services = $Project->services();
 
@@ -79,19 +80,19 @@ sub signature_needs {
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $Project->quantity( $qty_index );
-$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
-$openprint::log->debug("Cutting sig needs: stock: " . join('x', @$specs{'hdnSuppliedStockWidth'.$qty_index,'hdnSuppliedStockHeight'.$qty_index} ) );
-$openprint::log->debug("Cutting sig needs: ssize: " . join('x', @$specs{'txtWidth','txtHeight'} ) );
-		if ( $$specs{'txtImposition'.$qty_index} > 1 ) {
+#$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
+#$openprint::log->debug("Cutting sig needs: stock: " . join('x', @$specs{'hdnSuppliedStockWidth'.$qty_index,'hdnSuppliedStockHeight'.$qty_index} ) );
+#$openprint::log->debug("Cutting sig needs: ssize: " . join('x', @$specs{'txtWidth','txtHeight'} ) );
+		if ( $$sig_specs{'txtImposition'.$qty_index} > 1 ) {
 			return 1;
 		} # end if
 		if ( ! (
 			(
-			 $$specs{'hdnSuppliedStockWidth'.$qty_index} == $$specs{'txtWidth'} 
-			and $$specs{'hdnSuppliedStockHeight'.$qty_index} == $$specs{'txtHeight'}
+			 $$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtWidth'} 
+			and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtHeight'}
 			) or (
-			$$specs{'hdnSuppliedStockWidth'.$qty_index} == $$specs{'txtHeight'}
-			and $$specs{'hdnSuppliedStockHeight'.$qty_index} == $$specs{'txtWidth'}
+			$$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtHeight'}
+			and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtWidth'}
 			)
 			) ) {
 			return 1;
@@ -141,6 +142,7 @@ sub signature_calc_stock_cutting {
 
 #$openprint::log->debug("Loading Paper from signature in signature_calc_stock_cutting");
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
+	my $services = $Project->services();
 
 # Have an imposition, so can do all calculations
 	my ( $sheet_width, $sheet_height ) = ( $Paper->width(), $Paper->height() );
@@ -207,6 +209,10 @@ sub signature_calc_stock_cutting {
 # Has to happen on normal cutters
 	foreach my $Equipment ( @my_equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= "\tEquipment: ".$Equipment->name().':';
+		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+			next;
+		} # end if
 
 		my $reason = $Equipment->fits( @$specs{"txtSuppliedStockWidth-$signature_index-$qty_index","txtSuppliedStockHeight-$signature_index-$qty_index","txtStockCalliper-$signature_index"} );
 		$$specs{'hdnBreakdown'.$qty_index} .= $reason . "<br/>";
@@ -317,6 +323,10 @@ sub signature_calc_folding_cutting {
 # Has to happen on normal cutters
 	foreach my $Equipment ( @my_equipment ) {
 		next if $Equipment->specification('Type') eq 'Stitcher';
+		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+			next;
+		} # end if
 
 		$$specs{'hdnBreakdown'.$qty_index} .= "\tEquipment: ".$Equipment->name().':';
 
@@ -533,6 +543,10 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 	foreach my $Equipment ( @my_equipment ) {
 		next if ! $Equipment->id();
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $Equipment->name() .':';
+		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
+			next;
+		} # end if
 		if ( $Equipment->specification('Cutting Capable') eq 'When Printing' and $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on ' . $Equipment->strid();
 			next;
@@ -744,7 +758,7 @@ if ( 1 ) {
 		if ( $$specs{"OverridePrice$qty_index"} eq 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
 		} # end if
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );

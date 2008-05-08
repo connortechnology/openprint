@@ -224,8 +224,21 @@ $dbh->do(q{alter table users add howdidyouhearaboutusother text});
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
 	my $ac = sql::start_transaction( $dbh );
-$dbh->do(q{alter table products rename column ysntaxexempt1 to taxexempt1});
-$dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
+	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
+	if ( exists $$blah{'ysntaxexempt1'} ) {
+		if ( ! exists $$blah{'taxexempt1'} ) {
+			$dbh->do(q{alter table products rename column ysntaxexempt1 to taxexempt1});
+		} else {
+			$dbh->do(q{alter table products drop column ysntaxexempt1});
+		} # end if
+	} # end if
+	if ( exists $$blah{'ysntaxexempt2'} ) {
+		if ( ! exists $$blah{'taxexempt2'} ) {
+			$dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
+		} else {
+			$dbh->do(q{alter table products drop column ysntaxexempt2});
+		} # end if
+	} # end if
 	sql::insert( undef, undef, 'database_info', 'version', 1897, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1897;
@@ -233,9 +246,8 @@ $dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
 if ( $version < 1898 ) {
 	print "Updating to version 1898\n";
 	my $ac = sql::start_transaction( $dbh );
-$dbh->do(q{CREATE SEQUENCE StockPurposes_id_seq});
 $dbh->do(q{CREATE TABLE StockPurposes (
-    id  INTEGER NOT NULL default nextval('StockPurposes_id_seq'),
+    id  SERIAL NOT NULL,
     name   TEXT NOT NULL,
     PRIMARY KEY (id)
 )});

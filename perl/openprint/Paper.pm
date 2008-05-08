@@ -37,11 +37,24 @@ my @fields = (
 		'minimum_order','inventory_number','full_packages','message',
 		);
 
-# This is a whole new style of Paper.  A paper refers to all sheet sizes
+my %find_cache;
+
+sub init_cache {
+	%find_cache = ();
+} # end sub init_cache
 
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;
+
+	my $starttime = gettimeofday() if $debug;
+	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
+#$openprint::log->debug("Hash key: $hash_key");
+	if ( $find_cache{$hash_key} ) {
+		#$openprint::log->debug("Debug cached papers () () in : " . sprintf('%.4f', tv_interval( [$starttime])*1000) . 'usecs records:' . @{$find_cache{$hash_key}} ) if $debug;
+		return @{$find_cache{$hash_key}};
+	} # end if
+
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
 	my $sql = 'SELECT *, (SELECT name FROM StockGroups WHERE id=group_id LIMIT 1) AS group, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id LIMIT 1) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id LIMIT 1) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id LIMIT 1) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id LIMIT 1) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id LIMIT 1) AS weight FROM Papers WHERE 1>0';
@@ -203,16 +216,15 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
-	#my $starttime = gettimeofday();
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$openprint::log->debug("Error loading papers SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
 		$openprint::log->debug('No papers loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded papers ($sql) (@values) :" . @$data ) if $debug;
-		#$openprint::log->debug("Debug loaded papers ($sql) (@values) in " . sprintf('%.4f', tv_interval( [$starttime])*1000) . 'usecs records:' . @$data );
+		$openprint::log->debug("Debug loaded papers ($sql) (@values) in : " . sprintf('%.4f', tv_interval( [$starttime])*1000) . 'usecs records:' . @$data ) if $debug;
 	} # end if
+	@{$find_cache{$hash_key}} = map { new openprint::Paper( $_->{id}, $_ ) } @$data;
 	return map { new openprint::Paper( $_->{id}, $_ ) } @$data;
 } # end sub find
 
@@ -799,7 +811,7 @@ sub get_price {
 		$price{'Cost'} *= $$self{'mweight'} / 100000;
 		$price{'Price'} *= $$self{'mweight'} / 100000;
 	} # end if
-$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'}) ($price{'100lb Cost'}) ($price{'Price'})") if $debug;
+#$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'}) ($price{'100lb Cost'}) ($price{'Price'})") if $debug;
 	return %price;
 
 } # end sub get_price

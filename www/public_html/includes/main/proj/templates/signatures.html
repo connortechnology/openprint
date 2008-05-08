@@ -1,18 +1,34 @@
 <div class="templates">
+<? eval ( $log->debug("Template: " . $$variable{'rdbTemplateType'.$$variable{'Signature'}} ) ) ?>
     <p>
 		<img src="/images/templates/2PanelFold.gif" alt="2 Panel Fold"/>
-		<input type="radio" id="rdbTemplateType4PageSignatureFold" name="rdbTemplateType" value="4PageSignatureFold"  <? echo ( $$variable{'rdbTemplateType'} eq '4PageSignatureFold' or $$variable{'rdbTemplateType'} eq  '' ? 'checked="checked"' : '' ) ?> />
-		<label for="rdbTemplateType4PageSignatureFold">2 Panel</label>
+		<input type="radio" id="rdbTemplateType4PageSignatureFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="4PageSignatureFold" onclick="$('PresentationFolderQuestions').hide();" <? echo ( ($$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '4PageSignatureFold' or $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq  '' ) ? 'checked="checked"' : '' ) ?> />
+		<label for="rdbTemplateType4PageSignatureFold<?Signature?>">2 Panel</label>
 	</p>
     <p>
 		<img src="/images/templates/SingleGateFold.gif" alt="Single Gate Fold"/> 
-		<input type="radio" id="rdbTemplateTypeSingleGateFold" name="rdbTemplateType" value="SingleGateFold" <? echo ( $$variable{'rdbTemplateType'} eq 'SingleGateFold' ? 'checked="checked"' : '' ) ?> /> 
-		<label for="rdbTemplateTypeSingleGateFold">Single Gate Fold</label>
+		<input type="radio" id="rdbTemplateTypeSingleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="SingleGateFold" onclick="$('PresentationFolderQuestions').hide();" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'SingleGateFold' ? 'checked="checked"' : '' ) ?> /> 
+		<label for="rdbTemplateTypeSingleGateFold<?Signature?>">Single Gate Fold</label>
 	</p>
     <p>
 		<img src="/images/templates/DoubleGateFold.gif" alt="Double Gate Fold" />
-		<input type="radio" id="rdbTemplateTypeDoubleGateFold" name="rdbTemplateType" value="DoubleGateFold" <? echo ( $$variable{'rdbTemplateType'} eq 'DoubleGateFold' ? 'checked="checked"' : '' ) ?> />
-		<label for="rdbTemplateTypeDoubleGateFold">Double Gate Fold</label>
+		<input type="radio" id="rdbTemplateTypeDoubleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="DoubleGateFold" onclick="$('PresentationFolderQuestions').hide();" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'DoubleGateFold' ? 'checked="checked"' : '' ) ?> />
+		<label for="rdbTemplateTypeDoubleGateFold<?Signature?>">Double Gate Fold</label>
 	</p>
-<br class="spacer"/>
+	<p>
+		<img src="/images/templates/Presentation%20Folders/2Panel1Pocket.gif"> 
+		<input type="radio" id="rdbTemplateTypeSinglePocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="2Panel1Pocket" onclick="$('PresentationFolderQuestions').show();set_rdb_value(this.form.rdbPanels, 2);this.form.chkPocketCenter.checked=false;selectProjectTemplate('f1');" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '2Panel1Pocket' ? 'checked="checked"' : '' ) ?> /> 
+		<label for="rdbTemplateTypeSinglePocket<?Signature?>">Single Pocket</label>
+	</p>
+	<p>
+		<img src="/images/templates/Presentation%20Folders/2Panel2Pocket.gif"> 
+		<input type="radio" id="rdbTemplateType2Panel2Pocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="2Panel2Pocket" onclick="$('PresentationFolderQuestions').show();set_rdb_value(this.form.rdbPanels, 2);this.form.chkPocketCenter.checked=false;selectProjectTemplate('f1');" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '2Panel2Pocket' ? 'checked="checked"' : '' ) ?> /> 
+		<label for="rdbTemplateType2Panel2Pocket<?Signature?>">Double Pocket</label>
+	</p>
+	<p>
+		<img src="/images/templates/Presentation%20Folders/3Panel2Pocket.gif">
+		<input type="radio" id="rdbTemplateTypeTriFoldDoublePocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="TriFoldDoublePocket" onclick="$('PresentationFolderQuestions').show();set_rdb_value(this.form.rdbPanels, 3);selectProjectTemplate(this.form.name);" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'TriFoldDoublePocket' ? 'checked="checked"' : '' ) ?> />
+		<label for="rdbTemplateTypeTriFoldDoublePocket<?Signature?>">TriFold Double Pocket</label>
+	</p>
+	<br class="spacer"/>
 </div>
