@@ -20,8 +20,8 @@ The following errors occurred:<br/>
 		<br/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(jump.skid_id.value){jump.action='skid.html';jump.submit();} else if ( jump.rfidtag_id.value){jump.action='rfidtag_details.html';jump.submit();}else{jump.skid_id.focus();}",'','Go' ),
-				ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', '/employee/inventory/skid_details.html', 'Add Skid Skid' ),
+				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(jump.skid_id.value){jump.action='skid.html';jump.submit();} else if ( jump.rfidtag_id.value){jump.action='rfidtag_details.html';jump.submit();}else{jump.skid_id.focus();}",'','Jump' ),
+				ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', '/employee/inventory/skid_details.html', 'Add Skid' ),
 			); ) ?>
 		</p>
 	</fieldset>

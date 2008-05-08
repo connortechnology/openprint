@@ -122,6 +122,15 @@ sub save {
 		} elsif ( $$self{'type'} ) {
 			$type = $$self{'type'};
 		} # end if
+		if ( ! $type ) {
+			my $type_digit = substr( $$self{'id'}, 0, 1 );
+			if ( $type_digit == 1 ) {
+				$type='Location';
+			} elsif ( $type_digit == 2 ) {
+				$type='Skid';
+			} # end if
+		} # end if
+                    
 		if ( $type ) {
 			my ( $type_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?)', $type );
 			if ( ! $type_id ) {
@@ -165,6 +174,11 @@ sub delete {
 	delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}}
 } # end sub delete
 
+sub Skid {
+	my ($self) = @_;
+	return openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+} # end sub Skid
+
 sub Type {
 	return new openprint::RFIDTagType( $_[0]->type_id() );
 } # end sub Type
@@ -189,12 +203,21 @@ sub location_id {
     my ( $self, $new, $scanner_id ) = @_;
     if ( $new ) {
         if ( $new != $$self{'location_id'} ) {
-            sql::insert( undef, undef, 'RFIDTagHistory', {'rfidtag_id'=>$$self{'id'},'location_id'=>$new, 'scanner_id'=>$scanner_id} );
+            sql::insert( undef, undef, 'RFIDTagHistory', {'rfidtag_id'=>$$self{'id'},'location_id'=>$new, 'scanner_id'=>$scanner_id} ) if $$self{'id'};
             $$self{'location_id'} = $new;
         } # end if
     } # end if
     return $$self{'location_id'};
 } # end sub location_id
+
+sub skid_id {
+	my ( $self ) = @_;
+	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+	if ( @Skids ) {
+		return $Skids[0]->id();
+	} # end if
+	return;
+} # end sub skid_id
 
 1;
 __END__

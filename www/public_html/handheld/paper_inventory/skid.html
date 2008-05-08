@@ -65,7 +65,7 @@
 		$Skid->rfidtag_id( $openprint::param{'rfidtag_id'} );
 		$$variable{'error'} .= $Skid->save();
 	} # end if quanitty and docket
-
+	$$variable{'Skid'} = $Skid;
 ) ?>
 <div class="error"><?error?></div>
 <div class="information"><?information?></div>
@@ -77,7 +77,7 @@
 		</p>
 		<p>
 			<label for="rfidtag_id">RFID #:</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<?rfidtag_id?>" onkeypress="return input_handler( this, event);" onchange="change_handler(this);" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $openprint::param{'rfidtag_id'} ? $openprint::param{'rfidtag_id'} : $$variable{'Skid'}->rfidtag_id() ) ?>" onkeypress="return input_handler( this, event);" onchange="change_handler(this);" />
 		</p>
 		<p>
 			<label for="Docket">Docket:</label>

@@ -22,10 +22,11 @@
 			</tr>
 			<? echo (
 				my $html;
-				my @data = sql::execute( $log, $dbh, q{SELECT skid_id, (SELECT name FROM Locations WHERE id=location_id), quantity, units FROM Skid_Contents, skids WHERE id=skid_id AND paper_id=? ORDER BY skid_id}, $openprint::param{'paper_id'} );
+				my @data = sql::execute( $log, $dbh, q{SELECT skid_id, quantity, units FROM Skid_Contents, skids WHERE id=skid_id AND paper_id=? ORDER BY skid_id}, $openprint::param{'paper_id'} );
 				my $rowclass;
-				while ( my ( $skid_id, $location, $quantity, $units ) = splice @data, 0, 4 ) {
-					$html .= qq`<tr$rowclass><td><a href="skid_details.html?skid_id=$skid_id">$skid_id</a></td><td><a href="skid_details.html?skid_id=$skid_id">$location</a></td><td align="right"><a href="skid_details.html?skid_id=$skid_id">$quantity $units</a></td><td>`;
+				while ( my ( $skid_id, $quantity, $units ) = splice @data, 0, 3 ) {
+					my $Skid = new openprint::Skid( $skid_id );
+					$html .= qq`<tr$rowclass><td><a href="skid_details.html?skid_id=$skid_id">$skid_id</a></td><td><a href="skid_details.html?skid_id=$skid_id">`.$Skid->Location()->name().qq`</a></td><td align="right"><a href="skid_details.html?skid_id=$skid_id">$quantity $units</a></td><td>`;
 					$html .= ssi::writeButton( $log, $dbh, "label$skid_id", 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$skid_id', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Label' );
 					$html .= q`</td></tr>`;
 					$rowclass = $rowclass ? '' : ' class="colRow"';

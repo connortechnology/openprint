@@ -14,14 +14,18 @@
 		<td colspan="3"><? hecho ( $$variable{'CAR'}->reply_by() ) ?></td>
 	</tr>
 	<tr>
-		<td colspan="1">Customer:</td>
-		<td colspan="9"><? hecho ( $$variable{'CAR'}->Company()->name() ) ?></td>
-	</tr>
-	<tr>
 		<td colspan="1">Docket No:</td>
 		<td colspan="1"><? hecho ( $$variable{'CAR'}->docket() ) ?></td>
+		<td colspan="1">Customer:</td>
+		<td colspan="3"><? hecho ( $$variable{'CAR'}->Company()->name() ) ?></td>
 		<td colspan="1">Press:</td>
-		<td colspan="7"><? hecho ( join(' ', map { new openprint::Equipment( $_ )->name() } split(';', $$variable{'CAR'}->presses() ));) ?></td>
+		<td colspan="3"><? hecho ( join(' ', map { new openprint::Equipment( $_ )->name() } split(';', $$variable{'CAR'}->presses() ));) ?></td>
+	</tr>
+	<tr>
+		<td colspan="2">Problem Identified By:</td>
+		<td colspan="3"><? hecho ( $$variable{'CAR'}->identified_by() ) ?></td>
+		<td colspan="2">Printed On:</td>
+		<td colspan="3"><? hecho ( $$variable{'CAR'}->printed_on() ) ?></td>
 	</tr>
 	<tr><td colspan="4">PROBLEM/NONCONFORMANCE DESCRIPTION</td>
 		<td colspan="1">Area:</td>
@@ -31,25 +35,33 @@
 	</tr>
 	<tr><td colspan="10"><? hecho ( $$variable{'CAR'}->problem() ) ?></td></tr>
 	<tr>
-		<td colspan="1">Reprint Request:</td>
+		<td colspan="1">Reprint Req:</td>
 		<td colspan="1"><? hecho ( $$variable{'CAR'}->reprint() ) ?></td>
 		<td colspan="1">Art Work:</td>
 		<td colspan="2"><? hecho ( $$variable{'CAR'}->artwork() ) ?></td>
 		<td colspan="2">Expected Reprint On</td>
 		<td colspan="3"><? hecho ( $$variable{'CAR'}->reprint_on() ) ?></td>
 	</tr>
+<? if ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
 	<tr>
-		<td colspan="1">Originator:</td>
-		<td colspan="4"><? hecho ( new openprint::User( $$variable{'CAR'}->part1_user_id() )->name() ) ?></td>
-		<td colspan="2">Date:</td>
-		<td colspan="3"><? hecho ( $$variable{'CAR'}->part1_signed_on() ) ?></td>
+		<td colspan="2">Reprint Approved:</td>
+		<td colspan="3"><? echo ( $$variable{'CAR'}->reprint_approval() ) ?></td>
+		<td colspan="2">Charge:</td>
+		<td colspan="3"><? echo ( $$variable{'CAR'}->reprint_charge() ) ?></td>
 	</tr>
+	<tr>
+		<td colspan="2">Approved by:</td>
+		<td colspan="3"><? hecho ( new openprint::User( $$variable{'CAR'}->approved_by_id())->name() ) ?></td>
+		<td colspan="2">Approved on:</td>
+		<td colspan="3"><? echo ( $$variable{'CAR'}->approved_on() ) ?></td>
+	</tr>
+<? endif ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
 </table>
-<? if ( $$variable{'CAR'}->part1_user_id() == $openprint::session{'user_id'} ) ?>
+<? if ( $$variable{'CAR'}->issued_by_id() == $openprint::session{'user_id'} or openprint::usergroup::is_user_in( ['Reprint Approvals','Quality Control'], $openprint::session{'user_id'} ) ) ?>
 	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart1', 'edit.gif', sprintf(q`new Ajax.Updater('Part1', '_car_edit_part1.html', { method: 'get', parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), '', 'Edit' ); ) ?>.
 	</p>
-<? endif ( $$variable{'CAR'}->part1_user_id() == $openprint::session{'user_id'} ) ?>
+<? endif ( $$variable{'CAR'}->issued_by_id() == $openprint::session{'user_id'} or openprint::usergroup::is_user_in( ['Reprint Approvals','Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <? if ( ! $$variable{'CAR'}->part2_user_id() ) ?>
 <script type="text/javascript">
 	new Ajax.Updater( 'Part2', '_car_edit_part2.html', { method: 'get', parameters: {car_id:<? echo ( $$variable{'CAR'}->id() ) ?>} } );

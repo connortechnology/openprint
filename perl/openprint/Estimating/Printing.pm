@@ -1044,6 +1044,8 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 						$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
 						$$specs{'PrintingTypes'} = ['Offset','Waterless'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
 						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
 					} else {
@@ -1068,6 +1070,10 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 					$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
 				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
 					$$specs{'PrintingTypes'} = ['Offset'];
+				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
 				} # end if
 				if ( ! $$specs{'PrintingTypes'} ) {
 
@@ -1164,7 +1170,7 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 				} # end if
 			} else {
 				if ( $$specs{'PrintingTypes'} and ! sets::isin( $Press->specification('Printing Type'), $$specs{'PrintingTypes'} ) ) {
-					$openprint::log->error('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes') if $debug;
+					$openprint::log->error('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} ));
 					next;
 				} # end if
 			} # end if

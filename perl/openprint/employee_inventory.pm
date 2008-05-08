@@ -205,13 +205,13 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 				} # end if
 				if ( $delta != 0 ) {
 					sql::insert($log, $dbh, 'Paper_Inventory', [
-							'PaperIndex',	$paper_index,
-							'InStock',		$instock + $delta,
-							'Delta',		$delta,
-							'UserIndex',	$openprint::session{'user_id'},
-							'UpdateTime',	'NOW()',
-							'Comment',		'Stock Check',
-							] );
+						'PaperIndex',	$paper_index,
+						'InStock',		$instock + $delta,
+						'Delta',		$delta,
+						'UserIndex',	$session{'user_id'},
+						'updated_on',	'NOW()',
+						'Comment',		'Stock Check',
+						] );
 				} # end if
 
 			} # end if
@@ -413,9 +413,9 @@ sub save_skid {
 			} # end foreach
 		} # end if
 		if ( $Paper ) {
-			my $delta = $Skid->add( $Paper, @openprint::param{'Quantity','purpose_id'} );
-			$Paper->add_inventory( $Skid->id(), $delta );
+			my $delta = $Skid->add( $Paper, @param{'Quantity','Units'} );
 			my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
+			$Paper->add_inventory( $Skid->id(), $delta, $units );
 #FIXME
 			if ( $delta > 0 ) {
 				$variable{'information'} .= "Added $delta $units to inventory.<br/>";
@@ -434,8 +434,8 @@ sub save_skid {
 					$variable{'error'} .= "Docket $param{'Docket'} not found. No paper allocated. CSR not notified.<br/>";
 				} else {
 					my $Project = shift @Projects if @Projects;
-					$Paper->allocate( $$Skid{'id'}, $Project->id(), $delta, $param{'Units'} );
-					$variable{'information'} .= "Allocated $delta $param{'Units'} to docket $param{'Docket'}.<br/>";
+					$Paper->allocate( $$Skid{'id'}, $Project->id(), $delta, $units );
+					$variable{'information'} .= "Allocated $delta $units to docket $param{'Docket'}.<br/>";
 				} # end if
 			} # end if
 		} # end if Paper
@@ -479,7 +479,7 @@ sub skid_details {
 	foreach ( @skid_ids ) {
 		my $S = new openprint::Skid( $_ );
 		if ( sets::intersection( map {$_->paper_id} ( $S->contents(),$Skid->contents() ) ) != map { $_->paper_id }$S->contents() ) {
-			$$variable{'similar'} = 0;
+			$variable{'similar'} = 0;
 			last;
 		} # end if
 	} # end foreach
@@ -529,7 +529,12 @@ sub skid_details {
 					} # end of
 				} # end of
 			} # end foreach
-			$$variable{'information'} .= "Added $openprint::param{'skid_quantity'} skids.<br/>";
+			$variable{'information'} .= "Added $param{'skid_quantity'} skids.<br/>";
+		} else {
+			foreach my $skid_id ( @skid_ids ) {
+				$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
+				save_skid( new openprint::Skid( $skid_id ) );
+			} # end foreach
 		} # end if
 
 	} elsif ( sets::isin( $param{'btnFunction'}, 'Copy', 'Duplicate' ) ) {
@@ -801,7 +806,7 @@ sub send_paper_arrival_notification {
 				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 				$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-				$_ = encode_qp( ssi::variable_substitution( $email_template, \%info ) );
+				$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 				my @body = ('', $_, 'text/html', 'quoted-printable');
 				my %mail = (
 						SMTP	=> $config{'Mail Server'},
@@ -811,7 +816,7 @@ sub send_paper_arrival_notification {
 						);
 				misc::send_email_with_attachment( $log, \%mail, @body );
 			} # end if to
-		} # end foreach c
+		} # end foreach skid content
 	} # end foreach Paper
 } # end sub send_paper_arrival_notification
 
@@ -899,6 +904,7 @@ sub rfidtags {
 
 sub rfidtag_details {
 	my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
+	$RFIDTag->id( $param{'rfidtag_id'} ) if ! $RFIDTag->id();
 	
 $log->debug("Loading tag: $param{'rfidtag_id'}");
 	if ( $param{'btnFunction'} eq 'Save' ) {

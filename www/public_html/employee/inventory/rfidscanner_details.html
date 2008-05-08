@@ -91,6 +91,8 @@ The following errors occurred:<br/>
 				<label class="radio" for="typeFixed">Fixed</label>
 				<input type="radio" id="typeMobile" name="type" value="Mobile" <? echo ( $$variable{'RFIDScanner'}->type() eq 'Mobile' ? 'checked="checked"' : '' ) ?> onclick="$('Location').hide();"/>
 				<label class="radio" for="typeMobile">Mobile</label>
+				<input type="radio" id="typeCheckout" name="type" value="Checkout" <? echo ( $$variable{'RFIDScanner'}->type() eq 'Checkout' ? 'checked="checked"' : '' ) ?> onclick="$('Location').show();"/>
+				<label class="radio" for="typeCheckout">Checkout</label>
 			</p>
 			<p id="Location">
 				<label>Location:</label>
@@ -105,24 +107,24 @@ The following errors occurred:<br/>
 	<? echo ( $$variable{'RFIDScanner'}->Location()->name() ) ?>
 <? endif ( $$variable{'RFIDScanner'}->type() ne 'Mobile' ) ?>
 			</p>
+			<p class="buttons">
+				<? echo ( 
+						my $html;
+						$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
+						if ( $$variable{'RFIDScanner'}->id() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.action='rfidscanners.html?rfidscanner_id=$$variable{'rfidscanner_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'RFIDScanner'}->id();
+						$html .= ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', 'rfidscanner_details.html', 'Add New RFIDScanner' );
+						} # end if
+						$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
+						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
+						return $html;
+				) ?>
+			</p>
 		</div><!-- column -->
 		<div class="rightColumn" id="Map">
 			<!--#include virtual="_map.html"-->
 		</div>
 		<br class="spacer"/>
-		<div style="float: right;">
-			<? echo ( 
-					my $html;
-					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
-					if ( $$variable{'RFIDScanner'}->id() ) {
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.action='rfidscanners.html?rfidscanner_id=$$variable{'rfidscanner_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'RFIDScanner'}->id();
-					$html .= ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', 'rfidscanner_details.html', 'Add New RFIDScanner' );
-					} # end if
-					$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
-					#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
-					return $html;
-			) ?>
-		</div>
 	</fieldset>
 </form>
 <? if ( $$variable{'RFIDScanner'}->id() ) ?>
@@ -143,7 +145,8 @@ The following errors occurred:<br/>
 			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidscanner_details.html?EndMonth'} ? $openprint::session{'/employee/inventory/rfidscanner_details.html?EndMonth'} : $$variable{'Month'} ); ) ?></select>
 			<select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidscanner_details.html?EndDay'} ? $openprint::session{'/employee/inventory/rfidscanner_details.html?EndDay'} : $$variable{'Day'} ); ) ?></select>
 			</span>
-			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', "new Ajax.Updater('Log','_rfidscanner_log.html', {method:'get', parameters: \$('f2').serialize()} );", '', 'Load' ); ) ?>
+			<select name="limit" style="width:auto;"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
+			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', "\$('Log').innerHTML='Loading...';new Ajax.Updater('Log','_rfidscanner_log.html', {method:'get', parameters: \$('f2').serialize()} );", '', 'Load' ); ) ?>
 		</p>
 		<div id="Log"></div>
 	</fieldset>

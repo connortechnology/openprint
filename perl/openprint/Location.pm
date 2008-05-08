@@ -30,6 +30,9 @@ sub find {
 		if ( $params{'order_by'} ) {
 		$sql .= " ORDER BY $params{'order_by'}";
 		} # en if
+		if ( $params{'order'} ) {
+		$sql .= " ORDER BY $params{'order'}";
+		} # en if
 		my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 		return map { new openprint::Location( $_->{id}, $_ ) } @$data;
 	} # end if
@@ -60,19 +63,26 @@ sub save {
 		'parent_id',$$self{'parent_id'},
 		'name',		$$self{'name'},
 		'coordinates',	$$self{'coordinates'},
+		'updated_on', 'NOW()',
 		);
 		
 	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Location_id_seq')} );
-		sql::insert( undef, undef, 'Locations', [@sql, 'id', $$self{'id'}] );
+		if ( my $error = sql::insert( undef, undef, 'Locations', [@sql, 'id', $$self{'id'}] ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} else {
-		sql::update( undef, undef, 'Locations', ['id=?', $$self{'id'}], \@sql );
+		if ( my $error = sql::update( undef, undef, 'Locations', ['id=?', $$self{'id'}], \@sql ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} # end if
 
 	sql::end_transaction( $dbh, $ac );
 	$self->load();
-
+	return;
 } # end sub save
 
 sub delete {
