@@ -1,4 +1,3 @@
-<link href="/css/quote.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
 	function company_onchange( e ) {
 		new Ajax.Request( '_company_information.json', { method: 'get', parameters: { company_id: e.value }, onSUccess: function(response){fill_form_from_xml($('f1'), response.responseXML);} } );
