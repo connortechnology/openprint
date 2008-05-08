@@ -244,6 +244,15 @@ sub setup_project {
 			);
 # Paper is now an array ref
 
+	$project{'HasFolding'} = $$services{'Folding'} ? $$services{'Folding'}[0] : 0;
+	$project{'HasScoring'} = $$services{'Scoring'} ? $$services{'Scoring'}[0] : 0;
+	$project{'HasPerforating'} = $$services{'Perforating'} ? $$services{'Perforating'}[0] : 0;
+	$project{'HasDieCutting'} = $$services{'DieCutting'} ? $$services{'DieCutting'}[0] : 0;
+	$project{'HasCutting'} = $$services{'Cutting'} ? $$services{'Cutting'}[0] : 0;
+	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
+	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
+	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
+
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{'NoBindery'} ) {
 		if ( $$services{'DieCutting'} ) {
@@ -251,7 +260,7 @@ sub setup_project {
 			$project{'NeedScoring'} = 0;
 		} else {	
 			$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
-			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
+			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $project{'ScoringSpecs'}, $specs );
 		} # end if
 
 	} else {
@@ -261,13 +270,6 @@ sub setup_project {
 	$project{'NeedUVCoating'} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{'NeedAqueous'} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
 
-	$project{'HasFolding'} = $$services{'Folding'} ? $$services{'Folding'}[0] : 0;
-	$project{'HasScoring'} = $$services{'Scoring'} ? $$services{'Scoring'}[0] : 0;
-	$project{'HasPerforating'} = $$services{'Perforating'} ? $$services{'Perforating'}[0] : 0;
-	$project{'HasDieCutting'} = $$services{'DieCutting'} ? $$services{'DieCutting'}[0] : 0;
-	$project{'HasCutting'} = $$services{'Cutting'} ? $$services{'Cutting'}[0] : 0;
-	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
-	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
 
 	if ( $project{'NeedUVCoating'} ) {
 		if ( ! $$services{'UVCoating'} ) {
@@ -285,7 +287,6 @@ sub setup_project {
 
 	%{$project{'FoldingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasFolding'} )} if $project{'HasFolding'};
 	%{$project{'CuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasCutting'} )} if $project{'HasCutting'};
-	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
 	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
 
 	if ( $$services{'SaddleStitching'} ) {
@@ -2197,6 +2198,13 @@ sub calc_price {
 		} else {
 			$price{'Scoring Breakdown'} .= "Scoring Price: $scoring_results{'Price'}<br/>";
 			$price{'Comparison Cost'} += $scoring_results{'Price'};
+			if ( $scoring_results{'Equipment'}->id() == $Press->id() ) {
+				if ( $scoring_results{'Runspeed'} =~ /(.*)\%/ ) {
+					$run_speed *= (1+$1/100);
+				} else {
+					$run_speed = $scoring_results{'Runspeed'} if $run_speed > $scoring_results{'Runspeed'};
+				} # end if
+			} # end if
 		} # end if
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if
