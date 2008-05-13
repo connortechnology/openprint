@@ -223,16 +223,13 @@ sub location {
 	my $self = shift;
 	if ( @_ ) {
 		my $name = shift;
-		@$self{'location_id','location'} = sql::execute( undef, undef, q{SELECT id,name FROM Locations WHERE name=?}, $name );
+		@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
 		if ( ! $$self{'location'} ) {
 			sql::insert( undef,undef, 'Locations', 'name', $name );
-			@$self{'location_id','location'} = sql::execute( undef, undef, q{SELECT id,name FROM Locations WHERE name=?}, $name );
+			@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
 		} # end if
 	} # end if
-	if ( ( ! $$self{'location'} ) and $$self{'location_id'} ) {
-		@$self{'location'} = new openprint::Location( $$self{'location_id'} )->name();
-	} # end if
-	return $$self{'location'};
+	return new openprint::Location( $$self{'location_id'} )->name();
 } # end if
 
 sub location_id {
@@ -242,6 +239,7 @@ sub location_id {
 		my $Tag = new openprint::RFIDTag( $$self{'rfidtag_id'} );
 		if ( $new ) {
 			$Tag->location_id( $new );
+			$Tag->save();
 			$$self{'location_id'} = $new;
 		} elsif ( $Tag->location_id() != $$self{'location_id'} ) {
 			$$self{'location_id'} = $Tag->location_id();
