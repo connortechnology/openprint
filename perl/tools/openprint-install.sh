@@ -25,7 +25,7 @@ ln -sf /etc/apache2/lib/perl /var/www/$1/perl
 
 perl -MCPAN -e shell << EOF
 force install Date::Handler
-force install Date::Handler
+force install Date::Parse
 force install Math::Units
 force install Barcode::Code128
 EOF

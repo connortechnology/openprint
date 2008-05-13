@@ -1,3 +1,4 @@
+<? if ( $$variable{'Project'}->signatures({'type'=>'GateFolded Spreads'}) ) ?>
 <div id="GateFoldFit">
 		Will your <? echo ( ssi::writeTip('Gate Folded'); ) ?>
 		Page(s) require an exact fit? Choosing short will be more cost-effective, 
@@ -7,18 +8,46 @@
 		<label>Gate Fold Fit:</label>
 		<input type="radio" id="rdbGateFoldFitExact" name="rdbGateFoldFit" value="Exact" onclick="calc('f1')" <? echo ( 'checked="checked"' if $$variable{'rdbGateFoldFit'} eq 'Exact' ) ?> />
 		<label class="radio" for="rdbGateFoldFitExact">Exact</label>
-		<input type="radio" id="rdbGateFoldDitShort" name="rdbGateFoldFit" value="Short" onclick="calc('f1')" <? echo ( 'checked="checked"' if $$variable{'rdbGateFoldFit'} ne 'Exact' ) ?> />
+		<input type="radio" id="rdbGateFoldFitShort" name="rdbGateFoldFit" value="Short" onclick="calc('f1')" <? echo ( 'checked="checked"' if $$variable{'rdbGateFoldFit'} ne 'Exact' ) ?> />
 		<label class="radio" for="rdbGateFoldFitShort">Short</label>
 	</p>
 </div>
+<? endif ( $$variable{'Project'}->signatures({'type'=>'GateFolded Spreads'}) ) ?>
+<? eval ( 
+	$$variable{'NeedCoverFit'} = 0;
+	if ( my @sigs = $$variable{'Project'}->signatures({'Group'=>1}) ) {
+$openprint::log->warn("Have Cover");
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $sigs[0] );
+		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) or $$sig_specs{'PageQuantity'.$$variable{'QTYIndex'}} > 4 ) {
+$openprint::log->warn("Nee CoverFot");
+			 $$variable{'NeedCoverFit'} = 1;
+		} # end if
+	} else {
+
+$openprint::log->warn("No Have Cover");
+	} # end if
+) ?>
+<? if ( $$variable{'NeedCoverFit'} ) ?>
+<div id="CoverFit">
+	Will your Cover require an exact fit? Choosing short will be more cost-effective, 
+	however the Cover will be approximately 1/16&quot; short of the finished size.
+	<p>
+		<label>Cover Fit:</label>
+		<input type="radio" id="CoverFitExact" name="CoverFit" value="Exact" onclick="calc(this.form.name)" <? echo ( $$variable{'rdbGateFoldFit'} ne 'Short' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="CoverFitExact">Exact</label>
+		<input type="radio" id="CoverFitShort" name="CoverFit" value="Short" onclick="calc(this.form.name)" <? echo ( $$variable{'rdbGateFoldFit'} eq 'Short' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="CoverFitShort">Short</label>
+	</p>
+</div>
+<? endif ( $$variable{'NeedCoverFit'} ) ?>
+<? if ( $$variable{'txtInsertQuantity'} ) ?>
 <div id="Inserts">
 	The # of inserts must be set on the book printing page.
 	<p>
 		<label># of inserts:</label>
 		<?txtInsertQuantity?>
-		<input name="txtInsertQuantity" value="<?txtInsertQuantity?>" type="hidden" size="9" onkeyup="calc(this.form.name);" />
+		<input name="txtInsertQuantity" value="<?txtInsertQuantity?>" type="hidden" />
 	</p>
-<? if ( $$variable{'txtInsertQuantity'} ) ?>
     <? eval ( $$variable{'InsertIndex'} = 1; ) ?>
     <? while ( $$variable{'InsertIndex'} <= $$variable{'txtInsertQuantity'} ) ?>
 	<p>
@@ -29,5 +58,5 @@
 	</p>
     <? eval ( $$variable{'InsertIndex'} += 1; ) ?>
     <? endwhile ( $$variable{'InsertIndex'} <= $$variable{'txtInsertQuantity'} ) ?>
-<? endif ( $$variable{'txtInsertQuantity'} ) ?>
 </div>
+<? endif ( $$variable{'txtInsertQuantity'} ) ?>

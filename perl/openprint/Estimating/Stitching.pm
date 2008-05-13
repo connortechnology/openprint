@@ -41,7 +41,7 @@ my %variables = (
 		'ddmEquipment1'=>['save','output'], 'ddmEquipment2'=>['save','output'], 'ddmEquipment3'=>['save','output'],
 		'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],
 		'chkOverrideEquipment1'=>['save'], 'chkOverrideEquipment2'=>['save'], 'chkOverrideEquipment3'=>['save'],
-		'rdbGateFoldFit'=>['save'],
+		'rdbGateFoldFit'=>['save'], 'CoverFit'=>['save'],
 		'txtUnitPrice1'=>['output'], 'txtUnitPrice2'=>['output'], 'txtUnitPrice3'=>['output'],
 		'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
 		'Markup1'=>['save'], 'Markup2'=>['save'], 'Markup3'=>['save'],
@@ -103,7 +103,7 @@ sub neccessary {
 	} # end if
 
 	my $printing_service_index = $$services{''}[0] if $$services{''};
-	my $specs = openprint::service::get_specs_ref( $Project->id(), $printing_service_index );
+	my $specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
 	if ( sets::isin( $$specs{'rdbTemplateType'},[ 'SaddleStitching','LoopStitching'] ) ) {
 		return 1;
 	} # end if
@@ -151,7 +151,7 @@ sub signature_calc {
 
 		if ( $imposition > 1 and ! $I->StitchingImposition() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
+			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 
 			$imposition = 1 if ( 
 			($$sig_specs{'txtImposition'.$qty_index} % 2 ) or 
@@ -291,7 +291,7 @@ sub calc {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 $openprint::log->debug(sprintf('%d %s %s %d %dx%d', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index} ) );
-			next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
+			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			if ( 
 				($$sig_specs{'txtImposition'.$qty_index}%2) or 
 				($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) or 
@@ -644,19 +644,38 @@ sub get_price {
 	if ( my @sigs = $Project->signatures({'Group'=>1}) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
 		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) or $$sig_specs{'PageQuantity'.$qty_index} > 4 ) {
-			if ( $$specs{'rdbGateFoldFit'} eq 'Exact' ) {
-				$price{'Service'} += openprint::service::get_price( $$ServiceType{'name'}, 1, $Equipment );
+			if ( (!$$specs{'CoverFit'}) or ($$specs{'CoverFit'} eq 'Exact') ) {
+				if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}.'1Pockets', $qty, $Equipment ) ) ) {
+					%servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}, 1, $Equipment );
+				} # end if
+				my $slowdown_percent = $Equipment->specification('2ndPass Slowdown');
+				
+				my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+				if ( $slowdown_percent ) {
+					$slowdown_percent =~ s/[^\d\.\-]//g;
+					$runtime *= (1+$slowdown_percent/100);
+				} # end if
+				$price{'RunTime'} += $runtime * 360;
+				if ( $servicePrice{'units'} eq 'Per M' ) {
+					$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
+					$price{'Service'} += $servicePrice{'Total'};
+				} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+					$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
+					$price{'Service'} += $servicePrice{'Total'}
+				} else {
+					$openprint::log->debug("Unknown Unit Type: $servicePrice{'units'} for $$ServiceType{'name'} range($neededPockets) equipment(".$Equipment->strid().")");
+				} # end if
 				$price{'MakeReady'} += $MakeReady{'Price'} + $pocketMakeReady;
 				$price{'Passes'} += 1;
 			} # end if Exact
 		} # end if requires exact or not
 	} # end if
 	if ( $Project->signatures({'type'=>'GateFoldedPages'}) ) {
-	my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
-	if ( $$specs{'rdbGateFoldFit'} eq 'Exact' and $gateFolds > 0 ) {
-		$price{'Service'} += openprint::service::get_price( $$ServiceType{'name'}, $gateFolds, $Equipment );
-		$price{'MakeReady'} += $MakeReady{'Price'} + ( $pocketMakeReady * ( $gateFolds + 1 ) );
-	} # end if
+		my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
+		if ( $$specs{'rdbGateFoldFit'} eq 'Exact' and $gateFolds > 0 ) {
+			$price{'Service'} += openprint::service::get_price( $$ServiceType{'name'}, $gateFolds, $Equipment );
+			$price{'MakeReady'} += $MakeReady{'Price'} + ( $pocketMakeReady * ( $gateFolds + 1 ) );
+		} # end if
 	} # end if
 
 	$price{'Calliper Markup'} = $Equipment->specification( 'Calliper Price Adjustment', $$specs{'txtCalliper'} );

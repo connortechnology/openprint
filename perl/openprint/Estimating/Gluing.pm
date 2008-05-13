@@ -28,11 +28,17 @@ my @variables = (
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
-	'txtArea','chkOverrideArea',
 );
 
 sub variables {
-	return @variables;
+	my ( $p_id, $s_id, $specs ) = @_;
+	my @v = @variables;
+	my $Project = new openprint::Project( $p_id );
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		push @v, ( "txtArea-$$sig_specs{'SignatureIndex'}","chkOverrideArea-$$sig_specs{'SignatureIndex'}", );
+	} # end foreach signature
+	return @v;
 } # end sub variables
 
 my @outputs = (
@@ -47,13 +53,21 @@ sub get_outputs {
 
 my @no_outputs = (
 	'ProjectIndex', 'ServiceIndex', 'txtQuantity1','txtQuantity2','txtQuantity3',
-	'ServiceType','chkOverrideArea',
+	'ServiceType',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
 );
 
 sub no_outputs {
-	return @no_outputs;
+	my ( $p_id, $s_id, $specs ) = @_;
+	my @o = @no_outputs;
+
+	my $Project = new openprint::Project( $p_id );
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		push @o, ( "chkOverrideArea-$$sig_specs{'SignatureIndex'}", );
+	} # end foreach signature
+	return @o;
 };
 
 sub neccessary {
@@ -70,6 +84,12 @@ sub neccessary {
     if ( $Project->Type()->strid() eq 'PresentationFolders' ) {
         return 1;
     } # end if
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+			return 1;
+		} # end if
+	} # end foreach signature
 
 	return 0;
 } # end sub neccessary

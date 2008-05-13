@@ -389,6 +389,19 @@ sub multipage_signatures {
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
 		my $type = $$sig_specs{'Group'};
+		if ( $type == 1 ) {
+			my $services = $Project->services();
+			# Presentation Folder Cover -> Make sure required services like Die Cutting and Gluing are present
+			if ( sets::isin( $$param{'rdbTemplateType'.$type}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+				if ( my @ProjectTypes = openprint::ProjectType::find('strid'=>'PresentationFolders') ) {
+					foreach my $ServiceType ( @ProjectTypes[0]->required_ServiceTypes() ) {
+						if ( ! $$services{$ServiceType->name()} ) {
+							push @{$$services{$ServiceType->name()}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType );
+						} # end if
+					} # end foreach servicetype
+				} # end if
+			} # end if
+		} # end if
 
 		# We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec ( 

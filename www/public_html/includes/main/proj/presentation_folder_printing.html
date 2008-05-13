@@ -27,7 +27,7 @@
 		<span class="checkOption">
 		<input type="radio" id="rdbPocketSizeOther<?Signature?>" name="rdbPocketSize<?Signature?>" value="Other" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbPocketSize'.$$variable{'Signature'}} eq 'Other' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPocketSizeOther<?Signature?>">Other</label>
-			<input type="text" name="PocketSize<?Signature?>" value="<? echo ( $$variable{'PocketSize'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '' );$('rdbPocketSizeOther<?Signature?>').checked=true;calc(this.form.name);" />
+			<input type="text" name="PocketSize<?Signature?>" value="<? echo ( $$variable{'PocketSize'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '' );$('rdbPocketSizeOther<?Signature?>').checked=true;calc(this.form.name);" size="2"/>
 		</span>
 	</p>
 	<p>
