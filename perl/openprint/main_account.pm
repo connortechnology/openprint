@@ -477,7 +477,6 @@ sub login {
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Login' ) {
 		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-
 	} # end if
 } # end sub login
 

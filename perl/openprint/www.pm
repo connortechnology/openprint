@@ -188,8 +188,8 @@ sub parse_page {
 	if ( $filename eq 'getfile.html' ) {
 $openprint::log->debug("Getfile");
 		$variable{'Download'} = $openprint::param{'filename'};
-		my $sourceDir = $openprint::config{'ProjectFilesPath'} . openprint::upload_handler::get_destdir();
-		push @{$variable{'File_Data'}}, misc::load_file( $openprint::log, $sourceDir.$variable{'Download'});
+		my $sourceDir = $config{'ProjectFilesPath'} . openprint::upload_handler::get_destdir();
+		push @{$variable{'File_Data'}}, misc::load_file( $log, $sourceDir.$variable{'Download'});
 		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$variable{'Download'}\"";
 		$r->content_type( "application/octet-stream; name=\"$variable{'Download'}\"" );
 		return;
@@ -210,7 +210,7 @@ $openprint::log->debug("Getfile");
 
 		if ( $session{'user_type'} ne 'A' ) {
 			# If the page requires you to be logged in, check that we are logged in.
-			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				if ( sql::execute( $log, $dbh, q{SELECT chrType FROM Users WHERE chrType='A'} ) ) {
 					$variable{'Redirect'} = '/administrator/error/login.html';
 					$variable{'Destination'} = misc::get_destination( $r, $log );
@@ -255,7 +255,7 @@ $openprint::log->debug("Getfile");
 		} # end if
 
 		if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) )	) {
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) )	) {
 				$variable{'Redirect'} = '/employee/error/login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log );
 				return Apache2::Const::OK;
@@ -318,7 +318,7 @@ $openprint::log->debug("Getfile");
 			} else {
 				$variable{'error'} = 'Unauthorized';
 				$variable{'details'} = 'You are not authorized to view this page.';
-				$variable{'Redirect'} = $openprint::config{'errorpage'};
+				$variable{'Redirect'} = $config{'errorpage'};
 				return;
 			} # endif
 		} elsif ( $second eq 'accounting' ) {
@@ -330,7 +330,7 @@ $openprint::log->debug("Getfile");
 			} else {
 				$variable{'error'} = "Unauthorized";
 				$variable{'details'} = "You are not authorized to view this page.";
-				$variable{'Redirect'} = $openprint::config{'errorpage'};
+				$variable{'Redirect'} = $config{'errorpage'};
 				return;
 			} # endif
 		} else {
@@ -347,7 +347,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.
-			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
 				return Apache2::Const::OK;
@@ -468,15 +468,15 @@ $openprint::log->debug("$1");
 						openprint::Estimating::UPS::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} # end if
 				} # end if main:proj:$third
-			} # end if
+			} # end if defined third
 
 			openprint::print_project::create_edit_display( $r, $log, $dbh, \%variable )		if $filename eq 'create_edit.html';
-			openprint::print_project::history_list( $r, $log, $dbh, \%variable )					if $filename eq 'history.html';
-			openprint::print::view_services( $r, $log, $dbh, \%variable )				if $filename eq 'view.html';
-			openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )					if $filename eq 'proj_view_pdf.html';
-			openprint::print_project::summary( $r, $log, $dbh, \%variable )						if $filename eq 'summary.html';
-			openprint::print_project::summary( $r, $log, $dbh, \%variable )						if $filename eq 'docket_sheet.html';
-			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 		if $filename eq 'reuse.html';
+			openprint::print_project::history_list( $r, $log, $dbh, \%variable )			if $filename eq 'history.html';
+			openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
+			openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
+			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
+			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
+			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 	if $filename eq 'reuse.html';
 		} else {
 			my $module = 'openprint::' . join('_', ($first, $second )	);
 			eval( "require $module;" );
