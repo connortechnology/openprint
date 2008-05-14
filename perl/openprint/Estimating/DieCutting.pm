@@ -40,8 +40,8 @@ sub variables {
 	my $Project = new openprint::Project( $p_id );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		push @v, ("txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}",
-			 "rdbDieCutting-$$sig_specs{'SignatureIndex'}",
+		push @v, ("txtWidth-$$sig_specs{'SignatureIndex'}","txtHeight-$$sig_specs{'SignatureIndex'}",
+			 "rdbDieCutting-$$sig_specs{'SignatureIndex'}","Needed-$$sig_specs{SignatureIndex}",
 			 "rdbSuppliedDie-$$sig_specs{'SignatureIndex'}","txtDieCutPunches-$$sig_specs{'SignatureIndex'}",
 			 "txtSteelRuleLength-$$sig_specs{'SignatureIndex'}","txtDieCutBends-$$sig_specs{'SignatureIndex'}","txtHoleClearingHoles-$$sig_specs{'SignatureIndex'}");
 		foreach my $qty_index ( 1 .. 3 ) {
@@ -182,6 +182,15 @@ sub calc {
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+	
+		$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'N' if ! $$specs{"Needed-$$sig_specs{SignatureIndex}"};
+		if ( sets::isin( $$param{'rdbTemplateType'.$type}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+			$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'Y';
+		} # end if
+			
+		if ( $$specs{"Needed-$$sig_specs{SignatureIndex}"} ne 'Y' ) {
+			next;
+		} # end if
 
 		if ( ! $$specs{'rdbSuppliedDie-'.$$sig_specs{'SignatureIndex'}} ) {
 			$$specs{'alert'} .= 'Please select whether the die is to be supplied by the customer or not for signature ' . $$sig_specs{'SignatureIndex'} . '.<br/>';
@@ -236,6 +245,9 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			if ( $$specs{"Needed-$$sig_specs{SignatureIndex}"} ne 'Y' ) {
+				next;
+			} # end if
 
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
 			@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
