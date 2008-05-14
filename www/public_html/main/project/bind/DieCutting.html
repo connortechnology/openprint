@@ -19,9 +19,18 @@
 				<? if ( $$variable{'Reference'} ) ?>
 				<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
 				<? endif ( $$variable{'Reference'} ) ?>
+				<p>
+					<label>Die Cutting Needed:</label>
+					<input type="radio" name="Needed-<?SignatureIndex?>" id="Needed-<?SignatureIndex?>Y" value="Y" <? echo ( $$variable{'Needed-'.$$variable{'SignatureIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="$('DieCutting-<?SignatureIndex?>').show();" />
+					<label class="radio" for="Needed-<?SignatureIndex?>Y">Yes</label>
+					<input type="radio" name="Needed-<?SignatureIndex?>" id="Needed-<?SignatureIndex?>N" value="N" <? echo ( $$variable{'Needed-'.$$variable{'SignatureIndex'}} eq 'N' ? 'checked="checked"' : '' ) ?> onclick="$('DieCutting-<?SignatureIndex?>').hide();" />
+					<label class="radio" for="Needed-<?SignatureIndex?>N">No</label>
+				</p>
+				<div id="DieCutting-<?SignatureIndex?>" <? echo ( $$variable{'Needed-'.$$variable{'SignatureIndex'}} ne 'Y' ? 'style="display:none;"' : '' ) ?>>
 				<!--#include virtual="/includes/main/proj/die_cutting.html"-->
 				<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
 				<!--#include virtual="/includes/main/proj/signature_equipment.html"-->
+				</div>
 				</fieldset>
 		<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureGroups'}}; ) ?>
 <p id="DiePrice">

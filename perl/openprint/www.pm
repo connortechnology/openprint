@@ -121,8 +121,8 @@ $openprint::log->debug("Page: $page");
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 			} # end if
-			$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
-			#$variable{'PageContent'} = $content;
+			#$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
+			$variable{'PageContent'} = $content;
 		} # end if
 		my $template;
 		my @page_path = split('/', $page );
