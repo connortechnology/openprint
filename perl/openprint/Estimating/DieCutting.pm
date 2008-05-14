@@ -183,9 +183,11 @@ sub calc {
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 	
-		$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'N' if ! $$specs{"Needed-$$sig_specs{SignatureIndex}"};
-		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-			$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'Y';
+		if ( ! $$specs{"Needed-$$sig_specs{SignatureIndex}"} ) {
+			$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'N';
+			if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+				$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'Y';
+			} # end if
 		} # end if
 			
 		if ( $$specs{"Needed-$$sig_specs{SignatureIndex}"} ne 'Y' ) {

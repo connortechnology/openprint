@@ -289,7 +289,7 @@ sub calc {
 		my $imposition = 2;
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 $openprint::log->debug(sprintf('%d %s %s %d %dx%d', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index} ) );
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			if ( 
@@ -344,7 +344,7 @@ $openprint::log->debug("Overriding imposiion");
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
 			foreach my $signature_service_index ( $Project->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
@@ -433,6 +433,7 @@ $openprint::log->debug("Overriding imposiion");
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "$$Equipment{name}.<br/>";
 			my ($ss_id) = $Project->signatures();
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 			if ( $$services{'NoOfflineBindery'} ) {
