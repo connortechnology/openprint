@@ -1,6 +1,20 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript">
+function convert_lbs_to_kg( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = parseInt(qtys[i] / 2.2);
+	} // end for
+	to.value = qtys.join(',');
+}
+function convert_kg_to_lbs( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = parseInt(qtys[i] * 2.2);
+	} // end for
+	to.value = qtys.join(',');
+}
 var allocateWin;
 function allocate_window(paper_id, skid_id, quantity ) {
 	if ( ! allocateWin ) {
