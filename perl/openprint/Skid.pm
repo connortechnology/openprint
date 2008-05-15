@@ -317,9 +317,12 @@ sub allocation {
 # Checkout all paper on the skid
 sub checkout {
 	my ( $self ) = @_;
-	foreach my $Paper ( keys %{$$self{'Paper'}} ) {
-		
-	} # end foreach Paper
+	foreach my $C ( openprint::SkidContent::find('skid_id'=>$$self{id}) ) {
+		my ( $project_id ) = sql::execute( undef, undef, q{SELECT project_id FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $C->paper() );
+		$C->Paper->add_inventory( $$self{id}, -1*$C->quantity(), $C->units(), 'Removed' . $project_id ? ' for docket ' . new openprint::Project($project_id)->docket() : '' );
+		$C->quantity( 0 );
+		$C->save();
+	} # end foreach Content
 } # end sub checkout
 
 sub previous {

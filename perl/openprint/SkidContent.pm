@@ -90,6 +90,12 @@ sub Purpose {
 	return $Purpose;
 } # end sub Purpose
 
+sub Paper {
+	my $self = shift;
+	my $Paper = new openprint::Paper( $$self{'paper_id'} );
+	return $Paper;
+} # end sub Paper
+
 1;
 
 __END__

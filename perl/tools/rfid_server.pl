@@ -26,6 +26,8 @@ sub process_request {
 
 	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'www2') );
 
+	my @checkout_tags = openprint::RFIDTag::find('type'=>'Checkout');
+
 	eval {
 		local $SIG{'ALRM'} = sub { die "Timed Out!\n" };
 		my $timeout = 60; # give the user 30 seconds to type some lines
@@ -92,10 +94,10 @@ sub process_request {
 					} # end if
 				} # end if
 				if ( $Scanner->type() eq 'Mobile' ) {
-					if ( $Tag->type() eq 'Location' ) {
+					if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 						#$self->log(1, sprintf('%s : %s : getting histyo', $date, $self->{server}->{peeraddr} ));
-						my @location_ids = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>3);
-						$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
+						my @location_ids = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>4);
+						#$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
 						if ( ! sets::isin( $Tag->location_id(), \@location_ids ) ) {
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
 							my $e = $Scanner->save();
@@ -113,8 +115,16 @@ sub process_request {
 						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					} # End if
 				} elsif ( $Scanner->type() eq 'Checkout' ) {
+					$Scanner->save();
 					if ( $Tag->type() eq 'Skid' ) {
-						my $Skid = $Tag->Skid();
+						$self->log(1, sprintf('%s : %s : checkout is skid', $date, $self->{server}->{peeraddr}, ));
+						if ( sets::isin( $Tag->location_id(), map { $_->location_id() } @checkout_tags ) ) {
+							my $Skid = $Tag->Skid();
+							$Skid->checkout();
+							$self->log(1, sprintf('%s : %s : Skid is in checkout location', $date, $self->{server}->{peeraddr}, ));
+						} else {
+							$self->log(1, sprintf('%s : %s : not in checkout locations', $date, $self->{server}->{peeraddr}, ));
+						} # end if skid is in checkout location
 					} # end if
 				} else {
 					$self->log(1, sprintf('%s : %s : unknown scanner type %s', $date, $self->{server}->{peeraddr}, $Scanner->type() ));
@@ -137,6 +147,10 @@ sub process_request {
 
 	if ($@ =~ /timed out/i) {
 		print STDOUT "Timed Out.\r\n";
+		return;
+	} else {
+		print STDOUT $@;
+		print STDERR $@;
 		return;
 	}
 } # end sub process_request
