@@ -113,7 +113,7 @@ The following errors occurred:<br/>
 						my $html;
 						$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
 						if ( $$variable{'RFIDTag'}->id() ) {
-						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.action='rfidtags.html?rfidtag_id=$$variable{'rfidtag_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'RFIDTag'}->id();
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'RFIDTag'}->id();
 						$html .= ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', 'rfidtag_details.html', 'Add New RFIDTag' );
 						} # end if
 						$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );

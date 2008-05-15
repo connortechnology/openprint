@@ -3,7 +3,7 @@ package openprint::Skid;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %variable %cache);
+use vars qw( $log $dbh %variable );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -249,16 +249,13 @@ sub location {
 	my $self = shift;
 	if ( @_ ) {
 		my $name = shift;
-		@$self{'location_id','location'} = sql::execute( undef, undef, q{SELECT id,name FROM Locations WHERE name=?}, $name );
+		@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
 		if ( ! $$self{'location'} ) {
 			sql::insert( undef,undef, 'Locations', 'name', $name );
-			@$self{'location_id','location'} = sql::execute( undef, undef, q{SELECT id,name FROM Locations WHERE name=?}, $name );
+			@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
 		} # end if
 	} # end if
-	if ( ( ! $$self{'location'} ) and $$self{'location_id'} ) {
-		@$self{'location'} = new openprint::Location( $$self{'location_id'} )->name();
-	} # end if
-	return $$self{'location'};
+	return new openprint::Location( $$self{'location_id'} )->name();
 } # end if
 
 sub location_id {
@@ -268,6 +265,7 @@ sub location_id {
 		my $Tag = new openprint::RFIDTag( $$self{'rfidtag_id'} );
 		if ( $new ) {
 			$Tag->location_id( $new );
+			$Tag->save();
 			$$self{'location_id'} = $new;
 		} elsif ( $Tag->location_id() != $$self{'location_id'} ) {
 			$$self{'location_id'} = $Tag->location_id();
@@ -365,6 +363,23 @@ sub empty {
 	} # end foreach
 	return 1;
 } # end sub empty
+
+sub contents {
+	my ( $self, $Paper ) = @_;
+	return $$self{'Paper'}{$Paper->id()};
+} # end sub contents
+
+sub rfidtag_id {
+	my ( $self, $rfidtag_id ) = @_;
+
+	if ( $rfidtag_id ) {
+		my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+		my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
+		$openprint::log->error( $error ) if $error;
+		$$self{'rfidtag_id'} = $rfidtag_id;
+	} # end if
+	return $$self{'rfidtag_id'};
+} # end sub rfidtag_id
 
 1;
 __END__

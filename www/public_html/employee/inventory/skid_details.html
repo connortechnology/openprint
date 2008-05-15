@@ -1,6 +1,20 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript">
+function convert_lbs_to_kg( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = parseInt(qtys[i] / 2.2);
+	} // end for
+	to.value = qtys.join(',');
+}
+function convert_kg_to_lbs( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = parseInt(qtys[i] * 2.2);
+	} // end for
+	to.value = qtys.join(',');
+}
 var allocateWin;
 function allocate_window(paper_id, skid_id, quantity ) {
 	if ( ! allocateWin ) {
@@ -135,41 +149,6 @@ function check_inputs(form ) {
 
 function calc() {
 }
-function loadPaper(results) {
-	var Paper = new Array();
-	var form = getFormObj('f1');
-
-	var pairs = results.split('|');
-	for ( var i = 0; i < pairs.length; i += 1 ){
-		var data = pairs[i].split('~');
-		Paper[data[0]] = data[1];
-	} // end for
-
-	ddm_select_by_value( form.Owner, Paper['owner_id'] );
-	ddm_select_by_value( form.Manufacturer, Paper['manufacturer_id'] );
-	ddm_select_by_value( form.Name, Paper['name_id'] );
-	ddm_select_by_value( form.Finish, Paper['finish_id'] );
-	ddm_select_by_value( form.Colour, Paper['colour_id'] );
-	if ( form.Weight )
-		ddm_select_by_value( form.Weight, Paper['weight_id'] );
-	ddm_select_by_value( form.Quality, Paper['quality_id'] );
-	ddm_select_by_value( form.purpose_id, Paper['purpose_id'] );
-	form.mweight.value = Paper['mweight'];
-	form.gsm.value = Paper['gsm'];
-	form.width.value = Paper['width'];
-	form.height.value = Paper['height'];
-	form.fsc_code.value = Paper['fsc_code'];
-	set_rdb_value( form.type, Paper['type'] );
-	if ( Paper['type'] == 'Roll' ) {
-		$('Units').innerHTML='lbs';
-		//$('PaperHeight').hide();
-		//$('MWeight').hide();
-	} else {
-		$('Units').innerHTML='sheets';
-		//$('PaperHeight').show();
-		//$('MWeight').show();
-	} // end if
-}
 function mweight_to_gsm( form ) {
 	var mweight = parseFloat(1*form.elements['mweight'].value);
 	var width = parseFloat(1*form.elements['width'].value);
@@ -266,10 +245,9 @@ The following errors occurred:<br/>
 			</p>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
 			<p><label>RFID Tag:</label>
+					<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>" />
 				<? if ( $$variable{'Skid'}->rfidtag_id() ) ?>
-					<a href="rfidtag_details.html?rfidtag_id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>"><? echo ( $$variable{'Skid'}->rfidtag_id() ) ?></a>
-				<? else ( $$variable{'Skid'}->rfidtag_id() ) ?>
-					<input type="text" id="rfidtag_id" name="rfidtag_id" value="" />
+					<a href="rfidtag_details.html?rfidtag_id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>">View Tag</a>
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
 			</p>
 			<p>

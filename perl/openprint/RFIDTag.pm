@@ -169,9 +169,11 @@ sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
 	sql::update( undef, undef, 'Skids', ['rfidtag_id=?', $$self{'id'}], 'rfidtag_id', undef );
+    sql::execute( undef, undef, q{DELETE FROM RFIDTagHistory WHERE rfidtag_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM RFIDTags WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
-	delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}}
+	delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}};
+	return '';
 } # end sub delete
 
 sub Skid {
