@@ -3,7 +3,7 @@ package openprint::Skid;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %variable %cache);
+use vars qw( $log $dbh %variable );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -325,6 +325,23 @@ sub empty {
 	} # end foreach
 	return 1;
 } # end sub empty
+
+sub contents {
+	my ( $self, $Paper ) = @_;
+	return $$self{'Paper'}{$Paper->id()};
+} # end sub contents
+
+sub rfidtag_id {
+	my ( $self, $rfidtag_id ) = @_;
+
+	if ( $rfidtag_id ) {
+		my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+		my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
+		$openprint::log->error( $error ) if $error;
+		$$self{'rfidtag_id'} = $rfidtag_id;
+	} # end if
+	return $$self{'rfidtag_id'};
+} # end sub rfidtag_id
 
 1;
 __END__

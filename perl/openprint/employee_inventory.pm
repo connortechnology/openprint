@@ -317,13 +317,17 @@ sub save_skid {
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
 	$Skid->location_id( $param{'ddmLocation'} ) if $param{'ddmLocation'};
 	$Skid->location( $param{'txtLocation'} ) if $param{'txtLocation'};
-	$Skid->save();
+	if ( my $error = $Skid->save() ) {
+		$variable{'error'} .= $error;
+		return;
+	} # end if
+	
 
 	if ( $param{'Name'} or $param{'txtName'} ) {
 		my $weight;
 		if ( $param{'txtWeight'} ) {
 			$weight = $param{'txtWeight'};
-		} elsif ( $param{'weight'} ) {
+		} elsif ( $param{'weight'} and ! $param{'weight'} =~ /lb/ ) {
 			$weight = $param{'weight'} . 'lb';
 		} elsif ( $param{'calliper'} ) {
 			$weight = $param{'calliper'} . 'PT';

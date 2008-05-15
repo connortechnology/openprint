@@ -1,4 +1,7 @@
-<? eval ( $$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} ) if ! $$variable{'Paper'}; ) ?>
+<? eval ( 
+	$$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} ) if ! $$variable{'Paper'};
+	$$variable{'Skid'} = new openprint::Skid( $openprint::param{'skid_id'} ) if ! $$variable{'Skid'};
+ ) ?>
 <p>
 	<label for="txtManufacturer" onclick="f1.txtManufacturer.value='';f1.Manufacturer.selectedIndex=0;f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
 	<select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
@@ -68,7 +71,7 @@
 	</select>
 	<input style="display: none;" type="text" id="txtWeight" name="txtWeight" />
 -->
-	<input type="text" id="weight" name="weight" value="<? echo ( $openprint::param{'weight'} ? $openprint::param{'weight'} : $$variable{'Paper'}->weight() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lbs
+	<input type="text" id="weight" name="weight" value="<? echo ( my $weight = $openprint::param{'weight'} ? $openprint::param{'weight'} : $$variable{'Paper'}->weight(); $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
 </p>
 <p>
 	<label for="txtQuality" onclick="toggleInput('Quality');">Quality:</label>
@@ -119,11 +122,11 @@
     </p>
 	<p>
 		<label for="Owner">Owner:</label>
-		<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $openprint::session{'company_id'} ); ) ?></select>
+		<select id="Owner" name="Owner"><? echo ( openprint::Company::get_dropdown( $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $openprint::session{'company_id'} ); ) ?></select>
 	</p>
 	<p>
 		<label for="Quantity">Quantity:</label>
-		<input type="text" id="Quantity" name="Quantity" size="10" value="<? echo ( $openprint::param{'Quantity'} ) ?>" style="width: auto;" onkeyup="if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs'; } else { $('Units').innerHTML='sheets';}" />
+		<input type="text" id="Quantity" name="Quantity" size="10" value="<? echo ( $openprint::param{'Quantity'} ? $openprint::param{'Quantity'} : $$variable{'Skid'}->contents( $$variable{'Paper'} ); ) ?>" style="width: auto;" onkeyup="if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs'; } else { $('Units').innerHTML='sheets';}" />
 		<span id="Units"><? echo ( ($openprint::param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll') ? 'lbs' : 'sheets' ) ?></span>
 	</p>
     <p>
