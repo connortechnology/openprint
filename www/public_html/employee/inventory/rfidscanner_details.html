@@ -62,7 +62,7 @@ The following errors occurred:<br/>
 				<? echo ( 
 					my $html;
 					if ( $$variable{'RFIDScanner'}->created_on() ) {
-						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'RFIDScanner'}->created_on()) );
+						$html .= Date::Format::time2str('%Y-%m-%d %H:%M:%S', Date::Parse::str2time($$variable{'RFIDScanner'}->created_on()) );
 					} # end if
 					return $html;
 				) ?>
@@ -72,7 +72,7 @@ The following errors occurred:<br/>
 				<? echo (
 					my $html;
 					if ( $$variable{'RFIDScanner'}->updated_on() ) {
-						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'RFIDScanner'}->updated_on()) );
+						$html .= Date::Format::time2str('%Y-%m-%d %H:%M:%S', Date::Parse::str2time($$variable{'RFIDScanner'}->updated_on()) );
 					} # end if
 					return $html;
 				) ?>
