@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -90,21 +90,17 @@ $openprint::log->debug("Trying dutch:") if $debug;
 sub fix_height {
 	my ( $imp, $specs ) = @_;
 	if ( ! $imp->paper()->start_height() ) {
-		if ( $$specs{'Cut Off'} ) {
-# Take the smallest available cut off
-			foreach my $cut_off ( sort split(',', $$specs{'Cut Off'} ) ) {
-				#$openprint::log->debug("dutch Cut Off $cut_off " . $imp->used_height() );
-				if ( $cut_off >= $imp->used_height() ) {
-					$imp->paper()->height( $cut_off );
-					return;
-				} # end if
-			} # end foreach
-			# We didn't finda valid cut off.  THis makes this imposition invalid.  This should generally only happen when the sheet length is smaller than any available cutoff.
-			$imp->imposition(0);
-		} else {
+		# Can only happen when there is no cut off specified
+		if ( ! $imp->paper()->height() ) {
 			$imp->paper()->height( $imp->used_height() );
-		} # end if
-	} # end if
+		} else {
+		# Make sure the height is equal to a cut off
+			if ( ! sets::isin( $imp->paper()->height(), split(',', $$specs{'Cut Off'} ) ) ) {
+				$imp->imposition(0);
+$openprint::log->warn('Height not in cut offs: ' . $imp->paper()->height() . ' cut offs: ' . $$specs{'Cut Off'} );
+			} # end if
+		} # end if has height
+	} # end if has start_height
 } # end sub fix_height
 
 # This function makes sure that the setup is valid.
@@ -336,14 +332,22 @@ sub calc_setup_object {
 		} # end if
 
 # Calculate Available Printing Space
-		my $adjusted_paper_height = $paper_height;
-		$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
+		my $adjusted_paper_height;
+		if ( $paper_height ) {
+			$adjusted_paper_height = $paper_height;
+		} elsif ( $$specs{'Cut Off'} ) {
+			$adjusted_paper_height = $$specs{'Cut Off'};
+			$setup1->paper()->height( $$specs{'Cut Off'} );
+		} # end if
 
 		# On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
-		if ( ( ! $paper_height ) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
+		if ( ( ! $adjusted_paper_height ) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
 			$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
 			$openprint::log->debug("*** Using Max Image Length1: $adjusted_paper_height ***") if $debug;
+		} else {
+			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
 		} # end if
+
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
 		} # end if
@@ -488,11 +492,18 @@ $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 			$gutters = 0 if $gutters < 0;
 		} # end if
 
-		my $adjusted_paper_height = $paper_height;
-		$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
+		my $adjusted_paper_height;
+		if ( $paper_height ) {
+			$adjusted_paper_height = $paper_height;
+		} elsif ( $$specs{'Cut Off'} ) {
+			$adjusted_paper_height = $$specs{'Cut Off'};
+			$setup2->paper()->height( $$specs{'Cut Off'} );
+		} # end if
 		if ( (!$paper_height) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
 			$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
 			$openprint::log->debug("*** Using Max Image Length2: $adjusted_paper_height ***") if $debug;
+		} else {
+			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
 		} # end if
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};

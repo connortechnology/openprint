@@ -1,4 +1,4 @@
-package openprint::StockColour;
+package openprint::StockQuality;
 @ISA = qw(openprint::Object);
 
 use strict;
@@ -8,7 +8,7 @@ require sql;
 sub find {
 	my %params = @_;
 
-	my $sql = 'SELECT * FROM PaperColours WHERE 1>0';
+	my $sql = 'SELECT * FROM PaperQualities WHERE 1>0';
 	my @values;
 
 	if ( $params{'shortname'} ) {
@@ -26,9 +26,9 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("openprint::StockColour::find( $sql)" . $openprint::dbh->errstr);
+		$openprint::log->debug("openprint::StockQuality::find( $sql)" . $openprint::dbh->errstr);
 	} else {
-		return map { new openprint::StockColour( $_->{id}, $_ ); } @$data;
+		return map { new openprint::StockQuality( $_->{id}, $_ ); } @$data;
 	} # end if
 } # end sub find
 
@@ -36,7 +36,7 @@ sub load {
 	my ( $self, $data ) = @_;
 
 	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM PaperColours WHERE id=?', {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM PaperQualities WHERE id=?', {}, $$self{'id'} );
 		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
 	} # end if
 	@$self{qw/id shortname longname/} = @$data{qw/id shortname longname/};
@@ -45,7 +45,7 @@ sub load {
 
 sub delete {
 	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM PaperColours WHERE id=?}, $$self{'id'} );
+    sql::execute( undef, undef, q{DELETE FROM PaperQualities WHERE id=?}, $$self{'id'} );
 } # end sub delete
 
 sub save {
@@ -53,19 +53,23 @@ sub save {
 
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_prices_id_seq')});
-		sql::insert( undef, undef, 'PaperColours', $self );
+		sql::insert( undef, undef, 'PaperQualities', $self );
 	} else {
-		sql::update( undef, undef, 'PaperColours', ['id=?', $$self{'id'}], $self );
+		sql::update( undef, undef, 'PaperQualities', ['id=?', $$self{'id'}], $self );
 	} # end if
 } # end sub save
 
 sub copy {
 	my $self = shift;
-	my $new = new openprint::StockColour();
+	my $new = new openprint::StockQuality();
 	@$new{keys %$self} = @$self{keys %$self};
 	$$new{'id'} = undef;
 	return $new;
 } # end sub
+
+sub name {
+	return $_[0]{'shortname'};
+} # end sub name
 
 1;
 

@@ -380,8 +380,11 @@ sub save_skid {
 			$Paper->calliper( $param{'calliper'} );
 			$Paper->mweight( $param{'mweight'} );
 			$Paper->gsm( $param{'gsm'} );
-			$Paper->save();
-			$variable{'information'} .= 'Paper created.<br/>';
+			if ( my $error = $Paper->save() ) {
+				$variable{'error'} .= $error;
+			} else {
+				$variable{'information'} .= 'Paper created.<br/>';
+			} # end if
 		} elsif ( 1 == @papers ) {
 			$Paper = shift @papers;
 			my $changed = 0;
@@ -410,7 +413,7 @@ sub save_skid {
 				$variable{'information'}	.= '<a href="paper_details.html?paper_id='.$Paper->id().'">'.$Paper->to_string().'</a><br/>';
 			} # end foreach
 		} # end if
-		if ( $Paper ) {
+		if ( $Paper and $Paper->id() ) {
 			my $delta = $Skid->add( $Paper, @param{'Quantity','Units'} );
 			$Paper->add_inventory( $Skid->id(), $delta, $param{'Units'} );
 #FIXME

@@ -684,21 +684,23 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 				foreach my $P ( @Papers ) {
 					# Don't cut rolls into sheets
 					next if ! $P->cuttable();
+$openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.$P->start_height() );
 					if ( $P->type() eq 'Roll' ) {
-						next if $$specs{'OverrideStockHeight'.$qty_index};
-						#next if $P->start_width() and ($P->start_width() < $$specs{'OverrideStockWidth'.$qty_index });
+						#next if $$specs{'OverrideStockHeight'.$qty_index};
+						next if $P->start_width() and ($P->start_width() != $$specs{'OverrideStockWidth'.$qty_index });
 					} elsif ( $P->type() eq 'Sheet' ) {
 						# Don't cut sheets into rolls
 						next if ! $$specs{'OverrideStockHeight'.$qty_index};
 						# Must be big enough to cut
 						next if ( $P->start_width() < $$specs{'OverrideStockWidth'.$qty_index} or $P->start_height() < $$specs{'OverrideStockHeight'.$qty_index} ) and ( $P->start_width() < $$specs{'OverrideStockHeight'.$qty_index} or $P->start_height() < $$specs{'OverrideStockWidth'.$qty_index} );
 					} # end if
+$openprint::log->debug('cloning');
 					my $P2 = $P->clone();
 
 					# Make sure gsm has calculated
 					$P2->gsm();
-					$P2->width( $$specs{'OverrideStockWidth'.$qty_index } );
-					$P2->height( $$specs{'OverrideStockHeight'.$qty_index } );
+					$P2->width( $$specs{'OverrideStockWidth'.$qty_index} );
+					$P2->height( $$specs{'OverrideStockHeight'.$qty_index} );
 					if ( $P2->type() ne 'Roll' ) {
 						$P2->mweight( 0 );
 					} else {
@@ -710,10 +712,10 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 		} # end foreach qty_index
 	} # end if override
 
-#foreach my $P ( @Papers ) {
-#$openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
-#} 
 	push @Papers, @Ps;
+foreach my $P ( @Papers ) {
+$openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
+} 
 
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
@@ -1060,7 +1062,7 @@ $openprint::log->debug("No spread layout for you!");
 			$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 			$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
 			$project{'Runstyles'} = $Press->specification('Runstyles');
-			$project{'Cut Off'} = $Press->specification('Cut Off');
+
 			$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
 
 
@@ -1076,11 +1078,22 @@ $openprint::log->debug("No spread layout for you!");
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 
 					my $P = $Paper->clone();
-					$P->height('');
-					my @i = openprint::imposition::get_imposition( \%project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
+					#$P->height('');
+					my @i;
+					if ( $Press->specification('Cut Off') ) {
+						foreach my $cut_off ( split(',',$Press->specification('Cut Off')) ) {
+							$project{'Cut Off'} = $cut_off;
+							push @i, openprint::imposition::get_imposition( \%project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
 							( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ? $$specs{'ddmRunStyle'.$qty_index} : undef ), 
 							( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ? $$specs{'rdbGrainDirection'.$qty_index} : undef ), $Press,
 							);
+						} # end foreach
+					} else {
+							push @i, openprint::imposition::get_imposition( \%project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
+							( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ? $$specs{'ddmRunStyle'.$qty_index} : undef ), 
+							( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ? $$specs{'rdbGrainDirection'.$qty_index} : undef ), $Press,
+							);
+					} # end if
 					if ( $P->start_width() ) {
 						push @imps, @i;
 					} else {

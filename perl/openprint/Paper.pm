@@ -21,6 +21,7 @@ require openprint::StockName;
 require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockWeight;
+require openprint::StockQuality;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
