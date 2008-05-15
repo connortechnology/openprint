@@ -30,6 +30,14 @@
 		</ul>
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $openprint::session{'user_id'} ) ) ?>
+	<? if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+	<li id="InventoryMenu" class="off"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
+		<ul>
+			<li><a href="/employee/inventory/paper.html;NOSSL">&raquo; Paper</a></li>
+			<li><a href="/employee/inventory/skids.html;NOSSL">&raquo; Skids</a></li>
+		</ul>
+	</li>
+	<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 	<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
 	<li id="AccountingMenu" class="off"><a href="#" onclick="toggleMenu($('AccountingMenu'), 'off', 'on');return false;">ACCOUNTING</a>
 		<ul>
