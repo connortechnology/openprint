@@ -185,6 +185,9 @@
 			} # end if
 			if ( $$sig_specs{'StockType'.$$variable{'Project'}->ordered_quantity_index()} eq 'Roll' ) {
 			$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} );
+			if ( $$sig_specs{'ddmRunstyle'.$$variable{'Project'}->ordered_quantity_index()} ne 'Web' ) {
+				$html .= sprintf(' %s&quot; Cut Off', $$sig_specs{'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
+			} # end if
 			} else {
 			$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
 			} # end if

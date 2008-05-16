@@ -155,6 +155,8 @@ my %variables = (
 		'StockHeight1' => ['save','output'], 'StockHeight2' => ['save','output'], 'StockHeight3' => ['save','output'],
 		'OverrideStockWidth1' => ['save'], 'OverrideStockWidth2' => ['save'], 'OverrideStockWidth3' => ['save'],
 		'OverrideStockHeight1' => ['save'], 'OverrideStockHeight2' => ['save'], 'OverrideStockHeight3' => ['save'],
+		'CutOff1' => ['save','output'], 'CutOff2' => ['save','output'], 'CutOff3' => ['save','output'],
+		'OverrideCutOff1' => ['save'], 'OverrideCutOff2' => ['save'], 'OverrideCutOff3' => ['save'],
 		'StockType' => ['save','output'],'StockType1' => ['save','output'], 'StockType2' => ['save','output'], 'StockType3' => ['save','output'],
 		'hdnImageOrientation1' => ['save','output'], 'hdnImageOrientation2' => ['save','output'], 'hdnImageOrientation3' => ['save','output'], 
 		'hdnNetSheetCount1' => ['save','output'], 'hdnNetSheetCount2' => ['save','output'], 'hdnNetSheetCount3' => ['save','output'],
@@ -933,15 +935,17 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 				foreach my $P ( @Papers ) {
 					# Don't cut rolls into sheets
 					next if ! $P->cuttable();
+$openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.$P->start_height() );
 					if ( $P->type() eq 'Roll' ) {
-						next if $$specs{'OverrideStockHeight'.$qty_index};
-						#next if $P->start_width() and ($P->start_width() < $$specs{'OverrideStockWidth'.$qty_index });
+						#next if $$specs{'OverrideStockHeight'.$qty_index};
+						next if $P->start_width() and ($P->start_width() != $$specs{'OverrideStockWidth'.$qty_index });
 					} elsif ( $P->type() eq 'Sheet' ) {
 						# Don't cut sheets into rolls
 						next if ! $$specs{'OverrideStockHeight'.$qty_index};
 						# Must be big enough to cut
 						next if ( $P->start_width() < $$specs{'OverrideStockWidth'.$qty_index} or $P->start_height() < $$specs{'OverrideStockHeight'.$qty_index} ) and ( $P->start_width() < $$specs{'OverrideStockHeight'.$qty_index} or $P->start_height() < $$specs{'OverrideStockWidth'.$qty_index} );
 					} # end if
+$openprint::log->debug('cloning');
 					my $P2 = $P->clone();
 
 					# Make sure gsm has calculated
@@ -959,10 +963,10 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 		} # end foreach qty_index
 	} # end if override
 
-#foreach my $P ( @Papers ) {
-#$openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
-#} 
 	push @Papers, @Ps;
+foreach my $P ( @Papers ) {
+$openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
+} 
 
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
@@ -1270,11 +1274,21 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 
 					my $P = $Paper->clone();
-					$P->height('');
-					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
+					my @i;
+					if ( $Press->specification('Cut Off') ) {
+						foreach my $cut_off ( split(',',$Press->specification('Cut Off')) ) {
+							$project{'Cut Off'} = $cut_off;
+							push @i, openprint::imposition::get_imposition( \%project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
 							( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ? $$specs{'ddmRunStyle'.$qty_index} : undef ), 
 							( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ? $$specs{'rdbGrainDirection'.$qty_index} : undef ), $Press,
 							);
+						} # end foreach
+					} else {
+							push @i, openprint::imposition::get_imposition( \%project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
+							( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ? $$specs{'ddmRunStyle'.$qty_index} : undef ), 
+							( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ? $$specs{'rdbGrainDirection'.$qty_index} : undef ), $Press,
+							);
+					} # end if
 					if ( $P->start_width() ) {
 						push @imps, @i;
 					} else {
@@ -1344,12 +1358,11 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 					} # end while cutting it
 				} # end if Web or Sheet
 
-				if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) {
+				if ( ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideCutOff'.$qty_index} ) ) {
 					foreach my $imp ( @imps ) {
 						push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp;
 					} # end foreach
 				} else {
-#$openprint::log->debug("Sorting " . $Press->strid() . ': ' . $Paper->width() . 'x' . $Paper->height() );	
 					foreach my $imp ( @imps ) {
 						my $add = -1;
 						my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
@@ -1521,6 +1534,12 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		$$specs{'StockWidth'.$qty_index} = $Paper->width();
 		$$specs{'StockHeight'.$qty_index} = $Paper->height();
 		$$specs{'StockType'.$qty_index} = $Paper->type();
+		if ( ($Paper->type() eq 'Roll') and $Paper->height() ) {
+			$$specs{'CutOff'.$qty_index} = $Paper->height();
+		} else {
+			$$specs{'CutOff'.$qty_index} = '';
+		} # end if
+			
 
 		$$specs{'txtPlateQuantity'.$qty_index} = $best_price{'txtPlateQuantity'};
 		my $plate_setup = $best_price{'Plate Costs'};
@@ -1744,6 +1763,13 @@ sub get_project_price {
 				} # end if
 				#$openprint::log->debug("QTY $qty_index: Right stock want : ".$$specs{'OverrideStockWidth'.$qty_index}.'x'.$$specs{'OverrideStockHeight'.$qty_index}." but have " . $imp->paper()->width() . 'x'.$imp->paper()->height() );
 			} # end if
+			if ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
+$openprint::log->warn("Want " . $$specs{'CutOff'.$qty_index} . ' got ' . $imp->Paper()->height() );
+				if ( $imp->Paper()->height() != $$specs{'CutOff'.$qty_index} ) {
+$openprint::log->warn('next');
+					next;
+				} # end if
+			} # end if OverrrideCutOff
 #my $starttime = gettimeofday();
 #$imp->display();
 

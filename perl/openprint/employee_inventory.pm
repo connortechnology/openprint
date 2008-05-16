@@ -319,13 +319,17 @@ sub save_skid {
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
 	$Skid->location_id( $param{'ddmLocation'} ) if $param{'ddmLocation'};
 	$Skid->location( $param{'txtLocation'} ) if $param{'txtLocation'};
-	$Skid->save();
+	if ( my $error = $Skid->save() ) {
+		$variable{'error'} .= $error;
+		return;
+	} # end if
+	
 
 	if ( $param{'Name'} or $param{'txtName'} ) {
 		my $weight;
 		if ( $param{'txtWeight'} ) {
 			$weight = $param{'txtWeight'};
-		} elsif ( $param{'weight'} ) {
+		} elsif ( $param{'weight'} and ! $param{'weight'} =~ /lb/ ) {
 			$weight = $param{'weight'} . 'lb';
 		} elsif ( $param{'calliper'} ) {
 			$weight = $param{'calliper'} . 'PT';
@@ -382,8 +386,11 @@ sub save_skid {
 			$Paper->calliper( $param{'calliper'} );
 			$Paper->mweight( $param{'mweight'} );
 			$Paper->gsm( $param{'gsm'} );
-			$Paper->save();
-			$variable{'information'} .= 'Paper created.<br/>';
+			if ( my $error = $Paper->save() ) {
+				$variable{'error'} .= $error;
+			} else {
+				$variable{'information'} .= 'Paper created.<br/>';
+			} # end if
 		} elsif ( 1 == @papers ) {
 			$Paper = shift @papers;
 			my $changed = 0;
@@ -412,7 +419,7 @@ sub save_skid {
 				$variable{'information'}	.= '<a href="paper_details.html?paper_id='.$Paper->id().'">'.$Paper->to_string().'</a><br/>';
 			} # end foreach
 		} # end if
-		if ( $Paper ) {
+		if ( $Paper and $Paper->id() ) {
 			my $delta = $Skid->add( $Paper, @param{'Quantity','Units'} );
 			my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 			$Paper->add_inventory( $Skid->id(), $delta, $units );
