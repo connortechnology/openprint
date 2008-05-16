@@ -322,13 +322,13 @@ sub save_skid {
 		return;
 	} # end if
 	
-
 	if ( $param{'Name'} or $param{'txtName'} ) {
 		my $weight;
 		if ( $param{'txtWeight'} ) {
 			$weight = $param{'txtWeight'};
-		} elsif ( $param{'weight'} and ! $param{'weight'} =~ /lb/ ) {
-			$weight = $param{'weight'} . 'lb';
+		} elsif ( $param{'weight'} ) {
+			$weight = $param{'weight'};
+			$weight .= 'lb' if ! $param{'weight'} =~ /lb/;
 		} elsif ( $param{'calliper'} ) {
 			$weight = $param{'calliper'} . 'PT';
 		} # end if
