@@ -891,6 +891,11 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 		foreach my $P ( @Papers ) {
 			$P->prices();
 		} # end foreach
+		if ( ! @Papers ) {
+$openprint::log->warn('no papers');
+			$$specs{'alert'} .= 'Unable to find any stocks matching your specifications.<br/>';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
 		@$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade'} = $Papers[0]->get('name','finish','colour','weight','grade');
 		#} # end if
 		$$specs{'txtSpecificStockCalliper'} = $Papers[0]->calliper() if @Papers;

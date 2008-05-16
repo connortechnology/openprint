@@ -584,7 +584,7 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 		my %ServicePrice = openprint::service::get_price_object( 'Cutting', $$specs{"txtQuantity$qty_index"}, $Equipment );
 
 		my $price;
-		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$sig_specs{'txtImposition'.$qty_index} );
+		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 
 		if ( $vertical_cuts > $horizontal_cuts ) {
@@ -614,7 +614,7 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 		if ( $dutch_vertical_cuts or $dutch_horizontal_cuts ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
 
-			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$sig_specs{'txtImposition'.$qty_index} );
+			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 
 			if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
@@ -651,7 +651,7 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 		} # end if
 
 		if ( $$specs{"txtAdditionalCuts$signature_index"} ) {
-			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$sig_specs{'txtImposition'.$qty_index} );
+			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 			my $price = ( $runs * $$specs{"txtAdditionalCuts$signature_index"} * $ServicePrice{'Price'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= "\tAdditional cuts:<br/>";
