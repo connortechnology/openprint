@@ -143,7 +143,7 @@ sub calc {
 			} # end if
 
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
-if ( $Price{'Equipment'} ) {
+			if ( $Price{'Equipment'} ) {
                 $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->id();
                 $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->imposition();
                 $$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_width();
@@ -154,7 +154,7 @@ if ( $Price{'Equipment'} ) {
                 $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
                 $$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
                 $$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
-                $status = 'uncalculated';
+                $status = $Price{'Status'};
                 if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
                     $$specs{'alert'} = "The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.";
                 } else {
@@ -233,8 +233,7 @@ sub signature_calc {
 		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 	} else {
 		if ( ! @all_equipment ) {
-			@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'Y'} );
-			push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Printing'} );
+			@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>['Y','When Printing']} );
 			if ( $stitching_service_index and $$services{'Folding'} ) {
 
 				push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Folding'} );
@@ -252,6 +251,8 @@ sub signature_calc {
 	if ( ! $imposition ) {
 		$imposition = new openprint::Imposition();
 		$imposition->load( $sig_specs, $qty_index );
+	} else {
+		$imposition = $imposition->copy();
 	} # end if
 
 	if ( 1 ) {
@@ -298,6 +299,10 @@ sub signature_calc {
 		$Results{'Breakdown'} .= "<br/>Equipment: ".$Equipment->name().', ';
 		next if ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'};
 		next if ( $Equipment->specification('Type') eq 'Stitcher' ) and ! $stitching_service_index;
+		if ( $Equipment->specification('Scoring Capable') eq 'When Printing' and $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
+			$Results{'Breakdown'} .= "Not printing on $$Equipment{name}.<br/>";
+			next;
+		} # end if
 		my @impositions = ();
 		if ( $Equipment->specification('Type') eq 'Press' ) {
 			if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
@@ -310,10 +315,6 @@ sub signature_calc {
 		} # end if
 		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$Results{'Breakdown'} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
-			next;
-		} # end if
-		if ( $Equipment->specification('Scoring Capable') eq 'When Printing' and $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
-			$Results{'Breakdown'} .= 'Not printing on $$Equipment{name}.<br/>';
 			next;
 		} # end if
 		foreach my $imposition ( @impositions ) {
@@ -370,7 +371,7 @@ sub signature_calc {
                 $horizontal_rule = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} * $imposition->columns();
                 $horizontal_length = $horizontal_rule * $$sig_specs{'txtHeight'};
             } # end if
-        $openprint::log->debug("Horizontal: $horizontal_rule");
+        #$openprint::log->debug("Horizontal: $horizontal_rule");
             if ( $horizontal_rule ) {
                 if ( my @Materials = openprint::Material::find('name'=>'ScoringRule') ) {
                     %horizontal_price = $Materials[0]->get_price( $horizontal_rule, $Equipment );
@@ -401,7 +402,7 @@ sub signature_calc {
                 $vertical_length = $vertical_rule * $$sig_specs{'txtWidth'};
             } # end if
 
-        $openprint::log->debug("Vertical: $vertical_rule");
+        #$openprint::log->debug("Vertical: $vertical_rule");
             if ( $vertical_rule ) {
                 if ( my @Materials = openprint::Material::find('name'=>'PerforatingWheel') ) {
                     %vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );

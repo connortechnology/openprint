@@ -481,6 +481,7 @@ sub calc_from_imposition {
 		my $Press = $Imposition->Press();
 
 		# Neccessary since specs do not neccessarily match the Impo
+$openprint::log->debug("Saving Imposition: $$Imposition{imposition}");
 		$Imposition->save( $specs, $qty_index );
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 		$$specs{'ddmBleedSize'.$qty_index} = $$price{'ddmBleedSize'};
@@ -520,7 +521,7 @@ sub calc_from_imposition {
 #$$specs{'RunTime'.$qty_index} = $best_price{'RunTime'};
 
 		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
-		$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $$price{'100lb Price'} );
+			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $$price{'100lb Price'} );
 		} else {
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
@@ -1532,7 +1533,7 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $best_price{'Impressions'};
 #$$specs{'RunTime'.$qty_index} = $best_price{'RunTime'};
 		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
-		$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $best_price{'100lb Price'} );
+			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $best_price{'100lb Price'} );
 		} else {
 		} # end if
 
@@ -1720,8 +1721,10 @@ sub get_project_price {
 				next;
 			} # end if
 			if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) ) {
-				$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$specs{'txtImposition'.$qty_index}) if $debug;
+				$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$specs{'txtImposition'.$qty_index}) if $debug or 1;
 				next;
+			} else {
+				$openprint::log->debug("Does match imposition override " . $imp->imposition() . ' != ' . $$specs{'txtImposition'.$qty_index}) if $debug or 1;
 			} # end if
 			if ( ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $imp->pages() != $$specs{'PageQuantity'.$qty_index} ) ) {
 				#$openprint::log->debug("Doesn't match page quantity override " . $imp->pages() . ' != ' . $$specs{'PageQuantity'.$qty_index}) if $debug;
@@ -1768,6 +1771,12 @@ sub get_project_price {
 			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, (%best_price ? $best_price{'Comparison Cost'} : 0), $pms_prices, $inkCoverage, $special_colours );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$openprint::log->debug( breakdown( $price, $specs ) );
+			my $Paper = $imp->Paper();
+			if ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) {
+				$Paper = $Paper->copy();
+				$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
+			} # end if
+			my $stock_qty = $$Paper{type} eq 'Roll' ? $$price{'Stock Weight'} : $$price{'Gross Sheet Count'};
 
 			if ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} and $imp->pages() ) {
 				my $upq = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
@@ -1826,6 +1835,7 @@ sub get_project_price {
 							$additional_price -= $$sig_price{'PerfectBound Cost'};
 							$sigs =int($$specs{'txtUnspecifiedPageQuantity'.$qty_index}/$imp->pages());
 							$additional_price *= $sigs;
+							$stock_qty += $sigs * ( $$Paper{type} eq 'Roll' ? $$sig_price{'Stock Weight'} : $$sig_price{'Gross Sheet Count'} );
 							foreach ( 1 .. $sigs ) {
 								push @{$$price{'Additional Impositions'}},$imp;
 							} # end foreach
@@ -1834,6 +1844,7 @@ sub get_project_price {
 #last if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} % $imp->pages() >= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index} % $imp->pages();
 						} else {
+							$stock_qty += $$Paper{type} eq 'Roll' ? $$sig_price{'Stock Weight'} : $$sig_price{'Gross Sheet Count'};
 							push @{$$price{'Additional Impositions'}},$imp;
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $imp->pages();
 						} # end if
@@ -1922,8 +1933,12 @@ $openprint::log->warn("Doing full calc without Page Override" );
 					} # end if
 #$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Cutting Breakdown'};
 #$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Stitching Breakdown'};
+
+
+					$$price{'Comparison Cost'} += $$price{'Paper Price'};
+
 					last if %best_price and check_price( $best_price{'Comparison Cost'}, $price, $specs, $qty_index, $imp, 'Sig' );
-				} # end while
+				} # end while UnspecifiedPages
 				$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = $upq;
 				$$specs{'PreviousForms'.$qty_index} = $pf;
 				$$specs{'PreviousPlates'.$qty_index} = $pp;
@@ -1931,6 +1946,28 @@ $openprint::log->warn("Doing full calc without Page Override" );
 				$$specs{'StitchingImposition'.$qty_index} = $si;
 			} # end if UnspecifiedPageQuanitty
 #$openprint::log->debug( 'calc_price: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) . ' Complete: ' . $price{complete} );
+
+			my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $stock_qty );
+			$openprint::log->warn("PStock price: $stock_qty: $paper_price{'100lb Price'}" );
+			@$price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb Cost', '100lb Price'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb Cost', '100lb Price'};
+			if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
+				if ( my %SuppliedPaperPrice = openprint::service::get_price_object( 'Supplied'.$Paper->type(), undef, undef ) ) {
+					if ( lc $SuppliedPaperPrice{'units'} eq 'per 100lbs' ) {
+						$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $$price{'Stock Weight'} / 100;
+					} elsif ( lc $SuppliedPaperPrice{'units'} eq 'per sheet' ) {
+						$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $$price{'Gross Sheet Count'};
+					} elsif ( lc $SuppliedPaperPrice{'units'} eq 'per m' ) {
+						$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $$price{'Gross Sheet Count'}/1000;
+					} # end if
+					$$price{'SuppliedPaperPrice'} = \%SuppliedPaperPrice;
+					$$price{'Comparison Cost'} += $SuppliedPaperPrice{'Total'};
+				} # end if
+			} # end if
+
+			if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+				$$price{'Roll2SheetCharge'} = openprint::service::get_price( 'Roll2Sheet', undef, $Press );
+				$$price{'Comparison Cost'} += $$price{'Roll2SheetCharge'};
+			} # end if
 
 			if ( ! $$price{complete} ) {
 #$openprint::log->debug("No price complete ");
@@ -1960,11 +1997,12 @@ $openprint::log->warn("Doing full calc without Page Override" );
 #$$imp{'Comparison'} = $$price{'Comparison Cost'};
 		} # end foreach imposition
 	} # end foreach Press
-
 	if ( ! %best_price ) {
 		$$specs{'alert'} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
 		$$specs{'Status'} = 'uncalculated';
 		return;
+	} else {
+$openprint::log->warn( "After calc imp: " . $best_price{'Imposition'}->imposition() );
 	} # end if
 	return \%best_price;
 } # end sub get_project_price
@@ -1997,11 +2035,11 @@ sub calc_price {
 	my $Press = $Imposition->Press();
 
 # It's ok to do this, because $$specs is either a copy, or will be reset before being returned
-	$$specs{"hdnImpositionRows$qty_index"} = $$Imposition{rows};
-	$$specs{"hdnImpositionColumns$qty_index"} = $$Imposition{columns};
-	$$specs{"hdnImpositionDutchRows$qty_index"} = $$Imposition{dutch_rows};
-	$$specs{"hdnImpositionDutchColumns$qty_index"} = $$Imposition{dutch_columns};
-	$$specs{"txtImposition$qty_index"} = $$Imposition{imposition};
+	#$$specs{"hdnImpositionRows$qty_index"} = $$Imposition{rows};
+	#$$specs{"hdnImpositionColumns$qty_index"} = $$Imposition{columns};
+	#$$specs{"hdnImpositionDutchRows$qty_index"} = $$Imposition{dutch_rows};
+	#$$specs{"hdnImpositionDutchColumns$qty_index"} = $$Imposition{dutch_columns};
+	#$$specs{"txtImposition$qty_index"} = $$Imposition{imposition};
 	$$specs{'SpreadRows'.$qty_index} = $$Imposition{spread_rows};
 	$$specs{'SpreadCols'.$qty_index} = $$Imposition{spread_columns};
 	$$specs{'hdnImageOrientation'.$qty_index} = $$Imposition{image_orientation};
@@ -2317,7 +2355,7 @@ sub calc_price {
 		$gross_qty += $additional_overs;
 	} # end if
 	$impressions = $gross_qty;
-	my $weight = $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi();
+	my $weight = ceil( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
 	my $sheets_per_package = $Paper->sheets_per_package();
 	if ( $sheets_per_package and $Paper->full_packages() ) {
 		if ( $Paper->type() eq 'Sheet' ) {
@@ -2358,32 +2396,6 @@ sub calc_price {
 	$price{'Plate Price'} = $plate_setup{'Plate Price'} * $plate_setup{'Plate Count'};
 
 	$price{'Stock Weight'} = $sheet_qty{'Weight'};
-	if ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) {
-		$Paper = $Paper->copy();
-		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
-	} # end if
-	my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
-	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb Cost', '100lb Price'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb Cost', '100lb Price'};
-	if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
-		if ( my %SuppliedPaperPrice = openprint::service::get_price_object( 'Supplied'.$Paper->type(), undef, undef ) ) {
-			if ( lc $SuppliedPaperPrice{'units'} eq 'per 100lbs' ) {
-				$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $sheet_qty{'Weight'} / 100;
-			} elsif ( lc $SuppliedPaperPrice{'units'} eq 'per sheet' ) {
-				$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $sheet_qty{'Gross Sheet Count'};
-			} elsif ( lc $SuppliedPaperPrice{'units'} eq 'per m' ) {
-				$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $sheet_qty{'Gross Sheet Count'}/1000;
-			} # end if
-			$price{'SuppliedPaperPrice'} = \%SuppliedPaperPrice;
-			$price{'Comparison Cost'} += $SuppliedPaperPrice{'Total'};
-		} # end if
-	} # end if
-
-	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
-		$price{'Roll2SheetCharge'} = openprint::service::get_price( 'Roll2Sheet', undef, $Press );
-		$price{'Comparison Cost'} += $price{'Roll2SheetCharge'};
-	} # end if
-
-	$price{'Comparison Cost'} += $price{'Paper Price'};
 
 	my $sheets = $impressions;
 	$$specs{"txtPressSheetQty$qty_index"} = $sheets;
@@ -2638,7 +2650,7 @@ sub calc_price {
 	if ( $$project{'HasCutting'} ) {
 		if ( ($Paper->type() ne 'Roll') and ($Paper->start_width() != $Paper->width() or $Paper->start_height() != $Paper->height() ) ) {
 			#my $time = gettimeofday();
-			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $openprint::log, $openprint::dbh, $openprint::variable, $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper );
+			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $openprint::log, $openprint::dbh, $openprint::variable, $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
 			$price{'Cutting Breakdown'} .= "Stock Cutting Price: $cutting_results{'Price'} $$project{'CuttingSpecs'}{'alert'}<br/>";
 			$price{'Comparison Cost'} += $cutting_results{'Price'};
 #$openprint::log->debug("Elapsed stock cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
@@ -2646,7 +2658,7 @@ sub calc_price {
 		} # end if
 
 		#my $time = gettimeofday();
-		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper );
+		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
 #$openprint::log->debug("Elapsed cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		if ( $$project{'CuttingSpecs'}{'Status'} eq 'uncalculated' ) {
 			$price{'Cutting Breakdown'} .= "Cutting error: $$project{'CuttingSpecs'}{'alert'}<br/>";
@@ -2658,7 +2670,6 @@ sub calc_price {
 
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Cutting' );
 	} # end if
-
 
 	$price{'complete'} = 1;
 	return \%price;

@@ -222,6 +222,8 @@ sub signature_calc {
 	if ( ! $imposition ) {
 		$imposition = new openprint::Imposition();
 		$imposition->load( $sig_specs, $qty_index );
+	} else {
+		$imposition = $imposition->copy();
 	} # end if
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
