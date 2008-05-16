@@ -1264,7 +1264,6 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 			$$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 			$$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
 			$$project{'Runstyles'} = $Press->specification('Runstyles');
-			$$project{'Cut Off'} = $Press->specification('Cut Off');
 			$$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
 
 			my @impositions;
@@ -1280,19 +1279,35 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 
 					my $P = $Paper->clone();
 					my @i;
+					my @cut_offs;
 					if ( $Press->specification('Cut Off') ) {
-						foreach my $cut_off ( split(',',$Press->specification('Cut Off')) ) {
-							$project{'Cut Off'} = $cut_off;
-							push @i, openprint::imposition::get_imposition( \%project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
-							( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ? $$specs{'ddmRunStyle'.$qty_index} : undef ), 
-							( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ? $$specs{'rdbGrainDirection'.$qty_index} : undef ), $Press,
-							);
+						@cut_offs = split(',',$Press->specification('Cut Off'));
+					} elsif ( $Press->specification('Cut Off Minimum') ) {
+if ( 0 ) {
+						my $max = $Press->specification('Cut Off Maximum');
+						$max = $Press->specification('Maximum Sheet Length') if ! $max;
+						my $increment = $Press->specification('Cut Off Increment');
+						my $cut_off = $Press->specification('Cut Off Minimum');
+						while ( $cut_off <= $max ) {
+							push @cut_offs, $cut_off;
+							$cut_off += $increment;
+						} # end while cutoff < max
+} # end if
+					} # end if
+
+					if ( @cut_offs ) {
+						foreach my $cut_off ( @cut_offs ) {
+							$$project{'Cut Off'} = $cut_off;
+							push @i, openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
+									( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ? $$specs{'ddmRunStyle'.$qty_index} : undef ), 
+									( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ? $$specs{'rdbGrainDirection'.$qty_index} : undef ), $Press,
+									);
 						} # end foreach
 					} else {
-							push @i, openprint::imposition::get_imposition( \%project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
-							( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ? $$specs{'ddmRunStyle'.$qty_index} : undef ), 
-							( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ? $$specs{'rdbGrainDirection'.$qty_index} : undef ), $Press,
-							);
+							push @i, openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
+									( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ? $$specs{'ddmRunStyle'.$qty_index} : undef ), 
+									( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ? $$specs{'rdbGrainDirection'.$qty_index} : undef ), $Press,
+									);
 					} # end if
 					if ( $P->start_width() ) {
 						push @imps, @i;
@@ -1745,10 +1760,10 @@ sub get_project_price {
 				next;
 			} # end if
 			if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) ) {
-				$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$specs{'txtImposition'.$qty_index}) if $debug or 1;
+				$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$specs{'txtImposition'.$qty_index}) if $debug;
 				next;
-			} else {
-				$openprint::log->debug("Does match imposition override " . $imp->imposition() . ' != ' . $$specs{'txtImposition'.$qty_index}) if $debug or 1;
+			#} else {
+				#$openprint::log->debug("Does match imposition override " . $imp->imposition() . ' != ' . $$specs{'txtImposition'.$qty_index}) if $debug or 1;
 			} # end if
 			if ( ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $imp->pages() != $$specs{'PageQuantity'.$qty_index} ) ) {
 				#$openprint::log->debug("Doesn't match page quantity override " . $imp->pages() . ' != ' . $$specs{'PageQuantity'.$qty_index}) if $debug;
