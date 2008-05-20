@@ -216,5 +216,14 @@ sub skid_id {
 	return;
 } # end sub skid_id
 
+sub Skid {
+	my ( $self ) = @_;
+	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+	if ( ! @Skids ) {
+		return new openprint::Skid();
+	} # end if
+	return $Skids[0];
+} # end sub Skid
+
 1;
 __END__

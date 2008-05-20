@@ -86,26 +86,27 @@ The following errors occurred:<br/>
 				<label>IP Address:</label>
 				<input type="text" name="ipaddr" value="<? echo ( $$variable{'RFIDScanner'}->ipaddr() ) ?>" />
 			</p>
-			<p><label onclick="$('type').toggle();$('type_id').toggle();">Type:</label>
-				<input type="radio" id="typeFixed" name="type" value="Fixed" <? echo ( $$variable{'RFIDScanner'}->type() eq 'Fixed' ? 'checked="checked"' : '' ) ?> onclick="$('Location').show();"/>
-				<label class="radio" for="typeFixed">Fixed</label>
-				<input type="radio" id="typeMobile" name="type" value="Mobile" <? echo ( $$variable{'RFIDScanner'}->type() eq 'Mobile' ? 'checked="checked"' : '' ) ?> onclick="$('Location').hide();"/>
-				<label class="radio" for="typeMobile">Mobile</label>
-				<input type="radio" id="typeCheckout" name="type" value="Checkout" <? echo ( $$variable{'RFIDScanner'}->type() eq 'Checkout' ? 'checked="checked"' : '' ) ?> onclick="$('Location').show();"/>
-				<label class="radio" for="typeCheckout">Checkout</label>
+			<p>
+				<label>Other Data:</label>
+				<input type="text" name="other" value="<? echo ( $$variable{'RFIDScanner'}->other() ) ?>" />
+			</p>
+			<p><label>Type:</label>
+				<select name="type" id="type">
+					<option value="">select</option>
+					<? echo ( 
+						my @options = ( 'Checkout', 'Fixed','Mobile', 'Truck Inventory','Truck Location' );
+						return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'RFIDScanner'}->type() );
+					) ?>
+				</select>
 			</p>
 			<p id="Location">
 				<label>Location:</label>
-<? if ( $$variable{'RFIDScanner'}->type() ne 'Mobile' ) ?>
 				<select id="location_id" name="location_id">
 					<option value="">select</option>
 					<? echo ( 
 						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)')], $$variable{'RFIDScanner'} ? $$variable{'RFIDScanner'}->location_id() : $openprint::param{'location_id'} );
 						) ?>
 				</select>
-<? else ( $$variable{'RFIDScanner'}->type() ne 'Mobile' ) ?>
-	<? echo ( $$variable{'RFIDScanner'}->Location()->name() ) ?>
-<? endif ( $$variable{'RFIDScanner'}->type() ne 'Mobile' ) ?>
 			</p>
 			<p class="buttons">
 				<? echo ( 
