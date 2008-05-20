@@ -614,11 +614,22 @@ sub Owner {
 } # endn sub Owner
 sub owner {
     my $self = shift;
-    if ( @_ ) {
-        $$self{'owner_id'} = shift;
-        $$self{'owner_id'} =~ s/\D//g;
+	my $Company;
+    if ( @_ and $_[0] ) {
+		my @Companies = openprint::Company::find('name'=>$_[0]);
+		if ( ! @Companies ) {
+			$Company = new openprint::Company();
+			$Company->name( $_[0] );
+			$Company->save();
+		} else {
+			$Company = $Companies[0];
+		} # end if
+
+        $$self{'owner_id'} = $Company->id();
+	} else {
+		$Company = new openprint::Company( $$self{'owner_id'} );
     } # end if
-    return $$self{'owner_id'};
+    return $Company->name();
 } # end sub owner
 sub owner_id {
     my $self = shift;

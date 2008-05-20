@@ -25,6 +25,7 @@ my $debug = 1;
 	'location_id'	=>	'location_id',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
+	'other'			=>	'other',
 );
 
 %transforms = (

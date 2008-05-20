@@ -155,6 +155,8 @@ my %variables = (
 		'StockHeight1' => ['save','output'], 'StockHeight2' => ['save','output'], 'StockHeight3' => ['save','output'],
 		'OverrideStockWidth1' => ['save'], 'OverrideStockWidth2' => ['save'], 'OverrideStockWidth3' => ['save'],
 		'OverrideStockHeight1' => ['save'], 'OverrideStockHeight2' => ['save'], 'OverrideStockHeight3' => ['save'],
+		'CutOff1' => ['save','output'], 'CutOff2' => ['save','output'], 'CutOff3' => ['save','output'],
+		'OverrideCutOff1' => ['save'], 'OverrideCutOff2' => ['save'], 'OverrideCutOff3' => ['save'],
 		'StockType' => ['save','output'],'StockType1' => ['save','output'], 'StockType2' => ['save','output'], 'StockType3' => ['save','output'],
 		'hdnImageOrientation1' => ['save','output'], 'hdnImageOrientation2' => ['save','output'], 'hdnImageOrientation3' => ['save','output'], 
 		'hdnNetSheetCount1' => ['save','output'], 'hdnNetSheetCount2' => ['save','output'], 'hdnNetSheetCount3' => ['save','output'],
@@ -1353,12 +1355,11 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 					} # end while cutting it
 				} # end if Web or Sheet
 
-				if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) {
+				if ( ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideCutOff'.$qty_index} ) ) {
 					foreach my $imp ( @imps ) {
 						push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp;
 					} # end foreach
 				} else {
-#$openprint::log->debug("Sorting " . $Press->strid() . ': ' . $Paper->width() . 'x' . $Paper->height() );	
 					foreach my $imp ( @imps ) {
 						my $add = -1;
 						my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
@@ -1530,6 +1531,12 @@ $openprint::log->debug("# of good impos: " . @{$impositions{''}});
 		$$specs{'StockWidth'.$qty_index} = $Paper->width();
 		$$specs{'StockHeight'.$qty_index} = $Paper->height();
 		$$specs{'StockType'.$qty_index} = $Paper->type();
+		if ( ($Paper->type() eq 'Roll') and $Paper->height() ) {
+			$$specs{'CutOff'.$qty_index} = $Paper->height();
+		} else {
+			$$specs{'CutOff'.$qty_index} = '';
+		} # end if
+			
 
 		$$specs{'txtPlateQuantity'.$qty_index} = $best_price{'txtPlateQuantity'};
 		my $plate_setup = $best_price{'Plate Costs'};
@@ -1751,6 +1758,13 @@ sub get_project_price {
 				} # end if
 				#$openprint::log->debug("QTY $qty_index: Right stock want : ".$$specs{'OverrideStockWidth'.$qty_index}.'x'.$$specs{'OverrideStockHeight'.$qty_index}." but have " . $imp->paper()->width() . 'x'.$imp->paper()->height() );
 			} # end if
+			if ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
+$openprint::log->warn("Want " . $$specs{'CutOff'.$qty_index} . ' got ' . $imp->Paper()->height() );
+				if ( $imp->Paper()->height() != $$specs{'CutOff'.$qty_index} ) {
+$openprint::log->warn('next');
+					next;
+				} # end if
+			} # end if OverrrideCutOff
 #my $starttime = gettimeofday();
 #$imp->display();
 

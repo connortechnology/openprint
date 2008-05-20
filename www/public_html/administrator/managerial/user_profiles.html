@@ -206,6 +206,20 @@ Please select a company or user to obtain login information.<br/>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<? if ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+		<fieldset><legend>Email Settings:</legend>
+			<p>
+				<label>Password:</label>
+				<input type="text" name="EmailPassword" value="<?EmailPassword?>"  />
+			</p>
+			<p>
+				<label>Verify Password:</label>
+				<input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>"  />
+			</p>
+			<p>
+				<label>Forwards:<br/>(One per line)</label>
+				<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( scalar @{$$variable{'Aliases'}} + 1 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>
+			</p>
+		</fieldset>
 		<fieldset><legend>Vacation Auto-Responder Settings:</legend>
 			<p>
 				<label>Subject:</label>

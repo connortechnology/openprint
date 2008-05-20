@@ -83,5 +83,42 @@ sub stop_vacation {
 
 } # end sub stop_vacation
 
+sub aliases {
+	my ( $log, $email, @new ) = @_;
+
+	my @aliases;
+	my $auto_alias = '';
+	my $me = '';
+	( $_ ) = sql::execute( $log, $dbh, q{SELECT goto FROM alias WHERE address=?}, $email );
+	foreach my $alias ( split( ',', $_ ) ) {
+		$alias =~ s/\n//g;
+		$alias =~ s/\r//g;
+		if ( $alias =~ /autoreply/ ) {
+			$auto_alias = $alias;
+		} elsif ( $alias eq $email ) {
+			$me = $alias;
+		} elsif ( ! $alias ) {
+
+		} else {
+			push @aliases, $alias;
+		} # end if
+	} # end foreach alias
+	if ( @new ) {
+		@aliases = ();
+		foreach my $alias ( @new ) {
+			$alias =~ s/\n//g;
+			$alias =~ s/\r//g;
+			next if ! $alias;
+			next if $alias eq $email;
+			next if $alias =~ /autoreply/;
+			push @aliases, $alias;
+		} # end foreach
+		push @aliases, $auto_alias if $auto_alias;
+		push @aliases, $me if $me;
+		sql::update( $log, $dbh, 'alias', ['address=?', $email], 'goto', join(',', @aliases ), 'modified', 'NOW()' );
+	} # end if
+	return @aliases;
+} # end sub get_aliases
+
 1;
 __END__
