@@ -77,7 +77,7 @@
         </p>
 		<p>
 			<label>Forwards:<br/>(One per line)</label>
-			<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( scalar @{$$variable{'Aliases'}} ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>	
+			<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( scalar @{$$variable{'Aliases'}} + 1 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>	
 		</p>
     </fieldset>
     <fieldset><legend>Vacation Auto-Responder Settings:</legend>
