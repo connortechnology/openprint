@@ -28,7 +28,7 @@ my $debug = 1;
 );
 
 %transforms = (
-	'updated_on'	=>	['s/.*/NOW()/'],
+	'updated_on'	=>	['s/.*//g'],
 );
 
 %defaults = (
@@ -99,19 +99,23 @@ sub save {
 	if ( $hash ) {
 		$self->set( $hash );
 	} # end if
+
+	my %sql = map { $_, $$self{$_} } keys %fields;
+	$sql{'updated_on'} = 'NOW()';
 	
 	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('RFIDScanners_id_seq')} );
+		$sql{'id'} = $$self{'id'};
 
-		if ( my $error = sql::insert( undef, undef, 'RFIDScanners', [map { $_, $$self{$_} } keys %fields ] ) ) {
+		if ( my $error = sql::insert( undef, undef, 'RFIDScanners', \%sql ) ) {
 			$$self{'id'} = undef;
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 
     } else {
-		if ( my $error = sql::update( undef, undef, 'RFIDScanners', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
+		if ( my $error = sql::update( undef, undef, 'RFIDScanners', ['id=?', $$self{id}], \%sql ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
