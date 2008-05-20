@@ -848,11 +848,19 @@ sub summary {
 					$cover_pages += $$sig_specs{'GroupPageQuantity'};
 					last;
 				} # end foreach
-			$summary .= sprintf('%dpg+Cover ', $specs{'txtTotalPageQuantity'} - $cover_pages );
+				$summary .= sprintf('%dpg+Cover ', $specs{'txtTotalPageQuantity'} - $cover_pages );
 			} else {
-			$summary .= sprintf('%dpg ', $specs{'txtTotalPageQuantity'} );
-			$summary .= $specs{'rdbCover'}.' Cover';
+				$summary .= sprintf('%dpg ', $specs{'txtTotalPageQuantity'} );
+				$summary .= $specs{'rdbCover'}.' Cover';
 			} # end if
+			$summary .= '<br/>';
+			foreach my $group_id ( sort ( sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' ) ) ) {
+				foreach my $ss_id ( $self->signatures({'Group'=>$group_id}) ) {
+					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
+					#$summary .= $$sig_specs{'txtServiceName'} . ' pages on ' . join(' ', @$sig_specs{'ddmPaperName','ddmPaperFinish','ddmPaperColour','ddmPaperWeight'} . '<br/>' );
+					$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
+				} # end foreach signature
+			} # end foreach Group
 		} else {
 # normal printing services
 			$specs{'txtWidth'} *= 1;

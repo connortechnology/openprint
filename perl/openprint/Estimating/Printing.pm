@@ -3315,7 +3315,7 @@ sub summary {
 				$back_colours += 1;
 			} # end if
 		} # end foreach
-		return sprintf( qq{%s %s"x%s" %d%s/%d%s\non %s %s},
+		return sprintf( '%s: %s"x%s" %d%s/%d%s on %s %s<br/>',
 				@$specs{'txtServiceDescription','txtWidth','txtHeight'},
 				$front_colours,
 				$front_coatings,
