@@ -3315,6 +3315,19 @@ sub summary {
 				$back_colours += 1;
 			} # end if
 		} # end foreach
+		my $dimensions = '';
+		if ( ( $specs{'txtFinalWidth'} and $specs{'txtFinalHeight'} ) and ( $specs{'txtFinalWidth'} != $specs{'txtWidth'} or $specs{'txtFinalHeight'} != $specs{'txtHeight'} ) ) {
+			if ( $$services{'Folding'} ) {
+				$summary .= sprintf( '%s&quot;x%s&quot; folded to %s&quot;x%s&quot; ',
+						@specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
+			} else {
+				$summary .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
+						@specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
+			} # end if
+		} else {
+			$summary .= sprintf( '%s&quot;x%s&quot; ', @specs{'txtWidth','txtHeight'});
+		} # end if
+
 		return sprintf( '%s: %s"x%s" %d%s/%d%s on %s %s<br/>',
 				@$specs{'txtServiceDescription','txtWidth','txtHeight'},
 				$front_colours,
