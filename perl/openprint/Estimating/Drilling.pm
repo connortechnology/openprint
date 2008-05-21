@@ -209,6 +209,11 @@ sub display {
 }  # end sub display
 
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	if ( $qty_index ) {
+	} else {
+		return $$specs{'txtHoleQty'} . ' ' . $$specs{'txtHoleSize'} . '&quot; holes';
+	} # end if
 	return '';
 } # end sub summary
 

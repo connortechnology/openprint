@@ -853,6 +853,9 @@ sub summary {
 				$summary .= sprintf('%dpg ', $specs{'txtTotalPageQuantity'} );
 				$summary .= $specs{'rdbCover'}.' Cover';
 			} # end if
+			if ( $specs{'PrintingType'} ) {
+				$summary .= ' printed ' . $specs{'PrintingType'};
+			} # end if
 			$summary .= '<br/>';
 			foreach my $group_id ( sort ( sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' ) ) ) {
 				foreach my $ss_id ( $self->signatures({'Group'=>$group_id}) ) {
@@ -891,7 +894,6 @@ sub summary {
 			} else {
 				$summary .= sprintf( 'on %s, %s, %s, %s', @specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} );
 			} # end if
-		} # end if
 		if ( $specs{'PrintingType'} ) {
 			$summary .= ' printed ' . $specs{'PrintingType'};
 		} elsif ( $specs{'chkOverridePrintingType1'} ) {
@@ -901,28 +903,27 @@ sub summary {
 		} elsif ( $specs{'chkOverridePrintingType3'} ) {
 			$summary .= ' printed ' . $specs{'PrintingType3'};
 		} # end if
+		} # end if book or not
 	} # end if
-	if ( $$services{'Cutting'} ) {
-		$summary .= ' Trim ';
-	} # end if
-	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
-		$summary .= ' Stitch ';
-	} # end if
-	if ( $$services{'SpinePaste'} ) {
-		$summary .= ' Spine Paste ';
-	} # end if
-	if ( $$services{'PerfectBound'} ) {
-		$summary .= ' PerfectBound ';
-	} # end if
-	if ( $$services{'NoBindery'} ) {
-		$summary .= ' NoBindery ';
-	} # end if
-	if ( $$services{'PlainCartons'} ) {
-		$summary .= ' Boxes';
-	} # end if
-	if ( $$services{'BulkSkids'} ) {
-		$summary .= ' Skids';
-	} # end if
+	foreach my $category ( 'Prepress','Bindery','Packaging' ) {
+		foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {
+			if ( $$services{$ServiceType->name()} ) {
+				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
+					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
+					if ( $project_summary ) {
+						$summary .= $project_summary;
+					} else {
+						$summary .= ' ' . $ServiceType->description() . ' ';
+						if ( $_ = eval( 'openprint::Estimating::'.$ServiceType->type().'::summary( $self, $service_id, $service_specs );' ) ) {
+							$summary .= ':'.$_ . '<br/>';
+						} # end if
+						
+					} # end if
+				} # end foreach service
+			} # end if
+		} # end foreach ServiceType
+	} # end foreach category
 	if ( $$services{'Turnaround'} ) {
 		my $specs = openprint::service::get_specs_ref( $self, $$services{'Turnaround'}[0] );
 		$summary .= sprintf(' in %ddays', $$specs{'TurnaroundDays'} );

@@ -566,5 +566,25 @@ sub summary {
 	return '';
 } # end sub summary
 
+sub project_summary {
+	my ( $Project, $service_id, $specs ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+	my %types;
+
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		my $signature_index = $$sig_specs{'SignatureIndex'};
+		foreach my $key ( keys %{$specs} ) {
+			if ( my ($proof_index, $qty_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
+				if ( my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
+					$types{$Service[0]->description()} = 1;
+				} # end if
+			} # end if
+		} # end foreach key
+	} # end foreach signature
+	return join(',', keys %types) . ' Proofs<br/>';
+} # end sub project_summary
+
 1;
 __END__

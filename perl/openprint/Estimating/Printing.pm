@@ -2300,7 +2300,7 @@ sub calc_price {
 		} else {
 			$price{'Perforating Breakdown'} .= sprintf('Perforating Price: %.2f speed: %s<br/>', @perforating_results{'Price','Runspeed'} );
 			$price{'Comparison Cost'} += $perforating_results{'Price'};
-			if ( $perforating_results{'Equipment'}->id() == $Press->id() ) {
+			if ( $perforating_results{'Equipment'} and ($perforating_results{'Equipment'}->id() == $Press->id()) ) {
 				if ( $perforating_results{'Runspeed'} =~ /(.*)\%/ ) {
 					$run_speed *= (1+$1/100);
 				} else {
