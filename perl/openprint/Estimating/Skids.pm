@@ -245,15 +245,29 @@ sub summary {
 					$summary .= sprintf( ', Total Weight: %.0flbs (%.0fg)', $$specs{'totalWeight'.$qty_index}, $g );
 				} # end if
 			} else {
-				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' cartons' : ' cartons' );
+				if ( $$specs{'ServiceType'} eq 'Gaylords' ) {
+					$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' gaylord' : ' gaylords' );
+				} else {
+					$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' carton' : ' cartons' );
+				} # end if
 			} # end if
 		} else {
-			$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' cartons' : ' cartons' );
-			my $g = Math::Units::convert( $$specs{'totalWeight'.$qty_index}, 'lbs','g');
-			if ( $g > 1000 ) {
-				$summary .= sprintf( ', Total Weight: %.0flbs (%.0fkg)', $$specs{'totalWeight'.$qty_index}, $g/1000 );
+			if ( $$specs{'ServiceType'} eq 'Gaylords' ) {
+				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' gaylord' : ' gaylords' );
+				my $g = Math::Units::convert( $$specs{'totalWeight'.$qty_index}, 'lbs','g');
+				if ( $g > 1000 ) {
+					$summary .= sprintf( ', Total Weight: %.0flbs (%.0fkg)', $$specs{'totalWeight'.$qty_index}, $g/1000 );
+				} else {
+					$summary .= sprintf( ', Total Weight: %.0flbs (%.0fg)', $$specs{'totalWeight'.$qty_index}, $g );
+				} # end if
 			} else {
-				$summary .= sprintf( ', Total Weight: %.0flbs (%.0fg)', $$specs{'totalWeight'.$qty_index}, $g );
+				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' carton' : ' cartons' );
+				my $g = Math::Units::convert( $$specs{'totalWeight'.$qty_index}, 'lbs','g');
+				if ( $g > 1000 ) {
+					$summary .= sprintf( ', Total Weight: %.0flbs (%.0fkg)', $$specs{'totalWeight'.$qty_index}, $g/1000 );
+				} else {
+					$summary .= sprintf( ', Total Weight: %.0flbs (%.0fg)', $$specs{'totalWeight'.$qty_index}, $g );
+				} # end if
 			} # end if
 		} # end if
 		return $summary;

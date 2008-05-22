@@ -91,10 +91,6 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 
 	$log->debug("BEGIN PERFING!!!!!!!!!!!!!!!!!!");
-	#if ( $Project->Type()->strid() eq 'MultiPagePublication'  ) {
-		#$$specs{'alert'} = 'We are unable to auto-calculate a price for perforation on a multipage publication. Please call for pricing.';
-		#return $$specs{'Status'} = 'uncalculated';
-	#} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
@@ -232,6 +228,8 @@ sub signature_calc {
 	if ( ! $imposition ) {
 		$imposition = new openprint::Imposition();
 		$imposition->load( $sig_specs, $qty_index );
+	} else {
+		$imposition = $imposition->copy();
 	} # end if
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -311,8 +309,6 @@ sub signature_calc {
 
 			my %servicePrice;
 			my $servicePrice;
-			my %materialPrice;
-			my $materialPrice = 0;
 
 			if ( $scor_equipment eq $Equipment->strid() and $scor_imposition == $imposition->imposition() ) {
 				$Results{'Breakdown'} .= "\tSame equipment as scoring, no service price needed.<br/>";
@@ -332,6 +328,9 @@ sub signature_calc {
 				} # end if
 				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s @ %d%s = $%.2f<br/>', @servicePrice{'Price','units'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour', $servicePrice );
 			} # end if
+# Div by imposition
+			$servicePrice /= $imposition->imposition() if $imposition->imposition();
+
 
 			my $horizontal_rule = 0;
 			my $horizontal_length = 0;
@@ -351,14 +350,14 @@ sub signature_calc {
 					if ( sets::isin( lc $horizontal_price{'units'},['per rule','each'] ) ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_rule;
 						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=%3$.2f', @horizontal_price{'Price','units','Total'}, $horizontal_rule );
-					} elsif ( lc $materialPrice{'units'} eq 'per inch' ) {
+					} elsif ( lc $horizontal_price{'units'} eq 'per inch' ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_length;
 						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=%3$.2f', @horizontal_price{'Price','units','Total'}, $horizontal_length );
-					} elsif ( $materialPrice{'units'} eq 'per foot' ) {
+					} elsif ( $horizontal_price{'units'} eq 'per foot' ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_length/12;
 						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=%3$.2f', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
 					} else {
-						$Results{'Breakdown'} .= "Unknown units set on material price ($horizontal_price{'units'})<br/>";
+						$Results{'Breakdown'} .= "Unknown units set on rule price ($horizontal_price{'units'})<br/>";
 					} # end if
 				} # end if
 			} # end if
@@ -377,7 +376,7 @@ sub signature_calc {
 
 		$openprint::log->debug("Vertical: $vertical_rule");	
 			if ( $vertical_rule ) {
-				if ( my @Materials = openprint::Material::find('name'=>'PerforatingWheel') ) {
+				if ( my @Materials = openprint::Material::find('name'=>'ScoringWheel') ) {
 					%vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );
 					if ( sets::isin( lc $horizontal_price{'units'},['per rule','each'] ) ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_rule;
@@ -385,11 +384,11 @@ sub signature_calc {
 					} elsif ( lc $vertical_price{'units'} eq 'per inch' ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_length;
 						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f2$%s * %4$.2finches=%3$.2f', @vertical_price{'Price','units','Total'}, $vertical_length );
-					} elsif ( $materialPrice{'units'} eq 'per foot' ) {
+					} elsif ( $vertical_price{'units'} eq 'per foot' ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_length/12;
 						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f2$%s * %4$.2finches=%3$.2f', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
 					} else {
-						$Results{'Breakdown'} .= "Unknown units set on material price ($vertical_price{'units'})<br/>";
+						$Results{'Breakdown'} .= "Unknown units set on wheel price ($vertical_price{'units'})<br/>";
 					} # end if
 				} # end if
 			} # end if

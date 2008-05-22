@@ -772,6 +772,7 @@ sub get_price {
 
     if ( $$self{'Price'} ) {
 		# If custom paper
+$openprint::log->warn('Using override price');
 		%price = ( 'Price' => $$self{'Price'}, 'Cost'=>$$self{'Price'}, 'units'=>$$self{'Units'});
 	} else {
 		my $list_id = openprint::pricing::get_pricelist_id( );
@@ -782,6 +783,7 @@ sub get_price {
 			return;
 		} # end if
 		foreach my $Price ( @Prices ) {
+#$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->Min(), $Price->Max(), $Price->Price() ) );
 			if ( 
 					( $Price->pricelist_id() == $list_id ) and 
 					( $Price->Min() eq '' or $Price->Min() <= $qty ) and
@@ -1055,6 +1057,10 @@ $openprint::log->debug(sprintf('Paper %sx%s = %s', $Paper->width(), $Paper->heig
 				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
 			} # end if
 		} # end if
+	} # end if
+	if ( $qty_index and ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) ) {
+$openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
+		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
 	} # end if
 	return $Paper;
 	

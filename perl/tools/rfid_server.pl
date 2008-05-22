@@ -80,21 +80,7 @@ sub process_request {
 				my $Tag = new openprint::RFIDTag( $tag_id );
 				if ( ! $Tag->id() ) {
 					#$self->log(1, sprintf('%s : going to allocate ', $self->{server}->{peeraddr} ));
-					$changed = 1;
-				} # end if
-					#$self->log(1, sprintf('%s : Type %s', $self->{server}->{peeraddr}, $Tag->type() ));
-				if ( ! $Tag->type() ) {
-					if ( $type_digit == 1 ) {
-					#$self->log(1, sprintf('%s : Location %s', $self->{server}->{peeraddr}, $type_digit ));
-						$Tag->type( 'Location' );
-					#$self->log(1, sprintf('%s : Type %s', $self->{server}->{peeraddr}, $Tag->type() ));
-						$changed = 1;
-					} elsif ( $type_digit == 2 ) {
-						$Tag->type( 'Skid' );
-						$changed = 1;
-					} else {
-						$self->log(1, sprintf('%s : %s : unknown type %s', $date, $self->{server}->{peeraddr}, $type_digit ));
-					} # end if
+					$Tag->save( {'id'=>$tag_id} );
 				} # end if
 if ( 1 ) {
 				if ( time - Date::Parse::str2time($Scanner->updated_on()) > 10 ) {
@@ -176,6 +162,11 @@ if ( 1 ) {
 				} elsif ( $Scanner->type() eq 'Truck Inventory' ) {
 					$self->log(1, sprintf('%s : %s : truck inventory', $date, $self->{server}->{peeraddr}, ));
 					if ( ( $Tag->type() eq 'Skid' ) and ( $Scanner->location_id() != $Tag->location_id() ) ) {
+						my $Skid = $Tag->Skid();
+						$Skid = new openprint::Skid() if ! $Skid;
+						$Skid->rfidtag_id( $Tag->id() ) if ! $Skid->rfidtag_id();
+						my $error = $Skid->save() if ! $Skid->id();
+						$self->log(1, sprintf('%s : %s : error saving skid: %s', $date, $self->{server}->{peeraddr}, $error )) if $error;
 						$changed = 1;
 						$self->log(1, sprintf('%s : %s : updating location of tag %s to $d', $date, $self->{server}->{peeraddr}, $Tag->id(), $Scanner->Location()->name() ));
 						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );

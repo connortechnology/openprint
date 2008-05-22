@@ -97,9 +97,9 @@ sub do_new_substitution {
 } # end sub do_new_substitution
 
 sub include {
-	my ( $file ) = @_;
+	my ( $file, $variable ) = @_;
 	my $blah = misc::load_file( $log, $file);
-	return variable_substitution( \$blah, \%variable );
+	return variable_substitution( \$blah, $variable );
 }
 
 sub do_include {

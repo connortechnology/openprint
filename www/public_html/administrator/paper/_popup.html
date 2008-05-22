@@ -18,7 +18,7 @@
 <? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"\$('num_prices').value=1+parseInt(\$('num_prices').value);new Ajax.Request('_popup_price.html?pricelist_id=$$variable{Pricelist}{id}&id='+\$('num_prices').value, { method: 'get', onSuccess: function(response){new Insertion.Bottom(\$('Prices'), response.responseText);} } );",'','Add' ); ) ?>
 					</th>
 				</tr>
-				<? echo ( $param{'id'} = 1; $param{'pricelist_id'}=$$variable{'Pricelist'}->id(); return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/paper/_popup_price.html' ); ) ?>
+				<? echo ( $param{'id'} = 1; $param{'pricelist_id'}=$$variable{'Pricelist'}->id(); return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/paper/_popup_price.html', $variable ); ) ?>
 			</table>
 		</p>
 		<? endwhile ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?>

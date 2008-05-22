@@ -238,10 +238,6 @@ sub used_height {
     my $self = shift;
     return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'} + ( $$self{'colour_bar_orientation'} eq 'Width' ? $$self{'colour_bar_size'} : 0 );
 }
-sub used_height {
-	my $self = shift;
-	return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'};
-}
 
 sub object_area {
 	my $self = shift;

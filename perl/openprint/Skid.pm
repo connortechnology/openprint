@@ -13,6 +13,7 @@ require openprint::Location;
 require openprint::Paper;
 require openprint::SkidContent;
 require openprint::RFIDTag;
+require openprint::Project;
 
 my $debug = 1;
 
@@ -333,7 +334,7 @@ sub checkout {
 
 	foreach my $C ( @contents ) {
 		my ( $project_id ) = sql::execute( undef, undef, q{SELECT project_id FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $C->paper() );
-		$C->Paper->add_inventory( $$self{id}, -1*$C->quantity(), $C->units(), 'Removed' . $project_id ? ' for docket ' . new openprint::Project($project_id)->docket() : '' );
+		$C->Paper->add_inventory( $$self{id}, -1*$C->quantity(), $C->units(), 'Removed' . ($project_id ? ' for docket ' . new openprint::Project($project_id)->docket() : '' ) );
 		$C->quantity( 0 );
 		$C->save();
 	} # end foreach Content
@@ -379,11 +380,6 @@ sub empty {
 	} # end foreach
 	return 1;
 } # end sub empty
-
-sub contents {
-	my ( $self, $Paper ) = @_;
-	return $$self{'Paper'}{$Paper->id()};
-} # end sub contents
 
 sub rfidtag_id {
 	my ( $self, $rfidtag_id ) = @_;

@@ -6,11 +6,12 @@ use MIME::Base64;
 use openprint::Currency;
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config);
+use vars qw($r %variable $log $dbh %config);
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*r = \$openrpint::r;
 
 require sql;
 require openprint::logs;
@@ -350,10 +351,14 @@ sub send {
 		# Add a project summary for each project in the quote
 		foreach my $Project ($self->Projects()) {
 			my %variable;
-			openprint::project::view( $openprint::log, $openprint::dbh, \%variable, $Project->id() );
+			openprint::project::view( $log, $dbh, \%variable, $Project->id() );
+			if ( -f $config{'SkinPath'} . '/email_content/project_view.html' ) {
+			$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/project_view.html' );
+			} else {
 			$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_view.html' );
-			$variable{'ReplacementText'} = ssi::variable_substitution( $openprint::r, $openprint::log, $openprint::dbh, \$variable{'ReplacementText'}, \%variable );
-			push @project_summaries, sprintf('Project%d.html',$Project->id()), encode_qp( ssi::variable_substitution( $openprint::r, $openprint::log, $openprint::dbh, \$email_template, \%variable )), 'text/html', 'quoted-printable';
+			} # end if
+			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+			push @project_summaries, sprintf('Project%d.html',$Project->id()), encode_qp( ssi::variable_substitution( \$email_template, \%variable )), 'text/html', 'quoted-printable';
 		} # for each Project
 	} # end if
 
