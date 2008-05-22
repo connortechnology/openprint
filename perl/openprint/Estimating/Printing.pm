@@ -1164,7 +1164,7 @@ $openprint::log->debug("No spread layout for you!");
 					} # end while cutting it
 				} # end if Web or Sheet
 
-				if ( ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideCutOff'.$qty_index} ) ) {
+				if ( ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) ) {
 					foreach my $imp ( @imps ) {
 						push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp;
 					} # end foreach
