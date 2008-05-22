@@ -853,76 +853,52 @@ sub summary {
 				$summary .= sprintf('%dpg ', $specs{'txtTotalPageQuantity'} );
 				$summary .= $specs{'rdbCover'}.' Cover';
 			} # end if
+			if ( $specs{'PrintingType'} ) {
+				$summary .= ' printed ' . $specs{'PrintingType'} . ' ';
+			} # end if
 			$summary .= '<br/>';
-			foreach my $group_id ( sort ( sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' ) ) ) {
+			my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' );
+
+			foreach my $group_id ( sort @groups ) {
 				foreach my $ss_id ( $self->signatures({'Group'=>$group_id}) ) {
 					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
-					#$summary .= $$sig_specs{'txtServiceName'} . ' pages on ' . join(' ', @$sig_specs{'ddmPaperName','ddmPaperFinish','ddmPaperColour','ddmPaperWeight'} . '<br/>' );
 					$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
+					last;
 				} # end foreach signature
 			} # end foreach Group
 		} else {
 # normal printing services
-			$specs{'txtWidth'} *= 1;
-			$specs{'txtHeight'} *= 1;
-			if ( $specs{'txtFinalWidth'} != $specs{'txtWidth'} or $specs{'txtFinalHeight'} != $specs{'txtHeight'} ) {
-				if ( $$services{'Folding'} ) {
-				$summary .= sprintf( '%s&quot;x%s&quot; folded to %s&quot;x%s&quot; ',
-						@specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
-				} else {
-				$summary .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
-						@specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
-				} # end if
-			} else {
-				$summary .= sprintf( '%s&quot;x%s&quot; ', @specs{'txtFinalWidth','txtFinalHeight'});
+			$summary .= openprint::Estimating::Printing::summary( $self, $$services{''}[0], \%specs );
+			if ( $specs{'PrintingType'} ) {
+				$summary .= ' printed ' . $specs{'PrintingType'};
+			} elsif ( $specs{'chkOverridePrintingType1'} ) {
+				$summary .= ' printed ' . $specs{'PrintingType1'};
+			} elsif ( $specs{'chkOverridePrintingType2'} ) {
+				$summary .= ' printed ' . $specs{'PrintingType2'};
+			} elsif ( $specs{'chkOverridePrintingType3'} ) {
+				$summary .= ' printed ' . $specs{'PrintingType3'};
 			} # end if
-			$summary .= sprintf('%d%s%s/%d%s%s ',
-					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideOne' ),
-					$specs{'rdbAqueousSideOne'} ne 'None' ? '+AQ' : '',
-					($specs{'SideOneUVCoatingType'} and $specs{'SideOneUVCoatingType'} ne 'None' ? '+UV' : ''),
-					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideTwo' ),
-					$specs{'rdbAqueousSideTwo'} ne 'None' ? '+AQ' : '',
-					($specs{'SideTwoUVCoatingType'} and $specs{'SideTwoUVCoatingType'} ne 'None' ? '+UV' : ''),
- );
-			if ( $specs{'rdbSuppliedStock'} eq 'Y' ) {
-				$summary .= 'Customer Supplied Stock';
-			} elsif ( $specs{'rdbSpecificStock'} eq 'Y' ) {
-				$summary .= sprintf( 'on %s, %s, %s, %s', @specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} );
-			} else {
-				$summary .= sprintf( 'on %s, %s, %s, %s', @specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} );
+		} # end if book or not
+	} # end if
+	foreach my $category ( 'Prepress','Bindery','Packaging','Shipping' ) {
+		foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {
+			if ( $$services{$ServiceType->name()} ) {
+				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
+					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
+					if ( $project_summary ) {
+						$summary .= $project_summary;
+					} else {
+						$summary .= ' ' . $ServiceType->description() . ' ';
+						if ( $_ = eval( 'openprint::Estimating::'.$ServiceType->type().'::summary( $self, $service_id, $service_specs );' ) ) {
+							$summary .= ':'.$_ . '<br/>';
+						} # end if
+						
+					} # end if
+				} # end foreach service
 			} # end if
-		} # end if
-		if ( $specs{'PrintingType'} ) {
-			$summary .= ' printed ' . $specs{'PrintingType'};
-		} elsif ( $specs{'chkOverridePrintingType1'} ) {
-			$summary .= ' printed ' . $specs{'PrintingType1'};
-		} elsif ( $specs{'chkOverridePrintingType2'} ) {
-			$summary .= ' printed ' . $specs{'PrintingType2'};
-		} elsif ( $specs{'chkOverridePrintingType3'} ) {
-			$summary .= ' printed ' . $specs{'PrintingType3'};
-		} # end if
-	} # end if
-	if ( $$services{'Cutting'} ) {
-		$summary .= ' Trim ';
-	} # end if
-	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
-		$summary .= ' Stitch ';
-	} # end if
-	if ( $$services{'SpinePaste'} ) {
-		$summary .= ' Spine Paste ';
-	} # end if
-	if ( $$services{'PerfectBound'} ) {
-		$summary .= ' PerfectBound ';
-	} # end if
-	if ( $$services{'NoBindery'} ) {
-		$summary .= ' NoBindery ';
-	} # end if
-	if ( $$services{'PlainCartons'} ) {
-		$summary .= ' Boxes';
-	} # end if
-	if ( $$services{'BulkSkids'} ) {
-		$summary .= ' Skids';
-	} # end if
+		} # end foreach ServiceType
+	} # end foreach category
 	if ( $$services{'Turnaround'} ) {
 		my $specs = openprint::service::get_specs_ref( $self, $$services{'Turnaround'}[0] );
 		$summary .= sprintf(' in %ddays', $$specs{'TurnaroundDays'} );
@@ -988,7 +964,7 @@ sub Order {
 }
 
 sub signatures {
-	my $self = shift;
+	my ( $self, $params ) = @_;
 	if ( ! exists $$self{'signatures'} ) {
 		my $services = $self->services();
 		if ( $$services{'AdditionalSignature'} ) {
@@ -997,10 +973,9 @@ sub signatures {
 			@{$$self{'signatures'}} = @{$$services{''}};
 		} # end if
 	} # end if
-	if ( @_ ) {
-		my $params = shift;
-		my @sigs;
 
+	if ( $params ) {
+		my @sigs;
 		foreach my $s_id ( @{$$self{'signatures'}} ) {
 			my $specs = openprint::service::get_specs_ref( $$self{'id'}, $s_id );
 
@@ -1014,8 +989,9 @@ sub signatures {
 		} # end foreach signatures
 		return @sigs;
 	} # end if
+
 	if ( $$self{'signatures'} ) {
-	return @{$$self{'signatures'}};
+		return @{$$self{'signatures'}};
 	} # end if
 	return ();
 } # end sub signatures

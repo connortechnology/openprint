@@ -69,8 +69,8 @@ function get_variables( formName, service_type ) {
 function cbFillResults( results ) {
     var pairs = results.split('|');
     var form = getFormObj('f1');
-	remove_div('AlertDiv');
-	remove_div('InformationDiv');
+	$('AlertDiv').hide();
+	$('InformationDiv').hide();
 
     for ( var i = 0; i < pairs.length; i += 1 ){
         if ( pairs[i].indexOf('~') != -1 ) {
@@ -80,6 +80,7 @@ function cbFillResults( results ) {
 					var div = $("AlertDiv");
 					if ( div ) {
 						div.innerHTML = data[1];
+						div.show();
 					} else {
 						alert( data[1] );
 					} // end if

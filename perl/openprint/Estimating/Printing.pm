@@ -1932,7 +1932,8 @@ $openprint::log->warn("Doing full calc without Page Override" );
 							} # end if sig_price complete
 
 #$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} . ' ' . $$sig_price{'Comparison Cost'} - $$sig_price{'Stitching Cost'} );
-						} # end if just calc or get_project_price
+						} # end if cached or get_project_price
+						$stock_qty += $$Paper{type} eq 'Roll' ? $$sig_price{'Stock Weight'} : $$sig_price{'Gross Sheet Count'};
 						$additional_price = $$sig_price{'Comparison Cost'};
 
 						if ( ! $$sig_price{'Imposition'} ) {
@@ -1945,7 +1946,7 @@ $openprint::log->warn("Doing full calc without Page Override" );
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $$sig_price{'Imposition'}->pages();
 						} # end if
 #$openprint::log->warn("Done full calc $sig_price{'Comparison Cost'} :". $$specs{'PageQuantity'.$qty_index});
-					} # end if
+					} # end if calc_price or get_project_price
 
 					$additional_price -= $$sig_price{'Stitching Cost'};
 					$additional_price -= $$sig_price{'PerfectBound Cost'};
@@ -1996,6 +1997,8 @@ $openprint::log->warn("Doing full calc without Page Override" );
 			my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $stock_qty );
 			$openprint::log->warn("PStock price: $stock_qty: $paper_price{'100lb Price'}" );
 			@$price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb Cost', '100lb Price'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb Cost', '100lb Price'};
+			$$price{'Comparison Cost'} += $$price{'Paper Price'};
+
 			if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
 				if ( my %SuppliedPaperPrice = openprint::service::get_price_object( 'Supplied'.$Paper->type(), undef, undef ) ) {
 					if ( lc $SuppliedPaperPrice{'units'} eq 'per 100lbs' ) {
@@ -2007,12 +2010,16 @@ $openprint::log->warn("Doing full calc without Page Override" );
 					} # end if
 					$$price{'SuppliedPaperPrice'} = \%SuppliedPaperPrice;
 					$$price{'Comparison Cost'} += $SuppliedPaperPrice{'Total'};
+					$$price{'Total Cost'} += $SuppliedPaperPrice{'Total'};
 				} # end if
+			} elsif ( ! openprint::ServiceType::find('name'=>'Paper') ) {
+				$$price{'Total Cost'} += $$price{'Paper Price'};
 			} # end if
 
 			if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
 				$$price{'Roll2SheetCharge'} = openprint::service::get_price( 'Roll2Sheet', undef, $Press );
 				$$price{'Comparison Cost'} += $$price{'Roll2SheetCharge'};
+				$$price{'Total Cost'} += $$price{'Roll2SheetCharge'};
 			} # end if
 
 			if ( ! $$price{complete} ) {
@@ -2300,7 +2307,7 @@ sub calc_price {
 		} else {
 			$price{'Perforating Breakdown'} .= sprintf('Perforating Price: %.2f speed: %s<br/>', @perforating_results{'Price','Runspeed'} );
 			$price{'Comparison Cost'} += $perforating_results{'Price'};
-			if ( $perforating_results{'Equipment'}->id() == $Press->id() ) {
+			if ( $perforating_results{'Equipment'} and ($perforating_results{'Equipment'}->id() == $Press->id()) ) {
 				if ( $perforating_results{'Runspeed'} =~ /(.*)\%/ ) {
 					$run_speed *= (1+$1/100);
 				} else {
@@ -2586,8 +2593,10 @@ sub calc_price {
 
 		} elsif ( $real_colour =~ /(\w*) Spot Colour/ ) {
 			$colour = $1.'Ink';
-		} elsif ( $real_colour =~ /PMS/ ) {
+		} elsif ( $real_colour =~ /PMS/i ) {
 			$colour = 'PMSInk';
+		} elsif ( $real_colour =~ /Metallic/i ) {
+			$colour = 'MetallicInk';
 		} else { 
 			$colour = $real_colour . 'Ink';
 		} # end if
@@ -2683,13 +2692,6 @@ sub calc_price {
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Totals' );
 	$price{'Total Cost'} = $total_cost;
-	if ( ( $$specs{'rdbSuppliedStock'} ne 'Y' ) and ! openprint::ServiceType::find('name'=>'Paper') ) {
-		$price{'Total Cost'} += $price{'Paper Price'};
-	} else {
-		if ( my $SuppliedPaperPrice = $price{'SuppliedPaperPrice'} ) {
-			$price{'Total Cost'} += $$SuppliedPaperPrice{'Total'};
-		} # end if
-	} # end if
 
 # Now add in cutting costs to the comparison
 
@@ -3315,8 +3317,21 @@ sub summary {
 				$back_colours += 1;
 			} # end if
 		} # end foreach
-		return sprintf( '%s: %s"x%s" %d%s/%d%s on %s %s<br/>',
-				@$specs{'txtServiceDescription','txtWidth','txtHeight'},
+		my $dimensions = '';
+		if ( ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) and ( $$specs{'txtFinalWidth'} != $$specs{'txtWidth'} or $$specs{'txtFinalHeight'} != $$specs{'txtHeight'} ) ) {
+			if ( $$services{'Folding'} ) {
+				$dimensions .= sprintf( '%s&quot;x%s&quot; folded to %s&quot;x%s&quot; ',
+						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
+			} else {
+				$dimensions .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
+						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
+			} # end if
+		} else {
+			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtWidth','txtHeight'});
+		} # end if
+
+		return sprintf( '%s %s %d%s/%d%s on %s %s<br/>',
+				($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions,
 				$front_colours,
 				$front_coatings,
 				$back_colours,
