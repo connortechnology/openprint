@@ -140,6 +140,7 @@ sub save {
 			} else {
 				$$self{'type_id'} = $type_id;
 			} # end if
+			$$self{'type'} = $type;
 		} # end if
 	} # end if
 
@@ -215,6 +216,15 @@ sub skid_id {
 	} # end if
 	return;
 } # end sub skid_id
+
+sub Skid {
+	my ( $self ) = @_;
+	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+	if ( ! @Skids ) {
+		return new openprint::Skid();
+	} # end if
+	return $Skids[0];
+} # end sub Skid
 
 1;
 __END__

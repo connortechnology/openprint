@@ -1395,6 +1395,11 @@ sub create_calc {
 
 	return if ! $specs{'rdbProjectType'};
 
+	# Sanitize input
+	foreach my $qty_index ( 1 .. 3 ) {
+		$specs{"txtQuantity$qty_index"} =~ s/\D//g;
+	} # end foreach qty_index
+
 	my $Project = new openprint::Project( $specs{'ProjectIndex'} );
 	$Project->currency_id( $openprint::session{'Currency_id'} ) if ! $Project->currency_id();
 	if ( ! $Project->id() ) {

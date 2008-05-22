@@ -886,6 +886,19 @@ $log->debug("Loading tag: $param{'rfidtag_id'}");
 		$variable{'error'} .= $RFIDTag->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $RFIDTag->delete();
+	} elsif ( $param{'btnFunction'} eq 'AllocateSkid' ) {
+$log->debug('allocate skid');
+		if ( ! $RFIDTag->skid_id() ) {
+			my $Skid = new openprint::Skid();
+			$Skid->rfidtag_id( $RFIDTag->id() );
+			$Skid->location_id( $RFIDTag->location_id() );
+			$variable{'error'} .= $Skid->save();
+$log->debug('skid saved');
+		} else {
+			$variable{'error'} .= 'Skid already allocated<br/>';
+		} # end if
+	} else {
+$log->debug('unknown function: '. $param{'btnFunction'});
 	} # end if
 
 	$variable{'RFIDTag'} = $RFIDTag;

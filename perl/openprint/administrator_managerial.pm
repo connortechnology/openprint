@@ -158,6 +158,16 @@ sub user_profiles {
 			} else {
 				email::stop_vacation( $r, $log, $User->email() );
 			} # end if
+			if ( $openprint::param{'EmailPassword'} and $openprint::param{'EmailPassword'} eq $openprint::param{'VerifyEmailPassword'} ) {
+                email::set_password( $r, $log, @openprint::param{'email','EmailPassword'} );
+            } # end if
+            my @aliases = ();
+            foreach my $alias ( split "\r\n", $openprint::param{'aliases'} ) {
+                next if ! $alias;
+                push @aliases, $alias;
+            } # end foreach
+            email::aliases( $log, $User->email(), @aliases );
+
 			$sql::dbh = $dbh;
         } # end if
 
@@ -213,6 +223,7 @@ sub user_profiles {
 
 	if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 		@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
+		@{$$variable{'Aliases'}} = email::aliases( $log, $User->email() );
 		$sql::dbh = $dbh;
 	} # end if
 

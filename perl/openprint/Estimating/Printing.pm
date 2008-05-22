@@ -989,13 +989,13 @@ $openprint::log->debug("No spread layout for you!");
 				} # end if
 			} else {
 				if ( $$specs{'PrintingTypes'} and ! sets::isin( $Press->specification('Printing Type'), $$specs{'PrintingTypes'} ) ) {
-					$openprint::log->error('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} ));
+					$openprint::log->warn('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} ));
 					next;
 				} # end if
 			} # end if
 # If we have a plate type override, then make sure that this press can do it.
 			if ( ( $$specs{'chkOverridePlateType'.$qty_index} eq 'Y' ) and ( $Press->specifcation('Plate Type') ne $$specs{'rdbPlateType'.$qty_index} ) ) {
-				$openprint::log->error("Press Plate Type ");
+				$openprint::log->warn("Press Plate Type ");
 				next;
 			} # end if
 

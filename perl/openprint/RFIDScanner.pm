@@ -25,6 +25,7 @@ my $debug = 1;
 	'location_id'	=>	'location_id',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
+	'other'			=>	'other',
 );
 
 %transforms = (
@@ -112,6 +113,7 @@ sub save {
 
     } else {
 		if ( my $error = sql::update( undef, undef, 'RFIDScanners', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
+$openprint::log->error( $error );
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
