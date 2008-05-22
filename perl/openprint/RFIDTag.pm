@@ -140,6 +140,7 @@ sub save {
 			} else {
 				$$self{'type_id'} = $type_id;
 			} # end if
+			$$self{'type'} = $type;
 		} # end if
 	} # end if
 
