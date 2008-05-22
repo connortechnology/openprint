@@ -583,7 +583,7 @@ sub project_summary {
 			} # end if
 		} # end foreach key
 	} # end foreach signature
-	return join(',', keys %types) . ' Proofs<br/>';
+	return ' ' . join(',', keys %types) . ' Proofs<br/>';
 } # end sub project_summary
 
 1;

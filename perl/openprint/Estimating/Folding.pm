@@ -341,13 +341,13 @@ $openprint::log->debug("Loading imposition");
 			my $add = 1;
 			if ( $Press->specification('Folding Capable') ) {
 
-				if ( $$services{'UVCoating'} ) {
+				if ( $$services{'UVCoating'} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
 					$uv_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] ) if ! $uv_specs;
 					if ( $$uv_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Press->id() ) {
 						$add = 0;
 					} # end if
 				} # end if
-				if ( $$services{'Aqueous'} ) {
+				if ( $$services{'Aqueous'} and openprint::Estimating::Aqueous::signature_needs( $Project, $sig_specs ) ) {
 					$aq_specs = openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] ) if ! $aq_specs;
 					if ( $$aq_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Press->id() ) {
 						$add = 0;

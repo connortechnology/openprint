@@ -57,12 +57,12 @@ sub sheet_calc {
 	my %price;
 
 	my %paper_price = $Paper->get_price( $quantity );
-$openprint::log->warn("Paper Price: qty:($quantity) 100lb Price: $paper_price{'100lb Price'}");
+#$openprint::log->warn("Paper Price: qty:($quantity) 100lb Price: $paper_price{'100lb Price'}");
 	$price{'100lb Cost'} = $paper_price{'100lb Cost'};
 	$price{'100lb Price'} = $paper_price{'100lb Price'};
 	$price{'Sheet Cost'} = $paper_price{Cost};
 	$price{'Sheet Price'} = $paper_price{Price};
-$openprint::log->warn(" Paper Price: $quantity $paper_price{'100lb Price'} ");
+#$openprint::log->warn(" Paper Price: $quantity $paper_price{'100lb Price'} ");
 
 	if ( $Paper->type() eq 'Roll' ) {
 		$price{'Paper Cost'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Cost'} );
@@ -99,7 +99,7 @@ sub calc {
 			next if ! $Project->quantity( $qty_index );
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-$openprint::log->warn("Paper Price Override: $$Paper{Price}");
+#$openprint::log->warn("Paper Price Override: $$Paper{Price}");
 			$papers{$Paper->id()} = $Paper;
 			#my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
 			if ( $Paper->type() eq 'Roll' ) {
@@ -109,7 +109,7 @@ $openprint::log->warn("Paper Price Override: $$Paper{Price}");
 				$totals{$$Paper{id}}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
 			} elsif ( $Paper->type() eq 'Sheet' ) {
 				#$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
-				$totals{$$Paper{id}}[$qty_index] += sprintf('%.0f', $$sig_specs{'SheetQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi() );
+				$totals{$$Paper{id}}[$qty_index] += $$sig_specs{'SheetQuantity'.$qty_index};
 			} # end if
 		} # end foreach qty_index
 	} # end foreach signature
@@ -118,6 +118,7 @@ $openprint::log->warn("Paper Price Override: $$Paper{Price}");
 		foreach my $paper_id ( keys %totals ) {
 			my $Paper = $papers{$paper_id};
 			my %price = sheet_calc( $Paper, $totals{$$Paper{id}}[$qty_index] );
+#$openprint::log->warn("Paper price for " . $totals{$$Paper{id}}[$qty_index] . ' of ' . $Paper->to_string() . ' : ' . $price{'Paper Price'} );
 			$$specs{"txtPrice$qty_index"} += $price{'Paper Price'};
 		} # end foreach Stock
 	} # end foreach qty_index
