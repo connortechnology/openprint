@@ -587,8 +587,17 @@ sub create_edit_process {
 	my $recalculate;
 
 	my $Project = new openprint::Project( int $openprint::param{'ProjectIndex'} );
-	$Project->save() if ( ! $Project->id() );
+	$error = $Project->save() if ( ! $Project->id() );
 	$openprint::session{'project_id'} = $Project->id();
+	if ( $error ne '' ) {
+		$$variable{'Redirect'} = '/main/project/create_edit.html';
+		$$variable{'error'} = 'Fields not complete';
+		$$variable{'details'} = $error;
+		foreach ( $r->param() ) {
+			$$variable{$_} = $r->param($_);
+		} # end foreach
+        return;
+    } # end if
 	my $project_index = $Project->id();
 
 	my %services = $Project->get_services();

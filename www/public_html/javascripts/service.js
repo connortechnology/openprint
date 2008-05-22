@@ -70,7 +70,8 @@ function cbFillResults( results ) {
     var pairs = results.split('|');
     var form = getFormObj('f1');
 	$('AlertDiv').hide();
-	$('InformationDiv').hide();
+	if ( $('InformationDiv') )
+		$('InformationDiv').hide();
 
     for ( var i = 0; i < pairs.length; i += 1 ){
         if ( pairs[i].indexOf('~') != -1 ) {
