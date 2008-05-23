@@ -332,7 +332,7 @@ sub auto_calculate {
 	} # end if
 
 # Proofs
-	if ( ! $services{'Proofs'} ) {
+	if ( ! ( $services{'Proofs'} or $services{'NoPrinting'} ) ) {
 		push @{$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Proofs' );
 	} # end if
 

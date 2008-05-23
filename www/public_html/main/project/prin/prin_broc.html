@@ -141,6 +141,7 @@
 		<!--#include virtual="/includes/main/proj/templates/covers.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Covers' ) ?>
+<? if ( ! $$variable{'NoPrinting'} ) ?>
 	<div id="OtherSpecifications">
 		<fieldset><legend>Other Specifications</legend>
 			<!--#include virtual="/includes/main/proj/printing_type.html"-->
@@ -153,9 +154,11 @@
 <? if ( $$variable{'ProjectTypeID'} ne 'Envelopes' ) ?>
 	<!--#include virtual="/includes/main/proj/bleeds_colourbars.html"-->	
 <? endif ( $$variable{'ProjectTypeID'} ne 'Envelopes' ) ?>
+<? endif ( ! $$variable{'NoPrinting'} ) ?>
 	<!--#include virtual="/includes/main/proj/paper_dropdowns.html"-->
 	<br class="spacer"/>
 </fieldset>
+<? if ( ! $$variable{'NoPrinting'} ) ?>
 <!-- End of Input - Start of Results -->
 		<fieldset><legend>Results</legend>
 			<!--#include virtual="/includes/main/proj/printing_results.html"-->
@@ -163,6 +166,7 @@
 		<!-- End of Results -->
 		<hr/>
 		<!--#include virtual="/includes/main/proj/press_approval.html"-->
+<? endif ( ! $$variable{'NoPrinting'} ) ?>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 	</form>
 </div><!-- Service -->

@@ -252,7 +252,6 @@ sub setup_project {
 	$project{'HasDieCutting'} = $$services{'DieCutting'} ? $$services{'DieCutting'}[0] : 0;
 	$project{'HasCutting'} = $$services{'Cutting'} ? $$services{'Cutting'}[0] : 0;
 	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
-	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
 	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
 
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
@@ -271,6 +270,7 @@ sub setup_project {
 	} # end if
 	$project{'NeedUVCoating'} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{'NeedAqueous'} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
+	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
 
 
 	if ( $project{'NeedUVCoating'} ) {
@@ -773,9 +773,6 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @side_one_colours = get_colours( $specs, 'SideOne' );
-	my @side_two_colours = get_colours( $specs, 'SideTwo' );
-	my %inkCoverage = get_inkcoverage( $specs );
 	if ( $$specs{'ProjectType'} eq 'ScratchPads' ) {
 		if ( ! $$specs{'PageQuantity'} ) {
 			$$specs{'alert'} .= 'Please enter the # of pages per pad.';
@@ -785,7 +782,11 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} # end if
 
-	if ( ! ( @side_one_colours or @side_two_colours ) ) {
+
+	my @side_one_colours = get_colours( $specs, 'SideOne' );
+	my @side_two_colours = get_colours( $specs, 'SideTwo' );
+	my %inkCoverage = get_inkcoverage( $specs );
+	if ( ! ( $$services{'NoPrinting'} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{'alert'} .= 'Please choose the colours to be printed.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -969,9 +970,6 @@ $openprint::log->debug('cloning');
 	} # end if override
 
 	push @Papers, @Ps;
-foreach my $P ( @Papers ) {
-$openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
-} 
 
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
@@ -983,6 +981,11 @@ if ( $debug or 0 ) {
 $openprint::log->debug("Paper: " . $P->to_string() );
 	} # end foreach
 } # end if
+
+	if ( $$services{'NoPrinting'} ) {
+		return $$specs{'Status'} = 'calculated';
+	} # end if
+
 	my @possible_presses = sort { $a->strid() <=> $b->strid() } select_presses( $Project, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
 	if ( ! @possible_presses ) {
 		$$specs{'alert'} = 'There were no possible presses. Your project may be too large for us.<br/>';

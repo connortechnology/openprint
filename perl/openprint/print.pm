@@ -224,6 +224,7 @@ sub print_prices {
 
     $$variable{'Cutting'} = $$services{'Cutting'} ? 'YES' : 'NO';
     $$variable{'Folding'} = $$services{'Folding'} ? 'YES' : 'NO';
+    $$variable{'NoPrinting'} = $$services{'NoPrinting'};
 
 	$$variable{'Mode'} = $Project->mode();
 

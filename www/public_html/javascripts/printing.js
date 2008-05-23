@@ -121,7 +121,7 @@ function validate_data(formName) {
 		stockWeight = form.txtSpecificStockCalliper.value;
 	} // end if
 	
-	if ( stockBrand == '' && form.txtSpecificStockBrand.value == '' ) {
+	if ( stockBrand == '' && form.txtSpecificStockBrand && form.txtSpecificStockBrand.value == '' ) {
 		text += "Please Select a Paper Brand\n";
 	} // end if
 	if ( form.elements['txtSpecificStockWidth'] && form.elements['txtSpecificStockHeight'] && form.txtSpecificStockWidth.value && form.txtSpecificStockHeight.value ) {
@@ -132,13 +132,13 @@ function validate_data(formName) {
 			text += "The sheet size you have entered is too small for the dimesions of your project, please enter a larger sheet size.";	
 		} // end if
 	} // end if
-	if ( ! ( stockFinish || form.txtSpecificStockFinish.value ) ) {
+	if ( ! ( stockFinish || (form.txtSpecificStockFinish && form.txtSpecificStockFinish.value ) ) ) {
 		text += "Please Select a Paper Finish\n";
 	} // end if
-	if ( ! ( stockColour || form.txtSpecificStockColour.value ) ) {
+	if ( ! ( stockColour || ( form.txtSpecificStockColour && form.txtSpecificStockColour.value ) ) ) {
 		text += "Please Select a Paper Colour\n";
 	} // end if
-	if ( ! ( stockWeight  || form.txtSpecificStockWeight.value ) ) {
+	if ( ! ( stockWeight  || ( form.txtSpecificStockWeight && form.txtSpecificStockWeight.value ) ) ) {
 		text += "Please Select a Paper Weight\n";
 	} // end if
 

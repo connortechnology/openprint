@@ -146,7 +146,7 @@ sub create_edit_display {
 
 	my $sql = q{SELECT name,description FROM Service_Types WHERE category=? AND create_visible=true ORDER BY Sorting, lower(name)};
 	@{$$variable{'PrepressServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Prepress' );
-	push @{$$variable{'PrepressServiceTypes'}}, sql::execute( $log, $dbh, $sql, 'Proofs' );
+	#push @{$$variable{'PrepressServiceTypes'}}, sql::execute( $log, $dbh, $sql, 'Proofs' );
 
 	@{$$variable{'BinderyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Bindery' );
 	@{$$variable{'SpecialtyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Specialty' );
@@ -753,10 +753,6 @@ sub create_edit_process {
 		push @{$services{'GraphicDesign'}}, insert_service( $log, $dbh, $project_index, 'GraphicDesign') if ! $services{'GraphicDesign'};
 	} # end if
 
-	if ( ! $services{'Proofs'} ) {
-		push @{$services{'Proofs'}}, insert_service( $log, $dbh, $project_index, 'Proofs');
-		$recalculate = 1;
-	} # end if
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
 
@@ -778,6 +774,10 @@ sub create_edit_process {
 			} # end if
 		} # end if
 	} # end foreach
+	if ( ! ( $services{'Proofs'} or $services{'NoPrinting'} ) ) {
+		push @{$services{'Proofs'}}, insert_service( $log, $dbh, $project_index, 'Proofs');
+		$recalculate = 1;
+	} # end if
 
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Edited' );
 	if ( $recalculate ) {

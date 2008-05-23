@@ -853,7 +853,7 @@ sub summary {
 				$summary .= sprintf('%dpg ', $specs{'txtTotalPageQuantity'} );
 				$summary .= $specs{'rdbCover'}.' Cover';
 			} # end if
-			if ( $specs{'PrintingType'} ) {
+			if ( ( ! $$services{'NoPrinting'} ) and $specs{'PrintingType'} ) {
 				$summary .= ' printed ' . $specs{'PrintingType'} . ' ';
 			} # end if
 			$summary .= '<br/>';
@@ -869,18 +869,20 @@ sub summary {
 		} else {
 # normal printing services
 			$summary .= openprint::Estimating::Printing::summary( $self, $$services{''}[0], \%specs );
-			if ( $specs{'PrintingType'} ) {
-				$summary .= ' printed ' . $specs{'PrintingType'};
-			} elsif ( $specs{'chkOverridePrintingType1'} ) {
-				$summary .= ' printed ' . $specs{'PrintingType1'};
-			} elsif ( $specs{'chkOverridePrintingType2'} ) {
-				$summary .= ' printed ' . $specs{'PrintingType2'};
-			} elsif ( $specs{'chkOverridePrintingType3'} ) {
-				$summary .= ' printed ' . $specs{'PrintingType3'};
+			if ( ! $$services{'NoPrinting'} ) {
+				if ( $specs{'PrintingType'} ) {
+					$summary .= ' printed ' . $specs{'PrintingType'};
+				} elsif ( $specs{'chkOverridePrintingType1'} ) {
+					$summary .= ' printed ' . $specs{'PrintingType1'};
+				} elsif ( $specs{'chkOverridePrintingType2'} ) {
+					$summary .= ' printed ' . $specs{'PrintingType2'};
+				} elsif ( $specs{'chkOverridePrintingType3'} ) {
+					$summary .= ' printed ' . $specs{'PrintingType3'};
+				} # end if
 			} # end if
 		} # end if book or not
 	} # end if
-	foreach my $category ( 'Prepress','Bindery','Packaging','Shipping' ) {
+	foreach my $category ( 'Options', 'Prepress','Bindery','Packaging','Shipping' ) {
 		foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {
 			if ( $$services{$ServiceType->name()} ) {
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {

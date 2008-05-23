@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -170,7 +170,7 @@ sub signature_needs {
 	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
-		#$openprint::log->warn("FOLDING NEEDED templatetype!") if $debug;
+		$openprint::log->warn("FOLDING NEEDED templatetype!") if $debug;
 		return 1;
 	} # end if
 
@@ -185,7 +185,7 @@ sub signature_needs {
 
 	# This works for books because sigs don't have a txtFinalWidth, etc.
 	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
-		#$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
+		$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
 		return 1;
 	} # end if
 
