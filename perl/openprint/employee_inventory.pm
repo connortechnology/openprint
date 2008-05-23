@@ -311,7 +311,7 @@ sub paper_details {
 } # end sub paper_details
 
 sub save_skid {
-	my ( $Skid ) = @_;
+	my ( $Skid, $qty ) = @_;
 
 	$Skid->rfidtag_id( $param{'rfidtag_id'} ) if exists $param{'rfidtag_id'};
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
@@ -418,7 +418,7 @@ sub save_skid {
 			} # end foreach
 		} # end if
 		if ( $Paper and $Paper->id() ) {
-			my $delta = $Skid->add( $Paper, @param{'Quantity','Units'} );
+			my $delta = $Skid->add( $Paper, $qty ? $qty : $param{'Quantity'} );
 			$Paper->add_inventory( $Skid->id(), $delta, $param{'Units'} );
 #FIXME
 			if ( $delta > 0 ) {
@@ -923,6 +923,29 @@ sub rfidscanner_details {
 
 	$variable{'RFIDScanner'} = $RFIDScanner;
 } # end sub rfidscanner_details
+
+sub update_inventory {
+$log->warn("Update inventory");
+	if ( $param{'btnFunction'} eq 'Submit' ) {
+		delete $param{'rfidtag_id'};
+		foreach my $tag_id ( split(';', $param{'rfidtag_ids'} ) ) {
+			next if ! $tag_id;
+			my $Tag = new openprint::RFIDTag( $tag_id );
+			if ( ! $Tag->id() ) {
+				$variable{'error'} .= $Tag->save( {'id'=>$tag_id} );
+				last if $variable{'error'};
+			} # end if
+			my $Skid = $Tag->Skid();
+			save_skid( $Skid, $openprint::param{"qty_lbs-$tag_id"} );
+			last if $variable{'error'};
+		} # end foreach tag_id
+		if ( ! $variable{'error'} ) {
+			foreach my $k ( keys %param ) {
+				delete $param{$k};
+			} # end foreach
+		} # end if
+	} # end if
+} # end sub update_inventory
 
 1;
 

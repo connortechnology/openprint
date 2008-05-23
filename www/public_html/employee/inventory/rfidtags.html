@@ -15,6 +15,14 @@ Please select a RFID Tag to view/edit.<br>
 </form>
 <form name="f2" method="post" action="rfidtags.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
+		<? eval (
+			if ( ! $openprint::session{'/employee/inventory/rfidtags.html?StartYear'} ) {
+				@openprint::session{'/employee/inventory/rfidtags.html?StartYear','/employee/inventory/rfidtags.html?StartMonth','/employee/inventory/rfidtags.html?StartDay'} = Date::Calc::Today();
+			} # end if
+			if ( ! $openprint::session{'/employee/inventory/rfidtags.html?EndYear'} ) {
+				@openprint::session{'/employee/inventory/rfidtags.html?EndYear','/employee/inventory/rfidtags.html?EndMonth','/employee/inventory/rfidtags.html?EndDay'} = Date::Calc::Today();
+			} # end if
+		) ?>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">

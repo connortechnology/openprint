@@ -219,9 +219,15 @@ sub skid_id {
 
 sub Skid {
 	my ( $self ) = @_;
+if ( ! $$self{'id'} ) {
+	$openprint::log->error('Cant load ski on a tag without an id');
+	return;
+} # end if
 	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
 	if ( ! @Skids ) {
-		return new openprint::Skid();
+		my $Skid = new openprint::Skid();
+		$Skid->rfidtag_id( $$self{'id'} );
+		return $Skid;
 	} # end if
 	return $Skids[0];
 } # end sub Skid
