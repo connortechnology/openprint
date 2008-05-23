@@ -51,6 +51,7 @@ sub profile {
 				next if ! $alias;
 				push @aliases, $alias;
 			} # end foreach
+			push @aliases, $User->email() if ! @aliases;
 			email::aliases( $log, $User->email(), @aliases );
 			$sql::dbh = $dbh;
 		} # end if

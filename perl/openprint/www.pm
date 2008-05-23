@@ -320,6 +320,7 @@ $openprint::log->debug("Getfile");
 				openprint::employee_inventory::rfidtag_details( $r, $log, $dbh, \%variable )	if $filename eq 'rfidtag_details.html';
 				openprint::employee_inventory::rfidscanners( $r, $log, $dbh, \%variable )		if $filename eq 'rfidscanners.html';
 				openprint::employee_inventory::rfidscanner_details( $r, $log, $dbh, \%variable )	if $filename eq 'rfidscanner_details.html';
+				openprint::employee_inventory::update_inventory()	if $filename eq 'update_inventory.html';
 				openprint::paper_purchase_order::history( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_orders.html';
 				openprint::paper_purchase_order::display( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_order.html';
 			} else {

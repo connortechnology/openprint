@@ -184,12 +184,12 @@
 				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
 			} # end if
 			if ( $$sig_specs{'StockType'.$$variable{'Project'}->ordered_quantity_index()} eq 'Roll' ) {
-			$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} );
-			if ( $$sig_specs{'ddmRunstyle'.$$variable{'Project'}->ordered_quantity_index()} ne 'Web' ) {
-				$html .= sprintf(' %s&quot; Cut Off', $$sig_specs{'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
-			} # end if
+				$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} );
+				if ( $$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()} ne 'Web' ) {
+					$html .= sprintf(' %s&quot; Cut Off', $$sig_specs{'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
+				} # end if
 			} else {
-			$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
+				$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
 			} # end if
 			$html .='<hr/>'.$type;
 			if ( $$sig_specs{'ddmStockFinish'} eq 'Coated 1 Side' or $$sig_specs{'ddmStockFinish'} eq 'C1S' ) {
