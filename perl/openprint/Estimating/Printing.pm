@@ -943,8 +943,8 @@ $openprint::log->warn('no papers');
 					next if ! $P->cuttable();
 $openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.$P->start_height() );
 					if ( $P->type() eq 'Roll' ) {
-						#next if $$specs{'OverrideStockHeight'.$qty_index};
-						next if $P->start_width() and ($P->start_width() != $$specs{'OverrideStockWidth'.$qty_index });
+						next if $$specs{'OverrideStockHeight'.$qty_index};
+						#next if $P->start_width() and ($P->start_width() != $$specs{'OverrideStockWidth'.$qty_index });
 					} elsif ( $P->type() eq 'Sheet' ) {
 						# Don't cut sheets into rolls
 						next if ! $$specs{'OverrideStockHeight'.$qty_index};

@@ -1046,7 +1046,12 @@ sub load_from_signature {
 			$params{'type'}	= $$specs{'StockType'.$qty_index};
 		} # end if
 		my @Papers = find( %params );
-		$Paper = shift @Papers;
+		if ( ! @Papers ) {
+			delete $params{'width'};
+			delete $params{'height'};
+			@Papers = find( %params );
+		} # end if
+		$Paper = shift @Papers if @Papers;
 		$Paper = new openprint::Paper() if ! $Paper;
 		if ( $qty_index ) {
 			if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
