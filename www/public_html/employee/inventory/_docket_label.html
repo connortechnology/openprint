@@ -1,0 +1,10 @@
+<? while ( $openprint::param{'label_qty'} ) ?>
+	<? eval ( $openprint::param{'label_qty'} -= 1; ) ?>
+	<div style="width: 4in;">
+	<div style="padding:0px 7px 0px 7px;">
+		<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D<? echo ( $openprint::param{'Docket'} ) ?>+&amp;NoText=1&amp;Height=30"/><b>Docket:</b><br class="spacer"/>
+		<div style="font-size: 99pt; text-align: center;"><b><? echo ( $openprint::param{'docket'} ) ?></b></div>
+	</div>
+	</div>
+	<br class="pagebreak"/>
+<? endwhile ( $openprint::param{'label_qty'} ) ?>
