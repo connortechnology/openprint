@@ -113,7 +113,6 @@
 							</ul>
 						</li>
 						<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
-						<? if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 						<li id="InventoryMenu" class="<? echo ( $r->uri() =~ /employee\/inventory/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 							<ul>
 								<li><a href="/employee/inventory/purchase_orders.html;NOSSL">&raquo; Purchase Orders</a></li>
@@ -125,7 +124,6 @@
 								<li><a href="/employee/inventory/update_inventory.html;NOSSL">&raquo; Update Inventory</a></li>
 							</ul>
 						</li>
-						<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 						<li id="ISOMenu" class="<? echo ( $r->uri() =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ISOMenu'), 'off', 'on');return false;">ISO</a>
 							<ul>
 								<li><a href="/employee/iso/pars.html;NOSSL">&raquo; Preventive Action Requests</a></li>
