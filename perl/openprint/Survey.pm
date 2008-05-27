@@ -70,13 +70,6 @@ sub save {
             $openprint::dbh->rollback();
         } # end i
 	} # end if
-	if ( $$self{Questions} ) {
-        sql::execute( $openprint::dbh, $openprint::dbh, 'DELETE FROM Survey_Questions WHERE survey_id=?', $$self{id} );
-        foreach my $Q ( @{$$self{Questions}} ) {
-            $Q->survey_id( $$self{id} );
-            $Q->save();
-        } # end foreach
-    } # end if
     sql::end_transaction( $openprint::dbh, $ac );
 
 	$self->load();
@@ -85,9 +78,14 @@ sub save {
 sub delete {
 	my $self = shift;
 	my $ac = sql::start_transaction();
-	sql::execute( undef, undef, q{DELETE FROM Survey_Questions WHERE survey_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Survey_Answers WHERE survey_id=?}, $$self{id} );
+	foreach my $Q ( $self->Questions() ) {
+		foreach my $A ( $Q->AvailableAnswers() ) {
+			$A->delete();
+		} # end foreach
+		$Q->delete();
+	} # end foreach Question
 	sql::execute( undef, undef, q{DELETE FROM Surveys WHERE id=?}, $$self{id} );
 	sql::end_transaction( $ac );
 } # end sub delete
@@ -115,12 +113,18 @@ sub copy {
     my $new = new openprint::Survey();
     $$new{name} = 'Copy of ' . $$self{name};
     $$new{description} = $$self{description};
-    foreach my $Q ( $self->Questions ) {
-        my $Q2 = $Q->copy();
-        $Q2->survey_id('');
-        push @{$$new{Questions}}, $Q2;
-    } # end foreach
     $new->save();
+    foreach my $Q ( $self->Questions() ) {
+        my $Q2 = $Q->copy();
+        $Q2->survey_id($new->id());
+		$Q2->save();
+        push @{$$new{Questions}}, $Q2;
+		foreach my $Available_Answer ( $Q->AvailableAnswers() ) {
+			my $new_Available_Answer = $Available_Answer->copy();
+			$new_Available_Answer->question_id( $Q2->id() );
+			$new_Available_Answer->save({'question_id'=>$Q2->id()});
+		} # end foreach 
+    } # end foreach
     return $new;
 } # end sub copy
 

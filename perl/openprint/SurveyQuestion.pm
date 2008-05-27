@@ -4,8 +4,10 @@ use strict;
 use openprint ();
 
 require sql;
+require openprint::SurveyQuestionAvailableAnswer;
 
 my @fields = (
+	'id',
 	'text',
 	'type',
 	'survey_id',
@@ -47,27 +49,31 @@ sub save {
 
 	if ( $params ) {
 		foreach my $key ( @fields ) {
-		$$self{key} = $$params{$key};
+		$$self{key} = $$params{$key} if exists $$params{$key};
 		} 
 	} # end if
 
 	my @sql;
 	foreach my $key ( @fields ) {
+		next if $key eq 'id';
 		push @sql, $key, $$self{$key};
 	} 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('survey_question_id_seq'::text)} );
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Survey_Questions', 'id', $$self{'id'}, @sql ) ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Survey_Questions', ['id', $$self{'id'}, @sql ] ) ) {
 			$openprint::dbh->rollback();
+			return $e;
 		} # end if
 	} else {
-		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Survey_Questions', "id=$$self{'id'}", @sql ) ) {
+		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Survey_Questions', ['id=?', $$self{'id'}], \@sql ) ) {
 			$openprint::dbh->rollback();
+			return $e;
 		} # end if
 	} # end if
 	sql::end_transaction( $openprint::dbh, $ac );
 	$self->load();
+	return;
 
 } # end sub save
 
@@ -75,8 +81,20 @@ sub copy {
 	my $self = shift;
 	my $new = new openprint::SurveyQuestion();
 	@$new{@fields} = @$self{@fields};
+	delete $$new{'id'};
 	return $new;
 } # end sub copy
 
+sub AvailableAnswers {
+	my ( $self ) = @_;
+	return openprint::SurveyQuestionAvailableAnswer::find('question_id'=>$$self{'id'});
+} # end sub AvailableAnswers
+
+sub delete {
+	my $self = shift;
+	my $ac = sql::start_transaction();
+	sql::execute( undef, undef, q{DELETE FROM Survey_Questions WHERE id=?}, $$self{id} );
+	sql::end_transaction( $ac );
+} # end sub delete
 1;
 __END__

@@ -103,6 +103,9 @@ sub surveys {
         $$variable{'error'} = $$variable{'Survey'}->save( \%openprint::param );
     } elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
         $$variable{'Survey'} = $$variable{'Survey'}->copy();
+        $$variable{'error'} = $$variable{'Survey'}->save( );
+    } elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
+        $$variable{'error'} = $$variable{'Survey'}->delete( );
     } # end if
 	
 } # end sub surveys 

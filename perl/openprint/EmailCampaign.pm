@@ -30,9 +30,9 @@ my @Fields = (
 );
 
 my %Defaults = (
-	'lastrun'	=> undef,
+	'lastrun'	=> 'NOW()',
 	'interval'	=> undef,
-	'timeofday'	=>	undef,
+	'timeofday'	=> undef,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 );
@@ -78,12 +78,12 @@ sub save {
 
 	foreach ( @Fields ) {
 		$$self{$_} = $$hash{$_} if $hash and exists $$hash{$_};
-		$$self{$_} = $Defaults{$_} if ! defined $$self{$_};
+		$$self{$_} = $Defaults{$_} if ! $$self{$_};
 	} # end if
 
 	if ( ! $$self{id} ) {
 		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('EmailCampaign_Id_seq')} );
-		sql::insert( $openprint::log, $openprint::dbh, 'EmailCampaigns', map { $_, $self->{$_} } @Fields );
+		sql::insert( undef, undef, 'EmailCampaigns', map { $_, $self->{$_} } @Fields );
 	} else {
 		sql::update( $openprint::log, $openprint::dbh, 'EmailCampaigns', 'id='.$$self{id},
 					map { $_, $self->{$_}; } @Fields
