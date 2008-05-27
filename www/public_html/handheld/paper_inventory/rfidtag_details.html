@@ -101,34 +101,34 @@ $openprint::log->error($$variable{'error'});
 <? else ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
 <table class="List">
 	<tr>
-		<th align="left">Paper</th><th width="75" align="right">Quantity</th>
+		<th align="left">Paper</th><th width="75" align="left">In Stock</th><th>Allocated</th>
 	</tr>
 <? echo ( 
+		require openprint::PaperAllocation;
 		my $html;
 		foreach my $paper_id ( keys %{$$variable{'Skid'}{Paper}} ) {
 			my $Paper = new openprint::Paper( $paper_id );
-			my $available = 0;
-			foreach my $skid_id ( @{$$variable{'skid_ids'}} ) {
-				my $Skid = new openprint::Skid( $skid_id );
-				$available += ($$Skid{Paper}{$paper_id} - $Skid->allocation('Paper'=>$Paper));
-			} # end foreach
-
 			$html .= '<tr>';
 			$html .= qq`<td><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
 			$html .= $Paper->to_string();
 			$html .= '</a></td>';
-			$html .= qq`<td align="right"><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
+			$html .= qq`<td align="left"><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
 			$html .= $$variable{'Skid'}{Paper}{$paper_id};
 			$html .= $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 			$html .= '</a></td>';
+			$html .= '<td>';
+			foreach my $Allocation ( openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$paper_id ) ) {
+				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() ), $Allocation->quantity(), $Allocation->units() );
+			} # end foreach Allocation
+			$html .= '</td>';
 			$html .= '</tr>';
 		} # end foreach
 		return $html;
 ) ?>
 	</table>
 <? endif ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
-<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 </fieldset>
+<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 	<input type="hidden" name="btnFunction" value="" />
 </form>
 <script type="text/javascript">document.f1.rfidtag_id.focus();</script>

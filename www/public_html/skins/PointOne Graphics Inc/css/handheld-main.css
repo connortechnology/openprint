@@ -14,7 +14,7 @@ body {
 input {
 	margin: 0px;
 	padding: 0px;
-	border: 1px solid black;
+	border: 0px solid black;
 	font-size: 8px;
 }
 select {
@@ -45,4 +45,10 @@ div.row span.buttons {
 }
 a {
 	font-size: 8px;
+}
+table tr th {
+	font-size: 8px;
+}
+p label {
+	width: 40px;
 }
