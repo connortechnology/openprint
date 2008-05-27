@@ -694,7 +694,10 @@ sub quantities {
 } # end sub quantities
 
 sub quantity {
-	my ( $self, $index ) = @_;
+	my ( $self, $index, $qty ) = @_;
+	if ( defined $qty ) {
+		$$self{"quantity$index"} = $qty;
+	} # end if
 	return $$self{'quantity'.$index};
 } # end sub quanitty
 

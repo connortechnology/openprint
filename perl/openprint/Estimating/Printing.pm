@@ -145,7 +145,7 @@ my %variables = (
 		'hdnImpositionColumns1' => ['save','output'], 'hdnImpositionColumns2' => ['save','output'], 'hdnImpositionColumns3' => ['save','output'],
 		'hdnImpositionDutchRows1' => ['save','output'], 'hdnImpositionDutchRows2' => ['save','output'], 'hdnImpositionDutchRows3' => ['save','output'],
 		'hdnImpositionDutchColumns1' => ['save','output'], 'hdnImpositionDutchColumns2' => ['save','output'], 'hdnImpositionDutchColumns3' => ['save','output'],
-		'txtQuantity1' => ['save','output'], 'txtQuantity2' => ['save','output'], 'txtQuantity3' => ['save','output'], 
+		'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'], 
 		'hdnImpressionQuantity1' => ['save','output'], 'hdnImpressionQuantity2' => ['save','output'], 'hdnImpressionQuantity3' => ['save','output'], 
 		'rdbPressProof' => ['save'], 
 		'txtMWeight1' => ['save','output'], 'txtMWeight2' => ['save','output'], 'txtMWeight3' => ['save','output'],
@@ -570,6 +570,15 @@ sub calc {
 	# First, clean up all inputs
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $Project->quantity($qty_index);
+		my $qty = $$specs{"txtQuantity$qty_index"};
+		$qty = $Project->quantity( $qty_index ) if ! $qty;
+		$qty =~ s/\D//g;
+		
+		if ( $qty != $$specs{"txtQuantity$qty_index"} ) {
+			$$specs{"txtQuantity$qty_index"} = $qty;
+			$variables{"txtQuantity$qty_index"} = [sets::union( 'output', @{$variables{"txtQuantity$qty_index"}} ) ];
+		} # end if
+		$Project->quantity( $qty_index, $qty );
 		
 		foreach my $k ( 'txtPlateChangeQuantity' ) {
 			if ( $$specs{$k.$qty_index} =~ /\D/ ) {
@@ -3350,7 +3359,31 @@ sub summary {
 
 } # end sub summary
 
+sub save {
+	my ( $p_id, $s_id, $param ) = @_;
+	my $Project = new openprint::Project( $p_id );
+	my $services = $Project->services();
+
+	my $changed = 0;
+
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $Project->quantity( $qty_index );
+
+		if ( $$param{"txtQuantity$qty_index"} != $Project->quantity( $qty_index ) ) {
+			$changed = 1;
+			$Project->quantity( $qty_index, $$param{"txtQuantity$qty_index"} );
+			foreach my $service_name ( keys %{$services} ) {
+				foreach my $service_id ( @{$$services{$service_name}} ) {
+					openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $service_id, "txtQuantity$qty_index", $$param{"txtQuantity$qty_index"} );
+				} # end foreach service_id
+			} # end foreach service name
+		} # end if new qty
+	} # end foreach qty_index
+	$Project->save() if $changed;
+
+} # end sub save
+
 1;
 
 __END__
-~	   
+		~	   
