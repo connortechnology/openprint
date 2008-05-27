@@ -8,6 +8,8 @@
 			); ) ?>
 		</span>
 		<br class="spacer"/>
+		<p><label>Customer:</label><input type="text" name="customer" onkeyup="new Ajax.Updater( 'Label', '_docket_label.html', { method: 'get', parameters: this.form.serialize() } );" /></p>
+		<p><label>Contact:</label><input type="text" name="contact" value="<? echo ( new openprint::User( $openprint::session{'user_id'} )->name(); ) ?>" onkeyup="new Ajax.Updater( 'Label', '_docket_label.html', { method: 'get', parameters: this.form.serialize() } );" /></p>
 		<p><label>Docket:</label><input type="text" name="docket" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater( 'Label', '_docket_label.html', { method: 'get', parameters: this.form.serialize() } );" /></p>
 		<p><label># of Labels:</label><input type="text" name="label_qty" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater( 'Label', '_docket_label.html', { method: 'get', parameters: this.form.serialize() } );" /></p>
 		</fieldset>

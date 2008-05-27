@@ -263,10 +263,10 @@ The following errors occurred:<br/>
 
 </form>
 <? if ( $$variable{'paper_id'} ) ?>
-<div id="CurrentInventory" style="float: left; width: 48%; min-width: 400px;">
+<div id="CurrentInventory">
 <!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
 </div>
-<div style="float: left; width: 48%;min-width: 400px;">
+<div>
 	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
 	<div id="Allocations" style="display: none;"> </div>
 	</fieldset>
