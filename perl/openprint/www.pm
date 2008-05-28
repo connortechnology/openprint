@@ -311,7 +311,7 @@ $openprint::log->debug("Getfile");
 		} elsif ( $second eq 'inventory' ) {
 			require openprint::employee_inventory;
 			require openprint::paper_purchase_order;
-			if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
+			#if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
 				openprint::employee_inventory::paper( $r, $log, $dbh, \%variable )		if $filename eq 'paper.html';
 				openprint::employee_inventory::paper_details( $r, $log, $dbh, \%variable )	if $filename eq 'paper_details.html';
 				openprint::employee_inventory::skids( $r, $log, $dbh, \%variable )		if $filename eq 'skids.html';
@@ -323,12 +323,12 @@ $openprint::log->debug("Getfile");
 				openprint::employee_inventory::update_inventory()	if $filename eq 'update_inventory.html';
 				openprint::paper_purchase_order::history( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_orders.html';
 				openprint::paper_purchase_order::display( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_order.html';
-			} else {
-				$variable{'error'} = "Unauthorized";
-				$variable{'details'} = "You are not authorized to view this page.";
-				$variable{'Redirect'} = $openprint::config{'errorpage'};
-				return;
-			} # endif
+			#} else {
+				#$variable{'error'} = "Unauthorized";
+				#$variable{'details'} = "You are not authorized to view this page.";
+				#$variable{'Redirect'} = $openprint::config{'errorpage'};
+				#return;
+			#} # endif
 		} elsif ( $second eq 'accounting' ) {
 			if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
 				require openprint::employee_accounting;
