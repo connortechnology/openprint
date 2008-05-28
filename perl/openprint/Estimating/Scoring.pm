@@ -143,26 +143,26 @@ sub calc {
 			} # end if
 
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
+            $status = $Price{'Status'} if $Price{'Status'} eq 'uncalculated';
 			if ( $Price{'Equipment'} ) {
                 $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->id();
                 $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->imposition();
                 $$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_width();
                 $$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_height();
-                $status = $Price{'Status'};
             } else {
                 $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y';
                 $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
                 $$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
                 $$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
-                $status = $Price{'Status'};
-                if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-                    $$specs{'alert'} = "The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.";
-                } else {
-                    $$specs{'alert'} = "No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.";
+				if ( $Price{'Status'} eq 'uncalculated' ) {
+					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+						$$specs{'alert'} = "The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.";
+					} else {
+						$$specs{'alert'} = "No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.";
+					} # end if
                 } # end if
             } # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{'Breakdown'};
-
 
 			$qtyTotal += $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"};
 			$qtyTotal += $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
@@ -317,10 +317,6 @@ sub signature_calc {
 			$Results{'Breakdown'} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
 			next;
 		} # end if
-		if ( $Equipment->specification('Maximum Scoring Calliper') < $$sig_specs{'txtSpecificStockCalliper'} ) {
-			$Results{'Breakdown'} .= "Too thick.<br/>";
-			next;
-		} # end if
 		foreach my $imposition ( @impositions ) {
 			if ( $Equipment->specification('Type') ne 'Press' ) {
 				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$imposition->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $imposition->rows() );
@@ -340,7 +336,7 @@ sub signature_calc {
 					next;
 				} # end if
 			} else {
-				if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
+				if ( $_ = $Equipment->fits( $width, $height ) ) {
 					$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
 					next;
 				} # end if
@@ -389,7 +385,7 @@ sub signature_calc {
                         $horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_length/12;
                         $Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=%3$.2f', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
                     } else {
-                        $Results{'Breakdown'} .= "Unknown units set on material price ($horizontal_price{'units'})<br/>";
+                        $Results{'Breakdown'} .= "Unknown units set on horizontal material price ($horizontal_price{'units'})<br/>";
                     } # end if
                 } # end if
             } # end if
@@ -410,7 +406,7 @@ sub signature_calc {
             if ( $vertical_rule ) {
                 if ( my @Materials = openprint::Material::find('name'=>'PerforatingWheel') ) {
                     %vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );
-                    if ( sets::isin( lc $horizontal_price{'units'},['per rule','each'] ) ) {
+                    if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
                         $vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_rule;
                         $Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f2$%s * %4$d wheels=%3$.2f', @vertical_price{'Price','units','Total'}, $vertical_rule );
                     } elsif ( lc $vertical_price{'units'} eq 'per inch' ) {
@@ -420,7 +416,7 @@ sub signature_calc {
                         $vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_length/12;
                         $Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f2$%s * %4$.2finches=%3$.2f', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
                     } else {
-                        $Results{'Breakdown'} .= "Unknown units set on material price ($vertical_price{'units'})<br/>";
+                        $Results{'Breakdown'} .= "Unknown units set on vertical material price ($vertical_price{'units'})<br/>";
                     } # end if
                 } # end if
             } # end if
