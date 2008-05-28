@@ -3313,18 +3313,34 @@ sub summary {
 	} else {
 		my $front_colours = 0;
 		my $front_coatings;
+		my $back_colours = 0;
+		my $back_coatings;
+		my $coatings = '';
+		if ( $$specs{'chkProcessColourSideOne'} and $$specs{'chkProcessColourSideTwo'} ) {
+			$coatings .= ' Process';
+		} elsif ( $$specs{'chkProcessColourSideOne'} ) {
+			$front_coatings .= ' Process';
+		} elsif ( $$specs{'chkProcessColourSideTwo'} ) {
+			$back_coatings .= ' Process';
+		} # end if Process
 		foreach my $c ( get_colours( $specs, 'SideOne') ) {
 			if ( $c =~ /Aqueous/ or $c =~ /Varnish/ or $c =~ /UV/ ) {
 				$front_coatings .= '+'.$c;
+			} elsif ( $c =~ /PMS/i ) {
+				$front_coatings .= '+PMS' if ! $front_coatings =~ /PMS/;
+			} elsif ( $c =~ /Metallic/i ) {
+				$front_coatings .= '+Metallic' if ! $front_coatings =~ /Metallic/;
 			} else {
 				$front_colours += 1;
 			} # end if
 		} # end foreach
-		my $back_colours = 0;
-		my $back_coatings;
 		foreach my $c ( get_colours( $specs, 'SideTwo') ) {
 			if ( $c =~ /Aqueous/ or $c =~ /Varnish/ or $c =~ /UV/ ) {
 				$back_coatings .= '+'.$c;
+			} elsif ( $c =~ /PMS/i ) {
+				$back_coatings .= '+PMS' if ! $back_coatings =~ /PMS/;
+			} elsif ( $c =~ /Metallic/i ) {
+				$back_coatings .= '+Metallic' if ! $back_coatings =~ /Metallic/;
 			} else {
 				$back_colours += 1;
 			} # end if
@@ -3342,12 +3358,13 @@ sub summary {
 			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtWidth','txtHeight'});
 		} # end if
 
-		return sprintf( '%s %s %d%s/%d%s on %s %s<br/>',
+		return sprintf( '%s %s %d%s/%d%s %s on %s %s<br/>',
 				($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions,
 				$front_colours,
 				$front_coatings,
 				$back_colours,
 				$back_coatings,
+				$coatings,
 				$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
 				$$specs{'rdbSpecificStock'} eq 'Y' ?
 				join(',', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
@@ -3388,4 +3405,3 @@ if ( 0 ) {
 1;
 
 __END__
-		~	   
