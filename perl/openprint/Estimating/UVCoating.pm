@@ -291,6 +291,11 @@ sub signature_calc {
 			foreach my $type ( @types ) {
 				my $setupPrice += openprint::service::get_price( $type.' MakeReady', $run_qty/$imp->imposition(), $Equipment );
 
+				my $BlanketCutPrice = 0;
+				if ( $type =~ /Spot/ ) {
+					$BlanketCutPrice += openprint::service::get_price( 'BlanketCut', undef, $Equipment );
+				} # end if type is spot
+
 				my %ServicePrice = openprint::service::get_price_object( $type, $run_qty/$imp->imposition(), $Equipment );
 				if ( lc $ServicePrice{'units'} eq 'per m' ) {
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / 1000;
@@ -314,7 +319,7 @@ sub signature_calc {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty / 1000;
 				} # end if
 
-				my $colour_total = $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'};
+				my $colour_total = $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'} + $BlanketCutPrice;
 				$totalPrice += $colour_total;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + Service: $%.2f%s=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
 					$setupPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );

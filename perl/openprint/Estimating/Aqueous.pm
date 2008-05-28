@@ -294,7 +294,11 @@ sub signature_calc {
 			} # end if
 			foreach my $type ( @types ) {
 				my $setupPrice += openprint::service::get_price( $type.' MakeReady', $run_qty/$imp->imposition(), $Equipment );
-				my $BlanketCutPrice += openprint::service::get_price( 'BlanketCut', undef, $Equipment );
+				
+				my $BlanketCutPrice = 0;
+				if ( $type =~ /Spot/ ) {
+					$BlanketCutPrice += openprint::service::get_price( 'BlanketCut', undef, $Equipment );
+				} # end if type is spot
 
 				my %ServicePrice = openprint::service::get_price_object( $type, $run_qty/$imp->imposition(), $Equipment );
 				if ( lc $ServicePrice{'units'} eq 'per m' ) {

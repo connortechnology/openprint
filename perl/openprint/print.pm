@@ -513,7 +513,7 @@ sub get_book_type {
 	my $services = $Project->services();
 
 # the way we cut down the book depends on how it is being bound, so we need this for the signature information.
-	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire, Cerlox','NoBindery' ) {
+	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','NoBindery' ) {
 		
 		if ( $$services{$service} ) {
 			return $service;
