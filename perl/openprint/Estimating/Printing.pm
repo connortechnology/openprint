@@ -578,12 +578,12 @@ sub calc {
 			$$specs{"txtQuantity$qty_index"} = $qty;
 			$variables{"txtQuantity$qty_index"} = [sets::union( 'output', @{$variables{"txtQuantity$qty_index"}} ) ];
 		} # end if
-		$Project->quantity( $qty_index, $qty );
+		#$Project->quantity( $qty_index, $qty );
 		
 		foreach my $k ( 'txtPlateChangeQuantity' ) {
-			if ( $$specs{$k.$qty_index} =~ /\D/ ) {
+			if ( $$specs{$k.$qty_index} =~ /[^\d\-]/ ) {
 				$variables{$k.$qty_index} = [ sets::union( 'output', @{$variables{$k.$qty_index}} ) ];
-				$$specs{$k.$qty_index} =~ s/\D//g;
+				$$specs{$k.$qty_index} =~ s/[^\d\-]//g;
 			} else {
 				$variables{$k.$qty_index} = [ sets::exclude( ['output'], $variables{$k.$qty_index} ) ];
 			} # end if
@@ -3366,6 +3366,7 @@ sub save {
 
 	my $changed = 0;
 
+if ( 0 ) {
 	foreach my $qty_index ( 1 .. 3 ) {
 		next if ! $Project->quantity( $qty_index );
 
@@ -3380,6 +3381,7 @@ sub save {
 		} # end if new qty
 	} # end foreach qty_index
 	$Project->save() if $changed;
+} # end if
 
 } # end sub save
 

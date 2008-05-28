@@ -317,6 +317,10 @@ sub signature_calc {
 			$Results{'Breakdown'} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
 			next;
 		} # end if
+		if ( $Equipment->specification('Maximum Scoring Calliper') < $$sig_specs{'txtSpecificStockCalliper'} ) {
+			$Results{'Breakdown'} .= "Too thick.<br/>";
+			next;
+		} # end if
 		foreach my $imposition ( @impositions ) {
 			if ( $Equipment->specification('Type') ne 'Press' ) {
 				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$imposition->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $imposition->rows() );

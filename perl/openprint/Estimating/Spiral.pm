@@ -91,7 +91,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 		if ( $$specs{"txtQuantity$qty_index"} ) {
 			my $qty = $$specs{"txtQuantity$qty_index"};
 			my %PunchingPrice = openprint::service::get_price_object( $ServiceType->name().'Punching', $qty, undef );
-			$$specs{'hdnBreakdown'.$qty_index} .= "Punching: " . sprintf( '%.4f', $PunchingPrice{'Price'} ) . "$PunchingPrice{'units'}\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Punching: " . sprintf( '%.4f', $PunchingPrice{'Price'} ) . "$PunchingPrice{'units'}<br/>";
 			if ( $PunchingPrice{'units'} eq 'Per M' ) {
 				$PunchingPrice{'Total'} = ( $PunchingPrice{'Price'} / 1000 ) * $qty;
 			} else {
@@ -99,7 +99,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 			} # end if
 
 			my %CoilingPrice = openprint::service::get_price_object( $ServiceType->name(), $qty, undef );
-			$$specs{'hdnBreakdown'.$qty_index} .= "Coiling: " . sprintf( '%.4f', $CoilingPrice{'Price'} ) . "$CoilingPrice{'units'}\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Coiling: " . sprintf( '%.4f', $CoilingPrice{'Price'} ) . "$CoilingPrice{'units'}<br/>";
 			if ( $CoilingPrice{'units'} eq 'Per M' ) {
 				$CoilingPrice{'Total'} = ( $CoilingPrice{'Price'} / 1000 ) * $qty;
 			} # end if
@@ -121,7 +121,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units for material";
 				} # end if
-				$$specs{'hdnBreakdown'.$qty_index} .= "Material: " . sprintf( '%.2f', $MaterialPrice{'Price'} ) . " " . $MaterialPrice{'units'} . "=$MaterialPrice{'Total'}\n";
+				$$specs{'hdnBreakdown'.$qty_index} .= "Material: " . sprintf( '%.2f', $MaterialPrice{'Price'} ) . " " . $MaterialPrice{'units'} . "=$MaterialPrice{'Total'}<br/>";
 				$price += $MaterialPrice{'Total'};
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No material found';
@@ -131,7 +131,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 				$price = $minimumCharge;
 			} # end if
 			$unitPrice = $price / $qty;
-			$$specs{'hdnBreakdown'.$qty_index} .= "Qty: " . $$specs{"txtQuantity$qty_index"} . ": Price: $price\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Qty: " . $$specs{"txtQuantity$qty_index"} . ": Price: $price<br/>";
 		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
