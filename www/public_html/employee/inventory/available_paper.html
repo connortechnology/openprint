@@ -1,6 +1,6 @@
 <? eval (
 if ( $openprint::param{'btnFunction'} eq 'Allocate' ) {
-	openprint::employee_inventory::allocate( $variable, @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
+	openprint::employee_inventory::allocate( @openprint::param{'skid_id','paper_id','Quantity','Project','Docket'} );
 } # end if
 ) ?>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>

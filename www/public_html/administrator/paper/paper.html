@@ -158,7 +158,7 @@ function gsm_to_mweight( form ) {
 			</p>
 			<p>
 				<label>Type:</label>
-				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('BasisSize').hide();$('MWeight').show();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() ne 'Roll'; ) ?> />
+				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('BasisSize').hide();$('MWeight').show();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() eq 'Sheet'; ) ?> />
                 <label class="radio" for="typeSheet">Sheet</label>
                 <input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('BasisSize').show();$('MWeight').hide();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() eq 'Roll'; ) ?> />
                 <label class="radio" for="typeRoll">Roll</label>
