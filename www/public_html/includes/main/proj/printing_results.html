@@ -11,7 +11,7 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input type="text" id="txtQuantity<?QTYIndex?>" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+		<input type="text" id="txtQuantity<?QTYIndex?>" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
 	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>

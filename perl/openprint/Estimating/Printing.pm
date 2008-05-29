@@ -577,6 +577,8 @@ sub calc {
 		if ( $qty != $$specs{"txtQuantity$qty_index"} ) {
 			$$specs{"txtQuantity$qty_index"} = $qty;
 			$variables{"txtQuantity$qty_index"} = [sets::union( 'output', @{$variables{"txtQuantity$qty_index"}} ) ];
+		} else {
+			$variables{"txtQuantity$qty_index"} = [sets::exclude( ['output'], $variables{"txtQuantity$qty_index"} ) ];
 		} # end if
 		#$Project->quantity( $qty_index, $qty );
 		
@@ -1037,7 +1039,8 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 		} else {
 			$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		} # end if
-		my $qty = $Project->quantity($qty_index);
+		next if ! $Project->quantity($qty_index);
+		my $qty = $$specs{"txtQuantity$qty_index"};
 		next if ! defined $qty;
 		next if ! int $qty;
 
