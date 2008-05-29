@@ -37,6 +37,12 @@
 		<input type="checkbox" name="outs" id="outs" <? echo ( $openprint::session{'/employee/inventory/inventory_log.html?outs'} ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="outs">Check Outs</label>
 	</p>
+		<p><label>Type:</label>
+            <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Sheet', split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
+            <label class="radio" for="TypeSheet">Sheet</label>
+            <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Roll', split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
+            <label class="radio" for="TypeRoll">Roll</label>
+        </p>
 	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );", '', 'Load' ); ) ?>
 	</p>
