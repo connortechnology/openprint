@@ -46,13 +46,14 @@
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">
 	<table class="List">
 		<tr>
+			<th width="20"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
 			<th align="left" width="75">Skid ID</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
+			<th align="left" width="115">RFIDTag</th>
 			<th align="left" width="100">Location</th>
 			<th align="left" width="140">Dockets</th>
 			<th align="left">Contents</th>
-			<th width="20"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
 		</tr>
 		<? echo (
 			my $html;
@@ -79,10 +80,12 @@
 				next if ( ! $Skid->rfidtag_id() ) and ! $openprint::session{'/employee/inventory/skids.html?withoutrfid'};
 
 				$html .= "<tr$rowclass>";
+				$html .= qq`<td><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->created_on()) ), );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->updated_on()) ), );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->location(),);
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'rfidtag_id'} );
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->location() );
 
 				$html .= '<td>';
 				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), paper_id, quantity FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $$Skid{'id'} );
@@ -107,7 +110,6 @@
 					);
 				} # end foreach
 				$html .= '</td>';	
-				$html .= qq`<td><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid

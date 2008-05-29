@@ -1,0 +1,35 @@
+<? eval (
+	if ( ! $openprint::param{'StartYear'} ) {
+		@openprint::param{'StartYear','StartMonth','StartDay'} = Date::Calc::Today();
+	} # end if
+	@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @openprint::param{'StartYear','StartMonth','StartDay'} );
+	
+	if ( ! $openprint::param{'EndYear'} ) {
+		@openprint::param{'EndYear','EndMonth','EndDay'} = Date::Calc::Today();
+	} # end if
+	@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, @openprint::param{'EndYear','EndMonth','EndDay'} );
+) ?>
+<form name="LogForm" id="LogForm">
+	<fieldset><legend>Filters</legend>
+	<p>
+		<label>Date:</label>
+		<span class="DateSelector">
+			<select name="StartYear" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?StartYears?></select>
+			<select name="StartMonth" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?StartMonths?></select>
+			<select name="StartDay" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?StartDays?></select>
+			to
+		</span>
+		<span class="DateSelector">
+			<select name="EndYear" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndYears?></select>
+			<select name="EndMonth" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndMonths?></select>
+			<select name="EndDay" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndDays?></select>
+		</span>
+	</p>
+	<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );", '', 'Load' ); ) ?>
+	</p>
+	</fieldset>
+	<fieldset><legend>Results</legend>
+		<div id="Log"><!--#include virtual="_inventory_log.html"--></div>
+	</fieldset>
+</form>
