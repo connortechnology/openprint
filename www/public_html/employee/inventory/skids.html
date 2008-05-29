@@ -1,3 +1,11 @@
+<? eval (
+if ( ! exists $openprint::session{'/employee/inventory/skids.html?withrfid'} ) {
+	$openprint::param{'withrfid'} = $openprint::session{'/employee/inventory/skids.html?withrfid'} = 1;
+} # end if
+if ( ! exists $openprint::session{'/employee/inventory/skids.html?withoutrfid'} ) {
+	$openprint::param{'withoutrfid'} = $openprint::session{'/employee/inventory/skids.html?withoutrfid'} = 0;
+} # end if
+) ?>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <? if ( $$variable{'information'} ) ?>
 <p class="information"><?information?></p>
@@ -74,9 +82,9 @@ Please select a Skid to view/edit.<br>
 		</p>
 		<p>
             <label>With/Without RFID?</label>
-            <input type="checkbox" id="withrfid" name="withrfid" <? echo ( $openprint::session{'/employee/inventory/skids.html?withrfid'} or ! exists $openprint::session{'/employee/inventory/skids.html?withrfid'} ? 'checked="checked"' : '' ) ?> />
+            <input type="checkbox" id="withrfid" name="withrfid" <? echo ( $openprint::session{'/employee/inventory/skids.html?withrfid'} ? 'checked="checked"' : '' ) ?> />
             <label class="radio" for="withrfid">With RFID</label>
-            <input type="checkbox" id="withoutrfid" name="withoutrfid" <? echo ( $openprint::session{'/employee/inventory/skids.html?withoutrfid'} or ! exists $openprint::session{'/employee/inventory/skids.html?withoutrfid'} ? 'checked="checked"' : '' ) ?> />
+            <input type="checkbox" id="withoutrfid" name="withoutrfid" <? echo ( $openprint::session{'/employee/inventory/skids.html?withoutrfid'} ? 'checked="checked"' : '' ) ?> />
             <label class="radio" for="notempty">Without RFID</label>
 		</p>
 		<p><label>Type:</label>
