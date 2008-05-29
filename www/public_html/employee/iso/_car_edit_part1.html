@@ -224,7 +224,7 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','_car_view_part1.html',
 		{
 			method:'get',
-			parameters: Form.serialize( \$('part1form') ),
+			parameters: \$('part1form').serialize(),
 			evalScripts: true,
 		} );}", '','Save' ),
 		); ) ?>
