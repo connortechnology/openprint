@@ -24,20 +24,21 @@
 			) ?>
 			<p>
 				<label>Docket:</label>
-				<input type="text" name="Docket" onkeypress="return input_handler( this, event);"/>
+				<input type="text" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateDocket', 'clear.gif', "allocateform.Docket.value='';", '', 'Clear' ); ) ?>
 				
 			</p>
 			<p>
 				<label>Project:</label>
-				<input type="text" name="Project" onkeypress="return input_handler( this, event);"/>
+				<input type="text" name="Project" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateProject', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 				
 			</p>
 			<p>
 				<label>Quantity: ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
+				<input type="hidden" name="Units" value="<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>" />
 				<input type="hidden" name="available_quantity" value="<? echo ( $$variable{Paper}->in_stock() - $$variable{Paper}->allocated() ) ?>"/>
-				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);"/>
+				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 				
 			</p>

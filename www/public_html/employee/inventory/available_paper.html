@@ -27,17 +27,21 @@ onDestroy: function(eventName, win) {
 
 function check_inputs(form ) {
 	if ( form.skid_id && form.skid_id.value ) {
-		if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
+		if ( form.type && (get_rdb_value( form.type ) == 'Roll') && form.Quantity.value > 10000 ) {
 			alert( 'Skids cannot contain more than 10000lbs' );
 			return false;
 		} // end if
-		if ( form.Units && get_ddm_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
+		if ( form.Units && (get_ddm_value( form.Units ) == 'lbs') && form.Quantity.value > 10000 ) {
 			alert( 'Skids cannot contain more than 10000lbs' );
 			return false;
 		} // end if
 	} // end if
-	if ( form.available_quantity && form.Quantity.value > form.available_quantity.value ) {
+	if ( form.available_quantity && ( parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) ) {
+		if ( form.Units ) {
 		alert( 'There are only ' + form.available_quantity.value + get_ddm_value( form.Units ) + ' available' );
+		} else {
+		alert( 'There are only ' + form.available_quantity.value + ' available' );
+		} // end if
 		return false;
 	} // end if
 	return true;

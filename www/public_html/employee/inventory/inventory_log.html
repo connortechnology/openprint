@@ -25,6 +25,12 @@
 			<select name="EndDay" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndDays?></select>
 		</span>
 	</p>
+	<p><label>Ins/Outs</label>
+		<input type="checkbox" name="ins" id="ins" <? echo ( $openprint::session{'/employee/inventory/inventory_log.html?ins'} ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="ins">Check Ins</label>
+		<input type="checkbox" name="outs" id="outs" <? echo ( $openprint::session{'/employee/inventory/inventory_log.html?outs'} ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="outs">Check Outs</label>
+	</p>
 	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );", '', 'Load' ); ) ?>
 	</p>
