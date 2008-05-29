@@ -1,3 +1,10 @@
+<? eval (
+	if ( %openprint::param ) {
+		foreach my $k ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','ins','outs' ) {
+			$openprint::session{"/employee/inventory/inventory_log.html?$k"} = $openprint::param{$k};
+		} # end foreach
+	} # end if
+) ?>
 <table class="List">
 	<tr>
 		<th align="left" width="120">Date</th>
@@ -16,6 +23,8 @@
 		);
 		my $rowclass;
 		while ( my ( $time, $user_id, $delta, $instock, $units, $comment, $po_id, $skid_id, $paper_id ) = splice @data, 0, 9 ) {
+			next if $delta <= 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?outs'};
+			next if $delta > 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?ins'};
 			$html .= sprintf( '<tr%s><td>%s</td><td>%s</td><td><a href="skid_details.html?skid_id=%d">%d</a></td><td>%s</td><td>%d</td><td>%d</td><td>%s</td></tr>',
 				$rowclass,
 				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
