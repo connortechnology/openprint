@@ -1,4 +1,10 @@
 <? eval (
+	if ( ! exists $openprint::session{'/employee/inventory/inventory_log.html?ins'} ) {
+		$openprint::param{'ins'} = $openprint::session{'/employee/inventory/inventory_log.html?ins'} = 1;
+	} # end if
+	if ( ! exists $openprint::session{'/employee/inventory/inventory_log.html?outs'} ) {
+		$openprint::param{'outs'} = $openprint::session{'/employee/inventory/inventory_log.html?outs'} = 1;
+	} # end if
 	if ( ! $openprint::param{'StartYear'} ) {
 		@openprint::param{'StartYear','StartMonth','StartDay'} = Date::Calc::Today();
 	} # end if

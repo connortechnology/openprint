@@ -1078,6 +1078,7 @@ $openprint::log->debug("No spread layout for you!");
 				if ( $Paper->type() eq 'Roll' ) {
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
+					next if $Paper->width() > $Press->specification('Maximum Roll Width');
 
 					my $P = $Paper->clone();
 					#$P->height('');
@@ -1100,6 +1101,7 @@ $openprint::log->debug("No spread layout for you!");
 						push @imps, @i;
 					} else {
 						foreach my $i ( @i ) {
+							next if $Press->specification('Maximum Roll Width') and ($i->Paper()->width() > $Press->specification('Maximum Roll Width'));
 							my $i2 = $i;
 							while ( $i2->columns() ) {
 								push @imps, $i2;
@@ -1108,6 +1110,7 @@ $openprint::log->debug("No spread layout for you!");
 								$i2->paper()->width( $i2->used_width() );
 								openprint::imposition::check_setup( $i2, \%project );
 								$i2->columns(0) if $Press->specification('Minimum Sheet Width') and ($i2->paper()->width() < $Press->specification('Minimum Sheet Width'));
+								$i2->columns(0) if $Press->specification('Minimum Roll Width') and ($i2->paper()->width() < $Press->specification('Minimum Roll Width'));
 							} # end while
 						} # end foreach
 					} # end if has a defined width
