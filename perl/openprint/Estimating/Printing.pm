@@ -1078,7 +1078,7 @@ $openprint::log->debug("No spread layout for you!");
 				if ( $Paper->type() eq 'Roll' ) {
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
-					next if $Paper->width() > $Press->specification('Maximum Roll Width');
+					next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
 
 					my $P = $Paper->clone();
 					#$P->height('');
