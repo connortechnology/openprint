@@ -79,8 +79,12 @@ sub insert_project_type {
 sub add_service {
 # THis is an external wrapper for insert_service
 	my ( $r, $log, $dbh, $variable, $project_index, @services ) = @_;
+	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 	foreach my $service_id ( @services ) {
+		if ( ! $$services{$service_id} ) {
 		insert_service( $log, $dbh, $project_index, $service_id );
+		} # end if
 	} # end foreach
 } # end sub add_service
 
