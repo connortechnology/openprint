@@ -69,7 +69,7 @@ function getFormObj( formName ) {
 function do_decimals( number, precision ) {
 	var a = number.toString();
 	number = parseFloat( 1* a.replace(/[^\d\-\.]/g, '' ) );
-	if ( ! precision ) {
+	if ( precision == '' ) {
 		precision = 2;
 	} else {
 		var a = precision.toString();

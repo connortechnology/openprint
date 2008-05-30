@@ -25,12 +25,12 @@ sub create_image {
 
 	my $image = new Image::Magick;
 	my $output_path = join('/', $path, $Location->parent()->name());
-	if ( ! -e join('/', $path, $Location->parent()->name().'.png') ) {
-		$r->log->debug("No template at " . join('/', $path, $Location->parent()->name().'.png') );
+	if ( ! -e join('/', $path, $Location->parent()->name().'.gif') ) {
+		$r->log->debug("No template at " . join('/', $path, $Location->parent()->name().'.gif') );
 		return;
 	} # en dif
 		
-	$image->Read(join('/', $path, $Location->parent()->name().'.png'));
+	$image->Read(join('/', $path, $Location->parent()->name().'.gif'));
 	$r->log->debug("$output_path");
 	if ( ! -e $output_path ) {
 		$r->log->debug("makeing $output_path");
@@ -41,7 +41,7 @@ sub create_image {
 	}
 	$r->log->debug("Drawing location");
 	$image->Draw(stroke=>'red', primitive=>'rectangle', points=>join(',',map{$_-1} split(',',$Location->coordinates())));
-	my $e = $image->Write( join('/', $path, $Location->parent()->name(),$Location->name().'.png' ) );
+	my $e = $image->Write( join('/', $path, $Location->parent()->name(),$Location->name().'.gif' ) );
 	$r->log->error($e) if $e;
 } # end sub create_image
 
@@ -49,7 +49,7 @@ sub handler {
 # this module just generates barcodes
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
-	$r->content_type('image/png');
+	$r->content_type('image/gif');
 	$dbh = sql::open_sql( $log, 
 			'database'	=> $r->dir_config('db_name'),
 			'driver'	=> $r->dir_config('db_driver'), 
@@ -61,7 +61,7 @@ sub handler {
 	my @path = split('/', $r->filename);
 	my $filename = pop @path;
 
-	my ( $selected ) = $filename =~ /^(.*).png$/;
+	my ( $selected ) = $filename =~ /^(.*).gif$/;
 	$r->log->debug("Path: ".$r->filename." Filename: $filename, selected: $selected");
 	if ( ! $selected ) {
 		if ( ! -e $r->filename ) {

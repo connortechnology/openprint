@@ -936,6 +936,7 @@ $log->warn("Update inventory");
 				last if $variable{'error'};
 			} # end if
 			my $Skid = $Tag->Skid();
+			$openprint::param{"qty_lbs-$tag_id"} = sprintf('%d', $openprint::param{"qty_lbs-$tag_id"});
 			save_skid( $Skid, $openprint::param{"qty_lbs-$tag_id"} );
 			last if $variable{'error'};
 		} # end foreach tag_id

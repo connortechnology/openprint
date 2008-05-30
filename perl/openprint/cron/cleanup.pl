@@ -191,32 +191,44 @@ foreach my $Tag ( @Tags ) {
 	} # end if
 } # end foreach Tag
 }
-my @Paper_Inventory = openprint::PaperInventory::find(
-		'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 ) ),
-		'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Today() ),
-		'order'=>'updated_on',
-);
-$log->warn("Paper Inventory: " . @Paper_Inventory . ' entries');
-for ( my $i = 0; $i < @Paper_Inventory; $i += 1 ) {
-	my $PI = $Paper_Inventory[$i];
-	if ( $PI->comment() eq 'Skid checked out' ) {
-		for ( my $j = $i+1; $j < @Paper_Inventory; $j += 1 ) {
-			if ( ( $PI->skid_id() == $Paper_Inventory[$j]->skid_id() ) and ( $Paper_Inventory[$j]->comment() eq 'Skid checked out' ) ) {
-				$Paper_Inventory[$j]->delete();
-				splice @Paper_Inventory, $j, 1;
-				$j -= 1;
-			} # end if
-		} # end for
-	} elsif ( $PI->comment() eq 'Removed' ) {
-		for ( my $j = $i+1; $j < @Paper_Inventory; $j += 1 ) {
-			if ( ( $PI->skid_id() == $Paper_Inventory[$j]->skid_id() ) and ( $Paper_Inventory[$j]->comment() eq 'Removed' ) and ! $Paper_Inventory[$j]->delta() ) {
-				$Paper_Inventory[$j]->delete();
-				splice @Paper_Inventory, $j, 1;
-				$j -= 1;
-			} # end if
-		} # end for
-	} # end if
-} # end for
+
+foreach my $Skid ( openprint::Skid::find() ) {
+
+	my @Paper_Inventory = openprint::PaperInventory::find(
+			#'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 ) ),
+			#'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Today() ),
+			'skid_id'=>$Skid->id(),
+			'order'=>'updated_on',
+	);
+	$log->warn("Paper Inventory: " . @Paper_Inventory . ' entries');
+	my $in_stock = 0;
+	for ( my $i = 0; $i < @Paper_Inventory; $i += 1 ) {
+		
+		my $PI = $Paper_Inventory[$i];
+		$in_stock += $PI->delta();
+		$log->warn("Old instock: " . $PI->instock() . ' new instock: ' . $in_stock);
+		$PI->instock( $in_stock );
+		my $error = $PI->save();
+		$log->error($error) if $error;
+		if ( defined $PI->comment() and ($PI->comment() eq 'Skid checked out') ) {
+			for ( my $j = $i+1; $j < @Paper_Inventory; $j += 1 ) {
+				if ( ( $PI->skid_id() == $Paper_Inventory[$j]->skid_id() ) and ( $Paper_Inventory[$j]->comment() eq 'Skid checked out' ) ) {
+					$Paper_Inventory[$j]->delete();
+					splice @Paper_Inventory, $j, 1;
+					$j -= 1;
+				} # end if
+			} # end for
+		} elsif ( defined $PI->comment() and ($PI->comment() eq 'Removed' ) ) {
+			for ( my $j = $i+1; $j < @Paper_Inventory; $j += 1 ) {
+				if ( ( $PI->skid_id() == $Paper_Inventory[$j]->skid_id() ) and ( $Paper_Inventory[$j]->comment() eq 'Removed' ) and ! $Paper_Inventory[$j]->delta() ) {
+					$Paper_Inventory[$j]->delete();
+					splice @Paper_Inventory, $j, 1;
+					$j -= 1;
+				} # end if
+			} # end for
+		} # end if
+	} # end for PI
+} # end foreach Skid
 	
 
 $dbh->disconnect();
