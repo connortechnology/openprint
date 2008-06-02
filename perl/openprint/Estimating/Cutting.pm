@@ -215,8 +215,8 @@ sub signature_calc_stock_cutting {
 			next;
 		} # end if
 
-		my $reason = $Equipment->fits( @$specs{"txtSuppliedStockWidth-$signature_index-$qty_index","txtSuppliedStockHeight-$signature_index-$qty_index","txtStockCalliper-$signature_index"} );
-		$$specs{'hdnBreakdown'.$qty_index} .= $reason . "<br/>";
+		my $reason = $Equipment->fits( @$specs{"txtSuppliedStockWidth-$signature_index-$qty_index","txtSuppliedStockHeight-$signature_index-$qty_index"} );
+		$$specs{'hdnBreakdown'.$qty_index} .= $reason . '<br/>';
 		next if $reason;
 
 		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
@@ -332,8 +332,8 @@ sub signature_calc_folding_cutting {
 
 		$$specs{'hdnBreakdown'.$qty_index} .= "\tEquipment: ".$Equipment->name().':';
 
-		my $reason = $Equipment->fits( $I->paper()->width(), $I->paper()->height(), $Paper->calliper() );
-		$$specs{'hdnBreakdown'.$qty_index} .= $reason . "<br/>";
+		my $reason = $Equipment->fits( $I->paper()->width(), $I->paper()->height() );
+		$$specs{'hdnBreakdown'.$qty_index} .= $reason . '<br/>';
 		next if $reason;
 
 		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
@@ -577,8 +577,8 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 		$$specs{'hdnBreakdown'.$qty_index} .= "(Lift: $liftDepth)<br/>";
 		my $totalPrice = 0;
 
-		if ( my $reason = $Equipment->fits( $sheet_width, $sheet_height, $$specs{"txtStockCalliper-$signature_index"} ) ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= $reason;
+		if ( my $reason = $Equipment->fits( $sheet_width, $sheet_height ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= $reason . '<br/>';
 			next;
 		} # end if
 
