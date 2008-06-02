@@ -3302,7 +3302,7 @@ sub summary {
 				$$specs{'ddmPress'.$qty_index} );
 
 		#$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
-		$html .= sprintf(' with %d plate changes ', $$specs{'txtPlateChangeQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
+		$html .= sprintf(' with %d plate changes = %d plates', @$specs{'txtPlateChangeQuantity'.$qty_index,'txtPlateQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
 
 		$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
 		if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
