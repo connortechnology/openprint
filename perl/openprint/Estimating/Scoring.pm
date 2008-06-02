@@ -405,7 +405,7 @@ sub signature_calc {
 
         #$openprint::log->debug("Vertical: $vertical_rule");
             if ( $vertical_rule ) {
-                if ( my @Materials = openprint::Material::find('name'=>'PerforatingWheel') ) {
+                if ( my @Materials = openprint::Material::find('name'=>'ScoringWheel') ) {
                     %vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );
                     if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
                         $vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_rule;
