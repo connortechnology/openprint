@@ -16,6 +16,7 @@
 
 package openprint::Estimating::DieCutting;
 use strict;
+use POSIX qw( ceil );
 
 require openprint::project;
 require openprint::Equipment;
@@ -126,18 +127,23 @@ sub calc_price {
 	$Total{'Total'} += $DiePrice{'Price'};
 
 	# Why 1.28, overs I assume
-	my $impressions = int($$specs{"txtQuantity$qty_index"} / $imposition * 1.28);
+	my $impressions = ceil($$specs{"txtQuantity$qty_index"} / $imposition);
 	$Total{'Impressions'} = $impressions;
 
-	my %Stripping = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}.'Stripping' ,undef, $Equipment );
-	if ( ! %Stripping ) {
-		%Stripping = openprint::service::get_price_object( 'DieCuttingStripping' ,undef, $Equipment);
+	if ( $$specs{'OverrideStrippingPrice'} ne 'Y' ) {
+		my %Stripping = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}.'Stripping' ,undef, $Equipment );
+		if ( ! %Stripping ) {
+			%Stripping = openprint::service::get_price_object( 'DieCuttingStripping' ,undef, $Equipment);
+		} # end if
+		if ( lc $Stripping{'units'} eq 'per m' ) {
+			$Stripping{'Total'} = $Stripping{'Price'} * $impressions / 1000;
+		} # end if
+
+		$Total{'Stripping'} = \%Stripping;
+		$Total{'Total'} += $Stripping{'Total'};
+	} else {
+		$Total{'Total'} += $$specs{"StrippingPrice$qty_index"};
 	} # end if
-	if ( lc $Stripping{'units'} eq 'per m' ) {
-		$Stripping{'Total'} = $Stripping{'Price'} * $impressions / 1000;
-	} # end if
-	$Total{'Stripping'} = \%Stripping;
-	$Total{'Total'} += $Stripping{'Total'};
 
 #$$specs{'hdnBreakdown'.$qty_index} .= 'Materials: $' . sprintf( '%.2f', $price{'MaterialPrice'}->{'Price'})."\n";
 
@@ -339,14 +345,25 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $bestPrice{'MakeReadyPrice'}{'Price'});
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $bestPrice{'DiePrice'}{'Price'});
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$bestPrice{'ServicePrice'}}{'Price','units','Total'}, $bestPrice{'Impressions'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$bestPrice{'Stripping'}}{'Price','units','Total'}, $bestPrice{'Impressions'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f<br/>', $bestPrice{'txtPrice'});
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %4$d impressions = $%3$.2f<br/>', @{$bestPrice{'HoleClearingPrice'}}{'Price','units','Total'}, $bestPrice{'Impressions'}, $$specs{"txtHoleClearingHoles-$$sig_specs{'SignatureIndex'}"} ) if $bestPrice{'HoleClearingPrice'};
+
+				if ( $$specs{'OverrideStrippingPrice'} ne 'Y' ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$bestPrice{'Stripping'}}{'Price','units','Total'}, $bestPrice{'Impressions'} );
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f<br/>', $$specs{"StrippingPrice$qty_index"} );
+				} # end if
+
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f * %s% = $%.2f<br/>', $bestPrice{'txtPrice'},$$specs{'Markup'.$qty_index}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100));
 			} # end if
 		} # end foreach Signature
 
 	
 		$$specs{"DiePrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalDiePrice );
-		$$specs{"StrippingPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalStrippingPrice );
+		if ( $$specs{'OverrideStrippingPrice'} ne 'Y' ) {
+			$$specs{"StrippingPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalStrippingPrice );
+		} else {
+			$$specs{"StrippingPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"StrippingPrice$qty_index"} );
+		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100) );
 		} # end if
