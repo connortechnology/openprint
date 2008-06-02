@@ -57,7 +57,7 @@ function set_rdb_value( rdb, value ) {
 
 function get_rdb_value( rdb ) {
 	if ( ! rdb ) {
-		alert( "Radio button not found: " + rdbName );
+		alert( "Radio button not found");
 	} else {
 		for ( var x = 0; x < rdb.length; x ++ ) {
 			if ( rdb[x].checked == true ) {

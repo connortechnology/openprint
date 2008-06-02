@@ -8,8 +8,10 @@ Please select a RFID Tag to view/edit.<br>
 	<fieldset class="filters"><legend>Choose RFID Tag</legend>
 		<p>
 			<label for="rfidtag_id">RFID Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeypress="return input_handler( this, event);"/>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
+			<input type="text" id="rfidtag_like" name="rfidtag_like" size="10" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', Serialize( document.forms.f1 ) );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', Serialize( document.forms.f1 ) );",'','Show' ); ) ?>
 		</p>
 	</fieldset>
 </form>

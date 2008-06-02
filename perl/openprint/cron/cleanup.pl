@@ -191,7 +191,7 @@ foreach my $Tag ( @Tags ) {
 	} # end if
 } # end foreach Tag
 }
-
+if ( 1 ) {
 foreach my $Skid ( openprint::Skid::find() ) {
 
 	my @Paper_Inventory = openprint::PaperInventory::find(
@@ -230,6 +230,7 @@ foreach my $Skid ( openprint::Skid::find() ) {
 	} # end for PI
 } # end foreach Skid
 	
+}
 
 $dbh->disconnect();
 1;

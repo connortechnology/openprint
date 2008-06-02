@@ -385,7 +385,7 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	return join('-', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), $self->mweight().'M', $self->quality() ) );
+	return join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ), $self->quality() ) );
 }
 
 sub name {
@@ -510,12 +510,22 @@ sub mweight {
         $$self{'mweight'} = 1*$mweight;
 	} # end if
 	if ( ! $$self{'mweight'} ) {
-		my $wpsi = $$self{'gsm'}/703064.5;
-		if ( $$self{'type'} eq 'Roll' and $$self{'basis_width'} and $$self{'basis_height'} and $$self{'gsm'} ) {
-			$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
-			# MWeight is in relaion to the basis size
-		} elsif ( $$self{'width'} and $$self{'height'} and $$self{'gsm'} ) {
-			$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'width'} * $$self{'height'} * 1000 );
+		if ( $$self{'gsm'} ) {
+			my $wpsi = $$self{'gsm'}/703064.5;
+			if ( $$self{'type'} eq 'Roll' and $$self{'basis_width'} and $$self{'basis_height'} ) {
+				$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
+				# MWeight is in relaion to the basis size
+			} elsif ( $$self{'width'} and $$self{'height'} ) {
+				$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'width'} * $$self{'height'} * 1000 );
+			} # end if
+		} elsif ( $self->weight() =~ /(\d*)lb/ ) {
+			# weigiht of 500sheets of 25x38
+$openprint::log->debug("Auto calcing mweight from $1");
+			$$self{'mweight'} = sprintf('%.0f', ($1*$$self{'width'}*$$self{'height'})/(25*38));
+		} elsif ( ! $self->weight() =~ /\D/ ) {
+			# weigiht of 500sheets of 25x38
+$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
+			$$self{'mweight'} = sprintf('%.0f', ($self->weight()*$$self{'width'}*$$self{'height'})/(25*38));
 		} # end if
     } # end if
     return $$self{'mweight'};

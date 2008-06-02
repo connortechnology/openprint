@@ -57,6 +57,9 @@ sub find {
 		$sql .= ' AND type_id=?';
 		push @values, $params{'type_id'};
 	} # end if
+	if ( $params{'id_like'} ) {
+		$sql .= " AND id LIKE '%$params{id_like}%'";
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
 		push @values, @params{'created_on_start','created_on_end'};

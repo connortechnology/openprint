@@ -132,7 +132,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 		misc::export_csv( $r, $log, \%variable, "PaperInventoryLog $date.csv", \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Download Inventory' ) {
 
-		my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','Date Added','Location', 'InStock');
+		my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)');
 		my @papers = openprint::Paper::find(
 				'owner_id'	=>	( defined $param{'Owner'} ? $param{'Owner'} : '' ),
 				'manufacturer_id'	=>	( defined $param{'PaperManufacturer'} ? $param{'PaperManufacturer'} : undef ),
@@ -149,30 +149,41 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 				);
 		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 		my @data;
+		my $total_weight = 0;
 		foreach my $Paper ( @papers ) {
 			foreach my $Skid ( $Paper->skids() ) {
-				push @data,
-				$$Paper{'id'},
-				new openprint::Company($Paper->owner_id())->name(),
-				$Paper->manufacturer(),
-				$Paper->name(),
-				$Paper->finish(),
-				$Paper->colour(),
-				$Paper->weight(),
-				$Paper->type(),
-				$Paper->width(),
-				$Paper->height(),
-				$Paper->quality(),
-				$Paper->mweight(),
-				$Paper->gsm(),
-				$$Skid{'id'},
-				$$Skid{'created_on'},
-				$Skid->location(),
-				$$Skid{Paper}{$$Paper{'id'}} . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
+				my $weight = 0;
+				if ( $Paper->type() eq 'Roll' ) {
+				$weight = $$Skid{Paper}{$$Paper{'id'}};
+				} else {
+				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $$Skid{Paper}{$$Paper{'id'}};
+				} # end if
+				$total_weight += $weight;
+				push @data,(
+						$$Paper{'id'},
+						new openprint::Company($Paper->owner_id())->name(),
+						$Paper->manufacturer(),
+						$Paper->name(),
+						$Paper->finish(),
+						$Paper->colour(),
+						$Paper->weight(),
+						$Paper->type(),
+						$Paper->width(),
+						$Paper->height(),
+						$Paper->quality(),
+						$Paper->mweight(),
+						$Paper->gsm(),
+						$$Skid{'id'},
+						$$Skid{'rfidtag_id'},
+						$$Skid{'created_on'},
+						$Skid->Location()->name(),
+						$Paper->type() eq 'Sheet' ? $$Skid{Paper}{$$Paper{'id'}} : '',
+						$weight,
+						);
 			} # end foreach skid
 		} # end foreach
 		#my $date;
-		push @data, ( 'Report generated',$date,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef );
+		push @data, ( 'Report generated',$date,undef,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
 		misc::export_csv( $r, $log, \%variable, "PaperInventory $date.csv", \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		if ( $param{'paper_id'} ) {

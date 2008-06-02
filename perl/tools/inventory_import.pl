@@ -39,6 +39,10 @@ while ( <HANDLE> ) {
 	my ( $rfidtag_id,$manufacturer,$name, $location_part1, $location_part2, $location_part3, $finish, $colour, $weight, $quality, $type, $length, $width, $calliper, $gsm, $mweight, $owner, $qty_kg, $units, $qty_lbs, $fsc ) = misc::trim($csv->fields());
 	next if ! $rfidtag_id;
 
+	if ( ! $weight =~ /\D/ ) {
+		$weight .= 'lb';
+	} # end if
+
 	$rfidtag_id =~ s/R(.*)/$1/;
 
 	my $Tag = new openprint::RFIDTag( $rfidtag_id );
