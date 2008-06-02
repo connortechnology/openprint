@@ -233,7 +233,7 @@ sub signature_calc {
 		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 	} else {
 		if ( ! @all_equipment ) {
-			@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>['Y','When Printing']} );
+			@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>['Y','When Printing','When PerfectBinding','When Stitching']} );
 			if ( $stitching_service_index and $$services{'Folding'} ) {
 
 				push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Folding'} );
@@ -299,6 +299,7 @@ sub signature_calc {
 		$Results{'Breakdown'} .= "<br/>Equipment: ".$Equipment->name().', ';
 		next if ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'};
 		next if ( $Equipment->specification('Type') eq 'Stitcher' ) and ! $stitching_service_index;
+		next if ( $Equipment->specification('Type') eq 'PerfectBinder' ) and ! $$services{'PerfectBound'};
 		if ( $Equipment->specification('Scoring Capable') eq 'When Printing' and $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
 			$Results{'Breakdown'} .= "Not printing on $$Equipment{name}.<br/>";
 			next;

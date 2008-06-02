@@ -267,7 +267,7 @@ sub signature_calc {
 		( $scor_equipment, $scor_imposition ) = @$score_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index", "txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"};
 		if ( ( $$score_specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} or $$score_specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} ) and ! $scor_equipment ) {
 			$openprint::log->debug("No equipment selected for scoring.  Quitting.");
-			$$specs{'alert'} = 'Scoring calculations are not complete.  Your project contains a scoring service.  It must be completed before the Perforation service.';
+			$$specs{'alert'} = 'Scoring calculations are not complete.  Your project contains a scoring service.  It must be completed before the Perforating service.';
 			$Results{'Status'} = 'uncalculated';
 			return %Results;
 		} # end if
@@ -295,7 +295,7 @@ sub signature_calc {
 			next;
 		} # end if
 
-		my $setupPrice = openprint::service::get_price( 'PerforationMakeReady', undef, $Equipment );
+		my $setupPrice = openprint::service::get_price( 'PerforatingMakeReady', undef, $Equipment );
 		$Results{'Breakdown'} .= sprintf( 'Setup: $%.2f<br/>', $setupPrice);
 
 		foreach my $imposition ( @impositions ) {
