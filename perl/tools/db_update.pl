@@ -811,6 +811,15 @@ if ( $version < $new_version ) {
     sql::end_transaction( $dbh, $ac );
     $version = $new_version;
 } # end if
+my $new_version = 1926;
+if ( $version < $new_version ) {
+    print "Updating to version $new_version\n";
+    my $ac = sql::start_transaction( $dbh );
+	sql::insert( undef, undef, 'configuration', 'name', 'MinimumPagesWithoutCounting','value','25','description', 'Minimum number of pages per pad before counting is required.', 'category','Miscellaneous Settings' );
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    sql::end_transaction( $dbh, $ac );
+    $version = $new_version;
+} # end if
 
 $dbh->disconnect();
 1;
