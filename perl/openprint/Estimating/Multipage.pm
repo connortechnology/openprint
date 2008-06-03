@@ -175,7 +175,7 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 } # end sub calc
 
 sub calculate_signatures {
-	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my ( $log, $dbh, $variable, $project_index ) = @_;
 
 	my $status;
 $openprint::log->debug("Starting Multipage::calculate_signatures");

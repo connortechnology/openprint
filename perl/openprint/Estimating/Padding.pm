@@ -78,7 +78,7 @@ sub calc {
 		$$specs{'alert'} = 'Please select how many pages each pad will have.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( $$specs{'PageQuantity'} < 100 ) {
+	if ( $$specs{'PageQuantity'} < $openprint::config{'MinimumPagesWithoutCounting'} ) {
 		if ( ! $$services{'Counting'} ) {
 			$_ = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' );
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $_, 'Counting' ) if $_;
@@ -200,5 +200,16 @@ sub summary {
 	return $text;
 } # end sub summary
 
+sub save {
+	my ( $p_id, $s_id, $param ) = @_;
+	my $Project = new openprint::Project( $p_id );
+	my $services = $Project->services();
+	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	if ( $$param{'PageQuantity'} != $$project_specs{'PageQuantity'} ) {
+		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $$services{''}[0], 'PageQuantity', $$param{'PageQuantity'} );
+		# FOrce recalc of printing
+		openprint::Estimating::Multipage::calculate_signatures( $openprint::log, $openprint::dbh, $openprint::variable, $p_id );
+	} # end if
+} # end sub save
 1;
 __END__
