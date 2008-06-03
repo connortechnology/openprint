@@ -325,8 +325,8 @@ sub signature_calc {
 
 				my $colour_total = $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'} + $BlanketCutPrice;
 				$totalPrice += $colour_total;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + Service: $%.2f%s=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
-					$setupPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%s MR: $%.2f + BC: $%.2f + Service: $%.2f%s=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>', $type,
+					$setupPrice, $BlanketCutPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
 			} # end foreach type
 			my %minimum = openprint::service::get_price_object( 'UVCoatingMinimumCharge', undef, $Equipment );
 			if ( $totalPrice < $minimum{Price} ) {
