@@ -64,6 +64,15 @@ sub get_output {
 	return @output;
 } # end sub get_output
 
+my @no_outputs = (
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1','Markup2','Markup3',
+	'txtQuantity1','txtQuantity2','txtQuantity3',
+);
+
+sub no_outputs {
+	return @no_outputs;
+}
 sub calc_price {
     my ( $log, $dbh, $variable, $specs, $Equipment, $qty_index, $imposition, $sig_specs ) = @_;
 
@@ -366,6 +375,9 @@ sub calc {
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100) );
+			@no_outputs = sets::exclude( ["txtPrice$qty_index"], \@no_outputs );
+		} else {
+			@no_outputs = sets::union( "txtPrice$qty_index", @no_outputs );
 		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalUnitPrice );
 
