@@ -6,13 +6,13 @@ function check_inputs(form ) {
 			alert( 'Skids cannot contain more than 10000lbs' );
 			return false;
 		} // end if
-		if ( form.Units && get_dm_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
+		if ( form.Units && get_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
 			alert( 'Skids cannot contain more than 10000lbs' );
 			return false;
 		} // end if
 	} // end if
 	if ( form.available_quantity && form.Quantity.value > form.available_quantity.value ) {
-		alert( 'There are only ' + form.available_quantity.value + get_ddm_value( form.Units ) + ' available' );
+		alert( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available' );
 		return false;
 	} // end if
 	return true;
