@@ -1393,55 +1393,52 @@ if ( 0 ) {
 					} # end while cutting it
 				} # end if Web or Sheet
 
-				if ( ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideCutOff'.$qty_index} ) ) {
-					foreach my $imp ( @imps ) {
-						push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp;
-					} # end foreach
-				} else {
-					foreach my $imp ( @imps ) {
-						my $add = -1;
-						my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
-#$imp->display();
-						if ( $imps{$str} ) {
+				foreach my $imp ( @imps ) {
+					my $add = -1;
+					my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
+					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockWidth$qty_index"} ) or $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+						$add = 1;
+					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+						$add = 1;
+                    } elsif ( $imps{$str} ) {
 #$openprint::log->debug("Exists " . @{$imps{$str}} );
-							for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
+						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 
-								my $I = $imps{$str}[$j];
-								my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-								my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
-								if ( int($I->Paper()->gsm()) != int($imp->Paper()->gsm()) ) {
+							my $I = $imps{$str}[$j];
+							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
+							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+							if ( int($I->Paper()->gsm()) != int($imp->Paper()->gsm()) ) {
 #$openprint::log->debug(sprintf('gsm : %s %s',  $I->Paper()->gsm(),$imp->Paper()->gsm() ));
-									$add = 1;
-								} elsif ( $I->Paper()->area() > $imp->Paper()->area() ) {
+								$add = 1;
+							} elsif ( $I->Paper()->area() > $imp->Paper()->area() ) {
 #$openprint::log->debug(sprintf('adding area: %s > %s',  $I->Paper()->area() , $imp->Paper()->area() ));
-									if ( (1*$BiggerPrice{'100lb Price'}) == (1*$SmallerPrice{'100lb Price'}) ) {
+								if ( (1*$BiggerPrice{'100lb Price'}) == (1*$SmallerPrice{'100lb Price'}) ) {
 #$openprint::log->debug(sprintf('splicing 100lb price : %s == %s',  $BiggerPrice{'100lb Price'}, $SmallerPrice{'100lb Price'} ));
-										splice @{$imps{$str}}, $j, 1;
-										$j -= 1;
+									splice @{$imps{$str}}, $j, 1;
+									$j -= 1;
 #} else {
 #$openprint::log->debug(sprintf('not splicing 100lb price : %s == %s',  $BiggerPrice{'100lb Price'}, $SmallerPrice{'100lb Price'} ));
-									} # end if
-									$add = 1;
-								} else { # same or smaller area
-									$add = 0;
-									if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
-										# Prefer non-dutch
-										splice @{$imps{$str}}, $j, 1;
-										$j -= 1;
-										$add = 1;
-#$openprint::log->debug(sprintf('addin & splicing cuz dutch', ));
-									} elsif ( (1*$BiggerPrice{'100lb Price'}) < (1*$SmallerPrice{'100lb Price'}) ) {
-#$openprint::log->debug(sprintf('adding cuz 100lb price : %s < %s',  $BiggerPrice{'100lb Price'}, $SmallerPrice{'100lb Price'} ));
-										$add = 1;
-									} # end if
 								} # end if
-							} # end for
-						} else {
-							$add = 1;
-						} # end if cached
-						push @{$imps{$str}}, $imp if $add > 0;
-					} # end foreach imp
-				} # end if Override
+								$add = 1;
+							} else { # same or smaller area
+								$add = 0;
+								if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
+									# Prefer non-dutch
+									splice @{$imps{$str}}, $j, 1;
+									$j -= 1;
+									$add = 1;
+#$openprint::log->debug(sprintf('addin & splicing cuz dutch', ));
+								} elsif ( (1*$BiggerPrice{'100lb Price'}) < (1*$SmallerPrice{'100lb Price'}) ) {
+#$openprint::log->debug(sprintf('adding cuz 100lb price : %s < %s',  $BiggerPrice{'100lb Price'}, $SmallerPrice{'100lb Price'} ));
+									$add = 1;
+								} # end if
+							} # end if
+						} # end for
+					} else {
+						$add = 1;
+					} # end if overriden or not or cached
+					push @{$imps{$str}}, $imp if $add > 0;
+				} # end foreach imp
 
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
@@ -1926,7 +1923,7 @@ $openprint::log->warn('next');
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 #$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}}{'Comparison Cost'} );
 
-							if ( ! $$sig_price{'complete'} ) {
+							if ( ( ! $$sig_price{'complete'} ) and $new_specs{'chkOverridePageQuantity'.$qty_index} ) {
 								$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
 $openprint::log->warn("Doing full calc without Page Override" );
 #$sig_price = $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}};

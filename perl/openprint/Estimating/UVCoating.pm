@@ -256,11 +256,15 @@ sub signature_calc {
 	#$openprint::log->debug('DOne Cutting :' . @impositions);
 
 	foreach my $Equipment ( @equipment ) {
-		$$specs{'hdnBreakdown'.$qty_index} .= "\t\tEquipment: ".$Equipment->strid().",<br/>";
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().',<br/>';
 
 		foreach my $imp ( @impositions ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tImposition: \%dx\%d+\%dx\%d=\%dout :", @$imp{'columns','rows','dutch_columns','dutch_rows','imposition'} );
 			next if ! ( $imp->rows() * $imp->columns() );
+			if ( sets::isin( $imp->runstyle(),['Work & Turn','Work & Tumble']) and $Equipment->specification('WT UVCoating') ne 'Y' ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Does not support WT UV Coating';
+				next;
+			} # end if 
 			my $width = $imposition->sheet_width() / ( $imposition->columns()/$imp->columns() );
 			my $height = $imposition->sheet_height() / ( $imposition->rows()/$imp->rows() );
 			$$specs{'hdnBreakdown'.$qty_index} .= $width . 'x' . $height.'<br/>';
