@@ -140,14 +140,24 @@ push @ids, $openprint::param{'rfidtag_id'} if $openprint::param{'rfidtag_id'};
 <table class="List sortable">
 	<tr>
 		<th>RFIDTAG ID</th>
+		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
+		<th>Cost (/100lbs)</th>
+		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
 		<th>Quantity (lbs)</th>
 		<th>Quantity (kgs)</th>
 	</tr>
 	<? echo (
 		my $html = '';
+		my $in_accounting = openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} );
 		foreach my $tag_id ( @{$$variable{'IDS'}} ) {
 			next if ! $tag_id;
-			$html .= sprintf( q{<tr><td>%1$s</td><td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$d" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td></tr>}, $tag_id, @openprint::param{"qty_lbs-$tag_id","qty_kgs-$tag_id"} );
+			$html .= sprintf('<tr><td>%s</td>', $tag_id );
+			# Prices
+			if ( $in_accounting ) {
+				$html .= sprintf( q{<td><input type="text" id="cost_lbs-%1$s" name="cost_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" /></td>}, $tag_id, @openprint::param{"cost_lbs-$tag_id"} );
+			} # end if
+			# Inventory
+			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$d" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td></tr>}, $tag_id, @openprint::param{"qty_lbs-$tag_id","qty_kgs-$tag_id"} );
 		
 		} # end foreach tag_id
 		return $html;

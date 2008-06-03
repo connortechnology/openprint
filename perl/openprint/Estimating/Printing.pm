@@ -223,6 +223,7 @@ sub get_unspecified_spreads {
 # SpreadSize is always 4
 		$unspecified_spreads = 1 - $specified_spreads;
 	} # end if
+$openprint::log->error("UNspecified: $qty_index $unspecified_spreads");
 	return $unspecified_spreads;
 } # end sub get_unspecified_spreads
 
@@ -1167,18 +1168,18 @@ $openprint::log->debug("No spread layout for you!");
 					} # end while cutting it
 				} # end if Web or Sheet
 
-				if ( ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) ) {
-					foreach my $imp ( @imps ) {
-						push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp;
-					} # end foreach
-				} else {
-
 #$openprint::log->debug("Sorting");	
 #foreach my $i ( @imps ) {
 #$openprint::log->warn("IMp $$i{'imposition'} out " . $i->layout_width().'x'.$i->layout_height() . " on " . $i->Paper()->width() . 'x' . $i->Paper()->height() );
 #}
-					foreach my $imp ( @imps ) {
-						my $add = -1;
+				foreach my $imp ( @imps ) {
+					my $add = -1;
+					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockWidth$qty_index"} ) or $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+						$add = 1;
+					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+						$add = 1;
+					} else {
+
 #$imp->display();
 						if ( $imps{$imp->imposition().$imp->runstyle()} ) {
 #$openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}} );
@@ -1196,7 +1197,7 @@ $openprint::log->debug("No spread layout for you!");
 								} else { # same or smaller area
 									$add = 0;
 									if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
-										# Prefer non-dutch
+# Prefer non-dutch
 										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
 										$j -= 1;
 										$add = 1;
@@ -1208,9 +1209,9 @@ $openprint::log->debug("No spread layout for you!");
 						} else {
 							$add = 1;
 						} # end if cached
-						push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp if $add > 0;
-					} # end foreach imp
-				} # end if override
+					} # end if
+					push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp if $add > 0;
+				} # end foreach imp
 
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
@@ -1617,23 +1618,27 @@ $$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 							$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
 							$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}*$$specs{'txtSpreadSize'};
-	#$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
+	$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
 							#$new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} = 'Y';
 							$new_specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$new_specs{'chkOverridePress'.$qty_index} = 'Y';
-							$new_specs{'chkOverrideSheetSize'.$qty_index} = '';
 							$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 							$new_specs{'chkOverrideImposition'.$qty_index} = '';
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
-							if ( ! $$sig_price{'complete'} ) {
+
+							if ( ( ! $$sig_price{'complete'} ) and ( $new_specs{'chkOverridePageQuantity'.$qty_index} or $new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} ) ) {
 								$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
 								$new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} = '';
 #$openprint::log->warn("Doing full calc without page override $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 								$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 							} # end if
-if ( 0 ) {
-							if ( ! $$sig_price{'complete'} ) {
+							if ( ( ! $$sig_price{'complete'} ) and ( $new_specs{'chkOverrideSheetSize'.$qty_index} ) ) {
+								$new_specs{'chkOverrideSheetSize'.$qty_index} = '';
+								$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
+							} # end if
+if ( 1 ) {
+							if ( ( ! $$sig_price{'complete'} ) and $new_specs{'chkOverridePress'.$qty_index} ) {
 #$openprint::log->warn("Doing full calc without Press Override" . $imp->spreads() );
 								$new_specs{'chkOverridePress'.$qty_index} = '';
 								$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );

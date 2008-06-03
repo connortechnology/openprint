@@ -93,7 +93,12 @@ Please select a Skid to view/edit.<br>
             <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/skids.html?Type'} ) or sets::isin( 'Roll', split(';', $openprint::session{'/employee/inventory/skids.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeRoll">Roll</label>
         </p>
-
+		<p><label>Location:</label>
+			<select name="location_id">
+				<option value=""> All </option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $openprint::session{'/employee/inventory/skids.html?location_id'} ); ) ?>
+			</select>
+		</p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );", '', 'Show Results' ),

@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -488,7 +488,7 @@ $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 		if ( $paper_height ) {
 			$adjusted_paper_height = $paper_height;
 		} elsif ( $$specs{'Cut Off'} ) {
-$openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}");
+$openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if $debug;
 			$adjusted_paper_height = $$specs{'Cut Off'};
 			$setup2->paper()->height( $$specs{'Cut Off'} );
 			$setup2->stock_height( $$specs{'Cut Off'} );
@@ -555,7 +555,7 @@ $openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}");
 				$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? 'height' : 'width' );
 				if ( ! $paper_width ) {
 					$setup2->paper()->width( $setup2->used_width() );
-					$openprint::log->debug("Setting paper width: " . $setup2->paper()->width());
+					$openprint::log->debug("Setting paper width: " . $setup2->paper()->width()) if $debug;
 				} # end if
 				fix_height( $setup2, $specs );
 				if ( $setup2->imposition() ) {

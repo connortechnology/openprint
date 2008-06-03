@@ -712,7 +712,7 @@ sub allocate {
 	} # end if
 
 	my $Paper = new openprint::Paper( $paper_id );
-	my $available_qty = $Paper->in_stock();
+	my $available_qty = $Paper->in_stock() - $Paper->allocated();
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	if ( $available_qty < $quantity ) {
 		$variable{'error'} .= "Only $available_qty $units are available to be allocated. Please try again.<br/>";

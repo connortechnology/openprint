@@ -660,6 +660,7 @@ sub allocated {
 	} # end if
     return $$self{allocated};
 } # end sub allocated
+
 sub in_stock {
     my $self = shift;
 	return 0 if ! $$self{'id'};

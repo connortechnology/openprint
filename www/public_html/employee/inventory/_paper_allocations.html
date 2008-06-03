@@ -36,11 +36,13 @@
 			@data = sql::execute( $log, $dbh, q{SELECT id, created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), skid_id, paper_id, quantity, units FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $openprint::param{'skid_id'} ) if $openprint::param{'skid_id'};
 			my $rowclass;
 			while ( my ( $id, $time, $project_id, $docket, $skid_id, $paper_id, $quantity, $units ) = splice @data, 0, 8 ) {
-				$html .= sprintf( '<tr%s><td>%s</td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%d</a></td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td><td>',
-					$rowclass,
-					Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
-					$project_id,
-					$openprint::param{'skid_id'} ? new openprint::Paper( $paper_id )->to_string() : $skid_id,
+				$html .= sprintf( '<tr%1$s><td>%2$s</td>', $rowclass, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ) );
+				if ( $openprint::param{'skid_id'} ) {
+					$html .= sprintf('<td><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $paper_id, new openprint::Paper( $paper_id )->to_string() );
+				} else {
+					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $skid_id );
+				} # end if
+				$html .= sprintf('<td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td><td>',
 					$project_id,
 					$docket,
 					$quantity, $units,

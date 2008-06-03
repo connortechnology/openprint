@@ -27,12 +27,13 @@
 		sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} ),
 		);
 		my $rowclass;
+		my $total = 0;
 		while ( my ( $time, $user_id, $delta, $instock, $units, $comment, $po_id, $skid_id, $paper_id ) = splice @data, 0, 9 ) {
 			next if $delta <= 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?outs'};
 			next if $delta > 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?ins'};
 			my $Paper = new openprint::Paper( $paper_id );
 			my $Skid = new openprint::Skid( $skid_id );
-			next if ! sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
+			next if $Paper->type() and ! sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
 			
 			$html .= sprintf( '<tr%s><td>%s</td><td><a href="skid_details.html?skid_id=%d">%d</a></td><td>%s</td><td>%s</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td></tr>',
 				$rowclass,
@@ -45,8 +46,10 @@
 				$Skid->Location()->name(),
 				$comment,
 				);
+			$total += $delta;
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
+			$html .= sprintf( '<tr class="totals"><td colspan="3">&nbsp;</td><td>Totals:</td><td>%d</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>', $total );
 		return $html;
 	) ?>
 </table>

@@ -18,3 +18,12 @@ div.PopupWindow fieldset p label {
 	margin: 0px;
 	text-align: left;
 }
+
+#Allocate fieldset p {
+	padding-left: 100px;
+	
+}
+#Allocate fieldset p label {
+	width: 100px;
+	margin-left: -95px;
+}
