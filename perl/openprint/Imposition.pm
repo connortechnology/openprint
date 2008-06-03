@@ -204,7 +204,15 @@ sub load {
 
 sub used_width {
 	my $self = shift;
-	return $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'} + ( $$self{'colour_bar_orientation'} eq 'Length' ? $$self{'colour_bar_size'} : 0 );
+	my $width = $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'} + ( $$self{'colour_bar_orientation'} eq 'Length' ? $$self{'colour_bar_size'} : 0 );
+	if ( ($$self{runstyle} eq 'Perfecting' ) and $$self{Press} and $$self{paper} ) {
+		if ( $$self{paper}->perfecting() ne 'Y' ) {
+			if ( $$self{columns} % 2 ) {
+			$width += $$self{Press}->specification('Perfecting Double Gutter Size') - $$self{Press}->specification('Perfecting Single Gutter Size');
+			} # end if
+		} # end if
+	} # end if
+	return $width;
 }
 sub used_height {
     my $self = shift;

@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 1;
+my $debug = 0;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -121,9 +121,9 @@ sub check_setup {
 	if ( sets::isin( $setup->runstyle(),[ 'Sheet Work', 'Web' ] ) ) {
 		#$log->debug(" *** Runstyle is:	Sheet Work ***");
 	} elsif ( $setup->runstyle() eq 'Perfecting' ) {
-		#$log->debug("*** Runstyle is: Perfecting Imposition is : $$setup{'Imposition'} ***" );
+		#$openprint::log->debug("*** Runstyle is: Perfecting Imposition is : $$setup{'Imposition'} ***" . $setup->Paper()->perfecting() );
 
-		if ( ! $setup->paper()->perfecting() ) {
+		if ( ! $setup->Paper()->perfecting() ) {
 			# check to make sure that the gutter space is actually where it needs to be.
 			if ( $setup->columns() == 1 ) {
 				$setup->rows(0);

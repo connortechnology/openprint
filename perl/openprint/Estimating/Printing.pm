@@ -565,6 +565,8 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 				$$specs{'StockGrade'} = 1;
 			} elsif ( $$specs{'txtSpecificStockFinish'} =~ /matte/i ) {
 				$$specs{'StockGrade'} = 2;
+			} elsif ( $$specs{'txtSpecificStockFinish'} =~ /offset/i ) {
+				$$specs{'StockGrade'} = 4;
 			} else {
 				$$specs{'StockGrade'} = 3;
 			} # end if
@@ -601,7 +603,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 			} # end if
 		} # end if
 		my $Paper = new openprint::Paper();
-		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',($$specs{'txtSpecificStockBrand'} =~ /offset/i ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
+		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',(sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
 		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};
@@ -1068,10 +1070,7 @@ $openprint::log->debug("No spread layout for you!");
 
 			$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
 
-
 			my @impositions;
-# Start with an arrayof papers... an overrided paper may or may not exist in the array.  What we should do is... try to find in in the array, if not, try to find it in an array of cut papers... if not, then special cut it...
-			my @papers;
 			my %imps;
 
 			foreach my $Paper ( @Papers ) {
@@ -1170,11 +1169,11 @@ $openprint::log->debug("No spread layout for you!");
 
 #$openprint::log->debug("Sorting");	
 #foreach my $i ( @imps ) {
-#$openprint::log->warn("IMp $$i{'imposition'} out " . $i->layout_width().'x'.$i->layout_height() . " on " . $i->Paper()->width() . 'x' . $i->Paper()->height() );
+#$i->display();
 #}
 				foreach my $imp ( @imps ) {
 					my $add = -1;
-					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockWidth$qty_index"} ) or $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
 						$add = 1;
 					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 						$add = 1;
@@ -1190,16 +1189,25 @@ $openprint::log->debug("No spread layout for you!");
 								my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 								if ( $I->Paper()->area() > $imp->Paper()->area() ) {
 									if ( (1*$BiggerPrice{'100lb'}) == (1*$SmallerPrice{'100lb'}) ) {
-										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
-										$j -= 1;
+										if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+										} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+										} else {
+
+											splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
+											$j -= 1;
+										} # end if
 									} # end if
 									$add = 1;
 								} else { # same or smaller area
 									$add = 0;
 									if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
+										if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+										} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+										} else {
 # Prefer non-dutch
-										splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
-										$j -= 1;
+											splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
+											$j -= 1;
+										} # end if
 										$add = 1;
 									} elsif ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
 										$add = 1;
@@ -1215,6 +1223,10 @@ $openprint::log->debug("No spread layout for you!");
 
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
+$openprint::log->warn('Impositions');
+foreach my $I ( @impositions ) {
+$I->display();
+} # end foreach
 
 			if ( ! @impositions ) {
 #$openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
