@@ -190,19 +190,25 @@ sub calc {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 	
 		if ( ! $$specs{"Needed-$$sig_specs{SignatureIndex}"} ) {
-			$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'N';
 			if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 				$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'Y';
+			} elsif ( $Project->signatures() == 1 ) {
+				$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'Y';
+			} else {
+				$$specs{"Needed-$$sig_specs{SignatureIndex}"} = 'N';
 			} # end if
 		} # end if
 			
-		if ( $$specs{"Needed-$$sig_specs{SignatureIndex}"} ne 'Y' ) {
+		if ( $$specs{"Needed-$$sig_specs{SignatureIndex}"} eq '' ) {
+			$$specs{'alert'} .= 'Please select whether die cutting is required for signature ' . $$sig_specs{'SignatureIndex'} . '.<br/>';
+			return $$specs{'Status'} = 'uncalculated';
+		} elsif ( $$specs{"Needed-$$sig_specs{SignatureIndex}"} eq 'N' ) {
 			next;
 		} # end if
 
 		if ( ! $$specs{'rdbSuppliedDie-'.$$sig_specs{'SignatureIndex'}} ) {
 			$$specs{'alert'} .= 'Please select whether the die is to be supplied by the customer or not for signature ' . $$sig_specs{'SignatureIndex'} . '.<br/>';
-			return 'uncalculated';
+			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( ! $$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}} ) {
 			if ( $$sig_specs{'rdbTemplateType'} eq '2Panel2Pocket' ) {
