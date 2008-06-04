@@ -226,7 +226,7 @@ sub summary {
 		} # end foreach key
 		return $html;
 	} else {
-		return '<br/>'.join('<br/>', sort keys %totals );
+		return join('<br/>', sort keys %totals );
 	} # end if
 } # end sub summary
 
