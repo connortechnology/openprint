@@ -1106,6 +1106,10 @@ sub area {
 	my $self = shift;
 	return $$self{width}*$$self{height};
 }
+sub start_area {
+	my $self = shift;
+	return $$self{start_width}*$$self{start_height};
+}
 
 sub gsm_to_mweight {
 	my ( $gsm ) = @_;

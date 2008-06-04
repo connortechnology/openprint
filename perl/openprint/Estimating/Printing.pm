@@ -1396,7 +1396,7 @@ if ( 0 ) {
 				foreach my $imp ( @imps ) {
 					my $add = -1;
 					my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
-					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockWidth$qty_index"} ) or $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
 						$add = 1;
 					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 						$add = 1;
@@ -1414,18 +1414,44 @@ if ( 0 ) {
 #$openprint::log->debug(sprintf('adding area: %s > %s',  $I->Paper()->area() , $imp->Paper()->area() ));
 								if ( (1*$BiggerPrice{'100lb Price'}) == (1*$SmallerPrice{'100lb Price'}) ) {
 #$openprint::log->debug(sprintf('splicing 100lb price : %s == %s',  $BiggerPrice{'100lb Price'}, $SmallerPrice{'100lb Price'} ));
-									splice @{$imps{$str}}, $j, 1;
-									$j -= 1;
-#} else {
-#$openprint::log->debug(sprintf('not splicing 100lb price : %s == %s',  $BiggerPrice{'100lb Price'}, $SmallerPrice{'100lb Price'} ));
+									if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+									} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+									} else {
+										splice @{$imps{$str}}, $j, 1;
+										$j -= 1;
+									} # end if
 								} # end if
 								$add = 1;
-							} else { # same or smaller area
+							} elsif ( $I->Paper()->area() == $imp->Paper()->area() ) {
+								$add = 0;
+								if ( ( $I->Paper()->start_area() != $I->Paper()->area() ) and ( $imp->Paper()->start_area() == $imp->Paper()->area ) ) {
+									splice @{$imps{$str}}, $j, 1;
+									$j -= 1;
+									$add = 1;
+								} elsif ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
+									# Prefer non-dutch
+									if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+									} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+									} else {
+										splice @{$imps{$str}}, $j, 1;
+										$j -= 1;
+									} # end if
+									$add = 1;
+								} elsif ( (1*$BiggerPrice{'100lb Price'}) < (1*$SmallerPrice{'100lb Price'}) ) {
+									splice @{$imps{$str}}, $j, 1;
+									$j -= 1;
+									$add = 1;
+								} # end if
+							} else { # smaller area
 								$add = 0;
 								if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
 									# Prefer non-dutch
-									splice @{$imps{$str}}, $j, 1;
-									$j -= 1;
+									if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+									} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+									} else {
+										splice @{$imps{$str}}, $j, 1;
+										$j -= 1;
+									} # end if
 									$add = 1;
 #$openprint::log->debug(sprintf('addin & splicing cuz dutch', ));
 								} elsif ( (1*$BiggerPrice{'100lb Price'}) < (1*$SmallerPrice{'100lb Price'}) ) {
@@ -1441,7 +1467,16 @@ if ( 0 ) {
 				} # end foreach imp
 
 			}# end foreach Paper
+
 			push @impositions, map {@{$_}} values %imps;
+
+if ( 0 ) {
+$openprint::log->warn('Impositions');
+foreach my $I ( @impositions ) {
+$I->display();
+} # end foreach
+$openprint::log->warn('***************Impositions');
+} #ne dif
 
 			if ( ! @impositions ) {
 #$openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
@@ -1718,7 +1753,7 @@ sub get_project_price {
 		my $Press;
 		if ( ! $P ) {
 			if ( $$impositions{''} and @{$$impositions{''}} ) {
-#$openprint::log->debug("# of elevated impositions: " . @{$$impositions{''}} );
+$openprint::log->debug("# of elevated impositions: " . @{$$impositions{''}} );
 				@impositions = @{$$impositions{''}};
 				$Press = $impositions[0]->Press();
 			} # end if
@@ -1759,7 +1794,7 @@ sub get_project_price {
 		my $pms_prices = get_special_colours_price( $Press, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
 
 		if ( 0 ) {
-			$openprint::log->debug("QTY: $qty_index");
+			$openprint::log->debug("QTY: $qty_index " . @impositions );
 			foreach my $imp ( @impositions ) {
 				$imp->display();
 			} # end foreach
@@ -2007,7 +2042,7 @@ $openprint::log->warn("Doing full calc without Page Override" );
 #$openprint::log->debug( 'calc_price: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) . ' Complete: ' . $price{complete} );
 
 			my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $stock_qty );
-			$openprint::log->warn("PStock price: $stock_qty: $paper_price{'100lb Price'}" );
+			#$openprint::log->warn("PStock price: $stock_qty: $paper_price{'100lb Price'}" );
 			@$price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb Cost', '100lb Price'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb Cost', '100lb Price'};
 			$$price{'Comparison Cost'} += $$price{'Paper Price'};
 
@@ -2046,10 +2081,19 @@ $openprint::log->warn("Doing full calc without Page Override" );
 #$imp->display();
 			} elsif ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
 #$openprint::log->debug("No good, more expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
+#$best_price{'Imposition'}->display();
+#$openprint::log->debug( breakdown( \%best_price, $specs ) );
 #$imp->display();
+#$openprint::log->debug( breakdown( $price, $specs ) );
 			} else {
-#$openprint::log->debug("Got better: $$best_price{'Comparison Cost'} > $$price{'Comparison Cost'}" );
 #$imp->display();
+#$openprint::log->debug("Got better: $best_price{'Comparison Cost'} > $$price{'Comparison Cost'}" );
+#if ( %best_price ) {
+#$best_price{'Imposition'}->display();
+#$openprint::log->debug( breakdown( \%best_price, $specs ) );
+#}
+#$imp->display();
+#$openprint::log->debug( breakdown( $price, $specs ) );
 				%best_price = %{$price};
 #$imp->display();
 #keep track of the best price we have found so far.
@@ -2067,7 +2111,7 @@ $openprint::log->warn("Doing full calc without Page Override" );
 		$$specs{'Status'} = 'uncalculated';
 		return;
 	} else {
-$openprint::log->warn( "After calc imp: " . $best_price{'Imposition'}->imposition() );
+#$openprint::log->warn( "After calc imp: " . $best_price{'Imposition'}->imposition() );
 	} # end if
 	return \%best_price;
 } # end sub get_project_price
@@ -2085,6 +2129,7 @@ sub check_price {
 #if ( $price_to_beat > $p ) {
 #$openprint::log->debug("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 	if ( $price_to_beat > $$price{'Comparison Cost'} ) {
+	#$openprint::log->warn("Check Price: $$price{'Comparison Cost'} $p <= $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;
 		return 0;
 	} # end if
 	$openprint::log->warn("Check Price: $$price{'Comparison Cost'} $p > $price_to_beat: " . $Imposition->imposition().'out ' . $Imposition->spreads() .'spreads on ' . $Imposition->paper()->width().'x'.$Imposition->paper()->height(). " : $text") if $debug;

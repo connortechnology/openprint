@@ -281,6 +281,12 @@ sub signature_calc {
 			@impositions = ($imposition);
 			if ( ( $Equipment->specification('WTPerforation') ne 'Y' ) and sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$Results{'Breakdown'} .= 'Cant do an inline perf when W&T.<br/>';
+				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					$$specs{'alert'} = "Can't do an inline perf when W&T.  After saving, printing will be recalculated.";
+					$Results{'Equipment'} = $Equipment;
+					$Results{'Status'} = 'uncalculated';
+					return %Results;	
+				} # end if
 				next;
 			} # end if
 		} else {
