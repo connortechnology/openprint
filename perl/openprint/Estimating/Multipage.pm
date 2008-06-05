@@ -125,6 +125,10 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 			$remaining_pages = 0;
 		} # end if
 		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
+		if ( $$specs{'chkOverrideDimensions'.$group_id} ne 'Y' ) {
+			$$specs{'txtWidth'.$group_id} = $$specs{'txtWidth'};
+			$$specs{'txtHeight'.$group_id} = $$specs{'txtHeight'};
+		} # end if
 	} # end foreach
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {

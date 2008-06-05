@@ -1412,7 +1412,7 @@ if ( 0 ) {
 								$add = 1;
 							} elsif ( $I->Paper()->area() > $imp->Paper()->area() ) {
 #$openprint::log->debug(sprintf('adding area: %s > %s',  $I->Paper()->area() , $imp->Paper()->area() ));
-								if ( (1*$BiggerPrice{'100lb Price'}) == (1*$SmallerPrice{'100lb Price'}) ) {
+								if ( (1*$BiggerPrice{'100lb Price'}) >= (1*$SmallerPrice{'100lb Price'}) ) {
 #$openprint::log->debug(sprintf('splicing 100lb price : %s == %s',  $BiggerPrice{'100lb Price'}, $SmallerPrice{'100lb Price'} ));
 									if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
 									} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
@@ -1430,14 +1430,10 @@ if ( 0 ) {
 									$add = 1;
 								} elsif ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
 									# Prefer non-dutch
-									if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
-									} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
-									} else {
-										splice @{$imps{$str}}, $j, 1;
-										$j -= 1;
-									} # end if
+									splice @{$imps{$str}}, $j, 1;
+									$j -= 1;
 									$add = 1;
-								} elsif ( (1*$BiggerPrice{'100lb Price'}) < (1*$SmallerPrice{'100lb Price'}) ) {
+								} elsif ( (1*$BiggerPrice{'100lb Price'}) > (1*$SmallerPrice{'100lb Price'}) ) {
 									splice @{$imps{$str}}, $j, 1;
 									$j -= 1;
 									$add = 1;
@@ -1446,16 +1442,8 @@ if ( 0 ) {
 								$add = 0;
 								if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
 									# Prefer non-dutch
-									if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
-									} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
-									} else {
-										splice @{$imps{$str}}, $j, 1;
-										$j -= 1;
-									} # end if
 									$add = 1;
-#$openprint::log->debug(sprintf('addin & splicing cuz dutch', ));
 								} elsif ( (1*$BiggerPrice{'100lb Price'}) < (1*$SmallerPrice{'100lb Price'}) ) {
-#$openprint::log->debug(sprintf('adding cuz 100lb price : %s < %s',  $BiggerPrice{'100lb Price'}, $SmallerPrice{'100lb Price'} ));
 									$add = 1;
 								} # end if
 							} # end if
