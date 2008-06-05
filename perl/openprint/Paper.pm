@@ -1058,7 +1058,7 @@ sub load_from_signature {
 				$Paper = $Paper->clone();
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 				$Paper->height( $$specs{'StockHeight'.$qty_index} );
-$openprint::log->debug(sprintf('Paper %sx%s = %s', $Paper->width(), $Paper->height(), $Paper->area() ) );
+#$openprint::log->debug(sprintf('Paper %sx%s = %s', $Paper->width(), $Paper->height(), $Paper->area() ) );
 				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
 			} # end if
 		} # end if

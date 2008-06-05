@@ -3196,7 +3196,7 @@ sub compare_signatures_runstyle {
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
 		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity','txtImposition' ) {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
-				#$openprint::log->debug("Not the same $key $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
+				#$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
 				return 0;
 
 			} # end if
@@ -3225,8 +3225,8 @@ sub compare_signatures_runstyle {
 			'ColourCoatingTypeSideTwo8', 'ColourCoatingColourSideTwo8', 'ColourCoatingCoverageSideTwo8',
 			'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','ddmBleedSize',
 			) {
-				if ($$sig1{$key} ne $$sig2{$key} ) {
-$openprint::log->debug("Not the same $key $$sig1{$key} ne $$sig2{$key}");
+				if ( $$sig1{$key} ne $$sig2{$key} ) {
+#$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
 					return 0;
 				} # end if
 			} # end foreach
@@ -3242,14 +3242,23 @@ sub compare_signatures {
 #} # end if
 #} # end foreach q_i
 	foreach my $key (
-			'CustomStockPrice','txtCustomMWeight','txtStockGSM',
+			'CustomStockPrice','txtCustomMWeight',
 			'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour',
 			'txtSpecificStockWidth', 'txtSpecificStockHeight',
 			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
 			'rdbSuppliedStock','rdbSpecificStock',
 			) {
-		return 0 if $$sig1{$key} ne $$sig2{$key};
+		if ( $$sig1{$key} ne $$sig2{$key} ) {
+#$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
+			return 0
+		} # end if
 	} # end foreach
+	#foreach my $key ( 'txtStockGSM' ) {
+		#if ( sprintf('%.0f', $$sig1{$key}) ne sprintf('%.0f', $$sig2{$key}) ) {
+			##$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
+			#return 0
+		#} # end if
+	#} # end foreach
 
 	return 1;
 } # end sub compare_signatures

@@ -16,7 +16,7 @@ use vars qw( %fields );
 	'view_visible'		=> 'view_visible',
 );
 
-my $debug = 1;
+my $debug = 0;
 
 my %cache;
 
