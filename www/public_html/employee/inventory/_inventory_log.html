@@ -16,6 +16,7 @@
 		<th align="left" width="125">RFIDTAG</th>
 		<th align="left">Paper</th>
 		<th align="left" width="70">Amount</th>
+		<th align="left" width="70">Allocated</th>
 		<th align="left" width="70">In Stock</th>
 		<th align="left" width="90">Location</th>
 		<th align="left">Comment</th>
@@ -23,8 +24,8 @@
 	<? echo (
 		my $html;
 		my @data = sql::execute( $log, $dbh, q{SELECT updated_on, user_id, delta, instock, units, comment, poindex, skid_id, paper_id FROM Paper_Inventory WHERE (updated_on BETWEEN ? AND ? ) ORDER BY updated_on},
-		sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'StartYear','StartMonth','StartDay'} ),
-		sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} ),
+		sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/employee/inventory/inventory_log.html?StartYear','/employee/inventory/inventory_log.html?StartMonth','/employee/inventory/inventory_log.html?StartDay'} ),
+		sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} ),
 		);
 		my $rowclass;
 		my $total = 0;
@@ -34,14 +35,16 @@
 			my $Paper = new openprint::Paper( $paper_id );
 			my $Skid = new openprint::Skid( $skid_id );
 			next if $Paper->type() and ! sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
+			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', split(';',  $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
 			
-			$html .= sprintf( '<tr%s><td>%s</td><td><a href="skid_details.html?skid_id=%d">%d</a></td><td>%s</td><td>%s</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td></tr>',
+			$html .= sprintf( '<tr%s><td>%s</td><td><a href="skid_details.html?skid_id=%d">%d</a></td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td></tr>',
 				$rowclass,
 				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
 				$skid_id, $skid_id,
 				$Skid->rfidtag_id(),
 				$Paper->to_string(),
 				$delta,
+				join('<br/>', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
 				$instock,
 				$Skid->Location()->name(),
 				$comment,
@@ -49,7 +52,7 @@
 			$total += $delta;
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
-			$html .= sprintf( '<tr class="totals"><td colspan="3">&nbsp;</td><td>Totals:</td><td>%d</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>', $total );
+			$html .= sprintf( '<tr class="totals"><td colspan="3">&nbsp;</td><td>Totals:</td><td>%d</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>', $total );
 		return $html;
 	) ?>
 </table>

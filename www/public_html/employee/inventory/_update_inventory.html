@@ -1,9 +1,3 @@
-<? eval (
-my @ids = split(';', $openprint::param{'rfidtag_ids'} );
-push @ids, $openprint::param{'rfidtag_id'} if $openprint::param{'rfidtag_id'};
-@ids = reverse sort sets::union( @ids );
-@{$$variable{'IDS'}} = @ids;
-) ?>
 <form name="f1" id="f1" method="post">
 	<input type="hidden" name="rfidtag_ids" value="<? echo ( join(';', @openprint::param{'rfidtag_ids','rfidtag_id'} ); ) ?>" />
 	<fieldset><legend>Enter RFID #'s</legend>
@@ -13,6 +7,24 @@ push @ids, $openprint::param{'rfidtag_id'} if $openprint::param{'rfidtag_id'};
 		</p>
 	</fieldset>
 	<fieldset>
+		<div class="error"><?error?></div>
+		<div class="leftColumn">
+			<p><label for="manifest_id">Manifest #:</label>
+				<input type="text" id="manifest_id" name="manifest_id" value="<? hecho ( $openprint::param{'manifest_id'} ) ?>" />
+			</p>
+		</div>
+		<div class="rightColumn">
+			<p><label>Received On:</label>
+<? eval ( @openprint::param{'received_on_year','received_on_month','received_on_day'} = Date::Calc::Today() if ! exists $openprint::param{'received_on_year'}; ) ?>
+			<span class="DateSelector">
+			<select name="received_on_year" onchange="setDaysDropDown(this.value,this.form.received_on_month.value,this.form.received_on_day, this.form.received_on_day.value);"><? echo ( ssi::return_years( undef, undef, $openprint::param{'received_on_year'} ); ) ?></select>
+			<select name="received_on_month" onchange="setDaysDropDown(this.form.received_on_year.value,this.value,this.form.received_on_day,this.form.received_on_day.value);"><? echo ( ssi::getmonths( $openprint::param{'received_on_month'} ); ) ?></select>
+			<select name="received_on_day"><? echo ( ssi::getdays( $openprint::param{'received_on_day'} ); ) ?></select>
+			</span>
+			</p>
+		</div>
+		<br class="spacer"/>
+		<hr/>
 		<div class="leftColumn">
 			<p>
 				<label for="Owner">Owner:</label>
@@ -154,10 +166,10 @@ push @ids, $openprint::param{'rfidtag_id'} if $openprint::param{'rfidtag_id'};
 			$html .= sprintf('<tr><td>%s</td>', $tag_id );
 			# Prices
 			if ( $in_accounting ) {
-				$html .= sprintf( q{<td><input type="text" id="cost_lbs-%1$s" name="cost_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" /></td>}, $tag_id, @openprint::param{"cost_lbs-$tag_id"} );
+				$html .= sprintf( q{<td><input type="text" id="cost_lbs-%1$s" name="cost_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" /></td>}, $tag_id, $openprint::param{"cost_lbs-$tag_id"} );
 			} # end if
 			# Inventory
-			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$d" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td></tr>}, $tag_id, @openprint::param{"qty_lbs-$tag_id","qty_kgs-$tag_id"} );
+			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td></tr>}, $tag_id, @openprint::param{"qty_lbs-$tag_id","qty_kgs-$tag_id"} );
 		
 		} # end foreach tag_id
 		return $html;

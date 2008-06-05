@@ -16,6 +16,9 @@ require openprint::StockColour;
 require openprint::RFIDTag;
 require openprint::RFIDTagType;
 require openprint::RFIDScanner;
+require openprint::Manifest;
+require openprint::ManifestContent;
+require openprint::PaperAllocation;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -938,8 +941,25 @@ sub rfidscanner_details {
 sub update_inventory {
 $log->warn("Update inventory");
 	if ( $param{'btnFunction'} eq 'Submit' ) {
+		my @ids = misc::trim( split(';', $param{'rfidtag_ids'} ) );
+		@{$variable{'IDS'}} = @ids;
+
+if ( 0 ) {
+		if ( $param{'manifest_id'} ) {
+			my @Manifests = openprint::Manifest::find('id'=>$param{'manifest_id'});
+			if ( @Manifests ) {
+				$variable{'error'} .= "Manifest $param{'manifest_id'} has already been entered.";
+				$param{'manifest_id'} = '';
+			} # end if
+		} # end if
+} # end if
+
+		my $Manifest = new openprint::Manifest();
+		$Manifest->id( $param{'manifest_id'} );
+		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
+		$variable{'error'} .= $Manifest->save();
 		delete $param{'rfidtag_id'};
-		foreach my $tag_id ( split(';', $param{'rfidtag_ids'} ) ) {
+		foreach my $tag_id ( @ids ) {
 			next if ! $tag_id;
 			my $Tag = new openprint::RFIDTag( $tag_id );
 			if ( ! $Tag->id() ) {
@@ -947,17 +967,63 @@ $log->warn("Update inventory");
 				last if $variable{'error'};
 			} # end if
 			my $Skid = $Tag->Skid();
-			$openprint::param{"qty_lbs-$tag_id"} = sprintf('%d', $openprint::param{"qty_lbs-$tag_id"});
-			save_skid( $Skid, $openprint::param{"qty_lbs-$tag_id"} );
+			$param{"qty_lbs-$tag_id"} = sprintf('%d', $param{"qty_lbs-$tag_id"});
+			save_skid( $Skid, $param{"qty_lbs-$tag_id"} );
+			last if $variable{'error'};
+
+			my $MC = new openprint::ManifestContent();
+			$variable{'error'} .= $MC->save( {
+					'manifest_id'	=>	$Manifest->id(),
+					'skid_id'		=>	$Skid->id(),
+					'quantity'		=>	$param{"qty_lbs-$tag_id"},
+					'cost'			=>	$param{"cost-$tag_id"},
+					} );
 			last if $variable{'error'};
 		} # end foreach tag_id
 		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= 'Information successfully stored.';
 			foreach my $k ( keys %param ) {
 				delete $param{$k};
 			} # end foreach
+			delete $variable{'IDS'};	
 		} # end if
 	} # end if
 } # end sub update_inventory
+
+sub _update_inventory {
+	my @ids = split(';', $param{'rfidtag_ids'} );
+    if ( $param{'rfidtag_id'} ) {
+		($param{'rfidtag_id'}) = misc::trim($param{'rfidtag_id'});
+        if ( sets::isin( $param{'rfidtag_id'}, \@ids ) ) {
+            $variable{'error'} .= 'RFID Tag ' . $param{'rfidtag_id'} . ' has already been scanned.';
+        } else {
+            push @ids, $param{'rfidtag_id'}
+        } # end if
+    } # end if
+    @ids = reverse sort sets::union( @ids );
+    @{$variable{'IDS'}} = @ids;
+	if ( $param{'manifest_id'} ) {
+		my @Manifests = openprint::Manifest::find('id'=>$param{'manifest_id'});
+		if ( @Manifests ) {
+			$variable{'error'} .= "Manifest $param{'manifest_id'} has already been entered.";
+			$param{'manifest_id'} = '';
+		} # end if
+	} # end if
+} # end sub _update_inventory
+
+sub manifests {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		foreach my $manifest_id ( ref $param{'manifests'} eq 'ARRAY' ? @{$param{'manifests'}} : split(',',$param{'manifests'}) ) {
+			my $Manifest = new openprint::Manifest( $manifest_id );
+			$variable{'error'} .= $Manifest->delete();
+
+		} # end foreach manifest_id
+	} # end if
+} # end sub manifests
+sub inventory_log {
+} # end sub inventory_log
+sub _inventory_log {
+} # end sub inventory_log
 
 1;
 

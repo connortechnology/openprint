@@ -402,7 +402,7 @@ hr {
         color: red;
 }
 
-.colRow {
+.colRow,.roweven {
 	background-color: #CAB880;
 }/* alternating row color in generated tables */
 .colRowRed {

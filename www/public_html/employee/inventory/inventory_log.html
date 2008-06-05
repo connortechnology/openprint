@@ -1,19 +1,19 @@
 <? eval (
 	if ( ! exists $openprint::session{'/employee/inventory/inventory_log.html?ins'} ) {
-		$openprint::param{'ins'} = $openprint::session{'/employee/inventory/inventory_log.html?ins'} = 1;
+		$openprint::session{'/employee/inventory/inventory_log.html?ins'} = 1;
 	} # end if
 	if ( ! exists $openprint::session{'/employee/inventory/inventory_log.html?outs'} ) {
-		$openprint::param{'outs'} = $openprint::session{'/employee/inventory/inventory_log.html?outs'} = 1;
+		$openprint::session{'/employee/inventory/inventory_log.html?outs'} = 1;
 	} # end if
-	if ( ! $openprint::param{'StartYear'} ) {
-		@openprint::param{'StartYear','StartMonth','StartDay'} = Date::Calc::Today();
+	if ( ! $openprint::session{'/employee/inventory/inventory_log.html?StartYear'} ) {
+		@openprint::session{'/employee/inventory/inventory_log.html?StartYear','/employee/inventory/inventory_log.html?StartMonth','/employee/inventory/inventory_log.html?StartDay'} = Date::Calc::Today();
 	} # end if
-	@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @openprint::param{'StartYear','StartMonth','StartDay'} );
+	@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @openprint::session{'/employee/inventory/inventory_log.html?StartYear','/employee/inventory/inventory_log.html?StartMonth','/employee/inventory/inventory_log.html?StartDay'} );
 	
-	if ( ! $openprint::param{'EndYear'} ) {
-		@openprint::param{'EndYear','EndMonth','EndDay'} = Date::Calc::Today();
+	if ( ! $openprint::session{'/employee/inventory/inventory_log.html?EndYear'} ) {
+		@openprint::session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} = Date::Calc::Today();
 	} # end if
-	@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, @openprint::param{'EndYear','EndMonth','EndDay'} );
+	@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, @openprint::session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} );
 ) ?>
 <form name="LogForm" id="LogForm">
 	<fieldset><legend>Filters</legend>
@@ -42,6 +42,8 @@
             <label class="radio" for="TypeSheet">Sheet</label>
             <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Roll', split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeRoll">Roll</label>
+            <input type="checkbox" id="TypeUnknown" name="Type" value="Unknown" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Unknown', split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
+            <label class="radio" for="TypeUnknown">Unknown</label>
         </p>
 	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );", '', 'Load' ); ) ?>
