@@ -785,6 +785,11 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 		$openprint::log->debug( "Presses: " . join(',', map { $_->strid() } @possible_presses ) );
 	} # end if
 
+	my @available_printingtypes;
+	foreach my $Press ( @possible_presses ) {
+		push @available_printingtypes, $Press->specification('Printing Type');
+	} # end foreach
+
 # Caches
 	my %mixed_colours;
 	my %washed_colours;
@@ -851,7 +856,7 @@ $openprint::log->debug("Grabbing UV Specs");
 
 		} # end if
 
-		if ( $$printing_specs{'PrintingType'} ) {
+		if ( $$printing_specs{'PrintingType'} and sets::isin( $$printing_specs{'PrintingType'}, \@available_printingtypes ) ) {
 			$$specs{'PrintingTypes'} = [ $$printing_specs{'PrintingType'} ];
 		} else {
 
@@ -859,18 +864,20 @@ $openprint::log->debug("Grabbing UV Specs");
 # FIgure out printing types
 				foreach my $index ( $Project->signatures('Interior Spreads') ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-						$$specs{'PrintingTypes'} = ['Digital'];
-					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
-						$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
-					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
-						$$specs{'PrintingTypes'} = ['Offset','Waterless'];
-					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
-						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
-						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-					} else {
-						$openprint::log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
+					if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
+						if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
+							$$specs{'PrintingTypes'} = ['Digital'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
+							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
+							$$specs{'PrintingTypes'} = ['Offset','Waterless'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+						} else {
+							$openprint::log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
+						} # end if
 					} # end if
 					last if $$specs{'PrintingTypes'};
 				} # end foreach
@@ -900,16 +907,18 @@ $openprint::log->debug("Grabbing UV Specs");
 					foreach my $index ( $Project->signatures('Interior Spreads') ) {
 						next if $index == $service_index;
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-						if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-							$$specs{'PrintingTypes'} = ['Digital'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
-							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
-							$$specs{'PrintingTypes'} = ['Offset'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
-							$$specs{'PrintingTypes'} = ['Web'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
-							$$specs{'PrintingTypes'} = ['Sheetfed'];
+						if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
+							if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
+								$$specs{'PrintingTypes'} = ['Digital'];
+							} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
+								$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
+							} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
+								$$specs{'PrintingTypes'} = ['Offset'];
+							} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+								$$specs{'PrintingTypes'} = ['Web'];
+							} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+								$$specs{'PrintingTypes'} = ['Sheetfed'];
+							} # end if
 						} # end if
 						last if $$specs{'PrintingTypes'};
 					} # end foreach
@@ -1173,6 +1182,7 @@ $openprint::log->debug("No spread layout for you!");
 #}
 				foreach my $imp ( @imps ) {
 					my $add = -1;
+					my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
 					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
 						$add = 1;
 					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
@@ -1180,34 +1190,42 @@ $openprint::log->debug("No spread layout for you!");
 					} else {
 
 #$imp->display();
-						if ( $imps{$imp->imposition().$imp->runstyle()} ) {
+						if ( $imps{$str} ) {
 #$openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}} );
-							for ( my $j = 0; $j < @{$imps{$imp->imposition().$imp->runstyle()}}; $j += 1 ) {
-
-								my $I = $imps{$imp->imposition().$imp->runstyle()}[$j];
+							for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
+								my $I = $imps{$str}[$j];
 								my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 								my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 								if ( $I->Paper()->area() > $imp->Paper()->area() ) {
-									if ( (1*$BiggerPrice{'100lb'}) == (1*$SmallerPrice{'100lb'}) ) {
+									if ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) ) {
 										if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
 										} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 										} else {
-
-											splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
+											splice @{$imps{$str}}, $j, 1;
 											$j -= 1;
 										} # end if
 									} # end if
 									$add = 1;
-								} else { # same or smaller area
+								} elsif ( $I->Paper()->area() == $imp->Paper()->area() ) {
+									$add = 0;
+									if ( ( $I->Paper()->start_area() != $I->Paper()->area() ) and ( $imp->Paper()->start_area() == $imp->Paper()->area ) ) {
+										splice @{$imps{$str}}, $j, 1;
+										$j -= 1;
+										$add = 1;
+									} elsif ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
+# Prefer non-dutch
+										splice @{$imps{$str}}, $j, 1;
+										$j -= 1;
+										$add = 1;
+									} elsif ( (1*$BiggerPrice{'100lb Price'}) > (1*$SmallerPrice{'100lb Price'}) ) {
+										splice @{$imps{$str}}, $j, 1;
+										$j -= 1;
+										$add = 1;
+									} # end if
+                                    
+								} else { # smaller area
 									$add = 0;
 									if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
-										if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
-										} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
-										} else {
-# Prefer non-dutch
-											splice @{$imps{$imp->imposition().$imp->runstyle()}}, $j, 1;
-											$j -= 1;
-										} # end if
 										$add = 1;
 									} elsif ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
 										$add = 1;
@@ -1218,15 +1236,18 @@ $openprint::log->debug("No spread layout for you!");
 							$add = 1;
 						} # end if cached
 					} # end if
-					push @{$imps{$imp->imposition().$imp->runstyle()}}, $imp if $add > 0;
+					push @{$imps{$str}}, $imp if $add > 0;
 				} # end foreach imp
 
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
+
+if ( 0 ) {
 $openprint::log->warn('Impositions');
 foreach my $I ( @impositions ) {
 $I->display();
 } # end foreach
+} # end if
 
 			if ( ! @impositions ) {
 #$openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;

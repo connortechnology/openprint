@@ -1032,7 +1032,14 @@ sub doublesided {
 
 sub area {
 	my $self = shift;
+	return $$self{width} if ! $$self{height};
 	return $$self{width}*$$self{height};
+}
+
+sub start_area {
+	my $self = shift;
+	return $$self{start_width} if ! $$self{start_height};
+	return $$self{start_width}*$$self{start_height};
 }
 
 1;
