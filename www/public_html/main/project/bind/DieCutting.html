@@ -45,7 +45,7 @@
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="text" name="DiePrice<?QTYIndex?>" value="<? echo ( $$variable{'DiePrice'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
+		<input type="text" name="DiePrice<?QTYIndex?>" value="<? echo ( $$variable{'DiePrice'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc(this.form.name);" />
 <? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 		<? echo ( $$variable{'DiePrice'.$$variable{'QTYIndex'}} ) ?>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
@@ -66,7 +66,7 @@
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="text" name="StrippingPrice<?QTYIndex?>" value="<? echo ( $$variable{'StrippingPrice'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
+		<input type="text" name="StrippingPrice<?QTYIndex?>" value="<? echo ( $$variable{'StrippingPrice'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc(this.form.name);" />
 <? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 		<? echo ( $$variable{'StrippingPrice'.$$variable{'QTYIndex'}} ) ?>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>

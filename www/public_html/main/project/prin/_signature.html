@@ -1,4 +1,4 @@
-<fieldset id="SignatureGroup<?Group?>" <? echo ( ( $$variable{'Group'} == 1 and $$variable{'rdbCover'} ne 'Different' ) ? 'style="display:none;"' : '' ) ?> >
+<fieldset id="SignatureGroup<?Group?>" <? echo ( ( $$variable{'Group'} == 1 and $$variable{'rdbCover'} ne 'Different' ) ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
 <? if ( $$variable{'Group'} == 1 ) ?>
 	<!--#include virtual="/includes/main/proj/templates/signatures.html" -->
 <? endif ( $$variable{'Group'} == 1 ) ?>
@@ -39,5 +39,25 @@
 		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
 		return variable_substitution( \$html, $variable );
 	) ?>
+<? eval (
+    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+    $$variable{'Columns'} = 'Three';
+    } else {
+    $$variable{'Columns'} = 'Two';
+    } # end if
+) ?>
+<hr class="spacer"/>
+	<p>
+		<label>Quantity:</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<span class="<?Columns?>Columns">
+			<input type="text" id="txtQuantity<?QTYIndex?><?Group?>" name="txtQuantity<?QTYIndex?><?Group?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}.$$variable{'Group'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+		</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	</p>
 </fieldset>
 
