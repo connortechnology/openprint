@@ -30,6 +30,16 @@ sub find {
 		push @values, $params{'category_id'};
 	} # end if
 
+	if ( exists $params{'deleted'} ) {
+		if ( $params{'deleted'} ) {
+			$sql .= ' AND (deleted=? OR deleted IS NULL)', $params{'deleted'};
+		} else {
+			$sql .= ' AND deleted=?', $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=false OR deleted IS NULL)';
+	} # end if
+
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
@@ -43,6 +53,11 @@ sub find {
 
 sub delete {
 	my $self = shift;
+	sql::update( undef, undef, 'Products', ['id=?', $$self{id}], 'deleted', 1 );
+} # end sub delete
+
+sub destroy {
+	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
 	foreach my $Price ( openprint::ProductPrice::find( 'product' => $self ) ) {
 		$Price->delete();
@@ -54,15 +69,15 @@ sub delete {
 	
 	# Add record to audit log - action "Delete Product".
 	openprint::logs::insertLogRecord('17', "Product ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
-} # end sub delete
+} # end sub destroy
 
 # Returns a copy of the paper object.
 # Will also save the data to db
 sub copy {
 	my $self = shift;
 	my $Product = new openprint::Product( );
-	@$Product{'name','description','weight','taxexempt1','taxexempt2','sort'} = 
-		@$self{'name','description','weight','taxexempt1','taxexempt2','sort'};
+	@$Product{'name','description','weight','taxexempt1','taxexempt2','sort','category_id'} = 
+		@$self{'name','description','weight','taxexempt1','taxexempt2','sort','category_id'};
 	$$Product{'name'} = 'Copy of '.$$Product{'name'};
 
 	#@{$$Product{'Prices'}} = $self->prices();
