@@ -1477,30 +1477,27 @@ $openprint::log->warn('***************Impositions');
 
 			$imposition_count += scalar @impositions;
 			$impositions{$Press->id()} = \@impositions;
-#$openprint::log->warn('Impositions for press: ' . $Press->strid() . ' : ' . @impositions );
-		} # end foreach Press
+			} # end foreach Press
 # FIXME this used to generate the old impo, and add it, but what we really need to do is search through the impos we have, and select the old one, moving it to the front.  This is made more complex for book because they have not been converted here.
-if ( 1 ) {
 		@{$impositions{''}} = ();
 		if ( $$specs{'ddmPress'.$qty_index} and ($$specs{'chkOverridePress'.$qty_index} ne 'Y') ) {
 			if ( ( my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'ddmPress'.$qty_index} ) ) ) {
 				my $E = $Equipment[0];
-			
+
 				for ( my $i = 0; $i < @{$impositions{$E->id()}}; $i += 1 ) {
 					my $I = $impositions{$E->id()}[$i];
-					if ( $I->runstyle() eq $$specs{'ddmRunStyle'.$qty_index} ) {
-						if ( $I->Paper()->width() == $$specs{'StockWidth'.$qty_index} and $I->Paper()->height() == $$specs{'StockHeight'.$qty_index} ) {
-							push @{$impositions{''}}, splice @{$impositions{$E->id()}}, $i, 1;
-							$i -= 1;
-						} # end if
+					if ( 
+						( $I->imposition() != $$specs{'txtImposition'.$qty_index} ) and
+						( $I->runstyle() eq $$specs{'ddmRunStyle'.$qty_index} ) and
+						( $I->Paper()->width() == $$specs{'StockWidth'.$qty_index} ) and 
+						( $I->Paper()->height() == $$specs{'StockHeight'.$qty_index} ) 
+					   ) {
+						push @{$impositions{''}}, splice @{$impositions{$E->id()}}, $i, 1;
+						$i -= 1;
 					} # end if
-				} # end foreach
-			} else {
-$openprint::log->debug("Press not found: " . $$specs{'ddmPress'.$qty_index} );
-			} # end if
-		} # end if
-$openprint::log->debug("# of good impos: " . @{$impositions{''}});
-} # end if
+				} # end foreach Imposition
+			} # end if we have equipment
+		} # end if can preload
 
 		if ( ! $imposition_count ) {
 			$$specs{'alert'} .= 'There were no possible impositions for your specifications.<br/>';

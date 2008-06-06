@@ -491,7 +491,7 @@ $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 		if ( $paper_height ) {
 			$adjusted_paper_height = $paper_height;
 		} elsif ( $$specs{'Cut Off'} ) {
-$openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}");
+#$openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}");
 			$adjusted_paper_height = $$specs{'Cut Off'};
 			$setup2->paper()->height( $$specs{'Cut Off'} );
 			$setup2->stock_height( $$specs{'Cut Off'} );
