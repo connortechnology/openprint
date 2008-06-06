@@ -344,8 +344,8 @@ sub signature_calc {
 			} # end if
 			$Results{'Breakdown'} .= '<br/>';
 			my $setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
-			$Results{'Breakdown'} .= sprintf( 'Setup: %d scores $%.2f<br/>', $score_qty, $setupPrice);
-			$Results{'Breakdown'} .= "\t\tImposition: $$imposition{'imposition'}: ";
+			$Results{'Breakdown'} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice);
+			$Results{'Breakdown'} .= "Imposition: $$imposition{'imposition'}: ";
 
 			my $servicePrice;
 			my %servicePrice = openprint::service::get_price_object( 'Scoring', $score_qty, $Equipment );
