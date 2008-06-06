@@ -821,6 +821,17 @@ if ( $version < $new_version ) {
     $version = $new_version;
 } # end if
 
+my $new_version = 1927;
+if ( $version < $new_version ) {
+    print "Updating to version $new_version\n";
+    my $ac = sql::start_transaction( $dbh );
+	$dbh->do('ALTER TABLE Products ADD deleted boolean');
+	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean');
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    sql::end_transaction( $dbh, $ac );
+    $version = $new_version;
+} # end if
+
 $dbh->disconnect();
 1;
 __END__
