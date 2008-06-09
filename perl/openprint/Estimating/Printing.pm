@@ -3406,6 +3406,8 @@ sub summary {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
 						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
 			} # end if
+		} elsif ( $$specs{'txtSignatureType'} ) {
+			$dimensions .= sprintf( '%s&quot;x%s&quot; ', $$specs{'txtWidth'}/($$specs{'txtSpreadSize'}/2),$$specs{'txtHeight'});
 		} else {
 			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtWidth','txtHeight'});
 		} # end if
