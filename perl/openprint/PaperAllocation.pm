@@ -49,12 +49,16 @@ sub find {
 	} # end if
 
 	if ( exists $params{'skid_id'} ) {
-			$sql .= ' AND skid_id=?';
-			push @values, $params{'skid_id'};
+		$sql .= ' AND skid_id=?';
+		push @values, $params{'skid_id'};
 	} # end if
 	if ( exists $params{'paper_id'} ) {
-			$sql .= ' AND paper_id=?';
-			push @values, $params{'paper_id'};
+		$sql .= ' AND paper_id=?';
+		push @values, $params{'paper_id'};
+	} # end if
+	if ( exists $params{'project_id'} ) {
+		$sql .= ' AND project_id=?';
+		push @values, $params{'project_id'};
 	} # end if
 	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
 		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';

@@ -23,7 +23,7 @@ use vars qw($log $dbh);
 *log = \$openprint::log;
 
 my $r;
-$log = logger->new('warn');
+$log = logger->new('debug');
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],
@@ -191,7 +191,7 @@ foreach my $Tag ( @Tags ) {
 	} # end if
 } # end foreach Tag
 }
-if ( 1 ) {
+if ( 0 ) {
 foreach my $Skid ( openprint::Skid::find() ) {
 
 	my @Paper_Inventory = openprint::PaperInventory::find(
@@ -231,6 +231,20 @@ foreach my $Skid ( openprint::Skid::find() ) {
 } # end foreach Skid
 	
 }
+
+if ( 0 ) {
+require openprint::PaperInventory;
+foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Removed%' ) ) {
+	$PI->comment() =~ /Removed (.*)/;
+	$PI->comment( "Checked out $1" );
+	$PI->save();
+} # end foreach
+foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Skid checked%' ) ) {
+	$PI->comment() =~ /Skid checked (.*)/;
+	$PI->comment( "Checked $1" );
+	$PI->save();
+} # end foreach
+} # end if 1
 
 $dbh->disconnect();
 1;

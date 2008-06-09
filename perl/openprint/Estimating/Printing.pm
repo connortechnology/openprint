@@ -223,7 +223,7 @@ sub get_unspecified_spreads {
 # SpreadSize is always 4
 		$unspecified_spreads = 1 - $specified_spreads;
 	} # end if
-$openprint::log->error("UNspecified: $qty_index $unspecified_spreads");
+#$openprint::log->erro("UNspecified: $qty_index $unspecified_spreads");
 	return $unspecified_spreads;
 } # end sub get_unspecified_spreads
 
@@ -1976,7 +1976,7 @@ sub calc_price {
 		} else {
 			$price{'StitchingImposition'} = $$results{'Imposition'};
 			if ( $$results{'Imposition'} < $$Imposition{StitchingImposition} ) {
-				$openprint::log->error( "New StitchingImposition is less than old!" );
+				#$openprint::log->error( "New StitchingImposition is less than old!" );
 			} # end if
 			$$Imposition{StitchingImposition} = $$results{'Imposition'};
 			$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );

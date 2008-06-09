@@ -21,6 +21,7 @@
 	} # end if
 ) ?>
 <script type="text/javascript">
+<!--
 	function loadDivs( results ) {
 		var rows = results.split('|');
 		for ( var r = 0; r < rows.length; r += 1 ) {
@@ -204,6 +205,26 @@
 	} // end function saveComment
 	function errFunc( t ) {
 	}
+	var popupWin;
+	function popup_window( url, parameters ) {
+		if ( ! popupWin ) {
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
+			// Set up a windows observer, check ou debug window to get messages
+			myObserver = {
+	onDestroy: function(eventName, win) {
+				   if (win == popupWin) {
+					   popupWin = null;
+					   Windows.removeObserver(this);
+				   }
+			   }
+			}
+			Windows.addObserver(myObserver);
+		} // end if
+		popupWin.setHTMLContent('Loading... please wait');
+		popupWin.showCenter();
+		popupWin.setAjaxContent(url+'?'+parameters, null , true);
+	} // end function popup_window
+-->
 </script>
 <link rel="stylesheet" type="text/css" href="/css/press_schedule.css">
 <div id="CommentPopup" style="display:none;">

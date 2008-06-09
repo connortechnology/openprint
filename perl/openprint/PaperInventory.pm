@@ -53,6 +53,10 @@ sub find {
 		$sql .= ' AND skid_id=?';
 		push @values, $params{'skid_id'};
 	} # end if
+	if ( exists $params{'comment_like'} ) {
+		$sql .= ' AND comment LIKE ?';
+		push @values, $params{'comment_like'};
+	} # end if
 	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
 		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
 		push @values, @params{'updated_on_start','updated_on_end'}
