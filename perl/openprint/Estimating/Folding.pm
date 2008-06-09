@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -172,6 +172,8 @@ sub signature_needs {
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
 		$openprint::log->warn("FOLDING NEEDED templatetype!") if $debug;
 		return 1;
+	} else {
+		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if $debug;
 	} # end if
 
 	if ( $$specs{'txtSignatureType'} ) {

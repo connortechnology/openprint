@@ -98,10 +98,9 @@ sub neccessary {
         return 0;
     } # end if
 
-	my $specs = openprint::service::get_specs_ref( $Project, $$services{'Scoring'}[0] );
-
 	# Only need scoring if it's being folded.
 	if ( $$services{'Folding'} ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $$services{'Scoring'}[0] ) if $$services{'Scoring'};
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
