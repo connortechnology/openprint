@@ -145,6 +145,10 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 	return $status;
 } # end sub calc
 
+sub summary {
+	return;
+}
+
 1;
 
 __END__

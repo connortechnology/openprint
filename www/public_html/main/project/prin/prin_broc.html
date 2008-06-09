@@ -166,6 +166,9 @@
 		<!-- End of Results -->
 		<hr/>
 		<!--#include virtual="/includes/main/proj/press_approval.html"-->
+<? else ( ! $$variable{'NoPrinting'} ) ?>
+		<!--#include virtual="/includes/main/proj/printing_results_no_printing.html"-->
+		<hr/>
 <? endif ( ! $$variable{'NoPrinting'} ) ?>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 	</form>

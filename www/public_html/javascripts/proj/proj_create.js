@@ -147,6 +147,8 @@ function service_onclick( element ) {
 			element.form.chkServicesPerforating.checked = false;
 		if ( element.form.chkServicesDrilling ) 
 			element.form.chkServicesDrilling.checked = false;
+		if ( element.form.chkServicesPlainCartons ) 
+			element.form.chkServicesPlainCartons.checked = false;
 	} else if ( element.value == 'NoPrinting' ) {
 		var e = $('Design');
 		if ( element.checked ) {

@@ -46,11 +46,11 @@ sub neccessary {
 	} # end if
 
 	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Packaging') ) {
-$openprint::log->debug("Counting neccessary: ServiceType: " . $ServiceType->name());
+#$openprint::log->debug("Counting neccessary: ServiceType: " . $ServiceType->name());
 		next if ! $$services{$ServiceType->name()};
 		foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
 			my $specs = openprint::service::get_specs_ref( $Project, $s_id );
-$openprint::log->debug("Counting neccessary: Accurate Count: " . $$specs{'AccurateCount'} );
+#$openprint::log->debug("Counting neccessary: Accurate Count: " . $$specs{'AccurateCount'} );
 			return 1 if $$specs{'AccurateCount'} eq 'Y';
 		} # end foreach s_id
 	} # end foreach ServiceType

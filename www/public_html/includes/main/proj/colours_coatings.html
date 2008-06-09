@@ -26,6 +26,7 @@
 				my $html;
 				$$variable{'Side'} = 'SideOne';
 				my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_additional_colour_coating.html' );
+				$$variable{index} = 0;
 				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
 					next if ! $$variable{"ColourCoating$$variable{Side}$index$$variable{Signature}"};
 					$$variable{index} = $index;

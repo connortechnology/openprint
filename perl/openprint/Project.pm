@@ -887,23 +887,24 @@ sub summary {
 	} # end if
 	foreach my $category ( 'Options', 'Prepress','Bindery','Packaging','Shipping' ) {
 		foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {
-			if ( $$services{$ServiceType->name()} ) {
-				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
-					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
-					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
-					if ( $project_summary ) {
-						$summary .= $project_summary;
+			next if ! $$services{$ServiceType->name()};
+			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+				my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
+				my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
+				if ( $project_summary ) {
+					$summary .= $project_summary;
+				} else {
+					$summary .= ' ' . $ServiceType->description();
+					if ( $_ = eval( 'openprint::Estimating::'.$ServiceType->type().'::summary( $self, $service_id, $service_specs );' ) ) {
+						$summary .= ' :'.$_ . '<br/> ';
 					} else {
-						$summary .= ' ' . $ServiceType->description() . ' ';
-						if ( $_ = eval( 'openprint::Estimating::'.$ServiceType->type().'::summary( $self, $service_id, $service_specs );' ) ) {
-							$summary .= ':'.$_ . '<br/>';
-						} # end if
-						
+						$summary .= ',';
 					} # end if
-				} # end foreach service
-			} # end if
+				} # end if
+			} # end foreach service
 		} # end foreach ServiceType
 	} # end foreach category
+	$summary =~ s/(.*),$/$1/m;
 	if ( $$services{'Turnaround'} ) {
 		my $specs = openprint::service::get_specs_ref( $self, $$services{'Turnaround'}[0] );
 		$summary .= sprintf(' in %ddays', $$specs{'TurnaroundDays'} );
