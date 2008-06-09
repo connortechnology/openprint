@@ -1,0 +1,82 @@
+<? eval (
+	require openprint::Manifest;
+
+	if ( %openprint::param ) {
+		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay' ) {
+			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
+				$openprint::session{'/employee/inventory/manifests.html?'.$key} = join(';', @{$openprint::param{$key}} );
+			} else {
+				$openprint::session{'/employee/inventory/manifests.html?'.$key} = $openprint::param{$key};
+			}
+		} # end foreach
+	} # end if
+
+	@{$$variable{'Manifests'}} = openprint::Manifest::find( 
+		'id_like'	=> $openprint::param{'manifest_like'},
+		'received_on_start'	=>	Date::Calc::check_date( @openprint::session{
+			'/employee/inventory/manifests.html?StartYear',
+			'/employee/inventory/manifests.html?StartMonth',
+			'/employee/inventory/manifests.html?StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
+			'/employee/inventory/manifests.html?StartYear',
+			'/employee/inventory/manifests.html?StartMonth',
+			'/employee/inventory/manifests.html?StartDay'} ) : undef,
+		'received_on_end'	=>	Date::Calc::check_date( @openprint::session{
+			'/employee/inventory/manifests.html?EndYear',
+			'/employee/inventory/manifests.html?EndMonth',
+			'/employee/inventory/manifests.html?EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
+			'/employee/inventory/manifests.html?EndYear',
+			'/employee/inventory/manifests.html?EndMonth',
+			'/employee/inventory/manifests.html?EndDay'} ) : undef,
+		'order'		=>	'received_on',
+		);
+) ?>
+<? if ( @{$$variable{'Manifests'}} ) ?>
+<form id="ManifestResults" name="ManifestResults" action="manifests.html" method="post">
+	<table class="List sortable">
+		<tr>
+			<th width="10"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
+			<th align="left" width="200">Manifest ID</th>
+			<th align="left" width="115">Date Received</th>
+			<th align="left">Contents</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Manifest ( @{$$variable{'Manifests'}} ) {
+
+				$html .= '<tr>';
+				$html .= qq`<td align="center"><input type="checkbox" name="manifests" value="$$Manifest{'id'}"/></td>`;
+				$html .= sprintf( '<td><a href="manifest_details.html?manifest_id=%1$s">%1$s</a></td>', $$Manifest{'id'} );
+				$html .= sprintf( '<td><a href="manifest_details.html?manifest_id=%s">%s</a></td>', $$Manifest{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($Manifest->received_on()) ) );
+
+				$html .= '<td>';
+				my %skids;
+				my %weight;
+				foreach my $MC ( $Manifest->Contents() ) {
+					my $Skid = $MC->Skid();
+					foreach my $paper_id ( keys %{$$Skid{Paper}} ) {
+						$skids{$paper_id} += 1;
+						$weight{$paper_id} += $MC->quantity();
+					} # end foreach paper on skid
+				} # end foreach MC
+				foreach my $paper_id ( keys %weight ) {
+					my $Paper = new openprint::Paper( $paper_id );
+					$html .= sprintf('%s : %dlbs : %d skids<br/>', $Paper->to_string(), $weight{$paper_id}, $skids{$paper_id}  );
+				} # end foreach
+				$html .= '</td>';	
+				$html .= '</tr>';
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Manifest
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+	<span style="float: right;">
+		<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "ManifestResults.btnFunction.value='Delete';ManifestResults.submit();", '', 'Delete Checked' ),
+			); ) ?>
+	</span>
+</form>
+<? else ( @{$$variable{'Manifests'}} ) ?>
+There were no manifests matching your search criteria.
+<? endif ( @{$$variable{'Manifests'}} ) ?>

@@ -231,12 +231,16 @@ sub get_li {
 		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Complete'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='CompleteJob';f1.submit();}", '', 'C' );
 		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Remove'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$row{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
 		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Split'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){split_job($$row{'projectindex'}, $$row{'serviceindex'}, '$ul_id' );}", '', 'S' ) if $specs{'SignatureQuantity'} > 1;
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Paper'.$$row{'serviceindex'}, '', "popup_window('_paper_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
 		$html .= '</span>';
 		$html .= sprintf( q{<span id="%1$dRuntime" class="Runtime" onclick="openPopup( 'Runtime', %1$d );">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
 	} else {
 		$html .= sprintf( '<div class="Comment">%s</div>', ssi::htmlize($specs{'txtEmployeeComments'}) );
 		$html .= sprintf( '<span class="Forms">%d %s</span>', $specs{'SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
 		$html .= sprintf( '<span class="Impressions">%d imps</span>', $specs{'ImpressionQuantity'} );
+		$html .= '<span class="Buttons">';
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Paper'.$$row{'serviceindex'}, '', "popup_window('_paper_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
+		$html .= '</span>';
 	} # end if
 	$html .= '<br/></li>';
 	return $html;

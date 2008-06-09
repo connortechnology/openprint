@@ -817,6 +817,8 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 				$$specs{'StockGrade'} = 1;
 			} elsif ( $$specs{'txtSpecificStockFinish'} =~ /matte/i ) {
 				$$specs{'StockGrade'} = 2;
+			} elsif ( $$specs{'txtSpecificStockFinish'} =~ /offset/i ) {
+				$$specs{'StockGrade'} = 4;
 			} else {
 				$$specs{'StockGrade'} = 3;
 			} # end if
@@ -853,7 +855,7 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 			} # end if
 		} # end if
 		my $Paper = new openprint::Paper();
-		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',($$specs{'txtSpecificStockBrand'} =~ /offset/i ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
+		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',(sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
 		@$Paper{'width','height','mweight','Price','type','basis_width','basis_height','basis_mweight','minimum_order'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','basis_width','basis_height','basis_mweight','minimum_order'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};
@@ -1013,6 +1015,10 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 		$openprint::log->debug( "Presses: " . join(',', map { $_->strid() } @possible_presses ) );
 	} # end if
 
+	my @available_printingtypes;
+	foreach my $Press ( @possible_presses ) {
+		push @available_printingtypes, $Press->specification('Printing Type');
+	} # end foreach
 
 # Do this once now, so we don't do it many times in calc_print_price
 	my @filtered_colours = filter_colours( @side_one_colours, @side_two_colours );
@@ -1063,7 +1069,7 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 		} # end if
 
-		if ( $$printing_specs{'PrintingType'} ) {
+		if ( $$printing_specs{'PrintingType'} and sets::isin( $$printing_specs{'PrintingType'}, \@available_printingtypes ) ) {
 			$$specs{'PrintingTypes'} = [ $$printing_specs{'PrintingType'} ];
 		} else {
 
@@ -1071,18 +1077,20 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 # FIgure out printing types
 				foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-						$$specs{'PrintingTypes'} = ['Digital'];
-					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
-						$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
-					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
-						$$specs{'PrintingTypes'} = ['Offset','Waterless'];
-					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
-						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
-						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-					} else {
-						$openprint::log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
+					if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
+						if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
+							$$specs{'PrintingTypes'} = ['Digital'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
+							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
+							$$specs{'PrintingTypes'} = ['Offset','Waterless'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+						} else {
+							$openprint::log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
+						} # end if
 					} # end if
 					last if $$specs{'PrintingTypes'};
 				} # end foreach
@@ -1113,16 +1121,18 @@ $openprint::log->debug("Paper: " . $P->to_string() );
 					foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
 						next if $index == $service_index;
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-						if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-							$$specs{'PrintingTypes'} = ['Digital'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
-							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
-							$$specs{'PrintingTypes'} = ['Offset'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
-							$$specs{'PrintingTypes'} = ['Web'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
-							$$specs{'PrintingTypes'} = ['Sheetfed'];
+						if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
+							if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
+								$$specs{'PrintingTypes'} = ['Digital'];
+							} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
+								$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
+							} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
+								$$specs{'PrintingTypes'} = ['Offset'];
+							} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+								$$specs{'PrintingTypes'} = ['Web'];
+							} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+								$$specs{'PrintingTypes'} = ['Sheetfed'];
+							} # end if
 						} # end if
 						last if $$specs{'PrintingTypes'};
 					} # end foreach
@@ -1203,13 +1213,13 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 				} # end if
 			} else {
 				if ( $$specs{'PrintingTypes'} and ! sets::isin( $Press->specification('Printing Type'), $$specs{'PrintingTypes'} ) ) {
-					$openprint::log->error('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} ));
+					$openprint::log->warn('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} ));
 					next;
 				} # end if
 			} # end if
 # If we have a plate type override, then make sure that this press can do it.
 			if ( ( $$specs{'chkOverridePlateType'.$qty_index} eq 'Y' ) and ( $Press->specifcation('Plate Type') ne $$specs{'rdbPlateType'.$qty_index} ) ) {
-				$openprint::log->error("Press Plate Type ");
+				$openprint::log->warn("Press Plate Type ");
 				next;
 			} # end if
 			if ( (! $$services{'Folding'} ) and ($Press->specification('Sheeter') ne 'Y' ) ) {
@@ -1289,8 +1299,6 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 			$$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
 
 			my @impositions;
-# Start with an arrayof papers... an overrided paper may or may not exist in the array.  What we should do is... try to find in in the array, if not, try to find it in an array of cut papers... if not, then special cut it...
-			my @papers;
 			my %imps;
 
 			foreach my $Paper ( @Papers ) {
@@ -1298,6 +1306,7 @@ $openprint::log->error("Press Printing Type (" . $Press->specification('Printing
 				if ( $Paper->type() eq 'Roll' ) {
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
+					next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
 
 					my $P = $Paper->clone();
 					my @i;
@@ -1335,6 +1344,7 @@ if ( 0 ) {
 						push @imps, @i;
 					} else {
 						foreach my $i ( @i ) {
+							next if $Press->specification('Maximum Roll Width') and ($i->Paper()->width() > $Press->specification('Maximum Roll Width'));
 							my $i2 = $i;
 							while ( $i2->columns() ) {
 								push @imps, $i2;
@@ -1343,6 +1353,7 @@ if ( 0 ) {
 								$i2->paper()->width( $i2->used_width() );
 								openprint::imposition::check_setup( $i2, $project );
 								$i2->columns(0) if $Press->specification('Minimum Sheet Width') and ($i2->paper()->width() < $Press->specification('Minimum Sheet Width'));
+								$i2->columns(0) if $Press->specification('Minimum Roll Width') and ($i2->paper()->width() < $Press->specification('Minimum Roll Width'));
 							} # end while
 						} # end foreach
 					} # end if start_width or cut for all sizes
@@ -1470,8 +1481,6 @@ $openprint::log->warn('Impositions');
 foreach my $I ( @impositions ) {
 $I->display();
 } # end foreach
-$openprint::log->warn('***************Impositions');
-} #ne dif
 
 			if ( ! @impositions ) {
 #$openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
@@ -1948,7 +1957,6 @@ $openprint::log->warn('next');
 							my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
-#$openprint::log->debug("got price: " . $additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'PageQuantity'.$qty_index}}{'Comparison Cost'} );
 
 							if ( ( ! $$sig_price{'complete'} ) and $new_specs{'chkOverridePageQuantity'.$qty_index} ) {
 								$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
@@ -2221,7 +2229,7 @@ sub calc_price {
 		} else {
 			$price{'StitchingImposition'} = $$results{'Imposition'};
 			if ( $$results{'Imposition'} < $$Imposition{StitchingImposition} ) {
-				$openprint::log->error( "New StitchingImposition is less than old!" );
+				#$openprint::log->error( "New StitchingImposition is less than old!" );
 			} # end if
 			$$Imposition{StitchingImposition} = $$results{'Imposition'};
 			$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );

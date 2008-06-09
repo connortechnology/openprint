@@ -57,6 +57,9 @@ sub find {
 		$sql .= ' AND type_id=?';
 		push @values, $params{'type_id'};
 	} # end if
+	if ( $params{'id_like'} ) {
+		$sql .= " AND id LIKE '%$params{id_like}%'";
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
 		push @values, @params{'created_on_start','created_on_end'};
@@ -140,6 +143,7 @@ sub save {
 			} else {
 				$$self{'type_id'} = $type_id;
 			} # end if
+			$$self{'type'} = $type;
 		} # end if
 	} # end if
 
@@ -223,9 +227,15 @@ sub skid_id {
 
 sub Skid {
 	my ( $self ) = @_;
+if ( ! $$self{'id'} ) {
+	$openprint::log->error('Cant load ski on a tag without an id');
+	return;
+} # end if
 	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
 	if ( ! @Skids ) {
-		return new openprint::Skid();
+		my $Skid = new openprint::Skid();
+		$Skid->rfidtag_id( $$self{'id'} );
+		return $Skid;
 	} # end if
 	return $Skids[0];
 } # end sub Skid

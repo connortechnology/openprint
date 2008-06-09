@@ -1,4 +1,4 @@
-package openprint::PaperInventory;
+package openprint::PaperAllocation;
 @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
@@ -23,14 +23,12 @@ my $debug = 1;
 %fields = (
 	'id'			=>	'id',
 	'paper_id'		=>	'paper_id',
-	'user_id'		=>	'user_id',
-	'poindex'		=>	'poindex',
-	'instock'		=>	'instock',
-	'updated_on'	=>	'updated_on',
-	'delta'			=>	'delta',
-	'comment'		=>	'comment',
 	'skid_id'		=>	'skid_id',
+	'operator_id'	=>	'operator_id',
+	'created_on'	=>	'created_on',
+	'project_id'	=>	'project_id',
 	'units'			=>	'units',
+	'quantity'		=>	'quantity',
 );
 
 # Returns a paper object specified by the parameters
@@ -38,7 +36,7 @@ sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
-	my $sql = 'SELECT * FROM Paper_Inventory WHERE 1>0';
+	my $sql = 'SELECT * FROM Paper_Allocations WHERE 1>0';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -49,13 +47,18 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+
 	if ( exists $params{'skid_id'} ) {
 		$sql .= ' AND skid_id=?';
 		push @values, $params{'skid_id'};
 	} # end if
-	if ( exists $params{'comment_like'} ) {
-		$sql .= ' AND comment LIKE ?';
-		push @values, $params{'comment_like'};
+	if ( exists $params{'paper_id'} ) {
+		$sql .= ' AND paper_id=?';
+		push @values, $params{'paper_id'};
+	} # end if
+	if ( exists $params{'project_id'} ) {
+		$sql .= ' AND project_id=?';
+		push @values, $params{'project_id'};
 	} # end if
 	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
 		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
@@ -72,19 +75,19 @@ sub find {
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading paper inventory SQL($sql)" . DBI->errstr );
+		$openprint::log->debug("Error loading paper allocations SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
-		$openprint::log->debug('No paper inventory loaded (' . $sql . ") (@values)" );
+		$openprint::log->debug('No paper allocations loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded paper inventory ($sql) (@values) records:" . @$data );
+		$openprint::log->debug("Debug loaded paper allocations ($sql) (@values) records:" . @$data );
 	} # end if
-	return map { new openprint::PaperInventory( $_->{id}, $_ ) } @$data;
+	return map { new openprint::PaperAllocation( $_->{id}, $_ ) } @$data;
 } # end sub find
 
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Paper_Inventory WHERE id=?}, {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Paper_Allocations WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 } # end sub load
@@ -98,16 +101,16 @@ sub save {
 	
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paperinventory_id_seq')} );
+		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_allocation_id_seq')} );
 
-		if ( my $error = sql::insert( undef, undef, 'Paper_Inventory', [map { $_, $$self{$_} } keys %fields ] ) ) {
+		if ( my $error = sql::insert( undef, undef, 'Paper_Allocations', [map { $_, $$self{$_} } keys %fields ] ) ) {
 			$$self{'id'} = undef;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
 
     } else {
-        if ( my $error = sql::update( undef, undef, 'Paper_Inventory', ['id=?',$$self{'id'}], [ map { $_, $$self{$_} } keys %fields ] ) ) {
+        if ( my $error = sql::update( undef, undef, 'Paper_Allocations', ['id=?',$$self{'id'}], [ map { $_, $$self{$_} } keys %fields ] ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
@@ -121,7 +124,7 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
-    sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE id=?}, $$self{'id'} );
+    sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
 
@@ -132,7 +135,7 @@ sub Skid {
 	return new openprint::Skid( $_[0]{'skid_id'} );
 } # end sub Skid
 sub User {
-	return new openprint::User( $_[0]{'user_id'} );
+	return new openprint::User( $_[0]{'operator_id'} );
 } # end sub User
 
 1;

@@ -144,8 +144,8 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'User already exists.', "There is already a user with the specified email address.  Please try another.");
 		} # end if
 
-		$openprint::param{'assistant_ids'} = '' if ! exists $openprint::param{'assistant_ids'};
-		$openprint::param{'csr_ids'} = '' if ! exists $openprint::param{'csr_ids'};
+		#$openprint::param{'assistant_ids'} = '' if ! exists $openprint::param{'assistant_ids'};
+		#$openprint::param{'csr_ids'} = '' if ! exists $openprint::param{'csr_ids'};
 		my $error = $User->save( \%openprint::param );
 
 		if ( $error ) {
@@ -166,6 +166,7 @@ sub user_profiles {
                 next if ! $alias;
                 push @aliases, $alias;
             } # end foreach
+			push @aliases, $User->email() if ! @aliases;
             email::aliases( $log, $User->email(), @aliases );
 
 			$sql::dbh = $dbh;

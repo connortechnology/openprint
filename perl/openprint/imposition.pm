@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -121,9 +121,9 @@ sub check_setup {
 	if ( sets::isin( $setup->runstyle(),[ 'Sheet Work', 'Web' ] ) ) {
 		#$log->debug(" *** Runstyle is:	Sheet Work ***");
 	} elsif ( $setup->runstyle() eq 'Perfecting' ) {
-		#$log->debug("*** Runstyle is: Perfecting Imposition is : $$setup{'Imposition'} ***" );
+		#$openprint::log->debug("*** Runstyle is: Perfecting Imposition is : $$setup{'Imposition'} ***" . $setup->Paper()->perfecting() );
 
-		if ( ! $setup->paper()->perfecting() ) {
+		if ( ! $setup->Paper()->perfecting() ) {
 			# check to make sure that the gutter space is actually where it needs to be.
 			if ( $setup->columns() == 1 ) {
 				$setup->rows(0);
@@ -491,7 +491,7 @@ $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 		if ( $paper_height ) {
 			$adjusted_paper_height = $paper_height;
 		} elsif ( $$specs{'Cut Off'} ) {
-#$openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}");
+$openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if $debug;
 			$adjusted_paper_height = $$specs{'Cut Off'};
 			$setup2->paper()->height( $$specs{'Cut Off'} );
 			$setup2->stock_height( $$specs{'Cut Off'} );

@@ -110,13 +110,13 @@ function check_inputs(form ) {
 		alert('Please enter either the weight or calliper');
 		return false;
 	} // end if
-	if ( get_rdb_value( form.type ) == 'Roll' ) {
+	if ( form.type && get_rdb_value( form.type ) == 'Roll' ) {
 		if ( ! form.width.value ) {
 			alert('Please enter either the width');
 			return false;
 		} // end if
 	} else {
-		if ( ! ( form.width.value && form.height.value ) ) {
+		if ( form.width && form.height && ! ( form.width.value && form.height.value ) ) {
 			alert('Please enter either the width and height');
 			return false;
 		} // end if
@@ -132,7 +132,7 @@ function check_inputs(form ) {
 	} // end if
 	var units;
     if ( form.Units )
-        units = get_ddm_value( form.Units );
+        units = get_value( form.Units );
     else if ($('Units'))
         units = $('Units').innerHTML;
 
@@ -307,7 +307,7 @@ The following errors occurred:<br/>
 <div id="Allocations" style="display: none;"></div>
 </fieldset>
 <fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id:<?skid_id?>} );">Inventory Log - click to hide/show</legend>
-<div id="Log" style="display: none;"></div>
+<div id="Log"><!--#include virtual="_skid_log.html"--></div>
 </fieldset>
 <? endif ( $$variable{'skid_id'} ) ?>
 <script type="text/javascript">document.jump.skid_id.focus();</script>

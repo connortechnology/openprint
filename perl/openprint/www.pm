@@ -301,26 +301,6 @@ $openprint::log->debug("Getfile");
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 			} # end if
-		} elsif ( $second eq 'inventory' ) {
-			require openprint::employee_inventory;
-			require openprint::paper_purchase_order;
-			if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
-				openprint::employee_inventory::paper( $r, $log, $dbh, \%variable )		if $filename eq 'paper.html';
-				openprint::employee_inventory::paper_details( $r, $log, $dbh, \%variable )	if $filename eq 'paper_details.html';
-				openprint::employee_inventory::skids( $r, $log, $dbh, \%variable )		if $filename eq 'skids.html';
-				openprint::employee_inventory::skid_details( $r, $log, $dbh, \%variable )	if $filename eq 'skid_details.html';
-				openprint::employee_inventory::rfidtags( $r, $log, $dbh, \%variable )		if $filename eq 'rfidtags.html';
-				openprint::employee_inventory::rfidtag_details( $r, $log, $dbh, \%variable )	if $filename eq 'rfidtag_details.html';
-				openprint::employee_inventory::rfidscanners( $r, $log, $dbh, \%variable )		if $filename eq 'rfidscanners.html';
-				openprint::employee_inventory::rfidscanner_details( $r, $log, $dbh, \%variable )	if $filename eq 'rfidscanner_details.html';
-				openprint::paper_purchase_order::history( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_orders.html';
-				openprint::paper_purchase_order::display( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_order.html';
-			} else {
-				$variable{'error'} = 'Unauthorized';
-				$variable{'details'} = 'You are not authorized to view this page.';
-				$variable{'Redirect'} = $config{'errorpage'};
-				return;
-			} # endif
 		} elsif ( $second eq 'accounting' ) {
 			if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
 				require openprint::employee_accounting;

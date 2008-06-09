@@ -17,6 +17,7 @@ $openprint::log->debug('checkdate: ' . Date::Calc::check_date( @openprint::sessi
             '/employee/inventory/rfidtags.html?StartDay'} ) );
 
 	@{$$variable{'RFIDTags'}} = openprint::RFIDTag::find( 
+		'id_like'	=> $openprint::param{'rfidtag_like'},
 		'owner_id'	=>	( defined $openprint::session{'/employee/inventory/rfidtags.html?Owner'} ? $openprint::session{'/employee/inventory/rfidtags.html?Owner'} : undef ),
 		'created_on_start'	=>	Date::Calc::check_date( @openprint::session{
 			'/employee/inventory/rfidtags.html?StartYear',
