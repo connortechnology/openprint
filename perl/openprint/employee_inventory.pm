@@ -433,7 +433,7 @@ sub save_skid {
 		} # end if
 		if ( $Paper and $Paper->id() ) {
 			my $delta = $Skid->add( $Paper, $qty ? $qty : $param{'Quantity'} );
-			$Paper->add_inventory( $Skid->id(), $delta, $param{'Units'} );
+			$Paper->add_inventory( $Skid, $delta, $param{'Units'} );
 #FIXME
 			if ( $delta > 0 ) {
 				$variable{'information'} .= "Added $delta $param{'Units'} to inventory.<br/>";
@@ -633,17 +633,19 @@ sub check_out {
 	foreach my $skid_id ( @skids ) {
 		my $Skid = new openprint::Skid( $skid_id );
 		if ( $$Skid{Paper}{$paper_id} < $qty ) {
-			$Paper->add_inventory( $Skid->id(), -1*$$Skid{Paper}{$paper_id}, $units, 'Removed' . @Projects ? ' for docket ' . $Projects[0]->docket() : '' );
-			$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$$Skid{Paper}{$paper_id} ) if $Paper->allocated( $Projects[0]->id() );
-			$qty -= $$Skid{Paper}{$paper_id};
-			$$Skid{Paper}{$paper_id} = 0;
+			my $amount = $$Skid{Paper}{$paper_id};
+			$qty -= $amount;
+			$amount *= -1;
+			$Skid->add( $Paper, $amount );
+			$Paper->add_inventory( $Skid, $amount, $units, 'Checked out' . @Projects ? ' for docket ' . $Projects[0]->docket() : '' );
+			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if $Paper->allocated( $Projects[0]->id() );
 		} else {
 			$$Skid{Paper}{$paper_id} -= $qty;
 			if ( @Projects ) {
-				$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' .( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
+				$Paper->add_inventory( $Skid, -1*$qty, $units, 'Checked out' .( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
 				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
 			} else {
-				$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' );
+				$Paper->add_inventory( $Skid, -1*$qty, $units, 'Checked out' );
 			} # end if
 			$qty = 0;
 		} # end if
@@ -697,11 +699,11 @@ sub check_in {
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	my $delta = $Skid->add( $Paper, $quantity, $units );
 	if ( ! @Projects ) {
-		$Paper->add_inventory( $Skid->id(), $delta, $units, 'Added' );
+		$Paper->add_inventory( $Skid, $delta, $units, 'Added' );
 		$variable{'information'} .= "Checked in $quantity $units to unknown docket.<br/>";
 	} else {
 		my $Project = shift @Projects;
-		$Paper->add_inventory( $Skid->id(), $delta, $units, 'Added for docket ' . $Project->docket() );
+		$Paper->add_inventory( $Skid, $delta, $units, 'Added for docket ' . $Project->docket() );
 		$variable{'information'} .= "Checked in $quantity $units from docket " . $Project->docket() . '<br/>';
 	} # end if
 	$Skid->save();

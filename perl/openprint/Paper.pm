@@ -41,7 +41,7 @@ sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
-	my $sql = 'SELECT *, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id LIMIT 1) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id LIMIT 1) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id LIMIT 1) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id LIMIT 1) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id LIMIT 1) AS weight FROM Papers WHERE 1>0';
+	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -599,12 +599,13 @@ sub owner_id {
     return $$self{'owner_id'};
 } # end sub owner
 
+# This function assumes that the skid contents have already been updated
 sub add_inventory {
-    my ( $self, $skid_id, $quantity, $units, $description ) = @_;
+    my ( $self, $Skid, $quantity, $units, $description ) = @_;
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
-	my $Skid = new openprint::Skid( $skid_id );
+	$Skid = new openprint::Skid( $Skid ) if ref $Skid ne 'openprint::Skid';
 	#Skid{Paper}{paper_id} has already been adjusted
 
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
@@ -612,11 +613,11 @@ sub add_inventory {
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  ($skid_id? $$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
+        'InStock',  ($Skid->id() ? 1*$$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
         'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
-        'skid_id',  $skid_id,
+        'skid_id',  $Skid->id(),
 		'units',	$units,
         );
 	delete $$self{allocated};

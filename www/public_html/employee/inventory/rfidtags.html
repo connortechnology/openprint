@@ -24,6 +24,12 @@ Please select a RFID Tag to view/edit.<br>
 			if ( ! $openprint::session{'/employee/inventory/rfidtags.html?EndYear'} ) {
 				@openprint::session{'/employee/inventory/rfidtags.html?EndYear','/employee/inventory/rfidtags.html?EndMonth','/employee/inventory/rfidtags.html?EndDay'} = Date::Calc::Today();
 			} # end if
+			if ( ! exists $openprint::session{'/employee/inventory/rfidtags.html?assigned'} ) {
+				$openprint::session{'/employee/inventory/rfidtags.html?assigned'} = 1;
+			} # end if
+			if ( ! exists $openprint::session{'/employee/inventory/rfidtags.html?notassigned'} ) {
+				$openprint::session{'/employee/inventory/rfidtags.html?notassigned'} = 1;
+			} # end if
 		) ?>
 		<p>
 			<label>Date Added:</label>
@@ -55,9 +61,9 @@ Please select a RFID Tag to view/edit.<br>
 		</p>
 		<p>
             <label>Assigned/Unassigned?</label>
-            <input type="checkbox" id="assigned" name="assigned" value="Y" <? echo ( $openprint::session{'/employee/inventory/rfidtags.html?assigned'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+            <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( $openprint::session{'/employee/inventory/rfidtags.html?assigned'} ? 'checked="checked"' : '' ) ?> />
             <label class="radio" for="assigned">Assigned</label>
-            <input type="checkbox" id="notassigned" name="notassigned" value="Y" <? echo ( $openprint::session{'/employee/inventory/rfidtags.html?notassigned'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+            <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( $openprint::session{'/employee/inventory/rfidtags.html?notassigned'} ? 'checked="checked"' : '' ) ?> />
             <label class="radio" for="notassigned">Unassigned</label>
 		</p>
 		<p><label>Type:</label>
