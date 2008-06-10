@@ -978,7 +978,7 @@ if ( 0 ) {
 					'manifest_id'	=>	$Manifest->id(),
 					'skid_id'		=>	$Skid->id(),
 					'quantity'		=>	$param{"qty_lbs-$tag_id"},
-					'cost'			=>	$param{"cost-$tag_id"},
+					'cost'			=>	$param{"cost"},
 					} );
 			last if $variable{'error'};
 		} # end foreach tag_id
