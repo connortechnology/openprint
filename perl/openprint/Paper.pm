@@ -45,10 +45,10 @@ sub find {
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
+			$sql .= ' AND papers.id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
 			push @values, @{$params{'id'}};
 		} else {
-			$sql .= ' AND id=?';
+			$sql .= ' AND papers.id=?';
 			push @values, $params{'id'};
 		} # end if
 	} # end if
@@ -139,15 +139,15 @@ sub find {
 		push @values, 1*$params{'height_start'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND id IN (SELECT paper_id FROM paper_allocations WHERE project_id = (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id = (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'project_type_name'} ) {
-		$sql .= ' AND id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT lngIndex FROM Project_Types WHERE strID = ?))';
+		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT lngIndex FROM Project_Types WHERE strID = ?))';
 		push @values, $params{'project_type_name'};
 	} # end if
 	if ( $params{'project_type_id'} ) {
-		$sql .= ' AND id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
+		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
 		push @values, $params{'project_type_id'};
 	} # end if
 	if ( $params{'fsc_code'} ) {
