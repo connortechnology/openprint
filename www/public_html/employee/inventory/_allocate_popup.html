@@ -1,6 +1,11 @@
 <? eval (
-	$ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
-	$$variable{'referer'} = $1;
+	if ( $openprint::param{'referer'} ) {
+		$$variable{'referer'} = $openprint::param{'referer'};
+	} elsif ( $ENV{'HTTP_REFERER'} ) {
+		$openprint::log->debug($ENV{'HTTP_REFERER'});
+		$ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
+		$$variable{'referer'} = $1;
+	} # end if
 	$$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} );
 	if ( exists $openprint::param{'quantity'} ) {
 		$$variable{'quantity'} = $openprint::param{'quantity'};

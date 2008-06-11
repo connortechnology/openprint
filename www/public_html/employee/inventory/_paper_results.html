@@ -1,5 +1,5 @@
 <? eval (
-	foreach my $key ( 'Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','outofstock' ) {
+	foreach my $key ( 'Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','outofstock','Owner' ) {
 		$openprint::session{'/employee/inventory/paper.html?'.$key} = $openprint::param{$key};
 	} # end foreach
 	$openprint::session{'/employee/inventory/paper.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/employee/inventory/paper.html?Owner'};

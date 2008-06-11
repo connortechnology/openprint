@@ -22,7 +22,7 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	}
-		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?paper_id='+paper_id, null , true);
+		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?referer=available_paper.html&paper_id='+paper_id, null , true);
 } // end function bug_report
 
 	function check_inputs(form ) {

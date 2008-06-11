@@ -31,10 +31,10 @@ The following errors occurred:<br/>
 		my $rowclass;
 		while ( my ( $time, $project_id, $docket, $paper_id, $quantity, $units ) = splice @data, 0, 6 ) {
 			my $Paper = new openprint::Paper( $paper_id );
-			$html .= sprintf( '<tr%s><td>%s</td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td></tr>',
+			$html .= sprintf( '<tr%s><td>%s</td><td><a href="/employee/inventory/paper_details.html?paper_id=%d">%s</a></td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td></tr>',
 				$rowclass,
 				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
-				$project_id,
+				$Paper->id(),
 				$Paper->to_string(),
 				$project_id,
 				$docket,

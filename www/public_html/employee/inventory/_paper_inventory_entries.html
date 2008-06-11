@@ -12,7 +12,6 @@
 ) ?>
 <div class="error"><?error?></div>
 <form id="f2" name="f2">
-	<fieldset><legend>Current Inventory</legend>
 		<table class="List">
 			<tr>
 				<th width="80" align="left">Skid</th>
@@ -59,7 +58,6 @@
 				<td><? echo ( ssi::writeButton( $log, $dbh, 'AddInventory', 'add.gif', "LoadContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', Serialize( document.forms['f2'] ) );", '', 'Add' ); ) ?></td>
 			</tr>
 		</table>
-	</fieldset>
 	<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />
 	<input type="hidden" name="Action" value="Add" />
 </form>

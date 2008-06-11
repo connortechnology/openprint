@@ -1001,7 +1001,9 @@ $openprint::log->debug("No spread layout for you!");
 				} # end if
 			} else {
 				if ( $$specs{'PrintingTypes'} and ! sets::isin( $Press->specification('Printing Type'), $$specs{'PrintingTypes'} ) ) {
-					$openprint::log->warn('Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} ));
+					if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
+						$$specs{'alert'} .= 'Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} );
+					} # end if
 					next;
 				} # end if
 			} # end if

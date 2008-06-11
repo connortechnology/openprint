@@ -312,7 +312,7 @@ sub allocate {
 			'project_id',	$project_id ? $project_id : undef,
 			'operator_id',	$variable{'user_id'},
 			);
-	(new openprint::Project( $project_id ))->add_to_log( @openprint::session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skids.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
+	(new openprint::Project( $project_id ))->add_to_log( @openprint::session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
 	sql::end_transaction( undef, $ac );
 } # end sub allocate
 
