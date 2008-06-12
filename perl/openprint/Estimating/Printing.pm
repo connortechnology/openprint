@@ -1202,7 +1202,7 @@ $openprint::log->debug("No spread layout for you!");
 								my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 								my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 								if ( $I->Paper()->area() > $imp->Paper()->area() ) {
-									if ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) ) {
+									if ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() and (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) ) {
 										if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
 										} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 										} else {
@@ -1213,7 +1213,9 @@ $openprint::log->debug("No spread layout for you!");
 									$add = 1;
 								} elsif ( $I->Paper()->area() == $imp->Paper()->area() ) {
 									$add = 0;
+
 									if ( ( $I->Paper()->start_area() != $I->Paper()->area() ) and ( $imp->Paper()->start_area() == $imp->Paper()->area ) ) {
+									# Prefer non-cut sheet
 										splice @{$imps{$str}}, $j, 1;
 										$j -= 1;
 										$add = 1;
@@ -1247,7 +1249,7 @@ $openprint::log->debug("No spread layout for you!");
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
-if ( 0 ) {
+if ( 1 ) {
 $openprint::log->warn('Impositions');
 foreach my $I ( @impositions ) {
 $I->display();
