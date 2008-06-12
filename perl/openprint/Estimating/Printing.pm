@@ -2081,6 +2081,7 @@ sub calc_price {
 		$gross_qty += $additional_overs;
 	} # end if
 	$impressions = $gross_qty;
+	my $weight = $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi();
 	my $sheets_per_package = $Paper->sheets_per_package();
 	if ( $sheets_per_package and $Paper->full_packages() ) {
 		if ( $Paper->type() eq 'Sheet' ) {
