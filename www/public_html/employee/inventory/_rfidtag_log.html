@@ -34,15 +34,17 @@
 <? if ( @{$$variable{'Entries'}} ) ?>
 <table class="List">
 	<tr>
-		<th align="left">When</th>
-		<th align="left">Scanner</th>
-		<th align="left">Where</th>
+		<th align="left" width="120">When</th>
+		<th align="left" width="90">Scanner</th>
+		<th align="left" width="120">Where</th>
+		<th align="left">Comment</th>
 	</tr>
 	<? while ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
 		<tr>
-			<td><? echo ( $$variable{'Entry'}->updated_on() ) ?></td>
+			<td><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Entry'}->updated_on() ) ); ) ?></td>
 			<td><? echo ( $$variable{'Entry'}->Scanner()->name() ) ?></td>
 			<td><? echo ( $$variable{'Entry'}->Location()->name() ) ?></td>
+			<td><? echo ( $$variable{'Entry'}->comment() ) ?></td>
 		</tr>
 	<? endwhile ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
 </table>
