@@ -23,6 +23,7 @@ my $debug = 1;
 	'scanner_id'		=>	'scanner_id',
 	'location_id'		=>	'location_id',
 	'updated_on'		=>	'updated_on',
+	'comment'			=>	'comment',
 );
 
 %transforms = (

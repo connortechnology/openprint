@@ -680,7 +680,9 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 			my $found = 0;
 			
 			foreach my $P ( @Papers ) {
+$openprint::log->debug("Looking for: " . $$specs{'OverrideStockWidth'.$qty_index} . 'x'. $$specs{'OverrideStockHeight'.$qty_index} .' from' . $P->width() . 'x' . $P->height() );
 				if ( $P->width() == $$specs{'OverrideStockWidth'.$qty_index} and $P->height() == $$specs{'OverrideStockHeight'.$qty_index} ) {
+$openprint::log->debug('gound it'); 
 					$found = 1;
 					push @Ps, $P;
 				} # end if
