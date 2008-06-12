@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -296,19 +296,13 @@ sub signature_calc {
 
 	# First step, find out if we are stitching, then find out which equipment is being used for stitching
 	my $services = $Project->services();
-
+if ( 0 ) {
 	$$specs{"txtQuantity$qty_index"} = int $$specs{"txtQuantity$qty_index"};
 	$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{'txtPressSheetComboItems'} ) {
 		$$specs{"txtQuantity$qty_index"} *= $$specs{'txtPressSheetComboItems'};
 	} # end if
-
-	if ( ! $Imposition ) {
-$openprint::log->debug("Loading imposition");
-		$Imposition = new openprint::Imposition;
-		$Imposition->paper( $Paper );
-		$Imposition->load( $sig_specs, $qty_index );
-	} # end if
+} # end if
 
 	my $bestPrice;
 	my $bestRunPrice = 0;
@@ -328,15 +322,10 @@ $openprint::log->debug("Loading imposition");
 		} # end if
 		push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 	} else {
-		@my_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'} );
-
-		if ( $$services{'PerfectBound'} ) {
-#$openprint::log->debug('Adding Perfect Bound' . join(',', map { $_->name() } openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'}, 'order'=>'lower(strname)' ) ) );
-			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'} );
-		} # end if
-		if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
-			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'} );
-		} # end if
+		my @folding_capable = ('Y');
+		push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
+		push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
+		@my_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable} );
 
 		if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
 			my $Press = shift @Press;
@@ -809,7 +798,9 @@ sub calc {
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtServiceDescription'}:</legend>";
 				$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
-				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, undef, undef, $uv_specs, $aq_specs );
+				my $Imposition = new openprint::Imposition;
+				$Imposition->load( $sig_specs, $qty_index );
+				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition->Paper(), $Imposition, $uv_specs, $aq_specs );
 
 				$price += $results{'Price'};
 				$mprice += $results{'MPrice'};

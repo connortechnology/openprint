@@ -16,8 +16,8 @@
 			<input type="text" name="txtServiceDescription<?Group?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ) ?>" />
 		</p>
 		<p>
-			<label>Spread Size:</label>
-			<input type="text" name="txtWidth<?Group?>" value="<? echo ( $$variable{'txtWidth'.$$variable{'Group'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Group?>').checked){calc(this.form.name);}"/>x<input type="text" name="txtHeight<?Group?>" value="<? echo ( $$variable{'txtHeight'.$$variable{'Group'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Group?>').checked){calc(this.form.name);}" />
+			<label>Size:</label>
+			<input type="text" name="txtFinalWidth<?Group?>" value="<? echo ( $$variable{'txtFinalWidth'.$$variable{'Group'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Group?>').checked){calc(this.form.name);}"/>x<input type="text" name="txtFinalHeight<?Group?>" value="<? echo ( $$variable{'txtFinalHeight'.$$variable{'Group'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Group?>').checked){calc(this.form.name);}" />
 			<input type="checkbox" name="chkOverrideDimensions<?Group?>" id="chkOverrideDimensions<?Group?>" value="Y" <? echo ( $$variable{'chkOverrideDimensions'.$$variable{'Group'}} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if(!this.checked)calc(this.form.name);" />
 			<label class="radio" for="chkOverrideDimensions<?Group?>">Override</label>
 		</p>

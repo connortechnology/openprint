@@ -41,7 +41,7 @@ require openprint::Estimating::UVCoating;
 require openprint::Estimating::Aqueous;
 require openprint::Equipment;
 require openprint::Material;
-#use Time::HiRes qw{ time gettimeofday tv_interval }; 
+use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 
 # These are use to tell the code which variables to save
@@ -718,22 +718,18 @@ $openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 				if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
 # Perfect bound requires more width on th cover to conver the calliiper	
 					my $finished_calliper = 0;
-					$_ = q{SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='txtSignatureType' AND NOT strValue='Cover Pages'};
-					my @signature_service_indices = sql::execute( $log, $dbh, $_, $project_index );
-					foreach my $signature_service_index ( @signature_service_indices ) {
-						my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
+					foreach my $group_id ( @Groups ) {
+# Don't include the cover
+						next if $group_id == 1;
+						foreach my $ss_id ( $Project->signatures({'Group'=>$group_id}) ) {
+# Each group has at least 1 sig in it.
+							my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 
-						my $calliper1 = $$sig_specs{'PageQuantity1'} ? $$sig_specs{'PageQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-						my $calliper2 = $$sig_specs{'PageQuantity2'} ? $$sig_specs{'PageQuantity2'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-						my $calliper3 = $$sig_specs{'PageQuantity3'} ? $$sig_specs{'PageQuantity3'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-						if ( $calliper1 ) {
-							$finished_calliper += $calliper1/2;
-						} elsif ( $calliper2 ) {
-							$finished_calliper += $calliper2/2;
-						} elsif ( $calliper3 ) {
-							$finished_calliper += $calliper3/2;
-						} # end if
-					} # end foreach signature
+							$finished_calliper += $$sig_specs{'GroupPageQuantity'} * $$sig_specs{'txtSpecificStockCalliper'} /2;
+							last;
+						} # end foreach signature in the group
+					} # end foreach group
 
 					$openprint::log->debug("Cover size calc: $finished_calliper");
 					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper)*1000)/1000);
@@ -2249,7 +2245,7 @@ sub calc_price {
 			$price{'PerfectBound Cost'} = $$results{'Price'};
 			$price{'Comparison Cost'} += $$results{'Price'};
 		} # end if
-		#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+		#$openprint::log->debug( 'PerfectBound Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'PerfectBound' );
 	} # end if
@@ -3330,13 +3326,11 @@ sub summary {
 	my ( $Project, $service_index, $specs, $qty_index ) = @_;
 
 	my $services = $Project->services();
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
 	if ( $qty_index ) {
 		if ( ! $$specs{'txtSpreadSize'} ) {
-			if ( $$services{''} ) {
-				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-				$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
-			} # end if
+			$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
 		} # end if
 		return '' if ! $$specs{'txtImposition'.$qty_index};
 		my $html = sprintf(qq{%s %dout %s},
@@ -3398,7 +3392,13 @@ sub summary {
 			} # end if
 		} # end foreach
 		my $dimensions = '';
-		if ( ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) and ( $$specs{'txtFinalWidth'} != $$specs{'txtWidth'} or $$specs{'txtFinalHeight'} != $$specs{'txtHeight'} ) ) {
+		if ( $$specs{'txtSignatureType'} ) {
+			if ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) {
+			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtFinalWidth','txtFinalHeight'});
+			} else {
+			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$printing_specs{'txtFinalWidth','txtFinalHeight'});
+			} # end if
+		} elsif ( ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) and ( $$specs{'txtFinalWidth'} != $$specs{'txtWidth'} or $$specs{'txtFinalHeight'} != $$specs{'txtHeight'} ) ) {
 			if ( $$services{'Folding'} ) {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; folded to %s&quot;x%s&quot; ',
 						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
@@ -3406,8 +3406,6 @@ sub summary {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
 						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
 			} # end if
-		} elsif ( $$specs{'txtSignatureType'} ) {
-			$dimensions .= sprintf( '%s&quot;x%s&quot; ', $$specs{'txtWidth'}/($$specs{'txtSpreadSize'}/2),$$specs{'txtHeight'});
 		} else {
 			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtWidth','txtHeight'});
 		} # end if

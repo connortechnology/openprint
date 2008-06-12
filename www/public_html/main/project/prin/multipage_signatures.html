@@ -24,8 +24,10 @@ function calc( formName, force ) {
 				<p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
 				<p>
 					<label>Spread dimensions:</label>
-						<input name="txtWidth" size="9" value="<?txtWidth?>"  onkeyup="calc('f1');" /> x 
-						<input name="txtHeight" size="9" value="<?txtHeight?>"  onkeyup="calc('f1');"/>
+						<input name="txtFinalWidth" value="<?txtFinalWidth?>" />
+						<input name="txtFinalHeight" value="<?txtFinalHeight?>" />
+						<input name="txtWidth" size="9" value="<?txtWidth?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x 
+						<input name="txtHeight" size="9" value="<?txtHeight?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/>
 						(W x H)
 					<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 					<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( 'checked="checked"' if $$variable{'chkOverrideDimensions'} eq 'Y' ) ?> />

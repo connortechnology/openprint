@@ -441,7 +441,7 @@ sub multipage_signatures {
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription','rdbTemplateType',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
-				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
+				'txtFinalWidth','txtFinalHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
 		} # end foreach spec
