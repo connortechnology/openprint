@@ -82,14 +82,14 @@ sub neccessary {
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 
-	my %services = $Project->get_services( );
-	if ( $services{'NoBindery'} ) {
+	my $services = $Project->services( );
+	if ( $$services{'NoBindery'} ) {
         #$log->debug(" ** Project is marked as No bindery, Scoring not needed ! ** ");
         return 0;
     } # end if
 
 	# Only need scoring if it's being folded.
-	if ( $services{'Folding'} ) {
+	if ( $$services{'Folding'} ) {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $specs = openprint::service::get_specs_ref( $Project->id(), $signature_service_index );
 
@@ -97,8 +97,6 @@ sub neccessary {
 				return 1;
 			} # end if
 		} # end foreach
-	} else {
-		$openprint::log->debug("No Folding");
 	} # end if
 
 	return 0;
@@ -121,16 +119,14 @@ sub calc {
 	# juts for efficeincy
 	my $cutting_service_index = $$services{'Cutting'};
 
-	if ( ! @all_equipment ) {
-		@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'Y'} );
-		if ( $stitching_service_index and $$services{'Folding'} ) {
-			push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Folding'} );
-		} # end if
+	@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'Y'} );
+	if ( $stitching_service_index and $$services{'Folding'} ) {
+		push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Folding'} );
+	} # end if
 
-		my @stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'} );
-		if ( ! $stitching_service_index ) {
-			@all_equipment = sets::exclude( \@stitchers, \@all_equipment );
-		} # end if
+	my @stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'} );
+	if ( ! $stitching_service_index ) {
+		@all_equipment = sets::exclude( \@stitchers, \@all_equipment );
 	} # end if
 
 	foreach my $qty_index ( 1 .. 3 ) {
@@ -340,7 +336,7 @@ $openprint::log->debug("Scores: $score_qty");
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= '<br/>';
 			my $setupPrice = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'ScoringMakeReady', $score_qty, $Equipment );
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Setup: %d scores $%.2f<br/>', $score_qty, $setupPrice);
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice);
 			$$specs{'hdnBreakdown'.$qty_index} .= "\t\tImposition: $$imposition{'imposition'}: ";
 
 			my $servicePrice;
@@ -364,15 +360,20 @@ $openprint::log->debug("Scores: $score_qty");
 				if ( %materialPrice ) {
 					if ( sets::isin( lc $materialPrice{'units'},['per rule','per score'] ) ) {
 						$materialPrice = $materialPrice{'Price'} * $score_qty;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $score_qty );
+					} elsif ( sets::isin( lc $materialPrice{'units'},['per item'] ) ) {
+						$materialPrice = $materialPrice{'Price'} * $imposition->imposition();
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $imposition->imposition() );
 					} elsif ( lc $materialPrice{'units'} eq 'per inch' ) {
 						$materialPrice = $materialPrice{'Price'} * $score_qty;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $score_qty );
 					} elsif ( $materialPrice{'units'} eq 'per foot' ) {
 						$materialPrice = $materialPrice{'Price'} * $score_qty * $$specs{"txtLength-$$sig_specs{'SignatureIndex'}"} / 12;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $score_qty );
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units set on material price ($materialPrice{'units'})<br/>";
 					} # end if
 				} # end if
-				$$specs{'hdnBreakdown'.$qty_index} .= "Material: \$ $materialPrice{'Price'} $materialPrice{'units'}, ";
 			} # end if
 
 # Div by imposition

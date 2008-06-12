@@ -201,6 +201,10 @@ div#MainBox:after {
 /* Hides from IE-mac \*/
 * html div#MainBox {height: 1%;}
 /* End hide from IE-mac */
+img#Butterfly {
+	width: 160px;
+	float: left;
+}
 ul#ProjectTypes {
     p\osition: relative;
     float: left;
@@ -224,13 +228,64 @@ ul#ProjectTypes {
 .ProjectTypes a:hover {
     color: #ff00ff;
 }
+#QuickLogin {
+    float: left;
+    margin: 0px;
+    padding: 0px;
+    width: 400px;
+}
 #CurrencySelection {
+    float: left;
+    margin: 0px;
+    padding: 0px;
+    width: 470px;
+}
+#QuickLogin fieldset {
+	margin: 0px;
+}
+#QuickLogin p {
+    padding: 0px;
+    padding-left: 80px;
+    margin: 0px;
+    vertical-align: top;
 }
 #CurrencySelection p {
+    padding: 0px;
+    padding-left: 150px;
+    margin: 0px;
+    vertical-align: top;
 }
-#CurrencySelection p label {
+#QuickLogin p label {
+    width: 75px;
+    margin-left: -80px;
+    text-align: right;
+    float: left;
+    overflow: visible;
+    padding: 0px;
+    vertical-align: top;
 	color: black;
 	font-size: x-small;
 	font-weight: normal;
-	width: 180px;
 }
+#CurrencySelection p label {
+    width: 145px;
+    margin-left: -150px;
+    text-align: right;
+    float: left;
+    overflow: visible;
+    padding: 0px;
+    vertical-align: top;
+	color: black;
+	font-size: x-small;
+	font-weight: normal;
+}
+#QuickLogin p input, #CurrencySelection p input, #QuickLogin p select, #CurrencySelection p select {
+    margin: 0px;
+    width: 65%;
+    padding: 2px;
+    vertical-align: top;
+}
+#QuickLogin p a.buttonImageOn, #QuickLogin p a.buttonImageOff, #CurrencySelection p a.buttonImageOn, #CurrencySelection p a.buttonImageOff {
+    margin: 0px;
+}
+

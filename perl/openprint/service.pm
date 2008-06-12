@@ -265,7 +265,6 @@ sub auto_calculate {
 	my %services = $Project->get_services();
 
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary
-	my $folding_service_index = $services{'Folding'}[0] if $services{'Folding'};
 	if ( ! openprint::Estimating::Folding::neccessary( $log, $dbh, $project_index ) ) {
 	} else {
 		if ( ! $services{'Folding'} ) {

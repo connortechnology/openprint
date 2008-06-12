@@ -556,15 +556,14 @@ sub store_order_info {
 		$Order->company_id( $openprint::param{'company_id'} );
 		$openprint::session{'company_id'} = $openprint::param{'company_id'};
 	} # end if
-	$Order->company_name( $r->param('txtCompanyName') );
-	$Order->first_name( $r->param('txtFirstName') );
-	$Order->last_name( $r->param('txtLastName') );
-	$Order->salutation( $r->param('rdbSalutation') );
-	$Order->address1( $r->param('txtAddress1') );
-	$Order->address2( $r->param('txtAddress2') );
-	$Order->city( $r->param('txtCity') );
-	$Order->state( $openprint::param{'ddmStateProvince'} );
+	$Order->company_name( $openprint::param{'txtCompanyName'} );
+	$Order->first_name( $openprint::param{'txtFirstName'} );
+	$Order->last_name( $openprint::param{'txtLastName'} );
+	$Order->salutation( $openprint::param{'rdbSalutation'} );
+	$Order->address1( $openprint::param{'txtAddress1'} );
+	$Order->address2( $openprint::param{'txtAddress2'} );
 	$Order->city( $openprint::param{'txtCity'} );
+	$Order->state( $openprint::param{'ddmStateProvince'} );
 	$Order->postalcode( $openprint::param{'txtPostalCode'} );
 	$Order->country( $openprint::param{'ddmCountry'} );
 	$Order->phone( $openprint::param{'txtPhone'} );

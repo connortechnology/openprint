@@ -118,6 +118,7 @@ my %variables = (
 		'basis_width'=>['save'],'basis_height'=>['save'],'basis_mweight'=>['save'],
 		'StockGrade'	=> ['save'],	
 		'CustomStockPriceUnits' => ['save'],
+		'minimum_order'=>['save'],
 		'txtSignatureSpreadQuantity1' => ['save','output'], 'txtUnspecifiedSpreadQuantity1' => ['output'], 'PageQuantity1' => ['save','output'],
 		'txtSignatureSpreadQuantity2' => ['save','output'], 'txtUnspecifiedSpreadQuantity2' => ['output'], 'PageQuantity2' => ['save','output'],
 		'txtSignatureSpreadQuantity3' => ['save','output'], 'txtUnspecifiedSpreadQuantity3' => ['output'], 'PageQuantity3' => ['save','output'],
@@ -604,7 +605,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 		} # end if
 		my $Paper = new openprint::Paper();
 		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',(sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
-		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight'};
+		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight','minimum_order'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight','minimum_order'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};
 		} # end if
@@ -1902,6 +1903,8 @@ sub calc_price {
 		$impressions += $additional_overs;
 	} # end if
 
+	my $plate_impressions = $impressions;
+	$plate_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Work & Turn','Work & Tumble'] ));
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
@@ -1918,8 +1921,7 @@ sub calc_price {
 
 	# Whya re we doing this here?
 	#$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
-
-	my %plate_setup = plate_setup_cost( $Imposition, $Press, $$Paper{width} * $$Paper{height}, $impressions, \@colours, $specs, $qty_index );
+	my %plate_setup = plate_setup_cost( $Imposition, $Press, $$Paper{width} * $$Paper{height}, $plate_impressions, \@colours, $specs, $qty_index );
 	# THis is here more to take care of multi-version documents as opposed to business cards
 	#if ( ( $$specs{'Versions'} > 1 ) and sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble' ] ) ) {
 		#$plate_setup{'Plate Count'} *= ( $imposition / $$specs{'Versions'} );
@@ -2080,9 +2082,31 @@ sub calc_price {
 	} # end if
 	$impressions = $gross_qty;
 	my $sheets_per_package = $Paper->sheets_per_package();
-	if ( $sheets_per_package ) {
-		$gross_qty = $sheets_per_package * ( ceil( $gross_qty / $sheets_per_package ) );
+	if ( $sheets_per_package and $Paper->full_packages() ) {
+		if ( $Paper->type() eq 'Sheet' ) {
+			$gross_qty = $sheets_per_package * ceil( $gross_qty / $sheets_per_package );
+		} elsif ( $Paper->type() eq 'Roll' ) {
+			$weight = $sheets_per_package * ceil( $weight/$sheets_per_package);
+			$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
+		} else {
+			$openprint::log->error('Unknown paper type.');
+		} # end if
 	} # end if
+	if ( $Paper->minimum_order() ) {
+# Assume sheets for sheets, lbs for Rolls
+		if ( $Paper->type() eq 'Sheet' ) {
+			if ( $Paper->minimum_order() > $gross_qty ) {
+				$gross_qty = $Paper->minimum_order();
+			} # end if
+		} elsif ( $Paper->type() eq 'Roll' ) {
+			if ( $Paper->minimum_order() > $weight ) {
+				$weight = $Paper->minimum_order();
+				$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
+			} # end if
+		} # end if
+		$openprint::log->debug('Minimum Order Requirement not met');
+	} # end if
+
 	my %sheet_qty = (
 			'Impressions'				=> $impressions, 
 			'Gross Sheet Count'			=> $gross_qty, 

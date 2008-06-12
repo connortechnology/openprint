@@ -27,9 +27,9 @@
 				</span>
 				<br class="spacer"/>
 				<span class="input">
-						<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onClick="remove_div('CoverStocks');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} ne 'Different' ) ?> />
+						<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('CoverStocks');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} ne 'Different' ) ?> />
 						<label for="rdbCoverSelf">Self Cover</label>
-						<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onClick="add_div('CoverStocks');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
+						<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('CoverStocks');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
 						<label for="rdbCoverDifferent">Different Cover</label>
 					<br class="spacer"/>
 				</span>
@@ -58,11 +58,27 @@
 				</div>
 				<br class="spacer"/>
 				<? echo ( 
+						# Load Defaults
+						if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+
+                            $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
+                            my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
+                            while ( my ( $name, $value ) = splice @defaults,0,2 ) {
+                                $$variable{$name.'CoverSpreads'} = $value;
+                            } # end while
+                        } # end if
+
 					$$variable{'Signature'} = 'CoverSpreads';
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
 					return variable_substitution( $r, $log, $dbh, \$html, $variable );
 					) ?>
+				<input type="hidden" name="rdbColourBarCoverSpreads" value="<?rdbColourBarCoverSpreads?>"/>
+				<input type="hidden" name="txtCropMarkSpaceCoverSpreads" value="<?txtCropMarkSpaceCoverSpreads?>"/>
+				<input type="hidden" name="chkBleedLeftCoverSpreads" value="<?chkBleedLeftCoverSpreads?>"/>
+				<input type="hidden" name="chkBleedRightCoverSpreads" value="<?chkBleedRightCoverSpreads?>"/>
+				<input type="hidden" name="chkBleedTopCoverSpreads" value="<?chkBleedTopCoverSpreads?>"/>
+				<input type="hidden" name="chkBleedBottomCoverSpreads" value="<?chkBleedBottomCoverSpreads?>"/>
 			</div>
 			<br class="spacer"/>
 			<div class="row">

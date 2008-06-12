@@ -32,6 +32,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
+		'minimum_order','full_packages',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -799,9 +800,19 @@ sub cut {
         $$self{'width'} /= 2;
     } # end if
     $$self{'mweight'} /= 2;
-    $$self{'sheets_per_package'} *= 2;
 	$$self{'grain_direction'} = undef; # force recalc of gd
 } # end sub cut
+
+sub sheets_per_package {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{sheets_per_package} = shift;
+	} # end if
+
+	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} );
+$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
+	return $$self{'sheets_per_package'} * $factor;
+}
 
 sub gsm {
 	my $self = shift;

@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -111,11 +111,12 @@ sub signature_needs {
 	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
+		$openprint::log->warn("FOLDING NEEDED templatetype!") if $debug;
 		return 1;
 	} # end if
 
 	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
-		#$openprint::log->debug("FOLDING NEEDED dimensions do not match!");
+		$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
 		return 1;
 	} # end if
 	return 0;
@@ -154,7 +155,7 @@ sub neccessary {
 			return 1;
 		} # end if
 	} # end foreach
-	$log->debug("FOLDING NOT NEEDED!");
+	$log->debug("FOLDING NOT NEEDED! $$services{Folding}");
 	return 0;	
 } # end sub neccessary
 
@@ -400,7 +401,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					my $I = shift @folds;
 					last if ! $I->spreads();
 					
-					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width() * $imposition, $I->image_height() ) : ( $I->image_width(), $I->image_height() * $imposition ), $$sig_specs{'txtSpecificStockCalliper'} );
+					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height()*$imposition ) : ( $I->image_width()*$imposition, $I->image_height() ), $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 						my $fold_type = $I->pages().'PageSignatureFold';
 						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type ) ) {
@@ -453,7 +454,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					next;
 				} else {
 					foreach my $I ( @good_folds ) {
-						$folds{$I->spreads()*$$sig_specs{'txtSpreadSize'}.'PageSignatureFold'} += 1;
+						$folds{$I->pages().'PageSignatureFold'} += 1;
 					}
 				} # end if
 			} # end if
@@ -584,6 +585,9 @@ sub calc {
 				} # end foreach
 			}# # end if
 		} # end foreach signature
+		if ( $status eq 'uncalculated' and ! $$specs{'alert'} ) {
+			$$specs{'alert'} = 'Unable to fold.';
+		} # end if
 
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );

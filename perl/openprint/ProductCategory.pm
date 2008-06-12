@@ -32,6 +32,15 @@ sub find {
 		$sql .= ' AND name=?';
 		push @values, $params{name};
 	} # end if
+	if ( exists $params{'deleted'} ) {
+		if ( $params{'deleted'} ) {
+			$sql .= ' AND (deleted=? OR deleted IS NULL)', $params{'deleted'};
+		} else {
+			$sql .= ' AND deleted=?', $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=false OR deleted IS NULL)';
+	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
@@ -88,6 +97,11 @@ sub save {
 } # end sub save
 
 sub delete {
+	my $self = shift;
+	sql::update( undef, undef, 'Product_Categories', ['id=?', $$self{id}], 'deleted', 1 );
+} # end sub delete
+
+sub destroy {
 	my $self = shift;
 	return if ! $$self{'id'};
 	my $ac = sql::start_transaction( $openprint::dbh );
