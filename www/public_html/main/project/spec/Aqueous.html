@@ -50,12 +50,65 @@
 				</div>
 				<br class="spacer"/>
 				<div id="Results-<?SignatureIndex?>" >
+					<p><label>Make Ready (<?CurrencySymbol?>):</label>
+					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+						<span class="<?Columns?>Columns">
+						<input type="text" name="MakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="checkbox" id="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+						<label class="radio" for="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
+						</span>
+					<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+					</p>
+					<p><label>Blanket (<?CurrencySymbol?>):</label>
+					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+						<span class="<?Columns?>Columns">
+						<input type="text" name="BlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"BlanketPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="checkbox" id="OverrideBlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideBlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideBlanketPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+						<label class="radio" for="OverrideBlanketPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
+						</span>
+					<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+					</p>
+					<p><label>Service (<?CurrencySymbol?>):</label>
+					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+						<span class="<?Columns?>Columns">
+						<input type="text" name="ServicePrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"ServicePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="checkbox" id="OverrideServicePrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideServicePrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideServicePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+						<label class="radio" for="OverrideServicePrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
+						</span>
+					<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+
+					</p>
+					<p><label>Material (<?CurrencySymbol?>):</label>
+					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+						<span class="<?Columns?>Columns">
+						<input type="text" name="MaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"MaterialPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="checkbox" id="OverrideMaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideMaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideMaterialPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+						<label class="radio" for="OverrideMaterialPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
+						</span>
+					<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+					</p>
 					<p><label>Signature Price (<?CurrencySymbol?>):</label>
 					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 						<span class="<?Columns?>Columns">
-						<input type="text" name="SignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="text" name="SignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"SignaturePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
 						<input type="checkbox" id="OverrideSignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideSignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideSignaturePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 						<label class="radio" for="OverrideSignaturePrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
 						</span>
