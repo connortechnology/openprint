@@ -1788,6 +1788,23 @@ $openprint::log->debug("# of elevated impositions: " . @{$$impositions{''}} );
 			} # end foreach
 		} # end if
 		$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions) if $debug;
+		if ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
+		my $found = 0;
+			foreach my $I ( @impositions ) {
+				if ( $I->imposition() == $$specs{'txtImposition'.$qty_index} ) {
+					$found = 0;
+				} # end if
+			} # end foreach I
+			if ( ! $found ) {
+				my @i;
+				foreach my $I ( openprint::imposition::get_all_impositions( @impositions ) ) {
+					if ( $I->imposition() == $$specs{'txtImposition'.$qty_index} ) {
+						push @i, $I;
+					} # end if
+				} # end foreach I
+				@impositions = @i;
+			} # end if
+		} # end if
 		foreach my $imp ( @impositions ) {
 #$imp->display();
 			if ( ( $imp->runstyle() eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
