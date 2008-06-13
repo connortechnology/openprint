@@ -364,7 +364,7 @@ sub calc {
 
 				if ( $$specs{'OverrideStrippingPrice'} ne 'Y' ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$bestPrice{'Stripping'}}{'Price','units','Total'}, $bestPrice{'Impressions'} );
-					@no_outputs = sets::exclude( ["StrippingPrice$qty_index"], @no_outputs );
+					@no_outputs = sets::exclude( ["StrippingPrice$qty_index"], \@no_outputs );
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f<br/>', $$specs{"StrippingPrice$qty_index"} );
 					@no_outputs = sets::union( @no_outputs, "StrippingPrice$qty_index" );
