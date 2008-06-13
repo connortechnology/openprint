@@ -49,6 +49,8 @@ sub variables {
 				 "ddmEquipment-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index",
 				 "txtImposition-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$specs{'SignatureIndex'}-$qty_index",
 				 "txtLayoutWidth-$$specs{'SignatureIndex'}-$qty_index", "txtLayoutHeight-$$specs{'SignatureIndex'}-$qty_index",
+				 "SignaturePrice-$$specs{'SignatureIndex'}-$qty_index", "OverrideSignaturePrice-$$specs{'SignatureIndex'}-$qty_index", 
+
 		} # end foreach
 	} # end foreach
     return @v;
@@ -128,11 +130,14 @@ sub calc {
 			} # end if
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
 			@outputs = sets::union( @outputs, 
-					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
-					"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
 					"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index", "txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index",
 					);	
-			$$specs{"txtPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Total'};
+			if ( $$specs{"OverrideSignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+			$$specs{"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Total'} );
+			} # end if
 			$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
 			if ( $results{'Status'} eq 'uncalculated' ) {
 				$status = 'uncalculated';
@@ -145,7 +150,7 @@ sub calc {
 
 				if ( $results{'Equipment'} ) {
 					$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'}->id();
-					$GrandTotal += $results{'Total'};
+					$GrandTotal += $$specs{"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"};
 					$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Imposition'}->imposition();
 					$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Imposition'}->layout_width();
 					$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Imposition'}->layout_height();
