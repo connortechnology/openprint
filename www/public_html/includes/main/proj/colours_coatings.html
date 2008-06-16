@@ -1,4 +1,3 @@
-<input type="checkbox" id="sides_the_same<?Signature?>" name="sides_the_same<?Signature?>" value="Y" onclick="calc(this.form.name);" />
 <div class="InksFront">
 	<fieldset><legend>Front</legend>
 		<? echo ( 
@@ -43,6 +42,9 @@
 </div>
 <div class="InksBack">
 	<fieldset><legend>Back</legend>
+<input type="checkbox" id="sides_the_same<?Signature?>" name="sides_the_same<?Signature?>" value="Y" onclick="if(this.checked){$('InksOnBackQuestions').hide();}else{$('InksOnBackQuestions').show();}calc(this.form.name);" />
+<label class="radio" for="sides_the_same<?Signature?>">Same as front?</label>
+		<div id="InksOnBackQuestions" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>
 		<? echo (
             my $html;
             foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
@@ -79,6 +81,7 @@
 				$html .= ssi::variable_substitution( \$fragment, $variable );
 				return $html;
 			) ?>
+		</div>
 		</div>
 	</fieldset>
 	<br class="spacer"/>
