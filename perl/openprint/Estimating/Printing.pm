@@ -102,6 +102,7 @@ my %variables = (
 		'ColourCoatingSideTwo7' => ['save'], 'ColourCoatingTypeSideTwo7' => ['save'], 'ColourCoatingColourSideTwo7' => ['save'],'ColourCoatingCoverageSideTwo7' => ['save'],
 		'ColourCoatingSideTwo8' => ['save'], 'ColourCoatingTypeSideTwo8' => ['save'], 'ColourCoatingColourSideTwo8' => ['save'],'ColourCoatingCoverageSideTwo8' => ['save'],
 		'ColourCoatingSideTwo9' => ['save'], 'ColourCoatingTypeSideTwo9' => ['save'], 'ColourCoatingColourSideTwo9' => ['save'],'ColourCoatingCoverageSideTwo9' => ['save'],
+		'sides_the_same'	=> ['save'],
 		'chkBleedLeft' => ['save'],'chkBleedRight' => ['save'],'chkBleedTop' => ['save'],'chkBleedBottom' => ['save'],
 		'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
 		'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
@@ -329,7 +330,7 @@ sub get_colours {
 #$openprint::log->debug("Looking at $k $$specs{$k}");
 		if ( my ( $index ) = $k =~ /ColourCoating$side(\d+)$signature/ ) {
 			my $type = $$specs{"ColourCoatingType$side$index$signature"};
-			$openprint::log->debug("Found Colour $side $index $signature $type");
+			#$openprint::log->debug("Found Colour $side $index $signature $type");
 			if ( $type =~ /PMS/ ) {
 				if ( ! $$specs{'ColourCoatingColour'.$side.$index.$signature} ) {
 					$$specs{'ColourCoatingColour'.$side.$index.$signature} = "PMS $index";
@@ -3399,29 +3400,64 @@ sub summary {
 			$front_coatings .= ' Process';
 		} elsif ( $$specs{'chkProcessColourSideTwo'} ) {
 			$back_coatings .= ' Process';
-		} # end if Process
-		foreach my $c ( get_colours( $specs, 'SideOne') ) {
-			if ( $c =~ /Aqueous/ or $c =~ /Varnish/ or $c =~ /UV/ ) {
-				$front_coatings .= '+'.$c;
-			} elsif ( $c =~ /PMS/i ) {
-				$front_coatings .= '+PMS' if ! $front_coatings =~ /PMS/;
-			} elsif ( $c =~ /Metallic/i ) {
-				$front_coatings .= '+Metallic' if ! $front_coatings =~ /Metallic/;
-			} else {
+		} # end if Process 
+
+		my $side = 'SideOne';
+		foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+			if ( $$specs{'chk'.$colour.$side} ) {
 				$front_colours += 1;
 			} # end if
 		} # end foreach
-		foreach my $c ( get_colours( $specs, 'SideTwo') ) {
-			if ( $c =~ /Aqueous/ or $c =~ /Varnish/ or $c =~ /UV/ ) {
-				$back_coatings .= '+'.$c;
-			} elsif ( $c =~ /PMS/i ) {
-				$back_coatings .= '+PMS' if ! $back_coatings =~ /PMS/;
-			} elsif ( $c =~ /Metallic/i ) {
-				$back_coatings .= '+Metallic' if ! $back_coatings =~ /Metallic/;
-			} else {
+
+		if ( $$specs{'chkProcessColour'.$side} ) {
+			$front_colours += 4;
+		} # end if
+		foreach my $k ( keys %$specs ) {
+			if ( my ( $index ) = $k =~ /ColourCoating$side(\d+)/ ) {
+				my $type = $$specs{"ColourCoatingType$side$index"};
+
+				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
+					$front_coatings .= '+'.$$specs{"ColourCoatingColour$side$index"};
+				} elsif ( $type =~ /PMS/i ) {
+					$front_coatings .= '+PMS' if ! ($front_coatings =~ /PMS/);
+				} elsif ( $type =~ /Metallic/i ) {
+					$front_coatings .= '+Metallic' if ! ($front_coatings =~ /Metallic/);
+				} else {
+					$front_colours += 1;
+				} # end if
+			} # end if
+		} # end foreach
+		if ( $$specs{'sides_the_same'} eq 'Y' ) {
+			$back_colours = $front_colours;
+			$back_coatings = $front_coatings;
+			$coatings .= ' back the same as front';
+		} else {
+			$side = 'SideTwo';
+		foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+			if ( $$specs{'chk'.$colour.$side} ) {
 				$back_colours += 1;
 			} # end if
 		} # end foreach
+
+		if ( $$specs{'chkProcessColour'.$side} ) {
+			$back_colours += 4;
+		} # end if
+			foreach my $k ( keys %$specs ) {
+				if ( my ( $index ) = $k =~ /ColourCoating$side(\d+)/ ) {
+					my $type = $$specs{"ColourCoatingType$side$index"};
+
+					if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
+						$back_coatings .= '+'.$$specs{"ColourCoatingColour$side$index"};
+					} elsif ( $type =~ /PMS/i ) {
+						$back_coatings .= '+PMS' if ! ($back_coatings =~ /PMS/);
+					} elsif ( $type =~ /Metallic/i ) {
+						$back_coatings .= '+Metallic' if ! ($back_coatings =~ /Metallic/);
+					} else {
+						$back_colours += 1;
+					} # end if
+				} # end if
+			} # end foreach
+		} # end if
 		my $dimensions = '';
 		if ( $$specs{'txtSignatureType'} ) {
 			if ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) {
