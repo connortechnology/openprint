@@ -736,9 +736,11 @@ sub allocate {
 	if ( $quantity < 0 ) {
 		foreach my $skid_id ( sql::execute( undef, undef, q{SELECT skid_id FROM paper_allocations WHERE paper_id=? AND quantity > 0 AND project_id=? ORDER BY skid_id}, $paper_id, $Projects[0]->id() ) ) {
 			my $Skid = new openprint::Skid( $skid_id );
-			if ( $$Skid{Paper}{$paper_id} < -1*$qty ) {
-				$Paper->allocate( $skid_id, $Projects[0]->id(), -1*$$Skid{Paper}{$paper_id}, $units );
-				$qty += $$Skid{Paper}{$paper_id};
+			my $allocateable = $Skid->allocateable( $Paper );
+			next if ! $allocateable;
+			if ( $allocateable < -1*$qty ) {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
+				$qty += $allocateable;
 			} else {
 				$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
 				$qty = 0;
@@ -755,10 +757,12 @@ sub allocate {
 
 		foreach my $skid_id ( @skids ) {
 			my $Skid = new openprint::Skid( $skid_id );
+			my $allocateable = $Skid->allocateable( $Paper );
+			next if ! $allocateable;
 
-			if ( $$Skid{Paper}{$paper_id} < $qty ) {
-				$Paper->allocate( $skid_id, $Projects[0]->id(), $$Skid{Paper}{$paper_id}, $units );
-				$qty -= $$Skid{Paper}{$paper_id};
+			if ( $allocateable < $qty ) {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+				$qty -= $allocateable;
 			} else {
 				$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
 				$qty = 0;

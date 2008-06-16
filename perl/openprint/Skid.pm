@@ -277,6 +277,11 @@ sub allocation {
 	} # end if
 } # end sub allocatiosn
 
+sub allocateable {
+	my ( $self, $Paper ) = @_;
+	return $$self{'Paper'}{$Paper->id()} - $self->allocation( 'Paper'=>$Paper );
+} # end sub allocateable
+
 # Checkout all paper on the skid
 sub checkout {
 	my ( $self ) = @_;
