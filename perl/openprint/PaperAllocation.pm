@@ -137,6 +137,9 @@ sub Skid {
 sub User {
 	return new openprint::User( $_[0]{'operator_id'} );
 } # end sub User
+sub Project {
+	return new openprint::Project( $_[0]{'project_id'} );
+} # end sub Project
 
 1;
 __END__
