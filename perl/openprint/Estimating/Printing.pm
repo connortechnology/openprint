@@ -1118,6 +1118,8 @@ sub calc {
 					foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
 						next if $index == $service_index;
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+						next if ( ( $index > $service_index ) and ( $$sig_specs{'chkOverridePrintingType'.$qty_index} ne 'Y' ) );
+							
 						if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
 							if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
 								$$specs{'PrintingTypes'} = ['Digital'];

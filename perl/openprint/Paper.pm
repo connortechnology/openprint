@@ -1018,8 +1018,8 @@ sub load_from_signature {
 		$Paper->colour( $$specs{'txtSpecificStockColour'} );
 		$Paper->weight( $$specs{'txtSpecificStockWeight'} );
 		$Paper->calliper( $$specs{'txtSpecificStockCalliper'} );
-		$Paper->width( $$specs{'txtSpecificStockWidth'} );
-		$Paper->height( $$specs{'txtSpecificStockHeight'} );
+		$Paper->width( $$specs{'StockWidth'.$qty_index} );
+		$Paper->height( $$specs{'StockHeight'.$qty_index} );
 		$Paper->start_width( $$specs{'txtSpecificStockWidth'} );
 		$Paper->start_height( $$specs{'txtSpecificStockHeight'} );
 		$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
