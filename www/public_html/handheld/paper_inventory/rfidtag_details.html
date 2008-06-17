@@ -69,7 +69,7 @@
 			$html .= '</td>';
 			$html .= '<td>';
 			foreach my $Allocation ( openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$paper_id ) ) {
-				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() ), $Allocation->quantity(), $Allocation->units() );
+				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() )->docket(), $Allocation->quantity(), $Allocation->units() );
 			} # end foreach Allocation
 			$html .= '</td>';
 			$html .= '</tr>';
