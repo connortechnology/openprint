@@ -15,6 +15,8 @@ use strict;
 use vars qw( %fields %defaults %transforms );
 
 require sql;
+require openprint::CAR_Area;
+require openprint::CAR_Reason;
 
 %fields = (
 	'issued_to_id'	=> 'issued_to_id',
@@ -27,8 +29,8 @@ require sql;
 	'cause'			=> 'cause',
 	'action'		=> 'action',	
 	'effectiveness'	=> 'effectiveness',
-	'area'			=> 'area',
-	'reason'		=> 'reason',
+	'area_id'		=> 'area_id',
+	'reason_id'		=> 'reason_id',
 	'presses'		=> 'presses',
 	'part1_user_id'	=> 'part1_user_id',
 	'part1_signed_on'	=> 'part1_signed_on',
@@ -332,6 +334,13 @@ sub send_changed_notification {
 	} # end foreach To
 
 } # end sub send_part2
-1;
 
+sub Area {
+	return new openprint::CAR_Area( $_[0]{area_id} );
+} # end sub Area
+sub Reason {
+	return new openprint::CAR_Reason( $_[0]{reason_id} );
+} # end sub Reason
+
+1;
 __END__
