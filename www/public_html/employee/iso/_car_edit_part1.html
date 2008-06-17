@@ -93,8 +93,7 @@
 			<select name="area">
 				<option value="">select</option>
 				<? echo (
-					my @options = ( 'SALES/CUSTOMER SERVICE','PURCHASING','RECEIVING','PREPRESS','CTP','PRINTING','BINDERY','ADMINISTRATION','PACKING/SHIPPING','SUPPLIER','OTHER' );
-					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->area() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::CAR_Area::find('order'=>'sorting,lower(name)') ], $$variable{'CAR'}->area_id() );
 				) ?>
 			</select>
 		</td>
@@ -103,13 +102,12 @@
 			<select name="reason">
 				<option value="">select</option>
 				<? echo (
-					my @options = ( 'INCORRECT SALES ORDER','WRONG QUANTITY','SHIPPING/RECEIVING ERROR','CUTTING ERROR','HICKEYS/SCRATCHES','WRONG STOCK','MISC PREPRESS ERROR','OFFSET/PRINT ERROR','FOLDING ERROR','STAFF PERFORMANCE','COLOUR PROBLEMS','DAMAGE','PLATE ERROR','MISSING IMAGE/TEXT','SLOW RESPONSE TO RFQs','DOCKET ERROR','IMPO ERROR','MISC BINDERY ERROR','NOT REGISTERED(PRESS)','SUB STANDARD STOCK','WRONG ITEM','WRONG QUANTITY','INCORRECT DIMENSIONS','POOR QUALITY','SHELF LIFE','WRONG COLOUR','WRONG BATCH','CONTAMINATION','LATE DELIVERY','INVOICE ISSUE','INTERNAL AUDIT','EXTERNAL AUDIT','OTHER');
-					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->reason() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::CAR_Reason::find('order'=>'sorting,lower(name)') ], $$variable{'CAR'}->reason_id() );
 				) ?>
 			</select>
 		</td>
 	</tr>
-	<tr><td colspan="10"><textarea name="problem" rows="5"><? echo ( $$variable{'CAR'}->problem() ) ?></textarea></td></tr>
+	<tr><td colspan="10"><textarea name="problem" rows="5" onkeyup="textarea_resize(this);"><? echo ( $$variable{'CAR'}->problem() ) ?></textarea></td></tr>
 	<tr><td colspan="1">Press:</td><td colspan="9">
 <? echo ( 
 	my $html = '';
