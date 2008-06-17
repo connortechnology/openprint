@@ -231,7 +231,7 @@ function open_window( page ) {
 				my $Paper = new openprint::Paper( $paper_id );
 				my $total = 0;
 
-				$html .= '<tr><td colspan="5">' . $Paper->to_string() . '</td></tr>';
+				$html .= sprintf('<tr><td colspan="5"><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td></tr>', $Paper->id(), $Paper->to_string() );
 				foreach my $Allocation ( @{$Allocations{$paper_id}} ) {
 					my $Skid = $Allocation->Skid();
 					$total += $Allocation->quantity();
