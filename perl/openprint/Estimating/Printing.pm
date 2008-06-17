@@ -894,22 +894,25 @@ $openprint::log->debug("Grabbing UV Specs");
 				foreach my $index ( $Project->signatures('Cover Spreads') ) {
 					$cover_specs = openprint::service::get_specs_ref( $project_index, $index );
 				} # end foreach
-				if ( $$cover_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-					$$specs{'PrintingTypes'} = ['Digital'];
-				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
-					$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
-				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
-					$$specs{'PrintingTypes'} = ['Offset'];
-				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+				if ( $cover_specs ) {
+					if ( $$cover_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
+						$$specs{'PrintingTypes'} = ['Digital'];
+					} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
+						$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
+					} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
+						$$specs{'PrintingTypes'} = ['Offset'];
+					} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Web' ) {
 						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-				} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+					} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
 						$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+					} # end if
 				} # end if
 				if ( ! $$specs{'PrintingTypes'} ) {
 
 					foreach my $index ( $Project->signatures('Interior Spreads') ) {
 						next if $index == $service_index;
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+						next if ( ( $index > $service_index ) and ( $$sig_specs{'chkOverridePrintingType'.$qty_index} ne 'Y' ) );
 						if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
 							if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
 								$$specs{'PrintingTypes'} = ['Digital'];
