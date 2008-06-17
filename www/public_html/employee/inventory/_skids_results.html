@@ -91,7 +91,7 @@
 
 				$html .= '<td>';
 				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), paper_id, quantity FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $$Skid{'id'} );
-				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 5 ) {
+				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 4 ) {
 					my $Paper = new openprint::Paper( $paper_id );
 					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%d - %d %s</a><br/>',
 					$$Skid{'id'},
