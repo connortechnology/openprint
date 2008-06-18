@@ -13,6 +13,12 @@
 		@openprint::session{'/employee/inventory/skids.html?EndYear','/employee/inventory/skids.html?EndMonth','/employee/inventory/skids.html?EndDay'} = Date::Calc::Today();
 		@openprint::session{'/employee/inventory/skids.html?StartYear','/employee/inventory/skids.html?StartMonth','/employee/inventory/skids.html?StartDay'} = Date::Calc::Today();
 	} # end if
+	if ( $openprint::session{'/employee/inventory/skids.html?Docket'} ) {
+	@{$$variable{'Skids'}} = openprint::Skid::find( 
+		'allocated_to_docket'	=>	$openprint::session{'/employee/inventory/skids.html?Docket'},
+		'order'		=>	'id',
+		);
+	} else {
 	@{$$variable{'Skids'}} = openprint::Skid::find( 
 		'owner_id'	=>	( defined $openprint::session{'/employee/inventory/skids.html?Owner'} ? $openprint::session{'/employee/inventory/skids.html?Owner'} : undef ),
 		'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
@@ -37,10 +43,10 @@
 			'/employee/inventory/skids.html?UpdatedEndYear',
 			'/employee/inventory/skids.html?UpdatedEndMonth',
 			'/employee/inventory/skids.html?UpdatedEndDay'} ) : undef,
-		'allocated_to_docket'	=>	$openprint::session{'/employee/inventory/skids.html?Docket'},
 		'fsc_code'				=>	$openprint::session{'/employee/inventory/skids.html?fsc_code'},
 		'order'		=>	'id',
 		);
+	} # end if
 ) ?>
 <? if ( @{$$variable{'Skids'}} ) ?>
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">

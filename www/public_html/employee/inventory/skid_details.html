@@ -179,7 +179,7 @@ The following errors occurred:<br/>
 <? endif ( $$variable{'error'} ) ?>
 <div class="information"><?information?></div>
 <? if ( $openprint::param{'skid_quantity'} ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$openprint::param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
+<? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$openprint::param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
 <? endif ( $openprint::param{'skid_quantity'} ) ?>
 
 <form name="jump" method="get" action="skid_details.html">

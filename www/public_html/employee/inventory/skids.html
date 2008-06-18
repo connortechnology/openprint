@@ -16,13 +16,19 @@ Please select a Skid to view/edit.<br>
 	<fieldset class="filters"><legend>Choose Skid</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
-			<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);"/>
+			<input type="text" id="skid_id" name="skid_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
 		</p>
 	</fieldset>
 </form>
 <form name="f2" method="post" action="skids.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
+		<p>
+			<label>Docket:</label>
+			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup=this.value=this.value.replace(/\D/,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );",'','Go' ); ) ?>
+		</p>
+		<hr/>
 		<? eval (
 			if ( ! $openprint::session{'/employee/inventory/skids.html?StartYear'} ) {
 				@openprint::session{'/employee/inventory/skids.html?StartYear','/employee/inventory/skids.html?StartMonth','/employee/inventory/skids.html?StartDay'} = Date::Calc::Today();
@@ -64,10 +70,6 @@ Please select a Skid to view/edit.<br>
 			<select name="UpdatedEndMonth" onchange="setDaysDropDown(this.form.UpdatedEndYear.value,this.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);"><option value="">select</option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/skids.html?UpdatedEndMonth'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedEndMonth'} : ''); ) ?></select>
 			<select name="UpdatedEndDay"><option value="">select</option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/skids.html?UpdatedEndDay'} ? $openprint::session{'/employee/inventory/skids.html?UpdatedEndDay'} : ''); ) ?></select>
 			</span>
-		</p>
-		<p>
-			<label>Docket:</label>
-			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/inventory/skids.html?Docket'} ) ?>"  />
 		</p>
 		<p>
 			<label>FSC Code:</label>
