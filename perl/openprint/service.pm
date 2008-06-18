@@ -338,13 +338,27 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
+	# Order for these is important.  Stitching must be calc'd before Folding
+	foreach my $type ( 'SaddleStitching','LoopStitching','Folding' ) {
+		foreach my $service_index ( @{$services{$type}} ) {
+			if ( sets::isin( $type, [ 'LoopStitching', 'SaddleStitching'] ) ) {
+				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Stitching' );
+				$alert .= $$specs{'alert'};
+			} else {
+				eval "require openprint::Estimating::$type";
+				$openprint::log->error('Error requiring openAprint::Estimating::$type: ' . $@ ) if $@;
+				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $type );
+				$alert .= $$specs{'alert'};
+			} # end if
+		} # end foreach service_index
+	} # end foreach type
+
 	foreach my $type ( keys %services ) {
+		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding' ] );
+
 		foreach my $service_index ( @{$services{$type}} ) {
 			if ( sets::isin( $type, [ 'PhotoRetouching', 'ColourCorrection', 'PhotoPlacement', 'CDBurning' ] ) ) {
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Prepress' );
-			} elsif ( sets::isin( $type, [ 'LoopStitching', 'SaddleStitching'] ) ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Stitching' );
-				$alert .= $$specs{'alert'};
 			} elsif ( sets::isin( $type , [ 'Bundling', 'KraftWrap', 'ShrinkWrap' ] ) ) {
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Packaging' );
 				$alert .= $$specs{'alert'};

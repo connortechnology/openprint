@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -343,10 +343,11 @@ sub signature_calc {
 	my $imposition;
 	if ( $Imposition->StitchingImposition() ) {
 		$imposition = $Imposition->StitchingImposition();
-#$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug;
+$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug or 1;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
+$openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if $debug or 1;
 #$openprint::log->debug("Got impo from SaddleStitching: $imposition out") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
