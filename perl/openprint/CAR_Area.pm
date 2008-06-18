@@ -37,7 +37,7 @@ sub find {
 		$sql .= ' AND deleted=?';
 		push @values, $params{'deleted'};
 	} else {
-		$sql .= ' AND deleted=?';
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
 

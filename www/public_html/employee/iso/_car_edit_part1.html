@@ -90,16 +90,17 @@
 	<tr>
 		<td colspan="1">Area:</td>
 		<td colspan="4">
-			<select name="area">
+			<select name="area_id">
 				<option value="">select</option>
 				<? echo (
+					require openprint::CAR_Area;
 					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::CAR_Area::find('order'=>'sorting,lower(name)') ], $$variable{'CAR'}->area_id() );
 				) ?>
 			</select>
 		</td>
 		<td colspan="1">Reason:</td>
 		<td colspan="4">
-			<select name="reason">
+			<select name="reason_id">
 				<option value="">select</option>
 				<? echo (
 					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::CAR_Reason::find('order'=>'sorting,lower(name)') ], $$variable{'CAR'}->reason_id() );
