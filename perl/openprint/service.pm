@@ -367,13 +367,24 @@ $openprint::log->debug("Apres Skdis");
 			push @{$services{'Scoring'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Scoring' );
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Scoring");
 
 	if ( openprint::Estimating::Counting::neccessary( $Project ) ) {
 		push @{$services{'Counting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' ) if ! $services{'Counting'};
 	} # end if
 
+	foreach my $type ( 'SaddleStitching','LoopStitching','Folding' ) {
+		next if ! $services{$type};
+		foreach my $service_index ( @{$services{$type}} ) {
+			my $ServiceType = $Project->ServiceType( $service_index );
+			my $service_type = $ServiceType->type();
+			eval "require openprint::Estimating::$service_type";
+			$openprint::log->error('Error requiring openAprint::Estimating::$service_type: ' . $@ ) if $@;
+			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
+			$alert .= $$specs{'alert'};
+		} # end foreach service_index
+	} # end while service_type
 	foreach my $type ( keys %services ) {
+		next if sets::isin( $type, ['SaddleStitching','LoopStitching','Folding'] );
 		foreach my $service_index ( @{$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
