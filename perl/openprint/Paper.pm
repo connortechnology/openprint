@@ -57,14 +57,14 @@ sub find {
 
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
-	my $sql = 'SELECT *, (SELECT name FROM StockGroups WHERE id=group_id LIMIT 1) AS group, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id LIMIT 1) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id LIMIT 1) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id LIMIT 1) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id LIMIT 1) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id LIMIT 1) AS weight FROM Papers WHERE 1>0';
+	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
+			$sql .= ' AND papers.id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
 			push @values, @{$params{'id'}};
 		} else {
-			$sql .= ' AND id=?';
+			$sql .= ' AND papers.id=?';
 			push @values, $params{'id'};
 		} # end if
 	} # end if
@@ -164,15 +164,15 @@ sub find {
 		push @values, 1*$params{'height_start'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND id IN (SELECT paper_id FROM paper_allocations WHERE project_id = (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id = (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'project_type_name'} ) {
-		$sql .= ' AND id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT lngIndex FROM Project_Types WHERE strID = ?))';
+		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT lngIndex FROM Project_Types WHERE strID = ?))';
 		push @values, $params{'project_type_name'};
 	} # end if
 	if ( $params{'project_type_id'} ) {
-		$sql .= ' AND id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
+		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
 		push @values, $params{'project_type_id'};
 	} # end if
 	if ( $params{'fsc_code'} ) {
@@ -650,8 +650,9 @@ sub owner_id {
     return $$self{'owner_id'};
 } # end sub owner
 
+# This function assumes that the skid contents have already been updated
 sub add_inventory {
-    my ( $self, $skid_id, $quantity, $units, $description ) = @_;
+    my ( $self, $Skid, $quantity, $units, $description ) = @_;
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
@@ -673,11 +674,11 @@ sub add_inventory {
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  ($skid_id? $$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
+        'InStock',  ($Skid->id() ? 1*$$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
         'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
-        'skid_id',  $skid_id,
+        'skid_id',  $Skid->id(),
 		'units',	$units,
         );
 	delete $$self{allocated};
@@ -866,7 +867,7 @@ sub sheets_per_package {
 	$factor = 1 if ! $factor;
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
 	return $$self{'sheets_per_package'} * $factor;
-}
+} # end sheets_per_package
 
 sub gsm {
 	my $self = shift;

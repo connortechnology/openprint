@@ -372,6 +372,7 @@ $openprint::log->debug("Apres Skdis");
 		push @{$services{'Counting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' ) if ! $services{'Counting'};
 	} # end if
 
+	# Order for these is important.  Stitching must be calc'd before Folding
 	foreach my $type ( 'SaddleStitching','LoopStitching','Folding' ) {
 		next if ! $services{$type};
 		foreach my $service_index ( @{$services{$type}} ) {
@@ -383,8 +384,10 @@ $openprint::log->debug("Apres Skdis");
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
 	} # end while service_type
+
 	foreach my $type ( keys %services ) {
-		next if sets::isin( $type, ['SaddleStitching','LoopStitching','Folding'] );
+		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding' ] );
+
 		foreach my $service_index ( @{$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();

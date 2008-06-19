@@ -22,7 +22,7 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	}
-		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?paper_id='+paper_id, null , true);
+		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?referer=available_paper.html&paper_id='+paper_id, null , true);
 } // end function bug_report
 
 	function check_inputs(form ) {
@@ -168,7 +168,7 @@ Please select a Paper to view/edit.<br>
 	</fieldset>
 <div id="Results">
 <? eval (
-	@{$$variable{'Papers'}} = openprint::Paper::find( 'order_by'=>'manufacturer,name,finish,colour,weight', 'in_stock_start'=>1,);
+	@{$$variable{'Papers'}} = openprint::Paper::find( 'order_by'=>'lower(manufacturers.shortname),name,finish,colour,weight', 'in_stock_start'=>1,);
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">

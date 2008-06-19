@@ -71,6 +71,8 @@ sub copy {
 	my $new = new openprint::EmailCampaign();
 	@$new{keys %$self} = @$self{keys %$self};	
 	$new->name( 'Copy of ' . $$self{'name'} );
+	delete $$new{id};
+	return $new;
 } # end sub copy
 
 sub save {

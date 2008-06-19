@@ -434,7 +434,7 @@ sub save_skid {
 		} # end if
 		if ( $Paper and $Paper->id() ) {
 			my $delta = $Skid->add( $Paper, $qty ? $qty : $param{'Quantity'} );
-			$Paper->add_inventory( $Skid->id(), $delta, $param{'Units'} );
+			$Paper->add_inventory( $Skid, $delta, $param{'Units'} );
 #FIXME
 			if ( $delta > 0 ) {
 				$variable{'information'} .= "Added $delta $units to inventory.<br/>";
@@ -649,7 +649,7 @@ sub check_out {
 		my $Skid = new openprint::Skid( $skid_id );
 		foreach my $c ( $Skid->contents('paper_id'=>$paper_id) ) {
 			if ( $c->quantity() < $qty ) {
-				$Paper->add_inventory( $Skid->id(), -1*$c->quantity(), $units, 'Removed' . @Projects ? ' for docket ' . $Projects[0]->docket() : '' );
+				$Paper->add_inventory( $Skid->id(), -1*$c->quantity(), $units, 'Checked out' . @Projects ? ' for docket ' . $Projects[0]->docket() : '' );
 				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$c->quantity() ) if $Paper->allocated( $Projects[0]->id() );
 				$qty -= $c->quantity();
 				$c->delete();
@@ -657,10 +657,10 @@ sub check_out {
 				$c->quantity( $c->quantity() - $qty );
 				$c->save();
 				if ( @Projects ) {
-					$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' .( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
+					$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Checked out' .( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
 					$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
 				} else {
-					$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' );
+					$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Checked out' );
 				} # end if
 				$qty = 0;
 			} # end if
@@ -722,11 +722,11 @@ sub check_in {
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	my $delta = $Skid->add( $Paper, $quantity, $units );
 	if ( ! @Projects ) {
-		$Paper->add_inventory( $Skid->id(), $delta, $units, 'Added' );
+		$Paper->add_inventory( $Skid, $delta, $units, 'Added' );
 		$variable{'information'} .= "Checked in $quantity $units to unknown docket.<br/>";
 	} else {
 		my $Project = shift @Projects;
-		$Paper->add_inventory( $Skid->id(), $delta, $units, 'Added for docket ' . $Project->docket() );
+		$Paper->add_inventory( $Skid, $delta, $units, 'Added for docket ' . $Project->docket() );
 		$variable{'information'} .= "Checked in $quantity $units from docket " . $Project->docket() . '<br/>';
 	} # end if
 	$Skid->save();
@@ -759,18 +759,17 @@ sub allocate {
 	if ( $quantity < 0 ) {
 		foreach my $skid_id ( sql::execute( undef, undef, q{SELECT skid_id FROM paper_allocations WHERE paper_id=? AND quantity > 0 AND project_id=? ORDER BY skid_id}, $paper_id, $Projects[0]->id() ) ) {
 			my $Skid = new openprint::Skid( $skid_id );
-			foreach my $c ( $Skid->contents( 'paper_id'=>$paper_id ) ) {
-
-				if ( $c->quantity() < -1*$qty ) {
-					$Paper->allocate( $skid_id, $Projects[0]->id(), -1*$c->quantity(), $units );
-					$qty += $c->quantity();
-				} else {
-					$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
-					$qty = 0;
-				} # end if
-				last if ! $qty;
-			} # end foreach c
-		} # end foreach skid
+			my $allocateable = $Skid->allocateable( $Paper );
+			next if ! $allocateable;
+			if ( $allocateable < -1*$qty ) {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
+				$qty += $allocateable;
+			} else {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+				$qty = 0;
+			} # end if
+			last if ! $qty;
+		} # end foreach
 	} else {
 		my @skids;
 		if ( ! $skid_id ) {
@@ -781,17 +780,18 @@ sub allocate {
 
 		foreach my $skid_id ( @skids ) {
 			my $Skid = new openprint::Skid( $skid_id );
-			foreach my $c ( $Skid->contents( 'paper_id'=>$paper_id ) ) {
-				if ( $c->quantity() < $qty ) {
-					$Paper->allocate( $skid_id, $Projects[0]->id(), $c->quantity(), $units );
-					$qty -= $c->quantity();
-				} else {
-					$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
-					$qty = 0;
-				} # end if
-				last if ! $qty;
-			} # end foreach c
-		} # end foreach skid
+			my $allocateable = $Skid->allocateable( $Paper );
+			next if ! $allocateable;
+
+			if ( $allocateable < $qty ) {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+				$qty -= $allocateable;
+			} else {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+				$qty = 0;
+			} # end if
+			last if ! $qty;
+		} # end foreach
 	} # end if
 	$variable{'information'} .= "Allocated $quantity $units to docket " . $Projects[0]->docket() . '<br/>';
 } # end sub allocate
@@ -1006,7 +1006,7 @@ if ( 0 ) {
 					'manifest_id'	=>	$Manifest->id(),
 					'skid_id'		=>	$Skid->id(),
 					'quantity'		=>	$param{"qty_lbs-$tag_id"},
-					'cost'			=>	$param{"cost-$tag_id"},
+					'cost'			=>	$param{"cost"},
 					} );
 			last if $variable{'error'};
 		} # end foreach tag_id

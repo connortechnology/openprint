@@ -66,6 +66,20 @@ $openprint::log->debug('checkdate: ' . Date::Calc::check_date( @openprint::sessi
 			my $html;
 			my $rowclass;
 			foreach my $RFIDTag ( @{$$variable{'RFIDTags'}} ) {
+if ( ! $openprint::session{'/employee/inventory/rfidtags.html?assigned'} ) {
+	if ( $RFIDTag->type() eq 'Skid' ) {
+		next if openprint::Skid::find('rfidtag_id'=>$RFIDTag->id() );
+	} elsif ( $RFIDTag->type() eq 'Location' ) {
+		next if $RFIDTag->location_id();
+	} # end if
+} # end if
+if ( ! $openprint::session{'/employee/inventory/rfidtags.html?notassigned'} ) {
+	if ( $RFIDTag->type() eq 'Skid' ) {
+		next if ! openprint::Skid::find('rfidtag_id'=>$RFIDTag->id() );
+	} elsif ( $RFIDTag->type() eq 'Location' ) {
+		next if ! $RFIDTag->location_id();
+	} # end if
+} # end if
 
 				$html .= "<tr$rowclass height=\"25\">";
 				$html .= qq`<td align="center"><input type="checkbox" name="rfidtags" value="$$RFIDTag{'id'}"/></td>`;

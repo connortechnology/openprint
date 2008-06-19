@@ -36,7 +36,7 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	}
-	allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?paper_id='+paper_id, null , true);
+	allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?referer=paper_details.html&paper_id='+paper_id, null , true);
 } // end function bug_report
 
 var checkoutWin;
@@ -56,7 +56,7 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	}
-	checkoutWin.setAjaxContent('/employee/inventory/_check_out_popup.html?paper_id='+paper_id, null , true);
+	checkoutWin.setAjaxContent('/employee/inventory/_check_out_popup.html?referer=paper_details.html&paper_id='+paper_id, null , true);
 } // end function bug_report
 
 
@@ -263,12 +263,16 @@ The following errors occurred:<br/>
 
 </form>
 <? if ( $$variable{'paper_id'} ) ?>
-<div id="CurrentInventory">
-<!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
-</div>
+	<fieldset><legend onclick="toggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory - click to hide/show</legend>
+	<div id="CurrentInventory">
+	<!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
+	</div>
+	</fieldset>
 <div>
 	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
-	<div id="Allocations" style="display: none;"> </div>
+	<div id="Allocations">
+	<!--#include virtual="/employee/inventory/_paper_allocations.html" -->
+	</div>
 	</fieldset>
 </div>
 <br class="spacer"/>

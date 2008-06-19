@@ -86,9 +86,8 @@ sub email_campaign {
 	if ( $openprint::param{'btnFunction'} eq 'Run' ) {
 		$$variable{'Results'} = $Campaign->send();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
-		$openprint::param{'name'} = 'Copy of ' . $openprint::param{name};
-		$openprint::param{'id'} = undef;
-		$Campaign->save( %openprint::param );
+		$Campaign = $Campaign->copy();
+		$$variable{'error'} .= $Campaign->save( );
 	} # end if
 	$Campaign->load_info( $variable ) if $Campaign;
 	$$variable{'Campaign'} = $Campaign;

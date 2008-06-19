@@ -14,6 +14,12 @@
 		@openprint::session{'/employee/inventory/skids.html?EndYear','/employee/inventory/skids.html?EndMonth','/employee/inventory/skids.html?EndDay'} = Date::Calc::Today();
 		@openprint::session{'/employee/inventory/skids.html?StartYear','/employee/inventory/skids.html?StartMonth','/employee/inventory/skids.html?StartDay'} = Date::Calc::Today();
 	} # end if
+	if ( $openprint::session{'/employee/inventory/skids.html?Docket'} ) {
+	@{$$variable{'Skids'}} = openprint::Skid::find( 
+		'allocated_to_docket'	=>	$openprint::session{'/employee/inventory/skids.html?Docket'},
+		'order'		=>	'id',
+		);
+	} else {
 	@{$$variable{'Skids'}} = openprint::Skid::find( 
 		'owner_id'	=>	( defined $openprint::session{'/employee/inventory/skids.html?Owner'} ? $openprint::session{'/employee/inventory/skids.html?Owner'} : undef ),
 		'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
@@ -38,11 +44,11 @@
 			'/employee/inventory/skids.html?UpdatedEndYear',
 			'/employee/inventory/skids.html?UpdatedEndMonth',
 			'/employee/inventory/skids.html?UpdatedEndDay'} ) : undef,
-		'allocated_to_docket'	=>	$openprint::session{'/employee/inventory/skids.html?Docket'},
 		'fsc_code'				=>	$openprint::session{'/employee/inventory/skids.html?fsc_code'},
 		'purpose_id'			=>	$openprint::session{'/employee/inventory/skids.html?purpose_id'},
 		'order'		=>	'id',
 		);
+	} # end if
 ) ?>
 <? if ( @{$$variable{'Skids'}} ) ?>
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">
@@ -95,7 +101,7 @@
 
 				$html .= '<td>';
 				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), paper_id, quantity FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $$Skid{'id'} );
-				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 5 ) {
+				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 4 ) {
 					my $Paper = new openprint::Paper( $paper_id );
 					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%d - %d %s</a><br/>',
 					$$Skid{'id'},
