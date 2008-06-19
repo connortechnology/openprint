@@ -28,67 +28,17 @@
 <!--#include virtual="_shipping_type_select.html"-->
 <? echo ( 
 	my $html;
-	my %shipping_fields = (
-		'ToCompanyName'    =>  'CompanyName',
-		'ToSalutation'     =>  'Salutation',
-		'ToFirstName'      =>  'FirstName',
-		'ToLastName'       =>  'LastName',
-		'ToAddress1'       =>  'Address1',
-		'ToAddress2'       =>  'Address2',
-		'ToCity'           =>  'City',
-		'ToStateProvince'  =>  'StateProvince',
-		'ToCountry'        =>  'Country',
-		'ToPostalCode'  	=>	'PostalCode',
-		'ToPhone'          =>  'Phone',
-		'ToExtension'      =>  'Extension',
-		'ToFax'            =>  'Fax',
-		'ToEmail'          =>  'Email',
-		);
 
 	my $services = $$variable{'Project'}->services();
 
 	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
-		next if $ServiceType->name() eq 'CustomerPickUp';
 		next if ! $$services{$ServiceType->name()};
 		foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
-			my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
 			$$variable{'ServiceIndex'} = $service_id;
 			$$variable{'ServiceType'} = $ServiceType->name();
-
-			if ( ! ( $$specs{'ToCompanyName'} and $$specs{'ToAddress1'} and $$specs{'ToCity'} and $$specs{'ToCountry'} ) ) {
-				# Load from customer
-				my $customer = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
-				my $shipping_address = $customer->get_shipping_address();
-				my %shipping_specs;
-				@shipping_specs{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
-				foreach my $spec ( keys %shipping_fields ) {
-					$$specs{$spec} = $shipping_specs{$spec} if ! $$specs{$spec};
-				} # end foreach
-			} # end if
-			foreach my $spec ( keys %shipping_fields ) {
-				$$variable{"$spec-$$variable{'ProjectIndex'}-$service_id"} = $$specs{$spec};
-			} # end foreach
-			my %UserSpecs = (
-					'ToEmail'		=>	'email',
-					'ToSalutation'	=>	'salutation',
-					'ToFirstName'	=>	'firstname',
-					'ToLastName'	=>	'lastname',
-					'ToPhone'		=>	'phone',
-					'ToExtension'	=>	'extension',
-					);
-			if ( ! ( $$specs{'ToEmail'} and $$specs{'ToPhone'} ) ) {
-				require openprint::User;
-				my $User = new openprint::User( $openprint::session{'user_id'} );
-				foreach my $spec ( keys %UserSpecs ) {
-					$$specs{$spec} = $User->get($UserSpecs{$spec}) if ! $$specs{$spec};
-				} # end foreach
-			} # end if
-
-			foreach my $spec ( keys %UserSpecs ) {
-				$$variable{"$spec-$$variable{'ProjectIndex'}-$service_id"} = $$specs{$spec};
-			} # end foreach
-			my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_project_shipping_address.html');
+			my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_'.$ServiceType->name().'.html');
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
+
 		} # end foreach service_id
 
 	} # end foreach ServiceType

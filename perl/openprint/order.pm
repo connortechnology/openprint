@@ -323,49 +323,50 @@ sub save_project_information {
 	} # end if
 
 	my $services = $Project->services();
-	my %ShippingServices = map { $_->name(), $_->id() } openprint::ServiceType::find('category'=>'Shipping');
+	my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+	my %ShippingServices = map { $_->name(), $_->id() } @ServiceTypes;
 
 	# If we are specifying the Shipping Type
 	if ( $openprint::param{'ShippingType'.$project_index} ) {
-		foreach my $ShippingType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+		foreach my $ShippingType ( @ServiceTypes ) {
 			if ( sets::isin( $ShippingType->name(), $openprint::param{'ShippingType'.$project_index} ) ) {
 				if ( ! $$services{$ShippingType->name()} ) {
 					my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $ShippingType->name() );
 					push @{$$services{$ShippingType->name()}}, $new_service_index;
-					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, $ShippingType->name() );
 				} # end if
 			} elsif ( $$services{$ShippingType->name()} ) {
 				foreach ( @{$$services{$ShippingType->name()}} ) {
 					openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 				} # end foreach
+				delete $$services{$ShippingType->name()};
 			} # end if
-
-			next if $ShippingType->name() eq 'CustomerPickUp';
 
 			if ( $$services{$ShippingType->name()} ) {
-			my %shipping_fields = (
-					'ToCompanyName'		=>	'ToCompanyName',
-					'ToSalutation'		=>	'ToSalutation',
-					'ToFirstName'		=>	'ToFirstName',
-					'ToLastName'		=>	'ToLastName',
-					'ToAddress1'		=>	'ToAddress1',
-					'ToAddress2'		=>	'ToAddress2',
-					'ToCity'			=>	'ToCity',
-					'ToStateProvince'	=>	'ToStateProvince',
-					'ToCountry'			=>	'ToCountry',
-					'ToPostalCode'		=>	'ToPostalCode',
-					'ToPhone'			=>	'ToPhone',
-					'ToExtension'		=>	'ToExtension',
-					'ToFax'				=>	'ToFax',
-					'ToEmail'			=>	'ToEmail',
-					);
+				my %shipping_fields = (
+						'txtQuantity'.$Project->ordered_quantity_index()	=> 'txtQuantity'.$Project->ordered_quantity_index(),
+						'ToCompanyName'		=>	'ToCompanyName',
+						'ToSalutation'		=>	'ToSalutation',
+						'ToFirstName'		=>	'ToFirstName',
+						'ToLastName'		=>	'ToLastName',
+						'ToAddress1'		=>	'ToAddress1',
+						'ToAddress2'		=>	'ToAddress2',
+						'ToCity'			=>	'ToCity',
+						'ToStateProvince'	=>	'ToStateProvince',
+						'ToCountry'			=>	'ToCountry',
+						'ToPostalCode'		=>	'ToPostalCode',
+						'ToPhone'			=>	'ToPhone',
+						'ToExtension'		=>	'ToExtension',
+						'ToFax'				=>	'ToFax',
+						'ToEmail'			=>	'ToEmail',
+						);
 				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
-
 					foreach my $spec ( keys %shipping_fields ) {
-						openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $shipping_fields{$spec}, $openprint::param{"$spec-$project_index-$service_id"} );
+						openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $shipping_fields{$spec}, $openprint::param{"$spec-$project_index-$service_id"} ) if exists $openprint::param{"$spec-$project_index-$service_id"};
 					} # end foreach field
+					my $specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, $ShippingType->name() );
+$openprint::log->warn($$specs{'alert'}) if $$specs{'alert'};
 				} # end foreach service_id
-			} # end if
+			} # end if exists service
 		} # end foreach ShippingType
 	} # end if
 
@@ -437,12 +438,6 @@ $openprint::log->debug("Making order from quote");
 		return misc::error( $log, $dbh, $variable, 'Error', $error );
 	} # end if
 	$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
-
-	#my $order_total;
-	##$order_total += $project_price;
-	#if ( check_credit( $log, $dbh, $variable, $order_total ) ) {
-		#return;
-	#} # end if
 
 	if ( ! $$variable{'error'} ) {
 		# Only check for errors if we don't have any yet
@@ -520,7 +515,6 @@ $openprint::log->debug("Making order from quote");
 
 	$$variable{'OrderID'} = $order_id;
 	$$variable{'Order'} = new openprint::Order( $order_id );
-$openprint::log->debug("Order id: " . $$variable{'Order'}->id() );
 
 } # end sub information
 
@@ -632,7 +626,7 @@ sub verify_order {
 	$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
 
-	if ( $openprint::param{'btnFunction'} eq 'Continue') { # saving projcet information
+	if ( $openprint::param{'btnFunction'} eq 'Continue') { # saving project information
 		foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
 			save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
 		} # end foreach
@@ -659,37 +653,47 @@ sub verify_order {
 	} # end if
 
 	my @errors;
-	my @data = sql::execute( $log, $dbh, q{SELECT intQuantityIndex, ShippingType, lngProjectIndex, (SELECT strProjectReference FROM tbl_Projects WHERE Index=lngProjectIndex) FROM Order_Contents WHERE OrderIndex=?}, $order_id );
-	while ( my ( $qty, $shipping, $project_index, $ref ) = splice @data, 0, 4 ) {
+	my @data = sql::execute( $log, $dbh, q{SELECT intQuantityIndex, ShippingType, lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id );
+	while ( my ( $qty, $shipping, $project_index ) = splice @data, 0, 3 ) {
+		my $Project = new openprint::Project( $project_index );
 		if ( ! $qty ) {
 			push @errors, "Please select the quantity to order for project $project_index";
-		} # end if
-		if ( ! $ref ) {
-			push @errors, "Please give project $project_index a reference";
 		} # end if
 		if ( ! $shipping ) {
 			push @errors, "Please select a shipping type for project $project_index";
 		} # end if
-		my $Project = new openprint::Project( $project_index );
-		my %services = $Project->get_services();
-		if ( $shipping and $shipping ne 'CustomerPickUp' ) {
-			my $specs = openprint::service::get_specs_ref( $project_index, $services{$shipping}[0] );
-
-			# do error checks
-			push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{'txtShippingCompanyName'};
-			push @errors, 'Please enter the Shipping Address.' if ! $$specs{'txtShippingAddress1'};
-			push @errors, 'Please enter the Shipping City.' if ! $$specs{'txtShippingCity'};
-			push @errors, 'Please enter the Shipping State/Province.' if ! $$specs{'ddmShippingStateProvince'};
-			push @errors, 'Please enter the Shipping PostalCode.' if ! $$specs{'txtShippingPostalCode'};
-			push @errors, 'Please enter the Shipping Country.' if ! $$specs{'ddmShippingCountry'};
-			push @errors, 'Please enter the Shipping Phone.' if ! $$specs{'txtShippingPhone'};
-			push @errors, 'Please enter the Shipping Email.' if	! $$specs{'txtShippingEmail'};
-
-			if ( ! Email::Valid->address($$specs{'txtShippingEmail'} ) ) {
-				push @errors, 'Shipping Email is not a valid email address.';
-			} # end if
+		if ( ! $Project->reference() ) {
+			push @errors, "Please give project $project_index a reference";
 		} # end if
-	} # end while
+		my $services = $Project->services();
+		my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+		foreach my $ServiceType ( @ServiceTypes ) {
+			next if ! $$services{$ServiceType->name()};
+			next if $ServiceType->name() eq 'CustomerPickUp';
+		
+			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+
+# do error checks
+				push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{'ToCompanyName'};
+				push @errors, 'Please enter the Shipping Address.' if ! $$specs{'ToAddress1'};
+				push @errors, 'Please enter the Shipping City.' if ! $$specs{'ToCity'};
+				push @errors, 'Please enter the Shipping State/Province.' if ! $$specs{'ToStateProvince'};
+				push @errors, 'Please enter the Shipping PostalCode.' if ! $$specs{'ToPostalCode'};
+				push @errors, 'Please enter the Shipping Country.' if ! $$specs{'ToCountry'};
+				push @errors, 'Please enter the Shipping Phone.' if ! $$specs{'ToPhone'};
+				push @errors, 'Please enter the Shipping Email.' if	! $$specs{'ToEmail'};
+
+				if ( ! Email::Valid->address($$specs{'ToEmail'} ) ) {
+					push @errors, 'Shipping Email is not a valid email address.';
+				} # end if
+	
+				if ( openprint::service::status( $project_index, $service_id ) eq 'uncalculated' ) {
+					push @errors, 'Unable to calculate shipping:' . $$specs{'alert'}.'.';
+				} # end if
+			} # end foreach service_id
+		} # end foreach ServiceType
+	} # end while Project
 	if ( @errors ) {
 		$$variable{'error'} .= join('<br/>', @errors );
 		$$variable{'Redirect'} = '/main/order/information.html';
