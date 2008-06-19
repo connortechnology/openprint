@@ -1530,8 +1530,6 @@ sub get_project_price {
 #$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 		} # end if Folding
 
-		my $pms_prices = get_special_colours_price( $openprint::log, $openprint::dbh, $openprint::variable, $P, $filtered_colours, $mixed_colours, $washed_colours, $special_colours, $qty_index );
-
 		if ( 0 ) {
 $openprint::log->debug("QTY: $qty_index");
 			foreach my $imp ( @impositions ) {
@@ -1578,7 +1576,7 @@ $openprint::log->warn('next');
 
 #my $time = gettimeofday();
 			$imp = $imp->copy();
-			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
+			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $inkCoverage, $special_colours );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 						#$openprint::log->debug( breakdown( $price, $specs ) );
 
@@ -1629,7 +1627,7 @@ $$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 
 #my $time = gettimeofday();
 #n$new_specs{'no_stitching'} = 1; # unneccessary calculation
-						$sig_price = calc_price( $Project, $s_id, $imp, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
+						$sig_price = calc_price( $Project, $s_id, $imp, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $inkCoverage, $special_colours );
 #$openprint::log->debug("2 Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$new_specs{'no_stitching'} = 0; # unneccessary calculation
 						$additional_price = $$sig_price{'Comparison Cost'};
@@ -1654,7 +1652,7 @@ $$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 						if ( $additional_signature_cache{$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index}} ) {
 #$openprint::log->debug("Using cache: " . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{complete} . ': ' . $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}}{'Comparison Cost'} );
 							#$sig_price = $additional_signature_cache{$new_specs{'txtSignatureSpreadQuantity'.$qty_index}};
-							$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index}}, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $pms_prices, $inkCoverage, $special_colours );
+							$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index}}, $project, $Project->services(), \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $inkCoverage, $special_colours );
 						} else {
 							my $services = $Project->services();
 							my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -1813,7 +1811,7 @@ $openprint::log->warn("Check Price: $$price{'Comparison Cost'} $p > $price_to_be
 # Takes and Imposition object, and calculates a Price Object.
 # Does not need to take folding or Cutting into account, as those were chosen separately
 sub calc_price {
-	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $price_to_beat, $pms_prices, $inkCoverage, $special_colours ) = @_;
+	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $price_to_beat, $inkCoverage, $special_colours ) = @_;
 
 	my $Paper = $Imposition->Paper();
 	my $Press = $Imposition->Press();
@@ -2159,11 +2157,8 @@ sub calc_price {
 		%varnish_price = get_varnish_run_price( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$project{print_sides}, $impressions, $specs, $side_one_colours, $side_two_colours, $qty_index, $Imposition, $Project, $service_index, $inkCoverage);
 	} # end if
 
-	$price{'Press Washes'} += $$pms_prices{'Press Washes'};
+	#$price{'Press Washes'} += $$pms_prices{'Press Washes'};
 	$price{'Press Washes'} += $varnish_price{'Press Washes'};
-	$price{'Press Wash Price'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'WashUp', undef, $Press );
-	$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
-
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
 		$price{'Imposition MakeReady'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'ImpositionMakeReady','',$Press );
 		$price{'Imposition Price'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'Imposition',$Imposition->imposition(),$Press);
@@ -2173,14 +2168,13 @@ sub calc_price {
 	my %RunStylePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $$Imposition{runstyle}.'Setup','',$Press );
 	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
 
-	$price{'Ink Mix Charge'} = $$pms_prices{'Ink Mix Charge'};
-	my $setup_cost = $price{'Imposition Total'} + $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $$pms_prices{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'};
+	#$price{'Ink Mix Charge'} = $$pms_prices{'Ink Mix Charge'};
+	my $setup_cost = $price{'Imposition Total'} + $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'};
 	$price{'Comparison Cost'} += $setup_cost;
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
-	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Run Charges' );
+	#return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Run Charges' );
 	$setup_cost += $press_setup;
 
-	$price{'Setup Total'} = $setup_cost;
 	$price{'Press Setup'} = $press_setup;
 
 	my $run_cost = $run_price{'Price'};
@@ -2209,6 +2203,9 @@ sub calc_price {
 	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Run Cost' );
 
 	$price{'Ink Price'} = 0;
+
+	my %mixed_colours = %$mixed_colours;
+
 	foreach my $real_colour ( @colours ) {
 		my $colour;
 		if ( $real_colour =~ /Varnish/ ) {
@@ -2222,10 +2219,38 @@ sub calc_price {
 		} # end if
 		my %ink_price;
 		my $InkMaterial;
+
 		if ( $$special_colours{$real_colour} ) {
+			#my %pms_mix_price = openprint::service::get_price_object( $log, $dbh, $variable, 'PMSInkMix','',$Press);
+	##my %wash_price = openprint::service::get_price_object( $log, $dbh, $variable, 'WashUp','',$Press);
+
+			if ( ! $mixed_colours{$real_colour} ) {
+				my %mix_price = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'MetallicInkMix',undef,$Press);
+				$price{'Ink Mix Charge'} += $mix_price{'Price'};
+				$mixed_colours{$real_colour} = 1;
+			} # end if
+
+# Washed_colours contains each colour used in the other signatures
+			if ( ( ! $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) or ( $$Imposition{runstyle} eq 'Perfecting' and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) )
+			   ) {
+				$price{'Press Washes'} += $$special_colours{$real_colour}{washups};
+			} # end if
+#
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
 			$InkMaterial = new openprint::Material( $$special_colours{$real_colour}->{material_id} );
 			%ink_price = $InkMaterial->get_price( undef, $Press );
+		} elsif ( ! sets::isin( $real_colour, ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour'] ) ) {
+			# PMS?
+			if ( ! $mixed_colours{$real_colour} ) {
+				my %mix_price = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'PMSInkMix',undef,$Press);
+				$price{'Ink Mix Charge'} += $mix_price{'Price'};
+				$mixed_colours{$real_colour} = 1;
+			} # end if
+
+			if ( ( ! $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) or ( $$Imposition{runstyle} eq 'Perfecting' and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) )
+			   ) {
+				$price{'Press Washes'} += 1;
+			} # end if
 		} # end if
 		if ( ! %ink_price ) {
 #$openprint::log->debug("Getting price for $colour Ink");
@@ -2279,6 +2304,11 @@ sub calc_price {
 			$openprint::log->error("Unknown units for Ink $colour: $ink_price{'units'}" . $Press->strid() );
 		} # end if
 	} # end foreach
+	$price{'Press Wash Price'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'WashUp', undef, $Press );
+	$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
+
+	$setup_cost += $price{'Ink Mix Charge'} + $price{'Press Wash Total'};
+	$price{'Setup Total'} = $setup_cost;
 
 	my $total_cost = $run_cost + $setup_cost + $plate_setup{'Plate Price'} * $plate_setup{'Plate Count'} + $price{'Ink Price'} + $varnish_price{'run_price'} + $varnish_price{'Material Total'} + $plate_setup{'Blank Price'} * $plate_setup{'Blank Plates'};
 	$price{'Comparison Cost'} += $price{'Film Cost'} + $price{'Ink Price'} + $varnish_price{'run_price'} + $varnish_price{'Material Total'};
@@ -2529,7 +2559,7 @@ sub get_varnish_run_price {
 				$colour = 'GlossVarnish';
 			} elsif ( $colour =~ /Matte/ ) {
 				$colour = 'MatteVarnish';
-		} # end if
+			} # end if
 			$area = $Imposition->layout_area();
 		} # end if
 		if ( my @materials = openprint::Material::find('name'=>$colour) ) {
@@ -2572,43 +2602,6 @@ sub get_varnish_run_price {
 	return %varnish_price;
 } # end if
 
-
-# Returns a price per image, which will later need to be multiplied by the imposition
-sub get_special_colours_price {
-	my ( $log, $dbh, $variable, $Press, $colours, $mixed_colours, $washed_colours, $special_colours, $qty_index ) = @_;
-	my %price = ('Ink Mix Charge',0,'Press Washes',0);
-
-	my %metallic_mix_price = openprint::service::get_price_object( $log, $dbh, $variable, 'MetallicInkMix','',$Press);
-	my %pms_mix_price = openprint::service::get_price_object( $log, $dbh, $variable, 'PMSInkMix','',$Press);
-	#my %wash_price = openprint::service::get_price_object( $log, $dbh, $variable, 'WashUp','',$Press);
-
-	foreach my $key ( @{$colours} ) {
-		next if sets::isin( $key, ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour'] );
-		next if $key =~ /Varnish/;
-		my $mix_price = \%pms_mix_price;
-
-		if ( $$special_colours{$key} ) {
-			$mix_price = \%metallic_mix_price;
-		} # end if
-		if ( ! $$mixed_colours{$key} ) {
-			$price{'Ink Mix Charge'} += $$mix_price{'Price'};
-		} # end if
-
-# Washed_colours contains each colour used in the other signatures
-		if ( ! $$washed_colours{$key.'-'.$Press->strid().'-'.$qty_index} ) {
-			if ( $$special_colours{$key} ) {
-				$price{'Press Washes'} += $$special_colours{$key}{washups};
-			} else {
-				$price{'Press Washes'} += 1;
-			} # end if
-		} # end if
-#
-	} # end foreach
-
-# So here at the end, Total Run Price is the price of ink for a 1out 2-sided impression. If we multiply it by the imposition and # of sheets, then we should get the total cost of ink. 
-
-	return \%price;
-} # end sub get_special_colours_price
 
 sub get_aqueous_price {
 	my ( $log, $dbh, $variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ) = @_;
