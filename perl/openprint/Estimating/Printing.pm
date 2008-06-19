@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 use strict;
@@ -1530,7 +1530,7 @@ sub get_project_price {
 #$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 		} # end if Folding
 
-		if ( 0 ) {
+		if ( 1 ) {
 $openprint::log->debug("QTY: $qty_index");
 			foreach my $imp ( @impositions ) {
 	$imp->display();
@@ -1572,7 +1572,7 @@ $openprint::log->warn('next');
 				} # end if
 			} # end if OverrrideCutOff
 #my $starttime = gettimeofday();
-#$imp->display();
+$imp->display();
 
 #my $time = gettimeofday();
 			$imp = $imp->copy();
