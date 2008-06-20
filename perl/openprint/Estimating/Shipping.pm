@@ -35,6 +35,7 @@ my %variables = (
     'txtPackageWeight3'=>['save','output'],
 	'FromCompany'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
 	'ToCompany'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
+	'alert'=>['save'],
 
 );
 
@@ -60,7 +61,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-
+	$$specs{'alert'} = '';
 	my $status = 'calculated';
 	my ( $carton_service_index ) = $$services{'PlainCartons'}[0] if $$services{'PlainCartons'}[0];
 	if ( ! $carton_service_index ) {
