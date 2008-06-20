@@ -237,10 +237,10 @@ sub impositions {
 
 	my @imps = ( $Imposition );
 
-	if ( $Imposition->Press()->specification('Folding Capable') ne 'Y' ) {
+	my $Equipment = $Imposition->Press();
+	if ( $Equipment->specification('Folding Capable') ne 'Y' ) {
 		return @imps;
 	} # end if
-	my $Equipment = $Imposition->Press();
 
 # Special case because we can't cut it in the middle of printing.  This case is basically for web presses
 	my $foldtype = $Imposition->spread_columns().'x'.$Imposition->spread_rows().'-'.$Imposition->pages().'Page-'.$Imposition->image_orientation().'SignatureFold';
@@ -390,6 +390,32 @@ $openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
 #$openprint::log->debug("Got impo from LoopStitching: $imposition out") if $debug;
+	} else {
+		# Something else entirely
+			
+		my $width_folds;
+		my $height_folds;
+		if ( $$sig_specs{'txtFinalWidth'} ) {
+			$width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} )-1 );
+			$height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+		} else {
+			$width_folds = sprintf('%.0f', ($Imposition->image_width() / $Imposition->object_width())-1 );
+			$height_folds = sprintf('%.0f', ($Imposition->image_height()/$Imposition->object_height()) -1 );
+		} # end if
+		if ( $width_folds and $height_folds ) {
+		} elsif ( $width_folds ) {
+			if ( $Imposition->image_orientation() eq 'Vertical' ) {
+				$imposition = $Imposition->rows();
+			} else {
+				$imposition = $Imposition->columns();
+			} # end if
+		} elsif ( $height_folds ) {
+			if ( $Imposition->image_orientation() eq 'Vertical' ) {
+				$imposition = $Imposition->columns();
+			} else {
+				$imposition = $Imposition->rows();
+			} # end if
+		} # end if
 	} # end if
 	$imposition = 1 if ! $imposition;
 
@@ -606,7 +632,6 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		
 				$openprint::log->debug("Pricing fold $fold_type on " . $Equipment->name()) if $debug;
 
-				my $width = $Imposition->image_width();
 				my $width_folds;
 				my $height_folds;
 				if ( $$sig_specs{'txtFinalWidth'} ) {
@@ -624,6 +649,23 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					} else {
 						$width_folds = $Fold->folds();
 						$height_folds = $Fold->angles();
+					} # end if
+				} # end if
+$openprint::log->debug(" Width_folds: $width_folds Height_folds: $height_folds");
+				my $width = 0;
+				if ( $width_folds and $height_folds ) {
+					$width = $Imposition->image_width() * $imposition;
+				} elsif ( $width_folds ) {
+					if ( $Imposition->image_orientation() eq 'Vertical' ) {
+						$width = $Imposition->image_height() * $Imposition->rows();
+					} else {
+						$width = $Imposition->image_height() * $Imposition->columns();
+					} # end if
+				} elsif ( $height_folds ) {
+					if ( $Imposition->image_orientation() eq 'Vertical' ) {
+						$width = $Imposition->image_width() * $Imposition->columns();
+					} else {
+						$width = $Imposition->image_width() * $Imposition->rows();
 					} # end if
 				} # end if
 

@@ -245,7 +245,7 @@ sub used_width {
 sub used_height {
     my $self = shift;
 	my $height = $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'} + ( $$self{'colour_bar_orientation'} eq 'Width' ? $$self{'colour_bar_size'} : 0 );
-$openprint::log->warn("Height: $height");
+#$openprint::log->warn("Height: $height");
     return $height;
 } # end sub used_height
 

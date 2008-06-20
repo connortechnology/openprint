@@ -1857,7 +1857,7 @@ sub get_project_price {
 				} # end if
 			} # end if OverrrideCutOff
 #my $starttime = gettimeofday();
-$imp->display();
+#$imp->display();
 
 			$$specs{'ddmRunStyle'.$qty_index} = $imp->runstyle();
 			$$specs{'ddmPress'.$qty_index} = $Press->strid();
