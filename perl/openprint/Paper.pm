@@ -660,8 +660,7 @@ sub add_inventory {
 
 	my $in_stock;
 	my $Skid;
-	if ( $skid_id ) {
-		$Skid = new openprint::Skid( $skid_id );
+	if ( $Skid and $Skid->id() ) {
 		foreach my $content ( $Skid->contents( 'Paper'=>$self ) ) {
 			$in_stock += $content->quantity();
 		} # end foreach
