@@ -17,6 +17,7 @@ require openprint::press_schedule;
 require sql;
 require openprint::MXML;
 require openprint::JDF;
+require openprint::PaperAllocation;
 
 sub view {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -58,6 +59,10 @@ sub view {
 				if ( $complete ) {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Complete' );	
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'All signatures complete - marking printing complete.' );
+					foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
+						$PA->delete();
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+					} # end foreach
 				} else {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Ordered' );	
 				} # end if
@@ -238,6 +243,10 @@ sub view {
 			if ( $complete ) {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Printed from $status" );
+				foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
+					$PA->delete();
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+				} # end foreach
 # shuffle jobs on the print schedule
 
 			} else {
