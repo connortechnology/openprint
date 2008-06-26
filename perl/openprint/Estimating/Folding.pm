@@ -473,14 +473,14 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 			my $runSpeed = $Equipment->specification($fold.'RunSpeed');
 			if ( ! $runSpeed ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No runspeed for $fold on " . $Equipment->name() ." : $runSpeed<br/>";
-				next;
+				last;
 			} # end if
 
 			# We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
 			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold, $folds{$fold} * $$specs{"txtQuantity$qty_index"}/$imposition, $Equipment );
 			if ( ! %servicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No price assigned for $fold on ".$Equipment->name().". <br/>";
-				next;
+				last;
 			} # end if
 
 			my %setupPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold.'MakeReady', undef, $Equipment );
@@ -518,13 +518,13 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		} # end foreach fold
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Total: ' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . '<br/>';
 
-		if ( ( $totalPrice < $bestPrice ) or ( ! defined $bestPrice ) ) {
+		if ( (defined $totalPrice) and (( $totalPrice < $bestPrice ) or ( ! defined $bestPrice ) ) ) {
 			$bestPrice = $totalPrice;
 			$bestEquipment = $Equipment;
 			$bestRunTime = int($totalTime);
 			$bestFolds = \%folds;
+			last if ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 		} # end if
-		last if ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 	} # end foreach Equipment
 	my %results = (
 		'Price'			=> $bestPrice,
@@ -581,9 +581,11 @@ sub calc {
 					} # end if
 					$status = 'uncalculated';
 				} # end if
-				foreach ( keys %fold_types ) {
-					$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'BestFolds'}{$_};
-				} # end foreach
+				if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+					foreach ( keys %fold_types ) {
+						$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'BestFolds'}{$_};
+					} # end foreach
+				} # end if
 			}# # end if
 		} # end foreach signature
 		if ( $status eq 'uncalculated' and ! $$specs{'alert'} ) {

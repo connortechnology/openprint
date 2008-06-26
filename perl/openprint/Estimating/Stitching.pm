@@ -286,8 +286,10 @@ $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposit
 			last if $imposition == 1;
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
 				$imposition = 1 if $$sig_specs{'hdnImpositionRows'.$qty_index} % 2;
+				$openprint::log->warn("Setting imposition to 1 : Rows" . $$sig_specs{'hdnImpositionRows'.$qty_index} );
 			} elsif ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
 				$imposition = 1 if $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2;
+				$openprint::log->warn("Setting imposition to 1 : Cols" . $$sig_specs{'hdnImpositionColumns'.$qty_index} );
 			} # end if
 		} # end foreach
 
