@@ -1,0 +1,23 @@
+The following stock has been allocated for docket <b><? echo ( $$variable{'Project'}->docket() ) ?></b>:<br/>
+<br/>
+<b><? echo ( $$variable{'Paper'}->to_string(); ) ?></b><br/><br/>
+<table class="List">
+	<tr>
+		<th align="left">Skid #</th><th align="left">RFID #</th><th align="left">Location</th><th align="right">Quantity</th>
+	</tr>
+<? echo (
+	my $html;
+	my $rowclass = '';
+	foreach my $Skid ( @{$$variable{'Skids'}} ) {
+		$html .= sprintf('<tr%s>', $rowclass );
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+		$html .= sprintf('<td>%s</td>', $Skid->id() );
+		$html .= sprintf('<td>%s</td>', $Skid->rfidtag_id() );
+		$html .= sprintf('<td>%s</td>', $Skid->Location()->name() );
+		foreach my $PA ( openprint::PaperAllocation::find('paper_id'=>$$variable{'Paper'}->id(), 'skid_id'=>$Skid->id() ) ) {
+			$html .= sprintf('<td align="right">%s%s</td>', $PA->quantity(), $PA->units() );
+		} # end foreach
+	} # end foreach Skid
+	return $html;
+) ?>
+</table>

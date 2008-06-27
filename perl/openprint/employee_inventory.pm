@@ -732,12 +732,17 @@ sub allocate {
 		return;
 	} # end if
 
+	my @affected_skids = ();
+
 	my $qty = $quantity;
 	if ( $quantity < 0 ) {
 		foreach my $skid_id ( sql::execute( undef, undef, q{SELECT skid_id FROM paper_allocations WHERE paper_id=? AND quantity > 0 AND project_id=? ORDER BY skid_id}, $paper_id, $Projects[0]->id() ) ) {
 			my $Skid = new openprint::Skid( $skid_id );
 			my $allocateable = $Skid->allocateable( $Paper );
 			next if ! $allocateable;
+
+			push @affected_skids, $Skid;
+
 			if ( $allocateable < -1*$qty ) {
 				$Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
 				$qty += $allocateable;
@@ -760,19 +765,54 @@ sub allocate {
 			my $allocateable = $Skid->allocateable( $Paper );
 			next if ! $allocateable;
 
+			push @affected_skids, $Skid;
+
 			if ( $allocateable < $qty ) {
 				$Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
 				$qty -= $allocateable;
 			} else {
-				$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+				if ( $Paper->type() eq 'Roll' ) {
+					# Must allocate whole rolls
+					$Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+				} else {
+					$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+				} # end if
 				$qty = 0;
 			} # end if
 			last if ! $qty;
 		} # end foreach
 	} # end if
+	if ( @affected_skids ) {
+		stock_allocation_notification( $Projects[0], $Paper, @affected_skids );
+	} # end if
 	$variable{'information'} .= "Allocated $quantity $units to docket " . $Projects[0]->docket() . '<br/>';
 } # end sub allocate
 
+sub stock_allocation_notification {
+	my ( $Project, $Paper, @skids ) = @_;
+
+	my %info;
+	$info{'Project'} = $Project;
+	$info{'Paper'} = $Paper;
+	$info{'Skids'} = \@skids;
+
+	foreach my $User ( openprint::User::find( 'usergroup'=>'InventoryManager' ) ) {
+		my $From = new openprint::User( $session{'user_id'} );
+		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+
+		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/stock_allocation_notification.html\"-->";
+		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+		my @body = ('', $_, 'text/html', 'quoted-printable');
+		my %mail = (
+				SMTP    => $openprint::config{'Mail Server'},
+				FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+				TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
+				SUBJECT => 'Stock allocated for docket ' . $Project->docket(),
+				);
+            misc::send_email_with_attachment( $log, \%mail, @body );
+	} # end foreach User
+
+} # end sub stock_allocation_notification
 
 sub send_paper_arrival_notification {
 	my ( $Skid, @papers ) = @_;
