@@ -3,7 +3,7 @@
 	<fieldset><legend>Enter RFID #'s</legend>
 		<p>
 			<label>RFID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize()} );}" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
 		</p>
 	</fieldset>
 	<fieldset>
