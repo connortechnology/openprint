@@ -24,6 +24,7 @@ my @Fields = (
 	'email_subject',
 	'email_from',
 	'email_text',
+	'attachments',
 	'lastrun',
 	'created_on',
 	'updated_on',
@@ -223,20 +224,21 @@ sub send_email {
 	$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements );
 	$email_template = encode_qp( ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements ) );
 
-
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');
+	my @attachments = eval $self->{attachments};
+	$openprint::log->warn( "Eval error Reason: " . $@ ) if $@;
 
 	# Setup the mail message
 	my %mail = (
 			SMTP => $openprint::config{'Mail Server'},
-			FROM => $self->{'email_from'} ? $self->{'email_from'} : sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
-			TO => sprintf("\"%s %s\" <%s>", @$replacements{'FIRSTNAME','LASTNAME','EMAIL_ADDRESS'} ),
+			FROM => $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
+			TO => sprintf('"%s %s" <%s>', @$replacements{'FIRSTNAME','LASTNAME','EMAIL_ADDRESS'} ),
 			SUBJECT => $$self{'email_subject'}
 		);
 
 	# Send the email
-	misc::send_email_with_attachment($self->{log}, \%mail, @body, ());
+	misc::send_email_with_attachment($self->{log}, \%mail, @body, @attachments );
 	sql::insert( $openprint::log, $openprint::dbh, 'EmailCampaign_Log', 
 			'campaign_id',	$self->{'id'},
 			'Log',				"Sending Email To $mail{TO}",
@@ -307,7 +309,7 @@ sub send {
 
 		# First check if a sent row exists
 		$query = q{SELECT (NOW() - EmailSentOn) > ?, NumEmailSent, MarkedForDeletion FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?};
-		if ( ( $interval_expired, $num_email_sent, $marked_for_deletion ) =  sql::execute(@$self{'log','dbh'}, $query, @$self{'interval','id'}, $user_index ) ) {
+		if ( $$self{'interval'} and ( $interval_expired, $num_email_sent, $marked_for_deletion ) =  sql::execute(@$self{'log','dbh'}, $query, @$self{'interval','id'}, $user_index ) ) {
 
 			# Check if the duration has elapsed	
 			if ($interval_expired == 1) {

@@ -88,6 +88,8 @@ sub email_campaign {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
 		$$variable{'error'} .= $Campaign->save( );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
+		$Campaign->save( \%openprint::param );
 	} # end if
 	$Campaign->load_info( $variable ) if $Campaign;
 	$$variable{'Campaign'} = $Campaign;

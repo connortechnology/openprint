@@ -77,6 +77,63 @@ sub skids {
 	} # end if
 } # end sub skids
 
+sub inventory_report {
+	my %param = @_;
+	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)');
+	my @papers = openprint::Paper::find(
+			'owner_id'	=>	( defined $param{'Owner'} ? $param{'Owner'} : '' ),
+			'manufacturer_id'	=>	( defined $param{'PaperManufacturer'} ? $param{'PaperManufacturer'} : undef ),
+			'name_id'	=>	( defined $param{'PaperBrand'} ? $param{'PaperBrand'} : undef ),
+			'finish_id' =>	( defined $param{'PaperFinish'} ? $param{'PaperFinish'} : undef ),
+			'colour_id' =>	( defined $param{'PaperColour'} ? $param{'PaperColour'} : undef ),
+			'weight_id' =>	( defined $param{'PaperWeight'} ? $param{'PaperWeight'} : undef ),
+			'type'		=>	$param{'Type'},
+			'created_on_start'  => defined $param{'StartYear'} ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
+			'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ),
+			'allocated_to_docket'   => $param{'Docket'},
+			'fsc_code'  =>  $param{'fsc_code'},
+			'order_by'	=> 'owner_id,manufacturer_id,name_id,finish_id,colour_id,weight_id,width,height',
+			);
+	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+	my @data;
+	my $total_weight = 0;
+	foreach my $Paper ( @papers ) {
+		foreach my $Skid ( $Paper->skids() ) {
+			my $weight = 0;
+			if ( $Paper->type() eq 'Roll' ) {
+			$weight = $$Skid{Paper}{$$Paper{'id'}};
+			} else {
+			$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $$Skid{Paper}{$$Paper{'id'}};
+			} # end if
+			$total_weight += $weight;
+			push @data,(
+					$$Paper{'id'},
+					new openprint::Company($Paper->owner_id())->name(),
+					$Paper->manufacturer(),
+					$Paper->name(),
+					$Paper->finish(),
+					$Paper->colour(),
+					$Paper->weight(),
+					$Paper->type(),
+					$Paper->width(),
+					$Paper->height(),
+					$Paper->quality(),
+					$Paper->mweight(),
+					$Paper->gsm(),
+					$$Skid{'id'},
+					$$Skid{'rfidtag_id'},
+					$$Skid{'created_on'},
+					$Skid->Location()->name(),
+					$Paper->type() eq 'Sheet' ? $$Skid{Paper}{$$Paper{'id'}} : '',
+					$weight,
+					);
+		} # end foreach skid
+	} # end foreach
+	#my $date;
+	push @data, ( 'Report generated',$date,undef,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
+	return ( \@header, \@data );
+} # end sub paper_inventory
+
 sub paper {
 	if ( $param{'btnFunction'} eq 'Consumption Report' ) {
 		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
@@ -134,60 +191,10 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 		push @data, ( 'Report generated',$date,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef );
 		misc::export_csv( $r, $log, \%variable, "PaperInventoryLog $date.csv", \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Download Inventory' ) {
-
-		my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)');
-		my @papers = openprint::Paper::find(
-				'owner_id'	=>	( defined $param{'Owner'} ? $param{'Owner'} : '' ),
-				'manufacturer_id'	=>	( defined $param{'PaperManufacturer'} ? $param{'PaperManufacturer'} : undef ),
-				'name_id'	=>	( defined $param{'PaperBrand'} ? $param{'PaperBrand'} : undef ),
-				'finish_id' =>	( defined $param{'PaperFinish'} ? $param{'PaperFinish'} : undef ),
-				'colour_id' =>	( defined $param{'PaperColour'} ? $param{'PaperColour'} : undef ),
-				'weight_id' =>	( defined $param{'PaperWeight'} ? $param{'PaperWeight'} : undef ),
-				'type'		=>	$param{'Type'},
-				'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ),
-				'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ),
-				'allocated_to_docket'   => $param{'Docket'},
-				'fsc_code'  =>  $param{'fsc_code'},
-				'order_by'	=> 'owner_id,manufacturer_id,name_id,finish_id,colour_id,weight_id,width,height',
-				);
+		my ( $header, $data ) = inventory_report( %param );
 		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-		my @data;
-		my $total_weight = 0;
-		foreach my $Paper ( @papers ) {
-			foreach my $Skid ( $Paper->skids() ) {
-				my $weight = 0;
-				if ( $Paper->type() eq 'Roll' ) {
-				$weight = $$Skid{Paper}{$$Paper{'id'}};
-				} else {
-				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $$Skid{Paper}{$$Paper{'id'}};
-				} # end if
-				$total_weight += $weight;
-				push @data,(
-						$$Paper{'id'},
-						new openprint::Company($Paper->owner_id())->name(),
-						$Paper->manufacturer(),
-						$Paper->name(),
-						$Paper->finish(),
-						$Paper->colour(),
-						$Paper->weight(),
-						$Paper->type(),
-						$Paper->width(),
-						$Paper->height(),
-						$Paper->quality(),
-						$Paper->mweight(),
-						$Paper->gsm(),
-						$$Skid{'id'},
-						$$Skid{'rfidtag_id'},
-						$$Skid{'created_on'},
-						$Skid->Location()->name(),
-						$Paper->type() eq 'Sheet' ? $$Skid{Paper}{$$Paper{'id'}} : '',
-						$weight,
-						);
-			} # end foreach skid
-		} # end foreach
-		#my $date;
-		push @data, ( 'Report generated',$date,undef,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
-		misc::export_csv( $r, $log, \%variable, "PaperInventory $date.csv", \@header, \@data );
+		misc::export_csv( $r, $log, \%variable, "PaperInventory $date.csv", $header, $data );
+
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		if ( $param{'paper_id'} ) {
 			my $Paper = new openprint::Paper( $param{'paper_id'} );
