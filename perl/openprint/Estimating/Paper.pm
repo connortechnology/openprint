@@ -23,6 +23,8 @@ require openprint::print;
 require openprint::service;
 require openprint::Currency;
 
+my $debug = 0;
+
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -69,11 +71,11 @@ sub sheet_calc {
 		$price{'100lb'} = $paper_price{'100lb'};
 	} # end if
 	if ( $Paper->type() eq 'Roll' ) {
-	$price{'Paper Cost'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Cost'} );
-	$price{'Paper Price'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Price'} );
+		$price{'Paper Cost'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Cost'} );
+		$price{'Paper Price'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Price'} );
 	} else {
-	$price{'Paper Cost'} = sprintf( '%.2f', $quantity * $price{'Sheet Cost'} );
-	$price{'Paper Price'} = sprintf( '%.2f', $quantity * $price{'Sheet Price'} );
+		$price{'Paper Cost'} = sprintf( '%.2f', $quantity * $price{'Sheet Cost'} );
+		$price{'Paper Price'} = sprintf( '%.2f', $quantity * $price{'Sheet Price'} );
 	} # end if
 	return %price;
 } # end sub sheet_calc

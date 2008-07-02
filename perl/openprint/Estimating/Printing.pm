@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 use strict;
@@ -1188,6 +1188,7 @@ $openprint::log->debug("No spread layout for you!");
 #foreach my $i ( @imps ) {
 #$i->display();
 #}
+				if ( 1 ) {
 				foreach my $imp ( @imps ) {
 					my $add = -1;
 					my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
@@ -1239,6 +1240,10 @@ $openprint::log->debug("No spread layout for you!");
 										$add = 1;
 									} elsif ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
 										$add = 1;
+									} elsif ( ( $I->Paper()->start_area() != $I->Paper()->area() ) and ( $imp->Paper()->start_area() == $imp->Paper()->area ) ) {
+										$add = 1;
+									} elsif ( $I->Paper()->minimum_order() > $imp->Paper()->minimum_order() ) {
+										$add = 1;
 									} # end if
 								} # end if
 							} # end for
@@ -1248,6 +1253,9 @@ $openprint::log->debug("No spread layout for you!");
 					} # end if
 					push @{$imps{$str}}, $imp if $add > 0;
 				} # end foreach imp
+				} else {
+				push @impositions, @imps;
+				} # end if
 
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
