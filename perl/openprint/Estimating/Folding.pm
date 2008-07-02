@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -466,7 +466,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 
 		my $totalPrice;
 		foreach my $fold ( keys %folds ) {
-			next if ! $folds{$fold};
+			#next if ! $folds{$fold};
 		
 			$openprint::log->debug("Pricing fold $fold : $folds{$fold}") if $debug;
 
