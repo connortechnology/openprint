@@ -248,7 +248,8 @@ sub send {
 	my $results = '';
 
 	my %replacements;
-	$replacements{ReplacementText} = eval $self->{'email_text'};
+	my $body = $self->{'email_text'};
+	$replacements{ReplacementText} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$body, \%replacements );
 	if ( ! $replacements{ReplacementText} ) {
 		$results .= 'No body.  Not sending.<br/>';
 		return $results;
@@ -380,7 +381,8 @@ sub trial {
 
 	$results .= "There are ".@mail_user_ids." users that fit the campaign<br/>";
 	my %replacements;
-	$replacements{ReplacementText} = eval $self->{'emailtext'};
+	my $body = $self->{'email_text'};
+	$replacements{ReplacementText} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$body, \%replacements );
 	if ( ! $replacements{ReplacementText} ) {
 		$results .= 'No body.  Not sending<br/>';
 	} else {

@@ -286,8 +286,8 @@ sub insert_colour_proof {
 	my ( $log, $dbh, $project_index, $service_index, $signature_service_index, $proof_index, $qty_index, $specs ) = @_;
 
 	#$log->debug("*** Inserting Colour Proof *******");
-
-	my $signature_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+	my $Project = new openprint::Project( $project_index );
+	my $signature_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 	my @Equipment = openprint::Equipment::find( 'strid'=>$$signature_specs{'ddmPress'.$qty_index} );
 	return if ! @Equipment;
 
@@ -304,7 +304,7 @@ sub insert_colour_proof {
 	} # end if
 	if ( 
 			( $$specs{'RequireColourProofs'} eq 'Y' )  or (
-($$specs{'RequireColourProofs'} ne 'N') and $$signature_specs{'chkProcessColourSideTwo'} ) ) {
+				($$specs{'RequireColourProofs'} ne 'N') and $$signature_specs{'chkProcessColourSideTwo'} ) ) {
 		$quantity += 1;
 	} # end if
 

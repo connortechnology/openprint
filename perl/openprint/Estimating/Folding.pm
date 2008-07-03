@@ -483,11 +483,15 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				last;
 			} # end if
 
-			my %setupPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold.'MakeReady', undef, $Equipment );
-			if ( $setupPrice{'units'} eq 'Per Form' ) {
-				$totalPrice += $setupPrice{'Price'};
-			} elsif ( ! sets::isin( $fold, $makereadies{$Equipment->id()} ) ) {
-				$totalPrice += $setupPrice{'Price'};
+			my %setupPrice;
+			if ( $folds{$fold} ) {
+				%setupPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold.'MakeReady', undef, $Equipment );
+				
+				if ( $setupPrice{'units'} eq 'Per Form' ) {
+					$totalPrice += $setupPrice{'Price'};
+				} elsif ( ! sets::isin( $fold, $makereadies{$Equipment->id()} ) ) {
+					$totalPrice += $setupPrice{'Price'};
+				} # end if
 			} # end if
 
 			my $runTime = sprintf( '%.4f', ($$specs{"txtQuantity$qty_index"}/$imposition) / $runSpeed );
