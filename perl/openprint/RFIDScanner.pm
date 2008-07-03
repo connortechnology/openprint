@@ -68,9 +68,14 @@ sub find {
 		$sql .= ' AND name=?';
 		push @values, $params{'name'};
 	} # end if
-	if ( $params{'ipaddr'} ) {
-		$sql .= ' AND ipaddr=?';
-		push @values, $params{'ipaddr'};
+	if ( exists $params{'ipaddr'} ) {
+		if ( ref $params{'ipaddr'} eq 'ARRAY' ) {
+			$sql .= ' AND ipaddr IN ('. join(',', map {'?'} @{$params{'ipaddr'}} ) . ')';
+			push @values, @{$params{'ipaddr'}};
+		} else {
+			$sql .= ' AND ipaddr=?';
+			push @values, $params{'ipaddr'};
+		} # end if
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};

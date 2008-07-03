@@ -33,23 +33,13 @@
 					) ?>
 			</select>
 		</p>
-		<p class="buttons">
-			<? echo ( join('',
-						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f2.btnFunction.value='Save';f2.submit();", '', 'Save' ),
-						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f2);', '', 'Clear' ),
-						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
-						); ) ?>
-		</p>
-		<div class="rightColumn" id="Map">
-			<!--#include virtual="_map.html"-->
-		</div>
-	</fieldset>
 <? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 <? eval ( $$variable{'Skid'} = $$variable{'RFIDTag'}->Skid() ) ?>
-<fieldset><legend>Current Contents</legend>
+<p><label>Current Contents:</label>
 <? if ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
 	Skid is empty
 <? else ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+<br/>
 <table class="List">
 	<tr>
 		<th align="left">Paper</th><th width="75" align="left">In Stock</th><th>Allocated</th>
@@ -78,8 +68,19 @@
 ) ?>
 	</table>
 <? endif ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
-</fieldset>
+</p>
 <? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
+		<p class="buttons">
+			<? echo ( join('',
+						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f2.btnFunction.value='Save';f2.submit();", '', 'Save' ),
+						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f2);', '', 'Clear' ),
+						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
+						); ) ?>
+		</p>
+		<div class="rightColumn" id="Map">
+			<!--#include virtual="_map.html"-->
+		</div>
+	</fieldset>
 	<input type="hidden" name="btnFunction" value="" />
 </form>
 <? endif ( $$variable{'RFIDTag'} ) ?>
