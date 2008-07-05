@@ -343,11 +343,11 @@ sub signature_calc {
 	my $imposition;
 	if ( $Imposition->StitchingImposition() ) {
 		$imposition = $Imposition->StitchingImposition();
-#$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug;
+$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug or 1;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
-#$openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if $debug;
+$openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if $debug or 1;
 #$openprint::log->debug("Got impo from SaddleStitching: $imposition out") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
@@ -466,32 +466,28 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 
 		my $totalPrice;
 		foreach my $fold ( keys %folds ) {
-			#next if ! $folds{$fold};
+			next if ! $folds{$fold};
 		
 			$openprint::log->debug("Pricing fold $fold : $folds{$fold}") if $debug;
 
 			my $runSpeed = $Equipment->specification($fold.'RunSpeed');
 			if ( ! $runSpeed ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No runspeed for $fold on " . $Equipment->name() ." : $runSpeed<br/>";
-				last;
+				next;
 			} # end if
 
 			# We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
 			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold, $folds{$fold} * $$specs{"txtQuantity$qty_index"}/$imposition, $Equipment );
 			if ( ! %servicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No price assigned for $fold on ".$Equipment->name().". <br/>";
-				last;
+				next;
 			} # end if
 
-			my %setupPrice;
-			if ( $folds{$fold} ) {
-				%setupPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold.'MakeReady', undef, $Equipment );
-				
-				if ( $setupPrice{'units'} eq 'Per Form' ) {
-					$totalPrice += $setupPrice{'Price'};
-				} elsif ( ! sets::isin( $fold, $makereadies{$Equipment->id()} ) ) {
-					$totalPrice += $setupPrice{'Price'};
-				} # end if
+			my %setupPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $fold.'MakeReady', undef, $Equipment );
+			if ( $setupPrice{'units'} eq 'Per Form' ) {
+				$totalPrice += $setupPrice{'Price'};
+			} elsif ( ! sets::isin( $fold, $makereadies{$Equipment->id()} ) ) {
+				$totalPrice += $setupPrice{'Price'};
 			} # end if
 
 			my $runTime = sprintf( '%.4f', ($$specs{"txtQuantity$qty_index"}/$imposition) / $runSpeed );
@@ -522,13 +518,13 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		} # end foreach fold
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Total: ' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . '<br/>';
 
-		if ( (defined $totalPrice) and (( $totalPrice < $bestPrice ) or ( ! defined $bestPrice ) ) ) {
+		if ( ( $totalPrice < $bestPrice ) or ( ! defined $bestPrice ) ) {
 			$bestPrice = $totalPrice;
 			$bestEquipment = $Equipment;
 			$bestRunTime = int($totalTime);
 			$bestFolds = \%folds;
-			last if ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 		} # end if
+		last if ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 	} # end foreach Equipment
 	my %results = (
 		'Price'			=> $bestPrice,
@@ -585,7 +581,7 @@ sub calc {
 					} # end if
 					$status = 'uncalculated';
 				} # end if
-				if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 					foreach ( keys %fold_types ) {
 						$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'BestFolds'}{$_};
 					} # end foreach
