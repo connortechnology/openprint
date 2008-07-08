@@ -78,6 +78,7 @@ sub no_outputs {
 	'SingleGateFold', 'Single Gate Fold',
 	'DoubleGateFold', 'Double Gate Fold',
 	'4PageSignatureFold', '4PageSignatureFold',
+	'6PageSignatureFold', '6PageSignatureFold',
 	'8PageSignatureFold', '8PageSignatureFold',
 	'12PageSignatureFold', '12PageSignatureFold',
 	'16PageSignatureFold', '16PageSignatureFold',
