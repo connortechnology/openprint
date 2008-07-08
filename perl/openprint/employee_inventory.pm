@@ -1059,9 +1059,6 @@ sub _update_inventory {
 	if ( $param{'remove'} ) {
 		@ids = sets::exclude( [ $param{'remove'} ], \@ids );
 	} # end if
-	@ids = sets::union( @ids );
-    @ids = sort @ids;
-    @ids = reverse @ids;
     @{$variable{'IDS'}} = @ids;
 	if ( $param{'manifest_id'} ) {
 		my @Manifests = openprint::Manifest::find('id'=>$param{'manifest_id'});
