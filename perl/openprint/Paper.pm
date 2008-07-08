@@ -654,6 +654,7 @@ sub add_inventory {
 		foreach my $content ( $Skid->contents( 'Paper'=>$self ) ) {
 			$in_stock += $content->quantity();
 		} # end foreach
+		$in_stock += $quantity;
 	} else {
 		$in_stock = $self->in_stock() + $quantity;
 	} # end if
@@ -663,7 +664,7 @@ sub add_inventory {
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  ($skid_id? $$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
+        'InStock',  $in_stock,
         'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
@@ -672,7 +673,6 @@ sub add_inventory {
         );
 	delete $$self{allocated};
 	delete $$self{in_stock};
-
 } # end sub add_inventory
 
 sub allocate {

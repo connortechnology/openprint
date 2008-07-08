@@ -53,9 +53,18 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( $params{'type'} ) {
+		$sql .= ' AND type_id=(SELECT id FROM RFIDTagTypes WHERE name=?)';
+		push @values, $params{'type'};
+	} # end if
+	
 	if ( $params{'type_id'} ) {
 		$sql .= ' AND type_id=?';
 		push @values, $params{'type_id'};
+	} # end if
+	if ( $params{'location_id'} ) {
+		$sql .= ' AND location_id=?';
+		push @values, $params{'location_id'};
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
@@ -142,6 +151,7 @@ sub save {
 			} # end if
 		} # end if
 	} # end if
+	$$self{'updated_on'} = 'NOW()';
 
 	delete $$self{'type'};
 	
@@ -175,11 +185,6 @@ sub delete {
 	delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}};
 	return '';
 } # end sub delete
-
-sub Skid {
-	my ($self) = @_;
-	return openprint::Skid::find('rfidtag_id'=>$$self{'id'});
-} # end sub Skid
 
 sub Type {
 	return new openprint::RFIDTagType( $_[0]->type_id() );

@@ -315,9 +315,11 @@ sub allocation {
 
 # Checkout all paper on the skid
 sub checkout {
-	my ( $self ) = @_;
+	my ( $self, $c ) = @_;
 	my @contents = openprint::SkidContent::find('skid_id'=>$$self{id});
 	if ( ! @contents ) {
+		my ( $comment ) = sql::execute( undef, undef, 'SELECT comment FROM paper_inventory WHERE skid_id=? AND comment LIKE ?', $$self{id},'Checked out%' );
+		if ( ! $comment ) {
 		sql::insert( undef, undef, 'Paper_Inventory',
 				'paper_id', undef,
 				'user_id',  $openprint::session{'user_id'},
@@ -325,19 +327,25 @@ sub checkout {
 				'InStock',  0,
 				'updated_on',   'NOW()',
 				'delta',    0,
-				'Comment',  'Skid checked out',
+				'Comment',  'Checked out' . $c,
 				'skid_id',  $$self{'id'},
 				'units',    'unknown',
 				);
-		return;
+		} # end if
+		return 1;
 	} # end if
 
 	foreach my $C ( @contents ) {
 		my ( $project_id ) = sql::execute( undef, undef, q{SELECT project_id FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $C->paper() );
-		$C->Paper->add_inventory( $$self{id}, -1*$C->quantity(), $C->units(), 'Removed' . ($project_id ? ' for docket ' . new openprint::Project($project_id)->docket() : '' ) );
-		$C->quantity( 0 );
-		$C->save();
+		my $desc = 'Checked out' . ($project_id ? ' for docket ' . new openprint::Project($project_id)->docket() : '');
+		if ( ! sql::execute( undef, undef, 'SELECT comment FROM paper_inventory WHERE skid_id=? AND comment LIKE ?', $$self{id}, $desc.'%' ) ) {
+			$C->Paper->add_inventory( $$self{id}, -1*$C->quantity(), $C->units(), $desc.$c );
+			$C->quantity( 0 );
+			$C->save();
+			return 1;
+		} # end if
 	} # end foreach Content
+	return 0;
 } # end sub checkout
 
 sub previous {

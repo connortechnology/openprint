@@ -23,7 +23,7 @@ $openprint::log->debug("Dumping Object cache");
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
-    if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+    if ( (! $no_cache) and $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
         return $openprint::Object::cache{$parent}{$id};
     } # end if
 
