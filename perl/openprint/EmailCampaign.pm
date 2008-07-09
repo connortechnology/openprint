@@ -12,6 +12,7 @@ use strict;
 require sql;
 require configuration;
 require openprint::logs;
+require openprint::EmailTemplate;
 
 my @Fields = (
 	'id',
@@ -28,6 +29,7 @@ my @Fields = (
 	'lastrun',
 	'created_on',
 	'updated_on',
+	'template_id',
 );
 
 my %Defaults = (
@@ -209,7 +211,13 @@ sub send_email {
 	my ($self, $replacements) = @_;
 
 	# Load the email template
-	my $email_template = misc::load_file( $self->{log}, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = '';
+	if ( $$self{'template_id'} ) {
+		my $EmailTemplate = $self->Template();
+		$email_template = $EmailTemplate->body();
+	} else {
+		$email_template = misc::load_file( $self->{log}, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	} # end if
 
 	# Do the appropriate variable substitutions
 	# - The first substitution replaces the 'ReplacementText' field
@@ -324,7 +332,7 @@ sub send {
 						# Email the admin
 						$replacements{ReplacementText} = $self->{'emailtext'};
 						#send_admin_email($openprint::log, $openprint::dbh, \%replacements);
-						sql::update( $openprint::log, $openprint::dbh, 'EmailCampaign_Sent', "campaign_id=$$self{id} AND user_id=$user_index",
+						sql::update( undef, undef, 'EmailCampaign_Sent', ['campaign_id=? AND user_id=?', $$self{id}, $user_index],
 								'MarkedForDeletion',	'Y',
 								);
 						$results .= "<span class=\"error\">NOT Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'} because this email address has been sent to $num_email_sent times already.</span><br>";
@@ -334,8 +342,8 @@ sub send {
 							$results .= "<span class=\"error\">NOT Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'} because the email address appears to be invalid.</span><br>";
 						} else {
 							$results .= "Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'}<br>";
-							$self->send_email( \%replacements);
-							sql::update( $openprint::log, $openprint::dbh, 'EmailCampaign_Sent', "campaign_id = ".$self->{'id'}." AND user_id = $user_index",
+							$self->send_email( \%replacements );
+							sql::update( undef, undef, 'EmailCampaign_Sent', [ 'campaign_id=? AND user_id=?', $self->{'id'}, $user_index],
 									'NumEmailSent',	$num_email_sent+1,
 									'EmailSentOn',	'NOW()',
 									);
@@ -418,6 +426,10 @@ sub trial {
 	} # end if
 	return $results;
 } # end sub trial
+
+sub Template {
+	return new openprint::EmailTemplate( $_[0]->template_id() );
+} # end sub Template
 
 1;
 

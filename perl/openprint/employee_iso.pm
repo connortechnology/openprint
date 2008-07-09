@@ -84,8 +84,21 @@ sub _car_view_part1 {
 		my $send_reprint_request_notification = 0;
 		my $send_reprint_approval_notification = 0;
 
+		if ( $param{'area_id'} and ( ! $param{'issued_to_id'} ) and ( ! $variable{'CAR'}->issued_to_id() ) ) {
+			# Auto assignation
+			my $Area = new openprint::CAR_Area( $param{'area_id'} );
+			if ( $Area->assignee_id() ) {
+			$param{'issued_to_id'} = $Area->assignee_id();
+			} elsif ( $param{'docket'} ) {
+				# Assign to the CSR for the docket
+				my @Orders = openprint::Order::find('docket'=>$param{'docket'} );
+				if ( @Orders ) {
+					$param{'issued_to_id'} = $Orders[0]->salesrep_id();
+				} # end if
+			} # end if
+		} # end if
+
 		if ( $param{'issued_to_id'} and ! $variable{'CAR'}->issued_to_id() ) {
-			#This is a brand new CAR.  So email the assignee
 			$send_assignee_notification = 1;
 		} # end if issued_to
 		# if a reprint is requested, but if the approval is already given, then we are the Approver, so don't bother.

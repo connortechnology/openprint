@@ -17,8 +17,10 @@ use vars qw( %fields %defaults %transforms );
 require sql;
 
 %fields = (
-	'name'		=> 'name',
-	'deleted'	=> 'deleted',
+	'name'		=>	'name',
+	'assignee_id'	=>	'assignee_id',
+	'deleted'	=>	'deleted',
+	'sorting'	=>	'sorting',
 );
 
 %transforms = (

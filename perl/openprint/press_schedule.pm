@@ -55,6 +55,7 @@ sub find {
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
 		$openprint::log->error( "Error loading schedule: ($sql) (@values) : " . $openprint::dbh->errstr() );

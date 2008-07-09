@@ -10,6 +10,11 @@
 		} // end if
 		return 1;
 	} // end function check_part1
+	function area_id_onchange( e ) {
+		if ( e.form.issued_to_id ) {
+			new Ajax.Request('_select_assignee_from_area.json', {method:'get', parameters: {area_id:e.value}} );
+		} // end if
+	} // end function area_id_onchange(e)
 </script>
 <style type="text/css">
 	#CAR {

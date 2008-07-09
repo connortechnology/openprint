@@ -69,7 +69,11 @@ require openprint::CAR_Reason;
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 	'approved_on'	=> undef,
+	'printed_on'	=> undef,
 	'deleted'		=> 0,
+	'reprint'		=> undef,
+	'area_id'		=> undef,
+	'reason_id'		=> undef,
 );
 
 sub find {
@@ -341,6 +345,9 @@ sub Area {
 sub Reason {
 	return new openprint::CAR_Reason( $_[0]{reason_id} );
 } # end sub Reason
+sub issued_to {
+	return new openprint::User( $_[0]{issued_to_id} );
+} # end sub issued_to
 
 1;
 __END__
