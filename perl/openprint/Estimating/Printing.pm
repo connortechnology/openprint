@@ -1539,8 +1539,8 @@ sub get_project_price {
 #$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 		} # end if Folding
 
-		if ( 1 ) {
-$openprint::log->debug("QTY: $qty_index");
+		if ( 0 ) {
+$openprint::log->debug("QTY: $qty_index on " . $P->strid() );
 			foreach my $imp ( @impositions ) {
 	$imp->display();
 			} # end foreach
@@ -2019,11 +2019,10 @@ sub calc_price {
 #my $time = gettimeofday();
 		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
 #$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
-		if ( $$project{'FoldingSpecs'}{'Status'} eq 'uncalculated' ) {
+		if ( $folding_results{'Status'} eq 'uncalculated' ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
 			$price{'Comparison Cost'} += 1000000; 
 			$openprint::log->debug("Unable to fold spreads:" . $Imposition->spreads() . ' alert:'. $$project{'FoldingSpecs'}{'alert'} ) if $debug;
-
 		} # end if
 		$price{'FoldingImposition'} = $folding_results{'Imposition'};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");

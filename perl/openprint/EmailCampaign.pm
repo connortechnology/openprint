@@ -328,7 +328,7 @@ sub send {
 				if ($marked_for_deletion eq 'N') {
 					$self->{log}->debug('not marked for deletion');
 					# Check if we have sent this too many times
-					if ($num_email_sent >= $self->{'timestosend'}) {
+					if ( ($self->{'timestosend'} ne '') and $num_email_sent >= $self->{'timestosend'}) {
 						# Email the admin
 						$replacements{ReplacementText} = $self->{'emailtext'};
 						#send_admin_email($openprint::log, $openprint::dbh, \%replacements);
