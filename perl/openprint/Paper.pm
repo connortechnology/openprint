@@ -725,6 +725,7 @@ sub get_price {
     if ( $$self{'Price'} ) {
 		# If custom paper
 		%price = ( 'Price' => $$self{'Price'}, 'Cost'=>$$self{'Price'}, 'units'=>$$self{'Units'});
+$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
 	} else {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $bestPrice;
@@ -750,11 +751,11 @@ sub get_price {
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$price{'currency_id'} = $Pricelist->currency_id();
 		openprint::Currency::convert( \%price );
-	} # end if
 
-	my $Company = new openprint::Company( $openprint::session{company_id} );
-	if ( $Company->discount() ) {
-		$price{'Price'} *= 1 - ( $Company->discount()/100 );
+		my $Company = new openprint::Company( $openprint::session{company_id} );
+		if ( $Company->discount() ) {
+			$price{'Price'} *= 1 - ( $Company->discount()/100 );
+		} # end if
 	} # end if
 
 # Don't need to cut it because the mweight has already byeen cut
