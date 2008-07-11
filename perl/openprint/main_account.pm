@@ -21,7 +21,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
-*param = \%param;
+*param = \%openprint::param;
 *session = \%openprint::session;
 *config = \%openprint::config;
 
