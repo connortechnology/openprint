@@ -883,7 +883,8 @@ sub finalise_order {
 			( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
 		} # end if
 
-		$Order->company_id( $openprint::session{'company_id'} );
+		# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
+		$Order->company_id( $openprint::session{'company_id'} ) if ! $Order->company_id();
 		$Order->salesrep_id( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() );
 		$Order->federal_tax( $gst_total );
 		$Order->state_tax( $pst_total );
