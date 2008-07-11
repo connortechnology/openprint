@@ -752,10 +752,11 @@ $openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
 		$price{'currency_id'} = $Pricelist->currency_id();
 		openprint::Currency::convert( \%price );
 
-		my $Company = new openprint::Company( $openprint::session{company_id} );
-		if ( $Company->discount() ) {
-			$price{'Price'} *= 1 - ( $Company->discount()/100 );
-		} # end if
+	} # end if
+
+	my $Company = new openprint::Company( $openprint::session{company_id} );
+	if ( $Company->discount() ) {
+		$price{'Price'} *= 1 - ( $Company->discount()/100 );
 	} # end if
 
 # Don't need to cut it because the mweight has already byeen cut
