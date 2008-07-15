@@ -24,6 +24,12 @@ Please select a Paper to view/edit.<br>
 <form name="f1" method="post" action="paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
+			<label>Docket:</label>
+			<input type="text" name="Docket" value="<? echo ( $openprint::session{'/employee/inventory/paper.html?Docket'} ) ?>" style="width: auto;" size="6" onKeyPress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){LoadContent('Results','/employee/inventory/_paper_results.html', Serialize(f1) );}" />
+		</p>
+	</fieldset>
+	<fieldset class="filters"><legend>Or</legend>
+		<p>
 			<label>Manufacturer:</label>
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
 				<option value="">select</option>
@@ -113,10 +119,6 @@ Please select a Paper to view/edit.<br>
 				<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><?EndMonths?></select>
 				<select name="EndDay"><?EndDays?></select>
 			</span>
-		</p>
-		<p>
-			<label>Docket:</label>
-			<input type="text" name="Docket" value="<? echo ( $openprint::session{'/employee/inventory/paper.html?Docket'} ) ?>" style="width: auto;" size="6" onKeyPress="return input_handler( this, event);" />
 		</p>
 		<p>
 			<label>FSC Code:</label>
