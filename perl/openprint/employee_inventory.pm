@@ -302,7 +302,8 @@ sub paper_details {
 		allocate( undef, @param{'paper_id','Quantity','Project','Docket'} );
 	} elsif ( $param{'btnFunction'} eq 'Delete Allocation' ) {
 		if ( $param{'allocation_id'} ) {
-			sql::execute( $log, $dbh, 'DELETE FROM Paper_allocations WHERE id=?', $param{'allocation_id'} );
+			my $PA = new openprint::PaperAllocation( $param{'allocation_id'} );
+			$PA->delete();
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
 		check_out( undef, @param{'paper_id','Quantity','Project','Docket'} );
@@ -571,7 +572,8 @@ sub skid_details {
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Delete Allocation' ) {
 		if ( $param{'allocation_id'} ) {
-			sql::execute( $log, $dbh, 'DELETE FROM Paper_allocations WHERE id=?', $param{'allocation_id'} );
+			my $PA = new openprint::PaperAllocation( $param{'allocation_id'} );
+			$PA->delete();
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'CheckIn' ) {
 		foreach my $skid_id ( @skid_ids ) {
@@ -716,8 +718,10 @@ sub check_in {
 	$Skid->save();
 } # end sub check_in
 
+# allocate
+# skid_ids is plural because it may be a comma delimited string of skid_ids
 sub allocate {
-	my ( $skid_id, $paper_id, $quantity, $project_id, $docket ) = @_;
+	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket ) = @_;
 	if ( ! $paper_id ) {
 		$variable{'error'} .= "Paper not specified. No paper allocated.<br/>";
 		return;
@@ -739,69 +743,63 @@ sub allocate {
 		return;
 	} # end if
 
-	my @affected_skids = ();
+	my @allocations = ();
 
 	my $qty = $quantity;
-	if ( $quantity < 0 ) {
-		foreach my $skid_id ( sql::execute( undef, undef, q{SELECT skid_id FROM paper_allocations WHERE paper_id=? AND quantity > 0 AND project_id=? ORDER BY skid_id}, $paper_id, $Projects[0]->id() ) ) {
-			my $Skid = new openprint::Skid( $skid_id );
-			my $allocateable = $Skid->allocateable( $Paper );
-			next if ! $allocateable;
+	if ( $skid_ids ) {
+		if ( $qty < 0 ) {
+			foreach my $skid_id ( split(',', $skid_ids ) ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				my $allocateable = $Skid->allocateable( $Paper );
+				next if ! $allocateable;
 
-			push @affected_skids, $Skid;
-
-			if ( $allocateable < -1*$qty ) {
-				$Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
-				$qty += $allocateable;
-			} else {
-				$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
-				$qty = 0;
-			} # end if
-			last if ! $qty;
-		} # end foreach
-	} else {
-		my @skids;
-		if ( ! $skid_id ) {
-			@skids = sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? AND quantity > 0 ORDER BY skid_id}, $paper_id );
-		} else {
-			push @skids, $skid_id;
-		} # end if
-
-		foreach my $skid_id ( @skids ) {
-			my $Skid = new openprint::Skid( $skid_id );
-			my $allocateable = $Skid->allocateable( $Paper );
-			next if ! $allocateable;
-
-			push @affected_skids, $Skid;
-
-			if ( $allocateable < $qty ) {
-				$Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
-				$qty -= $allocateable;
-			} else {
-				if ( $Paper->type() eq 'Roll' ) {
-					# Must allocate whole rolls
-					$Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+				if ( $allocateable < -1*$qty ) {
+					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
+					$qty += $allocateable;
 				} else {
-					$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+					$qty = 0;
 				} # end if
-				$qty = 0;
-			} # end if
-			last if ! $qty;
-		} # end foreach
+				last if ! $qty;
+			} # end foreach
+		} else {
+			foreach my $skid_id ( split(',', $skid_ids ) ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				my $allocateable = $Skid->allocateable( $Paper );
+				next if ! $allocateable;
+
+				if ( $allocateable < $qty ) {
+					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+					$qty -= $allocateable;
+				} else {
+					if ( $Paper->type() eq 'Roll' ) {
+						# Must allocate whole rolls
+						push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+					} else {
+						push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+					} # end if
+					$qty = 0;
+				} # end if
+				last if ! $qty;
+			} # end foreach
+		} # end if
+	} else {
+		push @allocations, $Paper->allocate( undef, $Projects[0]->id(), $qty, $units );
 	} # end if
-	if ( @affected_skids ) {
-		stock_allocation_notification( $Projects[0], $Paper, @affected_skids );
+	
+	if ( @allocations ) {
+		stock_allocation_notification( $Projects[0], $Paper, @allocations );
 	} # end if
 	$variable{'information'} .= "Allocated $quantity $units to docket " . $Projects[0]->docket() . '<br/>';
 } # end sub allocate
 
 sub stock_allocation_notification {
-	my ( $Project, $Paper, @skids ) = @_;
+	my ( $Project, $Paper, @allocations ) = @_;
 
 	my %info;
 	$info{'Project'} = $Project;
 	$info{'Paper'} = $Paper;
-	$info{'Skids'} = \@skids;
+	$info{'Allocations'} = \@allocations;
 
 	foreach my $User ( openprint::User::find( 'usergroup'=>'InventoryManager' ) ) {
 		my $From = new openprint::User( $session{'user_id'} );
@@ -1082,6 +1080,23 @@ sub inventory_log {
 } # end sub inventory_log
 sub _inventory_log {
 } # end sub inventory_log
+
+sub _paper_allocations {
+	if ( $param{'action'} eq 'Add' ) {
+        $param{'skid_id'} =~ s/\D//g;
+        $param{'paper_id'} =~ s/\D//g;
+        $param{'Docket'} =~ s/\D//g;
+        $param{'AllocationQuantity'} =~ s/[^\d\-]//g;
+        my $Paper = new openprint::Paper( $param{'paper_id'} );
+        my @Projects = openprint::Project::find( 'docket'=>$param{'Docket'} ) if $param{'Docket'};
+        if ( ! @Projects ) {
+            $variable{'error'} .= "Docket $param{'Docket'} not found.";
+        } else {
+            $Paper->allocate( $param{'skid_id'}, $Projects[0]->id(), $param{'AllocationQuantity'} );
+        } # end if
+        delete $param{'skid_id'};
+    } # end if
+}
 
 1;
 

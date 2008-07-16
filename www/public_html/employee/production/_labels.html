@@ -1,0 +1,34 @@
+<table class="List" style="table-layout: auto;">
+	<tr><th align="left">Created</th>
+		<th align="left">Type</th>
+		<th align="left">Reference</th>
+		<th>&nbsp;</th>
+	</tr>
+<? echo ( 
+require openprint::Label;
+my $html = '';
+my @Labels = openprint::Label::find('docket'=>$$variable{'Project'}->docket());
+foreach my $Label ( @Labels ) {
+	$html .= sprintf('<tr><td><a href="/employee/production/labels/label.html?id=%d&project_id=%d">%s</a></td><td><a href="/employee/production/labels/label.html?id=%d&project_id=%d">%s</a></td><td>%s</td><td>%s</td></tr>', $Label->id(), $$variable{'Project'}->id(), Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Label->created_on() ) ), $Label->id(), $$variable{'Project'}->id(), $Label->Type()->name(), $Label->reference(),
+		join('',
+			ssi::writeButton( $log, $dbh, 'delete'.$Label->id(), '',qq`new Ajax.Updater('Labels','_labels.html', { method:'get', parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, '', 'X' ),
+			ssi::writeButton( $log, $dbh, 'copy'.$Label->id(), '',qq`new Ajax.Updater('Labels','_labels.html', { method:'get', parameters:{action:'copy', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, '', 'Copy' ),
+		)
+	 );
+} # end foreach
+return $html;
+) ?>
+	<tr>
+		<td>New:</td>
+		<td>
+			<select id="new_label_type_id" name="type_id">
+				<option value="">select</option>
+			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::LabelType::find('order'=>'lower(name)') ] ); ) ?>
+			</select>
+		</td>
+		<td><input type="text" name="reference"/></td>	
+		<td>
+			<? echo ( ssi::writeButton( $log, $dbh, 'AddLabel', 'add.gif', q`if(!get_ddm_value(document.LabelForm.type_id)){alert('Please select the label type.');} else {LabelForm.submit();};`, '', 'Add' ); ) ?>
+		</td>
+	</tr>
+</table>
