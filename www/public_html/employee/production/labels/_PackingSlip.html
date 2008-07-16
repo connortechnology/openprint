@@ -95,13 +95,6 @@
 		<tr>
 			<td style="font-size: 30PT;">PACKING SLIP</td>
 			<td style="border: 1px solid black;">DATE: 
-<? eval (
-	#if ( $$variable{'CAR'}->shipped_on() ) {
-	#@$variable{'shipped_on_years','shipped_on_months','shipped_on_days','shipped_start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{'CAR'}->shipped_on()) );
-	#} else {
-	@$variable{'shipped_on_years','shipped_on_months','shipped_on_days','shipped_start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
-	#} # end if
-) ?>
 <? echo ( 
 Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Label'}->created_on() ) );
 ) ?>
