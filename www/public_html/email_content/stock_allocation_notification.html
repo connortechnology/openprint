@@ -8,16 +8,14 @@ The following stock has been allocated for docket <b><? echo ( $$variable{'Proje
 <? echo (
 	my $html;
 	my $rowclass = '';
-	foreach my $Skid ( @{$$variable{'Skids'}} ) {
+	foreach my $PA ( @{$$variable{'Allocations'}} ) {
 		$html .= sprintf('<tr%s>', $rowclass );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
-		$html .= sprintf('<td>%s</td>', $Skid->id() );
-		$html .= sprintf('<td>%s</td>', $Skid->rfidtag_id() );
-		$html .= sprintf('<td>%s</td>', $Skid->Location()->name() );
-		foreach my $PA ( openprint::PaperAllocation::find('paper_id'=>$$variable{'Paper'}->id(), 'skid_id'=>$Skid->id() ) ) {
-			$html .= sprintf('<td align="right">%s%s</td>', $PA->quantity(), $PA->units() );
-		} # end foreach
-	} # end foreach Skid
+		$html .= sprintf('<td>%s</td>', $PA->Skid()->id() );
+		$html .= sprintf('<td>%s</td>', $PA->Skid()->rfidtag_id() );
+		$html .= sprintf('<td>%s</td>', $PA->Skid()->Location()->name() );
+		$html .= sprintf('<td align="right">%s%s</td>', $PA->quantity(), $PA->units() );
+	} # end foreach Allocation
 	return $html;
 ) ?>
 </table>

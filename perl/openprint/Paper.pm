@@ -630,19 +630,20 @@ sub allocate {
     my ( $self, $skid_id, $project_id, $quantity, $units ) = @_;
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
 
-    my $ac = sql::start_transaction();
-    sql::insert( undef, undef, 'Paper_Allocations',
-        'paper_id',     $$self{'id'},
-        'skid_id',      $skid_id,
-        'quantity',     $quantity,
-		'units',		$units,
-        'project_id',   $project_id,
-        'operator_id',  $openprint::session{'user_id'},
-        );
+	my $PA = new openprint::PaperAllocation();
+	$PA->save( {
+        'paper_id'	=>	$$self{'id'},
+        'skid_id'	=>	$skid_id,
+        'quantity'	=>	$quantity,
+		'units'		=>	$units,
+        'project_id'	=>	$project_id,
+        'operator_id'	=>	$openprint::session{'user_id'},
+        } );
     openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} );
-    sql::end_transaction( undef, $ac );
-
+	delete $$self{allocated};
+	return $PA;
 } # end sub allocate
+
 sub back_ordered {
     my $self = shift;
 	return 0 if ! $$self{'id'};
