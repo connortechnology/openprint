@@ -69,7 +69,7 @@ sub sheet_calc {
 		$price{'Sheet Cost'} = $paper_price{Cost};
 		$price{'Sheet Price'} = $paper_price{Price};
 		$price{'100lb'} = $paper_price{'100lb'};
-$openprint::log->debug("Paper cost: $price{'100lb'}");
+#$openprint::log->debug("Paper cost: $price{'100lb'}");
 	} # end if
 	if ( $Paper->type() eq 'Roll' ) {
 		$price{'Paper Cost'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Cost'} );
