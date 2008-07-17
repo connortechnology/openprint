@@ -1,7 +1,7 @@
 <? eval (
 	require openprint::Manifest;
 
-	if ( %openprint::param ) {
+	if ( exists $openprint::param{'StartYear'} ) {
 		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 				$openprint::session{'/employee/inventory/manifests.html?'.$key} = join(';', @{$openprint::param{$key}} );
@@ -34,9 +34,9 @@
 <form id="ManifestResults" name="ManifestResults" action="manifests.html" method="post">
 	<table class="List sortable">
 		<tr>
-			<th width="10"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
+			<th width="20"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
 			<th align="left" width="200">Manifest ID</th>
-			<th align="left" width="115">Date Received</th>
+			<th align="left" width="90">Received On</th>
 			<th align="left">Contents</th>
 		</tr>
 		<? echo (

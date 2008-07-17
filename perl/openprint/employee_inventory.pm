@@ -1039,7 +1039,7 @@ if ( 0 ) {
 			foreach my $k ( keys %param ) {
 				delete $param{$k};
 			} # end foreach
-			delete $variable{'IDS'};	
+			@{$variable{'IDS'}} = ();
 		} # end if
 	} # end if
 } # end sub update_inventory
