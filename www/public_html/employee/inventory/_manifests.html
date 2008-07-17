@@ -46,8 +46,8 @@
 
 				$html .= '<tr>';
 				$html .= qq`<td align="center"><input type="checkbox" name="manifests" value="$$Manifest{'id'}"/></td>`;
-				$html .= sprintf( '<td><a href="manifest_details.html?manifest_id=%1$s">%1$s</a></td>', $$Manifest{'id'} );
-				$html .= sprintf( '<td><a href="manifest_details.html?manifest_id=%s">%s</a></td>', $$Manifest{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($Manifest->received_on()) ) );
+				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%1$s</a></td>', $$Manifest{'id'} );
+				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%s">%s</a></td>', $$Manifest{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($Manifest->received_on()) ) );
 
 				$html .= '<td>';
 				my %skids;
