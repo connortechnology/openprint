@@ -82,7 +82,7 @@ sub AUTOLOAD {
 
 sub display {
 	my $self = shift;
-	$openprint::log->debug("Imp: $$self{'columns'}x$$self{'rows'}+$$self{'dutch_columns'}x$$self{'dutch_rows'}:$$self{imposition}out spreads:$$self{'spread_columns'}x$$self{'spread_rows'}=$$self{'spreads'} $$self{runstyle} on: $self->{paper}->{width}x$self->{paper}->{height} $$self{Press}->{strid} I: $$self{image_width}x$$self{image_height} L:$$self{layout_width}x$$self{layout_height} $$self{image_orientation} pages: " . $self->page_columns() . 'x' . $self->page_rows() );
+	$openprint::log->debug("Imp: $$self{'columns'}x$$self{'rows'}+$$self{'dutch_columns'}x$$self{'dutch_rows'}:$$self{imposition}out spreads:$$self{'spread_columns'}x$$self{'spread_rows'}=$$self{'spreads'} $$self{runstyle} on: $self->{paper}->{start_width}x$self->{paper}->{start_height} -> $self->{paper}->{width}x$self->{paper}->{height} $$self{Press}->{strid} I: $$self{image_width}x$$self{image_height} L:$$self{layout_width}x$$self{layout_height} $$self{image_orientation} pages: " . $self->page_columns() . 'x' . $self->page_rows() );
 } # end sub display
 
 sub set {
