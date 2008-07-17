@@ -817,6 +817,7 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
 	%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )} if $$services{'SaddleStitching'};
 	%{$project{'SpinePasteSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SpinePaste'}[0] )} if $$services{'SpinePaste'};
+	$project{'PrintingSpecs'} = $printing_specs;
 
 	if ( $$services{'UVCoating'} ) {
 $openprint::log->debug("Grabbing UV Specs");
@@ -2107,14 +2108,16 @@ sub calc_price {
 		} # end if
 	} # end if
 	if ( $Paper->minimum_order() ) {
+		my $rate = $Imposition->pages() / $$project{'PrintingSpecs'}{'txtTotalPageQuantity'} if $Imposition->pages() and $$project{'PrintingSpecs'}{'txtTotalPageQuantity'};
+		$rate = 1 if ! $rate;
 # Assume sheets for sheets, lbs for Rolls
 		if ( $Paper->type() eq 'Sheet' ) {
-			if ( $Paper->minimum_order() > $gross_qty ) {
-				$gross_qty = $Paper->minimum_order();
+			if ( $Paper->minimum_order() * $rate > $gross_qty ) {
+				$gross_qty = $Paper->minimum_order() * $rate;
 			} # end if
 		} elsif ( $Paper->type() eq 'Roll' ) {
-			if ( $Paper->minimum_order() > $weight ) {
-				$weight = $Paper->minimum_order();
+			if ( $Paper->minimum_order() * $rate > $weight ) {
+				$weight = $Paper->minimum_order() * $rate ;
 				$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
 			} # end if
 		} # end if
