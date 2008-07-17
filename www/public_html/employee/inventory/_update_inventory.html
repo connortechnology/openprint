@@ -1,3 +1,13 @@
+<? if ( $$variable{'error'} ) ?>
+<div class="error">
+<?error?>
+</div>
+<? endif ( $$variable{'error'} ) ?>
+<? if ( $$variable{'information'} ) ?>
+<div class="information">
+<?information?>
+</div>
+<? endif ( $$variable{'information'} ) ?>
 <form name="f1" id="f1" method="post">
 	<input type="hidden" name="rfidtag_ids" value="<? echo ( join(';', @{$$variable{'IDS'}} ); ) ?>" />
 	<fieldset><legend>Enter RFID #'s</legend>

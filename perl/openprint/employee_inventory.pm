@@ -1039,10 +1039,11 @@ if ( 0 ) {
 			foreach my $k ( keys %param ) {
 				delete $param{$k};
 			} # end foreach
-			delete $variable{'IDS'};	
+			@{$variable{'IDS'}} = ();
 		} # end if
 	} # end if
 } # end sub update_inventory
+
 
 sub _update_inventory {
 	my @ids = split(';', $param{'rfidtag_ids'} );
@@ -1097,6 +1098,59 @@ sub _paper_allocations {
         delete $param{'skid_id'};
     } # end if
 }
+sub manifest {
+	if ( $param{'btnFunction'} eq 'Submit' ) {
+		my @ids = misc::trim( split(';', $param{'rfidtag_ids'} ) );
+		@{$variable{'IDS'}} = @ids;
+
+if ( 0 ) {
+		if ( $param{'manifest_id'} ) {
+			my @Manifests = openprint::Manifest::find('id'=>$param{'manifest_id'});
+			if ( @Manifests ) {
+				$variable{'error'} .= "Manifest $param{'manifest_id'} has already been entered.";
+				$param{'manifest_id'} = '';
+			} # end if
+		} # end if
+} # end if
+
+		my $Manifest = new openprint::Manifest();
+		$Manifest->id( $param{'manifest_id'} );
+		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
+		$variable{'error'} .= $Manifest->save();
+		delete $param{'rfidtag_id'};
+		foreach my $tag_id ( @ids ) {
+			next if ! $tag_id;
+			my $Tag = new openprint::RFIDTag( $tag_id );
+			if ( ! $Tag->id() ) {
+				$variable{'error'} .= $Tag->save( {'id'=>$tag_id} );
+				last if $variable{'error'};
+			} # end if
+			my $Skid = $Tag->Skid();
+			$param{"qty_lbs-$tag_id"} = sprintf('%d', $param{"qty_lbs-$tag_id"});
+			save_skid( $Skid, $param{"qty_lbs-$tag_id"} );
+			if ( openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out' ) ) {
+				save_skid( $Skid, -1*$param{"qty_lbs-$tag_id"} );
+			} # end if
+			last if $variable{'error'};
+
+			my $MC = new openprint::ManifestContent();
+			$variable{'error'} .= $MC->save( {
+					'manifest_id'	=>	$Manifest->id(),
+					'skid_id'		=>	$Skid->id(),
+					'quantity'		=>	$param{"qty_lbs-$tag_id"},
+					'cost'			=>	$param{"cost"},
+					} );
+			last if $variable{'error'};
+		} # end foreach tag_id
+		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= 'Information successfully stored.';
+			foreach my $k ( keys %param ) {
+				delete $param{$k};
+			} # end foreach
+			@{$variable{'IDS'}} = ();
+		} # end if
+	} # end if
+} # end sub manifest
 
 1;
 
