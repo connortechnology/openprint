@@ -137,6 +137,7 @@ my %variables = (
 		'BlankPlateQuantity1' => ['save','output'], 'BlankPlateQuantity2' => ['save','output'], 'BlankPlateQuantity3' => ['save','output'], 
 		'PreviousPlates1' => [], 'PreviousPlates2' => [], 'PreviousPlates3' => [],
 		'txtPlateChangeQuantity1' => ['save'], 'txtPlateChangeQuantity2' => ['save'], 'txtPlateChangeQuantity3' => ['save'], 
+		'AdditionalPlates1' => ['save'], 'AdditionalPlates2' => ['save'], 'AdditionalPlates3' => ['save'],
 		'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
 		'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
 		'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
@@ -1438,7 +1439,7 @@ sub breakdown {
 
 	my $breakdown = '';
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
-	$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} - $$price{'Plate Total'} );
+	$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
 	$breakdown .= sprintf("\tImposition Charge:\t\$%1\$.2f + \$%2\$.2f*\%4\$d=\$%3\$.2f<br/>", @$price{'Imposition MakeReady','Imposition Price','Imposition Total'}, $Imposition->imposition() );
 	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", @$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
@@ -1949,27 +1950,27 @@ sub calc_price {
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @$side_one_colours and @$side_two_colours ) {
 			$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $side_one_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
-			$press_setup += $_->{'Total'};
+			$press_setup += $_->{'Press Setup'};
 			$price{'Plate Total'} += $_->{'Plate Total'};
 			$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $side_two_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
-			$press_setup += $_->{'Total'};
+			$press_setup += $_->{'Press Setup'};
 			$price{'Plate Total'} += $_->{'Plate Total'};
 		} elsif ( @$side_one_colours ) {
 			$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_one_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
-			$press_setup += $_->{'Total'};
+			$press_setup += $_->{'Press Setup'};
 			$price{'Plate Total'} += $_->{'Plate Total'};
 		} elsif ( @$side_two_colours ) {
 			$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $side_two_colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
-			$press_setup += $_->{'Total'};
+			$press_setup += $_->{'Press Setup'};
 			$price{'Plate Total'} += $_->{'Plate Total'};
 		} # end if
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web', 'Perfecting'] ) ) {
 		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
-		$press_setup += $_->{'Total'};
+		$press_setup += $_->{'Press Setup'};
 		$price{'Plate Total'} += $_->{'Plate Total'};
 	} else {
 		$_ = press_setup_cost( $openprint::log, $openprint::dbh, $openprint::variable, $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $Project, $service_index, $Imposition );
-		$press_setup += $_->{'Total'};
+		$press_setup += $_->{'Press Setup'};
 		$price{'Plate Total'} += $_->{'Plate Total'};
 	} # end if
 	$price{'Plate Costs'} = \%plate_setup;
@@ -2183,7 +2184,7 @@ sub calc_price {
 	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
 
 	#$price{'Ink Mix Charge'} = $$pms_prices{'Ink Mix Charge'};
-	my $setup_cost = $price{'Imposition Total'} + $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'};
+	my $setup_cost = $price{'Imposition Total'} + $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'} + $price{'Plate Total'};
 	$price{'Comparison Cost'} += $setup_cost;
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	#return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Run Charges' );
@@ -2777,6 +2778,7 @@ sub press_setup_cost {
 		} # end if
 	} # end foreach colour
 	my %Price;
+	$Price{'Setup Count'} = $setup_count;
 	if ( ! ( %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady'.$Imposition->runstyle(), undef, $Press) ) ) {
 		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', undef, $Press);
 	} # end if
@@ -2807,7 +2809,8 @@ sub press_setup_cost {
 		$Price{'Total'} *= $plate_runs if $plate_runs;
 		$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
-	my %PlateSetupPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'PlateMakeReady', undef, $Press);
+	$Price{'Press Setup'} = $Price{'Total'};
+	my %PlateSetupPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'PlateMakeReady', undef, $Press );
 	if ( %PlateSetupPrice ) {
 		if ( lc $PlateSetupPrice{'units'} eq 'per hour') {
 			my $time = $Press->specification('Plate Setup Time');
@@ -2818,8 +2821,9 @@ sub press_setup_cost {
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
 			$Price{'Total'} += $PlateSetupPrice{'Price'} * $time;
 		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
-			my $plates = $setup_count + $plate_change_qty;
+			my $plates = $setup_count;
 			$plates *= $plate_runs if $plate_runs;
+			$plates += $plate_change_qty;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
 			$Price{'Total'} += $PlateSetupPrice{'Price'} * $plates;
 		} else {
@@ -2860,6 +2864,7 @@ sub plate_setup_cost {
 
 #$log->debug("** GETTTING PLATE SIZE FOR: $press : SIZE ($plate_size) TYPE ($plate_type) COUNT ($plate_count) RUNS($plate_runs)*$impressions*$max_impressions") if $debug or 1;
 	$plate_count *= $plate_runs;
+	$plate_count += $$specs{'AdditionalPlates'.$qty_index};
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
 #$log->debug("Previous Plates: $used_plates");
 
