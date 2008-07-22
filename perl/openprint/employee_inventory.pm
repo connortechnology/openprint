@@ -756,7 +756,7 @@ sub allocate {
 	my $qty = $quantity;
 	if ( @skid_ids ) {
 		if ( $qty < 0 ) {
-			foreach my $skid_id ( @skid_ids ) ) {
+			foreach my $skid_id ( @skid_ids ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				my $allocateable = $Skid->allocateable( $Paper );
 				next if ! $allocateable;
@@ -771,7 +771,7 @@ sub allocate {
 				last if ! $qty;
 			} # end foreach
 		} else {
-			foreach my $skid_id ( @skid_ids ) ) {
+			foreach my $skid_id ( @skid_ids ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				my $allocateable = $Skid->allocateable( $Paper );
 				next if ! $allocateable;
