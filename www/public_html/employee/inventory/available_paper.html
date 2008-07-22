@@ -1,29 +1,24 @@
-<? eval (
-if ( $openprint::param{'btnFunction'} eq 'Allocate' ) {
-	openprint::employee_inventory::allocate( @openprint::param{'skid_id','paper_id','Quantity','Project','Docket'} );
-} # end if
-) ?>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript">
-var allocateWin;
-function allocate_window(paper_id) {
-    if (allocateWin == null) {
-		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:300} );
-		allocateWin.setHTMLContent('Loading... please wait');
-		allocateWin.showCenter();
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-onDestroy: function(eventName, win) {
-			   if (win == allocateWin) {
-				   allocateWin = null;
-				   Windows.removeObserver(this);
-			   }
-		   }
+	var allocateWin;
+	function allocate_window( paper_id ) {
+		if ( allocateWin == null ) {
+			allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:300} );
+			allocateWin.setHTMLContent('Loading... please wait');
+			allocateWin.showCenter();
+			// Set up a windows observer, check ou debug window to get messages
+			myObserver = {
+				onDestroy: function(eventName, win) {
+					if (win == allocateWin) {
+						allocateWin = null;
+						Windows.removeObserver(this);
+					}
+				}
+			}
+			Windows.addObserver(myObserver);
 		}
-		Windows.addObserver(myObserver);
-	}
 		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?referer=available_paper.html&paper_id='+paper_id, null , true);
-} // end function bug_report
+	} // end function bug_report
 
 	function check_inputs(form ) {
 		if ( form.skid_id && form.skid_id.value ) {

@@ -5,10 +5,6 @@ fieldset p label {
 	width: 140px;
 	margin-left: -135px;
 }
-fieldset p label.radio {
-	width: auto;
-	margin: 0px;
-}
 
 div.PopupWindow fieldset p {
 	padding-left: 0px;
@@ -26,4 +22,9 @@ div.PopupWindow fieldset p label {
 #Allocate fieldset p label {
 	width: 100px;
 	margin-left: -95px;
+}
+
+fieldset p label.radio, #Allocate fieldset p label.radio {
+	width: auto;
+	margin-left: 0px;
 }

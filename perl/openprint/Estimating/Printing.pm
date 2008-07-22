@@ -1464,14 +1464,15 @@ sub breakdown {
 	if ( $Paper->type() ne 'Roll' ) {
 		$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
 		$breakdown .= "\tPaper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
+		$breakdown .= " minimum order adjustment $$price{'minimum_order'}sheets<br/>" if $$price{'minimum_order'};
 		$breakdown .= "(\$ $$Paper{'Per M'} Per M) " if $$Paper{'Per M'};
 		$breakdown .= " (\$ $$price{'100lb'}/100lb) = \$ $$price{'Paper Price'}<br/>";
 		$$price{'Paper 1000 Price'} = ($$price{'Sheet Price'}*1000/$Imposition->imposition());
 	} elsif ( $Paper->width() ) {
 		$breakdown .= sprintf("\tPaper: \%sx\%s * \%.6flbs/sq inch = \%.6f lbs per sheet (%d gsm)<br/>", $Paper->width(), $Paper->height(), $Paper->wpsi(), $Paper->width() * $Paper->height()* $Paper->wpsi(), $Paper->gsm() );
 		$$price{'Paper 1000 Price'} = (($Paper->mweight()/$Imposition->imposition())/100)*$$price{'100lb'};
-
 		$breakdown .= sprintf("\tPaper: %.0f lbs * \$%.2f/100lb = \$%.2f<br/>", @$price{'Stock Weight','100lb','Paper Price'});
+		$breakdown .= " minimum order adjustment $$price{'minimum_order'}lbs<br/>" if $$price{'minimum_order'};
 	} # end if
 	if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
 		$breakdown .= "\tPaper Price not included in total<br/>";
@@ -2099,7 +2100,7 @@ sub calc_price {
 		$gross_qty += $additional_overs;
 	} # end if
 	$impressions = $gross_qty;
-	my $weight = $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi();
+	my $weight = ceil( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
 	my $sheets_per_package = $Paper->sheets_per_package();
 	if ( $sheets_per_package and $Paper->full_packages() ) {
 		if ( $Paper->type() eq 'Sheet' ) {
@@ -2117,15 +2118,16 @@ sub calc_price {
 # Assume sheets for sheets, lbs for Rolls
 		if ( $Paper->type() eq 'Sheet' ) {
 			if ( $Paper->minimum_order() * $rate > $gross_qty ) {
-				$gross_qty = $Paper->minimum_order() * $rate;
+				$price{'minimum_order'} = ceil( $Paper->minimum_order() * $rate ) - $gross_qty;
+				$gross_qty += $price{'minimum_order'};
 			} # end if
 		} elsif ( $Paper->type() eq 'Roll' ) {
 			if ( $Paper->minimum_order() * $rate > $weight ) {
-				$weight = $Paper->minimum_order() * $rate ;
+				$price{'minimum_order'} = ceil( $Paper->minimum_order() * $rate ) - $weight;
+				$weight += $price{'minimum_order'};
 				$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
 			} # end if
 		} # end if
-		$openprint::log->debug('Minimum Order Requirement not met');
 	} # end if
 
 	my %sheet_qty = (
