@@ -14,6 +14,8 @@ require ssi;
 require misc;
 require configuration;
 require openprint::Skid;
+require openprint::User;
+require openprint::Project;
 require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;

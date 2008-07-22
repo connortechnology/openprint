@@ -721,7 +721,7 @@ sub check_in {
 # allocate
 # skid_ids is plural because it may be a comma delimited string of skid_ids
 sub allocate {
-	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket ) = @_;
+	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket, $specific ) = @_;
 	if ( ! $paper_id ) {
 		$variable{'error'} .= "Paper not specified. No paper allocated.<br/>";
 		return;
@@ -744,11 +744,19 @@ sub allocate {
 	} # end if
 
 	my @allocations = ();
+	my @skid_ids = split(',', $skid_ids );
+	if ( $specific and ! @skid_ids ) {
+		if ( $quantity < 0 ) {
+			@skid_ids = sql::execute( undef, undef, q{SELECT skid_id FROM paper_allocations WHERE paper_id=? AND quantity > 0 AND project_id=? ORDER BY skid_id}, $paper_id, $Projects[0]->id() );
+		} else {
+			@skid_ids = sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? AND quantity > 0 ORDER BY skid_id}, $paper_id );
+		} # end if
+	} # end if
 
 	my $qty = $quantity;
-	if ( $skid_ids ) {
+	if ( @skid_ids ) {
 		if ( $qty < 0 ) {
-			foreach my $skid_id ( split(',', $skid_ids ) ) {
+			foreach my $skid_id ( @skid_ids ) ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				my $allocateable = $Skid->allocateable( $Paper );
 				next if ! $allocateable;
@@ -763,7 +771,7 @@ sub allocate {
 				last if ! $qty;
 			} # end foreach
 		} else {
-			foreach my $skid_id ( split(',', $skid_ids ) ) {
+			foreach my $skid_id ( @skid_ids ) ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				my $allocateable = $Skid->allocateable( $Paper );
 				next if ! $allocateable;
@@ -1151,6 +1159,28 @@ if ( 0 ) {
 		} # end if
 	} # end if
 } # end sub manifest
+
+sub available_paper {
+	if ( $param{'btnFunction'} eq 'Allocate' ) {
+		allocate( @param{'skid_id','paper_id','Quantity','Project','Docket','specific'} );
+	} # end if
+} # end sub available_paper
+
+sub _allocate_popup {
+    if ( $param{'referer'} ) {
+        $variable{'referer'} = $param{'referer'};
+    } elsif ( $ENV{'HTTP_REFERER'} ) {
+        $log->debug($ENV{'HTTP_REFERER'});
+        $ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
+        $variable{'referer'} = $1;
+    } # end if
+    $variable{'Paper'} = new openprint::Paper( $param{'paper_id'} );
+    if ( exists $param{'quantity'} ) {
+        $variable{'quantity'} = $param{'quantity'};
+    } else {
+        $variable{'quantity'} = $variable{Paper}->in_stock() - $variable{Paper}->allocated();
+    } # end if
+} # end sub _allocate_popup
 
 1;
 
