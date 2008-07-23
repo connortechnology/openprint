@@ -3,11 +3,13 @@ package openprint::OrderedProduct;
 
 use strict;
 require openprint::Product;
+require openprint::Project;
 
 my @fields = (
 	'id',
 	'order_id',
 	'product_id',
+	'project_id',
 	'quantity',
 	'price',
 	'shipping_type',
@@ -21,6 +23,11 @@ sub find {
 	my %params = @_;
 	my $sql = 'SELECT * FROM Ordered_Products WHERE 1>0';
 	my @values;
+
+	if ( $params{'id'} ) {
+		$sql .= ' AND id=?';
+		push @values, $params{id};
+	} # end if
 
 	if ( $params{order_id} ) {
 		$sql .= ' AND order_id=?';
@@ -41,6 +48,16 @@ sub find {
 	} # end if
 	
 } # end sub find
+
+sub delete {
+	my $self = shift;
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+	sql::execute( undef, undef, 'DELETE FROM ORdered_products WHERE id=?', $$self{'id'} );
+	$self->Project()->delete() if $$self{'project_id'};
+	sql::end_transaction( $openprint::dbh, $ac );
+	return;
+} # end sub delete
 
 sub load {
 	my ( $self, $data ) = @_;
@@ -70,6 +87,21 @@ sub save {
 	$self->load();
 	return;
 } # end sub save
+
+sub Project {
+	my ( $self ) = @_;
+	if ( $$self{'project_id'} ) {
+		return new openprint::Project( $_[0]{'project_id'} );
+	} else {
+		my $Project = new openprint::Project( $self->Product()->project_id() )->copy();
+		$Project->reference( $self->Product()->name() );
+		$Project->company_id( $openprint::session{'company_id'} );
+		$Project->save();
+		$$self{'project_id'} = $Project->id();
+		$self->save();
+		return $Project;
+	} # end if
+} # end sub Project
 
 sub Product {
 	my $self = shift;

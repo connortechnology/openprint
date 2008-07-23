@@ -822,56 +822,20 @@ sub reuse_project {
 		openprint::main_account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
 	} # end if
 
-
-	my @dont_copy = (
-			'ServiceIndex','ProjectIndex','TemplateType',
-			'txtEmployeeComments','rdbComplete','rdbApproved','ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
-			'ddmCompletionDate.*','txtRunHours','txtDowntimeHours',
-			'ddmPressCompletionDate.*',	'UsePress.*', 'rdbPressComplete.*',
-			'UsedPaper.*',
-			'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
-			);
-
 	# Make this all one transaction... Don't need locking because a reload would get a different projectindex
 	my $ac = sql::start_transaction( $dbh );
-
-	my @contents = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, servicetype_id, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
+	foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $NewProject->id() ) ) {
 			
-	while ( @contents ) {
-		my ( $service_index, $servicetype_id, $status ) = splice @contents, 0, 3;
-
-		# uncalc->uncalc,	*->calc
-		if ( $status ne '' and sets::isin( $status, [ 'Pending Deposit', 'Ordered', 'Proofs Out', 'Approved', 'Complete' ] ) ) {
-			$status = 'calculated';
-		} # end if
-
-		my ( $new_service_index ) = sql::execute( $log, $dbh, q{SELECT nextval('ContentsServiceIndex_seq')} );
-		sql::insert( $log, $dbh, 'tbl_Project_Contents',[
-				'lngProjectIndex',	$NewProject->id(),
-				'lngServiceIndex', $new_service_index,
-				'servicetype_id',   $servicetype_id,
-				'strStatus',	$status
-				] );
-		openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'ProjectIndex', $NewProject->id(), 1 );
-		openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'ServiceIndex', $new_service_index, 1 );
-
-		my $specs = openprint::service::get_specs_ref( $Project->id(), $service_index );
-		foreach my $key ( keys %$specs ) {
-			if ( ! sets::isin_regx( $key, @dont_copy ) ) {
-				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, $key, $$specs{$key}, 1 );
-			} # end if
-		} # end foreach
 		if ( $Project->quantity1() != $NewProject->quantity1() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'txtQuantity1', $NewProject->quantity1() );
+			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity1', $NewProject->quantity1() );
 		} # end if
 		if ( $Project->quantity2() != $NewProject->quantity2() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'txtQuantity2', $NewProject->quantity2() );
+			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity2', $NewProject->quantity2() );
 		} # end if
 		if ( $Project->quantity3() != $NewProject->quantity3() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'txtQuantity3', $NewProject->quantity3() );
+			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity3', $NewProject->quantity3() );
 		} # end if
-
-	} # end while
+	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()

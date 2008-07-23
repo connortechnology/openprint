@@ -31,6 +31,7 @@ sub edit {
 		$Product->category_id( $param{'ddmCategory'} );
 		$Product->taxexempt1( $param{'rdbTaxExempt1'} );
 		$Product->taxexempt2( $param{'rdbTaxExempt2'} );
+		$Product->project_id( $param{'project_id'} );
 		$Product->sort( $param{'sort'} );
 		$$variable{'error'} = $Product->save();
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {

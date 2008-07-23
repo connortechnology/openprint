@@ -69,3 +69,6 @@ div.OrderHeader fieldset p label {
 div.OrderHeader fieldset#OrderedBy {
 	float: right;
 }
+div#main_content_inner {
+		 padding-left: 6px;
+}

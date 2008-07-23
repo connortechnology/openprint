@@ -86,17 +86,31 @@ sub add_product {
 	$order_id = get_unfinished_order( $openprint::log, $openprint::dbh, $openprint::session{_session_id}, $openprint::variable ) if ! $order_id;
 	$order_id = create_order( $openprint::log, $openprint::dbh, $openprint::session{_session_id}, $openprint::variable ) if ! $order_id;
 
+	my $Product;
 	if ( my @Products = openprint::OrderedProduct::find( 'order_id'=>$order_id, 'product_id'=>$product_id ) ) {
-		my $Product = shift @Products;
+		$Product = shift @Products;
 		$Product->quantity( $Product->quantity() + $quantity );
 		$error .= $Product->save();
 	} else {
-		my $Product = new openprint::OrderedProduct();
+		$Product = new openprint::OrderedProduct();
 		$Product->product_id( $product_id );
 		$Product->order_id( $order_id );
 		$Product->quantity( $quantity );
 		$error .= $Product->save();
 	} # end if	
+	my $Project = $Product->Project();
+	$Project->order_id( $order_id );
+	$Project->quantity1( $Product->quantity() );
+	foreach my $service_index ( sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() ) ) {
+
+		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $service_index, 'txtQuantity1', $Project->quantity1() );
+	} # end foreach
+	foreach my $signature_service_index ( sort $Project->signatures() ) {
+		openprint::service::internal_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Project->id(), $signature_service_index, 'Printing' );
+	} # end foreach
+	openprint::service::auto_calculate( $openprint::r, $openprint::log, $openprint::dbh, $openprint::variable, $Project->id(), undef );
+	$Project->save();
+	$error .= add_project_to_order( $openprint::log, $openprint::dbh, $openprint::cookie, $openprint::variable, $Product->project_id(), $order_id );
 $openprint::log->debug("E: $error");
 
 	return ( $order_id, $error );
@@ -135,9 +149,9 @@ sub add_project_to_order {
 	if ( $num_qtys == 1 ) {
 		$sql{'intQuantityIndex'}=$qty_index;
 	} # end if
-	my %services = $Project->get_services();
-	if ( $services{'Turnaround'} ) {
-		my $specs = openprint::service::get_specs_ref( $project_index, $services{'Turnaround'}[0] );
+	my $services = $Project->services();
+	if ( $$services{'Turnaround'} ) {
+		my $specs = openprint::service::get_specs_ref( $project_index, $$services{'Turnaround'}[0] );
 		my ( $year, $month, $day ) = Date::Calc::Today();
 		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, $$specs{'TurnaroundDays'} );
 		if ( Date::Calc::Day_of_Week( $year, $month, $day ) == 6 ) {
@@ -150,7 +164,7 @@ sub add_project_to_order {
 	my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
 	if ( @ShippingServices ) {
 		foreach my $ShippingType ( @ShippingServices ) {
-			if ( $services{$ShippingType->name()} ) {
+			if ( $$services{$ShippingType->name()} ) {
 				$sql{'ShippingType'}=$ShippingType->name();
 				last;
 			} # end if
@@ -631,16 +645,10 @@ sub verify_order {
 			save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
 		} # end foreach
 		foreach my $Product ( $Order->Products() ) {
-			$Product->quantity( $openprint::param{'ProductQuantity'.$Product->id()} );
-			my %price = $Product->Product()->get_price( $Product->quantity() );
-			$Product->price( $price{Price} );
-			if ( Date::Calc::check_date( @openprint::param{'ProductDueDateYear'.$Product->id(),'ProductDueDateMonth'.$Product->id(),'ProductDueDateDay'.$Product->id()} ) ) {
-			$Product->requested_for( join('-', @openprint::param{'ProductDueDateYear'.$Product->id(),'ProductDueDateMonth'.$Product->id(),'ProductDueDateDay'.$Product->id()} ) );
-			$Product->shipping_type( $openprint::param{'ProductShippingType'.$Product->id()} );
-			$$variable{'Error'} .= $Product->save();
-			} else {
-			$$variable{'Error'} .= 'Invalid date<br/>';
-			} # end if
+			#$Product->quantity( $openprint::param{'ProductQuantity'.$Product->id()} );
+			#my %price = $Product->Product()->get_price( $Product->quantity() );
+			#$Product->price( $price{Price} );
+			$$variable{'Error'} .= save_project_information( $r, $log, $dbh, $variable, $order_id, $Product->Project()->id() );
 		} # end foreach Product
 
 		$$variable{'Error'} .= store_order_info( $r, $log, $dbh, $cookie, $variable );

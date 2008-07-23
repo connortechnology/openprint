@@ -17,7 +17,7 @@
 	<br class="spacer"/>
 	<p>
 		<label>Reference:</label>
-		<textarea name="Reference<?ProjectIndex?>" rows="10"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
+		<textarea name="Reference<?ProjectIndex?>" rows="<? echo ( scalar split("\n",  $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
 	</p>
 <? if ( @{$$variable{'Quantities'}} > 1 ) ?>
 <!--#include virtual="_quantity_select.html"-->
@@ -38,7 +38,6 @@
 			$$variable{'ServiceType'} = $ServiceType->name();
 			my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_'.$ServiceType->name().'.html');
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
-
 		} # end foreach service_id
 
 	} # end foreach ServiceType

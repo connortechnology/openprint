@@ -69,6 +69,13 @@
 			<label>Sort:</label>
 			<input type="text" name="sort" value="<? echo ( $$variable{'Product'}->sort(); ) ?>" />
 		</p>
+		<p>
+			<label>Template:</label>
+			<select name="project_id" id="project_id">
+				<option value="">select</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project::find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
+			</select>
+		</p>
 	</fieldset>
 	<fieldset><legend> Purchasing Information</legend>
 		<p> 

@@ -6,94 +6,34 @@
 		} # end if
 		@{$$variable{'PRODUCTS'}} = new openprint::Order( $openprint::param{'order_id'} )->Products();
 	} # end if
+	$$variable{'Order'} = new openprint::Order( $openprint::param{'order_id'} ) if ! $$variable{'Order'};
 ) ?>
-<fieldset><legend>Products:</legend>
+<? while ( $$variable{'Product'} = shift @{$$variable{'PRODUCTS'}} ) ?>
+<? eval ( $$variable{'Project'} = $$variable{'Product'}->Project(); ) ?>
+<fieldset>
 	<span style="float: right;">
-
+		<? echo ( ssi::writeButton( $log, $dbh, 'delete'.$$variable{'Product'}->id(), '', "new Ajax.Updater('Products','_product_information.html', { method:'get', parameters: {product_id:".$$variable{'Product'}->id().",order_id:".$$variable{'Order'}->id().",action:'delete'} } );", '', 'Remove' );) ?>
 	</span>
-<table class="List" style="table-layout: auto;">
-	<tr>
-		<th align="left">Product</th><th width="100" align="right">Quantity</th><th width="85" align="right">Price</th><th>&nbsp;</th>
-	</tr>
-	<? while ( $$variable{'OrderedProduct'} = shift @{$$variable{'PRODUCTS'}} ) ?>
-		<tr<?rowclass?>>
-			<td align="left"><? echo ( return $$variable{'OrderedProduct'}->Product()->name();) ?></td>
-			<td align="right"><input type="text" name="ProductQuantity<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->quantity(); ) ?>" /></td>
-			<td align="right">
-				<? echo ( 
-					my %price = $$variable{'OrderedProduct'}->Product()->get_price( $$variable{'OrderedProduct'}->quantity() );
-					if ( ! %price ) {
-						$$variable{'ProductPrice'} = 0;
-						return 'n/a';
-					} else {
-						$$variable{'ProductPrice'} = $price{Price};
-						return sprintf('%s%.2f', new openprint::Currency( $openprint::session{'Currency_id'} )->symbol(), $price{Price} );
-					} # end if
-				) ?>
-			</td>
-			<td><? echo ( 
-					ssi::writeButton( $log, $dbh, 'delete'.$$variable{'OrderedProduct'}->id(), '', "new Ajax.Updater('Products','_product_information.html', { method:'get', parameters: {product_id:".$$variable{'OrderedProduct'}->id().",order_id:".$$variable{'Order'}->id().",action:'delete'} } );", '', 'X' );
-					) ?><? echo ( $$variable{'Order'}->id() ) ?></td>
-		</tr>
-		<? if ( ! $$variable{'OrderedProduct'}->requested_date() ) ?>
-		<tr<?rowclass?>>
-			<td align="right">Required By:</td>
-			<td colspan="2" align="right">
-			<? eval (
-				@$variable{
-					'ProductDueDateYear'.$$variable{'OrderedProduct'}->id(), 
-					'ProductDueDateMonth'.$$variable{'OrderedProduct'}->id(), 
-					'ProductDueDateDay'.$$variable{'OrderedProduct'}->id(),
-					} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 );
-			) ?>
-				
-				<select style="width: auto;" name="ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" size="1" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.form.ProductDueDateYear<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value,this.form.ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value);" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
-				<? echo ( ssi::getmonths( $$variable{'ProductDueDateMonth'.$$variable{'OrderedProduct'}->id()} ); ) ?>
-				</select>
-				<select style="width: auto;" name="ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" size="1" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.form.ProductDueDateYear<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value,this.form.ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value);" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
-				<? echo ( ssi::getdays( $$variable{'ProductDueDateDay'.$$variable{'OrderedProduct'}->id()} ); ) ?>
-				</select>
-				<select style="width: auto;" name="ProductDueDateYear<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" size="1" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.form.ProductDueDateYear<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value,this.form.ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value);" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
-					<? echo ( ssi::getyears((localtime(time))[5]+1900, (localtime(time))[5]-100, $$variable{'ProductDueDateYear'.$$variable{'OrderedProduct'}->id()} ); ) ?>
-				</select>
-			</td>
-			<td>&nbsp;</td>
-		</tr>
-		<? endif ( ! $$variable{'OrderedProduct'}->requested_date() ) ?>
-		<? if ( ! $$variable{'OrderedProduct'}->ShippingType() ) ?>
-			<tr<?rowclass?>>
-				<td align="right">Shipping Type:</td>
-				<td colspan="2">
-    <? echo (
-        my $html;
-		$$variable{'OrderedProduct'}->shippingtype( 'Customer Pickup' ) if ! $$variable{'OrderedProduct'}->shippingtype();
-if ( 0 ) {
-        my %Shipping_Services = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Service_Types WHERE strCategory='Shipping' ORDER BY lower(strName)} );
-        foreach my $key ( keys %Shipping_Services ) {
-            $html .= sprintf( '<input type="radio" id="ProductShippingType%1$d%2$s" name="ProductShippingType%1$d" value="%2$s" %3$s /><label class="radio" for="ProductShippingType%1$d%2$s">%4$s</label>', $$variable{'OrderedProduct'}->id(), $key, 
-				$$variable{'OrderedProduct'}->shippingtype() eq $key ? ' checked="checked"' : '',
-				$Shipping_Services{$key} );
-        } # end foreach
-} # end if
-        return $html;
-    ) ?>
-    <input type="radio" id="ProductShippingType<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>CustomerPickup" name="ProductShippingType<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="Customer Pickup" <? echo ( 'checked="checked"' if $$variable{'OrderedProduct'}->shippingtype() eq 'Customer Pickup' ) ?> />
-    <label class="radio" for="ProductShippingType<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>CustomerPickup">Customer Pickup</label>
+<? hecho ( return $$variable{'Product'}->Product()->name();) ?><br class="spacer"/>
+<!--#include virtual="_required_by.html"-->
+<!--#include virtual="_shipping_type_select.html"-->
+<? echo ( 
+	my $html;
 
-</td>
-			<td>&nbsp;</td>
-			</tr>
-		<? endif ( ! $$variable{'OrderedProduct'}->ShippingType() ) ?>
-		<? eval (
-			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-			$$variable{'ProductsTotal'} += $$variable{'ProductPrice'};
-		) ?>
-	<? endwhile ( $$variable{'OrderedProduct'} = shift @{$$variable{'PRODUCTS'}} ) ?>
-	<tr class="totals">
-		<td colspan="2" align="right"><b>Total:</b></td>
-		<td align="right" id="ProductsTotal"><? echo ( sprintf('%s%.2f', new openprint::Currency( $openprint::session{'Currency_id'} )->symbol(), $$variable{'ProductsTotal'} ); ) ?></td>
-			<td>&nbsp;</td>
-	</tr>
-</table>
-	<br class="spacer"/>
+	my $services = $$variable{'Project'}->services();
+
+	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+		next if ! $$services{$ServiceType->name()};
+		foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+			$$variable{'ServiceIndex'} = $service_id;
+			$$variable{'ServiceType'} = $ServiceType->name();
+			my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_'.$ServiceType->name().'.html');
+			$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
+		} # end foreach service_id
+
+	} # end foreach ServiceType
+
+	return $html;
+) ?>
 </fieldset>
+<? endwhile ( $$variable{'Product'} = shift @{$$variable{'PRODUCTS'}} ) ?>

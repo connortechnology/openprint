@@ -1,6 +1,6 @@
 <? eval ( @{$$variable{'ProjectTypes'}} = sql::execute( $log, $dbh, q{SELECT lngIndex, strID, strName, strDetailedURL FROM Project_Types ORDER BY lngSort, lower(strName)} ); ) ?>
 <ul class="ProjectTypes">
 <? while ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
-<li><a href="/content/<?url?>?ProjectType=<? echo ( URI::Escape::uri_escape($$variable{'id'}) ) ?>&amp;ProjectTypeName=<? echo ( URI::Escape::uri_escape($$variable{'name'}) ) ?>" title="<?name?>"><?name?></a></li>
+<li><a href="/content/<?url?>?ProjectType=<? echo ( URI::Escape::uri_escape($$variable{'id'}) ) ?>&amp;ProjectTypeName=<? echo ( URI::Escape::uri_escape($$variable{'name'}) ) ?>" title="<? hecho ( $$variable{'name'} ) ?>"><? hecho ( $$variable{'name'} ) ?></a></li>
 <? endwhile ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
 </ul>
