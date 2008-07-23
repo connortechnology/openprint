@@ -1219,24 +1219,23 @@ $openprint::log->debug("No spread layout for you!");
 								} elsif ( $I->Paper()->area() == $imp->Paper()->area() ) {
 									$add = 0;
 
-									if ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) and ( $I->Paper()->start_area() != $I->Paper()->area() ) and ( $imp->Paper()->start_area() == $imp->Paper()->area ) ) {
-									# Prefer non-cut sheet
- #if ( ( $I->Paper()->width() == 35 ) and ( ! $I->Paper()->start_height() ) and ( $I->runstyle() eq 'Perfecting' ) ) {
-#$openprint::log->debug("Splicing due to start area");
-#$imp->display();
-#}
-										splice @{$imps{$str}}, $j, 1;
-										$j -= 1;
-										$add = 1;
-									} elsif ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
+# This line prefers non-cut sheets to cut sheets
+									if ( $BiggerPrice{'100lb'} >= $SmallerPrice{'100lb'} ) {
+										if ( ( $I->Paper()->start_area() != $I->Paper()->area() ) and ( $imp->Paper()->start_area() == $imp->Paper()->area ) ) {
+											splice @{$imps{$str}}, $j, 1;
+											$j -= 1;
+											$add = 1;
+										} elsif ( $imp->Paper()->start_width() and ! $I->Paper()->start_width() ) {
+# Prefer non-cut sheet
+											splice @{$imps{$str}}, $j, 1;
+											$j -= 1;
+											$add = 1;
+										} elsif ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
 # Prefer non-dutch
-										splice @{$imps{$str}}, $j, 1;
-										$j -= 1;
-										$add = 1;
-									} elsif ( (1*$BiggerPrice{'100lb Price'}) > (1*$SmallerPrice{'100lb Price'}) ) {
-										splice @{$imps{$str}}, $j, 1;
-										$j -= 1;
-										$add = 1;
+											splice @{$imps{$str}}, $j, 1;
+											$j -= 1;
+											$add = 1;
+										} # end if
 									} # end if
                                     
 								} else { # smaller area
