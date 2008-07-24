@@ -1927,12 +1927,12 @@ sub calc_price {
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
-		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug;
+		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug or 1;
 		return \%price;
 	} # end if
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
-		$openprint::log->debug("Next cuz of minimum impression quantity $min_impression_quantity: $impressions" ) if $debug;
+		$openprint::log->debug("Next cuz of minimum impression quantity $min_impression_quantity: $impressions" ) if $debug or 1;
 		return \%price;
 	} # end if
 # Impressions are basically runs through the press
@@ -2327,7 +2327,8 @@ sub calc_price {
 	$price{'Setup Total'} = $setup_cost;
 
 	my $total_cost = $run_cost + $setup_cost + $plate_setup{'Plate Price'} * $plate_setup{'Plate Count'} + $price{'Ink Price'} + $varnish_price{'run_price'} + $varnish_price{'Material Total'} + $plate_setup{'Blank Price'} * $plate_setup{'Blank Plates'};
-	$price{'Comparison Cost'} += $price{'Film Cost'} + $price{'Ink Price'} + $varnish_price{'run_price'} + $varnish_price{'Material Total'};
+
+	$price{'Comparison Cost'} += $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Film Cost'} + $price{'Ink Price'} + $varnish_price{'run_price'} + $varnish_price{'Material Total'};
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Totals' );
 	$price{'Total Cost'} = $total_cost;
