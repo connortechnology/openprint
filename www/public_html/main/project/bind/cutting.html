@@ -49,7 +49,7 @@
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 	<p>
-		<label>Supplied press sheet size:</label>
+		<label>Supplied sheet size:</label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -62,7 +62,7 @@
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 	<p>
-		<label>Running press sheet size:</label>
+		<label>Running sheet size:</label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>

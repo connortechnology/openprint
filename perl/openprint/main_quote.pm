@@ -178,8 +178,8 @@ sub information {
 	} # end if
 
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
-	foreach my $key ( $r->param() ) {
-		if ( $key =~ /txtMarkup(\d+)_(\d+)/ ) {
+	foreach my $key ( keys %openprint::param ) {
+		if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
 			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $quote_id, $2],
 					'dblMarkup'.$1,         1*$r->param($key),
 					);
@@ -259,6 +259,14 @@ sub submit {
         if ( $_ = openprint::quote::store_quote_info( $r, $log, $dbh, $quote_id, $variable ) ) {
             return misc::error( $log, $dbh, $variable, 'Error', $_ );
         } # end if
+# store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
+	foreach my $key ( keys %openprint::param ) {
+		if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
+			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $quote_id, $2],
+					'dblMarkup'.$1,         1*$r->param($key),
+					);
+		} # end if
+	} # end foreach
     } # end if
 
     if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) {

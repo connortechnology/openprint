@@ -60,6 +60,7 @@ function cbWindowSaveClose( results ) {
 	window.close();
 } 
 
+
 function get_page_quantity(form) {
 	var pageQty = 1;
 	if ( form.elements['rdbPageQuantity'] ) {

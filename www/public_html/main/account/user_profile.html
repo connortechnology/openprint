@@ -2,6 +2,9 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
+<? if ( $$variable{'error'} ) ?>
+<div class="error"><?error?></div>
+<? endif ( $$variable{'error'} ) ?>
 <? if ( $openprint::session{'user_id'} ) ?>
 	<span class="requiredFieldIndicator">*</span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>

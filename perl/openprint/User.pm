@@ -60,6 +60,7 @@ my %defaults = (
 	'changepassword'	=>	'N',
 	'administrator'		=>	'N',
 	'commission'		=>	undef,
+	'quote_level'	=> undef,
 );
 
 sub get {

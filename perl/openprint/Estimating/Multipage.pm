@@ -38,6 +38,7 @@ my %variables = (
 	'txtSpreadSize'=>['save','output'],'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
+	'remaining_pages'=>['output'],'next_group_id'=>['output'],
 );
 
 sub variables {
@@ -119,7 +120,7 @@ sub calc {
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
-		if ( ! $override_pages{$group_id} ) {
+		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
 			$remaining_pages = 0;
 		} # end if
@@ -128,7 +129,19 @@ sub calc {
 			$$specs{'txtFinalWidth'.$group_id} = $$specs{'txtFinalWidth'};
 			$$specs{'txtFinalHeight'.$group_id} = $$specs{'txtFinalHeight'};
 		} # end if
-	} # end foreach
+	} # end foreach group_id
+
+	if ( $$specs{'remaining_pages'} = $remaining_pages ) {
+		my $max_group = 0;
+		foreach my $g_id ( @Groups ) {
+			if ( $g_id > $max_group ) {
+				$max_group = $g_id;
+			} # end if
+		} # end foreach g_id
+		$$specs{'next_group_id'} = $max_group + 1;
+	} else {
+		$$specs{'next_group_id'} = '';
+	} # end if
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'help'} = 'Please select the dimensions.';

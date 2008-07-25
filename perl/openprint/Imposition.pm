@@ -193,8 +193,8 @@ sub load {
 		$$self{'spreads'} = $$specs{'PageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
 		$$self{'spread_rows'} = $$specs{'SpreadRows'.$qty_index};
 		$$self{'spread_columns'} = $$specs{'SpreadCols'.$qty_index};
-		$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
-		$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
+		#$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
+		#$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
 		$$self{'spread_size'} = $$specs{'txtSpreadSize'};
 		#$$self{'image_width'} = $$self{'spread_columns'} * $$self{'image_width'};
 		#$$self{'image_height'} = $$self{'spread_rows'} * $$self{'image_height'};

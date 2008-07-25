@@ -1,3 +1,6 @@
+function versions_onkeyup( e ) {
+	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { method: 'get', parameters: e.form.serialize() } );
+}
 
 function filter_colours( side, signature ) {
 	// For each of the colours
@@ -172,6 +175,7 @@ function calc_print( formName, force ) {
 	jsrsExecute( '/jsrs.htm', cbFillPrintResults, 'openprint::service::external_calc', get_variables(formName,'Printing') );
 	return;
 } // end calc_print
+
 
 function clear_price_data( form ) {
 

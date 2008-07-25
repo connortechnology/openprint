@@ -85,13 +85,14 @@ if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 					next if ! $$variable{'Project'}->quantity($qty_index);
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
 if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
-					$html .= sprintf('<input type="checkbox" id="chkOverrideFoldType-%1$d-%2$d" name="chkOverrideFoldType-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideFoldType-%1$d-%2$d">Override</label><br/>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
-} elsif ( $$variable{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-					$html .= sprintf('<input type="hidden" name="chkOverrideFoldType-%1$d-%2$d" value="Y" /> Overriden<br/>', $$sig_specs{'SignatureIndex'}, $qty_index );
+					$html .= sprintf('<input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideFold-%1$d-%2$d">Override</label><br/>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+} elsif ( $$variable{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					$html .= sprintf('<input type="hidden" name="chkOverrideFold-%1$d-%2$d" value="Y" /> Overriden<br/>', $$sig_specs{'SignatureIndex'}, $qty_index );
 } # end if
 					$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
 					$$variable{'QTYIndex'} = $qty_index;
 
+					$html .= '<table style="width: auto;"><tr><th width="40">Qty</th><th width="40">Impo</th><th align="left">Type</th><th width="40">Folds</th><th width="40">Angles</th></tr>';
 					my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/project/bind/_fold.html' );
 					$$variable{'index'} = 0;
 					foreach my $index ( 1 .. 4 ) {
@@ -101,14 +102,57 @@ if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 					} # end foreach
 					$$variable{index} += 1;
 					$html .= ssi::variable_substitution( \$fragment, $variable );
+					$html .= '</table>';
 
 					$html .= '</span>';
+
 				} # end foreach qty_index
 				$html .= '</p>';
 				$html .= '</fieldset>';
 			} # end foreach signature
 			return $html;
 			) ?>
+			<hr/>
+
+			<p>
+				<label>Speed:</label>
+				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+				<span class="<?Columns?>Columns">
+					<input name="txtSpeed<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" />
+				</span>
+				<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+			</p>
+			<p>
+				<label>UP:</label>
+				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+				<span class="<?Columns?>Columns">
+					<input name="txtUp<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" />
+				</span>
+				<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+			</p>
+
+			<p>
+				<label>Cut hour</label>
+				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+				<span class="<?Columns?>Columns">
+					<input name="txtCutHour<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" />
+				</span>
+				<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+			</p>
+
+
 			<hr/>
 			<p>
 				<label>Quantity:</label>

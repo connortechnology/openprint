@@ -653,6 +653,7 @@ sub save {
 				'order_id',				$$self{'order_id'} ? $$self{'order_id'} : undef,
 				'lngdocketnumber',		$$self{'docket'} ? $$self{'docket'} : undef,
 				'due_date',				$$self{'due_date'} ? $$self{'due_date'} : undef,
+				'style_id',                     $$self{'style_id'} ? $$self{'style_id'} : undef,
 				
 	);
 	if ( ! $$self{'created_on'} ) {
@@ -689,6 +690,14 @@ sub Currency {
 	} # end if
 	return new openprint::Currency( $$self{'currency_id'} );
 } # end sub Currency
+sub quantity_indexes {
+	my ( $self ) = @_;
+	my @indexes;
+	foreach my $qty_index ( 1 .. 3 ) {
+		push @indexes, $qty_index if $$self{"quantity$qty_index"};
+	} # end foreach qty_index
+	return @indexes;
+} # end sub quantity_indexes
 
 sub quantities {
 	my $self = shift;
@@ -858,35 +867,83 @@ sub summary {
 				$summary .= sprintf('%dpg ', $specs{'txtTotalPageQuantity'} );
 				$summary .= $specs{'rdbCover'}.' Cover';
 			} # end if
-			if ( ( ! $$services{'NoPrinting'} ) and $specs{'PrintingType'} ) {
-				$summary .= ' printed ' . $specs{'PrintingType'} . ' ';
-			} # end if
+#block remarked as not required now june-25-2008
+#			if ( ( ! $$services{'NoPrinting'} ) and $specs{'PrintingType'} ) {
+#				$summary .= ' printed ' . $specs{'PrintingType'} . ' ';
+#			} # end if
+
 			$summary .= '<br/>';
 			my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' );
+
+#modified block june-24-2008
+			my $lastgroupid = '';
 
 			foreach my $group_id ( sort @groups ) {
 				foreach my $ss_id ( $self->signatures({'Group'=>$group_id}) ) {
 					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
 					$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
+					next if ( $lastgroupid eq $group_id );
+                    foreach my $prn ( keys %$sig_specs) {
+						if ( $prn =~ /^PrintingType/i ) {
+								if ( $$sig_specs{'Group'} eq $group_id ) {
+								 	if ( $$sig_specs{$prn} eq 'Web' ) { 
+											$summary .= ', '. 'Printed Web,<br/>';
+											last;
+									} else {
+										$summary .= ', '. 'Printed Sheetfed,<br/>';
+										last;
+									} #endif Web
+								} #endif group_id
+						} #endif $prn
+					} #end foreach $prn	
 					last;
 				} # end foreach signature
+				$lastgroupid = $group_id;
 			} # end foreach Group
 		} else {
 # normal printing services
 			$summary .= openprint::Estimating::Printing::summary( $self, $$services{''}[0], \%specs );
+			my $flgfound = '';
 			if ( ! $$services{'NoPrinting'} ) {
 				if ( $specs{'PrintingType'} ) {
 					$summary .= ' printed ' . $specs{'PrintingType'};
+					$flgfound = 'found';
 				} elsif ( $specs{'chkOverridePrintingType1'} ) {
 					$summary .= ' printed ' . $specs{'PrintingType1'};
+					$flgfound = 'found';
 				} elsif ( $specs{'chkOverridePrintingType2'} ) {
 					$summary .= ' printed ' . $specs{'PrintingType2'};
+					$flgfound = 'found';
 				} elsif ( $specs{'chkOverridePrintingType3'} ) {
 					$summary .= ' printed ' . $specs{'PrintingType3'};
+					$flgfound = 'found';
 				} # end if
 			} # end if
+#
+			if ( $flgfound ne 'found' ) {
+				my $services = $self->services();
+				my @sigs = $self->signatures();
+				while (@sigs) {
+					my $ss_id = shift @sigs;
+
+					my %sig_specs = %{openprint::service::get_specs_ref( $self, $ss_id)};
+                    foreach my $prn ( keys %sig_specs) {
+						if ( $prn =~ /^PrintingType/i ) {
+								if ( $sig_specs{$prn} eq 'Web' ) { 
+										$summary .= ', '. 'Printed Web, <br/>';
+										last;
+								} else {
+									$summary .= ', '. 'Printed Sheetfed, <br/>';
+									last;
+								} #endif Web
+						}		
+                    }
+                 } #end while
+			}
+#		
 		} # end if book or not
 	} # end if
+	
 	foreach my $category ( 'Options', 'Prepress','Bindery','Packaging','Shipping' ) {
 		foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {
 			next if ! $$services{$ServiceType->name()};
@@ -1040,4 +1097,3 @@ sub status_change {
 1;
 
 __END__
-~		

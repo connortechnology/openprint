@@ -42,8 +42,10 @@
 </div>
 <div class="InksBack">
 	<fieldset><legend>Back</legend>
+<div style="top: -22px; left: 50px; position: relative; background: white; width: 110px;padding-left: 5px;">
 <input type="checkbox" id="sides_the_same<?Signature?>" name="sides_the_same<?Signature?>" value="Y" onclick="if(this.checked){$('InksOnBackQuestions').hide();}else{$('InksOnBackQuestions').show();}calc(this.form.name);" <? echo ( $$variable{"sides_the_same$$variable{Signature}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 <label class="radio" for="sides_the_same<?Signature?>">Same as front?</label>
+</div>
 		<div id="InksOnBackQuestions" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>
 		<? echo (
             my $html;

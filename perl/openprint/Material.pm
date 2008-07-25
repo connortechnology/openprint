@@ -241,6 +241,8 @@ sub find {
 sub get_price {
 	my ( $self, $quantity, $equipment ) = @_;
 
+	return if ! $$self{'id'};
+
 	if ( ref $equipment eq 'openprint::Equipment' ) {
 		$equipment = $equipment->id();
 	} # end if

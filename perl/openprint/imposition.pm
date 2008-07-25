@@ -693,6 +693,75 @@ sub add_imposition {
 	return @impositions;
 } # end sub add_imposition
 
+# A permutation is a hash with an integer value for each version representing the # of times that version appears in the image
+# So it begins as a hash indexed by version id.  
+
+sub permutate_versions {
+	my ( $versions, $set_size ) = @_;
+	
+	my @perms;
+	if ( $set_size == 1 ) {
+		foreach my $v ( @$versions ) {
+			$$v{imposition} = 1;
+		}
+		@perms = ( [ @$versions ] );
+		return @perms;
+	} # end if
+
+	foreach my $P ( permutate_versions( $versions, $set_size-1 ) ) {
+		foreach my $v ( @$versions ) {
+			my %P2 = %$P;
+			$P2{$$v{index}}{imposition} += 1;
+			push @perms, \%P2;
+		} # end foreach
+	} # end foreach version
+
+	# remove duplicates
+	for ( my $i = 0; $i < @perms; $i += 1 ) {
+		for ( my $j = $i+1; $j < @perms; $j += 1 ) {
+			my $equal = 1;
+			my $pi = $perms[$i];
+			my $pj = $perms[$j];
+
+			foreach my $k ( keys %$pi ) {
+$openprint::log->debug("PI: $pi, PJ: $pj K: $k");
+				if ( $$pi{$k}{imposition} != $$pj{$k}{imposition} ) {
+					$equal = 0;
+					last;
+				} # end if
+			} # end foreach k
+			if ( $equal ) {
+				splice @perms, $j, 1;
+				$j -= 1;
+			} # end if
+		} # end for j
+	} # end for i
+		
+	return @perms;
+} # end sub permutate_versions
+
+# $versions is a pointer to an array of Version objects, sorted by descreasing quantity
+sub do_versions {
+	my ( $versions, $impositions ) = @_;
+	my @good_impositions = ();
+	my %ps;
+	
+	foreach my $i ( @$impositions ) {
+		# Use caching so we don't calc the perms more than we have to
+		$ps{$$i{imposition}} = [ permutate_versions( $versions, $$i{imposition} ) ] if ! $ps{$$i{imposition}};
+
+		foreach my $p ( @{$ps{$$i{imposition}}} ) {
+			my $i2 = $i->copy();
+
+			foreach my $v ( @$p ) {
+				$$i2{versions}{$$v{index}} += 1;
+			} # end foreach v
+			push @good_impositions, $i2;
+		} # end if
+	} # end foreach $i
+	return @good_impositions;
+} # end sub do_versions
+
 sub convert_impositions {
 	my ( $desired_signature_size, $spread_size, $impositions ) = @_;
 	my @good_impositions;

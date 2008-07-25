@@ -2,7 +2,7 @@
 <h1>Printing</h1>
 </div>
 <script type="text/javascript" src="/javascripts/printing.js?version=1.0"></script>
-<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/service.js?version=1.1"></script>
 <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.2"></script>
 <script type="text/javascript">
 	var quantities=new Array();
@@ -37,6 +37,7 @@
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Envelopes'] ) ) ?>
+
 <? if ( $$variable{'ProjectTypeID'} eq 'Door Hangers' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/posters.html" -->
@@ -105,12 +106,7 @@
 		</p>
 		<!--#include virtual="/includes/main/proj/dimensions.html" -->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Scratch/WritingPads' or $$variable{'ProjectType'} eq 'ScratchPads' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'MultiVersion' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/multi_version.html" -->
-		<!--#include virtual="/includes/main/proj/version_quantity.html"-->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'MultiVersion' ) ?>
+
 <? if ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/labels.html" -->
@@ -148,6 +144,8 @@
 			<!--#include virtual="/includes/main/proj/screen_type.html"-->
 		</fieldset>
 	</div>
+<br class="spacer"/>
+	<!--#include virtual="_versions.html"-->
 	<br class="spacer"/>
 	<!--#include virtual="/includes/main/proj/colours_coatings.html"-->
 	<br class="spacer"/>
@@ -173,6 +171,3 @@
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 	</form>
 </div><!-- Service -->
-<script type="text/javascript">
-addLoadEvent( function () {selectProjectTemplate( 'f1' )});
-</script>

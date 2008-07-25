@@ -28,7 +28,7 @@ require openprint::Estimating::Shipping;
 require openprint::service;
 require	openprint::Estimating::Lamination;
 require	openprint::Object;
-require openprint::administrator_paper;
+require openprint::administrator_stock;
 require openprint::employee_schedule;
 
 use openprint ();

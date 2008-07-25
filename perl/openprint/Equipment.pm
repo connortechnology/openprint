@@ -233,16 +233,16 @@ sub Fold {
 				( $$Fold{min_calliper} and $$Fold{min_calliper} > $$params{calliper} ) or
 				( $$Fold{max_calliper} and $$Fold{max_calliper} < $$params{calliper} )
 				) );
-		#$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{'max_imposition}") if $debug;
-		next if $$Fold{min_imposition} and $$params{imposition} and ($$Fold{min_imposition} > $$params{imposition});
-		next if $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition});
-		#$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if $debug;
-		next if $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} );
-		if ( $$params{gsm} ) {
-			#$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
-			my $RunSpeed = $Fold->Specification( $$params{gsm} );
+		#$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
+		next if $$Fold{'min_imposition'} and $$params{'imposition'} and ($$Fold{'min_imposition'} > $$params{'imposition'});
+		next if $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'});
+		#$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
+		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
+		if ( $$params{'gsm'} ) {
+			#$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
+			my $RunSpeed = $Fold->Specification( $$params{'gsm'} );
 			if ( ! $RunSpeed ) {
-#$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
+#$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
 				next;
 			} else {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
