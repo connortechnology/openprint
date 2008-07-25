@@ -755,9 +755,6 @@ if ( $version < 1922 ) {
 	$version = 1922;
 } # end if
 
-my $new_version = 1923;
-if ( $version < $new_version ) {
-    print "Updating to version $new_version\n";
     my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockGroups LIMIT 1', {} );
     if ( ! $data ) {
         my $ac = sql::start_transaction( $dbh );
@@ -772,9 +769,7 @@ if ( $version < $new_version ) {
 		$dbh->do(q`alter table papers add group_id INTEGER`);
 		$dbh->do(q`alter table papers add FOREIGN KEY (group_id) REFERENCES StockGroups (id)`);
 	} # end if
-    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
-    $version = $new_version;
-} # end if
+
 my $new_version = 1924;
 if ( $version < $new_version ) {
     print "Updating to version $new_version\n";

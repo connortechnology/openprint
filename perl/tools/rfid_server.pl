@@ -158,6 +158,7 @@ if ( 1 ) {
 						$changed = 1;
 						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					} # End if
+					$Scanner->save();
 				} elsif ( $Scanner->type() eq 'Checkout' ) {
 					if ( $Tag->type() eq 'Skid' ) {
 						if ( ! sets::isin( $Tag->location_id(), map { $_->location_id() } @checkout_tags ) ) {
@@ -191,7 +192,7 @@ if ( 1 ) {
 					} # end if
 
 				} elsif ( $Scanner->type() eq 'Truck Inventory' ) {
-					$self->log(1, sprintf('%s : %s : truck inventory', $date, $self->{server}->{peeraddr}, ));
+					#$self->log(1, sprintf('%s : %s : truck inventory', $date, $self->{server}->{peeraddr}, ));
 					if ( ( $Tag->type() eq 'Skid' ) and ( $Scanner->location_id() != $Tag->location_id() ) ) {
 						my $Skid = $Tag->Skid();
 						$Skid = new openprint::Skid() if ! $Skid;
@@ -222,6 +223,8 @@ if ( 1 ) {
 		close(LOG);
 		alarm($previous_alarm);
 	};
+
+	$dbh->disconnect();
 
 	if ($@ =~ /timed out/i) {
 		print STDOUT "Timed Out.\r\n";
