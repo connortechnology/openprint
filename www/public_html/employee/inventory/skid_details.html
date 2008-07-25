@@ -4,7 +4,7 @@
 function convert_lbs_to_kg( from, to ) {
 	var qtys = from.value.split(',');
 	for ( var i=0; i< qtys.length; i+=1 ) {
-		qtys[i] = parseInt(qtys[i] / 2.2);
+		qtys[i] = do_decimals( parseFloat(qtys[i] / 2.2), 2 );
 	} // end for
 	to.value = qtys.join(',');
 }
@@ -110,13 +110,13 @@ function check_inputs(form ) {
 		alert('Please enter either the weight or calliper');
 		return false;
 	} // end if
-	if ( get_rdb_value( form.type ) == 'Roll' ) {
+	if ( form.type && get_rdb_value( form.type ) == 'Roll' ) {
 		if ( ! form.width.value ) {
 			alert('Please enter either the width');
 			return false;
 		} // end if
 	} else {
-		if ( ! ( form.width.value && form.height.value ) ) {
+		if ( form.width && form.height && ! ( form.width.value && form.height.value ) ) {
 			alert('Please enter either the width and height');
 			return false;
 		} // end if
@@ -132,7 +132,7 @@ function check_inputs(form ) {
 	} // end if
 	var units;
     if ( form.Units )
-        units = get_ddm_value( form.Units );
+        units = get_value( form.Units );
     else if ($('Units'))
         units = $('Units').innerHTML;
 
@@ -179,7 +179,7 @@ The following errors occurred:<br/>
 <? endif ( $$variable{'error'} ) ?>
 <div class="information"><?information?></div>
 <? if ( $openprint::param{'skid_quantity'} ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$openprint::param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
+<? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$openprint::param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
 <? endif ( $openprint::param{'skid_quantity'} ) ?>
 
 <form name="jump" method="get" action="skid_details.html">
@@ -307,7 +307,7 @@ The following errors occurred:<br/>
 <div id="Allocations" style="display: none;"></div>
 </fieldset>
 <fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id:<?skid_id?>} );">Inventory Log - click to hide/show</legend>
-<div id="Log" style="display: none;"></div>
+<div id="Log"><!--#include virtual="_skid_log.html"--></div>
 </fieldset>
 <? endif ( $$variable{'skid_id'} ) ?>
 <script type="text/javascript">document.jump.skid_id.focus();</script>

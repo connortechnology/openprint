@@ -15,11 +15,13 @@
 <? endif ( $$variable{'Project'}->signatures({'type'=>'GateFolded Spreads'}) ) ?>
 <? eval ( 
 	$$variable{'NeedCoverFit'} = 0;
+	my $services = $$variable{'Project'}->services();
 	if ( my @sigs = $$variable{'Project'}->signatures({'Group'=>1}) ) {
-$openprint::log->warn("Have Cover");
+		my $project_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{''}[0] );
 		my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $sigs[0] );
-		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) or $$sig_specs{'PageQuantity'.$$variable{'QTYIndex'}} > 4 ) {
-$openprint::log->warn("Nee CoverFot");
+		if ( 
+			( $$sig_specs{'txtWidth'}/2 != $$project_specs{'txtFinalWidth'} or $$sig_specs{'txtHeight'} != $$project_specs{'txtFinalHeight'} ) or
+			sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) or $$sig_specs{'PageQuantity'.$$variable{'QTYIndex'}} > 4 ) {
 			 $$variable{'NeedCoverFit'} = 1;
 		} # end if
 	} else {

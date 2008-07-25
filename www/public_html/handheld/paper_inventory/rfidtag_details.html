@@ -1,68 +1,19 @@
-<? eval (
-	require openprint::employee_inventory;
-
-	$openprint::param{'skid_id'} =~ s/\D//g;
-	$openprint::param{'rfidtag_id'} =~ s/\D//g;
-	#if ( length $openprint::param{'rfidtag_id'} != 15 ) {
-		#$$variable{'error'} = 'Invalid RFID Tag # ' . $openprint::param{'rfidtag_id'} . ' : ' . length $openprint::param{'rfidtag_id'};
-		#return;
-	#} # end if
-	@$variable{'skid_id','rfidtag_id'} = @openprint::param{'skid_id','rfidtag_id'};
-
-	if ( ! $openprint::param{'rfidtag_id'} ) {
-		$$variable{'error'} .= 'Please specify the tag id.<br/>';
-		return;
-	} # end if
-	my $TAG = new openprint::RFIDTag( $openprint::param{'rfidtag_id'} );
-	if ( ! $TAG->id() ) {
-		my $error = $TAG->save({'id'=>$openprint::param{'rfidtag_id'}});
-		if ( ! $error ) {
-			$$variable{'information'} .= 'Tag created.<br/>';
-		} else {
-			$$variable{'error'} .= 'Error creating tag: ' . $error . '<br/>';
-			return;
-		} # end if
-	} # end if
-
-	#$$TAG{location_id} = $openprint::param{'location_id'} if $openprint::param{'location_id'};
-	
-	if ( $openprint::param{'btnFunction'} eq 'Go' ) {
-		delete $openprint::param{'location_id'};
-	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
-		$TAG->location_id( $openprint::param{'location_id'} ) if $openprint::param{'location_id'};
-		if ( $openprint::param{'skid_id'} ) {
-			my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
-			$Skid->rfidtag_id( $TAG->id() );
-			$$variable{'error'} .= $Skid->save();
-			if ( $Skid->empty() ) {
-				$$variable{'information'} .= sprintf('Skid <a href="/handheld/paper_inventory/skid.html?skid_id=%1$d">%1$d</a> is empty.<br/>', $Skid->id() );
-			} # end if
-		} # end if
-		$TAG->type('Skid') if ! $TAG->type();
-		$$variable{'error'} .= $TAG->save();
-		if ( ! $$variable{'error'} ) {
-$openprint::log->debug("Success");
-			$$variable{'information'} .= 'TAG saved successfully.';	
-			$TAG = new openprint::RFIDTag();
-			delete $$variable{'skid_id'};
-		} else {
-$openprint::log->error($$variable{'error'});
-	
-		} # end if
-		delete $openprint::param{'location_id'};
-	} # end if Save
-	$$variable{'RFIDTag'} = $TAG;
-) ?>
 <div class="error"><?error?></div>
 <div class="information"><?information?></div>
 <form id="f1" name="f1" action="rfidtag_details.html" method="post">
 	<fieldset>
 		<p>
 			<label for="rfidtag_id">RFID #:</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);this.form.submit();" onfocus="if(this.value.length>16){this.value='';}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "f1.btnFunction.value='';f1.submit();", '', 'Go' ) ) ?>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);this.form.submit();" onfocus="if(this.value.length>16){this.value='';}" size="16"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "f1.submit();", '', 'Go' ) ) ?>
 		</p>
-		<hr/>
+	</fieldset>
+</form>
+<hr/>
+<? if ( $$variable{'RFIDTag'} ) ?>
+<form id="f2" name="f2" action="rfidtag_details.html" method="post">
+	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
+	<fieldset>
 		<p>
 			<label>Tag #:</label>
 			<? echo ( $$variable{'RFIDTag'}->id() ) ?>
@@ -84,15 +35,54 @@ $openprint::log->error($$variable{'error'});
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' ),
-						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f2.btnFunction.value='Save';f2.submit();", '', 'Save' ),
+						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f2);', '', 'Clear' ),
+						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
 						); ) ?>
 		</p>
 		<div class="rightColumn" id="Map">
 			<!--#include virtual="_map.html"-->
 		</div>
 	</fieldset>
+<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
+<? eval ( $$variable{'Skid'} = $$variable{'RFIDTag'}->Skid() ) ?>
+<fieldset><legend>Current Contents</legend>
+<? if ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+	Skid is empty
+<? else ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+<table class="List">
+	<tr>
+		<th align="left">Paper</th><th width="75" align="left">In Stock</th><th>Allocated</th>
+	</tr>
+<? echo ( 
+		require openprint::PaperAllocation;
+		my $html;
+		foreach my $paper_id ( keys %{$$variable{'Skid'}{Paper}} ) {
+			my $Paper = new openprint::Paper( $paper_id );
+			$html .= '<tr>';
+			$html .= qq`<td><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
+			$html .= $Paper->to_string();
+			$html .= '</a></td>';
+			$html .= '<td align="left">';
+			$html .= sprintf('<input type="text" name="in_stock-%d" value="%d" size="5"/>', $paper_id, $$variable{'Skid'}{Paper}{$paper_id} );
+			$html .= $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
+			$html .= '</td>';
+			$html .= '<td>';
+			foreach my $Allocation ( openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$paper_id ) ) {
+				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() )->docket(), $Allocation->quantity(), $Allocation->units() );
+			} # end foreach Allocation
+			$html .= '</td>';
+			$html .= '</tr>';
+		} # end foreach
+		return $html;
+) ?>
+	</table>
+<? endif ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+</fieldset>
+<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 	<input type="hidden" name="btnFunction" value="" />
 </form>
-<script type="text/javascript">document.f1.rfidtag_id.focus();</script>
+<? endif ( $$variable{'RFIDTag'} ) ?>
+<script>document.f1.rfidtag_id.focus();
+document.body.onload="document.f1.rfidtag_id.focus()";
+</script>

@@ -10,7 +10,9 @@
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns"><? echo ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?></span>
+	<span class="<?Columns?>Columns">
+		<input type="text" id="txtQuantity<?QTYIndex?>" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -33,6 +35,7 @@
 } ) ], $$variable{'ddmStockSheetSize'.$$variable{'QTYIndex'}} );
                     ) ?>
         </select>
+<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
         <input type="checkbox" id="chkOverrideSheetSize<?QTYIndex?>" name="chkOverrideSheetSize<?QTYIndex?>" value="Y" onclick="if(!this.checked){this.form.OverrideStockWidth<?QTYIndex?>.value='';this.form.OverrideStockHeight<?QTYIndex?>.value='';$('OverrideStockSize<?QTYIndex?>').hide();}else{$('OverrideStockSize<?QTYIndex?>').show();}; calc(this.form.name);"
         <? echo ( 'checked="checked"' if $$variable{'chkOverrideSheetSize'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
         />
@@ -41,6 +44,11 @@
 		<input type="text" name="OverrideStockWidth<?QTYIndex?>" value="<? echo ( $$variable{'OverrideStockWidth'.$$variable{'QTYIndex'}} ) ?>" onkeyup="this.form.ddmStockSheetSize<?QTYIndex?>.selectedIndex=0;calc(this.form.name);" size="9"/> x
 		<input type="text" name="OverrideStockHeight<?QTYIndex?>" value="<? echo ( $$variable{'OverrideStockHeight'.$$variable{'QTYIndex'}} ) ?>" onkeyup="this.form.ddmStockSheetSize<?QTYIndex?>.selectedIndex=0;calc(this.form.name);" size="9" />
 		</span>
+<? else ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+        <input type="hidden" name="chkOverrideSheetSize<?QTYIndex?>" value="<? echo ( $$variable{'chkOverrideSheetSize'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" name="OverrideStockWidth<?QTYIndex?>" value="<? echo ( $$variable{'OverrideStockWidth'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" name="OverrideStockHeight<?QTYIndex?>" value="<? echo ( $$variable{'OverrideStockHeight'.$$variable{'QTYIndex'}} ) ?>" />
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 	</span>
 <input type="hidden" name="hdnSuppliedStockWidth<?QTYIndex?>" />
 <input type="hidden" name="hdnSuppliedStockHeight<?QTYIndex?>" />

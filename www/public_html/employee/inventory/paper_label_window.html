@@ -4,7 +4,7 @@
 		<div class="unprintable">
 			<span style="float: right;">
 				<? echo (  join('',
-					ssi::writeButton( $log, $dbh, 'manifest', 'manifest.gif', 'f1.Manifest.value=1;f1.submit();', '', 'Include Manifest' ),
+					#ssi::writeButton( $log, $dbh, 'manifest', 'manifest.gif', 'f1.Manifest.value=1;f1.submit();', '', 'Include Manifest' ),
 					ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print();', '', 'Print' ),
 					ssi::writeButton( $log, $dbh, 'close', 'close.gif', 'window.close();', '', 'Close' ),
 				); ) ?>
@@ -46,7 +46,7 @@
             } # end if
 			$html .= '<br class="pagebreak"/>';
         } # end foreach skid_id
-        if ( $openprint::param{'Manifest'} ) {
+        if ( 0 and $openprint::param{'Manifest'} ) {
             @{$$variable{'Skids'}} = @skid_ids;
             my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/inventory/manifest.html' );
             $html .= ssi::variable_substitution( \$content, $variable );

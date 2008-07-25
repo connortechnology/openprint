@@ -41,16 +41,20 @@
 </td>
 		<td colspan="1">Reply By:</td>
 		<td colspan="4">
+<? if ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <? eval (
 	if ( $$variable{'CAR'}->reply_by() ) {
 @$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{'CAR'}->reply_by() ) );
 	} else {
-@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh );
 } # end if
 ) ?>
             <select name="reply_by_year" onchange="setDaysDropDown(this.value,this.form.reply_by_month.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_years?></select>
             <select name="reply_by_month" onchange="setDaysDropDown(this.form.reply_by_year.value,this.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_months?></select>
             <select name="reply_by_day"><?reply_by_days?></select>
+<? else ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<? hecho ( $$variable{'CAR'}->reply_by() ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 		</td>
 	</tr>
 	<tr>
@@ -86,26 +90,25 @@
 	<tr>
 		<td colspan="1">Area:</td>
 		<td colspan="4">
-			<select name="area">
+			<select name="area_id">
 				<option value="">select</option>
 				<? echo (
-					my @options = ( 'SALES/CUSTOMER SERVICE','PURCHASING','RECEIVING','PREPRESS','CTP','PRINTING','BINDERY','ADMINISTRATION','PACKING/SHIPPING','SUPPLIER','OTHER' );
-					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->area() );
+					require openprint::CAR_Area;
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::CAR_Area::find('order'=>'sorting,lower(name)') ], $$variable{'CAR'}->area_id() );
 				) ?>
 			</select>
 		</td>
 		<td colspan="1">Reason:</td>
 		<td colspan="4">
-			<select name="reason">
+			<select name="reason_id">
 				<option value="">select</option>
 				<? echo (
-					my @options = ( 'INCORRECT SALES ORDER','WRONG QUANTITY','SHIPPING/RECEIVING ERROR','CUTTING ERROR','HICKEYS/SCRATCHES','WRONG STOCK','MISC PREPRESS ERROR','OFFSET/PRINT ERROR','FOLDING ERROR','STAFF PERFORMANCE','COLOUR PROBLEMS','DAMAGE','PLATE ERROR','MISSING IMAGE/TEXT','SLOW RESPONSE TO RFQs','DOCKET ERROR','IMPO ERROR','MISC BINDERY ERROR','NOT REGISTERED(PRESS)','SUB STANDARD STOCK','WRONG ITEM','WRONG QUANTITY','INCORRECT DIMENSIONS','POOR QUALITY','SHELF LIFE','WRONG COLOUR','WRONG BATCH','CONTAMINATION','LATE DELIVERY','INVOICE ISSUE','INTERNAL AUDIT','EXTERNAL AUDIT','OTHER');
-					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'CAR'}->reason() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::CAR_Reason::find('order'=>'sorting,lower(name)') ], $$variable{'CAR'}->reason_id() );
 				) ?>
 			</select>
 		</td>
 	</tr>
-	<tr><td colspan="10"><textarea name="problem" rows="5"><? echo ( $$variable{'CAR'}->problem() ) ?></textarea></td></tr>
+	<tr><td colspan="10"><textarea name="problem" rows="5" onkeyup="textarea_resize(this);"><? echo ( $$variable{'CAR'}->problem() ) ?></textarea></td></tr>
 	<tr><td colspan="1">Press:</td><td colspan="9">
 <? echo ( 
 	my $html = '';
@@ -119,9 +122,9 @@ $html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="
 	<tr>
 		<td colspan="1">Reprint Req:</td>
 		<td colspan="2">
-			<input type="radio" name="reprint" value="Yes" id="reprintYes" <? echo ( $$variable{'CAR'}->reprint() eq 'Yes' ? 'checked="checked"' : '' ) ?> />
+			<input type="radio" name="reprint" value="Yes" id="reprintYes" <? echo ( $$variable{'CAR'}->reprint() eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('reprint_on').show();"/>
 			<label class="radio" for="reprintYes">Yes</label>
-			<input type="radio" name="reprint" value="No" id="reprintNo" <? echo ( $$variable{'CAR'}->reprint() ne 'Yes' ? 'checked="checked"' : '' ) ?> />
+			<input type="radio" name="reprint" value="No" id="reprintNo" <? echo ( $$variable{'CAR'}->reprint() ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('reprint_on').hide();"/>
 			<label class="radio" for="reprintNo">No</label>
 		</td>
 		<td width="10%" colspan="1">Art Work:</td>
@@ -132,7 +135,8 @@ $html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="
 			<label class="radio" for="artworkNoChange">No Change</label>
 		</td>
 		<td width="10%" colspan="1">Reprint On</td>
-		<td width="30%" colspan="3">
+		<td width="30%" colspan="3"><span id="reprint_on" <? echo ( $$variable{'CAR'}->reprint() ne 'Yes' ? 'style="display:none;"' : '' ) ?>>
+<? if ( $openprint::session{'user_id'} == $$variable{'CAR'}->Company()->salesrep_id() ) ?>
 <? eval (
 if ( $$variable{'CAR'}->reprint_on() ) {
 @$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{'CAR'}->reprint_on() ) );
@@ -143,6 +147,10 @@ if ( $$variable{'CAR'}->reprint_on() ) {
             <select name="reprint_on_year" onchange="setDaysDropDown(this.value,this.form.reprint_on_month.value,this.form.reprint_on_day,this.form.reprint_on_day.value);"><?reprint_on_years?></select>
             <select name="reprint_on_month" onchange="setDaysDropDown(this.form.reprint_on_year.value,this.value,this.form.reprint_on_day,this.form.reprint_on_day.value);"><?reprint_on_months?></select>
             <select name="reprint_on_day"><?reprint_on_days?></select>
+<? else ( $openprint::session{'user_id'} == $$variable{'CAR'}->Company()->salesrep_id() ) ?>
+<? hecho ( $$variable{'CAR'}->reprint_on() ) ?>
+<? endif ( $openprint::session{'user_id'} == $$variable{'CAR'}->Company()->salesrep_id() ) ?>
+			</span>
 		</td>
 	</tr>
 <? if ( openprint::usergroup::is_user_in( ['Reprint Approvals'], $openprint::session{'user_id'} ) ) ?>
@@ -224,7 +232,7 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','_car_view_part1.html',
 		{
 			method:'get',
-			parameters: Form.serialize( \$('part1form') ),
+			parameters: \$('part1form').serialize(),
 			evalScripts: true,
 		} );}", '','Save' ),
 		); ) ?>

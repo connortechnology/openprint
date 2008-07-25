@@ -79,8 +79,12 @@ sub insert_project_type {
 sub add_service {
 # THis is an external wrapper for insert_service
 	my ( $r, $log, $dbh, $variable, $project_index, @services ) = @_;
+	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 	foreach my $service_id ( @services ) {
+		if ( ! $$services{$service_id} ) {
 		insert_service( $log, $dbh, $project_index, $service_id );
+		} # end if
 	} # end foreach
 } # end sub add_service
 
@@ -146,7 +150,7 @@ sub create_edit_display {
 
 	my $sql = q{SELECT name,description FROM Service_Types WHERE category=? AND create_visible=true ORDER BY Sorting, lower(name)};
 	@{$$variable{'PrepressServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Prepress' );
-	push @{$$variable{'PrepressServiceTypes'}}, sql::execute( $log, $dbh, $sql, 'Proofs' );
+	#push @{$$variable{'PrepressServiceTypes'}}, sql::execute( $log, $dbh, $sql, 'Proofs' );
 
 	@{$$variable{'BinderyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Bindery' );
 	@{$$variable{'SpecialtyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Specialty' );
@@ -587,8 +591,17 @@ sub create_edit_process {
 	my $recalculate;
 
 	my $Project = new openprint::Project( int $openprint::param{'ProjectIndex'} );
-	$Project->save() if ( ! $Project->id() );
+	$error = $Project->save() if ( ! $Project->id() );
 	$openprint::session{'project_id'} = $Project->id();
+	if ( $error ne '' ) {
+		$$variable{'Redirect'} = '/main/project/create_edit.html';
+		$$variable{'error'} = 'Fields not complete';
+		$$variable{'details'} = $error;
+		foreach ( $r->param() ) {
+			$$variable{$_} = $r->param($_);
+		} # end foreach
+        return;
+    } # end if
 	my $project_index = $Project->id();
 
 	my %services = $Project->get_services();
@@ -744,10 +757,6 @@ sub create_edit_process {
 		push @{$services{'GraphicDesign'}}, insert_service( $log, $dbh, $project_index, 'GraphicDesign') if ! $services{'GraphicDesign'};
 	} # end if
 
-	if ( ! $services{'Proofs'} ) {
-		push @{$services{'Proofs'}}, insert_service( $log, $dbh, $project_index, 'Proofs');
-		$recalculate = 1;
-	} # end if
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
 
@@ -769,6 +778,10 @@ sub create_edit_process {
 			} # end if
 		} # end if
 	} # end foreach
+	if ( ! ( $services{'Proofs'} or $services{'NoPrinting'} ) ) {
+		push @{$services{'Proofs'}}, insert_service( $log, $dbh, $project_index, 'Proofs');
+		$recalculate = 1;
+	} # end if
 
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Edited' );
 	if ( $recalculate ) {
@@ -1144,8 +1157,6 @@ sub calc {
 # The adding of signatures will be done automatically by multipage_signatures
 # This will add bindery services, and a printing service
 			$specs{'Status'} = openprint::print::multipage_signatures( \%specs, $log, $dbh, $variable, $$project{'id'}, $printing_service_index );
-			#openprint::Estimating::Multipage::calculate_signatures($log, $dbh, $variable, $$project{'id'} );
-
 		} else {
 # Non-book
 
@@ -1242,12 +1253,18 @@ sub calc {
 			return jsrs::encode_pairs(%specs);
 		} # end if
 
+		# Force a reload
+		$services = $project->services();
+
 		$log->debug("Adding Required Services");
 		foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $project->type_id() ) ) {
 			if ( ! $$services{$servicetype_id} ) {
 				push @{$$services{$servicetype_id}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, $servicetype_id );
 			} # end if
 		} # end foreach
+
+		# Force a reload
+		$services = $project->services();
 
 		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Proofs' ) if ! $$services{'Proofs'};
 
@@ -1459,6 +1476,11 @@ sub create_calc {
 	my @results;
 
 	return if ! $specs{'rdbProjectType'};
+
+	# Sanitize input
+	foreach my $qty_index ( 1 .. 3 ) {
+		$specs{"txtQuantity$qty_index"} =~ s/\D//g;
+	} # end foreach qty_index
 
 	my $Project = new openprint::Project( $specs{'ProjectIndex'} );
 	$Project->currency_id( $openprint::session{'Currency_id'} ) if ! $Project->currency_id();

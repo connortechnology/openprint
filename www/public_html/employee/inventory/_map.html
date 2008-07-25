@@ -34,15 +34,15 @@
 	return $html;
 ) ?>
 	<br class="spacer"/>
-	<img id="MapImage" src="/images/maps/<?MapFile?>.png" width="200" alt="<? echo ( $$variable{'Location'}->name(); ) ?>." USEMAP="#Map" />
+	<img id="MapImage" src="/images/maps/<?MapFile?>.gif" width="200" alt="<? echo ( $$variable{'Location'}->name(); ) ?>." USEMAP="#Map" />
 	<map name="Map">
 	<? echo (
 		my $html;
 		foreach my $Region ( $$variable{'Location'}->children() ) {
 			$html .= q{<area shape="rect" href="#" };
 			$html .= sprintf(q{coords="%1$s" alt="%2$s" title="%2$s"}, $Region->coordinates(), $Region->name() );
-			$html .= sprintf(q{ onmouseover="mouseOver('MapImage','/images/maps/%1$s');"}, $$variable{'Location'}->name() . '/' . $Region->name().'.png' );
-			$html .= sprintf(q{ onmouseout="mouseOut('MapImage','/images/maps/%1$s');"}, $$variable{'MapFile'}.'.png' );
+			$html .= sprintf(q{ onmouseover="mouseOver('MapImage','/images/maps/%1$s');"}, $$variable{'Location'}->name() . '/' . $Region->name().'.gif' );
+			$html .= sprintf(q{ onmouseout="mouseOut('MapImage','/images/maps/%1$s');"}, $$variable{'MapFile'}.'.gif' );
 			if ( $$variable{'Selected'} ) {
 				$html .= sprintf(q` onclick="ddm_select_by_value($('location_id'), %1$d );new Ajax.Updater('Map','_map.html', {method:'get',parameters:{location_id:%2$d,selected_id:%3$d}} );"/>`, $Region->id(), ($Region->children() ? ($Region->parent_id(),$Region->id()) : ($Region->parent_id(), $$variable{'Selected'}->id() )) );
 			} else {

@@ -26,6 +26,7 @@
 				my $html;
 				$$variable{'Side'} = 'SideOne';
 				my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_additional_colour_coating.html' );
+				$$variable{index} = 0;
 				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
 					next if ! $$variable{"ColourCoating$$variable{Side}$index$$variable{Signature}"};
 					$$variable{index} = $index;
@@ -41,6 +42,9 @@
 </div>
 <div class="InksBack">
 	<fieldset><legend>Back</legend>
+<input type="checkbox" id="sides_the_same<?Signature?>" name="sides_the_same<?Signature?>" value="Y" onclick="if(this.checked){$('InksOnBackQuestions').hide();}else{$('InksOnBackQuestions').show();}calc(this.form.name);" <? echo ( $$variable{"sides_the_same$$variable{Signature}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+<label class="radio" for="sides_the_same<?Signature?>">Same as front?</label>
+		<div id="InksOnBackQuestions" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>
 		<? echo (
             my $html;
             foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
@@ -77,6 +81,7 @@
 				$html .= ssi::variable_substitution( \$fragment, $variable );
 				return $html;
 			) ?>
+		</div>
 		</div>
 	</fieldset>
 	<br class="spacer"/>

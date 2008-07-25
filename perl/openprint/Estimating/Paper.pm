@@ -17,6 +17,7 @@
 package openprint::Estimating::Paper;
 
 use strict;
+use POSIX qw( ceil );
 
 require sql;
 require openprint::print;
@@ -34,6 +35,8 @@ sub variables {
 
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
+	my $services = $Project->services();
+	return 0 if $$services{'NoPrinting'};
 	return 1 if $$sig_specs{'rdbSuppliedStock'} ne 'Y';
 	return 0;
 } # end sub
@@ -42,6 +45,8 @@ sub neccessary {
 	my ( $log, $dbh, $project_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+	return 0 if $$services{'NoPrinting'};
 
     foreach my $signature_service_index ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -109,7 +114,10 @@ sub calc {
 				$totals{$$Paper{id}}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
 			} elsif ( $Paper->type() eq 'Sheet' ) {
 				#$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
-				$totals{$$Paper{id}}[$qty_index] += $$sig_specs{'SheetQuantity'.$qty_index};
+				my $sheets = $$sig_specs{'SheetQuantity'.$qty_index};
+				$sheets /= ( $Paper->start_area() /$Paper->area() );
+				$sheets = ceil( $sheets );
+				$totals{$$Paper{id}}[$qty_index] += $sheets;
 			} # end if
 		} # end foreach qty_index
 	} # end foreach signature
@@ -162,8 +170,8 @@ sub display {
 
 			if ( $totals{$id}{Index} ) {
 				my $list_id = openprint::pricing::get_pricelist_id( $log, $dbh, $variable );
-				$price = openprint::pricing::get_best_price( $log, $dbh, $$variable{'cust_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', 1 );
-				my $discounted_price = openprint::pricing::get_best_price( $log, $dbh, $$variable{'cust_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', $totals{$id}{'hdnGrossSheetCount'.$qty_index} );
+				$price = openprint::pricing::get_best_price( $log, $dbh, $$variable{'company_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', 1 );
+				my $discounted_price = openprint::pricing::get_best_price( $log, $dbh, $$variable{'company_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', $totals{$id}{'hdnGrossSheetCount'.$qty_index} );
 				$discount = $price - $discounted_price;
 			} # end if
 
@@ -199,9 +207,12 @@ sub summary {
 				$totals{$string}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
 					
 			} elsif ( $Paper->type() eq 'Sheet' ) {
-				$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
-                $totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'SheetQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi() );
-                $sheets{$string}[$qty_index] += $$sig_specs{'SheetQuantity'.$qty_index};
+				$string .= sprintf(' %s&quot;x%s&quot;', $Paper->start_width(), $Paper->start_height() );
+                my $sheets = $$sig_specs{'SheetQuantity'.$qty_index};
+				$sheets /= ( $Paper->start_area() /$Paper->area() );
+				$sheets = ceil( $sheets );
+                $totals{$string}[$qty_index] += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
+                $sheets{$string}[$qty_index] += $sheets;
             } # end if
         } # end foreach qty_index
 
@@ -222,7 +233,7 @@ sub summary {
 		} # end foreach key
 		return $html;
 	} else {
-		return '<br/>'.join('<br/>', sort keys %totals );
+		return join('<br/>', sort keys %totals );
 	} # end if
 } # end sub summary
 

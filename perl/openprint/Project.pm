@@ -574,13 +574,15 @@ sub find {
 	if ( $params{'used_press_name'} ) {
 		if ( ref $params{'used_press_name'} eq 'ARRAY' ) {
 			if ( @{$params{'used_press_name'}} ) {
-				$sql .= q{ AND (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName='UsePress') IN (} . join( ',', map{'?'} @{$params{'used_press_name'}} ) . ')';
+				$sql .= ' AND (';
+				$sql .= join(' OR ', map { q{(? IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName='UsePress'))} } @{$params{'used_press_name'}} );
+				$sql .= ')';
 				push @values, @{$params{'used_press_name'}};
 			} # end if
 		} else {
-        $sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName='UsePress')};
-        push @values, $params{'used_press_name'};
-		}
+			$sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName='UsePress')};
+			push @values, $params{'used_press_name'};
+		} # end if
     } # end if
     if ( $params{'estimated_press_name'} ) {
         $sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName IN ('ddmPress1','ddmPress2','ddmPress3') )};
@@ -694,7 +696,10 @@ sub quantities {
 } # end sub quantities
 
 sub quantity {
-	my ( $self, $index ) = @_;
+	my ( $self, $index, $qty ) = @_;
+	if ( defined $qty ) {
+		$$self{"quantity$index"} = $qty;
+	} # end if
 	return $$self{'quantity'.$index};
 } # end sub quanitty
 
@@ -853,7 +858,7 @@ sub summary {
 				$summary .= sprintf('%dpg ', $specs{'txtTotalPageQuantity'} );
 				$summary .= $specs{'rdbCover'}.' Cover';
 			} # end if
-			if ( $specs{'PrintingType'} ) {
+			if ( ( ! $$services{'NoPrinting'} ) and $specs{'PrintingType'} ) {
 				$summary .= ' printed ' . $specs{'PrintingType'} . ' ';
 			} # end if
 			$summary .= '<br/>';
@@ -869,36 +874,39 @@ sub summary {
 		} else {
 # normal printing services
 			$summary .= openprint::Estimating::Printing::summary( $self, $$services{''}[0], \%specs );
-			if ( $specs{'PrintingType'} ) {
-				$summary .= ' printed ' . $specs{'PrintingType'};
-			} elsif ( $specs{'chkOverridePrintingType1'} ) {
-				$summary .= ' printed ' . $specs{'PrintingType1'};
-			} elsif ( $specs{'chkOverridePrintingType2'} ) {
-				$summary .= ' printed ' . $specs{'PrintingType2'};
-			} elsif ( $specs{'chkOverridePrintingType3'} ) {
-				$summary .= ' printed ' . $specs{'PrintingType3'};
+			if ( ! $$services{'NoPrinting'} ) {
+				if ( $specs{'PrintingType'} ) {
+					$summary .= ' printed ' . $specs{'PrintingType'};
+				} elsif ( $specs{'chkOverridePrintingType1'} ) {
+					$summary .= ' printed ' . $specs{'PrintingType1'};
+				} elsif ( $specs{'chkOverridePrintingType2'} ) {
+					$summary .= ' printed ' . $specs{'PrintingType2'};
+				} elsif ( $specs{'chkOverridePrintingType3'} ) {
+					$summary .= ' printed ' . $specs{'PrintingType3'};
+				} # end if
 			} # end if
 		} # end if book or not
 	} # end if
-	foreach my $category ( 'Prepress','Bindery','Packaging','Shipping' ) {
+	foreach my $category ( 'Options', 'Prepress','Bindery','Packaging','Shipping' ) {
 		foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {
-			if ( $$services{$ServiceType->name()} ) {
-				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
-					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
-					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
-					if ( $project_summary ) {
-						$summary .= $project_summary;
+			next if ! $$services{$ServiceType->name()};
+			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+				my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
+				my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
+				if ( $project_summary ) {
+					$summary .= $project_summary;
+				} else {
+					$summary .= ' ' . $ServiceType->description();
+					if ( $_ = eval( 'openprint::Estimating::'.$ServiceType->type().'::summary( $self, $service_id, $service_specs );' ) ) {
+						$summary .= ' :'.$_ . '<br/> ';
 					} else {
-						$summary .= ' ' . $ServiceType->description() . ' ';
-						if ( $_ = eval( 'openprint::Estimating::'.$ServiceType->type().'::summary( $self, $service_id, $service_specs );' ) ) {
-							$summary .= ':'.$_ . '<br/>';
-						} # end if
-						
+						$summary .= ',';
 					} # end if
-				} # end foreach service
-			} # end if
+				} # end if
+			} # end foreach service
 		} # end foreach ServiceType
 	} # end foreach category
+	$summary =~ s/(.*),$/$1/m;
 	if ( $$services{'Turnaround'} ) {
 		my $specs = openprint::service::get_specs_ref( $self, $$services{'Turnaround'}[0] );
 		$summary .= sprintf(' in %ddays', $$specs{'TurnaroundDays'} );

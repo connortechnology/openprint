@@ -71,14 +71,18 @@ sub no_outputs {
 }
 
 sub neccessary {
-	my ( $Project ) = @_;
+	my ( $Project, $type ) = @_;
 
-	my $finished_weight = openprint::print::get_finished_weight( $Project->id() );
-	foreach my $qty_index ( 1 .. 3 ) {
-		if ( $finished_weight * $$Project{'quantity'.$qty_index} > 1500 ) {
-			return 1;
-		} # end if
-	} # end freach qty_index
+	if ( $type eq 'BulkSkids' ) {
+		my $finished_weight = openprint::print::get_finished_weight( $Project->id() );
+		foreach my $qty_index ( 1 .. 3 ) {
+			if ( $finished_weight * $$Project{'quantity'.$qty_index} > 1500 ) {
+				return 1;
+			} # end if
+		} # end freach qty_index
+	} elsif ( $type eq 'PlainCartons' ) {
+		
+	} # end if
 	return 0;
 } # end sub neccessary 
 

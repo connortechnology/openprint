@@ -1,6 +1,7 @@
 #!/usr/bin/perl 
 use lib '/etc/apache2/lib/perl';
 use strict;
+use warnings;
 
 require sql;
 require ssi;
@@ -11,6 +12,8 @@ require openprint::Object;
 require openprint::Quote;
 require openprint::Order;
 require openprint::Project;
+require openprint::RFIDTag;
+require openprint::PaperInventory;
 use Date::Calc;
 use Apache::Session::Postgres;
 
@@ -20,7 +23,7 @@ use vars qw($log $dbh);
 *log = \$openprint::log;
 
 my $r;
-$log = logger->new('warn');
+$log = logger->new('debug');
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],
@@ -54,14 +57,14 @@ foreach my $session ( sql::execute( $log, $dbh, q{SELECT id FROM sessions} ) ) {
 
 } # end foreach
 
-if ( 1 ) {
+if ( 0 ) {
 # Clean out uncalculated projects
 	my @Projects = openprint::Project::find(
-'status'=>'uncalculated',
-'order'=>'index desc',
-'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
-'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
- );
+			'status'=>'uncalculated',
+			'order'=>'index desc',
+			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			);
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of uncalculated projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
@@ -80,11 +83,11 @@ if ( 1 ) {
 	} # end if
 
 	@Projects = openprint::Project::find(
-'status'=>'Unordered',
-'order'=>'index desc',
-'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ),
-'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ),
- );
+			'status'=>'Unordered',
+			'order'=>'index desc',
+			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ),
+			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ),
+			);
 	if ( @Projects ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		my $ac = sql::start_transaction( $dbh );
@@ -110,10 +113,10 @@ if ( 1 ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 	@Projects = openprint::Project::find(
-'status'=>'Deleted','order'=>'index desc',
-'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
-'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
- );
+			'status'=>'Deleted','order'=>'index desc',
+			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+			);
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of Deleted projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
@@ -129,7 +132,7 @@ if ( 1 ) {
 			$Project->delete();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
-	} # end if
+	} # end if Projects
 
 	my $ac = sql::start_transaction( $dbh );
 # Clean out unfinished Orders
@@ -146,21 +149,103 @@ if ( 1 ) {
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
 	} # end foreach
-	$ac = sql::start_transaction( $dbh );
+	sql::end_transaction( $dbh, $ac );
+} # end if 1
+
+if ( 0 ) {
+	my $ac = sql::start_transaction( $dbh );
 	my @users = sql::execute( undef, undef, q{SELECT Index FROM Users WHERE CompanyIndex NOT IN (SELECT Index FROM Company)} );
 	foreach my $user_id ( @users ) {
 		new openprint::User( $user_id)->delete();
 	} 
 	sql::end_transaction( $dbh, $ac );
-	$ac = sql::start_transaction( $dbh );
+} # end if
+if ( 0 ) {
+	my $ac = sql::start_transaction( $dbh );
 	my @companies = sql::execute( undef, undef, q{SELECT index FROM company WHERE (SELECT count(users.index) FROM users WHERE companyindex=Company.Index)=0} );
 	foreach my $id ( @companies ) {
 		new openprint::Company($id)->delete();
-	} 
+	} # end foreach empty company
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-$dbh->disconnect();
+# Searchf or duplicate papers
+if ( 0 ) {
+# Fix fucked up rfidtags
+my @Tags = openprint::RFIDTag::find();
+$log->warn("Looking at " . @Tags . ' tags' );
+foreach my $Tag ( @Tags ) {
+	if ( length $Tag->id() != 15 ) {
+		my ( $type, $data ) = $Tag->id() =~ /(\d)(\d*)/;
+		my $new_id = sprintf('%d%.15d', $type, $data );
+		$log->warn("Bad id: $$Tag{id}, new id: $new_id");
+		my $NewTag = new openprint::RFIDTag( $new_id );
+		if ( ! $NewTag->id() ) {
+			$NewTag->save( {'id'=>$new_id} );
+		} # end if
+		if ( $Tag->location_id() and ! $NewTag->location_id() ) {
+			$NewTag->location_id( $Tag->location_id() );
+			$NewTag->save();
+		} # end if
+		$Tag->delete();
+	} # end if
+} # end foreach Tag
+}
+if ( 0 ) {
+foreach my $Skid ( openprint::Skid::find() ) {
 
+	my @Paper_Inventory = openprint::PaperInventory::find(
+			#'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 ) ),
+			#'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Today() ),
+			'skid_id'=>$Skid->id(),
+			'order'=>'updated_on',
+	);
+	$log->warn("Paper Inventory: " . @Paper_Inventory . ' entries');
+	my $in_stock = 0;
+	for ( my $i = 0; $i < @Paper_Inventory; $i += 1 ) {
+		
+		my $PI = $Paper_Inventory[$i];
+		$in_stock += $PI->delta();
+		$log->warn("Old instock: " . $PI->instock() . ' new instock: ' . $in_stock);
+		$PI->instock( $in_stock );
+		my $error = $PI->save();
+		$log->error($error) if $error;
+		if ( defined $PI->comment() and ($PI->comment() eq 'Skid checked out') ) {
+			for ( my $j = $i+1; $j < @Paper_Inventory; $j += 1 ) {
+				if ( ( $PI->skid_id() == $Paper_Inventory[$j]->skid_id() ) and ( $Paper_Inventory[$j]->comment() eq 'Skid checked out' ) ) {
+					$Paper_Inventory[$j]->delete();
+					splice @Paper_Inventory, $j, 1;
+					$j -= 1;
+				} # end if
+			} # end for
+		} elsif ( defined $PI->comment() and ($PI->comment() eq 'Removed' ) ) {
+			for ( my $j = $i+1; $j < @Paper_Inventory; $j += 1 ) {
+				if ( ( $PI->skid_id() == $Paper_Inventory[$j]->skid_id() ) and ( $Paper_Inventory[$j]->comment() eq 'Removed' ) and ! $Paper_Inventory[$j]->delta() ) {
+					$Paper_Inventory[$j]->delete();
+					splice @Paper_Inventory, $j, 1;
+					$j -= 1;
+				} # end if
+			} # end for
+		} # end if
+	} # end for PI
+} # end foreach Skid
+	
+}
+
+if ( 0 ) {
+require openprint::PaperInventory;
+foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Removed%' ) ) {
+	$PI->comment() =~ /Removed (.*)/;
+	$PI->comment( "Checked out $1" );
+	$PI->save();
+} # end foreach
+foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Skid checked%' ) ) {
+	$PI->comment() =~ /Skid checked (.*)/;
+	$PI->comment( "Checked $1" );
+	$PI->save();
+} # end foreach
+} # end if 1
+
+$dbh->disconnect();
 1;
 __END__

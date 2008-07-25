@@ -170,8 +170,10 @@ sub signature_needs {
 	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
-		#$openprint::log->warn("FOLDING NEEDED templatetype!") if $debug;
+		$openprint::log->warn("FOLDING NEEDED templatetype!") if $debug;
 		return 1;
+	} else {
+		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if $debug;
 	} # end if
 
 	if ( $$specs{'txtSignatureType'} ) {
@@ -185,7 +187,7 @@ sub signature_needs {
 
 	# This works for books because sigs don't have a txtFinalWidth, etc.
 	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
-		#$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
+		$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
 		return 1;
 	} # end if
 
@@ -235,10 +237,10 @@ sub impositions {
 
 	my @imps = ( $Imposition );
 
-	if ( $Imposition->Press()->specification('Folding Capable') ne 'Y' ) {
+	my $Equipment = $Imposition->Press();
+	if ( $Equipment->specification('Folding Capable') ne 'Y' ) {
 		return @imps;
 	} # end if
-	my $Equipment = $Imposition->Press();
 
 # Special case because we can't cut it in the middle of printing.  This case is basically for web presses
 	my $foldtype = $Imposition->spread_columns().'x'.$Imposition->spread_rows().'-'.$Imposition->pages().'Page-'.$Imposition->image_orientation().'SignatureFold';
@@ -294,19 +296,13 @@ sub signature_calc {
 
 	# First step, find out if we are stitching, then find out which equipment is being used for stitching
 	my $services = $Project->services();
-
+if ( 0 ) {
 	$$specs{"txtQuantity$qty_index"} = int $$specs{"txtQuantity$qty_index"};
 	$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{'txtPressSheetComboItems'} ) {
 		$$specs{"txtQuantity$qty_index"} *= $$specs{'txtPressSheetComboItems'};
 	} # end if
-
-	if ( ! $Imposition ) {
-$openprint::log->debug("Loading imposition");
-		$Imposition = new openprint::Imposition;
-		$Imposition->paper( $Paper );
-		$Imposition->load( $sig_specs, $qty_index );
-	} # end if
+} # end if
 
 	my $bestPrice;
 	my $bestRunPrice = 0;
@@ -326,15 +322,10 @@ $openprint::log->debug("Loading imposition");
 		} # end if
 		push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 	} else {
-		@my_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'} );
-
-		if ( $$services{'PerfectBound'} ) {
-#$openprint::log->debug('Adding Perfect Bound' . join(',', map { $_->name() } openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'}, 'order'=>'lower(strname)' ) ) );
-			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'} );
-		} # end if
-		if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
-			push @my_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'} );
-		} # end if
+		my @folding_capable = ('Y');
+		push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
+		push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
+		@my_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable} );
 
 		if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
 			my $Press = shift @Press;
@@ -389,15 +380,42 @@ $openprint::log->debug("Loading imposition");
 	my $imposition;
 	if ( $Imposition->StitchingImposition() ) {
 		$imposition = $Imposition->StitchingImposition();
-#$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug;
+$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug or 1;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
+$openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if $debug or 1;
 #$openprint::log->debug("Got impo from SaddleStitching: $imposition out") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
 #$openprint::log->debug("Got impo from LoopStitching: $imposition out") if $debug;
+	} else {
+		# Something else entirely
+			
+		my $width_folds;
+		my $height_folds;
+		if ( $$sig_specs{'txtFinalWidth'} ) {
+			$width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} )-1 );
+			$height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+		} else {
+			$width_folds = sprintf('%.0f', ($Imposition->image_width() / $Imposition->object_width())-1 );
+			$height_folds = sprintf('%.0f', ($Imposition->image_height()/$Imposition->object_height()) -1 );
+		} # end if
+		if ( $width_folds and $height_folds ) {
+		} elsif ( $width_folds ) {
+			if ( $Imposition->image_orientation() eq 'Vertical' ) {
+				$imposition = $Imposition->rows();
+			} else {
+				$imposition = $Imposition->columns();
+			} # end if
+		} elsif ( $height_folds ) {
+			if ( $Imposition->image_orientation() eq 'Vertical' ) {
+				$imposition = $Imposition->columns();
+			} else {
+				$imposition = $Imposition->rows();
+			} # end if
+		} # end if
 	} # end if
 	$imposition = 1 if ! $imposition;
 
@@ -614,7 +632,6 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 		
 				$openprint::log->debug("Pricing fold $fold_type on " . $Equipment->name()) if $debug;
 
-				my $width = $Imposition->image_width();
 				my $width_folds;
 				my $height_folds;
 				if ( $$sig_specs{'txtFinalWidth'} ) {
@@ -632,6 +649,23 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					} else {
 						$width_folds = $Fold->folds();
 						$height_folds = $Fold->angles();
+					} # end if
+				} # end if
+$openprint::log->debug(" Width_folds: $width_folds Height_folds: $height_folds");
+				my $width = 0;
+				if ( $width_folds and $height_folds ) {
+					$width = $Imposition->image_width() * $imposition;
+				} elsif ( $width_folds ) {
+					if ( $Imposition->image_orientation() eq 'Vertical' ) {
+						$width = $Imposition->image_height() * $Imposition->rows();
+					} else {
+						$width = $Imposition->image_height() * $Imposition->columns();
+					} # end if
+				} elsif ( $height_folds ) {
+					if ( $Imposition->image_orientation() eq 'Vertical' ) {
+						$width = $Imposition->image_width() * $Imposition->columns();
+					} else {
+						$width = $Imposition->image_width() * $Imposition->rows();
 					} # end if
 				} # end if
 
@@ -807,7 +841,9 @@ sub calc {
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtServiceDescription'}:</legend>";
 				$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
-				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, undef, undef, $uv_specs, $aq_specs );
+				my $Imposition = new openprint::Imposition;
+				$Imposition->load( $sig_specs, $qty_index );
+				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition->Paper(), $Imposition, $uv_specs, $aq_specs );
 
 				$price += $results{'Price'};
 				$mprice += $results{'MPrice'};

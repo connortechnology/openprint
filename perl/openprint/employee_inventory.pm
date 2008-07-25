@@ -17,6 +17,9 @@ require openprint::StockColour;
 require openprint::RFIDTag;
 require openprint::RFIDTagType;
 require openprint::RFIDScanner;
+require openprint::Manifest;
+require openprint::ManifestContent;
+require openprint::PaperAllocation;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -133,7 +136,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 		misc::export_csv( $r, $log, \%variable, "PaperInventoryLog $date.csv", \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Download Inventory' ) {
 
-		my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','Date Added','Location', 'InStock');
+		my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#',($config{'RFID'} ? 'RFIDTag #' : ()),'Date Added','Location', 'In Stock (sheets)','In Stock(lbs)');
 		my @papers = openprint::Paper::find(
 				'owner_id'	=>	( defined $param{'Owner'} ? $param{'Owner'} : '' ),
 				'manufacturer_id'	=>	( defined $param{'PaperManufacturer'} ? $param{'PaperManufacturer'} : undef ),
@@ -150,9 +153,17 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 				);
 		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 		my @data;
+		my $total_weight = 0;
 		foreach my $Paper ( @papers ) {
 			foreach my $Skid ( $Paper->skids() ) {
 				foreach my $c ( $Skid->contents() ) {
+				my $weight = 0;
+				if ( $Paper->type() eq 'Roll' ) {
+				$weight = $c->quantity();
+				} else {
+				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $c->quantity();
+				} # end if
+				$total_weight += $weight;
 					push @data,
 						 $$Paper{'id'},
 						 new openprint::Company($Paper->owner_id())->name(),
@@ -167,14 +178,16 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 						 $Paper->mweight(),
 						 $Paper->gsm(),
 						 $$Skid{'id'},
+						$config{'RFID'} ? $$Skid{'rfidtag_id'} : (),
 						 $$Skid{'created_on'},
-						 $Skid->location(),
+						 $Skid->Location()->name(),
 						 $c->quantity(),
+						$weight,
 				} # end foreach Content
 			} # end foreach skid
 		} # end foreach
-#my $date;
-		push @data, ( 'Report generated',$date,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef );
+		#my $date;
+		push @data, ( 'Report generated',$date,undef,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, ($config{'RFID'} ? undef : () ),undef, 'Total Weight (lbs):', $total_weight );
 		misc::export_csv( $r, $log, \%variable, "PaperInventory $date.csv", \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		if ( $param{'paper_id'} ) {
@@ -313,7 +326,7 @@ sub paper_details {
 } # end sub paper_details
 
 sub save_skid {
-	my ( $Skid ) = @_;
+	my ( $Skid, $qty ) = @_;
 
 	$Skid->rfidtag_id( $param{'rfidtag_id'} ) if exists $param{'rfidtag_id'};
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
@@ -420,9 +433,8 @@ sub save_skid {
 			} # end foreach
 		} # end if
 		if ( $Paper and $Paper->id() ) {
-			my $delta = $Skid->add( $Paper, @param{'Quantity','Units'} );
-			my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-			$Paper->add_inventory( $Skid->id(), $delta, $units );
+			my $delta = $Skid->add( $Paper, $qty ? $qty : $param{'Quantity'} );
+			$Paper->add_inventory( $Skid, $delta, $param{'Units'} );
 #FIXME
 			if ( $delta > 0 ) {
 				$variable{'information'} .= "Added $delta $units to inventory.<br/>";
@@ -637,7 +649,7 @@ sub check_out {
 		my $Skid = new openprint::Skid( $skid_id );
 		foreach my $c ( $Skid->contents('paper_id'=>$paper_id) ) {
 			if ( $c->quantity() < $qty ) {
-				$Paper->add_inventory( $Skid->id(), -1*$c->quantity(), $units, 'Removed' . @Projects ? ' for docket ' . $Projects[0]->docket() : '' );
+				$Paper->add_inventory( $Skid->id(), -1*$c->quantity(), $units, 'Checked out' . @Projects ? ' for docket ' . $Projects[0]->docket() : '' );
 				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$c->quantity() ) if $Paper->allocated( $Projects[0]->id() );
 				$qty -= $c->quantity();
 				$c->delete();
@@ -645,10 +657,10 @@ sub check_out {
 				$c->quantity( $c->quantity() - $qty );
 				$c->save();
 				if ( @Projects ) {
-					$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' .( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
+					$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Checked out' .( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
 					$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
 				} else {
-					$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Removed' );
+					$Paper->add_inventory( $Skid->id(), -1*$qty, $units, 'Checked out' );
 				} # end if
 				$qty = 0;
 			} # end if
@@ -710,11 +722,11 @@ sub check_in {
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	my $delta = $Skid->add( $Paper, $quantity, $units );
 	if ( ! @Projects ) {
-		$Paper->add_inventory( $Skid->id(), $delta, $units, 'Added' );
+		$Paper->add_inventory( $Skid, $delta, $units, 'Added' );
 		$variable{'information'} .= "Checked in $quantity $units to unknown docket.<br/>";
 	} else {
 		my $Project = shift @Projects;
-		$Paper->add_inventory( $Skid->id(), $delta, $units, 'Added for docket ' . $Project->docket() );
+		$Paper->add_inventory( $Skid, $delta, $units, 'Added for docket ' . $Project->docket() );
 		$variable{'information'} .= "Checked in $quantity $units from docket " . $Project->docket() . '<br/>';
 	} # end if
 	$Skid->save();
@@ -728,7 +740,7 @@ sub allocate {
 	} # end if
 
 	my $Paper = new openprint::Paper( $paper_id );
-	my $available_qty = $Paper->in_stock();
+	my $available_qty = $Paper->in_stock() - $Paper->allocated();
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	if ( $available_qty < $quantity ) {
 		$variable{'error'} .= "Only $available_qty $units are available to be allocated. Please try again.<br/>";
@@ -747,18 +759,17 @@ sub allocate {
 	if ( $quantity < 0 ) {
 		foreach my $skid_id ( sql::execute( undef, undef, q{SELECT skid_id FROM paper_allocations WHERE paper_id=? AND quantity > 0 AND project_id=? ORDER BY skid_id}, $paper_id, $Projects[0]->id() ) ) {
 			my $Skid = new openprint::Skid( $skid_id );
-			foreach my $c ( $Skid->contents( 'paper_id'=>$paper_id ) ) {
-
-				if ( $c->quantity() < -1*$qty ) {
-					$Paper->allocate( $skid_id, $Projects[0]->id(), -1*$c->quantity(), $units );
-					$qty += $c->quantity();
-				} else {
-					$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
-					$qty = 0;
-				} # end if
-				last if ! $qty;
-			} # end foreach c
-		} # end foreach skid
+			my $allocateable = $Skid->allocateable( $Paper );
+			next if ! $allocateable;
+			if ( $allocateable < -1*$qty ) {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
+				$qty += $allocateable;
+			} else {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+				$qty = 0;
+			} # end if
+			last if ! $qty;
+		} # end foreach
 	} else {
 		my @skids;
 		if ( ! $skid_id ) {
@@ -769,17 +780,18 @@ sub allocate {
 
 		foreach my $skid_id ( @skids ) {
 			my $Skid = new openprint::Skid( $skid_id );
-			foreach my $c ( $Skid->contents( 'paper_id'=>$paper_id ) ) {
-				if ( $c->quantity() < $qty ) {
-					$Paper->allocate( $skid_id, $Projects[0]->id(), $c->quantity(), $units );
-					$qty -= $c->quantity();
-				} else {
-					$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
-					$qty = 0;
-				} # end if
-				last if ! $qty;
-			} # end foreach c
-		} # end foreach skid
+			my $allocateable = $Skid->allocateable( $Paper );
+			next if ! $allocateable;
+
+			if ( $allocateable < $qty ) {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+				$qty -= $allocateable;
+			} else {
+				$Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+				$qty = 0;
+			} # end if
+			last if ! $qty;
+		} # end foreach
 	} # end if
 	$variable{'information'} .= "Allocated $quantity $units to docket " . $Projects[0]->docket() . '<br/>';
 } # end sub allocate
@@ -918,6 +930,19 @@ $log->debug("Loading tag: $param{'rfidtag_id'}");
 		$variable{'error'} .= $RFIDTag->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $RFIDTag->delete();
+	} elsif ( $param{'btnFunction'} eq 'AllocateSkid' ) {
+$log->debug('allocate skid');
+		if ( ! $RFIDTag->skid_id() ) {
+			my $Skid = new openprint::Skid();
+			$Skid->rfidtag_id( $RFIDTag->id() );
+			$Skid->location_id( $RFIDTag->location_id() );
+			$variable{'error'} .= $Skid->save();
+$log->debug('skid saved');
+		} else {
+			$variable{'error'} .= 'Skid already allocated<br/>';
+		} # end if
+	} else {
+$log->debug('unknown function: '. $param{'btnFunction'});
 	} # end if
 
 	$variable{'RFIDTag'} = $RFIDTag;
@@ -942,6 +967,93 @@ sub rfidscanner_details {
 
 	$variable{'RFIDScanner'} = $RFIDScanner;
 } # end sub rfidscanner_details
+
+sub update_inventory {
+$log->warn("Update inventory");
+	if ( $param{'btnFunction'} eq 'Submit' ) {
+		my @ids = misc::trim( split(';', $param{'rfidtag_ids'} ) );
+		@{$variable{'IDS'}} = @ids;
+
+if ( 0 ) {
+		if ( $param{'manifest_id'} ) {
+			my @Manifests = openprint::Manifest::find('id'=>$param{'manifest_id'});
+			if ( @Manifests ) {
+				$variable{'error'} .= "Manifest $param{'manifest_id'} has already been entered.";
+				$param{'manifest_id'} = '';
+			} # end if
+		} # end if
+} # end if
+
+		my $Manifest = new openprint::Manifest();
+		$Manifest->id( $param{'manifest_id'} );
+		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
+		$variable{'error'} .= $Manifest->save();
+		delete $param{'rfidtag_id'};
+		foreach my $tag_id ( @ids ) {
+			next if ! $tag_id;
+			my $Tag = new openprint::RFIDTag( $tag_id );
+			if ( ! $Tag->id() ) {
+				$variable{'error'} .= $Tag->save( {'id'=>$tag_id} );
+				last if $variable{'error'};
+			} # end if
+			my $Skid = $Tag->Skid();
+			$param{"qty_lbs-$tag_id"} = sprintf('%d', $param{"qty_lbs-$tag_id"});
+			save_skid( $Skid, $param{"qty_lbs-$tag_id"} );
+			last if $variable{'error'};
+
+			my $MC = new openprint::ManifestContent();
+			$variable{'error'} .= $MC->save( {
+					'manifest_id'	=>	$Manifest->id(),
+					'skid_id'		=>	$Skid->id(),
+					'quantity'		=>	$param{"qty_lbs-$tag_id"},
+					'cost'			=>	$param{"cost"},
+					} );
+			last if $variable{'error'};
+		} # end foreach tag_id
+		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= 'Information successfully stored.';
+			foreach my $k ( keys %param ) {
+				delete $param{$k};
+			} # end foreach
+			delete $variable{'IDS'};	
+		} # end if
+	} # end if
+} # end sub update_inventory
+
+sub _update_inventory {
+	my @ids = split(';', $param{'rfidtag_ids'} );
+    if ( $param{'rfidtag_id'} ) {
+		($param{'rfidtag_id'}) = misc::trim($param{'rfidtag_id'});
+        if ( sets::isin( $param{'rfidtag_id'}, \@ids ) ) {
+            $variable{'error'} .= 'RFID Tag ' . $param{'rfidtag_id'} . ' has already been scanned.';
+        } else {
+            push @ids, $param{'rfidtag_id'}
+        } # end if
+    } # end if
+    @ids = reverse sort sets::union( @ids );
+    @{$variable{'IDS'}} = @ids;
+	if ( $param{'manifest_id'} ) {
+		my @Manifests = openprint::Manifest::find('id'=>$param{'manifest_id'});
+		if ( @Manifests ) {
+			$variable{'error'} .= "Manifest $param{'manifest_id'} has already been entered.";
+			$param{'manifest_id'} = '';
+		} # end if
+	} # end if
+} # end sub _update_inventory
+
+sub manifests {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		foreach my $manifest_id ( ref $param{'manifests'} eq 'ARRAY' ? @{$param{'manifests'}} : split(',',$param{'manifests'}) ) {
+			my $Manifest = new openprint::Manifest( $manifest_id );
+			$variable{'error'} .= $Manifest->delete();
+
+		} # end foreach manifest_id
+	} # end if
+} # end sub manifests
+sub inventory_log {
+} # end sub inventory_log
+sub _inventory_log {
+} # end sub inventory_log
 
 1;
 

@@ -21,6 +21,24 @@
 	} # end if
 ) ?>
 <script type="text/javascript">
+<!--
+function level_up( img ) {
+	if ( img.src.match(/level=1/) ) {
+	img.src=img.src.replace(/level=1/,'level=2');
+	} else if ( img.src.match(/level=2/) ) {
+	img.src=img.src.replace(/level=2/,'level=3');
+	} else if ( img.src.match(/level=3/) ) {
+	} 
+
+} 
+function level_down( img ) {
+	if ( img.src.match(/level=1/) ) {
+	} else if ( img.src.match(/level=2/) ) {
+	img.src=img.src.replace(/level=2/,'level=1');
+	} else if ( img.src.match(/level=3/) ) {
+	img.src=img.src.replace(/level=3/,'level=2');
+	} 
+}
 	function loadDivs( results ) {
 		var rows = results.split('|');
 		for ( var r = 0; r < rows.length; r += 1 ) {
@@ -204,6 +222,26 @@
 	} // end function saveComment
 	function errFunc( t ) {
 	}
+	var popupWin;
+	function popup_window( url, parameters ) {
+		if ( ! popupWin ) {
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
+			// Set up a windows observer, check ou debug window to get messages
+			myObserver = {
+	onDestroy: function(eventName, win) {
+				   if (win == popupWin) {
+					   popupWin = null;
+					   Windows.removeObserver(this);
+				   }
+			   }
+			}
+			Windows.addObserver(myObserver);
+		} // end if
+		popupWin.setHTMLContent('Loading... please wait');
+		popupWin.showCenter();
+		popupWin.setAjaxContent(url+'?'+parameters, null , true);
+	} // end function popup_window
+-->
 </script>
 <link rel="stylesheet" type="text/css" href="/css/press_schedule.css">
 <div id="CommentPopup" style="display:none;">

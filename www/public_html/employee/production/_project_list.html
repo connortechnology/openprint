@@ -2,9 +2,9 @@
 	if ( %openprint::param ) {
 		foreach my $param ( 'DueDateStartYear','DueDateStartMonth','DueDateStartDay','DueDateEndYear','DueDateEndMonth','DueDateEndDay','ProjectStatus','ddmCustomer', 'ddmPress','ddmSalesRep' ) {
 			if ( ref $openprint::param{$param} eq 'ARRAY' ) {
-			$openprint::session{'/employee/production/projects.html?'.$param} = join(';', @{$openprint::param{$param}} );
+				$openprint::session{'/employee/production/projects.html?'.$param} = join(';', @{$openprint::param{$param}} );
 			} else {
-			$openprint::session{'/employee/production/projects.html?'.$param} = $openprint::param{$param};
+				$openprint::session{'/employee/production/projects.html?'.$param} = $openprint::param{$param};
 			} # end if
 		} # end foreach
 	} # end if
@@ -41,7 +41,6 @@
 				$filters{'salesrep_id'} = $openprint::session{'/employee/production/projects.html?ddmSalesRep'};
 			} # end if
 			if ( $openprint::session{'/employee/production/projects.html?ddmCustomer'} ) {
-$openprint::log->debug("Adding Customer (" . $openprint::session{'/employee/production/projects.html?ddmCustomer'});
 				$filters{'company_id'} = $openprint::session{'/employee/production/projects.html?ddmCustomer'};
 			} # end if
 		@{$$variable{'Projects'}} = openprint::Project::find( %filters );

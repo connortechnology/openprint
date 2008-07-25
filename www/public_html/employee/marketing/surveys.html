@@ -6,7 +6,7 @@
 			<select name="survey_id" onchange="f1.submit();">
 				<option value=""> select </option>
 			<? echo ( 
-				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Survey::find( 'order'=>'lower(name)' ) ], $openprint::param{'survey_id'} );
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Survey::find( 'order'=>'lower(name)' ) ], $$variable{'Survey'}->id() );
 			) ?>
 			</select>
 		</p>
@@ -22,6 +22,10 @@
 	</fieldset>
 	<fieldset>
         <p>
+            <label>ID:</label>
+            <? echo ( $$variable{'Survey'}->id() ) ?>
+        </p>
+        <p>
             <label>Name:</label>
             <input type="text" name="name" value="<? echo ( $$variable{'Survey'}->name() ) ?>" />
         </p>
@@ -34,6 +38,7 @@
                 ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
                 ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
                 ssi::writeButton( $log, $dbh, 'Copy','copy.gif',"f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
+                ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
                 ); ) ?>
         </p>
     </fieldset>
@@ -44,13 +49,13 @@
 		my $html;
 		my @responses;
 		if ( $openprint::param{'CSR'} ) {
-			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses, Users WHERE user_id=users.index AND survey_id=? AND company_id IN (SELECT Index FROM Company WHERE lngSalesPerson=?) }, @openprint::param{'survey_id','CSR'} );
+			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses, Users WHERE user_id=users.index AND survey_id=? AND company_id IN (SELECT Index FROM Company WHERE lngSalesPerson=?) }, $$variable{'Survey'}->id(), $openprint::param{'CSR'} );
 		} else {
-			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses WHERE survey_id=?}, $openprint::param{'survey_id'} );
+			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses WHERE survey_id=?}, $$variable{'Survey'}->id() );
 		} # end if
 		if ( @responses ) {
 			$html .= '<span style="float:right;">';
-			$html .= ssi::writeButton( $log, $dbh, 'Responses', '', '', 'survey_responses.html?survey_id='.$openprint::param{'survey_id'}, 'View Responses' );
+			$html .= ssi::writeButton( $log, $dbh, 'Responses', '', '', 'survey_responses.html?survey_id='.$$variable{'Survey'}->id(), 'View Responses' );
 			$html .= '</span>';
 			if ( @responses == 1 ) {
 				$html .= "There is 1 response.";
@@ -64,8 +69,10 @@
 			my $csr = new openprint::User( $openprint::param{'CSR'} );
 			$html .= 'CSR: ' . $csr->name();
 		} # end if
+		@{$$variable{'Responses'}} = @responses;
 		return $html;
 	) ?>
+<? if ( @{$$variable{'Responses'}} ) ?>
 	<br class="spacer"/>
 	<table class="List" style="border: 1px solid #353c91; border-width: 1px; table-layout: auto;">
 	<? echo (
@@ -79,7 +86,7 @@
 				$html .= qq{<th colspan="6">&nbsp;</th>\n};
 			} # end if
 			$html .= "</tr>\n";
-			my @questions = sql::execute( $log, $dbh, q{SELECT id, text, type FROM survey_questions WHERE survey_id=? AND category_id=?}, $r->param('survey_id'),$cat_id );
+			my @questions = sql::execute( $log, $dbh, q{SELECT id, text, type FROM survey_questions WHERE survey_id=? AND category_id=?}, $$variable{'Survey'}->id(),$cat_id );
 			while ( my ( $id, $text, $type ) = splice @questions, 0, 3 ) {
 				$html .= qq{<tr><td>$text</td>};
 				if ( $type eq 'radio' ) {
@@ -87,9 +94,9 @@
 
 					my @answers;
 					if ( $r->param('CSR') ) {
-					@answers = sql::execute( $log, $dbh, q{SELECT answer FROM Survey_Responses WHERE survey_id=? AND question_id=? AND company_id IN (SELECT lngCustomerID FROM tbl_Customer WHERE lngSalesPerson=?)}, $r->param('survey_id'), $id, $r->param('CSR') );
+					@answers = sql::execute( $log, $dbh, q{SELECT answer FROM Survey_Responses WHERE survey_id=? AND question_id=? AND company_id IN (SELECT Index FROM Company WHERE lngSalesPerson=?)}, $$variable{'Survey'}->id(), $id, $r->param('CSR') );
 					} else {
-					@answers = sql::execute( $log, $dbh, q{SELECT answer FROM Survey_Responses WHERE survey_id=? AND question_id=?}, $r->param('survey_id'), $id  );
+					@answers = sql::execute( $log, $dbh, q{SELECT answer FROM Survey_Responses WHERE survey_id=? AND question_id=?}, $$variable{'Survey'}->id(), $id );
 					} # end if
 					my %counts;
 					foreach my $answer ( @answers ) {
@@ -107,6 +114,7 @@
 		return $html;
 		) ?>
 		</table>
+<? endif ( @{$$variable{'Responses'}} ) ?>
 	</fieldset>
 <? endif ( $openprint::param{'survey_id'} ) ?>
 </form>

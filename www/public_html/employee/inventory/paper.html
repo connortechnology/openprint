@@ -37,8 +37,8 @@ Please select a Paper to view/edit.<br>
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
 				<option value="">select</option>
 			<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Manufacturer'} );
-					) ?>
+				return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::Manufacturer::find('order'=>'lower(longname)') ], $openprint::session{'/employee/inventory/paper.html?Manufacturer'} );
+				) ?>
 			</select>
 		</p>
 		<p>
@@ -52,7 +52,7 @@ Please select a Paper to view/edit.<br>
 		</p>
 		<p>
 			<label>Finish:</label>
-			<select name="Finish" size="1" onchange="Finish_onChange(this,'');">
+			<select id="Finish" name="Finish" size="1" onchange="Finish_onChange(this,'');">
 				<option value="">select</option>
 			<? echo (
 					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Finish'} );
@@ -61,7 +61,7 @@ Please select a Paper to view/edit.<br>
 		</p>
 		<p>
 			<label>Colour:</label>
-			<select name="Colour" size="1" onchange="Colour_onChange(this,'');">
+			<select id="Colour" name="Colour" size="1" onchange="Colour_onChange(this,'');">
 				<option value="">select</option>
 			<? echo (
 					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Colour'} );
@@ -73,7 +73,7 @@ Please select a Paper to view/edit.<br>
 			<select name="Weight" size="1" onchange="Weight_onChange(this,'');">
 				<option value="">select</option>
 			<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Weight'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $openprint::session{'/employee/inventory/paper.html?Weight'} );
 				) ?>
 			</select>
 		</p>

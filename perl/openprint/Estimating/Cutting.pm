@@ -215,8 +215,8 @@ sub signature_calc_stock_cutting {
 			next;
 		} # end if
 
-		my $reason = $Equipment->fits( @$specs{"txtSuppliedStockWidth-$signature_index-$qty_index","txtSuppliedStockHeight-$signature_index-$qty_index","txtStockCalliper-$signature_index"} );
-		$$specs{'hdnBreakdown'.$qty_index} .= $reason . "<br/>";
+		my $reason = $Equipment->fits( @$specs{"txtSuppliedStockWidth-$signature_index-$qty_index","txtSuppliedStockHeight-$signature_index-$qty_index"} );
+		$$specs{'hdnBreakdown'.$qty_index} .= $reason . '<br/>';
 		next if $reason;
 
 		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
@@ -272,7 +272,7 @@ sub signature_calc_folding_cutting {
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
 	if ( ! $I ) {
 		$I = new openprint::Imposition();
-		$I->paper( $Paper );
+		$I->Paper( $Paper );
 		$I->load( $sig_specs, $qty_index );
 	} # end if
 	return %results if ! $I->imposition();
@@ -306,6 +306,7 @@ sub signature_calc_folding_cutting {
 	my $folding_cuts = keys %folds;
 	$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Cutting prior to folding: \%d -> \%s<br/>", $I->pages(), join(',',keys %folds ) );
 	if ( $folding_cuts <= 1 ) {
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Not needed<br/>' );
 		$results{'Status'} = 'calculated';
 		return %results;
 	} # end if
@@ -331,8 +332,8 @@ sub signature_calc_folding_cutting {
 
 		$$specs{'hdnBreakdown'.$qty_index} .= "\tEquipment: ".$Equipment->name().':';
 
-		my $reason = $Equipment->fits( $I->paper()->width(), $I->paper()->height(), $Paper->calliper() );
-		$$specs{'hdnBreakdown'.$qty_index} .= $reason . "<br/>";
+		my $reason = $Equipment->fits( $I->paper()->width(), $I->paper()->height() );
+		$$specs{'hdnBreakdown'.$qty_index} .= $reason . '<br/>';
 		next if $reason;
 
 		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
@@ -374,7 +375,7 @@ sub signature_calc {
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
 	if ( ! $I ) {
 		$I = new openprint::Imposition();
-		$I->paper( $Paper );
+		$I->Paper( $Paper );
 		$I->load( $sig_specs, $qty_index );
 	} # end if
 	if ( ! @equipment ) {
@@ -461,10 +462,10 @@ sub signature_calc {
 		# Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 		# but if we are cutting into smaller signatures, then we need more cutting
 #$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
-		if ( $stitching_imposition and ( $I->image_orientation() eq 'Horizontal' ) ) {
-			$vertical_cuts += int ($I->columns() / $stitching_imposition)-1;
+		if ( $stitching_imposition and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
+			$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
 		} else {
-			$vertical_cuts += $I->columns()-1;
+			$vertical_cuts += $$I{'columns'}-1;
 		} # end if
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 $openprint::log->warn('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
@@ -576,8 +577,8 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 		$$specs{'hdnBreakdown'.$qty_index} .= "(Lift: $liftDepth)<br/>";
 		my $totalPrice = 0;
 
-		if ( my $reason = $Equipment->fits( $sheet_width, $sheet_height, $$specs{"txtStockCalliper-$signature_index"} ) ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= $reason;
+		if ( my $reason = $Equipment->fits( $sheet_width, $sheet_height ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= $reason . '<br/>';
 			next;
 		} # end if
 
@@ -744,10 +745,12 @@ if ( 1 ) {
 			$price += $results{'Price'};
 			$mprice += $results{'MPrice'};
 			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
+$openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
 } # end if
 
 			my %results = signature_calc( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
 			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
+$openprint::log->warn("Status from sig_calc: $results{'Status'}");
 
 			my $minCharge = openprint::service::get_price( 'CuttingChargeMinimum', undef, $results{'Equipment'} );
 			$results{'Price'} = $minCharge if $results{'Price'} and ($results{'Price'} < $minCharge);

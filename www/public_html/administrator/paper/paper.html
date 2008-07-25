@@ -126,6 +126,7 @@
                 <label class="radio" for="typeSheet">Sheet</label>
                 <input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('BasisSize').show();$('MWeight').hide();$('QuantityPerPackageUnits').innerHTML='lbs';$('MinimumOrderUnits').innerHTML='lbs';" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() eq 'Roll'; ) ?> />
                 <label class="radio" for="typeRoll">Roll</label>
+			</p>
 			<p>
 				<label>Size:</label>
 				<input type="text" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>

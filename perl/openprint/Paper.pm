@@ -57,14 +57,14 @@ sub find {
 
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
-	my $sql = 'SELECT *, (SELECT name FROM StockGroups WHERE id=group_id LIMIT 1) AS group, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id LIMIT 1) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id LIMIT 1) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id LIMIT 1) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id LIMIT 1) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id LIMIT 1) AS weight FROM Papers WHERE 1>0';
+	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
+			$sql .= ' AND papers.id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
 			push @values, @{$params{'id'}};
 		} else {
-			$sql .= ' AND id=?';
+			$sql .= ' AND papers.id=?';
 			push @values, $params{'id'};
 		} # end if
 	} # end if
@@ -164,15 +164,15 @@ sub find {
 		push @values, 1*$params{'height_start'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND id IN (SELECT paper_id FROM paper_allocations WHERE project_id = (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id = (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'project_type_name'} ) {
-		$sql .= ' AND id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT lngIndex FROM Project_Types WHERE strID = ?))';
+		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT lngIndex FROM Project_Types WHERE strID = ?))';
 		push @values, $params{'project_type_name'};
 	} # end if
 	if ( $params{'project_type_id'} ) {
-		$sql .= ' AND id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
+		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
 		push @values, $params{'project_type_id'};
 	} # end if
 	if ( $params{'fsc_code'} ) {
@@ -427,7 +427,7 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	return join('-', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), $self->mweight().'M', $self->quality() ) );
+	return join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), $self->mweight().'M', $self->quality() ) );
 } # end sub to_string
 
 sub group {
@@ -561,12 +561,22 @@ sub mweight {
         $$self{'mweight'} = 1*$mweight;
 	} # end if
 	if ( ! $$self{'mweight'} ) {
-		my $wpsi = $$self{'gsm'}/703064.5;
-		if ( $$self{'type'} eq 'Roll' and $$self{'basis_width'} and $$self{'basis_height'} and $$self{'gsm'} ) {
-			$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
-			# MWeight is in relaion to the basis size
-		} elsif ( $$self{'width'} and $$self{'height'} and $$self{'gsm'} ) {
-			$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'width'} * $$self{'height'} * 1000 );
+		if ( $$self{'gsm'} ) {
+			my $wpsi = $$self{'gsm'}/703064.5;
+			if ( $$self{'type'} eq 'Roll' and $$self{'basis_width'} and $$self{'basis_height'} ) {
+				$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
+				# MWeight is in relaion to the basis size
+			} elsif ( $$self{'width'} and $$self{'height'} ) {
+				$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'width'} * $$self{'height'} * 1000 );
+			} # end if
+		} elsif ( $self->weight() =~ /(\d*)lb/ ) {
+			# weigiht of 500sheets of 25x38
+$openprint::log->debug("Auto calcing mweight from $1");
+			$$self{'mweight'} = sprintf('%.0f', ($1*$$self{'width'}*$$self{'height'})/(25*38));
+		} elsif ( ! $self->weight() =~ /\D/ ) {
+			# weigiht of 500sheets of 25x38
+$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
+			$$self{'mweight'} = sprintf('%.0f', ($self->weight()*$$self{'width'}*$$self{'height'})/(25*38));
 		} # end if
     } # end if
     return $$self{'mweight'};
@@ -640,8 +650,9 @@ sub owner_id {
     return $$self{'owner_id'};
 } # end sub owner
 
+# This function assumes that the skid contents have already been updated
 sub add_inventory {
-    my ( $self, $skid_id, $quantity, $units, $description ) = @_;
+    my ( $self, $Skid, $quantity, $units, $description ) = @_;
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
@@ -649,8 +660,7 @@ sub add_inventory {
 
 	my $in_stock;
 	my $Skid;
-	if ( $skid_id ) {
-		$Skid = new openprint::Skid( $skid_id );
+	if ( $Skid and $Skid->id() ) {
 		foreach my $content ( $Skid->contents( 'Paper'=>$self ) ) {
 			$in_stock += $content->quantity();
 		} # end foreach
@@ -668,7 +678,7 @@ sub add_inventory {
         'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
-        'skid_id',  $skid_id,
+        'skid_id',  $Skid->id(),
 		'units',	$units,
         );
 	delete $$self{allocated};
@@ -711,6 +721,7 @@ sub allocated {
 	} # end if
     return $$self{allocated};
 } # end sub allocated
+
 sub in_stock {
     my $self = shift;
 	return 0 if ! $$self{'id'};
@@ -855,7 +866,7 @@ sub sheets_per_package {
 	$factor = 1 if ! $factor;
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
 	return $$self{'sheets_per_package'} * $factor;
-}
+} # end sheets_per_package
 
 sub gsm {
 	my $self = shift;
@@ -1007,8 +1018,8 @@ sub load_from_signature {
 		$Paper->colour( $$specs{'txtSpecificStockColour'} );
 		$Paper->weight( $$specs{'txtSpecificStockWeight'} );
 		$Paper->calliper( $$specs{'txtSpecificStockCalliper'} );
-		$Paper->width( $$specs{'txtSpecificStockWidth'} );
-		$Paper->height( $$specs{'txtSpecificStockHeight'} );
+		$Paper->width( $$specs{'StockWidth'.$qty_index} );
+		$Paper->height( $$specs{'StockHeight'.$qty_index} );
 		$Paper->start_width( $$specs{'txtSpecificStockWidth'} );
 		$Paper->start_height( $$specs{'txtSpecificStockHeight'} );
 		$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
@@ -1046,14 +1057,19 @@ sub load_from_signature {
 			$params{'type'}	= $$specs{'StockType'.$qty_index};
 		} # end if
 		my @Papers = find( %params );
-		$Paper = shift @Papers;
+		if ( ! @Papers ) {
+			delete $params{'width'};
+			delete $params{'height'};
+			@Papers = find( %params );
+		} # end if
+		$Paper = shift @Papers if @Papers;
 		$Paper = new openprint::Paper() if ! $Paper;
 		if ( $qty_index ) {
 			if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
 				$Paper = $Paper->clone();
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 				$Paper->height( $$specs{'StockHeight'.$qty_index} );
-$openprint::log->debug(sprintf('Paper %sx%s = %s', $Paper->width(), $Paper->height(), $Paper->area() ) );
+#$openprint::log->debug(sprintf('Paper %sx%s = %s', $Paper->width(), $Paper->height(), $Paper->area() ) );
 				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
 			} # end if
 		} # end if
@@ -1099,7 +1115,12 @@ sub doublesided {
 
 sub area {
 	my $self = shift;
+	return $$self{width} if ! $$self{height};
 	return $$self{width}*$$self{height};
+}
+sub start_area {
+	my $self = shift;
+	return $$self{start_width}*$$self{start_height};
 }
 
 sub gsm_to_mweight {
@@ -1115,6 +1136,12 @@ sub gsm_to_weight {
 	return sprintf('%.0f', $wpsi * 25 * 38 * 500 );
 } # end sub gsm_to_mweight
 
+
+sub start_area {
+	my $self = shift;
+	return $$self{start_width} if ! $$self{start_height};
+	return $$self{start_width}*$$self{start_height};
+}
 
 1;
 __END__

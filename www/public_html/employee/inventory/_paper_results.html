@@ -6,7 +6,7 @@
 	@{$$variable{'Papers'}} = openprint::Paper::find(
 		'owner_id'	=>	$openprint::session{'/employee/inventory/paper.html?Owner'},
 		'manufacturer_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Manufacturer'} ? $openprint::session{'/employee/inventory/paper.html?Manufacturer'} : '' ),
-		'name_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Brand'} ? $openprint::session{'/employee/inventory/paper.html?Brand'} : '' ),
+		'name_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Name'} ? $openprint::session{'/employee/inventory/paper.html?Name'} : '' ),
 		'finish_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Finish'} ? $openprint::session{'/employee/inventory/paper.html?Finish'} : '' ),
 		'colour_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Colour'} ? $openprint::session{'/employee/inventory/paper.html?Colour'} : '' ),
 		'weight_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Weight'} ? $openprint::session{'/employee/inventory/paper.html?Weight'} : '' ),

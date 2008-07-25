@@ -187,7 +187,7 @@ sub save {
 	} # end if
 
 	if ( exists $$params{'assistant_ids'} ) {
-	$self->assistant_ids( ref $$params{'assistant_ids'} eq 'ARRAY' ? @{$$params{'assistant_ids'}} : $$params{'assistant_ids'} );
+		$self->assistant_ids( ref $$params{'assistant_ids'} eq 'ARRAY' ? @{$$params{'assistant_ids'}} : $$params{'assistant_ids'} );
 	} # end if
 	if ( exists $$params{'csr_ids'} ) {
 		$self->csr_ids( ref $$params{'csr_ids'} eq 'ARRAY' ? @{$$params{'csr_ids'}} : $$params{'csr_ids'} );

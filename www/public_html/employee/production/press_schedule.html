@@ -129,11 +129,31 @@
 	function errFunc( t ) {
 	}
 	function applySchedule( ) {
-	document.getElementsByClassName( 'Schedule', $('schedule') ).map (function(e){
-		jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::press_schedule2::drop_project', new Array( e.id, Sortable.serialize(e.id) ) );
-	} );
-	$('schedule').setStyle({background:'none'} );
+		document.getElementsByClassName( 'Schedule', $('schedule') ).map (function(e){
+			jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::press_schedule2::drop_project', new Array( e.id, Sortable.serialize(e.id) ) );
+		} );
+		$('schedule').setStyle({background:'none'} );
 	}  // end function
+var popupWin;
+function popup_window( url, parameters ) {
+    if ( ! popupWin ) {
+        popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
+        // Set up a windows observer, check ou debug window to get messages
+        myObserver = {
+onDestroy: function(eventName, win) {
+               if (win == popupWin) {
+                   popupWin = null;
+                   Windows.removeObserver(this);
+               }
+           }
+        }
+        Windows.addObserver(myObserver);
+    } // end if
+    popupWin.setHTMLContent('Loading... please wait');
+    popupWin.showCenter();
+    popupWin.setAjaxContent(url+'?'+parameters, null , true);
+} // end function popup_window
+
 </script>
 <link rel="stylesheet" type="text/css" href="/css/press_schedule2.css">
 <div class="Popup" id="CommentEdit">

@@ -86,9 +86,8 @@ sub email_campaign {
 	if ( $openprint::param{'btnFunction'} eq 'Run' ) {
 		$$variable{'Results'} = $Campaign->send();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
-		$openprint::param{'name'} = 'Copy of ' . $openprint::param{name};
-		$openprint::param{'id'} = undef;
-		$Campaign->save( %openprint::param );
+		$Campaign = $Campaign->copy();
+		$$variable{'error'} .= $Campaign->save( );
 	} # end if
 	$Campaign->load_info( $variable ) if $Campaign;
 	$$variable{'Campaign'} = $Campaign;
@@ -105,6 +104,9 @@ sub surveys {
         $$variable{'error'} = $$variable{'Survey'}->delete();
     } elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
         $$variable{'Survey'} = $$variable{'Survey'}->copy();
+        $$variable{'error'} = $$variable{'Survey'}->save( );
+    } elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
+        $$variable{'error'} = $$variable{'Survey'}->delete( );
     } # end if
 	
 } # end sub surveys 

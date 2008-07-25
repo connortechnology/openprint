@@ -1,6 +1,6 @@
 <? eval (
 if ( $openprint::param{'btnFunction'} eq 'Allocate' ) {
-	openprint::employee_inventory::allocate( $variable, @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
+	openprint::employee_inventory::allocate( @openprint::param{'skid_id','paper_id','Quantity','Project','Docket'} );
 } # end if
 ) ?>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
@@ -22,27 +22,31 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	}
-		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?paper_id='+paper_id, null , true);
+		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?referer=available_paper.html&paper_id='+paper_id, null , true);
 } // end function bug_report
 
-function check_inputs(form ) {
-	if ( form.skid_id && form.skid_id.value ) {
-		if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
-			alert( 'Skids cannot contain more than 10000lbs' );
+	function check_inputs(form ) {
+		if ( form.skid_id && form.skid_id.value ) {
+			if ( form.type && (get_rdb_value( form.type ) == 'Roll') && form.Quantity.value > 10000 ) {
+				alert( 'Skids cannot contain more than 10000lbs' );
+				return false;
+			} // end if
+			if ( form.Units && (get_value( form.Units ) == 'lbs') && form.Quantity.value > 10000 ) {
+				alert( 'Skids cannot contain more than 10000lbs' );
+				return false;
+			} // end if
+		} // end if
+		if ( form.available_quantity && ( parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) ) {
+			if ( form.Units ) {
+				alert( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available' );
+			} else {
+				alert( 'There are only ' + form.available_quantity.value + ' available' );
+			} // end if
 			return false;
 		} // end if
-		if ( form.Units && get_ddm_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
-			alert( 'Skids cannot contain more than 10000lbs' );
-			return false;
-		} // end if
-	} // end if
-	if ( form.available_quantity && form.Quantity.value > form.available_quantity.value ) {
-		alert( 'There are only ' + form.available_quantity.value + get_ddm_value( form.Units ) + ' available' );
-		return false;
-	} // end if
-	return true;
+		return true;
+	} // end function check_inputs(form)
 
-}
 	function highlight_paper( results ) {
 		var paper_ids = results.split('|');
 		for ( var i = 0; i < paper_ids.length; i += 1 ){
@@ -164,7 +168,7 @@ Please select a Paper to view/edit.<br>
 	</fieldset>
 <div id="Results">
 <? eval (
-	@{$$variable{'Papers'}} = openprint::Paper::find( 'order_by'=>'manufacturer,name,finish,colour,weight', 'in_stock_start'=>1,);
+	@{$$variable{'Papers'}} = openprint::Paper::find( 'order_by'=>'lower(manufacturers.shortname),name,finish,colour,weight', 'in_stock_start'=>1,);
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">

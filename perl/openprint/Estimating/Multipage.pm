@@ -92,7 +92,7 @@ sub calc {
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
 	foreach my $group_id ( @Groups ) {
-$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
+#$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 		next if $override_pages{$group_id};
 
 		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
@@ -109,14 +109,13 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 
 	# if there is a cover, then force it to be non-zero
 	if ( (! $override_pages{1} ) and ($$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) and ($$specs{'rdbCover'} eq 'Different') ) {
-$openprint::log->debug("Doing cover");
 		my $new_remaining = int(($remaining_pages-4) / $$specs{'txtSpreadSize'} ) * $$specs{'txtSpreadSize'};
 		$override_pages{1} = $remaining_pages - $new_remaining;
 		$remaining_pages = $new_remaining;
 	} # end if
 
 	foreach my $group_id ( @Groups ) {
-$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
+#$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
@@ -125,6 +124,10 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 			$remaining_pages = 0;
 		} # end if
 		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
+		if ( $$specs{'chkOverrideDimensions'.$group_id} ne 'Y' ) {
+			$$specs{'txtFinalWidth'.$group_id} = $$specs{'txtFinalWidth'};
+			$$specs{'txtFinalHeight'.$group_id} = $$specs{'txtFinalHeight'};
+		} # end if
 	} # end foreach
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
@@ -153,21 +156,23 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 		return 'uncalculated';
 	} # end if
 
-	if ( ($$specs{'rdbCover'} eq 'Different') and sets::isin($$specs{'rdbTemplateType1'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-		if ( $$specs{'rdbPocketSize1'} and ( $$specs{'rdbPocketSize1'} ne 'Other' ) ) {
-			$$specs{'PocketSize1'} = $$specs{'rdbPocketSize1'};	
-		} else {
-			delete $$specs{'PocketSize1'};
-		} # end if
-		if ( ! $$specs{'rdbPanels1'} ) {
-			$$specs{'alert'} .= 'Please select the number of panels.';
-			return $$specs{'Status'} = 'uncalculated';
-		} elsif ( ! $$specs{'rdbPocketSize1'} ) {
-			$$specs{'alert'} .= 'Please select the size of the pockets.';
-			return $$specs{'Status'} = 'uncalculated';
-		} elsif ( ! ( $$specs{'chkPocketCenter1'} or $$specs{'chkPocketLeft1'} or $$specs{'chkPocketRight1'} ) ) {
-			$$specs{'alert'} .= 'Please select where you would like the pockets.';
-			return $$specs{'Status'} = 'uncalculated';
+	if ( $$specs{'rdbCover'} eq 'Different') {
+		if ( sets::isin($$specs{'rdbTemplateType1'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+			if ( $$specs{'rdbPocketSize1'} and ( $$specs{'rdbPocketSize1'} ne 'Other' ) ) {
+				$$specs{'PocketSize1'} = $$specs{'rdbPocketSize1'};	
+			} else {
+				delete $$specs{'PocketSize1'};
+			} # end if
+			if ( ! $$specs{'rdbPanels1'} ) {
+				$$specs{'alert'} .= 'Please select the number of panels.';
+				return $$specs{'Status'} = 'uncalculated';
+			} elsif ( ! $$specs{'rdbPocketSize1'} ) {
+				$$specs{'alert'} .= 'Please select the size of the pockets.';
+				return $$specs{'Status'} = 'uncalculated';
+			} elsif ( ! ( $$specs{'chkPocketCenter1'} or $$specs{'chkPocketLeft1'} or $$specs{'chkPocketRight1'} ) ) {
+				$$specs{'alert'} .= 'Please select where you would like the pockets.';
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
 		} # end if
 	} # end if
 
@@ -175,7 +180,7 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 } # end sub calc
 
 sub calculate_signatures {
-	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my ( $log, $dbh, $variable, $project_index ) = @_;
 
 	my $status;
 $openprint::log->debug("Starting Multipage::calculate_signatures");

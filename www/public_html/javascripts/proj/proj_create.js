@@ -147,6 +147,19 @@ function service_onclick( element ) {
 			element.form.chkServicesPerforating.checked = false;
 		if ( element.form.chkServicesDrilling ) 
 			element.form.chkServicesDrilling.checked = false;
+		if ( element.form.chkServicesPlainCartons ) 
+			element.form.chkServicesPlainCartons.checked = false;
+	} else if ( element.value == 'NoPrinting' ) {
+		var e = $('Design');
+		if ( element.checked ) {
+			if ( element.form.chkServicesProofs ) 
+				element.form.chkServicesProofs.checked = false;
+			if ( e ) e.hide();
+		} else {
+			if ( element.form.chkServicesProofs ) 
+				element.form.chkServicesProofs.checked = true;
+			if ( e ) e.show();
+		} // end if
 	} else if ( element.checked ) {
 		if ( element.form.chkServicesNoBindery ) 
 			element.form.chkServicesNoBindery.checked = false;

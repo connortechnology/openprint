@@ -644,7 +644,12 @@ sub get_price {
 
 	if ( my @sigs = $Project->signatures({'Group'=>1}) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) or $$sig_specs{'PageQuantity'.$qty_index} > 4 ) {
+
+
+		if ( 
+( $$sig_specs{'txtWidth'}/2 != $$specs{'Width'} or $$sig_specs{'txtHeight'} != $$specs{'Height'} ) or
+( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) or $$sig_specs{'PageQuantity'.$qty_index} > 4 ) 
+) {
 			if ( (!$$specs{'CoverFit'}) or ($$specs{'CoverFit'} eq 'Exact') ) {
 				if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}.'1Pockets', $qty, $Equipment ) ) ) {
 					%servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}, 1, $Equipment );

@@ -115,7 +115,7 @@ sub calc {
 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
-	$openprint::log->debug("Customer Pickup Summary $Project, $service_id, $specs, $qty_index");
+	#$openprint::log->debug("Customer Pickup Summary $Project, $service_id, $specs, $qty_index");
 	my $services = $Project->services();
 	if ( $qty_index ) {
 		if ( $$services{'BulkSkids'} ) {

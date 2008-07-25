@@ -74,10 +74,10 @@ sub _car_view_part1 {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'issued_on'} = sprintf('%.4d-%.2d-%.2d', @param{'issued_on_year','issued_on_month','issued_on_day'} );
-		$param{'reprint_on'} = sprintf('%.4d-%.2d-%.2d', @param{'reprint_on_year','reprint_on_month','reprint_on_day'} );
+		$param{'reprint_on'} = sprintf('%.4d-%.2d-%.2d', @param{'reprint_on_year','reprint_on_month','reprint_on_day'} ) if $param{'reprint_on_year'};
 		$param{'printed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'printed_on_year','printed_on_month','printed_on_day'} ) if $param{'printed_on_year'} and $param{'printed_on_month'} and $param{'printed_on_day'};
 		$param{'approved_on'} = sprintf('%.4d-%.2d-%.2d', @param{'approved_on_year','approved_on_month','approved_on_day'} ) if $param{'approved_on_year'} and $param{'approved_on_month'} and $param{'approved_on_day'};
-		$param{'reply_by'} = sprintf('%.4d-%.2d-%.2d', @param{'reply_by_year','reply_by_month','reply_by_day'} );
+		$param{'reply_by'} = sprintf('%.4d-%.2d-%.2d', @param{'reply_by_year','reply_by_month','reply_by_day'} ) if $param{'reply_by_day'};
 		$param{'presses'} = ref $param{'presses'} eq 'ARRAY' ? join(';', @{$param{'presses'}} ) : $param{'presses'};
 		#$param{'part1_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part1_signed_on_year','part1_signed_on_month','part1_signed_on_day'} );
 		my $send_assignee_notification = 0;
@@ -220,6 +220,7 @@ sub _par_view_part2 {
 	$variable{'PAR'} = new openprint::PAR( $param{'par_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'part2_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part2_signed_on_year','part2_signed_on_month','part2_signed_on_day'} );
+		$param{'cause'} =~ s/<br\/>/\n/g;
 		$variable{'error'} .= $variable{'PAR'}->save( \%param );
 	} # end if
 } # end sub _par_view_part2

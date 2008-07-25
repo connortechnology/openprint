@@ -49,6 +49,12 @@ sub variables {
 				 "ddmEquipment-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index",
 				 "txtImposition-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$specs{'SignatureIndex'}-$qty_index",
 				 "txtLayoutWidth-$$specs{'SignatureIndex'}-$qty_index", "txtLayoutHeight-$$specs{'SignatureIndex'}-$qty_index",
+				 "MakeReadyPrice-$$specs{'SignatureIndex'}-$qty_index", "OverrideMakeReadyPrice-$$specs{'SignatureIndex'}-$qty_index", 
+				 "BlanketPrice-$$specs{'SignatureIndex'}-$qty_index", "OverrideBlanketPrice-$$specs{'SignatureIndex'}-$qty_index", 
+				 "ServicePrice-$$specs{'SignatureIndex'}-$qty_index", "OverrideServicePrice-$$specs{'SignatureIndex'}-$qty_index", 
+				 "MaterialPrice-$$specs{'SignatureIndex'}-$qty_index", "OverrideMaterialPrice-$$specs{'SignatureIndex'}-$qty_index", 
+				 "SignaturePrice-$$specs{'SignatureIndex'}-$qty_index", "OverrideSignaturePrice-$$specs{'SignatureIndex'}-$qty_index", 
+
 		} # end foreach
 	} # end foreach
     return @v;
@@ -128,11 +134,30 @@ sub calc {
 			} # end if
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
 			@outputs = sets::union( @outputs, 
-					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
-					"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
 					"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index", "txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"MakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"BlanketPrice-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"ServicePrice-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"MaterialPrice-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index",
 					);	
-			$$specs{"txtPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Total'};
+			if ( $$specs{"OverrideMakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+			$$specs{"MakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'MakeReady'} );
+			} # end if
+			if ( $$specs{"OverrideBlanketPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+			$$specs{"BlanketPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Blanket'} );
+			} # end if
+			if ( $$specs{"OverrideServicePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+			$$specs{"ServicePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Service'} );
+			} # end if
+			if ( $$specs{"OverrideMaterialPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+			$$specs{"MaterialPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Material'} );
+			} # end if
+			if ( $$specs{"OverrideSignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+			$$specs{"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Total'} );
+			} # end if
 			$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
 			if ( $results{'Status'} eq 'uncalculated' ) {
 				$status = 'uncalculated';
@@ -145,7 +170,7 @@ sub calc {
 
 				if ( $results{'Equipment'} ) {
 					$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'}->id();
-					$GrandTotal += $results{'Total'};
+					$GrandTotal += $$specs{"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"};
 					$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Imposition'}->imposition();
 					$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Imposition'}->layout_width();
 					$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Imposition'}->layout_height();
@@ -208,8 +233,6 @@ sub signature_calc {
 		$qty *= $$sig_specs{'Versions'};
 	} # end if
 
-	#@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
-
 	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -262,6 +285,7 @@ sub signature_calc {
 
 	foreach my $Equipment ( @equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().',<br/>';
+		my %minimum = openprint::service::get_price_object( 'AqueousMinimumCharge', undef, $Equipment );
 
 		foreach my $imp ( @impositions ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition: %dx%d+%dx%d=%dout :', @$imp{'columns','rows','dutch_columns','dutch_rows','imposition'} );
@@ -275,8 +299,7 @@ sub signature_calc {
 				next;
 			} # end if
 
-			my $totalPrice = 0;
-
+			my %Price;
 			my $run_qty = $qty;
 
 			my @types;
@@ -293,7 +316,14 @@ sub signature_calc {
 				@types = (@front_aq, @back_aq);
 			} # end if
 			foreach my $type ( @types ) {
-				my $setupPrice += openprint::service::get_price( $type.' MakeReady', $run_qty/$imp->imposition(), $Equipment );
+				my $setupPrice = openprint::service::get_price( $type.' MakeReady', $run_qty/$imp->imposition(), $Equipment );
+				$Price{'MakeReady'} += $setupPrice;
+				
+				my $BlanketCutPrice = 0;
+				if ( $type =~ /Spot/ ) {
+					$BlanketCutPrice = openprint::service::get_price( 'BlanketCut', undef, $Equipment );
+				} # end if type is spot
+					$Price{'BlanketCut'} += $BlanketCutPrice;
 
 				my %ServicePrice = openprint::service::get_price_object( $type, $run_qty/$imp->imposition(), $Equipment );
 				if ( lc $ServicePrice{'units'} eq 'per m' ) {
@@ -303,6 +333,7 @@ sub signature_calc {
 				} # end if
 # Div by imposition
 				$ServicePrice{'Total'} /= $imp->imposition();
+				$Price{'Service'} += $ServicePrice{'Total'};
 
 				my %MaterialPrice;
 				my $material_name = $type;
@@ -317,19 +348,23 @@ sub signature_calc {
 				} elsif ( lc $MaterialPrice{'units'} eq 'per m' ) {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty / 1000;
 				} # end if
+				$Price{'Material'} += $MaterialPrice{'Total'};
 
-				my $colour_total += $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'};
-				$totalPrice += $colour_total;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + Service: $%.2f%s=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
-					$setupPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
+				my $colour_total += $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'} + $BlanketCutPrice;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + BC: $%.2f + Service: $%.2f%s=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
+					$setupPrice, $BlanketCutPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
 			} # end foreach type
-			my %minimum = openprint::service::get_price_object( 'AqueousMinimumCharge', undef, $Equipment );
-			if ( $totalPrice < $minimum{Price} ) {
-				$totalPrice = $minimum{Price};
+			$Price{'Total'} = $Price{'MakeReady'} + $Price{'Service'} + $Price{'Material'} + $Price{'BlanketCut'};
+			if ( $Price{'Total'} < $minimum{Price} ) {
+				$Price{'Total'} = $minimum{Price};
 			} # end if
 
-			if ( $totalPrice < $bestPrice{'Total'} or ( ! defined $bestPrice{'Total'} ) ) {
-				$bestPrice{'Total'} = $totalPrice;
+			if ( $Price{'Total'} < $bestPrice{'Total'} or ( ! defined $bestPrice{'Total'} ) ) {
+				$bestPrice{'Total'} = $Price{'Total'};
+				$bestPrice{'MakeReady'} = $Price{'MakeReady'};
+				$bestPrice{'Service'} = $Price{'Service'};
+				$bestPrice{'Material'} = $Price{'Material'};
+				$bestPrice{'Blanket'} = $Price{'Blanket'};
 				$bestPrice{'Equipment'} = $Equipment;
 				$bestPrice{'Imposition'} = $imp;
 			} # end if
@@ -339,6 +374,20 @@ sub signature_calc {
 	if ( $bestPrice{'Total'} ) {
 		$bestPrice{'Status'} = 'calculated';
 	} # end if
+
+	if ( $$specs{"OverrideMakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+		$bestPrice{'MakeReady'} = $$specs{"MakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"};
+	} # end if
+	if ( $$specs{"OverrideBlanketPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+		$bestPrice{'Blanket'} = $$specs{"BlanketPrice-$$sig_specs{'SignatureIndex'}-$qty_index"};
+	} # end if
+	if ( $$specs{"OverrideServicePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+		$bestPrice{'Service'} = $$specs{"ServicePrice-$$sig_specs{'SignatureIndex'}-$qty_index"};
+	} # end if
+	if ( $$specs{"OverrideMaterialPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+		$bestPrice{'Material'} = $$specs{"MaterialPrice-$$sig_specs{'SignatureIndex'}-$qty_index"};
+	} # end if
+	$bestPrice{'Total'} = misc::sum( @bestPrice{'MakeReady','Blanket','Service','Material'} );
 	return %bestPrice;
 } # end sub signature_calc
 

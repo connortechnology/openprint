@@ -106,6 +106,14 @@ sub Parent {
 	my $self = shift;
 	return new openprint::Location( $$self{'parent_id'}) if $$self{'parent_id'};
 } # end sub parent
+sub Root {
+	my $self = shift;
+	my $P = $self->Parent();
+	while ( $P->parent_id() ) {
+		$P = $P->Parent();
+	} # end while 
+	return $P;
+} # end sub Root
 
 1;
 __END__

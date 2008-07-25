@@ -13,9 +13,7 @@ sub get_paper {
 	my ( $r, $log, $dbh, $variable, %specs ) = @_;
 
 	my @types = ('Sheet');
-	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
-		push @types, 'Roll';
-	} # end if
+	push @types, 'Roll';
 
 	my @papers = openprint::Paper::find( 
 			( $specs{'Selected'} eq 'Manufacturer' ? ( 'manufacturer_id'=>$specs{'Manufacturer'} ) : () ),
@@ -44,22 +42,13 @@ sub get_paper {
 		$weights{$Paper->weight()} = $Paper->weight_id() if ( ! $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'Name'} );
 	} # end foreach
 
-
 	my @results;
 	push @results, jsrs::encode_array( 'Brand', map {$names{$_}, $_ } sort keys %names ) if ($specs{'Selected'} eq 'Manufacturer') or ! $specs{'Selected'};
 	push @results, jsrs::encode_array( 'Finish', map { $finishes{$_}, $_ } sort keys %finishes ) if ( ! $specs{'Finish'} ) or ! sets::isin( $specs{'Selected'}, [ 'Finish', 'Colour', 'Weight' ] );
 	push @results, jsrs::encode_array( 'Colour', map { $colours{$_}, $_ } sort keys %colours ) if ( ! $specs{'Colour'} ) or ! sets::isin( $specs{'Selected'}, [ 'Finish','Weight' ] );
 	if ( $specs{'Selected'} ne 'Weight' ) {
-		my @weights;
-		my %results;
-		foreach my $weight ( keys %weights ) {
-			$weight =~ /(\d*)/;
-			$results{$1} = $weight;
-		} # end foreach
-		foreach my $sort ( sort { $a <=> $b } keys %results ) {
-			push @weights, $results{$sort};
-		} 
-		push @results, jsrs::encode_array( 'Weight', map { $weights{$_}, $_ } @weights )
+		push @results, jsrs::encode_array( 'Weight', map { $weights{$_}, $_ } 
+				sort { $a =~ s/^(\d*)/$1/; $b =~ s/^(\d*)/$1/; return $a <=> $b } keys %weights );
 	} # end if
 	#push @results, select_sheetsize( $r, $log, $dbh, $variable, $project_index, $name, $spfinish, $colour, $weight, $press );
 	push @results, "id~$specs{id}~$specs{id}";
@@ -77,7 +66,7 @@ sub select_paper {
 	} # end if
 
 	my @types = ('Sheet');
-	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
+	if ( (!$project_index) or ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
 
@@ -107,24 +96,14 @@ sub select_paper {
 	push @results, jsrs::encode_array( 'Finish', map { $_, $_ } sort keys %finishes ) if ! sets::isin( $selected, [ 'Finish', 'Colour', 'Weight' ] );
 	push @results, jsrs::encode_array( 'Colour', map { $_, $_ } sort keys %colours ) if ! sets::isin( $selected, [ 'Weight' ] );
 	if ( $selected ne 'Weight' ) {
-
-		# This extra code is to sort numerically instead of by string
-		my @weights;
-		my %results;
-		foreach my $weight ( keys %weights ) {
-			$weight =~ /(\d*)/;
-			$results{$1} = $weight;
-		} # end foreach
-		foreach my $sort ( sort { $a <=> $b } keys %results ) {
-			push @weights, $results{$sort};
-		} 
-		push @results, jsrs::encode_array( 'Weight', map { $_, $_ } @weights )
+		push @results, jsrs::encode_array( 'Weight', map { $_, $_ } 
+				sort { $a =~ s/^(\d*)/$1/; $b =~ s/^(\d*)/$1/; return $a <=> $b } keys %weights );
 	} # end if
 	push @results, select_sheetsize( $r, $log, $dbh, $variable, $project_index, $name, $finish, $colour, $weight, $supplied, $press );
 	push @results, "Press~$press~$press";
 
 	return join('|', @results ); 
-} # end sub select_paper_names
+} # end sub select_paper
 
 sub get_names {
 	my ( $type, $name, $finish, $colour, $weight, $supplied ) = @_;
@@ -246,16 +225,8 @@ sub get_weights {
 	foreach my $Paper ( @papers ) {
 		$weights{$Paper->weight()} = $Paper->weight_id();
 	} # end foreach
-	my @results;
-	my %results;
-	foreach my $weight ( keys %weights ) {
-		$weight =~ /(\d*)/;
-		$results{$1} = $weight;
-	} # end foreach
-	foreach my $sort ( sort { $a <=> $b } keys %results ) {
-		push @results, $results{$sort}, $results{$sort};
-	} 
-	return @results;
+	return map { $_, $_ } 
+		sort { $a =~ s/^(\d*)/$1/; $b =~ s/^(\d*)/$1/; return $a <=> $b } keys %weights;
 } # end sub
 
 sub select_by_name {

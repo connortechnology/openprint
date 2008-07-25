@@ -262,7 +262,6 @@ sub auto_calculate {
 	my %services = $Project->get_services();
 
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary
-	my $folding_service_index = $services{'Folding'}[0] if $services{'Folding'};
 	if ( ! openprint::Estimating::Folding::neccessary( $project_index ) ) {
 		while ( my $si = shift @{$services{'Folding'}} ) {
 			openprint::print_project::delete_service( $log, $dbh, $project_index, $si );
@@ -274,12 +273,13 @@ sub auto_calculate {
 			} # end if
 		} # end if
 	} # end if
-
+$openprint::log->debug("Apres Folding");
 	if ( openprint::Estimating::Paper::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $services{'Paper'} ) {
 			push @{$services{'Paper'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Paper' );
 		} # end if
 	} # end if
+$openprint::log->debug("Apres Paper");
 
 	if ( openprint::Estimating::Cutting::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $services{'Cutting'} ) {
@@ -288,6 +288,7 @@ sub auto_calculate {
 			} # end if
 		} # end if
 	} # end if
+$openprint::log->debug("Apres Cutting");
 
 	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $services{'PerfectBound'} ) {
@@ -298,27 +299,32 @@ sub auto_calculate {
 			openprint::print_project::delete_service( $log, $dbh, $project_index, $si );
 		} # end while
 	} # end if
+$openprint::log->debug("Apres PF");
 
 	if ( openprint::Estimating::Stitching::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! ( $services{'SaddleStitching'} or $services{'LoopStitching'} ) ) {
 			push @{$services{'SaddleStitching'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'SaddleStitching' );
 		} # end if
 	} # end if
+$openprint::log->debug("Apres Stitch");
 	if ( openprint::Estimating::ThreeKnifeTrim::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $services{'ThreeKnifeTrim'} ) {
 			push @{$services{'ThreeKnifeTrim'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'ThreeKnifeTrim' );
 		} # end if
 	} # end if
+$openprint::log->debug("Apres TKT");
 	if ( openprint::Estimating::Tipping::neccessary( $Project ) ) {
 		if ( ! $services{'Tipping'} ) {
 			push @{$services{'Tipping'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Tipping' );
 		} # end if
 	} # end if
+$openprint::log->debug("Apres Tip");
 	if ( openprint::Estimating::Blowing::neccessary( $Project ) ) {
 		if ( ! $services{'Blowing'} ) {
 			push @{$services{'Blowing'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Blowing' );
 		} # end if
 	} # end if
+$openprint::log->debug("Apres Blow");
 	if ( openprint::Estimating::Collating::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $services{'Collating'} ) {
 			push @{$services{'Collating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Collating' );
@@ -330,9 +336,10 @@ sub auto_calculate {
 			} # end foreach
 		} # end if
 	} # end if
+$openprint::log->debug("Apres Collat");
 
 # Proofs
-	if ( ! $services{'Proofs'} ) {
+	if ( ! ( $services{'Proofs'} or $services{'NoPrinting'} ) ) {
 		push @{$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Proofs' );
 	} # end if
 
@@ -341,12 +348,19 @@ sub auto_calculate {
 			openprint::Estimating::Proofs::insert_proof_defaults( $log, $dbh, $project_index, $si );
 		} # end if
 	} # end foreach
+$openprint::log->debug("Apres porrat");
 
 	if ( ! $services{'BulkSkids'} ) {
-		if ( openprint::Estimating::Skids::neccessary( $Project ) ) {
+		if ( openprint::Estimating::Skids::neccessary( $Project, 'BulkSkids' ) ) {
 			push @{$services{'BulkSkids'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'BulkSkids' );
 		} # end if
 	} # end if
+	if ( ! $services{'PlainCartons'} ) {
+		if ( openprint::Estimating::Skids::neccessary( $Project, 'PlainCartons' ) ) {
+			push @{$services{'PlainCartons'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'PlainCartons' );
+		} # end if
+	} # end if
+$openprint::log->debug("Apres Skdis");
 
 	if ( ! $services{'Scoring'} ) {
 		if ( openprint::Estimating::Scoring::neccessary( $Project ) ) {
@@ -358,7 +372,22 @@ sub auto_calculate {
 		push @{$services{'Counting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' ) if ! $services{'Counting'};
 	} # end if
 
+	# Order for these is important.  Stitching must be calc'd before Folding
+	foreach my $type ( 'SaddleStitching','LoopStitching','Folding' ) {
+		next if ! $services{$type};
+		foreach my $service_index ( @{$services{$type}} ) {
+			my $ServiceType = $Project->ServiceType( $service_index );
+			my $service_type = $ServiceType->type();
+			eval "require openprint::Estimating::$service_type";
+			$openprint::log->error('Error requiring openAprint::Estimating::$service_type: ' . $@ ) if $@;
+			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
+			$alert .= $$specs{'alert'};
+		} # end foreach service_index
+	} # end while service_type
+
 	foreach my $type ( keys %services ) {
+		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding' ] );
+
 		foreach my $service_index ( @{$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
