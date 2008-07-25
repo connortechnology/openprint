@@ -1481,7 +1481,7 @@ $openprint::log->debug('gound it');
 
 			push @impositions, map {@{$_}} values %imps;
 
-			if ( 0 ) {
+			if ( 1 ) {
 				$openprint::log->warn('Impositions');
 				foreach my $I ( @impositions ) {
 					$I->display();
@@ -1781,7 +1781,8 @@ sub get_project_price {
 				$SpreadLayout = $$specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
 			} # end if
 		} # end if
-		if ( 0 ) {
+		if ( 1 ) {
+			$openprint::log->debug("QTY: $qty_index before " . @impositions );
 			foreach my $imp ( @impositions ) {
 				$imp->display();
 			} # end foreach
@@ -1797,8 +1798,8 @@ sub get_project_price {
 			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 		} # end if Folding
 
-		if ( 0 ) {
-			$openprint::log->debug("QTY: $qty_index " . @impositions );
+		if ( 1 ) {
+			$openprint::log->debug("QTY: $qty_index after " . @impositions );
 			foreach my $imp ( @impositions ) {
 				$imp->display();
 			} # end foreach
@@ -2058,6 +2059,19 @@ sub get_project_price {
 				$$specs{'StitchingImposition'.$qty_index} = $si;
 			} # end if UnspecifiedPageQuanitty
 #$openprint::log->debug( 'calc_price: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) . ' Complete: ' . $price{complete} );
+			if ( $Paper->minimum_order() and ($Paper->minimum_order() > $stock_qty) ) {
+		# Assume sheets for sheets, lbs for Rolls
+				if ( $Paper->type() eq 'Sheet' ) {
+					if ( $Paper->minimum_order() > $stock_qty ) {
+						$stock_qty = $Paper->minimum_order();
+					} # end if
+				} elsif ( $Paper->type() eq 'Roll' ) {
+					if ( $Paper->minimum_order() > $stock_qty ) {
+						$stock_qty = $Paper->minimum_order();
+						#$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
+					} # end if
+				} # end if
+			} # end if
 
 			my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $stock_qty );
 #$openprint::log->warn("PStock price: $stock_qty: $paper_price{'100lb Price'}" );
@@ -2502,21 +2516,6 @@ sub calc_price {
 		} else {
 			$openprint::log->error('Unknown paper type.');
 		} # end if
-	} # end if
-	if ( $Paper->minimum_order() and ($Paper->minimum_order() > $weight) ) {
-# Assume sheets for sheets, lbs for Rolls
-		if ( $Paper->type() eq 'Sheet' ) {
-			if ( $Paper->minimum_order() > $gross_qty ) {
-				$gross_qty = $Paper->minimum_order();
-			} # end if
-		} elsif ( $Paper->type() eq 'Roll' ) {
-			if ( $Paper->minimum_order() > $weight ) {
-				$weight = $Paper->minimum_order();
-				$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
-			} # end if
-		} # end if
-		$openprint::log->debug('Minimum Order Requirement not met');
-		return \%price;
 	} # end if
 
 	my %sheet_qty = (
@@ -3063,6 +3062,7 @@ sub press_setup_cost {
 		} # end if
 	} # end foreach colour
 	my %Price;
+	$Price{'Setup Count'} = $setup_count;
 	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), undef, $Press ) ) ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
 	} # end if
@@ -3082,6 +3082,7 @@ sub press_setup_cost {
 		$Price{'Total'} *= $plate_runs if $plate_runs;
 		$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
+	$Price{'Press Setup'} = $Price{'Total'};
 	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press );
 	if ( %PlateSetupPrice ) {
 		if ( lc $PlateSetupPrice{'units'} eq 'per hour' ) {

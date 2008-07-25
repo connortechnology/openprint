@@ -60,3 +60,12 @@ $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert( undef, undef, 'database_info', 'version', $version, 'backup', 'false' );
 print "done\n";
+
+foreach my $Service ( openprint::Service::find('name'=>'Imposition') ) {
+	foreach my $Price ( $Service->prices() ) {
+		if ( $Price->units() eq 'Per Page' ) {
+			$Price->units('Per Imposition');
+			$Price->save();
+		} # end if
+	} # end foreach
+} # end foreach
