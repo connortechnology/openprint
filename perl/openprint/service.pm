@@ -582,6 +582,28 @@ sub summary {
 	return;
 } # end sub summary
 
+sub breakupsummary {
+	my ( $Project, $service_id, $qty_index ) = @_;
+
+	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+	my $services = $Project->services();
+
+	my $specs = get_specs_ref( $Project, $service_id );
+
+	if ( $$specs{'ServiceType'} eq 'Proofs' ) {
+		my $ServiceType = $Project->ServiceType( $service_id );
+		my $ServiceTypeType = $ServiceType->type();
+		return if ! $ServiceTypeType;
+		
+#		eval('require openprint::Estimating::'.$ServiceTypeType.';' );
+#		$openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::breakupsummary: $@)") if $@;
+		my $summary = openprint::Estimating::Proofs::breakupsummary( $Project, $service_id, $specs, $qty_index );
+		$openprint::log->error("ERror evalling openprint::Estimating:: $ServiceTypeType ::breakupsummary: $@)") if $@;
+		return $summary;
+	} # end if
+	return;
+} # end sub summary
+
 1;
 
 __END__

@@ -61,7 +61,7 @@ sub handler {
 	$log	= $r->log;
 
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
-	foreach my $key ( sets::union( $r->param ) ) {
+	foreach my $key ( sort sets::union( $r->param ) ) {
 		my @values = $r->param($key);
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
@@ -114,7 +114,7 @@ $openprint::log->debug("Page: $page");
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
-		if ( ! $variable{'PageContent'} ) {
+		if ( $variable{'PageContent'} eq '' ) {
 			my $content;
 			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
 				$content = misc::load_file( $log, $_ );
@@ -146,11 +146,11 @@ $openprint::log->debug("Page: $page");
 			} # end while
 		} # end if _
 		if ( $template ) {
-			$log->debug("parsing template!");
+			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
-			$log->warn("No template!" . $r->content_type());
-			$log->warn($variable{'PageContent'});
+			#$log->warn("No template!" . $r->content_type());
+			#$log->warn($variable{'PageContent'});
 			$r->print( ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) );
 		} # end if
 	} # end if
@@ -365,8 +365,8 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				# Things like UPS SHipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
-				my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
-				@variable{keys %$specs} = @$specs{keys %$specs};
+					my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+					@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
 $openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
 if ( ! $variable{'ServiceIndex'} ) {

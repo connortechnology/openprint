@@ -139,7 +139,7 @@ sub signature_calc {
 
 #$openprint::log->debug( 'Imp: ' . $I->imposition() . ' # of signatures: ' . scalar $Project->signatures()) if $debug;
 	if ( $I->StitchingImposition() ) {
-		# This is supposed to be hte stitching imposition passed in from the previous signature
+		# This is supposed to be the stitching imposition passed in from the previous signature
 		$imposition = $I->StitchingImposition() if $I->StitchingImposition() < $imposition;
 #$results{'alert'} .= 'Setting imposition to 1 from SittchingImposition' if $imposition==1;
 	} # end if
@@ -177,7 +177,7 @@ sub signature_calc {
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-$openprint::log->debug("Override Stitcher to " . $$specs{"ddmEquipment$qty_index"} );
+#$openprint::log->debug("Override Stitcher to " . $$specs{"ddmEquipment$qty_index"} );
 		@equipment = openprint::Equipment::find( 'id' => $$specs{"ddmEquipment$qty_index"} );
 	} else {
 		@equipment = @possible_equipment;
@@ -208,13 +208,13 @@ $openprint::log->debug("Override Stitcher to " . $$specs{"ddmEquipment$qty_index
 				next;
 			} # end if
 			if ( $I->Press()->id() != $Equipment->id() ) {
-				$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
+				#$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
 				next;
 			} # end if
 			my @sigs = $Project->signatures();
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
 			if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
-				$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
+				#$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
 				next;
 			} # end if
 		} # end if
@@ -274,7 +274,7 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
@@ -290,7 +290,7 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-$openprint::log->debug(sprintf('%d %s %s %d %dx%d', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index} ) );
+#$openprint::log->debug(sprintf('%d %s %s %d %dx%d', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index} ) );
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			if ( 
 				($$sig_specs{'txtImposition'.$qty_index}%2) or 
@@ -311,7 +311,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d', $imposition, @$sig_specs{'tx
 		} # end foreach
 
 		if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
-$openprint::log->debug("Overriding imposiion");
+#$openprint::log->debug("Overriding imposiion");
 			if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 				$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
 			} # end if
@@ -362,9 +362,13 @@ $openprint::log->debug("Overriding imposiion");
 				my %pages;
 				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
 				if ( $folding_specs ) {
-					foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
-						$pages{$pages} += $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index};
-					} # end foreach
+					foreach my $index ( 1 .. 4 ) {
+						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						next if ! $type;
+						my ( $pages ) = $type =~ /(\d+)PageFold/;
+						$pages{$pages} += 1;
+#$$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+					} # end foreach index
 				} # end if
 
 				# If not all pages have been folde, then revert to just pull from the sig.
@@ -379,7 +383,7 @@ $openprint::log->debug("Overriding imposiion");
 				} # end if
 			} # end foreach signature
 		} else { # Override Pockets
-			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
+			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64, 96 ) {
 				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
 #$openprint::log->debug("Pckets $qty_index: " . $$specs{"txtPockets$qty_index"} );
 			} # end foreach

@@ -1,8 +1,11 @@
 var timeout;
 
 function body_onLoad() {
-	if ( typeof(calc) == 'function' )
+	if ( typeof(selectProjectTemplate) == 'function' ) {
+		selectProjectTemplate( 'f1' );
+	} else if ( typeof(calc) == 'function' ) {
 		calc('f1');
+	} // end if
 }
 
 function calc( formName ) {

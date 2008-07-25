@@ -379,16 +379,14 @@ sub signature_calc {
 		$I->load( $sig_specs, $qty_index );
 	} # end if
 	if ( ! @equipment ) {
-		@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
-		push @equipment, openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'When Printing'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
-		push @equipment, openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'When Folding'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+		@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>['Y','When Printing','When Folding']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	} # end if
 	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @stitchers;
 
-# acts as flag to tell whether we can use the stitcher to do book cuts
 
 	my @my_equipment;
 
+# acts as flag to tell whether we can use the stitcher to do book cuts
 	my $stitching_imposition = 0;
 
 	my $services = $Project->services();
@@ -433,11 +431,6 @@ sub signature_calc {
 		return;
 	} # end if
 
-	if ( ! $I->imposition() ) {
-		$$specs{'hdnBreakdown'.$qty_index} .= "No Imposition:<br/>";
-		$$specs{'Status'} = 'calculated';
-		return;
-	} # end if
 	my $stitching_imposition;
 	if ( $I->StitchingImposition() ) {
 		$stitching_imposition = $I->StitchingImposition();
@@ -540,6 +533,8 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 		} # end if dutch imposition
 	} # end if exists signaturetype
 
+	$$specs{"txtCalculatedCuts-$signature_index-$qty_index"} = $vertical_cuts + $horizontal_cuts + $dutch_vertical_cuts + $dutch_horizontal_cuts;
+
 	my $bestPrice = undef;
 	my $bestEquipment;
 	foreach my $Equipment ( @my_equipment ) {
@@ -582,11 +577,18 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 			next;
 		} # end if
 
-		my %ServicePrice = openprint::service::get_price_object( 'Cutting', $$specs{"txtQuantity$qty_index"}, $Equipment );
+
+		my %ServicePrice = openprint::service::get_price_object( 'Cutting', undef, $Equipment );
+		if ( $ServicePrice{'units'} eq 'Per Cut' ) {
+			%ServicePrice = openprint::service::get_price_object( 'Cutting', $$specs{"txtQuantity$qty_index"} * $$specs{"txtCalculatedCuts-$signature_index-$qty_index"}, $Equipment );
+		} else {
+			%ServicePrice = openprint::service::get_price_object( 'Cutting', $$specs{"txtQuantity$qty_index"}, $Equipment );
+		} # end if
 
 		my $price;
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+		$$specs{'hdnBreakdown'.$qty_index} .= '# of cuts: ' . $$specs{"txtCalculatedCuts-$signature_index-$qty_index"} . ' => ' .($$specs{"txtCalculatedCuts-$signature_index-$qty_index"} * $sheets) . '<br/>';
 
 		if ( $vertical_cuts > $horizontal_cuts ) {
 			$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
@@ -645,7 +647,6 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 			} # end if
 		} # end if
 
-		$$specs{"txtCalculatedCuts-$signature_index-$qty_index"} = $vertical_cuts + $horizontal_cuts + $dutch_vertical_cuts + $dutch_horizontal_cuts;
 
 		if ( ( ! $$specs{"txtAdditionalCuts$signature_index"} ) and $$sig_specs{'txtPressSheetComboItems'} ) {
 			$$specs{"txtAdditionalCuts$signature_index"} = $$sig_specs{'txtPressSheetComboItems'};
@@ -655,17 +656,19 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 			my $price = ( $runs * $$specs{"txtAdditionalCuts$signature_index"} * $ServicePrice{'Price'} );
-			$$specs{'hdnBreakdown'.$qty_index} .= "\tAdditional cuts:<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d cuts on %d sheets: %.2f<br/>", $$specs{"txtAdditionalCuts$signature_index"}, $sheets, $price );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Additional cuts:<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d cuts on %d sheets: %.2f<br/>', $$specs{"txtAdditionalCuts$signature_index"}, $sheets, $price );
 			$totalPrice += $price;
 		} # end if
-		my $setup = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Make Ready: %.2f<br/>", $setup );
-		$totalPrice += $setup;
-		if ( $Paper->bladecleaning() ) {
-			my %cleaning = openprint::service::get_price_object( 'Blade Cleaning', undef, $Equipment );
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Blade Cleaning: %.2f<br/>", $cleaning{'Price'} );
-			$totalPrice += $cleaning{'Price'};
+		if ( $$specs{"txtCalculatedCuts-$signature_index-$qty_index"} ) {
+			my $setup = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Make Ready: %.2f<br/>", $setup );
+			$totalPrice += $setup;
+			if ( $Paper->bladecleaning() ) {
+				my %cleaning = openprint::service::get_price_object( 'Blade Cleaning', undef, $Equipment );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Blade Cleaning: %.2f<br/>", $cleaning{'Price'} );
+				$totalPrice += $cleaning{'Price'};
+			} # end if
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("Total: %.2f<br/>", $totalPrice );
 		if ( ( ! $bestEquipment ) or ( $bestPrice > $totalPrice ) ) {
@@ -718,6 +721,7 @@ sub calc {
 			my $Imposition = new openprint::Imposition();
 			$Imposition->paper( $Paper );
 			$Imposition->load( $sig_specs, $qty_index );
+			next if ! $Imposition->imposition();
 
 			@variables = sets::union( @variables, ( "txtStockCalliper-$signature_index",
 						"txtCalculatedCuts-$signature_index-$qty_index", "chkOverrideCalculatedCuts-$signature_index-$qty_index",

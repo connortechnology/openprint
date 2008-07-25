@@ -368,8 +368,9 @@ if ( $version < 1902 ) {
 if ( $version < 1903 ) {
 	print "Updating to version 1903\n";
 	my $ac = sql::start_transaction( $dbh );
-$dbh->do(q{alter table papers add minimum_order integer});
-$dbh->do(q{alter table papers add inventory_number	text});
+	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM papers LIMIT 1', {} );
+$dbh->do(q{alter table papers add minimum_order integer}) if ! exists $$blah{'minimum_order'};
+$dbh->do(q{alter table papers add inventory_number	text}) if ! exists $$blah{'inventory_number'};
 	sql::insert( undef, undef, 'database_info', 'version', 1903, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1903;
@@ -377,7 +378,8 @@ $dbh->do(q{alter table papers add inventory_number	text});
 if ( $version < 1904 ) {
 	print "Updating to version 1904\n";
 	my $ac = sql::start_transaction( $dbh );
-$dbh->do(q{alter table papers add full_packages boolean});
+	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM papers LIMIT 1', {} );
+$dbh->do(q{alter table papers add full_packages boolean}) if ! exists $$blah{'full_packages'};
 	sql::insert( undef, undef, 'database_info', 'version', 1904, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1904;
@@ -778,6 +780,13 @@ if ( $version < $new_version ) {
 my $new_version = 1924;
 if ( $version < $new_version ) {
     print "Updating to version $new_version\n";
+    my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Locations LIMIT 1', {} );
+    if ( ! $data ) {
+		$_ = misc::load_file( $log, q{../openprint/sql/Locations.sql});
+		foreach my $st ( split(';', $_ ) ) {
+			$dbh->do($st);
+		}
+	} # end if
     my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM RFIDTags LIMIT 1', {} );
     if ( ! $data ) {
         my $ac = sql::start_transaction( $dbh );
@@ -830,6 +839,32 @@ if ( $version < $new_version ) {
     sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
     sql::end_transaction( $dbh, $ac );
     $version = $new_version;
+} # end if
+
+my $new_version = 1928;
+if ( $version < $new_version ) {
+    print "Updating to version $new_version\n";
+    my $ac = sql::start_transaction( $dbh );
+    $dbh->do('ALTER TABLE tbl_Projects ADD style_id INTEGER');
+    $dbh->do('ALTER TABLE tbl_Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    sql::end_transaction( $dbh, $ac );
+    $version = $new_version;
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
+if ( ! exists $$data{'material_id'} ) {
+    my $ac = sql::start_transaction( $dbh );
+	print "Adding material_id to Papers";
+	$dbh->do(q`alter table Papers add material_id INTEGER`);
+        $_ = misc::load_file( $log, q{../openprint/sql/StockMaterials.sql});
+        foreach my $st ( split(';', $_ ) ) {
+            $dbh->do($st);
+        }
+	$dbh->do(q`insert into stockmaterials (name) values ('Paper')`);
+	$dbh->do(q`alter table Papers add foreign key (material_id) REFERENCES Stockmaterials (id)`);
+	$dbh->do(q`update Papers set material_id=1`);
+    sql::end_transaction( $dbh, $ac );
 } # end if
 
 $dbh->disconnect();

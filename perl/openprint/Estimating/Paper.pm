@@ -23,6 +23,9 @@ require sql;
 require openprint::print;
 require openprint::service;
 require openprint::Currency;
+require openprint::Estimating::Printing;
+
+my $debug = 1;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -57,36 +60,6 @@ sub neccessary {
 	return 0;
 } # end sub neccessary
 
-sub sheet_calc {
-	my ( $Paper, $quantity ) = @_;
-	my %price;
-
-	my %paper_price = $Paper->get_price( $quantity );
-#$openprint::log->warn("Paper Price: qty:($quantity) 100lb Price: $paper_price{'100lb Price'}");
-	$price{'100lb Cost'} = $paper_price{'100lb Cost'};
-	$price{'100lb Price'} = $paper_price{'100lb Price'};
-	$price{'Sheet Cost'} = $paper_price{Cost};
-	$price{'Sheet Price'} = $paper_price{Price};
-#$openprint::log->warn(" Paper Price: $quantity $paper_price{'100lb Price'} ");
-
-	if ( $Paper->type() eq 'Roll' ) {
-		$price{'Paper Cost'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Cost'} );
-		$price{'Paper Price'} = sprintf( '%.2f', $quantity/100 * $price{'100lb Price'} );
-	} else {
-		$price{'Paper Cost'} = sprintf( '%.2f', $quantity * $price{'Sheet Cost'} );
-		$price{'Paper Price'} = sprintf( '%.2f', $quantity * $price{'Sheet Price'} );
-	} # end if
-	return %price;
-} # end sub sheet_calc
-
-sub signature_calc {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $sig_specs, $qty_index, $Paper ) = @_;
-
-	$Paper = openprint::Paper::load_from_signature( new openprint::Project($project_index), $sig_specs, $qty_index ) if ! $Paper;
-
-	return sheet_calc( $Paper, $$sig_specs{'txtPressSheetQty'.$qty_index} );
-} # end sub signature_calc
-
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
@@ -105,19 +78,20 @@ sub calc {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 #$openprint::log->warn("Paper Price Override: $$Paper{Price}");
-			$papers{$Paper->id()} = $Paper;
+			$papers{$Paper->to_string()} = $Paper;
 			#my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
 			if ( $Paper->type() eq 'Roll' ) {
 				#$string .= sprintf(' %s&quot; Roll', $Paper->width() );
 				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
 				$impressions /= 2 if sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble','Sheet Work'] );
-				$totals{$$Paper{id}}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
+				$totals{$Paper->to_string()}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
 			} elsif ( $Paper->type() eq 'Sheet' ) {
 				#$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
 				my $sheets = $$sig_specs{'SheetQuantity'.$qty_index};
 				$sheets /= ( $Paper->start_area() /$Paper->area() );
 				$sheets = ceil( $sheets );
-				$totals{$$Paper{id}}[$qty_index] += $sheets;
+				#$totals{$Paper->to_string()}[$qty_index] += $sheets;
+				$totals{$Paper->to_string()}[$qty_index] += ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
 			} # end if
 		} # end foreach qty_index
 	} # end foreach signature
@@ -125,9 +99,14 @@ sub calc {
 		next if ! $Project->quantity( $qty_index );
 		foreach my $paper_id ( keys %totals ) {
 			my $Paper = $papers{$paper_id};
-			my %price = sheet_calc( $Paper, $totals{$$Paper{id}}[$qty_index] );
-#$openprint::log->warn("Paper price for " . $totals{$$Paper{id}}[$qty_index] . ' of ' . $Paper->to_string() . ' : ' . $price{'Paper Price'} );
-			$$specs{"txtPrice$qty_index"} += $price{'Paper Price'};
+			if ( ! $Paper->supplied() ) {
+				my %price = $Paper->get_price( $totals{$paper_id}[$qty_index] );
+			#my %price = sheet_calc( $Paper, $totals{$paper_id}[$qty_index] );
+				$price{'Total'} = $price{'100lb Price'} * $totals{$paper_id}[$qty_index] / 100;
+
+$openprint::log->warn("Paper price for " . $totals{$paper_id}[$qty_index] . ' of ' . $Paper->to_string() . ' : ' . $price{'Total'} ) if $debug;
+			$$specs{"txtPrice$qty_index"} += $price{'Total'};
+			} # endif
 		} # end foreach Stock
 	} # end foreach qty_index
 
@@ -199,11 +178,22 @@ sub summary {
             next if ! $Project->quantity( $qty_index );
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
+			my $string = '';
+			$string .= 'Customer Supplied ' if $Paper->supplied();
+			$string .= sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
 			if ( $Paper->type() eq 'Roll' ) {
 				$string .= sprintf(' %s&quot; Roll', $Paper->width() );
+				
 				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
-				$impressions /= 2 if sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble','Sheet Work'] );
+				if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
+					$impressions /= 2 
+				} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
+					my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
+					my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
+					if ( @side_one_colours and @side_two_colours ) {
+						$impressions /= 2 
+					} # end if
+				} # end if
 				$totals{$string}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
 					
 			} elsif ( $Paper->type() eq 'Sheet' ) {
@@ -229,7 +219,7 @@ sub summary {
 			} else {
 				$html .= 'none';
 			} # end if
-				$html .= '<br/>';
+			$html .= '<br/>';
 		} # end foreach key
 		return $html;
 	} else {

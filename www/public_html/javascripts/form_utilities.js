@@ -850,3 +850,29 @@ function getFormObj( formName ) {
 	var form = document.forms[formName];
 	return form;
 }
+ 
+function disableDiv(elm) {
+
+	while (elm.tagName !="DIV") {
+		elm = elm.parentNode
+	}
+
+	_width = elm.offsetWidth;
+	_height = elm.offsetHeight;;
+	_top = elm.offsetTop;
+	_left = elm.offsetLeft;
+
+	overlay = document.createElement("div");
+	overlay.style.width = _width + "px";
+	overlay.style.height = _height + "px";
+	overlay.style.position = "absolute";
+	overlay.style.background = "#dedede";
+	overlay.style.top = _top + "px";
+	overlay.style.left = _left + "px";
+
+	overlay.style.filter = "alpha(opacity=50)";
+	overlay.style.opacity = "0.5";
+	overlay.style.mozOpacity = "0.5";
+
+	document.getElementsByTagName("body")[0].appendChild(overlay);
+}

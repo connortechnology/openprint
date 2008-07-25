@@ -129,6 +129,7 @@ $openprint::log->debug("Paper Grade: " . $Paper->name() );
 		} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
 			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $$specs{"txtQuantity$qty_index"} / 1000;
 		} # end if
+		$price += $ServicePrice{'Total'};
 			
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'} );
 

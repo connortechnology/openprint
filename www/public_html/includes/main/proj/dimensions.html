@@ -1,16 +1,16 @@
 <div id="Dimensions">
 	<fieldset><legend>Dimensions</legend>
 		<div class="leftColumn">
-			<select name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(f1);">
+			<select name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
 				<option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
 			</select>
 		</div>
 		<div class="rightColumn">
-			<input type="text" name="txtFinalWidth" size="9" value="<?txtFinalWidth?>"  onkeyup="calc('f1');"/> 
-			<input type="text" name="txtFinalHeight" size="9" value="<?txtFinalHeight?>"  onkeyup="calc('f1');"/> 
+			<input type="text" name="txtFinalWidth" size="7" value="<?txtFinalWidth?>" onkeyup="calc(this.form.name);" /> 
+			<input type="text" name="txtFinalHeight" size="7" value="<?txtFinalHeight?>" onkeyup="calc(this.form.name);" /> 
 			(<? echo ( ssi::writeTip( 'Finished' ); ) ?> - W x H in inches)<br/>
-			<input name="txtWidth" size="9" value="<?txtWidth?>" onkeyup="calc('f1');" /> 
-			<input name="txtHeight" size="9" value="<?txtHeight?>" onkeyup="calc('f1');"/> 
+			<input type="text" name="txtWidth" size="7" value="<?txtWidth?>" onkeyup="calc(this.form.name);" /> 
+			<input type="text" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="calc(this.form.name);" /> 
 			(<? echo ( ssi::writeTip( 'Flat' ); ) ?> - W x H in inches)
 		</div>
 	</fieldset>
