@@ -248,6 +248,12 @@ print "Adding project_id to ordered_Products\n";
 	$dbh->do(q`alter table ordered_products add project_id INTEGER`);
 	$dbh->do(q`alter table ordered_products add FOREIGN KEY (project_id) REFERENCES tbl_Projects (index)`);
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
+if ( $data and ! exists $$data{'project_id'} ) {
+print "Adding project_id to Products\n";
+	$dbh->do(q`alter table products add project_id INTEGER`);
+	$dbh->do(q`alter table products add FOREIGN KEY (project_id) REFERENCES tbl_Projects (index)`);
+} # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
 if ( $data and ! exists $$data{'predefined'} ) {
 print "Adding predefined to Projects\n";

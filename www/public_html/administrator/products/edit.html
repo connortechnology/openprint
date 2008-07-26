@@ -46,15 +46,15 @@
 		</p>
 	</fieldset>
 	<br class="spacer"/><hr/><br class="spacer"/>
-	<div style="width: 49%; float: left;">
+	<div class="leftColumn">
 	<fieldset><legend>Product Information</legend>
 		<p> 
 			<label>Product Name:</label>
-			<input type="text" name="txtName" value="<? echo ( ssi::htmlize($$variable{'Product'}->name()); ) ?>" >
+			<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
 		</p>
 		<p> 
 			<label>Category:</label>
-			<select name="ddmCategory">
+			<select name="category_id">
 				<option value="">Select a category</option>
 				<? echo (
 					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory::find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
@@ -63,7 +63,7 @@
 		</p>
 		<p> 
 			<label>Description:</label>
-			<input type="text" name="txtDescription" value="<? echo ( ssi::htmlize($$variable{'Product'}->description()); ) ?>" >
+			<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
 		</p>
 		<p>
 			<label>Sort:</label>
@@ -77,6 +77,7 @@
 			</select>
 		</p>
 	</fieldset>
+<!--
 	<fieldset><legend> Purchasing Information</legend>
 		<p> 
 			<label>Supplier:</label>
@@ -86,26 +87,27 @@
 			</select>
 		</p>
 	</fieldset>
+-->
 	<fieldset><legend>Tax Information</legend>
 		<p> 
 			<label>Federal Exemption:</label>
-			<input type="radio" id="rdbTaxExempt1Y" name="rdbTaxExempt1" value="Y" <? echo ( 'checked' if $$variable{'Product'}->taxexempt1() eq 'Y' ) ?> />
-			<label class="radio" for="rdbTaxExempt1Y">Yes</label>
-			<input type="radio" id="rdbTaxExempt1N" name="rdbTaxExempt1" value="N" <? echo ( 'checked' if $$variable{'Product'}->taxexempt1() eq 'N' ) ?> />
-			<label class="radio" for="rdbTaxExempt1N">No</label>
+			<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( $$variable{'Product'}->taxexempt1() eq 'Y' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="taxexempt1Y">Yes</label>
+			<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( $$variable{'Product'}->taxexempt1() ne 'Y' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="taxexempt1N">No</label>
 		</p>
 		<p> 
 			<label>Prov/State Exemption:</label>
-			<input type="radio" id="rdbTaxExempt2Y" name="rdbTaxExempt2" value="Y" <? echo ( 'checked' if $$variable{'Product'}->taxexempt2() eq 'Y' ) ?> />
-			<label class="radio" for="rdbTaxExempt2Y">Yes</label>
-			<input type="radio" id="rdbTaxExempt2N" name="rdbTaxExempt2" value="N" <? echo ( 'checked' if $$variable{'Product'}->taxexempt2() eq 'N' ) ?> />
-			<label class="radio" for="rdbTaxExempt2N">No</label>
+			<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( 'checked' if $$variable{'Product'}->taxexempt2() eq 'Y' ) ?> />
+			<label class="radio" for="taxexempt2Y">Yes</label>
+			<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( 'checked' if $$variable{'Product'}->taxexempt2() eq 'N' ) ?> />
+			<label class="radio" for="taxexempt2N">No</label>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </div>
 </form>
-<div style="width: 49%; float: right;">
+<div class="rightColumn">
 <fieldset><legend>Specifications</legend>
 	<div id="Specifications">
 <? if ( $$variable{'Product'}->id() ) ?>

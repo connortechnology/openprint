@@ -3,11 +3,6 @@
 		$('OrderList').innerHTML = 'Please wait...';
 		new Ajax.Updater('OrderList','/main/order/_order_list.html', {method:'get',parameters: Form.serialize(form)});
 	} // end function load_quotes
-	function initializeDayDropDowns() {
-		setDaysDropDown(document.f1.ddmStartYear.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);
-		setDaysDropDown(document.f1.ddmEndYear.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);
-	}
-	window.onload = initializeDayDropDowns;
 </script>
 <div class="PageTitle">
 <h1>Orders</h1>
@@ -24,7 +19,7 @@
 			</p>
 			<p>
 				<label>Docket:</label>
-				<input type="text" size="10" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
+				<input type="text" size="10" id="Docket" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load_orders(f1);", '', 'Go' ); ) ?>
 			</p>
 		</fieldset>

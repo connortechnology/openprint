@@ -686,6 +686,15 @@ sub Currency {
 	return new openprint::Currency( $$self{'currency_id'} );
 } # end sub Currency
 
+sub quantity_indexes {
+	my ( $self ) = @_;
+	my @indexes;
+	foreach my $qty_index ( 1 .. 3 ) {
+		push @indexes, $qty_index if $$self{"quantity$qty_index"};
+	} # end foreach qty_index
+	return @indexes;
+} # end sub quantity_indexes
+
 sub quantities {
 	my $self = shift;
 	return @$self{'quantity1','quantity2','quantity3'};

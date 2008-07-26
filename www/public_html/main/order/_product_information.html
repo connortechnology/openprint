@@ -4,36 +4,22 @@
 		if ( @Products == 1 ) {
 			$Products[0]->delete();
 		} # end if
-		@{$$variable{'PRODUCTS'}} = new openprint::Order( $openprint::param{'order_id'} )->Products();
 	} # end if
 	$$variable{'Order'} = new openprint::Order( $openprint::param{'order_id'} ) if ! $$variable{'Order'};
+	@{$$variable{'PRODUCTS'}} = new openprint::Order( $openprint::param{'order_id'} )->Products() if ! $$variable{'PRODUCTS'};
 ) ?>
 <? while ( $$variable{'Product'} = shift @{$$variable{'PRODUCTS'}} ) ?>
-<? eval ( $$variable{'Project'} = $$variable{'Product'}->Project(); ) ?>
+<? eval ( 
+	$$variable{'Project'} = $$variable{'Product'}->Project();
+	$$variable{'ProjectIndex'} = $$variable{'Project'}->id();
+) ?>
 <fieldset>
 	<span style="float: right;">
 		<? echo ( ssi::writeButton( $log, $dbh, 'delete'.$$variable{'Product'}->id(), '', "new Ajax.Updater('Products','_product_information.html', { method:'get', parameters: {product_id:".$$variable{'Product'}->id().",order_id:".$$variable{'Order'}->id().",action:'delete'} } );", '', 'Remove' );) ?>
 	</span>
+	<input type="text" id="ProductQuantity<? echo ( $$variable{'Product'}->id() ) ?>" name="ProductQuantity<? echo ( $$variable{'Product'}->id() ) ?>" value="<? echo ( $$variable{'Product'}->quantity() ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 <? hecho ( return $$variable{'Product'}->Product()->name();) ?><br class="spacer"/>
 <!--#include virtual="_required_by.html"-->
 <!--#include virtual="_shipping_type_select.html"-->
-<? echo ( 
-	my $html;
-
-	my $services = $$variable{'Project'}->services();
-
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
-		next if ! $$services{$ServiceType->name()};
-		foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
-			$$variable{'ServiceIndex'} = $service_id;
-			$$variable{'ServiceType'} = $ServiceType->name();
-			my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_'.$ServiceType->name().'.html');
-			$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
-		} # end foreach service_id
-
-	} # end foreach ServiceType
-
-	return $html;
-) ?>
 </fieldset>
 <? endwhile ( $$variable{'Product'} = shift @{$$variable{'PRODUCTS'}} ) ?>

@@ -29,9 +29,9 @@ sub find {
 		push @values, $params{id};
 	} # end if
 
-	if ( $params{order_id} ) {
+	if ( $params{'order_id'} ) {
 		$sql .= ' AND order_id=?';
-		push @values, $params{order_id};
+		push @values, $params{'order_id'};
 	} # end if
 	if ( $params{product_id} ) {
 		$sql .= ' AND product_id=?';
@@ -70,16 +70,19 @@ sub load {
 sub save {
 	my $self = shift;
 
+$openprint::log->debug("Saving!");
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('ordered_product_id_seq')});
 		if ( my $e = sql::insert( undef, undef, 'Ordered_Products', map { $_, $$self{$_} } @fields ) ) {
 			$openprint::dbh->rollback();
+			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
     } else {
         if ( my $e = sql::update( undef, undef, 'Ordered_Products', ['id=?', $$self{'id'}], map { $_, $$self{$_} } @fields ) ) {
 			$openprint::dbh->rollback();
+			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
     } # end if
@@ -88,19 +91,30 @@ sub save {
 	return;
 } # end sub save
 
+sub copy {
+	my ( $self ) = @_;
+	my $New = new openprint::OrderedProduct();
+	@$New{@fields} = @$self{@fields};
+	delete $$New{'id'};
+	delete $$New{'project_id'};
+	return $New;
+} # end sub copy
+
 sub Project {
 	my ( $self ) = @_;
 	if ( $$self{'project_id'} ) {
-		return new openprint::Project( $_[0]{'project_id'} );
-	} else {
-		my $Project = new openprint::Project( $self->Product()->project_id() )->copy();
-		$Project->reference( $self->Product()->name() );
-		$Project->company_id( $openprint::session{'company_id'} );
-		$Project->save();
-		$$self{'project_id'} = $Project->id();
-		$self->save();
-		return $Project;
+		return new openprint::Project( $$self{'project_id'} );
 	} # end if
+$openprint::log->debug("Creating proejct from template: " . $self->Product()->project_id() );
+	my $Project = new openprint::Project( $self->Product()->project_id() )->copy();
+	$Project->reference( $self->Product()->name() );
+	$Project->company_id( $openprint::session{'company_id'} );
+	$Project->save();
+	$$self{'project_id'} = $Project->id();
+$openprint::log->debug("Save?");
+	my $e = $self->save();
+	$openprint::log->error( $e ) if $e;
+	return $Project;
 } # end sub Project
 
 sub Product {
@@ -109,9 +123,11 @@ sub Product {
 } # end sub Product
 
 sub price {
-	my $self = shift;
-
-	if ( ! $$self{price} ) {
+	my ( $self, $new_price ) = @_;
+	
+	if ( defined $new_price ) {
+		$$self{'price'} = $new_price;
+	} elsif ( ! $$self{price} ) {
 		my %Price = $self->Product()->get_price( $$self{quantity} );
 		$$self{price} = $Price{Price};
 	} # end if
