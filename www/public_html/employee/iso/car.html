@@ -8,6 +8,14 @@
 			alert('Please select either Internal or Customer for Problem Identification');
 			return 0;
 		} // end if
+		if ( ! get_value( form.area_id ) ) {
+			alert('Please select the area');
+			return 0;
+		} // end if
+		if ( ! get_value( form.reason_id ) ) {
+			alert('Please select the reason');
+			return 0;
+		} // end if
 		return 1;
 	} // end function check_part1
 	function area_id_onchange( e ) {

@@ -37,11 +37,13 @@
 			next if $Paper->type() and ! sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
 			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', split(';',  $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
 			
-			$html .= sprintf( '<tr%s><td>%s</td><td><a href="skid_details.html?skid_id=%d">%d</a></td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td></tr>',
+			$html .= sprintf( '<tr%s><td>%s</td><td><a href="skid_details.html?skid_id=%d">%d</a></td><td><a href="rfidtag_details.html?rfidtag_id=%d">%s</a></td><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td></tr>',
 				$rowclass,
 				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
 				$skid_id, $skid_id,
 				$Skid->rfidtag_id(),
+				$Skid->rfidtag_id(),
+				$Paper->id(),
 				$Paper->to_string(),
 				$delta,
 				join('<br/>', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
