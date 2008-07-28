@@ -568,7 +568,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 					$$specs{'StockGrade'} = 3;
 				} else {
 					$$specs{'StockGrade'} = 1;
-				}
+				} # end if
 			} elsif ( $$specs{'txtSpecificStockFinish'} =~ /matte/i ) {
 				$$specs{'StockGrade'} = 2;
 			} elsif ( $$specs{'txtSpecificStockFinish'} =~ /offset/i ) {
