@@ -564,7 +564,11 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 		} # end if
 		if ( ( ! $$specs{'StockGrade'} ) and $$specs{'txtSpecificStockFinish'} ) {
 			if ( $$specs{'txtSpecificStockFinish'} =~ /gloss/i ) {
-				$$specs{'StockGrade'} = 1;
+				if ( $$specs{'StockType'} eq 'Roll' ) {
+					$$specs{'StockGrade'} = 3;
+				} else {
+					$$specs{'StockGrade'} = 1;
+				}
 			} elsif ( $$specs{'txtSpecificStockFinish'} =~ /matte/i ) {
 				$$specs{'StockGrade'} = 2;
 			} elsif ( $$specs{'txtSpecificStockFinish'} =~ /offset/i ) {
