@@ -129,15 +129,19 @@ sub check_signature_inputs {
 	my ( $specs, $signature ) = @_;
 	if ( $$specs{'rdbSpecificStock'.$signature} eq 'Y' ) {
 		if ( ! $$specs{'txtSpecificStockCalliper'.$signature} ) {
-			$$specs{'alert'} .= 'Please enter the stock calliper';
+			$$specs{'alert'} .= "Please enter the stock calliper for $signature";
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		if ( ! $$specs{'StockType'.$signature} ) {
+			$$specs{'alert'} .= "Please select the stock format for $signature";
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( ! $$specs{'CustomStockPrice'.$signature} ) {
-			$$specs{'alert'} .= 'Please enter the stock cost in order to achieve an accurate imposition.';
+			$$specs{'alert'} .= "Please enter the stock cost in order to achieve an accurate imposition for $signature";
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( ! $$specs{'CustomStockPriceUnits'.$signature} ) {
-			$$specs{'alert'} .= 'Please select the units for the stock price';
+			$$specs{'alert'} .= "Please select the units for the stock price for $signature";
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( ( ! $$specs{'StockGrade'.$signature} ) and $$specs{'txtSpecificStockFinish'.$signature} ) {
@@ -155,11 +159,12 @@ sub check_signature_inputs {
 				$$specs{'StockGrade'.$signature} = 3;
 			} # end if
 			$variables{'StockGrade'.$signature} = [ sets::union( 'output', @{$variables{'StockGrade'.$signature}} ) ];
+		
 		} else {
 			$variables{'StockGrade'.$signature} = [ sets::exclude( ['output'], $variables{'StockGrade'.$signature} ) ];
 		} # end if
 		if ( ! $$specs{'StockGrade'.$signature} ) {
-			$$specs{'alert'} .= 'Please select the grade of stock';
+			$$specs{'alert'} .= "Please select the grade of stock for $signature";
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 	} # end if
