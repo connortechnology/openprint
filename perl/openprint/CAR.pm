@@ -19,6 +19,7 @@ require openprint::CAR_Area;
 require openprint::CAR_Reason;
 
 %fields = (
+	'id'			=>	'id',
 	'issued_to_id'	=> 'issued_to_id',
 	'issued_on'		=> 'issued_on',
 	'issued_by_id'	=> 'issued_by_id',
@@ -145,7 +146,7 @@ sub load {
 		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CAR WHERE id=?', {}, $$self{'id'} );
 		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
 	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
+	@$self{keys %fields} = @$data{keys %fields};
 } # end sub load
 
 sub delete {
