@@ -56,6 +56,10 @@
 }
 </style>
 <div id="CAR">
+	<? if ( $openprint::param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+	Invalid CAR # specified.
+	<? else ( $openprint::param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+
 	<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>
 		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{'CAR'}->id() ) ?></span></h3>
 		<? echo (
@@ -88,4 +92,5 @@
 			} # end if
 			return ssi::variable_substitution( $r, $log, $dbh, \$html, $variable );
 		) ?>
+	<? endif ( $openprint::param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
 </div>
