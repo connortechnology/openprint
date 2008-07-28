@@ -64,7 +64,7 @@ sub calc {
 	} else {
 		$$specs{'txtSpreadSize'} = 4;
 	} # end if
-	
+
 	if ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'rdbCover'} ne 'Different' ) {
 		$variables{'rdbCover'} = [sets::union('output', @{$variables{'rdbCover'}})];
 		$$specs{'rdbCover'} = 'Different';
@@ -75,13 +75,18 @@ sub calc {
 
 	openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, 'InteriorSpreads' );
 	openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, 'InteriorSpreads' );
-	openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, 'CoverSpreads' );
-	openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, 'CoverSpreads' );
 	openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, 'InteriorSpreads' );
-	openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, 'CoverSpreads' );
+	check_signature_inputs( $specs, 'InteriorSpreads' );
+
+	if ( $$specs{'rdbCover'} eq 'Different' ) {
+		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, 'CoverSpreads' );
+		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, 'CoverSpreads' );
+		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, 'CoverSpreads' );
+		check_signature_inputs( $specs, 'CoverSpreads' );
+	} # end if
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'help'} = 'Please select the dimensions.';
+		$$specs{'help'} .= 'Please select the dimensions.';
 		return 'uncalculated';
 	} # end if
 	$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
@@ -97,19 +102,19 @@ sub calc {
 	} # end if
 
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
-		$$specs{'help'} = 'Please enter the # of pages';
+		$$specs{'help'} .= 'Please enter the # of pages';
 		return 'uncalculated';
 	} # end if
 
 	if ( ! $$specs{'rdbCover'} ) {
-		$$specs{'help'} = 'Please select the cover type.';
+		$$specs{'help'} .= 'Please select the cover type.';
 		return 'uncalculated';
 	} # end if
 
 	$$specs{'txtTotalSpreadQuantity'} = ceil( $$specs{'txtTotalPageQuantity'} / $$specs{'txtSpreadSize'} );
 	$$specs{'txtInteriorSpreadQuantity'} = $$specs{'txtTotalSpreadQuantity'} - $$specs{'txtGateFoldedSpreadQuantity'};
 	if ( $$specs{'rdbCover'} eq 'Different' ) {
-		# Cover is always a 4page spread, unless gatefolded
+# Cover is always a 4page spread, unless gatefolded
 		if ( $$specs{'txtSpreadSize'} == 4 ) {
 			$$specs{'txtInteriorSpreadQuantity'} -= 1;
 		} else {
@@ -119,6 +124,47 @@ sub calc {
 	return 'calculated';
 
 } # end sub calc
+
+sub check_signature_inputs {
+	my ( $specs, $signature ) = @_;
+	if ( $$specs{'rdbSpecificStock'.$signature} eq 'Y' ) {
+		if ( ! $$specs{'txtSpecificStockCalliper'.$signature} ) {
+			$$specs{'alert'} .= 'Please enter the stock calliper';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		if ( ! $$specs{'CustomStockPrice'.$signature} ) {
+			$$specs{'alert'} .= 'Please enter the stock cost in order to achieve an accurate imposition.';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		if ( ! $$specs{'CustomStockPriceUnits'.$signature} ) {
+			$$specs{'alert'} .= 'Please select the units for the stock price';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		if ( ( ! $$specs{'StockGrade'.$signature} ) and $$specs{'txtSpecificStockFinish'.$signature} ) {
+			if ( $$specs{'txtSpecificStockFinish'.$signature} =~ /gloss/i ) {
+				if ( $$specs{'StockType'.$signature} eq 'Roll' ) {
+					$$specs{'StockGrade'.$signature} = 3;
+				} else {
+					$$specs{'StockGrade'.$signature} = 1;
+				} # end if
+			} elsif ( $$specs{'txtSpecificStockFinish'.$signature} =~ /matte/i ) {
+				$$specs{'StockGrade'.$signature} = 2;
+			} elsif ( $$specs{'txtSpecificStockFinish'.$signature} =~ /offset/i ) {
+				$$specs{'StockGrade'.$signature} = 4;
+			} else {
+				$$specs{'StockGrade'.$signature} = 3;
+			} # end if
+			$variables{'StockGrade'.$signature} = [ sets::union( 'output', @{$variables{'StockGrade'.$signature}} ) ];
+		} else {
+			$variables{'StockGrade'.$signature} = [ sets::exclude( ['output'], $variables{'StockGrade'.$signature} ) ];
+		} # end if
+		if ( ! $$specs{'StockGrade'.$signature} ) {
+			$$specs{'alert'} .= 'Please select the grade of stock';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+	} # end if
+
+} # end sub check_signature_inputs
 
 sub calculate_signatures {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
