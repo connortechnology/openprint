@@ -1,7 +1,6 @@
 #!/usr/bin/perl 
 
 BEGIN {
-	#use Apache2 ();
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
 	use APR::URI;
@@ -12,7 +11,7 @@ BEGIN {
 	use Apache::Session::Postgres;
 	use Apache2::Cookie;
 	use Apache2::Upload;
-	#use Apache2::SizeLimit;
+	use Apache2::SizeLimit;
 	use Apache::DBI ();
 	use URI::Escape;
 	use HTML::Entities;
@@ -54,7 +53,7 @@ BEGIN {
 	use openprint::paper;
 	use openprint::JDF;
 
-use MapImage;
+#use MapImage;
 
 }
 

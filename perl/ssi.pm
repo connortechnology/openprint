@@ -6,6 +6,7 @@ use states;
 use provinces;
 
 use Date::Calc qw(Days_in_Month Month_to_Text);
+use HTML::Entities qw(encode_entities);
 
 require sets;
 require sql;

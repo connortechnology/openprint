@@ -2664,6 +2664,15 @@ sub get_aqueous_price {
 			$openprint::log->debug("Unknown units in Aqueous");
 			$aqueous_price{'Total'} = $Price{'Price'};
 		} # end if
+		if ( 
+				( $$specs{'rdbAqueousSideOne'} ne 'None' ) 
+				and 
+				( $$specs{'rdbAqueousSideTwo'} ne 'None' ) 
+				and 
+				( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) 
+				and ( ! $is_sheetwork ) ) {
+			$aqueous_price{'Total'} += 1000000;
+		} # end if
 	} # end if
 	return %aqueous_price;
 } # end sub get_aqueous_price
