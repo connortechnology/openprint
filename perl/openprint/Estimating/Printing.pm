@@ -1208,8 +1208,6 @@ $openprint::log->debug("Remaining: @c");
 					} else {
 						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 							my $I = $imps{$str}[$j];
-							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 
 							my $splice = 0;
 							if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
@@ -1217,6 +1215,8 @@ $openprint::log->debug("Remaining: @c");
 							} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 								next;
 							} # end if
+							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
+							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 							if ( 
 									( $I->Paper()->area() >= $imp->Paper()->area() ) 
 									and
@@ -1228,7 +1228,17 @@ $openprint::log->debug("Remaining: @c");
 									) {
 								splice @{$imps{$str}}, $j, 1;
 								$j -= 1;
-								$add = 1;
+							} elsif ( 
+									( $I->Paper()->area() < $imp->Paper()->area() ) 
+									and
+									( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
+									and 
+									( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
+									and
+									( ( ! $I->Paper()->is_cut_sheet() ) or ( $imp->Paper()->is_cut_sheet() ) )
+									) {
+								# Already have a much better sheet
+								$add = 0;
 							} # end if
 						} # end for
 					} # end if
