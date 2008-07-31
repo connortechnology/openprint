@@ -91,6 +91,7 @@ The following errors occurred:<br/>
 				<label>ID #:</label>
 				<?paper_id?>
 			</p>
+<? if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 			<p>
 				<label for="txtManufacturer" onclick="f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
 				<select id="Manufacturer" name="Manufacturer" size="1">
@@ -187,6 +188,15 @@ The following errors occurred:<br/>
 				<label for="Owner">Owner:</label>
 				<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() || $openprint::session{'company_id'} ); ) ?></select>
 			</p>
+<? else ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+<p>
+<? echo ( $$variable{'Paper'}->to_string(); ) ?>
+</p>
+			<p>
+				<label for="Owner">Owner:</label>
+<? echo ( $$variable{'Paper'}->Owner()->name(); ) ?>
+			</p>
+<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 		</div>
 		<div style="float: right; width: 48%;">
 			<p>

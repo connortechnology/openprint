@@ -350,7 +350,7 @@ sub save_skid {
 			$weight = $param{'txtWeight'};
 		} elsif ( $param{'weight'} ) {
 			$weight = $param{'weight'};
-			$weight .= 'lb' if ! $param{'weight'} =~ /lb/;
+			$weight .= 'lb' if ! ( $param{'weight'} =~ /lb/ );
 		} elsif ( $param{'calliper'} ) {
 			$weight = $param{'calliper'} . 'PT';
 		} # end if
@@ -954,24 +954,19 @@ sub rfidtag_details {
 	my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
 	$RFIDTag->id( $param{'rfidtag_id'} ) if ! $RFIDTag->id();
 	
-$log->debug("Loading tag: $param{'rfidtag_id'}");
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $RFIDTag->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $RFIDTag->delete();
 	} elsif ( $param{'btnFunction'} eq 'AllocateSkid' ) {
-$log->debug('allocate skid');
 		if ( ! $RFIDTag->skid_id() ) {
 			my $Skid = new openprint::Skid();
 			$Skid->rfidtag_id( $RFIDTag->id() );
 			$Skid->location_id( $RFIDTag->location_id() );
 			$variable{'error'} .= $Skid->save();
-$log->debug('skid saved');
 		} else {
 			$variable{'error'} .= 'Skid already allocated<br/>';
 		} # end if
-	} else {
-$log->debug('unknown function: '. $param{'btnFunction'});
 	} # end if
 
 	$variable{'RFIDTag'} = $RFIDTag;

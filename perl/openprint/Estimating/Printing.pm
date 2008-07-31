@@ -1062,7 +1062,9 @@ $openprint::log->debug("No spread layout for you!");
 				$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 			} # end if
 
+$openprint::log->debug("Colours:  @side_one_colours, @side_two_colours");
 			my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Overall Varnish Gloss','Overall Varnish Matte','Spot Varnish Gloss','Spot Varnish Matte'], [ @side_one_colours, @side_two_colours ] );
+$openprint::log->debug("Remaining: @c");
 
 			if ( ! $$specs{'rdbColourBar'} ) {
 				if ( @c ) {
@@ -1201,63 +1203,34 @@ $openprint::log->debug("No spread layout for you!");
 						$add = 1;
 					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 						$add = 1;
+					} elsif ( ! $imps{$str} ) {
+						$add = 1;
 					} else {
+						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
+							my $I = $imps{$str}[$j];
+							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
+							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 
-#$imp->display();
-						if ( $imps{$str} ) {
-#$openprint::log->debug("Exists " . @{$imps{$imp->imposition().$imp->runstyle()}} );
-							for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
-								my $I = $imps{$str}[$j];
-								my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-								my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
-								if ( $I->Paper()->area() > $imp->Paper()->area() ) {
-									if ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() and (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) ) {
-										if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
-										} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
-										} else {
-											splice @{$imps{$str}}, $j, 1;
-											$j -= 1;
-										} # end if
-									} # end if
-									$add = 1;
-								} elsif ( $I->Paper()->area() == $imp->Paper()->area() ) {
-									$add = 0;
-
-# This line prefers non-cut sheets to cut sheets
-									if ( $BiggerPrice{'100lb'} >= $SmallerPrice{'100lb'} ) {
-										if ( ( $I->Paper()->start_area() != $I->Paper()->area() ) and ( $imp->Paper()->start_area() == $imp->Paper()->area ) ) {
-											splice @{$imps{$str}}, $j, 1;
-											$j -= 1;
-											$add = 1;
-										} elsif ( $imp->Paper()->start_width() and ! $I->Paper()->start_width() ) {
-# Prefer non-cut sheet
-											splice @{$imps{$str}}, $j, 1;
-											$j -= 1;
-											$add = 1;
-										} elsif ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
-# Prefer non-dutch
-											splice @{$imps{$str}}, $j, 1;
-											$j -= 1;
-											$add = 1;
-										} # end if
-									} # end if
-                                    
-								} else { # smaller area
-									$add = 0;
-									if ( $I->dutch_orientation() and ! $imp->dutch_orientation() ) {
-										$add = 1;
-									} elsif ( (1*$BiggerPrice{'100lb'}) < (1*$SmallerPrice{'100lb'}) ) {
-										$add = 1;
-									} elsif ( ( $I->Paper()->start_area() != $I->Paper()->area() ) and ( $imp->Paper()->start_area() == $imp->Paper()->area ) ) {
-										$add = 1;
-									} elsif ( $I->Paper()->minimum_order() > $imp->Paper()->minimum_order() ) {
-										$add = 1;
-									} # end if
-								} # end if
-							} # end for
-						} else {
-							$add = 1;
-						} # end if cached
+							my $splice = 0;
+							if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+								next;
+							} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+								next;
+							} # end if
+							if ( 
+									( $I->Paper()->area() >= $imp->Paper()->area() ) 
+									and
+									( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
+									and 
+									( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
+									and
+									( ! ( ! $I->Paper()->is_cut_sheet() and $imp->Paper()->is_cut_sheet() ) )
+									) {
+								splice @{$imps{$str}}, $j, 1;
+								$j -= 1;
+								$add = 1;
+							} # end if
+						} # end for
 					} # end if
 					push @{$imps{$str}}, $imp if $add > 0;
 				} # end foreach imp

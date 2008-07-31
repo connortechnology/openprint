@@ -317,7 +317,7 @@ sub send {
 
 		# First check if a sent row exists
 		$query = q{SELECT (NOW() - EmailSentOn) > ?, NumEmailSent, MarkedForDeletion FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?};
-		if ( $$self{'interval'} and ( $interval_expired, $num_email_sent, $marked_for_deletion ) =  sql::execute(@$self{'log','dbh'}, $query, @$self{'interval','id'}, $user_index ) ) {
+		if ( $$self{'interval'} and ( $interval_expired, $num_email_sent, $marked_for_deletion ) =  sql::execute( undef, undef, $query, @$self{'interval','id'}, $user_index ) ) {
 
 			# Check if the duration has elapsed	
 			if ($interval_expired == 1) {
@@ -376,7 +376,7 @@ sub send {
 sub recipients {
 	my ( $self ) = @_;
 	return sql::execute( undef, undef, $$self{'query'});
-}
+} # end sub recipients
 
 sub trial {
 	my ( $self ) = @_;

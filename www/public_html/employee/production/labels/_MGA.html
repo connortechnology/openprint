@@ -1,0 +1,162 @@
+<? eval (
+	$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} ) if ! $$variable{'Label'};
+	if ( ! $$variable{'Label'}->get_data('from') ) {
+		if ( $$variable{'Project'} ) {
+			#my $services = $$variable{'Project'}->services();
+			if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'Project'}->id(), 'Shipping' ) ) {
+				my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
+				$$variable{'Label'}->set_data('from'=> openprint::service::summary( $$variable{'Project'}, $services[0] ) );
+			} else {
+				my $Order = $$variable{'Project'}->Order();
+				$$variable{'Label'}->set_data('from'=> join("\n", $Order->company_name(),
+						join(',', $Order->get('address1','address2') ),
+						join(',', $Order->get('city','state','country') ),
+						$Order->get('postalcode'),
+						) );
+			} # end if
+		} # end if
+	} # endif
+	if ( ! $$variable{'Label'}->get_data('to') ) {
+		if ( $$variable{'Project'} ) {
+			my $Company = $$variable{'Project'}->Company();
+			$$variable{'Label'}->set_data('to'=> join("\n", $Company->name(),
+						join(',', $Company->get('address1','address2') ),
+						join(',', $Company->get('city','state','country') ),
+						$Company->get('postalcode'),
+						) );
+		} # end if
+	} # end if
+	if ( ! $$variable{'Label'}->get_data('description') ) {
+		my $html;
+		if ( $$variable{'Project'} ) {
+			$html .= $$variable{'Project'}->reference();
+		} elsif( $$variable{'docket'} ) {	
+			if ( my @Orders = openprint::Order::find('docket'=>$$variable{'docket'}) ) {
+				foreach my $Project ( $Orders[0]->Projects() ) {
+					$html .= $Project->reference() ."\n";
+				} # end foreach Project
+			} # end if
+		} # end if
+		$$variable{'Label'}->set_data('description'=>$html);
+	} # end if
+	if ( ! $$variable{'Label'}->get_data('quantity') ) {
+		my $html;
+		if ( $$variable{'Project'} ) {
+			my $services = $$variable{'Project'}->services();
+			my $carton_total = 0;
+			my $item_total = 0;
+				
+			if ( $$services{'PlainCartons'} ) {
+				$html .= '<table>';
+				foreach my $s_id ( @{$$services{'PlainCartons'}} ) {
+					my $carton_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'PlainCartons'}[0] );
+					$html .= sprintf('<tr><td>%d boxes @</td><td>%d</td></tr>', @$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index(),'txtItemsPerPackage'} );
+					$carton_total += $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()};
+					my $items = $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$carton_specs{'txtItemsPerPackage'};
+					$item_total += $items;
+				} # end foreach
+				$html .= sprintf('<tr><td>&nbsp;</td><td>%d</td></tr>', $item_total );
+				$html .= '</table>';
+			} # end if
+			if ( $$services{'BulkSkids'} ) {
+				my $skid_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'BulkSkids'}[0] );
+				$html .= sprintf('Total: %d skid%s', $$skid_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$skid_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()} == 0 ? '' : 's' );
+			} else {
+				$html .= sprintf('Total: %d BOXES', $carton_total );
+			} # end if
+		} else {	
+		} # end if
+		$$variable{'Label'}->set_data('quantity'=>$html);
+	} # end if
+	$$variable{'Label'}->save();
+) ?>
+<style type="text/css">
+	table {
+		border: 1px solid black;
+		width: 100%;
+	}
+	table tr td {
+		border: 1px solid black;
+	}
+</style>
+<div id="Header">
+	<img id="Logo" src="/images/MGALogo.gif"/>
+	<div style="float: right;">
+		Tel: (416) 233 0200<br/>
+Toll Free: (800) 935 3339<br/>
+Fax: (416) 233 0300<br/>
+	</div>
+</div>
+<b>BILL OF LADING. ORIGINAL. NON NEGOTIABLE</b><br/>
+<table>
+	<tr>
+		<td><label>CARRIER'S LOAD NO.</label></td>
+		<td><label>UNIT NO.</label></td>
+		<td><label>PHONE NO.</label></td>
+		<td><label>SHIPPERS REF.NO.</label><?DOCKET?></td>
+	</tr>
+	<tr>
+		<td colspan="2"><label>SHIPPER</label> PointOne Graphics Inc.</td>
+		<td><label>CONTACT</label> <? echo ( new openprint::User( $openprint::session{'user_id'} )->name(); ) ?></td>
+		<td><label>DATE</label></td>
+	</tr>
+	<tr>
+		<td colspan="2"><label>ADDRESS</label> 14 Vansco Rd</td>
+		<td><label>CITY/TOWN</label> Etobicoke</td>
+		<td><label>PROVINCE/STATE</label></td>
+	</tr>
+</table>
+<strong>COMBINATION SHORT FORM OF STRAIGHT BILL OF LADING - EXPRESS SHIPPING CONTRACT ADOPTED BY RAIL FREIGHT AND EXPRESS CARRIERS.
+SUBJECT TO THE JURISDICTION OF THE CANADIAN TRANSPORT COMMISSION - ISSUED AT SHIPPER'S REQUEST.</STRONG><br/>
+Received subject to the classifications and tarrifs in effect on the date of issue of this Original Bill of Lading, or, recieved, subject to the Rules for the Carriage of Express and Non-Caroad Freight Traffic and tarrifs in effect on the date of issue of this oriignal Shipping Contract ( bill of lading), goods desried below, in apparent good order, expect as noted (contents and considitions of conents of packages unknown). marked consigned and destined as indicated below, which said Company agrees to carry to its usual place of delivery at said destination, if on its road, otherwise to deliver to another carrier on the route to said destination.  It is mutualy afreed as to each carrier of all or any of said goods over all or any portion of said route to desintation and as to each party at any time interested in all or any of said goods that every service to be performed hereunder shall be subject to all the terms and conditions ( which are hereny incorporated by reference and have the same force and effect as if the same were severally, fully and specifically set forth there in).
+
+<ol>
+<li> approved by the Board of Transport COmmissioners for Canada by General Order No. T-5 dated February 1, 1965 set forth in the Canadian Freight Classification and also available at all Railway agaency stations and freight offices upon request,when said goods are corried by a rail carrier; or</li>
+<li> of the bill of lading of the water carrier as provided in its tarrifs of Rules and Refulations when said goods are arried by a watrer carier; or</li>
+<li> of the bill of lading set forth in or prescribed by the relevant tarrifs, classification, statues and regulations pertaining to maotor carrier's services when said goods are corried by motor carrier; or</li>
+<li> f the bill of lading form prescribed by O.C. 986-79, April 4, 1979, when said goods originaltin in Quebec are to be carried by a motor carrier;
+<li> or approved by the Board of Transport COmmissioners for Canada by General ORder No. T-43, set forth in the Rules for the Carriage of Express and Non-Carload Freight Traffic and also available at all express and railway agency stations and express and freight offices upon request, when said goods are carried by a rail carrier and which are agreed by the shipper and accepted for himself and his assigns.</li>
+</ol>
+<table>
+	<tr>
+		<td><label>CONSIGNEE</label> </td><td><label>CONTACT</label></td><td><label>PHONE</label></td>
+	</tr>
+	<tr>
+		<td><label>ADDRESS</label> </td><td><label>CITY / TOWN</label></td><td><label>PROVINCE / STATE</label></td>
+	</tr>
+</table>
+<table>
+	<tr>
+		<td rowspan="2">NO. OF PRICES OR QUANTITY</td><td rowspan="2">DESCRIPTION OF GOODS AND SPECIAL REMARKS</td><td>TYPE OF SERVICE REQUIRED</td><td>WEIGHT</td><td rowspan="2">RATE</td><td rowspan="2">AMOUNT</td><td rowspan="2">FREIGHT CHARGES</td></tr>
+	</tr>
+	<tr>
+		<td><input type="checkbox" id="service_typeNextDay" name="service_type" value="NextDay"><label for="service_typeNextDay">NEXT DAY</label></td>
+		<td><input type="checkbox" id="service_typeSameDay" name="service_type" value="SameDay"><label for="service_typeSameDay">SAME DAY</label></td>
+		<td><input type="checkbox" id="service_typeDirectService" name="service_type" value="DirectService"><label for="service_typeDirectService">DIRECT SERVICE</label></td>
+		<td>
+			<input type="checkbox" id="weightLBS" name="weight" value="LBS"><label for="weightLBS">LBS</label>
+			<input type="checkbox" id="weightKILOS" name="weight" value="KILOS"><label for="weightKILO">KILO</label>
+		</td>
+	</tr>
+	<tr>
+		<td></td><td colspan="4"></td><td></td><td></td><td></td><td>
+			<label for="freight_chargesCollect">COLLECT</label><input type="checkbox" name="freight_charges" id="freight_chargesCollect" value="Collect" /><br/>
+			<label for="freight_chargesPrepaid">PREPAID</label><input type="checkbox" name="freight_charges" id="freight_chargesPrepaid" value="Prepaid" /><br/>
+			FREIGHT CHARGES WILL BE COLLECTED UNLESS MARKED PAID<br/>
+			<hr/><hr/>
+			C.O.D. SHIPMENTS<br/>
+			<hr/><hr/>
+			<label for="cod_chargesCollect">COLLECT</label><input type="checkbox" name="cod_charges" id="cod_chargesCollect" value="Collect" /><br/>
+			<label for="cod_chargesPrepaid">PREPAID</label><input type="checkbox" name="cod_charges" id="cod_chargesPrepaid" value="Prepaid" /><br/>
+			AMOUNT $<input type="text" name="cod_amount" /><br/>
+			COLLECT CHARGES $<input type="text" name="cod_collectcharges" /><br/>
+			GST $<input type="text" name="cod_gst" /><br/>
+			TOTAL $<input type="text" name="cod_subtotal" /><br/>
+			INBOUND $<input type="text" name="cod_inbound" /><br/>
+			BEYOND $<input type="text" name="cod_beyond" /><br/>
+			OTHERS $<input type="text" name="cod_others" /><br/>
+			TOTAL $<input type="text" name="cod_total" /><br/>
+
+		</td>
+	</tr>
+</table>
