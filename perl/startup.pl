@@ -53,7 +53,7 @@ BEGIN {
 	use openprint::paper;
 	use openprint::JDF;
 
-#use MapImage;
+use MapImage;
 
 }
 
