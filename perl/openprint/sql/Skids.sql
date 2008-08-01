@@ -1,16 +1,15 @@
-DROP TABLE Skid_Contents;
-DROP TABLE Skids;
-DROP SEQUENCE Skid_id_seq;
+DROP TABLE iF EXISTS Skid_Contents;
+DROP TABLE iF EXISTS Skids;
 
 CREATE SEQUENCE Skid_id_seq;
 CREATE TABLE Skids (
-	id	INTEGER NOT NULL default nextval('Skid_id_seq'),
+	id	SERIAL NOT NULL,
 	location	TEXT,
 	rfidtag_id	TEXT,
 	created_on	timestamp with time zone default NOW(),
 	updated_on	timestamp with time zone default NOW(),
-	created_by_id	INTEGER NOT NULL,  FOREIGN KEY (created_by_id) REFERENCES Users (Index),
-	owner_id		INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Company (Index),
+	created_by_id	INTEGER NOT NULL,  FOREIGN KEY (created_by_id) REFERENCES Users (Id),
+	owner_id		INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (Id),
 	PRIMARY KEY (id)
 );
 

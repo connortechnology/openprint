@@ -11,26 +11,26 @@ require openprint::Object;
 require openprint::User;
 
 %fields = (
-		'id'						=>	'index',
-		'name'						=>	'strname',
-		'address1'					=>	'straddress1',
-		'address2'					=>	'straddress2',
-		'city'						=>	'strcity',
-		'country'					=>	'strcountry',
-		'state'						=>	'strprovstate',
-		'postalcode'				=>	'strpostalcode',
+		'id'						=>	'id',
+		'name'						=>	'name',
+		'address1'					=>	'address1',
+		'address2'					=>	'address2',
+		'city'						=>	'city',
+		'country'					=>	'country',
+		'state'						=>	'state',
+		'postalcode'				=>	'postalcode',
 		'salesrep_id' 				=>	'lngsalesperson',
 		'pst_exempt'				=>	'ysnpstexempt',
 		'gst_exempt'				=>	'ysngstexempt',
-		'gst_number'				=>	'strgstnumber',
-		'pst_number'				=>	'strpstnumber',
+		'gst_number'				=>	'fedtaxnumber',
+		'pst_number'				=>	'statetaxnumber',
 		'supplier'					=>	'ysnsupplier',
 		'reseller'					=>	'ysnreseller',
 		'accountnumber'				=>	'straccountnum',
-		'phone'						=>	'strphone',
+		'phone'						=>	'phone',
 		'extension'					=>	'strext',
-		'fax'						=>	'strfax',
-		'pricelist_id'				=>	'lngpricelist',
+		'fax'						=>	'fax',
+		'pricelist_id'				=>	'pricelist_id',
 		'currency_id'				=>	'currency_id',
 		'url'						=>	'strweburl',
 		'discount'					=>	'dblpricingpercent',
@@ -42,8 +42,8 @@ require openprint::User;
 		'business_form'				=>	'legalform',
 		'established'				=>	'dtmbusinessstartdate',
 		'president_owner'			=>	'strpresidentowner',
-		'created_on'				=>	'dtmdateentered',
-		'updated_on'				=>	'dtmlastmodified',
+		'created_on'				=>	'created_on',
+		'updated_on'				=>	'updated_on',
 		'employees'					=>	'stremployees',
 		'annual_sales'				=>	'strannualsales',
 		'bank_name'					=>	'strbankname',
@@ -77,7 +77,7 @@ sub find {
 
 	my $sql;
 	my @values;
-	$sql = q{SELECT * FROM Company WHERE 1>0};
+	$sql = q{SELECT * FROM Companies WHERE 1>0};
 
 	if ( $params{'id'} ) {
         if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -138,7 +138,7 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Company WHERE Index=?', {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Companies WHERE id=?', {}, $$self{'id'} );
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
@@ -183,7 +183,7 @@ sub delete {
 	foreach my $User ( openprint::User::find('company_id'=>$$self{'id'} ) ) {
 		$User->delete();
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Company WHERE Index=?',$$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{'id'} );
 
 	sql::end_transaction( $openprint::dbh, $ac );
 
@@ -207,18 +207,18 @@ sub save {
 		} # end if
 	} # end foreach
 	$sql{dtmlastmodified} = 'NOW()';
-	$sql{'strname'} = Text::Unaccent::unac_string('LATIN1', $sql{'strname'} );
+	$sql{'name'} = Text::Unaccent::unac_string('LATIN1', $sql{'name'} );
 
     my $ac = sql::start_transaction( $openprint::dbh );
     if ( ! $$self{'id'} ) {
-        @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('CompanyIndex_seq')} );
+        @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('companies_id_seq')} );
 		$sql{index} = $$self{'id'};
-        if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
+        if ( my $e = sql::insert( undef, undef, 'Companies', \%sql ) ) {
 			$openprint::dbh->rollback();
 			return $e;
 		} # end if
     } else {
-        if ( my $e = sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], \%sql ) ) {
+        if ( my $e = sql::update( undef, undef, 'Companies', ['id=?', $$self{'id'}], \%sql ) ) {
 			$openprint::dbh->rollback();
 			return $e;
 		} # end if
@@ -233,13 +233,13 @@ sub save {
 sub next {
     my $self = shift;
 
-    ( $_ ) = sql::execute( undef, undef, 'SELECT Index FROM Company WHERE strName = ( SELECT MIN(strName) FROM Company WHERE strName > (SELECT strName FROM Company WHERE Index=? ) )', $$self{id} );
+    ( $_ ) = sql::execute( undef, undef, 'SELECT id FROM Companies WHERE Name = ( SELECT MIN(Name) FROM Companies WHERE Name > (SELECT Name FROM Companies WHERE id=? ) )', $$self{id} );
     return $_;
 } # end sub next
 
 sub prev {
     my $self = shift;
-    ( $_ ) = sql::execute( undef, undef, 'SELECT Index FROM Company WHERE strName = ( SELECT MAX(strName) FROM Company WHERE strName < (SELECT strName FROM Company WHERE Index=? ) )', $$self{id} );
+    ( $_ ) = sql::execute( undef, undef, 'SELECT id FROM Companies WHERE name = ( SELECT MAX(name) FROM Companies WHERE name < (SELECT name FROM Companies WHERE id=? ) )', $$self{id} );
     return $_;
 } # end sub prev
 
@@ -325,14 +325,14 @@ sub Credit {
 sub get_dropdown {
 	my $selected = shift;
 
-	my $sql = 'SELECT Index, strName FROM Company';
+	my $sql = 'SELECT id, name FROM Companies';
 	my @values;
 
 	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) {
-		$sql .= ' WHERE Index=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
+		$sql .= ' WHERE id=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
-	$sql .= ' ORDER BY lower(strname)';
+	$sql .= ' ORDER BY lower(name)';
 
     my @company = sql::execute( undef, undef, $sql, @values );
 

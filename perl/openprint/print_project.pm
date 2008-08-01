@@ -5,7 +5,7 @@ use openprint ();
 use strict;
 
 require sql;
-require openprint::main_account;
+require openprint::account;
 require openprint::service;
 require openprint::ServiceType;
 require openprint::ProjectType;
@@ -857,7 +857,7 @@ sub reuse_project {
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 
 	if ( $r->param('ddmCompany') and $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
-		openprint::main_account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
+		openprint::account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
 	} # end if
 
 

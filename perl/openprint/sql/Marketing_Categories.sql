@@ -1,10 +1,7 @@
-DROP TABLE Marketing_Categories;
-DROP SEQUENCE Marketing_Category_Id_seq;
-
-CREATE SEQUENCE Marketing_Category_Id_seq;
+DROP TABLE IF EXISTS Marketing_Categories;
 
 CREATE TABLE Marketing_Categories (
-	id 			INTEGER DEFAULT nextval('Marketing_Category_Id_seq'),
+	id 			SERIAL NOT NULL,
 	Name		TEXT, UNIQUE(Name),
 	Description	TEXT,
 	Greeting	TEXT,

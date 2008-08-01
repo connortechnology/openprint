@@ -614,20 +614,20 @@ function checkInputData( inputItem ) {
 function checkLoginData( usernameInput, passwordInput ) {
 	if( ! checkInputData(usernameInput) ) {
 		// Display login name error.
-		add_div( 'missingLoginMessage' );
+		$( 'missingLoginMessage' ).show();
 		usernameInput.focus();
 		return false;
 	} else {
-		remove_div( 'missingLoginMessage' );
+		$( 'missingLoginMessage' ).hide();
 	}
 
 	if( passwordInput && !checkInputData(passwordInput) ) {
 		// Display login password error.
-		add_div( 'missingPasswordMessage' );
+		$( 'missingPasswordMessage' ).show();
 		passwordInput.focus();
 		return false;
 	} else {
-		remove_div( 'missingPasswordMessage' );
+		$( 'missingPasswordMessage' ).hide();
 	}
 
 	usernameInput.form.submit();
