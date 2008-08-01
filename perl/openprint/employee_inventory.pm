@@ -1081,7 +1081,41 @@ sub manifests {
 	} # end if
 } # end sub manifests
 sub inventory_log {
+  if ( $param{'btnFunction'} eq 'Download' ) {
+        my @Header = ('When','Skid','RFIDTag','Paper','Amount','Allocated','In Stock','Location','Comment' );
+        my @Data;
+
+        my @data = sql::execute( $log, $dbh, q{SELECT updated_on, user_id, delta, instock, units, comment, poindex, skid_id, paper_id FROM Paper_Inventory WHERE (updated_on BETWEEN ? AND ? ) ORDER BY updated_on},
+        sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'StartYear','StartMonth','StartDay','StartHour','StartMinute'}),
+        sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @param{'EndYear','EndMonth','EndDay','EndHour','EndMinute'}),
+        );
+        my $total = 0;
+        while ( my ( $time, $user_id, $delta, $instock, $units, $comment, $po_id, $skid_id, $paper_id ) = splice @data, 0, 9 ) {
+            next if $delta <= 0 and ! $param{'outs'};
+            next if $delta > 0 and ! $param{'ins'};
+            my $Paper = new openprint::Paper( $paper_id );
+            my $Skid = new openprint::Skid( $skid_id );
+            next if $Paper->type() and ! sets::isin( $Paper->type(), $param{'Type'} );
+            next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', $param{'Type'} );
+            
+            push @Data, (
+                Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
+                $skid_id,
+                $Skid->rfidtag_id(),
+                $Paper->to_string(),
+                $delta,
+                join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
+                $instock,
+                $Skid->Location()->name(),
+                $comment,
+                );
+            $total += $delta;
+        } # end while
+        push @Data, '','','','Totals:',$total,'','','','';
+        misc::export_csv( $r, $log, \%variable, 'InventoryLog.csv', \@Header, \@Data );
+    } # end if
 } # end sub inventory_log
+
 sub _inventory_log {
 } # end sub inventory_log
 
