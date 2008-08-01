@@ -1,6 +1,6 @@
 <? eval (
 	if ( %openprint::param ) {
-		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','ins','outs', 'Type' ) {
+		foreach my $key ( 'StartYear','StartMonth','StartDay','StartHour','StartMinute','EndYear','EndMonth','EndDay','EndHour','EndMinute','ins','outs', 'Type' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 				$openprint::session{'/employee/inventory/inventory_log.html?'.$key} = join(';', @{$openprint::param{$key}} );
 			} else {
@@ -8,7 +8,13 @@
 			}
 		} # end foreach
 	} # end if
+	$openprint::session{'/employee/inventory/inventory_log.html?StartHour'} = 0 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartHour'};
+	$openprint::session{'/employee/inventory/inventory_log.html?StartMinute'} if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartMinute'};
+	$openprint::session{'/employee/inventory/inventory_log.html?EndHour'} = 23 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndHour'};
+	$openprint::session{'/employee/inventory/inventory_log.html?EndMinute'} = 59 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndMinute'};
+
 ) ?>
+<? if ( $openprint::param{'action'} ne 'Download' ) ?>
 <table class="List">
 	<tr>
 		<th align="left" width="120">When</th>
@@ -24,8 +30,20 @@
 	<? echo (
 		my $html;
 		my @data = sql::execute( $log, $dbh, q{SELECT updated_on, user_id, delta, instock, units, comment, poindex, skid_id, paper_id FROM Paper_Inventory WHERE (updated_on BETWEEN ? AND ? ) ORDER BY updated_on},
-		sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/employee/inventory/inventory_log.html?StartYear','/employee/inventory/inventory_log.html?StartMonth','/employee/inventory/inventory_log.html?StartDay'} ),
-		sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} ),
+		sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @openprint::session{
+			'/employee/inventory/inventory_log.html?StartYear',
+			'/employee/inventory/inventory_log.html?StartMonth',
+			'/employee/inventory/inventory_log.html?StartDay',
+			'/employee/inventory/inventory_log.html?StartHour',
+			'/employee/inventory/inventory_log.html?StartMinute',
+			}),
+		sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @openprint::session{
+			'/employee/inventory/inventory_log.html?EndYear',
+			'/employee/inventory/inventory_log.html?EndMonth',
+			'/employee/inventory/inventory_log.html?EndDay',
+			'/employee/inventory/inventory_log.html?EndHour',
+			'/employee/inventory/inventory_log.html?EndMinute',
+			}),
 		);
 		my $rowclass;
 		my $total = 0;
@@ -58,3 +76,4 @@
 		return $html;
 	) ?>
 </table>
+<? endif ( $openprint::param{'action'} ne 'Download' ) ?>
