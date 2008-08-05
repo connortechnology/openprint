@@ -185,6 +185,9 @@ sub get_li {
 	} elsif ( 1 < sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=?}, $$row{'projectindex'} ) ) {
 		$colour = 'yellow';
 	} # end if
+	if ( $Project->rush() ) {
+		$colour .= ' rush';
+	} # end if
 	$html .= sprintf( '<li id="item_%d" class="%s">', $$row{'id'}, $colour );
 	if ( ( ! $previous_row ) or ( $$row{'projectindex'} != $$previous_row{'projectindex'} ) ) {
 		$html .= '<div class="Company">';

@@ -75,6 +75,9 @@ div.row {
 		background-color: #FF0000;
 		color: black;
 	}
+	div.PressColumn li.rush {
+		border: 2px solid blue;
+	} 
 	.When {
 		background-color: #ffb4da;
 		font-weight: bold;

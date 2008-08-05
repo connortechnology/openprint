@@ -641,6 +641,7 @@ sub save {
 				'order_id',				$$self{'order_id'} ? $$self{'order_id'} : undef,
 				'lngdocketnumber',		$$self{'docket'} ? $$self{'docket'} : undef,
 				'due_date',				$$self{'due_date'} ? $$self{'due_date'} : undef,
+				'rush',					$$self{'rush'},
 				
 	);
 	if ( ! $$self{'created_on'} ) {
@@ -745,8 +746,8 @@ sub load {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
 	} # endif
-	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date/};
+	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date rush/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date rush/};
 	return;
 } # end sub load
 

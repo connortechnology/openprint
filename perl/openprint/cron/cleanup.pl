@@ -249,7 +249,7 @@ if ( 0 ) {
 
 my @Hs = openprint::RFIDScannerHistory::find(
 		'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
-		'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -52 ) ),
+		'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
  );
 $log->warn( "History Entries: " . @Hs );
 foreach my $H ( @Hs ) {
