@@ -102,9 +102,11 @@ div#left_sidebar_inner {
 }
 div#content_container {
 	background-color: #fff;
-	width: 100%;
+	width: 900px;
 	overflow: hidden;
 	margin: 0px;
+	margin-left: auto;
+	margin-right: auto;
 }
 a:link, a:visited, a:hover, a:active {
 	text-decoration: none;
