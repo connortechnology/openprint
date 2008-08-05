@@ -128,6 +128,11 @@ function open_window( page ) {
 	<span style="float: right;">
 		<? echo ( 
 			my $html;
+			if ( ! $$variable{'Project'}->rush() ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Rush', 'rush.gif', "if(confirm('Are you sure you want to rush this job?')) {f1.btnFunction.value='Rush';f1.submit();}", '', 'Rush' );
+			} else {
+				$html .= ssi::writeButton( $log, $dbh, 'NoRush', 'norush.gif', "f1.btnFunction.value='No Rush';f1.submit();", '', 'No Rush' );
+			} # end if
 			
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
 				my @schedule = openprint::press_schedule::find('project_id'=>$$variable{'ProjectIndex'} );
