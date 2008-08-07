@@ -127,9 +127,11 @@
 	<? echo (
 		my $html = '';
 		my @sigs = $$variable{'Project'}->signatures();
+		my $part = 0;
 		while ( my $service_index = shift @sigs ) {
 			my $sig_specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $service_index );
 			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ( ! $$sig_specs{'UsePress'} );
+			$part += 1;
 			$html .= '<tr valign="top"><td class="docketText" align="center">';
 			if ( $$sig_specs{'UsePress'} eq '4C-1' ) {
 				$html .= 'GTO';
@@ -143,7 +145,7 @@
 				$html .= $$sig_specs{'UsePress'};
 			} # end if
 			if ( $openprint::config{'Barcodes Enabled'} ne 'N' ) {
-			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/>';
+			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/><br/>Part ' . $part;
 			} # end if
 			$html .= '</td><td class="docketText">';
 			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
@@ -228,7 +230,10 @@
 		if ( $Paper->type() eq 'Roll' ) {
 			my $net_impressions = $$variable{'Project'}->ordered_quantity();
 			$net_impressions /= $$sig_specs{'txtImposition'.$$variable{'Project'}->ordered_quantity_index()};
-			$net_impressions *= 2 if (sets::isin($$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()},['Sheet Work','Work & Turn','Work & Tumble'] ));
+			$net_impressions *= 2 if (
+					openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) and
+					openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) and
+					sets::isin($$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()},['Sheet Work','Work & Turn','Work & Tumble'] ));
 			$html .= sprintf('</td><td class="docketText">%dimps<br/>%d lbs</td>', $net_impressions, $net_impressions * $Paper->width() * $$sig_specs{'CutOff'.$$variable{'Project'}->ordered_quantity_index()} * $Paper->wpsi() );
 			$html .= sprintf('<td class="docketText">%dimps<br/>%s</td>', $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
 		} else {
