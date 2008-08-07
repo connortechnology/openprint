@@ -160,7 +160,14 @@
     </p>
     <p>
         <label>Docket:</label>
-        <input type="text" id="Docket" name="Docket" value="<? echo ( $openprint::param{'Docket'} ) ?>" size="10" style="width: auto;" />
+        <input type="text" id="Docket" name="Docket" value="<? echo ( $openprint::param{'Docket'} ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');if(this.value){$('allocate').show();} else {$('allocate').hide()}" />
+    </p>
+    <p id="allocate" <? echo ( $openprint::param{'Docket'} ? '' : 'style="display:none;"' ) ?>>
+        <label>Allocate:</label>
+		<input type="radio" name="allocate" value="Specific" id="allocateSpecific" <? echo ( $openprint::param{'allocate'} eq 'Specific' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="allocateSpecific">These Rolls</label>
+		<input type="radio" name="allocate" value="Pool" id="allocatePool" <? echo ( $openprint::param{'allocate'} ne 'Specific' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="allocatePool">Pool</label>
     </p>
 	</div>
 </fieldset>

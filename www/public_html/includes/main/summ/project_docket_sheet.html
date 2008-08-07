@@ -405,13 +405,6 @@
 			<? echo ( $$variable{'Project'}->ordered_quantity() ) ?>
 		</td>
 		<td class="docketText" valign="top">
-		<? echo (
-			if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {
-				my $specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, openprint::project::get_project_type_service_index( $log, $dbh, $$variable{'ProjectIndex'} ) );
-				return qq`<img style="float: left;" src="/images/templates/$$specs{'rdbTemplateType'}.gif"/>` if $$specs{'rdbTemplateType'};
-			} # end if
-			return '';
-		) ?>
 		<? if ( $$variable{'BinderyServices'} eq '' ) ?>
 		Ship Flat
 		<? endif ( $$variable{'BinderyServices'} eq '' ) ?>

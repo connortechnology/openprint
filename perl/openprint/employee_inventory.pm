@@ -460,7 +460,11 @@ sub save_skid {
 					$variable{'error'} .= "Docket $param{'Docket'} not found. No paper allocated. CSR not notified.<br/>";
 				} else {
 					my $Project = shift @Projects if @Projects;
-					$Paper->allocate( $$Skid{'id'}, $Project->id(), $delta, $param{'Units'} );
+					if ( ( exists $param{'allocate'} ) and $param{'allocate'} eq 'Specific' ) {
+						$Paper->allocate( $$Skid{'id'}, $Project->id(), $delta, $param{'Units'} );
+					} else {
+						$Paper->allocate( undef, $Project->id(), $delta, $param{'Units'} );
+					} # end if
 					$variable{'information'} .= "Allocated $delta $param{'Units'} to docket $param{'Docket'}.<br/>";
 				} # end if
 			} # end if

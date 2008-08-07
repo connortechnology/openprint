@@ -47,10 +47,10 @@ sub email_campaigns {
     } elsif ( $param{'btnFunction'} eq 'TrialRun' ) {
         $variable{'Results'} = $Campaign->trial( $param{'TrialEmailAddress'} );
     } elsif ( $param{'btnFunction'} eq 'Download Recipients' ) {
-        my @header = ( 'Company','Name','Email');
+        my @header = ( 'Company','Name','Email','Phone');
         my @data;
 		foreach my $User ( openprint::User::find('id'=>$Campaign->recipients() ) ) {
-			push @data, $User->Company()->name(), $User->name(), $User->email();
+			push @data, $User->Company()->name(), $User->name(), $User->email(), $User->phone();
 		} # end foreach
 
         misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
