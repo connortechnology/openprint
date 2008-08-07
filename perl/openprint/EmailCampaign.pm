@@ -87,10 +87,10 @@ sub save {
 	} # end if
 
 	if ( ! $$self{id} ) {
-		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('EmailCampaign_Id_seq')} );
+		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('EmailCampaign_Id_seq')} );
 		sql::insert( undef, undef, 'EmailCampaigns', map { $_, $self->{$_} } @Fields );
 	} else {
-		sql::update( $openprint::log, $openprint::dbh, 'EmailCampaigns', 'id='.$$self{id},
+		sql::update( undef, undef, 'EmailCampaigns', ['id=?',$$self{id}],
 					map { $_, $self->{$_}; } @Fields
 					);
 	} # end if
@@ -111,15 +111,8 @@ sub load {
 	} # end foreach
 } # end sub load
 
-sub load_info {
-	my ( $self, $variable ) = @_;
-	foreach my $key ( @Fields ) {
-		$$variable{$key} = $self->{$key};
-	} # end foreach
-} # end sub load_info
-
 sub get_user_detail {
-	my ($log, $dbh, $user_id, $replacements) = @_;
+	my ( $user_id, $replacements) = @_;
 
 	# query the db and get the all the details we might possibly need
 	# to fill into an email template
@@ -139,7 +132,7 @@ sub get_user_detail {
 			"C.lngsalesperson = R.index ".
 			"WHERE U.index = ?";
 
-	$log->info("Getting users details with query: $user_detail_query\n");
+	#$log->info("Getting users details with query: $user_detail_query\n");
 
 	# Populate the hash with results of the query
 	@$replacements{'EMAIL_ADDRESS',
@@ -150,10 +143,7 @@ sub get_user_detail {
 					'REPEMAIL',
 					'REPNAME',
 					'REPEXT'
-					} = sql::execute($log, $dbh, $user_detail_query, $user_id);
-
-	$log->info("Got results:");
-	$log->info(%$replacements);
+					} = sql::execute( undef, undef, $user_detail_query, $user_id);
 
 } # end sub get_user_detail
 
@@ -224,7 +214,7 @@ sub send_email {
 	# - The seconds substitution replaces the any tags that were
 	#   inserted by the first replacement
 	# NB. Only encode_qp ONCE
-	$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements );
+	#$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements );
 	$email_template = encode_qp( ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements ) );
 
 	# Formulate the body of the message
@@ -236,7 +226,7 @@ sub send_email {
 	my %mail = (
 			SMTP => $openprint::config{'Mail Server'},
 			FROM => $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
-			TO => sprintf('"%s %s" <%s>', @$replacements{'FIRSTNAME','LASTNAME','EMAIL_ADDRESS'} ),
+			TO => sprintf('"%s %s" <%s>', @$replacements{'User'}->get('firstname','lastname','email') ),
 			SUBJECT => $$self{'email_subject'}
 		);
 
@@ -257,11 +247,6 @@ sub send {
 
 	my %replacements;
 	my $body = $self->{'email_text'};
-	$replacements{ReplacementText} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$body, \%replacements );
-	if ( ! $replacements{ReplacementText} ) {
-		$results .= 'No body.  Not sending.<br/>';
-		return $results;
-	} # end if
 
 	# Find the email and company name for all accounts that match
 	# this campaign
@@ -282,7 +267,7 @@ sub send {
 	} else {
 		$query = q{DELETE FROM EmailCampaign_Sent WHERE campaign_id=?}; 
 	} # end if
-	sql::execute($openprint::log, $openprint::dbh, $query, $$self{'id'} );
+	sql::execute( undef, undef, $query, $$self{'id'} );
 
 	# for each userid, prepare an email to send if the following
 	# conditions are met
@@ -313,7 +298,14 @@ sub send {
 		# de we need to send this email?
 
 		my ( $interval_expired, $num_email_sent, $marked_for_deletion );
-		get_user_detail($openprint::log, $openprint::dbh, $user_index, \%replacements);
+		get_user_detail( $user_index, \%replacements );
+		$replacements{'User'} = new openprint::User( $user_index );
+
+		$replacements{ReplacementText} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$body, \%replacements );
+		if ( ! $replacements{ReplacementText} ) {
+			$results .= 'No body.  Not sending.<br/>';
+			next;
+		} # end if
 
 		# First check if a sent row exists
 		$query = q{SELECT (NOW() - EmailSentOn) > ?, NumEmailSent, MarkedForDeletion FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?};
@@ -335,31 +327,31 @@ sub send {
 						sql::update( undef, undef, 'EmailCampaign_Sent', ['campaign_id=? AND user_id=?', $$self{id}, $user_index],
 								'MarkedForDeletion',	'Y',
 								);
-						$results .= "<span class=\"error\">NOT Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'} because this email address has been sent to $num_email_sent times already.</span><br>";
+						$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because this email address has been sent to %d times already.</span><br/>', $replacements{'User'}->get('firstname','lastname','email'), $num_email_sent );
 					} else {
 						# Send the email to the user
-						if ( ! Email::Valid->address( $replacements{'EMAIL_ADDRESS'} ) ) {
-							$results .= "<span class=\"error\">NOT Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'} because the email address appears to be invalid.</span><br>";
+						if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
+							$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
 						} else {
-							$results .= "Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'}<br>";
+							$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
 							$self->send_email( \%replacements );
-							sql::update( undef, undef, 'EmailCampaign_Sent', [ 'campaign_id=? AND user_id=?', $self->{'id'}, $user_index],
+							sql::update( undef, undef, 'EmailCampaign_Sent', ['campaign_id=? AND user_id=?', $self->{'id'}, $user_index],
 									'NumEmailSent',	$num_email_sent+1,
 									'EmailSentOn',	'NOW()',
 									);
 						} # end if email is valid
 					} # if $num_email_sent > num_times to send
 				} else {
-					$results .= "<span class=\"error\">NOT Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'} because this account is marked for deletion.</span><br>";
+					$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because this account is marked for deletion.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
 				} # if marked for deletion
 			} # if interval expired
 		} else {
 			# No record of sent email, we need to send the first one
 			if ( ! Email::Valid->address( $replacements{'EMAIL_ADDRESS'} ) ) {
-				$results .= "<span class=\"error\">NOT Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'} because the email address appears to be invalid.</span><br>";
+				$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>',$replacements{'User'}->get('firstname','lastname','email') );
 			} else {
 				$self->send_email( \%replacements);
-				$results .= "Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'}<br>";
+				$results .= sprintf('Sending Email to: %s %s at %s<br/>', $replacements{'User'}->get('firstname','lastname','email') );
 				sql::insert( $openprint::log, $openprint::dbh, 'EmailCampaign_Sent', 
 						'NumEmailSent', '1',
 						'campaign_id', $self->{'id'},
@@ -390,40 +382,41 @@ sub trial {
 	$results .= "There are ".@mail_user_ids." users that fit the campaign<br/>";
 	my %replacements;
 	my $body = $self->{'email_text'};
-	$replacements{ReplacementText} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$body, \%replacements );
-	if ( ! $replacements{ReplacementText} ) {
-		$results .= 'No body.  Not sending<br/>';
-	} else {
-		foreach my $user_index ( @mail_user_ids ) {
+	foreach my $user_index ( @mail_user_ids ) {
 # de we need to send this email?
+		$replacements{'User'} = new openprint::User( $user_index );
+		$replacements{ReplacementText} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$body, \%replacements );
+		if ( ! $replacements{ReplacementText} ) {
+			$results .= 'No body.  Not sending<br/>';
+			next;
+		} # end if
 
-			my ( $interval_expired, $num_email_sent, $marked_for_deletion );
+		my ( $interval_expired, $num_email_sent, $marked_for_deletion );
 
 # First check if a sent row exists
-			$_ = 'SELECT (NOW() - EmailSentOn) > ?, NumEmailSent, MarkedForDeletion FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
-			if ( ( $interval_expired, $num_email_sent, $marked_for_deletion ) = sql::execute($openprint::log, $openprint::dbh, $_, @$self{'interval','id'}, $user_index ) ) {
+		$_ = 'SELECT (NOW() - EmailSentOn) > ?, NumEmailSent, MarkedForDeletion FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
+		if ( ( $interval_expired, $num_email_sent, $marked_for_deletion ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_index ) ) {
 
 # Check if the duration has elapsed	
-				if ($interval_expired == 1) {
+			if ($interval_expired == 1) {
 
 # if the account has already been marked for deletion, then
 # there is nothing to do
-					if ($marked_for_deletion eq 'Y') {
+				if ($marked_for_deletion eq 'Y') {
 # Check if we have sent this too many times
-						if ($num_email_sent < $self->{'timestosend'}) {
-							get_user_detail($openprint::log, $openprint::dbh, $user_index, \%replacements);
-							$results .= "Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'}<br>";
-						} # if $num_email_sent > num_times to send
-					} # if marked for deletion
-				} # if interval expired
-			} else {
+					if ($num_email_sent < $self->{'timestosend'}) {
+						get_user_detail( $user_index, \%replacements);
+						$results .= sprintf('Sending Email to: %s %s at %s<br/>', $replacements{'User'}->get('firstname','lastname','email') );
+					} # if $num_email_sent > num_times to send
+				} # if marked for deletion
+			} # if interval expired
+		} else {
 # No record of sent email, we need to send the first one
-				get_user_detail($openprint::log, $openprint::dbh, $user_index, \%replacements);
-				$results .= "Sending Email to: $replacements{'FIRSTNAME'} $replacements{'LASTNAME'} at $replacements{'EMAIL_ADDRESS'}<br>";
-			} # if row exists
+			get_user_detail( $user_index, \%replacements);
+			$results .= sprintf('Sending Email to: %s %s at %s<br/>', $replacements{'User'}->get('firstname','lastname','email') );
+		} # if row exists
 
-		} # for all mail user ids
-	} # end if
+	} # for all mail user ids
 	return $results;
 } # end sub trial
 

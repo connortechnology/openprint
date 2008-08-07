@@ -240,7 +240,7 @@ function open_window( page ) {
 				foreach my $Allocation ( @{$Allocations{$paper_id}} ) {
 					my $Skid = $Allocation->Skid();
 					$total += $Allocation->quantity();
-					$html .= sprintf( '<tr><td>&nbsp;</td><td>%3$d</td><td>%4$s</td><td>%5$s</td>', $Allocation->paper_id(), $Allocation->Paper()->to_string(), $Skid->id(), $Skid->rfidtag_id(), $Skid->Location()->name() );
+					$html .= sprintf( '<tr><td>&nbsp;</td><td>%3$s</td><td>%4$s</td><td>%5$s</td>', $Allocation->paper_id(), $Allocation->Paper()->to_string(), $Skid->id(), $Skid->rfidtag_id(), $Skid->Location()->name() );
 				$html .= sprintf( '<td>%1$d%2$s</td></tr>', $Allocation->quantity(), $Allocation->units() );
 				} # end foreach
 				$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td>'.$total . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
