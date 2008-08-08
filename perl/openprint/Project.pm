@@ -634,7 +634,7 @@ sub save {
 				'order_id',				$$self{'order_id'} ? $$self{'order_id'} : undef,
 				'lngdocketnumber',		$$self{'docket'} ? $$self{'docket'} : undef,
 				'due_date',				$$self{'due_date'} ? $$self{'due_date'} : undef,
-				'predefined'			$$self{'predefined'} ? $$self{'predefined'} : 'N',
+				'predefined',			$$self{'predefined'} ? $$self{'predefined'} : 'N',
 				
 	);
 	if ( ! $$self{'created_on'} ) {
