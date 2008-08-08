@@ -11,7 +11,7 @@
 			<label>Service:</label>
 			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service::find('order'=>'lower(name)') ], $openprint::param{'ddmService'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service::find('order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">
@@ -30,27 +30,27 @@
 			) ?>
 		</p>
 	</fieldset>
-	<fieldset style="float: left; width: 47%;"><legend>Service Information</legend>
+	<fieldset class="leftColumn"><legend>Service Information</legend>
 		<p> 
 			<label>Service Name:</label>
 			<input type="text" name="name" value="<? echo ( $$variable{'Service'}->name(); ) ?>" />
 		</p>
 		<p> 
 			<label>Category:</label>
-				<select name="ddmCategory">
-					<option value="">Select a category</option>
+			<select name="category_id">
+				<option value="">Select a category</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory::find('order'=>'lower(name)') ], $$variable{'Service'}->category_id() ); ) ?>
-				</select>
+			</select>
 		</p>
 		<p> 
 			<label>Description:</label>
 			<input type="text" name="description" value="<? echo ( $$variable{'Service'}->description(); ) ?>" />
 		</p>
 	</fieldset>
-	<fieldset style="float: right; width: 47%;"><legend>Purchasing Information</legend>
+	<fieldset class="rightColumn"><legend>Purchasing Information</legend>
 		<p> 
 			<label>Supplier:</label>
-			<select name="ddmSupplier">
+			<select name="supplier_id">
 				<option value="">Select a supplier</option>
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('supplier'=>'Y','order'=>'lower(strname)') ], $$variable{'Service'}->supplier_id() ); ) ?>
 			</select>

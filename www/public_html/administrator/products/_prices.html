@@ -1,9 +1,3 @@
-<? eval (
-	if ( $openprint::param{'btnFunction'} ) {
-		require openprint::administrator_products;
-		openprint::administrator_products::prices( );
-	} # end if
-) ?>
 <style type="text/css">
 	.Add {
 		width: 20px;
@@ -54,7 +48,7 @@ border: 1px solid;
 	) ?>
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
 	<fieldset><legend>Prices for Price List: <? echo ( $$variable{'Pricelist'}->name(); ) ?></legend>
-		<? eval ( @{$$variable{'Prices'}} = openprint::ProductPrice::find( 'product' => $$variable{'Product'}, 'pricelist' => $$variable{'Pricelist'}, 'order' => 'min' ); ) ?>
+		<? eval ( @{$$variable{'Prices'}} = openprint::ProductPrice::find( 'Product' => $$variable{'Product'}, 'Pricelist' => $$variable{'Pricelist'}, 'order' => 'min' ); ) ?>
 		<div class="Equipment">
 			<table class="List">
 				<tr>
@@ -132,7 +126,7 @@ border: 1px solid;
 	<input type="hidden" name="product_id" value="<? echo ( $$variable{'Product'}->id() ) ?>" />
 </form>
 <p class="buttons"><? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'SavePrices','save.gif',"document.PricesForm.btnFunction.value='Save';LoadContent('Prices','/administrator/products/_prices.html',Serialize(document.forms['PricesForm']) );",'','Save'),
+		ssi::writeButton( $log, $dbh, 'SavePrices','save.gif',"document.PricesForm.btnFunction.value='Save';new Ajax.Updater('Prices','_prices.html', { method: 'get', parameters: document.forms['PricesForm'].serialize() } );",'','Save'),
 		ssi::writeButton( $log, $dbh, 'ResetPrices','reset.gif','PricesForm.reset();','','Reset'),
 		); ) ?>
 </p>

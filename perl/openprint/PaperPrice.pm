@@ -17,6 +17,10 @@ sub find {
 		$sql .= ' AND lngpaperindex=?';
 		push @values, $params{'paper_id'};
 	} # end if
+	if ( exists $params{'Paper'} ) {
+		$sql .= ' AND lngpaperindex=?';
+		push @values, $params{'Paper'}->id();
+	} # end if
 	if ( $params{'pricelist_id'} ) {
 		$sql .= ' AND lngListindex=?';
 		push @values, $params{'pricelist_id'};

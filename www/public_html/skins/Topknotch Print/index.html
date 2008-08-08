@@ -1,12 +1,10 @@
-<img id="HomeCollage" src="/images/home_collage13.jpg"/>
-You are currently viewing prices in 
-	<? echo (
-			my $Currency = openprint::Currency::get_current();
-			return $Currency->name;
-		) ?>.
+<img style="width: 500px;margin-left: auto; margin-right: auto; display: block;" src="/skins/<?SiteTitle?>/images/plantatree.jpg" alt="Plant A Tree" /><br/>
+<span style="font-size: 12pt; font-weight: bold;">
 <br/>
+Topknotch will plant a tree on all orders over $250
+<? echo ( ssi::writeButton( $log, $dbh, 'skip','skip.gif','','/home.html', 'Skip' ); ) ?>
 <br/>
-<div>
-   <a href="/index.html?Country=US&Currency=USD"><img src="/images/usa_home.gif" alt="USA" border="0" /></a>
-   <a href="/index.html?Country=CA&Currency=CDN"><img src="/images/canada_home.gif" alt="Canada" border="0" /></a>
-</div>
+</span>
+<script type="text/javascript">
+setTimeout( "window.location='/home.html';", 5000 );
+</script>

@@ -1,21 +1,22 @@
 <? eval (
 	if ( $openprint::param{'action'} eq 'Login' ) {
-		eprint::login::verify_login( $r, $log, $dbh, $openprint::session{_session_id}, $variable, 'E' );
+		openprint::login::verify_login( $r, $log, $dbh, $openprint::session{_session_id}, $variable, 'E' );
 	} elsif ( $openprint::param{'action'} eq 'Logout' ) {
-		eprint::login::logout( $log, $dbh, $$variable{'cookie'}, 'E' );
+		openprint::login::logout( $log, $dbh, $variable, $$variable{'cookie'}, 'E' );
 	} # end if
 	
 ) ?>
-<? if ( $$variable{'user_id'} ) ?>
+<? if ( $openprint::session{'user_id'} ) ?>
 	<ul>
+		<li><a href="paper_inventory/rfidtag_details.html">RFID</a></li>
 		<li><a href="paper_inventory/skid.html">Skids</a></li>
 		<li><a href="paper_inventory/check.html">Take Inventory</a></li>
 	</ul>
-<? else ( $$variable{'user_id'} ) ?>
+<? else ( $openprint::session{'user_id'} ) ?>
 	<? if ( $$variable{'error'} ) ?>
 	<div class="error">
 	<b><?error?></b><?details?>
 	</div>
 	<? endif ( $$variable{'error'} ) ?>
 	<!--#include virtual="/handheld/login.html"-->
-<? endif ( $$variable{'user_id'} ) ?>
+<? endif ( $openprint::session{'user_id'} ) ?>

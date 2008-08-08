@@ -35,7 +35,7 @@ sub save_destination {
 	} else {
 		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue to the page you requested.};
 	} # end if
-} # end sub login_display
+} # end sub save_destination
 
 # login verification.	called when someone logs in
 sub verify_login {
@@ -43,6 +43,7 @@ sub verify_login {
 		
 	# convert the email address to lower case. All email addresses stored in DB will be lower case.
 	my $email = $openprint::param{'email'};
+	$email =~ s/^\s*(.*?)\s*$/$1/;
 	$email =~ tr/[A-Z]/[a-z]/;
 
 	$log->debug("** Verifying Login for Email Adress: $email **");
@@ -107,13 +108,11 @@ sub verify_login {
 	} # end if
 
 	if ( $user_type ne 'C' ) {
-		my $company_name = $openprint::config{'companyname'};
-		my ( $master_cust_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE strName=?}, $company_name );
-		if ( $cust_id != $master_cust_id ) {
+		if ( $cust_id != $openprint::config{'Owner'} ) {
 # Send an email notification
 			my %info;
-			$_ = 'SELECT strFirstName, strLastName, strEmail FROM Users WHERE Index=?';
-			@info{'UserFirstName','UserLastName','UserEmail'} = sql::execute( $log, $dbh, $_, $user_id );
+			my $User = new openprint::User( $user_id );
+			@info{'UserFirstName','UserLastName','UserEmail'} = $User->get('firstname','lastname','email');
 			$info{'Site'} = $site;
 			$info{'UserType'} = $user_type;
 

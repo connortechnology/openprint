@@ -111,13 +111,15 @@ $openprint::log->debug("Page: $page");
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
-		my $content;
-		if ( -e join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) ) {
-			$content = misc::load_file( $log, join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) );
-		} else {
-			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+		if ( ! $variable{'PageContent'} ) {
+			my $content;
+			if ( -e join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) ) {
+				$content = misc::load_file( $log, join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) );
+			} else {
+				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+			} # end if
+			$variable{'PageContent'} = ssi::variable_substitution( $r, $r->log, $dbh, \$content, \%variable );
 		} # end if
-		$variable{'PageContent'} = ssi::variable_substitution( $r, $r->log, $dbh, \$content, \%variable );
 		my $template;
 		my @page_path = split('/', $page );
 		my $filename = pop @page_path;
@@ -184,6 +186,7 @@ sub parse_page {
 	my @thing = split( '/', $uri );
 	my $filename = pop @thing;
 	shift @thing; # get rid of element before leading slash
+	my @path = @thing;
 	my $first = shift @thing if @thing;
 	my $second = shift @thing if @thing;
 	my $third = shift @thing if @thing;
@@ -305,22 +308,6 @@ $openprint::log->debug("Getfile");
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 			} # end if
-		} elsif ( $second eq 'inventory' ) {
-			require openprint::employee_inventory;
-			require openprint::paper_purchase_order;
-			if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
-				openprint::employee_inventory::paper( $r, $log, $dbh, \%variable )		if $filename eq 'paper.html';
-				openprint::employee_inventory::paper_details( $r, $log, $dbh, \%variable )	if $filename eq 'paper_details.html';
-				openprint::employee_inventory::skids( $r, $log, $dbh, \%variable )		if $filename eq 'skids.html';
-				openprint::employee_inventory::skid_details( $r, $log, $dbh, \%variable )	if $filename eq 'skid_details.html';
-				openprint::paper_purchase_order::history( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_orders.html';
-				openprint::paper_purchase_order::display( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_order.html';
-			} else {
-				$variable{'error'} = "Unauthorized";
-				$variable{'details'} = "You are not authorized to view this page.";
-				$variable{'Redirect'} = $openprint::config{'errorpage'};
-				return;
-			} # endif
 		} elsif ( $second eq 'accounting' ) {
 			if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
 				require openprint::employee_accounting;
@@ -334,10 +321,10 @@ $openprint::log->debug("Getfile");
 				return;
 			} # endif
 		} else {
-			eval( "require openprint::$first".'_'.$second );
+			eval( 'require openprint::'.join('_', @path ) );
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-			my ( $proc ) = $filename =~ /(.*).html/;
-			eval( 'openprint::'.$first.'_'.$second.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		} # end if
 
@@ -388,6 +375,11 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
 				@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
+$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+if ( ! $variable{'ServiceIndex'} ) {
+$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+$variable{'ServiceIndex'} = $service_index;
+} # end if
 
 				if ( $third eq 'prin' ) {
 					$log->debug("** START OF MAIN:PROJ:PRIN * ($project_index) ($service_index)");

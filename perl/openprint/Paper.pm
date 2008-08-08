@@ -17,9 +17,15 @@ require openprint::Skid;
 require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
+require openprint::StockName;
+require openprint::StockFinish;
+require openprint::StockColour;
+require openprint::StockWeight;
+require openprint::StockQuality;
+
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 1;
+my $debug = 0;
 
 my @fields = (
 		'owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
@@ -36,14 +42,14 @@ sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
-	my $sql = 'SELECT *, (SELECT shortname FROM Manufacturers WHERE id=manufacturer_id) AS manufacturer, (SELECT shortname FROM PaperNames WHERE id=name_id) AS name, (SELECT shortname FROM PaperColours WHERE id=colour_id) AS colour, (SELECT shortName FROM PaperFinishes WHERE id=finish_id) AS finish, (SELECT shortname FROM Paperweights WHERE id=weight_id) AS weight FROM Papers WHERE 1>0';
+	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
+			$sql .= ' AND papers.id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
 			push @values, @{$params{'id'}};
 		} else {
-			$sql .= ' AND id=?';
+			$sql .= ' AND papers.id=?';
 			push @values, $params{'id'};
 		} # end if
 	} # end if
@@ -134,15 +140,15 @@ sub find {
 		push @values, 1*$params{'height_start'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND id IN (SELECT paper_id FROM paper_allocations WHERE project_id = (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id = (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'project_type_name'} ) {
-		$sql .= ' AND id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT lngIndex FROM Project_Types WHERE strID = ?))';
+		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT lngIndex FROM Project_Types WHERE strID = ?))';
 		push @values, $params{'project_type_name'};
 	} # end if
 	if ( $params{'project_type_id'} ) {
-		$sql .= ' AND id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
+		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
 		push @values, $params{'project_type_id'};
 	} # end if
 	if ( $params{'fsc_code'} ) {
@@ -245,6 +251,31 @@ sub save {
 			$$self{$key} = $$hash{$key} if exists $$hash{$key};
 		} # end foreach
 	} # end if
+	if ( $$self{'name'} and ! $$self{'name_id'} ) {
+		sql::insert( undef, undef, 'PaperNames', [ 'shortname', $$self{'name'}, 'longname', $$self{'name'} ] );
+		@$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperNames WHERE longname=?}, $$self{'name'} );
+	} # end if name_id
+	if ( $$self{'finish'} and ! $$self{'finish_id'} ) {
+		sql::insert( undef, undef, 'PaperFinishes', 'shortname', $$self{'finish'}, 'longname', $$self{'finish'} );
+		@$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE longname=?}, $$self{'finish'} );
+	} # end if finish_id
+	if ( $$self{'colour'} and ! $$self{'colour_id'} ) {
+		sql::insert( undef, undef, 'PaperColours', 'shortname', $$self{'colour'}, 'longname', $$self{'colour'} );
+		@$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE longname=?}, $$self{'colour'} );
+	} # end if colour_id
+	if ( $$self{'weight'} and ! $$self{'weight_id'} ) {
+		sql::insert( undef, undef, 'PaperWeights', 'shortname', $$self{'weight'}, 'longname', $$self{'weight'} );
+		@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperWeights WHERE longname=?}, $$self{'weight'} );
+	} # end if weight_id
+	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
+		sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
+		@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
+	} # end if quality_id
+	if ( $$self{'manufacturer'} and ! $$self{'manufacturer_id'} ) {
+		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
+		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
+	} # end if manufacturer
+
 	foreach my $key ( @fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
 	} # end foreach
@@ -293,6 +324,10 @@ sub save {
        # Add record to audit log - action "Update Paper".
        openprint::logs::insertLogRecord('64', "Paper ID: " . $$self{'id'},);
     } # end if
+    sql::execute( undef, undef, q{DELETE FROM PaperNames WHERE id NOT IN (SELECT DISTINCT name_id FROM Papers)} );
+    sql::execute( undef, undef, q{DELETE FROM PaperFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM Papers)} );
+    sql::execute( undef, undef, q{DELETE FROM PaperColours WHERE id NOT IN (SELECT DISTINCT colour_id FROM Papers)} );
+    sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE id NOT IN (SELECT DISTINCT weight_id FROM Papers)} );
 
     my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
 	my @recommendations = $self->recommendations();
@@ -351,20 +386,22 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	return join('-', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), $self->mweight().'M', $self->quality() ) );
+	return join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ), $self->quality() ) );
 }
 
 sub name {
     my ( $self, $name ) = @_;
 
-    if ( defined $name ) {
-        @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE longname=?}, $name );
+	if ( defined $name ) {
+		$name =~ s/^\s*(.*)\s*$/$1/;
+
+        @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE lower(longname)=?}, lc $name );
         if ( ! $$self{'name_id'} ) {
-            sql::insert( undef, undef, 'PaperNames', [ 'shortname', $name, 'longname', $name ] );
-            @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE longname=?}, $name );
+			$$self{'name'} = $name;
         } # end if
     } elsif ( $$self{'name_id'} and ! $$self{'name'} ) {
-        @$self{'name'} = sql::execute( undef, undef, q{SELECT longname FROM PaperNames WHERE id=?}, $$self{'name_id'} );
+		my $Name = new openprint::StockName( $$self{'name_id'} );
+		$$self{'name'} = $Name->longname();
     } # end if
     return $$self{'name'};
 } # end sub name
@@ -373,13 +410,14 @@ sub manufacturer {
     my ( $self, $manufacturer ) = @_;
 
     if ( defined $manufacturer ) {
-        @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $manufacturer );
+		$manufacturer =~ s/^\s*(.*)\s*$/$1/;
+        @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE lower(longname)=?}, lc $manufacturer );
         if ( ! $$self{'manufacturer_id'} ) {
-            sql::insert( undef, undef, 'Manufacturers', 'shortname', $manufacturer, 'longname', $manufacturer );
-            @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $manufacturer );
+			$$self{'manufacturer'} = $manufacturer;
         } # end if
     } elsif ( $$self{'manufacturer_id'} and ! $$self{'manufacturer'} ) {
-        @$self{'manufacturer'} = sql::execute( undef, undef, q{SELECT longname FROM Manufacturers WHERE id=?}, $$self{'manufacturer_id'} );
+		my $Manufacturer = new openprint::Manufacturer( $$self{'manufacturer_id'} );
+		$$self{'manufacturer'} = $Manufacturer->longname();
     } # end if
     return $$self{'manufacturer'};
 } # end sub manufacturer
@@ -388,13 +426,14 @@ sub finish {
     my ( $self, $finish ) = @_;
 
     if ( defined $finish ) {
-        @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE longname=?}, $finish );
+		$finish =~ s/^\s*(.*)\s*$/$1/;
+        @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE lower(longname)=?}, lc $finish );
         if ( ! $$self{'finish_id'} ) {
-            sql::insert( undef, undef, 'PaperFinishes', 'shortname', $finish, 'longname', $finish );
-            @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE longname=?}, $finish );
+			$$self{'finish'} = $finish;
         } # end if
     } elsif ( $$self{'finish_id'} and ! $$self{'finish'} ) {
-        @$self{'finish'} = sql::execute( undef, undef, q{SELECT longname FROM PaperFinishes WHERE id=?}, $$self{'finish_id'} );
+		my $Finish = new openprint::StockFinish( $$self{'finish_id'} );
+		$$self{'finish'} = $Finish->longname();
     } # end if
     return $$self{'finish'};
 } # end sub finish
@@ -403,13 +442,14 @@ sub colour {
     my ( $self, $colour ) = @_;
 
     if ( defined $colour ) {
-        @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE longname=?}, $colour );
+		$colour =~ s/^\s*(.*)\s*$/$1/;
+        @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE lower(longname)=?}, lc $colour );
         if ( ! $$self{'colour_id'} ) {
-            sql::insert( undef, undef, 'PaperColours', 'shortname', $colour, 'longname', $colour );
-            @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE longname=?}, $colour );
+			$$self{'colour'} = $colour;
         } # end if
     } elsif ( $$self{'colour_id'} and ! $$self{'colour'} ) {
-        @$self{'colour'} = sql::execute( undef, undef, q{SELECT longname FROM PaperColours WHERE id=?}, $$self{'colour_id'} );
+		my $Colour = new openprint::StockColour( $$self{'colour_id'} );
+		$$self{'colour'} = $Colour->longname();
     } # end if
     return $$self{'colour'};
 } # end sub colour
@@ -417,14 +457,16 @@ sub colour {
 sub weight {
     my ( $self, $weight ) = @_;
 
+
     if ( defined $weight ) {
-        @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE longname=?}, $weight );
+		$weight =~ s/^\s*(.*)\s*$/$1/;
+        @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE lower(longname)=?}, lc $weight );
         if ( ! $$self{'weight_id'} ) {
-            sql::insert( undef, undef, 'PaperWeights', 'shortname', $weight, 'longname', $weight );
-            @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE longname=?}, $weight );
+			$$self{'weight'} = $weight;
         } # end if
     } elsif ( $$self{'weight_id'} and ! $$self{'weight'} ) {
-        @$self{'weight'} = sql::execute( undef, undef, q{SELECT longname FROM PaperWeights WHERE id=?}, $$self{'weight_id'} );
+		my $Weight = new openprint::StockWeight( $$self{'weight_id'} );
+		$$self{'weight'} = $Weight->longname();
     } # end if
     return $$self{'weight'};
 } # end sub weight
@@ -433,10 +475,10 @@ sub quality {
     my ( $self, $quality ) = @_;
 
     if ( defined $quality ) {
-        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE longname=?}, $quality );
+		$quality =~ s/^\s*(.*)\s*$/$1/;
+        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
         if ( ! $$self{'quality_id'} ) {
-            sql::insert( undef, undef, 'PaperQualities', 'shortname', $quality, 'longname', $quality );
-            @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE longname=?}, $quality );
+			$$self{'quality'} = $quality;
         } # end if
     } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
         @$self{'quality'} = sql::execute( undef, undef, q{SELECT longname FROM PaperQualities WHERE id=?}, $$self{'quality_id'} );
@@ -469,12 +511,22 @@ sub mweight {
         $$self{'mweight'} = 1*$mweight;
 	} # end if
 	if ( ! $$self{'mweight'} ) {
-		my $wpsi = $$self{'gsm'}/703064.5;
-		if ( $$self{'type'} eq 'Roll' and $$self{'basis_width'} and $$self{'basis_height'} and $$self{'gsm'} ) {
-			$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
-			# MWeight is in relaion to the basis size
-		} elsif ( $$self{'width'} and $$self{'height'} and $$self{'gsm'} ) {
-			$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'width'} * $$self{'height'} * 1000 );
+		if ( $$self{'gsm'} ) {
+			my $wpsi = $$self{'gsm'}/703064.5;
+			if ( $$self{'type'} eq 'Roll' and $$self{'basis_width'} and $$self{'basis_height'} ) {
+				$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
+				# MWeight is in relaion to the basis size
+			} elsif ( $$self{'width'} and $$self{'height'} ) {
+				$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'width'} * $$self{'height'} * 1000 );
+			} # end if
+		} elsif ( $self->weight() =~ /(\d*)lb/ ) {
+			# weigiht of 500sheets of 25x38
+$openprint::log->debug("Auto calcing mweight from $1");
+			$$self{'mweight'} = sprintf('%.0f', ($1*$$self{'width'}*$$self{'height'})/(25*38));
+		} elsif ( ! $self->weight() =~ /\D/ ) {
+			# weigiht of 500sheets of 25x38
+$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
+			$$self{'mweight'} = sprintf('%.0f', ($self->weight()*$$self{'width'}*$$self{'height'})/(25*38));
 		} # end if
     } # end if
     return $$self{'mweight'};
@@ -522,11 +574,22 @@ sub Owner {
 } # endn sub Owner
 sub owner {
     my $self = shift;
-    if ( @_ ) {
-        $$self{'owner_id'} = shift;
-        $$self{'owner_id'} =~ s/\D//g;
+	my $Company;
+    if ( @_ and $_[0] ) {
+		my @Companies = openprint::Company::find('name'=>$_[0]);
+		if ( ! @Companies ) {
+			$Company = new openprint::Company();
+			$Company->name( $_[0] );
+			$Company->save();
+		} else {
+			$Company = $Companies[0];
+		} # end if
+
+        $$self{'owner_id'} = $Company->id();
+	} else {
+		$Company = new openprint::Company( $$self{'owner_id'} );
     } # end if
-    return $$self{'owner_id'};
+    return $Company->name();
 } # end sub owner
 sub owner_id {
     my $self = shift;
@@ -537,12 +600,13 @@ sub owner_id {
     return $$self{'owner_id'};
 } # end sub owner
 
+# This function assumes that the skid contents have already been updated
 sub add_inventory {
-    my ( $self, $skid_id, $quantity, $units, $description ) = @_;
+    my ( $self, $Skid, $quantity, $units, $description ) = @_;
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
-	my $Skid = new openprint::Skid( $skid_id );
+	$Skid = new openprint::Skid( $Skid ) if ref $Skid ne 'openprint::Skid';
 	#Skid{Paper}{paper_id} has already been adjusted
 
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
@@ -550,11 +614,11 @@ sub add_inventory {
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  ($skid_id? $$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
-        'UpdateTime',   'NOW()',
+        'InStock',  ($Skid->id() ? 1*$$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
+        'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
-        'skid_id',  $skid_id,
+        'skid_id',  $Skid->id(),
 		'units',	$units,
         );
 	delete $$self{allocated};
@@ -566,19 +630,20 @@ sub allocate {
     my ( $self, $skid_id, $project_id, $quantity, $units ) = @_;
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
 
-    my $ac = sql::start_transaction();
-    sql::insert( undef, undef, 'Paper_Allocations',
-        'paper_id',     $$self{'id'},
-        'skid_id',      $skid_id,
-        'quantity',     $quantity,
-		'units',		$units,
-        'project_id',   $project_id,
-        'operator_id',  $openprint::session{'user_id'},
-        );
+	my $PA = new openprint::PaperAllocation();
+	$PA->save( {
+        'paper_id'	=>	$$self{'id'},
+        'skid_id'	=>	$skid_id,
+        'quantity'	=>	$quantity,
+		'units'		=>	$units,
+        'project_id'	=>	$project_id,
+        'operator_id'	=>	$openprint::session{'user_id'},
+        } );
     openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} );
-    sql::end_transaction( undef, $ac );
-
+	delete $$self{allocated};
+	return $PA;
 } # end sub allocate
+
 sub back_ordered {
     my $self = shift;
 	return 0 if ! $$self{'id'};
@@ -598,6 +663,7 @@ sub allocated {
 	} # end if
     return $$self{allocated};
 } # end sub allocated
+
 sub in_stock {
     my $self = shift;
 	return 0 if ! $$self{'id'};
@@ -645,10 +711,11 @@ sub get_price {
 	my ( $self, $qty ) = @_;
     my %price;
 
+	my $factor = 1;
 	if ( $$self{'width'} and $$self{'height'} and $$self{'start_width'} and $$self{'start_height'} ) {
 		# It's a sheet
 		if ( $$self{'start_width'} != $$self{'width'} or $$self{'start_height'} != $$self{'height'} ) {
-			my $factor = ( $$self{'start_width'} / $$self{'width'} ) * ( $$self{'start_height'} / $$self{'height'} );
+			$factor = ( $$self{'start_width'} / $$self{'width'} ) * ( $$self{'start_height'} / $$self{'height'} );
 			$qty /= $factor;
 			$qty = int( $qty );
 		} # endif
@@ -659,6 +726,7 @@ sub get_price {
     if ( $$self{'Price'} ) {
 		# If custom paper
 		%price = ( 'Price' => $$self{'Price'}, 'Cost'=>$$self{'Price'}, 'units'=>$$self{'Units'});
+$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
 	} else {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $bestPrice;
@@ -684,6 +752,7 @@ sub get_price {
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$price{'currency_id'} = $Pricelist->currency_id();
 		openprint::Currency::convert( \%price );
+
 	} # end if
 
 	my $Company = new openprint::Company( $openprint::session{company_id} );
@@ -709,9 +778,11 @@ sub get_price {
 			$price{'Price'} *= $$self{'mweight'} / 100000;
 		} # end if
 	} elsif ( ( lc $price{'units'} ) eq 'per m' ) {
-		$price{'100lb'} = $price{'Price'} * $price{'mweight'} / 100;
+		$price{'100lb'} = ($price{'Price'} * $price{'mweight'} /$factor) / 100;
 		$price{'Cost'} /= 1000;
+		$price{'Cost'} /= $factor;
 		$price{'Price'} /= 1000;
+		$price{'Price'} /= $factor;
 	} else {
 $openprint::log->warn("Invalid units in Paper.");
 		$price{'100lb'} = $price{'Price'};
@@ -741,9 +812,11 @@ sub sheets_per_package {
 		$$self{sheets_per_package} = shift;
 	} # end if
 
-	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} );
-$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
-	return $$self{'sheets_per_package'} * $factor;
+	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} ) if $$self{'width'} and $$self{'height'};
+#$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
+	
+	return $$self{'sheets_per_package'} * $factor if $factor;
+	return $$self{'sheets_per_package'};
 }
 
 sub gsm {
@@ -901,7 +974,6 @@ sub load_from_signature {
 		$Paper->start_width( $$specs{'txtSpecificStockWidth'} );
 		$Paper->start_height( $$specs{'txtSpecificStockHeight'} );
 		$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
-		$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		$Paper->gsm( $$specs{'txtStockGSM'} );
 		$Paper->type( $$specs{'StockType'} );
 
@@ -916,7 +988,9 @@ sub load_from_signature {
 		$Paper->basis_height( $$specs{'basis_height'} );
 		$Paper->basis_mweight( $$specs{'basis_mweight'} );
 		$Paper->score_required( $Paper->calliper() > 0.008 );
-
+		if ( $$specs{'StockType'} ne 'Roll' ) {
+		$Paper->mweight( $$specs{'txtCustomMWeight'} );
+		} # end if
 	} else {
 
 		my @Papers = openprint::Paper::find(
@@ -975,7 +1049,14 @@ sub doublesided {
 
 sub area {
 	my $self = shift;
+	return $$self{width} if ! $$self{height};
 	return $$self{width}*$$self{height};
+}
+
+sub start_area {
+	my $self = shift;
+	return $$self{start_width} if ! $$self{start_height};
+	return $$self{start_width}*$$self{start_height};
 }
 
 1;

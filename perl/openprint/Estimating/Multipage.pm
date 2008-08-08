@@ -241,7 +241,10 @@ $openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs
 				my $check_unspecified_spreads = $unspecified_spreads;
 				while ( $unspecified_spreads > 0 ) {
 					if ( $service_index ) {
-						$sig_specs = openprint::service::get_specs_ref( $Project, $service_index );
+						my $sig_specs2 = openprint::service::get_specs_ref( $Project, $service_index );
+						if ( $$sig_specs2{'txtSignatureType'} ne 'Cover Spreads' ) {
+							$sig_specs = $sig_specs2;
+						} # end if
 					} # end if
 					my $new_service_index = copy_signature( $project_index, $sig_specs );
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $new_service_index );

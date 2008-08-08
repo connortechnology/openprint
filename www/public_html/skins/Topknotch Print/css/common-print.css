@@ -52,10 +52,6 @@ div#main_content_inner
 div#left_sidebar {
 display: none;
 }
-div#main_page
-{
-float: left;
-}
 div#content_container
 {
 width: auto;

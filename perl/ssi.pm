@@ -132,6 +132,7 @@ sub htmlize {
 		$_ =~ s/>/&gt;/mg;
 		$_ =~ s/\r\n/<br\/>/mg;
 		$_ =~ s/\n\r/<br\/>/mg;
+		$_ =~ s/\n/<br\/>/mg;
 		return $_;
 	} # end if
 	for( $_ = 0; $_ < @_; $_ += 1 ) {
@@ -142,6 +143,7 @@ sub htmlize {
 		$_[$_] =~ s/>/&gt;/mg;
 		$_[$_] =~ s/\r\n/<br\/>/mg;
 		$_[$_] =~ s/\n\r/<br\/>/mg;
+		$_[$_] =~ s/\n/<br\/>/mg;
 	} # end for
 	return @_;
 } # end sub htmlize
@@ -235,8 +237,12 @@ sub getmonths {
 } # edn sub getmonths
 
 sub getdays {
-	my $selected = shift;
-	my @days = map { $_, $_ } ( 1 .. 31 );
+	my ( $selected, $year, $month ) = @_;
+	my $maxdays = 31;
+	if ( $year and $month and ( $maxdays > Days_in_Month( $year, $month ) ) ) {
+		$maxdays = Days_in_Month( $year, $month );
+	} # en dif
+	my @days = map { $_, $_ } ( 1 .. $maxdays );
 	$selected = (localtime(time))[3] if ! defined $selected;
 	return make_drop_down( \@days, $selected );
 } # end sub getdays
@@ -301,8 +307,8 @@ sub fix_date {
 	my ( $year, $month, $day ) = @_;
 	$month = int $month;
 	$month = 12 if ( $month > 12 );
-	$month = 1 if $month < 1;
-	if ( $year and $day > Days_in_Month( $year, $month ) ) {
+	$month = 1 if $month < 0;
+	if ( $year and $month and $day > Days_in_Month( $year, $month ) ) {
 		$day = Days_in_Month( $year, $month );
 	} # end if
 	return ( $year, $month, $day );
@@ -319,7 +325,7 @@ sub get_dates {
 	return (
 			getyears( $startYear, (localtime(time))[5]-100, $year ),
 			getmonths($month),
-			getdays($day),
+			getdays($day, $year, $month ),
 			$year ? join('-', $year, $month, $day ) : undef,
 		   );
 }

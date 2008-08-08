@@ -1,0 +1,83 @@
+<div class="PageTitle">
+<h1>CORRECTIVE ACTION REQUEST (CAR)</h1>
+<h2>(Re-print Job Request)</h2>
+</div>
+<script type="text/javascript">
+	function check_part1( form ) {
+		if ( ! get_rdb_value( form.identified_by ) ) {
+			alert('Please select either Internal or Customer for Problem Identification');
+			return 0;
+		} // end if
+		return 1;
+	} // end function check_part1
+	function area_id_onchange( e ) {
+		if ( e.form.issued_to_id ) {
+			new Ajax.Request('_select_assignee_from_area.json', {method:'get', parameters: {area_id:e.value}} );
+		} // end if
+	} // end function area_id_onchange(e)
+</script>
+<style type="text/css">
+	#CAR {
+	}
+	#CAR table {
+		background-color: white;
+		border: 1px solid black;
+		table-layout: fixed;
+	}
+	#CAR table td {
+		border: 1px solid black;
+		width: 10%;
+		vertical-align: top;
+	}
+	table.View tr td {
+	padding: 5px;
+	}
+	table tr td textarea {
+		width: 99%;
+	}
+	table tr td select {
+		padding: 1px;
+	}
+	table tr td select option {
+		padding: 1px;
+	}
+@media print {
+	form#part1form, form#part2form, form#part3form, form#part4form {
+		display: none;
+	}
+}
+</style>
+<div id="CAR">
+	<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>
+		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{'CAR'}->id() ) ?></span></h3>
+		<? echo (
+			my $html;
+			if ( ( ! $openprint::param{'car_id'} ) ) {
+				$html .= '<div id="Part1">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_edit_part1.html' );
+				$html .= '</div>';
+				$html .= '<div id="Part1">';
+				$html .= '</div>';
+				$html .= '<div id="Part2">';
+				$html .= '</div>';
+				$html .= '<div id="Part3">';
+				$html .= '</div>';
+				$html .= '<div id="Part4">';
+				$html .= '</div>';
+			} else {
+				$html .= '<div id="Part1">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part1.html' );
+				$html .= '</div>';
+				$html .= '<div id="Part2">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part2.html' );
+				$html .= '</div>';
+				$html .= '<div id="Part3">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part3.html' );
+				$html .= '</div>';
+				$html .= '<div id="Part4">';
+				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part4.html' );
+				$html .= '</div>';
+			} # end if
+			return ssi::variable_substitution( $r, $log, $dbh, \$html, $variable );
+		) ?>
+</div>

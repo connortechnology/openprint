@@ -21,6 +21,24 @@
 	} # end if
 ) ?>
 <script type="text/javascript">
+<!--
+function level_up( img ) {
+	if ( img.src.match(/level=1/) ) {
+	img.src=img.src.replace(/level=1/,'level=2');
+	} else if ( img.src.match(/level=2/) ) {
+	img.src=img.src.replace(/level=2/,'level=3');
+	} else if ( img.src.match(/level=3/) ) {
+	} 
+
+} 
+function level_down( img ) {
+	if ( img.src.match(/level=1/) ) {
+	} else if ( img.src.match(/level=2/) ) {
+	img.src=img.src.replace(/level=2/,'level=1');
+	} else if ( img.src.match(/level=3/) ) {
+	img.src=img.src.replace(/level=3/,'level=2');
+	} 
+}
 	function loadDivs( results ) {
 		var rows = results.split('|');
 		for ( var r = 0; r < rows.length; r += 1 ) {
@@ -204,6 +222,26 @@
 	} // end function saveComment
 	function errFunc( t ) {
 	}
+	var popupWin;
+	function popup_window( url, parameters ) {
+		if ( ! popupWin ) {
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
+			// Set up a windows observer, check ou debug window to get messages
+			myObserver = {
+	onDestroy: function(eventName, win) {
+				   if (win == popupWin) {
+					   popupWin = null;
+					   Windows.removeObserver(this);
+				   }
+			   }
+			}
+			Windows.addObserver(myObserver);
+		} // end if
+		popupWin.setHTMLContent('Loading... please wait');
+		popupWin.showCenter();
+		popupWin.setAjaxContent(url+'?'+parameters, null , true);
+	} // end function popup_window
+-->
 </script>
 <link rel="stylesheet" type="text/css" href="/css/press_schedule.css">
 <div id="CommentPopup" style="display:none;">
@@ -410,15 +448,25 @@
 			} # end foreach delta day
 			$html .= '</div>';
 		} # end foreach press
+		$html .= '<div class="unprintable"><hr class="spacer"/><h3>Pending Approved:</h3>';
+		# Now do unassigned jobs
+		foreach my $id ( sort keys %presses ) {
+			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $id, 1900, 1, 0, 'Approved' );
+			$html .= '<div class="PressColumn">';
+			$html .= openprint::press_schedule::get_ul( undef, undef, $id, {'name'=>'Approved'}, { 'Status'=>'Approved' } );
+			$html .= '</div>';
+		} # end foreach press
+		$html .= '</div>';
 		$html .= '<div class="unprintable"><hr class="spacer"/><h3>Pending:</h3>';
 		# Now do unassigned jobs
 		foreach my $id ( sort keys %presses ) {
-			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $id, 1900, 1, 0, '' );
+			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $id, 1900, 1, 0, 'NotApproved' );
 			$html .= '<div class="PressColumn">';
-			$html .= openprint::press_schedule::get_ul( undef, undef, $id, undef );
+			$html .= openprint::press_schedule::get_ul( undef, undef, $id, {'name'=>'NotApproved'}, {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval'] } );
 			$html .= '</div>';
 		} # end foreach press
-		return '</div>'.$html;
+		$html .= '</div>';
+		return $html;
 	) ?>
 </form>
 <br class="spacer"/>

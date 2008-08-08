@@ -1,0 +1,98 @@
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript">
+<!--
+    function delete_confirm(form) {
+        var number_of_deleted_cars = 0;
+        for ( var index = 0; index < form.elements['cars'].length; index += 1 ) {
+            if ( form.elements['cars'][index].checked ) {
+                number_of_deleted_cars += 1;
+            } // end if
+        } // end for
+        if ( number_of_deleted_cars == 0 ) {
+            alert("To Delete Cars, click the checkbox beside the CAR.");
+        } else if ( number_of_deleted_cars == 1 ) {
+            if ( confirm("Are you sure you wish to delete this CAR?") ) {
+				form.btnFunction.value='Delete';
+                form.submit();
+            } // end if
+        } else {
+            if ( confirm("Are you sure you wish to delete these " + number_of_deleted_cars + " CARS?") ) {
+				form.btnFunction.value='Delete';
+                form.submit();
+            } // end if
+        } // end if
+    }
+
+	 function load_cars( form ) {
+		 $('Results').innerHTML = 'Please wait...';
+		 new Ajax.Updater('Results','_car_results.html', {method:'get',parameters:Form.serialize(form)});
+	 } // end function
+-->
+</script>
+<? if ( $$variable{'information'} ) ?>
+<p class="information"><?information?></p>
+<hr/>
+<? endif ( $$variable{'information'} ) ?>
+Please select a CAR to view/edit.<br>
+<form id="f1" name="f1" method="post" action="car.html">
+	<fieldset class="filters"><legend>Choose CAR</legend>
+		<p>
+			<label for="car_id">CAR ID #</label>
+			<input type="text" id="car_id" name="car_id" size="10" onkeypress="return input_handler( this, event);"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="cars.html">
+	<input type="hidden" name="btnFunction" />
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<? eval (
+			if ( ! $openprint::session{'/employee/iso/cars.html?StartYear'} ) {
+				@openprint::session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
+			} # end if
+			if ( ! $openprint::session{'/employee/iso/cars.html?EndYear'} ) {
+				@openprint::session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'} = Date::Calc::Today();
+			} # end if
+			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, 
+				@openprint::session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'}
+				);
+			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, 
+				@openprint::session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'}
+				);
+		) ?>
+		<p>
+			<label>Date Issued:</label>
+			<span class="DateSelector">
+			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartYears?></select>
+			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartMonths?></select>
+			<select name="StartDay"><option value="">select</option><?StartDays?></select>
+			to 
+			</span>
+			<span class="DateSelector">
+			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndYears?></select>
+			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndMonths?></select>
+			<select name="EndDay"><option value="">select</option><?EndDays?></select>
+			</span>
+		</p>
+		<p>
+			<label>Status:</label>
+			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( (( ! exists $openprint::session{'/employee/iso/cars.html?status'} ) or sets::isin( 'Open', split(';',$openprint::session{'/employee/iso/cars.html?status'}) ) ) ? 'checked="checked"' : '' ) ?>
+			<label class="radio" for="statusOpen">Open</label>
+			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( sets::isin( 'Closed', split(';',$openprint::session{'/employee/iso/cars.html?status'}) ) ? 'checked="checked"' : '' ) ?>
+			<label class="radio" for="statusClosed">Closed</label>
+		</p>
+		<p>
+			<label>Docket:</label>
+			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/iso/cars.html?Docket'} ) ?>"  />
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_cars(f2);", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f2.btnFunction.value='Download in CSV Format';f2.submit();", '', 'Download' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'car.html', 'Add New CAR' ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">document.f1.car_id.focus();</script>
+<div id="Results"><!--#include virtual="_car_results.html"--></div>

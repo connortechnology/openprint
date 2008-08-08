@@ -36,6 +36,7 @@ my %variables = (
 		'alert'=>['output'],
 		'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
 		'txtCalliper'=>['save','output'],
+		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
 		'Imposition1'=>['save','output'], 'Imposition2'=>['save','output'], 'Imposition3'=>['save','output'],
 		'ddmEquipment1'=>['save','output'], 'ddmEquipment2'=>['save','output'], 'ddmEquipment3'=>['save','output'],
 		'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],
@@ -54,6 +55,7 @@ my %variables = (
 		'txtSignatureQty36Page-1'=>['save','output'], 'txtSignatureQty36Page-2'=>['save','output'], 'txtSignatureQty36Page-3'=>['save','output'],
 		'txtSignatureQty40Page-1'=>['save','output'], 'txtSignatureQty40Page-2'=>['save','output'], 'txtSignatureQty40Page-3'=>['save','output'],
 		'txtSignatureQty48Page-1'=>['save','output'], 'txtSignatureQty48Page-2'=>['save','output'], 'txtSignatureQty48Page-3'=>['save','output'],
+		'txtSignatureQty64Page-1'=>['save','output'], 'txtSignatureQty64Page-2'=>['save','output'], 'txtSignatureQty64Page-3'=>['save','output'],
 		);
 sub variables {
 	my ( $p_id, $s_id, $specs ) = @_;
@@ -264,7 +266,7 @@ sub calc {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
-			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
 				$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
 			} # end foreach
 		} # end if
@@ -284,8 +286,10 @@ $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposit
 			last if $imposition == 1;
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
 				$imposition = 1 if $$sig_specs{'hdnImpositionRows'.$qty_index} % 2;
+				$openprint::log->warn("Setting imposition to 1 : Rows" . $$sig_specs{'hdnImpositionRows'.$qty_index} );
 			} elsif ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
 				$imposition = 1 if $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2;
+				$openprint::log->warn("Setting imposition to 1 : Cols" . $$sig_specs{'hdnImpositionColumns'.$qty_index} );
 			} # end if
 		} # end foreach
 
@@ -303,7 +307,7 @@ $openprint::log->debug("Overriding imposiion");
 	if ( $$services{'Folding'} ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 	} # end if
-	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $log, $dbh, $project_index );
+	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	my $plusCover = 0;
 	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
 		#$log->debug("************* We Have Plus Cover *************************");
@@ -341,7 +345,7 @@ $openprint::log->debug("Overriding imposiion");
 				my %pages;
 				my $sig_pages = $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index}*$$sig_specs{'txtSpreadSize'};
 				if ( $folding_specs ) {
-					foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+					foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
 						$pages{$pages} += $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index};
 					} # end foreach
 				} # end if
@@ -358,7 +362,7 @@ $openprint::log->debug("Overriding imposiion");
 				} # end if
 			} # end foreach signature
 		} else { # Override Pockets
-			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48 ) {
+			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
 				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
 #$openprint::log->debug("Pckets $qty_index: " . $$specs{"txtPockets$qty_index"} );
 			} # end foreach

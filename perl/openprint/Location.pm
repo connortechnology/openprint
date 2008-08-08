@@ -3,8 +3,10 @@ package openprint::Location;
 
 use strict;
 use openprint ();
-use vars qw(%variable %cache);
+use vars qw( %variable %cache $log $dbh );
 *variable = \%openprint::variable;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 require sql;
 
@@ -28,7 +30,10 @@ sub find {
 		if ( $params{'order_by'} ) {
 		$sql .= " ORDER BY $params{'order_by'}";
 		} # en if
-		my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+		if ( $params{'order'} ) {
+		$sql .= " ORDER BY $params{'order'}";
+		} # en if
+		my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 		return map { new openprint::Location( $_->{id}, $_ ) } @$data;
 	} # end if
 
@@ -45,7 +50,7 @@ sub copy {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Locations WHERE id=?',{}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( 'SELECT * FROM Locations WHERE id=?',{}, $$self{'id'} );
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 } # end sub load
@@ -53,43 +58,40 @@ sub load {
 sub save {
 	my $self = shift;
 
-	my $ac = sql::start_transaction( $$self{'dbh'} );
 	my @sql = ( 
 		'name',		$$self{'location'},
 		'parent_id',$$self{'parent_id'},
 		'name',		$$self{'name'},
 		'coordinates',	$$self{'coordinates'},
+		'updated_on', 'NOW()',
 		);
 		
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( @$self{'log','dbh'}, q{SELECT nextval('Location_id_seq')} );
-		sql::insert( undef, undef, 'Locations', [@sql, 'id', $$self{'id'}] );
+		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Location_id_seq')} );
+		if ( my $error = sql::insert( undef, undef, 'Locations', [@sql, 'id', $$self{'id'}] ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} else {
-		sql::update( @$self{'log','dbh'}, 'Locations', ['id=?', $$self{'id'}], \@sql );
+		if ( my $error = sql::update( undef, undef, 'Locations', ['id=?', $$self{'id'}], \@sql ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} # end if
 
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
-	sql::end_transaction( $$self{'dbh'}, $ac );
-
+	return;
 } # end sub save
 
 sub delete {
 	my $self = shift;
 
-	my $ac = sql::start_transaction( $$self{'dbh'} );
+	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, q{DELETE FROM Locations WHERE id=?}, $$self{'id'} );
-	sql::end_transaction( $$self{'dbh'}, $ac );
+	sql::end_transaction( $dbh, $ac );
 } # end sub delete
-
-sub to_string {
-	my $self = shift;
-	return join('-', sql::execute( undef, undef, q{SELECT (SELECT shortname FROM PaperNames WHERE id=name_id),(SELECT shortname FROM PaperFinishes WHERE id=finish_id),(SELECT shortname FROM PaperColours WHERE id=colour_id),(SELECT shortname FROM PaperWeights WHERE id=weight_id),width,height FROM Papers WHERE Id=?}, $$self{'id'} ) );
-} # end sub
-
-sub created_on {
-	my $self = shift;
-	return $$self{'created_on'};
-} # end sub created_on
 
 sub children {
 	my $self = shift;
@@ -100,6 +102,18 @@ sub parent {
 	my $self = shift;
 	return new openprint::Location( $$self{'parent_id'}) if $$self{'parent_id'};
 } # end sub parent
+sub Parent {
+	my $self = shift;
+	return new openprint::Location( $$self{'parent_id'}) if $$self{'parent_id'};
+} # end sub parent
+sub Root {
+	my $self = shift;
+	my $P = $self->Parent();
+	while ( $P->parent_id() ) {
+		$P = $P->Parent();
+	} # end while 
+	return $P;
+} # end sub Root
 
 1;
 __END__

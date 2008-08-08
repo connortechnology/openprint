@@ -1,0 +1,20 @@
+<? eval (
+	@{$$variable{'Templates'}} = openprint::EmailTemplate::find('order'=>'lower(name)');
+) ?>
+<table class="List">
+	<tr>
+		<th align="left">Name</th><th align="left">Created On</th><th align="right">Updated On</th>
+	</tr>
+	<? while ( $$variable{'Template'} = shift @{$$variable{'Templates'}}; ) ?>  
+		<tr<?rowclass?>>
+			<td><a href="email_template.html?template_id=<? echo ( $$variable{'Template'}->id(); ) ?>"><? hecho ( $$variable{'Template'}->name() ) ?></a></td>
+			<td align="left"><a href="email_template.html?template_id=<? echo ( $$variable{'Template'}->id(); ) ?>"><? echo ( $$variable{'Template'}->created_on() ) ?></a></td>
+			<td align="right"><a href="email_template.html?template_id=<? echo ( $$variable{'Template'}->id(); ) ?>"><? echo ( $$variable{'Template'}->updated_on() ) ?></a></td>
+		</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( $$variable{'Template'} = shift @{$$variable{'Templates'}}; ) ?>  
+</table>
+<p class="buttons">
+<? echo ( ssi::writeButton( $log, $dbh, 'New', 'new.gif', '','email_template.html', 'New'); ) ?>
+</p>
+<br class="spacer"/>

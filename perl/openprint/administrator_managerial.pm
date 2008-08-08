@@ -144,6 +144,8 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'User already exists.', "There is already a user with the specified email address.  Please try another.");
 		} # end if
 
+		#$openprint::param{'assistant_ids'} = '' if ! exists $openprint::param{'assistant_ids'};
+		#$openprint::param{'csr_ids'} = '' if ! exists $openprint::param{'csr_ids'};
 		my $error = $User->save( \%openprint::param );
 
 		if ( $error ) {
@@ -156,6 +158,17 @@ sub user_profiles {
 			} else {
 				email::stop_vacation( $r, $log, $User->email() );
 			} # end if
+			if ( $openprint::param{'EmailPassword'} and $openprint::param{'EmailPassword'} eq $openprint::param{'VerifyEmailPassword'} ) {
+                email::set_password( $r, $log, @openprint::param{'email','EmailPassword'} );
+            } # end if
+            my @aliases = ();
+            foreach my $alias ( split "\r\n", $openprint::param{'aliases'} ) {
+                next if ! $alias;
+                push @aliases, $alias;
+            } # end foreach
+			push @aliases, $User->email() if ! @aliases;
+            email::aliases( $log, $User->email(), @aliases );
+
 			$sql::dbh = $dbh;
         } # end if
 
@@ -211,6 +224,7 @@ sub user_profiles {
 
 	if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 		@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
+		@{$$variable{'Aliases'}} = email::aliases( $log, $User->email() );
 		$sql::dbh = $dbh;
 	} # end if
 
@@ -383,6 +397,7 @@ if ( 0 ) {
 			$params{$fields{$field}} = $openprint::param{$field} if defined $openprint::param{$field};
 		} # end foreach
 		if ( $openprint::param{'txtStartYear'} ) {
+			$openprint::param{'ddmStartMonth'} = '01' if ! $openprint::param{'ddmStartMonth'};
 			$params{'BusinessStartDate'} = $openprint::param{'txtStartYear'} . '-' . $openprint::param{'ddmStartMonth'} . '-01';
 		} # end if
 		$customer->set( \%params );

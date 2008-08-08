@@ -40,14 +40,14 @@
 -->
 </script>	 
 <? if ( $openprint::session{'user_id'} ) ?>
-<form name="f1" method="post" action="/main/project/history.html">
+<form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="ProjectHistory">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 			<div style="float: left; width: 48%;">
 			<p>
 				<label>Project #:</label>
 				<input type="text" name="ProjectID" size="6" onkeydown="if(event.keyCode == 13){load_projects( this.form );}"/>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_projects( this.form );", '', 'Go' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_projects( \$('f1') );", '', 'Go' ); ) ?>
 			</p>
 			<p>
 				<label>Reference:</label>

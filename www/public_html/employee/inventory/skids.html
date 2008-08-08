@@ -1,17 +1,12 @@
+<? eval (
+if ( ! exists $openprint::session{'/employee/inventory/skids.html?withrfid'} ) {
+	$openprint::param{'withrfid'} = $openprint::session{'/employee/inventory/skids.html?withrfid'} = 1;
+} # end if
+if ( ! exists $openprint::session{'/employee/inventory/skids.html?withoutrfid'} ) {
+	$openprint::param{'withoutrfid'} = $openprint::session{'/employee/inventory/skids.html?withoutrfid'} = 0;
+} # end if
+) ?>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
-<script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f2.StartYear.value,document.f2.StartMonth.value,document.f2.StartDay,document.f2.StartDay.value);
-            setDaysDropDown(document.f2.EndYear.value,document.f2.EndMonth.value,document.f2.EndDay,document.f2.EndDay.value);
-            setDaysDropDown(document.f2.UpdatedStartYear.value,document.f2.UpdatedStartMonth.value,document.f2.UpdatedStartDay,document.f2.UpdatedStartDay.value);
-            setDaysDropDown(document.f2.UpdatedEndYear.value,document.f2.UpdatedEndMonth.value,document.f2.UpdatedEndDay,document.f2.UpdatedEndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-</script>
 <? if ( $$variable{'information'} ) ?>
 <p class="information"><?information?></p>
 <hr/>
@@ -21,13 +16,19 @@ Please select a Skid to view/edit.<br>
 	<fieldset class="filters"><legend>Choose Skid</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
-			<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);"/>
+			<input type="text" id="skid_id" name="skid_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
 		</p>
 	</fieldset>
 </form>
 <form name="f2" method="post" action="skids.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
+		<p>
+			<label>Docket:</label>
+			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup=this.value=this.value.replace(/\D/,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );",'','Go' ); ) ?>
+		</p>
+		<hr/>
 		<? eval (
 			if ( ! $openprint::session{'/employee/inventory/skids.html?StartYear'} ) {
 				@openprint::session{'/employee/inventory/skids.html?StartYear','/employee/inventory/skids.html?StartMonth','/employee/inventory/skids.html?StartDay'} = Date::Calc::Today();
@@ -71,10 +72,6 @@ Please select a Skid to view/edit.<br>
 			</span>
 		</p>
 		<p>
-			<label>Docket:</label>
-			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/inventory/skids.html?Docket'} ) ?>"  />
-		</p>
-		<p>
 			<label>FSC Code:</label>
 			<input type="text" name="fsc_code" size="13" value="<? echo ( $openprint::session{'/employee/inventory/skids.html?fsc_code'} ) ?>"  />
 		</p>
@@ -85,13 +82,25 @@ Please select a Skid to view/edit.<br>
             <input type="checkbox" id="notempty" name="notempty" value="Y" <? echo ( 'checked="checked"' if $openprint::session{'/employee/inventory/skids.html?notempty'} eq 'Y' or ! exists $openprint::session{'/employee/inventory/skids.html?notempty'} ) ?> />
             <label class="radio" for="notempty">Not Empty</label>
 		</p>
+		<p>
+            <label>With/Without RFID?</label>
+            <input type="checkbox" id="withrfid" name="withrfid" <? echo ( $openprint::session{'/employee/inventory/skids.html?withrfid'} ? 'checked="checked"' : '' ) ?> />
+            <label class="radio" for="withrfid">With RFID</label>
+            <input type="checkbox" id="withoutrfid" name="withoutrfid" <? echo ( $openprint::session{'/employee/inventory/skids.html?withoutrfid'} ? 'checked="checked"' : '' ) ?> />
+            <label class="radio" for="notempty">Without RFID</label>
+		</p>
 		<p><label>Type:</label>
             <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/skids.html?Type'} ) or sets::isin( 'Sheet', split(';', $openprint::session{'/employee/inventory/skids.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeSheet">Sheet</label>
             <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/skids.html?Type'} ) or sets::isin( 'Roll', split(';', $openprint::session{'/employee/inventory/skids.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeRoll">Roll</label>
         </p>
-
+		<p><label>Location:</label>
+			<select name="location_id">
+				<option value=""> All </option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $openprint::session{'/employee/inventory/skids.html?location_id'} ); ) ?>
+			</select>
+		</p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );", '', 'Show Results' ),

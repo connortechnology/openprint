@@ -3,14 +3,17 @@ package openprint::Skid;
 
 use strict;
 use openprint ();
-use vars qw(%variable %cache);
+use vars qw( $log $dbh %variable );
 *variable = \%openprint::variable;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 require sql;
 require openprint::Location;
 require openprint::Paper;
+require openprint::RFIDTag;
 
-my $debug = 0;
+my $debug = 1;
 
 sub find {
 	my %params = @_;
@@ -31,8 +34,12 @@ sub find {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
 	} # end if
+	if ( $params{'rfidtag_id'} ) {
+		$sql .= ' AND rfidtag_id=?';
+		push @values, $params{'rfidtag_id'};
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN	? AND ? )';
+		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
 		push @values, @params{'created_on_start','created_on_end'};
 	} elsif ( $params{'created_on_start'} ) {
 		$sql .= ' AND created_on >= ?';
@@ -42,7 +49,7 @@ sub find {
 		push @values, $params{'created_on_end'};
 	} # end if
 	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN	? AND ? )';
+		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
 		push @values, @params{'updated_on_start','updated_on_end'};
 	} elsif ( $params{'updated_on_start'} ) {
 		$sql .= ' AND updated_on >= ?';
@@ -60,18 +67,18 @@ sub find {
 		push @values, $params{'fsc_code'};
 	} # end if
 	if ( $params{'created_on'} ) {
-		$openprint::log->debug("Find: Created: $params{'created_on'}");
+		$log->debug("Find: Created: $params{'created_on'}");
 	} # end if
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading skids SQL($sql)" . DBI->errstr );
+		$log->debug("Error loading skids SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
-		$openprint::log->debug('No skidss loaded (' . $sql . ") (@values)" );
+		$log->debug('No skidss loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded skids ($sql) (@values) " );
+		$log->debug("Debug loaded skids ($sql) (@values) " );
 	} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
@@ -82,14 +89,14 @@ sub copy {
 	my $new = new openprint::Skid( );
 	@$new{'location_id'} = @$self{'location_id'};
 	if ( ! $$self{'Paper'} ) {
-		$$self{'log'}->debug("Problem with paper on skid");
+		$log->debug("Problem with paper on skid");
 	} # end if
 	%{$$new{'Paper'}} = %{$$self{'Paper'}};
 	$new->save();
 	foreach my $paper_id ( keys %{$$new{'Paper'}} ) {
 		my $Paper = new openprint::Paper( $paper_id );
 		$Paper->add_inventory( $new->id(), $$new{'Paper'}{$paper_id} );
-		my @data = sql::execute( $openprint::log,$openprint::dbh, q{SELECT project_id, quantity, units FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $paper_id );
+		my @data = sql::execute( undef, undef, q{SELECT project_id, quantity, units FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $paper_id );
 		while ( @data ) {
 			$Paper->allocate( $new->id(), splice @data, 0, 3 );
 		} # en d while
@@ -101,7 +108,7 @@ sub load {
 	my ($self, $data ) = @_;
 
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Skids WHERE id=?}, {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( q{SELECT * FROM Skids WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 
@@ -116,10 +123,11 @@ sub load {
 
 sub save {
 	my $self = shift;
-$$self{'log'}->warn("Saving skid");
+$log->warn("Saving skid");
 	$$self{'created_by_id'} = $openprint::session{'user_id'} if ! $$self{'created_by_id'};
-	my $ac = sql::start_transaction( $$self{'dbh'} );
+	my $ac = sql::start_transaction( $dbh );
 	my @sql = ( 
+		'rfidtag_id',	$$self{'rfidtag_id'} ? $$self{'rfidtag_id'} : undef,
 		'location_id',	$$self{'location_id'} ? $$self{'location_id'} : undef,
 		'created_by_id',$$self{'created_by_id'},	
 		'updated_on',	'NOW()',
@@ -128,9 +136,15 @@ $$self{'log'}->warn("Saving skid");
 		
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Skid_id_seq')} );
-		sql::insert( undef, undef, 'Skids', @sql, 'id', $$self{'id'} );
+		if ( my $error = sql::insert( undef, undef, 'Skids', @sql, 'id', $$self{'id'} ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} else {
-		sql::update( undef, undef, 'Skids', "id=$$self{'id'}", @sql );
+		if ( my $error = sql::update( undef, undef, 'Skids', ['id=?',$$self{'id'}], \@sql )) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} # end if
 
 	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE skid_id=?}, $$self{'id'} );
@@ -139,19 +153,19 @@ $$self{'log'}->warn("Saving skid");
 		sql::insert( undef, undef, 'skid_Contents', 'skid_id', $$self{'id'}, 'paper_id', $paper_id, 'quantity', int($$self{'Paper'}{$paper_id}), 'units', $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
 	} # end foreach paper_id
 	$self->load();
-	sql::end_transaction( $$self{'dbh'}, $ac );
-
+	sql::end_transaction( $dbh, $ac );
+	return;
 } # end sub save
 
 sub delete {
 	my $self = shift;
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_inventory WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skid_contents WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skids WHERE id=?}, $$self{'id'} );
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 } # end sub delete
 
 sub to_string {
@@ -209,17 +223,42 @@ sub location {
 	my $self = shift;
 	if ( @_ ) {
 		my $name = shift;
-		@$self{'location_id','location'} = sql::execute( undef, undef, q{SELECT id,name FROM Locations WHERE name=?}, $name );
+		@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
 		if ( ! $$self{'location'} ) {
 			sql::insert( undef,undef, 'Locations', 'name', $name );
-			@$self{'location_id','location'} = sql::execute( undef, undef, q{SELECT id,name FROM Locations WHERE name=?}, $name );
+			@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
 		} # end if
 	} # end if
-	if ( ( ! $$self{'location'} ) and $$self{'location_id'} ) {
-		@$self{'location'} = new openprint::Location( $$self{'location_id'} )->name();
-	} # end if
-	return $$self{'location'};
+	return new openprint::Location( $$self{'location_id'} )->name();
 } # end if
+
+sub location_id {
+	my ( $self, $new ) = @_;
+
+	if ( $$self{'rfidtag_id'} ) {
+		my $Tag = new openprint::RFIDTag( $$self{'rfidtag_id'} );
+		if ( $new ) {
+			$Tag->location_id( $new );
+			$Tag->save();
+			$$self{'location_id'} = $new;
+		} elsif ( $Tag->location_id() != $$self{'location_id'} ) {
+			$$self{'location_id'} = $Tag->location_id();
+		} # end if
+	} elsif ( $new ) {
+		$$self{'location_id'} = $new;
+	} # end if
+	return $$self{'location_id'};
+} # end sub location_id
+
+sub Location {
+	my ( $self ) = @_;
+
+	if ( $$self{'rfidtag_id'} ) {
+		return new openprint::RFIDTag( $$self{'rfidtag_id'} )->Location();
+	} # end if
+
+	return new openprint::Location( $$self{'location_id'} );
+} # end sub Location
 
 sub created_on {
 	my $self = shift;
@@ -237,6 +276,20 @@ sub allocation {
 		return $allocated;
 	} # end if
 } # end sub allocatiosn
+
+sub allocateable {
+	my ( $self, $Paper ) = @_;
+	return $$self{'Paper'}{$Paper->id()} - $self->allocation( 'Paper'=>$Paper );
+} # end sub allocateable
+
+# Checkout all paper on the skid
+sub checkout {
+	my ( $self ) = @_;
+	foreach my $Paper ( keys %{$$self{'Paper'}} ) {
+		
+	} # end foreach Paper
+} # end sub checkout
+
 sub previous {
 	my $self = shift;
 	if ( ! ( ( $_ ) = sql::execute( undef, undef, q{SELECT MAX(id) FROM Skids WHERE id<?}, $$self{'id'} ) ) ) {
@@ -264,10 +317,36 @@ sub allocate {
 			'project_id',	$project_id ? $project_id : undef,
 			'operator_id',	$variable{'user_id'},
 			);
-	(new openprint::Project( $project_id ))->add_to_log( @openprint::session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skids.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
+	(new openprint::Project( $project_id ))->add_to_log( @openprint::session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
 	sql::end_transaction( undef, $ac );
 } # end sub allocate
 
+sub empty {
+	my ( $self ) = @_;
+	foreach my $paper_id ( keys %{$$self{'Paper'}} ) {
+		if ( $$self{'Paper'}{$paper_id} > 0 ) {
+			return 0;
+		} # end if
+	} # end foreach
+	return 1;
+} # end sub empty
+
+sub contents {
+	my ( $self, $Paper ) = @_;
+	return $$self{'Paper'}{$Paper->id()};
+} # end sub contents
+
+sub rfidtag_id {
+	my ( $self, $rfidtag_id ) = @_;
+
+	if ( $rfidtag_id ) {
+		my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+		my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
+		$openprint::log->error( $error ) if $error;
+		$$self{'rfidtag_id'} = $rfidtag_id;
+	} # end if
+	return $$self{'rfidtag_id'};
+} # end sub rfidtag_id
 
 1;
 __END__

@@ -11,6 +11,10 @@ sub find {
 	my $sql = 'SELECT * FROM PaperColours WHERE 1>0';
 	my @values;
 
+	if ( $params{'shortname'} ) {
+		$sql .= ' AND shortname=?';
+		push @values, $params{'shortname'};
+	} # end if
 	if ( $params{'papers'} ) {
 		$sql .= ' AND id IN (?)';
 		push @values, [map { $_->name_id(); } @{$params{'papers'}}];

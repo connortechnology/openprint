@@ -22,7 +22,7 @@
 <? echo (
 		$$variable{'price'} = $$variable{'Project'}->ordered_price();
 		my ( $html, $shipping_html );
-	   my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
+		my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
 		my %services = $$variable{'Project'}->get_services();
 		foreach my $ServiceType ( @ShippingServices ) {
 			if ( $services{$ServiceType->name()} ) {
@@ -37,7 +37,7 @@
 					eval(' require openprint::Estimating::'.$ServiceType->name().';' );
 					my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs, $$variable{Project}->ordered_quantity_index() );') . ' to<br/>'.eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs );');
 					$openprint::log->error("Error ". $@) if $@;
-					$shipping_html .= qq`<tr$$variable{'rowclass'}><td colspan="3">`.$ServiceType->description().qq` $summary</td><td align="right">$$specs{'alert'}</td><td align="right">`.sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $price).'</td></tr>';
+					$shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td colspan="2">$summary</td><td align="right">$$specs{'alert'}</td><td align="right">`.sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $price).'</td></tr>';
 				} # end foreach
 			} # end if
 		} # end foreach
@@ -57,7 +57,7 @@
 <table class="List">
 	<tr class="totals"> 
 		<td colspan="2" align="right">Sub-Total:</td>
-		<td width="120" align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'SUB_TOTAL'} ); ) ?></td>
+		<td width="120" align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->sub_total() ); ) ?></td>
 	</tr>
 	<? if ( $$variable{'GST'} ) ?>
 	<tr> 

@@ -57,6 +57,7 @@ sub view_services {
 	if ( defined $openprint::param{'btnFunction'} and ( $openprint::param{'btnFunction'} eq 'Save Project' ) ) {
 		$log->debug("*** Time to Save Project - View Services Function ***");
 		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
+		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		my $Project = new openprint::Project( $project_index );
 		$Project->Currency( openprint::Currency::get_current() );
 		foreach my $signature_service_index ( $Project->signatures() ) {
@@ -112,6 +113,9 @@ sub view_services {
 				if ( $service_name eq '' ) {
 					$service_name = 'Adjust';
 				} # end if
+				my $CurrentCurrency = openprint::Currency::get_current();
+				my $ProjectCurrency = $Project->Currency();
+				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
 
 				if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
 					my $ac = sql::start_transaction( $dbh );
@@ -134,21 +138,21 @@ sub view_services {
 								'lngProjectIndex',  $project_index,
 								'lngServiceIndex',  $service_index,
 								'strName',          'txtPrice1',
-								'strValue',         misc::moneyfilter($r->param('txtPrice1') )]);
+								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice1') )]);
 					} # end if
 					if ( defined $r->param('txtPrice2') ) {
 					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 								'lngProjectIndex',  $project_index,
 								'lngServiceIndex',  $service_index,
 								'strName',          'txtPrice2',
-								'strValue',         misc::moneyfilter($r->param('txtPrice2') )]);
+								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice2') )]);
 					} # end if
 					if ( defined $r->param('txtPrice3') ) {
 					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 								'lngProjectIndex',  $project_index,
 								'lngServiceIndex',  $service_index,
 								'strName',          'txtPrice3',
-								'strValue',         misc::moneyfilter($r->param('txtPrice3') )]);
+								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice3') )]);
 					} # end if
 					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 								'lngProjectIndex',  $project_index,
@@ -218,12 +222,10 @@ sub print_prices {
 	$project_index = $openprint::param{'ProjectIndex'} if ! $project_index;
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
-    get_quantities( $variable, $project_index);
-
-    $$variable{'Cutting'} = $services{'Cutting'} ? 'YES' : 'NO';
-    $$variable{'Folding'} = $services{'Folding'} ? 'YES' : 'NO';
+    $$variable{'Cutting'} = $$services{'Cutting'} ? 'YES' : 'NO';
+    $$variable{'Folding'} = $$services{'Folding'} ? 'YES' : 'NO';
 
 	$$variable{'Mode'} = $Project->mode();
 
@@ -432,10 +434,12 @@ sub multipage_signatures {
 	} # end if
 
 	if ( $$param{'rdbTemplateType'} eq 'NoBindery' ) {
-		foreach ( openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' ) ) {
-			if ( $_ ne 'NoBindery' ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
-				@{$services{$_}} = sets::exclude( [ $_ ], $services{$_} );
+		my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' );
+		foreach my $service_id ( keys %bindery_services ) { 
+			my $ServiceType = new openprint::ServiceType( $bindery_services{$service_id} );
+			if ( $ServiceType->name() ne 'NoBindery' ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				@{$services{$_}} = sets::exclude( [ $service_id ], $services{$service_id} );
 			} # end if
 		} # end foreach
 		
@@ -562,13 +566,20 @@ sub get_finished_weight {
 	# We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
 
 # calculate project weight
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		foreach my $qty_index ( 1 ..3 ) {
-			next if ! $$specs{'txtQuantity'.$qty_index};
-			$project_weight += openprint::Estimating::Printing::get_weight( $Project, $specs, $qty_index );
-			last;
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $Project->quantity($qty_index);
+
+		foreach my $signature_service_index ( $Project->signatures() ) {
+			my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			next if $$specs{'txtSignatureType'} and ! $$specs{'PageQuantity'.$qty_index};
+			my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $specs, $qty_index );
+			if ( ! $sig_weight ) {
+				# unable to get weight for a sig, must recalc printing service
+				return 0;
+			} # end if
+			$project_weight += $sig_weight;
 		} # end foreach
+		last;
 	} # end foreach
 	$log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{'WeightMarkup'}/100));
 	
@@ -579,14 +590,14 @@ sub get_finished_weight {
 
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
-	my ( $log, $dbh, $project_index, $folding_service_index, $project_type ) = @_; 
-	$log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE $project_type *********************************");
+	my ( $project_index ) = @_; 
+	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE *********************************");
 
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
 
 	my $folding_specs;	
-	$folding_service_index = $services{'Folding'}[0] if ( ! $folding_service_index ) and $services{'Folding'};
+	my $folding_service_index = $services{'Folding'}[0] if $services{'Folding'};
 	if ( $folding_service_index ) {
 		$folding_specs = openprint::service::get_specs_ref( $project_index, $folding_service_index );
 	} # end if
@@ -621,7 +632,7 @@ sub get_finished_calliper {
 				$finished_calliper += $pages * $$sig_specs{'txtSpecificStockCalliper'};
 		} # end if
 	} # end foreach
-$log->debug("Calliper: $finished_calliper");
+$openprint::log->debug("Calliper: $finished_calliper");
 	return $finished_calliper;
 } # end sub get_finished_calliper
 

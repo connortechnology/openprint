@@ -103,13 +103,16 @@ sub calc {
 		$$specs{'alert'} .= "Dimensions of project are not known. Please enter them.";
 		return 'uncalculated';
 	} # end if
-	$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $log, $dbh, $project_index );
+	$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	if ( ! $$specs{'txtFinishedCalliper'} ) {
-		return 'uncalculated';
+		$$specs{'alert'} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	$$specs{'txtFinishedWeight'} = 1 * openprint::print::get_finished_weight( $log, $dbh, $project_index, 1 );
 	if ( ! $$specs{'txtFinishedWeight'} ) {
-		return 'uncalculated';
+$openprint::log->error("Unable to calculate weight");
+		$$specs{'alert'} .= 'Unable to calculate the weight of the project.  Please recalculate printing services.';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	
     foreach my $qty_index ( 1 .. 3 ) {

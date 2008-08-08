@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -78,6 +78,7 @@ sub no_outputs {
 	'SingleGateFold', 'Single Gate Fold',
 	'DoubleGateFold', 'Double Gate Fold',
 	'4PageSignatureFold', '4PageSignatureFold',
+	'6PageSignatureFold', '6PageSignatureFold',
 	'8PageSignatureFold', '8PageSignatureFold',
 	'12PageSignatureFold', '12PageSignatureFold',
 	'16PageSignatureFold', '16PageSignatureFold',
@@ -103,8 +104,10 @@ sub fold_types {
 } # end sub fold_types
 
 sub signature_needs {
-	my $specs = shift;
-	if ( $$specs{'rdbTemplateType'} eq 'NoBindery' ) {
+	my ( $Project, $specs ) = @_;
+
+	my $services = $Project->services();
+	if ( $$services{'NoBindery'} ) {
 		return 0;
 	} # end if
 
@@ -127,10 +130,6 @@ sub neccessary {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services( );
 
-	if ( $$services{'DieCutting'} ) {
-		$log->debug(" ** Project has Die Cutting, This Folding Service is NOT needed ** ");
-		return 0;
-	} # end if
 	if ( $$services{'NoBindery'} ) {
         $log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
         return 0;
@@ -152,8 +151,8 @@ sub neccessary {
     } # end if
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		if ( signature_needs( $specs ) ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+		if ( signature_needs( $Project, $specs ) ) {
 			return 1;
 		} # end if
 	} # end foreach
@@ -345,10 +344,11 @@ sub signature_calc {
 	my $imposition;
 	if ( $Imposition->StitchingImposition() ) {
 		$imposition = $Imposition->StitchingImposition();
-#$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug;
+$openprint::log->debug("Got impo from StitchingImposition $qty_index: $imposition out") if $debug ;
 	} elsif ( $$services{'SaddleStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$imposition = $$stitching_specs{'Imposition'.$qty_index};
+$openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if $debug;
 #$openprint::log->debug("Got impo from SaddleStitching: $imposition out") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
@@ -582,9 +582,11 @@ sub calc {
 					} # end if
 					$status = 'uncalculated';
 				} # end if
-				foreach ( keys %fold_types ) {
-					$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'BestFolds'}{$_};
-				} # end foreach
+				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+					foreach ( keys %fold_types ) {
+						$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'BestFolds'}{$_};
+					} # end foreach
+				} # end if
 			}# # end if
 		} # end foreach signature
 		if ( $status eq 'uncalculated' and ! $$specs{'alert'} ) {

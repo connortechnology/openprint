@@ -1,6 +1,11 @@
 <? eval (
-	$ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
-	$$variable{'referer'} = $1;
+	if ( $openprint::param{'referer'} ) {
+		$$variable{'referer'} = $openprint::param{'referer'};
+	} elsif ( $ENV{'HTTP_REFERER'} ) {
+		$openprint::log->debug($ENV{'HTTP_REFERER'});
+		$ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
+		$$variable{'referer'} = $1;
+	} # end if
 	$$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} );
 	if ( exists $openprint::param{'quantity'} ) {
 		$$variable{'quantity'} = $openprint::param{'quantity'};
@@ -24,20 +29,32 @@
 			) ?>
 			<p>
 				<label>Docket:</label>
-				<input type="text" name="Docket" onkeypress="return input_handler( this, event);"/>
+				<input type="text" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateDocket', 'clear.gif', "allocateform.Docket.value='';", '', 'Clear' ); ) ?>
 				
 			</p>
 			<p>
 				<label>Project:</label>
-				<input type="text" name="Project" onkeypress="return input_handler( this, event);"/>
+				<input type="text" name="Project" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateProject', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 				
 			</p>
 			<p>
 				<label>Quantity: ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
-				<input type="hidden" name="available_quantity" value="<? echo ( $$variable{Paper}->in_stock() - $$variable{Paper}->allocated() ) ?>"/>
-				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);"/>
+				<input type="hidden" name="Units" value="<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>" />
+				<input type="hidden" name="available_quantity" value="<? echo ( 
+					if ( $openprint::param{'skid_id'} ) {
+						my $available = 0;
+						foreach my $skid_id ( split(',', $openprint::param{'skid_id'} ) ) {
+							my $Skid = new openprint::Skid( $skid_id );
+							$available += ( $Skid->contents($$variable{'Paper'}) - $Skid->allocation('Paper'=>$$variable{'Paper'}) );
+						} # end foreach Skid
+						return $available;
+					} else {
+						return $$variable{Paper}->in_stock() - $$variable{Paper}->allocated();
+					} # end if
+) ?>"/>
+				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 				
 			</p>

@@ -1,8 +1,8 @@
 <? eval (
-$log->debug("skid_id: $openprint::param{'skid_id'}");
 	$$variable{'Skid'} = new openprint::Skid( $openprint::param{'skid_id'} );
 ) ?>
 	<? echo (
+		require openprint::PaperInventory;
 		my $html;
 		my %employees = map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'] );
 		foreach my $paper_id ( sql::execute( $log, $dbh, q{SELECT DISTINCT paper_id FROM Paper_Inventory WHERE skid_id=?}, $openprint::param{'skid_id'} ) ) {
@@ -18,18 +18,14 @@ $log->debug("skid_id: $openprint::param{'skid_id'}");
 				<th align="left">Comment</th>
 			</tr>
 			};
-			my @data = sql::execute( $log, $dbh, q{SELECT updatetime, user_id, delta, instock, comment, poindex, paper_id FROM Paper_Inventory WHERE skid_id=? AND paper_id=? ORDER BY updatetime},
-			$openprint::param{'skid_id'},
-			$paper_id,
-			);
 			my $rowclass;
-			while ( my ( $time, $user_id, $delta, $instock, $comment, $po_id, $paper_id ) = splice @data, 0, 7 ) {
+			foreach my $PI ( openprint::PaperInventory::find('skid_id'=>$openprint::param{'skid_id'}, 'paper_id'=>$paper_id, 'order'=>'updated_on' ) ) {
 				$html .= "<tr$rowclass>";
-				$html .= sprintf( '<td>%s</td>', Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ) );
-				$html .= sprintf( '<td>%s</td>', $employees{$user_id}, );
-				$html .= sprintf( '<td>%d</td>', $delta, );
-				$html .= sprintf( '<td>%d</td>', $instock, );
-				$html .= sprintf( '<td>%s</td>', $comment, );
+				$html .= sprintf( '<td>%s</td>', Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($PI->updated_on) ) );
+				$html .= sprintf( '<td>%s</td>', $PI->User()->name() );
+				$html .= sprintf( '<td>%d</td>', $PI->delta(), );
+				$html .= sprintf( '<td>%d</td>', $PI->instock(), );
+				$html .= sprintf( '<td>%s</td>', $PI->comment(), );
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end while

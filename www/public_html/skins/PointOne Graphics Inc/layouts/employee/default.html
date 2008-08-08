@@ -1,15 +1,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><?PageTitle?> - Employee</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.1"></script>
 		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/fastinit.js"></script>
+		<script type="text/javascript" src="/javascripts/tablekit.js?version=1.2.1"></script>
 		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/barcode.js?version=1.0"></script>
 		<!-- calendar stylesheet -->
@@ -40,6 +42,16 @@
 				<td><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
 				<td><a href="/index.html"><span id="PointOne">PointOne</span><br/><span id="GraphicsInc">GRAPHICS INC</span></a></td>
 				</tr></table>
+			</div>
+			<div id="CurrencySelection">
+				Currently selected currency:
+				<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
+					<select name="select_currency_id" onchange="this.form.submit();">
+					<? echo (
+							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
+							) ?>
+					</select>
+				</form>
 			</div>
 			<div class="Menu">
 					<ul id="menubar">
@@ -75,6 +87,7 @@
 						<li id="MarketingMenu" class="<? echo ( $r->uri() =~ /employee\/marketing/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MarketingMenu'), 'off', 'on');return false;">MARKETING</a>
 							<ul>
 								<li><a href="/employee/marketing/categories.html;NOSSL">&raquo; Marketing Categories</a></li>
+								<li><a href="/employee/marketing/email_templates.html;NOSSL">&raquo; Email Templates</a></li>
 								<li><a href="/employee/marketing/email_campaigns.html;NOSSL">&raquo; Email Campaigns</a></li>
 								<li><a href="/employee/marketing/surveys.html;NOSSL">&raquo; Surveys</a></li>
 							</ul>
@@ -101,16 +114,26 @@
 							</ul>
 						</li>
 						<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
-						<? if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 						<li id="InventoryMenu" class="<? echo ( $r->uri() =~ /employee\/inventory/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 							<ul>
 								<li><a href="/employee/inventory/purchase_orders.html;NOSSL">&raquo; Purchase Orders</a></li>
 								<li><a href="/employee/inventory/available_paper.html;NOSSL">&raquo; Available Paper</a></li>
+								<li><a href="/employee/inventory/docket_labels.html;NOSSL">&raquo; Docket Labels</a></li>
 								<li><a href="/employee/inventory/paper.html;NOSSL">&raquo; Paper</a></li>
 								<li><a href="/employee/inventory/skids.html;NOSSL">&raquo; Skids</a></li>
+								<li><a href="/employee/inventory/rfidtags.html;NOSSL">&raquo; RFID Tags</a></li>
+								<li><a href="/employee/inventory/rfidscanners.html;NOSSL">&raquo; RFID Scanners</a></li>
+								<li><a href="/employee/inventory/update_inventory.html;NOSSL">&raquo; Update Inventory</a></li>
+								<li><a href="/employee/inventory/inventory_log.html;NOSSL">&raquo; Inventory Log</a></li>
+								<li><a href="/employee/inventory/manifests.html;NOSSL">&raquo; Manifests</a></li>
 							</ul>
 						</li>
-						<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+						<li id="ISOMenu" class="<? echo ( $r->uri() =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ISOMenu'), 'off', 'on');return false;">ISO</a>
+							<ul>
+								<li><a href="/employee/iso/pars.html;NOSSL">&raquo; Preventive Action Requests</a></li>
+								<li><a href="/employee/iso/cars.html;NOSSL">&raquo; Corrective Action Requests</a></li>
+							</ul>
+						</li>
 						<li id="SupportMenu" class="<? echo ( $r->uri() =~ /employee\/support/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SupportMenu'), 'off', 'on');return false;">SUPPORT</a>
 							<ul>
 								<li><a href="/employee/support/helpdesk_search.html;NOSSL">&raquo; Help Desk</a></li>

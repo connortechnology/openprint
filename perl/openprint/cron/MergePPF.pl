@@ -66,16 +66,24 @@ foreach my $file ( @filenames ) {
 			} # end if
 			my $fileA = $file_base.'A';
 			my $fileM = $file_base.'M';
+
+			my ( $docket, $ppo, $name, $sig, $side ) = $file =~ /(\d\d\d\d\d)(\w\w)_?(\w*?)Sg(\d\d)Sd.(\w).PPF/i;
+#print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			while ( <A> ) {
 				my $line = $_;
-				next if $line =~ /CIP3EndOfFile/;
+				next if $line =~ /^CIP3EndSheet/;
 				$line =~ s/$fileA/$fileM/g;
-				print M $line;
-				if ( $line =~ /CIP3EndFront/ ) {
+				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
+					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d)\r\n", 1*$sig, $1 );
+				} # end if
+
+				if ( $line =~ /CIP3EndOfFile/ ) {
 					foreach ( @Back ) {
+						last if $_ =~ /^CIP3EndOfFile/;
 						print M $_;
 					} # end foreach
 				} # end if
+				print M $line;
 			} # end while
 			close A;
 			close M;

@@ -6,13 +6,13 @@ function check_inputs(form ) {
 			alert( 'Skids cannot contain more than 10000lbs' );
 			return false;
 		} // end if
-		if ( form.Units && get_ddm_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
+		if ( form.Units && get_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
 			alert( 'Skids cannot contain more than 10000lbs' );
 			return false;
 		} // end if
 	} // end if
 	if ( form.available_quantity && form.Quantity.value > form.available_quantity.value ) {
-		alert( 'There are only ' + form.available_quantity.value + get_ddm_value( form.Units ) + ' available' );
+		alert( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available' );
 		return false;
 	} // end if
 	return true;
@@ -36,7 +36,7 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	}
-	allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?paper_id='+paper_id, null , true);
+	allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?referer=paper_details.html&paper_id='+paper_id, null , true);
 } // end function bug_report
 
 var checkoutWin;
@@ -56,7 +56,7 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	}
-	checkoutWin.setAjaxContent('/employee/inventory/_check_out_popup.html?paper_id='+paper_id, null , true);
+	checkoutWin.setAjaxContent('/employee/inventory/_check_out_popup.html?referer=paper_details.html&paper_id='+paper_id, null , true);
 } // end function bug_report
 
 
@@ -92,68 +92,58 @@ The following errors occurred:<br/>
 				<?paper_id?>
 			</p>
 			<p>
-				<label for="txtManufacturer" onclick="f1.ddmManufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
-				<select id="ddmManufacturer" name="ddmManufacturer" size="1">
+				<label for="txtManufacturer" onclick="f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
+				<select id="Manufacturer" name="Manufacturer" size="1">
+					<option value="">select</option>
 				<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM Manufacturers ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->manufacturer_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->manufacturer_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
 			</p>
 			<p>
-				<label for="txtName" onclick="f1.txtName.toggle();f1.ddmName.toggle();">Name:</label>
-				<select id="ddmName" name="ddmName" size="1" onchange="f1.txtName.value='';">
+				<label for="txtName" onclick="f1.txtName.toggle();f1.Name.toggle();">Name:</label>
+				<select id="Name" name="Name" size="1" onchange="f1.txtName.value='';">
+					<option value="">select</option>
 					<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->name_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->name_id() );
 					) ?>
 				</select>
-				<input style="display: none;" type="text" id="txtName" name="txtName" onFocus="ddm_select_by_index( f1.ddmName, 0 );" />
+				<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="ddm_select_by_index( f1.Name, 0 );" />
 			</p>
 			<p>
-				<label for="txtFinish" onclick="f1.txtFinish.toggle();f1.ddmFinish.toggle();">Finish:</label>
-				<select id="ddmFinish" name="ddmFinish" size="1" onchange="f1.txtFinish.value='';">
+				<label for="txtFinish" onclick="f1.txtFinish.toggle();f1.Finish.toggle();">Finish:</label>
+				<select id="Finish" name="Finish" size="1" onchange="f1.txtFinish.value='';">
+					<option value="">select</option>
 				<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperFinishes ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $$variable{'Paper'}->finish_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->finish_id() );
 				) ?>
 				</select>
-				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onFocus="ddm_select_by_index( f1.ddmFinish, 0 );" />
+				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.Finish, 0 );" />
 			</p>
 			<p>
-				<label for="txtColour" onclick="f1.txtColour.toggle();f1.ddmColour.toggle();">Colour:</label>
-				<select id="ddmColour" name="ddmColour" size="1" onchange="f1.txtColour.value='';">
-					<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperColours ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->colour_id() );
+				<label for="txtColour" onclick="f1.txtColour.toggle();f1.Colour.toggle();">Colour:</label>
+				<select id="Colour" name="Colour" size="1" onchange="f1.txtColour.value='';">
+					<option value="">select</option>
+				<? echo (
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->colour_id() );
 					) ?>
 				</select>
-				<input style="display: none;" type="text" id="txtColour" name="txtColour" onFocus="ddm_select_by_index( f1.ddmColour, 0 );" />
+				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.Colour, 0 );" />
 			</p>
 			<p>
-				<label for="txtWeight" onclick="f1.txtWeight.toggle();f1.ddmWeight.toggle();">Weight:</label>
-				<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';">
+				<label for="txtWeight" onclick="f1.txtWeight.toggle();f1.Weight.toggle();">Weight:</label>
+				<select id="Weight" name="Weight" size="1" onchange="f1.txtWeight.value='';">
+					<option value="">select</option>
 				<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->weight_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->weight_id() );
 						) ?>
 				</select>
-				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onFocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
+				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
 			</p>
 			<p>
-				<label for="txtQuality" onclick="f1.txtQuality.toggle();f1.ddmQuality.toggle();">Quality:</label>
-				<select id="ddmQuality" name="ddmQuality" size="1">
+				<label for="txtQuality" onclick="f1.txtQuality.toggle();f1.Quality.toggle();">Quality:</label>
+				<select id="Quality" name="Quality" size="1">
 				<? echo (
 						my @options = ( '', 'select one',
 							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperQualities ORDER BY lower(longname)} )
@@ -161,7 +151,7 @@ The following errors occurred:<br/>
 						return ssi::make_drop_down( \@options, $$variable{'Paper'}->quality_id() );
 						) ?>
 				</select>
-				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onFocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
+				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
 			</p>
 			<p><label>Type:</label>
 				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() ne 'Roll'; ) ?> />
@@ -194,8 +184,8 @@ The following errors occurred:<br/>
 				<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>" size="13"	/>
 			</p>
 			<p>
-				<label for="ddmOwner">Owner:</label>
-				<select id="ddmOwner" name="ddmOwner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() || $openprint::session{'company_id'} ); ) ?></select>
+				<label for="Owner">Owner:</label>
+				<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() || $openprint::session{'company_id'} ); ) ?></select>
 			</p>
 		</div>
 		<div style="float: right; width: 48%;">
@@ -273,12 +263,16 @@ The following errors occurred:<br/>
 
 </form>
 <? if ( $$variable{'paper_id'} ) ?>
-<div id="CurrentInventory" style="float: left; width: 48%; min-width: 400px;">
-<!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
-</div>
-<div style="float: left; width: 48%;min-width: 400px;">
+	<fieldset><legend onclick="toggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory - click to hide/show</legend>
+	<div id="CurrentInventory">
+	<!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
+	</div>
+	</fieldset>
+<div>
 	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
-	<div id="Allocations" style="display: none;"> </div>
+	<div id="Allocations">
+	<!--#include virtual="/employee/inventory/_paper_allocations.html" -->
+	</div>
 	</fieldset>
 </div>
 <br class="spacer"/>

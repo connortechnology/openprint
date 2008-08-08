@@ -21,18 +21,12 @@ sub edit {
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'btnFunction'} = '';
-		if ( (! $param{'product_id'}) and openprint::Product::find( 'name' => $param{'txtName'} ) ) {
-			$$variable{'error'} = "A product with name $param{'txtName'} already exists.  Please choose another name.";
+		if ( (! $param{'product_id'}) and openprint::Product::find( 'name' => $param{'name'} ) ) {
+			$$variable{'error'} = "A product with name $param{'name'} already exists.  Please choose another name.";
 			return;
 		} # end if
 			
-		$Product->name( $param{'txtName'} );
-		$Product->description( $param{'txtDescription'} );
-		$Product->category_id( $param{'ddmCategory'} );
-		$Product->taxexempt1( $param{'rdbTaxExempt1'} );
-		$Product->taxexempt2( $param{'rdbTaxExempt2'} );
-		$Product->sort( $param{'sort'} );
-		$$variable{'error'} = $Product->save();
+		$$variable{'error'} = $Product->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $NewProduct = $Product->copy();
 		$NewProduct->save();
@@ -145,11 +139,11 @@ sub categories {
 	} # end if
 } # end sub categories
 
-sub prices {
+sub _prices {
 	my $Product = new openprint::Product( $openprint::param{'product_id'} );
 	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		foreach my $Pricelist ( openprint::Pricelist::find() ) {
-			foreach my $Price ( openprint::ProductPrice::find( 'product' => $Product, 'pricelist' => $Pricelist ) ) {
+			foreach my $Price ( openprint::ProductPrice::find( 'Product' => $Product, 'Pricelist' => $Pricelist ) ) {
 				if ( $openprint::param{'chk-'.$Price->id()} ) {
 					$Price->min($openprint::param{'min-'.$Price->id()});
 					$Price->max($openprint::param{'max-'.$Price->id()});
@@ -179,7 +173,7 @@ sub prices {
 			} # end if
 		} # end foreach Pricelist
 	} # end if
-} # end sub prices
+} # end sub _prices
 
 1;
 

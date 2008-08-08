@@ -17,7 +17,11 @@
             $description = $name;
         } # end if
         $html .= qq{<p><label>$description</label>\n};
-        if ( $type eq 'pricelist' ) {
+        if ( $type eq 'Supplier' ) {
+            $html .= qq{<select name="$name"><option value=""> select one </option>};
+            $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('supplier'=>'Y','order'=>'lower(strname)') ], $value );
+            $html .= qq{</select>};
+        } elsif ( $type eq 'pricelist' ) {
             $html .= qq{<select name="$name"><option value=""> select one </option>};
             $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist::find('order'=>'lower(name)') ], $value );
             $html .= qq{</select>};

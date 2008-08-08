@@ -1,74 +1,156 @@
-<fieldset><legend>Ship to:</legend>
+<? eval (
+	$$variable{'ServiceIndex'} = $openprint::param{'service_id'} if $openprint::param{'service_id'} and ! $$variable{'ServiceIndex'};
+	$$variable{'ProjectIndex'} = $openprint::param{'project_id'} if $openprint::param{'project_id'} and ! $$variable{'ProjectIndex'};
+	$$variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} ) if $openprint::param{'project_id'} and ! $$variable{'Project'};
+	my $Company = new openprint::Company( $openprint::session{'company_id'} );
+
+	my $specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+
+	if ( ! ( $$specs{'ToCompanyName'} and $$specs{'ToAddress1'} and $$specs{'ToCity'} and $$specs{'ToCountry'} ) ) {
+		my %shipping_fields = (
+			'ToCompanyName'     =>  'CompanyName',
+			'ToSalutation'      =>  'Salutation',
+			'ToFirstName'       =>  'FirstName',
+			'ToLastName'        =>  'LastName',
+			'ToAddress1'        =>  'Address1',
+			'ToAddress2'        =>  'Address2',
+			'ToCity'            =>  'City',
+			'ToStateProvince'   =>  'StateProvince',
+			'ToCountry'         =>  'Country',
+			'ToPostalCode'      =>  'PostalCode',
+			'ToPhone'           =>  'Phone',
+			'ToExtension'       =>  'Extension',
+			'ToFax'             =>  'Fax',
+			'ToEmail'           =>  'Email',
+			);
+
+# Load from customer
+		my $customer = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
+		my $shipping_address = $customer->get_shipping_address();
+		my %shipping_specs;
+		@shipping_specs{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields} ) );
+		foreach my $spec ( keys %shipping_fields ) {
+			$$specs{$spec} = $shipping_specs{$spec} if ! $$specs{$spec};
+		} # end foreach
+	} # end if
+		my %shipping_fields = (
+			'ToCompanyName'     =>  'ToCompanyName',
+			'ToSalutation'      =>  'ToSalutation',
+			'ToFirstName'       =>  'ToFirstName',
+			'ToLastName'        =>  'ToLastName',
+			'ToAddress1'        =>  'ToAddress1',
+			'ToAddress2'        =>  'ToAddress2',
+			'ToCity'            =>  'ToCity',
+			'ToStateProvince'   =>  'ToStateProvince',
+			'ToCountry'         =>  'ToCountry',
+			'ToPostalCode'      =>  'ToPostalCode',
+			'ToPhone'           =>  'ToPhone',
+			'ToExtension'       =>  'ToExtension',
+			'ToFax'             =>  'ToFax',
+			'ToEmail'           =>  'ToEmail',
+		);
+	$$specs{'ToCompanyName'} = $Company->business_name() if ! $$specs{'ToCompanyName'};
+	$$specs{'ToCompanyName'} = $Company->name() if ! $$specs{'ToCompanyName'};
+	$$specs{'ToAddress1'} = $Company->address1() if ! $$specs{'ToAddress1'};
+	$$specs{'ToAddress2'} = $Company->address2() if ! $$specs{'ToAddress2'};
+	$$specs{'ToCity'} = $Company->city() if ! $$specs{'ToCity'};
+	$$specs{'ToStateProvince'} = $Company->state() if ! $$specs{'ToStateProvince'};
+	$$specs{'ToCountry'} = $Company->country() if ! $$specs{'ToCountry'};
+	$$specs{'ToPostalCode'} = $Company->postalcode() if ! $$specs{'ToPostalCode'};
+	
+	foreach my $spec ( keys %shipping_fields ) {
+		$$variable{"$spec-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} = $$specs{$spec};
+	} # end foreach
+	my %UserSpecs = (
+			'ToEmail'       =>  'email',
+			'ToSalutation'  =>  'salutation',
+			'ToFirstName'   =>  'firstname',
+			'ToLastName'    =>  'lastname',
+			'ToPhone'       =>  'phone',
+			'ToExtension'   =>  'extension',
+			);
+	if ( ! ( $$specs{'ToEmail'} and $$specs{'ToPhone'} ) ) {
+		require openprint::User;
+		my $User = new openprint::User( $openprint::session{'user_id'} );
+		foreach my $spec ( keys %UserSpecs ) {
+			$$specs{$spec} = $User->get($UserSpecs{$spec}) if ! $$specs{$spec};
+		} # end foreach
+	} # end if
+
+	foreach my $spec ( keys %UserSpecs ) {
+		$$variable{"$spec-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} = $$specs{$spec};
+	} # end foreach
+) ?>
+<br/><b>Destination Address:</b><br/>
 	<p> 
-		<label>*Company Name:</label>
-		<input type="text" name="txtShippingCompanyName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingCompanyName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<label>Company Name:<span class="requiredFieldIndicator">*</span></label>
+		<input type="text" name="ToCompanyName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCompanyName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
 	</p>
 	<p>
-		<label>&nbsp;Salutation:</label>
-		<input type="radio" id="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr." name="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mr." <? echo ( $$variable{"rdbShippingSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mr.' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr.">Mr. </label>
-		<input type="radio" id="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs." name="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mrs." <? echo ( 'checked="checked"' if $$variable{"rdbShippingSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mrs.' ) ?> />
-		<label class="radio" for="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs.">Mrs. </label>
-		<input type="radio" id="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms." name="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Ms." <? echo ( 'checked="checked"' if $$variable{"rdbShippingSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Ms.' ) ?> />
-		<label class="radio" for="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms.">Ms. </label>
-		<input type="radio" id="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss" name="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Miss" <? echo ( 'checked="checked"' if $$variable{"rdbShippingSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Miss' ) ?> />
-		<label class="radio" for="rdbShippingSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss">Miss</label>
+		<label>Salutation:<span class="requiredFieldIndicator">&nbsp;</span></label>
+		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mr." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mr.' ) ?> />
+		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr.">Mr. </label>
+		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mrs." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mrs.' ) ?> />
+		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs.">Mrs. </label>
+		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Ms." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Ms.' ) ?> />
+		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms.">Ms. </label>
+		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss" name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Miss" <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Miss' ) ?> />
+		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss">Miss</label>
 	</p>
 	<p>
-		<label>&nbsp;First Name:</label>
-		<input type="text" name="txtShippingFirstName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingFirstName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>"/>
+		<label>First Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
+		<input type="text" name="ToFirstName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFirstName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>"/>
 	</p>
 	<p>
-		<label>&nbsp;Last Name:</label>
-		<input type="text" name="txtShippingLastName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingLastName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<label>Last Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
+		<input type="text" name="ToLastName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToLastName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
 	</p>
 	<p> 
-		<label>*Address:</label>
-		<input type="text" name="txtShippingAddress1-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingAddress1-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<label>Address:<span class="requiredFieldIndicator">*</span></label>
+		<input type="text" name="ToAddress1-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress1-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
 	</p>
 	<p> 
 		<label>&nbsp;</label>
-		<input type="text" name="txtShippingAddress2-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingAddress2-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<input type="text" name="ToAddress2-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress2-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
 	</p>
 	<p> 
-		<label>*Country:</label>
-			<select name="ddmShippingCountry-<?ProjectIndex?>-<?ServiceIndex?>" onchange="Country_onchange(this, this.form.elements['ddmShippingStateProvince-<?ProjectIndex?>-<?ServiceIndex?>'] );" >
+		<label>Country:<span class="requiredFieldIndicator">*</span></label>
+			<select name="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>" onchange="Country_onchange(this, this.form.elements['ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>'] );" >
 				<option value=""> Select </option>
 				<? echo ( 
-					ssi::make_drop_down( \@countries::countries, $$variable{'ddmShippingCountry-'.$$variable{ProjectIndex}.'-'.$$variable{ServiceIndex}} );
+					ssi::make_drop_down( \@countries::countries, $$variable{'ToCountry-'.$$variable{ProjectIndex}.'-'.$$variable{ServiceIndex}} );
 				) ?> 
 			</select>
 	</p>
 	<p> 
-		<label>*State/Province:</label>
-		<select name="ddmShippingStateProvince-<?ProjectIndex?>-<?ServiceIndex?>">
+		<label>State/Province:<span class="requiredFieldIndicator">*</span></label>
+		<select name="ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>">
 			<option value=""> Select </option>
 			<? echo ( join('',
-				ssi::make_drop_down( \@states::states, $$variable{"ddmShippingStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
-				ssi::make_drop_down( \@provinces::provinces, $$variable{"ddmShippingStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
-				);
+				ssi::make_drop_down( \@states::states, $$variable{"ToStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
+				ssi::make_drop_down( \@provinces::provinces, $$variable{"ToStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
+			);
 			) ?> 
 		</select>
 	</p>
 	<p> 
-		<label>*City:</label>
-		<input type="text" name="txtShippingCity-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingCity-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
+		<label>City:<span class="requiredFieldIndicator">*</span></label>
+		<input type="text" name="ToCity-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCity-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
 	</p>
 	<p> 
-		<label>*Zip/Postal Code:</label>
-		<input type="text" name="txtShippingPostalCode-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingPostalCode-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
+		<label>Zip/Postal Code:<span class="requiredFieldIndicator">*</span></label>
+		<input type="text" name="ToPostalCode-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPostalCode-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
 	</p>
 	<p> 
-		<label>*Phone:</label>
-		<input type="text" name="txtShippingPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" style="width: auto;" size="15"/> ext:
-		<input type="text" name="txtShippingExtension-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingExtension-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" style="width: auto;" size="4" />
+		<label>Phone:<span class="requiredFieldIndicator">*</span></label>
+		<input type="text" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" style="width: auto;" size="15"/> ext:
+		<input type="text" name="ToExtension-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToExtension-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" style="width: auto;" size="4" />
 	</p>
 	<p> 
-		<label>&nbsp;Fax:</label>
-		<input type="text" name="txtShippingFax-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingFax-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<label>Fax:<span class="requiredFieldIndicator">&nbsp;</span></label>
+		<input type="text" name="ToFax-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFax-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
 	</p>
 	<p> 
-		<label>*E-mail:</label>
-		<input type="text" name="txtShippingEmail-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtShippingEmail-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<label>E-mail:<span class="requiredFieldIndicator">*</span></label>
+		<input type="text" name="ToEmail-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToEmail-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
 	</p>
-</fieldset>

@@ -57,7 +57,7 @@ function set_rdb_value( rdb, value ) {
 
 function get_rdb_value( rdb ) {
 	if ( ! rdb ) {
-		alert( "Radio button not found: " + rdbName );
+		alert( "Radio button not found");
 	} else {
 		for ( var x = 0; x < rdb.length; x ++ ) {
 			if ( rdb[x].checked == true ) {
@@ -256,23 +256,23 @@ function filterDDM( filter, ddm ) {
 	} // end if
 	if ( ddm.selectedIndex == 0 && ddm.options.length ) 
 		ddm.selectedIndex = 1;
-    for ( var index = ddm.selectedIndex; index < ddm.options.length; index += 1 ) {
-        var chunk2 = ddm.options[index].text.toLowerCase();
-        if ( chunk1 <= chunk2 ) {
-            ddm.selectedIndex = index;
-            return;
-        } // end if
-        //} // end if
-    } // end for
+	for ( var index = ddm.selectedIndex; index < ddm.options.length; index += 1 ) {
+		var chunk2 = ddm.options[index].text.toLowerCase();
+		if ( chunk1 <= chunk2 ) {
+			ddm.selectedIndex = index;
+			return;
+		} // end if
+		//} // end if
+	} // end for
    // Assumes that the first entry is "SElect One"
-    for ( var index = 1; index < ddm.selectedIndex; index += 1 ) {
-        var chunk2 = ddm.options[index].text.toLowerCase();
-        if ( chunk1 <= chunk2 ) {
-            ddm.selectedIndex = index;
-            return;
-        } // end if
-        //} // end if
-    } // end for
+	for ( var index = 1; index < ddm.selectedIndex; index += 1 ) {
+		var chunk2 = ddm.options[index].text.toLowerCase();
+		if ( chunk1 <= chunk2 ) {
+			ddm.selectedIndex = index;
+			return;
+		} // end if
+		//} // end if
+	} // end for
 
 } // end function filterDDM
 
@@ -389,15 +389,14 @@ function isLeapYear(year) {
  *	if specified it will set the default selection to the passed selected day.
  */
 function setDaysDropDown(year, month, dayDropDown, selectedDay) {
-
 	var numberOfDays = returnNumberOfDays(month,year);
 	if ( numberOfDays < selectedDay ) {
 		selectedDay = numberOfDays;
 	} // end if
 
 	if ( dayDropDown.options[0].value == '' ) {
-		numberOfDays += 1;
-		selectedDay += 1;
+		numberOfDays = parseInt( numberOfDays ) + 1;
+		selectedDay = parseInt( selectedDay ) + 1;
 	} // end if
 
 	if ( dayDropDown.options.length > numberOfDays ) {
@@ -724,3 +723,28 @@ function Country_onchange( country_ddm, state ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @provinces::provinces )", jsrs_cbFillDDM );
 	} // end if
 } // end function
+
+function countLines(strtocount, cols) {
+	var hard_lines = 1;
+	var last = 0;
+	while ( true ) {
+		last = strtocount.indexOf("\n", last+1);
+		hard_lines ++;
+		if ( last == -1 ) break;
+	}
+	var soft_lines = Math.round(strtocount.length / (cols-1));
+	var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");
+	if ( hard ) soft_lines = hard_lines;
+	return soft_lines;
+}
+
+function textarea_resize( element ) {
+	element.rows = countLines(element.value,element.cols);
+} // end function textarea_resize
+
+function set_today( e_y, e_m, e_d ) {
+	var d = new Date();
+	ddm_select_by_value( e_y, d.getYear() );
+	ddm_select_by_value( e_m, d.getMonth()+1 );
+	ddm_select_by_value( e_d, d.getDate() );
+} // end function set_today

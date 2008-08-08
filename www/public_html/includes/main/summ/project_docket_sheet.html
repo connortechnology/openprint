@@ -184,11 +184,15 @@
 				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
 			} # end if
 			if ( $$sig_specs{'StockType'.$$variable{'Project'}->ordered_quantity_index()} eq 'Roll' ) {
-			$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} );
+				$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} );
+				if ( $$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()} ne 'Web' ) {
+					$html .= sprintf(' %s&quot; Cut Off', $$sig_specs{'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
+				} # end if
 			} else {
-			$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
+				$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
 			} # end if
-			$html .='<hr/>'.$type;
+			$html .='<hr/>';
+			#$html .='<hr/>'.$type;
 			if ( $$sig_specs{'ddmStockFinish'} eq 'Coated 1 Side' or $$sig_specs{'ddmStockFinish'} eq 'C1S' ) {
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
 			} # end if
@@ -222,12 +226,10 @@
 		my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs );
 
 		if ( $Paper->type() eq 'Roll' ) {
-my @Equipment = openprint::Equipment::find('strid'=> $$sig_specs{'UsePress'} );
-if ( @Equipment ) {
-			$html .= sprintf('</td><td class="docketText">%dimps<br/>%d lbs</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} * $Paper->width() * $Equipment[0]->specification('Cut Off') * $Paper->wpsi() );
-} else {
-			$html .= sprintf('</td><td class="docketText">%d</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} );
-} # end if
+			my $net_impressions = $$variable{'Project'}->ordered_quantity();
+			$net_impressions /= $$sig_specs{'txtImposition'.$$variable{'Project'}->ordered_quantity_index()};
+			$net_impressions *= 2 if (sets::isin($$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()},['Sheet Work','Work & Turn','Work & Tumble'] ));
+			$html .= sprintf('</td><td class="docketText">%dimps<br/>%d lbs</td>', $net_impressions, $net_impressions * $Paper->width() * $$sig_specs{'CutOff'.$$variable{'Project'}->ordered_quantity_index()} * $Paper->wpsi() );
 			$html .= sprintf('<td class="docketText">%dimps<br/>%s</td>', $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
 		} else {
 			$html .= sprintf('</td><td class="docketText">%d</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} );

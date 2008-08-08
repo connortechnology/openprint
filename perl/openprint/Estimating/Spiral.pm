@@ -71,7 +71,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 	my $ProjectType = $Project->Type();
 
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
-		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $log, $dbh, $project_index, undef, $ProjectType->strid() );
+		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	} else {
 		$$specs{'txtFinishedCalliper'} =~ s/[\D\.]//g;
 	} # end if

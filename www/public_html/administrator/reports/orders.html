@@ -12,6 +12,16 @@
 </script>
 <form name="f1" method="post" action="orders.html">
 	<fieldset class="filters"><legend>Select Report Criteria</legend>
+			<p>
+				<label for="OrderID">Order ID:</label>
+				<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" />
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
+			</p>
+			<p>
+				<label>Docket:</label>
+				<input type="text" size="10" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
+			</p>
 		<p>
 			<label>Company:</label>
 			<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4" />
@@ -54,7 +64,7 @@ ssi::fill_drop_down( $log, $dbh, q{SELECT id, name FROM Marketing_Categories ORD
 			<select name="ddmEmployee" size="1">
 				<option value="">All Employees</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ] , $openprint::param{'ddmEmployees'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ] , $openprint::param{'ddmEmployee'} );
 ) ?>
 			</select>
 		</p>
@@ -98,16 +108,22 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 		</p>
 	</fieldset>
 <? eval ( 
-	@{$$variable{'Orders'}} = openprint::Order::find( 
-		'company_id'		=> $openprint::param{'ddmCustomer'},
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
-		'value_start'		=> $openprint::param{'TotalStart'},
-		'value_end'			=> $openprint::param{'TotalEnd'},
-		'salesrep_id'		=> $openprint::param{'ddmEmployee'},
-		'status'			=> $openprint::param{'ddmStatus'},
-		'currency_id'		=> $openprint::param{'ddmCurrency'},
-	);
+	if ( $openprint::param{'OrderID'} ) {
+		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$openprint::param{'OrderID'} );
+	} elsif ( $openprint::param{'Docket'} ) {
+		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$openprint::param{'Docket'} );
+	} else {
+		@{$$variable{'Orders'}} = openprint::Order::find( 
+			'company_id'		=> $openprint::param{'ddmCustomer'},
+			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
+			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
+			'value_start'		=> $openprint::param{'TotalStart'},
+			'value_end'			=> $openprint::param{'TotalEnd'},
+			'salesrep_id'		=> $openprint::param{'ddmEmployee'},
+			'status'			=> $openprint::param{'ddmStatus'},
+			'currency_id'		=> $openprint::param{'ddmCurrency'},
+		);
+	} # end if
 ) ?>
 	<? if ( @{$$variable{'Orders'}} ) ?>
 	<table class="List">

@@ -61,7 +61,7 @@ my @no_outputs = (
 sub signature_needs {
 	my ( $Project, $specs ) = @_;
 # If it's not needing folding, then it doesn't need to be scored!!
-	if ( ! openprint::Estimating::Folding::signature_needs($specs) ) {
+	if ( ! openprint::Estimating::Folding::signature_needs( $Project, $specs) ) {
 #$openprint::log->debug("NeedFolding is not true $$specs{'txtWidth'}x$$specs{'txtHeight'} : $$specs{'txtFinalWidth'}x$$specs{'txtFinalHeight'}");
 		return 0;
 	} # end if

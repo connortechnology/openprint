@@ -12,10 +12,10 @@
 			element.value = element.value.substr(1,element.value.length-1);
 		} // end if
 		if ( Users[1*element.value] ) {
-			element.form.txtEmail.value = Users[1*element.value];
-			element.form.txtPassword.focus();
+			element.form.email.value = Users[1*element.value];
+			element.form.password.focus();
 		} else {
-			element.form.txtEmail.value = 'User not found: ' + element.value;
+			element.form.email.value = 'User not found: ' + element.value;
 		
 		} // end if
 
@@ -26,15 +26,15 @@
 <fieldset><legend>Login:</legend>
 	<p> 
 		<label for="UserID">UserID:</label>
-		<input type="text" id="UserID" name="UserID" EMPTYOK FORMAT="5N" onFocus="on(this);" onBlur="off(this);" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );">
+		<input type="text" id="UserID" name="UserID" EMPTYOK FORMAT="5N" onfocus="on(this);" onblur="off(this);" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );">
 	</p>
 	<p> 
-		<label for="txtEmail">E-mail:</label>
-		<input type="text" id="txtEmail" name="txtEmail" onFocus="on(this);" onBlur="off(this);" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.txtPassword );}" />
+		<label for="email">E-mail:</label>
+		<input type="text" id="email" name="email" onfocus="on(this);" onblur="off(this);" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.txtPassword );}" />
 	</p>
 	<p> 
-		<label for="txtPassword">Password:</label>
-		<input type="password" id="txtPassword" name="txtPassword" onFocus="on(this);" onBlur="off(this);" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.txtEmail, this);}" />
+		<label for="password">Password:</label>
+		<input type="password" id="password" name="password" onfocus="on(this);" onblur="off(this);" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.txtEmail, this);}" />
 	</p>
 	<br/>
 		<p class="buttons">

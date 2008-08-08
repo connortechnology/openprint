@@ -55,7 +55,7 @@ div.row:after {
 }
 /* Hides from IE-mac \*/
 * html div.row {height: 1%;}
-*/* End hide from IE-mac */
+/* End hide from IE-mac */
 
 .row .label {
 	float: left;

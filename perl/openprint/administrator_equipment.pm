@@ -16,7 +16,7 @@ sub import_specs {
 
 	my $error = '';
 	if ( $openprint::param{'fileSpecifications'} ) {
-		sql::start_transaction( $dbh );
+		my $ac = sql::start_transaction( $openprint::dbh );
 
 		sql::execute( undef, undef, 'DELETE FROM tbl_Equipment_Specifications' . ( $Equipment->id()?' WHERE lngEquipmentIndex=' . $Equipment->id():''));
 
@@ -38,7 +38,7 @@ sub import_specs {
 				if ( ! $equipment{$equip_id} ) {
 					$error .= "Equipment $equip_id not found.<br>";
 				} else {
-					sql::insert( $log, $dbh, 'tbl_Equipment_Specifications', [
+					$error .= sql::insert( $log, $dbh, 'tbl_Equipment_Specifications', [
 							'lngEquipmentIndex',    $equipment{$equip_id},
 							'dblMin',               ( $min ne '' ? $min : undef ),
 							'dblMax',               ( $max ne '' ? $max : undef ),
@@ -47,13 +47,15 @@ sub import_specs {
 							'strValue',             $value,
 							'interpolate',			$interpolate,
 							] );
-					openprint::logs::insertLogRecord('37', "Equipment ID: " . $equipment{$equip_id} . " Name: " . $name . " Value: " . $value . " Units: " . $units,);
+					#openprint::logs::insertLogRecord('37', "Equipment ID: " . $equipment{$equip_id} . " Name: " . $name . " Value: " . $value . " Units: " . $units,);
 				} # end if
+				last if $error;
 			} # end for each
-		} # end foreach
-		sql::end_transaction( $openprint::dbh );
+			last if $error;
+		} # end while
+		sql::end_transaction( $openprint::dbh, $ac );
 	} else {
-		$error .= "No file given to upload.<br>";
+		$error .= 'No file given to upload.<br>';
 	} # end if
 	return $error;
 
@@ -85,6 +87,26 @@ sub edit {
 		$Equipment = $Equipment->copy();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		$Equipment->save( \%openprint::param );
+		my $ac = sql::start_transaction( $openprint::dbh );
+		sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $Equipment->id() );
+		foreach my $key ( keys %openprint::param ) {
+			if ( $key =~ /txtSpecificationName(.*)/ and $openprint::param{$key} ne '' ) {
+				my $i = $1;
+				$openprint::param{'txtSpecificationMin'.$i} =~ s/[^\d\.]//g;
+				$openprint::param{'txtSpecificationMax'.$i} =~ s/[^\d\.]//g;
+				sql::insert( undef, undef, 'tbl_Equipment_Specifications', [
+						'lngEquipmentIndex',    $Equipment->id(),
+						'dblMin',               ( $openprint::param{'txtSpecificationMin'.$1} ne '' ? $openprint::param{'txtSpecificationMin'.$1} : undef ),
+						'dblMax',               ( $openprint::param{'txtSpecificationMax'.$1} ne '' ? $openprint::param{'txtSpecificationMax'.$1} : undef ),
+						'strUnits',             $openprint::param{'txtSpecificationUnits'.$1},
+						'strName',              $openprint::param{'txtSpecificationName'.$1},
+						'strValue',             $openprint::param{'txtSpecificationValue'.$1},
+						'interpolate',          $openprint::param{'interpolate'.$1},
+						] );
+			} # end if
+		} # end foreach
+
+		sql::end_transaction( $openprint::dbh, $ac );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		$Equipment->delete();
 		$Equipment = $Equipment->Next();

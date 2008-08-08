@@ -93,6 +93,14 @@
 			<input type="text" name="cost_center" value="<? hecho ( $$variable{'Equipment'}->cost_center(); ) ?>"  />
 		</p>
 <? endif ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
+		<p>
+			<label>JDF ID:</label>
+			<input type="text" name="jdf_id" value="<? hecho ( $$variable{'Equipment'}->jdf_id(); ) ?>"  />
+		</p>
+		<p>
+			<label>JDF Name:</label>
+			<input type="text" name="jdf_name" value="<? hecho ( $$variable{'Equipment'}->jdf_name(); ) ?>"  />
+		</p>
 	</fieldset>
 <? if ( $$variable{'Equipment'}->id() ) ?>
 	<fieldset><legend>Specifications</legend>

@@ -17,6 +17,7 @@ require openprint::press_schedule;
 require sql;
 require openprint::MXML;
 require openprint::JDF;
+require openprint::PaperAllocation;
 
 sub view {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -37,7 +38,7 @@ sub view {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [new openprint::MXML($Project)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		my $service_index = $openprint::param{'ServiceIndex'};
-		my $status = openprint::service::get_status( $log, $dbh, $service_index, $project_index );
+		my $status = openprint::service::status( $project_index, $service_index );
 
 		my ( $service_type ) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'ServiceType' );
 		if ( $service_type eq 'AdditionalSignature' ) {
@@ -46,7 +47,7 @@ sub view {
 # Run through each of the signatures and if everyone is complete, then set the printing service to complete
 				foreach my $signature_service_index ( $Project->signatures() ) {
 					next if $signature_service_index == $service_index;
-					my $status = openprint::service::get_status( $log, $dbh, $signature_service_index, $project_index );
+					my $status = openprint::service::status( $project_index, $signature_service_index );
 					if ( $status ne 'Complete' ) {
 						$complete = 0;
 					} # end if
@@ -58,6 +59,11 @@ sub view {
 				if ( $complete ) {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Complete' );	
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'All signatures complete - marking printing complete.' );
+					foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
+						next if $PA->Paper()->type() ne 'Roll';
+						$PA->delete();
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+					} # end foreach
 				} else {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Ordered' );	
 				} # end if
@@ -132,23 +138,7 @@ sub view {
 					} # end if completion date has changed
 
 					if ( $openprint::param{'ScheduleForPress'} eq 'Y' ) {
-						my $ac = sql::start_transaction( $dbh );
-
-						foreach my $s_s_id ( $Project->signatures() ) {
-							my %sig_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $s_s_id );
-							sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ServiceIndex=?}, $s_s_id );
-							my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $s_s_id );
-							if ( my @Equipment = openprint::Equipment::find('strid'=>$sig_specs{'UsePress'}) ) {
-								$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
-								if ( $_ ) {
-									$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
-								} else {
-									$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $sig_specs{'SignatureIndex'} to pending press schedule." );
-
-								} # end if
-							} # end if
-						} # end foreach
-						sql::end_transaction( $dbh, $ac );
+						$$variable{'error'} .= openprint::press_schedule::add_project_to_press_schedule( $Project );
 					} # end if
 
 					if ( (! exists $openprint::param{'rdbApproved'} ) or ($openprint::param{'rdbApproved'}  eq 'Y') ) {
@@ -254,6 +244,11 @@ sub view {
 			if ( $complete ) {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Printed from $status" );
+				foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
+					next if $PA->Paper()->type() ne 'Roll';
+					$PA->delete();
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+				} # end foreach
 # shuffle jobs on the print schedule
 
 			} else {
@@ -294,23 +289,7 @@ sub view {
 	} elsif ( $openprint::param{'btnFunction'} eq 'AddToBinderySchedule' ) {
 		openprint::bindery_schedule::add_project( $Project );
 	} elsif ( $openprint::param{'btnFunction'} eq 'AddToPressSchedule' ) {
-		my $ac = sql::start_transaction( $dbh );
-
-		foreach my $s_s_id ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
-			my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $s_s_id );
-			if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
-				$_ = sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) );
-				if ( $_ ) {
-					$$variable{'error'} .= 'Error adding to press schedule: ' . $_;
-				} else {
-					$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending press schedule." );
-
-				} # end if
-			} # end if
-		} # end foreach
-		sql::end_transaction( $dbh, $ac );
+		$$variable{'error'} = openprint::press_schedule::add_project_to_press_schedule( $Project );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Add Service' ) {
 
 		if ( $openprint::param{'NewServiceType'} ) {
@@ -664,13 +643,17 @@ sub is_sig_complete {
 	my ( $r, $log, $dbh, $project_index, $signature_service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-	if ( $r->param("rdbPressComplete-$$printing_specs{'SignatureIndex'}") ne 'Yes' ) {
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$printing_specs{'SignatureIndex'} incomplete." );
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+	if ( $r->param("rdbPressComplete-$$sig_specs{'SignatureIndex'}") ne 'Yes' ) {
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} incomplete." );
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Ordered' );
 		return 0;
 	} # end if
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$printing_specs{'SignatureIndex'} complete." );
+	if ( $openprint::session{'user_id'} != $openprint::param{"operator_id-$$sig_specs{'SignatureIndex'}"} ) {
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} complete for " . new openprint::User( $openprint::param{"operator_id-$$sig_specs{'SignatureIndex'}"} )->name() );
+	} else {
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} complete." );
+	} # end if
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.

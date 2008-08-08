@@ -1,14 +1,10 @@
 <fieldset>
 	<? eval (
-		@{$$variable{'Quantities'}} = ();
-		foreach ( 1 .. 3 ) {
-			push @{$$variable{'Quantities'}}, $$variable{"Quantity$_"} if $$variable{"Quantity$_"};
-		} # end foreach
 		$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ( ! $$variable{'Project'} );
 	) ?>
 	<legend>Project # <? echo ( $$variable{'Project'}->id() ) ?></legend>
 	<span style="float: right;">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'ProjectIndex'}, '', '', "information.html?OrderID=$$variable{'OrderID'}&remove=$$variable{'ProjectIndex'}", 'Remove' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'ProjectIndex'}, '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'ProjectIndex'}", 'Remove' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'ProjectIndex'}, '', '', "/main/project/view.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Edit Project' ); ) ?>
 	</span>
 	<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>">
@@ -17,84 +13,13 @@
 	<br class="spacer"/>
 	<p>
 		<label>Reference:</label>
-		<textarea name="Reference<?ProjectIndex?>" rows="10"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
+		<textarea name="Reference<?ProjectIndex?>" cols="" rows="<? echo ( scalar split("\n",  $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
 	</p>
-<? if ( @{$$variable{'Quantities'}} > 1 ) ?>
+<? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <!--#include virtual="_quantity_select.html"-->
-<? endif ( @{$$variable{'Quantities'}} > 1 ) ?>
+<? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <? if ( ! $$variable{'Project'}->requested_date() ) ?>
 <!--#include virtual="_required_by.html"-->
 <? endif ( ! $$variable{'Project'}->requested_date() ) ?>
 <!--#include virtual="_shipping_type_select.html"-->
-<? echo ( 
-	my $html;
-	my %shipping_fields = (
-		'txtShippingCompanyName'    =>  'CompanyName',
-		'rdbShippingSalutation'     =>  'Salutation',
-		'txtShippingFirstName'      =>  'FirstName',
-		'txtShippingLastName'       =>  'LastName',
-		'txtShippingAddress1'       =>  'Address1',
-		'txtShippingAddress2'       =>  'Address2',
-		'txtShippingCity'           =>  'City',
-		'ddmShippingStateProvince'  =>  'StateProvince',
-		'ddmShippingCountry'        =>  'Country',
-		'txtShippingPostalCode'  	=>	'PostalCode',
-		'txtShippingPhone'          =>  'Phone',
-		'txtShippingExtension'      =>  'Extension',
-		'txtShippingFax'            =>  'Fax',
-		'txtShippingEmail'          =>  'Email',
-		);
-
-	my %services = $$variable{'Project'}->get_services();
-	my %shipping_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'ProjectIndex'}, 'Shipping' );
-
-	foreach my $service_id ( keys %shipping_services ) {
-
-		my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $$variable{'ProjectIndex'}, $service_id );
-		next if $specs{'ServiceType'} eq 'CustomerPickUp';
-foreach my $k ( keys %specs ) {
-$openprint::log->debug(" $k => $specs{$k}");
-} # end foreach
-
-		$$variable{'ServiceIndex'} = $service_id;
-		my $ServiceType = new openprint::ServiceType( $shipping_services{$service_id} );	
-		$$variable{'ServiceType'} = $ServiceType->name();
-
-		if ( ! ( $specs{'CompanyName'} and $specs{'Address1'} and $specs{'City'} and $specs{'Country'} ) ) {
-			# Load from customer
-$openprint::log->debug("Loading customer");
-			my $customer = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
-			my $Company = new openprint::Company( $openprint::session{'company_id'} );
-			require openprint::User;
-			my $User = new openprint::User( $openprint::session{'user_id'} );
-			
-			my $shipping_address = $customer->get_shipping_address();
-
-			$specs{'CompanyName'} = $shipping_address->get('CompanyName') ? $shipping_address->get('CompanyName') : $Company->name();
-			$specs{'Salutation'} = $shipping_address->get('Salutation') ? $shipping_address->get('Salutation') : $User->salutation();
-			$specs{'FirstName'} = $shipping_address->get('FirstName') ? $shipping_address->get('FirstName') : $User->firstname();
-			$specs{'LastName'} = $shipping_address->get('LastName') ? $shipping_address->get('LastName') : $User->lastname();
-			$specs{'Phone'} = $shipping_address->get('Phone') ? $shipping_address->get('Phone') : $User->phone();
-			$specs{'Extension'} = $shipping_address->get('Extension') ? $shipping_address->get('Extension') : $User->extension();
-			$specs{'Fax'} = $shipping_address->get('Fax') ? $shipping_address->get('Fax') : $User->fax();
-			$specs{'Email'} = $shipping_address->get('Email') ? $shipping_address->get('Email') : $User->email();
-			$specs{'Address1'} = $shipping_address->get('Address1') ? $shipping_address->get('Address1') : $Company->address1();
-			$specs{'Address2'} = $shipping_address->get('Address2') ? $shipping_address->get('Address2') : $Company->address2();
-			$specs{'City'} = $shipping_address->get('City') ? $shipping_address->get('City') : $Company->city();
-			$specs{'StateProvince'} = $shipping_address->get('StateProvince') ? $shipping_address->get('StateProvince') : $Company->state();
-			$specs{'Country'} = $shipping_address->get('Country') ? $shipping_address->get('Country') : $Company->country();
-			$specs{'PostalCode'} = $shipping_address->get('PostalCode') ? $shipping_address->get('PostalCode') : $Company->postalcode();
-
-		} # end if
-
-		foreach my $spec ( keys %shipping_fields ) {
-$openprint::log->debug("Loading $spec => $specs{$shipping_fields{$spec}}");
-			$$variable{"$spec-$$variable{'ProjectIndex'}-$service_id"} = ssi::htmlize($specs{$shipping_fields{$spec}});
-		} # end foreach
-
-		my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_project_shipping_address.html');
-		$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
-    } # end foreach
-	return $html;
-) ?>
 </fieldset>

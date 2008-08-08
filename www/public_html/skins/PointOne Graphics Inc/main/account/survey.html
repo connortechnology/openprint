@@ -3,7 +3,7 @@
 		$$variable{'Complete'} = 1;
 		sql::execute( $log, $dbh, q{DELETE FROM Survey_Responses WHERE user_id=? AND survey_id=?}, $openprint::session{'user_id'}, $r->param('survey_id') );
 		@{$$variable{'Questions'}} = sql::execute( $log, $dbh, q{SELECT id FROM Survey_Questions WHERE survey_id=?}, $r->param('survey_id') );
-		foreach my $question_id (  @{$$variable{'Questions'}} ) {
+		foreach my $question_id ( @{$$variable{'Questions'}} ) {
 			sql::insert( $log, $dbh, 'Survey_Responses', 'company_id', $openprint::session{'company_id'}, 'user_id', $openprint::session{'user_id'}, 'survey_id', $r->param('survey_id'), 'question_id', $question_id, 'answer', $r->param( 'Answer'.$question_id ) );
 			$$variable{'Complete'} = 0 if ! $r->param('Answer'.$question_id);
 		} # end foreach

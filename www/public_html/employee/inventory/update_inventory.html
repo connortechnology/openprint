@@ -1,0 +1,33 @@
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="/javascripts/paper.js"></script>
+<script type="text/javascript">
+function convert_lbs_to_kg( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = do_decimals( parseFloat(qtys[i] / 2.2046), 4 );
+	} // end for
+	to.value = qtys.join(',');
+} // end function convert_lbs_to_kg
+function convert_kg_to_lbs( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = do_decimals( parseFloat(qtys[i] * 2.2046), '0' );
+	} // end for
+	to.value = qtys.join(',');
+} // end function convert_kg_to_lbs
+function mweight_to_gsm( form ) {
+	var mweight = parseFloat(1*form.elements['mweight'].value);
+	var width = parseFloat(1*form.elements['width'].value);
+	var height = parseFloat(1*form.elements['height'].value);
+	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
+	form.elements['gsm'].value = gsm;
+}
+function gsm_to_mweight( form ) {
+	var gsm = parseFloat(1*form.elements['gsm'].value);
+	var width = parseFloat(1*form.elements['width'].value);
+	var height = parseFloat(1*form.elements['height'].value);
+	var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
+	form.elements['mweight'].value = mweight;
+}
+</script>
+<div id="List"><!--#include virtual="/employee/inventory/_update_inventory.html"--></div>
