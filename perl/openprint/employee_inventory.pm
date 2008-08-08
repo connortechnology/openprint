@@ -1027,7 +1027,7 @@ if ( 0 ) {
 			my $Skid = $Tag->Skid();
 			$param{"qty_lbs-$tag_id"} = sprintf('%d', $param{"qty_lbs-$tag_id"});
 			save_skid( $Skid, $param{"qty_lbs-$tag_id"} );
-			if ( openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out' ) ) {
+			if ( openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ) {
 				save_skid( $Skid, -1*$param{"qty_lbs-$tag_id"} );
 			} # end if
 			last if $variable{'error'};
@@ -1169,7 +1169,7 @@ if ( 0 ) {
 			my $Skid = $Tag->Skid();
 			$param{"qty_lbs-$tag_id"} = sprintf('%d', $param{"qty_lbs-$tag_id"});
 			save_skid( $Skid, $param{"qty_lbs-$tag_id"} );
-			if ( openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out' ) ) {
+			if ( openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ) {
 				save_skid( $Skid, -1*$param{"qty_lbs-$tag_id"} );
 			} # end if
 			last if $variable{'error'};
