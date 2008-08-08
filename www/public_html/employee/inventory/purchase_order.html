@@ -40,202 +40,189 @@ function save ( form ) {
 	<div class="PO">
 		<h1>Purchase Order</h1>
 
-		<div class="row">
-			<span class="label">To:</span>
-			<span class="input"><input type="text" name="To" value="<?To?>"/></span>
-			<span class="label">Date:</span>
-			<span class="input"><?Date?></span>
-		</div>
-		<div class="row">
-			<span class="label">Attn:</span>
-			<span class="input"><input type="text" name="Attn" value="<?Attn?>"/></span>
-			<span class="label">Fax No.</span>
-			<span class="input"><input type="text" name="FaxNo" value="<?FaxNo?>"/></span>
-		</div>
-		<div class="row">
-			<span class="label">From:</span>
-			<span class="input"><input type="text" name="From" value="<?From?>"/></span>
-			<span class="label">P.O. No.</span>
-			<span class="input"><input type="text" name="PONum" value="<?PONum?>"/></span>
-		</div>
-		<div class="row unprintable">
-			<span class="label">Currency:</span>
-			<span class="input">
-		<select name="Currency">
-		<option value=""> select one </option>
-			<?CurrencyOptions?>
-		</select>
-			</span>
-		</div>
-		<br class="spacer"/>
+		<table>
+			<tr>
+				<td>To:</td>
+				<td><input type="text" name="To" value="<?To?>"/></td>
+				<td>Date:</td>
+				<td><?Date?></td>
+			</tr>
+			<tr>
+				<td>Attn:</td>
+				<td><input type="text" name="Attn" value="<?Attn?>"/></td>
+				<td>Fax No.</td>
+				<td><input type="text" name="FaxNo" value="<?FaxNo?>"/></td>
+			</tr>
+			<tr>
+				<td>From:</td>
+				<td><input type="text" name="From" value="<?From?>"/></td>
+				<td>P.O. No.</td>
+				<td><input type="text" name="PONum" value="<?PONum?>"/></td>
+			</tr>
+			<tr class="unprintable">
+				<td>Currency:</td>
+				<td><select name="Currency">
+					<option value=""> select one </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'CurrencyIndex'} ); ) ?>
+				</select>
+				</td>
+			</tr>
+		</table>
 		<br/>
-		<div class="Contents">
-			<div class="row tableHeader">
-				<span class="Actions">Actions</span>
-				<span class="Amount">Amount</span>
-				<span class="Qty"># Sheets</span>
-				<span class="Price">PER M Price</span>
-				<span class="Price">CWT</span>
-				<span class="Size">Size</span>
-				<span class="Weight">Weight</span>
-				<span class="Finish">Finish</span>
-				<span class="Name">Paper Name<span class="unprintable"><br/>click to load</span></span>
-			</div>
+		<div>
+			<table class="List">
+				<tr>
+					<th class="Actions">Actions</th>
+					<th class="Amount">Amount</th>
+					<th class="Qty"># Sheets</th>
+					<th class="Price">PER M Price</th>
+					<th class="Price">CWT</th>
+					<th class="Size">Size</th>
+					<th class="Weight">Weight</th>
+					<th class="Finish">Finish</th>
+					<th class="Name">Paper Name<span class="unprintable"><br/>click to load</span></th>
+				</tr>
 			<? while ( @$variable{'Index','Description','Brand','Finish','Weight','Size','CWT','Price','Qty','Amount'} = splice @{$$variable{'Contents'}},0,10; ) ?>
-			<div class="row" style="border-bottom: 1px solid;">
-				<span class="Actions">
-				<script language="JavaScript">
-				writeButton( 'Delete<?Index?>', 'delete.gif', "", '<?siteURL?>/employee/inventory/purchase_order.html?PaperPurchaseOrderIndex=<?PaperPurchaseOrderIndex?>&PaperIndex=<?Index?>&btnFunction=DeletePaper', 'Delete' );
-				</script>
-				</span>
-				<span class="Amount">&nbsp;<?CurrencySymbol?><?Amount?></span>
-				<span class="Qty">&nbsp;<?Qty?></span>
-				<span class="Price">&nbsp;<?CurrencySymbol?><?Price?></span>
-				<span class="Price">&nbsp;<?CurrencySymbol?><?CWT?></span>
-				<span class="Size">&nbsp;<?Size?></span>
-				<span class="Weight">&nbsp;<?Weight?></span>
-				<span class="Finish"><?Finish?>&nbsp;</span>
-				<span class="Name"><a href="#" onclick="loadPaper( 'f1', '<?PaperPurchaseOrderIndex?>','<?Index?>' ); return false;"><?Description?>&nbsp;</a></span>
-			</div>
+			<tr>
+				<td class="Actions">
+				<? echo ( ssi::writeButton( $log, $dbh, 'Delete'.$$variable{'Index'}, 'delete.gif', "", '/employee/inventory/purchase_order.html?PaperPurchaseOrderIndex='.$$variable{'PaperPurchaseOrderIndex'}.'&amp;PaperIndex='.$$variable{'Index'}.'&amp;btnFunction=DeletePaper', 'Delete' ); ) ?>
+				</td>
+				<td class="Amount">&nbsp;<?CurrencySymbol?><?Amount?></td>
+				<td class="Qty">&nbsp;<?Qty?></td>
+				<td class="Price">&nbsp;<?CurrencySymbol?><?Price?></td>
+				<td class="Price">&nbsp;<?CurrencySymbol?><?CWT?></td>
+				<td class="Size">&nbsp;<?Size?></td>
+				<td class="Weight">&nbsp;<?Weight?></td>
+				<td class="Finish"><?Finish?>&nbsp;</td>
+				<td class="Name"><a href="#" onclick="loadPaper( 'f1', '<?PaperPurchaseOrderIndex?>','<?Index?>' ); return false;"><?Description?>&nbsp;</a></td>
+			</tr>
 			<? endwhile ( @$variable{'Index','Description','Brand','Finish','Weight','Size','CWT','Price','Qty','Amount'} = splice @{$$variable{'Contents'}},0,10; ) ?>
 <? if ( $$variable{'SubTotal'} ) ?>
-			<div class="row">
-				<span class="Amount" style="border-bottom: 1px solid;">&nbsp;<?CurrencySymbol?><?SubTotal?></span>
-				<span class="Label" style="border-bottom: 1px solid;">Sub-Total</span>
-			</div>
+			<tr class="totals">
+				<td class="Amount">&nbsp;<?CurrencySymbol?><?SubTotal?></td>
+				<td class="Label">Sub-Total</td>
+			</tr>
 			<? if ( $$variable{'CurrencyName'} =~ /Canadian/ ) ?> 
-			<div class="row">
-				<span class="Amount" style="border-bottom: 1px solid;">&nbsp;<?CurrencySymbol?><?GST?></span>
-				<span class="Label" style="border-bottom: 1px solid;">G.S.T.</span>
-			</div>
+			<tr>
+				<td class="Amount">&nbsp;<?CurrencySymbol?><?GST?></td>
+				<td class="Label">G.S.T.</td>
+			</tr>
 			<? endif ( $$variable{'CurrencyName'} =~ /Canadian/ ) ?> 
-			<div class="row">
-				<span class="Amount" style="border-bottom: 1px solid;">&nbsp;<?CurrencySymbol?><?Total?></span>
-				<span class="Label" style="border-bottom: 1px solid;"><b>Total</b></span>
-			</div>
+			<tr>
+				<td class="Amount">&nbsp;<?CurrencySymbol?><?Total?></td>
+				<td class="Label"><b>Total</b></td>
+			</tr>
 <? endif ( $$variable{'SubTotal'} ) ?>
-		</div><!--Contents-->
-		<br>
+		</table>
+		</div>
+		<br/>
 		<br class="spacer"/>
 		<? if ( $$variable{'CurrencyName'} ) ?>
-		<div align="right" class="smTbl">All prices listed in <?CurrencyName?>.</div>
+		<div align="right">All prices listed in <?CurrencyName?>.</div>
 		<? endif ( $$variable{'CurrencyName'} ) ?>
 	</div><!--PO-->
 <? if ( $$variable{'Status'} eq 'Incomplete' ) ?>
 	<div class="AddNew">
 		<h3>Add/Edit Paper:</h3>
-		<div class="paper">
-			<span class="label">Brand:</span>
-			<span class="input">
-				<select name="PaperBrand" size="1" onChange="PaperBrand_onChange('<?id?>');">
-				<option value="<?PaperBrand?>"></option>
-				</select>
-			</span>
-		</div>
-		<div class="paper">
-			<span class="label">Description:</span>
-			<span class="input"><input type="text" name="PaperDescription" value="<?PaperDescription?>"/></span>
-		</div>
-		<div class="paper">
-			<span class="label">Finish:</span>
-			<span class="input">
-				<select name="PaperFinish" size="1" onChange="PaperFinish_onChange('id');">
+		<p class="paper">
+			<label>Brand:</label>
+			<select name="PaperBrand" size="1" onchange="PaperBrand_onchange('<?id?>');">
+			<option value="<?PaperBrand?>"></option>
+			</select>
+		</p>
+		<p class="paper">
+			<label>Description:</label>
+			<input type="text" name="PaperDescription" value="<?PaperDescription?>"/>
+		</p>
+		<p class="paper">
+			<label>Finish:</label>
+				<select name="PaperFinish" size="1" onchange="PaperFinish_onchange('id');">
 				<option value="<?PaperFinish?>"></option>
 				</select>
-			</span>
-		</div>
-		<div class="paper">
-			<span class="label">Colour:</span>
-			<span class="input">
-				<select name="PaperColour" size="1" onChange="PaperColour_onChange('id');">
+		</p>
+		<p class="paper">
+			<label>Colour:</label>
+				<select name="PaperColour" size="1" onchange="PaperColour_onchange('id');">
 				<option value="<?PaperColour?>"></option>
 				</select>
-			</span>
-		</div>
-		<div class="paper">
-			<span class="label">Weight:</span>
-			   <span class="input">
-				<select name="PaperWeight" size="1" onChange="PaperWeight_onChange('id');">
+		</p>
+		<p class="paper">
+			<label>Weight:</label>
+				<select name="PaperWeight" size="1" onchange="PaperWeight_onchange('id');">
 				<option value="<?PaperWeight?>"></option>
 				</select>
-			</span>
-		</div>
-		<div class="paper">
-			<span class="label">Size:</span>
-			<span class="input">
-				<select name="PaperSheetSize" size="1" onchange="PaperSheetSize_onChange('id');">
+		</p>
+		<p class="paper">
+			<label>Size:</label>
+				<select name="PaperSheetSize" size="1" onchange="PaperSheetSize_onchange('id');">
 				<option value="<?PaperSheetSize?>"></option>
 				</select>
-			</span>
-		</div>
-		<div class="paper">
-			<span class="label"># of Sheets:</span>
-			<span class="input"><input type="text" name="PaperQuantity" value="<?PaperQuantity?>"/></span>
-		</div>
-		<div class="paper">
-			<span class="label">MWeight:</span>
-			<span class="input"><input type="text" name="PaperMWeight" value="<?PaperMWeight?>"/></span>
-		</div>
-		<div class="paper">
-			<span class="label">Width:</span>
-			<span class="input"><input type="text" name="PaperWidth" value="<?PaperWidth?>"/></span>
-		</div>
-		<div class="paper">
-			<span class="label">Height:</span>
-			<span class="input"><input type="text" name="PaperHeight" value="<?PaperHeight?>"/></span>
-		</div>
-		<div class="paper">
-			<span class="label">Price Per 100lb:</span>
-			<span class="input"><input type="text" name="PaperPrice" value="<?PaperPrice?>"/></span>
-		</div>
+		</p>
+		<p class="paper">
+			<label># of Sheets:</label>
+			<input type="text" name="PaperQuantity" value="<?PaperQuantity?>"/>
+		</p>
+		<p class="paper">
+			<label>MWeight:</label>
+			<input type="text" name="PaperMWeight" value="<?PaperMWeight?>"/>
+		</p>
+		<p class="paper">
+			<label>Width:</label>
+			<input type="text" name="PaperWidth" value="<?PaperWidth?>"/>
+		</p>
+		<p class="paper">
+			<label>Height:</label>
+			<input type="text" name="PaperHeight" value="<?PaperHeight?>"/>
+		</p>
+		<p class="paper">
+			<label>Price Per 100lb:</label>
+			<input type="text" name="PaperPrice" value="<?PaperPrice?>"/>
+		</p>
 		<br class="spacer"/>
 		<br class="spacer"/>
 	</div><!--AddNew-->
 <? endif ( $$variable{'Status'} eq 'Incomplete' ) ?>
 <? if ( $$variable{'Status'} eq 'Sent' ) ?>
-	<div class="row">
-		<span class="label">Date Received:</span>
-		<span class="input">
+	<p>
+		<label>Date Received:</label>
+		
 			<? eval ( $$variable{'days'} = ssi::getdays((localtime(time))[3]); ) ?>
 			<? eval ( $$variable{'months'} = ssi::getmonths((localtime(time))[4]+1); ) ?>
 			<? eval ( $$variable{'years'} = ssi::getyears((localtime(time))[5]+1900); ) ?>
 			<select name="ddmReceivedDateMonth" size="1"> <?months?> </select>
 			<select name="ddmReceivedDateDay" size="1"> <?days?> </select>
 			<select name="ddmReceivedDateYear" size="1"> <?years?> </select>
-		</span>
-	</div>
-	<div class="row">
-		<span class="label">Warehouse Location:</span>
-		<span class="input"><input type="text" name="WarehouseLocation" value="<?WarehouseLocation?>"/></span>
-	</div>
+	</p>
+	<p>
+		<label>Warehouse Location:</label>
+		<input type="text" name="WarehouseLocation" value="<?WarehouseLocation?>"/>
+	</p>
 <? endif ( $$variable{'Status'} eq 'Sent' ) ?>
 <? if ( $$variable{'Status'} eq 'Received' ) ?>
-	<div class="row">
-		<span class="label">Date Received:</span>
-		<span class="input"><?ReceivedDate?></span>
-	</div>
-	<div class="row">
-		<span class="label">Warehouse Location:</span>
-		<span class="input"><?WarehouseLocation?></span>
-	</div>
+	<p>
+		<label>Date Received:</label>
+		<?ReceivedDate?>
+	</p>
+	<p>
+		<label>Warehouse Location:</label>
+		<?WarehouseLocation?>
+	</p>
 <? endif ( $$variable{'Status'} eq 'Received' ) ?>
 	<br class="spacer"/>
-	<div class="row">
-		<span class="buttons">
-			<script language="JavaScript">
-<? if ( $$variable{'Status'} eq 'Incomplete' ) ?>
-			writeButton( 'Save', 'save.gif', 'save(f1);', '', 'Save' );
-			writeButton( 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
-			writeButton( 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
-			writeButton( 'Send', 'send.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
-<? endif ( $$variable{'Status'} eq 'Incomplete' ) ?>
-<? if ( $$variable{'Status'} eq 'Sent' ) ?>
-			writeButton( 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
-			writeButton( 'Received', '', "f1.btnFunction.value='Received';f1.submit();", '', 'Received' );
-<? endif ( $$variable{'Status'} eq 'Sent' ) ?>
-			</script>
-		</span>
-	</div>
+	<p class="buttons">
+<? echo ( 
+	my $html = '';
+if ( $$variable{'Status'} eq 'Incomplete' ) {
+			$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', 'save(f1);', '', 'Save' );
+			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+			$html .= ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
+			$html .= ssi::writeButton( $log, $dbh, 'Send', 'send.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
+} elsif ( $$variable{'Status'} eq 'Sent' ) {
+			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+			$html .= ssi::writeButton( $log, $dbh, 'Received', '', "f1.btnFunction.value='Received';f1.submit();", '', 'Received' );
+} # end if
+) ?>
+	</p>
 	<input type="hidden" name="PaperPurchaseOrderIndex" value="<?PaperPurchaseOrderIndex?>"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
