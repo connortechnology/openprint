@@ -1,0 +1,25 @@
+<form id="completion_form" name="completion_form" action="print_overview.html" method="post">
+	<input type="hidden" name="btnFunction" value="CompleteJob" />
+	<input type="hidden" name="project_id" value="<? echo ( $openprint::param{'project_id'} ) ?>" />
+	<input type="hidden" name="service_id" value="<? echo ( $openprint::param{'service_id'} ) ?>" />
+	<fieldset><legend>Signature Completion</legend>
+		<p>
+			<label>Operator:</label>
+			<select name="operator_id" id="operator_id">
+				<? echo ( 
+					my $operator_id = openprint::service::operator_id( @openprint::param{'project_id','service_id'} );
+					$operator_id = $openprint::session{'user_id'} if ! $operator_id;
+
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('usergroups'=>['Press'],'order'=>'lower(strfirstname),lower(strlastname)') ], $operator_id );
+				) ?>
+			</select>
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Submit','submit.gif','completion_form.submit();','', 'Submit' ),
+				ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif','contentWin.destroy();','', 'Cancel' ),
+
+			); ) ?>
+		</p>
+	</fieldset>
+</form>

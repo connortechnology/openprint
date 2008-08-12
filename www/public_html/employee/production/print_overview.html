@@ -8,7 +8,7 @@
 			foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) {
 				if ( ref $openprint::param{$param} eq 'ARRAY' ) {
 					$openprint::session{'/employee/production/print_overview.html?'.$param} = join(';', @{$openprint::param{$param}} );
-				} else {
+				} elsif ( exists $openprint::param{$param} ) {
 					$openprint::session{'/employee/production/print_overview.html?'.$param} = $openprint::param{$param};
 				} # end if
 			} # end foreach
@@ -22,23 +22,23 @@
 ) ?>
 <script type="text/javascript">
 <!--
-function level_up( img ) {
-	if ( img.src.match(/level=1/) ) {
-	img.src=img.src.replace(/level=1/,'level=2');
-	} else if ( img.src.match(/level=2/) ) {
-	img.src=img.src.replace(/level=2/,'level=3');
-	} else if ( img.src.match(/level=3/) ) {
-	} 
+	function level_up( img ) {
+		if ( img.src.match(/level=1/) ) {
+			img.src=img.src.replace(/level=1/,'level=2');
+		} else if ( img.src.match(/level=2/) ) {
+			img.src=img.src.replace(/level=2/,'level=3');
+		} else if ( img.src.match(/level=3/) ) {
+		} 
 
-} 
-function level_down( img ) {
-	if ( img.src.match(/level=1/) ) {
-	} else if ( img.src.match(/level=2/) ) {
-	img.src=img.src.replace(/level=2/,'level=1');
-	} else if ( img.src.match(/level=3/) ) {
-	img.src=img.src.replace(/level=3/,'level=2');
 	} 
-}
+	function level_down( img ) {
+		if ( img.src.match(/level=1/) ) {
+		} else if ( img.src.match(/level=2/) ) {
+			img.src=img.src.replace(/level=2/,'level=1');
+		} else if ( img.src.match(/level=3/) ) {
+			img.src=img.src.replace(/level=3/,'level=2');
+		} 
+	}
 	function loadDivs( results ) {
 		var rows = results.split('|');
 		for ( var r = 0; r < rows.length; r += 1 ) {
