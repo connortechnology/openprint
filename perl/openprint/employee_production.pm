@@ -115,11 +115,9 @@ sub press_schedule {
 
 	} elsif ( $openprint::param{'btnFunction'} eq 'CompleteJob' ) {
 # Actually this is complete Signature
-		my $service_index = $openprint::param{'ServiceIndex'};
-		my $project_index = $openprint::param{'ProjectIndex'};
-		my $Project = new openprint::Project( $project_index );
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Job Completed from print schedule." );
-		complete_signature( $log, $dbh, $variable, $project_index, $service_index );
+		my $Project = new openprint::Project( $openprint::param{'project_id'} );
+		$Project->add_to_log( $openprint::session{'company_id'}, $openprint::param{'operator_id'}, "Job Completed from print schedule." );
+		complete_signature( $log, $dbh, $variable, @openprint::param{'project_id', 'service_id'} );
 		$Project->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $openprint::param{'schedule_id'} ) {
