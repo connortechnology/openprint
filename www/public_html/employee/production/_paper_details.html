@@ -30,12 +30,12 @@
 			foreach my $Skid ( @Skids ) {
 				my $Location = $Skid->Location();
 				if ( $Location->id() ) {
-					$html .= '<span style="float:right;width:100px;">';
-					$html .= sprintf('<img id="MAP%d" src="/images/maps/map.gif?location_id=%d&width=100&level=1" alt="" /><br/>', $Allocation->id(), $Location->id() );
-					$html .= ssi::writeButton( $log, $dbh, 'Plus'.$Allocation->id(), '', q{level_up( $('MAP}.$Allocation->id().q{') );}, '', '+' );
-					$html .= ssi::writeButton( $log, $dbh, 'Minus'.$Allocation->id(), '', q{level_down( $('MAP}.$Allocation->id().q{') );}, '', '-' );
+					$html .= '<span style="float:right;width:200px;">';
+					$html .= sprintf('<img id="MAP%d" src="/images/maps/map.gif?location_id=%d&width=200&level=1" alt="" /><br/>', $Skid->id(), $Location->id() );
+					$html .= ssi::writeButton( $log, $dbh, 'Plus'.$Skid->id(), '', q{level_up( $('MAP}.$Skid->id().q{') );}, '', '+' );
+					$html .= ssi::writeButton( $log, $dbh, 'Minus'.$Skid->id(), '', q{level_down( $('MAP}.$Skid->id().q{') );}, '', '-' );
 					$html .= '</span>';
-					$html .= 'Location:' . $Allocation->Skid()->Location()->name().'<br/>';
+					$html .= 'Location:' . $Location->name().'<br/>';
 				} # end if
 				$html .= 'Skid: ' . $Skid->id().'<br/>';
 				$html .= 'RFID: ' . $Skid->rfidtag_id().'<br/>';
