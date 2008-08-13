@@ -111,7 +111,7 @@ $log->debug("Carton Status: $carton_status");
 		} # end if
 		$qty_index = $qty_i if $$specs{"txtPackageQuantity$qty_i"} and ! $qty_index;
 	} # end foreach
-
+$openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 	$$specs{'ToPostalCode'} =~ s/[^0-9A-Za-z]//g;
 	if ( ! $$specs{'ToPostalCode'} ) {
 		$$specs{'alert'} = 'Please enter your postal code.';

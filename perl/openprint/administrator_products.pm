@@ -159,8 +159,8 @@ sub _prices {
 			} # end foreach Price
 			if ( $openprint::param{'chk-'.$Pricelist->id().'-New'} ) {
 				my $Price = new openprint::ProductPrice();
-				$Price->product( $Product );
-				$Price->pricelist( $Pricelist );
+				$Price->Product( $Product );
+				$Price->Pricelist( $Pricelist );
 				$Price->min($openprint::param{'min-'.$Pricelist->id().'-New'});
 				$Price->max($openprint::param{'max-'.$Pricelist->id().'-New'});
 				$Price->units($openprint::param{'units-'.$Pricelist->id().'-New'});

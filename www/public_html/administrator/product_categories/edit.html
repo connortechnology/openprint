@@ -1,3 +1,4 @@
+<? eval ( $$variable{'Category'} = new openprint::ProjectTypeCategory( $openprint::param{'category_id'} ) if ! $$variable{'Category'} ) ?>
 <form name="f1" method="post" enctype="multipart/form-data" action="list.html">
 	<input type="hidden" name="category_id" value="<? echo ( $openprint::param{'category_id'} ) ?>" />
 	<fieldset>
