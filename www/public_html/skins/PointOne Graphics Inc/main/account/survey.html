@@ -7,6 +7,9 @@
 			sql::insert( $log, $dbh, 'Survey_Responses', 'company_id', $openprint::session{'company_id'}, 'user_id', $openprint::session{'user_id'}, 'survey_id', $r->param('survey_id'), 'question_id', $question_id, 'answer', $r->param( 'Answer'.$question_id ) );
 			$$variable{'Complete'} = 0 if ! $r->param('Answer'.$question_id);
 		} # end foreach
+		if ( $$variable{'Complete'} ) {
+			sql::update( undef, undef, 'Users', ['index=?', $openprint::session{'user_id'}], 'strcustomgreeting','' );
+		} # end if
 	) ?>
 
 	<? if ( $$variable{'Complete'} ) ?>
