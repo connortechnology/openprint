@@ -127,9 +127,27 @@
 	<? echo (
 		my $html = '';
 		my @sigs = $$variable{'Project'}->signatures();
+		@sigs = sort { 
+			my $a_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $a );
+			my $b_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $b );
+			return $$a_specs{'PageQuantity'.$$variable{'Project'}->ordered_quantity_index()} <=> $$b_specs{'PageQuantity'.$$variable{'Project'}->ordered_quantity_index()};
+		} @sigs;
+		my $form = 1;
+
 		my $part = 0;
 		while ( my $service_index = shift @sigs ) {
 			my $sig_specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $service_index );
+
+			my $signatures = 1;
+			for ( my $i=0; $i < @sigs; $i += 1 ) {
+				my $sig_specs2= openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $sigs[$i] );
+				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $$variable{'Project'}->ordered_quantity_index() ) ) {
+					$signatures += 1;
+					splice @sigs, $i, 1;
+					$i -= 1;
+				} # end if
+			} # end for
+
 			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ( ! $$sig_specs{'UsePress'} );
 			$part += 1;
 			$html .= '<tr valign="top"><td class="docketText" align="center">';
@@ -145,8 +163,9 @@
 				$html .= $$sig_specs{'UsePress'};
 			} # end if
 			if ( $openprint::config{'Barcodes Enabled'} ne 'N' ) {
-			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/><br/>Part ' . $part;
+			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/>';
 			} # end if
+			$html .= '<br/>'.$signatures . ' Form'. ( $signatures > 1 ? 's' : '' );
 			$html .= '</td><td class="docketText">';
 			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
 				$html .= '<b>Customer Supplied</b> ';
@@ -194,7 +213,6 @@
 				$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
 			} # end if
 			$html .='<hr/>';
-			#$html .='<hr/>'.$type;
 			if ( $$sig_specs{'ddmStockFinish'} eq 'Coated 1 Side' or $$sig_specs{'ddmStockFinish'} eq 'C1S' ) {
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
 			} # end if
@@ -234,15 +252,29 @@
 					openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) and
 					openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) and
 					sets::isin($$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()},['Sheet Work','Work & Turn','Work & Tumble'] ));
-			$html .= sprintf('</td><td class="docketText">%dimps<br/>%d lbs</td>', $net_impressions, $net_impressions * $Paper->width() * $$sig_specs{'CutOff'.$$variable{'Project'}->ordered_quantity_index()} * $Paper->wpsi() );
-			$html .= sprintf('<td class="docketText">%dimps<br/>%s</td>', $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
+			$html .= '</td><td class="docketText">';
+			foreach my $f ( $form .. ($form+$signatures-1) ) {
+				$html .= sprintf('%dimps<br/>%d lbs X F%d<br/>', $net_impressions, $net_impressions * $Paper->width() * $$sig_specs{'CutOff'.$$variable{'Project'}->ordered_quantity_index()} * $Paper->wpsi(), $f );
+			} # end foreach
+			$html .= '</td><td class="docketText">';
+			foreach my $f ( $form .. ($form+$signatures-1) ) {
+				$html .= sprintf('%dimps<br/>%s X F%d<br/>', $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()}, $f );
+			} # end foreach
 		} else {
-			$html .= sprintf('</td><td class="docketText">%d</td>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()} );
-			$html .= sprintf('<td class="docketText">%s</td>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
+			$html .= '</td><td class="docketText">';
+			foreach my $f ( $form .. ($form+$signatures-1) ) {
+				$html .= sprintf('%d X F%d<br/>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()}, $f );
+			} # end foreach
+			$html .= '</td><td class="docketText">';
+			foreach my $f ( $form .. ($form+$signatures-1) ) {
+				$html .= sprintf('%s X F%d<br/>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()}, $f );
+			} # end foreach
 		} # end if
+		$html .= '</td>';
 		
 		$html .= '<td class="docketText">&nbsp;</td>';
 		$html .= '<td class="docketText"><br/><br/><br/></td></tr>';
+		$form += $signatures;
 	} # end while service_index
 	return $html;
 ) ?>

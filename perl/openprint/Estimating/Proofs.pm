@@ -190,7 +190,7 @@ sub calc {
 				} else {
 					$price = openprint::service::get_price( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, undef );
 				} # end if
-				if ( sets::isin( $type , ['EpsonProof','DigitalDylux'] ) ) {
+				if ( sets::isin( $type , ['CanonProof','EpsonProof','DigitalDylux'] ) ) {
 					$price *= $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144;	# Prices are in square feet, so 144=12x12inches
 				} elsif ( $type eq 'FujiFinalProof'  ) {
 				} elsif ( $type eq 'PDFProof' ) {
