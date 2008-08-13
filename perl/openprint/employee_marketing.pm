@@ -49,7 +49,8 @@ sub email_campaigns {
     } elsif ( $param{'btnFunction'} eq 'Download Recipients' ) {
         my @header = ( 'Company','Name','Email','Phone');
         my @data;
-		foreach my $User ( openprint::User::find( 'id' => [$Campaign->recipients()] ) ) {
+		foreach my $user_id ( $Campaign->recipients() ) {
+			my $User = new openprint::User( $user_id );
 			push @data, $User->Company()->name(), $User->name(), $User->email(), $User->phone();
 		} # end foreach
 

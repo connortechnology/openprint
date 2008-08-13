@@ -360,7 +360,7 @@ sub find {
 		$openprint::log->error( "Error loading Users: ($sql) (@values)" );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug( "loading Users: ($sql) (@values)" );
+		$openprint::log->debug( "loading Users: ($sql) (@values) " . $data );
 	} # end if
 	return map { new openprint::User( $_->{index}, $_ ) } @$data;
 } # end sub find
