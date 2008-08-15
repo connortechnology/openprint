@@ -332,8 +332,125 @@ sub paper_details {
 	$variable{'paper_id'} = $$Paper{'id'};
 } # end sub paper_details
 
+sub save_Paper {
+
+	my $weight;
+	if ( $param{'txtWeight'} ) {
+		$weight = $param{'txtWeight'};
+	} elsif ( $param{'weight'} ) {
+		$weight = $param{'weight'};
+		$weight .= 'lb' if ! ( $param{'weight'} =~ /lb/ );
+	} elsif ( $param{'calliper'} ) {
+		$weight = $param{'calliper'} . 'PT';
+	} # end if
+
+	my @papers = openprint::Paper::find(
+			'owner_id'	=>	$param{'Owner'},
+			'manufacturer_id'	=>	$param{'Manufacturer'},
+			'manufacturer'		=>	$param{'txtManufacturer'},
+			'name_id'	=>	$param{'Name'},
+			'name'		=>	$param{'txtName'},
+			'finish_id' =>	$param{'Finish'},
+			'finish'	=>	$param{'txtFinish'},
+			'colour_id' =>	$param{'Colour'},
+			'colour'	=>	$param{'txtColour'},
+			'weight_id' =>	$param{'Weight'},
+			'weight'	=>	$weight,
+			'quality_id' => $param{'Quality'},
+			'quality'	=>	$param{'txtQuality'},
+			'width'	=> $param{'width'},
+			'height'	=>	$param{'type'} ne 'Roll' ? $param{'height'} : undef,
+			'type'	=>	$param{'type'},
+			);
+	my $Paper;
+
+# Paper not found, this is the first time we are adding it to the skid
+	if ( 0 == @papers ) {
+		$Paper = new openprint::Paper( );
+		$Paper->owner_id( $param{'Owner'} );
+		$Paper->manufacturer( $param{'txtManufacturer'} ) if $param{'txtManufacturer'};
+		$Paper->manufacturer_id( $param{'Manufacturer'} ) if $param{'Manufacturer'};
+		$Paper->name( $param{'txtName'} ) if $param{'txtName'};
+		$Paper->name_id( $param{'Name'} ) if $param{'Name'};
+		$Paper->finish( $param{'txtFinish'} ) if $param{'txtFinish'};
+		$Paper->finish_id( $param{'Finish'} ) if $param{'Finish'};
+		$Paper->colour( $param{'txtColour'} ) if $param{'txtColour'};
+		$Paper->colour_id( $param{'Colour'} ) if $param{'Colour'};
+		$Paper->weight( $weight ) if $weight;
+		$Paper->weight_id( $param{'Weight'} ) if $param{'Weight'};
+		$Paper->quality( $param{'txtQuality'} ) if $param{'txtQuality'};
+		$Paper->quality_id( $param{'Quality'} ) if $param{'Quality'};
+		$Paper->type( $param{'type'} );
+		$Paper->fsc_code( $param{'fsc_code'} );
+		if ( $param{'type'} eq 'Roll' ) {
+			$Paper->width( $param{'width'} );
+			$Paper->height( undef );
+		} else { #Sheet
+			$Paper->width( $param{'width'} );
+			$Paper->height( $param{'height'} );
+		} # end if
+		if ( $param{'weight'} ) {
+			$Paper->basis_weight( $param{'weight'} * 2 );
+		} # end if
+		$Paper->calliper( $param{'calliper'} );
+		$Paper->mweight( $param{'mweight'} );
+		$Paper->gsm( $param{'gsm'} );
+		if ( my $error = $Paper->save() ) {
+			$variable{'error'} .= $error;
+		} else {
+			$variable{'information'} .= 'Paper created.<br/>';
+		} # end if
+	} elsif ( 1 == @papers ) {
+		$Paper = shift @papers;
+		my $changed = 0;
+# This is so that papers that don't have mweights will get filled in
+		if ( ( ! $Paper->basis_weight() ) and $param{'weight'} ) {
+			$Paper->basis_weight( $param{'weight'} * 2 );
+			$changed = 1;
+		} # end if
+		if ( ( ! $Paper->calliper() ) and $param{'calliper'} ) {
+			$Paper->calliper( $param{'calliper'} );
+			$changed = 1;
+		} # end if
+		if ( ( ! $Paper->mweight() ) and $param{'txtMWeight'} ) {
+			$Paper->mweight( $param{'txtMWeight'} );
+			$changed = 1;
+		} # end if
+		if ( ( ! $Paper->gsm() ) and $param{'gsm'} ) {
+			$Paper->gsm( $param{'gsm'} );
+			$changed = 1;
+		} # end if
+		$Paper->save() if $changed;
+	} else {
+		$variable{'error'} .= 'Duplicate Paper Detected!.<br/>';
+		$variable{'information'} .= 'The following papers both match, please edit them:<br/>';
+		foreach my $Paper ( @papers ) {
+			$variable{'information'}	.= '<a href="paper_details.html?paper_id='.$Paper->id().'">'.$Paper->to_string().'</a><br/>';
+		} # end foreach
+	} # end if
+	return $Paper;
+} # end sub save_Paper
+
+sub save_inventory {
+	my ( $Skid, $Paper, $qty ) = @_;
+	my $delta = $Skid->add( $Paper, $qty );
+	$Paper->add_inventory( $Skid, $delta, $param{'Units'} );
+#FIXME
+	if ( $delta > 0 ) {
+		$variable{'information'} .= "Added $delta $param{'Units'} to inventory.<br/>";
+	} elsif ( $delta < 0 ) {
+		$variable{'information'} .= "Removed $delta $param{'Units'} from inventory.<br/>";
+	} else {
+		$variable{'information'} .= "No change was made to inventory.<br/>";
+	}# end if
+
+	$Skid->save();
+} # end if
+
 sub save_skid {
 	my ( $Skid, $qty ) = @_;
+
+	$qty = $param{'Quantity'} if ! defined $qty;
 
 	$Skid->rfidtag_id( $param{'rfidtag_id'} ) if exists $param{'rfidtag_id'};
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
@@ -345,113 +462,10 @@ sub save_skid {
 	} # end if
 	
 	if ( $param{'Name'} or $param{'txtName'} ) {
-		my $weight;
-		if ( $param{'txtWeight'} ) {
-			$weight = $param{'txtWeight'};
-		} elsif ( $param{'weight'} ) {
-			$weight = $param{'weight'};
-			$weight .= 'lb' if ! ( $param{'weight'} =~ /lb/ );
-		} elsif ( $param{'calliper'} ) {
-			$weight = $param{'calliper'} . 'PT';
-		} # end if
+		my $Paper = save_Paper();
 
-		my @papers = openprint::Paper::find(
-				'owner_id'	=>	$param{'Owner'},
-				'manufacturer_id'	=>	$param{'Manufacturer'},
-				'manufacturer'		=>	$param{'txtManufacturer'},
-				'name_id'	=>	$param{'Name'},
-				'name'		=>	$param{'txtName'},
-				'finish_id' =>	$param{'Finish'},
-				'finish'	=>	$param{'txtFinish'},
-				'colour_id' =>	$param{'Colour'},
-				'colour'	=>	$param{'txtColour'},
-				'weight_id' =>	$param{'Weight'},
-				'weight'	=>	$weight,
-				'quality_id' => $param{'Quality'},
-				'quality'	=>	$param{'txtQuality'},
-				'width'	=> $param{'width'},
-				'height'	=>	$param{'type'} ne 'Roll' ? $param{'height'} : undef,
-				'type'	=>	$param{'type'},
-				);
-		my $Paper;
-
-# Paper not found, this is the first time we are adding it to the skid
-		if ( 0 == @papers ) {
-			$Paper = new openprint::Paper( );
-			$Paper->owner_id( $param{'Owner'} );
-			$Paper->manufacturer( $param{'txtManufacturer'} ) if $param{'txtManufacturer'};
-			$Paper->manufacturer_id( $param{'Manufacturer'} ) if $param{'Manufacturer'};
-			$Paper->name( $param{'txtName'} ) if $param{'txtName'};
-			$Paper->name_id( $param{'Name'} ) if $param{'Name'};
-			$Paper->finish( $param{'txtFinish'} ) if $param{'txtFinish'};
-			$Paper->finish_id( $param{'Finish'} ) if $param{'Finish'};
-			$Paper->colour( $param{'txtColour'} ) if $param{'txtColour'};
-			$Paper->colour_id( $param{'Colour'} ) if $param{'Colour'};
-			$Paper->weight( $weight ) if $weight;
-			$Paper->weight_id( $param{'Weight'} ) if $param{'Weight'};
-			$Paper->quality( $param{'txtQuality'} ) if $param{'txtQuality'};
-			$Paper->quality_id( $param{'Quality'} ) if $param{'Quality'};
-			$Paper->type( $param{'type'} );
-			$Paper->fsc_code( $param{'fsc_code'} );
-			if ( $param{'type'} eq 'Roll' ) {
-				$Paper->width( $param{'width'} );
-				$Paper->height( undef );
-			} else { #Sheet
-				$Paper->width( $param{'width'} );
-				$Paper->height( $param{'height'} );
-			} # end if
-			if ( $param{'weight'} ) {
-				$Paper->basis_weight( $param{'weight'} * 2 );
-			} # end if
-			$Paper->calliper( $param{'calliper'} );
-			$Paper->mweight( $param{'mweight'} );
-			$Paper->gsm( $param{'gsm'} );
-			if ( my $error = $Paper->save() ) {
-				$variable{'error'} .= $error;
-			} else {
-				$variable{'information'} .= 'Paper created.<br/>';
-			} # end if
-		} elsif ( 1 == @papers ) {
-			$Paper = shift @papers;
-			my $changed = 0;
-# This is so that papers that don't have mweights will get filled in
-			if ( ( ! $Paper->basis_weight() ) and $param{'weight'} ) {
-				$Paper->basis_weight( $param{'weight'} * 2 );
-				$changed = 1;
-			} # end if
-			if ( ( ! $Paper->calliper() ) and $param{'calliper'} ) {
-				$Paper->calliper( $param{'calliper'} );
-				$changed = 1;
-			} # end if
-			if ( ( ! $Paper->mweight() ) and $param{'txtMWeight'} ) {
-				$Paper->mweight( $param{'txtMWeight'} );
-				$changed = 1;
-			} # end if
-			if ( ( ! $Paper->gsm() ) and $param{'gsm'} ) {
-				$Paper->gsm( $param{'gsm'} );
-				$changed = 1;
-			} # end if
-			$Paper->save() if $changed;
-		} else {
-			$variable{'error'} .= 'Duplicate Paper Detected!.<br/>';
-			$variable{'information'} .= 'The following papers both match, please edit them:<br/>';
-			foreach my $Paper ( @papers ) {
-				$variable{'information'}	.= '<a href="paper_details.html?paper_id='.$Paper->id().'">'.$Paper->to_string().'</a><br/>';
-			} # end foreach
-		} # end if
 		if ( $Paper and $Paper->id() ) {
-			my $delta = $Skid->add( $Paper, $qty ? $qty : $param{'Quantity'} );
-			$Paper->add_inventory( $Skid, $delta, $param{'Units'} );
-#FIXME
-			if ( $delta > 0 ) {
-				$variable{'information'} .= "Added $delta $param{'Units'} to inventory.<br/>";
-			} elsif ( $delta < 0 ) {
-				$variable{'information'} .= "Removed $delta $param{'Units'} from inventory.<br/>";
-			} else {
-				$variable{'information'} .= "No change was made to inventory.<br/>";
-			}# end if
-
-			$Skid->save();
+			save_inventory( $Skid, $Paper, $qty );
 
 			if ( $param{'Docket'} ) {
 				my @Projects = openprint::Project::find('docket'=>$param{'Docket'} );
@@ -460,12 +474,14 @@ sub save_skid {
 					$variable{'error'} .= "Docket $param{'Docket'} not found. No paper allocated. CSR not notified.<br/>";
 				} else {
 					my $Project = shift @Projects if @Projects;
-					if ( ( exists $param{'allocate'} ) and $param{'allocate'} eq 'Specific' ) {
-						$Paper->allocate( $$Skid{'id'}, $Project->id(), $delta, $param{'Units'} );
+					if ( exists $param{'allocate'} ) {
+						if ( $param{'allocate'} eq 'Specific' ) {
+							$Paper->allocate( $$Skid{'id'}, $Project->id(), $qty, $param{'Units'} );
+						} # end if
 					} else {
-						$Paper->allocate( undef, $Project->id(), $delta, $param{'Units'} );
+						$Paper->allocate( undef, $Project->id(), $qty, $param{'Units'} );
 					} # end if
-					$variable{'information'} .= "Allocated $delta $param{'Units'} to docket $param{'Docket'}.<br/>";
+					$variable{'information'} .= "Allocated $qty $param{'Units'} to docket $param{'Docket'}.<br/>";
 				} # end if
 			} # end if
 		} # end if Paper
@@ -475,8 +491,8 @@ sub save_skid {
 		if ( ! @Projects ) {
 			$variable{'error'} .= "Docket $param{'Docket'} not found. No paper allocated.<br/>";
 		} else {
-			$Skid->allocate( undef, $Projects[0]->id(), @param{'Quantity','Units'} );
-			$variable{'information'} .= "Allocated $param{'Quantity'} $param{'Units'} to docket $param{'Docket'}.<br/>";
+			$Skid->allocate( undef, $Projects[0]->id(), $qty, $param{'Units'} );
+			$variable{'information'} .= "Allocated $qty $param{'Units'} to docket $param{'Docket'}.<br/>";
 		} # end if
 	} # end if
 } # end sub save_skid
@@ -1002,21 +1018,25 @@ $log->warn("Update inventory");
 		my @ids = misc::trim( split(';', $param{'rfidtag_ids'} ) );
 		@{$variable{'IDS'}} = @ids;
 
-if ( 0 ) {
-		if ( $param{'manifest_id'} ) {
-			my @Manifests = openprint::Manifest::find('id'=>$param{'manifest_id'});
-			if ( @Manifests ) {
-				$variable{'error'} .= "Manifest $param{'manifest_id'} has already been entered.";
-				$param{'manifest_id'} = '';
-			} # end if
-		} # end if
-} # end if
-
 		my $Manifest = new openprint::Manifest();
 		$Manifest->id( $param{'manifest_id'} );
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 		$variable{'error'} .= $Manifest->save();
 		delete $param{'rfidtag_id'};
+
+		my $total_qty = 0;
+
+		my $Paper = save_Paper();
+		my $Project;
+		if ( $param{'Docket'} ) {
+			my @Projects = openprint::Project::find('docket'=>$param{'Docket'});
+			if ( ! @Projects ) {
+				$variable{'error'} .= "Docket $param{'Docket'} not found.  No allocations made.<br/>";
+			} else {
+				$Project = $Projects[0];
+			} # end if
+		} # end if
+
 		foreach my $tag_id ( @ids ) {
 			next if ! $tag_id;
 			my $Tag = new openprint::RFIDTag( $tag_id );
@@ -1025,10 +1045,16 @@ if ( 0 ) {
 				last if $variable{'error'};
 			} # end if
 			my $Skid = $Tag->Skid();
-			$param{"qty_lbs-$tag_id"} = sprintf('%d', $param{"qty_lbs-$tag_id"});
-			save_skid( $Skid, $param{"qty_lbs-$tag_id"} );
+			my $qty = sprintf('%d', $param{"qty_lbs-$tag_id"});
+			$total_qty += $qty;
+			save_inventory( $Skid, $Paper, $qty );
+			if ( $Project and ( $param{'allocate'} eq 'Specific' ) ) {
+				$Paper->allocate( $Skid, $Project->id(), $qty, $param{'Units'} );
+				$variable{'information'} .= "Allocated $qty $param{'Units'} to docket $param{'Docket'}.<br/>";
+			} # end if
+			#save_skid( $Skid, $param{"qty_lbs-$tag_id"} );
 			if ( openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ) {
-				save_skid( $Skid, -1*$param{"qty_lbs-$tag_id"} );
+				save_inventory( $Skid, $Paper, -1*$qty );
 			} # end if
 			last if $variable{'error'};
 
@@ -1036,11 +1062,15 @@ if ( 0 ) {
 			$variable{'error'} .= $MC->save( {
 					'manifest_id'	=>	$Manifest->id(),
 					'skid_id'		=>	$Skid->id(),
-					'quantity'		=>	$param{"qty_lbs-$tag_id"},
+					'quantity'		=>	$qty,
 					'cost'			=>	$param{"cost"},
 					} );
 			last if $variable{'error'};
 		} # end foreach tag_id
+		if ( $Project and ( $param{'allocate'} ne 'Specific' ) ) {
+			$Paper->allocate( undef, $Project->id(), $total_qty, $param{'Units'} );
+			$variable{'information'} .= "Allocated $total_qty $param{'Units'} to docket $param{'Docket'}.<br/>";
+		} # end if
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= 'Information successfully stored.';
 			foreach my $k ( keys %param ) {

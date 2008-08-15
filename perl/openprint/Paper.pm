@@ -726,7 +726,7 @@ sub get_price {
     if ( $$self{'Price'} ) {
 		# If custom paper
 		%price = ( 'Price' => $$self{'Price'}, 'Cost'=>$$self{'Price'}, 'units'=>$$self{'Units'});
-$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
+#$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
 	} else {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $bestPrice;

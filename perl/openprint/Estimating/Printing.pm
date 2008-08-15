@@ -807,7 +807,7 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 		foreach my $colour ( get_colours( $sig_specs, 'SideOne' ), get_colours( $sig_specs, 'SideTwo' ) ) {
 			$mixed_colours{$colour} = 1;
 			foreach my $qty_index ( 1 ..3 ) {
-				$washed_colours{$colour.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} = 1;
+				$washed_colours{$colour.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} += 1;
 			} # end foreach
 		} # end foreach
 	} # end for each
@@ -864,6 +864,7 @@ $openprint::log->debug("Grabbing UV Specs");
 
 		} # end if
 
+		delete $$specs{'PrintingTypes'};
 		if ( $$printing_specs{'PrintingType'} and sets::isin( $$printing_specs{'PrintingType'}, \@available_printingtypes ) ) {
 			$$specs{'PrintingTypes'} = [ $$printing_specs{'PrintingType'} ];
 		} else {
@@ -1062,9 +1063,9 @@ $openprint::log->debug("No spread layout for you!");
 				$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 			} # end if
 
-$openprint::log->debug("Colours:  @side_one_colours, @side_two_colours");
+#$openprint::log->debug("Colours:  @side_one_colours, @side_two_colours");
 			my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Overall Varnish Gloss','Overall Varnish Matte','Spot Varnish Gloss','Spot Varnish Matte'], [ @side_one_colours, @side_two_colours ] );
-$openprint::log->debug("Remaining: @c");
+#$openprint::log->debug("Remaining: @c");
 
 			if ( ! $$specs{'rdbColourBar'} ) {
 				if ( @c ) {
@@ -1251,7 +1252,7 @@ $openprint::log->debug("Remaining: @c");
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
-if ( 1 ) {
+if ( 0 ) {
 $openprint::log->warn('Impositions');
 foreach my $I ( @impositions ) {
 $I->display();
@@ -1311,8 +1312,8 @@ $I->display();
 		my $Varnish = $$b_price{'Varnish'};
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
-		$Imposition->display();
-		$openprint::log->debug( breakdown( $b_price, $specs ) );
+		#$Imposition->display();
+		#$openprint::log->debug( breakdown( $b_price, $specs ) );
 
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 		$$specs{'ddmBleedSize'.$qty_index} = $best_price{'ddmBleedSize'};
@@ -1573,7 +1574,7 @@ $openprint::log->warn('next');
 				} # end if
 			} # end if OverrrideCutOff
 #my $starttime = gettimeofday();
-$imp->display();
+#$imp->display();
 
 #my $time = gettimeofday();
 			$imp = $imp->copy();
@@ -2233,8 +2234,9 @@ sub calc_price {
 				$mixed_colours{$real_colour} = 1;
 			} # end if
 
+#$openprint::log->debug("Washed color: $real_colour " . $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) if $$Imposition{runstyle} eq 'Perfecting';
 # Washed_colours contains each colour used in the other signatures
-			if ( ( ! $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) or ( $$Imposition{runstyle} eq 'Perfecting' and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) )
+			if ( ( ! $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) or ( $$Imposition{runstyle} eq 'Perfecting' and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) and $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} < 2 )
 			   ) {
 				$price{'Press Washes'} += $$special_colours{$real_colour}{washups};
 			} # end if
@@ -2250,7 +2252,8 @@ sub calc_price {
 				$mixed_colours{$real_colour} = 1;
 			} # end if
 
-			if ( ( ! $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) or ( $$Imposition{runstyle} eq 'Perfecting' and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) )
+#$openprint::log->debug("Washed color: $real_colour " . $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) if $$Imposition{runstyle} eq 'Perfecting';
+			if ( ( ! $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) or ( $$Imposition{runstyle} eq 'Perfecting' and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) and $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} < 2 )
 			   ) {
 				$price{'Press Washes'} += 1;
 			} # end if
