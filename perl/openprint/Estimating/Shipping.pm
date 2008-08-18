@@ -32,8 +32,10 @@ my %variables = (
 	'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],
 	'txtPackageWeight'=>['save','output'],
 
-	'FromCompany'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
-	'ToCompany'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
+	'FromCompanyName'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
+	'FromFirstName'=>['save'],'FromLastName'=>['save'],
+	'ToCompanyName'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
+	'ToFirstName'=>['save'],'ToLastName'=>['save'],
 	'alert'=>['save'],
 
 );
@@ -135,7 +137,7 @@ sub display {
 
 	if ( ! ( $$variable{'FromCity'} and $$variable{'FromPostalCode'} and $$variable{'FromStateProvince'} and $$variable{'FromCountry'} ) ) {
 		my %shipping_fields = (
-				'FromCompany'		=>	'CompanyName',
+				'FromCompanyName'		=>	'CompanyName',
 				'FromAddress1'		=>	'Address1',
 				'FromAddress2'		=>	'Address2',
 				'FromCity'			=>	'City',
@@ -156,7 +158,7 @@ sub display {
 	if ( $openprint::session{'company_id'} and ( ! (
 		$$variable{'ToCity'} and $$variable{'ToPostalCode'} and $$variable{'ToStateProvince'} and $$variable{'ToCountry'} ) ) ) {
 		my %shipping_fields = (
-				'ToCompany'			=>	'CompanyName',
+				'ToCompanyName'			=>	'CompanyName',
 				'ToAddress1'		=>	'Address1',
 				'ToAddress2'		=>	'Address2',
 				'ToCity'			=>	'City',
@@ -196,7 +198,7 @@ sub summary {
 
 		if ( $$specs{'FromAddress1'} or $$specs{'FromCity'} or $$specs{'FromStateProvince'} or $$specs{'FromCountry'} ) {
 			$html .= 'From: ' . join("\n", 
-					join(',', $$specs{'FromCompany'} ) ,
+					join(',', $$specs{'FromCompanyName'} ) ,
 					join(',', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
 						@$specs{'FromCity','FromStateProvince','FromCountry'},
 						@$specs{'FromPostalCode'} ),
@@ -204,7 +206,7 @@ sub summary {
 		} # end if
 		if ( $$specs{'ToAddress1'} or $$specs{'ToCity'} or $$specs{'ToStateProvince'} or $$specs{'ToCountry'} ) {
 			$html .= 'To: ' . join("\n", 
-					join(',', $$specs{'ToCompany'} ) ,
+					join(',', $$specs{'ToCompanyName'} ) ,
 					join(',', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
 						@$specs{'ToCity','ToStateProvince','ToCountry'},
 						@$specs{'ToPostalCode'} ),

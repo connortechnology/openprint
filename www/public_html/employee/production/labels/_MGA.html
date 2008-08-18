@@ -13,10 +13,10 @@
                 $$variable{'Label'}->set_data(
                     'shipper'=> $$shipping_specs{'FromCompanyName'},
                     'shipper_signature'=> $$shipping_specs{'FromCompanyName'},
-                    'shipper_address'=> join(',',@$shipping_specs{'FromCompanyAddress1','FromCompanyAddress2'}),
-                    'shipper_state'=> $$shipping_specs{'FromCompanyStateProvince'} . ' ' . $$shipping_specs{'FromCompanyPostalCode'},
-                    'shipper_phone'=> $$shipping_specs{'FromCompanyPhone'},
-                    'shipper_city'=> $$shipping_specs{'FromCompanyCity'},
+                    'shipper_address'=> join(',',@$shipping_specs{'FromAddress1','FromAddress2'}),
+                    'shipper_state'=> $$shipping_specs{'FromStateProvince'} . ' ' . $$shipping_specs{'FromPostalCode'},
+                    'shipper_phone'=> $$shipping_specs{'FromPhone'},
+                    'shipper_city'=> $$shipping_specs{'FromCity'},
                     );
             } else {
                 my $Order = $$variable{'Project'}->Order();
@@ -26,6 +26,7 @@
                     'consignee_state'=> $Order->state(),
                     'consignee_phone'=> $Order->phone(),
                     'consignee_city'=> $Order->city(),
+					'consignee_contact'=> $Order->firstname() . ' ' . $Order->lastname(),
                     );
             } # end if
         } # end if
@@ -40,10 +41,11 @@
 				my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
 				$$variable{'Label'}->set_data(
 					'consignee'=> $$shipping_specs{'ToCompanyName'},
-					'consignee_address'=> join(',',@$shipping_specs{'ToCompanyAddress1','ToCompanyAddress2'}),
-					'consignee_state'=> $$shipping_specs{'ToCompanyStateProvince'},
-					'consignee_phone'=> $$shipping_specs{'ToCompanyPhone'},
-					'consignee_city'=> $$shipping_specs{'ToCompanyCity'},
+					'consignee_address'=> join(',',@$shipping_specs{'ToAddress1','ToAddress2'}),
+					'consignee_state'=> $$shipping_specs{'ToStateProvince'},
+					'consignee_phone'=> $$shipping_specs{'ToPhone'},
+					'consignee_city'=> $$shipping_specs{'ToCity'},
+					'consignee_contact'=> join(' ', @$shipping_specs{'ToFirstName','ToLastName'} ),
 					);
 			} else {
 				my $Order = $$variable{'Project'}->Order();
@@ -53,6 +55,7 @@
 					'consignee_state'=> $Order->state(),
 					'consignee_phone'=> $Order->phone(),
 					'consignee_city'=> $Order->city(),
+					'consignee_contact'=> $Order->firstname() . ' ' . $Order->lastname(),
 					);
 			} # end if
 		} # end if
@@ -79,16 +82,13 @@
 			my $item_total = 0;
 				
 			if ( $$services{'PlainCartons'} ) {
-				$html .= '<table>';
 				foreach my $s_id ( @{$$services{'PlainCartons'}} ) {
 					my $carton_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'PlainCartons'}[0] );
-					$html .= sprintf('<tr><td>%d boxes @</td><td>%d</td></tr>', @$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index(),'txtItemsPerPackage'} );
+					$html .= sprintf('%d boxes @%d%s', @$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index(),'txtItemsPerPackage'},"\n" );
 					$carton_total += $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()};
 					my $items = $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$carton_specs{'txtItemsPerPackage'};
 					$item_total += $items;
 				} # end foreach
-				$html .= sprintf('<tr><td>&nbsp;</td><td>%d</td></tr>', $item_total );
-				$html .= '</table>';
 			} # end if
 			if ( $$services{'BulkSkids'} ) {
 				my $skid_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'BulkSkids'}[0] );
@@ -113,11 +113,11 @@
 		table-layout: fixed;
 	}
 	table tr th {
-		font-size: 7pt;
+		font-size: 10pt;
 	}
 	table tr td {
 		border: 1px solid black;
-		font-size: 7pt;
+		font-size: 10pt;
 		text-align: center;
 	}
 	table tr td div {
@@ -126,15 +126,21 @@
 	label {
 		float: left;
 		padding-right: 5px;
-		font-size: 7pt;
+		font-size: 8pt;
 		text-align: left;
 	}
 	label.radio {
 		float: none;
 		padding: 0px;
 	}
+	ol {
+		padding: 10px;
+	}
+	br.spacer {
+		clear: both;
+	}
 </style>
-<div id="Header">
+<div id="Header" style="height: 1in;">
 	<img id="Logo" src="/images/MGALogo.gif"/>
 	<div style="float: right; text-align:right;">
 		Tel: (416) 233 0200<br/>
@@ -142,7 +148,7 @@ Toll Free: (800) 935 3339<br/>
 Fax: (416) 233 0300<br/>
 	</div>
 </div>
-<div style="text-align: center;">
+<div style="text-align: center; height: .5in;">
 <b>BILL OF LADING. ORIGINAL. NON NEGOTIABLE</b><br/>
 </div>
 <table>
@@ -150,25 +156,25 @@ Fax: (416) 233 0300<br/>
 		<td><label>CARRIER'S LOAD NO.</label>
 <div id="load_no" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('load_no'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'load_no', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=load_no',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=load_no'});
+new Ajax.InPlaceEditor( 'load_no', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=load_no',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=load_no'});
 </script>
 </td>
 		<td><label>UNIT NO.</label>
 <div id="unit_no" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('unit_no'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'unit_no', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=unit_no',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=unit_no'});
+new Ajax.InPlaceEditor( 'unit_no', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=unit_no',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=unit_no'});
 </script>
 		</td>
 		<td><label>PHONE NO.</label>
 <div id="shipper_phone" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('shipper_phone'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'shipper_phone', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_phone',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_phone'});
+new Ajax.InPlaceEditor( 'shipper_phone', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_phone',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_phone'});
 </script>
 </td>
 		<td><label>SHIPPERS REF.NO.</label>
 <div id="docket" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('docket'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'docket', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=docket',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=docket'});
+new Ajax.InPlaceEditor( 'docket', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=docket',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=docket'});
 </script>
 </td>
 	</tr>
@@ -176,19 +182,19 @@ new Ajax.InPlaceEditor( 'docket', '/employee/production/labels/_label.html?id=<?
 		<td colspan="2"><label>SHIPPER</label>
 		<div id="shipper" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('shipper'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'shipper', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper'});
+		new Ajax.InPlaceEditor( 'shipper', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper'});
 		</script>
 		</td>
 		<td><label>CONTACT</label>
 		<div id="contact" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('contact'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'contact', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=contact',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=contact'});
+		new Ajax.InPlaceEditor( 'contact', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=contact',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=contact'});
 		</script>
 		</td>
 		<td><label>DATE</label>
 		<div id="date" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('date'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'date', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=date'});
+		new Ajax.InPlaceEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=date'});
 		</script>
 		</td>
 	</tr>
@@ -196,19 +202,19 @@ new Ajax.InPlaceEditor( 'docket', '/employee/production/labels/_label.html?id=<?
 		<td colspan="2"><label>ADDRESS</label>
 		<div id="shipper_address" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('shipper_address'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'shipper_address', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_address',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_address'});
+		new Ajax.InPlaceEditor( 'shipper_address', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_address',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_address'});
 		</script>
 		</td>
 		<td><label>CITY/TOWN</label>
 		<div id="shipper_city" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('shipper_city'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'shipper_city', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_city',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_city'});
+		new Ajax.InPlaceEditor( 'shipper_city', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_city',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_city'});
 		</script>
 		</td>
 		<td><label>PROVINCE/STATE</label>
 		<div id="shipper_state" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('shipper_state'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'shipper_state', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_state',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_state'});
+		new Ajax.InPlaceEditor( 'shipper_state', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_state',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_state'});
 		</script>
 		</td>
 	</tr>
@@ -233,19 +239,19 @@ Received subject to the classifications and tarrifs in effect on the date of iss
 		<td><label>CONSIGNEE</label>
 		<div id="consignee" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('consignee'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'consignee', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee'});
+		new Ajax.InPlaceEditor( 'consignee', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee'});
 		</script>
 		</td>
 		<td><label>CONTACT</label>
 		<div id="consignee_contact" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('consignee_contact'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'consignee_contact', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_contact',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_contact'});
+		new Ajax.InPlaceEditor( 'consignee_contact', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_contact',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_contact'});
 		</script>
 		</td>
 		<td><label>PHONE</label>
 		<div id="consignee_phone" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('consignee_phone'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'consignee_phone', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_phone',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_phone'});
+		new Ajax.InPlaceEditor( 'consignee_phone', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_phone',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_phone'});
 		</script>
 		</td>
 	</tr>
@@ -253,19 +259,19 @@ Received subject to the classifications and tarrifs in effect on the date of iss
 		<td><label>ADDRESS</label>
 		<div id="consignee_address" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('consignee_address'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'consignee_address', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_address',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_address'});
+		new Ajax.InPlaceEditor( 'consignee_address', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_address',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_address'});
 		</script>
 		</td>
 		<td><label>CITY / TOWN</label>
 		<div id="consignee_city" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('consignee_city'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'consignee_city', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_city',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_city'});
+		new Ajax.InPlaceEditor( 'consignee_city', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_city',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_city'});
 		</script>
 		</td>
 		<td><label>PROVINCE / STATE</label>
 		<div id="consignee_state" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('consignee_state'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'consignee_state', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_state',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_state'});
+		new Ajax.InPlaceEditor( 'consignee_state', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_state',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_state'});
 		</script>
 		</td>
 	</tr>
@@ -281,142 +287,181 @@ Received subject to the classifications and tarrifs in effect on the date of iss
 		<td rowspan="2" style="width:12.5%;">FREIGHT CHARGES</td>
 	</tr>
 	<tr style="margin-top: 2px;">
-		<td><input type="checkbox" id="service_typeNextDay" name="service_type" value="NextDay"><label class="radio" for="service_typeNextDay">NEXT<br/>DAY</label></td>
-		<td><input type="checkbox" id="service_typeSameDay" name="service_type" value="SameDay"><label class="radio" for="service_typeSameDay">SAME<br/>DAY</label></td>
-		<td><input type="checkbox" id="service_typeDirectService" name="service_type" value="DirectService"><label class="radio" for="service_typeDirectService">DIRECT<br/>SERVICE</label></td>
+		<td><input type="radio" id="service_typeNextDay" name="service_type" value="NextDay" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=service_type&value=NextDay');" <? echo ( $$variable{Label}->get_data('service_type') eq 'NextDay' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="service_typeNextDay">NEXT<br/>DAY</label></td>
+		<td><input type="radio" id="service_typeSameDay" name="service_type" value="SameDay" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=service_type&value=SameDay');" <? echo ( $$variable{Label}->get_data('service_type') eq 'SameDay' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="service_typeSameDay">SAME<br/>DAY</label></td>
+		<td><input type="radio" id="service_typeDirectService" name="service_type" value="DirectService" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=service_type&value=DirectService');" <? echo ( $$variable{Label}->get_data('service_type') eq 'DirectService' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="service_typeDirectService">DIRECT<br/>SERVICE</label>
+		</td>
 		<td>
-			<input type="checkbox" id="weightLBS" name="weight" value="LBS"><label class="radio" for="weightLBS">LBS</label>
-			<input type="checkbox" id="weightKILOS" name="weight" value="KILOS"><label class="radio" for="weightKILO">KILOS</label>
+			<input type="radio" id="weightLBS" name="weight" value="LBS" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=weight&value=LBS');" <? echo ( $$variable{Label}->get_data('weight') eq 'LBS' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="weightLBS">LBS</label><br/>
+			<input type="radio" id="weightKILOS" name="weight" value="KILOS" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=weight&value=KILOS');" <? echo ( $$variable{Label}->get_data('weight') eq 'KILOS' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="weightKILO">KILOS</label>
 		</td>
 	</tr>
 	<tr>
 		<td>
-		<div id="quantity" style="height:2.75in;"><? hecho ( $$variable{'Label'}->get_data('quantity'); ) ?></div>
+		<div id="quantity" style="height:2.75in;"><? echo ( $$variable{'Label'}->get_data('quantity'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'quantity', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=quantity'});
+		new Ajax.InPlaceEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:14,cols:8,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=quantity'});
 		</script>
 		</td>
 		<td colspan="4" style="2.75in;">
 		<div id="description" style="height:2.75in;"><? hecho ( $$variable{'Label'}->get_data('description'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'description', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=description'});
+		new Ajax.InPlaceEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=description'});
 		</script>
 		</td><td>
 		<div id="weight" style="height:2.75in;"><? hecho ( $$variable{'Label'}->get_data('weight'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'weight', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=weight',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=weight'});
+		new Ajax.InPlaceEditor( 'weight', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=weight',{okButton:true,cancelLink:true,submitOnBlur:true,rows:14,cols:6,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=weight'});
 		</script>
 		</td><td rowspan="2">
 		<div id="rate" style="height:3.5in;"><? hecho ( $$variable{'Label'}->get_data('rate'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'rate', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=rate',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=rate'});
+		new Ajax.InPlaceEditor( 'rate', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=rate',{okButton:true,cancelLink:true,submitOnBlur:true,rows:16,cols:6,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=rate'});
 		</script>
 		</td><td rowspan="2">
 		<div id="amount" style="height:3.5in;"><? hecho ( $$variable{'Label'}->get_data('amount'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'amount', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=amount',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=amount'});
+		new Ajax.InPlaceEditor( 'amount', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=amount',{okButton:true,cancelLink:true,submitOnBlur:true,rows:16,cols:6,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=amount'});
 		</script>
 		</td>
 		<td rowspan="4">
-			<label style="width: 60%;" for="freight_chargesCollect">COLLECT</label><input type="checkbox" name="freight_charges" id="freight_chargesCollect" value="Collect" /><br/>
-			<label style="width: 60%;" for="freight_chargesPrepaid">PREPAID</label><input type="checkbox" name="freight_charges" id="freight_chargesPrepaid" value="Prepaid" /><br/><br/>
+			<label style="width: 60%;" for="freight_chargesCollect">COLLECT</label><input type="radio" name="freight_charges" id="freight_chargesCollect" value="Collect" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=freight_charges&value=Collect');" <? echo ( $$variable{Label}->get_data('freight_charges') eq 'Collect' ? 'checked="checked"' : '' ) ?> /><br/>
+			<label style="width: 60%;" for="freight_chargesPrepaid">PREPAID</label><input type="radio" name="freight_charges" id="freight_chargesPrepaid" value="Prepaid" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=freight_charges&value=Prepaid');"<? echo ( $$variable{Label}->get_data('freight_charges') eq 'Prepaid' ? 'checked="checked"' : '' ) ?> /><br/><br/>
 			FREIGHT CHARGES WILL BE COLLECTED UNLESS MARKED PAID<br/>
 			<hr/><hr/>
 			<b>C.O.D. SHIPMENTS</b><br/>
 			<hr/><hr/>
-			<label style="width: 60%;" for="cod_chargesCollect">COLLECT</label><input type="checkbox" name="cod_charges" id="cod_chargesCollect" value="Collect" /><br/>
-			<label style="width: 60%;" for="cod_chargesPrepaid">PREPAID</label><input type="checkbox" name="cod_charges" id="cod_chargesPrepaid" value="Prepaid" /><br/>
+			<label style="width: 60%;" for="cod_chargesCollect">COLLECT</label><input type="radio" name="cod_charges" id="cod_chargesCollect" value="Collect" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_charges&value=Collect');" <? echo ( $$variable{Label}->get_data('cod_charges') eq 'Collect' ? 'checked="checked"' : '' ) ?> /><br/>
+			<label style="width: 60%;" for="cod_chargesPrepaid">PREPAID</label><input type="radio" name="cod_charges" id="cod_chargesPrepaid" value="Prepaid" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_charges&value=Prepaid');"<? echo ( $$variable{Label}->get_data('cod_charges') eq 'Prepaid' ? 'checked="checked"' : '' ) ?> /><br/>
 			<label style="width: 60%;">AMOUNT $</label>
 		<div id="cod_amount" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('cod_amount'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'cod_amount', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_amount',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_amount'});
+		new Ajax.InPlaceEditor( 'cod_amount', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_amount',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_amount'});
 		</script>
 
 		<label style="width: 60%;">COLLECT<br/>CHARGES $</label>
 		<div id="cod_collectcharges" style="height:.3in;"><? hecho ( $$variable{'Label'}->get_data('cod_collectcharges'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'cod_collectcharges', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_collectcharges',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_collectcharges'});
+		new Ajax.InPlaceEditor( 'cod_collectcharges', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_collectcharges',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_collectcharges'});
 		</script>
 
 		<label style="width: 60%;">GST $</label>
 		<div id="cod_gst" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('cod_gst'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'cod_gst', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_gst',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_gst'});
+		new Ajax.InPlaceEditor( 'cod_gst', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_gst',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_gst'});
 		</script>
 
 		<label style="width: 60%;">TOTAL $</label>
 		<div id="cod_subtotal" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('cod_subtotal'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'cod_subtotal', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_subtotal',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_subtotal'});
+		new Ajax.InPlaceEditor( 'cod_subtotal', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_subtotal',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_subtotal'});
 		</script>
 			<label style="width: 60%;">INBOUND $</label>
 		<div id="cod_inbound" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('cod_inbound'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'cod_inbound', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_inbound',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_inbound'});
+		new Ajax.InPlaceEditor( 'cod_inbound', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_inbound',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_inbound'});
 		</script>
 			<label style="width: 60%;">BEYOND $</label>
 		<div id="cod_beyond" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('cod_beyond'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'cod_beyond', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_beyond',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_beyond'});
+		new Ajax.InPlaceEditor( 'cod_beyond', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_beyond',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_beyond'});
 		</script>
 			<label style="width: 60%;">OTHERS $<br/><span style="font-size: 6pt;">SPECIFY</span></label>
 		<div id="cod_others" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('cod_others'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'cod_others', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_others',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_others'});
+		new Ajax.InPlaceEditor( 'cod_others', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_others',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_others'});
 		</script>
 			<label style="width: 60%;"><b>TOTAL</b> $</label>
 		<div id="cod_total" style="height:.25in;"><? hecho ( $$variable{'Label'}->get_data('cod_total'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'cod_total', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_total',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_total'});
+		new Ajax.InPlaceEditor( 'cod_total', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=cod_total',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=cod_total'});
 		</script>
 		</td>
 	</tr>
 	<tr>
 		<td colspan="2"><label><b>DIMENSIONS</b></label>
-		<table style="width: auto; border: none;">
+		<table style="width: 3in; border: none;">
 			<tr>
 				<td style="border:none;border-bottom:1px solid black;">
 		<div id="dimensions_x" style="height:.5in; width:.5in;"><? hecho ( $$variable{'Label'}->get_data('dimensions_x'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'dimensions_x', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=dimensions_x',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=dimensions_x'});
+		new Ajax.InPlaceEditor( 'dimensions_x', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=dimensions_x',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=dimensions_x'});
 		</script>
 				</td><td style="border:none;">X</td><td style="border:none;border-bottom:1px solid black;">
 		<div id="dimensions_y" style="height:.5in; width:.5in;"><? hecho ( $$variable{'Label'}->get_data('dimensions_y'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'dimensions_y', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=dimensions_y',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=dimensions_y'});
+		new Ajax.InPlaceEditor( 'dimensions_y', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=dimensions_y',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=dimensions_y'});
 		</script>
 				</td><td style="border:none;">X</td><td style="border:none;border-bottom:1px solid black;">
 		<div id="dimensions_z" style="height:.5in; width:.5in;"><? hecho ( $$variable{'Label'}->get_data('dimensions_z'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'dimensions_z', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=dimensions_z',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=dimensions_z'});
+		new Ajax.InPlaceEditor( 'dimensions_z', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=dimensions_z',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=dimensions_z'});
 		</script>
 				</td>
 			</tr>
 		</table>
 		</td>
 		<td colspan="3" valign="top"><label>DANGEROUS GOODS?</label><br/>
-			<input type="checkbox" name="dangerous_goods" id="dangerous_goods_y" value="y" /><label class="radio" for="dangerous_goods_y">YES</label>
-			<input type="checkbox" name="dangerous_goods" id="dangerous_goods_n" value="n" /><label class="radio" for="dangerous_goods_n">NO</label>
+			<input type="radio" name="dangerous_goods" id="dangerous_goods_y" value="y" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=dangerous_goods&value=y');" <? echo ( $$variable{Label}->get_data('dangerous_goods') eq 'y' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="dangerous_goods_y">YES</label>
+			<input type="radio" name="dangerous_goods" id="dangerous_goods_n" value="n" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=dangerous_goods&value=n');" <? echo ( $$variable{Label}->get_data('dangerous_goods') eq 'n' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="dangerous_goods_n">NO</label>
 		</td>
-		<td valign="top"><label style="font-size: 6pt;">TOTAL WEIGHT<label><hr/></td>
+		<td valign="top"><label style="font-size: 6pt;width: 95%; border-bottom: 1px solid black;">TOTAL WEIGHT<label><br class="spacer"/>
+<div id="total_weight" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('total_weight'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceEditor( 'total_weight', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=total_weight',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=total_weight'});
+</script>
+		</td>
 	</tr>
 	<tr style="height: .25in;">
-		<td colspan="2"><label>PLACARDS</label><label> NUMBER</label><label> TYPE</label>
+		<td colspan="2">
+			<table>
+				<tr><td><label>PLACARDS</label>
+<div id="placards" style="height: .25in;"><? hecho ( $$variable{'Label'}->get_data('placards'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceEditor( 'placards', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=placards',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=placards'});
+</script>
+					</td>
+					<td><label>NUMBER</label>
+<div id="number" style="height: .25in;"><? hecho ( $$variable{'Label'}->get_data('number'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceEditor( 'number', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=number',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=number'});
+</script>
+					</td>
+					<td><label>TYPE</label>
+<div id="type" style="height: .25in;"><? hecho ( $$variable{'Label'}->get_data('type'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceEditor( 'type', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=type',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=type'});
+</script>
+					</td>
+				</tr>
+			</table>
 		</td>
-		<td colspan="6"><label>24 HOUR EMERGENCY NUMBER</label></td>
+		<td colspan="6"><label>24 HOUR EMERGENCY NUMBER</label>
+			<div id="emergency_number" style="height: .25in;"><? hecho ( $$variable{'Label'}->get_data('emergency_number'); ) ?></div>
+			<script type="text/javascript">
+			new Ajax.InPlaceEditor( 'emergency_number', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=emergency_number',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=emergency_number'});
+			</script>
+		</td>
 	</tr>
 	<tr style="height: .5in;">
 		<td colspan="8"><label>SPECIAL AGREEMENT BETWEEN<br/>SHIPPER AND CARRIER, ADVISE HERE</label>
 <div id="special_agreement" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('special_agreement'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'special_agreement', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=special_agreement',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=special_agreement'});
+new Ajax.InPlaceEditor( 'special_agreement', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=special_agreement',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=special_agreement'});
 </script>
 		</td>
 	</tr>
 </table>
 <table>
 	<tr>
-		<td colspan="3" align="left"><label style="height: .75in; text-align:center; padding-left: .25in; padding-right: .25in;"><b>NOTICE<br/>OF<br/>CLAIM</b></label><div style="text-align:left; font-size: 8pt;">A. No carrier is liable for loss, damage or delay to any goods carried under the Bill of Lading unless notice thereof setting out particulars of the origin, destination and date of shipment of the goods and the estimated amount claimed in respect of such loss, damage or delay is given in writing to the originating carrier or the delivering carrier within sixty (60) days after the delivery of the goods, or, in the case of failure to make delivery, within nine (9) months from the date of shipment.<br/>
+		<td colspan="3" align="left"><label style="height: .5in; text-align:center; padding-left: .25in; padding-right: .25in; margin-top:.1in;"><b>NOTICE<br/>OF<br/>CLAIM</b></label><div style="text-align:left; font-size: 8pt;">A. No carrier is liable for loss, damage or delay to any goods carried under the Bill of Lading unless notice thereof setting out particulars of the origin, destination and date of shipment of the goods and the estimated amount claimed in respect of such loss, damage or delay is given in writing to the originating carrier or the delivering carrier within sixty (60) days after the delivery of the goods, or, in the case of failure to make delivery, within nine (9) months from the date of shipment.<br/>
 B. The final statement of the claim must be filed within nine (9) months from the date of shipment together with a copy of the paid freight bill.</div>
 		</td>
 	</tr>
@@ -425,7 +470,7 @@ B. The final statement of the claim must be filed within nine (9) months from th
 			<label>DECLARED VALUATION $</label>
 <div id="valuation" style="height: .25in; width: 2in; float: left;"><? hecho ( $$variable{'Label'}->get_data('valuation'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'valuation', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=valuation',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=valuation'});
+new Ajax.InPlaceEditor( 'valuation', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=valuation',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=valuation'});
 </script>
 MAXIMUM LIABILITY SHALL NOT EXCEED $ 4.41 PER KILOGRAM (2.00 PER /LB) CALCULATED ON THE TOTAL WEIGHT OF THE SHIPMENT UNLESS DECLARED VALUATION STATES OTHERWISE.
 		</td>
@@ -433,53 +478,53 @@ MAXIMUM LIABILITY SHALL NOT EXCEED $ 4.41 PER KILOGRAM (2.00 PER /LB) CALCULATED
 	<tr>
 		<td>
 			<label>SHIPPER</label>
-<div id="shipper_signature" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('shipper_signature'); ) ?></div>
+<div id="shipper_signature" style="height: .5in;border-bottom:1px solid black;"><? hecho ( $$variable{'Label'}->get_data('shipper_signature'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'shipper_signature', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_signature',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_signature'});
+new Ajax.InPlaceEditor( 'shipper_signature', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_signature',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_signature'});
 </script>
 <label>DATE</label>
-<div id="shipper_date" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('shipper_date'); ) ?></div>
+<div id="shipper_date" style="height: .5in;border-bottom:1px solid black;"><? hecho ( $$variable{'Label'}->get_data('shipper_date'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'shipper_date', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_date'});
+new Ajax.InPlaceEditor( 'shipper_date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_date'});
 </script>
 <label>PER</label>
-<div id="shipper_per" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('shipper_per'); ) ?></div>
+<div id="shipper_per" style="height: .5in;border-bottom:1px solid black;"><? hecho ( $$variable{'Label'}->get_data('shipper_per'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'shipper_per', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_per',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_per'});
+new Ajax.InPlaceEditor( 'shipper_per', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=shipper_per',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=shipper_per'});
 </script>
 		</td>
 		<td> 
 			<label>CARRIER</label>
-<div id="carrier_signature" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('carrier_signature'); ) ?></div>
+<div id="carrier_signature" style="height: .5in;border-bottom:1px solid black;"><? hecho ( $$variable{'Label'}->get_data('carrier_signature'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'carrier_signature', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=carrier_signature',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=carrier_signature'});
+new Ajax.InPlaceEditor( 'carrier_signature', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=carrier_signature',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=carrier_signature'});
 </script>
 			<label>DATE</label>
-<div id="carrier_date" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('carrier_date'); ) ?></div>
+<div id="carrier_date" style="height: .5in;border-bottom:1px solid black;"><? hecho ( $$variable{'Label'}->get_data('carrier_date'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'carrier_date', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=carrier_date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=carrier_date'});
+new Ajax.InPlaceEditor( 'carrier_date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=carrier_date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=carrier_date'});
 </script>
 			<label>PER</label>
-<div id="carrier_per" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('carrier_per'); ) ?></div>
+<div id="carrier_per" style="height: .5in;border-bottom:1px solid black;"><? hecho ( $$variable{'Label'}->get_data('carrier_per'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'carrier_per', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=carrier_per',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=carrier_per'});
+new Ajax.InPlaceEditor( 'carrier_per', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=carrier_per',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=carrier_per'});
 </script>
 		</td>
 		<td>
 			<label>CONSIGNEE</label>
-<div id="consignee_signature" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('consignee_signature'); ) ?></div>
+<div id="consignee_signature" style="height: .5in;border-bottom:1px solid black;"><? hecho ( $$variable{'Label'}->get_data('consignee_signature'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'consignee_signature', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_signature',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_signature'});
+new Ajax.InPlaceEditor( 'consignee_signature', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_signature',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_signature'});
 </script>
 			<label>DATE</label>
-<div id="consignee_date" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('consignee_date'); ) ?></div>
+<div id="consignee_date" style="height: .5in;border-bottom:1px solid black;"><? hecho ( $$variable{'Label'}->get_data('consignee_date'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'consignee_date', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_date'});
+new Ajax.InPlaceEditor( 'consignee_date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_date'});
 </script>
 			<label>PER</label>
-<div id="consignee_per" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('consignee_per'); ) ?></div>
+<div id="consignee_per" style="height: .5in;border-bottom:1px solid black;"><? hecho ( $$variable{'Label'}->get_data('consignee_per'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'consignee_per', '/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_per',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'/employee/production/labels/_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_per'});
+new Ajax.InPlaceEditor( 'consignee_per', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=consignee_per',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=consignee_per'});
 </script>
 		</td>
 	</tr>

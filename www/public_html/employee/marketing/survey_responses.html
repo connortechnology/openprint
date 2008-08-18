@@ -8,15 +8,16 @@
 			</select>
 		</p>
 	</fieldset>
-	<input type="hidden" name="survey_id" value="<? echo ( $r->param('survey_id'); ) ?>"/>
-<? if ( $r->param('user_id') ) ?>
+	<input type="hidden" name="survey_id" value="<? echo ( $openprint::param{'survey_id'}; ) ?>"/>
+	<input type="hidden" name="btnFunction" />
+<? if ( $openprint::param{'user_id'} ) ?>
 <fieldset><legend>Viewing Survey</legend>
 	The following response was submitted by <? echo ( new openprint::User( $openprint::param{'user_id'} )->name(); ) ?>.
 	<table class="List">
 	<? echo (
 		my $html;
 		my @categories = sql::execute( $log, $dbh, q{SELECT id, name FROM survey_question_categories ORDER BY sorting} );
-		my %answers = sql::execute( $log, $dbh, q{SELECT question_id, answer FROM survey_responses WHERE survey_id=? AND user_id=?}, $r->param('survey_id'), $r->param('user_id') );
+		my %answers = sql::execute( $log, $dbh, q{SELECT question_id, answer FROM survey_responses WHERE survey_id=? AND user_id=?}, @openprint::param{'survey_id','user_id'} );
 		while ( my ( $cat_id, $cat_name ) = splice @categories, 0, 2 ) {
 			$html .= qq{<tr><th colspan="2" align="left">$cat_name</th></tr>};
 			my @questions = sql::execute( $log, $dbh, q{SELECT id, text, type FROM survey_questions WHERE survey_id=? AND category_id=?}, $r->param('survey_id'), $cat_id );
@@ -30,6 +31,9 @@
 		return $html;
 		) ?>
 	</table>
+	<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete Response' ); )?>
+	</p>
 </fieldset>
-<? endif ( $r->param('user_id') ) ?>
+<? endif ( $openprint::param{'user_id'} ) ?>
 </form>
