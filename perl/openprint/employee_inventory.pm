@@ -1014,6 +1014,7 @@ sub rfidscanner_details {
 
 sub update_inventory {
 $log->warn("Update inventory");
+	@{$variable{'IDS'}} = ();
 	if ( $param{'btnFunction'} eq 'Submit' ) {
 		my @ids = misc::trim( split(';', $param{'rfidtag_ids'} ) );
 		@{$variable{'IDS'}} = @ids;
@@ -1027,6 +1028,10 @@ $log->warn("Update inventory");
 		my $total_qty = 0;
 
 		my $Paper = save_Paper();
+		if ( ! $Paper ) {
+			$variable{'error'} .= 'Unable to get Stock.<br/>';
+			return;
+		} # end if
 		my $Project;
 		if ( $param{'Docket'} ) {
 			my @Projects = openprint::Project::find('docket'=>$param{'Docket'});

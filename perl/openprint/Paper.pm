@@ -630,6 +630,8 @@ sub allocate {
     my ( $self, $skid_id, $project_id, $quantity, $units ) = @_;
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
 
+	$skid_id = $skid_id->id() if ref $skid_id eq 'openprint::Skid';
+
 	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
         'paper_id'	=>	$$self{'id'},
