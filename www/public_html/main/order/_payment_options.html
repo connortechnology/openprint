@@ -1,0 +1,16 @@
+<p>
+	<label>Payment Type:</label>
+	<? echo (
+		require openprint::PaymentType;
+		my $html;
+		my @PaymentTypes = openprint::PaymentType::find('order'=>'lower(name)');
+
+		foreach my $PaymentType ( @PaymentTypes ) {
+			$html .= sprintf(q`<input type="checkbox" id="PaymentType%1$s" name="PaymentType" value="%1$s" /><label class="radio" for="PaymentType%1$s">%2$s</label><br/>`,
+				$PaymentType->name(), $PaymentType->description(), 
+				);
+		} # end foreach
+		
+		return $html;
+	) ?>
+</p>

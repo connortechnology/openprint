@@ -499,7 +499,7 @@ if ( 0 ) {
 		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex='$index'\n".
 			"AND strStatus IN ('Pending Deposit','In Production','Paid')";
 		( $total ) = sql::execute( $log, $dbh, $_ );
-		( $payments ) = sql::execute( $log, $dbh, 'SELECT SUM(curAmount) FROM Payments WHERE company_id=?',$index);
+		( $payments ) = sql::execute( $log, $dbh, 'SELECT SUM(amount) FROM Payments WHERE (deleted=false OR deleted IS NULL) AND (completed=true) AND company_id=?',$index);
 	} # end if
 
 	$$variable{'CreditBalance'} = '$ '.sprintf( "%.2f", ( $total - $payments ) );

@@ -12,6 +12,8 @@
 <h1>Order History</h1>
 <h2>Viewing Order <?OrderID?></h2>
 </div>
+<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
 <span style="float: right;">
 <? echo ( my $html = '';
 		$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
@@ -94,7 +96,7 @@ Projects listed in red have changed price from the time this order was originall
 			} # end if
 			if ( $$variable{'AmountOutstanding'} ) {
 				if ( $openprint::config{'PaymentProcessor'} ) {
-					$html .= ssi::writeButton( $log, $dbh, 'MakePayment','makePayment.gif',"f1.action='/main/payment/payment_make.html';f1.submit();", '', 'Make Payment' ); 
+					$html .= ssi::writeButton( $log, $dbh, 'MakePayment','makePayment.gif',"ajax_window('_payment_window.html?order_id=$$variable{'OrderID'}&amp;amount=$$variable{'AmountOutstanding'}',400,300);", '', 'Make Payment' ); 
 				} # end if
 			} # end if
 			
