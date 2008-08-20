@@ -15,7 +15,7 @@
 			<select name="CSR" onchange="f1.submit();">
 				<option value=""> All </option>
 			<? echo ( 
-				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'strLastName, strFirstName' ) ], $openprint::param{'CSR'} );
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'strLastName, strFirstName','type'=>['E','A'],'usergroups'=>['Sales'] ) ], $openprint::param{'CSR'} );
 			) ?>
 			</select>
 		</p>

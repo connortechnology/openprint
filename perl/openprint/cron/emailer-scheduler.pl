@@ -53,7 +53,7 @@ configuration::init_cache( $log, $dbh, {
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
-my @campaign_ids = openprint::EmailCampaign::find( 'active' => 'Y', 'misc' => '(lastrun+interval<now() OR lastrun IS NULL ) AND timeofday <= NOW()::time' );
+my @campaign_ids = openprint::EmailCampaign::find( 'active' => 'Y', 'misc' => '(lastrun+interval<now() OR lastrun IS NULL ) AND ( timeofday IS NULL or timeofday <= NOW()::time)' );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 
@@ -61,7 +61,7 @@ $log->info("There are ".@campaign_ids." active campaigns\n");
 # between the last login time and now (which will be our threshold of concern)
 foreach my $Campaign (@campaign_ids) {
 	$Campaign->send();
-	print "Done campaign " . $Campaign->name() . "\n";
+	#print "Done campaign " . $Campaign->name() . "\n";
 } # foreach campaign_id
 
 $dbh->disconnect();

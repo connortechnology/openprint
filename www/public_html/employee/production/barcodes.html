@@ -4,7 +4,7 @@
 <table cellspacing="10">
 <? echo (
 	my $html;
-	my @operators = sql::execute( $log, $dbh, q{ SELECT lngUserID, strFirstName || ' ' || strLastName FROM tbl_Customer_Users WHERE chrType='E' ORDER By strLastName, strFirstName } );
+	my @operators = map { $_->id(), $_->name() } openprint::User::find('type'=>'E','order'=>'lower(strlastname),lower(strfirstname)');
 	while ( @operators ) {
 		$html .= '<tr>';
 		if ( my ( $id, $name ) = splice @operators, 0, 2 ) {

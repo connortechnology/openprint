@@ -47,10 +47,11 @@ sub email_campaigns {
     } elsif ( $param{'btnFunction'} eq 'TrialRun' ) {
         $variable{'Results'} = $Campaign->trial( $param{'TrialEmailAddress'} );
     } elsif ( $param{'btnFunction'} eq 'Download Recipients' ) {
-        my @header = ( 'Company','Name','Email');
+        my @header = ( 'Company','Name','Email','Phone');
         my @data;
-		foreach my $User ( openprint::User::find('id'=>$Campaign->recipients() ) ) {
-			push @data, $User->Company()->name(), $User->name(), $User->email();
+		foreach my $user_id ( $Campaign->recipients() ) {
+			my $User = new openprint::User( $user_id );
+			push @data, $User->Company()->name(), $User->name(), $User->email(), $User->phone();
 		} # end foreach
 
         misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
@@ -101,8 +102,6 @@ sub email_campaign {
 } # end sub email_campaign
 
 sub surveys {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
 	require openprint::Survey;
     $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
     if ( $param{'btnFunction'} eq 'Save' ) {
@@ -115,6 +114,12 @@ sub surveys {
     } # end if
 	
 } # end sub surveys 
+
+sub survey_responses {
+    if ( $param{'btnFunction'} eq 'Delete' ) {
+		sql::execute( undef, undef, 'DELETE FROM Survey_Responses WHERE survey_id=? and user_id=?', @param{'survey_id','user_id'} );
+    } # end if
+} # end sub survey_responses
 
 sub email_template {
 	require openprint::EmailTemplate;

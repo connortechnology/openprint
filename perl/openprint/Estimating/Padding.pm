@@ -100,6 +100,8 @@ sub calc {
 		if ( ! $price ) {
 			$log->debug('No price');
 			$status = 'uncalculated';
+			$$specs{'alert'} = 'We print press sheets only for pads - please ask a trade bindery to estimate the finishing.';
+ 
 			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', int($price) );
 			$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', int($price) );
 			next;

@@ -48,7 +48,7 @@
 	if ( $$variable{'CAR'}->reply_by() ) {
 @$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{'CAR'}->reply_by() ) );
 	} else {
-@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh );
+@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 ) );
 } # end if
 ) ?>
             <select name="reply_by_year" onchange="setDaysDropDown(this.value,this.form.reply_by_month.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_years?></select>

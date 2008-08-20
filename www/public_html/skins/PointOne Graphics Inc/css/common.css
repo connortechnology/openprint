@@ -462,7 +462,11 @@ span.DateSelector {
 	float: left;
 	width: 275px;
 }
-span.DateSelector select {
+span.DateTimeSelector {
+	float: left;
+	width: 400px;
+}
+span.DateSelector select, span.DateTimeSelector select {
 	width: auto;
 	max-width: none;
 }
@@ -539,3 +543,22 @@ br.pagebreak {
 fieldset p input.CompanyFilter {
 	width: auto;
 }
+
+form.inplaceeditor-form { /* The form */
+	width: 100%;
+}
+
+form.inplaceeditor-form input[type="text"] { /* Input box */
+}
+
+form.inplaceeditor-form textarea { /* Textarea, if multiple columns */
+	width: 100%;
+	height: 100%;
+}
+
+form.inplaceeditor-form input[type="submit"] { /* The submit button */
+}
+
+form.inplaceeditor-form a { /* The cancel link */
+}
+

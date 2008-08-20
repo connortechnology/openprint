@@ -140,7 +140,7 @@ sub find {
 		push @values, 1*$params{'height_start'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id = (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id IN (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'project_type_name'} ) {
@@ -359,22 +359,22 @@ sub delete {
     sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{'id'} );
 
-    if ( ! sql::execute( undef, undef, q{SELECT manufacturer_id FROM Papers WHERE manufacturer_id=?}, $$self{'manufacturer_id'} ) ) {
+    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT manufacturer_id FROM Papers WHERE manufacturer_id=?}, $$self{'manufacturer_id'} ) ) {
         sql::execute( undef, undef, q{DELETE FROM Manufacturers WHERE Id=?}, $$self{'manufacturer_id'} );
     } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT name_id FROM Papers WHERE name_id=?}, $$self{'name_id'} ) ) {
+    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT name_id FROM Papers WHERE name_id=?}, $$self{'name_id'} ) ) {
         sql::execute( undef, undef, q{DELETE FROM PaperNames WHERE Id=?}, $$self{'name_id'} );
     } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT finish_id FROM Papers WHERE finish_id=?}, $$self{'finish_id'} ) ) {
+    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT finish_id FROM Papers WHERE finish_id=?}, $$self{'finish_id'} ) ) {
         sql::execute( undef, undef, q{DELETE FROM PaperFinishes WHERE Id=?}, $$self{'finish_id'} );
     } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT colour_id FROM Papers WHERE colour_id=?}, $$self{'colour_id'} ) ) {
+    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT colour_id FROM Papers WHERE colour_id=?}, $$self{'colour_id'} ) ) {
         sql::execute( undef, undef, q{DELETE FROM PaperColours WHERE Id=?}, $$self{'colour_id'} );
     } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT weight_id FROM Papers WHERE weight_id=?}, $$self{'weight_id'} ) ) {
+    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT weight_id FROM Papers WHERE weight_id=?}, $$self{'weight_id'} ) ) {
         sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE Id=?}, $$self{'weight_id'} );
     } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT quality_id FROM Papers WHERE quality_id=?}, $$self{'quality_id'} ) ) {
+    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT quality_id FROM Papers WHERE quality_id=?}, $$self{'quality_id'} ) ) {
         sql::execute( undef, undef, q{DELETE FROM PaperQualities WHERE Id=?}, $$self{'quality_id'} );
     } # end if
     
@@ -630,6 +630,8 @@ sub allocate {
     my ( $self, $skid_id, $project_id, $quantity, $units ) = @_;
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
 
+	$skid_id = $skid_id->id() if ref $skid_id eq 'openprint::Skid';
+
 	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
         'paper_id'	=>	$$self{'id'},
@@ -726,7 +728,7 @@ sub get_price {
     if ( $$self{'Price'} ) {
 		# If custom paper
 		%price = ( 'Price' => $$self{'Price'}, 'Cost'=>$$self{'Price'}, 'units'=>$$self{'Units'});
-$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
+#$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
 	} else {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $bestPrice;
@@ -1058,6 +1060,14 @@ sub start_area {
 	return $$self{start_width} if ! $$self{start_height};
 	return $$self{start_width}*$$self{start_height};
 }
+
+sub is_cut {
+	my $self = shift;
+	if ( $$self{'start_width'} and $$self{'start_height'} ) {
+		return 1 if ( $$self{'start_width'} != $$self{'width'} or $$self{'start_height'} != $$self{'height'} );
+	} # end if
+	return 0;	
+} # end sub is_cut
 
 1;
 __END__

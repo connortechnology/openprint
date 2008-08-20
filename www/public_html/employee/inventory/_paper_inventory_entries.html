@@ -25,6 +25,7 @@
 				my @data = sql::execute( $log, $dbh, q{SELECT skid_id, quantity, units FROM Skid_Contents, skids WHERE id=skid_id AND paper_id=? ORDER BY skid_id}, $openprint::param{'paper_id'} );
 				my $rowclass;
 				while ( my ( $skid_id, $quantity, $units ) = splice @data, 0, 3 ) {
+					next if ! $quantity;
 					my $Skid = new openprint::Skid( $skid_id );
 					$html .= sprintf('<tr%1$s><td><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
 <td><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>

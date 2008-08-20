@@ -7,6 +7,9 @@
 			sql::insert( $log, $dbh, 'Survey_Responses', 'company_id', $openprint::session{'company_id'}, 'user_id', $openprint::session{'user_id'}, 'survey_id', $r->param('survey_id'), 'question_id', $question_id, 'answer', $r->param( 'Answer'.$question_id ) );
 			$$variable{'Complete'} = 0 if ! $r->param('Answer'.$question_id);
 		} # end foreach
+		if ( $$variable{'Complete'} ) {
+			sql::update( undef, undef, 'Users', ['index=?', $openprint::session{'user_id'}], 'strcustomgreeting','' );
+		} # end if
 	) ?>
 
 	<? if ( $$variable{'Complete'} ) ?>
@@ -67,12 +70,12 @@
 		<tr class="<?colRow?>">
 <? if ( $$variable{'type'} eq 'radio' ) ?>
 			<td><?text?></td>
-			<td style="background-color:#FFFF00;"><input type="radio" name="Answer<?question_id?>" value="1" <? echo ( 'checked' if $r->param("Answer$$variable{'question_id'}") == 1 ) ?> /></td>
-			<td style="background-color:#FF8000;"><input type="radio" name="Answer<?question_id?>" value="2" <? echo ( 'checked' if $r->param("Answer$$variable{'question_id'}") == 2 ) ?> /></td>
-			<td style="background-color:#FF0000;"><input type="radio" name="Answer<?question_id?>" value="3" <? echo ( 'checked' if $r->param("Answer$$variable{'question_id'}") == 3 ) ?> /></td>
-			<td style="background-color:#FF00FF;"><input type="radio" name="Answer<?question_id?>" value="4" <? echo ( 'checked' if $r->param("Answer$$variable{'question_id'}") == 4 ) ?> /></td>
-			<td style="background-color:#00baFF;"><input type="radio" name="Answer<?question_id?>" value="5" <? echo ( 'checked' if $r->param("Answer$$variable{'question_id'}") == 5 ) ?> /></td>
-			<td style="background-color:#00FF00;"><input type="radio" name="Answer<?question_id?>" value="6" <? echo ( 'checked' if $r->param("Answer$$variable{'question_id'}") == 6 ) ?> /></td>
+			<td style="background-color:#FFFF00;"><input type="radio" name="Answer<?question_id?>" value="1" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 1 ) ?> /></td>
+			<td style="background-color:#FF8000;"><input type="radio" name="Answer<?question_id?>" value="2" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 2 ) ?> /></td>
+			<td style="background-color:#FF0000;"><input type="radio" name="Answer<?question_id?>" value="3" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 3 ) ?> /></td>
+			<td style="background-color:#FF00FF;"><input type="radio" name="Answer<?question_id?>" value="4" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 4 ) ?> /></td>
+			<td style="background-color:#00baFF;"><input type="radio" name="Answer<?question_id?>" value="5" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 5 ) ?> /></td>
+			<td style="background-color:#00FF00;"><input type="radio" name="Answer<?question_id?>" value="6" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 6 ) ?> /></td>
 			<td>&nbsp;</td>
 <? endif ( $$variable{'type'} eq 'radio' ) ?>
 <? if ( $$variable{'type'} eq 'text' ) ?>
@@ -89,10 +92,10 @@
 	</table>
 	<br/>
 <div style="float: right;">
-	<script type="text/javascript">
-		writeButton('Submit2', 'submit.gif', "f1.submit();", '', 'Submit' );
-		writeButton('Reset2', 'reset.gif', "f1.reset();", '', 'Reset' );
-	</script>
+	<? echo ( join('',
+		ssi::writeButton( $log, $dbh, 'Submit2', 'submit.gif', "f1.submit();", '', 'Submit' ),
+		ssi::writeButton( $log, $dbh, 'Reset2', 'reset.gif', "f1.reset();", '', 'Reset' ),
+	); ) ?>
 	<br class="spacer"/>
 </div>
 <? else ( $$variable{'survey_id'} ) ?>

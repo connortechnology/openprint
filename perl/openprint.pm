@@ -62,7 +62,7 @@ sub session_init {
 	} # end if
 
 	if ( sets::isin( $session{'user_type'}, ['E','A'] ) and ($r->param('btnFunction') eq 'SelectCompany') ) {
-$openprint::log->debug('Selecting company');
+#$openprint::log->debug('Selecting company');
 		my $Company = new openprint::Company( $r->param('ddmCompany') );
 		$openprint::session{'company_id'} = $Company->id();
 		openprint::logs::insertLogRecord('79',);
@@ -83,9 +83,9 @@ $openprint::log->debug('Selecting company');
 
 	if ( ! $session{'Country'} ) {
 		$session{'Country'} = $r->dir_config('Country');
-		$log->debug("Setting Country to " . $r->dir_config('Country') );
+		#$log->debug("Setting Country to " . $r->dir_config('Country') );
 	} else {
-		$log->debug("Country is " . $session{'Country'} );
+		#$log->debug("Country is " . $session{'Country'} );
 	} # end if
 	if ( $config{'Pricelist'} ) {
 		if ( ! $session{'Pricelist_id'} ) {

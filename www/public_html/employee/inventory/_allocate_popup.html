@@ -1,18 +1,3 @@
-<? eval (
-	if ( $openprint::param{'referer'} ) {
-		$$variable{'referer'} = $openprint::param{'referer'};
-	} elsif ( $ENV{'HTTP_REFERER'} ) {
-		$openprint::log->debug($ENV{'HTTP_REFERER'});
-		$ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
-		$$variable{'referer'} = $1;
-	} # end if
-	$$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} );
-	if ( exists $openprint::param{'quantity'} ) {
-		$$variable{'quantity'} = $openprint::param{'quantity'};
-	} else {
-		$$variable{'quantity'} = $$variable{Paper}->in_stock() - $$variable{Paper}->allocated();
-	} # end if
-) ?>
 <div id="Allocate">
 	<form id="allocateform" name="allocateform" action="<?referer?>" method="post">
 		<input type="hidden" name="btnFunction" value="Allocate" />
@@ -57,6 +42,10 @@
 				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 				
+			</p>
+			<p>
+				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
+				<input type="checkbox" name="specific" id="specific" value="1" /><label class="radio" for="specific" title="Click to allocate specific skids on the floor.">Yes</label>
 			</p>
 			<hr/>
 			<p class="buttons">

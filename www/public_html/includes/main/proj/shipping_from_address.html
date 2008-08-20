@@ -1,16 +1,16 @@
 <fieldset class="leftColumn"><legend>From</legend>
 	<p> 
 		<label>Company:</label>
-		<input type="text" name="FromCompany" value="<?FromCompany?>" onkeyup="calc(this.form.name);"/> 
+		<input type="text" name="FromCompanyName" value="<?FromCompanyName?>" onchange="calc(this.form.name);"/> 
 	</p>
 	<p> 
 		<label>Address:</label>
-		<input type="text" name="FromAddress1" value="<?FromAddress1?>" /><br/>
+		<input type="text" name="FromAddress1" value="<?FromAddress1?>" onchange="calc(this.form.name);" /><br/>
 		<input type="text" name="FromAddress2" value="<?FromAddress2?>" /> 
 	</p>
 	<p> 
 		<label>City:</label>
-		<input type="text" name="FromCity" value="<?FromCity?>" onkeyup="calc(this.form.name);"/> 
+		<input type="text" name="FromCity" value="<?FromCity?>" onchange="calc(this.form.name);"/> 
 	</p>
 	<p> 
 		<label>Country:</label>
@@ -32,14 +32,14 @@
 	</p>
 	<p> 
 		<label>Phone:</label>
-		<input type="text" name="FromPhone" value="<?FromPhone?>" onkeyup="calc(this.form.name);"/>
+		<input type="text" name="FromPhone" value="<?FromPhone?>" onchange="calc(this.form.name);"/>
 	</p>
 	<p> 
 		<label>Fax:</label>
-		<input type="text" name="FromFax" value="<?FromFax?>" onkeyup="calc(this.form.name);"/>
+		<input type="text" name="FromFax" value="<?FromFax?>" onchange="calc(this.form.name);"/>
 	</p>
 	<p> 
 		<label>Email:</label>
-		<input type="text" name="FromEmail" value="<?FromEmail?>" onkeyup="calc(this.form.name);"/>
+		<input type="text" name="FromEmail" value="<?FromEmail?>" onchange="calc(this.form.name);"/>
 	</p>
 </fieldset>

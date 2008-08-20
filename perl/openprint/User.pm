@@ -301,11 +301,19 @@ sub id {
 
 sub find {
 	my %param = @_;
-	if ( $param{'id'} ) {
-		return new openprint::User( $param{'id'} );
-	} # end if
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;
+
+	if ( $param{'id'} ) {
+		if ( ref $param{'id'} eq 'ARRAY' ) {
+			$sql .= q{ AND index IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
+			push @values, @{$param{'id'}};
+		} else {
+			$sql .= q{ AND index=?};
+			push @values, $param{'id'};
+		} # end if
+	} # end if
+
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {
 			$sql .= q{ AND chrType IN ('} . join("','", @{$param{'type'}}) . q{')};
@@ -352,7 +360,7 @@ sub find {
 		$openprint::log->error( "Error loading Users: ($sql) (@values)" );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug( "loading Users: ($sql) (@values)" );
+		$openprint::log->debug( "loading Users: ($sql) (@values) " . $data );
 	} # end if
 	return map { new openprint::User( $_->{index}, $_ ) } @$data;
 } # end sub find

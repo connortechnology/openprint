@@ -177,7 +177,8 @@ sub save {
 	} # end foreach
 		
 	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
+		#@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
+		$$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
