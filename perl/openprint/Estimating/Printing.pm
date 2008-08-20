@@ -1210,7 +1210,6 @@ $openprint::log->debug("No spread layout for you!");
 						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 							my $I = $imps{$str}[$j];
 
-							my $splice = 0;
 							if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
 								next;
 							} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
@@ -1225,7 +1224,7 @@ $openprint::log->debug("No spread layout for you!");
 									and 
 									( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 									and
-									( ! ( ! $I->Paper()->is_cut_sheet() and $imp->Paper()->is_cut_sheet() ) )
+									( ! ( ! $I->Paper()->is_cut() and $imp->Paper()->is_cut() ) )
 									) {
 								splice @{$imps{$str}}, $j, 1;
 								$j -= 1;
@@ -1236,7 +1235,7 @@ $openprint::log->debug("No spread layout for you!");
 									and 
 									( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 									and
-									( ( ! $I->Paper()->is_cut_sheet() ) or ( $imp->Paper()->is_cut_sheet() ) )
+									( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 									) {
 								# Already have a much better sheet
 								$add = 0;

@@ -19,6 +19,7 @@ require openprint::RFIDScanner;
 require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::PaperAllocation;
+require openprint::PurchaseOrder;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -1013,6 +1014,7 @@ sub rfidscanner_details {
 } # end sub rfidscanner_details
 
 sub update_inventory {
+	@{$variable{'IDS'}} = ();
 	if ( $param{'btnFunction'} eq 'Submit' ) {
 		my @ids = misc::trim( split(';', $param{'rfidtag_ids'} ) );
 		@{$variable{'IDS'}} = @ids;
@@ -1026,6 +1028,10 @@ sub update_inventory {
 		my $total_qty = 0;
 
 		my $Paper = save_Paper();
+		if ( ! $Paper ) {
+			$variable{'error'} .= 'Unable to get Stock.<br/>';
+			return;
+		} # end if
 		my $Project;
 		if ( $param{'Docket'} ) {
 			my @Projects = openprint::Project::find('docket'=>$param{'Docket'});
@@ -1196,157 +1202,23 @@ sub _allocate_popup {
 } # end sub _allocate_popup
 
 sub purchase_order {
-	my $error = '';
-	my $ppo_index = $param{'PaperPurchaseOrderIndex'};
-	if ( $param{'btnFunction'} eq 'DeletePaper' ) {
-		my $paper_index = $param{'PaperIndex'};
-		if ( $paper_index ) {
-			sql::execute( $log, $dbh, 'DELETE FROM Paper_Purchase_Order_Contents WHERE PaperPurchaseOrder_Id=? AND Paper_Id=?', $ppo_index, $paper_index );
-		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		openprint::paper_purchase_order::delete( $log, $dbh, $ppo_index );
-		$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+
+	if ( $param{'btnFunction'} eq 'Delete' ) {
 		return;
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
-		sql::update( $log, $dbh, 'Paper_Purchase_Orders', "Id=$ppo_index",
-				'Status',				'Sent',
-				);
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
-		my ( $status ) = sql::execute( $log, $dbh, 'SELECT Status FROM Paper_Purchase_Orders WHERE Id=?', $ppo_index );
-		if ( $status eq 'Sent' ) {
-			# Only do this once
-			sql::update( $log, $dbh, 'Paper_Purchase_Orders', "Id=$ppo_index",
-					'WarehouseLocation',	$param{'WarehouseLocation'},
-					'Received',				join('-', $param{'ddmReceivedDateYear'}, $param{'ddmReceivedDateMonth'}, $param{'ddmReceivedDateDay'} ),
-					'Status',				'Received',
-					);
-
-			my @papers = sql::execute( $log, $dbh, 'SELECT Paper_Id, Quantity, (SELECT InStock FROM Paper_Inventory WHERE Paper_Inventory.Paper_Id=Paper_Purchase_Order_Contents.Paper_Id AND updated_on = (SELECT MAX(updated_on) FROM Paper_Inventory WHERE Paper_Inventory.Paper_Id=Paper_Purchase_Order_Contents.Paper_Id)) FROM Paper_Purchase_Order_Contents WHERE PaperPurchaseOrder_Id=?', $ppo_index );
-			while ( @papers ) {
-				my ( $paper_index, $quantity, $instock ) = splice @papers, 0, 3;
-	
-				sql::insert( $log, $dbh, 'Paper_Inventory', 
-						'Paper_Id',	$paper_index,
-						'User_Id',	$openprint::session{'user_id'}, 
-						'PO_Id',		$ppo_index,
-						'Delta',		$quantity,
-						'InStock',		$instock + $quantity,
-						'updated_on',	'NOW()',
-						'Comment',		'Received Paper',
-						);
-			} # end while
-		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		if ( ! $ppo_index ) {
-			( $ppo_index ) = sql::execute( $log, $dbh, "SELECT nextval('PaperPurchaseOrderIndex_seq')" );
-			$error .= sql::insert( $log, $dbh, 'Paper_Purchase_Orders', 
-					'id',			$ppo_index,
-					'user_id',		$openprint::session{'user_id'},
-					'SupplierTo',		$param{'To'},	
-					'SupplierAttn',		$param{'Attn'},
-					'SupplierFrom',		$param{'From'},
-					'SupplierFaxNo',	$param{'FaxNo'},
-					'PONum',			$param{'PONum'} ? $param{'PONum'} : undef,
-					'ExpectedArrival',	'NOW()',
-					'GST',				'0.00',
-					'Total',			'0.00',
-					'Status',			'Incomplete',
-					'updated_on',		'NOW()',
-					'currency_id',	$param{'Currency'} ? $param{'Currency'} : undef,
-					);
-		} else {
-			$error .= sql::update( $log, $dbh, 'Paper_Purchase_Orders', "Index=$ppo_index",
-					'UserIndex',		$openprint::session{'user_id'},
-					'SupplierTo',		$param{'To'},	
-					'SupplierAttn',		$param{'Attn'},
-					'SupplierFrom',		$param{'From'},
-					'SupplierFaxNo',	$param{'FaxNo'},
-					'ExpectedArrival',	'NOW()',
-					'PONum',			$param{'PONum'} ? $param{'PONum'} : undef,
-					'GST',				'0.00',
-					'Total',			'0.00',
-					'Status',			'Incomplete',
-					'LastModified',		'NOW()',
-					'CurrencyIndex',	$param{'Currency'} ? $param{'Currency'} : undef,
-					);
-		} # end if $ppoindex
-
-		if ( $param{'PaperBrand'} ) {
-# See if we can get a single paper out of it
-			my @papers = openprint::paper::get_paper( $log, $dbh,  
-						$param{'PaperBrand'},
-						$param{'PaperFinish'},
-						$param{'PaperColour'},
-						$param{'PaperWeight'},
-						$param{'PaperSheetSize'},
-						);
-			if ( @papers != 1 ) {
-				$error .= "Cannot determine a unique paper.";
-			} else {
-				sql::execute( $log, $dbh, 'DELETE FROM Paper_Purchase_Order_Contents WHERE PaperPurchaseOrder_Id=? AND Paper_Id=?', $ppo_index, $papers[0] );
-# Now insert Papers
-				$error .= sql::insert( $log, $dbh, 'Paper_Purchase_Order_Contents',
-						'PaperPurchaseOrder_Id', $ppo_index,
-						'Paper_Id',				@papers,
-						'Quantity',					$param{'PaperQuantity'},
-						'Description',				$param{'PaperDescription'},
-						'Price',					$param{'PaperPrice'},
-						'MWeight',					$param{'PaperMWeight'},
-						'Width',					$param{'PaperWidth'},
-						'Height',					$param{'PaperHeight'},
-						);
-			} # end if
-		} # end if insert paper
-
 	} # end if btnFunction == Save
 
-	# Update it on every refresh... a bit ugly...
-	sql::execute( $log, $dbh, 'UPDATE Paper_Purchase_Orders SET Total=(SELECT SUM((Price*mweight::numeric) * Quantity/1000) FROM Paper_Purchase_Order_Contents, Papers WHERE id=Paper_Id AND PaperPurchaseOrder_Id=?) WHERE Index=?', $ppo_index, $ppo_index );
-	sql::execute( $log, $dbh, 'UPDATE Paper_Purchase_Orders SET GST=Total*0.07 WHERE Id=?', $ppo_index );
-
-	if ( $error ne '' ) {
-		$variable{'Error'} = $error;
-		$variable{'PaperBrand'} = $param{'PaperBrand'};
-		$variable{'PaperFinish'} = $param{'PaperFinish'};
-		$variable{'PaperColour'} = $param{'PaperColour'};
-		$variable{'PaperWeight'} = $param{'PaperWeight'};
-		$variable{'PaperSheetSize'} = $param{'PaperSheetSize'};
-		$variable{'PaperPrice'} = $param{'PaperPrice'};
-		$variable{'PaperQuantity'} = $param{'PaperQuantity'};
-		$variable{'PaperDescription'} = $param{'PaperDescription'};
-	} # end if
-
-	if ( $ppo_index ) {
-		@variable{'To',
-			'Attn',
-			'From',
-			'FaxNo',
-			'PONum',
-			'GST',
-			'SubTotal',
-			'Total',
-			'Status',
-			'Date',
-			'ReceivedDate',
-			'WarehouseLocation',
-			'CurrencyIndex',
-} = sql::execute( $log, $dbh, "SELECT SupplierTo, SupplierAttn, SupplierFrom, SupplierFaxNo, PONum, ROUND(GST,2), ROUND(Total,2), ROUND(GST+Total,2), Status, to_char( now(),'Day Month DD, YYYY'), to_char( Received,'Day Month DD, YYYY'), WarehouseLocation, CurrencyIndex FROM Paper_Purchase_Orders WHERE Id=$ppo_index" );
-		$variable{'PPOIndex'} = $ppo_index;
-
-		$_ = "SELECT paper_id, Description, strName, strFinish, strWeight, Width || 'x' || Height,
-			Price, ROUND(Price * mweight::numeric,2), Quantity, ROUND((Price*mweight::numeric) * Quantity/1000,2) FROM Paper_Purchase_Order_Contents, Paper WHERE PaperPurchaseOrder_id=$ppo_index AND id = paper_id";
-		@{$variable{'Contents'}} = sql::execute( $log, $dbh, $_ );
-		$variable{'PaperPurchaseOrderIndex'} = $ppo_index;
-		if ( $variable{'CurrencyIndex'} ) {
-			my $Currency = new openprint::Currency( $variable{'CurrencyIndex'} );
-	
-			@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-		} # end if
-	} else {
-		$variable{'Status'} = 'Incomplete';
-	} # end if
-
+	$variable{'PurchaseOrder'} = $PO;
 } # end sub purchase_order
+
+sub purchase_orders {
+} # end sub purchase_orders
+
+sub _purchase_orders {
+} # end sub _purchase_orders
 
 1;
 __END__
