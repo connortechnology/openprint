@@ -458,7 +458,7 @@ $openprint::log->debug("Making order from quote");
 		} # end while
 		if ( @errors ) {
 			$$variable{'error'} = join('<br/>', @errors );
-			$openprint::log->error( "Order Error: $$variable{'error'}" );
+			#$openprint::log->error( "Order Error: $$variable{'error'}" );
 		} # end if
 	} # end if
 

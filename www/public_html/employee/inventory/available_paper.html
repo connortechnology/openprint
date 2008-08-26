@@ -106,15 +106,14 @@ Please select a Paper to view/edit.<br>
 			<? echo (
 					my %data;
                     foreach my $Stock ( openprint::Paper::find(
-
                             'owner_id'=>$openprint::session{'/employee/inventory/available_paper.html?Owner'},
                             #'group_id'=>$openprint::session{'/employee/inventory/available_paper.html?Group'},
-							'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
+			    'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
                             ) ) {
                         $data{$Stock->manufacturer()} = $Stock->manufacturer_id();
                     } # end foreach
                     return ssi::make_drop_down( [map { $data{$_}, $_ } sort keys %data ], $openprint::session{'/employee/inventory/available_paper.html?Manufacturer'} );
-					) ?>
+				) ?>
 			</select>
 		</p>
 		<p>
@@ -166,7 +165,7 @@ Please select a Paper to view/edit.<br>
                             'name_id'=>$openprint::session{'/employee/inventory/available_paper.html?Name'},
                             'finish_id'=>$openprint::session{'/employee/inventory/available_paper.html?Finish'},
                             #'group_id'=>$openprint::session{'/employee/inventory/available_paper.html?Group'},
-							'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
+			    'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
                             ) ) {
                         $data{$Stock->colour()} = $Stock->colour_id();
                     } # end foreach
@@ -187,7 +186,7 @@ Please select a Paper to view/edit.<br>
                             'finish_id'=>$openprint::session{'/employee/inventory/available_paper.html?Finish'},
                             'colour_id'=>$openprint::session{'/employee/inventory/available_paper.html?Colour'},
                             #'group_id'=>$openprint::session{'/employee/inventory/available_paper.html?Group'},
-							'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
+				'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
                             ) ) {
                         $data{$Stock->weight()} = $Stock->weight_id();
                     } # end foreach
@@ -211,7 +210,7 @@ Please select a Paper to view/edit.<br>
                             'colour_id'=>$openprint::session{'/employee/inventory/available_paper.html?Colour'},
                             'weight_id'=>$openprint::session{'/employee/inventory/available_paper.html?Weight'},
                             #'group_id'=>$openprint::session{'/employee/inventory/available_paper.html?Group'},
-							'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
+				'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
                             ) ) {
                         $data{$Stock->width()} = $Stock->width();
                     } # end foreach
@@ -221,7 +220,7 @@ Please select a Paper to view/edit.<br>
 			<select name="height" size="1" onchange="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );" >
 				<option value="">All</option>
 			<? echo ( 
-					my %data;
+				my %data;
                     foreach my $Stock ( openprint::Paper::find(
                             'owner_id'=>$openprint::session{'/employee/inventory/available_paper.html?Owner'},
                             'manufacturer_id'=>$openprint::session{'/employee/inventory/available_paper.html?Manufacturer'},
@@ -230,9 +229,9 @@ Please select a Paper to view/edit.<br>
                             'colour_id'=>$openprint::session{'/employee/inventory/available_paper.html?Colour'},
                             'weight_id'=>$openprint::session{'/employee/inventory/available_paper.html?Weight'},
                             #'group_id'=>$openprint::session{'/employee/inventory/available_paper.html?Group'},
-							'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
+				'type'=>[split(';', $openprint::session{'/employee/inventory/available_paper.html?Type'})],
                             ) ) {
-                        %data{$Stock->height()} = $Stock->height();
+                        $data{$Stock->height()} = $Stock->height();
                     } # end foreach
                     return ssi::make_drop_down( [map { $_, $_ } sort keys %data ], $openprint::session{'/employee/inventory/available_paper.html?height'} );
 				) ?>
