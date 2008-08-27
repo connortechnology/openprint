@@ -54,7 +54,11 @@ sub conversions {
 	my ( $self, $to ) = @_;
 	return 1 if $$self{id} == $to;
 	if ( ! exists $$self{'Conversions'} ) {
-		%{$$self{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$self{'id'} );
+		if ( $$self{'id'} ) {
+			%{$$self{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$self{'id'} );
+		} else {
+			%{$$self{'Conversions'}} = ();
+		} # end if
 	} # end if
 	if ( $to ) {
 		if ( $$self{'Conversions'}{$to} ) {
@@ -98,7 +102,7 @@ sub convert {
 		if ( $$DST_Currency{'id'} != $$Price{'currency_id'} ) {
 			my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
 			my $rate = $SRC_Currency->conversions( $DST_Currency->id() );
-			$$Price{'Price'} *= $rate;
+			$$Price{'Price'} *= $rate if $rate;
 			$$Price{'currency_id'} = $DST_Currency->id();
 		} # end if
 	} # end if

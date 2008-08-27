@@ -19,7 +19,7 @@ require openprint::User;
 		'country'					=>	'country',
 		'state'						=>	'state',
 		'postalcode'				=>	'postalcode',
-		'salesrep_id' 				=>	'lngsalesperson',
+		'salesrep_id' 				=>	'salesrep_id',
 		'pst_exempt'				=>	'ysnpstexempt',
 		'gst_exempt'				=>	'ysngstexempt',
 		'gst_number'				=>	'fedtaxnumber',
@@ -90,11 +90,11 @@ sub find {
     } # end if
 
 	if ( $params{'Name'} ) {
-		$sql .= q{ AND strName=?};
+		$sql .= q{ AND name=?};
 		push @values, $params{'Name'};
 	} # end if
 	if ( exists $params{'name'} ) {
-		$sql .= q{ AND strName=?};
+		$sql .= q{ AND name=?};
 		push @values, $params{'name'};
 	} # end if
 	if ( exists $params{'postalcode'} ) {
@@ -329,7 +329,7 @@ sub get_dropdown {
 	my @values;
 
 	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) {
-		$sql .= ' WHERE id=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
+		$sql .= ' WHERE id=(SELECT company_id FROM users WHERE id=?) OR salesrep_id IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
 	$sql .= ' ORDER BY lower(name)';
@@ -337,7 +337,7 @@ sub get_dropdown {
     my @company = sql::execute( undef, undef, $sql, @values );
 
     return ssi::make_drop_down( \@company, $selected );
-} # sub get_customer_dropdown
+} # sub get_dropdown
 
 sub CSR {
 	my $self = shift;
@@ -348,6 +348,15 @@ sub Users {
 	my $self = shift;
 	return openprint::User::find('company_id'=>$$self{'id'} );
 } # end sub Users
+
+sub Pricelist {
+	my $self = shift;
+	if ( $$self{'pricelist_id'} ) {
+		return new openprint::Pricelist( $$self{'pricelist_id'} );
+	} else {
+		return new openprint::Pricelist( openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable ));
+	} # end if
+} # end sub Pricelist
 
 1;
 __END__

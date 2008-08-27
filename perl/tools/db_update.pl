@@ -1038,9 +1038,21 @@ if ( $version < $new_version ) {
     $version = $new_version;
 } # end if
 
-$dbh->disconnect();
-1;
-__END__
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Prices LIMIT 1', {} );
+if ( $data ) {
+	$dbh->do('ALTER TABLE tbl_Service_Prices RENAME TO Service_Prices');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lnglistindex TO pricelist_id');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngserviceindex TO service_id');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngequipmentindex TO equipment_id');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblcost TO cost');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblmarkup TO markup');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblprice TO price');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN strunits TO units');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN ysndiscountable TO discountable');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmin TO min');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmax TO max');
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

@@ -32,7 +32,7 @@ my %fields = (
 	'greeting'			=>	'strcustomgreeting',
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
-	'type'				=>	'chrtype',
+	'type'				=>	'type',
 	'changepassword'	=>	'ysnchangepassword',
 	'commission'		=>	'dblcommission',
 	'administrator'		=>	'ysnadministrator',
@@ -315,9 +315,9 @@ sub find {
 	my @values;
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {
-			$sql .= q{ AND chrType IN ('} . join("','", @{$param{'type'}}) . q{')};
+			$sql .= q{ AND type IN ('} . join("','", @{$param{'type'}}) . q{')};
 		} else {
-			$sql .= q{ AND chrType = ?};
+			$sql .= q{ AND type = ?};
 			push @values, $param{'type'};
 		} # end if
 	} # end if

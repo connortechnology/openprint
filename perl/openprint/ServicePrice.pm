@@ -9,50 +9,50 @@ require openprint::logs;
 my $debug = 1;
 
 my %fields = (
-	'pricelist_id'	=>	'lnglistindex',
-	'service_id'	=>	'lngserviceindex',
-	'equipment_id'	=>	'lngequipmentindex',
-	'min'			=>	'lngmin',
-	'max'			=>	'lngmax',
-	'units'			=>	'strunits',
-	'cost'			=>	'dblcost',
-	'markup'		=>	'dblmarkup',
-	'price'			=>	'dblprice',
-	'discountable'	=>	'ysndiscountable',
+	'pricelist_id'	=>	'pricelist_id',
+	'service_id'	=>	'service_id',
+	'equipment_id'	=>	'equipment_id',
+	'min'			=>	'min',
+	'max'			=>	'max',
+	'units'			=>	'units',
+	'cost'			=>	'cost',
+	'markup'		=>	'markup',
+	'price'			=>	'price',
+	'discountable'	=>	'discountable',
 	'interpolate'	=>	'interpolate',
 );
 
 sub find {
 	my %params = @_;
-	my $sql = 'SELECT * FROM tbl_Service_Prices WHERE 1>0';
+	my $sql = 'SELECT * FROM Service_Prices WHERE 1>0';
 	my @values;
 
 	if ( $params{'pricelist_id'} ) {
-		$sql .= ' AND lngpricelistindex=?';
+		$sql .= ' AND pricelist_id=?';
 		push @values, $params{'pricelist_id'};
 	} # end if
 	if ( $params{'Pricelist'} ) {
-		$sql .= ' AND lnglistindex=?';
+		$sql .= ' AND pricelist_id=?';
 		push @values, $params{'Pricelist'}->id();
 	} # end if
 	if ( $params{'service_id'} ) {
-		$sql .= ' AND lngserviceindex=?';
+		$sql .= ' AND service_id=?';
 		push @values, $params{'service_id'};
 	} # end if
 	if ( $params{'Service'} ) {
-		$sql .= ' AND lngserviceindex=?';
+		$sql .= ' AND service_id=?';
 		push @values, $params{'Service'}->id();
 	} # end if
 	if ( $params{'equipment_id'} ) {
-		$sql .= ' AND lngEquipmentIndex=?';
+		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
 	} # end if
 	if ( $params{'Equipment'} ) {
 		if ( $params{'Equipment'}->id() ) {
-		$sql .= ' AND lngEquipmentIndex=?';
-		push @values, $params{'Equipment'}->id();
+			$sql .= ' AND equipment_id=?';
+			push @values, $params{'Equipment'}->id();
 		} else {
-		$sql .= ' AND lngEquipmentIndex IS NULL';
+			$sql .= ' AND equipment_id IS NULL';
 		} # end if
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -72,7 +72,7 @@ sub load {
 	my ( $self, $data ) = @_;
 
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Prices WHERE id=?', {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_Prices WHERE id=?', {}, $$self{'id'} );
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 
@@ -81,7 +81,7 @@ sub load {
 sub delete {
 	my $self = shift;
 
-	sql::execute( undef, undef, 'DELETE FROM tbl_Service_Prices WHERE id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Service_Prices WHERE id=?', $$self{'id'} );
 	openprint::logs::insertLogRecord('13', "Service Price ID: " . $$self{'id'},);
 } # end sub delete
 
@@ -90,31 +90,31 @@ sub save {
 
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('serviceprices_id_seq')} );
-		sql::insert( undef, undef, 'tbl_Service_Prices',
-				'id',					$$self{'id'},
-				'lngListIndex',			$$self{'pricelist_id'},
-				'lngServiceIndex',		$$self{'service_id'},
-				'lngEquipmentIndex', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
-				'lngMin',				$$self{'min'} eq '' ? undef : $$self{'min'},
-				'lngMax',				$$self{'max'} eq '' ? undef : $$self{'max'},
-				'strUnits',				$$self{'units'},
-				'dblCost',				1*$$self{'cost'},
-				'dblMarkup',			1*$$self{'markup'},
-				'dblPrice',				1*$$self{'price'},
-				'ysnDiscountable',		$$self{'discountable'},
+		sql::insert( undef, undef, 'Service_Prices',
+				'id',				$$self{'id'},
+				'pricelist_id',		$$self{'pricelist_id'},
+				'service_id',		$$self{'service_id'},
+				'equipment_id', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
+				'min',			$$self{'min'} eq '' ? undef : $$self{'min'},
+				'max',			$$self{'max'} eq '' ? undef : $$self{'max'},
+				'units',			$$self{'units'},
+				'cost',				1*$$self{'cost'},
+				'markup',			1*$$self{'markup'},
+				'price',			1*$$self{'price'},
+				'discountable',	$$self{'discountable'},
 				);
 	} else {
-		sql::update( undef, undef, 'tbl_Service_Prices', ['id=?', $$self{'id'}],
-				'lngListIndex',			$$self{'pricelist_id'},
-				'lngServiceIndex',		$$self{'service_id'},
-				'lngEquipmentIndex', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
-				'lngMin',				$$self{'min'} eq '' ? undef : $$self{'min'},
-				'lngMax',				$$self{'max'} eq '' ? undef : $$self{'max'},
-				'strUnits',				$$self{'units'},
-				'dblCost',				1*$$self{'cost'},
-				'dblMarkup',			1*$$self{'markup'},
-				'dblPrice',				1*$$self{'price'},
-				'ysnDiscountable',		$$self{'discountable'},
+		sql::update( undef, undef, 'Service_Prices', ['id=?', $$self{'id'}],
+				'pricelist_id',		$$self{'pricelist_id'},
+				'service_id',		$$self{'service_id'},
+				'equipment_id', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
+				'min',			$$self{'min'} eq '' ? undef : $$self{'min'},
+				'max',			$$self{'max'} eq '' ? undef : $$self{'max'},
+				'units',			$$self{'units'},
+				'cost',				1*$$self{'cost'},
+				'markup',			1*$$self{'markup'},
+				'price',			1*$$self{'price'},
+				'discountable',	$$self{'discountable'},
 				);
 	} # end if
 } # end sub save

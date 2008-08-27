@@ -292,7 +292,7 @@ sub customer_login {
 		$query .=  "AND Users.Index = (SELECT MIN(Index) FROM Users WHERE Users.CompanyIndex = Company.Index ) ";
       if ( $r->param('ddmEmployees') ) {
             if ( $r->param('ddmEmployees') eq 'None' ) {
-                $query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
+                $query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT id FROM Users WHERE Type='E' AND strEmployeeType='Sales')";
             } else {
                 $query .= " AND lngsalesperson=" . $r->param('ddmEmployees');
             } # end if
@@ -338,7 +338,7 @@ sub customer_login {
 
 		if ( $r->param('ddmEmployees') ) {
 			if ( $r->param('ddmEmployees') eq 'None' ) {
-				$query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
+				$query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT id FROM Users WHERE type='E' AND strEmployeeType='Sales')";
 			} else {
 				$query .= " AND lngsalesperson=" . $r->param('ddmEmployees');
 			} # end if

@@ -213,7 +213,7 @@ sub user_profiles {
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
-	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(strfirstname),lower(strlastname)' );
+	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(firstname),lower(lastname)' );
 
 	if ( ! $User->id() ) {
 		if ( sets::isin( $openprint::session{user_id}, map { $_->id() } @Users ) ) {
@@ -344,7 +344,7 @@ sub company_profiles {
 		$Company = new openprint::Company( $index );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Go' ) {
 		if ( $openprint::param{'txtSearchAccountNum'} ne '' ) {
-			( $index ) = sql::execute( $log, $dbh, 'SELECT Index from Company WHERE strAccountNum=?',$openprint::param{'txtSearchAccountNum'}); 
+			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$openprint::param{'txtSearchAccountNum'}); 
 		} # end if 
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 
@@ -374,7 +374,8 @@ sub company_profiles {
 			my %info;
 			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 			$info{'Company'} = $Company;
-			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
+
+			my @to = openprint::User::find('company_id'=>$index);
 
 			$_ = $openprint::param{'rdbReseller'} eq 'Y' ? 'customer_account_reseller.html' : 'customer_account_non_reseller.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
@@ -384,7 +385,7 @@ sub company_profiles {
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'AdministratorEmail'},
-					TO      => join( ',', @to ),
+					TO      => join( ',', map { sprintf('"%s" <%s>', $_->name(), $->email() ); } @to ),
 					SUBJECT => "Customer account status has changed!",
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
@@ -394,7 +395,7 @@ if ( 0 ) {
 			my %info;
 			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 			$info{'Company'} = $Company;
-			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
+			my @to = openprint::User::find('company_id'=>$index);
 
 			$_ = $openprint::param{'rdbSupplier'} eq 'Y' ? 'customer_account_supplier.html' : 'customer_account_non_supplier.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
@@ -403,7 +404,7 @@ if ( 0 ) {
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'AdministratorEmail'},
-					TO      => join( ',', @to ),
+					TO      => join( ',', map { sprintf('"%s" <%s>', $_->name(), $->email() ); } @to ),
 					SUBJECT => 'Customer account status has changed!',
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
@@ -508,9 +509,6 @@ if ( 0 ) {
 	$$variable{'ddmShippingStateProvince'} = ssi::return_states_and_provinces($$variable{'ddmShippingStateProvince'});
 	$$variable{'ddmShippingCountry'} = ssi::return_countries($$variable{'ddmShippingCountry'});
 
-    $_ = "SELECT Index, Name FROM Pricelists ORDER BY lower(Name)";
-    $$variable{'ddmPriceList'} = ssi::fill_drop_down( $log, $dbh, $_, $$variable{'ddmPriceList'} );
-
 	my $total;
 	my $payments;
 	if ( $index ) {
@@ -564,7 +562,7 @@ sub credit_applications {
 					'SubmissionDate',
 				} = sql::execute( $log, $dbh, $_, $credit_app );
 
-				if ( ! sql::execute( $log, $dbh, 'SELECT index FROM company WHERE index=?', $$variable{'hiddenCustomerID'} ) ) {
+				if ( ! sql::execute( $log, $dbh, 'SELECT id FROM company WHERE id=?', $$variable{'hiddenCustomerID'} ) ) {
 					return misc::error( $log, $dbh, $variable, 'Deleted Customer', "The company that created this credit app has been deleted from the system.  This credit app has been deleted." );
 				} # end if
 
@@ -581,7 +579,7 @@ sub credit_applications {
 				$params{'siteURL'} = $openprint::config{'siteURL'};
 				$params{'SecureSiteURL'} = $openprint::config{'SecureSiteURL'};
 
-				my ( $email ) = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE index=?', $$variable{'UserIndex'} );
+				my $User = new openprint::User( $$variable{'UserIndex'} );
 
 				$params{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
 				$params{'ReplacementText'} = ssi::variable_substitution( \$params{'ReplacementText'}, \%params );
@@ -590,7 +588,7 @@ sub credit_applications {
 				my %mail = (
 						SMTP	=> $openprint::config{'Mail Server'},
 						FROM	=> $openprint::config{'AdministratorEmail'},
-						TO		=> $email,
+						TO		=> sprintf('"%s" <%s>', $User->name(), $User->email() ),
 						SUBJECT => 'Credit Status Changed.'
 						);
 				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );

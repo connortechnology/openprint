@@ -48,9 +48,8 @@
 		<p> 
 			<label>Pricing List:</label>
 			<select name="ddmPriceList">
-				<option value="">Please select a Price list</option>
-				<option value="">--------------------------</option>
-				<?ddmPriceList?>
+				<option value="">select</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist::find('order'=>'lower(name)') ], $$variable{'ddmPriceList'} ); ) ?>
 			</select>
 		</p>
 		<p> 

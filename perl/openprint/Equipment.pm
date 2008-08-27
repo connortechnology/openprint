@@ -44,7 +44,7 @@ sub find {
 	if ( exists $params{'id'} ) {
 		if ( ref $params{id} eq 'ARRAY' ) {
 			if ( @{$params{id}} > 1 ) {
-			$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}  ) . ')';
+			$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
 			push @values, @{$params{id}};
 			} else {
 			$sql .= ' AND lngindex=?';
@@ -67,7 +67,7 @@ sub find {
 		# Assume specificatiosn is a hash of key/values to match
 		foreach my $name ( keys %{$params{'Specifications'}} ) {
 			if ( ref $params{'Specifications'}{$name} eq 'ARRAY' ) {
-				$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1) IN ( } . join(',', map {'?'} @{$params{'Specifications'}{$name}}  ) . ' )';
+				$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1) IN ( } . join(',', map {'?'} @{$params{'Specifications'}{$name}}	) . ' )';
 				push @values, $name, @{$params{'Specifications'}{$name}};
 			} else {
 				$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1)=?};
@@ -120,61 +120,61 @@ sub load {
 } # end sub load
 
 sub fits {
-   my ( $self, $width, $height, $calliper, $service ) = @_;
+	my ( $self, $width, $height, $calliper, $service ) = @_;
 
 	$service = ' '.$service if $service;
 
-   if ( $self->specification("Maximum$service Sheet Width") and $self->specification("Maximum$service Sheet Length") ) {
-	   my $imp = openprint::imposition::fit( $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
+	if ( $self->specification("Maximum$service Sheet Width") and $self->specification("Maximum$service Sheet Length") ) {
+		my $imp = openprint::imposition::fit( $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
 #$log->debug("Impo: $imp{'Imposition'} $imp{'Rows'}x$imp{'Cols'}");
-	   if ( ! $imp->imposition() ) {
-		   return sprintf('Too big %s x %s on %s x %s', $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
-	   } # end if
+		if ( ! $imp->imposition() ) {
+			return sprintf('Too big %s x %s on %s x %s', $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
+		} # end if
 	} elsif ( $self->specification("Maximum$service Sheet Width") ) {
 		if (
 			( $width > $self->specification("Maximum$service Sheet Width") ) and
 			( $height > $self->specification("Maximum$service Sheet Width") ) 
 			) {
-		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
+			return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
 		} # end if
 	} elsif ( $self->specification("Maximum$service Sheet Height") ) {
 		if (
 			( $width > $self->specification("Maximum$service Sheet Height") ) and
 			( $height > $self->specification("Maximum$service Sheet Height") ) 
 			) {
-		   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Height"));
+			return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Height"));
 		} # end if
 	} # end if
 
-   if ( $width and $height ) {
-	   if ( $self->specification("Minimum$service Sheet Width") and $self->specification("Minimum$service Sheet Length") ) {
-		   my $imp = openprint::imposition::fit( $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length"), $width, $height );
-		   if ( ! $imp->imposition() ) {
-			   return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length") );
-		   } # end if
-	   } elsif ( $self->specification("Minimum$service Sheet Width") ) {
-		   if (
-				   ( $width < $self->specification("Minimum$service Sheet Width") ) and
-				   ( $height < $self->specification("Minimum$service Sheet Width") ) 
-			  ) {
-			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
-		   } # end if
-	   } elsif ( $self->specification("Minimum$service Sheet Length") ) {
-		   if (
-				   ( $width < $self->specification("Minimum$service Sheet Length") ) and
-				   ( $height < $self->specification("Minimum$service Sheet Length") ) 
-			  ) {
-			   return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
-		   } # end if
-	   } # end if
-   } # end if
+	if ( $width and $height ) {
+		if ( $self->specification("Minimum$service Sheet Width") and $self->specification("Minimum$service Sheet Length") ) {
+			my $imp = openprint::imposition::fit( $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length"), $width, $height );
+			if ( ! $imp->imposition() ) {
+				return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length") );
+			} # end if
+		} elsif ( $self->specification("Minimum$service Sheet Width") ) {
+			if (
+					( $width < $self->specification("Minimum$service Sheet Width") ) and
+					( $height < $self->specification("Minimum$service Sheet Width") ) 
+				) {
+				return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
+			} # end if
+		} elsif ( $self->specification("Minimum$service Sheet Length") ) {
+			if (
+					( $width < $self->specification("Minimum$service Sheet Length") ) and
+					( $height < $self->specification("Minimum$service Sheet Length") ) 
+				) {
+				return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
+			} # end if
+		} # end if
+	} # end if
 
-   if ( $self->specification("Minimum$service Calliper") and $calliper and ( 1*$calliper < 1*$self->specification("Minimum$service Calliper") ) ) {
-	   return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification("Minimum$service Calliper") .' Inches.';
-   } # end if
-   if ( $self->specification("Maximum$service Calliper") and $calliper and ( 1*$calliper > 1*$self->specification("Maximum$service Calliper") ) ) {
-	   return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
-   } # end if
+	if ( $self->specification("Minimum$service Calliper") and $calliper and ( 1*$calliper < 1*$self->specification("Minimum$service Calliper") ) ) {
+		return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification("Minimum$service Calliper") .' Inches.';
+	} # end if
+	if ( $self->specification("Maximum$service Calliper") and $calliper and ( 1*$calliper > 1*$self->specification("Maximum$service Calliper") ) ) {
+		return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
+	} # end if
 
 } # end sub fits
 
@@ -369,42 +369,42 @@ sub copy {
 	my @specs = sql::execute( undef, undef, q{SELECT dblMin, dblMax, strUnits, strName, strValue, interpolate FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
 	while ( my ( $min, $max, $units, $name, $value, $interpolate ) = splice @specs, 0, 6 ) {
 		sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
-				'lngEquipmentIndex',    $$new{id},
-				'dblMin',               ( $min ne '' ? $min : undef ),
-				'dblMax',               ( $max ne '' ? $max : undef ),
-				'strUnits',             $units,
-				'strName',              $name,
-				'strValue',             $value,
+				'lngEquipmentIndex',	$$new{id},
+				'dblMin',				( $min ne '' ? $min : undef ),
+				'dblMax',				( $max ne '' ? $max : undef ),
+				'strUnits',			 $units,
+				'strName',				$name,
+				'strValue',			 $value,
 				'interpolate',			$interpolate,
 				] );
 	} # end while
 
 # Now do pricing, start with Service Prices
-	my @prices = sql::execute( undef, undef, q{SELECT lnglistindex, lngserviceindex, lngmin, lngmax, strunits, dblcost, dblmarkup, dblprice FROM tbl_Service_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
+	my @prices = sql::execute( undef, undef, q{SELECT pricelist_id, service_id, lngmin, lngmax, units, cost, markup, price FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
 	while ( my ( $list_id, $service_id, $min, $max, $units, $cost, $markup, $price ) = splice @prices, 0, 8 ) {
-		sql::insert( undef, undef, 'tbl_Service_Prices',[
-				'lnglistindex',     $list_id,
-				'lngserviceindex',  $service_id,
-				'lngmin',           $min,
-				'lngmax',           $max,
-				'strunits',         $units,
-				'dblcost',          $cost,
-				'dblmarkup',        $markup,
-				'dblPrice',         $price,
-                'lngEquipmentindex', $$new{id},
+		sql::insert( undef, undef, 'Service_Prices',[
+				'pricelist_id',	 $list_id,
+				'service_id',	$service_id,
+				'lngmin',			$min,
+				'lngmax',			$max,
+				'units',		 $units,
+				'cost',			$cost,
+				'markup',		$markup,
+				'Price',		 $price,
+				'equipment_id', $$new{id},
 				]);
 	} # end while
 	@prices = sql::execute( undef, undef, q{SELECT lnglistindex, lngmaterialindex, lngmin, lngmax, strunits, dblcost, dblmarkup, dblprice FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
 	while ( my ( $list_id, $service_id, $min, $max, $units, $cost, $markup, $price ) = splice @prices, 0, 8 ) {
 		sql::insert( undef, undef, 'tbl_Material_Prices',[
-				'lnglistindex',     $list_id,
+				'lnglistindex',	 $list_id,
 				'lngmaterialindex', $service_id,
-				'lngmin',           $min,
-				'lngmax',           $max,
-				'strunits',         $units,
-				'dblcost',          $cost,
-				'dblmarkup',        $markup,
-				'dblPrice',         $price,
+				'lngmin',			$min,
+				'lngmax',			$max,
+				'strunits',		 $units,
+				'dblcost',			$cost,
+				'dblmarkup',		$markup,
+				'dblPrice',		 $price,
 				'lngEquipmentindex', $$new{id},
 				] );
 	} # end while
@@ -418,13 +418,13 @@ sub delete {
 
 	delete $openprint::Object::cache{'openprint::Equipment'}{$$self{id}} if $openprint::Object::cache{'openprint::Equipment'};
 
-    my $ac = sql::start_transaction( $openprint::dbh );
-    sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
-    sql::execute( undef, undef, q{DELETE FROM tbl_Service_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
-    sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
-    sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
-    sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE lngIndex=?}, $$self{id} );
-    sql::end_transaction( $openprint::dbh, $ac );
+	my $ac = sql::start_transaction( $openprint::dbh );
+	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE lngIndex=?}, $$self{id} );
+	sql::end_transaction( $openprint::dbh, $ac );
 
 	openprint::logs::insertLogRecord('6', "Equipment Index: $$self{id} - " . $$self{name}, );
 } # end sub delete
@@ -461,13 +461,13 @@ if ( 0 ) {
 			$$param{'SMin'.$i} =~ s/[^\d\.]//g;
 			$$param{'SMax'.$i} =~ s/[^\d\.]//g;
 			sql::insert( undef, undef, 'tbl_Equipment_Specifications', [
-					'lngEquipmentIndex',    $$self{id},
-					'dblMin',               ( $$param{'SMin'.$1} ne '' ? $$param{'SMin'.$1} : undef ),
-					'dblMax',               ( $$param{'SMax'.$1} ne '' ? $$param{'SMax'.$1} : undef ),
-					'strUnits',             $$param{'SUnits'.$1},
-					'strName',              $$param{'SName'.$1},
-					'strValue',             $$param{'SValue'.$1},
-					'interpolate',          $$param{'i'.$1},
+					'lngEquipmentIndex',	$$self{id},
+					'dblMin',				( $$param{'SMin'.$1} ne '' ? $$param{'SMin'.$1} : undef ),
+					'dblMax',				( $$param{'SMax'.$1} ne '' ? $$param{'SMax'.$1} : undef ),
+					'strUnits',			 $$param{'SUnits'.$1},
+					'strName',				$$param{'SName'.$1},
+					'strValue',			 $$param{'SValue'.$1},
+					'interpolate',			$$param{'i'.$1},
 					] );
 		} # end if
 	} # end foreach
@@ -481,20 +481,20 @@ sub update_schedule {
 	my $self = shift;
 
 	if ( $openprint::config{'Smart Schedule'} ne 'Y' ) {
-		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
+		$openprint::log->debug("Not using Smart Schedule.	Not Updating Press Schedule");
 		return;
 	} # end if
 
-    $openprint::log->debug("Updating Press Schedule");
-    my ( $start_time ) = sql::execute( undef, undef, q{SELECT NOW()} );
-    $_ = q{SELECT DISTINCT ProjectIndex, ServiceIndex, StartTime FROM tbl_Projects, Schedule WHERE Equipment_id=? AND Index=ProjectIndex AND tbl_Projects.strStatus='Approved' ORDER BY StartTime};
-    my @data = sql::execute( undef, undef, $_, $$self{id} );
-    while ( my ( $project_index, $service_index, undef ) = splice @data, 0, 3 ) {
-        sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ServiceIndex=?', $$self{id}, $service_index],
-                'StartTime', $start_time
-                );
-        ( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ServiceIndex=?}, $service_index );
-    } # end while
+	$openprint::log->debug("Updating Press Schedule");
+	my ( $start_time ) = sql::execute( undef, undef, q{SELECT NOW()} );
+	$_ = q{SELECT DISTINCT ProjectIndex, ServiceIndex, StartTime FROM tbl_Projects, Schedule WHERE Equipment_id=? AND Index=ProjectIndex AND tbl_Projects.strStatus='Approved' ORDER BY StartTime};
+	my @data = sql::execute( undef, undef, $_, $$self{id} );
+	while ( my ( $project_index, $service_index, undef ) = splice @data, 0, 3 ) {
+		sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ServiceIndex=?', $$self{id}, $service_index],
+				'StartTime', $start_time
+				);
+		( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ServiceIndex=?}, $service_index );
+	} # end while
 
 } # end sub update_schedule
 
@@ -506,9 +506,9 @@ sub next {
 		$sql .= ' AND category=?';
 		push @values, $$params{category_id};
 	} # end if
-    my ($name) = sql::execute( undef, undef, $sql, @values );
+	my ($name) = sql::execute( undef, undef, $sql, @values );
 	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
-    return $_;
+	return $_;
 } # end sub next
 
 sub Next {
@@ -517,16 +517,16 @@ sub Next {
 } # end sub Next
 
 sub prev {
-    my ( $self, $params ) = shift;
+	my ( $self, $params ) = shift;
 	my $sql = q{SELECT max(strid) FROM tbl_Equipment WHERE strid < ?};
 	my @values = ($$self{'name'});
 	if ( $params and $$params{category_id} ) {
 		$sql .= ' AND category=?';
 		push @values, $$params{category_id};
 	} # end if
-    my ($name) = sql::execute( undef, undef, $sql, @values );
+	my ($name) = sql::execute( undef, undef, $sql, @values );
 	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
-    return $_;
+	return $_;
 } # end sub next
 
 sub Previous {

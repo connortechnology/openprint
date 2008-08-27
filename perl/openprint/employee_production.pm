@@ -763,7 +763,7 @@ sub barcode {
 	} # end foreach param
 
 	@openprint::param{'Order'} = sql::execute( $log, $dbh, q{SELECT  MAX(OrderIndex) FROM Order_Contents WHERE lngProjectIndex=?}, $openprint::param{'Project'} ) if ( ! $openprint::param{'Order'} ) and $openprint::param{'Project'};
-	my %operators = sql::execute( $log, $dbh, q{SELECT Index, strFirstName || ' ' || strLastName FROM Users WHERE chrType IN ('E','A')} );
+	my %operators = map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A']);
 
 	if ( $openprint::param{'Project'} or $openprint::param{'Action'} or $openprint::param{'Operator'} ) {
 		if ( ! $openprint::param{'Project'} ) {
