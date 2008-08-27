@@ -1,12 +1,14 @@
 DROP TABLE IF EXISTS CAR;
 CREATE TABLE CAR (
 	id serial NOT NULL,
-	issued_to_id	INTEGER NOT NULL, FOREIGN KEY (issued_to_id) REFERENCES Users (index),
+	issued_to_id	INTEGER, FOREIGN KEY (issued_to_id) REFERENCES Users (index),
 	issued_on	date not null default NOW(),
 	issued_by_id	INTEGER NOT NULL, FOREIGN KEY (issued_by_id) REFERENCES Users (index),
 	reply_by	date not null default NOW(),
 	docket			INTEGER,
 	company_id		INTEGER, FOREIGN KEY (company_id) REFERENCES Company (Index),
+	printed_on		date,
+	identified_by	text,
 	problem		text,
 	cause		text,
 	action		text,
@@ -22,6 +24,7 @@ CREATE TABLE CAR (
 	part4_signed_on	date,
 	reprint			text,
 	reprint_approval	text,
+	reprint_charge	text,
 	artwork			text,
 	reprint_on	date,
 	approved_by_id	INTEGER, FOREIGN KEY (approved_by_id) REFERENCES Users (index),
@@ -30,7 +33,24 @@ CREATE TABLE CAR (
 	created_on	timestamp with time zone NOT NULL default NOW(),
 	updated_on	timestamp with time zone NOT NULL default NOW(),
 	deleted		boolean default false,
-	area		TEXT,
-	reason		TEXT,
+	area_id		INTEGER, FOREIGN KEY (area_id) REFERENCES Car_Areas (id),
+	reason_id		INTEGER, FOREIGN KEY (reason_id) REFERENCES Car_Reasons (id),
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE CAR_Areas (
+	id	SERIAL NOT NULL,
+	name	TEXT NOT NULL,
+	assignee_id	INTEGER, FOREIGN KEY (assignee_id) REFERENCES Users (index),
+	deleted		BOOLEAN,
+	sorting		INTEGER,
+	PRIMARY KEY (id)
+);
+CREATE TABLE CAR_Reasons (
+	id	SERIAL NOT NULL,
+	area_id	INTEGER NOT NULL, FOREIGN KEY (area_id) REFERENCES CAR_Areas (id),
+	name	TEXT NOT NULL,
+	deleted		BOOLEAN,
+	sorting		INTEGER,
 	PRIMARY KEY (id)
 );

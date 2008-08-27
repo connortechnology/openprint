@@ -1,12 +1,13 @@
 <html>
 	<head>
-		<title><?SiteTitle?> - Quote</title>
+		<title><? echo ( $openprint::config{'SiteTitle'} ) ?> - Quote</title>
 		<style type="text/css">
 		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/email.css' ); ) ?>
 		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?>
 		</style>
 	</head>
 	<body>
+		<div id="Quote">
 		<table class="title">
 			<tr> 
 				<td align="left"><?ByCompanyName?> - Quote</td>
@@ -83,5 +84,6 @@ return $html;
 		</table>
 		<span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span><br/>
 		<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
+		</div>
 	</body>
 </html>

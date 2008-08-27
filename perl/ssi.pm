@@ -97,9 +97,9 @@ sub do_new_substitution {
 } # end sub do_new_substitution
 
 sub include {
-	my ( $file ) = @_;
+	my ( $file, $variable ) = @_;
 	my $blah = misc::load_file( $log, $file);
-	return variable_substitution( \$blah, \%variable );
+	return variable_substitution( \$blah, $variable );
 }
 
 sub do_include {
@@ -319,8 +319,8 @@ sub fix_date {
 	my ( $year, $month, $day ) = @_;
 	$month = int $month;
 	$month = 12 if ( $month > 12 );
-	$month = 1 if $month < 1;
-	if ( $year and $day > Days_in_Month( $year, $month ) ) {
+	$month = 1 if $month < 0;
+	if ( $year and $month and $day > Days_in_Month( $year, $month ) ) {
 		$day = Days_in_Month( $year, $month );
 	} # end if
 	return ( $year, $month, $day );

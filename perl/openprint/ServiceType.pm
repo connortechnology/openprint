@@ -3,8 +3,9 @@ package openprint::ServiceType;
 require openprint::Object;
 
 use strict;
+use vars qw( %fields );
 
-my %fields = (
+%fields = (
 	'name'				=> 'name',
 	'description'		=> 'description',
 	'url'				=> 'strdetailedurl',
@@ -15,16 +16,34 @@ my %fields = (
 	'view_visible'		=> 'view_visible',
 );
 
-my $debug = 1;
+my $debug = 0;
+
+my %cache;
+
+sub init_cache {
+	%cache = map { $_->name(), $_->id() } find();
+} # end sub init_cache
 
 sub find {
 	my %params = @_;
 	my @values;
 	my $sql = q{SELECT * FROM Service_Types WHERE 1>0};
-	if ( $params{'name'} ) {
+
+	if ( exists $params{'name'} ) {
+# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
+		if ( ( keys %params ) == 1 ) {
+			if ( %cache ) {
+				if ( exists $cache{$params{'name'}} ) {
+					return ( new openprint::ServiceType( $cache{$params{'name'}} ) );
+				} else {
+					return;
+				} # end if
+			} # end if
+		} # end if
 		$sql .= ' AND name=?';
 		push @values, $params{'name'};
 	} # end if
+
 	if ( $params{'category'} ) {
 		$sql .= ' AND category=?';
 		push @values, $params{'category'};

@@ -178,8 +178,8 @@ sub information {
 	} # end if
 
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
-	foreach my $key ( $r->param() ) {
-		if ( $key =~ /txtMarkup(\d+)_(\d+)/ ) {
+	foreach my $key ( keys %openprint::param ) {
+		if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
 			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $quote_id, $2],
 					'dblMarkup'.$1,         1*$r->param($key),
 					);
@@ -209,7 +209,7 @@ $openprint::log->debug("No for info");
 				my $Company = new openprint::Company( $openprint::session{'company_id'} );
 # pull information to pre-fill input fields
                 @$variable{'ForCompanyName', 'ForAddress1', 'ForAddress2', 'ForCity', 'ForStateProvince', 'ForPostalCode', 'ForCountry', 'ForPhone','ForExtension', 'ForFax' } = (
-				$Company->name(), $Company->address1(), $Company->address2(), $Company->city(), $Company->state(), $Company->postalcode(), $Company->country(), $Company->phone(), $Company->extension(), $Company->fax() );
+				$Company->business_name(), $Company->address1(), $Company->address2(), $Company->city(), $Company->state(), $Company->postalcode(), $Company->country(), $Company->phone(), $Company->extension(), $Company->fax() );
             } # end if
         } # end if
     } # end if
@@ -218,7 +218,7 @@ $openprint::log->debug("No for info");
         if ( $openprint::session{'user_id'} ) {
 # pull information to pre-fill input fields
 			my $Company = new openprint::Company( $cust_id );
-			@$variable{'ByCompanyName', 'ByAddress1', 'ByAddress2', 'ByCity', 'ByStateProvince', 'ByPostalCode', 'ByCountry', 'ByPhone', 'ByExtension', 'ByFax'} = $Company->get('name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
+			@$variable{'ByCompanyName', 'ByAddress1', 'ByAddress2', 'ByCity', 'ByStateProvince', 'ByPostalCode', 'ByCountry', 'ByPhone', 'ByExtension', 'ByFax'} = $Company->get('business_name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
 		} # end if
 	} # end if
 
@@ -259,6 +259,14 @@ sub submit {
         if ( $_ = openprint::quote::store_quote_info( $r, $log, $dbh, $quote_id, $variable ) ) {
             return misc::error( $log, $dbh, $variable, 'Error', $_ );
         } # end if
+# store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
+	foreach my $key ( keys %openprint::param ) {
+		if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
+			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $quote_id, $2],
+					'dblMarkup'.$1,         1*$r->param($key),
+					);
+		} # end if
+	} # end foreach
     } # end if
 
     if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) {

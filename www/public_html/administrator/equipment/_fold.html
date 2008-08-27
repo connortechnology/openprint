@@ -142,7 +142,7 @@
 				my $html = '';
 				my @specs = $$variable{'Fold'}->Specifications();
 				while ( $$variable{'Specification'} = shift @specs ) {
-					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/equipment/_fold_specification.html');
+					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/equipment/_fold_specification.html', $variable );
 				} # end while
 				return $html;
 			) ?>

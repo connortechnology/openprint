@@ -10,4 +10,10 @@
 </label>
 	<input name="txtItemsPerPackage" value="<?txtItemsPerPackage?>" type="text" onkeyup="calc(this.form.name);" size="4" />
 </p>
-
+<p>
+	<label>Accurate count:</label>
+	<input type="radio" name="AccurateCount" id="AccurateCountY" value="Y" <? echo ( $$variable{'AccurateCount'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="AccurateCountY">Yes</label>
+	<input type="radio" name="AccurateCount" id="AccurateCountN" value="N" <? echo ( $$variable{'AccurateCount'} eq 'N' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="AccurateCountN">No</label>
+</p>

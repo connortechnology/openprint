@@ -26,28 +26,17 @@
 		$('ProjectList').innerHTML = 'Please wait...';
 		new Ajax.Updater('ProjectList','/main/project/_project_list.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
-	function initializeDayDropDowns() {
-		if ( typeof(setDaysDropDown) == 'function' ) {
-			setDaysDropDown(document.f1.CreatedStartYear.value,document.f1.CreatedStartMonth.value,document.f1.CreatedStartDay,document.f1.CreatedStartDay.value);
-			setDaysDropDown(document.f1.CreatedEndYear.value,document.f1.CreatedEndMonth.value,document.f1.CreatedEndDay,document.f1.CreatedEndDay.value);
-			setDaysDropDown(document.f1.UpdatedStartYear.value,document.f1.UpdatedStartMonth.value,document.f1.UpdatedStartDay,document.f1.UpdatedStartDay.value);
-			setDaysDropDown(document.f1.UpdatedEndYear.value,document.f1.UpdatedEndMonth.value,document.f1.UpdatedEndDay,document.f1.UpdatedEndDay.value);
-		} // end if
-	}
-	
-	if ( typeof(initializeDayDropDowns) ) 
-		window.onload = initializeDayDropDowns;
 -->
 </script>	 
-<? if ( $openprint::session{'user_id'} ) ?>
-<form name="f1" method="post" action="/main/project/history.html">
+<? if ( $session{'user_id'} ) ?>
+<form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="ProjectHistory">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 			<div style="float: left; width: 48%;">
 			<p>
 				<label>Project #:</label>
 				<input type="text" name="ProjectID" size="6" onkeydown="if(event.keyCode == 13){load_projects( this.form );}"/>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_projects( this.form );", '', 'Go' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_projects( \$('f1') );", '', 'Go' ); ) ?>
 			</p>
 			<p>
 				<label>Reference:</label>
@@ -59,31 +48,31 @@
 					<option value="">All</option>
 <? echo ( 
 		$_ = q{SELECT name, name FROM Project_Statuses WHERE name != 'Deleted' ORDER BY sort,lower(name)};
-		ssi::make_drop_down( [sql::execute( $log, $dbh, $_ )], $openprint::session{'/main/project/history.html?ddmStatus'} );
+		ssi::make_drop_down( [sql::execute( $log, $dbh, $_ )], $session{'/main/project/history.html?ddmStatus'} );
 ) ?>
 				</select>
 			</p>
 <? eval (
-	if ( ( ! @openprint::session{'/main/project/history.html?CreatedStartYear'} ) or ( time - $openprint::session{'/main/project/history.html?lastupdated'} > 3600 ) ) {
-		@openprint::session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 );
-		@openprint::session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} = Date::Calc::Today();
+	if ( ( ! $session{'/main/project/history.html?CreatedStartYear'} ) or ( time - $session{'/main/project/history.html?lastupdated'} > 3600 ) ) {
+		@session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 );
+		@session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} = Date::Calc::Today();
 	} else {
-		@openprint::session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} = ssi::fix_date( @openprint::session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} );
-		@openprint::session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} = ssi::fix_date( @openprint::session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} );
+		@session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} = ssi::fix_date( @session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} );
+		@session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} = ssi::fix_date( @session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} );
 	} # end if
-	if ( ( ! @openprint::session{'/main/project/history.html?UpdatedStartYear'} ) or ( time - $openprint::session{'/main/project/history.html?lastupdated'} > 3600 ) ) {
-		@openprint::session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -14 );
-		@openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} = Date::Calc::Today();
+	if ( ( ! $session{'/main/project/history.html?UpdatedStartYear'} ) or ( time - $session{'/main/project/history.html?lastupdated'} > 3600 ) ) {
+		@session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -14 );
+		@session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} = Date::Calc::Today();
 	} else {
-		@openprint::session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} = ssi::fix_date( @openprint::session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} );
-		@openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} = ssi::fix_date( @openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} );
+		@session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} = ssi::fix_date( @session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} );
+		@session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} = ssi::fix_date( @session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} );
 	} # end if
 
-    @$variable{'CreatedStartYears','CreatedStartMonths','CreatedStartDays'} = ssi::get_dates( $log, $dbh, @openprint::session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} );
-	@$variable{'CreatedEndYears','CreatedEndMonths','CreatedEndDays'} = ssi::get_dates( $log, $dbh, @openprint::session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} );
+    @$variable{'CreatedStartYears','CreatedStartMonths','CreatedStartDays'} = ssi::get_dates( $log, $dbh, @session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} );
+	@$variable{'CreatedEndYears','CreatedEndMonths','CreatedEndDays'} = ssi::get_dates( $log, $dbh, @session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} );
 
-    @$variable{'UpdatedStartYears','UpdatedStartMonths','UpdatedStartDays'} = ssi::get_dates( $log, $dbh, @openprint::session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} );
-	@$variable{'UpdatedEndYears','UpdatedEndMonths','UpdatedEndDays'} = ssi::get_dates( $log, $dbh, @openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} );
+    @$variable{'UpdatedStartYears','UpdatedStartMonths','UpdatedStartDays'} = ssi::get_dates( $log, $dbh, @session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} );
+	@$variable{'UpdatedEndYears','UpdatedEndMonths','UpdatedEndDays'} = ssi::get_dates( $log, $dbh, @session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} );
 ) ?>
 			</div>
 			<div style="float: left; width: 50%;">
@@ -120,6 +109,6 @@
 	</div>
 		<div id="ProjectList"><!--#include virtual="_project_list.html"--></div>
 	</form>
-<? else ( $openprint::session{'user_id'} ) ?>
+<? else ( $session{'user_id'} ) ?>
 	Only logged in customers have a project history.
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>

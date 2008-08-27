@@ -84,8 +84,8 @@ sub AUTOLOAD {
 
 sub display {
 	my $self = shift;
-	$openprint::log->debug(sprintf('Imp: %dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s',
-	@$self{'start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'}) );
+	$openprint::log->debug(sprintf('Imp: %dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s',
+	@$self{'start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'}) );
 } # end sub display
 
 sub set {
@@ -193,8 +193,8 @@ sub load {
 		$$self{'spreads'} = $$specs{'PageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
 		$$self{'spread_rows'} = $$specs{'SpreadRows'.$qty_index};
 		$$self{'spread_columns'} = $$specs{'SpreadCols'.$qty_index};
-		$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
-		$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
+		#$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
+		#$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
 		$$self{'spread_size'} = $$specs{'txtSpreadSize'};
 		#$$self{'image_width'} = $$self{'spread_columns'} * $$self{'image_width'};
 		#$$self{'image_height'} = $$self{'spread_rows'} * $$self{'image_height'};
@@ -232,16 +232,22 @@ sub save {
 
 sub used_width {
 	my $self = shift;
-	return $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'} + ( $$self{'colour_bar_orientation'} eq 'Length' ? $$self{'colour_bar_size'} : 0 );
+	my $width = $$self{'layout_width'} + $$self{'gutters'} + $$self{'cropmark_left'} + $$self{'cropmark_right'} + ( $$self{'colour_bar_orientation'} eq 'Length' ? $$self{'colour_bar_size'} : 0 );
+	if ( ($$self{runstyle} eq 'Perfecting' ) and $$self{Press} and $$self{paper} ) {
+		if ( $$self{paper}->perfecting() ne 'Y' ) {
+			if ( $$self{columns} % 2 ) {
+			$width += $$self{Press}->specification('Perfecting Double Gutter Size') - $$self{Press}->specification('Perfecting Single Gutter Size');
+			} # end if
+		} # end if
+	} # end if
+	return $width;
 }
 sub used_height {
     my $self = shift;
-    return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'} + ( $$self{'colour_bar_orientation'} eq 'Width' ? $$self{'colour_bar_size'} : 0 );
-}
-sub used_height {
-	my $self = shift;
-	return $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'};
-}
+	my $height = $$self{'layout_height'} + $$self{'grip'} + $$self{'cropmark_top'} + $$self{'cropmark_bottom'} + ( $$self{'colour_bar_orientation'} eq 'Width' ? $$self{'colour_bar_size'} : 0 );
+#$openprint::log->warn("Height: $height");
+    return $height;
+} # end sub used_height
 
 sub object_area {
 	my $self = shift;

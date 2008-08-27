@@ -1,0 +1,56 @@
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<? if ( $$variable{'information'} ) ?>
+<p class="information"><?information?></p>
+<hr/>
+<? endif ( $$variable{'information'} ) ?>
+Please select an RFID Scanner to view/edit.<br/>
+<form name="f1" method="post" action="rfidscanner_details.html">
+	<fieldset class="filters"><legend>Choose RFID Scanner</legend>
+		<p>
+			<label for="rfidscanner_id">RFID Scanner ID #</label>
+			<input type="text" id="rfidscanner_id" name="rfidscanner_id" size="10" onkeypress="return input_handler( this, event);"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form name="f2" method="post" action="rfid_scanners.html">
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<p>
+			<label>Date Added:</label>
+			<span class="DateSelector">
+			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfid_scanners.html?StartYear'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?StartYear'} : ''); ) ?></select>
+			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfid_scanners.html?StartMonth'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?StartMonth'} : ''); ) ?></select>
+			<select name="StartDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfid_scanners.html?StartDay'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?StartDay'} : ''); ) ?></select>
+			to 
+			</span>
+			<span class="DateSelector">
+			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfid_scanners.html?EndYear'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?EndYear'} : ''); ) ?></select>
+			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfid_scanners.html?EndMonth'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?EndMonth'} : ''); ) ?></select>
+			<select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfid_scanners.html?EndDay'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?EndDay'} : ''); ) ?></select>
+			</span>
+		</p>
+		<p>
+			<label>Last Updated:</label>
+			<span class="DateSelector">
+			<select name="UpdatedStartYear" onchange="setDaysDropDown(this.value,this.form.UpdatedStartMonth.value,this.form.UpdatedStartDay, this.form.UpdatedStartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedStartYear'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedStartYear'} : ''); ) ?></select>
+			<select name="UpdatedStartMonth" onchange="setDaysDropDown(this.form.UpdatedStartYear.value,this.value,this.form.UpdatedStartDay,this.form.UpdatedStartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedStartMonth'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedStartMonth'} : ''); ) ?></select>
+			<select name="UpdatedStartDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedStartDay'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedStartDay'} : ''); ) ?></select>
+			to 
+			</span>
+			<span class="DateSelector">
+			<select name="UpdatedEndYear" onchange="setDaysDropDown(this.value,this.form.UpdatedEndMonth.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedEndYear'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedEndYear'} : 1); ) ?></select>
+			<select name="UpdatedEndMonth" onchange="setDaysDropDown(this.form.UpdatedEndYear.value,this.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedEndMonth'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedEndMonth'} : ''); ) ?></select>
+			<select name="UpdatedEndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedEndDay'} ? $openprint::session{'/employee/inventory/rfid_scanners.html?UpdatedEndDay'} : ''); ) ?></select>
+			</span>
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_rfidscanners_results.html', Serialize( document.forms.f2 ) );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'rfidscanner_details.html', 'Add New RFID Scanner' ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<div id="Results"><!--#include virtual="_rfidscanners_results.html"--></div>
+<script type="text/javascript">document.f1.rfidscanner_id.focus();</script>

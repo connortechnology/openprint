@@ -1,4 +1,3 @@
-<link href="/css/quote.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
 	function company_onchange( e ) {
 		new Ajax.Request( '_company_information.json', { method: 'get', parameters: { company_id: e.value }, onSUccess: function(response){fill_form_from_xml($('f1'), response.responseXML);} } );
@@ -291,7 +290,7 @@
 			<tr<?rowclass?>> 
 				<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?>&nbsp;</a></td>
 				<td align="center"> 
-					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6" value="<?markup?>" onkeyup="calc_from_markup(f1, this);"/>
+					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
 				</td>
 				<td align="right"><?qty?></td>
 				<td align="right"> 

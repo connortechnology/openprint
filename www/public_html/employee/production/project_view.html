@@ -186,7 +186,7 @@ function open_window( page ) {
 <div class="leftColumn">
 <fieldset><legend>Inventory</legend>
 <table class="List">
-    <tr><th align="left">Stock</th><th align="right" width="100">Required</th><th align="right" width="100">Allocated</th><th align="right" width="100">Checked Out</th></tr>
+    <tr><th align="left">Stock</th><th align="right" width="100">Required</th></tr>
     <? echo (
         my $html;
         my %Papers;
@@ -197,12 +197,12 @@ function open_window( page ) {
         } # end foreach
         foreach my $paper_id ( keys %Papers ) {
             my $Paper = new openprint::Paper( $paper_id );
-            $html .= sprintf('<tr><td>%1$s</td><td align="right">%2$d%5$s</td><td align="right">%3$d%5$s</td><td align="right">%4$d%5$s</td></tr>', $Paper->to_string(), $Papers{$paper_id}, 0, 0, $Paper->type() eq 'Roll' ? 'lbs':'sheets' );
+            $html .= sprintf('<tr><td>%1$s</td><td align="right">%2$d%3$s</td></tr>', $Paper->to_string(), $Papers{$paper_id}, $Paper->type() eq 'Roll' ? 'lbs':'sheets' );
         } # end foreach
         return $html;
     ) ?>
-</table>
-</fieldset>
+	</table>
+	</fieldset>
 </div>
 <div class="rightColumn">
 	<form name="LabelForm" id="LabelForm" method="post" action="/employee/production/labels/label.html">
@@ -213,10 +213,41 @@ function open_window( page ) {
 	</form>
 </div>
 <br class="spacer"/>
+<fieldset><legend>Allocated</legend>
+	<table class="List">
+		<tr><th align="left">Stock</th><th align="left" width="80">Skid</th><th align="left" width="120">RFIDTAG</th>
+<th align="left" width="120">Location</th>
+<th align="right" width="80">Allocated</th>
+		</tr>
+		<? echo (
+			require openprint::PaperAllocation;
+			my $html = '';
+			my %Allocations;
+
+			foreach my $Allocation ( openprint::PaperAllocation::find('project_id'=>$$variable{'Project'}->id(), 'order'=>'created_on' ) ) {
+				push @{$Allocations{$Allocation->paper_id()}}, $Allocation;
+			} # end foreach Allocation
+			foreach my $paper_id ( keys %Allocations ) {
+				my $Paper = new openprint::Paper( $paper_id );
+				my $total = 0;
+
+				$html .= sprintf('<tr><td colspan="5"><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td></tr>', $Paper->id(), $Paper->to_string() );
+				foreach my $Allocation ( @{$Allocations{$paper_id}} ) {
+					my $Skid = $Allocation->Skid();
+					$total += $Allocation->quantity();
+					$html .= sprintf( '<tr><td>&nbsp;</td><td>%3$d</td><td>%4$s</td><td>%5$s</td>', $Allocation->paper_id(), $Allocation->Paper()->to_string(), $Skid->id(), $Skid->rfidtag_id(), $Skid->Location()->name() );
+				$html .= sprintf( '<td>%1$d%2$s</td></tr>', $Allocation->quantity(), $Allocation->units() );
+				} # end foreach
+				$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td>'.$total . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
+			} # end foreach
+			return $html;
+		) ?>
+	</table>
+</fieldset>
+<br class="spacer"/>
 <fieldset><legend>Modification History</legend>
 	<table class="List">
 	<tr>
-	<th align="left" width="200">Customer</th>
 	<th align="left" width="200">User</th>
 	<th align="left" width="150">When</th>
 	<th align="left">Description</th>
@@ -227,7 +258,6 @@ function open_window( page ) {
 	) ?>
 	<? while ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{'ProjectLog'}},0,4; ) ?>
 	<tr<?rowclass?>>
-	<td><? echo ( new openprint::Company( $$variable{'CustomerIndex'} )->name(); ) ?></td>
 	<td><? echo ( new openprint::User( $$variable{'UserIndex'} )->name(); ) ?></td>
 	<td width="150"><?When?></td>
 	<td><? echo ( $$variable{'Description'} ) ?></td>

@@ -8,7 +8,7 @@ function loadPaper( formName, PurchaseOrderIndex, PaperIndex ) {
 function body_onLoad(formName) {
 	if ( ! formName ) formName = 'f1';
 	var form = document.forms[formName];
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form,'','') );
+	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form) );
 } // end function body_onLoad();
 
 function get_parameters( form ) {

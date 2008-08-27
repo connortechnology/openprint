@@ -11,6 +11,10 @@ sub find {
 	my $sql = 'SELECT * FROM PaperQualities WHERE 1>0';
 	my @values;
 
+	if ( $params{'shortname'} ) {
+		$sql .= ' AND shortname=?';
+		push @values, $params{'shortname'};
+	} # end if
 	if ( $params{'papers'} ) {
 		$sql .= ' AND id IN (?)';
 		push @values, [map { $_->name_id(); } @{$params{'papers'}}];
@@ -62,6 +66,10 @@ sub copy {
 	$$new{'id'} = undef;
 	return $new;
 } # end sub
+
+sub name {
+	return $_[0]{'shortname'};
+} # end sub name
 
 1;
 

@@ -144,6 +144,8 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'User already exists.', "There is already a user with the specified email address.  Please try another.");
 		} # end if
 
+		#$openprint::param{'assistant_ids'} = '' if ! exists $openprint::param{'assistant_ids'};
+		#$openprint::param{'csr_ids'} = '' if ! exists $openprint::param{'csr_ids'};
 		my $error = $User->save( \%openprint::param );
 
 		if ( $error ) {
@@ -156,6 +158,17 @@ sub user_profiles {
 			} else {
 				email::stop_vacation( $r, $log, $User->email() );
 			} # end if
+			if ( $openprint::param{'EmailPassword'} and $openprint::param{'EmailPassword'} eq $openprint::param{'VerifyEmailPassword'} ) {
+                email::set_password( $r, $log, @openprint::param{'email','EmailPassword'} );
+            } # end if
+            my @aliases = ();
+            foreach my $alias ( split "\r\n", $openprint::param{'aliases'} ) {
+                next if ! $alias;
+                push @aliases, $alias;
+            } # end foreach
+			push @aliases, $User->email() if ! @aliases;
+            email::aliases( $log, $User->email(), @aliases );
+
 			$sql::dbh = $dbh;
         } # end if
 
@@ -177,6 +190,24 @@ sub user_profiles {
 				sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $user_id ] );
 			} # end foreach
 		} # end if
+
+		foreach my $service_default_id ( sql::execute( undef, undef, 'SELECT id FROM User_Service_Defaults WHERE user_id=?', $user_id ) ) {
+			if ( 'name'=>$openprint::param{'name-'.$service_default_id} ) {
+			sql::update( undef, undef, 'User_Service_Defaults', ['id=?'=>$service_default_id], {
+					'servicetype_id'=>$openprint::param{'servicetype_id-'.$service_default_id} ? $openprint::param{'servicetype_id-'.$service_default_id} : undef,
+					'name'=>$openprint::param{'name-'.$service_default_id},
+					'value'=>$openprint::param{'value-'.$service_default_id}
+					});
+			} else {
+				sql::execute( undef, undef, 'DELETE FROM User_Service_Defaults WHERE id=?', $service_default_id );
+			} # end if
+		} # end foreach
+		sql::insert( undef, undef, 'User_Service_Defaults', {
+'user_id'=>$user_id,
+'servicetype_id'=>$openprint::param{'servicetype_id-'} ? $openprint::param{'servicetype_id-'} : undef,
+'name'=>$openprint::param{'name-'},
+'value'=>$openprint::param{'value-'} 
+} );
 
 		$$variable{'information'} = "Record saved successfully.";
 	} # end if btnFunction
@@ -211,6 +242,7 @@ sub user_profiles {
 
 	if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 		@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
+		@{$$variable{'Aliases'}} = email::aliases( $log, $User->email() );
 		$sql::dbh = $dbh;
 	} # end if
 

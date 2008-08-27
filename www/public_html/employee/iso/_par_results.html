@@ -1,6 +1,6 @@
 <? eval (
    if ( $openprint::param{StartYear} ) {
-		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
+		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','status' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 				$openprint::session{'/employee/iso/pars.html?'.$key} = join(';', @{$openprint::param{$key}} );
 			} else {
@@ -31,19 +31,25 @@
 <form id="PARResults" name="PARResults" action="pars.html" method="post">
 	<table class="List">
 		<tr>
+<!--
 			<th width="30" class="unprintable"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f1);" /></th>
+-->
 			<th align="left" width="75">PAR ID</th>
 			<th align="left" width="75">Issued On</th>
+			<th align="left" width="60">Status</th>
 			<th align="left">Problem</th>
 		</tr>
 		<? echo (
 			my $html;
 			my $rowclass;
 			foreach my $PAR ( @{$$variable{'PARs'}} ) {
+				next if $PAR->part4_signed_on() and ! sets::isin( 'Closed', split(';', $openprint::session{'/employee/iso/pars.html?status'} ) );
+				next if (!$PAR->part4_signed_on()) and ! sets::isin( 'Open', split(';', $openprint::session{'/employee/iso/pars.html?status'} ) );
 				$html .= "<tr$rowclass>";
-				$html .= sprintf( '<td class="unprintable"><input type="checkbox" name="pars" value="%d"/></td>', $$PAR{'id'} );
+				#$html .= sprintf( '<td class="unprintable"><input type="checkbox" name="pars" value="%d"/></td>', $$PAR{'id'} );
 				$html .= sprintf( '<td><a href="par.html?par_id=%d">%d</a></td>', $$PAR{'id'}, $$PAR{'id'}, );
 				$html .= sprintf( '<td><a href="par.html?par_id=%d">%s</a></td>', $$PAR{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($PAR->issued_on()) ), );
+				$html .= '<td>'. ( $PAR->part4_signed_on() ? 'Closed' : 'Open' ). '</td>';
 				$html .= '<td>';
 				$html .= $PAR->problem();
 				$html .= '</td>';	
@@ -55,9 +61,11 @@
 	</table>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<!--
 <span class="unprintable" style="float: left;">
 <? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.PARResults);",'','Delete Checked' ); ) ?>
 </span>
+-->
 <? else ( @{$$variable{'PARs'}} ) ?>
 There were no PARs matching your search criteria.
 <? endif ( @{$$variable{'PARs'}} ) ?>

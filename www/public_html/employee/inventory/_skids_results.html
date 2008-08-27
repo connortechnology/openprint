@@ -1,7 +1,7 @@
 <? eval (
 	require openprint::StockPurpose;
    if ( $openprint::param{StartYear} ) {
-		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','purpose_id' ) {
+		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','purpose_id','withrfid','withoutrfid','location_id' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 				$openprint::session{'/employee/inventory/skids.html?'.$key} = join(';', @{$openprint::param{$key}} );
 			} else {
@@ -14,6 +14,12 @@
 		@openprint::session{'/employee/inventory/skids.html?EndYear','/employee/inventory/skids.html?EndMonth','/employee/inventory/skids.html?EndDay'} = Date::Calc::Today();
 		@openprint::session{'/employee/inventory/skids.html?StartYear','/employee/inventory/skids.html?StartMonth','/employee/inventory/skids.html?StartDay'} = Date::Calc::Today();
 	} # end if
+	if ( $openprint::session{'/employee/inventory/skids.html?Docket'} ) {
+	@{$$variable{'Skids'}} = openprint::Skid::find( 
+		'allocated_to_docket'	=>	$openprint::session{'/employee/inventory/skids.html?Docket'},
+		'order'		=>	'id',
+		);
+	} else {
 	@{$$variable{'Skids'}} = openprint::Skid::find( 
 		'owner_id'	=>	( defined $openprint::session{'/employee/inventory/skids.html?Owner'} ? $openprint::session{'/employee/inventory/skids.html?Owner'} : undef ),
 		'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
@@ -38,23 +44,24 @@
 			'/employee/inventory/skids.html?UpdatedEndYear',
 			'/employee/inventory/skids.html?UpdatedEndMonth',
 			'/employee/inventory/skids.html?UpdatedEndDay'} ) : undef,
-		'allocated_to_docket'	=>	$openprint::session{'/employee/inventory/skids.html?Docket'},
 		'fsc_code'				=>	$openprint::session{'/employee/inventory/skids.html?fsc_code'},
 		'purpose_id'			=>	$openprint::session{'/employee/inventory/skids.html?purpose_id'},
 		'order'		=>	'id',
 		);
+	} # end if
 ) ?>
 <? if ( @{$$variable{'Skids'}} ) ?>
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">
 	<table class="List">
 		<tr>
+			<th width="20"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
 			<th align="left" width="75">Skid ID</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
+			<th align="left" width="115">RFIDTag</th>
 			<th align="left" width="100">Location</th>
 			<th align="left" width="140">Dockets</th>
 			<th align="left">Contents</th>
-			<th width="20"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
 		</tr>
 		<? echo (
 			my $html;
@@ -79,15 +86,22 @@
                 } # end if
                 next if ! $iftype;
 
+				next if $Skid->rfidtag_id() and ! $openprint::session{'/employee/inventory/skids.html?withrfid'};
+				next if ( ! $Skid->rfidtag_id() ) and ! $openprint::session{'/employee/inventory/skids.html?withoutrfid'};
+
+				next if $openprint::session{'/employee/inventory/skids.html?location_id'} and ( $Skid->location_id() != $openprint::session{'/employee/inventory/skids.html?location_id'} );
+
 				$html .= "<tr$rowclass>";
+				$html .= qq`<td><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->created_on()) ), );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->updated_on()) ), );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->location(),);
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'rfidtag_id'} );
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->Location()->name() );
 
 				$html .= '<td>';
 				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), paper_id, quantity FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $$Skid{'id'} );
-				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 5 ) {
+				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 4 ) {
 					my $Paper = new openprint::Paper( $paper_id );
 					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%d - %d %s</a><br/>',
 					$$Skid{'id'},
@@ -109,7 +123,6 @@
 					);
 				} # end foreach
 				$html .= '</td>';	
-				$html .= qq`<td><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid

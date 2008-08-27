@@ -49,7 +49,7 @@
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 	<p>
-		<label>Supplied press sheet size:</label>
+		<label>Supplied sheet size:</label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -62,7 +62,7 @@
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 	<p>
-		<label>Running press sheet size:</label>
+		<label>Running sheet size:</label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -170,35 +170,8 @@
 </fieldset>
 <? endwhile ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
 <fieldset>
-	<p> 
-		<label><b>Unit Price (<?CurrencySymbol?>):</b></label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-		<input name="txtUnitPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p> 
-		<label><b>Service Price (<?CurrencySymbol?>):</b></label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ); ) ?>
-		<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" onchange="calc(this.form.name);" />
-		<input type="checkbox" name="OverridePrice<?QTYIndex?>" value="Y" <? echo ( $$variable{'OverridePrice'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?>
-<? else ( sets::isin( $session{'user_type'}, ['A','E'] ); ) ?>
-		<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" readonly="readonly" onfocus="this.blur();" />
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ); ) ?>
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
+	<!--#include virtual="/includes/main/proj/_unit_price.html"-->
+	<!--#include virtual="/includes/main/proj/_service_price.html"-->
 	<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 	<p><label>&nbsp;</label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>

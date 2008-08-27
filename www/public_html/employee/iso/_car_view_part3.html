@@ -2,14 +2,6 @@
 <h3>Part 3 (To be completed by recipient)</h3>
 <table class="View">
 	<tr><td colspan="10">CORRECTIVE ACTION</td></tr>
-<? if ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
-	<tr>
-		<td colspan="2">Reprint Approval:</td>
-		<td colspan="3"><? echo ( $$variable{'CAR'}->reprint_approval() ) ?></td>
-		<td colspan="2">Approved by:</td>
-		<td colspan="3"><? hecho ( new openprint::User( $$variable{'CAR'}->approved_by_id())->name() ) ?></td>
-	</tr>
-<? endif ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
 	<tr><td colspan="10"><? hecho ( $$variable{'CAR'}->action() ) ?></td></tr>
 	<tr>
 		<td colspan="1">Recipient:</td>
@@ -18,11 +10,11 @@
 		<td colspan="4"><? hecho ( $$variable{'CAR'}->part3_signed_on() ) ?></td>
 	</tr>
 </table>
-<? if ( ($$variable{'CAR'}->part2_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<? if ( ($$variable{'CAR'}->issued_to_id() == $openprint::session{'user_id'} ) or ($$variable{'CAR'}->part3_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart3', 'edit.gif', sprintf(q`new Ajax.Updater('Part3', '_car_edit_part3.html', { method: 'get', parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), '', 'Edit' ); ) ?>.
 	</p>
-<? endif ( ($$variable{'CAR'}->part2_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<? endif ( ($$variable{'CAR'}->issued_to_id() == $openprint::session{'user_id'} ) or ($$variable{'CAR'}->part3_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <? if ( ( ! $$variable{'CAR'}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <script type="text/javascript">
 	new Ajax.Updater( 'Part4', '_car_edit_part4.html', { method: 'get', parameters: {car_id:<? echo ( $$variable{'CAR'}->id() ) ?>} } );

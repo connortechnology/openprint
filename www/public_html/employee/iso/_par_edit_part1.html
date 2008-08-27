@@ -49,24 +49,14 @@
             <select name="reply_by_day"><?reply_by_days?></select>
 		</td>
 	</tr>
-	<tr><td colspan="10">PROBLEM/NONCONFORMANCE DESCRIPTION</td></tr>
+	<tr><td colspan="10">POTENTIAL PROBLEM / NONCONFORMANCE / OPPORTUNITY FOR IMPROVEMENT</td></tr>
 	<tr>
 		<td colspan="1">Area:</td>
-		<td colspan="4">
+		<td colspan="9">
 			<select name="area">
 				<option value="">select</option>
 				<? echo (
 					my @options = ( 'SALES/CUSTOMER SERVICE','PURCHASING','RECEIVING','PREPRESS','CTP','PRINTING','BINDERY','ADMINISTRATION','PACKING/SHIPPING','SUPPLIER','OTHER' );
-					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'PAR'}->area() );
-				) ?>
-			</select>
-		</td>
-		<td colspan="1">Reason:</td>
-		<td colspan="4">
-			<select name="reason">
-				<option value="">select</option>
-				<? echo (
-					my @options = ( 'INCORRECT SALES ORDER','WRONG QUANTITY','SHIPPING/RECEIVING ERROR','CUTTING ERROR','HICKEYS/SCRATCHES','WRONG STOCK','MISC PREPRESS ERROR','OFFSET/PRINT ERROR','FOLDING ERROR','STAFF PERFORMANCE','COLOUR PROBLEMS','DAMAGE','PLATE ERROR','MISSING IMAGE/TEXT','SLOW RESPONSE TO RFQs','DOCKET ERROR','IMPO ERROR','MISC BINDERY ERROR','NOT REGISTERED(PRESS)','SUB STANDARD STOCK','WRONG ITEM','WRONG QUANTITY','INCORRECT DIMENSIONS','POOR QUALITY','SHELF LIFE','WRONG COLOUR','WRONG BATCH','CONTAMINATION','LATTE DELIVERY','INVOICE ISSUE','INTERNAL AUDIT','EXTERNAL AUDIT','OTHER');
 					return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'PAR'}->area() );
 				) ?>
 			</select>

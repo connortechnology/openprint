@@ -51,7 +51,7 @@ sub find {
 			$openprint::log->debug( $sql . join(',',@values) . ':' . @$data );
 		} # end if
 		
-		return map { new openprint::MaterialSpecification( $_->{lngindex}, $_ ) } @$data;
+		return map { new openprint::MaterialSpecification( $_->{id}, $_ ) } @$data;
 	} # end if
 } # end sub find
 
@@ -63,6 +63,43 @@ sub load {
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
 
+sub save {
+    my ( $self, $hash ) = @_;
+
+    if ( $hash ) {
+        $self->set( $hash );
+    } # end if
+
+    my $ac = sql::start_transaction( $openprint::dbh );
+    if ( ! $$self{'id'} ) {
+        @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('materialspecification_id_seq')} );
+
+        if ( my $error = sql::insert( undef, undef, 'Material_Specifications', [map { $_, $$self{$_} } keys %fields ] ) ) {
+            $$self{'id'} = undef;
+            sql::end_transaction( $openprint::dbh, $ac );
+            return $error;
+        } # end if
+
+    } else {
+        if ( my $error = sql::update( undef, undef, 'Material_Specifications', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
+            sql::end_transaction( $openprint::dbh, $ac );
+            return $error;
+        } # end if
+    } # end if
+
+    sql::end_transaction( $openprint::dbh, $ac );
+    $self->load();
+    return;
+} # end sub save
+
+
+sub copy {
+	my ( $self ) = @_;
+	my $new = new openprint::MaterialSpecification();
+	@$new{keys %fields} = @$self{keys %fields};
+	delete $$new{id};
+	return $new;
+} # end sub copy
 
 1;
 __END__

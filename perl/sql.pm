@@ -139,7 +139,7 @@ sub update {
 	$d = $dbh if ! $d;
 
 	my $starttime = [gettimeofday];
-	my %commands;
+	my %commands = ();
 	if ( @_ == 1 ) {
 		my $data = shift;
 		if ( ref $data eq 'HASH' ) {
@@ -157,15 +157,13 @@ sub update {
 		push @columns, "$column = ?";
 	} # end foreach
 	$command .= join( ',', @columns );
-	my @conditions;
+	my @conditions = ();
 	if ( ref $condition eq 'ARRAY' ) {
 		@conditions = @$condition;
 		$command .= ' WHERE ' . shift @conditions;
 	} else {
 		$command .= " WHERE $condition";
 	} # end if
-	my $print_command = $command;
-	$print_command =~ s/\?/\%s/g;
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
 		$log->error( "Error Preparing SQL Statement: ($command):" . $d->errstr ) if $log;
@@ -175,7 +173,16 @@ sub update {
 		$log->error("SQL statement execution failed: ($command):" . $d->errstr) if $log;
 		return $d->errstr;
 	} # end if
-	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, sprintf($print_command, values %commands, @conditions ) ) ) if $log;
+	
+	if ( $log ) {
+		my $print_command;
+		if ( $command and %commands and @conditions ) {
+			$command =~ s/\?/\%s/g;
+			$print_command = sprintf($command, values %commands, @conditions );
+		} # end if
+		$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, $print_command ) );
+	} # end if
+
 	return;
 } # end sub update
 

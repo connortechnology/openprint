@@ -57,7 +57,7 @@ function set_rdb_value( rdb, value ) {
 
 function get_rdb_value( rdb ) {
 	if ( ! rdb ) {
-		alert( "Radio button not found: " + rdbName );
+		alert( "Radio button not found");
 	} else {
 		for ( var x = 0; x < rdb.length; x ++ ) {
 			if ( rdb[x].checked == true ) {
@@ -114,15 +114,15 @@ function create_option( value, text ) {
 
 function sort_ddm(ddm) {
 	var selectedValue = ddm.value;
-    var copyOption = new Array();
-    for (var i=0;i<ddm.options.length;i+=1)
-        copyOption[i] = new Array(ddm.options[i].value,ddm.options[i].text, ddm.options[i]);
+	var copyOption = new Array();
+	for (var i=0;i<ddm.options.length;i+=1)
+		copyOption[i] = new Array(ddm.options[i].value,ddm.options[i].text, ddm.options[i]);
 
-    copyOption.sort(function(a,b) { return a[0]!=b[0] ? a[0]<b[0] ? -1 : 1 : 0; });
+	copyOption.sort(function(a,b) { return a[0]!=b[0] ? a[0]<b[0] ? -1 : 1 : 0; });
 
 	clear_ddm( ddm );
 
-    for (var i=0;i<copyOption.length;i++)
+	for (var i=0;i<copyOption.length;i++)
 		ddm[i] = copyOption[i][2];
 		//add_option( ddm, copyOption[i][0], copyOption[i][1] );
 	ddm_select_by_value( ddm, selectedValue, 0 );
@@ -270,23 +270,23 @@ function filterDDM( filter, ddm ) {
 	if ( ddm.selectedIndex == 0 && ddm.options.length ) 
 		ddm.selectedIndex = 1;
 
-    for ( var index = ddm.selectedIndex; index < ddm.options.length; index += 1 ) {
-        var chunk2 = ddm.options[index].text.toLowerCase();
-        if ( chunk1 <= chunk2 ) {
-            ddm.selectedIndex = index;
-            return index != old_selected;
-        } // end if
-        //} // end if
-    } // end for
+	for ( var index = ddm.selectedIndex; index < ddm.options.length; index += 1 ) {
+		var chunk2 = ddm.options[index].text.toLowerCase();
+		if ( chunk1 <= chunk2 ) {
+			ddm.selectedIndex = index;
+			return index != old_selected;
+		} // end if
+		//} // end if
+	} // end for
    // Assumes that the first entry is "SElect One"
-    for ( var index = 1; index < ddm.selectedIndex; index += 1 ) {
-        var chunk2 = ddm.options[index].text.toLowerCase();
-        if ( chunk1 <= chunk2 ) {
-            ddm.selectedIndex = index;
-            return index != old_selected;
-        } // end if
-        //} // end if
-    } // end for
+	for ( var index = 1; index < ddm.selectedIndex; index += 1 ) {
+		var chunk2 = ddm.options[index].text.toLowerCase();
+		if ( chunk1 <= chunk2 ) {
+			ddm.selectedIndex = index;
+			return index != old_selected;
+		} // end if
+		//} // end if
+	} // end for
 	return ddm.selectedIndex != old_selected;
 
 } // end function filterDDM
@@ -740,17 +740,17 @@ function Country_onchange( country_ddm, state ) {
 } // end function
 
 function countLines(strtocount, cols) {
-    var hard_lines = 1;
-    var last = 0;
-    while ( true ) {
-        last = strtocount.indexOf("\n", last+1);
-        hard_lines ++;
-        if ( last == -1 ) break;
-    }
-    var soft_lines = Math.round(strtocount.length / (cols-1));
-    var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");
-    if ( hard ) soft_lines = hard_lines;
-    return soft_lines;
+	var hard_lines = 1;
+	var last = 0;
+	while ( true ) {
+		last = strtocount.indexOf("\n", last+1);
+		hard_lines ++;
+		if ( last == -1 ) break;
+	}
+	var soft_lines = Math.round(strtocount.length / (cols-1));
+	var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");
+	if ( hard ) soft_lines = hard_lines;
+	return soft_lines;
 }
 
 function textarea_resize( element ) {
@@ -850,3 +850,33 @@ function getFormObj( formName ) {
 	return form;
 }
 
+function getFormObj( formName ) {
+	var form = document.forms[formName];
+	return form;
+}
+ 
+function disableDiv(elm) {
+
+	while (elm.tagName !="DIV") {
+		elm = elm.parentNode
+	}
+
+	_width = elm.offsetWidth;
+	_height = elm.offsetHeight;;
+	_top = elm.offsetTop;
+	_left = elm.offsetLeft;
+
+	overlay = document.createElement("div");
+	overlay.style.width = _width + "px";
+	overlay.style.height = _height + "px";
+	overlay.style.position = "absolute";
+	overlay.style.background = "#dedede";
+	overlay.style.top = _top + "px";
+	overlay.style.left = _left + "px";
+
+	overlay.style.filter = "alpha(opacity=50)";
+	overlay.style.opacity = "0.5";
+	overlay.style.mozOpacity = "0.5";
+
+	document.getElementsByTagName("body")[0].appendChild(overlay);
+}

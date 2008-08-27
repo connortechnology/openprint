@@ -22,7 +22,7 @@
 			<span class="<?Columns?>Columns">
 <? echo ( 
 	my $html = '';
-	foreach my $page ( 4, 8, 12, 16, 20, 24, 32, 36, 40 ) {
+	foreach my $page ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 44, 48, 64 ) {
 		$html .= sprintf('<input name="txtSignatureQty%1$dPage-%2$d" value="%3$d" type="text" size="4" onkeyup="calc(this.form.name);" %4$s /> %1$d Page Signature(s)<br/>', $page, $$variable{'QTYIndex'}, $$variable{'txtSignatureQty'.$page.'Page-'.$$variable{'QTYIndex'}}, sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ? '' : 'readonly="readonly"' );
 	} # end foreach
 	return $html;
@@ -67,7 +67,7 @@
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
 		<input type="hidden" name="ContinueProject" value="Y" />
-		<input type="hidden" name="ServiceType" value="<?ServiceType?>" />
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>" />
 		<div id="hdnBreakdown1" style="display: none;"></div>
 		<div id="hdnBreakdown2" style="display: none;"></div>
 		<div id="hdnBreakdown3" style="display: none;"></div>

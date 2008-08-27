@@ -146,13 +146,13 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td align="right"><?status?></td>
 			<td class="unprintable" align="right">
 				<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
-	<? if ( $$variable{'email'} =~ /iconnor/ ) ?>
+	<? if ( new openprint::User($$variable{'user_id'})->email() =~ /iconnor/ ) ?>
 					<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>&amp;calc=<?index?>">Calc</a><br/>
-	<? else ( $$variable{'email'} =~ /iconnor/ ) ?>
+	<? else ( new openprint::User($$variable{'user_id'})->email() =~ /iconnor/ ) ?>
 					<? if ( $$variable{'url'} ne '' ) ?>
 					<a href="/main/project/<?url?>?ProjectIndex=<?ProjectIndex?>&amp;ServiceIndex=<?index?>">Edit</a><br/>
 					<? endif ( $$variable{'url'} ne '' ) ?>
-	<? endif ( $$variable{'email'} =~ /iconnor/ ) ?>
+	<? endif ( new openprint::User($$variable{'user_id'})->email() =~ /iconnor/ ) ?>
 					<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>&amp;remove=<?index?>">Remove</a>
 				<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</td>

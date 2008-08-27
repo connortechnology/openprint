@@ -4,10 +4,36 @@
 	} # end if
 
     $openprint::session{'/administrator/paper/list.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/administrator/paper/list.html?Owner'};
-
 ) ?>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
+<script type="text/javascript" src="/administrator/paper/paper.js"></script>
 <script type="text/javascript">
+	var popupWin;
+	function popup_window( form ) {
+		var paper_ids = $A(form.chkPaper).filter(function(e){return e.checked});
+		if ( ! paper_ids.length ) {
+			alert('Please select papers to apply changes to.');
+			return;
+		} // end if
+		if ( ! popupWin ) {
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:700} );
+			// Set up a windows observer, check ou debug window to get messages
+			myObserver = {
+	onDestroy: function(eventName, win) {
+				   if (win == popupWin) {
+					   popupWin = null;
+					   Windows.removeObserver(this);
+				   }
+			   }
+			}
+			Windows.addObserver(myObserver);
+		} // end if
+		popupWin.setHTMLContent('Loading... please wait');
+		popupWin.showCenter();
+		var url = '/administrator/paper/_popup.html?' + paper_ids.map(function(e){return 'paper_ids=' + e.value}).join('&');
+
+		popupWin.setAjaxContent(url, null , true);
+	} // end function popup_window
 
 	function showPapers( results ) {
 		calc('f1');
@@ -27,6 +53,7 @@
 	}
 	function body_onLoad() {
 	}
+-->
 </script>
 <form id="f1" name="f1" method="post" action="list.html">
 	<fieldset class="filters"><legend>Search Information</legend>
@@ -35,29 +62,34 @@
 			<label>Owner:</label>
 			<select id="Owner" name="Owner" size="1" onchange="calc(this.form.name);">
 				<option value=""> All </option>
-				<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'/administrator/paper/list.html?Owner'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $openprint::session{'/administrator/paper/list.html?Owner'} ); ) ?>
+			</select>
+		</p>
+		<p>
+			<label>Group:</label>
+			<select id="Group" name="Group" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>
+				<? echo (
+                    return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup::find('order'=>'lower(name)') ], $openprint::session{'/administrator/paper/list.html?Group'} );
+					) ?>
 			</select>
 		</p>
 		<p>
 			<label>Manufacturer:</label>
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>
 				<? echo (
-						my @options = ( '', 'select one',
-                        sql::execute( $log, $dbh, q{SELECT id, longname FROM Manufacturers ORDER BY lower(longname)} )
-                        );
-                    return ssi::make_drop_down( \@options, $openprint::session{'/administrator/paper/list.html?Manufacturer'} );
+                    return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $openprint::session{'/administrator/paper/list.html?Manufacturer'} );
 					) ?>
 			</select>
 		</p>
 		<p>
 			<label>Name:</label>
 			<select name="Name" onchange="calc(this.form.name);">
-			<? echo (
-                    my @options = ( '', 'select one',
-                        sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
-                        );
-                    return ssi::make_drop_down( \@options, $openprint::session{'/administrator/paper/list.html?Name'} );
-                ) ?>
+				<option value="">select</option>
+				<? echo (
+                    return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $openprint::session{'/administrator/paper/list.html?Name'} );
+					) ?>
 			</select>
 		</p>
 		<p> 
@@ -66,7 +98,11 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %finishes;
-					foreach my $Paper ( openprint::Paper::find( 'name_id'=>$openprint::session{'/administrator/paper/list.html?Name'}) ) {
+					foreach my $Paper ( openprint::Paper::find( 
+							'name_id'=>$openprint::session{'/administrator/paper/list.html?Name'},
+							'manufacturer_id'=>$openprint::session{'/administrator/paper/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/paper/list.html?Group'}
+							) ) {
 						$finishes{$Paper->finish()} = $Paper->finish_id();
 					} # end foreach
                     return ssi::make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], $openprint::session{'/administrator/paper/list.html?Finish'} );
@@ -80,7 +116,9 @@
 			<? echo (
 					my %colours;
 					foreach my $Paper ( openprint::Paper::find( 'name_id'=>$openprint::session{'/administrator/paper/list.html?Name'},
-							'finish_id'=>$openprint::session{'/administrator/paper/list.html?Finish'}
+							'finish_id'=>$openprint::session{'/administrator/paper/list.html?Finish'},
+							'manufacturer_id'=>$openprint::session{'/administrator/paper/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/paper/list.html?Group'},
 							) ) {
 						$colours{$Paper->colour()} = $Paper->colour_id();
 					} # end foreach
@@ -97,6 +135,8 @@
 					foreach my $Paper ( openprint::Paper::find( 'name_id'=>$openprint::session{'/administrator/paper/list.html?Name'},
 							'finish_id'=>$openprint::session{'/administrator/paper/list.html?Finish'},
 							'colour_id'=>$openprint::session{'/administrator/paper/list.html?Colour'},
+							'manufacturer_id'=>$openprint::session{'/administrator/paper/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/paper/list.html?Group'},
 							) ) {
 						$colours{$Paper->weight()} = $Paper->weight_id();
 					} # end foreach
@@ -116,7 +156,7 @@
 		<p>
             <label>FSC Code:</label>
             <input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $openprint::session{'/administrator/paper/list.html?fsc_code'} ) ?>" size="13" style="width: auto;" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_orders('f1');", '', 'Go' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
         </p>
 		<p>
             <label>Inventory Code:</label>
@@ -126,6 +166,7 @@
 		</div>
 		<p class="buttons">
 			<? echo ( join('',
+ssi::writeButton( $log, $dbh, 'applychanges1', 'applychanges.gif', "popup_window(f1);", '', 'Make Changes' ),
 				ssi::writeButton($log, $dbh, 'New1','new.gif',"",'paper.html','Add A New Paper'),
 				ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete Checked Papers'),
 				#ssi::writeButton($log, $dbh, 'Save1','blah.gif',"show_div('PaperRecommendations', event );",'','Set Paper Recommendations'),

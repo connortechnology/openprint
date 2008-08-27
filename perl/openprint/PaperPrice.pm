@@ -82,6 +82,8 @@ sub load {
 sub delete {
 	my $self = shift;
     sql::execute( undef, undef, q{DELETE FROM Paper_Prices WHERE id=?}, $$self{'id'} );
+	my $Paper = $self->Paper();
+	delete $$Paper{'Prices'};
 } # end sub delete
 
 sub save {

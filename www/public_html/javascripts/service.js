@@ -1,8 +1,11 @@
 var timeout;
 
 function body_onLoad() {
-	if ( typeof(calc) == 'function' )
+	if ( typeof(selectProjectTemplate) == 'function' ) {
+		selectProjectTemplate( 'f1' );
+	} else if ( typeof(calc) == 'function' ) {
 		calc('f1');
+	} // end if
 }
 
 function calc( formName ) {
@@ -15,6 +18,7 @@ function calc( formName ) {
 		} else {
 			timeout = null;
 			remove_div('AlertDiv');
+			remove_div('InformationDiv');
 			gettingNewPrice = true;
 			jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
 		} // end if
@@ -68,25 +72,33 @@ function get_variables( formName, service_type ) {
 function cbFillResults( results ) {
     var pairs = results.split('|');
     var form = getFormObj('f1');
-	remove_div('AlertDiv');
+	$('AlertDiv').hide();
+	if ( $('InformationDiv') )
+		$('InformationDiv').hide();
 
     for ( var i = 0; i < pairs.length; i += 1 ){
         if ( pairs[i].indexOf('~') != -1 ) {
             var data = pairs[i].split('~');
             if ( data[0] == 'alert') {
 				if (data[1] != '') {
-					//var div = $("AlertDiv");
-					var div = add_div('AlertDiv');
+					var div = $("AlertDiv");
 					if ( div ) {
-						//div.update( data[1] );
 						div.innerHTML = data[1];
+						div.show();
 					} else {
 						alert( data[1] );
 					} // end if
-				} else {
-					remove_div('AlertDiv');
 				} // end if
 				
+                continue;
+            } else if ( data[0] == 'information') {
+				if (data[1] != '') {
+					var div = $("InformationDiv");
+					if ( div ) {
+						div.innerHTML = data[1];
+						div.show();
+					} // end if
+				} // end if
                 continue;
             } // end if
 

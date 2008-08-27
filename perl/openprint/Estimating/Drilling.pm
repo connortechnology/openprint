@@ -26,6 +26,7 @@ require openprint::service;
 require sql;
 
 my @variables = (
+		'Markup1', 'Markup2', 'Markup3',
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtHoleQty',
@@ -87,6 +88,8 @@ sub calc {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		next if ! $qty;
+		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		my $bestPrice = 0;
 		my $bestEquipment = '';
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty):<br/>";
@@ -182,7 +185,11 @@ sub calc {
 
 		my $unitPrice = 0;
 		$unitPrice = $bestPrice / $qty;
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 		$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
 
@@ -202,6 +209,11 @@ sub display {
 }  # end sub display
 
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	if ( $qty_index ) {
+	} else {
+		return $$specs{'txtHoleQty'} . ' ' . $$specs{'txtHoleSize'} . '&quot; holes';
+	} # end if
 	return '';
 } # end sub summary
 

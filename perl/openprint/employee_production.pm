@@ -180,14 +180,14 @@ sub bindery_overview {
 	} # end foreach
 
 	$_ = "SELECT tbl_Projects.Index, Orders.Index, tbl_Projects.lngDocketNumber, (SELECT strName FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex)";
-	$_ .= ", intQuantityIndex, duedate, tbl_Projects.strStatus\n";
+	$_ .= ", intQuantityIndex, due_date, tbl_Projects.strStatus\n";
 	$_ .=" FROM tbl_Projects, Order_Contents, Orders";
 	$_ .= " WHERE tbl_Projects.strStatus IN ( '". join("','", @statuses ) ."' )";
 	$_ .= " AND Orders.Index=Order_Contents.OrderIndex AND Orders.strStatus='In Production'";
 	$_ .= " AND tbl_Projects.Index = Order_Contents.lngProjectIndex";
-	$_ .= " AND duedate BETWEEN '$$variable{'StartDate'}' AND '$$variable{'EndDate'}'";
+	$_ .= " AND due_date BETWEEN '$$variable{'StartDate'}' AND '$$variable{'EndDate'}'";
 	$_ .= " AND Orders.lngEmployeeID=".$r->param('ddmSalesRep') if $r->param('ddmSalesRep');
-	$_ .= " ORDER BY duedate";
+	$_ .= " ORDER BY due_date";
 	my @projects = sql::execute( $log, $dbh, $_ );
 
 	@{$$variable{'Projects'}} = ();

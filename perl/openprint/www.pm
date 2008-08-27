@@ -61,7 +61,7 @@ sub handler {
 	$log	= $r->log;
 
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
-	foreach my $key ( sets::union( $r->param ) ) {
+	foreach my $key ( sort sets::union( $r->param ) ) {
 		my @values = $r->param($key);
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
@@ -86,7 +86,9 @@ sub handler {
 	openprint::usergroup::init_cache();
 	openprint::Material::init_cache();
 	openprint::Service::init_cache();
+	openprint::ServiceType::init_cache();
 	openprint::Equipment::init_cache();
+	openprint::Paper::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -112,7 +114,7 @@ $openprint::log->debug("Page: $page");
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
-		if ( ! $variable{'PageContent'} ) {
+		if ( $variable{'PageContent'} eq '' ) {
 			my $content;
 			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
 				$content = misc::load_file( $log, $_ );
@@ -144,11 +146,11 @@ $openprint::log->debug("Page: $page");
 			} # end while
 		} # end if _
 		if ( $template ) {
-			$log->debug("parsing template!");
+			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
-			$log->warn("No template!" . $r->content_type());
-			$log->warn($variable{'PageContent'});
+			#$log->warn("No template!" . $r->content_type());
+			#$log->warn($variable{'PageContent'});
 			$r->print( ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) );
 		} # end if
 	} # end if
@@ -186,8 +188,8 @@ sub parse_page {
 	if ( $filename eq 'getfile.html' ) {
 $openprint::log->debug("Getfile");
 		$variable{'Download'} = $openprint::param{'filename'};
-		my $sourceDir = $openprint::config{'ProjectFilesPath'} . openprint::upload_handler::get_destdir();
-		push @{$variable{'File_Data'}}, misc::load_file( $openprint::log, $sourceDir.$variable{'Download'});
+		my $sourceDir = $config{'ProjectFilesPath'} . openprint::upload_handler::get_destdir();
+		push @{$variable{'File_Data'}}, misc::load_file( $log, $sourceDir.$variable{'Download'});
 		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$variable{'Download'}\"";
 		$r->content_type( "application/octet-stream; name=\"$variable{'Download'}\"" );
 		return;
@@ -208,7 +210,7 @@ $openprint::log->debug("Getfile");
 
 		if ( $session{'user_type'} ne 'A' ) {
 			# If the page requires you to be logged in, check that we are logged in.
-			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				if ( sql::execute( $log, $dbh, q{SELECT chrType FROM Users WHERE chrType='A'} ) ) {
 					$variable{'Redirect'} = '/administrator/error/login.html';
 					$variable{'Destination'} = misc::get_destination( $r, $log );
@@ -253,7 +255,7 @@ $openprint::log->debug("Getfile");
 		} # end if
 
 		if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) )	) {
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) )	) {
 				$variable{'Redirect'} = '/employee/error/login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log );
 				return Apache2::Const::OK;
@@ -299,22 +301,6 @@ $openprint::log->debug("Getfile");
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 			} # end if
-		} elsif ( $second eq 'inventory' ) {
-			require openprint::employee_inventory;
-			require openprint::paper_purchase_order;
-			if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
-				openprint::employee_inventory::paper( $r, $log, $dbh, \%variable )		if $filename eq 'paper.html';
-				openprint::employee_inventory::paper_details( $r, $log, $dbh, \%variable )	if $filename eq 'paper_details.html';
-				openprint::employee_inventory::skids( $r, $log, $dbh, \%variable )		if $filename eq 'skids.html';
-				openprint::employee_inventory::skid_details( $r, $log, $dbh, \%variable )	if $filename eq 'skid_details.html';
-				openprint::paper_purchase_order::history( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_orders.html';
-				openprint::paper_purchase_order::display( $r, $log, $dbh, \%variable )	if $filename eq 'purchase_order.html';
-			} else {
-				$variable{'error'} = 'Unauthorized';
-				$variable{'details'} = 'You are not authorized to view this page.';
-				$variable{'Redirect'} = $openprint::config{'errorpage'};
-				return;
-			} # endif
 		} elsif ( $second eq 'accounting' ) {
 			if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
 				require openprint::employee_accounting;
@@ -324,7 +310,7 @@ $openprint::log->debug("Getfile");
 			} else {
 				$variable{'error'} = "Unauthorized";
 				$variable{'details'} = "You are not authorized to view this page.";
-				$variable{'Redirect'} = $openprint::config{'errorpage'};
+				$variable{'Redirect'} = $config{'errorpage'};
 				return;
 			} # endif
 		} else {
@@ -341,7 +327,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.
-			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
 				return Apache2::Const::OK;
@@ -379,8 +365,8 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				# Things like UPS SHipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
-				my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
-				@variable{keys %$specs} = @$specs{keys %$specs};
+					my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+					@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
 $openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
 if ( ! $variable{'ServiceIndex'} ) {
@@ -417,9 +403,6 @@ $openprint::log->warn('bind');
 					} elsif ( $filename eq 'cutting.html' ) {
 						require openprint::Estimating::Cutting;
 						openprint::Estimating::Cutting::display( $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename eq 'die_cutting.html' or $filename eq 'bind_kiss_cutt.html' ) {
-						require openprint::Estimating::DieCutting;
-						openprint::Estimating::DieCutting::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename eq 'perforating.html' ) {
 						require openprint::Estimating::Perforating;
 						openprint::Estimating::Perforating::get_specs( $log, $dbh, \%variable, $project_index, $service_index );
@@ -435,7 +418,7 @@ $openprint::log->warn('bind');
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename =~ /^(\w*).html$/ ) {
-$openprint::log->debug("$1");
+#$openprint::log->debug("$1");
 						eval sprintf('require openprint::Estimating::%1$s;
 						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
 						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
@@ -465,15 +448,15 @@ $openprint::log->debug("$1");
 						openprint::Estimating::UPS::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} # end if
 				} # end if main:proj:$third
-			} # end if
+			} # end if defined third
 
 			openprint::print_project::create_edit_display( $r, $log, $dbh, \%variable )		if $filename eq 'create_edit.html';
-			openprint::print_project::history_list( $r, $log, $dbh, \%variable )					if $filename eq 'history.html';
-			openprint::print::view_services( $r, $log, $dbh, \%variable )				if $filename eq 'view.html';
-			openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )					if $filename eq 'proj_view_pdf.html';
-			openprint::print_project::summary( $r, $log, $dbh, \%variable )						if $filename eq 'summary.html';
-			openprint::print_project::summary( $r, $log, $dbh, \%variable )						if $filename eq 'docket_sheet.html';
-			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 		if $filename eq 'reuse.html';
+			openprint::print_project::history_list( $r, $log, $dbh, \%variable )			if $filename eq 'history.html';
+			openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
+			openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
+			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
+			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
+			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 	if $filename eq 'reuse.html';
 		} else {
 			my $module = 'openprint::' . join('_', ($first, $second )	);
 			eval( "require $module;" );

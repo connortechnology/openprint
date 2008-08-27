@@ -42,7 +42,7 @@ sub variables {
 	push @v, 'txtPrice3' if $Project->quantity( 3 );
 
 	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $p_id, $ss_id );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $signature_index = $$sig_specs{'SignatureIndex'};
 		foreach my $key ( keys %{$specs} ) {
 			if ( $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
@@ -61,7 +61,7 @@ sub variables {
 		} # end foreach key
 	} # end foreach signature
 	return @v;
-}
+} # end sub variables
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
@@ -73,7 +73,7 @@ sub calc {
 
 	my @signature_service_indices = $Project->signatures();
 
-	foreach my $qty_index ( 1 ..3 ) {
+	foreach my $qty_index ( 1 .. 3 ) {
 		if ( ! $Project->quantity($qty_index) ) {
 			$$specs{"txtPrice$qty_index"} = '';
 			next;
@@ -94,7 +94,7 @@ sub calc {
 
 		# First, build a hash containing the quantities of each proof.  The reason for this is to honour quantity discounts.
 		foreach my $signature_service_index ( @signature_service_indices ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -119,7 +119,6 @@ sub calc {
 			} # end if
 				
 			foreach my $proof_index ( @{$proof_indexes{$signature_index}} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "\t\tProof: $proof_index<br/>";
 				if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ne 'Y' ) {
 					@output = sets::union( @output,
 							"txtProofIndex-$signature_index-$proof_index-$qty_index",
@@ -173,7 +172,6 @@ $openprint::log->debug("setting size Type $type : $$sig_specs{'txtWidth'} $$sig_
 					"txtProofQuantity-$signature_index-$proof_index-$qty_index",
 						"ddmProofType-$signature_index-$proof_index-$qty_index",
 				};
-				$$specs{'hdnBreakdown'.$qty_index} .= "\t\tQuantity: $quantity, Type: $type<br/>";
 				if ( ! $proof_totals{$type} ) {
 					$proof_totals{$type} = { Quantity => 0, Price => 0 };
 				} # end if
@@ -183,7 +181,7 @@ $openprint::log->debug("setting size Type $type : $$sig_specs{'txtWidth'} $$sig_
 		} # end foreach my $signature_service_index
 
 		foreach my $signature_service_index ( @signature_service_indices ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				next;
@@ -197,8 +195,9 @@ $openprint::log->debug("setting size Type $type : $$sig_specs{'txtWidth'} $$sig_
 					"txtProofQuantity-$signature_index-$proof_index-$qty_index",
 						"ddmProofType-$signature_index-$proof_index-$qty_index",
 				};
-				next if ! $type;
-
+				$$specs{'hdnBreakdown'.$qty_index} .= "Proof: $proof_index: Quantity: $quantity, Type: $type<br/>";
+				next if ! ( $type and $quantity );
+				
 				my %MakeReady = openprint::service::get_price_object( $type.'MakeReady', $proof_totals{$type}{Quantity}, undef );
 				my %price;
 				if ( $type eq 'PressProof' ) {
@@ -538,7 +537,6 @@ sub save_proof_specs {
 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
-
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	if ( $qty_index ) {
 		my %proof_totals;
@@ -549,7 +547,7 @@ sub summary {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
 					my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"});
 					if ( @Service ) {	
-						my $desc = sprintf('<td align="left">%s&quot;x%s&quot;</td><td align="left">%s', @$specs{
+						my $desc = sprintf('<td align="left"> %s&quot;x%s&quot;</td><td align="left">%s', @$specs{
 								"txtProofWidth-$signature_index-$proof_index-$qty_index",
 								"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service[0]->description() );
 						$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
@@ -559,12 +557,77 @@ sub summary {
 		} # end foreach signature
 		my $summary = '<table style="width:auto;table-layout:auto;">';
 		foreach my $k ( keys %proof_totals ) {
-			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'</td>'.$k.'</td></tr>';
+			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;</td>'.$k.'</td></tr>';
 		} # end foreach
 		return $summary.'</table>';
 	} # end if qty_index
 	return '';
 } # end sub summary
+
+sub breakupsummary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	if ( $qty_index ) {
+		my %proof_totals;
+		my %proof_tot;
+		my %Totprice;
+		foreach my $ss_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			my $signature_index = $$sig_specs{'SignatureIndex'};
+			foreach my $key ( keys %{$specs} ) {
+				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
+					my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"});
+					if ( @Service ) {	
+						my $desc = sprintf('<td align="left"> %s&quot;x%s&quot;</td><td align="left">%s', @$specs{
+								"txtProofWidth-$signature_index-$proof_index-$qty_index",
+								"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service[0]->description() );
+						my $qty      = $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
+						if ( $qty != 0 ) {
+							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
+							my $Uprice   = $$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"};
+							my $type = @$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"};
+							if ( ! $proof_tot{$type} ) {
+								$proof_tot{$type} = { Quantity => 0, Price => 0 };
+							} # end if
+							$proof_tot{$type}{Quantity} += $qty;
+							my %MkReady  = openprint::service::get_price_object( $type.'MakeReady', $proof_tot{$type}{Quantity}, undef );
+							$Totprice{$desc} += ($Uprice*$qty) + $MkReady{Price};
+						} # end if
+					} # end if
+				} # end if
+			} # end foreach key
+		} # end foreach signature
+		my $summary = '<table style="width:auto;table-layout:auto;">';
+		foreach my $k ( keys %proof_totals ) {
+			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;</td>'.$k.'&nbsp;</td>';
+			$summary .= '<td align="right"><b>'.sprintf("%.2f",$Totprice{$k}).'</b></td></tr>';
+#$openprint::log->debug("TESTING TEXT : ".$Totprice{$k}." |||||| ".$k." ENDING TEXT");
+		} # end foreach
+		return $summary.'</table>';
+	} # end if qty_index
+	return '';
+} # end sub summary
+
+
+sub project_summary {
+	my ( $Project, $service_id, $specs ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+	my %types;
+
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		my $signature_index = $$sig_specs{'SignatureIndex'};
+		foreach my $key ( keys %{$specs} ) {
+			if ( my ($proof_index, $qty_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
+				if ( my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
+					$types{$Service[0]->description()} = 1;
+				} # end if
+			} # end if
+		} # end foreach key
+	} # end foreach signature
+	return ' ' . join(',', keys %types) . ' Proofs<br/>';
+} # end sub project_summary
 
 1;
 __END__

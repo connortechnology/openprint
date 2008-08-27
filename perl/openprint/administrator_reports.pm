@@ -298,23 +298,23 @@ sub customer_login {
             } # end if
         } # end if
 
-        if ( $r->param('ddmLastProjectStartYear') or $r->param('ddmLastProjectStartMonth') or $r->param('ddmLastProjectStartDay') ) {
-            if ( $r->param('ddmLastProjectEndYear') or $r->param('ddmLastProjectEndMonth') or $r->param('ddmLastProjectEndDay') ) {
+        if ( $r->param('ddmLastProjectStartYear') and $r->param('ddmLastProjectStartMonth') and $r->param('ddmLastProjectStartDay') ) {
+            if ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
                 $query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastProjectStart'}') AND date('$$variable{'LastProjectEnd'}')";
             } else {
                 $query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) > date('$$variable{'LastProjectStart'}')";
             } # end if
-        } elsif ( $r->param('ddmLastProjectEndYear') or $r->param('ddmLastProjectEndMonth') or $r->param('ddmLastProjectEndDay') ) {
+        } elsif ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
             $query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) < date('$$variable{'LastProjectEnd'}')";
         } # end if
 
-        if ( $r->param('ddmLastOrderStartYear') or $r->param('ddmLastOrderStartMonth') or $r->param('ddmLastOrderStartDay') ) {
-            if ( $r->param('ddmLastOrderEndYear') or $r->param('ddmLastOrderEndMonth') or $r->param('ddmLastOrderEndDay') ) {
+        if ( $r->param('ddmLastOrderStartYear') and $r->param('ddmLastOrderStartMonth') and $r->param('ddmLastOrderStartDay') ) {
+            if ( $r->param('ddmLastOrderEndYear') and $r->param('ddmLastOrderEndMonth') and $r->param('ddmLastOrderEndDay') ) {
                 $query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastOrderStart'}') AND date('$$variable{'LastOrderEnd'}')";
             } else {
                 $query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  > date('$$variable{'LastOrderStart'}')";
             } # end if
-        } elsif ( $r->param('ddmLastOrderEndYear') or $r->param('ddmLastOrderEndMonth') or $r->param('ddmLastOrderEndDay') ) {
+        } elsif ( $r->param('ddmLastOrderEndYear') and $r->param('ddmLastOrderEndMonth') and $r->param('ddmLastOrderEndDay') ) {
             $query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  < date('$$variable{'LastOrderEnd'}')";
         } # end if
         if ( $$variable{'rdbActive'} ) {
@@ -344,23 +344,23 @@ sub customer_login {
 			} # end if
 		} # end if
 
-		if ( $r->param('ddmLastProjectStartYear') or $r->param('ddmLastProjectStartMonth') or $r->param('ddmLastProjectStartDay') ) {
-			if ( $r->param('ddmLastProjectEndYear') or $r->param('ddmLastProjectEndMonth') or $r->param('ddmLastProjectEndDay') ) {
+		if ( $r->param('ddmLastProjectStartYear') and $r->param('ddmLastProjectStartMonth') and $r->param('ddmLastProjectStartDay') ) {
+			if ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
 				$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastProjectStart'}') AND date('$$variable{'LastProjectEnd'}')";
 			} else {
 				$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) > date('$$variable{'LastProjectStart'}')";
 			} # end if
-		} elsif ( $r->param('ddmLastProjectEndYear') or $r->param('ddmLastProjectEndMonth') or $r->param('ddmLastProjectEndDay') ) {
+		} elsif ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
 			$query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) < date('$$variable{'LastProjectEnd'}')";
 		} # end if
 
-        if ( $r->param('ddmLastOrderStartYear') or $r->param('ddmLastOrderStartMonth') or $r->param('ddmLastOrderStartDay') ) {
-            if ( $r->param('ddmLastOrderEndYear') or $r->param('ddmLastOrderEndMonth') or $r->param('ddmLastOrderEndDay') ) {
+        if ( $r->param('ddmLastOrderStartYear') and $r->param('ddmLastOrderStartMonth') and $r->param('ddmLastOrderStartDay') ) {
+            if ( $r->param('ddmLastOrderEndYear') and $r->param('ddmLastOrderEndMonth') and $r->param('ddmLastOrderEndDay') ) {
 				$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastOrderStart'}') AND date('$$variable{'LastOrderEnd'}')";
 			} else {
 				$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  > date('$$variable{'LastOrderStart'}')";
 			} # end if
-		} elsif ( $r->param('ddmLastOrderEndYear') or $r->param('ddmLastOrderEndMonth') or $r->param('ddmLastOrderEndDay') ) {
+		} elsif ( $r->param('ddmLastOrderEndYear') and $r->param('ddmLastOrderEndMonth') and $r->param('ddmLastOrderEndDay') ) {
 			$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  < date('$$variable{'LastOrderEnd'}')";
 		} # end if
 		if ( $$variable{'rdbActive'} ) {

@@ -28,7 +28,7 @@ require openprint::Estimating::Shipping;
 require openprint::service;
 require	openprint::Estimating::Lamination;
 require	openprint::Object;
-require openprint::administrator_paper;
+require openprint::administrator_stock;
 require openprint::employee_schedule;
 
 use openprint ();
@@ -65,7 +65,9 @@ sub handler {
 	openprint::usergroup::init_cache();
 	openprint::Material::init_cache();
 	openprint::Service::init_cache();
+	openprint::ServiceType::init_cache();
 	openprint::Equipment::init_cache();
+	openprint::Paper::init_cache();
 
 	foreach my $key ( $r->param() ) {
 $log->debug("Paramter: $key => " . $r->param($key) );

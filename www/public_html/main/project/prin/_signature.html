@@ -1,15 +1,61 @@
-<fieldset id="SignatureGroup<?Group?>" <? echo ( ( $$variable{'Group'} == 1 and $$variable{'rdbCover'} ne 'Different' ) ? 'style="display:none;"' : '' ) ?> >
+<? eval (
+	if ( $param{'next_group_id'} ) {
+		$$variable{'Group'} = $param{'next_group_id'};
+		$$variable{'Signature'} = $param{'next_group_id'};
+
+		my $project_index = $$variable{'Project'}->id();
+		my $ac = sql::start_transaction( $dbh );
+        $dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+        my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
+        openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
+        openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
+        openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', $param{'next_group_id'} );
+        openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'GroupPageQuantity', $param{'remaining_pages'} );
+        $_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+        my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
+        $signature_count += 1;
+        openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', $signature_count );
+        sql::end_transaction( $dbh, $ac );
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $print_service_index );
+		foreach my $k ( keys %$sig_specs ) {
+			$$variable{$k.$$variable{'Group'}} = $$sig_specs{$k};
+		} # end foreach k
+	} # end if
+) ?>
+<fieldset id="SignatureGroup<?Group?>" <? echo ( ( $$variable{'Group'} == 1 and $$variable{'rdbCover'} ne 'Different' ) ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
+<? if ( $$variable{'Group'} == 1 ) ?>
+	<!--#include virtual="/includes/main/proj/templates/signatures.html" -->
+<? endif ( $$variable{'Group'} == 1 ) ?>
+
 	<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ? $$variable{'txtServiceDescription'.$$variable{'Group'}} : ( $$variable{'Group'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
-	<p>
-		<label># of Pages:</label>
-		<input type="text" name="GroupPageQuantity<?Group?>" value="<? echo ( $$variable{'GroupPageQuantity'.$$variable{'Group'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />
-		<input type="checkbox" id="OverrideGroupPageQuantity<?Group?>" name="OverrideGroupPageQuantity<?Group?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{'OverrideGroupPageQuantity'.$$variable{'Group'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="OverrideGroupPageQuantity<?Group?>">Override</label>
-	</p>
-	<p>
-		<label>Description:</label>
-		<input type="text" name="txtServiceDescription<?Group?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ) ?>" />
-	</p>
+	<div class="leftColumn">
+		<p>
+			<label># of Pages:</label>
+			<input type="text" name="GroupPageQuantity<?Group?>" value="<? echo ( $$variable{'GroupPageQuantity'.$$variable{'Group'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />
+			<input type="checkbox" id="OverrideGroupPageQuantity<?Group?>" name="OverrideGroupPageQuantity<?Group?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{'OverrideGroupPageQuantity'.$$variable{'Group'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="OverrideGroupPageQuantity<?Group?>">Override</label>
+		</p>
+		<p>
+			<label>Description:</label>
+			<input type="text" name="txtServiceDescription<?Group?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ) ?>" />
+		</p>
+		<p>
+			<label>Size:</label>
+			<input type="text" name="txtFinalWidth<?Group?>" value="<? echo ( $$variable{'txtFinalWidth'.$$variable{'Group'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Group?>').checked){calc(this.form.name);}"/>x<input type="text" name="txtFinalHeight<?Group?>" value="<? echo ( $$variable{'txtFinalHeight'.$$variable{'Group'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Group?>').checked){calc(this.form.name);}" />
+			<input type="checkbox" name="chkOverrideDimensions<?Group?>" id="chkOverrideDimensions<?Group?>" value="Y" <? echo ( $$variable{'chkOverrideDimensions'.$$variable{'Group'}} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if(!this.checked)calc(this.form.name);" />
+			<label class="radio" for="chkOverrideDimensions<?Group?>">Override</label>
+		</p>
+	</div>
+	<div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{'Group'}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+	<? echo (
+		if ( $$variable{'Group'} == 1 ) {
+			my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
+			return variable_substitution( \$html, $variable );
+		} # end if
+		return;
+	) ?>
+	</div>
+	<br class="spacer"/>
 	<input type="hidden" name="txtSignatureType<?Group?>" value="<? echo ( $$variable{'txtSignatureType'.$$variable{'Group'}} ) ?>" />
 	<? echo (
 		my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
@@ -17,5 +63,25 @@
 		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
 		return variable_substitution( \$html, $variable );
 	) ?>
+<? eval (
+    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+    $$variable{'Columns'} = 'Three';
+    } else {
+    $$variable{'Columns'} = 'Two';
+    } # end if
+) ?>
+<hr class="spacer"/>
+	<p>
+		<label>Quantity:</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<span class="<?Columns?>Columns">
+			<input type="text" id="txtQuantity<?QTYIndex?><?Group?>" name="txtQuantity<?QTYIndex?><?Group?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}.$$variable{'Group'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+		</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	</p>
 </fieldset>
 

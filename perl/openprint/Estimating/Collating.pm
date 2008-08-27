@@ -171,7 +171,10 @@ sub display {
 	} # end foreach qty_index
 
 } # end sub display
-#
+
+sub summary {
+	return;
+}
 
 1;
 

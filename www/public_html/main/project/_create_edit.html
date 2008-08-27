@@ -1,8 +1,7 @@
 <fieldset>
-	<legend>What type of project would you like to have printed?</legend>
+	<legend>Please select the project type:</legend>
 	<ul>
 	<? while ( @$variable{'index','name'} = splice @{$$variable{'ProjectTypes'}},0,2; ) ?>
-<? if ( $$variable{'name'} ne 'Envelopes' ) ?>
 		<li>
 			<input type="radio" id="<?index?>" name="rdbProjectType" value="<?index?>" onclick="project_type_alert(f1, this);calc('f1');"
 			<? echo ( $$variable{'SelectedProjectType'} eq $$variable{'index'} ? 'checked="checked"' : '' ) ?>
@@ -10,7 +9,6 @@
 			/>
 			<label for="<?index?>"><?name?></label>
 		</li>
-<? endif ( $$variable{'name'} ne 'Envelopes' ) ?>
 	<? endwhile ( @$variable{'index','name'} = splice @{$$variable{'ProjectTypes'}},0,2; ) ?>
 	</ul>
 </fieldset>
@@ -19,15 +17,15 @@
 	<ul>
 		<li>
 			<label for="Quantity1">Quantity 1:</label>
-			<input id="Quantity1" name="txtQuantity1" value="<?txtQuantity1?>" type="text" size="12" onchange="calc('f1');" />
+			<input id="Quantity1" name="txtQuantity1" value="<?txtQuantity1?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');" onchange="calc(this.form.name);" />
 		</li>
 		<li>
 			<label for="Quantity2">Quantity 2:</label>
-			<input id="Quantity2" name="txtQuantity2" value="<?txtQuantity2?>" type="text" size="12" onchange="calc('f1');" />
+			<input id="Quantity2" name="txtQuantity2" value="<?txtQuantity2?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');" onchange="calc(this.form.name);" />
 		</li>
 		<li>
 			<label for="Quantity3">Quantity 3:</label>
-			<input id="Quantity3" name="txtQuantity3" value="<?txtQuantity3?>" type="text" size="12" onchange="calc('f1');" />
+			<input id="Quantity3" name="txtQuantity3" value="<?txtQuantity3?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');" onchange="calc(this.form.name);" />
 		</li>
 	</ul>
 </fieldset>
@@ -64,6 +62,24 @@
 	) ?>
 <? endif ( @{$$variable{'Modes'}} > 1 ) ?>
 
+<? eval (  @{$$variable{'OptionServiceTypes'}} = openprint::ServiceType::find('category'=>'Options','create_visible'=>1); ) ?>
+<? if ( @{$$variable{'OptionServiceTypes'}} ) ?>
+<fieldset><legend>Options:</legend>
+	<ul>
+		<? echo ( 
+			my $html = '';
+			foreach my $ServiceType (@{$$variable{'OptionServiceTypes'}}) {
+				$html .= sprintf('<li><input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %2$s /> <label for="chkServices%1$s">%3$s</label></li>', 
+				$ServiceType->name(),
+				(sets::isin( $ServiceType->name(), $$variable{'SelectedServices'} ) ? 'checked="checked"' : ''),
+				ssi::writeTip( $ServiceType->description() ),
+				);
+			} # end foreach Service Type
+			return $html;
+		) ?>
+	</ul>
+</fieldset>
+<? endif ( @{$$variable{'OptionServiceTypes'}} ) ?>
 <!-- Step 2 questions -->
 <div id="step2Questions" <? echo ( 'style="display:none;"' if $$variable{'rdbMode'} ne 'Detailed' ) ?>>
 <fieldset><legend>What prepress services are required for the project?</legend>
@@ -163,7 +179,7 @@
 	} # end if
 ) ?>	
 <? if ( @{$$variable{'design_options'}} > 2 ) ?>
-	<p><label>If you are providing your own design, please specify the supplied format.</label>
+	<p id="Design" <? echo ( sets::isin('NoPrinting', $$variable{'SelectedServices'} ) ? 'style="display:none;"' : '' ) ?>><label>If you are providing your own design, please specify the supplied format.</label>
 		<select name="ddmDesign" size="1" onchange="ddmDesign_onChange(f1);">
 <? echo ( ssi::make_drop_down( $$variable{'design_options'}, $$variable{'ddmDesign'} ); ) ?>
 		</select>

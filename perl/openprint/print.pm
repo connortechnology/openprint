@@ -97,6 +97,9 @@ sub view_services {
 					# Only do this if all signatures have been specified, otherwise it is a waste of time
 					$log->info("********* Auto Calculate  ( PrintingService eq 'Y' ) *************");
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
+				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating'] ) ) {
+					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index );
 				} # end if
 				$Project->Currency( openprint::Currency::get_current() );
 				$Project->save();
@@ -221,6 +224,7 @@ sub print_prices {
 
     $$variable{'Cutting'} = $$services{'Cutting'} ? 'YES' : 'NO';
     $$variable{'Folding'} = $$services{'Folding'} ? 'YES' : 'NO';
+    $$variable{'NoPrinting'} = $$services{'NoPrinting'};
 
 	$$variable{'Mode'} = $Project->mode();
 
@@ -308,9 +312,9 @@ sub multipage_signatures {
 		} # end if
 	} # end foreach param
 
-foreach my $k ( keys %specified_pages ) {
-$openprint::log->debug("$k => $specified_pages{$k}" );
-} # end foreach
+#foreach my $k ( keys %specified_pages ) {
+#$openprint::log->debug("$k => $specified_pages{$k}" );
+#} # end foreach
 
 	if ( $$param{'rdbCover'} eq 'Different' ) {
 # now add a cover spread if we need one.
@@ -386,6 +390,19 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
 		my $type = $$sig_specs{'Group'};
+		if ( $type == 1 ) {
+			my $services = $Project->services();
+			# Presentation Folder Cover -> Make sure required services like Die Cutting and Gluing are present
+			if ( sets::isin( $$param{'rdbTemplateType'.$type}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+				if ( my @ProjectTypes = openprint::ProjectType::find('strid'=>'PresentationFolders') ) {
+					foreach my $ServiceType ( $ProjectTypes[0]->required_ServiceTypes() ) {
+						if ( ! $$services{$ServiceType->name()} ) {
+							push @{$$services{$ServiceType->name()}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType );
+						} # end if
+					} # end foreach servicetype
+				} # end if
+			} # end if
+		} # end if
 
 		# We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec ( 
@@ -422,7 +439,9 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 				'ColourCoatingSideTwo8', 'ColourCoatingTypeSideTwo8', 'ColourCoatingColourSideTwo8','ColourCoatingCoverageSideTwo8',
 				'ColourCoatingSideTwo9', 'ColourCoatingTypeSideTwo9', 'ColourCoatingColourSideTwo9','ColourCoatingCoverageSideTwo9',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
-				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
+				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription','rdbTemplateType',
+				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
+				'txtFinalWidth','txtFinalHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
 		} # end foreach spec
@@ -457,7 +476,26 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 		delete $services{$old_bindery_type};
 	} # end if
 
-	if ( $$param{'rdbTemplateType'} ) {
+	if ( $$param{'rdbTemplateType'} eq 'NoBindery' ) {
+		my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' );
+		foreach my $service_id ( keys %bindery_services ) { 
+			my $ServiceType = new openprint::ServiceType( $bindery_services{$service_id} );
+			if ( $ServiceType->name() ne 'NoBindery' ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				@{$services{$_}} = sets::exclude( [ $service_id ], $services{$service_id} );
+			} # end if
+		} # end foreach
+		
+		push @{$services{'NoBindery'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'NoBindery' ) if ! $services{'NoBindery'};
+	} elsif ( $$param{'rdbTemplateType'} ) {
+		# Delete No Bindery Service
+		if ( $services{'NoBindery'} ) {
+			foreach ( @{$services{'NoBindery'}} ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+			} # end foreach
+			delete $services{'NoBindery'};
+		} # end if
+
 		# Insert the desired Bindery Type
 		push @{$services{$$param{'rdbTemplateType'}}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $$param{'rdbTemplateType'} ) if ! $services{$$param{'rdbTemplateType'}};
 	} # end if
@@ -476,7 +514,7 @@ sub get_book_type {
 	my $services = $Project->services();
 
 # the way we cut down the book depends on how it is being bound, so we need this for the signature information.
-	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire, Cerlox','NoBindery' ) {
+	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','NoBindery' ) {
 		
 		if ( $$services{$service} ) {
 			return $service;
@@ -534,9 +572,12 @@ sub publication_pages {
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
-				'txtSignatureType',
+				'txtSignatureType','rdbTemplateType',
+				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
+				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {
 			$$variable{$spec.$type} = $$sig_specs{$spec};
+$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");
 		} # end foreach spec
 	} # end foreach ss_id
 

@@ -29,7 +29,7 @@
 		<p> 
 			<label for="">*Phone:</label>
 			<input type="text" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" >x
-			<input type="text" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" />
+			<input type="text" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" style="width: auto;" size="4" />
 		</p>
 		<p> 
 			<label for="mobile">&nbsp;Mobile:</label>
@@ -75,6 +75,10 @@
             <label>Verify Password:</label>
             <input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>"  />
         </p>
+		<p>
+			<label>Forwards:<br/>(One per line)</label>
+			<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( scalar @{$$variable{'Aliases'}} + 1 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>	
+		</p>
     </fieldset>
     <fieldset><legend>Vacation Auto-Responder Settings:</legend>
         <p>

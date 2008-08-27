@@ -108,6 +108,11 @@ $openprint::log->debug("Doing price ( $list $equipment_index $1)");
 				delete $$price{'id'};
 				$price->save();
 			} # end foreach
+			foreach my $Spec ( $Material->Specifications() ) {
+				$Spec = $Spec->copy();
+				$$Spec{'material_id'} = $NewMaterial->id();
+				$Spec->save();
+			} # end foreach
 			$Material = $NewMaterial;
 		} # end if
 	} # end if

@@ -1,6 +1,5 @@
 <div class="PageTitle">
-<h1>CORRECTIVE ACTION REQUEST (PAR)</h1>
-<h2>(Re-print Job Request)</h2>
+<h1>PREVENTATIVE ACTION REQUEST (PAR)</h1>
 </div>
 <style type="text/css">
 	#PAR {
@@ -29,6 +28,8 @@
 	}
 </style>
 <div id="PAR">
+	<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>
+		<h3>PAR ID: <span id="par_id"><? echo ( $$variable{'PAR'}->id() ) ?></span></h3>
 		<? echo (
 			my $html;
 			if ( ( ! $openprint::param{'par_id'} ) ) {

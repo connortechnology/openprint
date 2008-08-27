@@ -106,20 +106,17 @@ sub edit {
 
 sub _specification {
 	my $Specification = new openprint::EquipmentSpecification( $openprint::param{'id'} );
-$openprint::log->debug("Specification # " . $Specification->id() );
 	if ( $openprint::param{'action'} eq 'add' ) {
 		foreach my $k ( 'name','min','max','value','units','interpolate','equipment_id' ) {
 			$$Specification{$k} = $openprint::param{$k};
 		} # end foreach
 		$Specification->save();
-		$openprint::variable{'Specification'} = $Specification;
 	} elsif ( $openprint::param{'action'} eq 'delete' ) {
 		$Specification->delete();
 		$openprint::variable{'PageContent'} = ' ';
 	} elsif ( $openprint::param{'action'} eq 'copy' ) {
 		$Specification = $Specification->copy();
 		$Specification->save();
-		$openprint::variable{'Specification'} = $Specification;
 	} elsif ( $openprint::param{'action'} eq 'update' ) {
 		if ( $openprint::param{'field'} ne 'interpolate' ) {
 			if ( $openprint::param{'field'} eq 'name' ) {
@@ -140,6 +137,7 @@ $openprint::log->debug("Specification # " . $Specification->id() );
 			$openprint::variable{'PageContent'} = $$Specification{'interpolate'} ? 'Yes' : 'No';
 		} # end if
 	} # end if
+	$openprint::variable{'Specification'} = $Specification;
 } # end sub _specification
 
 sub _fold {
