@@ -3,6 +3,12 @@
 		$openprint::session{'/employee/inventory/paper.html?'.$key} = $openprint::param{$key};
 	} # end foreach
 	$openprint::session{'/employee/inventory/paper.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/employee/inventory/paper.html?Owner'};
+	if ( $openprint::session{'/employee/inventory/paper.html?Docket'} ) {
+		@{$$variable{'Papers'}} = openprint::Paper::find(
+			'allocated_to_docket'	=> $openprint::session{'/employee/inventory/paper.html?Docket'},
+			'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
+			);
+	} else {
 	@{$$variable{'Papers'}} = openprint::Paper::find(
 		'owner_id'	=>	$openprint::session{'/employee/inventory/paper.html?Owner'},
 		'manufacturer_id'	=>	( defined $openprint::session{'/employee/inventory/paper.html?Manufacturer'} ? $openprint::session{'/employee/inventory/paper.html?Manufacturer'} : '' ),
@@ -14,13 +20,13 @@
 		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/employee/inventory/paper.html?StartYear','/employee/inventory/paper.html?StartMonth','/employee/inventory/paper.html?StartDay'} ),
 		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/employee/inventory/paper.html?EndYear','/employee/inventory/paper.html?EndMonth','/employee/inventory/paper.html?EndDay'} ),
 		'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
-		'allocated_to_docket'	=> $openprint::session{'/employee/inventory/paper.html?Docket'},
 		'type'      => $openprint::session{'/employee/inventory/paper.html?Type'},
 		'fsc_code'	=>	$openprint::session{'/employee/inventory/paper.html?fsc_code'},
 		($openprint::param{'OrLarger'} ? 'width_start' : 'width') => $openprint::param{'width'},
 		($openprint::param{'OrLarger'} ? 'height_start' : 'height') => $openprint::param{'height'},
 
 		);
+	} # end if
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 <form name="PaperResults" action="paper.html" method="post">

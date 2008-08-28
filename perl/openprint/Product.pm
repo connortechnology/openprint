@@ -8,9 +8,32 @@ require openprint::logs;
 require sql;
 
 my $debug = 0;
-# This is a whole new style of Product.  A paper refers to all sheet sizes
 
-# Returns a paper object specified by the parameters
+use vars qw( %fields %defaults %transforms );
+%fields = (
+	'name'			=>	'name',
+	'description'	=>	'description',
+	'weight'		=>	'weight',
+	'taxexempt1'	=>	'taxexempt1',
+	'taxexempt2'	=>	'taxexempt2',
+	'sort'			=>	'sort',
+	'category_id'	=>	'category_id',
+	'project_id'	=>	'project_id',
+	'deleted'		=>	'deleted',
+);
+
+%transforms = (
+);
+%defaults = (
+	'weight'		=>	undef,
+	'taxexempt1'	=>	'N',
+	'taxexempt2'	=>	'N',
+	'sort'			=>	undef,
+	'category_id'	=>	undef,
+	'project_id'	=>	undef,
+	'deleted'		=>	0,
+);
+
 sub find {
 	my %params = @_;
 
@@ -59,7 +82,7 @@ sub delete {
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
-	foreach my $Price ( openprint::ProductPrice::find( 'product' => $self ) ) {
+	foreach my $Price ( openprint::ProductPrice::find( 'Product' => $self ) ) {
 		$Price->delete();
 	} # end foreach
 
@@ -76,21 +99,15 @@ sub destroy {
 sub copy {
 	my $self = shift;
 	my $Product = new openprint::Product( );
-	@$Product{'name','description','weight','taxexempt1','taxexempt2','sort','category_id'} = 
-		@$self{'name','description','weight','taxexempt1','taxexempt2','sort','category_id'};
+	@$Product{keys %fields} = @$self{keys %fields};
 	$$Product{'name'} = 'Copy of '.$$Product{'name'};
-
-	#@{$$Product{'Prices'}} = $self->prices();
-
 	return $Product;
 } # end sub copy
 
 sub prices {
 	my $self = shift;
 	if ( ! exists $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::ProductPrice::find(
-				'product_id',	$$self{'id'}
-				);
+		@{$$self{'Prices'}} = openprint::ProductPrice::find( 'product_id',	$$self{'id'});
 	} # end if
 	return @{$$self{'Prices'}};
 } # end sub prices
@@ -100,31 +117,20 @@ sub Prices {
 } # end sub Prices
 
 sub save {
-	my $self = shift;
+	my ( $self, $param ) = @_;
 
-	my %params;
-	if ( ( @_ == 1 ) and ( ref $_[0] eq 'HASH' ) ) {
-		%params = %{$_[0]};
-	} else {
-		%params = @_;
-	} # end if
-	foreach my $key ( keys %params ) {
-		$$self{$key} = $params{$key};
+	$self->set( $param ) if $param;
+
+	my %sql;
+	foreach my $k ( keys %fields ) {
+		$sql{$k} = $$self{$k};
 	} # end foreach
 
-	my @sql = (
-			'name',			$$self{'name'},
-			'weight',		$$self{'weight'} ? $$self{'weight'} : undef,
-			'description',	$$self{'description'},
-			'category_id',	$$self{'category_id'} ? $$self{'category_id'} : undef,
-			'TaxExempt1',	$$self{'taxexempt1'} ? $$self{'taxexempt1'} : 'N',
-			'TaxExempt2',	$$self{'taxexempt2'} ? $$self{'taxexempt2'} : 'N',
-			'sort',			$$self{'sort'} ? $$self{'sort'} : undef,
-			);
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Product_Id_seq')} );
-		if ( my $error = sql::insert( undef, undef, 'Products', @sql, 'id', $$self{'id'} ) ) {
+		$sql{'id'} = $$self{'id'};
+		if ( my $error = sql::insert( undef, undef, 'Products', %sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
@@ -132,7 +138,7 @@ sub save {
 		# Add record to audit log - action "New Product".
 		openprint::logs::insertLogRecord('58', "Product ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
 	} else {
-		if ( my $error = sql::update( undef, undef, 'Products', ['id=?', $$self{'id'}], \@sql ) ) {
+		if ( my $error = sql::update( undef, undef, 'Products', ['id=?', $$self{'id'}], \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
@@ -203,6 +209,17 @@ sub get_price {
 	my $list_id = openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh );
 
 	my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
+	if ( ! %price ) {
+$openprint::log->debug("Looking for a price $qty");
+		foreach my $Price ( openprint::ProductPrice::find('product_id'=>$$self{'id'},'pricelist_id'=>$list_id,'order'=>'min desc') ) {
+$openprint::log->debug("Looking at $$Price{min}");
+			next if $$Price{'min'} > $qty;
+			next if ! $$Price{'min'};
+			if ( ! ( $qty % $$Price{'min'} ) ) {
+				$price{'Price'} = $$Price{'price'} * $qty / $$Price{'min'};
+			} # end if
+		} # end foreach Price
+	} # end if
 	my $Pricelist = new openprint::Pricelist( $list_id );
 	$price{currency_id} = $Pricelist->currency_id();
 	openprint::Currency::convert( \%price );

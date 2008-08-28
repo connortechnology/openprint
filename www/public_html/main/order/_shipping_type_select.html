@@ -2,13 +2,28 @@
 	<label>Shipping Type:</label>
 	<? echo (
 		my $html;
-        my %Shipping_Services = map { $_->name(), $_->description() } openprint::ServiceType::find('category'=>'Shipping','order'=>'lower(name)');
 		my $services = $$variable{'Project'}->services();
-		foreach my $key ( keys %Shipping_Services ) {
-			$html .= qq#<input type="checkbox" id="ShippingType$$variable{'ProjectIndex'}$key" name="ShippingType$$variable{'ProjectIndex'}" value="$key" #;
-			$html .= 'checked="checked" ' if $$services{$key};
-			$html .= qq#/><label class="radio" for="ShippingType$$variable{'ProjectIndex'}$key">$Shipping_Services{$key}</label>#;
+		my @ShippingTypes = openprint::ServiceType::find('category'=>'Shipping','order'=>'lower(name)');
+
+		foreach my $ShippingType ( @ShippingTypes ) {
+			$html .= sprintf(q`<input type="checkbox" id="ShippingType%1$d%2$s" name="ShippingType%1$d" value="%2$s" onclick="if( !this.checked) {$('ShippingQuestions%1$d%2$s').innerHTML='';} else if ( ! $('ShippingQuestions%1$d%2$s').innerHTML ) { new Ajax.Updater('ShippingQuestions%1$d%2$s','_%2$s.html', { method: 'get', parameters:{ project_id: %1$d, service_id: %5$d, ServiceTypeName: '%2$s' } } ); }" %4$s /><label class="radio" for="ShippingType%1$d%2$s">%3$s</label><br/>`,
+				$$variable{'ProjectIndex'}, $ShippingType->name(), $ShippingType->description(), 
+				( $$services{$ShippingType->name()} ? 'checked="checked" ' : '' ), 
+				( $$services{$ShippingType->name()} ? $$services{$ShippingType->name()}[0] : 0 ),
+				);
 		} # end foreach
+		$html .= '</p>';
+		foreach my $ShippingType ( @ShippingTypes ) {
+			$html .= sprintf('<div id="ShippingQuestions%1$d%2$s">', $$variable{'ProjectIndex'}, $ShippingType->name() );
+			foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
+				$$variable{'ServiceIndex'} = $service_id;
+				$$variable{'ShippingType'} = $ShippingType->name();
+				my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_'.$ShippingType->name().'.html');
+				$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
+			} # end foreach service_id
+			$html .= '</div>';
+		 } # end foreach ShippingType
+		
 		return $html;
 	) ?>
 </p>

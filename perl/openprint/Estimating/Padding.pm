@@ -121,6 +121,7 @@ $openprint::log->debug("Paper Grade: " . $Paper->name() );
 		if ( ! %ServicePrice ) {
 			$log->debug('No price');
 			$status = 'uncalculated';
+			$$specs{'alert'} = 'We print press sheets only for pads - please ask a trade bindery to estimate the finishing.';
 			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', 0 );
 			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, 0 );
 			next;

@@ -850,3 +850,9 @@ function getFormObj( formName ) {
 	var form = document.forms[formName];
 	return form;
 }
+function set_today( e_y, e_m, e_d ) {
+	var d = new Date();
+	ddm_select_by_value( e_y, d.getYear() );
+	ddm_select_by_value( e_m, d.getMonth()+1 );
+	ddm_select_by_value( e_d, d.getDate() );
+} // end function set_today

@@ -11,7 +11,7 @@ function convert_lbs_to_kg( from, to ) {
 function convert_kg_to_lbs( from, to ) {
 	var qtys = from.value.split(',');
 	for ( var i=0; i< qtys.length; i+=1 ) {
-		qtys[i] = do_decimals( parseFloat(qtys[i] * 2.2046), 0 );
+		qtys[i] = do_decimals( parseFloat(qtys[i] * 2.2046), '0' );
 	} // end for
 	to.value = qtys.join(',');
 } // end function convert_kg_to_lbs

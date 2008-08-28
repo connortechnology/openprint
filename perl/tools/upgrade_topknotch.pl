@@ -1,9 +1,10 @@
 #!/usr/bin/perl
 use lib '/etc/apache2/lib/perl';
 use Date::Calc;
+use strict;
 require sql;
 require logger;
-use strict;
+require openprint::Object;
 
 use openprint ();
 use vars qw( $log $dbh );
@@ -11,30 +12,48 @@ use vars qw( $log $dbh );
 *dbh = \$openprint::dbh;
 
 $log = new logger( 'warn' );
+
+my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
+$src_db = 'topknotch' if ! $src_db;
+$dst_db = 'topknotch' if ! $dst_db;
+$src_host = 'topknotch.com' if ! $src_host;
+
 `/etc/init.d/apache2 reload`;
-my ( $year, $month, $day ) = @ARGV;
-( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) if ! $year;
-if ( ! -e "/tmp/topknotch-$year-$month-$day.sql.bz2" ) {
-print "scp topknotch.com:/media/Storage/Backups/Database/topknotch/$year-$month-$day.sql.bz2 /tmp/topknotch-$year-$month-$day.sql.bz2";
-`su postgres -c "scp topknotch.com:/media/Storage/Backups/Database/topknotch/$year-$month-$day.sql.bz2 /tmp/topknotch-$year-$month-$day.sql.bz2"`;
-}
-print "dropdb topknotch";
-`su postgres -c "dropdb topknotch"`;
-print "createdb topknotch";
-`su postgres -c "createdb -E SQL_ASCII topknotch"`;
-`su postgres -c "bunzip2 < /tmp/topknotch-$year-$month-$day.sql.bz2 | psql topknotch"`;
+if ( $year ) {
+	( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) if ! $month;
 
-my %sql_server;
-$sql_server{'database'} = 'topknotch';
-$sql_server{'driver'}   = 'Pg';
-$sql_server{'login'}    = 'topknotch';
-$sql_server{'password'} = 'topknotch';
+	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
+		print "Getting db backup $month-$day-$year\n";
+		`su postgres -c "scp $src_host:/var/backups/www2/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
+	} # end if
+	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
+		die "No db dum[";
+	}
+	print "Dropping db...";
+	`su postgres -c "dropdb $dst_db"`;
+	print "done\n";
+	print "Create db...";
+	`su postgres -c "createdb -E UTF8 $dst_db"`;
+	print "done\n";
+	print "Loading db...";
+	`su postgres -c "bunzip2 < /tmp/$src_db-$month-$day-$year.sql.bz2 | psql $dst_db"`;
+	print "done\n";
+} else {
+#grab direclty
+	print "Dropping db...";
+	`su postgres -c "dropdb $dst_db"`;
+	print "done\n";
+	print "Create db...";
+	`su postgres -c "createdb -E UTF8 $dst_db"`;
+	print "done\n";
+	print "Loading db...";
+	`su postgres -c "ssh $src_host pg_dump $src_db | psql $dst_db"`;
+	print "done\n";
 
-$dbh = sql::open_sql( $log, %sql_server );
-#sql::update(undef,undef,'tbl_equipment', ['strid=?','Komori8Perfector'], 'useinestimating', 1 );
+} # end if
+
 `chmod +x /etc/apache2/lib/perl/tools/db_update.pl`;
-`/etc/apache2/lib/perl/tools/db_update.pl topknotch topknotch topknotch`;
-my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
-
-sql::insert(undef,undef,'database_info','version'=>$version,'backup'=>'false');
-
+print "upgrading db ...";
+`/etc/apache2/lib/perl/tools/db_update.pl $dst_db topknotch topknotch` or $log->error($!);
+print "done\n";
+#$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'topknotch', 'password'=>'topknotch') );

@@ -1,8 +1,8 @@
 <? eval (
 		foreach my $key ( 'ddmCustomer','ddmStatus','ddmEmployee','ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','dblTotal1','dblTotal2' ) {
-			$openprint::session{'/employee/accounting/search.html?'.$key} = $openprint::param{$key} if ( defined $openprint::param{$key} );
+			$openprint::session{'/employee/accounting/search.html?'.$key} = $openprint::param{$key} if defined $openprint::param{$key};
 		} # end foreach
-		if ( $openprint::session{'/employee/accounting/search.html?ddmStatus'} ) {
+		if ( ! $openprint::session{'/employee/accounting/search.html?ddmStatus'} ) {
 			$openprint::session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
 		} # end if
 

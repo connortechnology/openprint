@@ -604,7 +604,7 @@ sub credit_applications {
 			$r->param('ddmEndDay') );
 
 	@{$$variable{'CreditApps'}} = ();
-	$_ = "SELECT Id, strSignature, date(dtmCreationDate), (SELECT strName FROM Company WHERE index=company_id), strStatus\n".
+	$_ = "SELECT Id, strSignature, date(dtmCreationDate), (SELECT name FROM Companies WHERE id=company_id), strStatus\n".
 		"FROM CreditApplications\n".
 		"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}')\n";
 	$_ .= "AND strStatus = 'Approved'\n" if $r->param('ddmStatus') eq 'Approved';

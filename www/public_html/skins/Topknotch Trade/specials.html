@@ -1,0 +1,78 @@
+<? eval (
+    my $list_id = openprint::pricing::get_pricelist_id( $log, $dbh, $variable );
+    $$variable{'Pricelist'} = new openprint::Pricelist( $list_id );
+	$$variable{'Currency'} = new openprint::Currency( $openprint::session{'Currency_id'} );
+) ?>
+<style>
+	tr.colRow {
+		background-color: #cccccc;
+	}
+</style>
+<div align="center">
+	<h2>Topknotch Specials for 
+<? echo (
+require Date::Calc;
+my ( $y, $m, $d ) = Date::Calc::Today();
+return Date::Calc::Month_to_Text($m) . ' ' . $y;
+) ?>
+	</h2>
+<p><b>Due to the quick turnaround on <span style="color: red;">Gangrun business cards and postcards</span> please ensure files are print ready. Proofs emailed for approval are only to check for ripping problems. Files with changes if already printed will be charged in full again.</b></p>
+<p>Specials pricing only applies to print ready pdf files with bleed and crop marks. All other file formats will be automatically charged between $10-$30.</p>
+<? eval (
+	@{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)' );
+) ?>
+<? while ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
+<h4><? echo ( $$variable{'Category'}->name(); ) ?></h4>
+<p><? echo ( $$variable{'Category'}->description(); ) ?></p>
+<table class="List">
+	<tr>
+<? echo (
+	my $html;
+	@{$$variable{'Products'}} = $$variable{'Category'}->products('order'=>'sort, lower(name)');
+	$$variable{'Product'} = $$variable{'Products'}[0];
+
+	foreach my $spec ( sort keys %{ $$variable{'Product'}->specifications() } ) {
+		$html .= qq{<th style="text-align:left;">$spec</th>};
+	} # end foreach specs
+
+	foreach my $qty ( sql::execute( $log, $dbh, q{SELECT DISTINCT min FROM Product_Prices WHERE product_id=? AND pricelist_id=? ORDER BY min}, $$variable{'Product'}->id(), $$variable{'Pricelist'}->id() ) ) {
+		$html .= qq{<th style="text-align:right;">$qty</th>};
+	} # end foreach
+	return $html;
+) ?>
+	</tr>
+<? while ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
+<? eval (
+	@{$$variable{'QTYS'}} = sql::execute( $log, $dbh, q{SELECT DISTINCT min FROM Product_Prices WHERE product_id=? AND pricelist_id=? ORDER BY min}, $$variable{'Product'}->id(), $$variable{'Pricelist'}->id() );
+) ?>
+	<? if ( @{$$variable{'QTYS'}} ) ?>
+<tr<?rowclass?>>
+<? echo (
+	my $html;
+	foreach my $spec ( sort keys %{ $$variable{'Product'}->specifications() } ) {
+		$html .= sprintf('<td style="text-align:left;">%s</td>', $$variable{'Product'}->specification( $spec ) );
+	} # end foreach specs
+	foreach my $qty ( @{$$variable{'QTYS'}} ) {
+		my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$variable{'Product'}->id(), $$variable{'Pricelist'}->id(), 'openprint::product_priceset', $qty );
+		if ( $price{'Price'} ) {
+		openprint::Currency::convert( \%price );
+		if ( $openprint::config{AllowOrdering} ne 'false' ) {
+		$html .= sprintf('<td style="text-align:right;"><a href="/main/order/information.html?Product=%d&Quantity=%d">%s%.2f</a></td>', $$variable{'Product'}->id(), $qty, $$variable{'Currency'}->symbol(), $price{'Price'} );
+		} else {
+		$html .= sprintf('<td style="text-align:right;">%s%.2f</td>', $$variable{'Currency'}->symbol(), $price{'Price'} );
+		} # end if
+		} else {
+		$html .= '<td style="text-align:right;">Call</td>';
+		} # end if
+	} # end foreach
+	return $html;
+) ?>
+</tr>
+<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endif ( @{$$variable{'QTYS'}} ) ?>
+<? endwhile ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
+</table>
+<span style="font-weight: bold;float: right;">All prices in <? echo ( $$variable{'Currency'}->name(); ) ?>.</span>
+<br/>
+<? endwhile ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
+</div>

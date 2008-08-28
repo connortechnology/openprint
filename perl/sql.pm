@@ -116,7 +116,7 @@ sub insert {
 	# we can use push and pop in here, because we actually don't acre about order, only pairing
 	my $command = "INSERT INTO $table (".join( ',', keys %commands ).') VALUES (';
 	my $print_command = $command;
-	$print_command .= join(',', @values ) if @values;
+	$print_command .= join(',', map { defined $_ ? $_ : 'undef' } @values ) if @values;
 	$print_command .= ')';
 
 	$command .= join(',', map { '?' } @values ).')';

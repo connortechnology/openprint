@@ -32,7 +32,7 @@ my %fields = (
 	'greeting'			=>	'strcustomgreeting',
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
-	'type'				=>	'type',
+	'type'				=>	'usertype',
 	'changepassword'	=>	'ysnchangepassword',
 	'commission'		=>	'dblcommission',
 	'administrator'		=>	'ysnadministrator',
@@ -243,7 +243,7 @@ sub next {
 		push @values, $params{'company_id'};
 	} # end if
 	if ( $params{'type'} ) {
-		$sql .= ' AND chrtype=?';
+		$sql .= ' AND usertype=?';
 		push @values, $params{'type'};
 	} # end if
 
@@ -267,7 +267,7 @@ sub prev {
 		push @values, $params{'company_id'};
 	} # end if
 	if ( $params{'type'} ) {
-		$sql .= ' AND chrtype=?';
+		$sql .= ' AND usertype=?';
 		push @values, $params{'type'};
 	} # end if
 
@@ -308,16 +308,24 @@ sub id {
 
 sub find {
 	my %param = @_;
-	if ( $param{'id'} ) {
-		return new openprint::User( $param{'id'} );
-	} # end if
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;
+
+	if ( $param{'id'} ) {
+		if ( ref $param{'id'} eq 'ARRAY' ) {
+			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
+			push @values, @{$param{'id'}};
+		} else {
+			$sql .= q{ AND id=?};
+			push @values, $param{'id'};
+		} # end if
+	} # end if
+
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {
-			$sql .= q{ AND type IN ('} . join("','", @{$param{'type'}}) . q{')};
+			$sql .= q{ AND usertype IN ('} . join("','", @{$param{'type'}}) . q{')};
 		} else {
-			$sql .= q{ AND type = ?};
+			$sql .= q{ AND usertype = ?};
 			push @values, $param{'type'};
 		} # end if
 	} # end if
@@ -345,7 +353,7 @@ sub find {
 		$param{'web_active'} = 'N' if $param{'web_active'} == 0;
 		$param{'web_active'} = 'Y' if $param{'web_active'} == 1;
 		} # end if
-		$sql .= ' AND ysnaccountactivation=?';
+		$sql .= ' AND web_active=?';
 		push @values, $param{'web_active'};
 	} # end if
 	if ( exists $param{'deleted'} ) {
@@ -363,7 +371,7 @@ sub find {
 		$log->error( "Error loading Users: ($sql) (@values)" );
 		return;
 	} elsif ( $debug ) {
-		$log->debug( "loading Users: ($sql) (@values)" );
+		$openprint::log->debug( "loading Users: ($sql) (@values) " . $data );
 	} # end if
 	return map { new openprint::User( $_->{id}, $_ ) } @$data;
 } # end sub find

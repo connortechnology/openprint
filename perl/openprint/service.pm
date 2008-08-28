@@ -427,6 +427,16 @@ sub status {
 	return $_;
 } # end sub status
 
+sub operator_id {
+	my ( $project_index, $service_index, $operator_id ) = @_;
+	if ( defined $operator_id ) {
+		sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index],
+			'operator_id',    $operator_id );
+		return $operator_id;
+	} # end if
+	( $_ ) = sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
+	return $_;
+} # end sub operator_id
 
 sub external_calc {
 	my ( $r, $log, $dbh, $variable, $service_type, %specs ) = @_;

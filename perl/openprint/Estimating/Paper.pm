@@ -24,6 +24,8 @@ require openprint::print;
 require openprint::service;
 require openprint::Currency;
 
+my $debug = 0;
+
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',

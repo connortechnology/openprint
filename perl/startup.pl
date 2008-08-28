@@ -14,7 +14,7 @@ BEGIN {
 	use Apache::Session::Postgres;
 	use Apache2::Cookie;
 	use Apache2::Upload;
-	#use Apache2::SizeLimit;
+	use Apache2::SizeLimit;
 	use Apache::DBI ();
 	use URI::Escape;
 	use HTML::Entities;

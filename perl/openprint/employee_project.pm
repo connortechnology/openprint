@@ -17,6 +17,7 @@ require openprint::press_schedule;
 require sql;
 require openprint::MXML;
 require openprint::JDF;
+require openprint::PaperAllocation;
 
 sub view {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -31,7 +32,40 @@ sub view {
 	} # end if
 	$$variable{'OrderID'} = $order_id;
 
-	if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
+	if ( ( $openprint::param{'btnFunction'} eq 'Rush' ) and ! $Project->rush() ) {
+		$Project->rush( 1 );
+		$$variable{'error'} .= $Project->save();
+		if ( ! $$variable{'error'} ) {
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Project marked as a rush job." );
+			my %info;
+			$info{'Project'} = $Project;
+			$info{'Docket'} = $Project->docket();
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rush_job_notification.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) );
+			my @body = ('', $_, 'text/html', 'quoted-printable');
+			my $From = new openprint::User( $openprint::session{'user_id'} );
+			my @To = openprint::User::find('usergroup'=>'Production');
+			if ( ! sets::isin( $Project->Order()->salesrep_id(), map { $_->id() } @To ) ) {
+				push @To, new openprint::User( $Project->Order()->salesrep_id() );
+			} # end if
+
+			foreach my $To ( @To ) {
+				my %mail = (
+						SMTP    => $openprint::config{'Mail Server'},
+						FROM    => sprintf( '"%s %s" <%s>', $From->get( 'firstname','lastname','email') ),
+						To		=> sprintf( '"%s %s" <%s>', $To->get( 'firstname','lastname','email') ),
+						SUBJECT => "Docket $info{'Docket'} Rushed!",
+						);
+				misc::send_email_with_attachment( $log, \%mail, @body );
+			} # end foreach To
+		} # end if
+	} elsif ( $openprint::param{'btnFunction'} eq 'No Rush' ) {
+		$Project->rush( 0 );
+		$$variable{'error'} .= $Project->save();
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Project marked as a non-rush job." );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf(1.2)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export MXML' ) {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [new openprint::MXML($Project)->toString()] );
@@ -58,6 +92,11 @@ sub view {
 				if ( $complete ) {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Complete' );	
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'All signatures complete - marking printing complete.' );
+					foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
+						next if $PA->Paper()->type() ne 'Roll';
+						$PA->delete();
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+					} # end foreach
 				} else {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Ordered' );	
 				} # end if
@@ -256,6 +295,11 @@ sub view {
 			if ( $complete ) {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Printed from $status" );
+				foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
+					next if $PA->Paper()->type() ne 'Roll';
+					$PA->delete();
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+				} # end foreach
 # shuffle jobs on the print schedule
 
 			} else {

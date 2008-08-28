@@ -116,11 +116,9 @@ sub press_schedule {
 
 	} elsif ( $openprint::param{'btnFunction'} eq 'CompleteJob' ) {
 # Actually this is complete Signature
-		my $service_index = $openprint::param{'ServiceIndex'};
-		my $project_index = $openprint::param{'ProjectIndex'};
-		my $Project = new openprint::Project( $project_index );
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Job Completed from print schedule." );
-		complete_signature( $log, $dbh, $variable, $project_index, $service_index );
+		my $Project = new openprint::Project( $openprint::param{'project_id'} );
+		$Project->add_to_log( $openprint::session{'company_id'}, $openprint::param{'operator_id'}, "Job Completed from print schedule." );
+		complete_signature( $log, $dbh, $variable, @openprint::param{'project_id', 'service_id'} );
 		$Project->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $openprint::param{'schedule_id'} ) {
@@ -179,7 +177,7 @@ sub bindery_overview {
 		} # end if
 	} # end foreach
 
-	$_ = "SELECT tbl_Projects.Index, Orders.Index, tbl_Projects.lngDocketNumber, (SELECT strName FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex)";
+	$_ = "SELECT tbl_Projects.Index, Orders.Index, tbl_Projects.lngDocketNumber, tbl_Projects.CompanyIndex";
 	$_ .= ", intQuantityIndex, due_date, tbl_Projects.strStatus\n";
 	$_ .=" FROM tbl_Projects, Order_Contents, Orders";
 	$_ .= " WHERE tbl_Projects.strStatus IN ( '". join("','", @statuses ) ."' )";
@@ -191,7 +189,7 @@ sub bindery_overview {
 	my @projects = sql::execute( $log, $dbh, $_ );
 
 	@{$$variable{'Projects'}} = ();
-	while ( my ( $project_index, $order_id, $docket, $company, $qty_index, $date_required, $status ) = splice @projects, 0, 7 ) {
+	while ( my ( $project_index, $order_id, $docket, $company_id, $qty_index, $date_required, $status ) = splice @projects, 0, 7 ) {
 		my %times;
 
 		my $Project = new openprint::Project( $project_index );
@@ -302,7 +300,7 @@ sub bindery_overview {
 		} # end if
 
 		if ( sets::intersection( @Services, keys %service_indices ) ) {
-			push @{$$variable{'Projects'}}, $project_index, $order_id, $docket, $company, $description,$date_required;
+			push @{$$variable{'Projects'}}, $project_index, $order_id, $docket, new openprint::Company( $company_id )->name(), $description,$date_required;
 			foreach my $service_type ( @{$$variable{'Services'}} ) {
 				if ( defined $times{$service_type} ) {
 					if ( $times{$service_type} ne 'done' ) {

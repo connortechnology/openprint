@@ -19,6 +19,7 @@ require openprint::CAR_Area;
 require openprint::CAR_Reason;
 
 %fields = (
+	'id'			=>	'id',
 	'issued_to_id'	=> 'issued_to_id',
 	'issued_on'		=> 'issued_on',
 	'issued_by_id'	=> 'issued_by_id',
@@ -69,7 +70,11 @@ require openprint::CAR_Reason;
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 	'approved_on'	=> undef,
+	'printed_on'	=> undef,
 	'deleted'		=> 0,
+	'reprint'		=> undef,
+	'area_id'		=> undef,
+	'reason_id'		=> undef,
 );
 
 sub find {
@@ -141,7 +146,7 @@ sub load {
 		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CAR WHERE id=?', {}, $$self{'id'} );
 		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
 	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
+	@$self{keys %fields} = @$data{keys %fields};
 } # end sub load
 
 sub delete {
@@ -341,6 +346,9 @@ sub Area {
 sub Reason {
 	return new openprint::CAR_Reason( $_[0]{reason_id} );
 } # end sub Reason
+sub issued_to {
+	return new openprint::User( $_[0]{issued_to_id} );
+} # end sub issued_to
 
 1;
 __END__

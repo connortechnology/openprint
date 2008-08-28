@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable %fields);
+use vars qw(%variable %fields %transforms %defaults );
 *variable = \%openprint::variable;
 
 
@@ -14,6 +14,8 @@ require ssi;
 require misc;
 require configuration;
 require openprint::Skid;
+require openprint::User;
+require openprint::Project;
 require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
@@ -31,6 +33,9 @@ my $debug = 1;
 	'quantity'		=>	'quantity',
 );
 
+%defaults = (
+	'created_on'	=> 'NOW()',
+);
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;

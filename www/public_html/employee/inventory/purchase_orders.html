@@ -1,18 +1,27 @@
 <link href="purchase_orders.css" rel="stylesheet" type="text/css">
 <form name="f1" action="purchase_orders.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
+		<? eval (
+            if ( ! $openprint::session{'/employee/inventory/purchase_orders.html?StartYear'} ) {
+                @openprint::session{'/employee/inventory/purchase_orders.html?StartYear','/employee/inventory/purchase_orders.html?StartMonth','/employee/inventory/purchase_orders.html?StartDay'} = Date::Calc::Today();
+            } # end if
+            if ( ! $openprint::session{'/employee/inventory/purchase_orders.html?EndYear'} ) {
+                @openprint::session{'/employee/inventory/purchase_orders.html?EndYear','/employee/inventory/purchase_orders.html?EndMonth','/employee/inventory/purchase_orders.html?EndDay'} = Date::Calc::Today();
+            } # end if
+        ) ?>
 		<p>
 			<label>Date:</label>
-				<select name="ddmStartYear"> <?ddmStartYear?> 
-				</select>
-				<select name="ddmStartMonth"> <?ddmStartMonth?> 
-				</select>
-				<select name="ddmStartDay"> <?ddmStartDay?> 
-				</select>
-to
-				<select name="ddmEndYear"><?ddmEndYear?></select>
-				<select name="ddmEndMonth"><?ddmEndMonth?></select>
-				<select name="ddmEndDay"><?ddmEndDay?></select>
+			<span class="DateSelector">
+            <select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/purchase_orders.html?StartYear'} ? $openprint::session{'/employee/inventory/purchase_orders.html?StartYear'} : ''); ) ?></select>
+            <select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/purchase_orders.html?StartMonth'} ? $openprint::session{'/employee/inventory/purchase_orders.html?StartMonth'} : ''); ) ?></select>
+            <select name="StartDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/purchase_orders.html?StartDay'} ? $openprint::session{'/employee/inventory/purchase_orders.html?StartDay'} : ''); ) ?></select>
+            to
+            </span>
+            <span class="DateSelector">
+            <select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/purchase_orders.html?EndYear'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndYear'} : ''); ) ?></select>
+            <select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/purchase_orders.html?EndMonth'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndMonth'} : ''); ) ?></select>
+            <select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/purchase_orders.html?EndDay'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndDay'} : ''); ) ?></select>
+            </span>
 		</p>
 		<p class="buttons">
 				<? echo ( join( '',
@@ -22,7 +31,14 @@ to
 				); ) ?>
 		</p>
 	</fieldset>
+<? eval (
+		$$variable{'StartDate'} = sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'StartYear','StartMonth','StartDay'} );
+		$$variable{'EndDate'} = sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} );
 
+		$_ = 'SELECT Id, PONum, to_char(Created, 'MM/DD/YYYY'), SupplierTo, Status, Total FROM Paper_Purchase_Orders WHERE date(Created) BETWEEN ? AND ?) ORDER BY Id DESC';
+
+		@{$$variable{'PURCHASEORDERS'}} = sql::execute( $log, $dbh, $_, @$variable{'StartDate','EndDate'} );
+) ?>
 	<? if ( @{$$variable{'PURCHASEORDERS'}} == 0 ) ?>
 	There are no purchase orders matching your search criteria.
 	<? else ( @{$$variable{'PURCHASEORDERS'}} == 0 ) ?>

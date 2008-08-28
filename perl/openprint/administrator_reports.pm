@@ -35,13 +35,12 @@ sub projects {
     $_ = "SELECT DISTINCT strStatus, strStatus FROM tbl_Projects ORDER BY strStatus";
     $$variable{'ddmStatus'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmStatus') );
 
-	$_ = "SELECT lngIndex, strName FROM tbl_Equipment ORDER BY strName";
-	$$variable{'ddmEquipment'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmEquipment') );
+	$$variable{'ddmEquipment'} = ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strName)') ], $r->param('ddmEquipment') );
 
 	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
 		my @header = ('Docket #', 'Project Reference','Company Name', 'Creation Date','Status');
 		$_ = "SELECT lngProjectIndex, SUBSTR(strProjectReference,0,50),\n".
-				"(SELECT strCompanyName FROM Company WHERE CompanyIndex = tbl_Projects.CompanyIndex),\n".
+				"(SELECT Name FROM Companies WHERE id = tbl_Projects.CompanyIndex),\n".
 				"to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus\n".
 				"FROM tbl_Projects ".
 				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
@@ -54,15 +53,15 @@ sub projects {
 		my @data = sql::execute( $log, $dbh, $_ );
 		misc::export_csv( $r, $log, $variable, 'project_report.csv', \@header, \@data );
 	} else {
-		$_ = "SELECT DISTINCT (SELECT Index FROM Company WHERE Index = CompanyIndex),\n".
-			"				(SELECT strName FROM Company WHERE Index = CompanyIndex),\n".
+		$_ = "SELECT DISTINCT (SELECT id FROM Companies WHERE id = CompanyIndex),\n".
+			"				(SELECT Name FROM Companies WHERE id = CompanyIndex),\n".
 			"				Index, SUBSTR(strProjectReference,0,50), to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus \n".
 				"FROM tbl_Projects	".
 				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
 		$_ .= "AND UserIndex = '".$r->param('ddmEstimator')."'\n" if $r->param('ddmEstimator');
 		$_ .= "AND strStatus = '".$r->param('ddmStatus')."' \n" if $r->param('ddmStatus');
 		$_ .= "AND CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		$_ .= "AND CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesperson='".$r->param('ddmEmployees')."')\n" if $r->param('ddmEmployees') ne '';
+		$_ .= "AND CompanyIndex IN ( SELECT id FROM Companies WHERE lngSalesperson='".$r->param('ddmEmployees')."')\n" if $r->param('ddmEmployees') ne '';
 		$_ .= "ORDER BY Index";
 		@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $_ );
 	} # end if

@@ -86,7 +86,7 @@ sub store_quote_info {
 		return $error;
 	} # end if
 
-	if ( $r->param('ForFirstName') and $r->param('ForLastName') ) {
+	if ( $r->param('ForFirstName') or $r->param('ForLastName') or $r->param('ForEmail') ) {
 		my $error = "";
 #		$error .= 'No prepared for address entered.<br>' if $r->param('ForAddress1') eq '';
 #		$error .= 'No prepared for city entered.<br>' if $r->param('ForCity') eq '';

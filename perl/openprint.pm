@@ -84,9 +84,9 @@ sub session_init {
 
 	if ( ! $session{'Country'} ) {
 		$session{'Country'} = $r->dir_config('Country');
-		$log->debug("Setting Country to " . $r->dir_config('Country') );
+		#$log->debug("Setting Country to " . $r->dir_config('Country') );
 	} else {
-		$log->debug("Country is " . $session{'Country'} );
+		#$log->debug("Country is " . $session{'Country'} );
 	} # end if
 	if ( $config{'Pricelist'} ) {
 		if ( ! $session{'Pricelist_id'} ) {
