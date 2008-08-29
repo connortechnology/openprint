@@ -4,14 +4,6 @@
 </div>
 <script type="text/javascript">
 <!--
-	function radio_select_by_value( radio, value ) {
-		for ( var index = 0; index < radio.length; index += 1 ) {
-			if ( radio[index].value == value ) {
-				radio[index].checked = true;
-				return;
-			} // end if
-		} // end for
-	} // end function
 	function company_id_onchange( e ) {
 		if ( e.getValue() ) {
 		new Ajax.Updater('ContactInformation','_contact_information.html', { method:'get', parameters:e.form.serialize() });
@@ -84,6 +76,9 @@
 			</fieldset>
 			<div id="ContactInformation">
 			<!--#include virtual="_contact_information.html"-->
+			</div>
+			<div id="PaymentOptions">
+			<!--#include virtual="_payment_options.html"-->
 			</div>
 		</div>
 		<div style="float: right; width: 49%; min-width: 320px;">

@@ -32,34 +32,36 @@ require openprint::User;
 		'fax'						=>	'fax',
 		'pricelist_id'				=>	'pricelist_id',
 		'currency_id'				=>	'currency_id',
-		'url'						=>	'strweburl',
-		'discount'					=>	'dblpricingpercent',
+		'url'						=>	'url',
+		'discount'					=>	'discount',
 		'activation'				=>	'ysnaccountactivation',
-		'greeting'					=>	'strcustomgreeting',
-		'mailinglist'				=>	'ysnmailinglist',
-		'business_type'				=>	'strbusinesstype',
-		'business_name'				=>	'strlegalbusname',
-		'business_form'				=>	'legalform',
-		'established'				=>	'dtmbusinessstartdate',
-		'president_owner'			=>	'strpresidentowner',
+		'greeting'					=>	'greeting',
+		'mailinglist'				=>	'mailinglist',
+		'business_type'				=>	'business_type',
+		'business_name'				=>	'business_name',
+		'business_form'				=>	'business_form',
+		'established'				=>	'established',
+		'president_owner'			=>	'president_owner',
 		'created_on'				=>	'created_on',
 		'updated_on'				=>	'updated_on',
-		'employees'					=>	'stremployees',
-		'annual_sales'				=>	'strannualsales',
-		'bank_name'					=>	'strbankname',
-		'bank_branch'				=>	'strbankbranch',
-		'bank_account'				=>	'strbankaccountno',
-		'bank_manager'				=>	'strbankaccountmanager',
-		'bank_phone'				=>	'strbankphone',
-		'bank_fax'					=>	'strbankfax',
-		'bank_email'				=>	'strbankemail',
+		'employees'					=>	'employees',
+		'annual_sales'				=>	'annual_sales',
+		'bank_name'					=>	'bank_name',
+		'bank_branch'				=>	'bank_branch',
+		'bank_account'				=>	'bank_account',
+		'bank_manager'				=>	'bank_manager',
+		'bank_phone'				=>	'bank_phone',
+		'bank_fax'					=>	'bank_fax',
+		'bank_email'				=>	'bank_email',
 		'detail_level'				=>	'detail_level',
 		'quote_project_breakdown'	=>	'quote_project_breakdown',
 		);
 %transforms = (
 	'name' => [ 's/\.//g' ],
+	'established'	=> [ 's/[^\d\-]//g' ],
 );
 %defaults = (
+	'detail_level'	=>	undef,
 	'discount'	=>	0,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
@@ -67,6 +69,9 @@ require openprint::User;
 	'pricelist_id'	=>	undef,
 	'activation'	=>	'N',
 	'mailinglist'	=>	'N',
+	'annual_sales'	=>	undef,
+	'employees'		=>	undef,
+	'salesrep_id'	=>	undef,
 );
 
 my $debug = 1;
@@ -191,22 +196,15 @@ sub delete {
    openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'}");
 } # end sub delete
 sub save {
-    my $self = shift;
+    my ($self, $param) = @_;
+	
+	$self->set( $param ) if $param;
 	my %sql;
 	foreach my $k ( keys %fields ) {
-		my @transforms = @{$transforms{$k}} if $transforms{$k};
-		foreach my $transform ( @transforms ) {
-			eval '$$self{$k} =~ ' . $transform;
-		} # end foreach
-
-		if ( ( ( ! defined $$self{$k} ) or ( $$self{$k} eq '' ) ) and exists $defaults{$k} ) {
-			$openprint::log->debug("Setting default for $k $defaults{$k}");
-			$sql{$fields{$k}} = $defaults{$k};
-		} else {
-			$sql{$fields{$k}} = $$self{$k};
-		} # end if
+		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
-	$sql{dtmlastmodified} = 'NOW()';
+	$sql{'updated_on'} = 'NOW()';
+	delete $sql{'created_on'};
 	$sql{'name'} = Text::Unaccent::unac_string('LATIN1', $sql{'name'} );
 
     my $ac = sql::start_transaction( $openprint::dbh );
@@ -357,6 +355,15 @@ sub Pricelist {
 		return new openprint::Pricelist( openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable ));
 	} # end if
 } # end sub Pricelist
+
+sub start_month {
+	$_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/;
+	return $2;
+} # end sub start_month
+sub start_year {
+	$_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/;
+	return $1;
+} # end sub start_year
 
 1;
 __END__

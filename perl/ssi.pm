@@ -405,6 +405,12 @@ sub writeButton {
 	return $html;
 } # end sub writeButton
 
+sub checked {
+    if ( $_[0] ) {
+        return 'checked="checked"';
+    } # end if
+    return '';
+} # end sub checked
 
 sub writeTip {
 	my $word = shift;

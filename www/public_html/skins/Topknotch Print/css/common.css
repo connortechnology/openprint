@@ -153,6 +153,10 @@ input {
 	color: red;
 	font-weight: bold;
 }
+.information {
+	color: #11ff11;
+	font-weight: bold;
+}
 input.text {
 	width: 95%;
 }
@@ -365,4 +369,15 @@ div.Service span.ThreeColumns {
 div.Service span.TwoColumns {
 	width: 50%;
 	float: left;
+}
+fieldset.Popup p {
+	padding-left: 105px;
+}
+fieldset.Popup p label {
+	margin-left: -105px;
+	width: 100px;
+}
+fieldset.Popup p.buttons {
+	margin-left: -105px;
+	float: right;
 }

@@ -267,47 +267,6 @@ sub company_profiles {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 # form field to db field mappings
-	my %fields = (
-			'rdbAccountActivation'  =>  'AccountActivation',
-			'txtAccountNum'         =>  'AccountNumber',
-			'txtCompanyName'        =>  'Name',
-			'txtAddress1'           =>  'Address1',
-			'txtAddress2'           =>  'Address2',
-			'txtCity'               =>  'City',
-			'ddmStateProvince'      =>  'StateProvince',
-			'txtStateProvince'      =>  'StateProvince',
-			'ddmCountry'            =>  'Country',
-			'txtCountry'            =>  'Country',
-			'txtPostalCode'         =>  'PostalCode',
-			'txtPhone'              =>  'Phone',
-			'txtExtension'          =>  'Extension',
-			'txtFax'                =>  'Fax',
-			'rdbLegalForm'              =>  'LegalForm',
-			'txtLegalBusinessName'  =>  'LegalBusinessName',
-			'txtBusinessType'       =>  'BusinessType',
-			'BusinessStartDate'     =>  'BusinessStartDate',
-			'txtPresidentOwner'     =>  'PresidentOwner',
-			'ddmEmployees'          =>  'Employees',
-			'ddmAnnualSales'        =>  'AnnualSales',
-			'txtGSTNumber'          =>  'TaxNumber1',
-			'txtPSTNumber'          =>  'TaxNumber2',
-			'rdbGSTExempt'          =>  'TaxExempt1',
-			'rdbPSTExempt'          =>  'TaxExempt2',
-			'ddmPriceList'          =>  'PriceList',
-			'ddmCurrency'			=>	'Currency',
-			'ddmSalesPerson'        =>  'SalesPerson',
-			'txtBankBranch'         =>  'BankBranch',
-			'txtBankName'           =>  'BankName',
-			'txtBankAccountNo'  =>  'BankAccountNumber',
-			'txtBankAccountManager' =>  'BankAccountManager',
-			'txtBankPhone'          =>  'BankPhone',
-			'txtBankFax'            =>  'BankFax',
-			'txtBankEmail'          =>  'BankEmail',
-			'rdbReseller'           =>  'Reseller',
-			'rdbSupplier'           =>  'Supplier',
-			'txtCustomGreeting'     =>  'CustomGreeting',
-			'txtPricingLevel'		=>  'Discount',
-	);
 	my %shipping_fields = (
 			'txtShippingCompanyName'    =>  'CompanyName',
 			'rdbShippingSalutation'     =>  'Salutation',
@@ -350,23 +309,23 @@ sub company_profiles {
 
 		my $customer = new openprint::obj_customer( $log, $dbh, $index );
 
-		if ( $Company->activation() ne $openprint::param{'rdbAccountActivation'} ) {
+		if ( $Company->activation() ne $openprint::param{'activation'} ) {
 			my %info;
 			$info{'Company'} = $Company;
 			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
-			$_ = $openprint::param{'rdbAccountActivation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
+			$_ = $openprint::param{'activation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
 			$email_template = ssi::variable_substitution( \$email_template, \%info ); 
 
-			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
+			my @to = map { sprintf('"%s %s" <%s>', $_->get('firstname','lastname','email')); } openprint::User::find('company_id'=>$index,'web_active'=>'Y');
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'AdministratorEmail'},
 					TO      => join( ',', @to ),
-					SUBJECT => "Customer account status has changed!",
+					SUBJECT => 'Customer account status has changed!',
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 		} # end if
@@ -385,7 +344,7 @@ sub company_profiles {
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'AdministratorEmail'},
-					TO      => join( ',', map { sprintf('"%s" <%s>', $_->name(), $->email() ); } @to ),
+					TO      => join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
 					SUBJECT => "Customer account status has changed!",
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
@@ -404,23 +363,20 @@ if ( 0 ) {
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'AdministratorEmail'},
-					TO      => join( ',', map { sprintf('"%s" <%s>', $_->name(), $->email() ); } @to ),
+					TO      => join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
 					SUBJECT => 'Customer account status has changed!',
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 		} # end if
 } # end if
 
-		my %params;
-		foreach my $field ( keys %fields ) {
-			$params{$fields{$field}} = $openprint::param{$field} if defined $openprint::param{$field};
-		} # end foreach
-		if ( $openprint::param{'txtStartYear'} ) {
-			$openprint::param{'ddmStartMonth'} = '01' if ! $openprint::param{'ddmStartMonth'};
-			$params{'BusinessStartDate'} = $openprint::param{'txtStartYear'} . '-' . $openprint::param{'ddmStartMonth'} . '-01';
+		$openprint::param{'start_year'} =~ s/\D//g;
+		if ( $openprint::param{'start_year'} ) {
+			$openprint::param{'start_month'} = '01' if ! $openprint::param{'start_month'};
+			$openprint::param{'established'} = $openprint::param{'start_year'} . '-' . $openprint::param{'start_month'} . '-01';
 		} # end if
-		$customer->set( \%params );
-		$index = $customer->{index};
+		$$variable{'error'} .= $Company->save( \%openprint::param );
+		$index = $Company->id();
 
 		if ( $index > 0 ) {
 # Otherwise Error!
@@ -462,17 +418,6 @@ if ( 0 ) {
 	if ( $index > 0 ) {
 		my $customer = new openprint::obj_customer( $log, $dbh, $index );
 
-        @$variable{ keys %fields } = ssi::htmlize( $customer->get( @fields{ keys %fields } ) );
-        $$variable{'rdbReseller'.$$variable{'rdbReseller'}} = 'CHECKED';
-        $$variable{'rdbSupplier'.$$variable{'rdbSupplier'}} = 'CHECKED';
-        @$variable{ keys %shipping_fields } = ssi::htmlize( $customer->load_shipping( @shipping_fields{ keys %shipping_fields } ) );
-
-		$$variable{'rdbLegalForm'.$$variable{'rdbLegalForm'}} = 'CHECKED';
-		$$variable{'rdbPSTExempt'.$$variable{'rdbPSTExempt'}} = 'CHECKED';
-		$$variable{'rdbGSTExempt'.$$variable{'rdbGSTExempt'}} = 'CHECKED';
-		
-		$$variable{'rdbAccountActivation'.$$variable{'rdbAccountActivation'}} = 'CHECKED';
-
 		$$variable{'txtPricingLevel'} = sprintf ( "%.0f", $$variable{'txtPricingLevel'} ) . "%";
 		$$variable{'txtDownpayment'} = sprintf ( "%.0f", $$variable{'txtDownpayment'} ) . "%";
 
@@ -496,26 +441,15 @@ if ( 0 ) {
 	} # end if
     $$variable{'selectCustomerCategories'} = ssi::make_select( \@available_categories, \@customers_categories );
 
-	@$variable{'txtStartYear','ddmStartMonth'} = $$variable{'BusinessStartDate'} =~ /^(\d+)-(\d+)-(\d+)/;
-    $$variable{'ddmStartMonth'} = ssi::getmonths( $$variable{'ddmStartMonth'} );
-
-    $$variable{'ddmSalesPeople'} = ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>'E', 'web_active'=>'Y', 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmSalesPerson'} );
-
-	$$variable{'ddmEmployees'} = ssi::getemployee_numbers( $r, $log, $dbh, $$variable{'ddmEmployees'} );
-	$$variable{'ddmAnnualSales'} = ssi::getannual_sales( $r, $log, $dbh, $$variable{'ddmAnnualSales'} );
-
-	$$variable{'ddmStateProvince'} = ssi::return_states_and_provinces($$variable{'ddmStateProvince'});
-	$$variable{'ddmCountry'} = ssi::return_countries($$variable{'ddmCountry'});
 	$$variable{'ddmShippingStateProvince'} = ssi::return_states_and_provinces($$variable{'ddmShippingStateProvince'});
 	$$variable{'ddmShippingCountry'} = ssi::return_countries($$variable{'ddmShippingCountry'});
 
 	my $total;
 	my $payments;
 	if ( $index ) {
-		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex='$index'\n".
-			"AND strStatus IN ('Pending Deposit','In Production','Paid')";
-		( $total ) = sql::execute( $log, $dbh, $_ );
-		( $payments ) = sql::execute( $log, $dbh, 'SELECT SUM(curAmount) FROM Payments WHERE company_id=?',$index);
+		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Paid')";
+		( $total ) = sql::execute( $log, $dbh, $_, $index );
+		( $payments ) = misc::sum( map { $_->amount() } openprint::Payment::find('completed'=>1, 'payor_id'=>$index, 'recipient_id'=>$openprint::session{'company_id'} ) );
 	} # end if
 
 	$$variable{'CreditBalance'} = '$ '.sprintf( "%.2f", ( $total - $payments ) );
@@ -526,6 +460,7 @@ if ( 0 ) {
 	} # end if
 
 	$$variable{'CustomerIndex'} = $index;
+	$$variable{'Company'} = $Company;
 } # end sub company_profiles
 
 

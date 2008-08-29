@@ -18,6 +18,7 @@ require openprint::Order;
 require openprint::OrderedProduct;
 require openprint::usergroup;
 require openprint::press_schedule;
+require openprint::Payment;
 
 sub delete_order {
 	my ( $log, $dbh, $order_id ) = @_;
@@ -1223,15 +1224,16 @@ sub history_details {
             return misc::error( $log, $dbh, $variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
         } # end if
 
-        my $error = sql::insert( $log, $dbh, 'Payments',
-            'Order_Id',     $order_id,
-            'Company_Id',   $Order->company_id(),
-            'curAmount',    $openprint::param{'Amount'},
-            'dtmDate',      'NOW()',
-            'strMethod',    'Manual',
-            'currency_id',  $Order->currency_id(),
-            'strDescription',   $openprint::param{'Description'},
-        );
+		my $Payment = new openprint::Payment();
+		my $error .= $Payment->save( {
+				'order_id'		=> $order_id,
+				'company_id'	=> $Order->company_id(),
+				'amount'		=> $openprint::param{'Amount'},
+				'method'		=> 'Manual',
+				'currency_id'	=> $Order->currency_id(),
+				'description'	=> $openprint::param{'Description'},
+				'completed'		=> 1,
+				} );
         if ( $error ) {
             return misc::error( $log, $dbh, $variable, 'Error Saving Payment', $error );
         } # end if
@@ -1241,7 +1243,7 @@ sub history_details {
         if ( $$variable{'DepositDue'} > 0 ) {
             foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
                 sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
-                sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
+                sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?',$project_index, 'Ordered'], 'strStatus', 'Pending Deposit' );
             } # end foreach
         } else {
             $Order->status('In Production') if $Order->status() eq 'Pending Deposit';
@@ -1255,13 +1257,18 @@ sub history_details {
             } # end if
             $Order->save();
         } # end if
-   } elsif ( $openprint::param{'btnFunction'} eq 'Delete Payment' ) {
-        my $payment_index = $openprint::param{'payment_id'};
-        $payment_index =~ s/\D//g;
-        if ( $payment_index ) {
-            sql::execute( $log, $dbh, 'DELETE FROM Payments WHERE id=?', $payment_index );
-        } # end if
-		$Order->update_status();
+	} elsif ( $openprint::param{'btnFunction'} eq 'Delete Payment' ) {
+		my $Payment = new openprint::Payment( $openprint::param{'payment_id'} );
+		if ( ! $Payment->id() ) {
+			$$variable{'error'} .= 'Invalid payment id specified.<br/>';
+		} else {
+			if ( my $error = $Payment->delete() ) {
+				$$variable{'error'} .= 'Payment not deleted: <br/>' . $error . '<br/>';
+			} else {
+				$$variable{'information'} .= 'Payment deleted successfully.<br/>';
+				$Order->update_status();
+			} # end if
+		} # end if
    } elsif ( $openprint::param{'btnFunction'} eq 'Invoice' ) {
 	   $Order->invoice_id( $openprint::param{'invoice_id'} );
 	   $Order->invoiced_on( 'NOW()' );
@@ -1277,15 +1284,10 @@ sub display_order {
 
 	if ( $order_id ) {
 		get_invoice_to( $log, $dbh, $variable, $order_id );
-		#get_ship_to( $log, $dbh, $variable, $order_id );
 		get_misc( $log, $dbh, $variable, $order_id );
 		get_projects( $log, $dbh, $variable, $order_id );
 		$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'txtCity','txtStateProvince','txtCountry'} );
 		$$variable{'OrderID'} = $order_id;
-		if ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) {
-			$_ = q{SELECT id, to_char(dtmDate,'MM/DD/YYYY'), strMethod, strDescription, curAmount, currency_id FROM Payments WHERE strSessionID IS NULL AND Order_Id=? ORDER BY dtmDate};
-			@{$$variable{'PAYMENTS'}} = sql::execute( $log, $dbh, $_, $order_id );
-		} # end if
 	} # end if
 } # end sub display_order
 
@@ -1455,7 +1457,7 @@ sub list_orders {
 	my $row_class = '';
 	foreach my $order_id ( @orders ) {
 		my ( $date, $name, $status, $total, $payment, $currency_id ) = sql::execute( $log, $dbh,
-				q{SELECT	to_char(dtmOrderDate, 'MM/DD/YYYY'), strFirstName || ' ' || strLastName, strStatus, curTotalSale,(SELECT SUM(curAmount) FROM Payments WHERE order_id=? AND strSessionID IS NULL), currency_id FROM Orders WHERE Index=?}, $order_id, $order_id );
+				q{SELECT	to_char(dtmOrderDate, 'MM/DD/YYYY'), strFirstName || ' ' || strLastName, strStatus, curTotalSale,(SELECT SUM(amount) FROM Payments WHERE order_id=? AND (deleted=false OR deleted IS NULL) AND completed=true), currency_id FROM Orders WHERE Index=?}, $order_id, $order_id );
 		$report_total += $total;
 		$report_balance += $total-$payment;
 		$total = sprintf('%.2f', $total );

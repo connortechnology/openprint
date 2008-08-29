@@ -3,6 +3,7 @@ package openprint::employee_accounting;
 use Text::CSV_XS;
 use strict;
 
+require openprint::Payment;
 require openprint::order;
 require openprint::Order;
 require misc;
@@ -63,15 +64,16 @@ sub details {
 			return misc::error( $log, $dbh, \%variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
 		} # end if
 
-		my $error = sql::insert( $log, $dbh, 'Payments',
-			'Order_Id',		$order_id,
-			'Company_Id',	$Order->company_id(),
-			'curAmount',	$param{'Amount'},
-			'dtmDate',		'NOW()',
-			'strMethod',	'Manual',
-			'currency_id',	$Order->currency_id(),
-			'strDescription',	$param{'Description'},
-		);
+		my $Payment = new openprint::Payment();
+		my $error = $Payment->save( {
+			'order_id'		=> $order_id,
+			'company_id'	=> $Order->company_id(),
+			'amount'		=> $param{'Amount'},
+			'method'		=> 'Manual',
+			'currency_id'	=> $Order->currency_id(),
+			'description'	=> $param{'Description'},
+			'completed'		=> 1,
+		} );
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
 		} # end if
@@ -109,9 +111,6 @@ sub details {
 	$variable{'OrderID'} = $order_id;
 	my $Currency = $Order->Currency();
 	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-
-	$_ = q{SELECT id, to_char(dtmDate,'MM/DD/YYYY'), strMethod, strDescription, curAmount, currency_id FROM Payments WHERE strSessionID IS NULL AND Order_Id=? ORDER BY dtmDate};
-	@{$variable{'PAYMENTS'}} = sql::execute( $log, $dbh, $_, $order_id );
 } # end sub details
 
 sub credit {
@@ -149,15 +148,15 @@ sub credit {
 	if ( $company_index ) {
 		$_ = "SELECT DISTINCT Orders.Index AS OrderIndex, to_char(dtmOrderDate, 'MM/DD/YYYY'), ".
 			"strCompanyName, strPONumber, curTotalSale, ".
-			"(SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index), lngDocketNumber, invoice_id ".
+			"(SELECT SUM(amount) FROM Payments WHERE (deleted=false OR deleted IS NULL) AND completed=true AND Payments.order_id=Orders.Index), lngDocketNumber, invoice_id ".
 			"FROM Orders, order_Contents ".
 			"WHERE Orders.Index = Order_Contents.OrderIndex ";
 		$_ .= "AND Orders.strStatus NOT IN ('Cancelled','Incomplete','Deleted')";
 # which customers
 		$_ .= "	AND Orders.CompanyIndex = $company_index";
 		$_ .= " AND (
-(SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) < curTotalSale OR	
-(SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) IS NULL ) ";
+(SELECT SUM(amount) FROM Payments WHERE (deleted=false OR deleted IS NULL) AND completed=true AND Payments.order_id=Orders.Index) < curTotalSale OR	
+(SELECT SUM(amount) FROM Payments WHERE (deleted=false OR deleted IS NULL) AND completed=true AND Payments.order_id=Orders.Index) IS NULL ) ";
 		$_ .= "ORDER BY OrderIndex";
 		@{$variable{'UnpaidOrders'}} = sql::execute( $log, $dbh, $_ );
 		for ( my $index = 0; $index < @{$variable{'UnpaidOrders'}}; $index += 8 ) {

@@ -23,8 +23,11 @@ ln -sf /etc/apache2/mods-available/apreq.load /etc/apache2/mods-enabled/
 mkdir /etc/apache2/lib
 ln -sf /etc/apache2/lib/perl /var/www/$1/perl
 
+apt-get -y install libsoap-lite-perl
+
 perl -MCPAN -e shell << EOF
 force install Date::Handler
 force install Date::Parse
 force install Math::Units
+force install Business::PayPal
 EOF
