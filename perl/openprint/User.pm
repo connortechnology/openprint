@@ -352,7 +352,7 @@ sub find {
 	} # end if
 	if ( exists $param{'deleted'} ) {
 		if ( ref $param{'deleted'} eq 'ARRAY' ) {
-			$sql .= ' AND deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$param{'deleted'}}) . ')';
+			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$param{'deleted'}}) . '))';
 			push @values, @{$param{'deleted'}};
 		} else {
 			$sql .= ' AND deleted=?';
