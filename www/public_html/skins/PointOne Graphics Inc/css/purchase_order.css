@@ -1,0 +1,30 @@
+
+@media screen {
+.unprintable {
+}
+}
+@media print {
+.unprintable {
+	display: none;
+}
+}
+
+.PO {
+	background-color: white;
+
+}
+
+.PO table {
+	border-top: 1px solid #3b5e91;
+}
+.PO table td {
+	border: 1px solid #aebdd2;
+}
+.PO table th {
+	border: 1px solid #aebdd2;
+	background-color: #e4ebf4;
+}
+	
+.PO table td.totals {
+	text-align: right;
+}

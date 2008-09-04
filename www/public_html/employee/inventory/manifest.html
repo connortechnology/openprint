@@ -20,7 +20,7 @@
 		<div class="error"><?error?></div>
 		<div class="leftColumn">
 			<p><label for="manifest_id">Manifest #:</label>
-				<input type="text" id="manifest_id" name="manifest_id" value="<? hecho ( $openprint::param{'manifest_id'} ) ?>" />
+				<input type="text" id="manifest_id" name="manifest_id" value="<? hecho ( $$variable{'Manifest'}->id() ) ?>" />
 			</p>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
 <p>
@@ -31,7 +31,13 @@
 		</div>
 		<div class="rightColumn">
 			<p><label>Received On:</label>
-<? eval ( @openprint::param{'received_on_year','received_on_month','received_on_day'} = Date::Calc::Today() if ! exists $openprint::param{'received_on_year'}; ) ?>
+<? eval ( 
+	if ( $$variable{'Manifest'}->received_on() ) {
+	@openprint::param{'received_on_year','received_on_month','received_on_day'} = split('-', $$variable{'Manifest'}->received_on() );
+	} else {
+	@openprint::param{'received_on_year','received_on_month','received_on_day'} = Date::Calc::Today(); 
+	} # end if
+) ?>
 			<span class="DateSelector">
 			<select name="received_on_year" onchange="setDaysDropDown(this.value,this.form.received_on_month.value,this.form.received_on_day, this.form.received_on_day.value);"><? echo ( ssi::return_years( undef, undef, $openprint::param{'received_on_year'} ); ) ?></select>
 			<select name="received_on_month" onchange="setDaysDropDown(this.form.received_on_year.value,this.value,this.form.received_on_day,this.form.received_on_day.value);"><? echo ( ssi::getmonths( $openprint::param{'received_on_month'} ); ) ?></select>
@@ -174,11 +180,11 @@
 	</tr>
 	<? echo (
 		my $html = '';
-		foreach my $tag_id ( @{$$variable{'IDS'}} ) {
-			next if ! $tag_id;
+		foreach my $C ( openprint::ManifestContent::find('manifest_id'=>$$variable{'Manifest'}->id() ) ) {
+			my $tag_id = $C->Skid()->rfidtag_id();
 			$html .= sprintf('<tr id="tr-%1$s"><td>%1$s</td>', $tag_id );
 			# Inventory
-			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td>}, $tag_id, @openprint::param{"qty_lbs-$tag_id","qty_kgs-$tag_id"} );
+			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td>}, $tag_id, $C->quantity(), undef );
 			$html .= '<td>' . ssi::writeButton( $log, $dbh, 'X'.$tag_id, 'x.gif', qq`f1.remove.value='$tag_id';new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: \$('f1').serialize(), evalScripts: true} );`, '', 'X' ) . '</td>';
 			$html .= '</tr>';
 		
