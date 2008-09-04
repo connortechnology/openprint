@@ -292,6 +292,7 @@ sub signature_calc {
 
 	@equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' ) if ! @equipment;
 	@stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) if ! @stitchers;
+	push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'For Pocket Folders'}, 'order'=>'lower(strname)' ) if $Project->Type()->name() eq 'Presentation Folders';
 	
 	my @my_equipment;
 
@@ -604,11 +605,13 @@ $log->debug($$specs{'hdnBreakdown'.$qty_index});
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' );
-	push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Printing'}, 'order'=>'lower(strname)' );
-
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+
+	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' );
+	push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Printing'}, 'order'=>'lower(strname)' );
+	push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'For Pocket Folders'}, 'order'=>'lower(strname)' ) if $Project->Type()->name() eq 'Presentation Folders';
+
 	if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
 		@equipment = sets::exclude( [ openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) ], \@equipment );
 	} # end if

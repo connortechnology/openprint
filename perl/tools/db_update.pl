@@ -289,7 +289,13 @@ print "Web found, converting to Roll.\n";
         $Spec->value('Roll');
         print $Spec->save();
     } # end if
+print "no change.\n";
 } # end foreach
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+if ( $data ) {
+	$dbh->do(q`alter table tbl_equipment add jdf_name text`) if ! exists $$data{'jdf_name'};
+	$dbh->do(q`alter table tbl_equipment add jdf_id text`) if ! exists $$data{'jdf_id'};
+} # end if
 
 $dbh->disconnect();
 1;

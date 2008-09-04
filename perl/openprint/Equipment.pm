@@ -64,10 +64,15 @@ sub find {
 		push @values, $params{'Name'};
 	} # end if
 	if ( $params{'Specifications'} ) {
-		# Assume specificatiosn is a hash of key/values to match
+# Assume specificatiosn is a hash of key/values to match
 		foreach my $name ( keys %{$params{'Specifications'}} ) {
-			$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1)=?};
-			push @values, $name, $params{'Specifications'}{$name};
+			if ( ref $params{'Specifications'}{$name} eq 'ARRAY' ) {
+				$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1) IN ( } . join(',', map {'?'} @{$params{'Specifications'}{$name}}  ) . ' )';
+				push @values, $name, @{$params{'Specifications'}{$name}};
+			} else {
+				$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1)=?};
+				push @values, $name, $params{'Specifications'}{$name};
+			} # end if
 		} # end foreach
 	} # end if
 	if ( $params{'UseInEstimating'} ) {

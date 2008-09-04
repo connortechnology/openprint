@@ -748,14 +748,8 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{'NoBindery'} ) {
-		if ( $$services{'DieCutting'} ) {
-			$project{'NeedFolding'} = 0;
-			$project{'NeedScoring'} = 0;
-		} else {	
-			$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
-			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
-		} # end if
-
+		$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
+		$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
 		$project{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $log, $dbh, $project_index, $specs );
 	} else {
 		$project{'NeedScoring'} = 0;
@@ -1192,11 +1186,12 @@ $openprint::log->debug("No spread layout for you!");
 					} # end while cutting it
 				} # end if Web or Sheet
 
+if ( 0 ) {
 $openprint::log->debug("Sorting");	
 foreach my $i ( @imps ) {
 $i->display();
 }
-				if ( 1 ) {
+} # end if 0
 				foreach my $imp ( @imps ) {
 					my $add = 1;
 					my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
@@ -1217,10 +1212,10 @@ $i->display();
 							} # end if
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
-$openprint::log->debug( sprintf( 'Comparing %sx%s %s %s %s to %sx%s %s %s %s', 
-	$I->Paper()->width(), $I->Paper()->height(), $I->Paper()->minimum_order(), $BiggerPrice{'100lb'}, $I->Paper()->is_cut(),
-	$imp->Paper()->width(), $imp->Paper()->height(), $imp->Paper()->minimum_order(), $SmallerPrice{'100lb'}, $imp->Paper()->is_cut(),
-) );
+#$openprint::log->debug( sprintf( 'Comparing %sx%s %s %s %s to %sx%s %s %s %s', 
+	#$I->Paper()->width(), $I->Paper()->height(), $I->Paper()->minimum_order(), $BiggerPrice{'100lb'}, $I->Paper()->is_cut(),
+	#$imp->Paper()->width(), $imp->Paper()->height(), $imp->Paper()->minimum_order(), $SmallerPrice{'100lb'}, $imp->Paper()->is_cut(),
+#) );
 							if ( 
 									( $I->Paper()->area() >= $imp->Paper()->area() ) 
 									and
@@ -1230,7 +1225,6 @@ $openprint::log->debug( sprintf( 'Comparing %sx%s %s %s %s to %sx%s %s %s %s',
 									and
 									( ! ( ! $I->Paper()->is_cut() and $imp->Paper()->is_cut() ) )
 									) {
-$openprint::log->debug('splice');
 								splice @{$imps{$str}}, $j, 1;
 								$j -= 1;
 							} elsif ( 
@@ -1243,21 +1237,16 @@ $openprint::log->debug('splice');
 									( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 									) {
 								# Already have a much better sheet
-$openprint::log->debug('dont add');
 								$add = 0;
 							} # end if
 						} # end for
 					} # end if
 					push @{$imps{$str}}, $imp if $add > 0;
 				} # end foreach imp
-				} else {
-				push @impositions, @imps;
-				} # end if
-
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
-if ( 1 ) {
+if ( 0 ) {
 $openprint::log->warn('Impositions');
 foreach my $I ( @impositions ) {
 $I->display();
