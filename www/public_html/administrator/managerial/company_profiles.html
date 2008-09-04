@@ -31,6 +31,7 @@
 		</p>
 	</fieldset>
 	<fieldset><legend>Sales Information:</legend>
+<div class="leftColumn">
 		<p> 
 			<label><b>Account Activated:</b></label>
 			<input type="radio" name="rdbAccountActivation" value="Y" <?rdbAccountActivationY?> /> Yes 
@@ -71,6 +72,17 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmSalesPerson'} ); ) ?>
 			</select>
 		</p>
+</div>
+<? if ( $$variable{'CustomerIndex'} ) ?>
+<div class="rightColumn">
+<p><label># of Orders:</label>
+	<? echo ( openprint::Order::find('company_id'=>$$variable{'CustomerIndex'}) ) ?>
+</p>
+<p><label># of Projects:</label>
+	<? echo ( openprint::Project::find('company_id'=>$$variable{'CustomerIndex'}) ) ?>
+</p>
+</div>
+<? endif ( $$variable{'CustomerIndex'} ) ?>
 	</fieldset>
 	<fieldset><legend>Customer Information:</legend>
 		<p> 
