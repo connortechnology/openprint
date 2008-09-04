@@ -1,4 +1,10 @@
-<link href="purchase_orders.css" rel="stylesheet" type="text/css">
+<script type="text/javascript">
+<!--
+	function load( div, form ) {
+		new Ajax.Updater( div, '_purchase_orders.html', { method: 'get', parameters: form.serialize() } );
+	} // end function load
+-->
+</script>
 <form name="f1" action="purchase_orders.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
 		<? eval (
@@ -12,15 +18,15 @@
 		<p>
 			<label>Date:</label>
 			<span class="DateSelector">
-            <select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/purchase_orders.html?StartYear'} ? $openprint::session{'/employee/inventory/purchase_orders.html?StartYear'} : ''); ) ?></select>
-            <select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/purchase_orders.html?StartMonth'} ? $openprint::session{'/employee/inventory/purchase_orders.html?StartMonth'} : ''); ) ?></select>
-            <select name="StartDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/purchase_orders.html?StartDay'} ? $openprint::session{'/employee/inventory/purchase_orders.html?StartDay'} : ''); ) ?></select>
+            <select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);load('Results',this.form);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/purchase_orders.html?StartYear'} ? $openprint::session{'/employee/inventory/purchase_orders.html?StartYear'} : ''); ) ?></select>
+            <select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);load('Results',this.form);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/purchase_orders.html?StartMonth'} ? $openprint::session{'/employee/inventory/purchase_orders.html?StartMonth'} : ''); ) ?></select>
+            <select name="StartDay" onchange="load('Results',this.form);"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/purchase_orders.html?StartDay'} ? $openprint::session{'/employee/inventory/purchase_orders.html?StartDay'} : ''); ) ?></select>
             to
             </span>
             <span class="DateSelector">
-            <select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/purchase_orders.html?EndYear'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndYear'} : ''); ) ?></select>
-            <select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/purchase_orders.html?EndMonth'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndMonth'} : ''); ) ?></select>
-            <select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/purchase_orders.html?EndDay'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndDay'} : ''); ) ?></select>
+            <select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);load('Results',this.form);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/purchase_orders.html?EndYear'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndYear'} : ''); ) ?></select>
+            <select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);load('Results',this.form);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/purchase_orders.html?EndMonth'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndMonth'} : ''); ) ?></select>
+            <select name="EndDay" onchange="load('Results',this.form);"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/purchase_orders.html?EndDay'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndDay'} : ''); ) ?></select>
             </span>
 		</p>
 		<p class="buttons">
@@ -31,39 +37,6 @@
 				); ) ?>
 		</p>
 	</fieldset>
-<? eval (
-		$$variable{'StartDate'} = sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'StartYear','StartMonth','StartDay'} );
-		$$variable{'EndDate'} = sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} );
-
-		$_ = 'SELECT Id, PONum, to_char(Created, 'MM/DD/YYYY'), SupplierTo, Status, Total FROM Paper_Purchase_Orders WHERE date(Created) BETWEEN ? AND ?) ORDER BY Id DESC';
-
-		@{$$variable{'PURCHASEORDERS'}} = sql::execute( $log, $dbh, $_, @$variable{'StartDate','EndDate'} );
-) ?>
-	<? if ( @{$$variable{'PURCHASEORDERS'}} == 0 ) ?>
-	There are no purchase orders matching your search criteria.
-	<? else ( @{$$variable{'PURCHASEORDERS'}} == 0 ) ?>
-	<br>
-	Please click on a <b>Purchase Order #</b> to view details. <br>
-	<br>
-<table class="List">
-	<tr>
-		<th>P.O.Num</th>
-		<th>Date</th>
-		<th>Supplier</th>
-		<th>Status</th>
-		<th>Total</th>
-	</tr>
-	<? while ( @$variable{'ppo_index','ponum','date','to','status','total'} = splice @{$$variable{'PURCHASEORDERS'}},0,6; ) ?>
-	<tr>
-		<td>&nbsp;<a href="purchase_order.html?PaperPurchaseOrderIndex=<?ppo_index?>"><?ponum?></a></td>
-		<td><a href="purchase_order.html?PaperPurchaseOrderIndex=<?ppo_index?>">&nbsp;<?date?></a></td>
-		<td>&nbsp;<?to?></td>
-		<td>&nbsp;<?status?></td>
-		<td>&nbsp;<?CurrencySymbol?>$<?total?></td>
-	</tr>
-	<? endwhile ( @$variable{'ppo_index','ponum','date','to','status','total'} = splice @{$$variable{'PURCHASEORDERS'}},0,6; ) ?>
-	</table>
-	<!--<div align="right" class="smTbl">All prices listed in <?CurrencyName?>.</div>-->
-	<? endif ( @{$$variable{'PURCHASEORDERS'}} == 0 ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<div id="Results"><!--#include virtual="_purchase_orders.html"--></div>

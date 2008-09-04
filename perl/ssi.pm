@@ -328,7 +328,7 @@ sub get_dates {
 			getmonths($month),
 			getdays($day, $year, $month ),
 			$year ? join('-', $year, $month, $day ) : undef,
-		   );
+			);
 }
 
 sub get_start_end_dates {
@@ -359,10 +359,8 @@ sub get_start_end_dates {
 	$$variable{'ddmStartDay'} = $$variable{'startdays'} = getdays($startDay);
 	$$variable{'ddmEndDay'} = $$variable{'enddays'} = getdays($endDay ? $endDay : (localtime(time))[3]);
 
-	$$variable{'StartDate'} = $startYear . '-' .  $startMonth . '-' .
-		( $startDay ? $startDay : 1 );
-	$$variable{'EndDate'} = $endYear . '-' . $endMonth . '-' .
-		( $endDay ? $endDay : (localtime(time))[3] );
+	$$variable{'StartDate'} = join( '-', $startYear, $startMonth, ( $startDay ? $startDay : 1 ) );
+	$$variable{'EndDate'} = join( '-', $endYear, $endMonth, ( $endDay ? $endDay : (localtime(time))[3] ) );
 
 } # end sub get_start_end_dates
 
@@ -399,7 +397,51 @@ sub writeTip {
 return qq{<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('$word',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('$word');}">$word</span>};
 }
 
+sub date_select {
+	 my ( $prefix, $value, $onchange ) = @_;
+
+	 my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
+
+	 my $html = '';
+	 $html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
+	 $html .= return_years( undef, undef, $year );
+	 $html .= '</select>';
+	 $html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $onchange );
+	 $html .= getmonths( $month );
+	 $html .= '</select>';
+	 $html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
+	 $html .= getdays( $day, $year, $month );
+	 $html .= '</select></span>';
+	 return $html;
+} # end sub date_select
+
+sub datetime_select {
+	 my ( $prefix, $value, $onchange ) = @_;
+
+	 my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
+$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
+
+	 my $html = '';
+	 $html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
+	 $html .= return_years( undef, undef, $year );
+	 $html .= '</select>';
+	 $html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $onchange );
+	 $html .= getmonths( $month );
+	 $html .= '</select>';
+	 $html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
+	 $html .= getdays( $day, $year, $month );
+	 $html .= '</select></span>';
+	 $html .= sprintf('<span id="%1$s_time"><select name="%1$s_hour" onchange="%2$s">', $prefix, $onchange );
+	 $html .= make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour );
+	 $html .= '</select>';
+	 $html .= ':';
+	 $html .= sprintf('<select name="%1$s_minute" onchange="%2$s">', $prefix, $onchange );
+	 $html .= make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $min );
+	 $html .= '</select></span>';
+	 return $html;
+} # end sub datetime_select
+
 1;
 
 __END__
-~       
+~		 
