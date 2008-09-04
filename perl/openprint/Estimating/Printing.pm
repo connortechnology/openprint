@@ -378,7 +378,7 @@ my $master_time = gettimeofday();
 		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'rdbPocketSize'} ) ) {
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
-			$$specs{'alert'} .= 'Please select where you would the pockets.';
+			$$specs{'alert'} .= 'Please select where you would like the pockets.';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
