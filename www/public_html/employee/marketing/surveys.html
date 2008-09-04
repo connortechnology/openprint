@@ -14,6 +14,7 @@
 			<label>CSR:</label>
 			<select name="CSR" onchange="f1.submit();">
 				<option value=""> All </option>
+				<option value="-1"> No CSR </option>
 			<? echo ( 
 				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'strLastName, strFirstName','type'=>['E','A'],'usergroups'=>['Sales'] ) ], $openprint::param{'CSR'} );
 			) ?>
@@ -47,7 +48,9 @@
 	<? echo (
 		my $html;
 		my @responses;
-		if ( $openprint::param{'CSR'} ) {
+		if ( $openprint::param{'CSR'} == -1 ) {
+			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses, Users WHERE user_id=users.index AND survey_id=? AND company_id IN (SELECT Index FROM Company WHERE lngSalesPerson IS NULL) }, $$variable{'Survey'}->id() );
+		} elsif ( $openprint::param{'CSR'} ) {
 			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses, Users WHERE user_id=users.index AND survey_id=? AND company_id IN (SELECT Index FROM Company WHERE lngSalesPerson=?) }, $$variable{'Survey'}->id(), $openprint::param{'CSR'} );
 		} else {
 			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses WHERE survey_id=?}, $$variable{'Survey'}->id() );

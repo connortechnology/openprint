@@ -172,6 +172,11 @@ sub save {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
+	} elsif ( $$params{'force_insert'} ) {
+		if ( my $error = sql::insert( $openprint::log, $openprint::dbh, 'Users', \%sql ) ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return $error;
+		} # end if
 	} else {
 		if ( my $error = sql::update( $openprint::log, $openprint::dbh, 'Users', ['Index=?',$$self{id}], \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
@@ -346,8 +351,13 @@ sub find {
 		push @values, $param{'web_active'};
 	} # end if
 	if ( exists $param{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $param{'deleted'};
+		if ( ref $param{'deleted'} eq 'ARRAY' ) {
+			$sql .= ' AND deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$param{'deleted'}}) . ')';
+			push @values, @{$param{'deleted'}};
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $param{'deleted'};
+		} # end if
 	} else {
 		$sql .= ' AND (deleted=? OR deleted IS NULL)';
 		push @values, 0;
