@@ -1,0 +1,190 @@
+/*
+dark: #330000
+less brown: #663300
+light#CC9900
+lighter: #FFF2AC
+*/
+body {
+	margin: 0px;
+	padding: 5px;
+	background-color: #fff;
+	color: #333;
+}
+input, textarea, select, option {
+	font-size: xx-small;
+}
+.Page {
+	border: 1px solid #330000;
+	background-color: #DFD6B4;
+	padding: 5px;
+	margin: 0px;
+}
+@media print {
+	body {
+		padding: 0px;
+	}
+	.Page {
+		border: none;
+		padding: 0px;
+	}
+}
+
+body, p, ol, ul, td {
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: xx-small;
+}
+
+h1 {
+}
+    pre {
+      background-color: #eee;
+      padding: 10px;
+    }
+
+
+    .fieldWithErrors {
+      padding: 2px;
+      background-color: red;
+      display: table;
+    }
+
+  #ErrorExplanation {
+      width: 400px;
+      border: 2px solid red;
+      padding: 7px;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      background-color: #f0f0f0;
+    }
+
+    #ErrorExplanation h2 {
+      text-align: left;
+      font-weight: bold;
+      padding: 5px 5px 5px 15px;
+      font-size: 12px;
+      margin: -7px;
+      background-color: #c00;
+      color: #fff;
+    }
+
+    #ErrorExplanation p {
+      color: #333;
+      margin-bottom: 0;
+      padding: 5px;
+    }
+                           
+
+.spacer {
+	clear: both;
+	height: 0px;
+	padding: 0px;
+	margin: 0px;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	width: 100%;
+}
+table.List {
+	border: 1px solid #330000;
+	table-layout: fixed;
+}
+th {
+	background-color: #330000;
+	color: #ffffff;
+	border-bottom: 1px solid #330000;
+	padding: 1;
+	text-align: left;
+	font-size: xx-small;
+}
+th.money {
+	text-align: right;
+}
+
+td { padding: 1; 
+	vertical-align: top;
+}
+
+tr.highlightOn {
+	background-color: #ffffff;
+	color: #ffffff;
+}
+tr.highlightOff {
+	background-color: #DFD6B4;
+}
+
+.DroppableOn {
+	border-color: #8C94BA;
+}
+.DroppableOff {
+	border-color: #000000;
+}
+
+tr.totals {
+	border-top: 1px solid #330000;
+}
+
+
+a {
+    text-decoration: none;
+    color: #000000;
+}
+
+a:hover {
+	background: none;
+    color: #000000;
+}
+
+a:visited, a:active {
+    color: #888888;
+}
+
+.menu a {
+	background: #330000;
+	color: #ffffff;
+	padding: 5px;
+}
+.menu a:hover {
+	background: #8C94BA;
+	color: #ffffff;
+}
+@media print {
+	.menu {
+		display: none;
+	}
+}
+
+fieldset p {
+	text-align:left;
+}
+fieldset p.buttons {
+	text-align: right;
+}
+fieldset legend {
+color: #330000;
+
+}
+fieldset p label {
+	margin-right: 5px;
+	float: left;
+	width: 25%;
+	text-align: right;
+	vertical-align: top;
+}
+label.radio {
+	width: auto;
+	float: none;
+}
+fieldset p br {
+	display: none;
+}
+hr {
+	color: #330000;
+	background-color: #330000;
+}
+a.button {
+	background-color: #330000;
+	color: #ffffff;
+	padding: 3px;
+}
