@@ -307,6 +307,7 @@ input, textarea, select, option {
 	background-color: white;
 	color: black;
 	font-size: xx-small;
+	outline: 0;
 }
 table.List input {
 	width: 95%;

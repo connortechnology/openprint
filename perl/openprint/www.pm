@@ -83,12 +83,16 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	openprint::session_init();
-	openprint::usergroup::init_cache();
-	openprint::Material::init_cache();
-	openprint::Service::init_cache();
-	openprint::ServiceType::init_cache();
-	openprint::Equipment::init_cache();
-	openprint::Paper::init_cache();
+
+	foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
+		eval "openprint::$o::init_cache();";
+	} # end foreach
+	#openprint::usergroup::init_cache();
+	#openprint::Material::init_cache();
+	#openprint::Service::init_cache();
+	#openprint::ServiceType::init_cache();
+	#openprint::Equipment::init_cache();
+	#openprint::Paper::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();

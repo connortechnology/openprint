@@ -1,0 +1,58 @@
+<form name="f1" id="f1" action="history.html" method="post">
+	<fieldset><legend>Editing timetrack</legend>
+		<div class="leftColumn">
+			<p><label for="company_id">Company</label>
+				<select id="company_id" name="company_id">
+					<option value=""> select </option>
+					<? echo ( openprint::Company::get_dropdown( $$variable{'Timetrack'}->company_id() ? $$variable{'Timetrack'}->company_id() : $session{'company_id'} ); ) ?>
+				</select>
+			</p>
+			<p><label for="user_id">Employee</label>
+				<select id="user_id" name="user_id">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Timetrack'}->user_id() ? $$variable{'Timetrack'}->user_id() : $session{'user_id'} ); ) ?>
+				</select>
+			</p>
+			<p>
+				<label>Time Associated</label>
+				<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( $$variable{'Timetrack'}->time_associated()? 'checked="checked"' : '' ) ?> onclick="if(this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }" />
+				<label class="radio" for="time_associated1">Yes</label>
+				<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( $$variable{'Timetrack'}->time_associated()? '' : 'checked="checked"' ) ?> onclick="if(!this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }" />
+				<label class="radio" for="time_associated0"> No</label>
+			</p>
+			<p><label for="timetrack_starting">Start</label>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting() ); ) ?></span>
+			</p>
+			<p><label for="timetrack_ending">End</label>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending() ); ) ?></span>
+			</p>
+			<p><label>Service</label>
+				<select id="service_id" name="service_id">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service::find('owner_id'=>$session{'company_id'},'order'=>'lower(name)') ], $$variable{'Timetrack'}->user_id() ? $$variable{'Timetrack'}->user_id() : $session{'user_id'} ); ) ?>
+				</select>
+			</p>
+			<p><label for="timetrack_rate">Override Rate</label>
+				<input type="text" name="rate" id="rate" value="<? echo ( $$variable{'Timetrack'}->rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			</p>
+		</div>
+		<div class="rightColumn">
+			<p>
+				<label for="description">Description</label>
+				<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{'Timetrack'}->description() ? scalar split("\n", $$variable{'Timetrack'}->description()) + 3 : 10 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Timetrack'}->description() ) ?></textarea>
+			</p>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+				if ( $$variable{'Timetrack'}->id() ) {
+				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();}", 'history.html', 'Save' );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+</form>

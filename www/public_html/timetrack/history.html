@@ -41,16 +41,7 @@
 				</select>
 			</p>
 <? eval (
-	if ( ( ! $session{'/timetrack/history.html?StartYear'} ) or ( time - $session{'/timetrack/history.html?lastupdated'} > 3600 ) ) {
-		@session{'/timetrack/history.html?StartYear','/timetrack/history.html?StartMonth','/timetrack/history.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 );
-		@session{'/timetrack/history.html?EndYear','/timetrack/history.html?EndMonth','/timetrack/history.html?EndDay'} = Date::Calc::Today();
-	} else {
-		@session{'/timetrack/history.html?StartYear','/timetrack/history.html?StartMonth','/timetrack/history.html?StartDay'} = ssi::fix_date( @session{'/timetrack/history.html?StartYear','/timetrack/history.html?StartMonth','/timetrack/history.html?StartDay'} );
-		@session{'/timetrack/history.html?EndYear','/timetrack/history.html?EndMonth','/timetrack/history.html?EndDay'} = ssi::fix_date( @session{'/timetrack/history.html?EndYear','/timetrack/history.html?EndMonth','/timetrack/history.html?EndDay'} );
-	} # end if
-
-    @$variable{'StartYears','StartMonths','StartDays'} = ssi::get_dates( $log, $dbh, @session{'/timetrack/history.html?StartYear','/timetrack/history.html?StartMonth','/timetrack/history.html?StartDay'} );
-	@$variable{'EndYears','EndMonths','EndDays'} = ssi::get_dates( $log, $dbh, @session{'/timetrack/history.html?EndYear','/timetrack/history.html?EndMonth','/timetrack/history.html?EndDay'} );
+	ssi:setup_date_select( '/timetrack/history.html', 'starting', -31 );
 
 	$session{'/timetrack/history.html?invoiced'} = '0' if ! $session{'/timetrack/history.html?invoiced'};
 	$session{'/timetrack/history.html?paid'} = '0' if ! $session{'/timetrack/history.html?paid'};
@@ -59,30 +50,30 @@
 			<p>
 				<label>Dates:</label>
 				<span class="DateSelector">
-					<select name="StartDay" onchange="load_timetracks(this.form);"><?StartDays?></select>
-					<select name="StartMonth" onchange="setDaysDropDown(document.f1.StartYear.value,this.value,document.f1.StartDay,document.f1.StartDay.value); load_timetracks(this.form);"><?StartMonths?></select>
-					<select name="StartYear" onchange="setDaysDropDown(this.value,document.f1.StartMonth.value,document.f1.StartDay,document.f1.StartDay.value);load_timetracks(this.form);"><?StartYears?></select>
+<? echo ( ssi::date_select( 'starting_start', join('-', @session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_starting_day'} ), 'load_timetracks(this.form);' ); ) ?>
 					to 
 				</span>
 				<span class="DateSelector">
-					<select name="EndDay" onchange="load_timetracks(this.form);"><?EndDays?></select>
-					<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);load_timetracks(this.form);"><?EndMonths?></select>
-					<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);load_timetracks(this.form);"><?EndYears?></select>
+<? echo ( ssi::date_select( 'starting_end', join('-', @session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ), 'load_timetracks(this.form);' ); ) ?>
 				</span>
 			</p>
 			</div>
 			<div class="rightColumn">
 			<p><label>Invoiced?:</label>
-				<input type="checkbox" id="invoiced_1" name="invoiced" value="1" <? echo ( sets::isin( 1, split(';', $session{'/timetrack/history.html?invoiced'} ) ) ? 'checked="checked"' : '' ) ?> onclick="load_timetracks(this.form);" />
+				<input type="radio" id="invoiced_1" name="invoiced" value="1" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '1' ); ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="invoiced_1">Yes</label>
-				<input type="checkbox" id="invoiced_0" name="invoiced" value="0" <? echo ( sets::isin( 0, split(';', $session{'/timetrack/history.html?invoiced'} ) ) ? 'checked="checked"' : '' ) ?> onclick="load_timetracks(this.form);" />
+				<input type="radio" id="invoiced_0" name="invoiced" value="0" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '0' ); ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="invoiced_0">No</label>
+				<input type="radio" id="invoiced_0;1" name="invoiced" value="0;1" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '0;1' ) ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="invoiced_0;1">Both</label>
 			</p>
 			<p><label>Paid?:</label>
-				<input type="checkbox" id="paid_1" name="paid" value="1" <? echo ( sets::isin( 1, split(';', $session{'/timetrack/history.html?paid'} ) ) ? 'checked="checked"' : '' ) ?> onclick="load_timetracks(this.form);" />
+				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '1' ); ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="paid_1">Yes</label>
-				<input type="checkbox" id="paid_0" name="paid" value="0" <? echo ( sets::isin( 0, split(';', $session{'/timetrack/history.html?paid'} ) ) ? 'checked="checked"' : '' ) ?> onclick="load_timetracks(this.form);" />
+				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '0' ); ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="paid_0">No</label>
+				<input type="radio" id="paid_0;1" name="paid" value="0;1" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '0;1' ); ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="paid_0;1">Both</label>
 			</p>
 			<p>
 				<label>Employee:</label>
