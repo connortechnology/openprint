@@ -41,8 +41,8 @@
 				</select>
 			</p>
 <? eval (
-	ssi:setup_date_select( '/invoice/history.html', 'created', -31 );
-	ssi:setup_date_select( '/invoice/history.html', 'due', -31 );
+	ssi:setup_date_select( '/invoice/history.html', 'created_on', -31 );
+	ssi:setup_date_select( '/invoice/history.html', 'due_on', -31 );
 
 
 	$session{'/invoice/history.html?invoiced'} = '0' if ! $session{'/invoice/history.html?invoiced'};
@@ -52,21 +52,21 @@
 			<p>
 				<label>Created:</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_start', join('-', @session{'/invoice/history.html?created_start_year','/invoice/history.html?created_start_month','/invoice/history.html?created_created_day'} ), 'load_invoices(this.form);' ); ) ?>
+<? echo ( ssi::date_select( 'created_on_start', join('-', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ), 'load_invoices(this.form);' ); ) ?>
 					to 
 				</span>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_end', join('-', @session{'/invoice/history.html?created_end_year','/invoice/history.html?created_end_month','/invoice/history.html?created_end_day'} ), 'load_invoices(this.form);' ); ) ?>
+<? echo ( ssi::date_select( 'created_on_end', join('-', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ), 'load_invoices(this.form);' ); ) ?>
 				</span>
 			</p>
 			<p>
 				<label>Due:</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'due_start', join('-', @session{'/invoice/history.html?due_start_year','/invoice/history.html?due_start_month','/invoice/history.html?due_due_day'} ), 'load_invoices(this.form);' ); ) ?>
+<? echo ( ssi::date_select( 'due_on_start', join('-', @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ), 'load_invoices(this.form);' ); ) ?>
 					to 
 				</span>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'due_end', join('-', @session{'/invoice/history.html?due_end_year','/invoice/history.html?due_end_month','/invoice/history.html?due_end_day'} ), 'load_invoices(this.form);' ); ) ?>
+<? echo ( ssi::date_select( 'due_on_end', join('-', @session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'} ), 'load_invoices(this.form);' ); ) ?>
 				</span>
 			</p>
 			</div>
