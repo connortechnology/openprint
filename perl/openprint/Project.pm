@@ -611,8 +611,7 @@ sub find {
 } # end sub find
 
 sub save {
-	my $self = shift;
-	my %hash = @_;
+	my ( $self, %hash ) = @_;
 
 	@$self{ keys %hash } = @hash{keys %hash};
 
@@ -659,6 +658,12 @@ sub save {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
+	} elsif ( $hash{'force_install'} ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'tbl_Projects', 'Index',	@$self{'id'}, @sql ) ) {
+			$openprint::dbh->rollback;
+			sql::end_transaction( $openprint::dbh, $ac );
+			return $e;
+		} # end if
 	} else {
 		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'tbl_Projects', "Index=$$self{'id'}", @sql ) ) {
 			$openprint::dbh->rollback;
@@ -678,6 +683,15 @@ sub Currency {
 	} # end if
 	return new openprint::Currency( $$self{'currency_id'} );
 } # end sub Currency
+
+sub quantity_indexes {
+	my ( $self ) = @_;
+	my @indexes;
+	foreach my $qty_index ( 1 .. 3 ) {
+		push @indexes, $qty_index if $$self{"quantity$qty_index"};
+	} # end foreach qty_index
+	return @indexes;
+} # end sub quantity_indexes
 
 sub quantities {
 	my $self = shift;
@@ -935,6 +949,11 @@ sub prices {
 	my $self = shift;
 	return @$self{'price1','price2','price3'};
 }
+
+sub price {
+	my ( $self, $index ) = @_;
+	return $$self{'price'.$index};
+} # end sub price
 
 sub Order {
 	my $self = shift;
