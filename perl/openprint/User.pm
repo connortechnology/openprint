@@ -196,6 +196,10 @@ sub save {
 
 sub delete {
 	my $self = shift;
+	sql::update( undef, undef, 'Users', ['index=?', $$self{'id'}], 'deleted', 1 );
+}
+sub destroy {
+	my $self = shift;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
@@ -206,6 +210,7 @@ sub delete {
 	foreach my $Order ( openprint::Order::find('user_id'=>$$self{'id'}) ) {
 		$Order->delete();
 	} # end foreach
+	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
 	foreach my $Project ( openprint::Project::find('user_id'=>$$self{'id'}) ) {
 		$Project->delete();
 	} # end foreach

@@ -15,6 +15,12 @@ function keepCompany( form ){
 
 }
 </script>
+<? if ( $$variable{'error'} ) ?>
+<div class="error"><?error?></div>
+<? endif ( $$variable{'error'} ) ?>
+<? if ( $$variable{'information'} ) ?>
+<div class="error"><?information?></div>
+<? endif ( $$variable{'information'} ) ?>
 Please select a company or user to obtain login information.<br/>
 <br/>
 <div id="UserProfile">
