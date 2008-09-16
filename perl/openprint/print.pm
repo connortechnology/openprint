@@ -421,9 +421,10 @@ sub multipage_signatures {
 		
 		} # end foreach spec
 		foreach my $spec ( 'Press','RunStyle' ) {
+			next if ! exists $$param{'ddm'.$spec.$type};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.$type} );
 				if ( $$param{'ddm'.$spec.$type} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.$type} );
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, 'Y' );
 				} else {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, '' );

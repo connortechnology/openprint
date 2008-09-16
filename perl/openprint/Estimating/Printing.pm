@@ -725,9 +725,11 @@ $openprint::log->debug('cloning');
 	} # end if override
 
 	push @Papers, @Ps;
+if ( $debug ) {
 foreach my $P ( @Papers ) {
 $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
 } 
+} # end if
 
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
@@ -1684,7 +1686,7 @@ $$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 							$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
 							$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}*$$specs{'txtSpreadSize'};
-	$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
+	#$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
 							#$new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} = 'Y';
 							$new_specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$new_specs{'chkOverridePress'.$qty_index} = 'Y';
@@ -1940,12 +1942,12 @@ sub calc_price {
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
-		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug or 1;
+		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug;
 		return \%price;
 	} # end if
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
-		$openprint::log->debug("Next cuz of minimum impression quantity $min_impression_quantity: $impressions" ) if $debug or 1;
+		$openprint::log->debug("Next cuz of minimum impression quantity $min_impression_quantity: $impressions" ) if $debug;
 		return \%price;
 	} # end if
 # Impressions are basically runs through the press
@@ -2469,7 +2471,7 @@ sub select_presses {
 				 ( $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' ) ) 
 				) and ( $Press->specification('Aqueous Coating') ne 'Y' )
 		   ) {
-			$openprint::log->debug(" ** Press $press_id Failed Aqueous Check (".$Press->specification('Aqueous Coating').")**");
+			$openprint::log->debug(" ** Press $press_id Failed Aqueous Check (".$Press->specification('Aqueous Coating').")**") if $debug;
 			next;
 		} # end if
 

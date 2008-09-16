@@ -83,11 +83,11 @@ sub inventory_report {
 	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)');
 	my @papers = openprint::Paper::find(
 			'owner_id'	=>	( defined $param{'Owner'} ? $param{'Owner'} : '' ),
-			'manufacturer_id'	=>	( defined $param{'PaperManufacturer'} ? $param{'PaperManufacturer'} : undef ),
-			'name_id'	=>	( defined $param{'PaperBrand'} ? $param{'PaperBrand'} : undef ),
-			'finish_id' =>	( defined $param{'PaperFinish'} ? $param{'PaperFinish'} : undef ),
-			'colour_id' =>	( defined $param{'PaperColour'} ? $param{'PaperColour'} : undef ),
-			'weight_id' =>	( defined $param{'PaperWeight'} ? $param{'PaperWeight'} : undef ),
+			'manufacturer_id'	=>	( defined $param{'Manufacturer'} ? $param{'Manufacturer'} : undef ),
+			'name_id'	=>	( defined $param{'Name'} ? $param{'Name'} : undef ),
+			'finish_id' =>	( defined $param{'Finish'} ? $param{'Finish'} : undef ),
+			'colour_id' =>	( defined $param{'Colour'} ? $param{'Colour'} : undef ),
+			'weight_id' =>	( defined $param{'Weight'} ? $param{'Weight'} : undef ),
 			'type'		=>	$param{'Type'},
 			'created_on_start'  => defined $param{'StartYear'} ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
 			'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ),
@@ -99,6 +99,20 @@ sub inventory_report {
 	my @data;
 	my $total_weight = 0;
 	foreach my $Paper ( @papers ) {
+		if ( $param{'width'} ) {
+			if ( $param{'OrLarger'} ) {
+				next if $Paper->width() < $param{'width'};
+			} else {
+				next if $Paper->width() != $param{'width'};
+			} # end if
+		} # end if
+		if ( $param{'height'} ) {
+			if ( $param{'OrLarger'} ) {
+				next if $Paper->height() < $param{'height'};
+			} else {
+				next if $Paper->height() != $param{'height'};
+			} # end if
+		} # end if
 		foreach my $Skid ( $Paper->skids() ) {
 			my $weight = 0;
 			if ( $Paper->type() eq 'Roll' ) {
@@ -667,8 +681,8 @@ sub check_out {
 			$qty -= $amount;
 			$amount *= -1;
 			$Skid->add( $Paper, $amount );
-			$Paper->add_inventory( $Skid, $amount, $units, 'Checked out' . @Projects ? ' for docket ' . $Projects[0]->docket() : '' );
-			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if $Paper->allocated( $Projects[0]->id() );
+			$Paper->add_inventory( $Skid, $amount, $units, 'Checked out' . ( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
+			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if @Projects and $Paper->allocated( $Projects[0]->id() );
 		} else {
 			$$Skid{Paper}{$paper_id} -= $qty;
 			if ( @Projects ) {
