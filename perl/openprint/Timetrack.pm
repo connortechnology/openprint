@@ -46,6 +46,11 @@ require sql;
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 	'deleted'		=> 0,
+	'rate'			=>	undef,
+	'paycheque_id'	=>	undef,
+	'currency_id'	=>	undef,
+	'owner_id'		=>	undef,
+	'invoice_id'	=>	undef,
 );
 
 sub find {
@@ -71,6 +76,16 @@ sub find {
 		} else {
 			$sql .= q{ AND user_id=?};
 			push @values, $params{'employee_id'};
+		} # end if
+	} # end if
+
+	if ( $params{'company_id'} ) {
+		if ( ref $params{'company_id'} eq 'ARRAY' ) {
+			$sql .= q{ AND company_id IN (}.join(',', map {'?'} @{$params{'company_id'}} ).')';
+			push @values, @{$params{'company_id'}};
+		} else {
+			$sql .= q{ AND company_id=?};
+			push @values, $params{'company_id'};
 		} # end if
 	} # end if
 

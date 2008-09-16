@@ -41,7 +41,7 @@
 				</select>
 			</p>
 <? eval (
-	ssi:setup_date_select( '/timetrack/history.html', 'starting', -31 );
+	ssi::setup_date_select( '/timetrack/history.html', 'starting', -31 );
 
 	$session{'/timetrack/history.html?invoiced'} = '0' if ! $session{'/timetrack/history.html?invoiced'};
 	$session{'/timetrack/history.html?paid'} = '0' if ! $session{'/timetrack/history.html?paid'};

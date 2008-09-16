@@ -4,15 +4,18 @@
 
 	$openprint::session{'/timetrack/history.html?lastupdated'} = time;
 
-	foreach ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','employee_id','company_id') {
-		if ( ref $openprint::param{$_} eq 'ARRAY' ) {
-			$openprint::session{"/timetrack/history.html?$_"} = join(';', @{$openprint::param{$_}} );
-		} elsif ( exists $openprint::param{$_} ) {
-			$openprint::session{"/timetrack/history.html?$_"} = $openprint::param{$_};
-		} # end if
-	} # end foreach
+	if ( ! $openprint::param{'btnFunction'} ) {
+		foreach ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','employee_id','company_id') {
+			if ( ref $openprint::param{$_} eq 'ARRAY' ) {
+				$openprint::session{"/timetrack/history.html?$_"} = join(';', @{$openprint::param{$_}} );
+			} elsif ( exists $openprint::param{$_} ) {
+				$openprint::session{"/timetrack/history.html?$_"} = $openprint::param{$_};
+			} # end if
+		} # end foreach
+	} # end if
 
 	@{$$variable{'Timetracks'}} = ();
+	$$variable{'elapsed_total'} = $$variable{'value_total'} = 0;
 	foreach my $Timetrack ( openprint::Timetrack::find( 
 		'starting_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_start_day'} ),
 		'starting_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ),
@@ -25,6 +28,8 @@
 		next if $Timetrack->invoiced() and ! sets::isin( 1, split(';', $openprint::session{'/timetrack/history.html?invoiced'} ) );
 		next if ( ! $Timetrack->invoiced() ) and ! sets::isin( 0, split(';', $openprint::session{'/timetrack/history.html?invoiced'} ) );
 		push @{$$variable{'Timetracks'}}, $Timetrack;
+		$$variable{'elapsed_total'} += $Timetrack->elapsed();
+		$$variable{'value_total'} += $Timetrack->value();
 	} # end foreach Timetrack
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
@@ -43,9 +48,9 @@
 			<th align="left">Company</th>
 			<th width="110" align="center">Start</th>
 			<th width="110" align="center">End</th>
-			<th width="50" align="center">Time</th>
-			<th width="50" align="center">Inv?</th>
-			<th width="50" align="center">Paid?</th>
+			<th width="50" align="right">Time</th>
+			<th width="50" align="right">Inv?</th>
+			<th width="50" align="right">Paid?</th>
 			<th align="left">Service</th>
 			<th width="60" align="right">Value</th>
 		</tr>
@@ -58,7 +63,7 @@
 			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->Company()->name(); ) ?></a></td>
 			<td align="center"><? echo ( Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $$variable{'Timetrack'}->starting() ) ); ) ?></td>
 			<td align="center"><? echo ( Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $$variable{'Timetrack'}->ending() ) ); ) ?></td>
-			<td align="center"><? echo ( sprintf( '%d:%d:%d', misc::seconds_to_interval( $$variable{'Timetrack'}->elapsed() ) ); ) ?></td>
+			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'Timetrack'}->elapsed() ); ) ?></td>
 			<td align="center"><? echo ( $$variable{'Timetrack'}->invoiced() ? 'Y' : 'N'; ) ?></td>
 			<td align="center"><? echo ( $$variable{'Timetrack'}->paid() ? 'Y' : 'N'; ) ?></td>
 			<td align="left"><? hecho ( $$variable{'Timetrack'}->Service()->name(); ) ?></td>
@@ -66,6 +71,12 @@
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Timetrack'} = shift @{$$variable{'Timetracks'}}; ) ?>
+		<tr class="totals">
+			<td colspan="4" align="right">Totals:</td>
+			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
+			<td colspan="3">&nbsp;</td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'value_total'} ); ) ?></td>
+		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $openprint::session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>

@@ -420,9 +420,11 @@ return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'funct
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;
 	if ( ( ! $session{$page.'?'.$prefix.'_start_year'} ) or ( time - $session{'lastupdated'} > 3600 ) ) {
+$openprint::log->debug("Reset date");
 		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$page.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $delta );
 		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Today();
 	} else {
+$openprint::log->debug("Fix date");
 		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} );
 		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} );
 	} # end if
@@ -467,7 +469,7 @@ $openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
 	$html .= '</select>';
 	$html .= ':';
 	$html .= sprintf('<select name="%1$s_minute" onchange="%2$s">', $prefix, $onchange );
-	$html .= make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $min );
+	$html .= make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $min );
 	$html .= '</select></span>';
 	return $html;
 } # end sub datetime_select

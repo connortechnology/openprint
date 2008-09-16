@@ -32,7 +32,7 @@ sub load {
 		$sql .= ' AND (? >= Min OR Min IS NULL) AND (? <= Max OR Max IS NULL)';
 		push @values, @$self{'qty','qty'};
 	} # end if
-    my @records = sql::execute( 0, undef, $sql, @values );
+    my @records = sql::execute( undef, undef, $sql, @values );
     while ( @records ) {
 		my $price = openprint::service_price->new( $self->{log}, $self->{dbh}, $self );
 		$price->set( splice @records, 0, 8 );
