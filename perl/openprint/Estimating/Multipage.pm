@@ -43,6 +43,11 @@ sub variables {
 	foreach my $k ( keys %variables ) {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
+	foreach my $k ( 'ddmPress','ddmRunStyle' ) {
+		foreach my $group ( 'CoverSpreads', 'InteriorSpreads' ) {
+			push @v, $k.$group;
+		} # end foreach
+	} # end foreach
 	return @v;
 } # end sub variables
 

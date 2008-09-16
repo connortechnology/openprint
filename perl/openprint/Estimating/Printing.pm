@@ -1336,6 +1336,12 @@ $I->display();
 		$$specs{'txtImageHeight'.$qty_index} = $Imposition->image_height();
 		$$specs{'txtLayoutWidth'.$qty_index} = $Imposition->layout_width();
 		$$specs{'txtLayoutHeight'.$qty_index} = $Imposition->layout_height();
+		if ( $Imposition->Paper()->type() eq 'Roll' ) {
+		$$specs{'minimum_stock_size'.$qty_index} = $Imposition->used_width().'&quot;';
+		} else {
+		$$specs{'minimum_stock_size'.$qty_index} = sprintf('%s&quot; x %s&quot;', $Imposition->used_width(), $Imposition->used_height() );
+		} # end if
+
 		if ( $Paper->width() and $Paper->height() ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . 'x' . $Paper->height();
 		} elsif ( $Paper->width() ) {
