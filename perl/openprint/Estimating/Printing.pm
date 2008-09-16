@@ -864,7 +864,15 @@ $openprint::log->debug("Grabbing UV Specs");
 
 		} # end if
 
+		delete $$specs{'PreviousStockType'};
+		foreach my $index ( $Project->signatures('Interior Spreads') ) {
+			next if $index >= $service_index;
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			$$specs{'PreviousStockType'} = $$sig_specs{'StockType'.$qty_index};
+		} # end foreach
+
 		delete $$specs{'PrintingTypes'};
+
 		if ( $$printing_specs{'PrintingType'} and sets::isin( $$printing_specs{'PrintingType'}, \@available_printingtypes ) ) {
 			$$specs{'PrintingTypes'} = [ $$printing_specs{'PrintingType'} ];
 		} else {
@@ -935,6 +943,7 @@ $openprint::log->debug("Grabbing UV Specs");
 						last if $$specs{'PrintingTypes'};
 					} # end foreach
 				} # end if PrintingTypes
+				
 			} # end if Spread Type
 		} # end if printing_specs{'PrintingType'}
 
@@ -1099,6 +1108,10 @@ $openprint::log->debug("No spread layout for you!");
 			my %imps;
 
 			foreach my $Paper ( @Papers ) {
+				if ( $$specs{'PreviousStockType'} and ( $Paper->type() ne $$specs{'PreviousStockType'} ) ) {
+					#$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() );
+					next;
+				} # end if
 				my @imps;
 				if ( $Paper->type() eq 'Roll' ) {
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
@@ -1539,6 +1552,11 @@ $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
 		} # end if
 		#$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions);
 		foreach my $imp ( @impositions ) {
+
+			if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
+				#$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() );
+				next;
+			} # end if
 			if ( ( $imp->runstyle() eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 				$openprint::log->debug('No Web 4 U');
 				next;
@@ -1666,6 +1684,8 @@ $$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 							$new_specs{'chkOverridePress'.$qty_index} = 'Y';
 							$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 							$new_specs{'chkOverrideImposition'.$qty_index} = '';
+
+							$new_specs{'PreviousStockType'} = $imp->Paper()->type();
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 
@@ -1995,7 +2015,7 @@ sub calc_price {
 		} # end if
 		#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 
-		#return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
+		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
 	} # end if
 	if ( $$services{'LoopStitching'} ) {
 	} # end if
