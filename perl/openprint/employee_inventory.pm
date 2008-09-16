@@ -1159,17 +1159,17 @@ sub _inventory_log {
 } # end sub inventory_log
 
 sub _paper_allocations {
+	$param{'paper_id'} =~ s/\D//g;
+	$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} );
 	if ( $param{'action'} eq 'Add' ) {
-        $param{'skid_id'} =~ s/\D//g;
-        $param{'paper_id'} =~ s/\D//g;
-        $param{'Docket'} =~ s/\D//g;
-        $param{'AllocationQuantity'} =~ s/[^\d\-]//g;
-        my $Paper = new openprint::Paper( $param{'paper_id'} );
-        my @Projects = openprint::Project::find( 'docket'=>$param{'Docket'} ) if $param{'Docket'};
-        if ( ! @Projects ) {
-            $variable{'error'} .= "Docket $param{'Docket'} not found.";
-        } else {
-            $Paper->allocate( $param{'skid_id'}, $Projects[0]->id(), $param{'AllocationQuantity'} );
+		$param{'skid_id'} =~ s/\D//g;
+		$param{'Docket'} =~ s/\D//g;
+		$param{'AllocationQuantity'} =~ s/[^\d\-]//g;
+		my @Projects = openprint::Project::find( 'docket'=>$param{'Docket'} ) if $param{'Docket'};
+		if ( ! @Projects ) {
+			$variable{'error'} .= "Docket $param{'Docket'} not found.";
+		} else {
+			$variable{'Paper'}->allocate( $param{'skid_id'}, $Projects[0]->id(), $param{'AllocationQuantity'} );
         } # end if
         delete $param{'skid_id'};
     } # end if
