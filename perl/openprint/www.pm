@@ -466,6 +466,34 @@ $variable{'ServiceIndex'} = $service_index;
 			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
 		} # end if main:$second
+	} elsif ( $first eq 'content' ) {
+		if ( $filename eq 'UPS.html' ) {
+			if ( ! $variable{'ServiceIndex'} ) {
+				$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
+			} # end if
+			$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
+			$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};
+			$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
+			my $ProjectType = $variable{'Project'}->Type();
+			@variable{'ProjectTypeID','ProjectTypeName'} = ($ProjectType->strid(), $ProjectType->name() );
+			$variable{'ServiceType'} = openprint::print::get_ServiceType( @variable{'ProjectIndex','ServiceIndex'} );
+
+			@variable{'ServiceTypeID','ServiceTypeName'} = ($variable{'ServiceType'}->name(), $variable{'ServiceType'}->description() ) if $variable{'ServiceType'};
+			my $Currency = openprint::Currency::get_current();
+			@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+			my $project_index = $variable{'ProjectIndex'};
+			my $service_index = $variable{'ServiceIndex'};
+
+# Things like UPS SHipping might not actually have a service
+			openprint::print::get_quantities( \%variable, $project_index );
+			if ( $project_index and $service_index ) {
+				my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+				@variable{keys %$specs} = @$specs{keys %$specs};
+			} # end if
+
+			require openprint::Estimating::UPS;
+			openprint::Estimating::UPS::display( $log, $dbh, \%variable, $project_index, $service_index );
+		} # end if
 	} else {
 		
 		my $module = 'openprint::' . $first;

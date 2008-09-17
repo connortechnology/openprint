@@ -64,7 +64,6 @@ sub calc {
 	my $status = 'calculated';
 
 $log->debug("UPS!!!!!!!!!!");
-	# Currently there is no equipmnet for collating
 	$$specs{'alert'} = '';
 
 	@$specs{'txtPrice1','txtPrice2','txtPrice3'} = ('','','');
@@ -319,6 +318,10 @@ $log->debug("UPS::display: $project_index, $service_index");
 
 		my $company = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
 		@$variable{ keys %shipping_fields } = $company->load_shipping( @shipping_fields{ keys %shipping_fields } );
+	} # end if
+	my $Company = new openprint::Company( $openprint::session{'company_id'} );
+	if ( ! $$variable{'ToPostalCode'} ) {
+		$$variable{'ToPostalCode'} = $Company->postalcode();
 	} # end if
 
 } # end sub display
