@@ -861,7 +861,7 @@ $openprint::log->debug("Grabbing UV Specs");
 		} # end if
 
 		delete $$specs{'PreviousStockType'};
-		foreach my $index ( $Project->signatures('Interior Spreads') ) {
+		foreach my $index ( $Project->signatures($$specs{'txtSignatureType'}) ) {
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$$specs{'PreviousStockType'} = $$sig_specs{'StockType'.$qty_index};
@@ -1013,7 +1013,7 @@ $openprint::log->debug("No spread layout for you!");
 			my $press_index = $Press->id();
 			if ( $$specs{'chkOverridePrintingType'.$qty_index} eq 'Y' ) {
 				if ( $Press->specification('Printing Type') ne $$specs{'PrintingType'.$qty_index} ) {
-#$openprint::log->error("Press Printing Type ($press_specs{'Printing Type'}) is not the overriden type " . $$specs{'PrintingType'.$qty_index} );
+					$openprint::log->error('Press Printing Type ('.$Press->specification('Printing Type').') is not the overriden type ' . $$specs{'PrintingType'.$qty_index} ) if $debug;
 					next;
 				} # end if
 			} else {
@@ -1105,7 +1105,7 @@ $openprint::log->debug("No spread layout for you!");
 
 			foreach my $Paper ( @Papers ) {
 				if ( $$specs{'PreviousStockType'} and ( $Paper->type() ne $$specs{'PreviousStockType'} ) ) {
-					#$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() );
+					$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() .' ' .$$specs{'PreviousStockType'} ) if $debug;
 					next;
 				} # end if
 				my @imps;
