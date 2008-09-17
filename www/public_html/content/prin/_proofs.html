@@ -1,9 +1,6 @@
-<? eval (
-	
-) ?>
 <p>
 	<label>Proofs:</label>
-	<select name="proof_type">
+	<select name="proof_type" onchange="remove_div('OrderButton');calc(this.form.name);">
 		<option value="">No Proof Required</option>
 <? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service::find('category'=>'Proofs') ], $$variable{'proof_type'} ); ) ?>
 	</select>
