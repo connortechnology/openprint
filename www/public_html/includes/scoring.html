@@ -2,9 +2,9 @@
 	<span class="label">Scoring:</span>
 	<span class="input">
 		<input type="radio" id="ScoringY" name="Scoring" value="Y" onclick="add_div('ScoringDiv');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Scoring'} eq 'Y' ) ?> />
-		<label for="ScoringY">Yes</label>
+		<label class="radio" for="ScoringY">Yes</label>
 		<input type="radio" id="ScoringN" name="Scoring" value="N" onclick="remove_div('ScoringDiv');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Scoring'} ne 'Y' ) ?> />
-		<label for="ScoringN">No</label>
+		<label class="radio" for="ScoringN">No</label>
 	</span>
 </div>
 <div class="row" id="ScoringDiv" <? echo ( 'style="display:none;"' if $$variable{'Scoring'} ne 'Y' ) ?> >
@@ -14,7 +14,7 @@
 	<span class="input">
 		<input type="text" id="txtScoreQty" name="txtScoreQty" value="<?txtScoreQty?>" size="2" onkeyup="remove_div('OrderButton');"/>
 		<input type="checkbox" id="chkOverrideScoreQty" name="chkOverrideScoreQty" value="Y" <? echo ( 'checked="checked"' if $$variable{'chkOverrideScoreQty'} eq 'Y' ) ?> onclick="remove_div('OrderButton');" />
-		<label for="chkOverrideScoreQty">Override</label>
+		<label class="radio" for="chkOverrideScoreQty">Override</label>
 	</span>
 </div>
 

@@ -1,0 +1,42 @@
+<? eval (
+	foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay' ) {
+		$openprint::session{'/employee/inventory/purchase_orders.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
+	} # end foreach
+
+	$$variable{'EndDate'} = sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} );
+
+	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find(
+		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/employee/inventory/purchase_orders.html?StartYear','/employee/inventory/purchase_orders.html?StartMonth','/employee/inventory/purchase_orders.html?StartDay'} ),
+		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/employee/inventory/purchase_orders.html?EndYear','/employee/inventory/purchase_orders.html?EndMonth','/employee/inventory/purchase_orders.html?EndDay'} ),
+		'order'				=> 'id desc',
+		);
+) ?>
+	<? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
+	There are no purchase orders matching your search criteria.
+	<? else ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
+	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
+<table class="List">
+	<tr>
+		<th>PO Num</th>
+		<th>Date</th>
+		<th>Supplier</th>
+		<th>Creator</th>
+		<th>Status</th>
+		<th>Total</th>
+	</tr>
+	<? echo ( 
+		my $html = '';
+		while ( $PurchaseOrder = shift @{$$variable{'PurchaseOrders'}} ) {
+			$html .= sprintf( '<tr>
+				<td>&nbsp;<a href="purchase_order.html?po_id=%1$d">%1$d</a></td>
+				<td><a href="purchase_order.html?po_id=%1$d">%2$s</a></td>
+				<td>%3$s</td>
+				<td>%4$s</td>
+				<td>%5$s%6$.2f</td>
+			</tr>', $PO->id(), $PO->created_on(), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total() );
+		} # end while
+		return $html;
+	) ?>
+	</table>
+	<!--<div align="right" class="smTbl">All prices listed in <?CurrencyName?>.</div>-->
+	<? endif ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>

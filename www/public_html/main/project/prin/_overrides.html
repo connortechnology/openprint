@@ -1,0 +1,17 @@
+<fieldset><legend>Overrides</legend>
+	Warning: Use of these overrides may result in a sub-optimal quote.
+	<p>
+		<label>Runstyle:</label>
+		<select name="ddmRunStyle<?Signature?>" size="1" onchange="calc(this.form.name);">
+			<option value="">Auto</option>
+			<? echo ( ssi::make_drop_down( $$variable{'RunStyleOptions'}, $$variable{"ddmRunStyle$$variable{Signature}"} ); ) ?>
+		</select>
+	</p>
+	<p>
+		<label>Press:</label>
+		<select name="ddmPress<?Signature?>" size="1" onchange="calc(this.form.name);">
+			<option value="">Auto</option>
+			<? echo ( ssi::make_drop_down( $$variable{'ddmPressOptions'}, $$variable{"ddmPress$$variable{Signature}"} ); ) ?>
+		</select>
+	</p>
+</fieldset>

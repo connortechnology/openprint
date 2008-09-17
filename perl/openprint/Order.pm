@@ -165,7 +165,7 @@ $openprint::log->debug("Loaded order: " . $$self{'id'} . ', company_id: ' . $$se
 } # end sub load
 
 sub save {
-	my $self = shift;
+	my ( $self, $params ) = @_;
 	my $ac = sql::start_transaction( $dbh );
 
 	
@@ -179,6 +179,11 @@ sub save {
 	if ( ! $$self{'id'} ) {
 		#@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
 		$$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if	
+	} elsif ( $$params{'force_insert'} ) {
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;

@@ -104,7 +104,7 @@ Please select a Paper to view/edit.<br>
 			<label>Owner:</label>
 			<select name="Owner" size="1">
 			<option value=""> All </option>
-			<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $variable, $openprint::session{'/employee/inventory/paper.html?Owner'} ); ) ?>
+			<? echo ( openprint::Company::get_dropdown( $openprint::session{'/employee/inventory/paper.html?Owner'} ); ) ?>
 			</select>
 		</p>
 		<p>

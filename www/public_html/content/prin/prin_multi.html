@@ -23,14 +23,14 @@
 			<div class="row">
 				<span class="label">Number of pages:</span>
 				<span class="input">
-					<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4"  onkeyup="remove_div('OrderButton');"/>
+					<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="remove_div('OrderButton');"/>
 				</span>
 				<br class="spacer"/>
 				<span class="input">
 						<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('CoverStocks');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} ne 'Different' ) ?> />
-						<label for="rdbCoverSelf">Self Cover</label>
+						<label class="radio" for="rdbCoverSelf">Self Cover</label>
 						<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('CoverStocks');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
-						<label for="rdbCoverDifferent">Different Cover</label>
+						<label class="radio" for="rdbCoverDifferent">Different Cover</label>
 					<br class="spacer"/>
 				</span>
 				<br class="spacer"/>

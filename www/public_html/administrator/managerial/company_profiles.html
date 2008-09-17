@@ -6,12 +6,20 @@
 			<input type="text" name="txtSearchAccountNum" size="13" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
 		</p>
+		<p>
+			<label>Sales Rep:</label>
+			<select name="search_salesrep_id" onchange="f1.btnFunction.value='Go';this.form.submit();">
+				<option value=""> all </option>
+				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } openprint::User::find('id'=>[sql::execute( undef, undef, 'select distinct lngsalesperson from company')],'deleted'=>[0,1],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::param{'search_salesrep_id'} ); ) ?>
+			</select>
+		</p>
 		<p> 
 			<label>Customer:</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
+			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" size="4" />
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('Buttons1').hide();$('Buttons2');f1.submit();}">
 				<option value=""> Select a Customer</option>
-	 <? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::param{'ddmCustomer'} ); ) ?>
+	 <? echo ( return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('salesrep_id'=>$openprint::param{'search_salesrep_id'},'order'=>'lower(strname)') ], $openprint::param{'ddmCustomer'} ); ) ?>
+
 			</select>
 			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
 		</p>
@@ -31,6 +39,7 @@
 		</p>
 	</fieldset>
 	<fieldset><legend>Sales Information:</legend>
+<div class="leftColumn">
 		<p> 
 			<label><b>Account Activated:</b></label>
 			<input type="radio" name="rdbAccountActivation" value="Y" <?rdbAccountActivationY?> /> Yes 
@@ -71,6 +80,17 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmSalesPerson'} ); ) ?>
 			</select>
 		</p>
+</div>
+<? if ( $$variable{'CustomerIndex'} ) ?>
+<div class="rightColumn">
+<p><label># of Orders:</label>
+	<? echo ( openprint::Order::find('company_id'=>$$variable{'CustomerIndex'}) ) ?>
+</p>
+<p><label># of Projects:</label>
+	<? echo ( openprint::Project::find('company_id'=>$$variable{'CustomerIndex'}) ) ?>
+</p>
+</div>
+<? endif ( $$variable{'CustomerIndex'} ) ?>
 	</fieldset>
 	<fieldset><legend>Customer Information:</legend>
 		<p> 

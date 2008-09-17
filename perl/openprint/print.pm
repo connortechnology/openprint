@@ -421,8 +421,20 @@ sub multipage_signatures {
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
+		
 		} # end foreach spec
-	} # end foreach
+		foreach my $spec ( 'Press','RunStyle' ) {
+			next if ! exists $$param{'ddm'.$spec.$type};
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				if ( $$param{'ddm'.$spec.$type} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.$type} );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, 'Y' );
+				} else {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, '' );
+				} # end if
+			} # end foreach qty_index
+		} # end foreach spec
+	} # end foreach signature
 
 	my %services = $Project->get_services();
 	my $old_bindery_type = get_book_type( $project_index );
@@ -488,6 +500,9 @@ sub publication_pages {
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION *******************************");
 	
+	@{$$variable{'ddmPressOptions'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strcategory='Printing' AND (UseInEstimating IS true) ORDER BY lower(strName)} );
+
+	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	load_template_sizes ( $log, $dbh, $$variable{'ProjectTypeID'}, $variable );
 
 	$$variable{'rdbGateFoldNo'} = $$variable{'rdbGateFoldYes'} eq '' ? 'checked' : '';

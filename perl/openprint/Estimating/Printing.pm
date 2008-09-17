@@ -725,9 +725,11 @@ $openprint::log->debug('cloning');
 	} # end if override
 
 	push @Papers, @Ps;
+if ( $debug ) {
 foreach my $P ( @Papers ) {
 $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
 } 
+} # end if
 
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
@@ -858,7 +860,15 @@ $openprint::log->debug("Grabbing UV Specs");
 
 		} # end if
 
+		delete $$specs{'PreviousStockType'};
+		foreach my $index ( $Project->signatures('Interior Spreads') ) {
+			next if $index >= $service_index;
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			$$specs{'PreviousStockType'} = $$sig_specs{'StockType'.$qty_index};
+		} # end foreach
+
 		delete $$specs{'PrintingTypes'};
+
 		if ( $$printing_specs{'PrintingType'} and sets::isin( $$printing_specs{'PrintingType'}, \@available_printingtypes ) ) {
 			$$specs{'PrintingTypes'} = [ $$printing_specs{'PrintingType'} ];
 		} else {
@@ -929,6 +939,7 @@ $openprint::log->debug("Grabbing UV Specs");
 						last if $$specs{'PrintingTypes'};
 					} # end foreach
 				} # end if PrintingTypes
+				
 			} # end if Spread Type
 		} # end if printing_specs{'PrintingType'}
 
@@ -1093,6 +1104,10 @@ $openprint::log->debug("No spread layout for you!");
 			my %imps;
 
 			foreach my $Paper ( @Papers ) {
+				if ( $$specs{'PreviousStockType'} and ( $Paper->type() ne $$specs{'PreviousStockType'} ) ) {
+					#$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() );
+					next;
+				} # end if
 				my @imps;
 				if ( $Paper->type() eq 'Roll' ) {
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
@@ -1318,6 +1333,12 @@ $I->display();
 		$$specs{'txtImageHeight'.$qty_index} = $Imposition->image_height();
 		$$specs{'txtLayoutWidth'.$qty_index} = $Imposition->layout_width();
 		$$specs{'txtLayoutHeight'.$qty_index} = $Imposition->layout_height();
+		if ( $Imposition->Paper()->type() eq 'Roll' ) {
+		$$specs{'minimum_stock_size'.$qty_index} = $Imposition->used_width().'&quot;';
+		} else {
+		$$specs{'minimum_stock_size'.$qty_index} = sprintf('%s&quot; x %s&quot;', $Imposition->used_width(), $Imposition->used_height() );
+		} # end if
+
 		if ( $Paper->width() and $Paper->height() ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . 'x' . $Paper->height();
 		} elsif ( $Paper->width() ) {
@@ -1534,6 +1555,11 @@ $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
 		} # end if
 		#$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions);
 		foreach my $imp ( @impositions ) {
+
+			if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
+				#$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() );
+				next;
+			} # end if
 			if ( ( $imp->runstyle() eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 				$openprint::log->debug('No Web 4 U');
 				next;
@@ -1655,12 +1681,14 @@ $$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 							$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
 							$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}*$$specs{'txtSpreadSize'};
-	$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
+	#$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
 							#$new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} = 'Y';
 							$new_specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$new_specs{'chkOverridePress'.$qty_index} = 'Y';
 							$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 							$new_specs{'chkOverrideImposition'.$qty_index} = '';
+
+							$new_specs{'PreviousStockType'} = $imp->Paper()->type();
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 
@@ -1909,12 +1937,12 @@ sub calc_price {
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
-		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug or 1;
+		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug;
 		return \%price;
 	} # end if
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
-		$openprint::log->debug("Next cuz of minimum impression quantity $min_impression_quantity: $impressions" ) if $debug or 1;
+		$openprint::log->debug("Next cuz of minimum impression quantity $min_impression_quantity: $impressions" ) if $debug;
 		return \%price;
 	} # end if
 # Impressions are basically runs through the press
@@ -1990,7 +2018,7 @@ sub calc_price {
 		} # end if
 		#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 
-		#return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
+		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Saddle Stitching' );
 	} # end if
 	if ( $$services{'LoopStitching'} ) {
 	} # end if
@@ -2438,7 +2466,7 @@ sub select_presses {
 				 ( $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' ) ) 
 				) and ( $Press->specification('Aqueous Coating') ne 'Y' )
 		   ) {
-			$openprint::log->debug(" ** Press $press_id Failed Aqueous Check (".$Press->specification('Aqueous Coating').")**");
+			$openprint::log->debug(" ** Press $press_id Failed Aqueous Check (".$Press->specification('Aqueous Coating').")**") if $debug;
 			next;
 		} # end if
 

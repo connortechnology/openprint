@@ -15,9 +15,7 @@
 		<label>Reference:</label>
 		<textarea name="Reference<?ProjectIndex?>" cols="" rows="<? echo ( scalar split("\n",  $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
 	</p>
-<? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <!--#include virtual="_quantity_select.html"-->
-<? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <? if ( ! $$variable{'Project'}->requested_date() ) ?>
 <!--#include virtual="_required_by.html"-->
 <? endif ( ! $$variable{'Project'}->requested_date() ) ?>

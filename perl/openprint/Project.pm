@@ -613,8 +613,7 @@ sub find {
 } # end sub find
 
 sub save {
-	my $self = shift;
-	my %hash = @_;
+	my ( $self, %hash ) = @_;
 
 	@$self{ keys %hash } = @hash{keys %hash};
 
@@ -658,6 +657,12 @@ sub save {
 
 		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('lngProjectIndex_seq'::text)} );
 
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'tbl_Projects', 'Index',	@$self{'id'}, @sql ) ) {
+			$openprint::dbh->rollback;
+			sql::end_transaction( $openprint::dbh, $ac );
+			return $e;
+		} # end if
+	} elsif ( $hash{'force_install'} ) {
 		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'tbl_Projects', 'Index',	@$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
@@ -990,6 +995,11 @@ sub prices {
 	my $self = shift;
 	return @$self{'price1','price2','price3'};
 }
+
+sub price {
+	my ( $self, $index ) = @_;
+	return $$self{'price'.$index};
+} # end sub price
 
 sub Order {
 	my $self = shift;

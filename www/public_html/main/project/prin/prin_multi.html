@@ -128,6 +128,9 @@
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/bleeds_colourbars.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
+					if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
+					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_overrides.html' );
+					} # end if
 					return variable_substitution( $r, $log, $dbh, \$html, $variable );
 					) ?>
 			</fieldset>

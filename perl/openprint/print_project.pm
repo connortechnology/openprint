@@ -1187,9 +1187,65 @@ sub calc {
 		$services = $project->services();
 
 		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Proofs' ) if ! $$services{'Proofs'};
+$openprint::log->debug("Proofs: $specs{'proof_type'}");
+		if ( $specs{'proof_type'} ) {
+			my $proof_specs = openprint::service::get_specs_ref( $project, $$services{'Proofs'}[0] );
+			my %proof_indexes;
+			foreach my $signature_service_index ( $project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $project, $signature_service_index );
+				my $signature_index = $$sig_specs{'SignatureIndex'};
+				foreach my $key ( keys %{$proof_specs} ) {
+					if ( $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
+						my ( $proof_index, $qty_index ) = ( $1, $2 );
+						push @{$proof_indexes{$signature_index}}, $qty_index;
+					} # end if
+				} # end foreach keys
+
+				if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
+					push @{$proof_indexes{$signature_index}}, 1;
+				} # end if
+				if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
+					push @{$proof_indexes{$signature_index}}, 2;
+				} # end if
+				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
+					push @{$proof_indexes{$signature_index}}, 3;
+				} # end if
+				my $proof_index = 0;
+				foreach ( @{$proof_indexes{$signature_index}} ) {
+					if ( $$proof_specs{"ddmProofType-$signature_index-$_-1"} eq $specs{'proof_type'} ) {
+						$proof_index = $_;
+						last;
+					} # end if
+				} # end foreach proof_index
+				if ( ! $proof_index ) {
+					$proof_index = sets::max( $proof_indexes{$signature_index} ) + 1;
+$openprint::log->debug("Adding proof $proof_index");
+					foreach my $qty_index ( $project->quantity_indexes() ) {
+						#$$proof_specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} = 1;
+						#$$proof_specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} = $specs{'proof_type'};
+						#$$proof_specs{"txtProofIndex-$signature_index-$proof_index-$qty_index"} = $proof_index;
+						openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofQuantity-$signature_index-$proof_index-$qty_index", 1);
+						openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofWidth-$signature_index-$proof_index-$qty_index", '' );
+						openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofHeight-$signature_index-$proof_index-$qty_index", '' );
+						openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "ddmProofType-$signature_index-$proof_index-$qty_index", $specs{'proof_type'} );
+						openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofIndex-$signature_index-$proof_index-$qty_index", $proof_index );
+					} # end foreach qty_index
+				} else {
+					foreach ( @{$proof_indexes{$signature_index}} ) {
+						if ( ( $_ > 3 ) and ( $_ != $proof_index ) ) {
+							foreach my $qty_index ( $project->quantity_indexes() ) {
+								openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "ddmProofType-$signature_index-$proof_index-$qty_index", '' );
+								openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofQuantity-$signature_index-$proof_index-$qty_index", 0 );
+							} # end foreach qty_index
+						} # end if
+					} # end foreach proof_index
+				} # end if ! found
+			} # end foreach signature
+
+		} # end if
 
 		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
-$openprint::log->error('Adding Folding');
+			$openprint::log->error('Adding Folding');
 			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {
 				$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';
