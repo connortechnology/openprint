@@ -870,6 +870,11 @@ $openprint::log->debug("Grabbing UV Specs");
 		foreach my $index ( $Project->signatures($$specs{'txtSignatureType'}) ) {
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			next if $$sig_specs{'ddmStockBrand'} ne $$specs{'ddmStockBrand'};
+			next if $$sig_specs{'txtSpecificStockBrand'} ne $$specs{'txtSpecificStockBrand'};
+			next if $$sig_specs{'ddmStockFinish'} ne $$specs{'ddmStockFinish'};
+			next if $$sig_specs{'ddmStockColour'} ne $$specs{'ddmStockColour'};
+			next if $$sig_specs{'ddmStockWeight'} ne $$specs{'ddmStockWeight'};
 			$$specs{'PreviousStockType'} = $$sig_specs{'StockType'.$qty_index};
 		} # end foreach
 
@@ -1111,7 +1116,7 @@ $openprint::log->debug("No spread layout for you!");
 
 			foreach my $Paper ( @Papers ) {
 				if ( $$specs{'PreviousStockType'} and ( $Paper->type() ne $$specs{'PreviousStockType'} ) ) {
-					$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() .' ' .$$specs{'PreviousStockType'} ) if $debug;
+					$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() .' ' .$$specs{'PreviousStockType'} ) if $debug or 1;
 					next;
 				} # end if
 				my @imps;
@@ -1562,7 +1567,7 @@ $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
 		foreach my $imp ( @impositions ) {
 
 			if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
-				#$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() );
+				$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() );
 				next;
 			} # end if
 			if ( ( $imp->runstyle() eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
