@@ -210,7 +210,7 @@ sub save {
     my $ac = sql::start_transaction( $openprint::dbh );
     if ( ! $$self{'id'} ) {
         @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('companies_id_seq')} );
-		$sql{index} = $$self{'id'};
+		$sql{id} = $$self{'id'};
         if ( my $e = sql::insert( undef, undef, 'Companies', \%sql ) ) {
 			$openprint::dbh->rollback();
 			return $e;

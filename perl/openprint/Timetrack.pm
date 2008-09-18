@@ -234,10 +234,10 @@ sub value {
 	if ( ! $$self{'rate'} ) {
 		my $Service = $self->Service();
 		my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-$openprint::log->debug( "Elapsed: $elapsed : " . $elapsed/3600 . ' : Service: ' .$Service->name() .' Price:' . $Price{'Price'} );
+#$openprint::log->debug( "Elapsed: $elapsed : " . $elapsed/3600 . ' : Service: ' .$Service->name() .' Price:' . $Price{'Price'} );
 		return $Price{'Price'} * $elapsed / 3600;
 	} else {
-$openprint::log->debug( "Elapsed: $elapsed : " . $elapsed/3600 . ' : Rate:' . $$self{'rate'} );
+#$openprint::log->debug( "Elapsed: $elapsed : " . $elapsed/3600 . ' : Rate:' . $$self{'rate'} );
 		return $$self{'rate'} * $elapsed / 3600;
 	} # end if
 	

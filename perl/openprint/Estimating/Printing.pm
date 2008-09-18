@@ -3352,6 +3352,9 @@ sub plate_setup_cost {
 	my $non_process_colours = 0;
 
 	foreach my $colour ( @$colours ) {
+		next if $colour =~ /Aqueous/;
+		next if $colour =~ /UV/;
+
 		$plate_count += 1;
 		$non_process_colours += 1 if ! sets::isin( $colour, ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour'] );
 	} # end foreach colour

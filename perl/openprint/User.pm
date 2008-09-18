@@ -26,10 +26,9 @@ my %fields = (
 	'phone'				=>	'phone',
 	'mobile'			=>	'mobile',
 	'sms'				=>	'sms',
-	'extension'			=>	'strext',
 	'fax'				=>	'fax',
 	'mailinglist'		=>	'ysnmailinglist',
-	'greeting'			=>	'strcustomgreeting',
+	'greeting'			=>	'greeting',
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
 	'type'				=>	'usertype',
@@ -60,6 +59,7 @@ my %defaults = (
 	'changepassword'	=>	'N',
 	'administrator'		=>	'N',
 	'commission'		=>	undef,
+	'quote_level'		=> undef,
 );
 
 sub get {
