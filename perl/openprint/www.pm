@@ -254,10 +254,14 @@ $openprint::log->debug("Getfile");
 	} elsif ( $first eq 'employee' ) {
 
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
-		return Apache2::Const::OK if $variable{'Redirect'};	
+		if ( $variable{'Redirect'} ) {
+			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+			return Apache2::Const::OK;
+		} # end if
 
 		if ( $filename eq 'login_confirmation.html' ) {
 			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
+			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
 			return $status if $variable{'Redirect'};	
 		} # end if
 
