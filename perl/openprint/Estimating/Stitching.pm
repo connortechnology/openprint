@@ -112,7 +112,7 @@ my @possible_equipment;
 
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 sub signature_calc {
-	my ( $Project, $service_index, $I, $specs, $qty_index ) = @_;
+	my ( $Project, $service_index, $specs, $qty_index, @Impositions ) = @_;
 
 	my %results;
 	my $services = $Project->services();
@@ -128,50 +128,23 @@ sub signature_calc {
 	} # end if
 
 	my $imposition = 2;
-	$$specs{"txtPockets$qty_index"} = 1;
-	$imposition = 1 if ($I->imposition()%2) or ( sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] ) and $I->imposition()%4);
-#$results{'alert'} .= 'Setting imposition to 1 cuz Runstyle and imp mod 4 odd' if $imposition==1;
-	if ( $imposition > 1 ) {
-		# Do further tests
-		if ( $I->image_orientation() eq 'Vertical' ) {
-			$imposition = 1 if $I->rows() % 2;
-#$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd' if $imposition==1;
-		} elsif ( $I->image_orientation() eq 'Horizontal' ) {
-			$imposition = 1 if $I->columns() % 2;
-#$results{'alert'} .= 'Setting imposition to 1 cuz Horizontal and columns odd' if $imposition==1;
-		} # end if
-	} # end if
-
-#$openprint::log->debug( sprintf('%d, %dx%d, %s', $imposition, $I->columns(), $I->rows(), $I->image_orientation() ) ) if $debug;
-
-#$openprint::log->debug( $I->imposition() . ' ' . $$specs{'Imposition'.$qty_index} . " # of signatures: " . scalar $Project->signatures()) if $debug;
 	
-	if ( $I->StitchingImposition() ) {
-		# This is supposed to be hte stitching imposition passed in from the previous signature
-		$imposition = $I->StitchingImposition() if $I->StitchingImposition() < $imposition;
-#$results{'alert'} .= 'Setting imposition to 1 from SittchingImposition' if $imposition==1;
+	$$specs{"txtPockets$qty_index"} = 0;
+	foreach my $I ( @Impositions ) {
+		$$specs{"txtPockets$qty_index"} += 1;
 
-	} else {
-		foreach my $signature_service_index ( $Project->signatures() ) {
-			next if $service_index and ($signature_service_index >= $service_index);
-
-			$$specs{"txtPockets$qty_index"} += 1;
-
-			if ( $imposition > 1 ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-				next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
+		if ( $imposition > 1 ) {
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
-				$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 );
-				if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
-					$imposition = 1 if $$sig_specs{'hdnImpositionRows'.$qty_index} % 2;
-					$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd' if $imposition==1;
-				} elsif ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
-					$imposition = 1 if $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2;
-					$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd' if $imposition==1;
-				} # end if
+			$imposition = 1 if ( $$I{'imposition'} % 2 ) or (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'} % 4 );
+			if ( $$I{'image_orientation'} eq 'Vertical' ) {
+				$imposition = 1 if $$I{'rows'} % 2;
+				$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd' if $imposition==1;
+			} elsif ( $$I{'image_orientation'} eq 'Horizontal' ) {
+				$imposition = 1 if $$I{'columns'} % 2;
+				$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd' if $imposition==1;
 			} # end if
-		} # end foreach
-	} # end if
+		} # end if
+	} # end foreach
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
