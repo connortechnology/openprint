@@ -866,6 +866,7 @@ $openprint::log->debug("Grabbing UV Specs");
 
 		} # end if
 
+		delete $$specs{'PreviousGrainDirection'};
 		delete $$specs{'PreviousStockType'};
 		foreach my $index ( $Project->signatures($$specs{'txtSignatureType'}) ) {
 			next if $index >= $service_index;
@@ -876,6 +877,7 @@ $openprint::log->debug("Grabbing UV Specs");
 			next if $$sig_specs{'ddmStockColour'} ne $$specs{'ddmStockColour'};
 			next if $$sig_specs{'ddmStockWeight'} ne $$specs{'ddmStockWeight'};
 			$$specs{'PreviousStockType'} = $$sig_specs{'StockType'.$qty_index};
+			$$specs{'PreviousGrainDirection'} = $$sig_specs{'rdbGrainDirection'.$qty_index};
 		} # end foreach
 
 		delete $$specs{'PrintingTypes'};
@@ -1567,7 +1569,11 @@ $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
 		foreach my $imp ( @impositions ) {
 
 			if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
-				$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() );
+				#$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() );
+				next;
+			} # end if
+			if ( $$specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
+				#$openprint::log->debug("Not consider imposition cuz it's not the previous grain direction " . $imp->grain_direction() ) if $debug;
 				next;
 			} # end if
 			if ( ( $imp->runstyle() eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
@@ -1699,6 +1705,7 @@ $$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 							$new_specs{'chkOverrideImposition'.$qty_index} = '';
 
 							$new_specs{'PreviousStockType'} = $imp->Paper()->type();
+							$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions );
 
