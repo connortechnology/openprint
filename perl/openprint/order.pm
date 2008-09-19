@@ -768,7 +768,7 @@ sub verify_order {
 	get_invoice_to( $log, $dbh, $variable, $order_id );
 	$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'txtCity','txtStateProvince','txtCountry'} );
 
-	if ( $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) {
+	if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 		$$variable{'AdministratorName'} = new openprint::User( $openprint::session{'user_id'} )->name();
 	} # end if
 
