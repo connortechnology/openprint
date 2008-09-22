@@ -135,10 +135,6 @@ sub user_profiles {
         $$variable{'information'} = "Record deleted.";
 
 	} elsif ($openprint::param{'btnFunction'} eq 'Save') {
-		if ( $openprint::param{'password'} eq '' ) {
-			return misc::error( $log, $dbh, $variable, "Empty Password.", 'We insist on a non-empty password.');
-		} # end if
-
 		if ( $openprint::param{'password'} ne $openprint::param{'verifypassword'} ) {
 			return misc::error( $log, $dbh, $variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
@@ -150,6 +146,7 @@ sub user_profiles {
 
 		#$openprint::param{'assistant_ids'} = '' if ! exists $openprint::param{'assistant_ids'};
 		#$openprint::param{'csr_ids'} = '' if ! exists $openprint::param{'csr_ids'};
+		delete $openprint::param{'password'} if ! $openprint::param{'password'};
 		my $error = $User->save( \%openprint::param );
 
 		if ( $error ) {

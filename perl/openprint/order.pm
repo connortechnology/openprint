@@ -1123,7 +1123,11 @@ sub send_sales_order {
 
 	my @admin_emails = split( ',', $openprint::config{'OrderingEmail'} );
 	@admin_emails = map { lc; misc::trim($_) } @admin_emails;
-	@admin_emails = sets::union( @admin_emails, $sales_person_email );
+
+	my @accounting_emails = split( ',', $openprint::config{'AccountingEmail'} );
+	@accounting_emails = map { lc; misc::trim($_) } @accounting_emails;
+
+	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
 
 	if ( @admin_emails ) {
 		my %mail = (
