@@ -1800,11 +1800,11 @@ if ( 1 ) {
 			if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
 
 				my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $$project{'StitchingSpecs'}, $qty_index, @{$$price{'Impositions'}} );
-				$openprint::log->error( "Stitching alert: $$results{alert}" );
+				#$openprint::log->error( "Stitching alert: $$results{alert}" );
 				if ( $$results{'Status'} eq 'uncalculated' ) {
 					$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'}<br/>";
 					$$price{'Comparison Cost'} += 10000000; # Can't stich this on
-						$$price{'Stitching Cost'} = 10000000;
+					$$price{'Stitching Cost'} = 10000000;
 				} else {
 					$$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
 					$$price{'Stitching Cost'} = $$results{'Price'};
