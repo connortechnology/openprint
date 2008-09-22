@@ -7,6 +7,9 @@ use strict;
 
 require sql;
 
+sub returns {
+} # end sub returns 
+
 sub confirmation_returns {
 	my ($r, $log, $dbh, $variable) = @_;
 
@@ -87,18 +90,28 @@ sub confirmation_returns {
 
 } # end sub rma
 
+sub help_desk {
+} # end sub help_desk
+
 sub confirmation_help_desk {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	my $error = '';
-	$error .= 'Missing First Name<br>' if $openprint::param{'txtFirstName'} eq '';
-	$error .= 'Missing Last Name<br>' if $openprint::param{'txtLastName'} eq '';
-	$error .= 'Missing Address<br>' if $openprint::param{'txtAddress1'} eq '';
-	$error .= 'Missing City<br>' if $openprint::param{'txtCity'} eq '';
-	$error .= 'Missing Postal Code<br>' if $openprint::param{'txtPostalCode'} eq '';
-	$error .= 'Missing Phone<br>' if $openprint::param{'txtPhone'} eq '';
-	$error .= 'Missing/Invalid E-mail<br>' if ( ! $openprint::param{'txtEmail'} ) or ( ! Email::Valid->address( $openprint::param{'txtEmail'} ) );
-	$error .= 'Missing Question or Comment<br>' if $openprint::param{'txtQuestion-Quote'} eq '';
+	$error .= 'Missing First Name<br/>' if $openprint::param{'txtFirstName'} eq '';
+	$error .= 'Missing Last Name<br/>' if $openprint::param{'txtLastName'} eq '';
+	$error .= 'Missing Address<br/>' if $openprint::param{'txtAddress1'} eq '';
+	$error .= 'Missing City<br/>' if $openprint::param{'txtCity'} eq '';
+	$error .= 'Missing Postal Code<br/>' if $openprint::param{'txtPostalCode'} eq '';
+	$error .= 'Missing Phone<br/>' if $openprint::param{'txtPhone'} eq '';
+	$error .= 'Missing/Invalid E-mail<br/>' if ( ! $openprint::param{'txtEmail'} ) or ( ! Email::Valid->address( $openprint::param{'txtEmail'} ) );
+	$error .= 'Missing Question or Comment<br/>' if $openprint::param{'txtQuestion-Quote'} eq '';
+	if ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+		require Authen::Captcha;
+		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $ENV{'DOCUMENT_ROOT'}.'/skins/'.$openprint::config{'SiteTitle'}.'/images/captcha');
+		if ( 1 != $Captcha->check_code( $openprint::param{'Captcha'}, $openprint::param{'MD5SUM'} ) ) {
+			$error .= 'Validation Code incorrect.  Please try again.';
+		} # end if
+	} # end if
 
 	if ( $error ) {
 		return misc::error( $log, $dbh, $variable, 'Bad Field', $error );
