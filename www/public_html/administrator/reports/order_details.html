@@ -27,6 +27,10 @@
 <br class="spacer"/>
 <span class="Currency">All prices listed in <?CurrencyName?>.</span>
 	<form name="f1" action="order_details.html?order_id=<?OrderID?>" method="post">
+<select name="company_id">
+<? echo ( openprint::Company::get_dropdown( $$variable{'Order'}->company_id() ); ) ?>
+</select>
+<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save'); ) ?>
 	<span style="float:right;">
 		<? echo ( my $html = '';
 			$html .= ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();",'','Delete');
