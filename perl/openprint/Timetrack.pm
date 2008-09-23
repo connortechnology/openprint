@@ -89,6 +89,16 @@ sub find {
 		} # end if
 	} # end if
 
+	if ( $params{'invoice_id'} ) {
+		if ( ref $params{'invoice_id'} eq 'ARRAY' ) {
+			$sql .= q{ AND invoice_id IN (}.join(',', map {'?'} @{$params{'invoice_id'}} ).')';
+			push @values, @{$params{'invoice_id'}};
+		} else {
+			$sql .= q{ AND invoice_id=?};
+			push @values, $params{'invoice_id'};
+		} # end if
+	} # end if
+
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
 		push @values, @params{'created_on_start','created_on_end'};
@@ -226,6 +236,20 @@ sub elapsed {
 
 	return Date::Parse::str2time( $$self{'ending'} ) - Date::Parse::str2time( $$self{'starting'} );
 } # end sub elapsed
+
+sub Price {
+	my ( $self ) = @_;
+	my $elapsed = $self->elapsed();
+	my %Price;
+	if ( ! $$self{'rate'} ) {
+		my $Service = $self->Service();
+		%Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+	} else {
+		$Price{'Cost'} = $Price{'Price'} = $$self{'rate'};
+	} # end if
+	$Price{'Total'} = $Price{'Price'} * $elapsed / 3600;
+	return \%Price;
+} # end sub Price
 
 sub value {
 	my ( $self ) = @_;
