@@ -12,7 +12,6 @@
                 my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
                 $$variable{'Label'}->set_data(
                     'shipper'=> $$shipping_specs{'FromCompanyName'},
-                    'shipper_signature'=> $$shipping_specs{'FromCompanyName'},
                     'shipper_address'=> join(',',@$shipping_specs{'FromAddress1','FromAddress2'}),
                     'shipper_state'=> $$shipping_specs{'FromStateProvince'} . ' ' . $$shipping_specs{'FromPostalCode'},
                     'shipper_phone'=> $$shipping_specs{'FromPhone'},
@@ -72,6 +71,7 @@
 				} # end foreach Project
 			} # end if
 		} # end if
+		$html .= "<h1>Printed Matter</h1><h1>**DO NOT STACK**</h1>";
 		$$variable{'Label'}->set_data('description'=>$html);
 	} # end if
 	if ( ! $$variable{'Label'}->get_data('quantity') ) {
@@ -100,6 +100,14 @@
 		} # end if
 		$$variable{'Label'}->set_data('quantity'=>$html);
 	} # end if
+
+	$$variable{Label}->set_data('weight'=>'LBS') if ! $$variable{Label}->get_data('weight');
+	$$variable{Label}->set_data('freight_charges'=>'Prepaid') if ! $$variable{Label}->get_data('freight_charges');
+	$$variable{Label}->set_data('dangerous_goods'=>'n') if ! $$variable{Label}->get_data('dangerous_goods');
+	$$variable{Label}->set_data('date'=>Date::Format::time2str($openprint::config{'DateFormat'}, time) ) if ! $$variable{Label}->get_data('date');
+	$$variable{Label}->set_data('shipper_signature'=> new openprint::Company( $openprint::session{'company_id'} )->name() ) if ! $$variable{Label}->get_data('shipper_signature');
+	$$variable{Label}->set_data('shipper_date'=> Date::Format::time2str($openprint::config{'DateFormat'},time) ) if ! $$variable{Label}->get_data('shipper_date');
+	$$variable{Label}->set_data('shipper_per'=> 'Leanne' ) if ! $$variable{Label}->get_data('shipper_per');
 	$$variable{'Label'}->save();
 ) ?>
 <style type="text/css">
@@ -321,7 +329,7 @@ Received subject to the classifications and tarrifs in effect on the date of iss
 		</script>
 		</td>
 		<td colspan="4" style="1.75in;">
-		<div id="description" style="height:1.75in;"><? hecho ( $$variable{'Label'}->get_data('description'); ) ?></div>
+		<div id="description" style="height:1.75in;"><? echo ( $$variable{'Label'}->get_data('description'); ) ?></div>
 		<script type="text/javascript">
 		new Ajax.InPlaceEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=description'});
 		</script>

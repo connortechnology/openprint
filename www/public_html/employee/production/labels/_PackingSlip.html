@@ -5,7 +5,12 @@
 			#my $services = $$variable{'Project'}->services();
 			if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'Project'}->id(), 'Shipping' ) ) {
 				my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
-				$$variable{'Label'}->set_data('from'=> openprint::service::summary( $$variable{'Project'}, $services[0] ) );
+				$$variable{'Label'}->set_data('from'=> join("\n",
+                    join(',', $$shipping_specs{'FromCompanyName'} ) ,
+                    join(',', $$shipping_specs{'FromAddress1'} , $$shipping_specs{'FromAddress2'},
+                        @$shipping_specs{'FromCity','FromStateProvince','FromCountry'},
+                        @$shipping_specs{'FromPostalCode'} ),
+                    ) );
 			} else {
 				my $Order = $$variable{'Project'}->Order();
 				$$variable{'Label'}->set_data('from'=> join("\n", $Order->company_name(),
@@ -17,13 +22,23 @@
 		} # end if
 	} # endif
 	if ( ! $$variable{'Label'}->get_data('to') ) {
-		if ( $$variable{'Project'} ) {
-			my $Company = $$variable{'Project'}->Company();
-			$$variable{'Label'}->set_data('to'=> join("\n", $Company->name(),
-						join(',', $Company->get('address1','address2') ),
-						join(',', $Company->get('city','state','country') ),
-						$Company->get('postalcode'),
-						) );
+		if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'Project'}->id(), 'Shipping' ) ) {
+			my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
+			$$variable{'Label'}->set_data('to'=> join("\n",
+				join(',', $$shipping_specs{'ToCompanyName'} ) ,
+				join(',', $$shipping_specs{'ToAddress1'} , $$shipping_specs{'ToAddress2'},
+					@$shipping_specs{'ToCity','ToStateProvince','ToCountry'},
+					@$shipping_specs{'ToPostalCode'} ),
+				) );
+		} else {
+			if ( $$variable{'Project'} ) {
+				my $Company = $$variable{'Project'}->Company();
+				$$variable{'Label'}->set_data('to'=> join("\n", $Company->name(),
+							join(',', $Company->get('address1','address2') ),
+							join(',', $Company->get('city','state','country') ),
+							$Company->get('postalcode'),
+							) );
+			} # end if
 		} # end if
 	} # end if
 	if ( ! $$variable{'Label'}->get_data('description') ) {
@@ -47,22 +62,20 @@
 			my $item_total = 0;
 				
 			if ( $$services{'PlainCartons'} ) {
-				$html .= '<table>';
 				foreach my $s_id ( @{$$services{'PlainCartons'}} ) {
 					my $carton_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'PlainCartons'}[0] );
-					$html .= sprintf('<tr><td>%d boxes @</td><td>%d</td></tr>', @$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index(),'txtItemsPerPackage'} );
+					$html .= sprintf('%d boxes @ %dlbs', @$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index(),'txtItemsPerPackage'} );
+					$html .= '<br/>';
 					$carton_total += $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()};
 					my $items = $$carton_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$carton_specs{'txtItemsPerPackage'};
 					$item_total += $items;
 				} # end foreach
-				$html .= sprintf('<tr><td>&nbsp;</td><td>%d</td></tr>', $item_total );
-				$html .= '</table>';
 			} # end if
 			if ( $$services{'BulkSkids'} ) {
 				my $skid_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'BulkSkids'}[0] );
 				$html .= sprintf('Total: %d skid%s', $$skid_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$skid_specs{'txtPackageQuantity'.$$variable{'Project'}->ordered_quantity_index()} == 0 ? '' : 's' );
 			} else {
-				$html .= sprintf('Total: %d BOXES', $carton_total );
+				$html .= sprintf('Total: %d BOXES %dlbs', $carton_total, $item_total );
 			} # end if
 		} else {	
 		} # end if
@@ -100,7 +113,7 @@ Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($
 			</td>
 		</tr>
 	</table>
-	# <? echo ( $$variable{'docket'} ) ?>&nbsp;&nbsp;
+	# <? echo ( $$variable{'Label'}->docket() ) ?>&nbsp;&nbsp;
 <img src="/barcode.png?code=D<? echo ( $$variable{'Label'}->docket() ) ?>+&amp;NoText=1&amp;Height=15" alt="<? echo ( $$variable{'Label'}->docket() ) ?>" />
 	<br/>
 	<table style="height: 2.75in;">
@@ -135,7 +148,7 @@ new Ajax.InPlaceEditor( 'description', '_label.html?id=<? echo ( $$variable{Labe
 				QUANTITY:<br/>
 				<div id="quantity" style="height: 3.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=quantity'});
+new Ajax.InPlaceEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=getnohtml&field=quantity'});
 </script>
 			</td>
 		</tr>
