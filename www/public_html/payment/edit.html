@@ -8,7 +8,7 @@
 				},
 				onSuccess: function(transport) {
 					alert('success paying');
-					new Ajax.Update( 'Unpaid', '_unpaid.html', {
+					new Ajax.Updater( 'Unpaid', '_unpaid.html', {
 						method:'get', 
 						parameters: { payment_id:<? echo ( $$variable{'Payment'}->id() ) ?> }
 						} );
@@ -27,7 +27,7 @@
 				},
 				onSuccess: function(transport) {
 					alert('success unpaying');
-					new Ajax.Update( 'Paid', '_paid.html', {
+					new Ajax.Updater( 'Paid', '_paid.html', {
 						method:'get',
 						parameters: { payment_id:<? echo ( $$variable{'Payment'}->id() ) ?> }
 						} );
@@ -81,7 +81,7 @@
 		<!--#include virtual="_paid.html"-->
 	</fieldset>
 	</div>
-	<div class="rightColumn">
+	<div class="rightColumn" id="Unpaid">
 		<!--#include virtual="_unpaid.html"-->
 	</div>
 	<br class="spacer"/>
