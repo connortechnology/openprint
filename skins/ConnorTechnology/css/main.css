@@ -188,3 +188,28 @@ a.button {
 	color: #ffffff;
 	padding: 3px;
 }
+#Portfolio ul {
+	float: none;
+	list-style:none;
+}
+#Portfolio ul li {
+	float: none;
+	list-style:none;
+	margin-bottom: 20px;
+}
+#Portfolio ul li:after {
+	content: ".";
+	display: block;
+	height: 0;
+    font-size: 0;
+	clear: both;
+	visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html #Portfolio ul li {height: 1%;}
+*     #Portfolio ul li{display:block;}
+/* End hide from IE-mac */
+#Portfolio ul li img {
+	float: left;
+	margin-right: 10px;
+}

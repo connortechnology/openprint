@@ -51,6 +51,8 @@ require sql;
 	'currency_id'	=>	undef,
 	'owner_id'		=>	undef,
 	'invoice_id'	=>	undef,
+	'service_id'	=>	undef,
+	'project_id'	=>	undef,
 );
 
 sub find {
@@ -96,6 +98,18 @@ sub find {
 		} else {
 			$sql .= q{ AND invoice_id=?};
 			push @values, $params{'invoice_id'};
+		} # end if
+	} # end if
+
+	if ( exists $params{'paycheque_id'} ) {
+		if ( ! $params{'paycheque_id'} ) {
+			$sql .= q{ AND paycheque_id IS NULL};
+		} elsif ( ref $params{'paycheque_id'} eq 'ARRAY' ) {
+			$sql .= q{ AND paycheque_id IN (}.join(',', map {'?'} @{$params{'invoice_id'}} ).')';
+			push @values, @{$params{'paycheque_id'}};
+		} else {
+			$sql .= q{ AND paycheque_id=?};
+			push @values, $params{'paycheque_id'};
 		} # end if
 	} # end if
 

@@ -1,10 +1,10 @@
 <form name="f1" id="f1" action="history.html" method="post">
 	<fieldset><legend>Editing Invoice</legend>
 		<div class="leftColumn">
-			<p><label for="company_id">Company:</label>
-				<select id="company_id" name="company_id">
+			<p><label for="invoicee_id">Company:</label>
+				<select id="invoicee_id" name="invoicee_id">
 					<option value=""> select </option>
-					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->company_id() ? $$variable{'Invoice'}->company_id() : $session{'company_id'} ); ) ?>
+					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
 				</select>
 			</p>
 <!--

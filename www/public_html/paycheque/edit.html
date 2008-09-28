@@ -1,0 +1,100 @@
+<script type="text/javascript">
+	function add_timetrack( timetrack_id ) {
+		new Ajax.Updater( 'Paid', '_paid.html', { 
+				method:'get', 
+				parameters: { 
+					paycheque_id:<? echo ( $$variable{'Paycheque'}->id() ) ?>,
+					timetrack_id: timetrack_id 
+				},
+				onSuccess: function(transport) {
+					new Ajax.Updater( 'Unpaid', '_unpaid.html', {
+						method:'get', 
+						parameters: { paycheque_id:<? echo ( $$variable{'Paycheque'}->id() ) ?> }
+						} );
+				},
+				onFailure: function(transport) {
+					alert('failure to pay');
+				}
+		} );
+	} // end function add_timetrack( invoice_id)
+	function del_timetrack( timetrack_id ) {
+		new Ajax.Updater( 'Unpaid', '_unpaid.html', {
+				method:'get',
+				parameters: {
+					paycheque_id:<? echo ( $$variable{'Paycheque'}->id() ) ?>,
+					timetrack_id: timetrack_id
+				},
+				onSuccess: function(transport) {
+					new Ajax.Updater( 'Paid', '_paid.html', {
+						method:'get',
+						parameters: { paycheque_id:<? echo ( $$variable{'Paycheque'}->id() ) ?> }
+						} );
+				},
+				onFailure: function(transport) {
+					alert('failure to unpay');
+				}
+			} );
+	} // end function del_timetrack(invoice_id)
+
+</script>
+<form name="f1" id="f1" action="<? echo ( $$variable{'Paycheque'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="paycheque_id" value="<? echo ( $$variable{'Paycheque'}->id() ) ?>" />
+	<fieldset><legend>Editing Paycheque <? echo ( $$variable{'Paycheque'}->id() ) ?></legend>
+		<div class="leftColumn">
+			<p><label for="employer_id">Employer:</label>
+				<select id="employer_id" name="employer_id">
+					<option value=""> select </option>
+					<? echo ( openprint::Company::get_dropdown( $$variable{'Paycheque'}->employer_id() ? $$variable{'Paycheque'}->employer_id() : $session{'company_id'} ); ) ?>
+				</select>
+			</p>
+			<p><label for="employee_id">Employee:</label>
+				<select id="employee_id" name="employee_id">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(firstname),lower(lastname)', 'company_id'=>$openprint::session{company_id} ) ], ( $$variable{'Paycheque'}->employee_id() ? $$variable{'Paycheque'}->employee_id() : $session{'user_id'} ) ); ) ?>
+				</select>
+			</p>
+			<p><label>Paid On:</label>
+			<span class="DateSelector"><? echo ( ssi::date_select( 'paid_on', $$variable{'Paycheque'}->paid_on() ); ) ?></span>
+			</p>
+			<p><label for="total">Total</label>
+				<input type="text" name="total" id="total" value="<? echo ( $$variable{'Paycheque'}->total() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />
+				<select name="currency_id" id="currency_id">
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ], $$variable{'Paycheque'}->currency_id() ); ) ?>
+				</select>
+			</p>
+		</div>
+		<div class="rightColumn">
+			<p>
+				<label for="internal_notes">Internal Notes</label>
+				<textarea cols="40" id="internal_notes" name="internal_notes" rows="<? echo ( $$variable{'Paycheque'}->internal_notes() ? scalar split("\n", $$variable{'Paycheque'}->internal_notes()) + 3 : 5 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Paycheque'}->internal_notes() ) ?></textarea>
+			</p>
+			<p>
+				<label for="external_notes">External Notes</label>
+				<textarea cols="40" id="external_notes" name="external_notes" rows="<? echo ( $$variable{'Paycheque'}->external_notes() ? scalar split("\n", $$variable{'Paycheque'}->external_notes()) + 3 : 5 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Paycheque'}->external_notes() ) ?></textarea>
+			</p>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+				if ( $$variable{'Paycheque'}->id() ) {
+				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+<? if ( $$variable{'Paycheque'}->id() ) ?>
+	<div class="leftColumn" id="Paid">
+		<!--#include virtual="_paid.html"-->
+	</fieldset>
+	</div>
+	<div class="rightColumn" id="Unpaid">
+		<!--#include virtual="_unpaid.html"-->
+	</div>
+<? endif ( $$variable{'Paycheque'}->id() ) ?>
+	<br class="spacer"/>
+</form>

@@ -40,6 +40,8 @@ require sql;
 	'updated_on'		=>	'updated_on',
 	'deleted'			=>	'deleted',
 	'currency_id'		=>	'currency_id',
+	'paid'				=>	'paid',
+	'interest'			=>	'interest',
 );
 
 %transforms = (
@@ -113,6 +115,11 @@ sub find {
 	} elsif ( $params{'due_on_end'} ) {
 		$sql .= ' AND due_on <= ?';
 		push @values, $params{'due_on_end'};
+	} # end if
+
+	if ( $params{'payment_id'} ) {
+		$sql .= ' AND id IN ( SELECT invoice_id FROM invoices_payments WHERE payment_id=? )';
+		push @values, $params{'payment_id'};
 	} # end if
 
 	if ( $params{'deleted'} ) {
@@ -217,13 +224,46 @@ sub Invoicer {
 
 sub interest {
 	my ( $self ) = @_;
-	return misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoice_interests WHERE invoice_id=?', $$self{'id'} ) );
+
+	if ( ! defined $$self{'interest'} ) {
+	$$self{'interest'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoice_interests WHERE invoice_id=?', $$self{'id'} ) );
+	} # end if
+	return $$self{'interest'};
 } # end sub interest
 
 sub paid {
-	my ( $self ) = @_;
-	return misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoices_payments WHERE invoice_id=?', $$self{'id'} ) );
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'paid'} = $_[0];
+	} # end if
+	if ( ! defined $$self{'paid'} ) {
+	$$self{'paid'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoices_payments WHERE invoice_id=?', $$self{'id'} ) );
+	} # end if
+	return $$self{'paid'};
 } # end sub paid
+
+sub add_Payment {
+	my ( $self, $Payment ) = @_;
+	if ( $Payment->remaining() and $self->owing() ) {
+		my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
+		sql::insert( undef, undef, 'invoices_payments', 'payment_id', $Payment->id(), 'invoice_id', $$self{id}, 'amount', $amount );
+		$Payment->remaining( undef ); # force update
+		$Payment->save();
+		$self->paid( undef );
+		$self->save();
+	} # end if
+} # end sub add_Payment
+
+sub del_Payment {
+	my ( $self, $Payment ) = @_;
+
+	sql::execute( undef, undef, 'DELETE FROM invoices_payments WHERE invoice_id=? AND payment_id=?', $$self{id}, $$Payment{'id'} );
+	$Payment->remaining( undef );
+	$Payment->save();
+	$self->paid( undef );
+	$self->save();
+} # end sub del_Payment
+
 1;
 
 __END__

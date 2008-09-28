@@ -1,4 +1,4 @@
-package openprint::Payment;
+package openprint::Paycheque;
 @ISA = qw(openprint::Object);
 
 use vars qw( %config $log $dbh %session );
@@ -18,35 +18,29 @@ require sql;
 
 %fields = (
 	'id'				=>	'id',
-	'order_id'			=>	'order_id',
-	'recipient_id'		=>	'owner_id',
-	'payor_id'			=>	'payor_id',
-	'amount'			=>	'amount',
+	'employer_id'		=>	'employer_id',
+	'employee_id'		=>	'employee_id',
+	'total'				=>	'total',
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
-	'method'			=>	'method',
 	'currency_id'		=>	'currency_id',
-	'transaction_id'	=>	'transaction_id',
-	'description'		=>	'memo',
-	'completed'			=>	'completed',
-	'received_on'		=>	'date',
-	'remaining'			=>	'remaining',
-	
+	'internal_notes'	=>	'internal_notes',
+	'external_notes'	=>	'external_notes',
+	'paid_on'			=>	'paid_on',
 );
 
 %transforms = (
 );
 %defaults = (
-	'order_id'		=>	undef,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
-	'completed'		=>	0,
+	'paid_on'	=> 'NOW()',
 );
 
 sub find {
 	my %params = @_;
 
-	my $sql = q{SELECT * FROM Payments WHERE 1>0};
+	my $sql = q{SELECT * FROM Paycheques WHERE 1>0};
 	my @values;
 	if ( $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -57,22 +51,22 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
-	if ( $params{'payor_id'} ) {
-		if ( ref $params{'payor_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND payor_id IN (}.join(',', map {'?'} @{$params{'payor_id'}} ).')';
-			push @values, @{$params{'payor_id'}};
+	if ( $params{'employer_id'} ) {
+		if ( ref $params{'employer_id'} eq 'ARRAY' ) {
+			$sql .= q{ AND employer_id IN (}.join(',', map {'?'} @{$params{'employer_id'}} ).')';
+			push @values, @{$params{'employer_id'}};
 		} else {
-			$sql .= q{ AND payor_id=?};
-			push @values, $params{'payor_id'};
+			$sql .= q{ AND employer_id=?};
+			push @values, $params{'employer_id'};
 		} # end if
 	} # end if
-	if ( $params{'recipient_id'} ) {
-		if ( ref $params{'recipient_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND owner_id IN (}.join(',', map {'?'} @{$params{'recipient_id'}} ).')';
-			push @values, @{$params{'recipient_id'}};
+	if ( $params{'employee_id'} ) {
+		if ( ref $params{'employee_id'} eq 'ARRAY' ) {
+			$sql .= q{ AND employee_id IN (}.join(',', map {'?'} @{$params{'employee_id'}} ).')';
+			push @values, @{$params{'employee_id'}};
 		} else {
-			$sql .= q{ AND owner_id=?};
-			push @values, $params{'recipient_id'};
+			$sql .= q{ AND employee_id=?};
+			push @values, $params{'employee_id'};
 		} # end if
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
@@ -96,15 +90,15 @@ sub find {
 		push @values, $params{'updated_on_end'};
 	} # end if
 
-	if ( $params{'received_on_start'} and $params{'received_on_end'} ) {
-		$sql .= ' AND ( date BETWEEN ? AND ? )';
-		push @values, @params{'received_on_start','received_on_end'};
-	} elsif ( $params{'received_on_start'} ) {
-		$sql .= ' AND date >= ?';
-		push @values, $params{'received_on_start'};
-	} elsif ( $params{'received_on_end'} ) {
-		$sql .= ' AND date <= ?';
-		push @values, $params{'received_on_end'};
+	if ( $params{'paid_on_start'} and $params{'paid_on_end'} ) {
+		$sql .= ' AND ( paid_on BETWEEN ? AND ? )';
+		push @values, @params{'paid_on_start','paid_on_end'};
+	} elsif ( $params{'paid_on_start'} ) {
+		$sql .= ' AND paid_on >= ?';
+		push @values, $params{'paid_on_start'};
+	} elsif ( $params{'paid_on_end'} ) {
+		$sql .= ' AND paid_on <= ?';
+		push @values, $params{'paid_on_end'};
 	} # end if
 
 	if ( $params{'deleted'} ) {
@@ -129,19 +123,19 @@ sub find {
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->warn("Error loading Payments: ($sql) (@values)" . $openprint::dbh->errstr );
+		$openprint::log->warn("Error loading Paycheques: ($sql) (@values)" . $openprint::dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$openprint::log->debug("openprint::Payment::find($sql) (@values)");
+		$openprint::log->debug("openprint::Paycheque::find($sql) (@values)");
 	} # end if
-	return map { new openprint::Payment( $_->{id}, $_ ); } @$data;
+	return map { new openprint::Paycheque( $_->{id}, $_ ); } @$data;
 } # end sub find
 
 sub load {
 	my ( $self, $data ) = @_;
 
 	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Payments WHERE id=?', {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Paycheques WHERE id=?', {}, $$self{'id'} );
 		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
@@ -149,12 +143,12 @@ sub load {
 
 sub delete {
 	my $self = shift;
-	return sql::update( undef, undef, 'Payments', ['id=?', $$self{'id'} ], 'deleted', 1 );
+	return sql::update( undef, undef, 'Paycheques', ['id=?', $$self{'id'} ], 'deleted', 1 );
 } # end sub delete
 
 sub destroy {
 	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM Payments WHERE id=?}, $$self{'id'} );
+    return sql::execute( undef, undef, q{DELETE FROM Paycheques WHERE id=?}, $$self{'id'} );
 } # end sub destroy
 
 sub save {
@@ -169,14 +163,14 @@ sub save {
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('payments_id_seq')});
+		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paycheque_id_seq')});
 		$sql{'id'} = $$self{id};
-		if ( my $error = sql::insert( undef, undef, 'Payments', \%sql ) ) {
+		if ( my $error = sql::insert( undef, undef, 'Paycheques', \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
 	} else {
-		if ( my $error = sql::update( undef, undef, 'Payments', ['id=?', $$self{'id'}], \%sql ) ) {
+		if ( my $error = sql::update( undef, undef, 'Paycheques', ['id=?', $$self{'id'}], \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
@@ -188,37 +182,34 @@ sub save {
 
 sub copy {
 	my $self = shift;
-	my $new = new openprint::Payment();
+	my $new = new openprint::Paycheque();
 	@$new{keys %$self} = @$self{keys %$self};
 	$$new{'id'} = undef;
 	return $new;
 } # end sub
 
-sub Payor {
-	return new openprint::Company( $_[0]{payor_id} );
+sub Employer {
+	return new openprint::Company( $_[0]{employer_id} );
 } # end sub Payor
 
-sub Recipient {
-	return new openprint::Company( $_[0]{owner_id} );
+sub Employee {
+	return new openprint::User( $_[0]{employee_id} );
 } # end sub Recipient
 
 sub Currency {
 	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
-sub Order {
-	return new openprint::Order( $_[0]{order_id} );
-} # end sub Order
 
-sub remaining {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'remaining'} = $_[0];
-	} # end if
-	if ( ! defined $$self{'remaining'} ) {
-		$$self{'remaining'} = $$self{'amount'} - misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoices_payments WHERE payment_id=?', $$self{'id'} ) );
-	} # end if
-	return $$self{'remaining'};
-} # end sub remaining
+sub add_Timetrack {
+	my ( $self, $Timetrack ) = @_;
+	sql::insert( undef, undef, 'paycheques_timetracks', 'timetrack_id', $Timetrack->id(), 'paycheque_id', $$self{id} );
+} # end sub add_Timetrack
+
+sub del_Timetrack {
+	my ( $self, $Timetrack ) = @_;
+
+	sql::execute( undef, undef, 'DELETE FROM paycheques_timetracks WHERE paycheque_id=? AND timetrack_id=?', $$self{id}, $$Timetrack{'id'} );
+} # end sub del_Timetrack
 
 1;
 

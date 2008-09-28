@@ -1,0 +1,66 @@
+<? eval (
+	require Date::Parse;
+	require Date::Format;
+
+	$openprint::session{'/payment/history.html?lastupdated'} = time;
+
+	foreach ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day',
+'company_id') {
+		if ( ref $openprint::param{$_} eq 'ARRAY' ) {
+			$openprint::session{"/payment/history.html?$_"} = join(';', @{$openprint::param{$_}} );
+		} elsif ( exists $openprint::param{$_} ) {
+			$openprint::session{"/payment/history.html?$_"} = $openprint::param{$_};
+		} # end if
+	} # end foreach
+
+	@{$$variable{'Payments'}} = ();
+	foreach my $Payment ( openprint::Payment::find( 
+		'received_on_start'	=> sprintf('%.4d-%.2d-%.2d', @openprint::session{'/payment/history.html?received_on_start_year','/payment/history.html?received_on_start_month','/payment/history.html?received_on_start_day'} ),
+		'received_on_end'	=> sprintf('%.4d-%.2d-%.2d', @openprint::session{'/payment/history.html?received_on_end_year','/payment/history.html?received_on_end_month','/payment/history.html?received_on_end_day'} ),
+		'payor_id'		=> $openprint::session{'/payment/history.html?company_id'},
+		'recipient_id'		=> $openprint::session{'company_id'},
+		'order'				=> 'id',
+		) ) {
+		push @{$$variable{'Payments'}}, $Payment;
+	} # end foreach Payment
+
+	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+) ?>
+
+<? if ( @{$$variable{'Payments'}} == 0 ) ?>
+	There are no payments which match your search criteria. 
+<? else ( @{$$variable{'Payments'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Payment ID #</b> to view payment details.<br/>
+		To delete payments from history check the appropriate payment(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th width="50">ID</th>
+			<th class="Date">When</th>
+			<th>From</th>
+			<th>Memo</th>
+			<th width="75" style="text-align:right;">Amount</th>
+			<th width="75" style="text-align:right;">Remaining</th>
+		</tr>
+		<? while ( $$variable{'Payment'} = shift @{$$variable{'Payments'}}; ) ?>
+		<? eval ( 
+			$$variable{'conversion_rate'} = $$variable{'Payment'}->Currency()->conversions( $openprint::session{'Currency_id'} );
+		) ?>
+		<tr title="<? echo ( $$variable{'Payment'}->description() ) ?>" <?rowclass?> onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');"> 
+			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( $$variable{'Payment'}->id(); ) ?></a></td>
+			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $$variable{'Payment'}->received_on() ) ); ) ?></a></td>
+			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->Payor()->name(); ) ?></a></td>
+			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->description(); ) ?></a></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Payment'}->amount() ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Payment'}->remaining() ); ) ?></td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
+		<? endwhile ( $$variable{'Payment'} = shift @{$$variable{'Payments'}}; ) ?>
+	</table>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $openprint::session{'Currency_id'} )->name(); ) ?></span>
+	<br class="spacer"/>
+<span class="unprintable" style="float: right;">
+<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
+</span>
+<? endif ( @{$$variable{'Payments'}} == 0 ) ?>
