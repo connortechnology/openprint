@@ -307,7 +307,7 @@ sub view {
 			} # end foreach
 		} # end if
 
-		openprint::project::update_status( $log, $dbh, $variable, $project_index );
+		$Project->update_status();
 		$order_id = $Project->order_id() if ! $order_id;
 		openprint::order::update_order_status( $r, $log, $dbh, $order_id );
 		sql::end_transaction( $dbh, $ac );
