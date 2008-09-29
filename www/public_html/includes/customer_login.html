@@ -1,13 +1,13 @@
-<fieldset>
-	<legend>Registration</legend>
-	Why register?  We require you to have an account to keep an order history, and allow you to check the status of your project through production and shipping.
-	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Register','register.gif','','/account/registration.html','Register Now'); ) ?>
-	</p>
-</fieldset>
-<div class="Login">
+<div id="Login">
 	<form name="LoginForm" method="post" action="<?SecureSiteURL?>/account/login.html">
-		<fieldset>
+		<fieldset class="Register">
+			<legend>Registration</legend>
+			Why register?  We require you to have an account to keep an order history, and allow you to check the status of your project through production and shipping.
+			<p class="buttons">
+				<? echo ( ssi::writeButton( $log, $dbh, 'Register','register.gif','','/account/registration.html','Register Now'); ) ?>
+			</p>
+		</fieldset>
+		<fieldset class="Login">
 			<legend>Please login:</legend>
 			Please enter your e-mail address and password.<br /><br />
 			<p>
