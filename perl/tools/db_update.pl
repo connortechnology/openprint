@@ -239,6 +239,24 @@ $dbh->do(q{alter table paper_inventory add primary key(id)});
 	$version = 1898;
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );
+if ( ! $data ) {
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('DROP TABLE IF EXISTS skid_verifications');
+	$dbh->do('
+CREATE TABLE skid_verifications (
+    id SERIAL NOT NULL,
+    skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
+    code    TEXT,
+    created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+    PRIMARY KEY (id)
+);';
+$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
+$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
+	sql::end_transaction( $dbh, $ac );
+} # end if
+
+
 
 $dbh->disconnect();
 1;

@@ -12,6 +12,7 @@ require sql;
 require openprint::Location;
 require openprint::Paper;
 require openprint::RFIDTag;
+require openprint::Skid_Verification;
 
 my $debug = 1;
 
@@ -29,6 +30,11 @@ sub find {
             push @values, $params{id};
         } # end if
     } # end if
+
+	if ( $params{'verification_code'} ) {
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?';
+		push @values, $params{'verification_code'};
+	} # end if
 
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
