@@ -1,72 +1,3 @@
-<? eval (
-	require openprint::employee_inventory;
-
-	$openprint::param{'skid_id'} =~ s/\D//g;
-	$openprint::param{'Docket'} =~ s/\D//g;
-	$openprint::param{'Project'} =~ s/\D//g;
-	$openprint::param{'Operator'} =~ s/\D//g;
-
-	@$variable{'skid_id','rfidtag_id','Quantity','Docket','Project','Operator'} = @openprint::param{'skid_id','rfidtag_id','Quantity','Docket','Project','Operator'};
-	$$variable{'Operator'} = $openprint::session{user_id} if ! $$variable{'Operator'};
-	my $Operator = new openprint::User( $$variable{'Operator'} );
-	$$variable{'OperatorName'} = $Operator->name();
-
-	if ( ! $openprint::param{'skid_id'} ) {
-		$$variable{'error'} .= 'Please specify the skid #.<br/>';
-		return;
-	} # end if
-	my $Skid = new openprint::Skid( $$variable{'skid_id'} );
-	if ( ! $Skid->id() ) {
-		$$variable{'error'} .= 'Invalid skid #.<br/>';
-		return;
-	} # end if
-
-	if ( ! ( $openprint::param{'Quantity'} and ($openprint::param{'Docket'} or $openprint::param{'Project'} ) ) ) {
-		my @data = sql::execute( $log, $dbh, q{SELECT paper_id, quantity, units, project_id FROM Paper_Allocations WHERE skid_id=?}, $$variable{'skid_id'} );
-		if ( @data == 4 ) {
-			my ( $paper_id, $quantity, $units, $project_id ) = @data;
-			my $Project = new openprint::Project( $project_id );
-			$$variable{'Docket'} = $Project->docket();
-			$$variable{'Project'} = $Project->id();
-			$$variable{'Quantity'} = $quantity if ! $$variable{'Quantity'};
-			$$variable{'Units'} = $units;
-			$$variable{'error'} .= 'Please verify docket and quantity.';
-		} elsif ( @data > 4 and $$variable{'Docket'} ) {
-			while ( @data ) {
-				my ( $paper_id, $quantity, $units, $project_id ) = @data;
-				my $Project = new openprint::Project( $project_id );
-				if ( $Project->docket() == $$variable{'Docket'} ) {
-					$$variable{'Quantity'} = $quantity if ! $$variable{'Quantity'};
-					$$variable{'Units'} = $units;
-					$$variable{'error'} .= 'Please verify quantity.';
-				} # end if
-			} # end while
-		} # end if 1 or more records
-	} # end if Quantity and Docket
-
-	if ( $openprint::param{'Quantity'} and ($openprint::param{'Docket'} or $openprint::param{'Project'} ) ) {
-		if ( $openprint::param{'btnFunction'} eq 'CheckIn' ) {
-			openprint::employee_inventory::check_in( @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
-		} elsif ( $openprint::param{'btnFunction'} eq 'CheckOut' ) {
-			openprint::employee_inventory::check_out( @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
-		} # end if CHeckin/CheckOut
-	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
-		my $TAG = new openprint::RFIDTag( $openprint::param{'rfidtag_id'} );
-		if ( ! $TAG->id() ) {
-			my $error = $TAG->save({'id'=>$openprint::param{'rfidtag_id'}});
-			if ( ! $error ) {
-				$$variable{'error'} .= 'Tag created.<br/>';
-			} else {
-				$$variable{'error'} .= 'Error creating tag: ' . $error . '<br/>';
-				return;
-			} # end if
-		} # end if
-		my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
-		$Skid->rfidtag_id( $openprint::param{'rfidtag_id'} );
-		$$variable{'error'} .= $Skid->save();
-	} # end if quanitty and docket
-	$$variable{'Skid'} = $Skid;
-) ?>
 <div class="error"><?error?></div>
 <div class="information"><?information?></div>
 <form id="f1" name="f1" action="skid.html" method="post">
@@ -95,6 +26,10 @@
 			<label for="Operator">Operator:</label>
 			<input type="text" id="Operator" name="Operator" size="4" style="width: auto;" value="<?Operator?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event );" /><?OperatorName?>
 		</p>
+		<p>
+			<label for="verification_code">Verification:</label>
+			<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" />
+		</p>
 		<p class="buttons">
 			<? echo ( join('',
 						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
@@ -107,4 +42,9 @@
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="" />
 </form>
+<? if ( $$variable{'Skid'}->id() ) ?>
+<fieldset><legend>Verifications</legend>
+<!--#include virtual="/employee/inventory/_verification_log.html"-->
+</fieldset>
+<? endif ( $$variable{'Skid'}->id() ) ?>
 <script type="text/javascript">document.f1.skid_id.focus();</script>

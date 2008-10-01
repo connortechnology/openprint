@@ -1,27 +1,19 @@
 Attached is a copy of an order. Please review all project services and the required 
 by date. Collect production downpayment if required and schedule projects appropriately 
 for production. Arrange shipping if necessary. 
-<br>
-<b>Ordered By:</b><br>
-<?txtSalutation?>
-<?txtFirstName?>
-<?txtLastName?>
-<br>
-<?txtCompanyName?>
-<br>
-<?txtAddress1?>
-<br>
-<? if ( $$variable{'txtAddress2'} ) ?>
-<?txtAddress2?>
-<br>
-<? endif ( $$variable{'txtAddress2'} ) ?>
-<?CCITYPROVCOUNTRY?>
-<br>
-<?txtPostalCode?>
-<br>
-<?txtPhone?>
-<?txtExtension?>
-<br>
-<?txtFax?>
-<br>
-<?txtEmail?>
+<br/>
+<div class="leftColumn">
+Docket:<a href="<? echo ( $openprint::config{'InternalSiteURL'} ) ?>/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id() ) ?>"><? echo ( $$variable{'Order'}->docket() ) ?></a><br/>
+</div>
+<div class="rightColumn">
+	<b>Ordered By:</b><br/>
+	<?txtSalutation?> <?txtFirstName?> <?txtLastName?> <br/>
+	<?txtCompanyName?> <br/>
+	<?txtAddress1?> <br/>
+	<? if ( $$variable{'txtAddress2'} ) ?> <?txtAddress2?> <br/> <? endif ( $$variable{'txtAddress2'} ) ?>
+	<?CCITYPROVCOUNTRY?> <br/>
+	<?txtPostalCode?> <br/>
+	<?txtPhone?> <?txtExtension?> <br/>
+	<?txtFax?> <br/>
+	<?txtEmail?>
+</div>

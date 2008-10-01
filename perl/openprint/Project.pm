@@ -993,13 +993,13 @@ sub status_change {
 	$self->add_to_log( $company_id,$user_id, 'Marked '.$new_status );
 	if ( $new_status eq 'Printed' ) {
 		foreach $_ ( $self->signatures() ) {
-			sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $self->id(), $_], 'strStatus', 'Complete' );
+			openprint::service::status( $$self{'id'}, $_, 'Complete' );
 		} # end foreach signature
         sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $self->id() );
 
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
-			sql::update( undef, undef, 'tbl_Project_Contents', "lngProjectIndex=$$self{'id'} AND lngServiceIndex=$s_id", 'strStatus', 'Complete' );
+			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
 		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
@@ -1014,7 +1014,7 @@ sub status_change {
 	} # end if
 	$self->save();
 	$self->Order()->update_status();
-} # end sub mark_picked_up
+} # end sub status_change
 
 
 

@@ -197,7 +197,8 @@ sub save {
 sub delete {
 	my $self = shift;
 	sql::update( undef, undef, 'Users', ['index=?', $$self{'id'}], 'deleted', 1 );
-}
+} # end sub delete
+
 sub destroy {
 	my $self = shift;
 

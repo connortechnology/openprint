@@ -23,6 +23,10 @@
 			<label for="skid_id">Skid #:</label>
 			<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
 		</p>
+		<p>
+			<label for="verification_code">Verification:</label>
+			<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" />
+		</p>
 		<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 		<p>
 			<label for="location_id">Location:</label>

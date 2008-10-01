@@ -576,12 +576,28 @@ sub skid_details {
 						$variable{'paper_id'} = $paper_ids[0] if @paper_ids;
 					} # end of
 				} # end of
+				if ( $param{'verification_code'} ) {
+					my $SV = new openprint::Skid_Verification();
+					$SV->save({
+						'skid_id'	=>	$S->id(),
+						'code'		=>	$param{'verification_code'},
+						'user_id'	=>	$openprint::session{'user_id'},
+					});
+				} # end if verification_code
 			} # end foreach
 			$variable{'information'} .= "Added $param{'skid_quantity'} skids.<br/>";
 		} else {
 			foreach my $skid_id ( @skid_ids ) {
 				$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
 				save_skid( new openprint::Skid( $skid_id ) );
+				if ( $param{'verification_code'} ) {
+					my $SV = new openprint::Skid_Verification();
+					$SV->save({
+						'skid_id'	=>	$skid_id,
+						'code'		=>	$param{'verification_code'},
+						'user_id'	=>	$openprint::session{'user_id'},
+					});
+				} # end if verification_code
 			} # end foreach
 		} # end if
 

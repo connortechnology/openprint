@@ -275,7 +275,7 @@ sub view {
 
 # There is now a set of press completion buttons for each signature
 			if ( $complete ) {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
+				openprint::service::status( $project_index, $service_index, 'Complete' );
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Printed from $status" );
 				foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
 					next if $PA->Paper()->type() ne 'Roll';
@@ -285,7 +285,7 @@ sub view {
 # shuffle jobs on the print schedule
 
 			} else {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$service_index", 'strStatus', 'Ordered' );
+				openprint::service::status( $project_index, $service_index, 'Ordered' );
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Ordered from $status" );
 			} #nd if
 		} elsif ( $service_type eq 'AdditionalSignature' ) {
@@ -307,7 +307,7 @@ sub view {
 			} # end foreach
 		} # end if
 
-		openprint::project::update_status( $log, $dbh, $variable, $project_index );
+		$Project->update_status();
 		$order_id = $Project->order_id() if ! $order_id;
 		openprint::order::update_order_status( $r, $log, $dbh, $order_id );
 		sql::end_transaction( $dbh, $ac );
