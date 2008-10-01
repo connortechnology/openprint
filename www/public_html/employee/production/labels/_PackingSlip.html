@@ -1,5 +1,8 @@
 <? eval (
 	$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} ) if ! $$variable{'Label'};
+	if ( ! $$variable{'Label'}->get_data('date') ) {
+		$$variable{'Label'}->set_data('date'=>Date::Format::time2str($openprint::config{'DateFormat'}, time ) );
+	} # end if
 	if ( ! $$variable{'Label'}->get_data('from') ) {
 		if ( $$variable{'Project'} ) {
 			#my $services = $$variable{'Project'}->services();
@@ -107,9 +110,10 @@
 		<tr>
 			<td style="font-size: 30PT;">PACKING SLIP</td>
 			<td style="border: 1px solid black;">DATE: 
-<? echo ( 
-Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Label'}->created_on() ) );
-) ?>
+				<span id="date"><? hecho ( $$variable{'Label'}->get_data('date'); ) ?></span>
+<script type="text/javascript">
+new Ajax.InPlaceEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=date'});
+</script>
 			</td>
 		</tr>
 	</table>
