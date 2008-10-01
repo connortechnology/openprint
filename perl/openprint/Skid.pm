@@ -32,7 +32,7 @@ sub find {
     } # end if
 
 	if ( $params{'verification_code'} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?';
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?)';
 		push @values, $params{'verification_code'};
 	} # end if
 

@@ -28,6 +28,11 @@ Please select a Skid to view/edit.<br>
 			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup=this.value=this.value.replace(/\D/,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );",'','Go' ); ) ?>
 		</p>
+		<p>
+			<label>Verification:</label>
+			<input type="text" name="verification_code" size="9" value="<? echo ( $openprint::session{'/employee/inventory/skids.html?verification_code'} ) ?>" onkeyup="" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', Serialize( document.forms.f2 ) );",'','Go' ); ) ?>
+		</p>
 		<hr/>
 		<? eval (
 			if ( ! $openprint::session{'/employee/inventory/skids.html?StartYear'} ) {
