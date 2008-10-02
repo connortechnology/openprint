@@ -233,7 +233,7 @@ $openprint::log->debug("Scores: $score_qty");
 		@equipment = openprint::Equipment::find( 'strid'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 	} else {
-		if ( ! @all_equipment ) {
+		#if ( ! @all_equipment ) {
 			my @capabilities = 'Y';
 			push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'Presentation Folders';
 			push @capabilities, 'When Folding' if $$services{'Folding'};
@@ -244,9 +244,12 @@ $openprint::log->debug("Scores: $score_qty");
 			if ( ! $stitching_service_index ) {
 				@all_equipment = sets::exclude( \@stitchers, \@all_equipment );
 			} # end if
-		} # end if
+		#} # end if
 		@equipment = @all_equipment;
 	} # endif
+	foreach my $E ( @equipment ) {
+		$openprint::log->debug( "Equipment: " . $E->strid() );
+	}
 
 # Get the impositions to consider
 	my $imposition = new openprint::Imposition();
@@ -293,7 +296,7 @@ $openprint::log->debug("Scores: $score_qty");
 	} # end if
 
 	foreach my $Equipment ( @equipment ) {
-		$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Equipment: ".$Equipment->name().', ';
+		$$specs{'hdnBreakdown'.$qty_index} .= '<br/>Equipment: '.$Equipment->name().', ';
 		next if ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'};
 		next if ( $Equipment->specification('Type') eq 'Stitcher' ) and ! $stitching_service_index;
 		my @impositions = ();
