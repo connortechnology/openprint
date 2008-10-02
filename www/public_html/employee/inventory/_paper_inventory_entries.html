@@ -15,7 +15,7 @@
 		<table class="List">
 			<tr>
 				<th width="80" align="left">Skid</th>
-				<th width="120" align="left">RFIDTag</th>
+				<th width="160" align="left">RFIDTag</th>
 				<th align="left">Location</th>
 				<th width="100" align="right">Quantity</th>
 				<th width="65">&nbsp;</th>
@@ -28,9 +28,9 @@
 					next if ! $quantity;
 					my $Skid = new openprint::Skid( $skid_id );
 					$html .= sprintf('<tr%1$s><td><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
-<td><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
+<td><a href="skid_details.html?skid_id=%2$d">%4$s (%7$x)</a></td>
 <td><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
-<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$d %6$s</a></td><td>', $rowclass, $skid_id, $Skid->Location()->name(), $Skid->rfidtag_id(), $quantity, $units );
+<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$d %6$s</a></td><td>', $rowclass, $skid_id, $Skid->Location()->name(), $Skid->rfidtag_id(), $quantity, $units, substr($Skid->RFIDTag()->id(),1,15) );
 					$html .= ssi::writeButton( $log, $dbh, "label$skid_id", 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$skid_id', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Label' );
 					$html .= q`</td></tr>`;
 					$rowclass = $rowclass ? '' : ' class="colRow"';

@@ -354,5 +354,9 @@ sub rfidtag_id {
 	return $$self{'rfidtag_id'};
 } # end sub rfidtag_id
 
+sub RFIDTag {
+	return new openprint::RFIDTag( $_[0]{rfidtag_id} );
+} # end sub RFIDTag
+
 1;
 __END__
