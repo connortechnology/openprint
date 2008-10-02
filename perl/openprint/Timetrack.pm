@@ -280,6 +280,11 @@ sub value {
 	} # end if
 	
 } # end sub value 
+sub wage {
+	my ( $self ) = @_;
+	my $elapsed = $self->elapsed();
+	return $self->User()->wage() * $elapsed / 3600;
+} # end sub  wage
 
 sub User {
 	return new openprint::User( $_[0]{user_id} );

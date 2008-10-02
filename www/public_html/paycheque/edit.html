@@ -1,3 +1,4 @@
+<? if ( $$variable{'Paycheque'}->id() ) ?>
 <script type="text/javascript">
 	function add_timetrack( timetrack_id ) {
 		new Ajax.Updater( 'Paid', '_paid.html', { 
@@ -37,6 +38,10 @@
 	} // end function del_timetrack(invoice_id)
 
 </script>
+<? endif ( $$variable{'Paycheque'}->id() ) ?>
+<? if ( $$variable{'error'} ) ?>
+<div class="error"><?error?></div>
+<? endif ( $$variable{'error'} ) ?>
 <form name="f1" id="f1" action="<? echo ( $$variable{'Paycheque'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="paycheque_id" value="<? echo ( $$variable{'Paycheque'}->id() ) ?>" />

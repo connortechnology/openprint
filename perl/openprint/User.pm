@@ -34,6 +34,7 @@ my %fields = (
 	'type'				=>	'usertype',
 	'changepassword'	=>	'ysnchangepassword',
 	'commission'		=>	'dblcommission',
+	'wage'				=>	'wage',
 	'administrator'		=>	'ysnadministrator',
 	'password',			=>	'strpassword',
 	'ftp_active'		=>	'ftp_active',

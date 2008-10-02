@@ -34,7 +34,8 @@ require sql;
 %defaults = (
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
-	'paid_on'	=> 'NOW()',
+	'paid_on'		=> 'NOW()',
+	'total'			=>	undef,
 );
 
 sub find {
@@ -121,12 +122,12 @@ sub find {
 		$sql .= " ORDER BY $params{'order'}";
 	} # end if
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->warn("Error loading Paycheques: ($sql) (@values)" . $openprint::dbh->errstr );
+		$log->warn("Error loading Paycheques: ($sql) (@values)" . $dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$openprint::log->debug("openprint::Paycheque::find($sql) (@values)");
+		$log->debug("openprint::Paycheque::find($sql) (@values)");
 	} # end if
 	return map { new openprint::Paycheque( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -135,8 +136,8 @@ sub load {
 	my ( $self, $data ) = @_;
 
 	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Paycheques WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
+		$data = $dbh->selectrow_hashref( 'SELECT * FROM Paycheques WHERE id=?', {}, $$self{'id'} );
+		if ( ! $data ) { $log->debug($dbh->errstr ); }
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
@@ -161,21 +162,22 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paycheque_id_seq')});
 		$sql{'id'} = $$self{id};
 		if ( my $error = sql::insert( undef, undef, 'Paycheques', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+			delete $$self{'id'};
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 	} else {
 		if ( my $error = sql::update( undef, undef, 'Paycheques', ['id=?', $$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return '';
 } # end sub save

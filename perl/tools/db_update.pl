@@ -1077,13 +1077,18 @@ print "Adding predefined to Projects\n";
 	sql::end_transaction( $dbh, $ac );
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
-if ( $data and ! exists $$data{'deleted'} ) {
+if ( $data ) {
+	if ( ! exists $$data{'deleted'} ) {
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do(q`alter table Users add deleted boolean`);
 	$dbh->do(q`alter table Users alter deleted set default false`);
 	$dbh->do(q`update Users set deleted=false`);
 	$dbh->do(q`alter table Users alter deleted set not null`);
 	sql::end_transaction( $dbh, $ac );
+	} 
+	if ( ! exists $$data{'wage'} ) {
+	$dbh->do(q`alter table Users add wage float`);
+	} # end if
 } # end if
 
 foreach my $E ( openprint::Equipment::find('Specifications'=>{'Type'=>'Press'}) ) {

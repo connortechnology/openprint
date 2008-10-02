@@ -167,6 +167,10 @@ Please select a company or user to obtain login information.<br/>
 			<label>Commission Rate:</label>
 			<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />%
 		</p>
+		<p> 
+			<label>Wage:</label>
+			<input type="text" name="wage" value="<? echo ( $$variable{'User'}->wage() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />/Hr
+		</p>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<p> 
 			<label>User Category:</label>

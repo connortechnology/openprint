@@ -15,7 +15,7 @@
 	} # end if
 
 	@{$$variable{'Timetracks'}} = ();
-	$$variable{'elapsed_total'} = $$variable{'value_total'} = 0;
+	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = 0;
 	foreach my $Timetrack ( openprint::Timetrack::find( 
 		'starting_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_start_day'} ),
 		'starting_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ),
@@ -30,6 +30,7 @@
 		push @{$$variable{'Timetracks'}}, $Timetrack;
 		$$variable{'elapsed_total'} += $Timetrack->elapsed();
 		$$variable{'value_total'} += $Timetrack->value();
+		$$variable{'wage_total'} += $Timetrack->wage();
 	} # end foreach Timetrack
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
@@ -52,7 +53,8 @@
 			<th width="50" align="right">Inv?</th>
 			<th width="50" align="right">Paid?</th>
 			<th align="left">Service</th>
-			<th width="60" align="right">Value</th>
+			<th width="60" align="right">Billable</th>
+			<th width="60" align="right">Wage</th>
 		</tr>
 		<? while ( $$variable{'Timetrack'} = shift @{$$variable{'Timetracks'}}; ) ?>
 		<? eval ( 
@@ -68,6 +70,7 @@
 			<td align="center"><? echo ( $$variable{'Timetrack'}->paid() ? 'Y' : 'N'; ) ?></td>
 			<td align="left"><? hecho ( $$variable{'Timetrack'}->Service()->name(); ) ?></td>
 			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Timetrack'}->value() ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Timetrack'}->wage() ); ) ?></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Timetrack'} = shift @{$$variable{'Timetracks'}}; ) ?>
@@ -76,6 +79,7 @@
 			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
 			<td colspan="3">&nbsp;</td>
 			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'value_total'} ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'wage_total'} ); ) ?></td>
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $openprint::session{'Currency_id'} )->name(); ) ?></span>
