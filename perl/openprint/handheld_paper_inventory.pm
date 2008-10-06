@@ -112,28 +112,6 @@ $openprint::log->debug("SKID_ID: $variable{'skid_id'}");
 		return;
 	} # end if
 
-	if ( ! ( $param{'Quantity'} and ($param{'Docket'} or $param{'Project'} ) ) ) {
-		my @data = sql::execute( $log, $dbh, q{SELECT paper_id, quantity, units, project_id FROM Paper_Allocations WHERE skid_id=?}, $variable{'skid_id'} );
-		if ( @data == 4 ) {
-			my ( $paper_id, $quantity, $units, $project_id ) = @data;
-			my $Project = new openprint::Project( $project_id );
-			$variable{'Docket'} = $Project->docket();
-			$variable{'Project'} = $Project->id();
-			$variable{'Quantity'} = $quantity if ! $variable{'Quantity'};
-			$variable{'Units'} = $units;
-			$variable{'error'} .= 'Please verify docket and quantity.';
-		} elsif ( @data > 4 and $variable{'Docket'} ) {
-			while ( @data ) {
-				my ( $paper_id, $quantity, $units, $project_id ) = @data;
-				my $Project = new openprint::Project( $project_id );
-				if ( $Project->docket() == $variable{'Docket'} ) {
-					$variable{'Quantity'} = $quantity if ! $variable{'Quantity'};
-					$variable{'Units'} = $units;
-					$variable{'error'} .= 'Please verify quantity.';
-				} # end if
-			} # end while
-		} # end if 1 or more records
-	} # end if Quantity and Docket
 
 	if ( $param{'Quantity'} and ($param{'Docket'} or $param{'Project'} ) ) {
 		if ( $param{'btnFunction'} eq 'CheckIn' ) {
@@ -142,6 +120,14 @@ $openprint::log->debug("SKID_ID: $variable{'skid_id'}");
 			openprint::employee_inventory::check_out( @param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
 		} # end if CHeckin/CheckOut
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+		$Skid->rfidtag_id( $param{'rfidtag_id'} );
+		foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
+			if ( $param{"in_stock-$paper_id"} != $$Skid{'Paper'}{$paper_id} ) {
+				$$Skid{'Paper'}{$paper_id} = $param{"in_stock-$paper_id"};
+			} # end if
+		} # end foreach paper on skid
+		$variable{'error'} .= $Skid->save();
+
 		my $TAG = new openprint::RFIDTag( $param{'rfidtag_id'} );
 		if ( ! $TAG->id() ) {
 			my $error = $TAG->save({'id'=>$param{'rfidtag_id'}});
@@ -152,9 +138,7 @@ $openprint::log->debug("SKID_ID: $variable{'skid_id'}");
 				return;
 			} # end if
 		} # end if
-		my $Skid = new openprint::Skid( $param{'skid_id'} );
-		$Skid->rfidtag_id( $param{'rfidtag_id'} );
-		$variable{'error'} .= $Skid->save();
+
 		if ( $param{'verification_code'} ) {
 			my $SV = new openprint::Skid_Verification();
 			$variable{'error'} .= $SV->save({

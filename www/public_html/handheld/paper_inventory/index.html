@@ -11,16 +11,16 @@ The following errors occurred:<br/>
 	<fieldset class="filter"><legend>Scan Item</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
-			<input type="text" id="skid_id" name="skid_id" size="10" style="width: auto;" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);"/>
+			<input type="text" id="skid_id" name="skid_id" size="10" style="width: auto;" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){jump.action='/handheld/paper_inventory/skid.html';jump.submit();}"/>
 		</p>
 		<p>
 			<label for="rfidtag_id">RFID ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" style="width: auto;" value="<?rfidtag_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);"/>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" style="width: auto;" value="<?rfidtag_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){jump.action='/handheld/paper_inventory/rfidtag_details.html';jump.submit();}"/>
 		</p>
 		<br/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(jump.skid_id.value){jump.action='skid.html';jump.submit();} else if ( jump.rfidtag_id.value){jump.action='rfidtag_details.html';jump.submit();}else{jump.skid_id.focus();}",'','Jump' ),
+				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(jump.skid_id.value){jump.action='/handheld/paper_inventory/skid.html';jump.submit();} else if ( jump.rfidtag_id.value){jump.action='/handheld/paper_inventory/rfidtag_details.html';jump.submit();}else{jump.skid_id.focus();}",'','Jump' ),
 				ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', '/employee/inventory/skid_details.html', 'Add Skid' ),
 			); ) ?>
 		</p>
