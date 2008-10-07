@@ -122,6 +122,12 @@ sub set {
 
 } # end sub set
 
+sub get {
+    my $self = shift;
+
+    return map { $self->$_() } @_;
+} # end sub get
+
 sub copy {
 	my $self = shift;
 	my $copy = new openprint::Imposition();
@@ -251,17 +257,21 @@ sub page_rows {
 sub sheet_width {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
-		return $self->paper()->height();
+		$$self{'paper'}->height( @_ ) if @_;
+		return $self->Paper()->height();
 	} else {
-		return $self->paper()->width();
+		$$self{'paper'}->width( @_ ) if @_;
+		return $self->Paper()->width();
 	} # end if
 } # end sub sheet_width
 sub sheet_height {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
-		return $self->paper()->width();
+		$$self{'paper'}->width( @_ ) if @_;
+		return $self->Paper()->width();
 	} else {
-		return $self->paper()->height();
+		$$self{'paper'}->height( @_ ) if @_;
+		return $self->Paper()->height();
 	} # end if
 } # end sub sheet_height
 
