@@ -299,7 +299,7 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 					last;
 				} # end if
 
-				my $run_qty = $qty / $imp->imposition();
+				my $run_qty = $qty / $Imposition->imposition();
 				my @types;
 				if ( sets::isin( $imp->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
 # need to merge any overalls into spots
