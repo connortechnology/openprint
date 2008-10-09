@@ -133,6 +133,7 @@ my %variables = (
 		'PrintingType1' => ['save','output'], 'PrintingType2' => ['save','output'], 'PrintingType3' => ['save','output'], 
 		'PrintingTypes' => [],
 		'rdbPlateType1' => ['save','output'], 'rdbPlateType2' => ['save','output'], 'rdbPlateType3' => ['save','output'],
+		'PlateID1' => ['save','output'], 'PlateID2' => ['save','output'], 'PlateID3' => ['save','output'],
 		'txtPlateQuantity1' => ['save','output'], 'txtPlateQuantity2' => ['save','output'], 'txtPlateQuantity3' => ['save','output'], 
 		'BlankPlateQuantity1' => ['save','output'], 'BlankPlateQuantity2' => ['save','output'], 'BlankPlateQuantity3' => ['save','output'], 
 		'txtPlateChangeQuantity1' => ['save'], 'txtPlateChangeQuantity2' => ['save'], 'txtPlateChangeQuantity3' => ['save'], 
@@ -797,7 +798,8 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 	foreach my $Press ( @possible_presses ) {
 		push @available_printingtypes, $Press->specification('Printing Type');
 	} # end foreach
-$openprint::log->debug("Available printing types @available_printingtypes");
+	@available_printingtypes = sets::union( @available_printingtypes );
+#$openprint::log->debug("Available printing types @available_printingtypes");
 
 # Caches
 	my %mixed_colours;
@@ -963,8 +965,8 @@ $openprint::log->debug("Grabbing UV Specs");
 	# Get plates in each previous signature, so we can get qty discounts
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-			$PlateCounts{$$specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
-			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
+			$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
+			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 		} # end foreach $index
 
 		$project{print_sides} = 1;
@@ -1389,6 +1391,7 @@ $I->display();
 		my $plate_setup = $best_price{'Plate Costs'};
 		$$specs{'BlankPlateQuantity'.$qty_index} = $$plate_setup{'Blank Plates'};
 		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
+		$$specs{'PlateID'.$qty_index} = $best_price{'PlateID'};
 
 		$$specs{'StitchingImposition'.$qty_index} = $best_price{'StitchingImposition'};
 		$$specs{'FoldingImposition'.$qty_index} = $best_price{'FoldingImposition'};
@@ -1798,6 +1801,8 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 			if ( my @materials = openprint::Material::find( 'name'=>$$price{'Plate Costs'}{'Plate ID'} ) ) {
 				%plate_price = $materials[0]->get_price( $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}, undef );
 			} # end if
+$openprint::log->debug("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
+			$$price{'PlateID'} = $$price{'Plate Costs'}{'Plate ID'};
 			$$price{'txtPlateQuantity'} = $$price{'Plate Costs'}{'Plate Count'};
 			$$price{'Plate Cost'} = $plate_price{'Price'};
 			$$price{'Plate Price'} = $plate_price{'Price'} * $$price{'Plate Costs'}{'Plate Count'};
@@ -1811,6 +1816,8 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 			$$price{'Blank Plate Price'} = $$price{'Plate Costs'}{'Blank Plates'} * $$price{'Plate Costs'}{'Blank Price'};
 			if ( $$price{'Plate Costs'}{'Plate Type'} eq 'Conventional' ) {
 				$$price{'Film Cost'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'Film', $imp->Paper()->area() * $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}, undef ) * $imp->Paper()->area() * $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}};
+				$$price{'Comparison Cost'} += $$price{'Film Cost'};
+				$$price{'Total Cost'} += $$price{'Film Cost'};
 			} # end if
 			foreach my $plate_id ( keys %PlateCounts ) {
 				if ( my @materials = openprint::Material::find( 'name'=>$plate_id ) ) {
