@@ -2,6 +2,13 @@
 <div class="information"><?information?></div>
 <form id="f1" name="f1" action="skid.html" method="post">
 	<fieldset>
+		<p class="buttons">
+			<? echo ( join('',
+						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
+						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' ),
+						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+						); ) ?>
+		</p>
 		<p>
 			<label for="skid_id">Skid #:</label>
 			<input type="text" id="skid_id" name="skid_id" value="<?skid_id?>" onkeypress="return input_handler( this, event);" onchange="change_handler(this);" />
@@ -10,6 +17,7 @@
 			<label for="rfidtag_id">RFID #:</label>
 			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $openprint::param{'rfidtag_id'} ? $openprint::param{'rfidtag_id'} : $$variable{'Skid'}->rfidtag_id() ) ?>" onkeypress="return input_handler( this, event);" onchange="change_handler(this);" />
 		</p>
+<!--
 		<p>
 			<label for="Docket">Docket:</label>
 			<input type="text" id="Docket" name="Docket" value="<?Docket?>" onkeypress="return input_handler( this, event);" onchange="change_handler(this);"/>
@@ -18,10 +26,7 @@
 			<label for="Project">Project:</label>
 			<input type="text" id="Project" name="Project" onchange="change_handler(this);" onkeypress="return input_handler(this, event );"/>
 		</p>
-		<p>
-			<label for="Quantity">Quantity:</label>
-			<input type="text" id="Quantity" name="Quantity" size="7" style="width: auto;" value="<?Quantity?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event );" />
-		</p>
+-->
 		<p>
 			<label for="Operator">Operator:</label>
 			<input type="text" id="Operator" name="Operator" size="4" style="width: auto;" value="<?Operator?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event );" /><?OperatorName?>
@@ -30,15 +35,7 @@
 			<label for="verification_code">Verification:</label>
 			<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" />
 		</p>
-		<p class="buttons">
-			<? echo ( join('',
-						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-						ssi::writeButton( $log, $dbh, 'CheckIn', 'checkin.gif', "f1.btnFunction.value='CheckIn';f1.submit();", '', 'CheckIn' ),
-						ssi::writeButton( $log, $dbh, 'CheckOut', 'checkout.gif', "f1.btnFunction.value='CheckOut';f1.submit();", '', 'CheckOut' ),
-						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' ),
-						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-						); ) ?>
-		</p>
+<!--#include virtual="_current_contents.html"-->
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="" />
 </form>
@@ -47,4 +44,4 @@
 <!--#include virtual="/employee/inventory/_verification_log.html"-->
 </fieldset>
 <? endif ( $$variable{'Skid'}->id() ) ?>
-<script type="text/javascript">document.f1.skid_id.focus();</script>
+<script type="text/javascript">document.forms[0].skid_id.focus();</script>

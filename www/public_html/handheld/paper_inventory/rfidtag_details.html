@@ -4,7 +4,7 @@
 	<fieldset>
 		<p>
 			<label for="rfidtag_id">RFID #:</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);this.form.submit();" onfocus="if(this.value.length>16){this.value='';}" size="16"/>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="16"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "f1.submit();", '', 'Go' ) ) ?>
 		</p>
 	</fieldset>
@@ -14,6 +14,13 @@
 <form id="f2" name="f2" action="rfidtag_details.html" method="post">
 	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
 	<fieldset>
+		<p class="buttons">
+			<? echo ( join('',
+						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f2.btnFunction.value='Save';f2.submit();", '', 'Save' ),
+						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f2);', '', 'Clear' ),
+						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
+						); ) ?>
+		</p>
 		<p>
 			<label>Tag #:</label>
 			<? echo ( $$variable{'RFIDTag'}->id() ) ?>
@@ -39,55 +46,23 @@
 		</p>
 <? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 <? eval ( $$variable{'Skid'} = $$variable{'RFIDTag'}->Skid() ) ?>
-<p><label>Current Contents:</label>
-<? if ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
-	Skid is empty
-<? else ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
-<br/>
-<table class="List">
-	<tr>
-		<th align="left">Paper</th><th width="75" align="left">In Stock</th><th>Allocated</th>
-	</tr>
-<? echo ( 
-		require openprint::PaperAllocation;
-		my $html;
-		foreach my $paper_id ( keys %{$$variable{'Skid'}{Paper}} ) {
-			my $Paper = new openprint::Paper( $paper_id );
-			$html .= '<tr>';
-			$html .= qq`<td><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
-			$html .= $Paper->to_string();
-			$html .= '</a></td>';
-			$html .= '<td align="left">';
-			$html .= sprintf('<input type="text" name="in_stock-%d" value="%d" size="5"/>', $paper_id, $$variable{'Skid'}{Paper}{$paper_id} );
-			$html .= $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-			$html .= '</td>';
-			$html .= '<td>';
-			foreach my $Allocation ( openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$paper_id ) ) {
-				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() )->docket(), $Allocation->quantity(), $Allocation->units() );
-			} # end foreach Allocation
-			$html .= '</td>';
-			$html .= '</tr>';
-		} # end foreach
-		return $html;
-) ?>
-	</table>
-<? endif ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
-</p>
+<!--#include virtual="_current_contents.html"-->
 <? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
-		<p class="buttons">
-			<? echo ( join('',
-						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f2.btnFunction.value='Save';f2.submit();", '', 'Save' ),
-						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f2);', '', 'Clear' ),
-						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
-						); ) ?>
-		</p>
 		<div class="rightColumn" id="Map">
 			<!--#include virtual="_map.html"-->
 		</div>
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="" />
 </form>
+<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
+<? eval ( $$variable{'Skid'}=$$variable{'RFIDTag'}->Skid(); ) ?>
+<? if ( $$variable{'Skid'}->id() ) ?>
+<fieldset><legend>Verifications</legend>
+<!--#include virtual="/employee/inventory/_verification_log.html"-->
+</fieldset>
+<? endif ( $$variable{'Skid'}->id() ) ?>
+<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 <? endif ( $$variable{'RFIDTag'} ) ?>
 <script>document.f1.rfidtag_id.focus();
-document.body.onload="document.f1.rfidtag_id.focus()";
+document.body.onload="document.forms[0].rfidtag_id.focus()";
 </script>

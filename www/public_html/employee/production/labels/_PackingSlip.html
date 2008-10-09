@@ -28,8 +28,8 @@
 		if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'Project'}->id(), 'Shipping' ) ) {
 			my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
 			$$variable{'Label'}->set_data('to'=> join("\n",
-				join(',', $$shipping_specs{'ToCompanyName'} ) ,
-				join(',', $$shipping_specs{'ToAddress1'} , $$shipping_specs{'ToAddress2'},
+				join(', ', $$shipping_specs{'ToCompanyName'} ) ,
+				join(', ', $$shipping_specs{'ToAddress1'} , $$shipping_specs{'ToAddress2'},
 					@$shipping_specs{'ToCity','ToStateProvince','ToCountry'},
 					@$shipping_specs{'ToPostalCode'} ),
 				) );
@@ -37,8 +37,8 @@
 			if ( $$variable{'Project'} ) {
 				my $Company = $$variable{'Project'}->Company();
 				$$variable{'Label'}->set_data('to'=> join("\n", $Company->name(),
-							join(',', $Company->get('address1','address2') ),
-							join(',', $Company->get('city','state','country') ),
+							join(', ', $Company->get('address1','address2') ),
+							join(', ', $Company->get('city','state','country') ),
 							$Company->get('postalcode'),
 							) );
 			} # end if
@@ -100,7 +100,7 @@
 			vertical-align: top;
 			font-family: Arial, Helvetica, Sans-Serif;
 			padding: 5px;
-			font-size: 20pt;
+			font-size: 12pt;
 		} 
 		table tr td textarea {
 			width: 98%;
@@ -117,21 +117,23 @@ new Ajax.InPlaceEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id(
 			</td>
 		</tr>
 	</table>
+	<span style="font-size: 12pt;font-weight: bold;">
 	# <? echo ( $$variable{'Label'}->docket() ) ?>&nbsp;&nbsp;
 <img src="/barcode.png?code=D<? echo ( $$variable{'Label'}->docket() ) ?>+&amp;NoText=1&amp;Height=15" alt="<? echo ( $$variable{'Label'}->docket() ) ?>" />
+	</span>
 	<br/>
-	<table style="height: 2.75in;">
+	<table style="height: 1.75in;">
 		<tr>
 			<td style="border: 1px solid black;">
 				TO:<br/>
-				<div id="to" style="height: 2.5in;"><? hecho ( $$variable{'Label'}->get_data('to'); ) ?></div>
+				<div id="to" style="height: 1.5in;"><? hecho ( $$variable{'Label'}->get_data('to'); ) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'to', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=to',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=to'});
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				FROM:<br/>
-				<div id="from" style="height: 2.5in;"><? hecho ( $$variable{'Label'}->get_data('from');) ?></div>
+				<div id="from" style="height: 1.5in;"><? hecho ( $$variable{'Label'}->get_data('from');) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=from',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=from'});
 </script>
@@ -139,18 +141,18 @@ new Ajax.InPlaceEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id(
 		</tr>
 	</table>
 	<br/>
-	<table style="height: 4in;">
+	<table style="height: 5in;">
 		<tr>
 			<td style="border: 1px solid black;">
 				DESCRIPTION:<br/>
-				<div id="description" style="height:3.75in;"><? hecho ( $$variable{'Label'}->get_data('description'); ) ?></div>
+				<div id="description" style="height:4.75in;"><? hecho ( $$variable{'Label'}->get_data('description'); ) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=description'});
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				QUANTITY:<br/>
-				<div id="quantity" style="height: 3.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
+				<div id="quantity" style="height: 4.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=getnohtml&field=quantity'});
 </script>
