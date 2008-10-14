@@ -11,10 +11,10 @@ function delete_confirm(form) {
 }
 </script>
 <span class="unprintable">
-To save, process a new quote or process an order from this quotation, please click on the appropriate button below.<br>
-<br>
+To save, process a new quote or process an order from this quotation, please click on the appropriate button below.<br/>
+<br/>
 </span>
-<span style="float: right;">
+<div style="float: right;">
 	<? echo ( my $html = '';
 			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
@@ -22,10 +22,10 @@ To save, process a new quote or process an order from this quotation, please cli
 			} # end if
 			return $html;
 		) ?>
-	</span>
-<b>Attention:</b> <br>
-Projects listed in red have changed price from the time this quote was originally generated.<br>
-<br>
+</div>
+<b>Attention:</b> <br/>
+Projects listed in red have changed price from the time this quote was originally generated.<br/>
+<br/>
 <!--#include virtual="/includes/quote_header.html" -->
 <!--#include virtual="/includes/quote_information.html" -->
 <br class="spacer"/>
