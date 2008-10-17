@@ -14,3 +14,17 @@ CREATE TABLE PurchaseOrders (
 	shipping_method	TEXT,
 	PRIMARY KEY (id)
 );
+
+DROP TABLE IF EXISTS PurchaseOrder_Contents;
+
+CREATE TABLE PurchaseOrder_COntents (
+	id SERIAL NOT NULL,
+	po_id	INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
+	qty		float,
+	price	float,
+	total	float,
+	item	text,
+	docket	text,
+	description	text,
+	PRIMARY KEY (id)
+);

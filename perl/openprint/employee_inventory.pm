@@ -1232,8 +1232,8 @@ sub _allocate_popup {
 } # end sub _allocate_popup
 
 sub purchase_order {
-	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		return;
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
@@ -1249,6 +1249,13 @@ sub purchase_orders {
 
 sub _purchase_orders {
 } # end sub _purchase_orders
+
+sub _purchase_order_supplier_address {
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	$PO->supplier_id( $param{'supplier_id'} );
+	$PO->save() if $PO->id();
+	$variable{'PurchaseOrder'} = $PO;
+} # end sub _purchase_order_supplier_address
 
 1;
 __END__

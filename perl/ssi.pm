@@ -12,6 +12,12 @@ require sets;
 require sql;
 
 use openprint;
+use vars qw( $log $dbh %config %session %param );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+*session = \%openprint::session;
+*param = \%openprint::param;
 
 sub do_new_substitution {
 	my ( $r, $log, $dbh, $command, $text, $variable ) = @_;
