@@ -16,7 +16,7 @@
 	$$variable{'DateEnd'} = join('-', ssi::fix_date( @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
 	my $sql = "SELECT OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber,".
 		"to_char(due_date, 'MM/DD/YYYY 22:00'), strStatus ".
-		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup','Added Label/Packing Slip','Marked Shipped')) ".
+		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Bindery Complete','Marked Waiting For Pickup','Added Label/Packing Slip')) ".
 		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Picked Up' ,'Marked Shipped')) ".
 		"FROM Order_Contents, tbl_Projects WHERE 1>0";
 	$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
@@ -52,6 +52,12 @@ Results for <? echo (
 			<th align="left">Performance Code</th>
 		</tr>
 		<? while ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime','shippedtime'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
+<? eval (
+				$$variable{'readytime'} = $$variable{'shippedtime'} if ! $$variable{'readytime'};
+				if ( ! $$variable{'readytime'} ) {
+					@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
+				} # end if
+) ?>
 		<tr<?rowclass?>> 
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?index?></a></td>
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?docket?></a></td>
@@ -61,9 +67,6 @@ Results for <? echo (
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?shippedtime?></a></td>
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>">
 			<? echo ( 
-				if ( ! $$variable{'readytime'} ) {
-					@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
-				} # end if
 				if ( ! $$variable{'shippedtime'} ) {
 					@$variable{'shippedtime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
 				} # end if
