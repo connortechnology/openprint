@@ -16,7 +16,7 @@
 	$$variable{'DateEnd'} = join('-', ssi::fix_date( @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
 	my $sql = "SELECT OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber,".
 		"to_char(due_date, 'MM/DD/YYYY 22:00'), strStatus ".
-		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup' ,'Marked Shipped')) ".
+		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Complete','Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup' ,'Marked Shipped')) ".
 		"FROM Order_Contents, tbl_Projects WHERE 1>0";
 	$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
 	$sql .= " AND Order_Contents.lngProjectIndex = tbl_Projects.Index";
