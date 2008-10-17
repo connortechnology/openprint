@@ -99,14 +99,12 @@ sub set {
 			eval '$$self{$field} =~ ' . $transform;
 		} # end foreach
 
-		my %defaults = eval('%'.$type . '::defaults');
+		my %defaults = eval('%'.$type.'::defaults');
 
 		if ( (!$$self{$field})  and exists $defaults{$field} ) {
 #$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
 		} # end if
-		#} else {
-			#$openprint::log->warn("Object::Set::Invalid field requested: $type ($field)." );
 	} # end foreach
 	return @set_fields;
 } # end sub set

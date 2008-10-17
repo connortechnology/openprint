@@ -431,7 +431,7 @@ sub datetime_select {
 	 my ( $prefix, $value, $onchange ) = @_;
 
 	 my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
-$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
+#$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
 
 	 my $html = '';
 	 $html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );

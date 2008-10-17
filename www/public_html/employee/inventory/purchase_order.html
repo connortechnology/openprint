@@ -10,42 +10,11 @@ function calc_price( element ) {
         $('total-'+index).value = do_decimals( cost * qty, 2 );
     } // end if
 } // end function calc_price
-
-function save ( form ) {
-	var error = '';
-	if ( ! get_ddm_value( form.PaperBrand ) ) {
-		error += 'Please select a Brand.\n';
-	} // end if
-	if ( ! get_ddm_value( form.PaperFinish ) ) {
-		error += 'Please select a Finish.\n';
-	} // end if
-	if ( ! get_ddm_value( form.PaperColour ) ) {
-		error += 'Please select a Colour.\n';
-	} // end if
-	if ( ! get_ddm_value( form.PaperWeight ) ) {
-		error += 'Please select a Weight.\n';
-	} // end if
-	if ( ! get_ddm_value( form.PaperSheetSize ) ) {
-		error += 'Please select a Size.\n';
-	} // end if
-	if ( ! form.PaperDescription.value ) {
-		error += 'Please select a Description.\n';
-	} // end if
-	
-	if ( error != '' ) {
-		//alert("You have not entered enough information to add this paper.  Please correct the following problems:\n"+error);
-		//return;
-} // end if
-	form.btnFunction.value='Save';
-	form.submit();
-}
 </script>
 <form name="f1" action="purchase_order.html?po_id=<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" method="post">
-	<? if ( $$variable{'Error'} ) ?>
-	<div class="ErrorMessage">
-	<?Error?>
-	</div>
-	<? endif ( $$variable{'Error'} ) ?>
+	<? if ( $$variable{'error'} ) ?>
+	<div class="error"><?error?></div>
+	<? endif ( $$variable{'error'} ) ?>
 	<div class="PO">
 		<div class="PageTitle">
 		<h1>PURCHASE ORDER</h1>
@@ -54,7 +23,6 @@ function save ( form ) {
 		<div class="leftColumn">
 		<p>
 			<label>VENDOR</label>
-			
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" size="4" style="width: auto;" />
 			<select name="supplier_id" onchange="new Ajax.Updater( 'Vendor_Address', '_purchase_order_supplier_address.html', { method: 'get', parameters: { po_id: '<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>', supplier_id: this.value } } );">
 			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
@@ -87,61 +55,73 @@ function save ( form ) {
 			</tr>
 		</table>
 		<br/>
-		<table>
-			<tr>
-				<th>QTY</th>
-				<th>ITEM</th>
-				<th>DESCRIPTION</th>
-				<th>DOCKET</th>
-				<th>UNIT PRICE</th>
-				<th>LINE TOTAL</th>
-			</tr>
-			<? echo ( my $html = '';
-				foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
-				} # end foreach C
-				return $html;
-			) ?>
-			<tr class="unprintable">
-				<td><input type="text" name="qty-new" id="qty-new" size="6" onkeyup="calc_price(this);" /></td>
-				<td><input type="text" name="item-new" id="item-new" size="10" /></td>
-				<td><input type="text" name="description-new" id="description-new" /></td>
-				<td><input type="text" name="docket-new" id="docket-new" size="6" /></td>
-				<td><input type="text" name="price-new" id="price-new" size="10" onkeyup="calc_price(this);" /></td>
-				<td><input type="text" name="total-new" id="total-new" size="10" /></td>
-			</tr>
-			<tr>
-				<td colspan="5" class="totals">SUBTOTAL</td>
-				<td><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
-			</tr>
-			<tr>
-				<td colspan="5" class="totals">SALES TAX</td>
-				<td><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->tax() ); ) ?></td>
-			</tr>
-			<tr>
-				<td colspan="5" class="totals">TOTAL</td>
-				<td><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->total() ); ) ?></td>
-			</tr>
-		</table>
+<table>
+	<tr>
+		<th>&nbsp;</th>
+		<th>QTY</th>
+		<th>ITEM</th>
+		<th>DESCRIPTION</th>
+		<th>DOCKET</th>
+		<th>UNIT PRICE</th>
+		<th>LINE TOTAL</th>
+	</tr>
+<? echo ( my $html = '';
+	my $line = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_purchase_order_content_line.html' );
+	foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
+		$param{'po_content_id'} = $C->id();
+		$html .= ssi::variable_substitution( $r, $log, $dbh, \$line, $variable );
+	} # end foreach C
+	return $html;
+) ?>
+	<tr class="unprintable" id="new">
+		<td>
+	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"new Ajax.Request('/employee/inventory/_purchase_order_content_line.html?action=add' +
+	'&qty=' + encodeURIComponent(\$('qty-new').value) +
+	'&item=' + encodeURIComponent(\$('item-new').value) +
+	'&description=' + encodeURIComponent(\$('description-new').value) +
+	'&docket=' + encodeURIComponent(\$('docket-new').value) +
+	'&price=' + encodeURIComponent(\$('price-new').value) +
+	'&total=' + encodeURIComponent(\$('total-new').value) +
+	'&po_id=' + $$variable{'PurchaseOrder'}{id} + 
+	'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.Before(\$('new'), response.responseText);} } );",'','Add' ); ) ?>
+		</td>
+		<td><input type="text" name="qty-new" id="qty-new" size="6" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);" /></td>
+		<td><input type="text" name="item-new" id="item-new" size="10" /></td>
+		<td><input type="text" name="description-new" id="description-new" /></td>
+		<td><input type="text" name="docket-new" id="docket-new" size="6" onkeyup="this.value=this.value.replace(/\D/,'');"/></td>
+		<td><input type="text" name="price-new" id="price-new" size="10" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);" /></td>
+		<td><input type="text" name="total-new" id="total-new" size="10" /></td>
+	</tr>
+	<tr>
+		<td colspan="6" class="totals">SUBTOTAL</td>
+		<td style="text-align: right;"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
+	</tr>
+	<tr>
+		<td colspan="6" class="totals">SALES TAX</td>
+		<td style="text-align: right;"><? echo ( sprintf('%s<span id="salestax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->tax() ); ) ?></td>
+	</tr>
+	<tr>
+		<td colspan="6" class="totals">TOTAL</td>
+		<td style="text-align: right;"><? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->total() ); ) ?></td>
+	</tr>
+</table>
 		<div class="leftColumn">
-	<ol>
-<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>
-<li> Please indicate this Purchase Order # in your invoice, packing slip / delivery note.</li>
-<li> Please notify us immediately if you are unable to ship as specified.</li>
-</ol>
+			<ol>
+				<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>
+				<li> Please indicate this Purchase Order # in your invoice, packing slip / delivery note.</li>
+				<li> Please notify us immediately if you are unable to ship as specified.</li>
+			</ol>
 		</div>
 		<div class="rightColumn">
 			<br/><br/><hr/>
 			<div class="leftColumn"><i>Authorized by</i></div>
 			<div class="rightColumn"><i>Date</i></div>
 		</div>
-			
-				
-
-				Currency:
-				<select name="Currency">
-					<option value=""> select one </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'PurchaseOrder'}->currency_id() ? $$variable{'PurchaseOrder'}->currency_id() : $session{'Currency_id'} ); ) ?>
-				</select>
+		Currency:
+		<select name="currency_id">
+			<option value=""> select one </option>
+			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'PurchaseOrder'}->currency_id() ? $$variable{'PurchaseOrder'}->currency_id() : $session{'Currency_id'} ); ) ?>
+		</select>
 		<br class="spacer"/>
 		<? if ( $$variable{'CurrencyName'} ) ?>
 		<div align="right">All prices listed in <?CurrencyName?>.</div>
@@ -151,16 +131,10 @@ function save ( form ) {
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
-if ( $$variable{'Status'} eq 'Incomplete' ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', 'save(f1);', '', 'Save' );
-			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
-			$html .= ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
-			$html .= ssi::writeButton( $log, $dbh, 'Send', 'send.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
-} elsif ( $$variable{'Status'} eq 'Sent' ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
-			$html .= ssi::writeButton( $log, $dbh, 'Received', '', "f1.btnFunction.value='Received';f1.submit();", '', 'Received' );
-} # end if
+	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+	return $html;
 ) ?>
 	</p>
-	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="btnFunction" />
 </form>

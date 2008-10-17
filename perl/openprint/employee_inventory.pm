@@ -1239,7 +1239,30 @@ sub purchase_order {
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-	} # end if btnFunction == Save
+$openprint::log->debug("Saving");
+		$variable{'error'} .= $PO->save( {
+			'created_by'	=>	$session{'user_id'},
+			'currency_id'	=>	$param{'currency_id'},
+			'delivered_on'	=>	sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'}),
+		} );
+		foreach my $k ( keys %param ) {
+			my ( $content_id ) = $k =~ /qty-(.*)/;
+			if ( $content_id ) {
+				next if ( $content_id eq 'new' );
+			my $C = new openprint::PurchaseOrder_Content( $content_id );
+			$variable{'error'} .= $C->save( {
+					'po_id'         =>  $PO->id(),
+					'qty'           =>  $param{'qty-'.$content_id},
+					'item'          =>  $param{'item-'.$content_id},
+					'description'   =>  $param{'description-'.$content_id},
+					'docket'        =>  $param{'docket-'.$content_id},
+					'price'         =>  $param{'price-'.$content_id},
+					'total'         =>  $param{'total-'.$content_id},
+					});
+			} # end if
+		} # end foreach
+$openprint::log->debug("END Saving");
+	} # end if btnFunction
 
 	$variable{'PurchaseOrder'} = $PO;
 } # end sub purchase_order
@@ -1256,6 +1279,15 @@ sub _purchase_order_supplier_address {
 	$PO->save() if $PO->id();
 	$variable{'PurchaseOrder'} = $PO;
 } # end sub _purchase_order_supplier_address
+
+sub _purchase_order_content_line {
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	$variable{'PurchaseOrder'} = $PO;
+	if ( $param{'action'} eq 'delete' ) {
+		my $PO_Content = new openprint::PurchaseOrder_Content( $param{'id'} );
+		$PO_Content->delete();
+	} # end if
+} # end sub _purchase_order_content_line
 
 1;
 __END__

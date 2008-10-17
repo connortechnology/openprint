@@ -5,11 +5,12 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config %session %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -30,10 +31,11 @@ my $debug = 1;
 	'delivered_on'	=>	'delivered_on',
 	'total'			=>	'total',
 	'deleted'		=>	'deleted',
-	'supplied_id'	=>	'supplier_id',
+	'supplier_id'	=>	'supplier_id',
 );
 
 %transforms = (
+	'id'			=>	[ 's/\D//g' ],
 );
 
 %defaults = (
@@ -41,7 +43,7 @@ my $debug = 1;
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 	'deleted'		=>	0,
-	'currency_id'	=> $openprint::session{'Currency_id'},
+	'currency_id'	=> $session{'Currency_id'},
 );
 
 # Returns a paper object specified by the parameters
@@ -73,13 +75,13 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading PurchaseOrders SQL($sql)" . DBI->errstr );
+		$log->debug("Error loading PurchaseOrders SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
-		$openprint::log->debug('No PurchaseOrders loaded (' . $sql . ") (@values)" );
+		$log->debug('No PurchaseOrders loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded PurchaseOrders ($sql) (@values) records:" . @$data );
+		$log->debug("Debug loaded PurchaseOrders ($sql) (@values) records:" . @$data );
 	} # end if
 	return map { new openprint::PurchaseOrder( $_->{id}, $_ ) } @$data;
 } # end sub find
@@ -87,14 +89,9 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-#
-#$openprint::log->debug("Loading label $$self{id}") if $debug;
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM PurchaseOrders WHERE id=?}, {}, $$self{'id'} );
-#$openprint::log->debug("Loading label $$self{id} $$data{data}") if $debug;
+		$data = $dbh->selectrow_hashref( q{SELECT * FROM PurchaseOrders WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
-	delete $$self{'data'};
-	%{$$self{'data'}} = sql::execute( undef, undef, 'SELECT name, value FROM label_Data WHERE label_id=?', $$self{'id'} );
 } # end sub load
 
 sub save {
@@ -110,25 +107,25 @@ sub save {
 	} # end foreach
 	delete $sql{'created_on'};
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('PurchaseOrders_id_seq')} );
 		$sql{'id'} = $$self{'id'};
 
 		if ( my $error = sql::insert( undef, undef, 'PurchaseOrders', \%sql ) ) {
 			$$self{'id'} = undef;
-			sql::end_transaction( $openprint::dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 
     } else {
 		if ( my $error = sql::update( undef, undef, 'PurchaseOrders', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
     } # end if
 
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return;
 } # end sub save
@@ -173,7 +170,7 @@ sub Creator {
 
 
 sub Contents {
-	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'po_id'});
+	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'});
 } # end sub Contents
 
 1;
