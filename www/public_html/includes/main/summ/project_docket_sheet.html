@@ -263,11 +263,11 @@
 		} else {
 			$html .= '</td><td class="docketText">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%d X F%d<br/>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()}, $f );
+				$html .= sprintf('%d F%d<br/>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()}, $f );
 			} # end foreach
 			$html .= '</td><td class="docketText">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%s X F%d<br/>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()}, $f );
+				$html .= sprintf('%s<br/>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
 			} # end foreach
 		} # end if
 		$html .= '</td>';
