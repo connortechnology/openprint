@@ -272,6 +272,13 @@ CREATE TABLE PurchaseOrder_COntents (
 );');
 } # en dif
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM users LIMIT 1', {} );
+if ( ! exists $$data{'purchasing_limit'} ) {
+	$dbh->do('ALTER TABLE Users ADD purchasing_limit FLOAT');
+} # end if
+if ( ! exists $$data{'purchasing_total_limit'} ) {
+	$dbh->do('ALTER TABLE Users ADD purchasing_total_limit FLOAT');
+} # end if
 
 $dbh->disconnect();
 1;

@@ -16,6 +16,7 @@
 
 .PO table {
 	border-top: 1px solid #3b5e91;
+	table-layout: fixed;
 }
 .PO table td {
 	border: 1px solid #aebdd2;
@@ -27,4 +28,18 @@
 	
 .PO table td.totals {
 	text-align: right;
+}
+.PO table td input {
+	width: 98%;
+	min-width:0px;
+	margin: 0px;
+	border: none;
+	padding: 0px;
+}
+.PO table td textarea {
+	width: 98%;
+	min-width:0px;
+	margin: 0px;
+	border: none;
+	padding: 0px;
 }

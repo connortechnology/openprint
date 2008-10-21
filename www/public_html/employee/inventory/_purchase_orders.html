@@ -1,41 +1,40 @@
 <? eval (
-	foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay' ) {
+	foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized' ) {
 		$openprint::session{'/employee/inventory/purchase_orders.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
 	} # end foreach
 
-	$$variable{'EndDate'} = sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'EndYear','EndMonth','EndDay'} );
-
 	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find(
-		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/employee/inventory/purchase_orders.html?StartYear','/employee/inventory/purchase_orders.html?StartMonth','/employee/inventory/purchase_orders.html?StartDay'} ),
-		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/employee/inventory/purchase_orders.html?EndYear','/employee/inventory/purchase_orders.html?EndMonth','/employee/inventory/purchase_orders.html?EndDay'} ),
+		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ),
+		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ),
 		'order'				=> 'id desc',
 		);
 ) ?>
-	<? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
+<? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
 	There are no purchase orders matching your search criteria.
-	<? else ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
+<? else ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
 	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
 <table class="List">
 	<tr>
 		<th width="30">ID</th>
 		<th width="110" style="text-align: left;">Date</th>
 		<th style="text-align: left;">Supplier</th>
-		<th style="text-align: left;">Creator</th>
+		<th style="text-align: left;">Created By</th>
+		<th style="text-align: left;">Authorized By</th>
 		<th width="110" style="text-align: right;">Total</th>
 	</tr>
 	<? echo ( 
 		my $html = '';
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
 			$html .= sprintf( '<tr>
-				<td>&nbsp;<a href="purchase_order.html?po_id=%1$d">%1$d</a></td>
-				<td><a href="purchase_order.html?po_id=%1$d">%2$s</a></td>
+				<td>&nbsp;<a href="purchase_order_view.html?po_id=%1$d">%1$d</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%2$s</a></td>
 				<td>%3$s</td>
 				<td>%4$s</td>
+				<td>%7$s</td>
 				<td style="text-align: right;">%5$s%6$.2f</td>
-			</tr>', $PO->id(), Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total() );
+			</tr>', $PO->id(), Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total(), $PO->Authorized_By()->name() );
 		} # end while
 		return $html;
 	) ?>
 	</table>
-	<!--<div align="right" class="smTbl">All prices listed in <?CurrencyName?>.</div>-->
-	<? endif ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
+<? endif ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>

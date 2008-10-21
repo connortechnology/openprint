@@ -28,10 +28,16 @@ my $debug = 1;
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'created_by'	=>	'created_by',
+	'authorized_by'	=>	'authorized_by',
+	'authorized_on'	=>	'authorized_on',
 	'delivered_on'	=>	'delivered_on',
 	'total'			=>	'total',
+	'subtotal'		=>	'subtotal',
+	'tax'			=>	'tax',
 	'deleted'		=>	'deleted',
 	'supplier_id'	=>	'supplier_id',
+	'shipping_method'	=>	'shipping_method',
+	'shipping_terms'	=>	'shipping_terms',
 );
 
 %transforms = (
@@ -44,6 +50,9 @@ my $debug = 1;
 	'updated_on'	=> 'NOW()',
 	'deleted'		=>	0,
 	'currency_id'	=> $session{'Currency_id'},
+	'tax'			=>	0,
+	'total'			=>	0,
+	'subtotal'		=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -71,6 +80,11 @@ sub find {
 	} elsif ( $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on <= ?)';
 		push @values, $params{'created_on_end'};
+	} # end if
+	if ( $params{'authorized'} eq 'Y' ) {
+		$sql .= ' AND authorized_by IS NOT NULL';
+	} elsif ( $params{'authorized'} eq 'N' ) {
+		$sql .= ' AND authorized_by IS NULL';
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
@@ -106,6 +120,12 @@ sub save {
 		$sql{$k} = $$self{$k};
 	} # end foreach
 	delete $sql{'created_on'};
+	$sql{'subtotal'} = 0;
+	foreach my $C ( $self->Contents() ) {
+$log->debug("Adding " . $C->total() );
+		$sql{'subtotal'} += $C->total();
+	} # end foreach
+	$sql{'total'} = $sql{'subtotal'};
 
 	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
@@ -119,7 +139,7 @@ sub save {
 		} # end if
 
     } else {
-		if ( my $error = sql::update( undef, undef, 'PurchaseOrders', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
+		if ( my $error = sql::update( undef, undef, 'PurchaseOrders', ['id=?', $$self{id}], \%sql ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
@@ -167,6 +187,9 @@ sub Supplier {
 sub Creator {
 	return new openprint::User( $_[0]{created_by} );
 } # end sub Creator
+sub Authorized_By {
+	return new openprint::User( $_[0]{authorized_by} );
+} # end sub Authorized_By
 
 
 sub Contents {
