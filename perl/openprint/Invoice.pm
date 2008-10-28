@@ -12,6 +12,7 @@ use MIME::Base64;
 require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
+require openprint::InvoiceLog;
 
 my $debug = 1;
 
@@ -212,21 +213,39 @@ sub Company {
 sub is_paid {
 	return ( $_[0]->total() - $_[0]->paid() > 0 ) ? 1 : 0;
 } # end sub is_paid
+
 sub owing {
 	return $_[0]->total() + $_[0]->interest() - $_[0]->paid();
 } # end sub owing
+
 sub Invoicee {
 	return new openprint::Company( $_[0]->invoicee_id() );
 } # end sub Invoicee
+
 sub Invoicer {
 	return new openprint::Company( $_[0]->invoicer_id() );
 } # end sub Invoicer
 
+sub subtotal {
+	my ( $self ) = @_;
+
+	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
+	} # end if
+	return $$self{'subtotal'};
+} # end sub subtotal
+sub total {
+	my ( $self ) = @_;
+
+	if ( (!$$self{'posted'}) or ( ! defined $$self{'total'} ) ) {
+	} # end if
+	return $$self{'total'};
+} # end sub total
+
 sub interest {
 	my ( $self ) = @_;
 
-	if ( ! defined $$self{'interest'} ) {
-	$$self{'interest'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoice_interests WHERE invoice_id=?', $$self{'id'} ) );
+	if ( (!$$self{'posted'}) or ( ! defined $$self{'interest'} ) ) {
+		$$self{'interest'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoice_interests WHERE invoice_id=?', $$self{'id'} ) );
 	} # end if
 	return $$self{'interest'};
 } # end sub interest
@@ -236,8 +255,8 @@ sub paid {
 	if ( @_ ) {
 		$$self{'paid'} = $_[0];
 	} # end if
-	if ( ! defined $$self{'paid'} ) {
-	$$self{'paid'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoices_payments WHERE invoice_id=?', $$self{'id'} ) );
+	if ( (!$$self{'posted'}) or ( ! defined $$self{'paid'} ) ) {
+		$$self{'paid'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoices_payments WHERE invoice_id=?', $$self{'id'} ) );
 	} # end if
 	return $$self{'paid'};
 } # end sub paid
@@ -263,6 +282,15 @@ sub del_Payment {
 	$self->paid( undef );
 	$self->save();
 } # end sub del_Payment
+
+sub Payments {
+	my ( $self ) = @_;
+	return openprint::Payment::find('invoice_id'=>$$self{'id'} );
+} # end sub Payments
+
+sub Logs {
+	return openprint::InvoiceLog::find('invoice_id'=>$_[0]{id},'order'=>'created_on');
+} # end sub Logs
 
 1;
 

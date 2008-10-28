@@ -317,7 +317,24 @@ table.List input {
 	background-color: #DFD6B4;
 	padding: 5px;
 	margin: 0px;
+} 
+.PageTitle {
+    width: 100%;
+    text-align: right;
 }
+.PageTitle h1 {
+    text-align: right;
+	color: #ff7f00;
+    margin: 0px;
+    font-size: 16px;
+}
+.PageTitle h2 {
+    text-align: right;
+    color: #000088;
+    margin-top: 0px;
+    font-size: 12px;
+}
+
 
 body, p, ol, ul, td {
 	font-family: verdana, arial, helvetica, sans-serif;

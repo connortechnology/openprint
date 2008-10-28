@@ -41,8 +41,8 @@
 				</select>
 			</p>
 <? eval (
-	ssi:setup_date_select( '/invoice/history.html', 'created_on', -31 );
-	ssi:setup_date_select( '/invoice/history.html', 'due_on', -31 );
+	ssi::setup_date_select( '/invoice/history.html', 'created_on', -31, 365 );
+	ssi::setup_date_select( '/invoice/history.html', 'due_on', -31, 365 );
 
 
 	$session{'/invoice/history.html?invoiced'} = '0' if ! $session{'/invoice/history.html?invoiced'};

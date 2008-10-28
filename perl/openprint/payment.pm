@@ -16,9 +16,8 @@ require openprint::Invoice;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
-		$param{'starting'} = sprintf('%.4d-%.2d-%2.d %.2d:%.2d:00', @param{'starting_year','starting_month','starting_day','starting_hour','starting_minute'} );
-		$param{'ending'} = sprintf('%.4d-%.2d-%2.d %.2d:%.2d:00', @param{'ending_year','ending_month','ending_day','ending_hour','ending_minute'} );
+		$param{'recipient_id'} = $session{'company_id'} if ! $param{'recipient_id'};
+		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->save(\%param);
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
@@ -33,8 +32,13 @@ sub _history {
 sub edit {
 	$variable{'Payment'} = new openprint::Payment( $param{'payment_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		$variable{'error'} .= $variable{'Payment'}->save(\%param);
-		$variable{'Redirect'} = '/payment/history.html';
+		$param{'recipient_id'} = $session{'company_id'} if ! $param{'recipient_id'};
+		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
+		my $Payment = new openprint::Payment( $param{'payment_id'} );
+		if ( $variable{'error'} .= $variable{'Payment'}->save(\%param) ) {
+			$variable{'Redirect'} = '/payment/history.html';
+			delete $param{'btnFunction'};
+		} # end if
 	} # end if
 } # end sub edit
 

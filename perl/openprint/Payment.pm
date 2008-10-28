@@ -27,7 +27,7 @@ require sql;
 	'method'			=>	'method',
 	'currency_id'		=>	'currency_id',
 	'transaction_id'	=>	'transaction_id',
-	'description'		=>	'memo',
+	'memo'				=>	'memo',
 	'completed'			=>	'completed',
 	'received_on'		=>	'date',
 	'remaining'			=>	'remaining',
@@ -74,6 +74,10 @@ sub find {
 			$sql .= q{ AND owner_id=?};
 			push @values, $params{'recipient_id'};
 		} # end if
+	} # end if
+	if ( $params{'invoice_id'} ) {
+		$sql .= ' AND id IN ( SELECT payment_id FROM invoices_payments WHERE invoice_id=? )';
+		push @values, $params{'invoice_id'};
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
@@ -127,12 +131,12 @@ sub find {
 		$sql .= " ORDER BY $params{'order'}";
 	} # end if
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->warn("Error loading Payments: ($sql) (@values)" . $openprint::dbh->errstr );
+		$log->warn("Error loading Payments: ($sql) (@values)" . $dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$openprint::log->debug("openprint::Payment::find($sql) (@values)");
+		$log->debug("openprint::Payment::find($sql) (@values)");
 	} # end if
 	return map { new openprint::Payment( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -141,8 +145,8 @@ sub load {
 	my ( $self, $data ) = @_;
 
 	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Payments WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
+		$data = $dbh->selectrow_hashref( 'SELECT * FROM Payments WHERE id=?', {}, $$self{'id'} );
+		if ( ! $data ) { $log->debug("No data when loading payment $$self{'id'} " . $dbh->errstr() ); }
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
@@ -167,21 +171,23 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('payments_id_seq')});
 		$sql{'id'} = $$self{id};
 		if ( my $error = sql::insert( undef, undef, 'Payments', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+			$dbh->rollback();
+			#sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 	} else {
+		delete $sql{'created_on'};
 		if ( my $error = sql::update( undef, undef, 'Payments', ['id=?', $$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return '';
 } # end sub save

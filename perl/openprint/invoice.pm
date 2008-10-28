@@ -22,3 +22,6 @@ sub _history {
 sub edit {
 	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
 } # end sub edit
+sub view {
+	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
+} # end sub view

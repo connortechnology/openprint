@@ -236,7 +236,7 @@ sub seconds_to_pretty_interval {
 	my $string;
 	my $years = int($seconds / ( 60 * 60 * 24 * 365 ));
 	my $remainder = $seconds % ( 60*60*24*365 );
-	$string .= sprintf('%d year%s', $years, $years == 1 ? '' : 's' ) if $years;
+	$string .= sprintf('%dy', $years) if $years;
 	return $string if ! $remainder;
 
 	my $days = int ( $remainder / ( 60* 60 * 24 ) );
@@ -244,7 +244,7 @@ sub seconds_to_pretty_interval {
 	if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
 		$string .= '1 month';
 	} elsif ( $days ) {
-		$string .= sprintf('%d day%s', $days, $days == 1 ? '' : 's' );
+		$string .= sprintf('%dd', $days );
 	} # end if
 	return $string if ! $remainder;
 

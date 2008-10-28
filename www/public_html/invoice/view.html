@@ -1,41 +1,5 @@
 <form name="f1" id="f1" action="history.html" method="post">
-	<fieldset><legend>Editing Invoice</legend>
-		<div class="leftColumn">
-			<p><label for="invoicee_id">Company:</label>
-				<select id="invoicee_id" name="invoicee_id">
-					<option value=""> select </option>
-					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
-				</select>
-			</p>
-<!--
-			<p><label>Created On:</label>
-			<span class="DateSelector"><? echo ( ssi::date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?></span>
-			</p>
--->
-			<p><label>Due On:</label>
-			<span class="DateSelector"><? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?></span>
-			</p>
-			<p><label for="monthly_interest">Interest Rate</label>
-				<input type="text" name="monthly_interest" id="monthly_interest" value="<? echo ( $$variable{'Invoice'}->monthly_interest() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-			</p>
-			<p><label for="federaltaxrate">Federal Tax Rate</label>
-				<input type="text" name="federaltaxrate" id="federaltaxrate" value="<? echo ( $$variable{'Invoice'}->federaltaxrate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-			</p>
-			<p><label for="statetaxrate">State/Provincial Tax Rate</label>
-				<input type="text" name="statetaxrate" id="statetaxrate" value="<? echo ( $$variable{'Invoice'}->statetaxrate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-			</p>
-		</div>
-		<div class="rightColumn">
-			<p>
-				<label for="external_notes">External Notes</label>
-				<textarea cols="40" id="external_notes" name="external_notes" rows="<? echo ( $$variable{'Invoice'}->external_notes() ? scalar split("\n", $$variable{'Invoice'}->external_notes()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->external_notes() ) ?></textarea>
-			</p>
-			<p>
-				<label for="internal_notes">Internal Notes</label>
-				<textarea cols="40" id="internal_notes" name="internal_notes" rows="<? echo ( $$variable{'Invoice'}->internal_notes() ? scalar split("\n", $$variable{'Invoice'}->internal_notes()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
-			</p>
-		</div>
-		<br class="spacer"/>
+	<fieldset><legend>Invoice <? echo ( $$variable{'Invoice'}->id() ) ?></legend>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
@@ -43,10 +7,28 @@
 				if ( $$variable{'Invoice'}->id() ) {
 				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
 				} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();}", 'history.html', 'Save' );
+				$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?invoice_id='.$$variable{'Invoice'}->id(), 'Edit' );
+				$html .= ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print()', '', 'Print' );
 				return $html;
 			) ?>
 		</p>
+		<div class="leftColumn">
+			<p><label for="invoicee_id">Company:</label><? echo ( $$variable{'Invoice'}->Invoicee()->name() ) ?></p>
+<!--
+			<p><label>Created On:</label>
+			<span class="DateSelector"><? echo ( ssi::date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?></span>
+			</p>
+-->
+			<p><label>Due On:</label><? echo ( $$variable{'Invoice'}->due_on(); ) ?></p>
+			<p><label>Interest Rate:</label><? echo ( $$variable{'Invoice'}->monthly_interest() ) ?>%</p>
+			<p><label>Federal Tax Rate</label><? echo ( $$variable{'Invoice'}->federaltaxrate() ) ?></p>
+			<p><label>State/Provincial Tax Rate</label><? echo ( $$variable{'Invoice'}->statetaxrate() ) ?></p>
+		</div>
+		<div class="rightColumn">
+			<p><label>External Notes</label><? echo ( $$variable{'Invoice'}->external_notes() ) ?></p>
+			<p><label>Internal Notes</label><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></p>
+		</div>
+		<br class="spacer"/>
 	</fieldset>
 	<fieldset><legend>Services in this invoice</legend>
 		<table class="List sortable">
@@ -90,7 +72,6 @@
 				<th style="text-align: right; width: 100px;">Price</th>
 				<th style="text-align: right; width: 50px;">Qty</th>
 				<th style="text-align: right; width: 100px;">Total</th>
-				<th style="text-align: right; width: 100px;" class="unprintable">Actions</th>
 			</tr>
 			<? echo ( 
 				my $html = '';
@@ -99,12 +80,9 @@
 					$html .= '<tr>';
 					$html .= sprintf('<td align="left">%s</td>', $Product->name() );
 
-					$html .= sprintf('<td align="right"><input type="text" id="product-price-%1$d" name="product-price-%1$d" value="%2$s"/></td>', $Product->id(), $Product->price() );
+					$html .= sprintf('<td align="right">%2$s</td>', $Product->id(), $Product->price() );
 					$html .= sprintf('<td align="right">%2$d</td>', $Product->id(), $Product->quantity() );
 					$html .= sprintf('<td align="right">%2$.2f</td>', $Product->id(), $Product->total() );
-					$html .= '<td align="right" class="unprintable">';
-$html .= ssi::writeButton( $log, $dbh, 'Remove'.$Product->id(), '','','Remove' );
-					$html .= '</td>';
 					$html .= '</tr>';
 					$$variable{'product_total'} += $Product->total();
 				} # end foreach Product
@@ -113,7 +91,6 @@ $html .= ssi::writeButton( $log, $dbh, 'Remove'.$Product->id(), '','','Remove' )
 			<tr class="totals">
 				<td colspan="3" align="right"><b>Totals:</b></td>
 				<td align="right"><b><? echo ( openprint::Currency::format( $$variable{'product_total'} ); ) ?></b></td>
-				<td class="unprintable">&nbsp;</td>
 			</tr>
 		</table>
 	</fieldset>
@@ -182,7 +159,7 @@ $html .= ssi::writeButton( $log, $dbh, 'Remove'.$Product->id(), '','','Remove' )
 	</fieldset>
 </div>
 <br class="spacer">
-<fieldset><legend>Logs</legend>
+<fieldset class="unprintable"><legend>Logs</legend>
 	<table>
 		<tr><th>When</th><th>Who</th><th>Description</th></tr>
 		<? echo ( 

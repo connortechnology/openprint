@@ -13,7 +13,7 @@
 			$openprint::session{"/invoice/history.html?$_"} = $openprint::param{$_};
 		} # end if
 	} # end foreach
-
+$$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Invoices'}} = ();
 	foreach my $Invoice ( openprint::Invoice::find( 
 		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ),
@@ -24,9 +24,16 @@
 		'invoicer_id'		=> $openprint::session{'company_id'},
 		'order'				=> 'id',
 		) ) {
-		next if $Invoice->is_paid() and ! sets::isin( 1, split(';', $openprint::session{'/invoice/history.html?paid'} ) );
-		next if ( ! $Invoice->is_paid() ) and ! sets::isin( 0, split(';', $openprint::session{'/invoice/history.html?paid'} ) );
+		if ( $openprint::session{'/invoice/history.html?paid'} ne '' ) {
+			next if $Invoice->is_paid() and $openprint::session{'/invoice/history.html?paid'} != 0;
+			next if ( ! $Invoice->is_paid() ) and $openprint::session{'/invoice/history.html?paid'} != 1;
+		} # end if
 		push @{$$variable{'Invoices'}}, $Invoice;
+		$$variable{'subtotal'} += $Invoice->subtotal();
+		$$variable{'gst_total'} += $Invoice->gst();
+		$$variable{'total'} += $Invoice->total();
+		$$variable{'interest_total'} += $Invoice->interest();
+		$$variable{'owing_total'} += $Invoice->owing();
 	} # end foreach Invoice
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
@@ -55,17 +62,25 @@
 			$$variable{'conversion_rate'} = $$variable{'Invoice'}->Currency()->conversions( $openprint::session{'Currency_id'} );
 		) ?>
 		<tr title="<? echo ( $$variable{'Invoice'}->description() ) ?>" <?rowclass?> onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');"> 
-			<td><a href="/invoice/edit.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->id(); ) ?></a></td>
-			<td><a href="/invoice/edit.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->due_on(); ) ?></a></td>
-			<td><a href="/invoice/edit.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? hecho ( $$variable{'Invoice'}->Invoicee()->name(); ) ?></a></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Invoice'}->subtotal() ); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Invoice'}->gst() ); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Invoice'}->total() ); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Invoice'}->interest() ); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Invoice'}->owing() ); ) ?></td>
+			<td><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->id(); ) ?></a></td>
+			<td><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->due_on(); ) ?></a></td>
+			<td><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? hecho ( $$variable{'Invoice'}->Invoicee()->name(); ) ?></a></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Invoice'} = shift @{$$variable{'Invoices'}}; ) ?>
+		<tr class="totals">
+			<td colspan="3">Totals:</td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'gsttotal'} ); ) ?></td>	
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>	
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?></td>	
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'owing_total'} ); ) ?></td>	
+		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $openprint::session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
