@@ -1231,24 +1231,77 @@ sub _allocate_popup {
     } # end if
 } # end sub _allocate_popup
 
-sub purchase_order {
-	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+sub purchase_order_view {
 
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		return;
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-	} # end if btnFunction == Save
+		if ( ! $param{'po_id'} ) {
+			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'} } );
+		} # end if
+		foreach my $k ( keys %param ) {
+			my ( $content_id ) = $k =~ /qty-(.*)/;
+			if ( $content_id ) {
+				next if ( $content_id eq 'new' );
+				my $C = new openprint::PurchaseOrder_Content( $content_id );
+				$variable{'error'} .= $C->save( {
+						'po_id'         =>  $PO->id(),
+						'qty'           =>  $param{'qty-'.$content_id},
+						'item'          =>  $param{'item-'.$content_id},
+						'description'   =>  $param{'description-'.$content_id},
+						'docket'        =>  $param{'docket-'.$content_id},
+						'price'         =>  $param{'price-'.$content_id},
+						'total'         =>  $param{'total-'.$content_id},
+						});
+			} # end if
+		} # end foreach
+		$variable{'error'} .= $PO->save( {
+			'supplier_id'		=>	$param{'supplier_id'},
+			'shipping_method'	=>	$param{'shipping_method'},
+			'shipping_terms'	=>	$param{'shipping_terms'},
+			'currency_id'		=>	$param{'currency_id'},
+			'delivered_on'		=>	sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'}),
+		} );
+	} # end if btnFunction
 
 	$variable{'PurchaseOrder'} = $PO;
-} # end sub purchase_order
+} # end sub purchase_order_view
+
+sub purchase_order_edit {
+
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		return;
+	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+	} # end if btnFunction
+
+	$variable{'PurchaseOrder'} = $PO;
+} # end sub purchase_order_edit
 
 sub purchase_orders {
 } # end sub purchase_orders
 
 sub _purchase_orders {
 } # end sub _purchase_orders
+
+sub _purchase_order_supplier_address {
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	$PO->supplier_id( $param{'supplier_id'} );
+	$PO->save() if $PO->id();
+	$variable{'PurchaseOrder'} = $PO;
+} # end sub _purchase_order_supplier_address
+
+sub _purchase_order_content_line {
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	$variable{'PurchaseOrder'} = $PO;
+	if ( $param{'action'} eq 'delete' ) {
+		my $PO_Content = new openprint::PurchaseOrder_Content( $param{'id'} );
+		$PO_Content->delete();
+	} # end if
+} # end sub _purchase_order_content_line
 
 1;
 __END__

@@ -1,0 +1,28 @@
+<? echo (
+	return '' if $param{'action'} eq 'delete';
+
+	my $C = new openprint::PurchaseOrder_Content( $param{'po_content_id'} );
+	if ( $param{'action'} eq 'add' ) {
+	$C->save( {
+		'po_id'			=>	$param{'po_id'},
+		'qty'			=>	$param{'qty-'.$param{'po_content_id'}},
+		'item'			=>	$param{'item-'.$param{'po_content_id'}},
+		'description'	=>	$param{'description-'.$param{'po_content_id'}},
+		'docket'		=>	$param{'docket-'.$param{'po_content_id'}},
+		'price'			=>	$param{'price-'.$param{'po_content_id'}},
+		'total'			=>	$param{'total-'.$param{'po_content_id'}},
+		});
+	} # end if
+
+
+	my $html .= sprintf('<tr id="line-%1$d">', $C->id() );
+	$html .= '<td>'.ssi::writeButton( $log, $dbh, 'del-'.$C->id(), 'delete.gif',qq`new Ajax.Request('/employee/inventory/_purchase_order_content_line.html?action=delete&amp;id=$$C{'id'}', { method: 'get', onSuccess: function(){var tr = \$('line-$$C{id}'); tr.parentNode.removeChild(tr);update_totals(\$('f1'));} } );`,'','Delete' ).'</td>';
+	$html .= sprintf(q{<td><input type="text" name="qty-%1$d" id="qty-%1$d" value="%2$d" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" /></td>}, $C->id(), $C->qty() );
+	$html .= sprintf(q{<td><input type="text" name="item-%1$d" id="item-%1$d" value="%2$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}"/></td>}, $C->id(), $C->item() );
+	$html .= sprintf(q{<td><input type="text" name="description-%1$d" id="description-%1$d" value="%2$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}"/></td>}, $C->id(), $C->description() );
+	$html .= sprintf(q{<td><input type="text" name="docket-%1$d" id="docket-%1$d" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}"/></td>}, $C->id(), $C->docket() );
+	$html .= sprintf(q{<td><input type="text" name="price-%1$d" id="price-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" style="text-align: right;"/></td>}, $C->id(), $C->price() );
+	$html .= sprintf(q{<td><input type="text" name="total-%1$d" id="total-%1$d" value="%2$.2f" style="text-align: right;"/></td>}, $C->id(), $C->total() );
+	$html .= '</tr>';
+	return $html;
+) ?>

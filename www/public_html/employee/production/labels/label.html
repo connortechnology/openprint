@@ -12,6 +12,7 @@
 	#} # end if
 	$$variable{'Label'}->save() if ! $$variable{'id'};
 	#my $content = $$variable{'Label'}{'content'};
+	$$variable{'Project'}->add_to_log( @openprint::session{'company_id','user_id'}, 'Added Label/Packing Slip' );
 ) ?>
 <div class="unprintable">
 	<p class="buttons">

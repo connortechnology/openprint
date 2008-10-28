@@ -35,6 +35,8 @@ my %fields = (
 	'web_active'		=>	'ysnaccountactivation',
 	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
+	'purchasing_limit'	=>	'purchasing_limit',
+	'purchasing_total_limit'	=>	'purchasing_total_limit',
 ); # end %fields
 
 my %transforms = (
@@ -407,6 +409,14 @@ sub csr_ids {
 	} # end if
 	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
 } # end sub
+
+sub purchasing_total {
+	require openprint::PurchaseOrder;
+	my $total = 0;
+	foreach my $PO ( openprint::PurchaseOrder::find('authorized'=>'N') ) {
+		$total += $PO->total();
+	} # end foreach $PO
+} # end sub purchasing_total
 
 1;
 

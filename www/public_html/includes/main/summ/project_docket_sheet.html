@@ -254,20 +254,20 @@
 					sets::isin($$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()},['Sheet Work','Work & Turn','Work & Tumble'] ));
 			$html .= '</td><td class="docketText">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%dimps<br/>%d lbs X F%d<br/>', $net_impressions, $net_impressions * $Paper->width() * $$sig_specs{'CutOff'.$$variable{'Project'}->ordered_quantity_index()} * $Paper->wpsi(), $f );
+				$html .= sprintf('%dimps<br/>%d lbs F%d<br/>', $net_impressions, $net_impressions * $Paper->width() * $$sig_specs{'CutOff'.$$variable{'Project'}->ordered_quantity_index()} * $Paper->wpsi(), $f );
 			} # end foreach
 			$html .= '</td><td class="docketText">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%dimps<br/>%s X F%d<br/>', $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()}, $f );
+				$html .= sprintf('%dimps<br/>%s<br/>', $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
 			} # end foreach
 		} else {
 			$html .= '</td><td class="docketText">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%d X F%d<br/>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()}, $f );
+				$html .= sprintf('%d F%d<br/>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()}, $f );
 			} # end foreach
 			$html .= '</td><td class="docketText">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%s X F%d<br/>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()}, $f );
+				$html .= sprintf('%s<br/>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
 			} # end foreach
 		} # end if
 		$html .= '</td>';
@@ -314,6 +314,8 @@
 	<br/><br/><br/></td>
 	</tr>
 </table>
+<br/>
+<span class="docketText">Stock allocated by: _______________ on _______________. Stock ordered by _______________ on _______________ for delivery on _______________.</span><br/>
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white" style="table-layout: fixed;">
 	<tr> 
@@ -600,5 +602,3 @@
 		<td class="docketText"><input type="checkbox" /> Bindery</td>
 	</tr>
 </table>
-<br/>
-<span class="docketText">Stock allocated by: _______________ on _______________. Stock ordered by _______________ on _______________ for delivery on _______________.</span><br/>
