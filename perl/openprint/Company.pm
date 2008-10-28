@@ -57,6 +57,7 @@ require openprint::Object;
 		);
 %transforms = (
 	'name' => [ 's/\.//g' ],
+	'discount'	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
 	'discount'	=>	0,
@@ -205,19 +206,11 @@ sub delete {
 } # end sub delete
 sub save {
     my ( $self, $params ) = @_;
+
+	$self->set( $params ) if $params;
 	my %sql;
 	foreach my $k ( keys %fields ) {
-		my @transforms = @{$transforms{$k}} if $transforms{$k};
-		foreach my $transform ( @transforms ) {
-			eval '$$self{$k} =~ ' . $transform;
-		} # end foreach
-
-		if ( ( ( ! defined $$self{$k} ) or ( $$self{$k} eq '' ) ) and exists $defaults{$k} ) {
-			$openprint::log->debug("Setting default for $k $defaults{$k}");
-			$sql{$fields{$k}} = $defaults{$k};
-		} else {
-			$sql{$fields{$k}} = $$self{$k};
-		} # end if
+		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 	$sql{dtmlastmodified} = 'NOW()';
 	$sql{'strname'} = Text::Unaccent::unac_string('LATIN1', $sql{'strname'} );
@@ -260,35 +253,6 @@ sub prev {
     ( $_ ) = sql::execute( undef, undef, 'SELECT Index FROM Company WHERE strName = ( SELECT MAX(strName) FROM Company WHERE strName < (SELECT strName FROM Company WHERE Index=? ) )', $$self{id} );
     return $_;
 } # end sub prev
-
-sub set {
-	my ( $self, $params ) = @_;
-	my @set_fields = ();
-
-	foreach my $field ( keys %{$params} ) {
-		
-		if ( defined $fields{$field} ) {
-			my @transforms = @{$transforms{$field}} if $transforms{$field};
-
-			foreach my $transform ( @transforms ) {
-				eval '$params->{$field} =~ ' . $transform;
-			} # end foreach
-
-			if ( ( ( ! defined $$params{$field} ) or ( $$params{$field} eq '' ) ) and exists $defaults{$field} ) {
-$openprint::log->debug("Setting default for $field $defaults{$field}");
-				$$params{$field} = $defaults{$field};
-			} # end if
-
-# if valid db field
-			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $$params{$field}) ) {
-# Only make changes to fields that have changed
-				$$self{$field} = $$params{$field};
-				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
-			} # end if
-		} # end if
-	} # end foreach
-	return @set_fields;
-} # end sub set
 
 sub load_tradereferences {
 	my ( $self, $index, $hash ) = @_;
