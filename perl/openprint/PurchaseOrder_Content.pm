@@ -67,6 +67,14 @@ sub find {
 			$sql .= ' AND po_id IS NULL';
 		} # end if
 	} # end if
+	if ( $params{'item_like'} ) {
+		$sql .= ' AND item LIKE ?';
+		push @values, $params{'item_like'};
+	} # end if
+	if ( $params{'description_like'} ) {
+		$sql .= ' AND description LIKE ?';
+		push @values, $params{'description_like'};
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
 		push @values, @params{'created_on_start','created_on_end'}
@@ -95,8 +103,11 @@ sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM PurchaseOrder_Contents WHERE id=?}, {}, $$self{'id'} );
+		if ( ! $data ) {
+			$openprint::log->error('Error loading PurchaseOrder_Content where id='.$$self{'id'} . ' error: ' . $dbh->errstr );
+		} # end if
 	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
+	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
 
 sub save {
