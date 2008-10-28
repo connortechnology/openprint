@@ -1,4 +1,6 @@
-
+html {
+overflow-y: scroll;
+}
 #Content {
 	top: 0px;
 	p\osition: relative;

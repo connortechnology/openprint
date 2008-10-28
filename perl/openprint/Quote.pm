@@ -417,7 +417,7 @@ sub send {
 					TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
 					SUBJECT => "Quote $$self{id}",
 					);
-			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
+			misc::send_email_with_attachment( $log, \%mail, @attachments );
 		} # end if
 
 	} else {
