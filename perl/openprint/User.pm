@@ -44,6 +44,8 @@ my %transforms = (
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
 	'created_on'		=> [ 's/.*//g' ],
 	'updated_on'		=> [ 's/.*//g' ],
+	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
+	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 );
 
 my %defaults = (
@@ -55,6 +57,8 @@ my %defaults = (
 	'changepassword'	=>	'N',
 	'administrator'		=>	'N',
 	'commission'		=>	undef,
+	'purchasing_limit'	=>	undef,
+	'purchasing_total_limit'	=>	undef,
 );
 
 sub get {
