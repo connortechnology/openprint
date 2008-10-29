@@ -254,11 +254,9 @@ sub elapsed {
 sub Price {
 	my ( $self ) = @_;
 	my $elapsed = $self->elapsed();
-	my %Price;
-	if ( ! $$self{'rate'} ) {
-		my $Service = $self->Service();
-		%Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-	} else {
+	my $Service = $self->Service();
+	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+	if ( $$self{'rate'} ) {
 		$Price{'Cost'} = $Price{'Price'} = $$self{'rate'};
 	} # end if
 	$Price{'Total'} = $Price{'Price'} * $elapsed / 3600;

@@ -27,7 +27,7 @@
 					</tr>
 					<? echo (
 						my $html = '';
-						my @Prices = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{Equipment}, 'order'=>'lngmin,lngmax' );
+						my @Prices = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{Equipment}, 'order'=>'min,max' );
 						foreach my $Price ( @Prices ) {
 							$html .= '<tr>';
 							$html .= sprintf('<td><input type="checkbox" name="chk-%d-%s-%d" checked="checked" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id() );

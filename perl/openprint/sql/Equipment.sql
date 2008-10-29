@@ -4,7 +4,7 @@ CREATE SEQUENCE Equipment_Index_seq;
 DROP TABLE tbl_Equipment;
 
 CREATE TABLE tbl_Equipment (
-	lngIndex			INT4 NOT NULL DEFAULT nextval('Equipment_Index_seq'),
+	lngIndex			SERIAL NOT NULL,
 	strID				TEXT,
 	strName				TEXT,
 	strDescription		TEXT,

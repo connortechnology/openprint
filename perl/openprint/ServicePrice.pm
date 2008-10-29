@@ -5,10 +5,20 @@ use strict;
 require sql;
 require openprint::Object;
 require openprint::logs;
+use openprint;
+use vars qw( %variable %session %param %config $log $dbh %fields %transforms %defaults );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 my $debug = 1;
 
-my %fields = (
+
+%fields = (
+	'owner_id'		=>	'owner_id',
 	'pricelist_id'	=>	'pricelist_id',
 	'service_id'	=>	'service_id',
 	'equipment_id'	=>	'equipment_id',

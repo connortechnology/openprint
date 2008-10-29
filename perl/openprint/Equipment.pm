@@ -380,13 +380,13 @@ sub copy {
 	} # end while
 
 # Now do pricing, start with Service Prices
-	my @prices = sql::execute( undef, undef, q{SELECT pricelist_id, service_id, lngmin, lngmax, units, cost, markup, price FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
+	my @prices = sql::execute( undef, undef, q{SELECT pricelist_id, service_id, min, max, units, cost, markup, price FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
 	while ( my ( $list_id, $service_id, $min, $max, $units, $cost, $markup, $price ) = splice @prices, 0, 8 ) {
 		sql::insert( undef, undef, 'Service_Prices',[
 				'pricelist_id',	 $list_id,
 				'service_id',	$service_id,
-				'lngmin',			$min,
-				'lngmax',			$max,
+				'min',			$min,
+				'max',			$max,
 				'units',		 $units,
 				'cost',			$cost,
 				'markup',		$markup,
