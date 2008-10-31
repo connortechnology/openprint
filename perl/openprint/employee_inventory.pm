@@ -1237,7 +1237,10 @@ sub purchase_order_view {
 
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		return;
+		$variable{'error'} .= $PO->delete();
+		if ( ! $variable{'error'} ) {
+			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
@@ -1246,8 +1249,8 @@ sub purchase_order_view {
 		} # end if
 		foreach my $k ( keys %param ) {
 			my ( $content_id ) = $k =~ /qty-(.*)/;
-			if ( $content_id ) {
-				next if ( $content_id eq 'new' );
+			if ( defined $content_id ) {
+				next if ( $content_id eq 'new' and ! $param{'qty-'.$content_id} );
 				my $C = new openprint::PurchaseOrder_Content( $content_id );
 				$variable{'error'} .= $C->save( {
 						'po_id'         =>  $PO->id(),
@@ -1260,13 +1263,33 @@ sub purchase_order_view {
 						});
 			} # end if
 		} # end foreach
-		$variable{'error'} .= $PO->save( {
-			'supplier_id'		=>	$param{'supplier_id'},
-			'shipping_method'	=>	$param{'shipping_method'},
-			'shipping_terms'	=>	$param{'shipping_terms'},
-			'currency_id'		=>	$param{'currency_id'},
-			'delivered_on'		=>	sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'}),
-		} );
+		if ( ! $param{'supplier_id'} ) {
+			my @Companies = openprint::Company::find( 'name'=>$param{'vendor_name'} );
+			if ( ! @Companies ) {
+				my $C = new openprint::Company();
+				$C->save({
+						'supplier'		=> 'Y',
+						'name'			=> $param{'vendor_name'},
+						'business_name'	=> $param{'vendor_name'},
+						'address1'		=> $param{'vendor_address1'},
+						'address2'		=> $param{'vendor_address2'},
+						'city'			=> $param{'vendor_city'},
+						'state'			=> $param{'vendor_state'},
+						'country'		=> $param{'vendor_country'},
+						'postalcode'	=> $param{'vendor_postalcode'},
+						'phone'			=> $param{'vendor_phone'},
+						'fax'			=> $param{'vendor_fax'},
+						} );
+				$param{'supplier_id'} = $C->id();
+			} elsif ( @Companies == 1 ) {
+				if ( $Companies[0]->supplier() ne 'Y' ) {
+					$Companies[0]->save( {'supplier'=>'Y'} );
+				} # end if
+				$param{'supplier_id'} = $Companies[0]->id();
+			} # end if
+		} # end if
+		$param{'delivered_on'} = sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'});
+		$variable{'error'} .= $PO->save( \%param );
 	} # end if btnFunction
 
 	$variable{'PurchaseOrder'} = $PO;
@@ -1280,14 +1303,37 @@ sub purchase_order_edit {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 	} # end if btnFunction
 
+	if ( ! $PO->id() ) {
+		my $U = new openprint::User( $session{'user_id'} );
+		my $C = $U->Company();
+		$PO->set( {
+			'shipto_contact'	=>	$U->name(),
+			'shipto_name'		=>	$C->name(),
+			'shipto_address1'	=>	$C->address1(),
+			'shipto_address2'	=>	$C->address2(),
+			'shipto_city'	=>	$C->city(),
+			'shipto_state'	=>	$C->state(),
+			'shipto_country'	=>	$C->country(),
+			'shipto_postalcode'	=>	$C->postalcode(),
+			'shipto_phone'	=>	$C->phone(),
+			'shipto_fax'	=>	$C->fax(),
+		} );
+	} # end if
 	$variable{'PurchaseOrder'} = $PO;
 } # end sub purchase_order_edit
 
 sub purchase_orders {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+		$variable{'error'} .= $PO->delete();
+	} # end if
 } # end sub purchase_orders
 
 sub _purchase_orders {
 } # end sub _purchase_orders
+
+sub _po_autocomplete {
+} # end sub _po_autocomplete
 
 sub _purchase_order_supplier_address {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );

@@ -289,7 +289,6 @@ fieldset p label {
 	vertical-align: top;
 	float: left;
 	overflow: visible;
-	padding-top: 2px;
 }
 fieldset p select {
     width: 70%;
@@ -568,3 +567,6 @@ form.inplaceeditor-form a { /* The cancel link */
     background-color: yellow;
 }
 
+input.filter, fieldset p input.filter {
+	width: 40px;
+}

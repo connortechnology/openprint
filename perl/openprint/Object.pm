@@ -66,9 +66,11 @@ sub get {
     my $self = shift;
     my @requested_fields = @_;
 
+	my $type = ref $self;
+	my %fields = eval ('%'.$type.'::fields');
     foreach my $field ( @requested_fields ) {
         if ( ! defined $fields{$field} ) {
-            $openprint::log->warn( ref $self . ": Invalid field requested: ($field)." );
+            $openprint::log->warn( "$type: Invalid field requested: ($field)." );
         } # end if
     } # end foreach
 
@@ -101,7 +103,7 @@ sub set {
 
 		my %defaults = eval('%'.$type.'::defaults');
 
-		if ( (!$$self{$field})  and exists $defaults{$field} ) {
+		if ( ( $$self{$field} eq '' or ! defined $$self{$field} )  and exists $defaults{$field} ) {
 #$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
 		} # end if
