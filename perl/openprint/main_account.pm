@@ -302,7 +302,7 @@ sub login_password {
 sub company_profile {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $Company = $variable{'Company'} = new openprint::Company( $openprint::session{'company_id'} );
+	my $Company = $variable{'Company'} = new openprint::Company( $param{'company_id'} ? $param{'company_id'} : $openprint::session{'company_id'} );
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $error = '';
