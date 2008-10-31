@@ -138,7 +138,7 @@ sub save {
 		misc::send_email_with_attachment( $openprint::log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
-	if ( $params and (defined $$params{'web_active'}) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
+	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
 		my %info;
 		$info{'User'} = $self;
 		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
