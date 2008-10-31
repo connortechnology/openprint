@@ -4,11 +4,13 @@ package openprint::EmailCampaign;
 use openprint::Object;
 use Email::Valid;
 use MIME::QuotedPrint;
+use DBI;
 use openprint ();
 
 use strict;
 
 require sql;
+require configuration;
 require openprint::logs;
 require openprint::EmailTemplate;
 
@@ -51,7 +53,7 @@ sub find {
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	$openprint::log->debug("Error EmailCampaign::find ($sql) " . $openprint::dbh->errstr ) if ! $data;
+	$openprint::log->debug("Error EmailCampaign::find ($sql) " . DBI->errstr ) if ! $data;
 	return map { new openprint::EmailCampaign( $_->{id}, $_ ); } @$data;
 	
 } # end sub find
@@ -214,15 +216,11 @@ sub send_email {
 	# NB. Only encode_qp ONCE
 	#$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements );
 	$email_template = encode_qp( ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements ) );
-foreach my $k ( keys %$replacements ) {
-$openprint::log->debug("$k => $$replacements{$k}");
-}
 
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');
 	my @attachments = eval $self->{attachments};
 	$openprint::log->warn( "Eval error Reason: " . $@ ) if $@;
-$openprint::log->debug("# of attachments: " . scalar @attachments );
 
 	# Setup the mail message
 	my %mail = (

@@ -158,15 +158,7 @@ Please select a company or user to obtain login information.<br/>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<p> 
 			<label>Commission Rate</label>
-			<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />%
-		</p>
-		<p> 
-			<label>Purchasing Limit (per PO)</label>
-			<input type="text" name="purchasing_limit" value="<? echo ( $$variable{'User'}->purchasing_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-		</p>
-		<p> 
-			<label>Purchasing Limit (Total)</label>
-			<input type="text" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" />
 		</p>
 		<p>
 			<label>Assistant to:</label>

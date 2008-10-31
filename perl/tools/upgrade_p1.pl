@@ -15,10 +15,6 @@ use vars qw( $log $dbh );
 $log = new logger( 'warn' );
 
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
-$src_db = 'point-one' if ! $src_db;
-$dst_db = 'point-one' if ! $dst_db;
-$src_host = 'www2.point-one.com' if ! $src_host;
-
 `/etc/init.d/apache2 reload`;
 if ( $year ) {
 	( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) if ! $month;
@@ -53,6 +49,7 @@ if ( $year ) {
 
 } # end if
 
+`chmod +x /etc/apache2/lib/perl/tools/db_update.pl`;
 print "upgrading structures 2...";
-`./db_update.pl $dst_db point-one point-one` or $log->error($!);
+`/etc/apache2/lib/perl/tools/db_update.pl $dst_db point-one point-one` or $log->error($!);
 print "done\n";

@@ -16,8 +16,7 @@
 	$$variable{'DateEnd'} = join('-', ssi::fix_date( @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
 	my $sql = "SELECT OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber,".
 		"to_char(due_date, 'MM/DD/YYYY 22:00'), strStatus ".
-		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Bindery Complete','Marked Waiting For Pickup','Added Label/Packing Slip')) ".
-		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Picked Up' ,'Marked Shipped')) ".
+		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup' ,'Marked Shipped')) ".
 		"FROM Order_Contents, tbl_Projects WHERE 1>0";
 	$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
 	$sql .= " AND Order_Contents.lngProjectIndex = tbl_Projects.Index";
@@ -47,35 +46,27 @@ Results for <? echo (
 			<th align="left" width="60">Docket</th>
 			<th align="left" width="150">Due Date/Time</th>
 			<th align="left" width="85">Status</th>
-			<th align="left" width="140">Ready/Pickup Time</th>
-			<th align="left" width="140">Shipped/Picked Up Time</th>
+			<th align="left" width="140">Shipped/Ready Date/Time</th>
 			<th align="left">Performance Code</th>
 		</tr>
-		<? while ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime','shippedtime'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
-<? eval (
-				$$variable{'readytime'} = $$variable{'shippedtime'} if ! $$variable{'readytime'};
-				if ( ! $$variable{'readytime'} ) {
-					@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
-				} # end if
-) ?>
+		<? while ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime'} = splice @{$$variable{'PROJECTS'}},0,6; ) ?>
 		<tr<?rowclass?>> 
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?index?></a></td>
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?docket?></a></td>
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?duedate?></a></td>
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?status?></a></td>
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?readytime?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?shippedtime?></a></td>
 			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>">
 			<? echo ( 
-				if ( ! $$variable{'shippedtime'} ) {
-					@$variable{'shippedtime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
+				if ( ! $$variable{'readytime'} ) {
+					@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
 				} # end if
-
 				if ( $$variable{'readytime'} and $$variable{'duedate'} ) {
 					my ( $dmonth, $dday, $dyear, $dhour, $dminutes ) = $$variable{'duedate'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
 					my ( $rmonth, $rday, $ryear, $rhour, $rminutes ) = $$variable{'readytime'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
 					my $delta = Date::Calc::Delta_Days( $dyear, $dmonth, $dday, $ryear, $rmonth, $rday );
-					my ($Dd,$Dh,$Dm,$Ds) = Date::Calc::Delta_DHMS($dyear,$dmonth,$dday, $dhour,$dminutes,0, $ryear,$rmonth,$rday, $rhour,$rminutes,0);
+					my ($Dd,$Dh,$Dm,$Ds) = Date::Calc::Delta_DHMS($dyear,$dmonth,$dday, $dhour,$dminutes,0,
+	                        		$ryear,$rmonth,$rday, $rhour,$rminutes,0);
 					if ( ($Dd > 0) or ($Dh > 0) or ($Dm > 0) ) {
 						my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM project_log WHERE project_id=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $$variable{'index'});
 						$reason =~ s/Reason for lateness: (\s*)/$1/;
@@ -97,9 +88,9 @@ Results for <? echo (
 			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ;
 			$$variable{'DocketCount'} += 1;
 		) ?>
-		<? endwhile ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime','shippedtime'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
-<tr><th COLSPAN="7"></th></tr>
-		<tr><td><b>Totals:</b></td><td colspan="2">Selected Dockets: <?DocketCount?></td><td>Late:<?LateCount?></td><td colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></td><td>&nbsp;</td></tr>
+		<? endwhile ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime'} = splice @{$$variable{'PROJECTS'}},0,6; ) ?>
+<TR><th COLSPAN="6"></th></TR>
+		<tr><TD><B>Totals:</B></TD><TD colspan="2">Selected Dockets: <?DocketCount?></TD><TD>Late:<?LateCount?></TD><TD colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></TD></tr>
 	</table>
 	<span style="float: right;">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( document.forms['f2'] ) );", '', 'Save Reasons' ); ) ?>

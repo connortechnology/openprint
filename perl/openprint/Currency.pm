@@ -2,11 +2,11 @@ package openprint::Currency;
 @ISA = qw(openprint::Object);
 
 use strict;
-use Number::Format;
 use openprint ();
 require openprint::Object;
 require sql;
 
+# This treats a Currency as an object.  The database is only accessed on method access.
 my $debug = 0;
 
 sub find {
@@ -106,19 +106,6 @@ sub get_current {
 		return new openprint::Currency( $openprint::session{'Currency_id'} );
 	} # end if
 } # end sub get_currenct
-
-sub format {
-	my ( $price, $precision ) = @_;
-
-	$precision = 2 if ! defined $precision;
-	my $Currency = get_current();
-
-	my $Formatter = new Number::Format(
-			-decimal_digits		=>  $precision,
-			-int_curr_symbol    =>  $Currency->symbol(),
-			);
-	return $Formatter->format_price( $price );
-} # end sub format
 1;
 
 __END__

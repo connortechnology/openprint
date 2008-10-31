@@ -256,29 +256,7 @@ $dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );
-if ( ! $data ) {
-	$dbh->do('
-CREATE TABLE PurchaseOrder_COntents (
-    id SERIAL NOT NULL,
-    po_id   INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
-    qty     float,
-    price   float,
-    total   float,
-    item    text,
-    docket  text,
-    description text,
-    PRIMARY KEY (id)
-);');
-} # en dif
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM users LIMIT 1', {} );
-if ( ! exists $$data{'purchasing_limit'} ) {
-	$dbh->do('ALTER TABLE Users ADD purchasing_limit FLOAT');
-} # end if
-if ( ! exists $$data{'purchasing_total_limit'} ) {
-	$dbh->do('ALTER TABLE Users ADD purchasing_total_limit FLOAT');
-} # end if
 
 $dbh->disconnect();
 1;

@@ -3,6 +3,16 @@
 <h2>Delivery</h2>
 </div>
 <script type="text/javascript">
+	function initializeDayDropDowns() {
+        if ( typeof(setDaysDropDown) == 'function' ) {
+            setDaysDropDown(document.f1.DateStartYear.value,document.f1.DateStartMonth.value,document.f1.DateStartDay,document.f1.DateStartDay.value);
+            setDaysDropDown(document.f1.DateEndYear.value,document.f1.DateEndMonth.value,document.f1.DateEndDay,document.f1.DateEndDay.value);
+        } // end if
+    }
+
+    if ( typeof(initializeDayDropDowns) )
+        window.onload = initializeDayDropDowns;
+
 	function load_projects( form ) {
 		LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( form ) );
 	} // end function

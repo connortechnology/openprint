@@ -748,16 +748,3 @@ function set_today( e_y, e_m, e_d ) {
 	ddm_select_by_value( e_m, d.getMonth()+1 );
 	ddm_select_by_value( e_d, d.getDate() );
 } // end function set_today
-
-Ajax.Autocompleter.extract_value = 
-function (value, className) {
-	var result;
-
-	var elements = 
-		document.getElementsByClassName(className, value);
-	if (elements && elements.length == 1) {
-		result = elements[0].innerHTML.unescapeHTML();
-	}
-
-	return result;
-};

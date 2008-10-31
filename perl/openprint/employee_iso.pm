@@ -132,7 +132,7 @@ sub _car_view_part2 {
 		$param{'part2_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part2_signed_on_year','part2_signed_on_month','part2_signed_on_day'} );
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
 		if ( ! $variable{'error'} ) {
-			#$variable{'CAR'}->send_changed_notification();
+			$variable{'CAR'}->send_changed_notification();
 		} # end if
 	} # end if
 } # end sub _car_view_part2
@@ -142,7 +142,7 @@ sub _car_view_part3 {
 		$param{'part3_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part3_signed_on_year','part3_signed_on_month','part3_signed_on_day'} );
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
 		if ( ! $variable{'error'} ) {
-			#$variable{'CAR'}->send_changed_notification();
+			$variable{'CAR'}->send_changed_notification();
 		} # end if
 	} # end if
 } # end sub _car_view_part3
@@ -153,7 +153,7 @@ sub _car_view_part4 {
 		$param{'part4_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part4_signed_on_year','part4_signed_on_month','part4_signed_on_day'} );
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
 		if ( ! $variable{'error'} ) {
-			#$variable{'CAR'}->send_changed_notification();
+			$variable{'CAR'}->send_changed_notification();
 		} # end if
 	} # end if
 } # end sub _car_view_part4
