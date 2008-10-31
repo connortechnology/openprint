@@ -577,6 +577,7 @@ sub skid_details {
 					} # end of
 				} # end of
 				if ( $param{'verification_code'} ) {
+					$param{'verification_code'} =~ s/^[Vv](.*)$/$1/;
 					my $SV = new openprint::Skid_Verification();
 					$SV->save({
 						'skid_id'	=>	$S->id(),
@@ -591,6 +592,7 @@ sub skid_details {
 				$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
 				save_skid( new openprint::Skid( $skid_id ) );
 				if ( $param{'verification_code'} ) {
+					$param{'verification_code'} =~ s/^[Vv](.*)$/$1/;
 					my $SV = new openprint::Skid_Verification();
 					$SV->save({
 						'skid_id'	=>	$skid_id,

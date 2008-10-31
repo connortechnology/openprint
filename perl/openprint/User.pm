@@ -42,6 +42,8 @@ my %transforms = (
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
 	'created_on'		=> [ 's/.*//g' ],
 	'updated_on'		=> [ 's/.*//g' ],
+	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
+	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 );
 
 my %defaults = (
@@ -53,6 +55,8 @@ my %defaults = (
 	'changepassword'	=>	'N',
 	'administrator'		=>	'N',
 	'commission'		=>	undef,
+	'purchasing_limit'	=>	undef,
+	'purchasing_total_limit'	=>	undef,
 );
 
 sub get {
@@ -132,7 +136,7 @@ sub save {
 		misc::send_email_with_attachment( $openprint::log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
-	if ( $params and (defined $$params{'web_active'}) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
+	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
 		my %info;
 		$info{'User'} = $self;
 		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';

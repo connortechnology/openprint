@@ -394,7 +394,34 @@ $openprint::log->debug('admin');
 		if ( ! $openprint::param{'ddmUser'} ) { # add
 			$User->company_id( $openprint::session{company_id} ) if ! $User->company_id();
 		} # end if
+		my $oldpassword = $User->password();
 		$$variable{'error'} .= $User->save( \%openprint::param );
+
+		if ( $openprint::param{'ddmUser'} and ( $openprint::param{'ddmUser'} != $openprint::session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
+# Send password change email
+			if ( my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' ) ) {
+				my %info = (
+						'User' =>$User,
+						);
+
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/changed_password.html' );
+				$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+				$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+				my @body = ('', $_, 'text/html', 'quoted-printable');
+
+				my %mail = (
+						SMTP    => $openprint::config{'Mail Server'},
+						FROM    => $openprint::config{'AdministratorEmail'},
+						TO      => sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+						SUBJECT => 'Password Changed',
+						);
+				misc::send_email_with_attachment( $log, \%mail, @body );
+				$variable{'information'} = 'The user has been notified by email of the password change.';
+			} else {
+				$variable{'error'} = 'We were unable to email the new password. Please contact support.';
+			} # end if
+		} # end if to send changed password notification
+
 	} # end if
 
 	$$variable{'Me'} = $Me;
@@ -402,7 +429,7 @@ $openprint::log->debug('admin');
 		$User = new openprint::User();
 	} # end if
 	$$variable{'User'} = $User;
-} # end sub user_edit
+} # end sub user_profile
 
 sub change_password {
 }

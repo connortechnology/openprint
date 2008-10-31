@@ -68,6 +68,7 @@ sub rfidtag_details {
 			$Skid->save() if $changed;
 			if ( $param{'verification_code'} ) {
 				my $SV = new openprint::Skid_Verification();
+				$param{'verification_code'} =~ s/^[Vv](.*)$/$1/;
 				$variable{'error'} .= $SV->save({
 						'user_id'	=>	$session{'user_id'},
 						'skid_id'	=>	$Skid->id(),
@@ -141,6 +142,7 @@ $openprint::log->debug("SKID_ID: $variable{'skid_id'}");
 
 		if ( $param{'verification_code'} ) {
 			my $SV = new openprint::Skid_Verification();
+			$param{'verification_code'} =~ s/^[Vv](.*)$/$1/;
 			$variable{'error'} .= $SV->save({
 					'user_id'	=>	$session{'user_id'},
 					'skid_id'	=>	$Skid->id(),

@@ -331,6 +331,29 @@ $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		} # end if
+	} elsif ( $first eq 'handheld' ) { # Handheld
+		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
+		if ( $variable{'Redirect'} ) {
+			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+			return Apache2::Const::OK;
+		} # end if
+
+		if ( $filename eq 'index.html' and $param{'action'} eq 'Login' ) {
+			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
+			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+			return $status if $variable{'Redirect'};
+		} # end if
+
+		if ( $filename ne 'index.html' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+			$variable{'Redirect'} = '/handheld/index.html';
+			$variable{'Destination'} = misc::get_destination( $r, $log );
+			return Apache2::Const::OK;
+		} # end if
+		eval( 'require openprint::'.join('_', @path ) );
+		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
