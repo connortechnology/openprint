@@ -26,6 +26,7 @@ my $debug = 1;
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'other'			=>	'other',
+	'monitor'		=>	'monitor',
 );
 
 %transforms = (
@@ -36,6 +37,7 @@ my $debug = 1;
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 	'location_id'	=>	undef,
+	'monitor'		=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -67,6 +69,10 @@ sub find {
 	if ( $params{'name'} ) {
 		$sql .= ' AND name=?';
 		push @values, $params{'name'};
+	} # end if
+	if ( $params{'monitor'} ) {
+		$sql .= ' AND monitor=?';
+		push @values, $params{'monitor'};
 	} # end if
 	if ( exists $params{'ipaddr'} ) {
 		if ( ref $params{'ipaddr'} eq 'ARRAY' ) {
