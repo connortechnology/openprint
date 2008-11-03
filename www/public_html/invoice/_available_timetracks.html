@@ -1,0 +1,36 @@
+<fieldset><legend>Available Timetracks</legend>
+	<table class="List sortable">
+		<tr>
+			<th width="200">Employee</th>
+			<th>Service</th>
+			<th width="110">Start</th>
+			<th width="110">End</th>
+			<th width="50">Interval</th>
+			<th width="10">&nbsp;</th>
+		</tr>
+		<? echo (
+			my $html = '';
+			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+			my @Timetracks;
+			foreach my $T ( openprint::Timetrack::find(
+				'owner_id'		=> $session{'company_id'},	
+				'company_id'	=> $variable{'Invoice'}->invoicee_id(),
+				'invoice_id'	=> undef,
+				'order'			=> 'id',
+			) ) {
+				push @Timetracks, $T;
+			} # end foreach $T
+			foreach my $T ( @Timetracks ) {
+			$html .= sprintf( q`<tr title="%s" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`, ssi::htmlize($T->description()) );
+				$html .= sprintf('<td><a href="/invoice/edit.html?invoice_id=%1$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Employee()->name()) );
+				$html .= sprintf('<td><a href="/invoice/edit.html?invoice_id=%1$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Service()->name()) );
+				$html .= sprintf('<td>%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $T->starting() ) ) );
+				$html .= sprintf('<td>%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $T->ending() ) ) );
+				$html .= sprintf('<td>%s</td>', misc::seconds_to_pretty_interval( $T->elapsed() ) );
+				$html .= sprintf('<td>%s</td>', ssi::writeButton( $log, $dbh, 'add'.$T->id(), '', 'add_timetrack('.$T->id().');', '', '+' ) );
+				$html .= '</tr>';
+			} # end foreach $T
+			return $html;
+		) ?>
+	</table>
+</fieldset>

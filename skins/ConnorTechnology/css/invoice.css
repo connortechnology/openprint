@@ -1,0 +1,20 @@
+
+.Invoicee {
+	float: left;
+	width: 40%;
+}
+.Invoicer {
+	float: right;
+	width: 40%;
+}
+.Notes {
+	float: left;
+	width: 60%;
+}
+.Totals {
+	float: right;
+	width: 40%;
+}
+.PageTitle {
+	float: right;
+}

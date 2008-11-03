@@ -57,9 +57,9 @@ sub taxes {
 		my @data = sql::execute( $log, $dbh, 'SELECT Country, State FROM Taxes' );
 		while ( my ( $country, $state ) = splice @data, 0, 2 ) {
 			sql::update( $log, $dbh, 'Taxes', [ 'Country=? AND State=?', $country, $state ], [
-				'dblStatePercent', ( $openprint::param{"txtSST$state"} ? $openprint::param{"txtSST$state"} : undef ),
-				'dblFederalPercent', ( $openprint::param{"txtFST$state"} ? $openprint::param{"txtFST$state"} : undef ),
-				'dblHarmonisedPercent', ( $openprint::param{"txtHST$state"} ? $openprint::param{"txtHST$state"} : undef ),
+				'Statetax', ( $openprint::param{"txtSST$state"} ? $openprint::param{"txtSST$state"} : undef ),
+				'Federaltax', ( $openprint::param{"txtFST$state"} ? $openprint::param{"txtFST$state"} : undef ),
+				'Harmonisedtax', ( $openprint::param{"txtHST$state"} ? $openprint::param{"txtHST$state"} : undef ),
 				]
 				);
 
@@ -69,9 +69,9 @@ sub taxes {
         } # end foreach
 		sql::insert( $log, $dbh, 'Taxes',[ 'Country', $openprint::param{'txtCountryNew'}, 
 				'State', $openprint::param{'txtStateNew'},
-				'dblStatePercent',	( $openprint::param{'txtSSTNew'} ? $openprint::param{"txtSSTNew"} : undef ),
-				'dblFederalPercent', ( $openprint::param{'txtFSTNew'} ? $openprint::param{"txtFSTNew"} : undef ),
-				'dblHarmonisedPercent',	( $openprint::param{'txtHSTNew'} ? $openprint::param{"txtHSTNew"} : undef ),
+				'Statetax',	( $openprint::param{'txtSSTNew'} ? $openprint::param{"txtSSTNew"} : undef ),
+				'Federaltax', ( $openprint::param{'txtFSTNew'} ? $openprint::param{"txtFSTNew"} : undef ),
+				'Harmonisedtax',	( $openprint::param{'txtHSTNew'} ? $openprint::param{"txtHSTNew"} : undef ),
 				] );
 
 		if($openprint::param{'txtCountryNew'}) {

@@ -2,6 +2,11 @@ package openprint::ServiceCategory;
 @ISA = qw( openprint::Object );
 require openprint::Service;
 
+use vars qw( %config $log $dbh );
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
 my @fields = (
 	'name',
 );
@@ -17,9 +22,9 @@ sub find {
 	if ( $params{'order'} ) {
 		$sql .= qq{ ORDER BY $params{'order'} };
 	} # end if
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->error("Error loading Service Categories: ($sql) (@values)");
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	if ( ( ! $data ) and $dbh->errstr ) {
+		$log->error("Error loading Service Categories: ($sql) (@values) :" . $dbh->errstr );
 		return;
 	} # end if
 	return map { new openprint::ServiceCategory( $_->{id}, $_ ) } @$data;
@@ -28,7 +33,7 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT id, name FROM Service_Categories WHERE id=?}, {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( q{SELECT id, name FROM Service_Categories WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{'id','name'} = @$data{qw/id name/};
 } # end sub load
@@ -38,25 +43,25 @@ sub save {
 
 	my @sql = map { $_, $$self{$_} } @fields;
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		if ( ! ( @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Service_Categories_id_seq')} ) ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return 'Error allocating new Service Category';
 		} # end if
 		$sql{'id'} = $$self{'id'};
 
-		if ( $_ = sql::insert( $openprint::log, $openprint::dbh, 'Service_Categories', \@sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+		if ( $_ = sql::insert( undef, undef, 'Service_Categories', \@sql ) ) {
+			sql::end_transaction( $dbh, $ac );
 			return "Error inserting Service Category $$self{'name'} : $_<br>";
 		} # end if
 	} else {
-		if ( $_ = sql::update( $openprint::log, $openprint::dbh, 'Service_Categories', ['id=?', $$self{'id'}], \@sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+		if ( $_ = sql::update( undef, undef, 'Service_Categories', ['id=?', $$self{'id'}], \@sql ) ) {
+			sql::end_transaction( $dbh, $ac );
 			return "Error updating Service Category $$self{'name'} : $_<br>";
 		} # end if
 	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return;
 } # end sub save

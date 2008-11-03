@@ -743,7 +743,7 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 	$$variable{'Currency'} = $Currency;
 
 	# get taxes
-	$_ = q{SELECT dblStatePercent, dblHarmonisedPercent, dblFederalPercent FROM Taxes WHERE State=? AND Country=?};
+	$_ = q{SELECT statetax, harmonisedtax, federaltax FROM Taxes WHERE State=? AND Country=?};
 	my ( $pst_rate, $hst_rate, $gst_rate ) = sql::execute( $log, $dbh, $_, $Order->state(), $Order->country() );
 	
 	my $Company = new openprint::Company( $openprint::session{'company_id'} );
@@ -827,7 +827,7 @@ sub finalise_order {
 
 		# Commit Project Information
 		# get taxes
-		$_ = q{SELECT dblStatePercent, dblHarmonisedPercent, dblFederalPercent FROM Taxes WHERE State=? AND Country=?};
+		$_ = q{SELECT Statetax, Harmonisedtax, federaltax FROM Taxes WHERE State=? AND Country=?};
 		my ( $pst_rate, $hst_rate, $gst_rate ) = sql::execute( $log, $dbh, $_, $Order->state(), $Order->country() );
 
 		$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};

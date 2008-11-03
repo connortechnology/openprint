@@ -25,8 +25,11 @@ $$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$varia
 		'order'				=> 'id',
 		) ) {
 		if ( $openprint::session{'/invoice/history.html?paid'} ne '' ) {
-			next if $Invoice->is_paid() and $openprint::session{'/invoice/history.html?paid'} != 0;
-			next if ( ! $Invoice->is_paid() ) and $openprint::session{'/invoice/history.html?paid'} != 1;
+			if ( $Invoice->is_paid() ) {
+				next if $openprint::session{'/invoice/history.html?paid'} == 0;
+			} else {
+				next if $openprint::session{'/invoice/history.html?paid'} == 1;
+			} # end if
 		} # end if
 		push @{$$variable{'Invoices'}}, $Invoice;
 		$$variable{'subtotal'} += $Invoice->subtotal();
@@ -46,7 +49,7 @@ $$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$varia
 		Please click on a <b>Invoice ID #</b> to view invoice details.<br/>
 		To delete invoices from history check the appropriate invoice(s) and click delete.<br/>
 	</div>
-	<table class="List">
+	<table class="List sortable">
 		<tr> 
 			<th width="50">ID</th>
 			<th width="80">Due</th>
@@ -61,17 +64,16 @@ $$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$varia
 		<? eval ( 
 			$$variable{'conversion_rate'} = $$variable{'Invoice'}->Currency()->conversions( $openprint::session{'Currency_id'} );
 		) ?>
-		<tr title="<? echo ( $$variable{'Invoice'}->description() ) ?>" <?rowclass?> onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');"> 
-			<td><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->id(); ) ?></a></td>
-			<td><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->due_on(); ) ?></a></td>
-			<td><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? hecho ( $$variable{'Invoice'}->Invoicee()->name(); ) ?></a></td>
+		<tr title="<? echo ( $$variable{'Invoice'}->description() ) ?>" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+			<td><a href="/invoice/<? echo ( $$variable{'Invoice'}->posted() ? 'view' : 'edit' ) ?>.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->id(); ) ?></a></td>
+			<td><a href="/invoice/<? echo ( $$variable{'Invoice'}->posted() ? 'view' : 'edit' ) ?>.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->due_on(); ) ?></a></td>
+			<td><a href="/invoice/<? echo ( $$variable{'Invoice'}->posted() ? 'view' : 'edit' ) ?>.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? hecho ( $$variable{'Invoice'}->Invoicee()->name(); ) ?></a></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></td>
 		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Invoice'} = shift @{$$variable{'Invoices'}}; ) ?>
 		<tr class="totals">
 			<td colspan="3">Totals:</td>

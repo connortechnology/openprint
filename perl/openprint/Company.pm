@@ -164,7 +164,9 @@ sub delete {
 	sql::execute( undef, undef, 'DELETE FROM Company_Credit WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM Payments WHERE Company_Id=?', $$self{'id'} );
+	foreach my $Payment ( openprint::Payment::find('recipient_id'=>$$self{id}) ) {
+		$Payment->delete();
+	} # end foreach Payment
 	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM log WHERE company_id=?', $$self{'id'} );
@@ -364,6 +366,12 @@ sub start_year {
 	$_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/;
 	return $1;
 } # end sub start_year
+
+sub AccountingContacts {
+	my ( $self ) = @_;
+
+	return openprint::User::find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{'id'} )] );
+} # end sub AccountingContacts
 
 1;
 __END__

@@ -516,22 +516,6 @@ color: #6494D2;
 .roweven {
     background-color: #e3e4f0;
 }/* alternating row color in generated tables */
-	.Invoicee {
-		float: left;
-		width: 40%;
-	}
-	.Invoicer {
-		float: right;
-		width: 40%;
-	}
-	.Notes {
-		float: left;
-		width: 60%;
-	}
-	.Totals {
-		float: right;
-		width: 40%;
-	}
 	br.pagebreak {
 		page-break-after: always;
 	}

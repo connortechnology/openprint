@@ -76,8 +76,8 @@
 				<label class="radio" for="paid_1">Yes</label>
 				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
 				<label class="radio" for="paid_0">No</label>
-				<input type="radio" id="paid_0;1" name="paid" value="0;1" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '0;1' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="paid_0;1">Both</label>
+				<input type="radio" id="paid_2" name="paid" value="2" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
+				<label class="radio" for="paid_2">Both</label>
 			</p>
 			</div>
 			<br class="spacer"/>

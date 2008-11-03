@@ -91,13 +91,17 @@ sub find {
 		} # end if
 	} # end if
 
-	if ( $params{'invoice_id'} ) {
-		if ( ref $params{'invoice_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND invoice_id IN (}.join(',', map {'?'} @{$params{'invoice_id'}} ).')';
-			push @values, @{$params{'invoice_id'}};
+	if ( exists $params{'invoice_id'} ) {
+		if ( $params{'invoice_id'} ) {
+			if ( ref $params{'invoice_id'} eq 'ARRAY' ) {
+				$sql .= q{ AND invoice_id IN (}.join(',', map {'?'} @{$params{'invoice_id'}} ).')';
+				push @values, @{$params{'invoice_id'}};
+			} else {
+				$sql .= q{ AND invoice_id=?};
+				push @values, $params{'invoice_id'};
+			} # end if
 		} else {
-			$sql .= q{ AND invoice_id=?};
-			push @values, $params{'invoice_id'};
+			$sql .= q{ AND invoice_id IS NULL};
 		} # end if
 	} # end if
 
@@ -287,6 +291,9 @@ sub wage {
 sub User {
 	return new openprint::User( $_[0]{user_id} );
 } # end sub User
+sub Employee {
+	return new openprint::User( $_[0]{user_id} );
+} # end sub Employee
 
 sub paid {
 	return $_[0]->paycheque_id() ? 1 : 0;

@@ -51,6 +51,7 @@ require sql;
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 	'deleted'		=> 0,
+	'posted'		=> 0,
 );
 
 sub find {
@@ -135,12 +136,12 @@ sub find {
 		$sql .= " ORDER BY $params{'order'}";
 	} # end if
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->warn("Error loading Invoices: ($sql) (@values)" . $openprint::dbh->errstr );
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	if ( (! $data) and $dbh->errstr ) {
+		$log->warn("Error loading Invoices: ($sql) (@values)" . $dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$openprint::log->debug("openprint::Invoice::find($sql) (@values)");
+		$log->debug("openprint::Invoice::find($sql) (@values)");
 	} # end if
 	return map { new openprint::Invoice( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -149,8 +150,8 @@ sub load {
 	my ( $self, $data ) = @_;
 
 	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Invoices WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
+		$data = $dbh->selectrow_hashref( 'SELECT * FROM Invoices WHERE id=?', {}, $$self{'id'} );
+		if ( (! $data) and $dbh->errstr ) { $log->debug($dbh->errstr ); }
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 } # end sub load
@@ -170,26 +171,32 @@ sub save {
 	
 	$self->set( $param ) if $param;
 
+	$$self{'total'} = $self->total();
+	$$self{'federaltax'} = $self->federaltax();
+	$$self{'statetax'} = $self->statetax();
+
 	my %sql;
 	foreach my $k ( keys %fields ) {
 		$sql{$k} = $$self{$k};
 	} # end foreach
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('invoices_id_seq')});
 		$sql{'id'} = $$self{id};
 		if ( my $error = sql::insert( undef, undef, 'Invoices', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+			$dbh->rollback();
+			delete $$self{'id'};
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 	} else {
 		if ( my $error = sql::update( undef, undef, 'Invoices', ['id=?', $$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return '';
 } # end sub save
@@ -211,7 +218,11 @@ sub Company {
 } # end sub Company
 
 sub is_paid {
-	return ( $_[0]->total() - $_[0]->paid() > 0 ) ? 1 : 0;
+	my ( $self ) = @_;
+	if ( ! $$self{'posted'} ) {
+		return 0;
+	} # end if
+	return ( $self->total() - $self->paid() > 0 ) ? 0 : 1;
 } # end sub is_paid
 
 sub owing {
@@ -230,6 +241,8 @@ sub subtotal {
 	my ( $self ) = @_;
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
+		$$self{'subtotal'} = 0;
+		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack::find('invoice_id'=>$$self{id});
 	} # end if
 	return $$self{'subtotal'};
 } # end sub subtotal
@@ -237,6 +250,9 @@ sub total {
 	my ( $self ) = @_;
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'total'} ) ) {
+		$$self{'total'} = $self->subtotal();
+		$$self{'total'} += $self->federaltax();
+		$$self{'total'} += $self->statetax();
 	} # end if
 	return $$self{'total'};
 } # end sub total
@@ -260,6 +276,32 @@ sub paid {
 	} # end if
 	return $$self{'paid'};
 } # end sub paid
+
+sub federaltax {
+	my ( $self ) = @_;
+	if ( ! $$self{'posted'} ) {
+		if ( $self->Invoicee()->taxexempt1() eq 'Y' ) {
+			return '';
+		} # end if
+		my ( $tax ) = sql::execute( undef, undef, 'SELECT Federaltax FROM Taxes WHERE State=? AND Country=?', $self->Invoicee()->get('state','country') );
+		return '' if ! $tax;
+		return $self->subtotal() * ( $tax/100 );
+	} # end if
+	return $$self{'federaltax'};
+} # end sub federaltax
+sub statetax {
+	my ( $self ) = @_;
+
+	if ( ! $$self{'posted'} ) {
+		if ( $self->Invoicee()->taxexempt2() eq 'Y' ) {
+			return '';
+		} # end if
+		my ( $tax ) = sql::execute( undef, undef, 'SELECT Statetax FROM Taxes WHERE State=? AND Country=?', $self->Invoicee()->get('state','country') );
+		return '' if ! $tax;
+		return $self->subtotal() * ($tax/100 );
+	} # end if
+	return $$self{'statetax'};
+} # end sub statetax
 
 sub add_Payment {
 	my ( $self, $Payment ) = @_;
@@ -291,6 +333,44 @@ sub Payments {
 sub Logs {
 	return openprint::InvoiceLog::find('invoice_id'=>$_[0]{id},'order'=>'created_on');
 } # end sub Logs
+
+sub add_to_log {
+	my ( $self, $desc, $user_id ) = @_;
+	my $Log = new openprint::InvoiceLog();
+	$Log->save({
+		'invoice_id'	=> $$self{'id'},
+		'user_id'		=> $user_id ? $user_id : $session{'user_id'},
+		'description'	=> $desc,
+	} );
+	
+} # end sub add_to_log
+
+sub send {
+	my ( $self ) = @_;
+
+	my %data;
+	$data{'Invoice'} = $self;
+
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+	my @attachments;
+	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice_body.html' );
+	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+	push @attachments, '', encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
+	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice.html' );
+	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+	push @attachments, 'Invoice '.$$self{'id'}, encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
+
+	my %mail = (
+			SMTP    => $config{'Mail Server'},
+			FROM    => $config{'AccountingEmail'},
+			TO      => 'iconnor@connortechnology.com',
+			#TO      => join(',', map { sprintf('"%s" <%s>', $_->get('name','email') ) } $self->Invoicee()->AccountingContacts() ),
+			SUBJECT => sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
+			);
+	misc::send_email_with_attachment( $log, \%mail, @attachments );
+	return 'Sent.';
+
+} # end sub send
 
 1;
 

@@ -1,23 +1,10 @@
+<style type="text/css">
+	<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/invoice.css' ); ) ?>
+</style>
 <div class="PageTitle">
 	<h1>Invoice #<? echo ( $$variable{'Invoice'}->id() ) ?></h1>
 </div>
 <br class="spacer"/>
-<form name="f1" id="f1" action="history.html" method="post">
-	<input type="hidden" name="btnFunction" />
-	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{'Invoice'}->id() ) ?>" />
-		<p class="buttons">
-			<? echo (
-				my $html = '';
-				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
-				if ( $$variable{'Invoice'}->id() ) {
-				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
-				} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?invoice_id='.$$variable{'Invoice'}->id(), 'Edit' );
-				$html .= ssi::writeButton( $log, $dbh, 'send', 'send.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
-				$html .= ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print()', '', 'Print' );
-				return $html;
-			) ?>
-		</p>
 	<fieldset>
 		<div class="Invoicee">
 			<? echo (
@@ -113,8 +100,6 @@
 		</table>
 	</fieldset>
 <? endif ( $$variable{'Invoice'}->Products() > 0 ) ?>
-
-</form>
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
         <table class="List">
@@ -189,20 +174,4 @@
 	</fieldset>
 </div>
 <? endif ( $$variable{'Invoice'}->Payments() ) ?>
-<div class="rightColumn">
-<fieldset class="unprintable"><legend>Logs</legend>
-	<table>
-		<tr><th>When</th><th>Who</th><th>Description</th></tr>
-		<? echo ( 
-			my $html = '';
-			foreach my $Log ( $$variable{'Invoice'}->Logs() ) {
-				$html .= sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>', 
-					Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time($Log->created_on())),
-					$Log->user_id() ? $Log->User()->name() : 'System', $Log->description() );
-			} # end foreach Log
-			return $html;
-		) ?>
-	</table>
-</fieldset>
-</div>
 <br class="spacer"/>

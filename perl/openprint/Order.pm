@@ -235,7 +235,7 @@ sub created_by_id {
 sub approve {
 	my $self = shift;
 # get taxes
-	$_ = q{SELECT dblStatePercent, dblHarmonisedPercent, dblFederalPercent FROM Taxes WHERE State=(SELECT strState FROM Orders WHERE Index=?)};
+	$_ = q{SELECT statetax, harmonisedtax, federaltax FROM Taxes WHERE State=(SELECT strState FROM Orders WHERE Index=?)};
 	my ( $pst_rate, $hst_rate, $gst_rate ) = sql::execute( $log, $dbh, $_, $$self{'id'} );
 
 	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};

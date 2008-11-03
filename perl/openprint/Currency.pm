@@ -121,9 +121,7 @@ sub get_current {
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$openprint::session{'Currency_id'} = $Pricelist->currency_id();
 	} # end if
-	if ( $openprint::session{'Currency_id'} ) {
-		return new openprint::Currency( $openprint::session{'Currency_id'} );
-	} # end if
+	return new openprint::Currency( $openprint::session{'Currency_id'} );
 } # end sub get_currenct
 
 sub format {
