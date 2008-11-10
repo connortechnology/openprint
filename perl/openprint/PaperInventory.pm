@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable %fields);
+use vars qw(%variable %fields %defaults);
 *variable = \%openprint::variable;
 
 
@@ -31,6 +31,10 @@ my $debug = 1;
 	'comment'		=>	'comment',
 	'skid_id'		=>	'skid_id',
 	'units'			=>	'units',
+);
+
+%defaults = (
+	'updated_on'	=>	'NOW()',
 );
 
 # Returns a paper object specified by the parameters
