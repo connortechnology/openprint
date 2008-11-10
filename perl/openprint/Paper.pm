@@ -691,18 +691,9 @@ sub add_inventory {
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
-	#Skid{Paper}{paper_id} has already been adjusted
-
-	my $in_stock;
-	my $Skid;
-	if ( $Skid and $Skid->id() ) {
-		foreach my $content ( $Skid->contents( 'Paper'=>$self ) ) {
-			$in_stock += $content->quantity();
-		} # end foreach
-		$in_stock += $quantity;
-	} else {
-		$in_stock = $self->in_stock() + $quantity;
-	} # end if
+	# force recalc;
+	delete $$self{'in_stock'};
+	my $in_stock = $self->in_stock();
 
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
     sql::insert( undef, undef, 'Paper_Inventory',
@@ -713,11 +704,10 @@ sub add_inventory {
         'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
-        'skid_id',  $Skid->id(),
+        'skid_id',  $Skid ? $Skid->id() : undef,
 		'units',	$units,
         );
 	delete $$self{allocated};
-	delete $$self{in_stock};
 } # end sub add_inventory
 
 sub allocate {

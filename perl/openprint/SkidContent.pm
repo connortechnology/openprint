@@ -70,6 +70,7 @@ sub save {
 			'units'			=>	$$self{'units'},
 			});
 	sql::end_transaction( $openprint::dbh, $ac );
+	return;
 } # end sub save
 
 sub copy {

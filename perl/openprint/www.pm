@@ -114,7 +114,7 @@ $openprint::log->debug("Page: $page");
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
-		if ( $variable{'PageContent'} eq '' ) {
+		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
 			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
 				$content = misc::load_file( $log, $_ );

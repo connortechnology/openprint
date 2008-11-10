@@ -9,8 +9,9 @@ use DBI;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 use strict;
 
-use vars qw( $log $dbh $debug );
+use vars qw( $log $dbh $debug $timing );
 $debug = 1;
+$timing = 1;
 
 sub open_sql {
 	my ( $l, %sql_server ) = @_;
@@ -39,7 +40,7 @@ sub execute {
 		$print_sql = $sql;
 		$print_sql =~ s/\?/\%s/g;
 		$print_sql = sprintf($print_sql, @values);
-		$starttime = gettimeofday();
+		$starttime = gettimeofday() if $timing;
 	} # end if
 	my $sth;
 	if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
@@ -53,13 +54,19 @@ sub execute {
 	if ( my $num_of_fields = $sth->{'NUM_OF_FIELDS'} ) {
 		while ( my $ref = $sth->fetchrow_arrayref ) {
 			for ( my $i = 0; $i < $num_of_fields; $i += 1 ) {
-				push( @return_array, $$ref[$i] );
+				push @return_array, $$ref[$i];
 			} # end for
 		} # end while
 	} # end if
 	$sth->finish(); # unneccessary
 	if ( $l and $debug ) {
+		if ( $timing ) {
 		$l->debug("SQL (".sprintf('%.4f', tv_interval( [$starttime])*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+		} elsif ( @return_array ) {
+		$l->debug("SQL ($print_sql) Results:".join(',',@return_array));
+		} else {
+		$l->debug("SQL ($print_sql) No Results:");
+		} # end if
 	} # end if
 
 	return @return_array;
@@ -176,7 +183,7 @@ sub update {
 	
 	if ( $log ) {
 		my $print_command;
-		if ( $command and %commands and @conditions ) {
+		if ( $command and %commands and @conditions and values %commands ) {
 			$command =~ s/\?/\%s/g;
 			$print_command = sprintf($command, values %commands, @conditions );
 		} # end if

@@ -105,7 +105,7 @@ sub copy {
 		$newcontent->skid_id( $new->id() );
 		$newcontent->save();
 
-		$Paper->add_inventory( $new->id(), $content->quantity() );
+		$Paper->add_inventory( $new, $content->quantity() );
 		my @data = sql::execute( $openprint::log,$openprint::dbh, q{SELECT project_id, quantity, units FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $Paper->id );
 		while ( @data ) {
 			$Paper->allocate( $new->id(), splice @data, 0, 3 );
@@ -325,17 +325,17 @@ sub checkout {
 	if ( ! @contents ) {
 		my ( $comment ) = sql::execute( undef, undef, 'SELECT comment FROM paper_inventory WHERE skid_id=? AND comment LIKE ?', $$self{id},'Checked out%' );
 		if ( ! $comment ) {
-		sql::insert( undef, undef, 'Paper_Inventory',
-				'paper_id', undef,
-				'user_id',  $openprint::session{'user_id'},
-				'POIndex',  undef,
-				'InStock',  0,
-				'updated_on',   'NOW()',
-				'delta',    0,
-				'Comment',  'Checked out' . $c,
-				'skid_id',  $$self{'id'},
-				'units',    'unknown',
-				);
+			sql::insert( undef, undef, 'Paper_Inventory',
+					'paper_id', undef,
+					'user_id',  $openprint::session{'user_id'},
+					'POIndex',  undef,
+					'InStock',  0,
+					'updated_on',   'NOW()',
+					'delta',    0,
+					'Comment',  'Checked out' . $c,
+					'skid_id',  $$self{'id'},
+					'units',    'unknown',
+					);
 		} # end if
 		return 1;
 	} # end if
@@ -344,9 +344,20 @@ sub checkout {
 		my ( $project_id ) = sql::execute( undef, undef, q{SELECT project_id FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $C->paper() );
 		my $desc = 'Checked out' . ($project_id ? ' for docket ' . new openprint::Project($project_id)->docket() : '');
 		if ( ! sql::execute( undef, undef, 'SELECT comment FROM paper_inventory WHERE skid_id=? AND comment LIKE ?', $$self{id}, $desc.'%' ) ) {
-			$C->Paper->add_inventory( $$self{id}, -1*$C->quantity(), $C->units(), $desc.$c );
+			my $PI = new openprint::PaperInventory();
+			my $e = $PI->save({
+					'paper_id'	=>	$C->paper_id(),
+					'user_id'	=>	$openprint::session{'user_id'},
+					'poindex'	=>	undef,
+					'instock'	=>	$C->Paper()->in_stock() - $C->quantity(),
+					'delta'		=>	-1*$C->quantity(),
+					'comment'	=>	$desc.$c,
+					'skid_id'	=>	$$self{id},
+					'units'		=>	$C->units(),
+					} );
 			$C->quantity( 0 );
-			$C->save();
+			$e .=	$C->save();
+			$openprint::log->error( $e ) if $e;
 			return 1;
 		} # end if
 	} # end foreach Content

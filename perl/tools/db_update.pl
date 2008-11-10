@@ -245,25 +245,36 @@ if ( $version < 1897 ) {
 } # end if
 if ( $version < 1898 ) {
 	print "Updating to version 1898\n";
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockPurposes LIMIT 1', {} );
 	my $ac = sql::start_transaction( $dbh );
+	
+if ( !$data ) {
 $dbh->do(q{CREATE TABLE StockPurposes (
     id  SERIAL NOT NULL,
     name   TEXT NOT NULL,
     PRIMARY KEY (id)
 )});
+} # end if
+	sql::end_transaction( $dbh, $ac );
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Skids LIMIT 1', {} );
+	my $ac = sql::start_transaction( $dbh );
+if ( ! exists $$data{'purpose_id'} ) {
 $dbh->do(q{alter table skid_contents add purpose_id integer});
 $dbh->do(q{alter table skid_contents add foreign key (purpose_id) references stockpurposes (id)});
 $dbh->do(q{insert into stockpurposes (name) values ('House Stock')});
 $dbh->do(q{insert into stockpurposes (name) values ('Job Stock')});
 $dbh->do(q{insert into stockpurposes (name) values ('Sample')});
+}
 
-$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on});
+$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on}) if ! exists $$data{updated_on};
+if ( ! exists $$data{id} ) {
 $dbh->do(q{alter table paper_inventory add id integer});
 $dbh->do(q{create sequence paperinventory_id_seq});
 $dbh->do(q{alter table paper_inventory alter id set default nextval('paperinventory_id_seq')});
 $dbh->do(q{update paper_inventory set id=nextval('paperinventory_id_seq')});
 $dbh->do(q{alter table paper_inventory alter id set not null});
 $dbh->do(q{alter table paper_inventory add primary key(id)});
+} # end if
 	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1898;

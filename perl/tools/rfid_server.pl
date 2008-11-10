@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w -T
+#!/usr/bin/perl -T
 use lib '/etc/apache2/lib/perl';
 use Net::Server::PreFork;
 
@@ -23,6 +23,8 @@ use vars qw( $log $dbh );
 $log = new logger( 'warn' );
 $openprint::Object::no_cache = 1;
 my %CheckedOutSkids;
+
+$sql::timing = 0;
 
 sub Checkout_Skid {
 	my ( $Scanner, $Tag, $context, $checkout_tags ) = @_;
@@ -52,7 +54,7 @@ sub Checkout_Skid {
 sub process_request {
 	my $self = shift;
 
-	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'www2') );
+	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'www4') );
 
 	my @checkout_tags = openprint::RFIDTag::find('type'=>'Checkout');
 	my %last_seen;
@@ -69,8 +71,6 @@ sub process_request {
 		my $previous_alarm = alarm($timeout);
 		$self->get_client_info();
 		
-		open( LOG, ">>/tmp/rfid.log" );
-
 		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 		$self->log(1, sprintf('%s : %s : %s',$date, $self->{server}->{peeraddr}, 'connect' ));
 		# Each tag is 40 chars long
@@ -89,15 +89,26 @@ sub process_request {
 			#$self->log(1, sprintf('%s : %s : hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			$tag_id = substr( $tag_id, length($tag_id)-16, 16 );
 			my $type_digit = substr( $tag_id, 0, 1 );
+			if ( $type_digit =~ /\D/ ) {
+				#$self->log(1, sprintf('%s : %s : invlaid type digit', $date, $self->{server}->{peeraddr} ));
+				next;
+			} # end if
+		
+			# This is due to a fuck up, where the tags printed only used 15 digits, whereas the rfid is 16
 			$tag_id = substr( $tag_id, 2, 15 );
 
-			#$self->log(1, sprintf('%s : %s : short  hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			$tag_id = hex($tag_id);
 			if ( $tag_id =~ /\D/ ) {
 				$self->log(1, sprintf('%s : %s : invlaid tag', $date, $self->{server}->{peeraddr} ));
 				next;
 			} # end if
-			#$self->log(1, sprintf('%s : %s : short  hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+
+			if ( ( $type_digit == 2 ) and ( $tag_id < 2100 ) ) {
+				# Ignore the test tags
+				$self->log(1, sprintf('%s : %s : old skid tag %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+				next;
+			} # end if
+
 			$tag_id = sprintf('%d%.14d', $type_digit , $tag_id );
 			#$self->log(1, sprintf('%s : %s : dec %s', $date, $self->{server}->{peeraddr}, $tag_id ));
 			if ( ! $tag_id ) {
@@ -217,10 +228,8 @@ if ( 1 ) {
 				#$self->log(1, sprintf('%s : %s : not saving', $date, $self->{server}->{peeraddr} ));
 				} # end if
 			} # end if
-			#print LOG $self->{server}->{peeraddr} . ": $data\r\n";
 			alarm($timeout);
 		} # end while
-		close(LOG);
 		alarm($previous_alarm);
 	};
 

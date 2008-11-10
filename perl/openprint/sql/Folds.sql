@@ -34,8 +34,6 @@ CREATE TABLE Folds (
 	makeready_overs_units	TEXT,
 	run_overs	integer,
 	run_overs_units	TEXT,
-	folds			INTEGER,
-	angles			INTEGER,
 	PRIMARY KEY (id)
 );
 
