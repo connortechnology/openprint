@@ -1,6 +1,7 @@
 <style type="text/css">
 	<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/invoice.css' ); ) ?>
 </style>
+<div id="Invoice">
 <div class="PageTitle">
 	<h1>Invoice #<? echo ( $$variable{'Invoice'}->id() ) ?></h1>
 </div>
@@ -175,3 +176,4 @@
 </div>
 <? endif ( $$variable{'Invoice'}->Payments() ) ?>
 <br class="spacer"/>
+</div>

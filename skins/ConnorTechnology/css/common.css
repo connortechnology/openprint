@@ -319,7 +319,7 @@ table.List input {
 	margin: 0px;
 } 
 .PageTitle {
-    width: 100%;
+	float: right;
     text-align: right;
 }
 .PageTitle h1 {

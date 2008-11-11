@@ -4,9 +4,6 @@ body {
     background-color: #fff;
     color: #333;
 }
-input, textarea, select, option {
-    font-size: xx-small;
-}
 @media print {
     body {
         padding: 0px;
@@ -18,11 +15,6 @@ body, p, ol, ul, td {
     font-size: xx-small;
 }
 
-    pre {
-      background-color: #eee;
-      padding: 10px;
-    }
-
 table {
     border-collapse: collapse;
     border-spacing: 0;
@@ -32,7 +24,6 @@ table.List {
     border: none;
     table-layout: fixed;
     border-bottom: 1px solid #0046a2;
-
 }
 th {
     color: #000000;
@@ -69,3 +60,10 @@ fieldset p label {
     padding-right: 5px;
 }
 
+td#banner {
+	background: url(http://www.connortechnology.com/images/header.png) repeat-x top;
+}
+.spacer {
+	height: 0px;
+	clear: both;
+}

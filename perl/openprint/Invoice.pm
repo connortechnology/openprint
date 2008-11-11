@@ -52,6 +52,12 @@ require sql;
 	'updated_on'	=> 'NOW()',
 	'deleted'		=> 0,
 	'posted'		=> 0,
+	'interest'		=> undef,
+	'paid'			=> undef,
+	'statetax'		=> undef,
+	'federaltax'	=> undef,
+	'statetaxrate'		=> undef,
+	'federaltaxrate'	=> undef,
 );
 
 sub find {
@@ -169,11 +175,13 @@ sub destroy {
 sub save {
 	my ( $self, $param ) = @_;
 	
-	$self->set( $param ) if $param;
-
+	# none of these should be set by param
+	
 	$$self{'total'} = $self->total();
 	$$self{'federaltax'} = $self->federaltax();
 	$$self{'statetax'} = $self->statetax();
+	
+	$self->set( $param ) if $param;
 
 	my %sql;
 	foreach my $k ( keys %fields ) {
@@ -283,6 +291,9 @@ sub federaltax {
 		if ( $self->Invoicee()->taxexempt1() eq 'Y' ) {
 			return '';
 		} # end if
+		if ( ! $self->Invoicer()->gst_number() ) {
+			return '';
+		} # end if
 		my ( $tax ) = sql::execute( undef, undef, 'SELECT Federaltax FROM Taxes WHERE State=? AND Country=?', $self->Invoicee()->get('state','country') );
 		return '' if ! $tax;
 		return $self->subtotal() * ( $tax/100 );
@@ -294,6 +305,9 @@ sub statetax {
 
 	if ( ! $$self{'posted'} ) {
 		if ( $self->Invoicee()->taxexempt2() eq 'Y' ) {
+			return '';
+		} # end if
+		if ( ! $self->Invoicer()->pst_number() ) {
 			return '';
 		} # end if
 		my ( $tax ) = sql::execute( undef, undef, 'SELECT Statetax FROM Taxes WHERE State=? AND Country=?', $self->Invoicee()->get('state','country') );
@@ -358,16 +372,18 @@ sub send {
 	push @attachments, '', encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice.html' );
 	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
-	push @attachments, 'Invoice '.$$self{'id'}, encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
+	push @attachments, 'Invoice '.$$self{'id'}.'.html', encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 
+	#my @recipients = ('iconnor@connortechnology.com');
+	my @recipients = map { sprintf('"%s" <%s>', $_->get('name','email') ) } $self->Invoicee()->AccountingContacts();
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
 			FROM    => $config{'AccountingEmail'},
-			TO      => 'iconnor@connortechnology.com',
-			#TO      => join(',', map { sprintf('"%s" <%s>', $_->get('name','email') ) } $self->Invoicee()->AccountingContacts() ),
+			TO      => join(',', @recipients ),
 			SUBJECT => sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
 			);
 	misc::send_email_with_attachment( $log, \%mail, @attachments );
+	$self->add_to_log( 'Emailed to ' . join(', ', @recipients) );
 	return 'Sent.';
 
 } # end sub send

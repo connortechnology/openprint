@@ -19,20 +19,25 @@ sub history {
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
 		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{'due_on'};
 		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
-		$variable{'error'} .= $Invoice->save(\%param);
+		if ( ! ( $variable{'error'} .= $Invoice->save(\%param) ) ) {
+			$variable{'information'} .= 'Invoice saved.<br/>';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Post' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		if ( ! ( $variable{'error'} .= $Invoice->save({'posted'=>1,'posted_on'=>'NOW()'}) ) ) {
 			$Invoice->add_to_log( 'Invoice posted.' );
+			$variable{'information'} .= 'Invoice posted.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'UnPost' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		if ( ! ( $variable{'error'} .= $Invoice->save({'posted'=>0}) ) ) {
-			$Invoice->add_to_log( 'Invoice posted.' );
+			$Invoice->add_to_log( 'Invoice unposted.' );
+			$variable{'information'} .= 'Invoice unposted.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		$variable{'error'} .= $Invoice->send();
+		$variable{'information'} .= 'Invoice sent.<br/>';
 	} # end if
 } # end sub history
 
