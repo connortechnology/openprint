@@ -70,7 +70,7 @@ sub skids {
 				my $Skid = new openprint::Skid( $skid_id );
 				foreach my $paper_id ( keys %{$$Skid{Paper}} ) {
 					my $Paper = new openprint::Paper( $paper_id );
-					$Skid->allocate( $paper_id, $Projects[0]->id(), $$Skid{Paper}{$paper_id}, $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
+					$Paper->allocate( $skid_id, $Projects[0]->id(), $$Skid{Paper}{$paper_id}, $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
 				} # end foreach Paper
 			} # end foreach Skid
 		} # end if
@@ -797,6 +797,7 @@ sub allocate {
 	} # end if
 
 	my @allocations = ();
+	my @old_skids = ();
 	my @skid_ids = split(',', $skid_ids );
 	if ( $specific and ! @skid_ids ) {
 		if ( $quantity < 0 ) {
@@ -829,40 +830,54 @@ sub allocate {
 				my $allocateable = $Skid->allocateable( $Paper );
 				next if ! $allocateable;
 
+				my @a;
 				if ( $allocateable < $qty ) {
-					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+					@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
 					$qty -= $allocateable;
 				} else {
 					if ( $Paper->type() eq 'Roll' ) {
 						# Must allocate whole rolls
-						push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+						@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
 					} else {
-						push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+						@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
 					} # end if
 					$qty = 0;
+				} # end if
+				push @allocations, @a;
+				if ( (time-Date::Parse::str2time($Skid->updated_on())) > (30*24*60*60) ) {
+					push @old_skids, @a;
 				} # end if
 				last if ! $qty;
 			} # end foreach
 		} # end if
 	} else {
-		push @allocations, $Paper->allocate( undef, $Projects[0]->id(), $qty, $units );
+		foreach my $PA ($Paper->allocate( undef, $Projects[0]->id(), $qty, $units ) ) {
+			push @allocations, $PA;
+			if ( $PA->skid_id() and (time-Date::Parse::str2time($PA->Skid()->updated_on())) > (30*24*60*60) ) {
+				push @old_skids, $PA;
+			} # end if
+		} # end foreach PA
 	} # end if
 	
 	if ( @allocations ) {
-		stock_allocation_notification( $Projects[0], $Paper, @allocations );
+		stock_allocation_notification( $Projects[0], $Paper, \@allocations, \@old_skids );
 	} # end if
 	$variable{'information'} .= "Allocated $quantity $units to docket " . $Projects[0]->docket() . '<br/>';
 } # end sub allocate
 
 sub stock_allocation_notification {
-	my ( $Project, $Paper, @allocations ) = @_;
+	my ( $Project, $Paper, $allocations, $old_skids ) = @_;
 
 	my %info;
 	$info{'Project'} = $Project;
 	$info{'Paper'} = $Paper;
-	$info{'Allocations'} = \@allocations;
+	$info{'Allocations'} = $allocations;
+	$info{'OldSkids'} = $old_skids;
 
-	foreach my $User ( openprint::User::find( 'usergroup'=>'InventoryManager' ) ) {
+	my @recipients = openprint::User::find( 'usergroup'=>'InventoryManager' );
+	push @recipients, $Project->Company()->CSR() if @$old_skids;
+
+	foreach my $User ( @recipients ) {
 		my $From = new openprint::User( $session{'user_id'} );
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
 
@@ -873,6 +888,7 @@ sub stock_allocation_notification {
 				SMTP    => $openprint::config{'Mail Server'},
 				FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 				TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
+				#TO      => 'iconnor@Point-one.com',
 				SUBJECT => 'Stock allocated for docket ' . $Project->docket(),
 				);
             misc::send_email_with_attachment( $log, \%mail, @body );
@@ -1205,7 +1221,35 @@ sub _paper_allocations {
         } # end if
         delete $param{'skid_id'};
     } # end if
-}
+} # end sub _paper_allocations
+
+sub _skid_allocations {
+    if ( $param{'action'} eq 'Add' ) {
+        my $Paper = new openprint::Paper( $param{'paper_id'} );
+        my @Projects = openprint::Project::find( 'id'=>$param{'ProjectID'}, 'docket'=>$param{'Docket'} ) if $param{'ProjectID'} or $param{'Docket'};
+        my $Skid = new openprint::Skid( $param{'skid_id'} );
+
+        if ( ! @Projects ) {
+            $variable{'error'} .= 'Docket not found. No paper allocated.<br/>';
+        } elsif ( $Skid->allocateable() < $param{'AllocationQuantity'} ) {
+            $variable{'error'} .= 'Only ' .  $Skid->allocateable() . ' on this skid. No paper allocated.<br/>';
+        } else {
+            my $Project = shift @Projects;
+            $Paper->allocate( $param{'skid_id'}, $Project->id(), @param{'AllocationQuantity','Units'} );
+            $variable{'information'} .= sprintf('Allocated %s%s to docket %d<br/>', @param{'AllocationQuantity','Units'}, $Project->docket() );
+        } # end if
+    } elsif ( $param{'action'} eq 'delete' ) {
+        my $Allocation = new openprint::PaperAllocation( $param{'allocation_id'} );
+		if ( $Allocation->id() ) {
+			$Allocation->Project()->add_to_log( @session{'company_id','user_id'}, 'Paper Allocation for skid ' . $Allocation->skid_id() . ' deleted.' );
+			$Allocation->delete();
+		} else {
+			$openprint::log->warn('Non-existent Paper Allocation deleted.');
+		} # end if
+    } # end if
+    $variable{'skid_id'} = $param{'skid_id'};
+} # end sub _skid_allocations
+
 sub manifest {
 	update_inventory();
 	$variable{'Manifest'} = new openprint::Manifest( $param{'manifest_id'} );
