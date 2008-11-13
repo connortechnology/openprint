@@ -1,6 +1,6 @@
 The following stock has been allocated for docket <b><? echo ( $$variable{'Project'}->docket() ) ?></b>:<br/>
 
-<? if ( $$variable{'OldSkids'} ) ?><br/>Some of these stocks have not been seen in over 30 days.  Please verify the availability of these stocks.<? endif ( $$variable{'OldSkids'} ) ?><br/>
+<? if ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><br/>Some of these stocks have not been seen in over 30 days.  Please verify the availability of these stocks.<? endif ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><br/>
 <br/>
 <b><? echo ( $$variable{'Paper'}->to_string(); ) ?></b><br/><br/>
 <table class="List">
@@ -18,7 +18,7 @@ The following stock has been allocated for docket <b><? echo ( $$variable{'Proje
 		$html .= sprintf('<td>%s</td>', $PA->Skid()->id() );
 		$html .= sprintf('<td>%s</td>', $PA->Skid()->rfidtag_id() );
 		$html .= sprintf('<td>%s</td>', $PA->Skid()->Location()->name() );
-		$html .= sprintf('<td align="right">%s</td>', Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $PA->Skid()->updated_on() ) ) );
+		$html .= sprintf('<td align="right">%s</td>', $PA->skid_id() ? Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $PA->Skid()->updated_on() ) ) : '' );
 		$html .= sprintf('<td align="right">%s%s</td>', $PA->quantity(), $PA->units() );
 		$units = $PA->units();
 		$total += $PA->quantity();
