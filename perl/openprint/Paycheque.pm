@@ -27,11 +27,13 @@ require sql;
 	'internal_notes'	=>	'internal_notes',
 	'external_notes'	=>	'external_notes',
 	'paid_on'			=>	'paid_on',
+	'deleted'			=>	'deleted',
 );
 
 %transforms = (
 );
 %defaults = (
+	'deleted'		=>	0,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 	'paid_on'		=> 'NOW()',
@@ -106,7 +108,7 @@ sub find {
 		$sql .= ' AND deleted=?';
 		push @values, $params{'deleted'};
 	} else {
-		$sql .= ' AND deleted=?';
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
 	if ( $params{'completed'} ) {

@@ -23,7 +23,7 @@
 					} # end foreach $T
 					foreach my $T ( @Timetracks ) {
 					$html .= sprintf( q`<tr title="%s" onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');">`, $T->description() );
-						$html .= sprintf('<td><a href="/invoice/edit.html?invoice_id=%1$d">%1$d</a></td>', $T->id() );
+						$html .= sprintf('<td><a href="/timetrack/edit.html?timetrack_id=%1$d">%1$d</a></td>', $T->id() );
 						$html .= sprintf('<td>%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $T->starting() ) ) );
 						$html .= sprintf('<td>%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $T->ending() ) ) );
 						$html .= sprintf('<td>%s</td>', misc::seconds_to_pretty_interval( $T->elapsed() ) );

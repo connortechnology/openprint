@@ -55,6 +55,10 @@
 </script>
 <form name="f1" id="f1" action="history.html" method="post">
 	<fieldset><legend>Editing timetrack</legend>
+		<? if ( $$variable{'Timetrack'}->deleted() ) ?>
+		<span class="warning">This timetrack has been deleted</span>
+		<? endif ( $$variable{'Timetrack'}->deleted() ) ?>
+		
 		<input type="hidden" name="timetrack_id" value="<? echo ( $openprint::param{'timetrack_id'} ) ?>" />
 		<div class="leftColumn">
 			<p><label for="company_id">Company:</label>

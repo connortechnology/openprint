@@ -14,7 +14,7 @@
 		$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 		foreach my $Timetrack ( openprint::Timetrack::find('paycheque_id'=>$$variable{'Paycheque'}->id(), 'order'=>'id') ) {
 			$html .= sprintf( q`<tr title="%s" onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');">`, $Timetrack->description() );
-			$html .= sprintf('<td>%d</td>', $Timetrack->id() );
+			$html .= sprintf('<td><a href="/timetrack/edit.html?timetrack_id=%1$d">%1$d</a></td>', $Timetrack->id() );
 			$html .= sprintf('<td>%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $Timetrack->starting() ) ) );
 			$html .= sprintf('<td>%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $Timetrack->ending() ) ) );
 			$html .= sprintf('<td>%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) );
