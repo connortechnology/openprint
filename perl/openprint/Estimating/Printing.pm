@@ -1483,7 +1483,7 @@ sub breakdown {
 	$breakdown .= sprintf( "\tPlates: \%d plates * \$%.2f per plate = \$%.2f<br/>", @$price{'txtPlateQuantity','Plate Cost','Plate Price'});
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 	my $stock_qty = $$price{'Stock Quantity'};
-	$breakdown .= sprintf( 'Overs: Base:%s Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
+	$breakdown .= sprintf( 'Overs: Base:%s Setup: %s Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
 	if ( $Paper->type() ne 'Roll' ) {
 		$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
 		$breakdown .= "\tPaper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
@@ -2208,7 +2208,7 @@ sub calc_price {
 
 	$run_overs = $base_impressions * $over_rate;
 	#my $gross_qty = $impressions;
-	my $gross_qty = sprintf( '%.0f', $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
+	my $gross_qty = ceil( $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
 	my $additional_overs=0;
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
@@ -2255,7 +2255,7 @@ sub calc_price {
 			'Bindery Overs'				=> $price{'SpinePaste MakeReady Overs'},
 			'Run Overs'					=> $run_overs,
 			'Additional Plate Overs'	=> $additional_overs,
-			'Total Overs'				=> $impressions,
+			'Total Overs'				=> ($setup_overs > $run_overs ? $setup_overs : $run_overs )+ $additional_overs + $fm_overs,
 			'Weight'					=> ( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() ),
 			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$fm_overs : 0,
 			);
