@@ -48,6 +48,7 @@ my $debug = 1;
 	'vendor_postalcode'	=>	'vendor_postalcode',
 	'vendor_phone'		=>	'vendor_phone',
 	'vendor_fax'		=>	'vendor_fax',
+	'vendor_email'		=>	'vendor_email',
 	'shipto_contact'	=>	'shipto_contact',
 	'shipto_name'		=>	'shipto_name',
 	'shipto_address1'	=>	'shipto_address1',
@@ -58,6 +59,7 @@ my $debug = 1;
 	'shipto_postalcode'	=>	'shipto_postalcode',
 	'shipto_phone'		=>	'shipto_phone',
 	'shipto_fax'		=>	'shipto_fax',
+	'shipto_email'		=>	'shipto_email',
 );
 
 %transforms = (
@@ -218,7 +220,7 @@ sub Contents {
 sub delivered_on {
 	my ( $self ) = @_;
 	if ( ! $$self{'delivered_on'} ) {
-	$$self{'delivered_on'} = join('-', Date::Calc::Today() );
+	$$self{'delivered_on'} = join('-', Date::Calc::Today() ) .' 00:00:00';
 	} # end if
 	return $$self{'delivered_on'};
 } # end sub delivered_on

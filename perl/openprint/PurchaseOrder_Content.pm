@@ -33,7 +33,8 @@ my $debug = 1;
 );
 
 %transforms = (
-	'qty'			=>	[ 's/\D//g' ],
+	'price'			=>	[ 's/[^\d\.]//g' ],
+	'total'			=>	[ 's/[^\d\.]//g' ],
 );
 
 %defaults = (

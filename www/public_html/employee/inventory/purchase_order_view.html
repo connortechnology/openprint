@@ -61,6 +61,7 @@
 	$html .= sprintf('%s %s, %s', $$variable{'PurchaseOrder'}->get('vendor_city','vendor_state', 'vendor_postalcode')) . '<br/>';
 	$html .= 'Phone: ' . $$variable{'PurchaseOrder'}->vendor_phone().'<br/>' if $$variable{'PurchaseOrder'}->vendor_phone();
 	$html .= 'Fax: '.$$variable{'PurchaseOrder'}->vendor_fax().'<br/>' if $$variable{'PurchaseOrder'}->vendor_fax();
+	$html .= $$variable{'PurchaseOrder'}->vendor_email().'<br/>' if $$variable{'PurchaseOrder'}->vendor_email();
 	return $html;
 ) ?>
 		</p>
@@ -77,6 +78,7 @@
 	$html .= sprintf('%s %s, %s', $$variable{'PurchaseOrder'}->get('shipto_city','shipto_state', 'shipto_postalcode')) . '<br/>';
 	$html .= 'Phone: ' . $$variable{'PurchaseOrder'}->shipto_phone().'<br/>' if $$variable{'PurchaseOrder'}->shipto_phone();
 	$html .= 'Fax: ' . $$variable{'PurchaseOrder'}->shipto_fax().'<br/>' if $$variable{'PurchaseOrder'}->shipto_fax();
+	$html .= $$variable{'PurchaseOrder'}->shipto_email().'<br/>' if $$variable{'PurchaseOrder'}->shipto_email();
 	return $html;
 ) ?>
 			</p>
@@ -113,7 +115,7 @@
 			<td>%4$s</td>
 			<td style="text-align: right;">%5$s</td>
 			<td style="text-align: right;">%6$s</td>
-		</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price()), openprint::Currency::format($C->total()) );
+		</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
 	} # end foreach C
 	return $html;
 ) ?>
@@ -122,7 +124,7 @@
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
 	<tr>
-		<td colspan="5" class="totals">SALES TAX</td>
+		<td colspan="5" class="totals">SALES TAX</td
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->tax() ); ) ?></td>
 	</tr>
 	<tr>

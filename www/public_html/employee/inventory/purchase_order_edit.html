@@ -23,8 +23,8 @@ function update_totals( form ) {
 		} // end if
 	} // end for
 	//$('subtotal').innerHTML = subtotal;
-	$('subtotal').innerHTML = do_decimals( subtotal, 2);
-	$('total').innerHTML = do_decimals( subtotal, 2);
+	$('subtotal').innerHTML = do_decimals( subtotal, 2 );
+	$('total').innerHTML = do_decimals( subtotal, 2 );
 } // end function update_totals
 function getSelectionId(input, li) {
 	var re = /(\w+)-(\w+)/;
@@ -79,6 +79,7 @@ function getSelectionId(input, li) {
 			<p><label for="vendor_postalcode">Postal Code:</label><input type="text" name="vendor_postalcode" id="vendor_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_postalcode() ) ?>" /></p>
 			<p><label for="vendor_phone">Phone:</label><input type="text" name="vendor_phone" id="vendor_phone" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_phone() ) ?>" /></p>
 			<p><label for="vendor_fax">Fax:</label><input type="text" name="vendor_fax" id="vendor_fax" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_fax() ) ?>" /></p>
+			<p><label for="vendor_email">Email:</label><input type="text" name="vendor_email" id="vendor_email" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_email() ) ?>" /></p>
 			</fieldset>
 		</div>
 		<div class="rightColumn">
@@ -103,6 +104,7 @@ function getSelectionId(input, li) {
 			<p><label for="shipto_postalcode">Postal Code:</label><input type="text" name="shipto_postalcode" id="shipto_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_postalcode() ) ?>" /></p>
 			<p><label for="shipto_phone">Phone:</label><input type="text" name="shipto_phone" id="shipto_phone" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_phone() ) ?>" /></p>
 			<p><label for="shipto_fax">Fax:</label><input type="text" name="shipto_fax" id="shipto_fax" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_fax() ) ?>" /></p>
+			<p><label for="shipto_email">Email:</label><input type="text" name="shipto_email" id="shipto_email" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_email() ) ?>" /></p>
 			</fieldset>
 		</div>
 		<br class="spacer"/>
@@ -167,7 +169,7 @@ function getSelectionId(input, li) {
 	'&po_id=' + $$variable{'PurchaseOrder'}{id} + 
 	'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));} } );",'','Add' ); ) ?>
 		</td>
-		<td><input type="text" name="qty-new" id="qty-new" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals(this.form);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" /></td>
+		<td><input type="text" name="qty-new" id="qty-new" onkeyup="calc_price(this);update_totals(this.form);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" /></td>
 		<td>
 			<input type="text" name="item-new" id="item-new" autocomplete="off" onkeyup="if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" />
 			<div id="autocomplete-item-new" class="autocomplete" style="display: none; position:relative;"></div>

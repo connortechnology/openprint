@@ -1332,7 +1332,7 @@ sub purchase_order_view {
 				$param{'supplier_id'} = $Companies[0]->id();
 			} # end if
 		} # end if
-		$param{'delivered_on'} = sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'});
+		$param{'delivered_on'} = sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'}) if ! $param{'delivered_on'};
 		$variable{'error'} .= $PO->save( \%param );
 	} # end if btnFunction
 
