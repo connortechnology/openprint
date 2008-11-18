@@ -215,6 +215,13 @@ sub Authorized_By {
 sub Contents {
 	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'});
 } # end sub Contents
+sub delivered_on {
+	my ( $self ) = @_;
+	if ( ! $$self{'delivered_on'} ) {
+	$$self{'delivered_on'} = join('-', Date::Calc::Today() );
+	} # end if
+	return $$self{'delivered_on'};
+} # end sub delivered_on
 
 1;
 __END__

@@ -1,14 +1,14 @@
 <link href="/css/purchase_order.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
 function calc_price( element ) {
-    var re = /(.*)-(.*)/
-    var matches = re.exec( element.name );
-    if ( matches ) {
-        var index = matches[2];
-        var cost = parseFloat( $('price-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-        var qty = parseFloat( $('qty-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-        $('total-'+index).value = do_decimals( cost * qty, 2 );
-    } // end if
+	var re = /(.*)-(.*)/
+	var matches = re.exec( element.name );
+	if ( matches ) {
+		var index = matches[2];
+		var cost = parseFloat( $('price-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+		var qty = parseFloat( $('qty-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+		$('total-'+index).value = do_decimals( cost * qty, 2 );
+	} // end if
 } // end function calc_price
 function update_totals( form ) {
 	var subtotal = 0;
@@ -25,7 +25,7 @@ function update_totals( form ) {
 	//$('subtotal').innerHTML = subtotal;
 	$('subtotal').innerHTML = do_decimals( subtotal, 2);
 	$('total').innerHTML = do_decimals( subtotal, 2);
-}
+} // end function update_totals
 function getSelectionId(input, li) {
 	var re = /(\w+)-(\w+)/;
 	var matches = re.exec( input.id );
@@ -43,9 +43,8 @@ function getSelectionId(input, li) {
 
 </script>
 <form id="f1" name="f1" action="purchase_order_view.html?po_id=<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" method="post">
-	<? if ( $$variable{'error'} ) ?>
-	<div class="error"><?error?></div>
-	<? endif ( $$variable{'error'} ) ?>
+	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
 	<div class="PO">
 		<div class="PageTitle">
 		<h1>PURCHASE ORDER</h1>
@@ -106,6 +105,7 @@ function getSelectionId(input, li) {
 			<p><label for="shipto_fax">Fax:</label><input type="text" name="shipto_fax" id="shipto_fax" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_fax() ) ?>" /></p>
 			</fieldset>
 		</div>
+		<br class="spacer"/>
 		<table>
 			<tr>
 				<th>Shipping Method</th>
@@ -115,7 +115,25 @@ function getSelectionId(input, li) {
 			<tr>
 				<td><textarea name="shipping_method" id="shipping_method" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_method()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
 				<td><textarea name="shipping_terms" id="shipping_terms" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_terms()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></textarea></td>
-				<td><? echo ( ssi::date_select('delivered_on', $$variable{'PurchaseOrder'}->delivered_on() ); ) ?></td>
+				<td valign="top">
+					<input type="hidden" id="delivered_on" name="delivered_on" value="<? echo ( $$variable{'PurchaseOrder'}->delivered_on(); ) ?>" />
+					<span id="delivered_on_display"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ); ) ?></span>
+<img src="/javascripts/jscalendar/img.gif" id="DateButton" style="cursor: pointer;" title="Date selector" style="width:20px;"/>
+					<script type="text/javascript">
+						Calendar.setup({
+							inputField	:	'delivered_on',	// id of the input field
+							displayArea	:	'delivered_on_display',	// id of the input field
+							ifFormat	:	'%Y-%m-%d',		// format of the input field
+							daFormat	:	'<? echo ( $config{'DateFormat'} ) ?>',
+							align		:	'Tl',
+							showsTime	:	false,			// will display a time selector
+							//displayArea :	'JumpToDate$$row{'serviceindex'}',
+							singleClick :	false,			// double-click mode
+							//onClose	 :	setduedate
+							button		:	'DateButton',
+						});
+					</script>
+				</td>
 			</tr>
 		</table>
 		<br/>
