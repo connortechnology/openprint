@@ -118,7 +118,7 @@ sub find {
 		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
 			$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
 			push @values, @{$params{'supplier_id'}};
-		} else {
+		} elsif ( $params{'supplied_id'} ) {
 			$sql .= ' AND supplier_id=?';
 			push @values, $params{'supplier_id'};
 		} # end if
@@ -138,6 +138,14 @@ sub find {
 	} elsif ( $params{'authorized'} eq 'N' ) {
 		$sql .= ' AND authorized_by IS NULL';
 	} # end if
+	if ( $params{'deleted'} ) {
+		$sql .= ' AND deleted=?';
+		push @values, $params{'deleted'};
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
+	} # end if
+
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
@@ -356,6 +364,13 @@ sub statetax_rate {
 sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
+
+sub authorize {
+	my ( $self ) = @_;
+	$$self{'authorized_by'} = $session{'user_id'};
+	$$self{'authorized_on'} = 'NOW()';
+	return $self->save();
+} # end sub authorize
 
 1;
 #__END__

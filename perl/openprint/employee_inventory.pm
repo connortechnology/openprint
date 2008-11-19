@@ -1370,8 +1370,23 @@ sub purchase_order_edit {
 
 sub purchase_orders {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
-		$variable{'error'} .= $PO->delete();
+		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
+			my $PO = new openprint::PurchaseOrder( $po_id );
+			if ( $_ = $PO->delete() ) {
+				$variable{'error'} .= $_ . '<br/>';
+			} else {
+				$variable{'information'} .= 'PO ' . $po_id . ' has been deleted.<br/>';
+			} # end if
+		} # end foreach po_id
+	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
+		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
+			my $PO = new openprint::PurchaseOrder( $po_id );
+			if ( $_ = $PO->authorize() ) {
+				$variable{'error'} .= $_ . '<br/>';
+			} else {
+				$variable{'information'} .= 'PO ' . $po_id . ' has been authorized.<br/>';
+			} # end if
+		} # end foreach po_id
 	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
 		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 		$variable{'error'} .= $PO->send_to_vendor();

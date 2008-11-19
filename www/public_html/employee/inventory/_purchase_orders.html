@@ -16,6 +16,9 @@
 	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
 <table class="List sortable">
 	<tr>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+		<th width="20"><input type="checkbox" onclick="select_all( this.form, 'po_id', this.checked );"/></th>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
 		<th width="30">ID</th>
 		<th width="110" style="text-align: left;">Date</th>
 		<th style="text-align: left;">Supplier</th>
@@ -26,7 +29,12 @@
 	<? echo ( 
 		my $html = '';
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
-			$html .= sprintf( q`<tr onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">
+			$html .= q`<tr onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`;
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= '<td><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
+			} # end if
+
+			$html .= sprintf( q`
 				<td>&nbsp;<a href="purchase_order_view.html?po_id=%1$d">%1$d</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%2$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%3$s</a></td>
@@ -38,4 +46,14 @@
 		return $html;
 	) ?>
 	</table>
+	<p class="buttons">
+		<? echo (
+			my $html;
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= ssi::writeButton($log, $dbh, 'Authorize', 'authorize.gif', "f1.btnFunction.value='Authorize';f1.submit();", '', 'Authorize Selected' );
+				$html .= ssi::writeButton($log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete Selected' );
+			} # end if
+			return $html;
+		) ?>
+	</p>
 <? endif ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
