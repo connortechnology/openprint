@@ -35,6 +35,7 @@ my $debug = 1;
 %transforms = (
 	'price'			=>	[ 's/[^\d\.]//g' ],
 	'total'			=>	[ 's/[^\d\.]//g' ],
+	'qty'			=>	[ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
@@ -42,6 +43,7 @@ my $debug = 1;
 	'created_on'	=> 'NOW()',
 	'price'			=>	undef,
 	'total'			=>	undef,
+	'qty'			=>	undef,
 );
 
 # Returns a paper object specified by the parameters

@@ -179,7 +179,7 @@ function getSelectionId(input, li) {
 ) ?>
 	<tr class="unprintable" id="line-new">
 		<td>
-	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"new Ajax.Request('/employee/inventory/_purchase_order_content_line.html?action=add' +
+	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"new Ajax.Request('/employee/inventory/_po_content_line.html?action=add' +
 	'&qty=' + encodeURIComponent(\$('qty-new').value) +
 	'&item=' + encodeURIComponent(\$('item-new').value) +
 	'&description=' + encodeURIComponent(\$('description-new').value) +
