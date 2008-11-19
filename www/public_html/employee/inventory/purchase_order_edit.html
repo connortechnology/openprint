@@ -24,7 +24,17 @@ function update_totals( form ) {
 	} // end for
 	//$('subtotal').innerHTML = subtotal;
 	$('subtotal').innerHTML = do_decimals( subtotal, 2 );
-	$('total').innerHTML = do_decimals( subtotal, 2 );
+	var federaltax = 0;
+	if ( form.federaltax_rate.value ) {
+		federaltax = subtotal * form.federaltax_rate.value/100;
+		$('federaltax').innerHTML = do_decimals( federaltax, 2 );
+	} // end if
+	var statetax = 0;
+	if ( form.statetax_rate.value ) {
+		statetax =  subtotal * form.statetax_rate.value/100;
+		$('statetax').innerHTML = do_decimals( statetax, 2 );
+	} // end if
+	$('total').innerHTML = do_decimals( subtotal + federaltax + statetax, 2 );
 } // end function update_totals
 function getSelectionId(input, li) {
 	var re = /(\w+)-(\w+)/;
@@ -191,7 +201,7 @@ function getSelectionId(input, li) {
 			</script>
 		</td>
 		<td><input type="text" name="description-new" id="description-new" onkeyup="if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" /></td>
-		<td><input type="text" name="docket-new" id="docket-new" onkeyup="this.value=this.value.replace(/\D/,'');if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}"/></td>
+		<td><input type="text" name="docket-new" id="docket-new" onkeyup="if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}"/></td>
 		<td><input type="text" name="price-new" id="price-new" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals(this.form);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" style="text-align:right;" /></td>
 		<td><input type="text" name="total-new" id="total-new" style="text-align:right;" /></td>
 	</tr>
@@ -199,9 +209,13 @@ function getSelectionId(input, li) {
 		<td colspan="6" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
-	<tr>
-		<td colspan="6" class="totals">SALES TAX</td>
-		<td style="text-align: right;"><? echo ( sprintf('%s<span id="salestax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->tax() ); ) ?></td>
+	<tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ? '' : ' style="display:none;"' ) ?>>
+		<td colspan="6" class="totals">FEDERAL TAX</td>
+		<td style="text-align: right;"><? echo ( sprintf('%s<span id="federaltax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
+	</tr>
+	<tr<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ? '' : ' style="display:none;"' ) ?>>
+		<td colspan="6" class="totals">STATE TAX</td>
+		<td style="text-align: right;"><? echo ( sprintf('%s<span id="statetax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
 	</tr>
 	<tr>
 		<td colspan="6" class="totals">TOTAL</td>

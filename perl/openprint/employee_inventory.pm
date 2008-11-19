@@ -1291,7 +1291,7 @@ sub purchase_order_view {
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{'po_id'} ) {
-			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'} } );
+			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>new openprint::User( $session{'user_id'} )->company_id() } );
 		} # end if
 		foreach my $k ( keys %param ) {
 			my ( $content_id ) = $k =~ /qty-(.*)/;

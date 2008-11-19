@@ -326,5 +326,12 @@ sub CSR {
 	return new openprint::User( $$self{'salesrep_id'} );
 }
 
+sub taxexempt1 {
+	return $_[0]{gst_exempt};
+}
+sub taxexempt2 {
+	return $_[0]{pst_exempt};
+}
+
 1;
 __END__

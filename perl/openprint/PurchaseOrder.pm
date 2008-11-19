@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -18,12 +18,17 @@ require misc;
 require openprint::Company;
 require openprint::Currency;
 require openprint::User;
+require openprint::Tax;
 require openprint::PurchaseOrder_Content;
 
 my $debug = 0;
 
+$table = 'PurchaseOrders';
+$serial = 'Purchaseorders_id_seq';
+
 %fields = (
 	'id'				=>	'id',
+	'company_id'		=>	'company_id',
 	'currency_id'		=>	'currency_id',
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
@@ -100,6 +105,15 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( exists $params{'company_id'} ) {
+		if ( ref $params{'company_id'} eq 'ARRAY' ) {
+			$sql .= ' AND company_id IN ('. join(',', map {'?'} @{$params{'company_id'}} ) . ')';
+			push @values, @{$params{'company_id'}};
+		} else {
+			$sql .= ' AND company_id=?';
+			push @values, $params{'company_id'};
+		} # end if
+	} # end if
 	if ( exists $params{'supplier_id'} ) {
 		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
 			$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
@@ -137,14 +151,6 @@ sub find {
 	} # end if
 	return map { new openprint::PurchaseOrder( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM PurchaseOrders WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
 
 sub save {
 	my ( $self, $hash ) = @_;
@@ -283,5 +289,73 @@ sub send_to_vendor {
 
 } # end sub send_to_vendor
 
+sub federaltax {
+	my ( $self, $new ) = @_;
+
+	if ( defined $new ) {
+		$$self{'federaltax'} = $new;
+	} # end if
+	if ( ! $$self{'federaltax'} ) {
+		$$self{'federaltax'} = $self->subtotal() * ( $self->federaltax_rate()/100 );
+	} # end if
+	return $$self{'federaltax'};
+} # end sub federaltax
+
+sub federaltax_rate {
+	my ( $self, $new ) = @_;
+	if ( defined $new ) {
+		$$self{'federaltax_rate'} = $new;
+	} # end if
+	if ( ! $$self{'federaltax_rate'} ) {
+		if ( $self->Company()->taxexempt1() eq 'Y' ) {
+			return '';
+		} # end if
+# This is true, but can't expect people to type it in
+#if ( ! $self->Vendor()->gst_number() ) {
+#   return '';
+#} # end if
+		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
+			$$self{'federaltax_rate'} = $Tax->federaltax_rate();
+		} # end if
+	} # end if
+	return $$self{'federaltax_rate'};
+} # end sub federaltax_rate
+
+sub statetax {
+	my ( $self, $new ) = @_;
+
+	if ( defined $new ) {
+		$$self{'statetax'} = $new;
+	} # end if
+	if ( ! $$self{'statetax'} ) {
+		$$self{'statetax'} = $self->subtotal() * ( $self->statetax_rate()/100 );
+	} # end if
+	return $$self{'statetax'};
+} # end sub statetax
+
+sub statetax_rate {
+	my ( $self, $new ) = @_;
+	if ( defined $new ) {
+		$$self{'statetax_rate'} = $new;
+	} # end if
+	if ( ! $$self{'statetax_rate'} ) {
+		if ( $self->Company()->taxexempt2() eq 'Y' ) {
+			return '';
+		} # end if
+# This is true, but can't expect people to type it in
+#if ( ! $self->Vendor()->gst_number() ) {
+#   return '';
+#} # end if
+		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
+			$$self{'statetax_rate'} = $Tax->statetax_rate();
+		} # end if
+	} # end if
+	return $$self{'statetax_rate'};
+} # end sub statetax_rate
+
+sub Company {
+	return new openprint::Company( $_[0]{'company_id'} );
+} # end sub Company
+
 1;
-__END__
+#__END__
