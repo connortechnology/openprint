@@ -238,6 +238,7 @@ function getSelectionId(input, li) {
 			</select>
 			<br/>
 		<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+			<br/><br/>
 			<div class="leftColumn"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><br/></div>
 			<div class="rightColumn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())) ) ?><br/></div>
 			<br class="spacer"/>
