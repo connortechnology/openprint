@@ -33,7 +33,10 @@ my $debug = 0;
 	'delivered_on'		=>	'delivered_on',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
-	'tax'				=>	'tax',
+	'federaltax'		=>	'federaltax',
+	'statetax'			=>	'statetax',
+	'federaltax_rate'	=>	'federaltax_rate',
+	'statetax_rate'		=>	'statetax_rate',
 	'deleted'			=>	'deleted',
 	'supplier_id'		=>	'supplier_id',
 	'shipping_method'	=>	'shipping_method',
@@ -75,6 +78,10 @@ my $debug = 0;
 	'tax'			=>	0,
 	'total'			=>	0,
 	'subtotal'		=>	0,
+	'federaltax'	=>	undef,
+	'federaltax_rate'	=>	undef,
+	'statetax'		=>	undef,
+	'statetax_rate'	=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -91,6 +98,15 @@ sub find {
 		} else {
 			$sql .= ' AND id=?';
 			push @values, $params{'id'};
+		} # end if
+	} # end if
+	if ( exists $params{'supplier_id'} ) {
+		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
+			$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
+			push @values, @{$params{'supplier_id'}};
+		} else {
+			$sql .= ' AND supplier_id=?';
+			push @values, $params{'supplier_id'};
 		} # end if
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
@@ -243,7 +259,7 @@ sub send_to_vendor {
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
-	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}, encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ), 'text/html', 'quoted-printable';
+	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ), 'text/html', 'quoted-printable';
 
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
@@ -251,9 +267,19 @@ sub send_to_vendor {
 			TO      => sprintf( '"%s" <%s>', $self->vendor_contact(), $self->vendor_email() ),
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
 			);
-	misc::send_email_with_attachment( $log, \%mail, @attachments );
 
-	return 'PO Emailed to ' . $From->email() . '<br/>';
+	my $results = 'PO ' . $$self{'id'} . ' email to the following recipients:<br/>';
+	if ( $self->vendor_email() ) {
+		misc::send_email_with_attachment( $log, \%mail, @attachments );
+		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
+	} # end if
+	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
+		$mail{'TO'} = sprintf( '"%s" <%s>', $self->shipto_contact(), $self->shipto_email() );
+		misc::send_email_with_attachment( $log, \%mail, @attachments );
+		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
+	} # end if
+
+	return $results;
 
 } # end sub send_to_vendor
 

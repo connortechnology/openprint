@@ -2,9 +2,8 @@
 <form id="f1" name="f1" action="purchase_orders.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" />
-	<? if ( $$variable{'error'} ) ?>
-	<div class="error"><?error?></div>
-	<? endif ( $$variable{'error'} ) ?>
+	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
@@ -16,7 +15,7 @@
 	} # end if
 	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 	if ( $$variable{'PurchaseOrder'}->vendor_email() ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Email Vendor';f1.submit();", '', 'Email Vendor' );
+		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Email Vendor';f1.submit();", '', 'Send Email' );
 	} # end if
 	$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'purchase_order_edit.html?po_id='.$$variable{'PurchaseOrder'}->id(), 'Edit' );
 	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
@@ -126,7 +125,7 @@
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
 	<tr>
-		<td colspan="5" class="totals">SALES TAX</td
+		<td colspan="5" class="totals">SALES TAX</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->tax() ); ) ?></td>
 	</tr>
 	<tr>
