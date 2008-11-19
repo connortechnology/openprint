@@ -82,6 +82,13 @@
 				<label for="txtJobDescription">Description:</label>
 				<textarea name="txtJobDescription" rows="4"></textarea>
 			</p>
+			<p>
+				<label>Proof Required:</label>
+				<select name="proof_type">
+				<option value="">No Proof Required</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service::find('category'=>'Proofs') ], $$variable{'proof_type'} ); ) ?>
+				</select>
+			</p>
 		</fieldset>
 <? endif ( ! ( $openprint::param{'docket'} or $openprint::param{'project_id'} ) ) ?>
 		<fieldset>
