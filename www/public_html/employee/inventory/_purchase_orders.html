@@ -1,11 +1,11 @@
 <? eval (
 	foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized' ) {
-		$openprint::session{'/employee/inventory/purchase_orders.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
+		$session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
 	} # end foreach
 
 	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find(
-		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ),
-		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ),
+		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ),
+		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ),
 		'order'				=> 'id desc',
 		);
 ) ?>
@@ -13,7 +13,7 @@
 	There are no purchase orders matching your search criteria.
 <? else ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
 	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
-<table class="List">
+<table class="List sortable">
 	<tr>
 		<th width="30">ID</th>
 		<th width="110" style="text-align: left;">Date</th>
@@ -25,14 +25,14 @@
 	<? echo ( 
 		my $html = '';
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
-			$html .= sprintf( '<tr>
+			$html .= sprintf( q`<tr onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">
 				<td>&nbsp;<a href="purchase_order_view.html?po_id=%1$d">%1$d</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%2$s</a></td>
-				<td>%3$s</td>
-				<td>%4$s</td>
-				<td>%7$s</td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%3$s</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%4$s</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%7$s</a></td>
 				<td style="text-align: right;">%5$s%6$.2f</td>
-			</tr>', $PO->id(), Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total(), $PO->Authorized_By()->name() );
+			</tr>`, $PO->id(), Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total(), $PO->Authorized_By()->name() );
 		} # end while
 		return $html;
 	) ?>

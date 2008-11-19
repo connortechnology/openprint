@@ -20,7 +20,7 @@ require openprint::Currency;
 require openprint::User;
 require openprint::PurchaseOrder_Content;
 
-my $debug = 1;
+my $debug = 0;
 
 %fields = (
 	'id'				=>	'id',
@@ -217,6 +217,7 @@ sub Authorized_By {
 sub Contents {
 	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'});
 } # end sub Contents
+
 sub delivered_on {
 	my ( $self ) = @_;
 	if ( ! $$self{'delivered_on'} ) {
@@ -224,6 +225,37 @@ sub delivered_on {
 	} # end if
 	return $$self{'delivered_on'};
 } # end sub delivered_on
+
+sub send_to_vendor {
+	my ( $self ) = @_;
+
+	my $From = new openprint::User( $session{'user_id'} );
+	
+	my %info = (
+			'PurchaseOrder'	=>	$self,
+			'From'			=>	$From,
+			);
+	my @attachments = ();
+
+	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_body.html\"-->";
+	$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	push @attachments, ('', $_, 'text/html', 'quoted-printable');
+
+	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
+	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}, encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ), 'text/html', 'quoted-printable';
+
+	my %mail = (
+			SMTP    => $config{'Mail Server'},
+			FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			TO      => sprintf( '"%s" <%s>', $self->vendor_contact(), $self->vendor_email() ),
+			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
+			);
+	misc::send_email_with_attachment( $log, \%mail, @attachments );
+
+	return 'PO Emailed to ' . $From->email() . '<br/>';
+
+} # end sub send_to_vendor
 
 1;
 __END__

@@ -45,6 +45,14 @@ function getSelectionId(input, li) {
 <form id="f1" name="f1" action="purchase_order_view.html?po_id=<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" method="post">
 	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
 	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+	<p class="buttons">
+<? echo ( 
+	my $html = '';
+	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+	return $html;
+) ?>
+	</p>
 	<div class="PO">
 		<div class="PageTitle">
 		<h1>PURCHASE ORDER</h1>
@@ -204,14 +212,15 @@ function getSelectionId(input, li) {
 				<li> Please indicate this Purchase Order # in your invoice, packing slip / delivery note.</li>
 				<li> Please notify us immediately if you are unable to ship as specified.</li>
 			</ol>
+			<br class="spacer"/>
 		</div>
-		<div class="rightColumn">
-		Currency:
-		<select name="currency_id">
-			<option value=""> select one </option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'PurchaseOrder'}->currency_id() ? $$variable{'PurchaseOrder'}->currency_id() : $session{'Currency_id'} ); ) ?>
-		</select>
-		<br/>
+		<div class="rightColumn" style="text-align: right;">
+			Currency:
+			<select name="currency_id">
+				<option value=""> select one </option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'PurchaseOrder'}->currency_id() ? $$variable{'PurchaseOrder'}->currency_id() : $session{'Currency_id'} ); ) ?>
+			</select>
+			<br/>
 		<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 			<div class="leftColumn"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><br/></div>
 			<div class="rightColumn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())) ) ?><br/></div>
@@ -220,17 +229,9 @@ function getSelectionId(input, li) {
 			<div class="leftColumn"><i>Authorized by</i></div>
 			<div class="rightColumn"><i>Date</i></div>
 		<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+			<br class="spacer"/>
 		</div>
-		<br class="spacer"/>
+		<br class="spacer"/><br/>
 	</div><!--PO-->
-	<br class="spacer"/>
-	<p class="buttons">
-<? echo ( 
-	my $html = '';
-	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
-	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
-	return $html;
-) ?>
-	</p>
 	<input type="hidden" name="btnFunction" />
 </form>

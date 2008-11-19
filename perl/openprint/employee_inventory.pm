@@ -1286,6 +1286,8 @@ sub purchase_order_view {
 			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
+	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
+		$variable{'error'} = $PO->send_to_vendor();
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{'po_id'} ) {
@@ -1370,6 +1372,9 @@ sub purchase_orders {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 		$variable{'error'} .= $PO->delete();
+	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
+		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+		$variable{'error'} .= $PO->send_to_vendor();
 	} # end if
 } # end sub purchase_orders
 

@@ -1,5 +1,7 @@
 <link href="/css/purchase_order.css" rel="stylesheet" type="text/css">
 <form id="f1" name="f1" action="purchase_orders.html" method="post">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="po_id" value="<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" />
 	<? if ( $$variable{'error'} ) ?>
 	<div class="error"><?error?></div>
 	<? endif ( $$variable{'error'} ) ?>
@@ -13,6 +15,9 @@
 		$html .= ssi::writeButton( $log, $dbh, 'Authorize', 'authorize.gif', "f1.btnFunction.value='Authorize';f1.submit();", '', 'Authorize' );
 	} # end if
 	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
+	if ( $$variable{'PurchaseOrder'}->vendor_email() ) {
+		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Email Vendor';f1.submit();", '', 'Email Vendor' );
+	} # end if
 	$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'purchase_order_edit.html?po_id='.$$variable{'PurchaseOrder'}->id(), 'Edit' );
 	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
 	return $html;
@@ -30,9 +35,7 @@
 				</tr></table>
 				<table>
 					<tr>
-						<td colspan="2">
-				<? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?>
-						</td>
+						<td colspan="2"><? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?></td>
 					</tr>
 					<tr>
 						<td>Phone:<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
@@ -43,15 +46,14 @@
 			<div class="PageTitle" style="text-align: left;">
 				<h1>PURCHASE ORDER</h1><br/>
 				P.O. # [ <? echo ( $$variable{'PurchaseOrder'}->id() ) ?> ]<br/>
-				Date: 
-				<? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->created_on() ) ) ) ?><br/>
+				Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->created_on() ) ) ) ?><br/>
 			</div>
 			<br class="spacer"/>
 		</div>
 		<br class="spacer"/>
 		<div class="leftColumn">
 		<p>
-			<label>VENDOR</label>
+			<label>VENDOR:</label>
 <? echo (
 	my $html = '';
 	$html .= $$variable{'PurchaseOrder'}->vendor_contact().'<br/>' if $$variable{'PurchaseOrder'}->vendor_contact();
@@ -68,7 +70,7 @@
 		</div>
 		<div class="rightColumn">
 			<p>
-				<label>SHIP TO</label>
+				<label>SHIP TO:</label>
 <? echo (
 	my $html = '';
 	$html .= $$variable{'PurchaseOrder'}->shipto_contact().'<br/>' if $$variable{'PurchaseOrder'}->shipto_contact();
@@ -83,7 +85,7 @@
 ) ?>
 			</p>
 		</div>
-		<br class="spacer"/>
+		<br class="spacer"/><br/>
 		<table style="table-layout: fixed;">
 			<tr>
 				<th>Shipping Method</th>
@@ -93,7 +95,7 @@
 			<tr>
 				<td><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
 				<td><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
-				<td><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) ) ?></td>
+				<td><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) ) ?></td>
 			</tr>
 		</table>
 		<br class="spacer"/>
@@ -144,7 +146,7 @@
 		<br/>
 <? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 			<div class="leftColumn"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><br/></div>
-			<div class="rightColumn"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?><br/></div>
+			<div class="rightColumn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?><br/></div>
 			<br class="spacer"/>
 			<hr/>
 			<div class="leftColumn"><i>Authorized by</i></div>
@@ -154,5 +156,4 @@
 		<br class="spacer"/>
 	</div><!--PO-->
 	<br class="spacer"/>
-	<input type="hidden" name="btnFunction" />
 </form>
