@@ -162,8 +162,9 @@ function getSelectionId(input, li) {
 <table>
 	<tr>
 		<th width="55">&nbsp;</th>
+		<th width="110">TYPE</th>
 		<th width="90">QTY</th>
-		<th>ITEM</th>
+		<th width="110">ITEM</th>
 		<th>DESCRIPTION</th>
 		<th width="90">DOCKET</th>
 		<th width="90">UNIT PRICE</th>
@@ -189,6 +190,11 @@ function getSelectionId(input, li) {
 	'&po_id=' + $$variable{'PurchaseOrder'}{id} + 
 	'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));} } );",'','Add' ); ) ?>
 		</td>
+		<td>
+			<select name="type_id-new" id="type-new">
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ] ); ) ?>
+			</select>
+		</td>
 		<td><input type="text" name="qty-new" id="qty-new" onkeyup="calc_price(this);update_totals(this.form);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" /></td>
 		<td>
 			<input type="text" name="item-new" id="item-new" autocomplete="off" onkeyup="if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" />
@@ -200,25 +206,25 @@ function getSelectionId(input, li) {
 				} );
 			</script>
 		</td>
-		<td><input type="text" name="description-new" id="description-new" onkeyup="if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" /></td>
+		<td><textarea name="description-new" id="description-new" rows="1" onkeyup="textarea_resize(this);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" ></textarea></td>
 		<td><input type="text" name="docket-new" id="docket-new" onkeyup="if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}"/></td>
 		<td><input type="text" name="price-new" id="price-new" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals(this.form);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" style="text-align:right;" /></td>
 		<td><input type="text" name="total-new" id="total-new" style="text-align:right;" /></td>
 	</tr>
 	<tr>
-		<td colspan="6" class="totals">SUBTOTAL</td>
+		<td colspan="7" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
 	<tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ? '' : ' style="display:none;"' ) ?>>
-		<td colspan="6" class="totals">FEDERAL TAX</td>
+		<td colspan="7" class="totals">FEDERAL TAX</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="federaltax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
 	</tr>
 	<tr<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ? '' : ' style="display:none;"' ) ?>>
-		<td colspan="6" class="totals">STATE TAX</td>
+		<td colspan="7" class="totals">STATE TAX</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="statetax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
 	</tr>
 	<tr>
-		<td colspan="6" class="totals">TOTAL</td>
+		<td colspan="7" class="totals">TOTAL</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 	</tr>
 </table>
@@ -237,14 +243,14 @@ function getSelectionId(input, li) {
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'PurchaseOrder'}->currency_id() ? $$variable{'PurchaseOrder'}->currency_id() : $session{'Currency_id'} ); ) ?>
 			</select>
 			<br/>
+			<br/>
+			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?><br/></div>
 		<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
-			<br/><br/>
-			<div class="leftColumn"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><br/></div>
-			<div class="rightColumn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())) ) ?><br/></div>
+			<br/>
 			<br class="spacer"/>
 			<hr/>
-			<div class="leftColumn"><i>Authorized by</i></div>
-			<div class="rightColumn"><i>Date</i></div>
+			<div class="leftColumn"><i>Authorized by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></i></div>
+			<div class="rightColumn"><i>Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())) ) ?></i></div>
 		<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 			<br class="spacer"/>
 		</div>

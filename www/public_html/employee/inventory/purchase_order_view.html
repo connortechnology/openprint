@@ -101,7 +101,7 @@
 <table>
 	<tr>
 		<th width="90" style="text-align: center;">QTY</th>
-		<th>ITEM</th>
+		<th width="110">ITEM</th>
 		<th>DESCRIPTION</th>
 		<th width="90">DOCKET</th>
 		<th width="90">UNIT PRICE</th>
@@ -124,10 +124,15 @@
 		<td colspan="5" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
-	<tr>
-		<td colspan="5" class="totals">SALES TAX</td>
-		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->tax() ); ) ?></td>
-	</tr>
+    <tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ? '' : ' style="display:none;"' ) ?>>
+        <td colspan="5" class="totals">FEDERAL TAX</td>
+        <td style="text-align: right;"><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
+    </tr>
+    <tr<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ? '' : ' style="display:none;"' ) ?>>
+        <td colspan="5" class="totals">STATE TAX</td>
+        <td style="text-align: right;"><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
+    </tr>
+
 	<tr>
 		<td colspan="5" class="totals">TOTAL</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
@@ -143,15 +148,14 @@
 		<div class="rightColumn" style="text-align: right;">
 		All prices are in <? echo ( $$variable{'PurchaseOrder'}->Currency()->name() ) ?>.
 		<br/>
+		<br/>
+			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?><br/></div>
 <? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 		<br/>
-		<br/>
-			<div class="leftColumn"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><br/></div>
-			<div class="rightColumn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?><br/></div>
-			<br class="spacer"/>
-			<hr/>
-			<div class="leftColumn"><i>Authorized by</i></div>
-			<div class="rightColumn"><i>Date</i></div>
+		<br class="spacer"/>
+		<hr/>
+			<div class="leftColumn"><i>Authorized by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></i></div>
+			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
 <? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 		</div>
 		<br class="spacer"/>

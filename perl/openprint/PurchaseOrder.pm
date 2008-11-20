@@ -361,6 +361,11 @@ sub statetax_rate {
 	return $$self{'statetax_rate'};
 } # end sub statetax_rate
 
+sub total {
+	my ( $self ) = @_;
+	return $$self{'subtotal'} + $self->federaltax() + $self->statetax();
+} # end sub total
+
 sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
