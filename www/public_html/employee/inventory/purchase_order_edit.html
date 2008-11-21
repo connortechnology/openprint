@@ -1,5 +1,5 @@
-<link href="/css/purchase_order.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
+<!--
 function calc_price( element ) {
 	var re = /(.*)-(.*)/
 	var matches = re.exec( element.name );
@@ -50,7 +50,7 @@ function getSelectionId(input, li) {
 		} // end if
 	} // end if
 } // end function getSelectionId
-
+-->
 </script>
 <form id="f1" name="f1" action="purchase_order_view.html?po_id=<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" method="post">
 	<input type="hidden" name="federaltax_rate" value="<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ) ?>" />
@@ -244,7 +244,7 @@ function getSelectionId(input, li) {
 			</select>
 			<br/>
 			<br/>
-			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?><br/></div>
+			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?></i><br/></div>
 		<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 			<br/>
 			<br class="spacer"/>

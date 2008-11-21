@@ -49,7 +49,7 @@ body div#Header {
 }
 }
 
-div.PO div#Header {
+div.PO div.Header {
 	display: block;
 	position: relative;
 	width: 100%;
@@ -60,7 +60,7 @@ div.PO div#Header {
 	border-top: 1px solid #3b5e91;
 	padding-top: 5px;
 }
-div.PO div#Header #Logo {
+div.PO div.Header .Logo {
 	margin: 7px;
 	padding: 0px;
 	color: black;
@@ -68,42 +68,42 @@ div.PO div#Header #Logo {
 	background: none;
 	float: left;
 }
-.PO #Header #Logo table {
+.PO div.Header .Logo table {
 	text-align: center;
 	margin-left: auto;
 	margin-right: auto;
 	border: none;
 	border-top: none;
 }
-.PO #Header #Logo table td {
+.PO .Header .Logo table td {
 	border: none;
 	vertical-align: top;
 	padding: 1px;
 }
-div.PO #Header #Logo a {
+div.PO .Header .Logo a {
 	color: black;
 	border: none;
 }
-div.PO #Header #Logo a img {
+div.PO .Header .Logo a img {
 	width: 100%;
 }
-div.PO #Header #Logo #PointOne {
+div.PO .Header .Logo .PointOne {
 	border-bottom: none;
 	font-family: Georgia, Times, serif;
 	padding: 0px;
 	margin: 0px; 
 	font-size: 42px;
 }
-div.PO #Header #Logo #GraphicsInc {
+div.PO .Header .Logo .GraphicsInc {
 	padding: 0px;
 	margin: 0px; 
 	font-size:24px;
 }
-div.PO #Header .PageTitle {
+div.PO .Header .PageTitle {
 	float: right;
 	width: 230px;
 }
-div.PO #Header .PageTitle h1 {
+div.PO .Header .PageTitle h1 {
 	font-size:24px;
 	color: #3b5e91;
 } 
