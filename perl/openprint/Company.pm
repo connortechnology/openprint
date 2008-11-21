@@ -135,6 +135,10 @@ sub find {
 		$sql .= ' AND ysnSupplier=?';
 		push @values, $params{'supplier'};
 	} # end if
+	if ( $params{'reseller'} ) {
+		$sql .= ' AND ysnReseller=?';
+		push @values, $params{'reseller'};
+	} # end if
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
 

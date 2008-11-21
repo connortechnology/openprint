@@ -1306,6 +1306,7 @@ sub purchase_order_view {
 						'docket'        =>  $param{'docket-'.$content_id},
 						'price'         =>  $param{'price-'.$content_id},
 						'total'         =>  $param{'total-'.$content_id},
+						'type_id'		=>	$param{'type_id-'.$content_id},
 						});
 			} # end if
 		} # end foreach
