@@ -115,7 +115,7 @@
 			<td>%4$s</td>
 			<td style="text-align: right;">%5$s</td>
 			<td style="text-align: right;">%6$s</td>
-		</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+		</tr>', $C->qty(), $C->item(), ssi::htmlize($C->description()), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
 	} # end foreach C
 	return $html;
 ) ?>
