@@ -250,3 +250,8 @@ div#UploadFiles fieldset p label {
 div#UploadFiles fieldset p input, div#UploadFiles fieldset p textarea {
 	width: 93%;
 }
+
+div#UploadFiles fieldset p.proof_type label {
+	font-weight: bold;
+	color: red;
+}
