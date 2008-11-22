@@ -35,6 +35,24 @@
 	margin: 0px;
 	padding: 0px;
 }
+.PO table td input.RollQTY {
+	width: 60px;
+} 
+.PO table td input.StockCost {
+	width: 40px;
+} 
+.PO table td input.SheetQTY {
+	width: 60px;
+} 
+.PO table td input.SheetName {
+	width: 240px;
+} 
+.PO table td input.SheetWidth, .PO table td input.SheetHeight {
+	width: 60px;
+} 
+.PO table td input.SheetMWeight {
+	width: 40px;
+} 
 .PO table td textarea {
 	width: 98%;
 	min-width:0px;

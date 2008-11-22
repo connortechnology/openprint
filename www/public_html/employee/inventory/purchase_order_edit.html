@@ -1,5 +1,8 @@
 <script type="text/javascript">
 <!--
+function set_sheet_description(index) {
+	$('description-'+index).value = $('mweight-'+index).value +'M ' + $('name-'+index).value;
+}
 function calc_price( element ) {
 	var re = /(.*)-(.*)/
 	var matches = re.exec( element.name );
@@ -7,6 +10,14 @@ function calc_price( element ) {
 		var index = matches[2];
 		var cost = parseFloat( $('price-'+index).value.replace(/[^\d\-\.]/g, '' ) );
 		var qty = parseFloat( $('qty-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+var type_element = $('type_id-'+index);
+var type = type_element.options[type_element.selectedIndex].text;
+		if ( type == 'Roll Stock' ) {
+			qty /= 100;
+		} else if ( type == 'Sheet Stock' ) {
+			var mweight = parseFloat( $('mweight-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+			qty = qty * mweight / 100000;
+		} // end if
 		$('total-'+index).value = do_decimals( cost * qty, 2 );
 	} // end if
 } // end function calc_price
@@ -135,12 +146,12 @@ function getSelectionId(input, li) {
 				<th width="183">Delivery Date</th>
 			</tr>
 			<tr>
-				<td><textarea name="shipping_method" id="shipping_method" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_method()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
-				<td><textarea name="shipping_terms" id="shipping_terms" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_terms()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></textarea></td>
+				<td><textarea name="shipping_method" id="shipping_method" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_method()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
+				<td><textarea name="shipping_terms" id="shipping_terms" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_terms()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></textarea></td>
 				<td valign="top">
 					<input type="hidden" id="delivered_on" name="delivered_on" value="<? echo ( $$variable{'PurchaseOrder'}->delivered_on(); ) ?>" />
 					<span id="delivered_on_display"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ); ) ?></span>
-<img src="/javascripts/jscalendar/img.gif" id="DateButton" style="cursor: pointer;" title="Date selector" style="width:20px;"/>
+<img src="/javascripts/jscalendar/img.gif" id="DateButton" style="cursor: pointer;width: 20px;" title="Date selector" alt="Calendar"/>
 					<script type="text/javascript">
 						Calendar.setup({
 							inputField	:	'delivered_on',	// id of the input field
@@ -163,10 +174,10 @@ function getSelectionId(input, li) {
 	<tr>
 		<th width="55">&nbsp;</th>
 		<th width="110">TYPE</th>
-		<th width="90">QTY</th>
+		<th width="110">QTY</th>
 		<th width="110">ITEM</th>
 		<th>DESCRIPTION</th>
-		<th width="90">DOCKET</th>
+		<th width="80">DOCKET</th>
 		<th width="90">UNIT PRICE</th>
 		<th width="90">LINE TOTAL</th>
 	</tr>
@@ -181,13 +192,13 @@ function getSelectionId(input, li) {
 	<tr class="unprintable" id="line-new">
 		<td>
 	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"new Ajax.Request('/employee/inventory/_po_content_line.html?action=add' +
-	'&qty=' + encodeURIComponent(\$('qty-new').value) +
-	'&item=' + encodeURIComponent(\$('item-new').value) +
-	'&description=' + encodeURIComponent(\$('description-new').value) +
-	'&docket=' + encodeURIComponent(\$('docket-new').value) +
-	'&price=' + encodeURIComponent(\$('price-new').value) +
-	'&total=' + encodeURIComponent(\$('total-new').value) +
-	'&po_id=' + $$variable{'PurchaseOrder'}{id} + 
+	'&amp;qty=' + encodeURIComponent(\$('qty-new').value) +
+	'&amp;item=' + encodeURIComponent(\$('item-new').value) +
+	'&amp;description=' + encodeURIComponent(\$('description-new').value) +
+	'&amp;docket=' + encodeURIComponent(\$('docket-new').value) +
+	'&amp;price=' + encodeURIComponent(\$('price-new').value) +
+	'&amp;total=' + encodeURIComponent(\$('total-new').value) +
+	'&amp;po_id=' + $$variable{'PurchaseOrder'}{id} + 
 	'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));} } );",'','Add' ); ) ?>
 		</td>
 		<td>
@@ -206,7 +217,7 @@ function getSelectionId(input, li) {
 				} );
 			</script>
 		</td>
-		<td><textarea name="description-new" id="description-new" rows="1" onkeyup="textarea_resize(this);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" ></textarea></td>
+		<td><textarea name="description-new" id="description-new" cols="" rows="1" onkeyup="textarea_resize(this);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" ></textarea></td>
 		<td><input type="text" name="docket-new" id="docket-new" onkeyup="if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}"/></td>
 		<td><input type="text" name="price-new" id="price-new" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals(this.form);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" style="text-align:right;" /></td>
 		<td><input type="text" name="total-new" id="total-new" style="text-align:right;" /></td>

@@ -77,7 +77,8 @@ sub find {
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded Taxs ($sql) (@values) records:" . @$data );
 	} # end if
-	return map { new openprint::Tax( $_->{id}, $_ ) } @$data;
+	@{$find_cache{$hash_key}} = map { new openprint::Tax( $_->{id}, $_ ) } @$data;
+	return @{$find_cache{$hash_key}};
 } # end sub find
 
 sub delete {

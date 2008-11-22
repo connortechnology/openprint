@@ -30,10 +30,13 @@ $serial = 'PurchaseOrder_ContentTypes_id';
 %defaults = (
 );
 
+my %find_cache;
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
+	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
+	return @{$find_cache{$hash_key}} if $find_cache{$hash_key};
 	my @values;
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
 
@@ -57,7 +60,8 @@ sub find {
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded PurchaseOrder_ContentTypes ($sql) (@values) records:" . @$data );
 	} # end if
-	return map { new openprint::PurchaseOrder_ContentType( $_->{id}, $_ ) } @$data;
+	@{$find_cache{$hash_key}} = map { new openprint::PurchaseOrder_ContentType( $_->{id}, $_ ) } @$data;
+	return @{$find_cache{$hash_key}};
 } # end sub find
 
 sub delete {
