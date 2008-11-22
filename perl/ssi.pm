@@ -474,6 +474,18 @@ $openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
 	return $html;
 } # end sub datetime_select
 
+sub save_params {
+	my ( $url, @keys ) = @_;
+	$session{$url.'?lastupdated'} = time;
+
+	foreach ( @keys ) {
+		if ( ref $param{$_} eq 'ARRAY' ) {
+			$session{"$url?$_"} = join(';', @{$param{$_}} );
+		} elsif ( exists $param{$_} ) {
+			$session{"$url?$_"} = $param{$_};
+		} # end if
+	} # end foreach
+} # end sub save_params
 1;
 
 __END__

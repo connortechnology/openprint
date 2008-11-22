@@ -18,19 +18,6 @@
 				ddm_select_by_value( form.ending_minute, form.starting_minute.value );
 			} // end if
 		} // end if
-		if ( get_value( form.time_associated ) == 1 ) {
-			var difference = parseInt( ( end - start ) / 1000 );
-			var days = parseInt(difference/(60*60*24));
-			difference -= days * ( 60*60*24 );
-			var hours = parseInt( difference/(60*60) );
-			difference -= hours * (60*60);
-			var minutes = parseInt( difference/60 );
-			$('duration').innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
-		} else {
-			var difference = parseInt( ( end - start ) / 1000 );
-			var days = parseInt(difference/(60*60*24));
-			$('duration').innerHTML = days +'days';
-		} // end if
 	} // end function check_time_starting
 	function check_time_ending(form) {
 		var start;
@@ -52,6 +39,25 @@
 			} // end if
 		} // end if
 	} // end function check_time_ending
+	function update_duration(form) {
+		if ( get_value( form.time_associated ) == 1 ) {
+			var start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value, form.starting_hour.value, form.starting_minute.value );
+			var end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value, form.ending_hour.value, form.ending_minute.value );
+			var difference = parseInt( ( end - start ) / 1000 );
+			var days = parseInt(difference/(60*60*24));
+			difference -= days * ( 60*60*24 );
+			var hours = parseInt( difference/(60*60) );
+			difference -= hours * (60*60);
+			var minutes = parseInt( difference/60 );
+			$('duration').innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
+		} else {
+			var start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value );
+			var end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value );
+			var difference = parseInt( ( end - start ) / 1000 );
+			var days = parseInt(difference/(60*60*24));
+			$('duration').innerHTML = days +'days';
+		} // end if
+	} // end function update_duration
 </script>
 <form name="f1" id="f1" action="history.html" method="post">
 	<fieldset><legend>Editing timetrack</legend>
@@ -81,15 +87,15 @@
 				<label class="radio" for="time_associated0">No</label>
 			</p>
 			<p><label>Start:</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 'check_time_starting(this.form);' ); ) ?></span>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 'check_time_starting(this.form);update_duration(this.form);' ); ) ?></span>
 			</p>
 			<p><label>End:</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 'check_time_ending(this.form);' ); ) ?></span>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 'update_duration(this.form);' ); ) ?></span>
 			</p>
 			<p><label>Duration:</label>
 				<span id="duration">
 				</span>
-				<script type="text/javascript">check_time_starting(document.forms['f1']);</script>
+				<script type="text/javascript">update_duration(document.forms['f1']);</script>
 			</p>
 			<p><label>Service:</label>
 				<select id="service_id" name="service_id">
@@ -106,6 +112,18 @@
 				<label for="description">Description:</label>
 				<textarea cols="" id="description" name="description" rows="<? echo ( $$variable{'Timetrack'}->description() ? scalar split("\n", $$variable{'Timetrack'}->description()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);" style="width: 100%;"><? echo ( $$variable{'Timetrack'}->description() ) ?></textarea>
 			</p>
+			<? if ( $$variable{'Timetrack'}->invoice_id() ) ?>
+			<p>
+				<label>Invoice:</label>
+				<a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Timetrack'}->invoice_id() ) ?>"><? echo ( $$variable{'Timetrack'}->invoice_id() ) ?></a>
+			</p>
+			<? endif ( $$variable{'Timetrack'}->invoice_id() ) ?>
+			<? if ( $$variable{'Timetrack'}->paycheque_id() ) ?>
+			<p>
+				<label>Paycheque:</label>
+				<a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Timetrack'}->paycheque_id() ) ?>"><? echo ( $$variable{'Timetrack'}->paycheque_id() ) ?></a>
+			</p>
+			<? endif ( $$variable{'Timetrack'}->paycheque_id() ) ?>
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">

@@ -2,33 +2,26 @@
 	require Date::Parse;
 	require Date::Format;
 
-	$openprint::session{'/invoice/history.html?lastupdated'} = time;
+	if ( $param{'btnFunction'} ) {
+		ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id') );
+	} # end if
 
-	foreach ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day',
-'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day',
-'paid','company_id') {
-		if ( ref $openprint::param{$_} eq 'ARRAY' ) {
-			$openprint::session{"/invoice/history.html?$_"} = join(';', @{$openprint::param{$_}} );
-		} elsif ( exists $openprint::param{$_} ) {
-			$openprint::session{"/invoice/history.html?$_"} = $openprint::param{$_};
-		} # end if
-	} # end foreach
 $$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Invoices'}} = ();
 	foreach my $Invoice ( openprint::Invoice::find( 
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ),
-		'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ),
-		'due_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'} ),
-		'invoicee_id'		=> $openprint::session{'/invoice/history.html?company_id'},
-		'invoicer_id'		=> $openprint::session{'company_id'},
+		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ),
+		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ),
+		'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ),
+		'due_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'} ),
+		'invoicee_id'		=> $session{'/invoice/history.html?company_id'},
+		'invoicer_id'		=> $session{'company_id'},
 		'order'				=> 'id',
 		) ) {
-		if ( $openprint::session{'/invoice/history.html?paid'} ne '' ) {
+		if ( $session{'/invoice/history.html?paid'} ne '' ) {
 			if ( $Invoice->is_paid() ) {
-				next if $openprint::session{'/invoice/history.html?paid'} == 0;
+				next if $session{'/invoice/history.html?paid'} == 0;
 			} else {
-				next if $openprint::session{'/invoice/history.html?paid'} == 1;
+				next if $session{'/invoice/history.html?paid'} == 1;
 			} # end if
 		} # end if
 		push @{$$variable{'Invoices'}}, $Invoice;
@@ -62,7 +55,7 @@ $$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$varia
 		</tr>
 		<? while ( $$variable{'Invoice'} = shift @{$$variable{'Invoices'}}; ) ?>
 		<? eval ( 
-			$$variable{'conversion_rate'} = $$variable{'Invoice'}->Currency()->conversions( $openprint::session{'Currency_id'} );
+			$$variable{'conversion_rate'} = $$variable{'Invoice'}->Currency()->conversions( $session{'Currency_id'} );
 		) ?>
 		<tr title="<? echo ( $$variable{'Invoice'}->description() ) ?>" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
 			<td><a href="/invoice/<? echo ( $$variable{'Invoice'}->posted() ? 'view' : 'edit' ) ?>.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->id(); ) ?></a></td>
@@ -84,7 +77,7 @@ $$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$varia
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'owing_total'} ); ) ?></td>	
 		</tr>
 	</table>
-	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $openprint::session{'Currency_id'} )->name(); ) ?></span>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
 <span class="unprintable" style="float: right;">
 <? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
