@@ -1355,6 +1355,7 @@ sub purchase_order_edit {
 		my $U = new openprint::User( $session{'user_id'} );
 		my $C = $U->Company();
 		$PO->set( {
+			'company_id'		=>	$C->id(),
 			'created_by'		=>	$U->id(),
 			'shipto_contact'	=>	$U->name(),
 			'shipto_name'		=>	$C->name(),

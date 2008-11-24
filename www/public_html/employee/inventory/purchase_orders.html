@@ -7,11 +7,11 @@
 </script>
 	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
 	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
-<form name="f1" action="purchase_orders.html" method="post">
+<form id="f1" name="f1" action="purchase_orders.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
 		<p><label>Docket:</label>
-			<input type="text" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
+			<input type="text" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $(f1) );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load('Results', f1);",'','Go' ); ) ?>
 		</p>
 		<hr/>
 		<p><label>Vendor:</label>

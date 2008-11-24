@@ -14,8 +14,7 @@ function calc_price( element ) {
 		var index = matches[2];
 		var cost = parseFloat( $('price-'+index).value.replace(/[^\d\-\.]/g, '' ) );
 		var qty = parseFloat( $('qty-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-var type_element = $('type_id-'+index);
-var type = type_element.options[type_element.selectedIndex].text;
+		var type = get_value( $('type_id-'+index) );
 		if ( type == 'Roll Stock' ) {
 			qty /= 100;
 		} else if ( type == 'Sheet Stock' ) {

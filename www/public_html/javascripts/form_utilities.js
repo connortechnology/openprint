@@ -26,7 +26,7 @@ function get_value( obj ) {
 				return obj[x].value;
 		}
 	} else {
-		alert("Unhandled Type in get_value! "+obj + ':' + obj.type);
+		return obj.innerHTML;
 	} // end if
 	return obj.value;
 }
