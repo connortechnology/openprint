@@ -299,6 +299,17 @@ sub send_to_vendor {
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
 	} # end if
+	if ( $self->notifications() ) {
+		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
+		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+		@attachments = ('', $_, 'text/html', 'quoted-printable');
+		$results .= 'Notification sent to: ';
+		foreach my $U ( $self->notifications() ) {
+			$mail{'TO'} = sprintf( '"%s" <%s>', $U->name(), $U->email() );
+			misc::send_email_with_attachment( $log, \%mail, @attachments );
+			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
+		} # end foreach U
+	} # end if
 
 	return $results;
 
@@ -385,14 +396,12 @@ sub authorize {
 } # end sub authorize
 
 sub notifications {
-	my $self = shift;
-	if ( @_ ) {
-		@{$$self{'notifications'}} = @_;
-		if ( $$self{'id'} ) {
-			$self->save();
-		} # end if
+	my ( $self, $new ) = @_;
+	if ( $new ) {
+		@{$$self{'notifications'}} = @{$new};
+		$self->save() if $$self{'id'};
 	} # end if
-	if ( ! exists $$self{'notifications'} ) {
+	if ( $$self{'id'} and ! exists $$self{'notifications'} ) {
 		@{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
 	} # end if
 	return @{$$self{'notifications'}};

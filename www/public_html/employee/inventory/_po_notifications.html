@@ -3,7 +3,7 @@
 <? echo (
 	my $html;
 	foreach my $U ( openprint::User::find('id'=>[$$variable{'PurchaseOrder'}->notifications()],'order' => 'lower(strfirstName),lower(strlastname)' ) ) {
-		$html .= sprintf( q{<li id="notification_%d"><span style="float: left;">%s</span><span style="float: right;">%s</span><br class="spacer"/></li>}, $U->id(), $U->name(), ssi::writeButton( $log, $dbh, 'd'.$U->id(), 'x.gif', q`new Ajax.Request('_po_notification.json', { method: 'get', parameters: { po_id : ` . $$variable{'PurchaseOrder'}->id() . q`, notification_id: ` . $U->id() .q`} } );`, '', 'X' ) 
+		$html .= sprintf( q{<li id="notification_%d"><span style="float: left;">%s</span><span style="float: right;">%s</span><br class="spacer"/></li>}, $U->id(), $U->name(), ssi::writeButton( $log, $dbh, 'd'.$U->id(), 'x.gif', q`new Ajax.Updater('notification_div','_po_notifications.html', { method: 'get', parameters: { action: 'delete', po_id : ` . $$variable{'PurchaseOrder'}->id() . q`, notification_id: ` . $U->id() .q`}, evalScripts: true } );`, '', 'X' ) 
 			);
 	} # end while
 	return $html;
