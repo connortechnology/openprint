@@ -12,11 +12,7 @@ use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
 *config = \%openprint::config;
 
 require sql;
-require ssi;
-require misc;
-require openprint::Company;
-require openprint::Currency;
-require openprint::User;
+require openprint::PurchaseOrder_ContentType;
 
 my $debug = 1;
 
@@ -30,10 +26,13 @@ my $debug = 1;
 	'item'			=>	'item',
 	'docket'		=>	'docket',
 	'description'	=>	'description',
+	'type_id'		=>	'type_id',
 );
 
 %transforms = (
-	'qty'			=>	[ 's/\D//g' ],
+	'price'			=>	[ 's/[^\d\.]//g' ],
+	'total'			=>	[ 's/[^\d\.]//g' ],
+	'qty'			=>	[ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
@@ -41,6 +40,8 @@ my $debug = 1;
 	'created_on'	=> 'NOW()',
 	'price'			=>	undef,
 	'total'			=>	undef,
+	'qty'			=>	undef,
+	'type_id'		=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -152,6 +153,10 @@ sub delete {
 sub PurchaseOrder {
 	return new openprint::PurchaseOrder( $_[0]{po_id} );
 } # end sub Supplier
+
+sub Type {
+	return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
+} # end sub Type
 
 1;
 __END__

@@ -127,7 +127,6 @@ $openprint::log->debug("Page: $page");
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
 				my $file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, $filename );
-				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
@@ -143,7 +142,6 @@ $openprint::log->debug("Page: $page");
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-	#$log->debug("[[[[ $file ]]]]");
 				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
@@ -153,7 +151,7 @@ $openprint::log->debug("Page: $page");
 			} # end while
 		} # end if _
 		if ( $template ) {
-			$log->debug("parsing template!");
+			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
 		} else {
 			$log->warn("No template!");
@@ -174,7 +172,7 @@ $openprint::log->debug("Page: $page");
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client!  This is really smart.
 	openprint::service::init_cache();
-	openprint::pricing::clear_cache( );
+	openprint::pricing::clear_cache();
 	openprint::Object::init_cache();
 	return Apache2::Const::OK;
 } # end sub handler
@@ -331,6 +329,29 @@ $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		} # end if
+	} elsif ( $first eq 'handheld' ) { # Handheld
+		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
+		if ( $variable{'Redirect'} ) {
+			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+			return Apache2::Const::OK;
+		} # end if
+
+		if ( $filename eq 'index.html' and $param{'action'} eq 'Login' ) {
+			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
+			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+			return $status if $variable{'Redirect'};
+		} # end if
+
+		if ( $filename ne 'index.html' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+			$variable{'Redirect'} = '/handheld/index.html';
+			$variable{'Destination'} = misc::get_destination( $r, $log );
+			return Apache2::Const::OK;
+		} # end if
+		eval( 'require openprint::'.join('_', @path ) );
+		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );

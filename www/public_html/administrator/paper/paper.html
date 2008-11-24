@@ -73,7 +73,7 @@ function gsm_to_mweight( form ) {
 			</p>
 			<p>
 				<label for="txtManufacturer" onclick="f1.ddmManufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
-				<select id="ddmManufacturer" name="ddmManufacturer" size="1">
+				<select id="ddmManufacturer" name="ddmManufacturer" size="1" onchange="f1.txtManufacturer.value='';">
 				<? echo (
 						my @options = ( '', 'select one',
 							sql::execute( $log, $dbh, q{SELECT id, longname FROM Manufacturers ORDER BY lower(longname)} )
@@ -81,7 +81,7 @@ function gsm_to_mweight( form ) {
 						return ssi::make_drop_down( \@options, $$variable{'Paper'}->manufacturer_id() );
 						) ?>
 				</select>
-				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
+				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" onfocus="ddm_select_by_index( f1.ddmManufacturer, 0 );" />
 			</p>
 			<p>
 				<label for="txtName" onclick="f1.txtName.toggle();f1.ddmName.toggle();">Name:</label>

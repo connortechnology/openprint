@@ -305,7 +305,7 @@ The following errors occurred:<br/>
 	</fieldset>
 </form>
 <? if ( $$variable{'skid_id'} ) ?>
-<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<?skid_id?>) );">Allocations - click to hide/show</legend>
+<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<?skid_id?>) );">Allocations - click to hide/show</legend>
 <div id="Allocations" style="display: none;"></div>
 </fieldset>
 <fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', new Array('skid_id',<?skid_id?>) );">Inventory Log - click to hide/show</legend>

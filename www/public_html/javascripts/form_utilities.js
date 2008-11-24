@@ -26,7 +26,7 @@ function get_value( obj ) {
 				return obj[x].value;
 		}
 	} else {
-		alert("Unhandled Type in get_value! "+obj + ':' + obj.type);
+		return obj.innerHTML;
 	} // end if
 	return obj.value;
 }
@@ -729,8 +729,8 @@ function countLines(strtocount, cols) {
 	var last = 0;
 	while ( true ) {
 		last = strtocount.indexOf("\n", last+1);
-		hard_lines ++;
 		if ( last == -1 ) break;
+		hard_lines ++;
 	}
 	var soft_lines = Math.round(strtocount.length / (cols-1));
 	var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");

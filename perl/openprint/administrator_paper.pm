@@ -116,7 +116,7 @@ sub paper {
 # Save prices
 		foreach my $key ( keys %openprint::param ) {
 			if ( $key =~ /min-(\d*)/ ) {
-				sql::update( $log, $dbh, 'Paper_Prices', "id=$1",
+				sql::update( $log, $dbh, 'Paper_Prices', ['id=?',$1],
 						'lngMin', $openprint::param{"min-$1"} ? int $openprint::param{"min-$1"} : undef,
 						'lngMax', $openprint::param{"max-$1"} ? int $openprint::param{"max-$1"} : undef,
 						'strunits', $openprint::param{"units-$1"},

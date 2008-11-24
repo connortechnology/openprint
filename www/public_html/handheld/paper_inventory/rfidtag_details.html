@@ -4,8 +4,13 @@
 	<fieldset>
 		<p>
 			<label for="rfidtag_id">RFID #:</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="16"/>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value ){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="16"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "f1.submit();", '', 'Go' ) ) ?>
+		</p>
+		<p>
+			<label for="skid_id">Skid #:</label>
+			<input type="text" id="skid_id" name="skid_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value ){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="16"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f1.submit();", '', 'Go' ) ) ?>
 		</p>
 	</fieldset>
 </form>
