@@ -199,16 +199,16 @@ function getSelectionId(input, li) {
 	<tr class="unprintable" id="line-new">
 		<td>
 	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"new Ajax.Request('/employee/inventory/_po_content_line.html?action=add' +
-	'&amp;type=' + encodeURIComponent(\$('qty-new').options[\$('qty-new').selectedIndex].text) +
-	'&amp;po_id=' + $$variable{'PurchaseOrder'}{id} + 
+	'&amp;type_id=' + encodeURIComponent(\$('type_id-new').options[\$('type_id-new').selectedIndex].value) +
+	'&amp;po_id=' + " . $$variable{'PurchaseOrder'}->id() ." + 
 	'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));} } );",'','Add' ); ) ?>
 		</td>
 		<td>
-			<select name="type_id-new" id="type-new">
+			<select name="type_id-new" id="type_id-new">
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ] ); ) ?>
 			</select>
 		</td>
-		<td colspan="6">&nbsp;</td>
+		<td colspan="6">Click on Add to add a new line to this PO.</td>
 	</tr>
 	<tr>
 		<td colspan="7" class="totals">SUBTOTAL</td>

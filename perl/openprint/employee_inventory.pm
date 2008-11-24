@@ -1345,6 +1345,7 @@ sub purchase_order_view {
 sub purchase_order_edit {
 
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		return;
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
@@ -1354,6 +1355,7 @@ sub purchase_order_edit {
 		my $U = new openprint::User( $session{'user_id'} );
 		my $C = $U->Company();
 		$PO->set( {
+			'created_by'		=>	$U->id(),
 			'shipto_contact'	=>	$U->name(),
 			'shipto_name'		=>	$C->name(),
 			'shipto_address1'	=>	$C->address1(),
@@ -1364,7 +1366,9 @@ sub purchase_order_edit {
 			'shipto_postalcode'	=>	$C->postalcode(),
 			'shipto_phone'	=>	$C->phone(),
 			'shipto_fax'	=>	$C->fax(),
+			'shipto_email'	=>	$U->email(),
 		} );
+		$PO->save();
 	} # end if
 	$variable{'PurchaseOrder'} = $PO;
 } # end sub purchase_order_edit

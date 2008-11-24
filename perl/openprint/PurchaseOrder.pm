@@ -145,6 +145,10 @@ sub find {
 		$sql .= ' AND (deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
+	if ( $params{'docket'} ) {
+		$sql .= ' AND id IN ( SELECT po_id FROM PurchaseOrder_Contents WHERE docket=?)';
+		push @values, $params{'docket'};
+	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
@@ -404,7 +408,7 @@ sub notifications {
 	if ( $$self{'id'} and ! exists $$self{'notifications'} ) {
 		@{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
 	} # end if
-	return @{$$self{'notifications'}};
+	return $$self{'notification'} ? @{$$self{'notifications'}} : ();
 } # end sub notifications
 
 1;
