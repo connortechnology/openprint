@@ -1,5 +1,6 @@
 <? echo (
 	my $C = $$variable{'C'};
+	$C = new openprint::PurchaseOrder_Content( $param{'content_id'} ) if $param{'content_id'};
 	my $html .= sprintf(q{<td><input type="text" class="SheetQTY" name="qty-%1$d" id="qty-%1$d" value="%2$d" onkeyup="calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" />sheets</td>}, $C->id(), $C->qty() );
 	$html .= sprintf(q{<td><input type="text" name="item-%1$d" id="item-%1$d" value="%2$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}"/></td>}, $C->id(), $C->item() );
 	my ( $mweight, $name ) = $C->description() =~ /^([\d\.]+)M (.*)$/;

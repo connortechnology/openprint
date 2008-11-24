@@ -197,6 +197,13 @@ $log->debug("Adding " . $C->total() );
 		} # end if
     } # end if
 
+	if ( exists $$self{'notifications'} ) {
+		sql::execute( undef, undef, 'DELETE FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
+		foreach ( @{$$self{'notifications'}} ) {
+			sql::insert( undef, undef, 'PurchaseOrder_Notifications', ['po_id', $$self{'id'}, 'user_id', $_ ] );
+		} # end foreach
+	} # end if
+
 	sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return;
@@ -376,6 +383,20 @@ sub authorize {
 	$$self{'authorized_on'} = 'NOW()';
 	return $self->save();
 } # end sub authorize
+
+sub notifications {
+	my $self = shift;
+	if ( @_ ) {
+		@{$$self{'notifications'}} = @_;
+		if ( $$self{'id'} ) {
+			$self->save();
+		} # end if
+	} # end if
+	if ( ! exists $$self{'notifications'} ) {
+		@{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
+	} # end if
+	return @{$$self{'notifications'}};
+} # end sub notifications
 
 1;
 #__END__

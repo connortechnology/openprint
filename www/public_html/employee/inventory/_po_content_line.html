@@ -14,17 +14,14 @@
 		});
 	} # end if
 
-
 	my $html .= sprintf('<tr id="line-%1$d">', $C->id() );
-	$html .= '<td>'.ssi::writeButton( $log, $dbh, 'del-'.$C->id(), 'delete.gif',qq`new Ajax.Request('/employee/inventory/_purchase_order_content_line.html?action=delete&amp;id=$$C{'id'}', { method: 'get', onSuccess: function(){var tr = \$('line-$$C{id}'); tr.parentNode.removeChild(tr);update_totals(\$('f1'));} } );`,'','Delete' ).'</td>';
-	$html .= sprintf(q`<td><select name="type_id-%1$d" id="type_id-%1$d" onchange="$('line-%1$d').addClassName('changed');">%2$s</select></td>`, $C->id(),
-	
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ], $C->type_id() ) );
-	#$html .= sprintf('<span id="content-%1$d">', $C->id() );
+	$html .= '<td>'.ssi::writeButton( $log, $dbh, 'del-'.$C->id(), 'delete.gif',qq`new Ajax.Request('/employee/inventory/_po_content_line.html?action=delete&amp;id=$$C{'id'}', { method: 'get', onSuccess: function(){var tr = \$('line-$$C{id}'); tr.parentNode.removeChild(tr);update_totals(\$('f1'));} } );`,'','Delete' ).'</td>';
+	$html .= sprintf(q`<td>%2$s</td>`, $C->id(), $C->Type()->name() );
+	$html .= sprintf('<span id="content-%1$d">', $C->id() );
 	$$variable{'C'} = $C;
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_po_content_'.$C->Type()->name().'.html' );
 	$html .= ssi::variable_substitution( $r, $log, $dbh, \$_, $variable );
-	#$html .= '</span>';
+	$html .= '</span>';
 	$html .= '</tr>';
 	return $html;
 ) ?>

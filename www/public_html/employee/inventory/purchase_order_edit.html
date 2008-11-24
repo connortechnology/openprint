@@ -1,5 +1,9 @@
 <script type="text/javascript">
 <!--
+function load_content_type( index, type ) {
+$('content-'+index).innerHTML = '';
+new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
+} // end function load_content_type
 function set_sheet_description(index) {
 	$('description-'+index).value = $('mweight-'+index).value +'M ' + $('name-'+index).value;
 }
@@ -136,6 +140,9 @@ function getSelectionId(input, li) {
 			<p><label for="shipto_phone">Phone:</label><input type="text" name="shipto_phone" id="shipto_phone" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_phone() ) ?>" /></p>
 			<p><label for="shipto_fax">Fax:</label><input type="text" name="shipto_fax" id="shipto_fax" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_fax() ) ?>" /></p>
 			<p><label for="shipto_email">Email:</label><input type="text" name="shipto_email" id="shipto_email" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_email() ) ?>" /></p>
+			<p><label>Also Notify:</label>
+				<span id="notification_div"><!--#include virtual="_po_notifications.html"--></span>
+			</p>
 			</fieldset>
 		</div>
 		<br class="spacer"/>
@@ -192,12 +199,7 @@ function getSelectionId(input, li) {
 	<tr class="unprintable" id="line-new">
 		<td>
 	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"new Ajax.Request('/employee/inventory/_po_content_line.html?action=add' +
-	'&amp;qty=' + encodeURIComponent(\$('qty-new').value) +
-	'&amp;item=' + encodeURIComponent(\$('item-new').value) +
-	'&amp;description=' + encodeURIComponent(\$('description-new').value) +
-	'&amp;docket=' + encodeURIComponent(\$('docket-new').value) +
-	'&amp;price=' + encodeURIComponent(\$('price-new').value) +
-	'&amp;total=' + encodeURIComponent(\$('total-new').value) +
+	'&amp;type=' + encodeURIComponent(\$('qty-new').options[\$('qty-new').selectedIndex].text) +
 	'&amp;po_id=' + $$variable{'PurchaseOrder'}{id} + 
 	'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));} } );",'','Add' ); ) ?>
 		</td>
@@ -206,21 +208,7 @@ function getSelectionId(input, li) {
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ] ); ) ?>
 			</select>
 		</td>
-		<td><input type="text" name="qty-new" id="qty-new" onkeyup="calc_price(this);update_totals(this.form);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" /></td>
-		<td>
-			<input type="text" name="item-new" id="item-new" autocomplete="off" onkeyup="if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" />
-			<div id="autocomplete-item-new" class="autocomplete" style="display: none; position:relative;"></div>
-			<script type="text/javascript">
-				new Ajax.Autocompleter('item-new','autocomplete-item-new','_po_autocomplete.html', {
-					minChars: 2,
-					afterUpdateElement : getSelectionId,
-				} );
-			</script>
-		</td>
-		<td><textarea name="description-new" id="description-new" cols="" rows="1" onkeyup="textarea_resize(this);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" ></textarea></td>
-		<td><input type="text" name="docket-new" id="docket-new" onkeyup="if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}"/></td>
-		<td><input type="text" name="price-new" id="price-new" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals(this.form);if (this.value != this.defaultValue){$('line-new').addClassName('changed');} else {$('line-new').removeClassName('changed');}" style="text-align:right;" /></td>
-		<td><input type="text" name="total-new" id="total-new" style="text-align:right;" /></td>
+		<td colspan="6">&nbsp;</td>
 	</tr>
 	<tr>
 		<td colspan="7" class="totals">SUBTOTAL</td>

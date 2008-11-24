@@ -1407,7 +1407,7 @@ sub _purchase_order_supplier_address {
 	$variable{'PurchaseOrder'} = $PO;
 } # end sub _purchase_order_supplier_address
 
-sub _purchase_order_content_line {
+sub _po_content_line {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 	$variable{'PurchaseOrder'} = $PO;
 	if ( $param{'action'} eq 'delete' ) {
@@ -1415,6 +1415,14 @@ sub _purchase_order_content_line {
 		$PO_Content->delete();
 	} # end if
 } # end sub _purchase_order_content_line
+
+sub _po_notifications {
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	if ( $param{'action'} eq 'add' ) {
+		$PO->notifications( split(',', $param{'notifications'}), $param{'new_notification_id'} );
+	} # end if
+	$variable{'PurchaseOrder'} = $PO;
+} # end if
 
 1;
 __END__

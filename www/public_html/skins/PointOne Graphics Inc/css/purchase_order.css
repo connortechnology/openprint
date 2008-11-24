@@ -183,3 +183,13 @@ div.autocomplete ul li {
   cursor:pointer;
 }
 
+div.PO ul {
+	list-style-type:none;
+	margin:0px;
+	padding:0px;
+}
+div.PO ul li {
+	list-style-type:none;
+	margin:0px;
+	padding:0px;
+}
