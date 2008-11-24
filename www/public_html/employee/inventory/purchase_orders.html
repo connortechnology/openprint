@@ -36,11 +36,11 @@
 		</p>
 		<p>
 			<label>Authorized:</label>
-			<input type="radio" name="authorized" id="authorizedY" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' ) ) ?> />
+			<input type="radio" name="authorized" id="authorizedY" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' ) ) ?> onclick="load('Results',this.form);" />
 			<label class="radio" for="authorizedY">Yes</label>
-			<input type="radio" name="authorized" id="authorizedY" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' ) ) ?> />
+			<input type="radio" name="authorized" id="authorizedN" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' ) ) ?> onclick="load('Results',this.form);" />
 			<label class="radio" for="authorizedN">No</label>
-			<input type="radio" name="authorized" id="authorizedB" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq '' ) ) ?> />
+			<input type="radio" name="authorized" id="authorizedB" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq '' ) ) ?> onclick="load('Results',this.form);" />
 			<label class="radio" for="authorizedB">Both</label>
 		</p>
 		<p class="buttons">

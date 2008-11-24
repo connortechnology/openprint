@@ -1375,6 +1375,9 @@ sub purchase_order_edit {
 } # end sub purchase_order_edit
 
 sub purchase_orders {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id' ) {
+        $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
+    } # end foreach
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -1400,6 +1403,9 @@ sub purchase_orders {
 } # end sub purchase_orders
 
 sub _purchase_orders {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id' ) {
+        $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
+    } # end foreach
 } # end sub _purchase_orders
 
 sub _po_autocomplete {

@@ -1,20 +1,24 @@
 <? eval (
-	foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id' ) {
-		$session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
-	} # end foreach
-
 	if ( $param{'docket'} ) {
-	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 'docket'=>$param{'docket'}, 'order' => 'id desc');
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+			'docket'=>$param{'docket'}, 
+			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
+			'order' => 'id desc');
 	} else {
 		my %search = (
-		'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
-		'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ),
-		'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ),
-		'order',			'id desc',
+			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
+			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ),
+			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ),
+			'order',			'id desc',
 		);
-	$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'},;
+		$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'},;
 
-	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( %search );
+		@{$$variable{'PurchaseOrders'}} = ();
+		foreach my $PO ( openprint::PurchaseOrder::find( %search ) ) {
+			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' and ! $PO->authorized_by();
+			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' and $PO->authorized_by();
+			push @{$$variable{'PurchaseOrders'}}, $PO;
+		} # end foreach PO
 	} # end if
 ) ?>
 <? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
