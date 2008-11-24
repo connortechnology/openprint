@@ -42,9 +42,8 @@ sub variables {
 
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $p_id, $s_s_id );
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity( $qty_index );
+		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "txtWidth-$$specs{'SignatureIndex'}", "txtHeight-$$specs{'SignatureIndex'}",
 				"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index",
 				"txtImposition-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$specs{'SignatureIndex'}-$qty_index",
@@ -130,7 +129,7 @@ sub calc {
 		@all_equipment = sets::exclude( \@stitchers, \@all_equipment );
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} = '';
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
@@ -256,12 +255,12 @@ $openprint::log->debug("Scores: $score_qty");
 	$imposition->load( $sig_specs, $qty_index );
 
 	if ( 1 ) {
-	# IF it's a W&T, we have to cut in half first, so just do it.
-	if ( $imposition->runstyle() eq 'Work & Turn' ) {
-		$imposition->columns( $imposition->columns()/2 );
-	} elsif ( $imposition->runstyle() eq 'Work & Tumble' ) {
-		$imposition->rows( $imposition->rows()/2 );
-	} # end if
+		# IF it's a W&T, we have to cut in half first, so just do it.
+		if ( $imposition->runstyle() eq 'Work & Turn' ) {
+			$imposition->columns( $imposition->columns()/2 );
+		} elsif ( $imposition->runstyle() eq 'Work & Tumble' ) {
+			$imposition->rows( $imposition->rows()/2 );
+		} # end if
 	} # end if
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -349,8 +348,8 @@ $openprint::log->debug("Scores: $score_qty");
 			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Scoring', $score_qty, $Equipment );
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
-				$servicePrice = $servicePrice{'Price'} * $qty / 1000;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d=%.2f<br/>', @servicePrice{'Price','units'}, $qty, $servicePrice );
+				$servicePrice = $servicePrice{'Price'} * $qty *$score_qty/ 1000;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d=%.2f<br/>', @servicePrice{'Price','units'}, $score_qty*$qty, $servicePrice );
 			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
 				my $hours = $qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
 				$servicePrice = $servicePrice{'Price'} * $hours;
