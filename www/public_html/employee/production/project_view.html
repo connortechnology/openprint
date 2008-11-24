@@ -64,6 +64,80 @@ function open_window( page ) {
 			<th colspan="3"></th>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
 		</tr>
+<? echo ( 
+	if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
+		use POSIX qw(ceil);
+		my %totals;
+		my %sheets;
+		my $Project = $$variable{'Project'};
+		my $qty_index = $Project->ordered_quantity_index();
+
+		foreach my $ss_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+
+				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+				if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
+					$impressions /= 2
+				} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
+					my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+					my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
+					if ( @side_one_colours and @side_two_colours ) {
+						$impressions /= 2
+					} # end if
+				} # end if
+
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			if ( $Paper->type() eq 'Roll' ) {
+
+				$totals{$Paper->id()} += ceil($impressions * $Paper->area() * $Paper->wpsi());
+			} elsif ( $Paper->type() eq 'Sheet' ) {
+				my $sheets = $impressions;
+				$sheets /= ( $Paper->start_area() /$Paper->area() );
+				$sheets = ceil( $sheets );
+				$totals{$Paper->id()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
+				$sheets{$Paper->id()} += $sheets;
+			} # end if
+		} # end foreach signature
+
+		my $html = '<tr><td><b>Stock:</b><br/>';
+        foreach my $paper_id ( sort keys %totals ) {
+			my $Paper = new openprint::Paper( $paper_id );
+			$html .= 'Customer Supplied ' if $Paper->supplied();
+			$html .= $Paper->to_string();
+if ( 0 ) {
+			$html .= sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
+			if ( $Paper->type() eq 'Roll' ) {
+				$html .= sprintf(' %s&quot; Roll', $Paper->width() );
+			} elsif ( $Paper->type() eq 'Sheet' ) {
+				$html .= sprintf(' %s&quot;x%s&quot;', $Paper->start_width(), $Paper->start_height() );
+			} # end if
+} # end if
+			$html .= '<br/>';
+		} # end foreach paper_id
+		$html .= '<td colspan="2" align="right"><br/>';
+        foreach my $paper_id ( sort keys %totals ) {
+			my $Paper = new openprint::Paper( $paper_id );
+			if ( $totals{$paper_id} ) {
+				if ( $sheets{$paper_id} ) {
+					$html .= $sheets{$paper_id}.'sheets '.$totals{$paper_id}.'lbs';
+				} else {
+					$html .= $totals{$paper_id}.'lbs';
+				} # end if
+			} else {
+				$html .= 'none';
+			} # end if
+            if ( ! $Paper->supplied() ) {
+                my %price = $Paper->get_price( $totals{$paper_id} );
+                $price{'Total'} = $price{'100lb Price'} * $totals{$paper_id} / 100;
+				$html .= sprintf('* $%.2f/100lb = $%.2f', @price{'100lb Price','Total'} );
+            } # endif
+			$html .= '<br/>';
+		} # end foreach key
+		$html .= '</td>';
+		$html .= '</tr>';
+		return $html;
+	} # end if
+) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin'], $openprint::session{'user_id'} ) ) ?>
 		<tr class="unprintable">
 			<td colspan="2">Add Service:<select name="NewServiceType"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType::find('order'=>'lower(name)') ] ); ) ?></select>
@@ -143,9 +217,9 @@ function open_window( page ) {
 			if ( $$variable{'ProjectStatus'} eq 'Printed' and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'AddToBinderySchedule', 'addtobinderyschedule.gif', "f1.btnFunction.value='AddToBinderySchedule';f1.submit();", '', 'Add To Bindery Schedule' );
 			} # end if
-			if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $openprint::session{'user_id'} ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', "f1.btnFunction.value='Complete';f1.submit();", '', 'Complete' );
-			} # end if
+			#if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $openprint::session{'user_id'} ) ) {
+			#$html .= ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', "f1.btnFunction.value='Complete';f1.submit();", '', 'Complete' );
+			#} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'CompleteBindery', 'completeBindery.gif', "f1.btnFunction.value='BinderyComplete';f1.submit();", '', 'Complete Bindery' );
 			if ( $$variable{'ShippingType'} eq 'Delivery' and $$variable{'ProjectStatus'} ne 'Shipped' ) {
 

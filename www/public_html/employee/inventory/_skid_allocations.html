@@ -1,25 +1,3 @@
-<? eval (
-	if ( $openprint::param{'action'} eq 'Add' ) {
-		my $Paper = new openprint::Paper( $openprint::param{'paper_id'} );
-		my @Projects = openprint::Project::find( 'id'=>$openprint::param{'ProjectID'}, 'docket'=>$openprint::param{'Docket'} ) if $openprint::param{'ProjectID'} or $openprint::param{'Docket'};
-		my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
-
-		if ( ! @Projects ) {
-			$$variable{'error'} .= 'Docket not found. No paper allocated.<br/>';
-		} elsif ( $Skid->allocateable() < $openprint::param{'AllocationQuantity'} ) {
-			$$variable{'error'} .= 'Only ' .  $Skid->allocateable() . ' on this skid. No paper allocated.<br/>';
-		} else {
-			my $Project = shift @Projects;
-			$Paper->allocate( $openprint::param{'skid_id'}, $Project->id(), @openprint::param{'AllocationQuantity','Units'} );
-			$$variable{'information'} .= sprintf('Allocated %s%s to docket %d<br/>', @openprint::param{'AllocationQuantity','Units'}, $Project->docket() );
-		} # end if
-	} elsif ( $openprint::param{'action'} eq 'delete' ) {
-		my $Allocation = new openprint::PaperAllocation( $openprint::param{'allocation_id'} );
-		$Allocation->Project()->add_to_log( @openprint::session{'company_id','user_id'}, 'Paper Allocation for skid ' . $Allocation->skid_id() . ' deleted.' );
-		$Allocation->delete();
-	} # end if
-	$$variable{'skid_id'} = $openprint::param{'skid_id'} if ! $$variable{'skid_id'};
-) ?>
 <? if ( $$variable{'error'} ) ?>
 The following errors occurred:<br/>
 <div class="error"><?error?></div>
@@ -36,6 +14,7 @@ The following errors occurred:<br/>
 	<? echo (
 		require openprint::PaperAllocation;
 		my $html;
+		#$$variable{'skid_id'} = $param{'skid_id'} if ! $$variable{'skid_id'};
 		my @Allocations = openprint::PaperAllocation::find( 'skid_id'=>$$variable{'skid_id'}, 'order'=>'created_on' );
 
 		my $rowclass;
@@ -52,7 +31,7 @@ The following errors occurred:<br/>
 				$Allocation->units(),
 				);
 			$html .= '<td>';
-			$html .= ssi::writeButton( $log, $dbh, 'delete%1$d', 'delete.gif', sprintf(q`new Ajax.Updater('', '_skid_allocations.html', { method: 'get', parameters: { allocation_id : %1$d, skid_id: %2$d, action: 'delete' } } );`, $Allocation->id(), $$variable{'skid_id'} ), '', 'X' );
+			$html .= ssi::writeButton( $log, $dbh, 'delete%1$d', 'delete.gif', sprintf(q`new Ajax.Updater('Allocations', '_skid_allocations.html', { method: 'get', parameters: { allocation_id : %1$d, skid_id: %2$d, action: 'delete' } } );`, $Allocation->id(), $$variable{'skid_id'} ), '', 'X' );
 			$html .= '</td></tr>';
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 			$$variable{'TotalAllocated'} += $Allocation->quantity();
@@ -63,5 +42,6 @@ The following errors occurred:<br/>
 	<tr class="totals">
 		<td colspan="3" align="right"><b>Totals:</b></td>
 		<td align="right"><?TotalAllocated?> <?Units?></td>
+		<td>&nbsp;</td>
 	</tr>
 </table>

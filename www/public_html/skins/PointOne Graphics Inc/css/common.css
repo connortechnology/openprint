@@ -1,4 +1,6 @@
-
+html {
+overflow-y: scroll;
+}
 #Content {
 	top: 0px;
 	p\osition: relative;
@@ -287,7 +289,6 @@ fieldset p label {
 	vertical-align: top;
 	float: left;
 	overflow: visible;
-	padding-top: 2px;
 }
 fieldset p select {
     width: 70%;
@@ -408,6 +409,9 @@ hr {
 .colRowRed {
     color: red;
 }/* alternating row color in generated tables */
+tr.highlightOn {
+	background-color: #FF5C51;
+}
 
 .mediumLengthLabel {
 	display: -moz-inline-box;
@@ -562,3 +566,10 @@ form.inplaceeditor-form input[type="submit"] { /* The submit button */
 form.inplaceeditor-form a { /* The cancel link */
 }
 
+.changed {
+    background-color: yellow;
+}
+
+input.filter, fieldset p input.filter {
+	width: 40px;
+}

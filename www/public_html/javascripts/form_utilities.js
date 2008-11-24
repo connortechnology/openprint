@@ -26,7 +26,7 @@ function get_value( obj ) {
 				return obj[x].value;
 		}
 	} else {
-		alert("Unhandled Type in get_value! "+obj + ':' + obj.type);
+		return obj.innerHTML;
 	} // end if
 	return obj.value;
 }
@@ -729,8 +729,8 @@ function countLines(strtocount, cols) {
 	var last = 0;
 	while ( true ) {
 		last = strtocount.indexOf("\n", last+1);
-		hard_lines ++;
 		if ( last == -1 ) break;
+		hard_lines ++;
 	}
 	var soft_lines = Math.round(strtocount.length / (cols-1));
 	var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");
@@ -748,3 +748,16 @@ function set_today( e_y, e_m, e_d ) {
 	ddm_select_by_value( e_m, d.getMonth()+1 );
 	ddm_select_by_value( e_d, d.getDate() );
 } // end function set_today
+
+Ajax.Autocompleter.extract_value = 
+function (value, className) {
+	var result;
+
+	var elements = 
+		document.getElementsByClassName(className, value);
+	if (elements && elements.length == 1) {
+		result = elements[0].innerHTML.unescapeHTML();
+	}
+
+	return result;
+};

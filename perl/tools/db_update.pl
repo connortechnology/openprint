@@ -229,13 +229,16 @@ if ( $version < 1897 ) {
 if ( $version < 1898 ) {
 	print "Updating to version 1898\n";
 	my $ac = sql::start_transaction( $dbh );
-$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on});
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM paper_inventory LIMIT 1', {} );
+$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on}) if exists $$data{'updatetime'};
+if ( ! exists $$data{'id'} ) {
 $dbh->do(q{alter table paper_inventory add id integer});
 $dbh->do(q{create sequence paperinventory_id_seq});
 $dbh->do(q{alter table paper_inventory alter id set default nextval('paperinventory_id_seq')});
 $dbh->do(q{update paper_inventory set id=nextval('paperinventory_id_seq')});
 $dbh->do(q{alter table paper_inventory alter id set not null});
 $dbh->do(q{alter table paper_inventory add primary key(id)});
+} # end if
 
 	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
@@ -297,6 +300,53 @@ if ( $data ) {
 	$dbh->do(q`alter table tbl_equipment add jdf_id text`) if ! exists $$data{'jdf_id'};
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );
+if ( ! $data ) {
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('DROP TABLE IF EXISTS skid_verifications');
+	$dbh->do('
+CREATE TABLE skid_verifications (
+    id SERIAL NOT NULL,
+    skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
+    code    TEXT,
+    created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+    PRIMARY KEY (id)
+);' );
+$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
+$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
+	sql::end_transaction( $dbh, $ac );
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );
+if ( ! $data ) {
+	$dbh->do('
+CREATE TABLE PurchaseOrder_COntents (
+    id SERIAL NOT NULL,
+    po_id   INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
+    qty     float,
+    price   float,
+    total   float,
+    item    text,
+    docket  text,
+    description text,
+    PRIMARY KEY (id)
+);');
+} # en dif
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM users LIMIT 1', {} );
+if ( ! exists $$data{'purchasing_limit'} ) {
+	$dbh->do('ALTER TABLE Users ADD purchasing_limit FLOAT');
+} # end if
+if ( ! exists $$data{'purchasing_total_limit'} ) {
+	$dbh->do('ALTER TABLE Users ADD purchasing_total_limit FLOAT');
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM RFIDScanners LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'monitor'} ) {
+	$dbh->do('ALTER TABLE RFIDScanners ADD monitor boolean not null default false');
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__
