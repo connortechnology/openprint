@@ -1421,7 +1421,20 @@ sub _purchase_order_supplier_address {
 sub _po_content_line {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 	$variable{'PurchaseOrder'} = $PO;
-	if ( $param{'action'} eq 'delete' ) {
+    if ( $param{'action'} eq 'add' ) {
+		my $C = new openprint::PurchaseOrder_Content( $param{'po_content_id'} );
+        $C->save( {
+            'po_id'         =>  $param{'po_id'},
+            'qty'           =>  $param{'qty'},
+            'item'          =>  $param{'item'},
+            'description'   =>  $param{'description'},
+            'docket'        =>  $param{'docket'},
+            'price'         =>  $param{'price'},
+            'total'         =>  $param{'total'},
+            'type_id'       =>  $param{'type_id'},
+            });
+		$variable{'C'} = $C;
+	} elsif ( $param{'action'} eq 'delete' ) {
 		my $PO_Content = new openprint::PurchaseOrder_Content( $param{'id'} );
 		$PO_Content->delete();
 	} # end if
