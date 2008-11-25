@@ -1571,6 +1571,12 @@ if ( 1 ) {
 				if ( $max_pages >= $imp->pages() ) {
 					next;
 				} # end if
+				if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
+					next;
+				} # end if
+				if ( $$specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
+					next;
+				} # end if
 				my $add = 1;
                 my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
                 if ( $imps{$str} ) {
@@ -1580,16 +1586,6 @@ if ( 1 ) {
                         if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
                             next;
                         } elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
-                            next;
-                        } # end if
-                        if ( $$specs{'PreviousStockType'} and ( $I->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
-            $openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() ) if $debug;
-                            $add = 0;
-                            next;
-                        } # end if
-                        if ( $$specs{'PreviousGrainDirection'} and ( $I->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
-            $openprint::log->debug("Not consider imposition cuz it's not the previous ($$specs{'PreviousGrainDirection'}) grain direction " . $imp->grain_direction() ) if $debug;
-                            $add = 0;
                             next;
                         } # end if
                         my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
