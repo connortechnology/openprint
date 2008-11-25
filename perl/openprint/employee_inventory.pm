@@ -1442,7 +1442,7 @@ sub _po_content_line {
 
 sub _po_notifications {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
-	if ( $param{'action'} eq 'add' ) {
+	if ( ( $param{'action'} eq 'add' ) and $param{'new_notification_id'} ) {
 		$PO->notifications( [ split(',', $param{'notifications'}), $param{'new_notification_id'} ] );
 	} elsif ( $param{'action'} eq 'delete' ) {
 		$PO->notifications( [ sets::exclude( [$param{'notification_id'}], [$PO->notifications()] ) ] );
