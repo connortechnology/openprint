@@ -156,11 +156,11 @@
 	</tr>
     <tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ? '' : ' style="display:none;"' ) ?>>
         <td colspan="5" class="totals">FEDERAL TAX</td>
-        <td style="text-align: right;"><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
+        <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
     </tr>
     <tr<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ? '' : ' style="display:none;"' ) ?>>
         <td colspan="5" class="totals">STATE TAX</td>
-        <td style="text-align: right;"><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
+        <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
     </tr>
 
 	<tr>

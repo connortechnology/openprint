@@ -76,6 +76,7 @@ sub save {
 
 	my %sql;
 	@sql{@fields{keys %fields}} = @$self{keys %fields};
+	delete $sql{'created_on'};
 
 	if ( ! $$self{'id'} ) {
 		my $ac = sql::start_transaction( $dbh );

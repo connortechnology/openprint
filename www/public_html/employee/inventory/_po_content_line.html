@@ -1,25 +1,17 @@
 <? echo (
 	return '' if $param{'action'} eq 'delete';
 
-	my $C = new openprint::PurchaseOrder_Content( $param{'po_content_id'} );
-	if ( $param{'action'} eq 'add' ) {
-		$C->save( {
-			'po_id'			=>	$param{'po_id'},
-			'qty'			=>	$param{'qty'},
-			'item'			=>	$param{'item'},
-			'description'	=>	$param{'description'},
-			'docket'		=>	$param{'docket'},
-			'price'			=>	$param{'price'},
-			'total'			=>	$param{'total'},
-			'type_id'		=>	$param{'type_id'},
-			});
-	} # end if
+	my $C = $$variable{'C'};
 
 	my $html .= sprintf('<tr id="line-%1$d">', $C->id() );
 	$html .= '<td>'.ssi::writeButton( $log, $dbh, 'del-'.$C->id(), 'delete.gif',qq`new Ajax.Request('/employee/inventory/_po_content_line.html?action=delete&amp;id=$$C{'id'}', { method: 'get', onSuccess: function(){var tr = \$('line-$$C{id}'); tr.parentNode.removeChild(tr);update_totals(\$('f1'));} } );`,'','Delete' ).'</td>';
-	$html .= sprintf(q`<td><span id="type_id-%1$d">%2$s</span></td>`, $C->id(), $C->Type()->name(), $C->type_id() );
-	$$variable{'C'} = $C;
+	if ( $C->type_id() ) {
+		$html .= sprintf(q`<td><span id="type-%1$d">%2$s</span><input type="hidden" name="type_id-%1$d" id=type_id-%1$d" value="%3$d"/></td>`, $C->id(), $C->Type()->name(), $C->type_id() );
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_po_content_'.$C->Type()->name().'.html' );
+	} else {
+		$html .= sprintf(q`<td><select name="type_id-%1$d" id="type_id-%1$d">%2$s</select></td>`, $C->id(), ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ], $C->type_id() ) );
+		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_po_content_Other.html' );
+	} # end if
 	$html .= ssi::variable_substitution( $r, $log, $dbh, \$_, $variable );
 	$html .= '</tr>';
 	return $html;

@@ -1,8 +1,8 @@
 <script type="text/javascript">
 <!--
 function load_content_type( index, type ) {
-$('content-'+index).innerHTML = '';
-new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
+	$('content-'+index).innerHTML = '';
+	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
 } // end function load_content_type
 function set_sheet_description(index) {
 	$('description-'+index).value = $('mweight-'+index).value +'M ' + $('name-'+index).value;
@@ -14,7 +14,7 @@ function calc_price( element ) {
 		var index = matches[2];
 		var cost = parseFloat( $('price-'+index).value.replace(/[^\d\-\.]/g, '' ) );
 		var qty = parseFloat( $('qty-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-		var type = get_value( $('type_id-'+index) );
+		var type = get_value( $('type-'+index) );
 		if ( type == 'Roll Stock' ) {
 			qty /= 100;
 		} else if ( type == 'Sheet Stock' ) {
@@ -187,10 +187,12 @@ function getSelectionId(input, li) {
 		<th width="90">UNIT PRICE</th>
 		<th width="90">LINE TOTAL</th>
 	</tr>
-<? echo ( my $html = '';
+<? echo ( 
+	require openprint::PurchaseOrder_ContentType;
+	my $html = '';
 	my $line = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_po_content_line.html' );
 	foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
-		$param{'po_content_id'} = $C->id();
+		$$variable{'C'} = $C;
 		$html .= ssi::variable_substitution( $r, $log, $dbh, \$line, $variable );
 	} # end foreach C
 	return $html;
