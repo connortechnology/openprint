@@ -28,7 +28,7 @@
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value=""> Select a Customer</option>
 				<? echo (
-					openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::param{'ddmCustomer'} );
+					openprint::Company::get_dropdown( $param{'ddmCustomer'} );
 				) ?>
 			</select>
 		</p>
@@ -46,7 +46,7 @@
 			<select name="ddmCurrency" size="1">
 			<option value="">All Currencies</option>
 <? echo ( 
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ], $openprint::param{'ddmCurrency'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ], $param{'ddmCurrency'} );
 ) ?>
 			</select>
 		</p>
@@ -64,40 +64,40 @@ ssi::fill_drop_down( $log, $dbh, q{SELECT id, name FROM Marketing_Categories ORD
 			<select name="ddmEmployee" size="1">
 				<option value="">All Employees</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1, 'usergroups'=>['Sales'] ) ] , $openprint::param{'ddmEmployee'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1, 'usergroups'=>['Sales'] ) ] , $param{'ddmEmployee'} );
 ) ?>
 			</select>
 		</p>
 <? eval (
-	if ( $openprint::param{'StartYear'} ) {
-		@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = 
-			@openprint::param{'StartYear','StartMonth','StartDay'};
-		@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = 
-			@openprint::param{'EndYear','EndMonth','EndDay'};
+	if ( $param{'StartYear'} ) {
+		@session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = 
+			@param{'StartYear','StartMonth','StartDay'};
+		@session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = 
+			@param{'EndYear','EndMonth','EndDay'};
 	} else {
-		@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = Date::Calc::Today();
-		@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = Date::Calc::Today();
+		@session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = Date::Calc::Today();
+		@session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = Date::Calc::Today();
 	} # end if
 ) ?>
 		<p> 
 			<label>Date:</label>
 			<span class="DateSelector">
-				<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?StartYear'} ); ) ?></select>
-				<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?StartMonth'} ); ) ?></select>
-				<select name="StartDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?StartDay'} ); ) ?></select>
+				<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::return_years( undef, undef, $session{$r->uri().'?StartYear'} ); ) ?></select>
+				<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::getmonths( $session{$r->uri().'?StartMonth'} ); ) ?></select>
+				<select name="StartDay"><? echo ( ssi::getdays( $session{$r->uri().'?StartDay'} ); ) ?></select>
 				-
 			</span>
 			<span class="DateSelector">
-				<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?EndYear'} ); ) ?></select>
-				<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?EndMonth'} ); ) ?></select>
-				<select name="EndDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?EndDay'} ); ) ?></select>
+				<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><? echo ( ssi::return_years( undef, undef, $session{$r->uri().'?EndYear'} ); ) ?></select>
+				<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><? echo ( ssi::getmonths( $session{$r->uri().'?EndMonth'} ); ) ?></select>
+				<select name="EndDay"><? echo ( ssi::getdays( $session{$r->uri().'?EndDay'} ); ) ?></select>
 			</span>
 		</p>
 		<p> 
 			<label>Total Range:</label>
-			<input type="text" name="TotalStart" size="12" style="width: auto;" value="<? echo ( $openprint::param{'TotalStart'} ) ?>" />
+			<input type="text" name="TotalStart" size="12" style="width: auto;" value="<? echo ( $param{'TotalStart'} ) ?>" />
 			to 
-			<input type="text" name="TotalEnd" size="12" style="width: auto;" value="<? echo ( $openprint::param{'TotalEnd'} ) ?>" />
+			<input type="text" name="TotalEnd" size="12" style="width: auto;" value="<? echo ( $param{'TotalEnd'} ) ?>" />
 		</p>
 		<p class="buttons">
 		<? echo ( $log, $dbh, join('',
@@ -108,20 +108,20 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 		</p>
 	</fieldset>
 <? eval ( 
-	if ( $openprint::param{'OrderID'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$openprint::param{'OrderID'} );
-	} elsif ( $openprint::param{'Docket'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$openprint::param{'Docket'} );
+	if ( $param{'OrderID'} ) {
+		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$param{'OrderID'} );
+	} elsif ( $param{'Docket'} ) {
+		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$param{'Docket'} );
 	} else {
 		@{$$variable{'Orders'}} = openprint::Order::find( 
-			'company_id'		=> $openprint::param{'ddmCustomer'},
-			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
-			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
-			'value_start'		=> $openprint::param{'TotalStart'},
-			'value_end'			=> $openprint::param{'TotalEnd'},
-			'salesrep_id'		=> $openprint::param{'ddmEmployee'},
-			'status'			=> $openprint::param{'ddmStatus'},
-			'currency_id'		=> $openprint::param{'ddmCurrency'},
+			'company_id'		=> $param{'ddmCustomer'},
+			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
+			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
+			'value_start'		=> $param{'TotalStart'},
+			'value_end'			=> $param{'TotalEnd'},
+			'salesrep_id'		=> $param{'ddmEmployee'},
+			'status'			=> $param{'ddmStatus'},
+			'currency_id'		=> $param{'ddmCurrency'},
 		);
 	} # end if
 ) ?>

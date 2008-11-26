@@ -167,7 +167,7 @@ $openprint::log->debug("Page: $page");
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();
-	openprint::pricing::clear_cache( );
+	openprint::pricing::clear_cache();
 	openprint::Object::init_cache();
 	return Apache2::Const::OK;
 } # end sub handler

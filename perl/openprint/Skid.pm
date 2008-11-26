@@ -13,11 +13,8 @@ require openprint::Location;
 require openprint::Paper;
 require openprint::SkidContent;
 require openprint::RFIDTag;
-<<<<<<< HEAD:perl/openprint/Skid.pm
 require openprint::Skid_Verification;
-=======
 require openprint::Project;
->>>>>>> 222bbf3635baa2aa8a4976537180188361d6c1c3:perl/openprint/Skid.pm
 
 my $debug = 1;
 

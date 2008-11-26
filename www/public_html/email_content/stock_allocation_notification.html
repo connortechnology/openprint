@@ -1,21 +1,32 @@
 The following stock has been allocated for docket <b><? echo ( $$variable{'Project'}->docket() ) ?></b>:<br/>
+
+<? if ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><br/>Some of these stocks have not been seen in over 30 days.  Please verify the availability of these stocks.<? endif ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><br/>
 <br/>
 <b><? echo ( $$variable{'Paper'}->to_string(); ) ?></b><br/><br/>
 <table class="List">
 	<tr>
-		<th align="left">Skid #</th><th align="left">RFID #</th><th align="left">Location</th><th align="right">Quantity</th>
+		<th align="left">Skid #</th><th align="left">RFID #</th><th align="left">Location</th><th align="right">Last Seen</th><th align="right">Quantity</th>
 	</tr>
 <? echo (
 	my $html;
 	my $rowclass = '';
+	my $total = 0;
+	my $units;
 	foreach my $PA ( @{$$variable{'Allocations'}} ) {
 		$html .= sprintf('<tr%s>', $rowclass );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 		$html .= sprintf('<td>%s</td>', $PA->Skid()->id() );
 		$html .= sprintf('<td>%s</td>', $PA->Skid()->rfidtag_id() );
 		$html .= sprintf('<td>%s</td>', $PA->Skid()->Location()->name() );
+		$html .= sprintf('<td align="right">%s</td>', $PA->skid_id() ? Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $PA->Skid()->updated_on() ) ) : '' );
 		$html .= sprintf('<td align="right">%s%s</td>', $PA->quantity(), $PA->units() );
+		$units = $PA->units();
+		$total += $PA->quantity();
 	} # end foreach Allocation
+	$html .= '<tr class="totals">';
+	$html .= '<td colspan="4" style="text-align: right;">Total:</td>';
+	$html .= '<td style="text-align: right;">' . $total . $units.'</td>';
+	$html .= '</tr>';
 	return $html;
 ) ?>
 </table>

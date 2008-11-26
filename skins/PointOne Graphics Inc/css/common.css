@@ -410,6 +410,9 @@ hr {
 .colRowRed {
     color: red;
 }/* alternating row color in generated tables */
+tr.highlightOn {
+	background-color: #FF5C51;
+}
 
 .mediumLengthLabel {
 	display: -moz-inline-box;

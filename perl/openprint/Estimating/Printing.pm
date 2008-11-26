@@ -1200,6 +1200,7 @@ my $master_time = gettimeofday();
 # if another interior spread is digital, then we need digital
 # if the cover is offset, then we need offset
 # if the cover is waterless, then we can do waterless, or offset
+				if ( ! $$specs{'PrintingTypes'} ) {
 				my $cover_specs;
 				foreach my $index ( $Project->signatures({'type'=>'Cover Pages'}) ) {
 					$cover_specs = openprint::service::get_specs_ref( $project_index, $index );
@@ -1915,7 +1916,6 @@ sub breakdown {
 	my $plate_costs = $$price{'Plate Costs'};
 	$breakdown .= sprintf( 'Plates: %d %s * $%.2f per plate = $%.2f<br/>', @$price{'txtPlateQuantity','PlateID','Plate Cost','Plate Price'});
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
-#	my $stock_qty = $$price{'Stock Quantity'};
 
 	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s FoldMakeReady: %d FoldRun: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'FoldingMakeReadyOvers','FoldingRunOvers','Total Overs'} );
 	if ( $Paper->type() ne 'Roll' ) {
@@ -2020,9 +2020,13 @@ if ( 1 ) {
 			} # end foreach
 			$max_pages /= 2;
 			foreach my $imp ( @impositions ) {
-if ( $max_pages >= $imp->pages() ) {
-next;
-} # end if
+				next if $max_pages >= $imp->pages();
+				if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
+					next;
+				} # end if
+				if ( $$specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
+					next;
+				} # end if
 				my $add = 1;
 				my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
 				if ( $imps{$str} ) {
@@ -2032,17 +2036,6 @@ next;
 						if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
 							next;
 						} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
-							next;
-						} # end if
-						if ( $$specs{'PreviousStockType'} and ( $I->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
-					
-			$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() ) if $debug;
-							$add = 0;
-							next;
-						} # end if
-						if ( $$specs{'PreviousGrainDirection'} and ( $I->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
-			$openprint::log->debug("Not consider imposition cuz it's not the previous ($$specs{'PreviousGrainDirection'}) grain direction " . $imp->grain_direction() ) if $debug;
-							$add = 0;
 							next;
 						} # end if
 						my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());

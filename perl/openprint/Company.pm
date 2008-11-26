@@ -135,6 +135,10 @@ sub find {
 		$sql .= ' AND ysnSupplier=?';
 		push @values, $params{'supplier'};
 	} # end if
+	if ( $params{'reseller'} ) {
+		$sql .= ' AND ysnReseller=?';
+		push @values, $params{'reseller'};
+	} # end if
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
 
@@ -347,7 +351,7 @@ sub get_dropdown {
 	my $sql = 'SELECT Index, strName FROM Company';
 	my @values;
 
-	if ( ( $openprint::config{'ProtectCustomerDatabase'} ne 'N' ) and $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) {
+	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
 		$sql .= ' WHERE Index=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
@@ -367,6 +371,12 @@ sub Users {
 	my $self = shift;
 	return openprint::User::find('company_id'=>$$self{'id'} );
 } # end sub Users
+sub taxexempt1 {
+	return $_[0]{gst_exempt};
+}
+sub taxexempt2 {
+	return $_[0]{pst_exempt};
+}
 
 1;
 __END__

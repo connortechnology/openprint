@@ -59,6 +59,25 @@ function open_window(url,title,options) {
 	upload_window.focus();
 }
 
+function AjaxToggleContent( divID, show_url, inputs, hide_url ) {
+	var div = $( divID );
+
+	var params = new Array();
+	while ( inputs.length ) {
+		params[params.length] = inputs.shift() + '=' + inputs.shift();
+	}
+
+
+	if ( div.style.display == 'none' ) {
+		div.show();
+		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&') } );
+	} else {
+		div.hide();
+		if ( page_to_hide )
+			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&') } );
+	} // end if
+} // end function AjaxToggleContent
+
 function toggleContent( divID, page_to_display, inputs, page_to_hide ) {
 	var div = $( divID );
 	if ( div.style.display == 'none' ) {

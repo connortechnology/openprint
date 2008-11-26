@@ -589,6 +589,7 @@ sub height {
     } # end if
     return $$self{'height'};
 } # end if
+
 sub mweight {
     my ( $self, $mweight ) = @_;
     if ( defined $mweight ) {
@@ -604,9 +605,7 @@ sub mweight {
 			} elsif ( $$self{'width'} and $$self{'height'} ) {
 				$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'width'} * $$self{'height'} * 1000 );
 			} # end if
-		} elsif ( $self->weight() =~ /(\d*)lb/ ) {
-			# weigiht of 500sheets of 25x38
-$openprint::log->debug("Auto calcing mweight from $1");
+		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)lbs/) ) {
 			$$self{'mweight'} = sprintf('%.0f', ($1*$$self{'width'}*$$self{'height'})/(25*38));
 		} elsif ( ! $self->weight() =~ /\D/ ) {
 			# weigiht of 500sheets of 25x38
@@ -615,18 +614,6 @@ $openprint::log->debug("Auto calcing mweight from " . $self->weight() );
 		} # end if
     } # end if
     return $$self{'mweight'};
-} # end sub mweight
-
-sub basis_mweight {
-    my ( $self, $mweight ) = @_;
-    if ( defined $mweight ) {
-        $mweight =~ s/[^\d\.]//g;
-        $$self{'basis_mweight'} = $mweight;
-	} elsif ( ! $$self{'basis_mweight'} ) {
-		my $wpsi = $$self{'gsm'}/703064.5;
-		$$self{'basis_mweight'} = sprintf('%.2f', $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
-    } # end if
-    return $$self{'basis_mweight'};
 } # end sub mweight
 
 sub calliper {
@@ -728,14 +715,14 @@ sub allocate {
 
 	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
-        'paper_id'	=>	$$self{'id'},
-        'skid_id'	=>	$skid_id,
-        'quantity'	=>	$quantity,
-		'units'		=>	$units,
-        'project_id'	=>	$project_id,
-        'operator_id'	=>	$openprint::session{'user_id'},
-        } );
-    openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} );
+			'paper_id'		=>	$$self{'id'},
+			'skid_id'		=>	$skid_id,
+			'quantity'		=>	$quantity,
+			'units'			=>	$units,
+			'project_id'	=>	$project_id,
+			'operator_id'	=>	$openprint::session{'user_id'},
+			} );
+	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} );
 	delete $$self{allocated};
 	return $PA;
 } # end sub allocate
@@ -902,18 +889,20 @@ sub gsm {
 	if ( @_ ) {
 		$$self{'gsm'} = shift;
 	} elsif ( ! $$self{'gsm'} ) {
+		if ( ! $$self{'wpsi'} ) {
+			if ( $$self{'type'} eq 'Roll' ) {
+				if ( $self->basis_mweight() ) {
+					$$self{'wpsi'} = ($$self{'basis_mweight'}/1000)/($self->basis_width()*$self->basis_height());
+				} # end if
+			} else { # Sheet
+				if ( $$self{'width'} and $$self{'height'} and $self->mweight() ) {
+					$$self{'wpsi'} = ($$self{'mweight'}/1000)/($$self{'width'}*$$self{'height'});
+				} # end if
+			} # end if Roll or Sheet
+		} # end if ! wpsi
+
 		if ( $$self{'wpsi'} ) {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
-		} elsif ( $$self{'basis_mweight'} or $$self{'mweight'} ) {
-			my $wpsi;
-			if ( $$self{'type'} eq 'Roll' and $$self{'basis_mweight'} ) {
-				if ( $$self{'basis_width'} and $$self{'basis_height'} ) {
-					$wpsi = ($$self{'basis_mweight'}/1000)/($$self{'basis_width'}*$$self{'basis_height'});
-				} # end if
-			} elsif ( $$self{'width'} and $$self{'height'} and $$self{'mweight'} ) {
-				$wpsi = ($$self{'mweight'}/1000)/($$self{'width'}*$$self{'height'});
-			} # end if
-			$$self{'gsm'} = sprintf('%.2f', $wpsi * 703064.5 );
 		} else { 
 			$openprint::log->warn("Can't calculate gsm");
 		} # end if
@@ -1186,6 +1175,57 @@ sub is_cut {
 	} # end if
 	return 0;	
 } # end sub is_cut
+
+sub basis_mweight {
+    my ( $self, $mweight ) = @_;
+    if ( defined $mweight ) {
+        $mweight =~ s/[^\d\.]//g;
+        $$self{'basis_mweight'} = $mweight;
+	} # end if
+	if ( ! $$self{'basis_mweight'} ) {
+		if ( $$self{'gsm'} ) {
+			my $wpsi = $$self{'gsm'}/703064.5;
+			$$self{'basis_mweight'} = sprintf('%.2f', $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
+		} elsif ( $$self{'wpsi'} ) {
+			$$self{'basis_mweight'} = sprintf('%.2f', $$self{'wpsi'} * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
+		} elsif ( ( $$self{'weight'} =~ /^(\d+)lb$/i ) or ( $$self{'weight'} =~ /^(\d+)lbs$/i ) or ( $$self{'weight'} =~ /^(\d+)#$/i ) ) {
+			$$self{'basis_mweight'} = 2*$1;
+		} # end if
+    } # end if
+    return $$self{'basis_mweight'};
+} # end sub basis_mweight
+
+sub basis_width {
+	my ( $self, $width ) = @_;
+	if ( defined $width ) {
+        $width =~ s/[^\d\.]//g;
+		$$self{'basis_width'} = $width;
+	} # end if
+	if ( ! $$self{'basis_width'} ) {
+		if ( $self->name() =~ /cover/i ) {
+			$$self{'basis_width'} = 20;
+		} else {
+			$$self{'basis_width'} = 25;
+		} # end if
+	} # end if
+	return $$self{'basis_width'};
+} # end sub basis_width
+
+sub basis_height {
+	my ( $self, $height ) = @_;
+	if ( defined $height ) {
+        $height =~ s/[^\d\.]//g;
+		$$self{'basis_height'} = $height;
+	} # end if
+	if ( ! $$self{'basis_height'} ) {
+		if ( $self->name() =~ /cover/i ) {
+			$$self{'basis_height'} = 26;
+		} else {
+			$$self{'basis_height'} = 38;
+		} # end if
+	} # end if
+	return $$self{'basis_height'};
+} # end sub basis_height
 
 1;
 __END__

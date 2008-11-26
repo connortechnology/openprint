@@ -5,8 +5,22 @@
 	} // end function load
 -->
 </script>
-<form name="f1" action="purchase_orders.html" method="post">
+	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+<form id="f1" name="f1" action="purchase_orders.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
+		<p><label>Docket:</label>
+			<input type="text" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $(f1) );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load('Results', f1);",'','Go' ); ) ?>
+		</p>
+		<hr/>
+		<p><label>Vendor:</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+			<select name="supplier_id" onchange="load('Results',this.form);">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/inventory/purchase_orders.html?supplier_id'} ); ) ?>
+			</select>
+		</p>
 		<? eval (
             if ( ! $openprint::session{'/employee/inventory/purchase_orders.html?StartYear'} ) {
                 @openprint::session{'/employee/inventory/purchase_orders.html?StartYear','/employee/inventory/purchase_orders.html?StartMonth','/employee/inventory/purchase_orders.html?StartDay'} = Date::Calc::Today();
@@ -29,6 +43,15 @@
             <select name="EndDay" onchange="load('Results',this.form);"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/purchase_orders.html?EndDay'} ? $openprint::session{'/employee/inventory/purchase_orders.html?EndDay'} : ''); ) ?></select>
             </span>
 		</p>
+		<p>
+			<label>Authorized:</label>
+			<input type="radio" name="authorized" id="authorizedY" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' ) ) ?> onclick="load('Results',this.form);" />
+			<label class="radio" for="authorizedY">Yes</label>
+			<input type="radio" name="authorized" id="authorizedN" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' ) ) ?> onclick="load('Results',this.form);" />
+			<label class="radio" for="authorizedN">No</label>
+			<input type="radio" name="authorized" id="authorizedB" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq '' ) ) ?> onclick="load('Results',this.form);" />
+			<label class="radio" for="authorizedB">Both</label>
+		</p>
 		<p class="buttons">
 				<? echo ( join( '',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
@@ -38,5 +61,5 @@
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
+	<div id="Results"><!--#include virtual="_purchase_orders.html"--></div>
 </form>
-<div id="Results"><!--#include virtual="_purchase_orders.html"--></div>

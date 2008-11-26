@@ -66,35 +66,35 @@
 			<th align="left" width="115">RFIDTag</th>
 			<th align="left" width="100">Location</th>
 			<th align="left" width="140">Dockets</th>
-			<th align="left">Contents</th>
 		</tr>
 		<? echo (
 			my $html;
 			my $rowclass;
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
-				my $empty = 1;
-				my $iftype = 0;
-				foreach my $c ( $Skid->contents() ) {
-					if ( $c->quantity() > 0 ) {
-						$empty = 0;
-					} # end if
-                    my $Paper = new openprint::Paper( $c->paper_id() );
-                    if ( sets::isin( $Paper->type(), split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) {
-                        $iftype = 1;
-                    } # end if
-				} # end foreach
+				my $empty = $Skid->empty();
 				if ( $session{'/employee/inventory/skids.html?empty'} ne 'Y' ) {
                     next if $empty;
                 } # end if
                 if ( $session{'/employee/inventory/skids.html?notempty'} ne 'Y' ) {
                     next if ! $empty;
                 } # end if
+				my $iftype = 1;
+                foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
+                    my $Paper = new openprint::Paper( $paper_id );
+                    if ( ! sets::isin( $Paper->type(), split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) {
+                        $iftype = 0;
+                        last;
+                    } # end if
+                } # end foreach
                 next if ! $iftype;
 
 				next if $Skid->rfidtag_id() and ! $session{'/employee/inventory/skids.html?withrfid'};
 				next if ( ! $Skid->rfidtag_id() ) and ! $session{'/employee/inventory/skids.html?withoutrfid'};
 
-				next if $session{'/employee/inventory/skids.html?location_id'} and ( $Skid->location_id() != $session{'/employee/inventory/skids.html?location_id'} );
+				if ( $session{'/employee/inventory/skids.html?location_id'} ) {
+					next if $session{'/employee/inventory/skids.html?location_id'} eq 'None' and $Skid->location_id();
+					next if $Skid->location_id() != $session{'/employee/inventory/skids.html?location_id'};
+				} # end if
 
 				$html .= "<tr$rowclass>";
 				$html .= qq`<td><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
@@ -104,7 +104,7 @@
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'rfidtag_id'} );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->Location()->name() );
 
-				$html .= '<td>';
+				$html .= '<td rowspan="2">';
 				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), paper_id, quantity FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $$Skid{'id'} );
 				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 4 ) {
 					my $Paper = new openprint::Paper( $paper_id );
@@ -116,7 +116,10 @@
 					);
 				} # end while
 				$html .= '</td>';	
-				$html .= '<td>';
+				$html .= '</tr>';
+				$html .= "<tr$rowclass>";
+				
+				$html .= '<td>&nbsp;</td><td colspan="5">';
 				foreach my $c ( $Skid->contents() ) {
 					my $Paper = new openprint::Paper( $c->paper_id() );
 					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s %s - %d %s</a><br/>',
