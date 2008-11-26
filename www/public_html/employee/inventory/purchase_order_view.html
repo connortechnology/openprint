@@ -154,12 +154,12 @@
 		<td colspan="5" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
-    <tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="5" class="totals">FEDERAL TAX</td>
+    <tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_charge() ? '' : ' style="display:none;"' ) ?>>
+        <td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?></td>
         <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
     </tr>
-    <tr<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="5" class="totals">STATE TAX</td>
+    <tr<? echo ( $$variable{'PurchaseOrder'}->statetax_charge() ? '' : ' style="display:none;"' ) ?>>
+        <td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?></td>
         <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
     </tr>
 

@@ -1340,6 +1340,8 @@ sub purchase_order_view {
 		} else {
 			$param{'delivered_on'} = undef;
 		} # end if
+		$param{'federaltax_charge'} = $param{'federaltax_charge'} ? 1 : 0;
+		$param{'statetax_charge'} = $param{'statetax_charge'} ? 1 : 0;
 		$variable{'error'} .= $PO->save( \%param );
 	} # end if btnFunction
 
