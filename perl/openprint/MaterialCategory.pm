@@ -10,6 +10,10 @@ sub find {
 	my %params = @_;
 	my $sql = q{SELECT * FROM Material_Categories WHERE 1>0};
 	my @values;
+	if ( $params{name} ) {
+		$sql .= ' AND name=?';
+		push @values, $params{name};
+	} # end if
 	if ( $params{'order'} ) {
 		$sql .= qq{ ORDER BY $params{'order'} };
 	} # end if
@@ -40,6 +44,7 @@ sub save {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return 'Error allocating new Material Category';
 		} # end if
+		$sql{'id'} = $$self{'id'};
 
 		if ( $_ = sql::insert( $openprint::log, $openprint::dbh, 'Material_Categories', \@sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
@@ -53,6 +58,7 @@ sub save {
 	} # end if
 	sql::end_transaction( $openprint::dbh, $ac );
 	$self->load();
+	return;
 } # end sub save
 
 sub Materials {
@@ -60,3 +66,5 @@ sub Materials {
 	
 	return openprint::Material::find( 'category_id'=>$$self{'id'} );
 } # end sub project_types
+ 1;
+__END__

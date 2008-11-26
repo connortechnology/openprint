@@ -2,8 +2,16 @@ package openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw( %variable $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
+use vars qw( %variable $AUTOLOAD %cache %fields %defaults %transforms $no_cache $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
 
+my $debug;
 $no_cache = 0;
 
 sub init_cache {
@@ -30,8 +38,6 @@ sub new {
     my $self = {};
     bless $self, $parent;
 
-	$$self{'log'} = $openprint::log;
-	$$self{'dbh'} = $openprint::dbh;
     if ( ( $$self{'id'} = $id ) or $data ) {
         $self->load( $data );
     } # end if
@@ -64,15 +70,18 @@ sub AUTOLOAD {
 
 sub get {
     my $self = shift;
-    my @requested_fields = @_;
+	if ( $debug ) {
+		my $type = ref $self;
+		my %fields = eval ('%'.$type.'::fields');
 
-    foreach my $field ( @requested_fields ) {
-        if ( ! defined $fields{$field} ) {
-            $openprint::log->warn( ref $self . ": Invalid field requested: ($field)." );
-        } # end if
-    } # end foreach
+		foreach my $field ( @_ ) {
+			if ( ! defined $fields{$field} ) {
+				$openprint::log->warn( $type . ": Invalid field requested: ($field)." );
+			} # end if
+		} # end foreach
+	} # end if
 
-    return @$self{@requested_fields};
+    return @$self{@_};
 } # end sub get
 
 sub set {
@@ -81,6 +90,9 @@ sub set {
 
 	my $type = ref $self;
 	my %fields = eval ('%'.$type.'::fields');
+	if ( ! %fields ) {
+$openprint::log->warn('Object::set called on an object with no fields');
+	} # end if
 
 	foreach my $field ( keys %fields ) {
 		
@@ -101,12 +113,12 @@ sub set {
 
 		my %defaults = eval('%'.$type . '::defaults');
 
-		if ( (!$$self{$field})  and exists $defaults{$field} ) {
-#$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+		if ( ((! defined $$self{$field} ) or $$self{$field} eq '' )  and exists $defaults{$field} ) {
+$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
+		} else {
+$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 		} # end if
-		#} else {
-			#$openprint::log->warn("Object::Set::Invalid field requested: $type ($field)." );
 	} # end foreach
 	return @set_fields;
 } # end sub set

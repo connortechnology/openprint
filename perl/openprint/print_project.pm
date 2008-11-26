@@ -48,6 +48,8 @@ sub insert_project_type {
 		my @defaults = sql::execute( $log, $dbh, $_ );
 		$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex=?};
 		push @defaults, sql::execute( $log, $dbh, $_, $project_type_index );
+		$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
+		push @defaults, sql::execute( $log, $dbh, $_, $openprint::session{'user_id'} );
 		
 		if ( $r->param('txtConventionalPlates') == 1 ) {
 			push @defaults, 'rdbPlates','Conventional';
@@ -77,8 +79,12 @@ sub insert_project_type {
 sub add_service {
 # THis is an external wrapper for insert_service
 	my ( $r, $log, $dbh, $variable, $project_index, @services ) = @_;
+	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 	foreach my $service_id ( @services ) {
+		if ( ! $$services{$service_id} ) {
 		insert_service( $log, $dbh, $project_index, $service_id );
+		} # end if
 	} # end foreach
 } # end sub add_service
 
@@ -106,6 +112,8 @@ sub insert_service {
 	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'ServiceType', $ServiceType->name(), 1 );
 	$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
 	my @defaults = sql::execute( $log, $dbh, $_, $ServiceType->id() );
+	$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
+	push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
 	while ( @defaults ) {
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, shift @defaults, shift @defaults, 1 );
 	} # end while
@@ -117,6 +125,7 @@ sub insert_service {
 	sql::end_transaction( $dbh, $ac );
 	my $Project = new openprint::Project( $project_index );
 	delete $$Project{'Services'};
+	delete $$Project{'service_types'};
 	delete $$Project{'signatures'};
 	return $service_index;
 } # end sub insert_service
@@ -141,7 +150,7 @@ sub create_edit_display {
 
 	my $sql = q{SELECT name,description FROM Service_Types WHERE category=? AND create_visible=true ORDER BY Sorting, lower(name)};
 	@{$$variable{'PrepressServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Prepress' );
-	push @{$$variable{'PrepressServiceTypes'}}, sql::execute( $log, $dbh, $sql, 'Proofs' );
+	#push @{$$variable{'PrepressServiceTypes'}}, sql::execute( $log, $dbh, $sql, 'Proofs' );
 
 	@{$$variable{'BinderyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Bindery' );
 	@{$$variable{'SpecialtyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Specialty' );
@@ -259,7 +268,7 @@ sub continue_project {
 			foreach my $qty_index ( 1 .. 3 ) {
 				next if ! $Project->quantity($qty_index);
 				if ( $_ = openprint::Estimating::Multipage::status( $project_index, undef, $qty_index ) ) {
-					my @sigs = $Project->signatures($_);
+					my @sigs = $Project->signatures({'Group'=>$_});
 					my $src_id = pop @sigs;
 					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
 					$service_index = openprint::Estimating::Multipage::copy_signature( $project_index, $src_specs );
@@ -349,7 +358,7 @@ sub get_services_in_category {
 	if ( $category eq 'Printing' ) {
 #The entire point of this is to sort the signature groups
 		if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
-			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Spreads','GateFolded Spreads','Cover Spreads') ORDER BY lngServiceIndex";
+			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','GateFolded Spreads','Cover Pages') ORDER BY lngServiceIndex";
 			my @signatures = sql::execute( $log, $dbh, $_, $project_index );
 			
 			while ( @signatures ) {
@@ -579,9 +588,20 @@ sub create_edit_process {
         return;
     } # end if
 
+	my $recalculate;
+
 	my $Project = new openprint::Project( int $openprint::param{'ProjectIndex'} );
-	$Project->save() if ( ! $Project->id() );
+	$error = $Project->save() if ( ! $Project->id() );
 	$openprint::session{'project_id'} = $Project->id();
+	if ( $error ne '' ) {
+		$$variable{'Redirect'} = '/main/project/create_edit.html';
+		$$variable{'error'} = 'Fields not complete';
+		$$variable{'details'} = $error;
+		foreach ( $r->param() ) {
+			$$variable{$_} = $r->param($_);
+		} # end foreach
+        return;
+    } # end if
 	my $project_index = $Project->id();
 
 	my %services = $Project->get_services();
@@ -593,6 +613,7 @@ sub create_edit_process {
 	} # end foreach
 
 	if ( $openprint::param{'txtQuantity1'} != $Project->quantity1() ) {
+		$recalculate = 1;
 		if ( ! $Project->quantity1() ) {
 			if ( $Project->quantity2() ) {
 				foreach my $service_id ( @service_ids ) {
@@ -628,6 +649,7 @@ sub create_edit_process {
 		$Project->quantity1( int $openprint::param{'txtQuantity1'} );
 	} # end if
 	if ( $openprint::param{'txtQuantity2'} != $Project->quantity2() ) {
+		$recalculate = 1;
 		if ( ! $Project->quantity2() ) {
 			if ( $Project->quantity1() ) {
 				foreach my $service_id ( @service_ids ) {
@@ -663,6 +685,7 @@ sub create_edit_process {
 		$Project->quantity2( int $openprint::param{'txtQuantity2'} );
 	} # end if
 	if ( $openprint::param{'txtQuantity3'} != $Project->quantity3() ) {
+		$recalculate = 1;
 		if ( ! $Project->quantity3() ) {
 			if ( $Project->quantity1() ) {
 				foreach my $service_id ( @service_ids ) {
@@ -715,6 +738,7 @@ sub create_edit_process {
 
 # Handle ProjectType
 	if ( $OldProjectType->strid() ne $ProjectType->strid() ) {
+		$recalculate = 1;
 		if ( $services{''} ) {
 			foreach ( @{$services{''}} ) { delete_service( $log, $dbh, $Project->id(), $_ ); };
 		} # end if
@@ -724,6 +748,7 @@ sub create_edit_process {
 	if ( ! $services{''} ) {
 		my $printing_service_index = insert_project_type( $r, $log, $dbh, $Project->id(), $r->param('rdbProjectType') );
 		push @{$services{''}}, $printing_service_index;
+		$recalculate = 1;
 	} # end if
 	$Project->save();
 
@@ -732,14 +757,14 @@ sub create_edit_process {
 		push @{$services{'GraphicDesign'}}, insert_service( $log, $dbh, $project_index, 'GraphicDesign') if ! $services{'GraphicDesign'};
 	} # end if
 
-	push @{$services{'Proofs'}}, insert_service( $log, $dbh, $project_index, 'Proofs') if ! $services{'Proofs'};
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
 
 	foreach my $ServiceType ( openprint::ServiceType::find( 'create_visible'=>'Y') ) {
 		if ( $openprint::param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
 			if ( ! $services{$ServiceType->name()} ) {	
-				push @{$services{$ServiceType->name()}}, insert_service( $log, $dbh, $Project->id(), $ServiceType->name() ) if ! $services{$ServiceType->name() };
+				push @{$services{$ServiceType->name()}}, insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );
+				$recalculate = 1;
 			} # end if
 		} else {
 			if ( $services{$ServiceType->name()} ) {
@@ -749,11 +774,23 @@ sub create_edit_process {
 					} # end if
 				} # end foreach
 				delete $services{$ServiceType->name()};
+				$recalculate = 1;
 			} # end if
 		} # end if
 	} # end foreach
+	if ( ! ( $services{'Proofs'} or $services{'NoPrinting'} ) ) {
+		push @{$services{'Proofs'}}, insert_service( $log, $dbh, $project_index, 'Proofs');
+		$recalculate = 1;
+	} # end if
 
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Edited' );
+	if ( $recalculate ) {
+		$Project->Currency( openprint::Currency::get_current() );
+		foreach my $signature_service_index ( $Project->signatures() ) {
+			openprint::service::internal_calc( $log, $dbh, $variable, $Project->id(), $signature_service_index, 'Printing' );
+		} # end foreach
+		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $Project->id(), undef );
+	} # end if
 	return $Project->id();
 } # end sub create_edit_process
 
@@ -777,6 +814,7 @@ sub delete_service {
 	my $Project = new openprint::Project( $project_index );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
+	delete $$Project{'service_types'};
 	sql::end_transaction( $dbh, $ac );
 	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
 } # end sub delete_service
@@ -881,6 +919,7 @@ sub reuse_project {
 		} # end foreach
 		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $NewProject->id(), undef );
 	} # endif
+	$openprint::session{'project_id'} = $NewProject->id();
 	return $NewProject->id();
 } # end sub reuse_project
 
@@ -889,6 +928,8 @@ my @no_outputs = (
 	'txtHoleQty','UPSShipping','HoleDrilling',
 	'Aqueous','txtTotalPageQuantity','Colours',
 	'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
+	'ddmStockBrand1','ddmStockFinish1','ddmStockColour1','ddmStockWeight1',
+	'ddmStockBrand2','ddmStockFinish2','ddmStockColour2','ddmStockWeight2',
 	'txtHoleSize', 
 	'rdbAqueousSideOne','rdbAqueousSideTwo',
 	'chkProcessColourSideOne', 'chkProcessColourSideTwo',
@@ -1005,43 +1046,43 @@ sub calc {
 				return jsrs::encode_pairs(%specs);
 			} # end if
 			if ( $specs{'rdbCover'} eq 'Different' ) {
-				if ( ! $specs{'ddmStockBrandCoverSpreads'} ) {
+				if ( ! $specs{'ddmStockBrand1'} ) {
 					$specs{'alert'} .= 'Please select Cover Stock Brand<br/>';
 					$specs{'Status'} = 'uncalculated';
 					return jsrs::encode_pairs(%specs);
 				} # end if
-				if ( ! $specs{'ddmStockFinishCoverSpreads'} ) {
+				if ( ! $specs{'ddmStockFinish1'} ) {
 					$specs{'alert'} .= 'Please select Cover Stock Finish<br/>';
 					$specs{'Status'} = 'uncalculated';
 					return jsrs::encode_pairs(%specs);
 				} # end if
-				if ( ! $specs{'ddmStockColourCoverSpreads'} ) {
+				if ( ! $specs{'ddmStockColour1'} ) {
 					$specs{'alert'} .= 'Please select Cover Stock Colour<br/>';
 					$specs{'Status'} = 'uncalculated';
 					return jsrs::encode_pairs(%specs);
 				} # end if
-				if ( ! $specs{'ddmStockWeightCoverSpreads'} ) {
+				if ( ! $specs{'ddmStockWeight1'} ) {
 					$specs{'alert'} .= 'Please select Cover Stock Weight<br/>';
 					$specs{'Status'} = 'uncalculated';
 					return jsrs::encode_pairs(%specs);
 				} # end if
 			} # end if
-			if ( ! $specs{'ddmStockBrandInteriorSpreads'} ) {
+			if ( ! $specs{'ddmStockBrand2'} ) {
                     $specs{'alert'} .= 'Please select Interior Stock Brand<br/>';
                     $specs{'Status'} = 'uncalculated';
                     return jsrs::encode_pairs(%specs);
                 } # end if
-                if ( ! $specs{'ddmStockFinishInteriorSpreads'} ) {
+                if ( ! $specs{'ddmStockFinish2'} ) {
                     $specs{'alert'} .= 'Please select Interior Stock Finish<br/>';
                     $specs{'Status'} = 'uncalculated';
                     return jsrs::encode_pairs(%specs);
                 } # end if
-                if ( ! $specs{'ddmStockColourInteriorSpreads'} ) {
+                if ( ! $specs{'ddmStockColour2'} ) {
                     $specs{'alert'} .= 'Please select Interior Stock Colour<br/>';
                     $specs{'Status'} = 'uncalculated';
                     return jsrs::encode_pairs(%specs);
                 } # end if
-                if ( ! $specs{'ddmStockWeightInteriorSpreads'} ) {
+                if ( ! $specs{'ddmStockWeight2'} ) {
                     $specs{'alert'} .= 'Please select Interior Stock Weight<br/>';
                     $specs{'Status'} = 'uncalculated';
                     return jsrs::encode_pairs(%specs);
@@ -1066,51 +1107,54 @@ sub calc {
 				} # end if
 			} # end foreach
 			sql::end_transaction( $dbh, $ac );
+
+			# Sets up the book service
 			openprint::service::internal_calc( $log, $dbh, $variable, $$project{'id'}, $printing_service_index, 'Multipage' );
 
+			# Setup the colours
 			if ( $specs{'Colours'} eq '4/4' ) {
-				$specs{'chkBlackSideOneInteriorSpreads'} = undef;
-				$specs{'chkBlackSideTwoInteriorSpreads'} = undef;
-				$specs{'chkProcessColourSideOneInteriorSpreads'} = 'ProcessColour';
-				$specs{'chkProcessColourSideTwoInteriorSpreads'} = 'ProcessColour';
+				$specs{'chkBlackSideOne2'} = undef;
+				$specs{'chkBlackSideTwo2'} = undef;
+				$specs{'chkProcessColourSideOne2'} = 'ProcessColour';
+				$specs{'chkProcessColourSideTwo2'} = 'ProcessColour';
 			} elsif ( $specs{'Colours'} eq '4/0' ) {
-				$specs{'chkBlackSideOneInteriorSpreads'} = undef;
-				$specs{'chkBlackSideTwoInteriorSpreads'} = undef;
-				$specs{'chkProcessColourSideOneInteriorSpreads'} = 'ProcessColour';
-				$specs{'chkProcessColourSideTwoInteriorSpreads'} = '';
+				$specs{'chkBlackSideOne2'} = undef;
+				$specs{'chkBlackSideTwo2'} = undef;
+				$specs{'chkProcessColourSideOne2'} = 'ProcessColour';
+				$specs{'chkProcessColourSideTwo2'} = '';
 			} elsif ( $specs{'Colours'} eq '4/1' ) {
-				$specs{'chkBlackSideOneInteriorSpreads'} = undef;
-				$specs{'chkBlackSideTwoInteriorSpreads'} = 'Black';
-				$specs{'chkProcessColourSideOneInteriorSpreads'} = 'ProcessColour';
-				$specs{'chkProcessColourSideTwoInteriorSpreads'} = undef;
+				$specs{'chkBlackSideOne2'} = undef;
+				$specs{'chkBlackSideTwo2'} = 'Black';
+				$specs{'chkProcessColourSideOne2'} = 'ProcessColour';
+				$specs{'chkProcessColourSideTwo2'} = undef;
 			} elsif ( $specs{'Colours'} eq '1/1' ) {
-				$specs{'chkBlackSideOneInteriorSpreads'} = 'Black';
-				$specs{'chkBlackSideTwoInteriorSpreads'} = 'Black';
-				$specs{'chkProcessColourSideOneInteriorSpreads'} = undef;
-				$specs{'chkProcessColourSideTwoInteriorSpreads'} = undef;
+				$specs{'chkBlackSideOne2'} = 'Black';
+				$specs{'chkBlackSideTwo2'} = 'Black';
+				$specs{'chkProcessColourSideOne2'} = undef;
+				$specs{'chkProcessColourSideTwo2'} = undef;
 			} # end if
-			@specs{'rdbAqueousSideOneInteriorSpreads','rdbAqueousSideTwoInteriorSpreads'} = @specs{'InteriorSpreadsAqueous','InteriorSpreadsAqueous'};
+			@specs{'rdbAqueousSideOne2','rdbAqueousSideTwo2'} = @specs{'2Aqueous','2Aqueous'};
 
 			if ( $specs{'rdbCover'} eq 'Different' ) {
 				if ( $specs{'ColoursCover'} eq '4/4' ) {
-					$specs{'chkBlackSideOneCoverSpreads'} = undef;
-					$specs{'chkBlackSideTwoCoverSpreads'} = undef;
-					$specs{'chkProcessColourSideOneCoverSpreads'} = 'ProcessColour';
-					$specs{'chkProcessColourSideTwoCoverSpreads'} = 'ProcessColour';
+					$specs{'chkBlackSideOne1'} = undef;
+					$specs{'chkBlackSideTwo1'} = undef;
+					$specs{'chkProcessColourSideOne1'} = 'ProcessColour';
+					$specs{'chkProcessColourSideTwo1'} = 'ProcessColour';
 				} elsif ( $specs{'ColoursCover'} eq '4/0' ) {
-					$specs{'chkBlackSideOneCoverSpreads'} = undef;
-					$specs{'chkBlackSideTwoCoverSpreads'} = undef;
-					$specs{'chkProcessColourSideOneCoverSpreads'} = 'ProcessColour';
-					$specs{'chkProcessColourSideTwoCoverSpreads'} = undef;
+					$specs{'chkBlackSideOne1'} = undef;
+					$specs{'chkBlackSideTwo1'} = undef;
+					$specs{'chkProcessColourSideOne1'} = 'ProcessColour';
+					$specs{'chkProcessColourSideTwo1'} = undef;
 				} elsif ( $specs{'ColoursCover'} eq '4/1' ) {
-					$specs{'chkBlackSideOneCoverSpreads'} = undef;
-					$specs{'chkBlackSideTwoCoverSpreads'} = 'Black';
-					$specs{'chkProcessColourSideOneCoverSpreads'} = 'ProcessColour';
-					$specs{'chkProcessColourSideTwoCoverSpreads'} = undef;
+					$specs{'chkBlackSideOne1'} = undef;
+					$specs{'chkBlackSideTwo1'} = 'Black';
+					$specs{'chkProcessColourSideOne1'} = 'ProcessColour';
+					$specs{'chkProcessColourSideTwo1'} = undef;
 				} # end if
-			@specs{'rdbAqueousSideOneCoverSpreads','rdbAqueousSideTwoCoverSpreads'} = @specs{'CoverSpreadsAqueous','CoverSpreadsAqueous'};
+			@specs{'rdbAqueousSideOne1','rdbAqueousSideTwo1'} = @specs{'1Aqueous','1Aqueous'};
 			} # end if
-# The adding of signatures will be done automatically by multipage signatures
+# The adding of signatures will be done automatically by multipage_signatures
 # This will add bindery services, and a printing service
 			$specs{'Status'} = openprint::print::multipage_signatures( \%specs, $log, $dbh, $variable, $$project{'id'}, $printing_service_index );
 		} else {
@@ -1417,8 +1461,13 @@ $openprint::log->warn("Aftere auto");
 		delete $specs{$key};
 	} # end foreach
 
-	$project->update_status( $variable );
-	$specs{'Status'} = $project->status() if $specs{'Status'} ne 'uncalculated';
+	$specs{'Status'} = $project->update_status( $variable ) if ! $specs{'Status'};
+	if ( $specs{'Status'} ne 'Unordered' ) {
+		$specs{'alert'} = 'There was an error in calculations.  Please contact us for help.' if ! $specs{'alert'};
+		$specs{'txtPrice1'} = '';
+		$specs{'txtUnitPrice1'} = '';
+	} # end if
+	delete $$variable{'Redirect'};
 	return jsrs::encode_pairs(%specs);
 } # end sub calc
 

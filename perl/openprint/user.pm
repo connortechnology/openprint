@@ -62,10 +62,10 @@ sub save {
 				$log->warn( "Unknown User Type Requested!" );
 			} # end if
 			$info{'User'} = $User;
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
+			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
+			$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
@@ -83,10 +83,10 @@ sub save {
 				@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = sql::execute( $log, $dbh, $_ );
 
 				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/usertype_system_notification.html' );
-				$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-				my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-				$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
+				my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
+				$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 				my %mail = (
 						SMTP    => $openprint::config{'Mail Server'},
@@ -109,9 +109,9 @@ sub save {
 			$info{'CustomerServiceEmail'} = $openprint::config{'CustomerServiceEmail'};
 			$_ = $r->param('rdbAccountActivation') eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-            my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
+			$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},

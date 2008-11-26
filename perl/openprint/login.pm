@@ -118,10 +118,10 @@ sub verify_login {
 			$info{'UserType'} = $user_type;
 
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/login_notification.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-			$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my %mail = (
 					SMTP	=> $openprint::config{'Mail Server'},
@@ -163,14 +163,11 @@ sub verify_login {
 } # sub verify_login
 
 sub logout {
-	my ( $log, $dbh, $variable, $cookie, $site ) = @_;
-
 	openprint::logs::insertLogRecord('3',);
 	foreach my $k ( keys %openprint::session ) {
-		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country','Pricelist_id' ] );
+		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country' ] );
 		delete $openprint::session{$k};
 	} # end foreach
-	
 } # sub logout
 
 sub email_password {
@@ -184,7 +181,7 @@ sub email_password {
 		return misc::error( $log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.' );
 	} # end if
 
-	if ( my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' ) ) {
+	if ( my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' ) ) {
 		my %info = (
 			'siteURL' => $r->dir_config('siteURL'),
 			'SecureSiteURL' => $r->dir_config('SecureSiteURL'),
@@ -193,8 +190,8 @@ sub email_password {
 		
 		openprint::user::load( $log, $dbh, $user_id, \%info );
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 
 		my %mail = (

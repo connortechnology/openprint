@@ -1,17 +1,17 @@
 <div style="font-size:14pt; font-family: Arial, Helvetica,Sans-Serif;">
 	<form name="f1" method="post">
         <input type="hidden" name="Manifest" value="<? echo ( $openprint::param{Manifest} ) ?>" />
-	<div class="unprintable">
-		<span style="float: right;">
-			<? echo (  join('',
-				#ssi::writeButton( $log, $dbh, 'manifest', 'manifest.gif', 'f1.Manifest.value=1;f1.submit();', '', 'Include Manifest' ),
-				ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print();', '', 'Print' ),
-				ssi::writeButton( $log, $dbh, 'close', 'close.gif', 'window.close();', '', 'Close' ),
-			); ) ?>
-		</span>
-		<br class="spacer"/>
-		<hr/>
-	</div>
+		<div class="unprintable">
+			<span style="float: right;">
+				<? echo (  join('',
+					#ssi::writeButton( $log, $dbh, 'manifest', 'manifest.gif', 'f1.Manifest.value=1;f1.submit();', '', 'Include Manifest' ),
+					ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print();', '', 'Print' ),
+					ssi::writeButton( $log, $dbh, 'close', 'close.gif', 'window.close();', '', 'Close' ),
+				); ) ?>
+			</span>
+			<br class="spacer"/>
+			<hr/>
+		</div>
 	</form>
 	<? echo (
 		my $html;
@@ -32,24 +32,24 @@
 			if ( $$variable{'paper_id'} ) {
 				@papers = ( $$variable{'paper_id'} );
 			} else {
-				@papers = keys %{$$variable{'Skid'}{'Paper'}};
+				@papers = map { $_->paper_id() } $$variable{'Skid'}->contents();
 			} # end if
 			if ( @papers ) {
 				foreach my $paper_id ( @papers ) {
 					$$variable{'paper_id'} = $paper_id;
 					my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/inventory/paper_label.html' );
-					$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+					$html .= ssi::variable_substitution( \$content, $variable );
 				} # end foreach paper_id
 			} else {
                 my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/inventory/paper_label.html' );
-                $html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+                $html .= ssi::variable_substitution( \$content, $variable );
             } # end if
 			$html .= '<br class="pagebreak"/>';
         } # end foreach skid_id
         if ( 0 and $openprint::param{'Manifest'} ) {
             @{$$variable{'Skids'}} = @skid_ids;
             my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/inventory/paper_manifest.html' );
-            $html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+            $html .= ssi::variable_substitution( \$content, $variable );
         } # end if
 
 		return $html;

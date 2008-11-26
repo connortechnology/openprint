@@ -1,6 +1,9 @@
 #!/usr/bin/perl 
 
 BEGIN {
+	use threads;
+	use threads::shared;
+	#use Apache2 ();
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
 	use APR::URI;
@@ -53,7 +56,7 @@ BEGIN {
 	use openprint::paper;
 	use openprint::JDF;
 
-use MapImage;
+#use MapImage;
 
 }
 

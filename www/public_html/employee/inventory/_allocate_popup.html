@@ -8,7 +8,9 @@
 			my $html = '';
 			foreach my $skid_id ( split(',', $openprint::param{'skid_id'} ) ) {
 				my $Skid = new openprint::Skid( $skid_id );
-				$html .= sprintf('skid %d contains %d%s<br/>', $skid_id, $$Skid{Paper}{$$variable{'Paper'}->id()}, $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : ' sheets' ); 
+				foreach my $c ( $Skid->contents() ) {
+				$html .= sprintf('skid %d contains %d%s<br/>', $skid_id, $c->quantity(), $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : ' sheets' ); 
+				} # end foreach
 			} # end foreach	
 			return $html;
 			) ?>

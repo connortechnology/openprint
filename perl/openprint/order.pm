@@ -316,7 +316,7 @@ sub save_project_information {
 	if ( $openprint::param{'ddmDueDateYear'.$project_index} and $openprint::param{'ddmDueDateMonth'.$project_index} and $openprint::param{'ddmDueDateDay'.$project_index} ) {
 
 		if ( ! check_date(1*$openprint::param{'ddmDueDateYear'.$project_index},1*$openprint::param{'ddmDueDateMonth'.$project_index},1*$openprint::param{'ddmDueDateDay'.$project_index})) {
-			return misc::error( $log, $dbh, $variable, 'Invalid Date', q{Date is not valid.	Please select a correct date.} );
+			return q{Date is not valid. Please select a correct date.};
 		} # end if
 		$sql{'dateRequired'}=sprintf('%.4d-%.2d-%.2d', @openprint::param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} );
 		$Project->requested_date( sprintf('%.4d-%.2d-%.2d', @openprint::param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
@@ -324,7 +324,6 @@ sub save_project_information {
 
 	my $services = $Project->services();
 	my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
-	my %ShippingServices = map { $_->name(), $_->id() } @ServiceTypes;
 
 	# If we are specifying the Shipping Type
 	if ( $openprint::param{'ShippingType'.$project_index} ) {
@@ -428,7 +427,7 @@ $openprint::log->debug("Making order from quote");
 	} elsif ( $openprint::param{'btnFunction'} eq 'Continue') { # saving projcet information
 		$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
 		foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
-			save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
+			$$variable{'error'} .= save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
 		} # end foreach
 	} elsif ( $openprint::param{'Product'} and $openprint::param{'Quantity'} ) {
 		( $order_id, $error ) = add_product( $order_id, @openprint::param{'Product','Quantity'} );
@@ -628,7 +627,7 @@ sub verify_order {
 
 	if ( $openprint::param{'btnFunction'} eq 'Continue') { # saving project information
 		foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
-			save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
+			$$variable{'Error'} .= save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
 		} # end foreach
 		foreach my $Product ( $Order->Products() ) {
 			$Product->quantity( $openprint::param{'ProductQuantity'.$Product->id()} );
@@ -649,7 +648,8 @@ sub verify_order {
 			return;
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
-		openprint::print::save_service( $r, $log, $dbh, $variable, @openprint::param{'ProjectIndex','ServiceIndex'} );
+		my $Project = new openprint::Project( $openprint::param{'ProjectIndex'} );
+		openprint::print::save_service( $r, $log, $dbh, $variable, $Project, $openprint::param{'ServiceIndex'} );
 	} # end if
 
 	my @errors;
@@ -947,14 +947,14 @@ sub send_completion_notice {
 	my @attachments = ();
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_completion_notice.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
+	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice.html' );
 	if ( $_ ) {
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) );
+		$_ = encode_qp( ssi::variable_substitution( \$_, \%order ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	#my %mail = (
@@ -988,15 +988,15 @@ sub send_invoice {
 	my @attachments = ();
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
+	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice.html' );
 	if ( $_ ) {
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) );
+		$_ = encode_qp( ssi::variable_substitution( \$_, \%order ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	my %mail = (
@@ -1011,13 +1011,13 @@ sub send_invoice {
 
 	my @attachments = ();
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
+	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_for_admin.html' );
 	if ( $_ ) {
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) );
+		$_ = encode_qp( ssi::variable_substitution( \$_, \%order ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	my %mail = (
@@ -1051,16 +1051,16 @@ sub send_sales_order {
 	$order{'SiteTitle'} = $r->dir_config('SiteTitle');
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
+	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	my @sales_order;
 	get_projects( $log, $dbh, \%order, $order_id );
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	@sales_order = ( "Order$order_id.html", encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) ), 'text/html', 'quoted-printable' );
+	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	@sales_order = ( "Order$order_id.html", encode_qp( ssi::variable_substitution( \$email_template, \%order ) ), 'text/html', 'quoted-printable' );
 
 	# Add a project summary for each project in the order
 	my @project_summaries = ();
@@ -1073,8 +1073,8 @@ sub send_sales_order {
 		$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
 		openprint::print_project::summary( $r, $log, $dbh, \%variable, $project );
 		$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_summary.html' );
-		$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
-		push @project_summaries, "ProjectSummary$project.html", encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%variable )), 'text/html', 'quoted-printable';
+		$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+		push @project_summaries, "ProjectSummary$project.html", encode_qp( ssi::variable_substitution( \$email_template, \%variable )), 'text/html', 'quoted-printable';
 	} # for each
 
 	my $sales_person_email;
@@ -1094,15 +1094,15 @@ sub send_sales_order {
 	misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries );
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
+	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my @sales_order;
 	get_projects( $log, $dbh, \%order, $order_id );
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
+	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	@sales_order = ( "Order$order_id.html", $_, 'text/html', 'quoted-printable' );
 	my @project_dockets = ();
 
@@ -1115,7 +1115,7 @@ sub send_sales_order {
 		openprint::print_project::summary( $r, $log, $dbh, \%variable, $project );
 		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
 		if ( $_ ) {
-			$_ = ssi::variable_substitution( $r, $log, $dbh, \$_, \%variable );
+			$_ = ssi::variable_substitution( \$_, \%variable );
 			$_ = encode_qp( $_ );
 			push @project_dockets, "ProjectDocket$project.html", $_, 'text/html', 'quoted-printable';
 		} # end if

@@ -1,18 +1,18 @@
 
-DROP TABLE Survey_Question_Available_Answers;
+DROP TABLE IF EXISTS Survey_Question_Available_Answers;
 
-DROP TABLE Survey_Responses;
+DROP TABLE IF EXISTS Survey_Responses;
 
-DROP TABLE Survey_Answers;
-DROP SEQUENCE survey_answer_id_seq;
-DROP TABLE Survey_Questions;
-DROP SEQUENCE survey_question_id_seq;
+DROP TABLE IF EXISTS Survey_Answers;
+DROP SEQUENCE IF EXISTS survey_answer_id_seq;
+DROP TABLE IF EXISTS Survey_Questions;
+DROP SEQUENCE IF EXISTS survey_question_id_seq;
 
-DROP TABLE Survey_Question_Categories;
-DROP SEQUENCE survey_question_category_id_seq;
+DROP TABLE IF EXISTS Survey_Question_Categories;
+DROP SEQUENCE IF EXISTS survey_question_category_id_seq;
 
-DROP TABLE Surveys;
-DROP SEQUENCE survey_id_seq;
+DROP TABLE IF EXISTS Surveys;
+DROP SEQUENCE IF EXISTS survey_id_seq;
 
 CREATE SEQUENCE survey_id_seq;
 CREATE TABLE Surveys (

@@ -16,7 +16,7 @@
 		<p> 
 			<label>Customer:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" size="4" />
-			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('Buttons1').hide();$('Buttons2').hide();f1.submit();}">
+			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('Buttons1').hide();$('Buttons2');f1.submit();}">
 				<option value=""> Select a Customer</option>
 	 <? echo ( return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('salesrep_id'=>$openprint::param{'search_salesrep_id'},'order'=>'lower(strname)') ], $openprint::param{'ddmCustomer'} ); ) ?>
 
@@ -454,7 +454,8 @@
 	</p>
 	<p> 
 		<label>Phone:</label>
-		<input type="text" name="txtTradeReferencePhone3" value="<?txtTradeReferencePhone3?>" >
+		 
+			<input type="text" name="txtTradeReferencePhone3" value="<?txtTradeReferencePhone3?>" >
 	</p>
 	<p> 
 		<label>Extension:</label>

@@ -147,6 +147,19 @@ function service_onclick( element ) {
 			element.form.chkServicesPerforating.checked = false;
 		if ( element.form.chkServicesDrilling ) 
 			element.form.chkServicesDrilling.checked = false;
+		if ( element.form.chkServicesPlainCartons ) 
+			element.form.chkServicesPlainCartons.checked = false;
+	} else if ( element.value == 'NoPrinting' ) {
+		var e = $('Design');
+		if ( element.checked ) {
+			if ( element.form.chkServicesProofs ) 
+				element.form.chkServicesProofs.checked = false;
+			if ( e ) e.hide();
+		} else {
+			if ( element.form.chkServicesProofs ) 
+				element.form.chkServicesProofs.checked = true;
+			if ( e ) e.show();
+		} // end if
 	} else if ( element.checked ) {
 		if ( element.form.chkServicesNoBindery ) 
 			element.form.chkServicesNoBindery.checked = false;
@@ -173,7 +186,7 @@ function checkSelections (form){
 	} // end if
 
 	if ( projectType == 'PresentationFolders' ) {
-		if ( ! form.chkServicesDieCutting.checked ) {
+		if ( form.chkServicesDieCutting && ! form.chkServicesDieCutting.checked ) {
 			if (confirm ("Your project requires a die cutting service in order for us to fufill your request for Presentation Folders.\n\nIf you would like to add die cutting to your project please click OK, otherwise click Cancel.")){
 				form.chkServicesDieCutting.checked = true;
 			} // end if			

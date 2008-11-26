@@ -5,10 +5,6 @@
 <? if ( $$variable{'error'} ) ?>
 <div class="error"><?error?></div>
 <? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<div class="information"><?information?></div>
-<? endif ( $$variable{'information'} ) ?>
-
 <? if ( $openprint::session{'user_id'} ) ?>
 	<span class="requiredFieldIndicator">*</span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
@@ -101,6 +97,16 @@
    					<input type="radio" id="AdministratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" /> 
    					<label class="radio" for="AdministratorN">No</label>
    				</p>
+<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
+<? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
+   				<p>
+   					<label>Quote Level:&nbsp;&nbsp;&nbsp;</label>
+					<select name="quote_level">
+						<option value="">select</option>
+						<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ) ) ?>
+					</select>
+   				</p>
+<? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
    			</fieldset>
    			<fieldset>

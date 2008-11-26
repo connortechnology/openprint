@@ -8,6 +8,7 @@ use openprint ();
 
 require sql;
 require openprint::Object;
+require openprint::User;
 
 %fields = (
 		'id'						=>	'index',
@@ -346,7 +347,7 @@ sub get_dropdown {
 	my $sql = 'SELECT Index, strName FROM Company';
 	my @values;
 
-	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) {
+	if ( ( $openprint::config{'ProtectCustomerDatabase'} ne 'N' ) and $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) {
 		$sql .= ' WHERE Index=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
@@ -361,6 +362,11 @@ sub CSR {
 	my $self = shift;
 	return new openprint::User( $$self{'salesrep_id'} );
 }
+
+sub Users {
+	my $self = shift;
+	return openprint::User::find('company_id'=>$$self{'id'} );
+} # end sub Users
 
 1;
 __END__

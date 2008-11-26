@@ -152,7 +152,7 @@ sub save {
 	my $ac = sql::start_transaction( $dbh );
 
 	if ( ! sql::execute( undef, undef, 'SELECT * FROM RFIDTags WHERE id=?', $$self{'id'} ) ) {
-		if ( my $error = sql::insert( undef, undef, 'RFIDTags', map { $_, $$self{$_} } keys %fields ) ) {
+		if ( my $error = sql::insert( undef, undef, 'RFIDTags', [ map { $_, $$self{$_} } keys %fields ] ) ) {
 			$$self{'id'} = undef;
 			sql::end_transaction( $dbh, $ac );
 			return $error;
@@ -180,13 +180,18 @@ sub delete {
 	return '';
 } # end sub delete
 
+sub Skid {
+	my ($self) = @_;
+	return openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+} # end sub Skid
+
 sub Type {
 	return new openprint::RFIDTagType( $_[0]->type_id() );
 } # end sub Type
 
 sub type {
 	my ( $self, $new ) = @_;
-	if ( $new and $new ne $$self{'type'} ) {
+	if ( $new and ($new ne $$self{'type'}) ) {
 		$$self{'type'} = $new;
 		$$self{'type_id'} = '';
 	} # end if

@@ -89,7 +89,7 @@ sub save {
 	my ( $self, $param ) = @_;
 
 	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, "SELECT nextval('serviceprices_id_seq')" );
+		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('serviceprices_id_seq')} );
 		sql::insert( undef, undef, 'tbl_Service_Prices',
 				'id',					$$self{'id'},
 				'lngListIndex',			$$self{'pricelist_id'},

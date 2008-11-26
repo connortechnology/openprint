@@ -3,7 +3,14 @@
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="value"><? echo ( $$variable{'ddmStockSheetSize'.$$variable{'QTYIndex'}} ) ?></span>
+	<span class="value"><? echo ( 
+if ( $$variable{'StockType'.$$variable{'QTYIndex'}} eq 'Roll' ) {
+	return sprintf('%s&quot;', $$variable{'StockWidth'.$$variable{'QTYIndex'}} );
+} else {
+	return sprintf('%s&quot;x%s&quot;', @$variable{'StockWidth'.$$variable{'QTYIndex'},'StockHeight'.$$variable{'QTYIndex'}} );
+} # end if
+) ?>
+</span>
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>

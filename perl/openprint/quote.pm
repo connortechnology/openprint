@@ -5,6 +5,7 @@ use Date::Calc qw(Add_Delta_Days);
 use MIME::QuotedPrint;
 use MIME::Base64;
 use Mail::Sendmail;
+use Email::Valid;
 use strict;
 
 require sql;
@@ -78,10 +79,11 @@ sub store_quote_info {
 		} # end if
 	} # end foreach
 
-	my $error = "";
-	$error .= 'No prepared by first name entered.<br>' if $r->param('ByFirstName') eq '';
-	$error .= 'No prepared by last name entered.<br>' if $r->param('ByLastName') eq '';
-	$error .= 'No prepared by email address entered.<br>' if $r->param('ByEmail') eq '';
+	my $error = '';
+	$error .= 'No prepared by first name entered.<br/>' if $by{'ByFirstName'} eq '';
+	$error .= 'No prepared by last name entered.<br/>' if $by{'ByLastName'} eq '';
+	$error .= 'No prepared by email address entered.<br/>' if $by{'ByEmail'} eq '';
+	$error .= 'Invalid prepared by email address entered.<br/>' if ( ! Email::Valid->address( $by{'ByEmail'} ) );
 	if ( $error ne '' ) {
 		return $error;
 	} # end if
@@ -94,7 +96,8 @@ sub store_quote_info {
 #		$error .= 'No prepared for postal code entered.<br>' if $r->param('ForPostalCode') eq '';
 #		$error .= 'No prepared for country entered.<br>' if $r->param('ForCountry') eq ''; 
 #		$error .= 'No prepared for phone number entered.<br>' if $r->param('ForPhone') eq '';
-		$error .= 'No prepared for email address entered.<br>' if $r->param('ForEmail') eq '';
+		$error .= 'No prepared for email address entered.<br/>' if $r->param('ForEmail') eq '';
+		$error .= 'Invalid prepared for email address entered.<br/>' if ( ! Email::Valid->address( $for{'ForEmail'} ) );
 		if ( $error ne '' ) {
 			return $error;
 		} # end if
@@ -141,38 +144,26 @@ sub get_misc_info {
 sub get_finished_quote_contents {
 	my ( $log, $dbh, $variable, $quote_id ) = @_;
 
-	$_ = 'SELECT ProjectIndex, strdescription FROM tbl_Quote_Details WHERE QuoteIndex=? ORDER BY ProjectIndex';
-	@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, $_, $quote_id );
+	@{$$variable{'PROJECTS'}} = ();
 
-	for ( my $index = 0; $index < @{$$variable{'PROJECTS'}}; $index += 2 ) {
-		my $project_index = $$variable{'PROJECTS'}[$index];
-		my $Project = new openprint::Project( $project_index );
-		if ( ! $$variable{'PROJECTS'}[$index+1] ) {
-			$$variable{'PROJECTS'}[$index+1] = $Project->summary();
+	my $Quote = new openprint::Quote( $quote_id );
+	foreach my $QP ( $Quote->Quoted_Projects() ) {
+		my $Project = $QP->Project();
+
+		push @{$$variable{'PROJECTS'}}, $QP->project_id(); 
+		push @{$$variable{'PROJECTS'}}, ( $Project->reference() ? $Project->reference() : $Project->summary() );
+
+		@{$$variable{'PROJECT_PRICES_'.$QP->project_id()}} = ();
+		my $colour = 'black';
+		if ( $QP->quantity1() != $Project->quantity1() or $QP->quantity2() != $Project->quantity2() or $QP->quantity3() != $Project->quantity3() ) {
+			$colour = 'red';
+		} elsif ( $Project->price1() != $QP->price1() or $Project->price2() != $QP->price2() or $Project->price3() != $QP->price3() ) {
+			$colour = 'red';
 		} # end if
-		@{$$variable{"PROJECT_PRICES_$project_index"}} = ();
-		$_ = 'SELECT dblMarkup1, intQuantity1, dblPrice1, '.
-				'dblMarkup2, intQuantity2, dblPrice2, '.
-				'dblMarkup3, intQuantity3, dblPrice3 '.
-				'FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?';
-		my @data = sql::execute( $log, $dbh, $_, $quote_id, $project_index );
-		while ( @data ) {
-			my ( $markup1, $qty1, $price1, $markup2, $qty2, $price2, $markup3, $qty3, $price3 ) = splice( @data, 0, 9 );
-
-			my $newprice1 = sprintf( "%.2f",($price1*(1+($markup1/100))));
-			my $newprice2 = sprintf( "%.2f",($price2*(1+($markup2/100))));
-			my $newprice3 = sprintf( "%.2f",($price3*(1+($markup3/100))));
-
-			my $colour = 'black';
-			if ( $qty1 != $Project->quantity1() or $qty2 != $Project->quantity2() or $qty3 != $Project->quantity3() ) {
-				$colour = 'red';
-			} elsif ( $Project->price1() != $price1 or $Project->price2() != $price2 or $Project->price3() != $price3 ) {
-				$colour = 'red';
-			} # end if
-			push @{$$variable{"PROJECT_PRICES_$project_index"}}, 1, $markup1, $qty1, $price1, $newprice1, $colour, 2, $markup2, $qty2, $price2, $newprice2, $colour, 3, $markup3, $qty3, $price3, $newprice3, $colour;
-		} # end while
-
-	} # end for
+		foreach my $qty_index ( 1 .. 3 ) {
+			push @{$$variable{'PROJECT_PRICES_'.$QP->project_id()}}, $qty_index, $QP->get('markup'.$qty_index,'quantity'.$qty_index,'price'.$qty_index,'price'.$qty_index), $colour ;
+		} # end foreach qty_index
+	} # end foreach QP
 	return @{$$variable{'PROJECTS'}};
 } # end sub get_finished_quote_contents
 

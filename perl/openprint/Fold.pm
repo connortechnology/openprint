@@ -9,7 +9,9 @@ require sql;
 
 my $debug = 0;
 
-my %fields = (
+use vars qw( %fields %transforms %defaults );
+
+%fields = (
 	'id'					=>	'id',
 	'equipment_id'			=>	'equipment_id',
 	'type'					=>	'type',
@@ -18,11 +20,14 @@ my %fields = (
 	'max_width'				=>	'max_width',
 	'min_height'			=>	'min_height',
 	'max_height'			=>	'max_height',
+	'min_calliper'			=>	'min_calliper',
+	'max_calliper'			=>	'max_calliper',
 	'pages'					=>	'pages',
 	'page_columns'			=>	'page_columns',
 	'page_rows'				=>	'page_rows',
 	'min_imposition'		=>	'min_imposition',
 	'max_imposition'		=>	'max_imposition',
+	'cutting'				=>	'cutting',
 	'stitching'				=>	'stitching',
 	'perfectbind'			=>	'perfectbind',
 	'spinepaste'			=>	'spinepaste',
@@ -32,26 +37,34 @@ my %fields = (
 	'makeready_overs_units'	=>	'makeready_overs_units',
 	'run_overs_units'		=>	'run_overs_units',
 	'run_overs'				=>	'run_overs',
+	'folds'					=>	'folds',
+	'angles'				=>	'angles',
 );
-my %transforms = (
+%transforms = (
 	'min_width' => [ 's/[^\d\.]//g' ],
 	'max_width' => [ 's/[^\d\.]//g' ],
 	'min_height' => [ 's/[^\d\.]//g' ],
 	'max_height' => [ 's/[^\d\.]//g' ],
+	'min_calliper' => [ 's/[^\d\.]//g' ],
+	'max_calliper' => [ 's/[^\d\.]//g' ],
 	'min_imposition' => [ 's/\D//g' ],
 	'max_imposition' => [ 's/\D//g' ],
 	'pages' => [ 's/\D//g' ],
 	'page_columns' => [ 's/\D//g' ],
 	'page_rows' => [ 's/\D//g' ],
-	'makeready_time' => [ 's/\D//g' ],
-	'makeready_overs' => [ 's/\D//g' ],
-	'run_overs' => [ 's/\D//g' ],
+	'makeready_time' => [ 's/[^\d\.]//g' ],
+	'makeready_overs' => [ 's/[^\d\.]//g' ],
+	'run_overs' => [ 's/[^\d\.]//g' ],
+	'folds' => [ 's/\D//g' ],
+	'angles' => [ 's/\D//g' ],
 );
-my %defaults = (
+%defaults = (
 	'min_width'			=>	undef,
 	'max_width'			=>	undef,
 	'min_height'		=>	undef,
 	'max_height'		=>	undef,
+	'min_calliper'		=>	undef,
+	'max_calliper'		=>	undef,
 	'min_imposition'	=>	undef,
 	'max_imposition'	=>	undef,
 	'pages'		=>	undef,
@@ -63,8 +76,14 @@ my %defaults = (
 	'stitching'	=> undef,
 	'perfectbind'	=> undef,
 	'spinepaste'	=> undef,
+	'folds'			=> undef,
+	'angles'		=> undef,
 );
 
+sub to_string {
+	my ( $self ) = @_;
+	return sprintf('%s %dx%d=%d pages min:%d max:%d impo', @$self{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'} );
+} # end sub to_string
 
 sub find {
 	my %params = @_;
@@ -118,23 +137,10 @@ sub load {
 sub save {
 	my ( $self, $param ) = @_;
 
+	$self->set( $param ) if $param;
 	my %sql;
     foreach my $k ( keys %fields ) {
-		if ( $param and exists $$param{$k} ) {
-			$$self{$k} = $$param{$k};
-		} # end if
-
-        my @transforms = @{$transforms{$k}} if $transforms{$k};
-        foreach my $transform ( @transforms ) {
-            eval '$$self{$k} =~ ' . $transform;
-        } # end foreach
-
-        if ( ( ( ! defined $$self{$k} ) or ( $$self{$k} eq '' ) ) and exists $defaults{$k} ) {
-            $openprint::log->debug("Setting default for $k $defaults{$k}");
-            $sql{$fields{$k}} = $defaults{$k};
-        } else {
-            $sql{$fields{$k}} = $$self{$k};
-        } # end if
+		$sql{$fields{$k}} = $$self{$k};
     } # end foreach
 
 	my $ac = sql::start_transaction( $openprint::dbh );
@@ -210,8 +216,8 @@ $openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_we
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}[$i];
-#$openprint::log->debug("Examining: (" . $Spec->min() .     ') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
-		return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max} == $range );
+$openprint::log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . "(" . $Spec->min_weight() .     ') (' . $Spec->max_weight() . $Spec->weight_units(). ') (' . $Spec->runspeed() .') ('.$Spec->interpolate() ) if $debug;
+		return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max_weight} == $range );
 
 		return $Spec if (
 				(! $$Spec{interpolate})
@@ -221,14 +227,14 @@ $openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_we
 
 # first step, find one less than the min
 		last if 1*$$Spec{min_weight} > $range;
-#last if ( $Spec->max() eq '' and ! $Spec->interpolate() );
+		last if ( $Spec->max_weight() eq '' and ! $Spec->interpolate() );
 	} # end if
 
    if ( $i and $i <= @{$$self{'Specifications'}} ) {
         $i -= 1;
         # back up
 		$x = $$self{'Specifications'}[$i];
-#$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+$openprint::log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight() . ' : ' . $x->runspeed() ) if $debug;
 		return if ( (1*$$x{max_weight}) and ( $$x{max_weight} < $range ) and ! $$x{interpolate} );
    } else {
 	   $openprint::log->debug("Couldn't find monimum for $range ") if $debug;
@@ -245,9 +251,9 @@ $openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_we
    if ( $i and $i < @{$$self{'Specifications'}} ) {
 # back up
 	   $y = $$self{'Specifications'}[$i];
-#$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+$openprint::log->debug("Found spec max " . $y->min_weight() . ' ' . $y->max_weight() . ' : ' . $y->runspeed() ) if $debug;
    } else {
-#$openprint::log->debug("Couldn't find maximum") if $debug;
+$openprint::log->debug("Couldn't find maximum") if $debug;
 	   return;
    } # end if
 

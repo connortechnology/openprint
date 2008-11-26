@@ -26,18 +26,16 @@ my $debug = 1;
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'other'			=>	'other',
-	'monitor'		=>	'monitor',
 );
 
 %transforms = (
-  'updated_on'    =>  ['s/.*/NOW()/'],
+	'updated_on'	=>	['s/.*//g'],
 );
 
 %defaults = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 	'location_id'	=>	undef,
-	'monitor'		=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -69,10 +67,6 @@ sub find {
 	if ( $params{'name'} ) {
 		$sql .= ' AND name=?';
 		push @values, $params{'name'};
-	} # end if
-	if ( $params{'monitor'} ) {
-		$sql .= ' AND monitor=?';
-		push @values, $params{'monitor'};
 	} # end if
 	if ( exists $params{'ipaddr'} ) {
 		if ( ref $params{'ipaddr'} eq 'ARRAY' ) {
@@ -111,20 +105,23 @@ sub save {
 	if ( $hash ) {
 		$self->set( $hash );
 	} # end if
+
+	my %sql = map { $_, $$self{$_} } keys %fields;
+	$sql{'updated_on'} = 'NOW()';
 	
 	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('RFIDScanners_id_seq')} );
+		$sql{'id'} = $$self{'id'};
 
-		if ( my $error = sql::insert( undef, undef, 'RFIDScanners', [map { $_, $$self{$_} } keys %fields ] ) ) {
+		if ( my $error = sql::insert( undef, undef, 'RFIDScanners', \%sql ) ) {
 			$$self{'id'} = undef;
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 
     } else {
-		if ( my $error = sql::update( undef, undef, 'RFIDScanners', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
-$openprint::log->error( $error );
+		if ( my $error = sql::update( undef, undef, 'RFIDScanners', ['id=?', $$self{id}], \%sql ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
@@ -147,16 +144,15 @@ sub Location {
 } # end sub Location
 
 sub location_id {
-	my ( $self, $new, $rfidtag_id ) = @_;
-	if ( $new ) {
-		if ( $new != $$self{'location_id'} ) {
-			sql::insert( undef, undef, 'RFIDScannerHistory', {'location_id'=>$new, 'scanner_id'=>$$self{id}, 'rfidtag_id'=>$rfidtag_id } );
-			$$self{'location_id'} = $new;
-		} # end if
-	} # end if
-	return $$self{'location_id'};
+    my ( $self, $new, $rfidtag_id ) = @_;
+    if ( $new ) {
+        if ( $new != $$self{'location_id'} ) {
+            sql::insert( undef, undef, 'RFIDScannerHistory', {'location_id'=>$new, 'scanner_id'=>$$self{id}, 'rfidtag_id'=>$rfidtag_id } );
+            $$self{'location_id'} = $new;
+        } # end if
+    } # end if
+    return $$self{'location_id'};
 } # end sub location_id
-
 
 1;
 __END__

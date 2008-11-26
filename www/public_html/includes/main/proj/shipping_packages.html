@@ -1,10 +1,18 @@
 <p>
 	<label>Full Package Weight:</label>
-		<input name="txtPackageWeight" value="<?txtPackageWeight?>" type="text" size="9"  onkeyup="calc('f1');" /> lbs
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+		<input name="txtPackageWeight<?QTYIndex?>" value="<? echo ( $$variable{'txtPackageWeight'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" /> lbs
 <? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="checkbox" id="chkOverridePackageWeight" name="chkOverridePackageWeight" value="Y" onclick="if ( ! this.checked ) { calc('f1'); }" <? echo ( 'checked' if $$variable{'chkOverridePackageWeight'} eq 'Y' ) ?> /> 
+		<input type="checkbox" id="chkOverridePackageWeight<?QTYIndex?>" name="chkOverridePackageWeight<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) { calc(this.form.name); }" <? echo ( 'checked' if $$variable{'chkOverridePackageWeight'.$$variable{'QTYIndex'}} eq 'Y' ) ?> /> 
 		<label class="radio" for="chkOverridePackageWeight">Override</label>
 <? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+	</span>
+<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <p>
 	<label>Package Quantity:</label>

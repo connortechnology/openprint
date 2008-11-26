@@ -237,7 +237,21 @@ sub interval_to_seconds {
     return ($h*3600) + ($m*60) + $s;
 } # end sub interval_to_seconds
 
-
+sub CommaFormatted{
+	my $delimiter = ','; # replace comma if desired
+	my($n,$d) = split /\./,shift,2;
+	my @a = ();
+	while($n =~ /\d\d\d\d/)
+	{
+		$n =~ s/(\d\d\d)$//;
+		unshift @a,$1;
+	}
+	unshift @a,$n;
+	$n = join $delimiter,@a;
+	$n = "$n\.$d" if $d =~ /\d/;
+	return $n;
+}
+# end of subroutine CommaFormatted
 
 1;
 

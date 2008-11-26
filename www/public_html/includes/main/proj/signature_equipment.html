@@ -4,11 +4,19 @@
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<select name="ddmEquipment-<?SignatureIndex?>-<?QTYIndex?>" size="1" onchange="calc('f1');">
+		<select name="ddmEquipment-<?SignatureIndex?>-<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
 		<option value="">Equipment Options</option>
-<? echo ( ssi::fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ); ) ?>
+<? echo (
+$openprint::log->debug($$variable{'Equipment'});
+	if ( $$variable{'Equipment'} ) {
+$openprint::log->debug($$variable{'Equipment'});
+		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $$variable{"ddmEquipment-$$variable{SignatureIndex}-$$variable{QTYIndex}"} );
+	} else {
+		return ssi::fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} );
+	} # end if
+) ?>
 		</select>
-		<input type="checkbox" id="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>" name="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');"
+		<input type="checkbox" id="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>" name="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc(this.form.name);"
 		<? echo ( $$variable{"chkOverrideEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} eq 'Y' ? 'checked="checked"' : '' ) ?>
 />
 		<label class="radio" for="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>">Override</label>

@@ -35,6 +35,11 @@
 		<label for="rdbTemplateTypeSpinePaste">Spine Paste</label>
 	</span>
 <? endif ( $$variable{'ServiceTypes'}{'SpinePaste'} ) ?>
+	<span class="templateOption">
+		<img src="/images/templates/SpinePaste.gif" alt=""/>
+		<input type="radio" id="rdbTemplateTypeUnbound" name="rdbTemplateType" value="Unbound" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'Unbound' ) ?> /> 
+		<label for="rdbTemplateTypeSpinePaste">Unbound</label>
+	</span>
 <? if ( $$variable{'ServiceTypes'}{'Cerlox'} ) ?>
 	<span class="templateOption">
 		<img src="/images/templates/Cerlox.gif" alt=""/>
@@ -66,7 +71,7 @@
 	<span class="templateOption">
 		<img src="/images/templates/NoFold.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypeNoBindery" name="rdbTemplateType" value="NoBindery" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'NoBindery' ) ?> />
-		<label for="rdbTemplateTypeNoBindery">No Bindery<br/>(Press Sheets Only)</label>
+		<label for="rdbTemplateTypeNoBindery">Loose Leaf</label>
 	</span>
 	<br class="spacer"/>
 </div>

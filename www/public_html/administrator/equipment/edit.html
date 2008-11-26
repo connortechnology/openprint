@@ -1,4 +1,8 @@
 <form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+	<? if ( $$variable{'error'} ) ?>
+	<div class="error"><?error?></div>
+	<? endif ( $$variable{'error'} ) ?>
+
 	<fieldset class="filters"><legend>Search Information</legend>
 		<p>
 			<label>Equipment ID:</label>
@@ -13,9 +17,9 @@
 		<? echo ( join( '',
 				ssi::writeButton( $log, $dbh, 'PreviousTop', 'prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','Previous'),
 				ssi::writeButton( $log, $dbh, 'NextTop', 'next.gif', "f1.btnFunction.value='>>';fmCheck(f1);",'','Next'),
-				ssi::writeButton( $log, $dbh, 'NewTop', 'new.gif', "addCheck(f1);",'','New'),
+				ssi::writeButton( $log, $dbh, 'NewTop', 'new.gif', "addCheck(f2);",'','New'),
 				ssi::writeButton( $log, $dbh, 'DeleteTop', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'SaveTop', 'save.gif', "f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+				ssi::writeButton( $log, $dbh, 'SaveTop', 'save.gif', "document.f2.btnFunction.value='Save';fmChange=3;fmCheck(document.f2);",'','Save'),
 				ssi::writeButton( $log, $dbh, 'CopyTop', 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();",'','Copy'),
 				ssi::writeButton( $log, $dbh, 'ResetTop', 'reset.gif', 'f1.reset();','','Reset'),
 				);
@@ -29,7 +33,12 @@
 ); ) ?>
 		</p>
 	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<form name="f2" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
 	<fieldset><legend>Equipment Information</legend>
+		<div class="leftColumn">
 		<p> 
 			<label>ID:</label>
 			<input type="text" name="strid" value="<? hecho ( $$variable{Equipment}->strid(); ) ?>"/>
@@ -53,6 +62,8 @@
 			<label>Image:</label>
 			<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
 		</p>
+		</div>
+		<div class="rightColumn">
 		<p> 
 			<label>Supplier:</label>
 			<input type="text" name="supplier" value="<? hecho ( $$variable{Equipment}->supplier(); ) ?>" />
@@ -88,11 +99,13 @@
 			<input type="radio" id="instantgate_enabledfalse" name="instantgate_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').hide();" />
 			<label class="radio" for="instantgate_enabledfalse">No</label>
 		</p>
+<? endif ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
+<? if ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
 		<p id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{'Equipment'}->instantgate_enabled() ) ?>>
 			<label>Cost Center:</label>
 			<input type="text" name="cost_center" value="<? hecho ( $$variable{'Equipment'}->cost_center(); ) ?>"  />
 		</p>
-<? endif ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
+<? endif ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
 		<p>
 			<label>JDF ID:</label>
 			<input type="text" name="jdf_id" value="<? hecho ( $$variable{'Equipment'}->jdf_id(); ) ?>"  />
@@ -101,64 +114,80 @@
 			<label>JDF Name:</label>
 			<input type="text" name="jdf_name" value="<? hecho ( $$variable{'Equipment'}->jdf_name(); ) ?>"  />
 		</p>
+		</div>
 	</fieldset>
 <? if ( $$variable{'Equipment'}->id() ) ?>
 	<fieldset><legend>Specifications</legend>
-		<table class="List">
+		Changes made below take effect immediately.<br/>
+		<table id="specifications" class="List sortable">
 			<tr>
-				<th>Specification</th>
-				<th width="10%">Min</th>
-				<th width="10%">Max</th>
-				<th width="10%">Value</th>
-				<th width="10%">Units</th>
-				<th width="95">Interpolate</th>
+				<th align="left">Specification</th>
+				<th align="left" width="10%" class="nosort">Min</th>
+				<th align="left" width="10%">Max</th>
+				<th align="left" width="20%">Value</th>
+				<th align="left" width="10%">Units</th>
+				<th align="left" width="95">Interpolate</th>
+				<th align="left" width="120">&nbsp;</th>
+			</tr>
+			<tr id="New"> 
+				<td><input type="text" id="SNameNew" name="SNameNew" /></td>
+				<td><input type="text" id="SMinNew" name="SMinNew" /></td>
+				<td><input type="text" id="SMaxNew" name="SMaxNew" /></td>
+				<td><input type="text" id="SValueNew" name="SValueNew" /></td>
+				<td><input type="text" id="SUnitsNew" name="SUnitsNew" /></td>
+				<td>
+					<input type="radio" id="iNewtrue" name="iNew" value="true"/>
+					<label class="radio" for="iNewtrue">Yes</label>
+					<input type="radio" id="iNewfalse" name="iNew" value="false" checked="checked" />
+					<label class="radio" for="iNewfalse">No</label>
+				</td>
+				<td>
+<? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=add' + 
+'&name=' + encodeURIComponent(\$('SNameNew').value) + 
+'&min=' + encodeURIComponent(\$('SMinNew').value) + 
+'&max=' + encodeURIComponent(\$('SMaxNew').value) + 
+'&value=' + encodeURIComponent(\$('SValueNew').value) + 
+'&units=' + encodeURIComponent(\$('SUnitsNew').value) + 
+'&equipment_id=' + encodeURIComponent(\$('ddmEquipment').value) +
+'&interpolate=' + encodeURIComponent(get_value(f2.elements['iNew'])) + 
+'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.After(\$('New'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
+				</td>
 			</tr>
 			<? eval ( @{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications(); ) ?>
 			<? while ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
-			<tr<?rowclass?>> 
-				<td><input type="text" name="txtSpecificationName<? echo ( $$variable{'Spec'}->id() ) ?>" value="<? echo ( $$variable{'Spec'}->name(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationMin<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->min(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationMax<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->max(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationValue<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( HTML::Entities::encode_entities($$variable{'Spec'}->value()); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationUnits<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->units(); ) ?>" /></td>
+			<tr id="S<? echo ( $$variable{'Spec'}->id(); ) ?>" > 
+				<td><span style="width:100%; float: left;" id="SName<? echo ( $$variable{'Spec'}->id() ) ?>"><? hecho ( $$variable{'Spec'}->name(); ) ?></span></td>
+				<td><span style="width:100%; float: left;" id="SMin<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->min() ? ssi::htmlize($$variable{'Spec'}->min()) : '&nbsp;'; ) ?></span></td>
+				<td><span style="width:100%; float: left;" id="SMax<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->max() ? ssi::htmlize($$variable{'Spec'}->max()) : '&nbsp;'; ) ?></span></td>
+				<td><span style="width:100%; float: left;" id="SValue<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->value() ? ssi::htmlize($$variable{'Spec'}->value()) : '&nbsp;'; ) ?></span></td>
+				<td><span style="width:100%; float: left;" id="SUnits<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->units() ? ssi::htmlize($$variable{'Spec'}->units()) : '&nbsp;'; ) ?></span></td>
+				<td><span style="width:100%; float: left;" id="i<? echo ( $$variable{'Spec'}->id(); ) ?>" onclick="new Ajax.Updater('i<? echo ( $$variable{'Spec'}->id(); ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=interpolate', {} );"><? echo ( $$variable{'Spec'}->interpolate() ? 'Yes' : 'No' ) ?></span></td>
 				<td>
-					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="true" <? echo ( 'checked="checked"' if $$variable{'Spec'}->interpolate() ) ?> />
-					<label class="radio" for="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true">Yes</label>
-					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>false" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="false" <? echo ( 'checked="checked"' if ! $$variable{'Spec'}->interpolate() ) ?> />
-					<label class="radio" for="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>false">No</label>
+<? echo ( ssi::writeButton( $log, $dbh, 'delete'.$$variable{'Spec'}->id(), 'delete.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id=".$$variable{'Spec'}->id()."', { method: 'get', onSuccess: function(){var tr = \$('S".$$variable{'Spec'}->id()."'); tr.parentNode.removeChild(tr);SortableTable.load();} } );",'','Delete' ); ) ?>
+
+<? echo ( ssi::writeButton( $log, $dbh, 'copy'.$$variable{'Spec'}->id(), 'copy.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id=".$$variable{'Spec'}->id()."', { method: 'get', onSuccess: function(response){new Insertion.After(\$('S".$$variable{'Spec'}->id()."'), response.responseText); SortableTable.load();} } );",'','Copy' ); ) ?>
 				</td>
 			</tr>
+<script type="text/javascript">
+	  new Ajax.InPlaceEditor( 'SName<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=name',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'SMin<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=min',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'SMax<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=max',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'SValue<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=value',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+	  new Ajax.InPlaceEditor( 'SUnits<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=units',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
+</script>
 			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 			<? endwhile ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
-			<tr> 
-				<td><input type="text" name="txtSpecificationNameNew" /></td>
-				<td><input type="text" name="txtSpecificationMinNew" /></td>
-				<td><input type="text" name="txtSpecificationMaxNew" /></td>
-				<td><input type="text" name="txtSpecificationValueNew" /></td>
-				<td><input type="text" name="txtSpecificationUnitsNew" /></td>
-				<td>
-					<input type="radio" id="interpolateNewtrue" name="interpolateNew" value="true"/>
-					<label class="radio" for="interpolateNewtrue">Yes</label>
-					<input type="radio" id="interpolateNewfalse" name="interpolateNew" value="false"/>
-					<label class="radio" for="interpolateNewfalse">No</label>
-				</td>
-			</tr>
 		</table>
 	</fieldset>
 <? endif ( $$variable{'Equipment'}->id() ) ?>
-	<fieldset>
-		<p class="buttons">
-		<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'PreviousBottom', 'prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','Previous'),
-				ssi::writeButton( $log, $dbh, 'NextBottom', 'next.gif', "f1.btnFunction.value='>>';fmCheck(f1);",'','Next'),
-				ssi::writeButton( $log, $dbh, 'NewBottom', 'new.gif', "addCheck(f1);",'','New'),
-				ssi::writeButton( $log, $dbh, 'DeleteBottom', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'SaveBottom', 'save.gif', "f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'CopyBottom', 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();",'','Copy'),
-				ssi::writeButton( $log, $dbh, 'ResetBottom', 'reset.gif', 'f1.reset();','','Reset'),
-				);
-			) ?>
-		</p>
-	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<? if ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
+	<fieldset><legend>Fold Specifications</legend>
+		Select the # of pages of the folds that you would like to edit.  To add a new fold click Add.
+		<p><label>Pages:</label><select style="width: auto;" id="pages" name="pages" onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{'Equipment'}->id() ) ?>, pages: $('pages').getValue() } } );"><option value="">select</option><option value="all">All</option><? echo ( ssi::make_drop_down( [ map { $_, $_ } sql::execute(undef,undef,q{SELECT DISTINCT pages FROM folds WHERE equipment_id=?}, $$variable{'Equipment'}->id() ) ] ); ) ?></select>
+<? echo ( ssi::writeButton( $log, $dbh, 'AddFold', 'add.gif',"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{'Equipment'}->id() ."', { method: 'get', onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
+		</p>
+		<div id="Folds"> </div>
+	</fieldset>
+<? endif ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>

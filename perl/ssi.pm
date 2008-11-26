@@ -12,26 +12,33 @@ require sets;
 require sql;
 
 use openprint;
+use vars qw( $r %variable %session %param %config $log $dbh );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*r = \$openprint::r;
 
 sub do_new_substitution {
-	my ( $r, $log, $dbh, $command, $text, $variable ) = @_;
+	my ( $command, $text, $variable ) = @_;
 	if ( $$command =~ /^while\s*\(\s*(.*)\s*\)/ ) {
 		my $dataname = $1;
 		if ( $$text =~ /(.*?)<\?\s*endwhile\s*\(\s*\Q$dataname\E\s*\)\s*\?>(.*)/si ) {
 			my $middle = $1;
 			my $end = $2;
 			my $replacement_text = '';
-#$dataname = variable_substitution( $r, $log, $dbh, $dataname, $variable );
 			while ( 1 ) {
 				$_ = eval $dataname;
 				$log->error( "Eval error of ($dataname), Reason: " . $@ ) if $@;
 				last if ! $_;
-				$replacement_text .= variable_substitution( $r, $log, $dbh, \$middle, $variable );
+				$replacement_text .= variable_substitution( \$middle, $variable );
 			} # end while
-			return $replacement_text . variable_substitution( $r, $log, $dbh, \$end, $variable );
+			return $replacement_text . variable_substitution( \$end, $variable );
 		} else {
 			$log->debug("Unable to find terminating while ($$command)");
-			return variable_substitution( $r, $log, $dbh, $text, $variable );
+			return variable_substitution( $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /^if\s*\(\s*(.*)\s*\)/ ) {
 		my $dataname = $1;
@@ -49,50 +56,55 @@ sub do_new_substitution {
 			$_ = eval $dataname;
 			$log->error( "Eval error of if ($dataname), Reason:" . $@ ) if $@;
 			if ( $_ ) {
-				$replacement_text .= variable_substitution( $r, $log, $dbh, \$middle, $variable );
+				$replacement_text .= variable_substitution( \$middle, $variable );
 			} elsif ( $elsetext ne '' ) {
-				$replacement_text .= variable_substitution( $r, $log, $dbh, \$elsetext, $variable );
+				$replacement_text .= variable_substitution( \$elsetext, $variable );
 			} # end if
-			return $replacement_text . variable_substitution( $r, $log, $dbh, \$end, $variable );
+			return $replacement_text . variable_substitution( \$end, $variable );
 		} else {
 			$log->debug("Unable to find terminating if ( $$command )");
-			return variable_substitution( $r, $log, $dbh, $text, $variable );
+			return variable_substitution( $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /pop\s*\((.*)\)\s*=\s*([\%\w]*)/i ) {
 		my $variables = $1;
-		my $dataname = variable_substitution( $r, $log, $dbh, \$2, $variable );
+		my $dataname = variable_substitution( \$2, $variable );
 		my @var_names = split( ',', $variables );
 		foreach my $name ( @var_names ) {
 			$name =~ s/^\s*(\w+)\s*$/$1/;
 			$$variable{$name} = shift @{$$variable{$dataname}};
 		} # end foreach
-		return variable_substitution( $r, $log, $dbh, $text, $variable );
+		return variable_substitution( $text, $variable );
 	} elsif ( $$command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
 		$_ = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		return variable_substitution( $r, $log, $dbh, $text, $variable );
+		return variable_substitution( $text, $variable );
 	} elsif ( $$command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		$result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
+		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 		$result = htmlize($result);
-		$result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
+		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} else {
 		my $replacement = $$variable{$$command};
-#my $replacement = variable_substitution( $r, $log, $dbh, $$variable{$command}, $variable );
 #$log->debug("Replacement: $command : $replacement");
-		return $replacement . variable_substitution( $r, $log, $dbh, $text, $variable );
+		return $replacement . variable_substitution( $text, $variable );
 	} # end if
 
 } # end sub do_new_substitution
 
+sub include {
+	my ( $file, $variable ) = @_;
+	my $blah = misc::load_file( $log, $file);
+	return variable_substitution( \$blah, $variable );
+}
+
 sub do_include {
-	my ( $r, $log, $dbh, $text, $variable ) = @_;
+	my ( $text, $variable ) = @_;
 	if ( $$text =~ /(.*?)<!--\s*#include\s+virtual="(.*?)"\s*-->(.*)/ms ) {
 		my ( $before, $middle, $after ) = ( $1, $2, $3 );
 		#my $file = variable_substitution( $r, $log, $dbh, \$middle, $variable );
@@ -104,7 +116,7 @@ sub do_include {
 			$file = $path . $file;
 		} # end if
 	my $blah = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $file);
-	return $before . variable_substitution( $r, $log, $dbh, \$blah, $variable ).variable_substitution( $r, $log, $dbh, \$after, $variable );
+	return $before . variable_substitution( \$blah, $variable ).variable_substitution( \$after, $variable );
 	} # end if
 	return $$text;
 } # end sub do_include
@@ -113,13 +125,13 @@ sub do_include {
 # this big bottleneck is all the regexp searches through the text.
 # the text is huge, so the more we break it down, the faster these get.
 sub variable_substitution {
-	my ( $r, $log, $dbh, $text, $variable ) = @_;
+	my ( $text, $variable ) = @_;
 	if ( $$text =~ /(.*?)<\?\s*(.*?)\s*\?>(.*)/ms ) {
 		my ( $before, $middle, $after ) = ( $1, $2, $3 );
-		$before .= do_new_substitution( $r, $log, $dbh, \$middle, \$after, $variable );
-		return do_include( $r, $log, $dbh, \$before, $variable );
+		$before .= do_new_substitution( \$middle, \$after, $variable );
+		return do_include( \$before, $variable );
 	} # end if
-	return do_include( $r, $log, $dbh, $text, $variable );
+	return do_include( $text, $variable );
 } # end sub variable_substitution
 
 sub htmlize {

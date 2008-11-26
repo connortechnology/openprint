@@ -86,7 +86,6 @@ sub find {
 		push @values, $params{'created_on_end'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );

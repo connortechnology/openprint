@@ -26,15 +26,15 @@ Please enter the specifications for your proofs. In most cases these are automat
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
 					$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
 					$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
-					$$variable{'Reference'} .= openprint::service::summary( $$variable{'Project'}->id(), @$variable{'SignatureServiceIndex','QTYIndex'} );
-					$$variable{'Reference'} = ssi::htmlize( $$variable{'Reference'} );
+					$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), @$variable{'SignatureServiceIndex','QTYIndex'} );
+					$$variable{'Reference'} = $$variable{'Reference'};
 				) ?>
 			<table>
-				<tr><td valign="top" rowspan="<? echo ( int(@{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}}/6)+2) ?>"><?Reference?></td>
+				<tr><td valign="top" rowspan="<? echo ( int(@{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}}/6)+2) ?>"><br/><?Reference?></td>
 <th width="40">Qty</th>
 <th width="170">Dimensions</th>
-<th>Type</th>
-<th width="110">Unit Price</th>
+<th width="105" align="left">Type</th>
+<th width="105">Unit Price</th>
 <th width="105">&nbsp;</th>
 </tr>
 	<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}},0,6; ) ?>

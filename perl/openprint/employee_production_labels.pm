@@ -30,7 +30,7 @@ $openprint::log->debug("_label get " . join('',$Label->get_data($param{'field'})
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
 	} elsif ( $param{'action'} eq 'getnohtml' ) {
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
-$openprint::log->debug('filtering');
+		$openprint::log->debug('filtering');
 		$variable{'PageContent'} =~ s/<br\/>/\n/ig;
 	} # end if
 } # end sub _label

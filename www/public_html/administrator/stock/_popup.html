@@ -1,0 +1,43 @@
+<form name="f1" id="f1" action="list.html" method="post">
+	<input type="hidden" id="num_prices" name="num_prices" value="1" />
+	<input type="hidden" name="stock_ids" value="<? echo ( join(',', (ref $param{'stock_ids'} eq 'ARRAY' ? @{$param{'stock_ids'}} : $param{'stock_ids'} ) ); ) ?>" />
+	<input type="hidden" name="btnFunction" value="ApplyChanges"/>
+	<fieldset><legend><input type="radio" id="modenew" name="mode" value="new" checked="checked" /> New Pricing</legend>
+		<? eval ( @{$$variable{'Pricelists'}} = openprint::Pricelist::find(); ) ?>
+		<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?>
+		<p>
+			<label>Prices for pricelist <? echo ( $$variable{'Pricelist'}->name() ) ?>:</label>
+			<table class="List" id="Prices">
+				<tr>
+					<th class="Range">Quantity Range</th>
+					<th class="Cost">Cost CWT</th>
+					<th class="Markup">Mark up</th>
+					<th class="Price">Price CWT</th>
+					<th class="Discount">Discount?</th>
+					<th>
+<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"\$('num_prices').value=1+parseInt(\$('num_prices').value);new Ajax.Request('_popup_price.html?pricelist_id=$$variable{Pricelist}{id}&id='+\$('num_prices').value, { method: 'get', onSuccess: function(response){new Insertion.Bottom(\$('Prices'), response.responseText);} } );",'','Add' ); ) ?>
+					</th>
+				</tr>
+				<? echo ( $param{'id'} = 1; $param{'pricelist_id'}=$$variable{'Pricelist'}->id(); return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/paper/_popup_price.html', $variable ); ) ?>
+			</table>
+		</p>
+		<? endwhile ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?>
+	</fieldset>
+	<fieldset><legend><input type="radio" id="modemodify" name="mode" value="modify" /> Modify Pricing</legend>
+		<p>
+			To add, put a + in front.  To subtract, put a - in front.  To set, don't put anything in front.
+			<table>
+				<tr>
+					<td>Add Amount:</td><td>$<input id="amount" type="text" name="amount" onkeyup="this.value=this.value.replace(/[^\.\d\+\-]/,'');$('modemodify').checked=true;" /></td>
+					<td>Markup:</td><td><input id="markup" type="text" name="markup" onkeyup="this.value=this.value.replace(/[^\.\d\+\-]/,'');$('modemodify').checked=true;" />%</td>
+				</tr>
+			</table>
+		</p>
+	</fieldset>
+	<p class="buttons">
+		<? echo ( join('',
+			ssi::writeButton( $log, $dbh, 'apply', 'apply.gif', q`$('f1').submit();`, '', 'Apply' ),
+			ssi::writeButton( $log, $dbh, 'cancel', 'cancel.gif', 'popupWin.destroy();', '', 'Cancel' ),
+		); ) ?>
+	</p>
+</form>

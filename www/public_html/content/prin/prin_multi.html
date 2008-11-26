@@ -64,14 +64,14 @@
                             $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
                             my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
                             while ( my ( $name, $value ) = splice @defaults,0,2 ) {
-                                $$variable{$name.'CoverSpreads'} = $value;
+                                $$variable{$name.'1'} = $value;
                             } # end while
                         } # end if
 
-					$$variable{'Signature'} = 'CoverSpreads';
+					$$variable{'Signature'} = '1';
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
-					return variable_substitution( $r, $log, $dbh, \$html, $variable );
+					return variable_substitution( \$html, $variable );
 					) ?>
 				<input type="hidden" name="rdbColourBarCoverSpreads" value="<?rdbColourBarCoverSpreads?>"/>
 				<input type="hidden" name="txtCropMarkSpaceCoverSpreads" value="<?txtCropMarkSpaceCoverSpreads?>"/>
@@ -94,10 +94,10 @@
 				</div>
 				<br class="spacer"/>
 				<? echo ( 
-					$$variable{'Signature'} = 'InteriorSpreads';
+					$$variable{'Signature'} = '2';
 					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
-					return variable_substitution( $r, $log, $dbh, \$html, $variable );
+					return variable_substitution( \$html, $variable );
 					) ?>
 				<br class="spacer"/>
 			</div>

@@ -51,20 +51,34 @@ sub values {
 } # end sub values
 
 sub conversions {
-	my $self = shift;
+	my ( $self, $to ) = @_;
+	return 1 if $$self{id} == $to;
 	if ( ! exists $$self{'Conversions'} ) {
-		%{$$self{'Conversions'}} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$self{'id'} );
+		%{$$self{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$self{'id'} );
 	} # end if
-	if ( my $to = shift ) {
-		return $$self{'Conversions'}{$to};
+	if ( $to ) {
+		if ( $$self{'Conversions'}{$to} ) {
+			return $$self{'Conversions'}{$to};
+		} else {
+			my $To = new openprint::Currency( $to );
+			if ( $To->id() ) {
+				if ( ! exists $$To{'Conversions'} ) {
+					%{$$To{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$To{'id'} );
+				} # end if
+				if ( my $rate = $$To{'Conversions'}{$$self{'id'}} ) {
+					return 1/$rate if $rate;
+				} # end if
+				return;
+			} # end if
+		} # end if
 	} # end if
 	return %{$$self{'Conversions'}};
 } # end sub conversions
 
 sub set_conversion {
 	my ( $self, $to, $rate ) = @_;
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Currency_Conversions WHERE from_id=? and to_id=?}, $$self{'id'}, $to );
-	sql::insert( $openprint::log, $openprint::dbh, 'Currency_Conversions', 'from_id', $$self{'id'}, 'to_id', $to, 'rate', $rate );
+	sql::execute( undef, undef, q{DELETE FROM Currency_Conversions WHERE from_id=? AND to_id=?}, $$self{'id'}, $to );
+	sql::insert( undef, undef, 'Currency_Conversions', 'from_id', $$self{'id'}, 'to_id', $to, 'rate', $rate ) if $rate;
 } # end sub add_conversion
 
 sub convert_from {
@@ -81,8 +95,8 @@ sub convert {
 	# Get display_currency
 	my $DST_Currency = get_current();
 	if ( $DST_Currency ) {
-		my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
-		if ( $DST_Currency->id() != $$Price{'currency_id'} ) {
+		if ( $$DST_Currency{'id'} != $$Price{'currency_id'} ) {
+			my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
 			my $rate = $SRC_Currency->conversions( $DST_Currency->id() );
 			$$Price{'Price'} *= $rate;
 			$$Price{'currency_id'} = $DST_Currency->id();

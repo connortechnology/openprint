@@ -13,9 +13,9 @@ sub init_cache {
 # Similar to Ruby style.... takes an optional hash ref to determine filters
 # Currently returns an array of id/name pairs maybe someday should return an array of objects...
 sub find {
-	my ( $log, $dbh, $filters ) = @_;
+	my %params = @_;
 
-	return sql::execute( $log, $dbh, q{SELECT id, name FROM UserGroups ORDER BY lower(name)} );
+	return sql::execute( undef, undef, q{SELECT id, name FROM UserGroups ORDER BY lower(name)} );
 } # end if
 
 sub names {
@@ -33,6 +33,11 @@ sub is_user_in {
     } # end if
 	if ( ! %groups_cache ) {
 		%groups_cache = sql::execute( undef, undef, q{SELECT name, id FROM usergroups} );
+	} # end if
+
+	# If the groups don't exist, then default to true
+	if ( ! @groups_cache{@$groups} ) {
+		return @$groups;
 	} # end if
 	
     return sets::intersection( @{$cache{$user_id}}, @groups_cache{@$groups} );

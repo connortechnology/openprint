@@ -1,13 +1,16 @@
-<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/service.js?version=1.1"></script>
 <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.2"></script>
+<script type="text/javascript" src="/javascripts/printing.js?version=1.2"></script>
 <script type="text/javascript">
 	function calc( formName ) {
-		var form = getFormObj('f1');
+		var form = getFormObj( formName );
 		if ( gettingNewPrice ) {
+			if ( timeout )
+				clearTimeout( timeout );
 			setTimeout( "calc('"+formName+"');", 1000 );
 			return;
 		} // end if
-
+		timeout = null;
 		gettingNewPrice = true;
 		jsrsExecute( '/jsrs.htm', cbBookResults, 'openprint::service::external_calc', get_variables(formName,'Multipage') );
 	}
@@ -15,9 +18,16 @@
 		cbFillResults(results);
 		var form = getFormObj('f1');
 		if ( get_value( form.rdbCover ) == 'Self' ) {
-			remove_div('CoverStocks');
+			$('SignatureGroup1').hide();
 		} else {
-			add_div('CoverStocks');
+			$('SignatureGroup1').show();
+		} // end if
+		if ( ( form.remaining_pages.value > 0 ) && ! $('SignatureGroup'+form.next_group_id.value) ) {
+			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { method: 'get', 
+					parameters: { 'next_group_id' : form.next_group_id.value, },
+					onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+form.next_group_id.value)){calc(form.name);}}
+					//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+				 } );
 		} // end if
 	} // end function cbBookResults
 
@@ -27,21 +37,9 @@
 			alert("Please enter the total quantity of pages.");
 			return 0;
 		} // end if
-		if ( parseFloat(form.txtGateFoldedSpreadQuantity.value) > parseFloat(form.txtTotalSpreadQuantity.value) ) {
+		if ( parseFloat(form.txtGateFoldedSpreadQuantity.value) > parseFloat(form.txtTotalPageQuantity.value/form.txtSpreadSize.value) ) {
 			alert('The quantity of gate folded spreads can not exceed the total spread quantity.');
 			return 0;
-		} // end if
-		if ( ! form.txtGateFoldedSpreadQuantity.value ) {
-			if ( parseInt(form.txtTotalPageQuantity.value/form.txtSpreadSize.value) != parseFloat(form.txtTotalPageQuantity.value/form.txtSpreadSize.value) ) {
-				alert('The number of pages should be a multiple of ' + form.txtSpreadSize.value );
-				return 0;
-			} // end if
-		} else {
-			if ( parseInt(form.txtTotalPageQuantity.value/2) != parseFloat(form.txtTotalPageQuantity.value/2) ) {
-				alert('The number of pages should be a multiple of ' + 2 );
-				return 0;
-			} // end if
-	
 		} // end if
 
 		return 1;
@@ -56,84 +54,96 @@
 		<fieldset><legend><?ProjectTypeName?></legend>
 			<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
-			<!--#include virtual="/includes/main/proj/multipage_printing_type.html" -->
 			<!--#include virtual="/includes/main/proj/dimensions.html" -->
-<br class="spacer"/>
-<fieldset><legend>Book Specifications</legend>
-	<p>
-		<label>Total pages:</label>
-		<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="9"  onkeyup="calc('f1');" />
-	</p>
-	<p>
-		<label>Cover:</label>
-		<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('CoverStocks');calc('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Self' ) ?> />
-		<label class="radio" for="rdbCoverSelf">Self Cover</label>
-		<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('CoverStocks');calc('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
-		<label class="radio" for="rdbCoverDifferent">Different Cover</label>
-	</p>
-	<p>
-		<label>Total interior spreads:</label>
-		<input name="txtInteriorSpreadQuantity" readonly="readonly" value="<?txtInteriorSpreadQuantity?>" type="text" size="9" onfocus="this.blur();" />
-	</p>
-	<p>
-		<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> spreads:</label>
-		<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="9"  onkeyup="calc('f1');" />
-	</p>
-	<p>
-		<label>Total spreads:</label>
-		<input name="txtTotalSpreadQuantity" readonly="readonly" value="<?txtTotalSpreadQuantity?>" type="text" size="9" onfocus="this.blur();" />
-	</p>
-	<p>
-		<label># of inserts:</label>
-		<input name="txtInsertQuantity" size="9" value="<?txtInsertQuantity?>"/>
-	</p>
+<div id="OtherSpecifications">
+<fieldset><legend>Other Specifications</legend>
+		<!--#include virtual="/includes/main/proj/multipage_printing_type.html"-->
+		<!--#include virtual="/includes/main/proj/screen_type.html"-->
 </fieldset>
+</div>
 			<br class="spacer"/>
-			<fieldset id="CoverStocks" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
-				<legend>Information for Cover</legend>
-				<? echo ( 
-	
-					$$variable{'Signature'} = 'CoverSpreads';
-					if ( ! $$variable{'Project'}->signatures('Cover Spreads') ) {
-						# Load Defaults
-						if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
-
-							$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
-							my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
-							while ( my ( $name, $value ) = splice @defaults,0,2 ) {
-								$$variable{$name.$$variable{'Signature'}} = $value;
-							} # end while
-						} # end if
-					} # end if
-					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
-					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/bleeds_colourbars.html' );
-					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
-					return variable_substitution( $r, $log, $dbh, \$html, $variable );
-					) ?>
-			</fieldset><br class="spacer"/>
-			<fieldset><legend>Information for Interior Pages</legend>
-				<? echo ( 
-					$$variable{'Signature'} = 'InteriorSpreads';
-					if ( ! $$variable{'Project'}->signatures('Interior Spreads') ) {
-						# Load Defaults
-						if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
-
-							$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
-							my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
-							while ( my ( $name, $value ) = splice @defaults,0,2 ) {
-								$$variable{$name.$$variable{'Signature'}} = $value;
-							} # end while
-						} # end if
-					} # end if
-					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
-					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/bleeds_colourbars.html' );
-					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
-					if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
-					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_overrides.html' );
-					} # end if
-					return variable_substitution( $r, $log, $dbh, \$html, $variable );
-					) ?>
+			<fieldset><legend>Book Specifications</legend>
+				<div id="PagesCover">
+				<p>
+					<label>Total pages:</label>
+					<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="calc(this.form.name);" />
+				</p>
+				<p>
+					<label>Cover:</label>
+					<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Self' ) ?> />
+					<label class="radio" for="rdbCoverSelf">Self Cover</label>
+					<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
+					<label class="radio" for="rdbCoverDifferent">Different Cover</label>
+				</p>
+				</div>
+				<div id="GateInsert">
+				<p>
+					<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages:</label>
+					<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="4"  onkeyup="calc(this.form.name);" />
+				</p>
+				<p>
+					<label>Supplied Inserts:</label>
+					<input name="txtInsertQuantity" size="4" value="<?txtInsertQuantity?>"/>
+				</p>
+			<? if ( openprint::ServiceType::find('name'=>'Tipping') ) ?>
+				<p>
+					<label># of tip-ins:</label>
+					<input name="TippingQuantity" size="4" value="<?TippingQuantity?>"/>
+				</p>
+			<? endif ( openprint::ServiceType::find('name'=>'Tipping') ) ?>
+			<? if ( openprint::ServiceType::find('name'=>'Blowing') ) ?>
+				<p>
+					<label># of blow-ins:</label>
+					<input name="BlowingQuantity" size="4" value="<?BlowingQuantity?>"/>
+				</p>
+			<? endif ( openprint::ServiceType::find('name'=>'Blowing') ) ?>
+				</div>
 			</fieldset>
+			<br class="spacer"/>
+			<div id="SignatureGroups">
+			<? echo (
+				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
+				if ( ! sets::isin( 1, \@Groups ) ) {
+					# Unshift so that cover is always first
+					unshift @Groups, 1;
+					# Load Defaults
+					if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+
+						$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
+						my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
+						while ( my ( $name, $value ) = splice @defaults,0,2 ) {
+							$$variable{$name.1} = $value;
+						} # end while
+					} # end if
+					$$variable{'txtServiceDescription1'} = 'Cover Pages';
+					$$variable{'txtSignatureType1'} = 'Cover Pages';
+				} # end if
+					$$variable{'txtSignatureType1'} = 'Cover Pages';
+				if ( ! sets::isin( 2, \@Groups ) ) {
+					# Ensure 1 interior pages
+					push @Groups, 2;
+					# Load Defaults
+					if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+						$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
+						my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
+						while ( my ( $name, $value ) = splice @defaults,0,2 ) {
+							$$variable{$name.2} = $value;
+						} # end while
+					} # end if
+					$$variable{'txtServiceDescription2'} = 'Interior Pages';
+					$$variable{'txtSignatureType2'} = 'Interior Pages';
+				} # end if
+				my $html = '';
+				foreach my $Group ( @Groups ) {
+					$$variable{'Group'} = $Group;
+					$$variable{'Signature'} = $Group;
+				
+					my $h .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_signature.html' );
+					$html .= variable_substitution( \$h, $variable );
+				} # end foreach
+				return $html;
+			) ?>
+			</div>
 		</fieldset>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
@@ -146,8 +156,7 @@
 		<input type="hidden" name="NewBook" value="Y"/>
 		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>"/>
 		<input type="hidden" name="ServiceType" value="Multipage"/>
+		<input type="hidden" name="remaining_pages" />
+		<input type="hidden" name="next_group_id" />
 	</form>
 </div><!--Service-->
-<script type="text/javascript">
-selectProjectTemplate( 'f1' );
-</script>

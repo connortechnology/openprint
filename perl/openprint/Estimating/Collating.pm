@@ -73,7 +73,7 @@ sub calc {
 $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 	# Currently there is no equipmnet for collating
 
-	my $minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'CollatingMinimumCharge', undef, undef );
+	my $minimumCharge = openprint::service::get_price( 'CollatingMinimumCharge', undef, undef );
 
 	my $printing_service_index = openprint::project::get_project_type_service_index( $log, $dbh, $project_index );
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $printing_service_index );
@@ -135,8 +135,8 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 				'Equipment'	=> $Equipment,
 				'Total'		=> 0,
 			);
-			$price{'MakeReady'} = openprint::service::get_price( $log, $dbh, $variable, 'CollatingMakeReady', undef, $Equipment );
-			my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Collating', $qty, $Equipment );
+			$price{'MakeReady'} = openprint::service::get_price( 'CollatingMakeReady', undef, $Equipment );
+			my %servicePrice = openprint::service::get_price_object( 'Collating', $qty, $Equipment );
 			if ( sets::isin( $servicePrice{'units'}, 'Per M', 'Per 1000' )  ) {
 				$price{'Service'} = $servicePrice{'Price'}/1000; # Service Price for Collating is per 1000
 			} else {
@@ -154,7 +154,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 			$status = 'uncalculated';
 		} # end if
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{'Equipment'}->id();
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $bestPrice{'Service'} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'Service'} );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'Total'} );
 	} # end foreach qty_index
 
@@ -171,7 +171,10 @@ sub display {
 	} # end foreach qty_index
 
 } # end sub display
-#
+
+sub summary {
+	return;
+}
 
 1;
 

@@ -1,11 +1,40 @@
 package openprint::PaperPrice;
 @ISA = qw(openprint::Object);
 
-my $debug = 1;
+my $debug = 0;
+
+use vars qw( %fields %transforms %defaults );
 
 use strict;
 
 require sql;
+
+%fields = (
+	'id'			=>	'id',
+	'pricelist_id'	=>	'lnglistindex',
+	'paper_id'		=>	'lngpaperindex',	
+	'Min'			=>	'lngmin',
+	'Max'			=>	'lngmax',
+	'Units'			=>	'strunits',
+	'Cost'			=>	'dblcost',
+	'Markup'		=>	'dblmarkup',
+	'Price'			=>	'dblprice',
+	'Discountable'	=>	'ysndiscountable',
+);
+%transforms = (
+	'Min' => [ 's/(\d*)/$1/g' ],
+	'Max' => [ 's/(\d*)/$1/g' ],
+	'Cost' => [ 's/[^\d\.]//g' ],
+	'Price' => [ 's/[^\d\.]//g' ],
+	'Markup' => [ 's/[^\d\.]//g' ],
+);
+%defaults = (
+	'Min' => undef,
+	'Max' => undef,
+	'Cost' => 0,
+	'Price' => 0,
+	'Markup' => 0,
+);
 
 sub find {
 	my %params = @_;
@@ -36,8 +65,8 @@ sub find {
 	if ( ! $data ) {
 		$openprint::log->warn("Error loading PaperPrices: ($sql) (@values)" . $openprint::dbh->errstr );
 		return;
-	} elsif ($debug ) {
-		$openprint::log->debug("openprint::PaperPrice::find($sql) (@values)");
+	} elsif ($debug) {
+		$openprint::log->debug("openprint::PaperPrice::find($sql) (@values) " . @$data );
 	} # end if
 	return map { new openprint::PaperPrice( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -49,7 +78,7 @@ sub load {
 		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Paper_Prices WHERE id=?', {}, $$self{'id'} );
 		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
 	} # end if
-	@$self{qw/id PricelistIndex PaperIndex Min Max Units Cost Markup Price Discountable/} = 
+	@$self{qw/id pricelist_id paper_id Min Max Units Cost Markup Price Discountable/} = 
 		@$data{qw/id lnglistindex lngpaperindex lngmin lngmax strunits dblcost dblmarkup dblprice ysndiscountable/};
 
 } # end sub load
@@ -57,6 +86,8 @@ sub load {
 sub delete {
 	my $self = shift;
     sql::execute( undef, undef, q{DELETE FROM Paper_Prices WHERE id=?}, $$self{'id'} );
+	my $Paper = $self->Paper();
+	delete $$Paper{'Prices'};
 } # end sub delete
 
 sub save {
@@ -65,8 +96,8 @@ sub save {
 	$$self{Price} = $$self{Cost} * ( 1+($$self{Markup}/100) ) if ( ! $$self{Price} );
 
 	my @sql = (
-			'lngListIndex',			$$self{'PricelistIndex'},
-			'lngPaperIndex',		$$self{'PaperIndex'},
+			'lngListIndex',			$$self{'pricelist_id'},
+			'lngPaperIndex',		$$self{'paper_id'},
 			'lngMin',				$$self{'Min'} eq '' ? undef : $$self{'Min'},
 			'lngMax',				$$self{'Max'} eq '' ? undef : $$self{'Max'},
 			'strUnits',				$$self{'Units'},
@@ -77,9 +108,13 @@ sub save {
 			);
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_prices_id_seq')});
-		sql::insert( undef, undef, 'Paper_Prices', [ 'id', $$self{'id'}, @sql ] );
+		if ( my $error = sql::insert( undef, undef, 'Paper_Prices', [ 'id', $$self{'id'}, @sql ] ) ) {
+			return $error;
+		} # end if
 	} else {
-		sql::update( undef, undef, 'Paper_Prices', ['id=?', $$self{'id'}], \@sql );
+		if ( my $error = sql::update( undef, undef, 'Paper_Prices', ['id=?', $$self{'id'}], \@sql ) ) {
+			return $error;
+		} # end if
 	} # end if
 } # end sub save
 
@@ -90,6 +125,32 @@ sub copy {
 	$$new{'id'} = undef;
 	return $new;
 } # end sub
+
+sub Paper {
+	my $self = shift;
+	return new openprint::Paper( $$self{paper_id} );
+} # end sub Paper
+
+sub costperm {
+	my $self = shift;
+	my $Paper = $self->Paper();
+	if ( ! $Paper->mweight() ) {
+		# ROll papers won't have an mweight
+		return sprintf('%.2f', $$self{'Cost'} *= $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000 );
+	} else {
+		return sprintf('%.2f', $$self{'Cost'} *= $Paper->mweight() / 100 );
+	} # end if
+} # end sub costperm
+sub priceperm {
+	my $self = shift;
+	my $Paper = $self->Paper();
+	if ( ! $Paper->mweight() ) {
+		# ROll papers won't have an mweight
+		return sprintf('%.2f', $$self{'Price'} *= $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000 );
+	} else {
+		return sprintf('%.2f', $$self{'Price'} *= $Paper->mweight() / 100 );
+	} # end if
+} # end sub priceperm
 
 1;
 

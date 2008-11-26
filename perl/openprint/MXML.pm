@@ -78,7 +78,7 @@ sub new {
 	my $child_id = 0;
 	my $parent_sig_id = 0;
 
-	my ( $cover_sig_id ) = $P->signatures('Cover Spreads' );
+	my ( $cover_sig_id ) = $P->signatures({'type'=>'Cover Pages'});
 	my @signatures = $P->signatures();
 	$cover_sig_id = shift @signatures if ! $cover_sig_id;
 	@signatures = sets::exclude([$cover_sig_id], \@signatures );
@@ -87,7 +87,6 @@ sub new {
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_id = $signatures[$i];
 		my $sig_specs = openprint::service::get_specs_ref( $P->id(), $sig_id );
-		$$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()} = 1 if ! $$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()};
 		my @equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$P->ordered_quantity_index()});
 		my $Equipment = shift @equipment;
 
@@ -104,7 +103,7 @@ sub new {
 		$Component->setAttribute('RequestedNumberOut', $$sig_specs{'txtImposition'.$P->ordered_quantity_index()} );
 		$Component->setAttribute('Priority', 5 );
 		$Component->setAttribute('Active', 'True' );
-		$Component->setAttribute('Cover', $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ? 'True' : 'False' );
+		$Component->setAttribute('Cover', $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ? 'True' : 'False' );
 		$Component->setAttribute('CombinePages','False');
 
 		if ( $sig_id != $cover_sig_id ) {
@@ -123,7 +122,7 @@ sub new {
 		} else {
 			$Component->setAttribute('FinishedGrain', 'Either' );
 		} # end if
-		if ( $sig_id == $cover_sig_id and $$sig_specs{'txtSignatureType'} ne 'Cover Spreads' ) {
+		if ( $sig_id == $cover_sig_id and $$sig_specs{'txtSignatureType'} ne 'Cover Pages' ) {
 			$Component->setAttribute('ChildIndex', '-1' );
 		} else {
 			if ( $binding eq 'SaddleStitching' ) {
@@ -172,7 +171,7 @@ sub new {
 		if ( $$sig_specs{'rdbTemplateType'} ) {
 			$FoldingScheme->setAttribute('JDFFoldCatalog',$openprint::JDF::folds{$$sig_specs{'rdbTemplateType'}} );
 		} else {
-			$FoldingScheme->setAttribute('JDFFoldCatalog',$openprint::JDF::folds{$$sig_specs{'txtSpreadSize'}*$$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()}.'PageFold'} );
+			$FoldingScheme->setAttribute('JDFFoldCatalog',$openprint::JDF::folds{$$sig_specs{'PageQuantity'.$P->ordered_quantity_index()}.'PageFold'} );
 		} # end if
 
 		my $FoldingSchemeRef = $Component->appendChild( $doc->createElement('FoldingSchemeRef'));
@@ -219,25 +218,12 @@ sub new {
 		my $ComponentRef = $ComponentRefPool->appendChild( $doc->createElement( 'ComponentRef' ) );
 		$ComponentRef->setAttribute('rRef','Component'.$sig_id);
 
-		foreach my $spread ( 1 .. $$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()} ) {
-			if ( $$sig_specs{'txtSpreadSize'} == 4 ) {
-				foreach my $side ( 'SideOne','SideTwo' ) {
-					next if ! @{$Colors{$side}};
-					$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
-					$page += 1;
-				} # end foreach
-				foreach my $side ( 'SideOne','SideTwo' ) {
-					next if ! @{$Colors{$side}};
-					$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
-					$page += 1;
-				} # end foreach
-			} else { # SpreadSize==2
-				foreach my $side ( 'SideOne','SideTwo' ) {
-					next if ! @{$Colors{$side}};
-					$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
-					$page += 1;
-				} # end foreach
-			} # end if
+		foreach my $spread ( 1 .. $$sig_specs{'PageQuantity'.$P->ordered_quantity_index()} ) {
+			foreach my $side ( 'SideOne','SideTwo' ) {
+				next if ! @{$Colors{$side}};
+				$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
+				$page += 1;
+			} # end foreach
 		} # end foreach
 		$parent_sig_id = $sig_id;
 	} # end foreach signature
