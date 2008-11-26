@@ -7,10 +7,15 @@ require logger;
 require openprint::Object;
 require openprint::Paper;
 require openprint::Equipment;
+require openprint::EquipmentSpecification;
 require openprint::ServicePrice;
+require openprint::ServiceType;
 require openprint::Service;
 require openprint::Project;
 require openprint::service;
+require openprint::Material;
+require openprint::MaterialCategory;
+
 
 use openprint ();
 use vars qw( $log $dbh );
@@ -398,7 +403,7 @@ $_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
 foreach my $st ( split(';', $_ ) ) {
 $dbh->do($st);
 }
-foreach my $E ( openprint::Equipment::find('Specification'=>{'Folding Capable'=>'When Printing'}) ) {
+foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'When Printing'}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		if ( $Spec->name() =~ /^(\d*)PageSignatureFoldRunSpeed$/ ) {
 			my $pages = $1;
@@ -417,11 +422,17 @@ foreach my $E ( openprint::Equipment::find('Specification'=>{'Folding Capable'=>
 			die $_ if $_;
 			$Spec->delete();
 
-		} elsif ( $Spec->name() =~ /(\d)x(\d)-(\d*)Page-(\w*)FoldDescription/ ) {
+		} elsif ( $Spec->name() =~ /(\d)x(\d)-(\d*)Page-(\w*)SignatureFoldDescription/ ) {
 			my ( $columns, $rows, $pages, $spine_direction ) = ( $1, $2, $3, $4 );
 			my $spread_size = $pages/($columns*$rows);
-$spread_size /= 2;
-			my $fold = sprintf('%dx%d-%dPage-%sFold', $columns, $rows, $pages, $spine_direction );
+			if ( $spread_size == 4 ) {
+				if ( $spine_direction eq 'Vertical' ) {
+					$columns *= 2;
+				} else {
+					$rows *= 2;
+				} # end if
+			} # end if
+			my $fold = sprintf('%dx%d-%dPage-%sSignatureFold', $columns, $rows, $pages, $spine_direction );
 			my $Fold = new openprint::Fold();
 			$Fold->equipment_id( $E->id() );
 			$Fold->name( $Spec->value() );
@@ -431,19 +442,19 @@ $spread_size /= 2;
 			$Fold->page_rows( $rows );
 			$Fold->spine_direction( $spine_direction );
 			if ( $_ = $E->Specification( $fold.'MinimumWidth' ) ) {
-				$Fold->min_width( sprintf( '%.3f', ($_->value()/$columns)/$spread_size ) );
+				$Fold->min_width( sprintf( '%.3f', ($_->value()/$columns)) );
 				$_->delete();
 			} #end if
 			if ( $_ = $E->Specification( $fold.'MaximumWidth' ) ) {
-				$Fold->max_width( sprintf('%.3f', ($_->value()/$columns)/$spread_size ) );
+				$Fold->max_width( sprintf('%.3f', ($_->value()/$columns)) );
 				$_->delete();
 			} # en dif
 			if ( $_ = $E->Specification( $fold.'MinimumHeight' ) ) {
-				$Fold->min_height( sprintf('%.3f', ($_->value()/$rows)/$spread_size ) );
+				$Fold->min_height( sprintf('%.3f', ($_->value()/$rows)) );
 				$_->delete();
 			} # end if
 			if ( $_ = $E->Specification( $fold.'MaximumHeight' ) ) {
-				$Fold->max_height( sprintf('%.3f', ($_->value()/$rows)/$spread_size ) );
+				$Fold->max_height( sprintf('%.3f', ($_->value()/$rows)) );
 				$_->delete();
 			} # end if
 			if ( $_ = $E->Specification( $fold.'MaximumImposition' ) ) {
@@ -593,15 +604,12 @@ if ( $version < 1914 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1914;
 } # end if
-if ( $version < 1915 ) {
-	print "Updating to version 1915\n";
-	my $ac = sql::start_transaction( $dbh );
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
-	$dbh->do(q`alter table users add deleted boolean`) if ! exists $$data{'deleted'};
-	sql::insert( undef, undef, 'database_info', 'version', 1915, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1915;
-} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
+my $ac = sql::start_transaction( $dbh );
+$dbh->do(q`alter table users add deleted boolean`) if ! exists $$data{'deleted'};
+$dbh->do(q`alter table users add email_quotes_to_myself boolean default false`) if ! exists $$data{'email_quotes_to_myself'};
+sql::end_transaction( $dbh, $ac );
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );
 if ( ! $data ) {
@@ -620,39 +628,26 @@ $dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-if ( $version < 1914 ) {
-	print "Updating to version 1914\n";
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
-	if ( ! $data ) {
-		my $ac = sql::start_transaction( $dbh );
-		$_ = misc::load_file( $log, q{../openprint/sql/Labels.sql});
-		foreach my $st ( split(';', $_ ) ) {
-			$dbh->do($st);
-		}
-		sql::end_transaction( $dbh, $ac );
-	} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
-	$version = 1914;
-} # end if
-if ( $version < 1915 ) {
-	print "Updating to version 1915\n";
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
+if ( ! $data ) {
 	my $ac = sql::start_transaction( $dbh );
-	if ( ! exists $$data{'jdf_name'} ) {
-	$dbh->do(q`alter table tbl_equipment add jdf_name text`);
-		
-	} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1915, 'backup', $backup );
+	$_ = misc::load_file( $log, q{../openprint/sql/Labels.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
 	sql::end_transaction( $dbh, $ac );
-	$version = 1915;
 } # end if
+
+if ( $data and ! exists $$data{'jdf_name'} ) {
+$dbh->do(q`alter table tbl_equipment add jdf_name text`);
+} # end if
+
 if ( $version < 1916 ) {
 	print "Updating to version 1916\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM papers LIMIT 1', {} );
 	my $ac = sql::start_transaction( $dbh );
 	if ( ! exists $$data{'message'} ) {
 	$dbh->do(q`alter table papers add message text`);
-		
 	} # end if
 	sql::insert( undef, undef, 'database_info', 'version', 1916, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
@@ -783,27 +778,35 @@ if ( $version < $new_version ) {
 	$version = $new_version;
 } # end if
 
-if ( $version < 1921 ) {
-	print "Updating to version 1921\n";
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
-	my $ac = sql::start_transaction( $dbh );
+foreach my $Type ( openprint::ServiceType::find('name'=>'BulkSkids') ) {
+    $Type->type( 'Skids' );
+    $Type->save();
+}
+foreach my $Type ( openprint::ServiceType::find('name'=>'PlainCartons') ) {
+    $Type->type( 'Skids' );
+    $Type->save();
+}
+foreach my $Type ( openprint::ServiceType::find('name'=>'Bundling') ) {
+    $Type->type( 'Packaging' );
+    $Type->save();
+}
+foreach my $Type ( openprint::ServiceType::find('name'=>'ShrinkWrap') ) {
+    $Type->type( 'Packaging' );
+    $Type->save();
+}
+foreach my $Type ( openprint::ServiceType::find('name'=>'KraftWrap') ) {
+    $Type->type( 'Packaging' );
+    $Type->save();
+}
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+if ( $data ) {
 	if ( ! exists $$data{'jdf_name'} ) {
-	$dbh->do(q`alter table tbl_equipment add jdf_name text`);
+		$dbh->do(q`alter table tbl_equipment add jdf_name text`);
 	} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1921, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1921;
-} # end if
-if ( $version < 1922 ) {
-	print "Updating to version 1922\n";
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
-	my $ac = sql::start_transaction( $dbh );
 	if ( ! exists $$data{'jdf_id'} ) {
-	$dbh->do(q`alter table tbl_equipment add jdf_id text`);
+		$dbh->do(q`alter table tbl_equipment add jdf_id text`);
 	} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1922, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1922;
 } # end if
 
 my $new_version = 1923;
@@ -915,6 +918,67 @@ if ( ! exists $$data{'material_id'} ) {
 	$dbh->do(q`update Papers set material_id=1`);
     sql::end_transaction( $dbh, $ac );
 } # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
+if ( ! exists $$data{'rush'} ) {
+    my $ac = sql::start_transaction( $dbh );
+    print "Adding rush to projects";
+    $dbh->do(q`alter table tbl_Projects add rush boolean default false`);
+    sql::end_transaction( $dbh, $ac );
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Quote_Details LIMIT 1', {} );
+my $ac = sql::start_transaction( $dbh );
+$dbh->do(q`alter table tbl_Quote_Details add include_detailed boolean default false`) if ! exists $$data{'include_detailed'};
+if ( ! exists $$data{'template_id'} ) {
+$dbh->do(q`alter table tbl_Quote_Details add template_id INTEGER`);
+$dbh->do(q`alter table tbl_Quote_Details add foreign key (template_id) REFERENCES QuoteLevels (id)`);
+} # end if
+$dbh->do(q`alter table tbl_Quote_Details add id SERIAL NOT NULL`) if ! exists $$data{'id'};
+$dbh->do(q`alter table tbl_Quote_Details DROP dblmarkup`) if exists $$data{'dblmarkup'};
+sql::end_transaction( $dbh, $ac );
+
+if ( ! openprint::ServiceType::find('name'=>'Paper') ) {
+    my $PaperService = new openprint::ServiceType();
+    $PaperService->save({'name'=>'Paper',
+            'description'=>'Paper',
+            'url'=>'',
+            'type'=>'Paper',
+            'category'=>'Materials',
+            'sorting'=>undef,
+            'create_visible'=>'N',
+            'view_visible'=>'Y',
+            });
+} # end if
+foreach my $E ( openprint::Equipment::find('Specifications'=>{'Type'=>'Press'}) ) {
+    foreach my $Spec ( openprint::EquipmentSpecification::find('equipment_id'=>$E->id(), 'name'=>'Press Run Overs Rate') ) {
+        $Spec->name('MakeReady Overs Rate');
+        $Spec->save();
+print "Updating Press RUn Overs Rate to MakeReady Overs Rate\n";
+    } # end if
+    foreach my $Spec ( openprint::EquipmentSpecification::find('equipment_id'=>$E->id(), 'name'=>'Press Run Overs Minimum') ) {
+        $Spec->name('Overs Minimum');
+        $Spec->save();
+print "Updating Press RUn Overs Rate to MakeReady Overs Minimum\n";
+    } # end if
+    if ( ! $E->Specification('Sheeter') ) {
+        my $Spec = new openprint::EquipmentSpecification();
+        $Spec->save({'name'=>'Sheeter','value'=>'Y','equipment_id'=>$E->id()});
+        print "Adding Sheeter setting on . " . $E->name() . "\n";
+    } # end if
+} # end foreach E
+
+if ( ! openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
+    my $Category = new openprint::MaterialCategory();
+    $Category->save({'name'=>'PlainCartons'});
+    print "Adding PlainCartons Category\n";
+} # end if
+foreach my $M ( openprint::Material::find('name'=>'Plain Carton') ) {
+    next if $M->Category()->name() eq 'PlainCartons';
+    foreach my $C  ( openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
+        $M->category_id( $C->id() );
+    } # end foreach $C
+} # end foreach $M
+
 
 $dbh->disconnect();
 1;

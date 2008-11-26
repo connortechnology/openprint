@@ -486,7 +486,7 @@ sub find {
 			push @values, $params{'id_end'};
 	} # end if
 	if ( $params{'id_like'} ) {
-		$sql .= " AND index LIKE '$params{'id_like'}%'";
+		$sql .= " AND index::text LIKE '$params{'id_like'}%'";
 	} # end if
 
 	if ( $params{'reference'} ) {
@@ -856,26 +856,24 @@ sub summary {
 
 	my $services = $self->services();
 	if ( $$services{''} ) {
-		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $$self{'id'}, $$services{''}[0] );
-		if ( $specs{'Versions'} ) {
-			$summary .= $specs{'Versions'} .= ' versions ';
+		my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
+		if ( $$printing_specs{'Versions'} ) {
+			$summary .= $$printing_specs{'Versions'} .= ' versions ';
 		} # end if
 
-		$specs{'txtFinalWidth'} *= 1;
-		$specs{'txtFinalHeight'} *= 1;
-		if ( $specs{'txtTotalPageQuantity'} ) {
-			$summary .= sprintf( '%s&quot;x%s&quot; ', @specs{'txtFinalWidth','txtFinalHeight'});
-			if ( $specs{'rdbCover'} eq 'Different' ) {
+		if ( $$printing_specs{'txtTotalPageQuantity'} ) {
+			$summary .= sprintf( '%s&quot;x%s&quot; ', 1*$$printing_specs{'txtFinalWidth'},1*$$printing_specs{'txtFinalHeight'});
+			if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
 				my $cover_pages = 0;
 				foreach my $ss_id ( $self->signatures({'Group'=>1}) ) {
 					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
 					$cover_pages += $$sig_specs{'GroupPageQuantity'};
 					last;
 				} # end foreach
-				$summary .= sprintf('%dpg+Cover ', $specs{'txtTotalPageQuantity'} - $cover_pages );
+				$summary .= sprintf('%dpg+Cover ', $$printing_specs{'txtTotalPageQuantity'} - $cover_pages );
 			} else {
-				$summary .= sprintf('%dpg ', $specs{'txtTotalPageQuantity'} );
-				$summary .= $specs{'rdbCover'}.' Cover';
+				$summary .= sprintf('%dpg ', $$printing_specs{'txtTotalPageQuantity'} );
+				$summary .= $$printing_specs{'rdbCover'}.' Cover';
 			} # end if
 #block remarked as not required now june-25-2008
 #			if ( ( ! $$services{'NoPrinting'} ) and $specs{'PrintingType'} ) {
@@ -895,17 +893,16 @@ sub summary {
 #general::writetofile('Testing ?'.openprint::service::summary(	$$self{'id'}, $ss_id ) );
 #general::writetofile('Testing ? '. $$self{'id'}.'	'. $ss_id	);
 					next if ( $lastgroupid eq $group_id );
-					foreach my $prn ( keys %$sig_specs) {
+					foreach my $prn ( keys %$sig_specs ) {
 						if ( $prn =~ /^PrintingType/i ) {
-								if ( $$sig_specs{'Group'} eq $group_id ) {
-								 	if ( $$sig_specs{$prn} eq 'Web' ) { 
-											$summary .= ', '. 'Printed Web,<br/>';
-											last;
-									} else {
-										$summary .= ', '. 'Printed Sheetfed,<br/>';
-										last;
-									} #endif Web
-								} #endif group_id
+							if ( $$sig_specs{'Group'} eq $group_id ) {
+								if ( $$sig_specs{$prn} eq 'Web' ) { 
+									$summary .= ', '. 'Printed Web,<br/>';
+								} else {
+									$summary .= ', '. 'Printed Sheetfed,<br/>';
+								} #endif Web
+								last;
+							} #endif group_id
 						} #endif $prn
 					} #end foreach $prn	
 					last;
@@ -914,49 +911,44 @@ sub summary {
 			} # end foreach Group
 		} else {
 # normal printing services
-			$summary .= openprint::Estimating::Printing::summary( $self, $$services{''}[0], \%specs );
+			foreach my $ss_id ( $self->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
+				$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
+			} # end foreach signature
 			my $flgfound = '';
 			if ( ! $$services{'NoPrinting'} ) {
-				if ( $specs{'PrintingType'} ) {
-					$summary .= ' printed ' . $specs{'PrintingType'};
+				if ( $$printing_specs{'PrintingType'} ) {
+					$summary .= ' printed ' . $$printing_specs{'PrintingType'};
 					$flgfound = 'found';
-				} elsif ( $specs{'OverridePrintingType1'} ) {
-					$summary .= ' printed ' . $specs{'PrintingType1'};
+				} elsif ( $$printing_specs{'OverridePrintingType1'} ) {
+					$summary .= ' printed ' . $$printing_specs{'PrintingType1'};
 					$flgfound = 'found';
-				} elsif ( $specs{'OverridePrintingType2'} ) {
-					$summary .= ' printed ' . $specs{'PrintingType2'};
+				} elsif ( $$printing_specs{'OverridePrintingType2'} ) {
+					$summary .= ' printed ' . $$printing_specs{'PrintingType2'};
 					$flgfound = 'found';
-				} elsif ( $specs{'OverridePrintingType3'} ) {
-					$summary .= ' printed ' . $specs{'PrintingType3'};
+				} elsif ( $$printing_specs{'OverridePrintingType3'} ) {
+					$summary .= ' printed ' . $$printing_specs{'PrintingType3'};
 					$flgfound = 'found';
 				} # end if
 			} # end if
-#
-			if ( $flgfound ne 'found' ) {
-				my $services = $self->services();
-				my @sigs = $self->signatures();
-				while (@sigs) {
-					my $ss_id = shift @sigs;
 
-					my %sig_specs = %{openprint::service::get_specs_ref( $self, $ss_id)};
-					foreach my $prn ( keys %sig_specs) {
+			if ( $flgfound ne 'found' ) {
+				foreach my $ss_id ( $self->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
+					foreach my $prn ( keys %$sig_specs ) {
 						if ( $prn =~ /^PrintingType/i ) {
-								if ( $sig_specs{$prn} eq 'Web' ) { 
-										$summary .= ', '. 'Printed Web, <br/>';
-										last;
-								} else {
-									$summary .= ', '. 'Printed Sheetfed, <br/>';
-									last;
-								} #endif Web
-						}		
-					}
-				 } #end while
-			}
-#		
+							if ( $$sig_specs{$prn} eq 'Web' ) { 
+								$summary .= ', '. 'Printed Web, <br/>';
+							} else {
+								$summary .= ', '. 'Printed Sheetfed, <br/>';
+							} #endif Web
+							last;
+						} # end if
+					} # end foreach key
+				} # end foreach sig
+			} # flgfound
 		} # end if book or not
 	} # end if
-
-#changes made here to add caterogy Paper to show paper details 13-aug-08
 
 	foreach my $category ('Paper', 'Options', 'Prepress','Bindery','Packaging','Shipping' ) {
 		foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {

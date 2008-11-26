@@ -132,14 +132,10 @@ sub find {
 } # end sub find
 
 sub get_price {
-    my ( $self, $quantity, $equipment ) = @_;
+    my ( $self, $quantity, $Equipment ) = @_;
 
-    if ( ref $equipment eq 'openprint::Equipment' ) {
-        $equipment = $equipment->id();
-    } # end if
-
-    my $list_id = openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable );
-    my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{id}, $list_id, 'openprint::service_priceset', $quantity, $equipment );
+    my $list_id = openprint::pricing::get_pricelist_id();
+    my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{id}, $list_id, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
     return if ! %price;
 
     my $Pricelist = new openprint::Pricelist( $list_id );

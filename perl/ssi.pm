@@ -161,6 +161,30 @@ sub htmlize {
 	return @_;
 } # end sub htmlize
 
+sub unhtmlize {
+	return if ! @_;
+	if ( @_ == 1 ) {
+		$_ = shift;
+		return if ! defined $_;
+		$_ =~ s/&amp;/&/mg;
+		$_ =~ s/&quot;/"/mg;
+		$_ =~ s/&lt;/</mg;
+		$_ =~ s/&gt;/>/mg;
+		$_ =~ s/<br\/>/\n/mg;
+		return $_;
+	} # end if
+	for( $_ = 0; $_ < @_; $_ += 1 ) {
+		next if ! defined $_[$_];
+		$_[$_] =~ s/&amp;/&/mg;
+		$_[$_] =~ s/&quot;/"/mg;
+		$_[$_] =~ s/&lt;/</mg;
+		$_[$_] =~ s/&gt;/>/mg;
+		$_[$_] =~ s/<br\/>/\n/mg;
+	} # end for
+	return @_;
+} # end sub unhtmlize
+
+
 sub make_drop_down {
 	my ( $search_data, $checkval, $length ) = @_;
 	my ( $temp, $checked );
@@ -416,14 +440,14 @@ return qq{<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) 
 }
 
 sub setup_date_select {
-    my ( $page, $prefix, $delta ) = @_;
-    if ( ( ! $session{$page.'?'.$prefix.'_start_year'} ) or ( time - $session{'lastupdated'} > 3600 ) ) {
-        @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $delta );
-        @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Today();
-    } else {
-        @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} );
-        @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} );
-    } # end if
+	my ( $page, $prefix, $delta ) = @_;
+	if ( ( ! $session{$page.'?'.$prefix.'_start_year'} ) or ( time - $session{'lastupdated'} > 3600 ) ) {
+		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $delta );
+		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Today();
+	} else {
+		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} );
+		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} );
+	} # end if
 } # end sub setup_date_select
 
 sub date_select {

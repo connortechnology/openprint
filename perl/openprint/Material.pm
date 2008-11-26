@@ -7,6 +7,7 @@ require openprint::Object;
 
 require openprint::logs;
 require openprint::MaterialSpecification;
+require openprint::MaterialCategory;
 
 use vars qw{ %fields %transforms %defaults };
 
@@ -300,6 +301,10 @@ sub copy {
 
 	return $new;
 } # end sub copy
+
+sub Category {
+	return new openprint::MaterialCategory( $_[0]{'category_id'} );
+}
 
 1;
 __END__

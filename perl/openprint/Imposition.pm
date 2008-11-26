@@ -228,16 +228,15 @@ sub load {
 		$$self{'spread_rows'} = sprintf('%.0f', $$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
 		$$self{'spread_columns'} = sprintf('%.0f',$$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
 
-		if ( 1 ) {
-		$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
-		$$self{'spread_size'} = 2;
+		if ( 0 ) {
+			$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
+			$$self{'spread_size'} = 2;
 		} else {
-
-		# This is the alternate way of doing it
-		$$self{'spread_size'} = $$self{'spread_rows'} * $$self{'spread_columns'} * 2;
-		$$self{'spread_rows'} = 1;
-		$$self{'spread_columns'} = 1;
-		$$self{'spreads'} = 1;
+			# This is the alternate way of doing it, this makes more sense, but it screws something up.  I can never remember what.
+			$$self{'spread_size'} = $$self{'spread_rows'} * $$self{'spread_columns'} * 2;
+			$$self{'spread_rows'} = 1;
+			$$self{'spread_columns'} = 1;
+			$$self{'spreads'} = 1;
 		} # end if
 	} # end if
 

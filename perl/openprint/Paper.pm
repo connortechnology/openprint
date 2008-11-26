@@ -691,17 +691,17 @@ sub add_inventory {
 	} # end if
 
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
-    sql::insert( undef, undef, 'Paper_Inventory',
-        'paper_id', $$self{'id'},
-        'user_id',  $openprint::session{'user_id'},
-        'POIndex',  undef,
-        'InStock',  ($Skid->id() ? 1*$$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
-        'updated_on',   'NOW()',
-        'delta',    $quantity,
-        'Comment',  $description,
-        'skid_id',  $Skid->id(),
-		'units',	$units,
-        );
+	new openprint::PaperInventory()->save({
+			'paper_id'		=> $$self{'id'},
+			'user_id'		=> $openprint::session{'user_id'},
+			'poindex'		=> undef,
+			'instock'		=> $in_stock,
+			'delta'			=> $quantity,
+			'comment'		=> $description,
+			'skid_id'		=> $Skid->id(),
+			'units'			=> $units,
+			} );
+
 	delete $$self{allocated};
 	delete $$self{in_stock};
 

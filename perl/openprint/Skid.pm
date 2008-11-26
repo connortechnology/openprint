@@ -11,6 +11,7 @@ use vars qw( $log $dbh %variable );
 require sql;
 require openprint::Location;
 require openprint::Paper;
+require openprint::PaperInventory;
 require openprint::SkidContent;
 require openprint::RFIDTag;
 require openprint::Skid_Verification;

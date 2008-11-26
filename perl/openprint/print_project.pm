@@ -301,19 +301,19 @@ sub try_to_delete_project {
 	my $proj_reference = $Project->reference();
 
 	if ( $Project->company_id() != $openprint::session{'company_id'} ) {
-		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br>";
+		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br/>";
 		$delete = 0;
 	} # end if
 	$_ = "SELECT Orders.Index FROM Orders,Order_Contents WHERE Orders.Index=Order_Contents.OrderIndex AND lngProjectIndex=? AND Orders.strStatus != 'Incomplete'";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
-		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br>";
+		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br/>";
 		$delete = 0;
 	} # end if
 	$_ = "SELECT tbl_Quotes.Index FROM tbl_Quotes,tbl_Quote_Details WHERE tbl_Quotes.Index=tbl_Quote_Details.QuoteIndex AND ProjectIndex=? AND tbl_Quotes.strStatus != 'Incomplete'";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
-		$error .= "Project $proj_reference is in quote <a href=\"/main/quote/history_details.html?quote_id=$_\">$_</a>.	You must delete the quote before you can delete the project.<br>";
+		$error .= "Project $proj_reference is in quote <a href=\"/main/quote/history_details.html?quote_id=$_\">$_</a>.	You must delete the quote before you can delete the project.<br/>";
 		$delete = 0;
 	} # end if
 	if ( $delete ) {
@@ -325,19 +325,13 @@ sub try_to_delete_project {
 sub history_list {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $error = '';
 	foreach my $key ( $r->param() ) {
 		if ( $key =~ /chkDelete(\d*)/ ) {
-			$error = try_to_delete_project( $log, $dbh, $variable, $1 );
+			$$variable{'error'} .= try_to_delete_project( $log, $dbh, $variable, $1 );
 		} elsif ( $key eq 'btnFunction' and $r->param($key) eq 'Delete Project' ) {
-			$error = try_to_delete_project( $log, $dbh, $variable, $r->param('ProjectIndex') );
+			$$variable{'error'} .= try_to_delete_project( $log, $dbh, $variable, $r->param('ProjectIndex') );
 		} # end if
 	} # end foreach
-
-	if ( $error ne '' ) {
-		return misc::error( $log, $dbh, $variable, 'Error',$error );
-	} # end if
-
 } # end sub history_list 
 
 sub view_pdfs {
@@ -1228,9 +1222,9 @@ sub calc {
 			} # end foreach
 			if ( $specs{'PrintingType'} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'PrintingType1', $specs{'PrintingType'} );
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'chkOverridePrintingType1', 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'OverridePrintingType1', 'Y' );
 			} else {
-				openprint::service::delete_service_spec( $$project{'id'}, $printing_service_index, 'chkOverridePrintingType1' );
+				openprint::service::delete_service_spec( $$project{'id'}, $printing_service_index, 'OverridePrintingType1' );
 			} # end if
 			if ( $specs{'ProjectType'} eq 'PresentationFolders' ) {
 				foreach my $spec ( 'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketRight','chkPocketCenter' ) {
