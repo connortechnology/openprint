@@ -99,12 +99,12 @@
 			<tr>
 				<th>Shipping Method</th>
 				<th>Shipping Terms</th>
-				<th width="183">Delivery Date</th>
+				<th width="183" style="text-align: center;">Delivery Date</th>
 			</tr>
 			<tr>
 				<td><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
 				<td><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
-				<td><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) ) ?></td>
+				<td style="text-align: center;"><? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : 'ASAP' ) ?></td>
 			</tr>
 		</table>
 		<br class="spacer"/>

@@ -178,7 +178,6 @@ sub save {
 	delete $sql{'created_on'};
 	$sql{'subtotal'} = 0;
 	foreach my $C ( $self->Contents() ) {
-$log->debug("Adding " . $C->total() );
 		$sql{'subtotal'} += $C->total();
 	} # end foreach
 	$sql{'total'} = $sql{'subtotal'};
@@ -221,7 +220,6 @@ sub delete {
 sub destroy {
     my $self = shift;
     my $ac = sql::start_transaction( );
-    #sql::execute( undef, undef, q{DELETE FROM PurchaseOrder_data WHERE label_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM PurchaseOrders WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
@@ -231,9 +229,6 @@ sub copy {
 	my $new = new openprint::PurchaseOrder();
 	@$new{keys %fields} = @$self{keys %fields};
 	delete $$new{'id'};
-	#foreach my $k ( keys %{$$self{'data'}} ) {
-		#$$new{'data'}{$k} = $$self{'data'}{$k};
-	#} # end foreach
 	return $new;
 } # end sub copy
 
@@ -254,18 +249,9 @@ sub Authorized_By {
 	return new openprint::User( $_[0]{authorized_by} );
 } # end sub Authorized_By
 
-
 sub Contents {
 	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'});
 } # end sub Contents
-
-sub delivered_on {
-	my ( $self ) = @_;
-	if ( ! $$self{'delivered_on'} ) {
-	$$self{'delivered_on'} = join('-', Date::Calc::Today() ) .' 00:00:00';
-	} # end if
-	return $$self{'delivered_on'};
-} # end sub delivered_on
 
 sub send_to_vendor {
 	my ( $self ) = @_;

@@ -81,7 +81,7 @@ function getSelectionId(input, li) {
 	</p>
 	<div class="PO">
 		<div class="PageTitle">
-		<h1>PURCHASE ORDER</h1>
+		<h1>PURCHASE ORDER (<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>)</h1>
 		</div>
 		<div class="leftColumn">
 		<fieldset><legend>VENDOR:</legend>
@@ -155,23 +155,29 @@ function getSelectionId(input, li) {
 				<td><textarea name="shipping_method" id="shipping_method" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_method()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
 				<td><textarea name="shipping_terms" id="shipping_terms" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_terms()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></textarea></td>
 				<td valign="top">
-					<input type="hidden" id="delivered_on" name="delivered_on" value="<? echo ( $$variable{'PurchaseOrder'}->delivered_on(); ) ?>" />
-					<span id="delivered_on_display"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ); ) ?></span>
-<img src="/javascripts/jscalendar/img.gif" id="DateButton" style="cursor: pointer;width: 20px;" title="Date selector" alt="Calendar"/>
-					<script type="text/javascript">
-						Calendar.setup({
-							inputField	:	'delivered_on',	// id of the input field
-							displayArea	:	'delivered_on_display',	// id of the input field
-							ifFormat	:	'%Y-%m-%d',		// format of the input field
-							daFormat	:	'<? echo ( $config{'DateFormat'} ) ?>',
-							align		:	'Tl',
-							showsTime	:	false,			// will display a time selector
-							//displayArea :	'JumpToDate$$row{'serviceindex'}',
-							singleClick :	false,			// double-click mode
-							//onClose	 :	setduedate
-							button		:	'DateButton',
-						});
-					</script>
+					<input type="radio" id="delivered_on_switchASAP" name="delivered_on_switch" value="ASAP" <? echo ( ! ssi::checked( $$variable{'PurchaseOrder'}->delivered_on() ) ) ?> onclick="$('delivered_on_div').hide();" />
+					<label for="delivered_on_switchASAP">ASAP</label>
+					<input type="radio" id="delivered_on_switchDATE" name="delivered_on_switch" value="DATE" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on() ) ) ?> onclick="$('delivered_on_div').show();" />
+					<label for="delivered_on_switchDATE">DATE</label>
+					<div id="delivered_on_div" <? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? '' : 'style="display:none;"' ) ?>>
+						<input type="hidden" id="delivered_on" name="delivered_on" value="<? echo ( $$variable{'PurchaseOrder'}->delivered_on() ?  $$variable{'PurchaseOrder'}->delivered_on() : join('-', Date::Calc::Today() ); ) ?>" />
+						<span id="delivered_on_display"><? echo ( Date::Format::time2str( $config{'DateFormat'}, $$variable{'PurchaseOrder'}->delivered_on() ? Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) : time ); ) ?></span>
+	<img src="/javascripts/jscalendar/img.gif" id="DateButton" style="cursor: pointer;width: 20px;" title="Date selector" alt="Calendar"/>
+						<script type="text/javascript">
+							Calendar.setup({
+								inputField	:	'delivered_on',	// id of the input field
+								displayArea	:	'delivered_on_display',	// id of the input field
+								ifFormat	:	'%Y-%m-%d',		// format of the input field
+								daFormat	:	'<? echo ( $config{'DateFormat'} ) ?>',
+								align		:	'Tl',
+								showsTime	:	false,			// will display a time selector
+								//displayArea :	'JumpToDate$$row{'serviceindex'}',
+								singleClick :	false,			// double-click mode
+								//onClose	 :	setduedate
+								button		:	'DateButton',
+							});
+						</script>
+					</div>
 				</td>
 			</tr>
 		</table>
@@ -199,13 +205,24 @@ function getSelectionId(input, li) {
 ) ?>
 	<tr class="unprintable" id="line-new">
 		<td>
-	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"new Ajax.Request('/employee/inventory/_po_content_line.html?action=add' +
-	'&amp;type_id=' + encodeURIComponent(\$('type_id-new').options[\$('type_id-new').selectedIndex].value) +
-	'&amp;po_id=' + " . $$variable{'PurchaseOrder'}->id() ." + 
-	'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));} } );",'','Add' ); ) ?>
+	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"
+		if ( \$('type_id-new').value ) {
+			new Ajax.Request('/employee/inventory/_po_content_line.html?action=add' +
+			'&amp;type_id=' + encodeURIComponent( \$('type_id-new').options[\$('type_id-new').selectedIndex].value ) +
+			'&amp;po_id=' + " . $$variable{'PurchaseOrder'}->id() ." + 
+			'', { 
+					method: 'get', 
+					evalScripts: true, 
+					onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));}
+				} );
+		} else {
+			alert('Please select a type for the new line.');
+		}",'','Add' );
+) ?>
 		</td>
 		<td>
 			<select name="type_id-new" id="type_id-new">
+				<option value=""> select one </option>
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ] ); ) ?>
 			</select>
 		</td>
