@@ -164,6 +164,8 @@ sub update {
 	} else {
 		$command .= " WHERE $condition";
 	} # end if
+    my $print_command = $command;
+    $print_command =~ s/\?/\%s/g;
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
 		$log->error( 'Error Preparing SQL Statement: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr ) if $log;

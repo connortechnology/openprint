@@ -415,8 +415,6 @@ sub writeTip {
 return qq{<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('$word',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('$word');}">$word</span>};
 }
 
-<<<<<<< HEAD:perl/ssi.pm
-=======
 sub setup_date_select {
     my ( $page, $prefix, $delta ) = @_;
     if ( ( ! $session{$page.'?'.$prefix.'_start_year'} ) or ( time - $session{'lastupdated'} > 3600 ) ) {
@@ -428,7 +426,6 @@ sub setup_date_select {
     } # end if
 } # end sub setup_date_select
 
->>>>>>> ae9fe0b5294a7193302c0bcbebc49053a0c3695c:perl/ssi.pm
 sub date_select {
 	 my ( $prefix, $value, $onchange ) = @_;
 
