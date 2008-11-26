@@ -227,8 +227,7 @@ sub calc {
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity($qty_index);
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			$$specs{'txtCalliper'} = 0;
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -255,7 +254,7 @@ sub calc {
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 
 			my $Paper;
-			foreach my $qty_index ( 1 .. 3 ) {
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				next if ! $Project->quantity( $qty_index );
 				$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 				last;
@@ -269,7 +268,7 @@ sub calc {
 		} # end foreach sig
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g; ;
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;

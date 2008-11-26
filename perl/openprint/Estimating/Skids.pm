@@ -25,7 +25,7 @@ require openprint::service;
 
 require sql;
 
-my $debug = 0;
+my $debug = 1;
 
 my %variables = (
 	'txtFinalWidth'=>['output'],'txtFinalHeight'=>['output'],

@@ -44,14 +44,16 @@ sub variables {
 
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $p_id, $s_s_id );
-		foreach my $qty_index ( 1 .. 3 ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 			push @v, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index";
 			foreach my $fold_index ( 1 .. 4 ) {
 				push @v, "FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
 				push @v, "FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
 				push @v, "FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
 				push @v, "FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
 				push @v, "FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
@@ -422,8 +424,7 @@ sub signature_calc {
 		my $i = $Imposition->copy();
 		push @Set_Of_Impositions, $i;
 	} # end if
-
-	if ( $Imposition->pages() < 2 ) {
+	if ( ! $$sig_specs{'txtSignatureType'} ) {
 
 	# Get rid of dutches
 	my @Impositions = ();
@@ -665,6 +666,7 @@ sub signature_calc {
 										'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 										'gsm'				=>	$Paper->gsm(),
 										'calliper'			=>	$Paper->calliper(),
+										'imposition'		=>	$$I{'imposition'},
 										);
 								if ( $Fold ) {
 									my $RunSpeed = $Fold->Specification( $Paper->gsm() );
@@ -686,39 +688,11 @@ sub signature_calc {
 							last if ! $$sig_specs{'PageQuantity'.$qty_index};
 
 # If we have to cut it down
-							if ( $I->spread_rows() > $I->spread_columns() ) {
-								if ( $I->spread_rows() % 2 ) {
-									my $i2 = $I->copy();
-									$i2->spread_rows(1);
-									$i2->image_height( $I->image_height()/$I->spread_rows() );
-
-									push @folds, $i2;
-									$I->spread_rows( $I->spread_rows() - 1 );
-									$I->image_height( ($I->image_height()/($I->spread_rows()+1))*$I->spread_rows() );
-									push @folds, $I;
-								} else {
-									$I->spread_rows( $I->spread_rows()/2 );
-									$I->image_height( $I->image_height() /2 );
-									push @folds, $I;
-									my $i2 = $I->copy();
-									push @folds, $i2;
-								} # end if
-							} else {
-								if ( $I->spread_columns() % 2 ) {
-									my $i2 = $I->copy();
-									$i2->spread_columns(1);
-									$i2->image_width( $I->image_width()/$I->spread_columns() );
-									push @folds, $i2;
-									$I->spread_columns( $I->spread_columns() - 1 );
-									$I->image_width( ($I->image_width()/($I->spread_columns()+1))*$I->spread_columns() );
-									push @folds, $I;
-								} else {
-									$I->spread_columns( $I->spread_columns()/2 );
-									$I->image_width( $I->image_width()/2 );
-									push @folds, $I;
-									push @folds, $I->copy();
-								} # end if
-							} # end if
+if ( $I->imposition() > 1 ) {
+	push @folds, cut_imposition( $I );
+} else {
+	push @folds, cut_spreads( $I ) if $I->spreads() > 1;
+} # end if
 						} # end while spreads
 
 						if ( @folds ) {
@@ -894,7 +868,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 				%AnglePrice = openprint::service::get_price_object( 'FoldingAngle', $imposition, $Equipment ) if ! %AnglePrice;
 
 				if ( lc $servicePrice{'units'} eq 'per hour' ) {
-					$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime * $qty;
+					$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime;
 					$Breakdown .= sprintf('&nbsp;Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f<br/>', @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per m', 'per 1000'] ) ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $qty/1000 );
@@ -1050,6 +1024,8 @@ sub calc {
 					$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
 					$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = 0;
 					$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
+					$$specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
+					$$specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
 					$$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
 					$$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
 					$$specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
@@ -1095,6 +1071,8 @@ sub calc {
 						$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $fold_type;
 						$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = scalar @{$$folds{$key}};
 						$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->Imposition()->imposition();
+						$$specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->Imposition()->columns();
+						$$specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->Imposition()->rows();
 						$$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->folds();
 						$$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->angles();
 						$$specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->runspeed();
@@ -1202,6 +1180,52 @@ sub reduce_impositions {
 	
 } # end sub reduce_impositions
 
+sub cut_imposition {
+	my ( $I ) = @_;
+	my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
+	if ( $$I{columns} > $$I{rows} ) {
+		$i1->columns(int $$I{columns}/2);
+		$i2->columns( $$I{columns} - $$i1{columns} );
+	} else {
+		$i1->rows(int $$I{rows}/2);
+		$i2->rows( $$I{rows} - $$i1{rows} );
+	} # end if
+	#$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) );
+	return ( $i1, $i2 );
+} # end sub cut_imposition
+
+sub cut_spreads {
+	my ( $I ) = @_;
+	my $i1 = $I->copy();
+	my $i2 = $I->copy();
+	if ( $I->spread_rows() > $I->spread_columns() ) {
+		if ( $I->spread_rows() % 2 ) {
+			$i1->spread_rows(1);
+			$i1->image_height( $I->image_height()/$I->spread_rows() );
+			$i2->spread_rows( $i2->spread_rows() - 1 );
+			$i2->image_height( ($i2->image_height()/($i2->spread_rows()+1))*$i2->spread_rows() );
+		} else {
+			$i1->spread_rows( $i1->spread_rows()/2 );
+			$i1->image_height( $i1->image_height() /2 );
+			$i2->spread_rows( $i2->spread_rows()/2 );
+			$i2->image_height( $i2->image_height() /2 );
+		} # end if
+	} else {
+		if ( $I->spread_columns() % 2 ) {
+			$i1->spread_columns(1);
+			$i1->image_width( $I->image_width()/$I->spread_columns() );
+			$i2->spread_columns( $I->spread_columns() - 1 );
+			$i2->image_width( ($I->image_width()/($I->spread_columns()+1))*$I->spread_columns() );
+		} else {
+			$i1->spread_columns( $i1->spread_columns()/2 );
+			$i1->image_width( $i1->image_width()/2 );
+			$i2->spread_columns( $i2->spread_columns()/2 );
+			$i2->image_width( $i2->image_width()/2 );
+		} # end if
+	} # end if
+	#$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) );
+	return ( $i1, $i2 );
+} # end cut_spreads
 1;
 
 __END__

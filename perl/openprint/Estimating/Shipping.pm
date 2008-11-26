@@ -37,7 +37,7 @@ my %variables = (
 	'FromFirstName'=>['save'],'FromLastName'=>['save'],
 	'ToCompanyName'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
 	'ToFirstName'=>['save'],'ToLastName'=>['save'],
-	'alert'=>['save'],
+	'alert'=>['save','output'],
 
 );
 
@@ -93,6 +93,7 @@ sub calc {
 	} # end if
 	if ( ! $$specs{'ToCountry'} ) {
 		$$specs{'alert'} .= 'Please enter To Country<br/>';
+$openprint::log->debug("Alert $$specs{'alert'}" );
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	my @shipping_services;
@@ -103,7 +104,7 @@ sub calc {
 		} # end foreach
 	} # end foreach ServiceType
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\.\d]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -153,7 +154,7 @@ sub display {
 
 	if ( ! ( $$variable{'FromCity'} and $$variable{'FromPostalCode'} and $$variable{'FromStateProvince'} and $$variable{'FromCountry'} ) ) {
 		my %shipping_fields = (
-				'FromCompanyName'		=>	'CompanyName',
+				'FromCompanyName'	=>	'CompanyName',
 				'FromAddress1'		=>	'Address1',
 				'FromAddress2'		=>	'Address2',
 				'FromCity'			=>	'City',
@@ -168,13 +169,16 @@ sub display {
 
 		
 		my $company = new openprint::obj_customer( $log, $dbh, $openprint::config{'Owner'} );
-		@$variable{ keys %shipping_fields } = $company->load_shipping( @shipping_fields{ keys %shipping_fields } );
+		my $address = $company->get_shipping_address();
+		foreach my $k ( keys %shipping_fields ) {
+			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
+		} # end foreach
 	} # end if
 
 	if ( $openprint::session{'company_id'} and ( ! (
 		$$variable{'ToCity'} and $$variable{'ToPostalCode'} and $$variable{'ToStateProvince'} and $$variable{'ToCountry'} ) ) ) {
 		my %shipping_fields = (
-				'ToCompanyName'			=>	'CompanyName',
+				'ToCompanyName'		=>	'CompanyName',
 				'ToAddress1'		=>	'Address1',
 				'ToAddress2'		=>	'Address2',
 				'ToCity'			=>	'City',
@@ -188,7 +192,10 @@ sub display {
 				);
 
 		my $company = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
-		@$variable{ keys %shipping_fields } = $company->load_shipping( @shipping_fields{ keys %shipping_fields } );
+		my $address = $company->get_shipping_address();
+		foreach my $k ( keys %shipping_fields ) {
+			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
+		} # end foreach
 	} # end if
 
 } # end sub display
