@@ -694,6 +694,31 @@ if ( $version < 1918 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1918;
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+if ( ! $data ) {
+} else {
+	if ( ! exists $$data{'federaltax_charge'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add federaltax_charge BOOLEAN');
+	} # end if
+	if ( ! exists $$data{'statetax_charge'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add statetax_charge BOOLEAN');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );
+if ( ! $data ) {
+	$dbh->do('
+CREATE TABLE PurchaseOrder_COntents (
+    id SERIAL NOT NULL,
+    po_id   INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
+    qty     float,
+    price   float,
+    total   float,
+    item    text,
+    docket  text,
+    description text,
+    PRIMARY KEY (id)
+);');
+} # en dif
 
 if ( $version < 1919 ) {
 	print "Updating to version 1919\n";

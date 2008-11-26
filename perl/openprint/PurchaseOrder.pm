@@ -38,9 +38,11 @@ $serial = 'Purchaseorders_id_seq';
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
 	'federaltax'		=>	'federaltax',
-	'statetax'			=>	'statetax',
 	'federaltax_rate'	=>	'federaltax_rate',
+	'federaltax_charge'	=>	'federaltax_charge',
+	'statetax'			=>	'statetax',
 	'statetax_rate'		=>	'statetax_rate',
+	'statetax_charge'	=>	'statetax_charge',
 	'deleted'			=>	'deleted',
 	'supplier_id'		=>	'supplier_id',
 	'shipping_method'	=>	'shipping_method',
@@ -173,6 +175,11 @@ sub save {
 		$sql{$k} = $$self{$k};
 	} # end foreach
 	delete $sql{'created_on'};
+	$sql{'subtotal'} = 0;
+	foreach my $C ( $self->Contents() ) {
+		$sql{'subtotal'} += $C->total();
+	} # end foreach
+	$sql{'total'} = $sql{'subtotal'};
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
@@ -212,7 +219,6 @@ sub delete {
 sub destroy {
     my $self = shift;
     my $ac = sql::start_transaction( );
-    #sql::execute( undef, undef, q{DELETE FROM PurchaseOrder_data WHERE label_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM PurchaseOrders WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
@@ -222,9 +228,6 @@ sub copy {
 	my $new = new openprint::PurchaseOrder();
 	@$new{keys %fields} = @$self{keys %fields};
 	delete $$new{'id'};
-	#foreach my $k ( keys %{$$self{'data'}} ) {
-		#$$new{'data'}{$k} = $$self{'data'}{$k};
-	#} # end foreach
 	return $new;
 } # end sub copy
 
@@ -241,14 +244,13 @@ sub Supplier {
 sub Creator {
 	return new openprint::User( $_[0]{created_by} );
 } # end sub Creator
+sub Authorized_By {
+	return new openprint::User( $_[0]{authorized_by} );
+} # end sub Authorized_By
 
-sub delivered_on {
-	my ( $self ) = @_;
-	if ( ! $$self{'delivered_on'} ) {
-	$$self{'delivered_on'} = join('-', Date::Calc::Today() ) .' 00:00:00';
-	} # end if
-	return $$self{'delivered_on'};
-} # end sub delivered_on
+sub Contents {
+	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'});
+} # end sub Contents
 
 sub send_to_vendor {
 	my ( $self ) = @_;
@@ -308,7 +310,7 @@ sub federaltax {
 	if ( defined $new ) {
 		$$self{'federaltax'} = $new;
 	} # end if
-	if ( ! $$self{'federaltax'} ) {
+	if ( ( ! $$self{'federaltax'} ) and $self->federaltax_charge() ) {
 		$$self{'federaltax'} = $self->subtotal() * ( $self->federaltax_rate()/100 );
 	} # end if
 	return $$self{'federaltax'};
@@ -320,13 +322,6 @@ sub federaltax_rate {
 		$$self{'federaltax_rate'} = $new;
 	} # end if
 	if ( ! $$self{'federaltax_rate'} ) {
-		if ( $self->Company()->taxexempt1() eq 'Y' ) {
-			return '';
-		} # end if
-# This is true, but can't expect people to type it in
-#if ( ! $self->Vendor()->gst_number() ) {
-#   return '';
-#} # end if
 		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
 			$$self{'federaltax_rate'} = $Tax->federaltax_rate();
 		} # end if
@@ -334,13 +329,32 @@ sub federaltax_rate {
 	return $$self{'federaltax_rate'};
 } # end sub federaltax_rate
 
+sub federaltax_charge {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'federaltax_charge'} = $_[0];
+	} # end if
+	if ( ! defined $$self{'federaltax_charge'} ) {
+		if ( $self->Company()->taxexempt1() eq 'Y' ) {
+			$$self{'federaltax_charge'} = 0;
+		} # end if
+# This is true, but can't expect people to type it in
+#if ( ! $self->Vendor()->gst_number() ) {
+#   return 0;
+#} # end if
+		$$self{'federaltax_charge'} = 1;
+	} # end if
+$log->debug("federaltax_charge: $$self{'federaltax_charge'}");
+	return $$self{'federaltax_charge'};
+} # end sub federaltax_charge
+
 sub statetax {
 	my ( $self, $new ) = @_;
 
 	if ( defined $new ) {
 		$$self{'statetax'} = $new;
 	} # end if
-	if ( ! $$self{'statetax'} ) {
+	if ( ( ! $$self{'statetax'} ) and $self->statetax_charge() ) {
 		$$self{'statetax'} = $self->subtotal() * ( $self->statetax_rate()/100 );
 	} # end if
 	return $$self{'statetax'};
@@ -352,19 +366,30 @@ sub statetax_rate {
 		$$self{'statetax_rate'} = $new;
 	} # end if
 	if ( ! $$self{'statetax_rate'} ) {
-		if ( $self->Company()->taxexempt2() eq 'Y' ) {
-			return '';
-		} # end if
-# This is true, but can't expect people to type it in
-#if ( ! $self->Vendor()->gst_number() ) {
-#   return '';
-#} # end if
 		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
 			$$self{'statetax_rate'} = $Tax->statetax_rate();
 		} # end if
 	} # end if
 	return $$self{'statetax_rate'};
 } # end sub statetax_rate
+
+sub statetax_charge {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'statetax_charge'} = $_[0];
+	} # end if
+	if ( ! defined $$self{'statetax_charge'} ) {
+		if ( $self->Company()->taxexempt2() eq 'Y' ) {
+			return 0;
+		} # end if
+# This is true, but can't expect people to type it in
+#if ( ! $self->Vendor()->pst_number() ) {
+#   return 0;
+#} # end if
+		$$self{'statetax_charge'} = 1;
+	} # end if
+	return $$self{'statetax_charge'};
+} # end sub statetax_charge
 
 sub total {
 	my ( $self ) = @_;
