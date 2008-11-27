@@ -195,7 +195,7 @@ sub calc {
 				} elsif ( $type eq 'FujiFinalProof'  ) {
 				} elsif ( $type eq 'PDFProof' ) {
 				} # end if
-				$price = ceil( $price );
+				$price = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 				$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = sprintf( '%.2f', $price );
 				$totalPrice += $price * $quantity;
 			} # end foreach my $proof_index
