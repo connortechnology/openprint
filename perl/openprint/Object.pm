@@ -54,15 +54,16 @@ sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
 
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . q{ WHERE id=?}, {}, $$self{'id'} );
 		if ( ! $data ) {
-			$log->error( 'Failure to load ' . ref $self . " $$self{'id'}: Reason: " . $dbh->errstr );
+			$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
 			return;
 		} # end if
 	} # end if
+
+	my %fields = eval '%'.$type.'::fields';
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 
 } # end sub load

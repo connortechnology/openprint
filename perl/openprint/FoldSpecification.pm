@@ -35,8 +35,7 @@ $serial = 'foldspecification_id_seq';
 	'interpolate'	=>	0,
 );
 
-my $debug = 1;
-# Returns a paper object specified by the parameters
+my $debug = 0;
 sub find {
 	my %params = @_;
 

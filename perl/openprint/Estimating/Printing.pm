@@ -2800,7 +2800,7 @@ $price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 		$run_overs = $$specs{'OverRun'.$qty_index};
 	} else {
 		$over_rate = $Press->specification( 'Press Run Overs', $base_impressions );
-		if ( $_ = $Press->specification( 'Covers Overs Percentage' ) ) {
+		if ( ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) and ( $_ = $Press->specification( 'Covers Overs Percentage' ) ) ) {
 			$over_rate *= ( 1 + $_ / 100 );
 		} # end if
 		$run_overs = $base_impressions * $over_rate;
@@ -3407,7 +3407,10 @@ sub get_run_price {
 
 	if ( $Imposition->runstyle() eq 'Web' ) {
 # A web does both sides at once, and cannot do multipass
-		%RunPrice = openprint::service::get_price_object( 'WebImpression'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press );
+		$impression_service = 'WebImpression'.$side_one_colours.'/'.$side_two_colours;
+		if ( ! ( %RunPrice = openprint::service::get_price_object( 'WebImpression'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press ) ) ) {
+			%RunPrice = openprint::service::get_price_object( 'WebImpression', $impressions, $Press );
+		} # end if
 		$run_price{'units'} = $RunPrice{'units'};
 		$running_price = $RunPrice{'Price'};
 #$openprint::log->debug("Price: $running_price");
@@ -3487,11 +3490,11 @@ sub get_run_price {
 		$run_price{'Cost'} = $running_price;
 		$run_price{'Price'} = $running_price * $run_price{'RunHours'};
 	} else {
-		$openprint::log->debug("Unknown Units: $run_price{'units'}");
+		$openprint::log->warn("Unknown Units for $impression_service: ($run_price{'units'}) on " . $Press->strid() );
 	} # end if
 #$openprint::log->debug("Impresion price: $run_price{'Cost'} $run_price{'units'} = $run_price{'Price'}");
 	return %run_price;
-} # end sub
+} # end sub get_run_price
 
 # This is called once perside, or just once for W&T
 sub press_setup_cost {

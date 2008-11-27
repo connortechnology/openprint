@@ -7,7 +7,7 @@ use openprint::Fold;
 use openprint::FoldSpecification;
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 
 use vars qw( $table $serial $log $dbh %fields %transforms %defaults );
 

@@ -101,7 +101,7 @@ sub calc {
 	my $serviceCharge = openprint::service::get_price( $ServiceType->name(), undef, undef );
 	my $packingCharge = openprint::service::get_price( $ServiceType->name().'Packing', undef, undef );
 
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtWidth','txtHeight'};
@@ -121,7 +121,7 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	
-    foreach my $qty_index ( 1 .. 3 ) {
+    foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
@@ -237,7 +237,7 @@ sub summary {
 	if ( $qty_index ) {
 		my $summary;
 		my $services = $Project->services();
-		my $Material = new openprint::Material( $$specs{'ddmPackageType'} );
+		my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
 
 		if ( $$services{'BulkSkids'} ) {
 			if ( $$services{'BulkSkids'}[0] == $service_id ) {

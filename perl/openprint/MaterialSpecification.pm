@@ -5,7 +5,13 @@ use openprint ();
 use openprint::Material;
 require sql;
 
-my %fields = (
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+$table = 'Material_Specifications';
+$serial = 'materialspecification_id_seq';
+
+%fields = (
 	'id'			=>	'id',
 	'material_id'	=>	'material_id',
 	'min'			=>	'min',
@@ -14,6 +20,11 @@ my %fields = (
 	'name'			=>	'name',
 	'value'			=>	'value',
 	'interpolate'	=>	'interpolate',
+);
+
+%transforms = (
+);
+%defaults = (
 );
 
 my $debug = 0;
@@ -43,55 +54,17 @@ sub find {
 
 		$sql .= " OR $params{'or'}" if $params{'or'};
 		$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-		my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 		if ( ! $data ) {
-			$openprint::log->error( "Error loading Material Specification ($sql) (@values) :" . $openprint::dbh->errstr );
+			$log->error( "Error loading Material Specification ($sql) (@values) :" . $dbh->errstr );
 		} elsif ( $debug ) {
-		#$openprint::log->debug( 'Number of results: ' . @$data );
-			$openprint::log->debug( $sql . join(',',@values) . ':' . @$data );
+		#$log->debug( 'Number of results: ' . @$data );
+			$log->debug( $sql . join(',',@values) . ':' . @$data );
 		} # end if
 		
 		return map { new openprint::MaterialSpecification( $_->{id}, $_ ) } @$data;
 	} # end if
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Material_Specifications WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
-
-sub save {
-    my ( $self, $hash ) = @_;
-
-    if ( $hash ) {
-        $self->set( $hash );
-    } # end if
-
-    my $ac = sql::start_transaction( $openprint::dbh );
-    if ( ! $$self{'id'} ) {
-        @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('materialspecification_id_seq')} );
-
-        if ( my $error = sql::insert( undef, undef, 'Material_Specifications', [map { $_, $$self{$_} } keys %fields ] ) ) {
-            $$self{'id'} = undef;
-            sql::end_transaction( $openprint::dbh, $ac );
-            return $error;
-        } # end if
-
-    } else {
-        if ( my $error = sql::update( undef, undef, 'Material_Specifications', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
-            sql::end_transaction( $openprint::dbh, $ac );
-            return $error;
-        } # end if
-    } # end if
-
-    sql::end_transaction( $openprint::dbh, $ac );
-    $self->load();
-    return;
-} # end sub save
-
 
 sub copy {
 	my ( $self ) = @_;

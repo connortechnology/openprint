@@ -72,7 +72,7 @@
 		<? if ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
 		<p>
 			<label>Customer Service Rep:</label>
-			<a href="mailto:<? echo ( $$variable{'Project'}->Company()->CSR()->email() ) ?>"><? echo ( $$variable{'Project'}->Company()->CSR()->name() ?></a>
+			<a href="mailto:<? echo ( $$variable{'Project'}->Company()->CSR()->email() ) ?>"><? echo ( $$variable{'Project'}->Company()->CSR()->name() ) ?></a>
 		</p>
 		<? endif ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
 	</fieldset>

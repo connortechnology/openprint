@@ -979,13 +979,56 @@ if ( ! openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
     $Category->save({'name'=>'PlainCartons'});
     print "Adding PlainCartons Category\n";
 } # end if
+
 foreach my $M ( openprint::Material::find('name'=>'Plain Carton') ) {
-    next if $M->Category()->name() eq 'PlainCartons';
-    foreach my $C  ( openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
-        $M->category_id( $C->id() );
-    } # end foreach $C
+	if ( ! $M->specification('Maximum Weight') ) {
+		my $S = new openprint::MaterialSpecification();
+		$S->save({
+				'material_id'	=>	$M->id(),
+				'name'	=>	'Maximum Weight',
+				'value'	=>	'40',
+				});
+	} # end if
+	next if $M->Category()->name() eq 'PlainCartons';
+	foreach my $C ( openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
+		$M->category_id( $C->id() );
+		last;
+	} # end foreach $C
+	$M->save();
+} # end foreach $M
+if ( ! openprint::MaterialCategory::find('name'=>'BulkSkids') ) {
+    my $Category = new openprint::MaterialCategory();
+    $Category->save({'name'=>'BulkSkids'});
+    print "Adding BulkSkids Category\n";
+} # end if
+
+foreach my $M ( openprint::Material::find('name'=>'BulkSkid') ) {
+	if ( ! $M->specification('Maximum Weight') ) {
+		my $S = new openprint::MaterialSpecification();
+		$S->save({
+				'material_id'	=>	$M->id(),
+				'name'	=>	'Maximum Weight',
+				'value'	=>	'1500',
+				});
+	} # end if
+	next if $M->Category()->name() eq 'BulkdSkids';
+	foreach my $C ( openprint::MaterialCategory::find('name'=>'BulkSkids') ) {
+		$M->category_id( $C->id() );
+		last;
+	} # end foreach $C
+	$M->save();
 } # end foreach $M
 
+foreach my $S ( openprint::ServiceType::find('name'=>['SaddleStitching','LoopStitching']) ) {
+	if ( $S->type() ne 'Stitching' ) {
+		$S->type('Stitching');
+		$S->save();
+	} # end if
+} # end foreach
+
+$dbh->disconnect();
+1;
+__END__
 
 $dbh->disconnect();
 1;

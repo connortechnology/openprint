@@ -471,8 +471,12 @@ sub group {
 	if ( defined $group ) {
 		$group =~ s/^\s*(.*)\s*$/$1/;
 
-        @$self{'group_id','group'} = sql::execute( undef, undef, q{SELECT id, name FROM StockGroups WHERE lower(name)=?}, lc $group );
-        if ( ! $$self{'group_id'} ) {
+		if ( ! $$self{'custom'} ) {
+			@$self{'group_id','group'} = sql::execute( undef, undef, q{SELECT id, name FROM StockGroups WHERE lower(name)=?}, lc $group );
+			if ( ! $$self{'group_id'} ) {
+				$$self{'group'} = $group;
+			} # end if
+		} else {
 			$$self{'group'} = $group;
         } # end if
     } elsif ( $$self{'group_id'} and ! $$self{'group'} ) {
@@ -486,9 +490,12 @@ sub name {
 
 	if ( defined $name ) {
 		$name =~ s/^\s*(.*)\s*$/$1/;
-
-        @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE lower(longname)=?}, lc $name );
-        if ( ! $$self{'name_id'} ) {
+		if ( ! $$self{'custom'} ) {
+			@$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE lower(longname)=?}, lc $name );
+			if ( ! $$self{'name_id'} ) {
+				$$self{'name'} = $name;
+			} # end if
+		} else {
 			$$self{'name'} = $name;
         } # end if
     } elsif ( $$self{'name_id'} and ! $$self{'name'} ) {
@@ -502,8 +509,12 @@ sub manufacturer {
 
     if ( defined $manufacturer ) {
 		$manufacturer =~ s/^\s*(.*)\s*$/$1/;
-        @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE lower(longname)=?}, lc $manufacturer );
-        if ( ! $$self{'manufacturer_id'} ) {
+		if ( ! $$self{'custom'} ) {
+			@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE lower(longname)=?}, lc $manufacturer );
+			if ( ! $$self{'manufacturer_id'} ) {
+				$$self{'manufacturer'} = $manufacturer;
+			} # end if
+		} else {
 			$$self{'manufacturer'} = $manufacturer;
         } # end if
     } elsif ( $$self{'manufacturer_id'} and ! $$self{'manufacturer'} ) {
@@ -517,10 +528,14 @@ sub finish {
 
     if ( defined $finish ) {
 		$finish =~ s/^\s*(.*)\s*$/$1/;
-        @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE lower(longname)=?}, lc $finish );
-        if ( ! $$self{'finish_id'} ) {
+		if ( ! $$self{'custom'} ) {
+			@$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE lower(longname)=?}, lc $finish );
+			if ( ! $$self{'finish_id'} ) {
+				$$self{'finish'} = $finish;
+			} # end if
+		} else {
 			$$self{'finish'} = $finish;
-        } # end if
+		} # end if
     } elsif ( $$self{'finish_id'} and ! $$self{'finish'} ) {
         $$self{'finish'} = new openprint::StockFinish( $$self{'finish_id'} )->shortname();
     } # end if
@@ -532,8 +547,12 @@ sub colour {
 
     if ( defined $colour ) {
 		$colour =~ s/^\s*(.*)\s*$/$1/;
-        @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE lower(longname)=?}, lc $colour );
-        if ( ! $$self{'colour_id'} ) {
+		if ( ! $$self{'custom'} ) {
+			@$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE lower(longname)=?}, lc $colour );
+			if ( ! $$self{'colour_id'} ) {
+				$$self{'colour'} = $colour;
+			} # end if
+		} else {
 			$$self{'colour'} = $colour;
         } # end if
     } elsif ( $$self{'colour_id'} and ! $$self{'colour'} ) {
@@ -548,8 +567,12 @@ sub weight {
 
     if ( defined $weight ) {
 		$weight =~ s/^\s*(.*)\s*$/$1/;
-        @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE lower(longname)=?}, lc $weight );
-        if ( ! $$self{'weight_id'} ) {
+		if ( ! $$self{'custom'} ) {
+			@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE lower(longname)=?}, lc $weight );
+			if ( ! $$self{'weight_id'} ) {
+				$$self{'weight'} = $weight;
+			} # end if
+		} else {
 			$$self{'weight'} = $weight;
         } # end if
     } elsif ( $$self{'weight_id'} and ! $$self{'weight'} ) {
@@ -563,8 +586,12 @@ sub quality {
 
     if ( defined $quality ) {
 		$quality =~ s/^\s*(.*)\s*$/$1/;
-        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
-        if ( ! $$self{'quality_id'} ) {
+		if ( ! $$self{'custom'} ) {
+			@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
+			if ( ! $$self{'quality_id'} ) {
+				$$self{'quality'} = $quality;
+			} # end if
+		} else {
 			$$self{'quality'} = $quality;
         } # end if
     } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
@@ -1031,6 +1058,7 @@ sub load_from_signature {
 	my $Paper;
 	if ( $$specs{'rdbSpecificStock'} eq 'Y' ) {
 		$Paper = new openprint::Paper();
+		$$Paper{'custom'} = 1;
 		$Paper->name( $$specs{'txtSpecificStockBrand'} );
 		$Paper->finish( $$specs{'txtSpecificStockFinish'} );
 		$Paper->colour( $$specs{'txtSpecificStockColour'} );
