@@ -344,7 +344,6 @@ sub federaltax_charge {
 #} # end if
 		$$self{'federaltax_charge'} = 1;
 	} # end if
-$log->debug("federaltax_charge: $$self{'federaltax_charge'}");
 	return $$self{'federaltax_charge'};
 } # end sub federaltax_charge
 

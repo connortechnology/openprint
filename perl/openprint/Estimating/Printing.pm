@@ -2012,13 +2012,26 @@ if ( 1 ) {
 			} # end foreach
 			$max_pages /= 2;
 			foreach my $imp ( @impositions ) {
-				next if ( $max_pages >= $imp->pages() );
+				if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') {
+					if ( ( $imp->Paper()->width() != $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$sig_specs{"OverrideStockHeight$qty_index"} )) {
+						next;
+					} # end if
+				} elsif ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
+					if ( $imp->Paper()->height() != $$sig_specs{"CutOff$qty_index"} ) {
+						next;
+					} # end if
+				} elsif ($max_pages >= $imp->pages()) {
+					# Only do this if not sheet size overrides
+					next;
+				} # end if
+
 				if ( $$sig_specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$sig_specs{'PreviousStockType'} ) ) {
 					next;
 				} # end if
 				if ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
 					next;
 				} # end if
+
 				my $add = 1;
 				my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
 				if ( $imps{$str} ) {

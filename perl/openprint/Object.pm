@@ -168,5 +168,15 @@ $openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults
 	return @set_fields;
 } # end sub set
 
+sub delete {
+    my ( $self ) = @_;
+	my $type = ref $self;
+	my $table = eval '$'.$type.'::table';
+    sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+	delete $openprint::Object::cache{$type}{$$self{id}};
+} # end sub delete
+
+
+
 1;
 __END__

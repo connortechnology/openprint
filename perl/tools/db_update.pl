@@ -401,19 +401,34 @@ $dbh->do(q{alter table papers add full_packages boolean}) if ! exists $$blah{'fu
 if ( $version < 1905 ) {
 	print "Updating to version 1905\n";
 	my $ac = sql::start_transaction( $dbh );
-$_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
-foreach my $st ( split(';', $_ ) ) {
-$dbh->do($st);
-}
-foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'When Printing'}) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+	die if sql::insert( undef, undef, 'database_info', 'version', 1905, 'backup', $backup );
+	sql::end_transaction( $dbh, $ac );
+	$version = 1905;
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment_Specifications LIMIT 1', {} );
+if ( $data ) {
+	if ( exists $$data{'lngindex'} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment_SPecifications rename column lngindex to id');
+		$dbh->do('CREATE SEQUENCE tbl_equipment_specifications_id_seq');
+		$dbh->do("ALTER TABLE tbl_Equipment_specifications alter column id set default nextval('tbl_equipment_specifications_id_seq')");
+		$dbh->do('DROP SEQUENCE EquipmentSpecification_seq');
+		$dbh->do("SELECT setval('tbl_equipment_specifications_id_seq', (SELECT MAX(id) FROM tbl_equipment_specifications) )");
+	} # end if
+} # end if
+foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'Y'}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
-		if ( $Spec->name() =~ /^(\d*)PageSignatureFoldRunSpeed$/ ) {
+		if ( $Spec->name() =~ /^(\d+)PageSignatureFoldRunSpeed$/ ) {
 			my $pages = $1;
 			my $Fold = new openprint::Fold();
 			$Fold->equipment_id( $E->id() );
-			$Fold->name( $pages.'PageSignatureFold' );
-			$Fold->type( $pages . 'PageSignatureFold' );
+			$Fold->name( $pages.'PageFold' );
+			$Fold->type( $pages . 'PageFold' );
 			$Fold->pages( $pages );
+			$Fold->max_imposition( 1 );
 			$_ = $Fold->save();
 			die $_ if $_;
 			my $FS = new openprint::FoldSpecification();
@@ -423,8 +438,28 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$_ =  $FS->save();
 			die $_ if $_;
 			$Spec->delete();
-
-		} elsif ( $Spec->name() =~ /^(\d)x(\d)-(\d*)Page-(\w*)SignatureFoldDescription$/ ) {
+		} elsif ( $Spec->name() =~ /^(\w*)FoldRunSpeed/ ) {
+			my $type = $1;
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $type.'Fold' );
+			$Fold->type( $type.'Fold' );
+			$Fold->max_imposition( 1 );
+			$_ = $Fold->save();
+			die $_ if $_;
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
+		}
+	} 
+}
+foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'When Printing'}) ) {
+	foreach my $Spec ( $E->Specifications() ) {
+		if ( $Spec->name() =~ /^(\d)x(\d)-(\d*)Page-(\w*)SignatureFoldDescription$/ ) {
 			my ( $columns, $rows, $pages, $spine_direction ) = ( $1, $2, $3, $4 );
 			my $spread_size = $pages/($columns*$rows);
 			my $fold = sprintf('%dx%d-%dPage-%sSignatureFold', $columns, $rows, $pages, $spine_direction );
@@ -488,28 +523,9 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 				delete $$E{'Specifications'};
 			} # end while
 			$Spec->delete();
-		#} elsif ( $Spec->name() =~ /^(\w*)FoldRunSpeed/ ) {
-			#my $type = $1;
-			#my $Fold = new openprint::Fold();
-			#$Fold->equipment_id( $E->id() );
-			#$Fold->name( $type.'Fold' );
-			#$Fold->type( $type.'Fold' );
-			#$_ = $Fold->save();
-			#die $_ if $_;
-			#my $FS = new openprint::FoldSpecification();
-			#$FS->fold_id( $Fold->id() );
-			#$FS->runspeed( $Spec->value() );
-			#$FS->interpolate( $Spec->interpolate() );
-			#$_ =  $FS->save();
-			#die $_ if $_;
-			#$Spec->delete();
 		} # end if
 	} # end foreach
 } # end foreach
-die if sql::insert( undef, undef, 'database_info', 'version', 1905, 'backup', $backup );
-sql::end_transaction( $dbh, $ac );
-$version = 1905;
-} # end if
 if ( $version < 1906 ) {
 	print "Updating to version 1906\n";
 	my $ac = sql::start_transaction( $dbh );
@@ -524,7 +540,7 @@ if ( $version < 1906 ) {
 if ( $version < 1907 ) {
 	print "Updating to version 1907\n";
 	my $ac = sql::start_transaction( $dbh );
-foreach my $E ( openprint::Equipment::find('Specification'=>{'Type'=>'Press'}) ) {
+foreach my $E ( openprint::Equipment::find('Specifications'=>{'Type'=>'Press'}) ) {
 	my $Spec = $E->Specification('Feed');
 	if ( ! $Spec ) {
 		$Spec = new openprint::EquipmentSpecification();
@@ -579,14 +595,6 @@ if ( $version < 1911 ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Folds LIMIT 1', {} );
 	$dbh->do('alter table folds add min_calliper float') if ! exists $$data{'min_calliper'};
 	$dbh->do('alter table folds add max_calliper float') if ! exists $$data{'max_calliper'};
-	sql::insert( undef, undef, 'database_info', 'version', 1911, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1911;
-} # end if
-if ( $version < 1912 ) {
-	print "Updating to version 1912\n";
-	my $ac = sql::start_transaction( $dbh );
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Folds LIMIT 1', {} );
 	$dbh->do('alter table folds add cutting boolean') if ! exists $$data{'cutting'};
 	sql::insert( undef, undef, 'database_info', 'version', 1912, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
@@ -656,42 +664,34 @@ if ( $version < 1916 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1916;
 } # end if
-if ( $version < 1917 ) {
-	print "Updating to version 1917\n";
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM folds LIMIT 1', {} );
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! exists $$data{'folds'} ) {
-	$dbh->do(q`alter table folds add folds integer`);
-	} # end if
-	if ( ! exists $$data{'angles'} ) {
-	$dbh->do(q`alter table folds add angles integer`);
-	} # end if
-	foreach my $E ( openprint::Equipment::find() ) {
-		foreach my $Fold ( $E->Folds() ) {
-			if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
-				$Fold->type( "$1PageFold" );
-				$Fold->save();
-			} # end if
-		} # end foreach
-	} # end foreach
-	sql::insert( undef, undef, 'database_info', 'version', 1917, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1917;
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM folds LIMIT 1', {} );
+my $ac = sql::start_transaction( $dbh );
+if ( ! exists $$data{'folds'} ) {
+$dbh->do(q`alter table folds add folds integer`);
 } # end if
-if ( $version < 1918 ) {
-	print "Updating to version 1918\n";
-	my $ac = sql::start_transaction( $dbh );
-	foreach my $E ( openprint::Equipment::find() ) {
-		foreach my $Fold ( $E->Folds() ) {
-			if ( $Fold->type() =~ /(\d*)PageFold/ ) {
-				sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFold"], 'name', "$1PageFold" );
-			} # end if
-		} # end foreach
-	} # end foreach
-	sql::insert( undef, undef, 'database_info', 'version', 1918, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1918;
+if ( ! exists $$data{'angles'} ) {
+$dbh->do(q`alter table folds add angles integer`);
 } # end if
+foreach my $E ( openprint::Equipment::find() ) {
+	foreach my $Fold ( $E->Folds() ) {
+		if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
+			$Fold->type( "$1PageFold" );
+			$Fold->save();
+		} # end if
+	} # end foreach
+} # end foreach
+sql::end_transaction( $dbh, $ac );
+
+foreach my $E ( openprint::Equipment::find() ) {
+	foreach my $Fold ( $E->Folds() ) {
+		if ( $Fold->type() =~ /(\d*)PageFold/ ) {
+			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFold"], 'name', "$1PageFold" );
+			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFoldMakeReady"], 'name', "$1PageFoldMakeReady" );
+		} # end if
+	} # end foreach
+} # end foreach
+
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
 if ( ! $data ) {
 } else {
@@ -897,7 +897,6 @@ if ( $version < $new_version ) {
 	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean') if ! exists $$data{'deleted'};
 	} # end if
     sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
-    sql::end_transaction( $dbh, $ac );
     $version = $new_version;
 } # end if
 
