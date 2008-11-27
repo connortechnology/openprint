@@ -3728,99 +3728,6 @@ sub get_weight {
 	return $sig_weight;
 } # end sub get_weight
 
-sub trimstr {
-	my ( $teststring ) = @_;
-	$teststring =~ s/^\s+//;
-	$teststring =~ s/\s+$//;
-	return $teststring;
-}
-
-#################################################
-sub summaryTEST {
-	my ( $Project, $service_index, $specs, $qty_index ) = @_;
-
-	my $services = $Project->services();
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
-
-	if ( $qty_index ) {
-		if ( ! $$specs{'txtSpreadSize'} ) {
-			$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
-		} # end if
-		return '' if ! $$specs{'txtImposition'.$qty_index};
-		my $html = sprintf(qq{%s %dout %s},
-				$$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
-				$$specs{'txtImposition'.$qty_index},
-				($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . ssi::htmlize($$specs{'ddmRunStyle'.$qty_index}) : ssi::htmlize($$specs{'ddmRunStyle'.$qty_index}) ), 
-				);
-		$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ! $$services{'NoPrinting'};
-
-#$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
-		$html .= sprintf(' with %d plate changes = %d plates', @$specs{'txtPlateChangeQuantity'.$qty_index,'txtPlateQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
-
-		if ( $$services{'NoPrinting'} ) {
-			$html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
-		} else {
-			$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
-			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
-				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
-					$html .= sprintf( ' of %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
-				} # end if
-			} else {
-				$html .= sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
-			} # end if
-		} # end if
-		return $html;
-	} else {
-		my $front_colours = 0;
-		my $front_coatings;
-		my $back_colours = 0;
-		my $back_coatings;
-		my $coatings = '';
-		if ( $$specs{'chkProcessColourSideOne'} and $$specs{'chkProcessColourSideTwo'} ) {
-			$coatings .= ' Process';
-		} elsif ( $$specs{'chkProcessColourSideOne'} ) {
-			$front_coatings .= ' Process';
-		} elsif ( $$specs{'chkProcessColourSideTwo'} ) {
-			$back_coatings .= ' Process';
-		} # end if Process 
-
-		my $side = 'SideOne';
-		foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-			if ( $$specs{'chk'.$colour.$side} ) {
-				$front_colours += 1;
-			} # end if
-		} # end foreach
-
-		if ( $$specs{'chkProcessColour'.$side} ) {
-			$front_colours += 4;
-		} # end if
-
-		my $test = 'TEST1';
-
-		foreach my $k ( keys %$specs ) {
-			if ( my ( $index ) = $k =~ /ColourCoating$side(\d+)/ ) {
-				my $type = $$specs{"ColourCoatingType$side$index"};
-				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
-					$front_coatings .= '+' .$$specs{"ColourCoatingType$side$index"}; #.$$specs{"ColourCoatingColour$side$index"}
-				} elsif ( $type =~ /PMS/i ) {
-					$front_coatings .= '+PMS' if ! ($front_coatings =~ /PMS/);
-				} elsif ( $type =~ /Metallic/i ) {
-					$front_coatings .= '+Metallic' if ! ($front_coatings =~ /Metallic/);
-				} else {
-					$front_colours += 1;
-				} # end if
-			} # end if
-		} # end foreach
-		my $dimensions = '';
-		$test .= $front_coatings;
-		$test .= 'TEST2';
-		return $test;
-	} # end if
-} # end sub summaryTEST
-
-
-#################################################
-
 sub summary {
 	my ( $Project, $service_index, $specs, $qty_index ) = @_;
 
@@ -3859,25 +3766,17 @@ sub summary {
 	} else {
 		my $front_colours = 0;
 		my $front_coatings;
+		my $front_pms = 0;
+		my $front_process = 0;
 		my $back_colours = 0;
 		my $back_coatings;
 		my $coatings = '';
-		my $front_pms = 0;
 		my $back_pms = 0;
+		my $back_process = 0;
 
 		my $colorsideone = '';
 		my $colorsidetwo = '';
 		
-#changes made on june-19-2008 block remarked
-#		if ( $$specs{'chkProcessColourSideOne'} and $$specs{'chkProcessColourSideTwo'} ) {
-#			$coatings .= ' Process';
-#		} elsif ( $$specs{'chkProcessColourSideOne'} ) {
-#			$front_coatings .= ' Process';
-#		} elsif ( $$specs{'chkProcessColourSideTwo'} ) {
-#			$back_coatings .= ' Process';
-#		} # end if Process 
-#
-
 		my $side = 'SideOne';
 		foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
 			if ( $$specs{'chk'.$colour.$side} ) {
@@ -3898,8 +3797,6 @@ sub summary {
 				my $type = $$specs{"ColourCoatingType$side$index"};
 
 				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
-#changes made on June-19-2008 			
-#					$front_coatings .= '+'.$$specs{"ColourCoatingColour$side$index"};
 					$front_coatings .= '+'.$$specs{"ColourCoatingType$side$index"};
 				} elsif ( $type =~ /PMS/i ) {
 					$front_pms += 1;
@@ -3971,34 +3868,20 @@ sub summary {
 		} # end if
 
 		if ( $$services{'NoPrinting'} ) {
-#changed made removed br line break  june-25-2008
-			return sprintf( '%s %s',
-					($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions,);
+			return sprintf( '%s %s', ($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions );
 		} else {
-#changes on june-19-2008
-#changed made removed br line break  june-25-2008
-
-###			return sprintf( '%s %s %d %s %s %s %s/%d %s %s %s %s %s %s %s'
-###					$front_colours,
-###					$back_colours,
-
-			return sprintf( '%s %s %d %s %s %s %s %s/%d %s %s %s %s %s %s %s %s',
+			return sprintf( '%s %s %d%s%s%s/%d%s%s%s %s on %s %s',
 					($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''),
-					($dimensions ? $dimensions.',' : ''),
+					$dimensions,
 					$front_colours,
 					$colorsideone,
-					($front_colours ? 'Proc.' : ''),
 					($front_pms ? '+'.$front_pms.'PMS' : ''),
-					(($front_coatings or $front_pms) ? '' : ','),
 					$front_coatings,
 					$back_colours,
 					$colorsidetwo,
-					($back_colours ? 'Proc.' : ''),
 					($back_pms ? '+'.$back_pms.'PMS' : ''),
-					(($back_coatings or $back_pms) ? '' : ','),
-					($back_coatings ? '' : ','),
-					($back_coatings ? $back_coatings.',' : ''),
-					($coatings ? $coatings.',' : ''),
+					$back_coatings,
+					$coatings,
 					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
 					$$specs{'rdbSpecificStock'} eq 'Y' ?
 					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
@@ -4008,7 +3891,6 @@ sub summary {
 		} # end if
 	} # end if
 } # end sub summary
-
 
 sub save {
 	my ( $p_id, $s_id, $param ) = @_;
