@@ -30,6 +30,22 @@
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
 				</p>
 			</fieldset>
+			<div class="leftColumn">
+   			<fieldset>
+   			   <legend>Login Information</legend>
+   				<p>
+   					<label for="Email">E-mail Address: <span class="requiredFieldIndicator">*</span></label>
+   					<input type="text" id="Email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+   				</p>
+   				<p>
+   					<label for="Password">Password: <span class="requiredFieldIndicator">*</span></label>
+   					<input type="Password" id="Password" name="password" />
+   				</p>
+   				<p>
+   					<label for="VerifyPassword">Verify Password: <span class="requiredFieldIndicator">*</span></label>
+   					<input type="Password" id="VerifyPassword" name="verifypassword" />
+   				</p>
+   			</fieldset>
    			<fieldset>
    			   <legend>User Information:</legend>
    				<p> 
@@ -68,6 +84,10 @@
    					<label for="fax">Fax:&nbsp;&nbsp;&nbsp;</label>
    					<input type="text" id="fax" name="fax" value="<? echo ( $$variable{'User'}->fax() ) ?>" />
    				</p>
+   			</fieldset>
+			</div>
+			<div class="rightColumn">
+				<fieldset><legend>Settings</legend>
    				<p>
    					<label>Add to our Mailing List:&nbsp;&nbsp;&nbsp;</label>
 					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
@@ -75,7 +95,7 @@
 					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
 					<label class="radio" for="MailingListN">No</label>
    				</p>
-			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
+			<? if ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
    				<p>
    					<label>Can login to the web site?&nbsp;&nbsp;&nbsp;</label>
    					<input type="radio" id="web_activeY" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() eq 'Y' ) ?> value="Y" />
@@ -99,31 +119,25 @@
    				</p>
 <? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-   				<p>
-   					<label>Quote Level:&nbsp;&nbsp;&nbsp;</label>
+				<p>
+					<label>Quote Level:&nbsp;&nbsp;&nbsp;</label>
 					<select name="quote_level">
 						<option value="">select</option>
 						<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ) ) ?>
 					</select>
-   				</p>
+				</p>
 <? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
-   			</fieldset>
-   			<fieldset>
-   			   <legend>Login Information</legend>
+			<? endif ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
    				<p>
-   					<label for="Email">E-mail Address: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="text" id="Email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+   					<label>Email my quotes to myself?&nbsp;&nbsp;&nbsp;</label>
+   					<input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( ssi::checked( $$variable{'User'}->email_quotes_to_mysql() ); ) ?> value="1" />
+   					<label class="radio" for="email_quotes_to_myself1">Yes</label>
+   					<input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( ssi::checked( ! $$variable{'User'}->email_quotes_to_mysql() ); ) ?> value="0" />
+   					<label class="radio" for="email_quotes_to_myself0">No</label>
    				</p>
-   				<p>
-   					<label for="Password">Password: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="Password" id="Password" name="password" />
-   				</p>
-   				<p>
-   					<label for="VerifyPassword">Verify Password: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="Password" id="VerifyPassword" name="verifypassword" />
-   				</p>
-   			</fieldset>
+				</fieldset>
+			</div>
+			<br class="spacer"/>
 		</div><!--UserProfile-->
 		<input type="hidden" name="btnFunction"/>
 	</form>

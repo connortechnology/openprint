@@ -11,4 +11,15 @@
 <!--#include virtual="/includes/main/summ/imposition.html"-->
 <!--#include virtual="/includes/main/summ/multipage_signatures.html"-->
 <!--#include virtual="/includes/main/summ/press_approval.html"-->
+<div class="row">
+	<span class="label">Breakdown</span>
+	<? echo ( 
+		my $html = '';
+		my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project', 'ServiceIndex'} );
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= '<span class="value">'.$$sig_specs{'hdnBreakdown'.$qty_index}.'</span>';
+		} 
+		return $html;
+	) ?>
+</div>
 

@@ -2,13 +2,13 @@
 	<h1>QUOTE</h1>
 	<h2>Submit Quote <? echo ( $$variable{'Quote'}->id(); ) ?></h2>
 </div>
-<div id="Quote">
 Please review the quote below to ensure accuracy.  When ready, click "Submit Quote" to save it and send a copy via email to the addresses listed.<br/>
 <br/>
+<form name="f1" method="post" action="/main/quote/confirmation.html">
+<div id="Quote">
 <!--#include virtual="/includes/quote_header.html"-->
 <!--#include virtual="/includes/quote_information.html"-->
 <br class="spacer"/><br/>
-<form name="f1" method="post" action="/main/quote/confirmation.html">
 <? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <table class="List">
 	<tr> 
@@ -128,11 +128,27 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	</div>
 	<br class="spacer"/>
 	<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
-	<br/>
+</div>
+<? echo (
+	my $html = '';
+	foreach my $Project ( $$variable{'Quote'}->Quoted_Projects() ) {
+		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+			$html .= 'Include detailed project description for the following project:';
+			$html .= sprintf(q`<input type="radio" name="include_description%1$d" id="include_description%1$d1" value="1" %2$s onclick="new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', {method: 'get', parameters: { quote_id: %3$d, project_id: %1$d, include_detailed : this.value } } );"><label class="radio" for="include_description%1$d1">Yes</label>`, $Project->id(), ssi::checked( $Project->included_in_quote() ), $$variable{'Quote'}->id() );
+			$html .= sprintf(q`<input type="radio" name="include_description%1$d" id="include_description%1$d0" value="0" %2$s onclick="new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', {method: 'get', parameters: { quote_id: %3$d, project_id: %1$d, include_detailed : this.value } } );"><label class="radio" for="include_description%1$d0">No</label>`, $Project->id(), ssi::checked( ! $Project->included_in_quote() ) );
+		} # end if
+		$html .= sprintf( '<div id="QuotedProject_%1$d">', $Project->id() );
+		$$variable{'QuotedProject'} = $Project;
+		my $template = ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template.html', $variable );
+		$html .= $template;
+		$html .= '</div>';
+	} # end foreach Project
+	return $html;
+) ?>
+	<br class="spacer"/>
 	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'SubmitQuote', 'submitQuote.gif', "f1.btnFunction.value='Submit Quote';f1.submit();", '', 'Submit Quote' ); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>
 </form>
-</div>
 <br class="spacer"/>
