@@ -8,7 +8,15 @@ require openprint::logs;
 
 my $debug = 1;
 
-my %fields = (
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+$table = 'tbl_Service_prices';
+$serial = 'serviceprices_id_seq';
+
+%fields = (
+	'id'			=>	'id',
 	'pricelist_id'	=>	'lnglistindex',
 	'service_id'	=>	'lngserviceindex',
 	'equipment_id'	=>	'lngequipmentindex',
@@ -20,6 +28,22 @@ my %fields = (
 	'price'			=>	'dblprice',
 	'discountable'	=>	'ysndiscountable',
 	'interpolate'	=>	'interpolate',
+);
+
+%transforms = (
+	'min' => [ 's/(\d*)/$1/g' ],
+	'max' => [ 's/(\d*)/$1/g' ],
+	'cost' => [ 's/[^\d\.]//g' ],
+	'price' => [ 's/[^\d\.]//g' ],
+	'markup' => [ 's/[^\d\.]//g' ],
+);
+%defaults = (
+	'min'			=>	undef,
+	'max'			=>	undef,
+	'equipment_id'	=>	undef,
+	'cost'			=>	0,
+	'markup'		=>	0,
+	'price'			=>	0,
 );
 
 sub find {
@@ -68,60 +92,9 @@ sub find {
 	return map { new openprint::ServicePrice( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Prices WHERE id=?', {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-
-} # end sub load
-
-sub delete {
-	my $self = shift;
-
-	sql::execute( undef, undef, 'DELETE FROM tbl_Service_Prices WHERE id=?', $$self{'id'} );
-	openprint::logs::insertLogRecord('13', "Service Price ID: " . $$self{'id'},);
-} # end sub delete
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('serviceprices_id_seq')} );
-		sql::insert( undef, undef, 'tbl_Service_Prices',
-				'id',					$$self{'id'},
-				'lngListIndex',			$$self{'pricelist_id'},
-				'lngServiceIndex',		$$self{'service_id'},
-				'lngEquipmentIndex', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
-				'lngMin',				$$self{'min'} eq '' ? undef : $$self{'min'},
-				'lngMax',				$$self{'max'} eq '' ? undef : $$self{'max'},
-				'strUnits',				$$self{'units'},
-				'dblCost',				1*$$self{'cost'},
-				'dblMarkup',			1*$$self{'markup'},
-				'dblPrice',				1*$$self{'price'},
-				'ysnDiscountable',		$$self{'discountable'},
-				);
-	} else {
-		sql::update( undef, undef, 'tbl_Service_Prices', ['id=?', $$self{'id'}],
-				'lngListIndex',			$$self{'pricelist_id'},
-				'lngServiceIndex',		$$self{'service_id'},
-				'lngEquipmentIndex', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
-				'lngMin',				$$self{'min'} eq '' ? undef : $$self{'min'},
-				'lngMax',				$$self{'max'} eq '' ? undef : $$self{'max'},
-				'strUnits',				$$self{'units'},
-				'dblCost',				1*$$self{'cost'},
-				'dblMarkup',			1*$$self{'markup'},
-				'dblPrice',				1*$$self{'price'},
-				'ysnDiscountable',		$$self{'discountable'},
-				);
-	} # end if
-} # end sub save
-
 sub next {
 	my $self = shift;
-	return new openprint::ServicePrice( sql::execute( undef,undef, q{SELECT MIN(Index) WHERE Index > ?}, $$self{'id'} ) );
+	return new openprint::ServicePrice( sql::execute( undef,undef, q{SELECT MIN(id) WHERE id > ?}, $$self{'id'} ) );
 } # end sub next
 
 1;

@@ -177,6 +177,18 @@ sub delete {
 	delete $openprint::Object::cache{$type}{$$self{id}};
 } # end sub delete
 
+sub copy {
+	my $self = shift;
+
+	my $type = ref $self;
+	my $new = new $type;
+	my %fields = eval ('%'.$type.'::fields');
+	@$new{keys %fields} = @$self{keys %fields};
+	delete $$new{id};
+	$$new{'name'} = 'Copy of ' . $$new{'name'};
+
+	return $new;
+} # end sub copy
 
 
 1;

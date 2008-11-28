@@ -1739,11 +1739,13 @@ $i->display();
 		if ( $Paper->type() eq 'Roll' ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . '" Roll';
 			$$specs{'txtPressSheetQty'.$qty_index} = sprintf('%.0f lbs', $best_price{'Stock Weight'});
+			$$specs{'minimum_stock_size'.$qty_index} = $Imposition->used_width().'&quot;';
 		} elsif ( $Paper->type() eq 'Sheet' ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . 'x' . $Paper->height();
 			$$specs{'txtPressSheetQty'.$qty_index} = $best_price{'Gross Sheet Count'} .'sheets';
 			$$specs{'hdnNetSheetCount'.$qty_index} = $best_price{'Net Sheet Count'};
 			$$specs{'SheetQuantity'.$qty_index} = $best_price{'Gross Sheet Count'};
+			$$specs{'minimum_stock_size'.$qty_index} = sprintf('%s&quot; x %s&quot;', $Imposition->used_width(), $Imposition->used_height() );
 		} else {
 			$$specs{'ddmStockSheetSize'.$qty_index} = '';
 			$$specs{'txtPressSheetQty'.$qty_index} = 0;
@@ -1762,7 +1764,6 @@ $i->display();
 		} else {
 			$$specs{'CutOff'.$qty_index} = '';
 		} # end if
-
 
 		$$specs{'txtPlateQuantity'.$qty_index} = $best_price{'txtPlateQuantity'};
 		my $plate_setup = $best_price{'Plate Costs'};
@@ -3870,14 +3871,14 @@ sub summary {
 		if ( $$services{'NoPrinting'} ) {
 			return sprintf( '%s %s', ($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions );
 		} else {
-			return sprintf( '%s %s %d%s%s%s/%d%s%s%s %s on %s %s',
+			return sprintf( '%s %s %s%s%s%s/%s%s%s%s %s on %s %s',
 					($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''),
 					$dimensions,
-					$front_colours,
+					($front_colours ? $front_colours : ''),
 					$colorsideone,
 					($front_pms ? '+'.$front_pms.'PMS' : ''),
 					$front_coatings,
-					$back_colours,
+					( $back_colours ? $back_colours : '' ),
 					$colorsidetwo,
 					($back_pms ? '+'.$back_pms.'PMS' : ''),
 					$back_coatings,

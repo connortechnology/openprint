@@ -11,6 +11,7 @@ require openprint::EquipmentSpecification;
 require openprint::ServicePrice;
 require openprint::ServiceType;
 require openprint::Service;
+require openprint::ServiceCategory;
 require openprint::Project;
 require openprint::service;
 require openprint::Material;
@@ -24,6 +25,9 @@ use vars qw( $log $dbh );
 $openprint::Object::no_cache = 1;
 
 $log = new logger( 'warn' );
+
+$ARGV[1] = $ARGV[0] if ! $ARGV[1];
+$ARGV[2] = $ARGV[0] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
@@ -428,7 +432,7 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$Fold->name( $pages.'PageFold' );
 			$Fold->type( $pages . 'PageFold' );
 			$Fold->pages( $pages );
-			$Fold->max_imposition( 1 );
+			$Fold->max_imposition( $pages == 4 ? 4 : 1 );
 			$_ = $Fold->save();
 			die $_ if $_;
 			my $FS = new openprint::FoldSpecification();
@@ -444,7 +448,7 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$Fold->equipment_id( $E->id() );
 			$Fold->name( $type.'Fold' );
 			$Fold->type( $type.'Fold' );
-			$Fold->max_imposition( 1 );
+			$Fold->max_imposition( 4 );
 			$_ = $Fold->save();
 			die $_ if $_;
 			my $FS = new openprint::FoldSpecification();
@@ -1026,9 +1030,147 @@ foreach my $S ( openprint::ServiceType::find('name'=>['SaddleStitching','LoopSti
 	} # end if
 } # end foreach
 
-$dbh->disconnect();
-1;
-__END__
+if ( ! openprint::ServiceType::find('name'=>'Aqueous') ) {
+	print "Adding Aqueous ServiceType\n";
+	my $S = new openprint::ServiceType();
+	$S->save({
+		'name'	=>	'Aqueous',
+		'description'	=>	'Aqueous',
+		'type'		=>	'Aqueous',
+		'category'	=>	'Printing',
+		'url'		=>	'spec/Aqueous.html',
+		'create_visible'	=>	0,
+		'view_visible'		=>	1,
+});
+} # end if
+
+if ( ! openprint::ServiceCategory::find('name'=>'Coating') ) {
+	print "Adding Coating Service Category\n";
+	my $SC = new openprint::ServiceCategory();
+	$SC->save({
+		'name'=>'Coating',
+	});
+} # end if
+foreach my $S ( openprint::Service::find('name'=>'Aqueous') ) {
+	print "Converting Service Aqueous\n";
+	$S->name('Aqueous Gloss');
+	$S->description('Aqueous Gloss');
+	$S->category('Coating');
+	$S->save();
+	my $S2 = $S->copy();
+	$S2->name('Aqueous Matte');
+	$S2->description('Aqueous Matte');
+	$S2->save();
+	foreach my $P ( $S->prices() ) {
+		$P = $P->copy();
+		$P->service_id( $S2->id() );
+		$P->save();
+	} # end foreach
+} # end if
+foreach my $S ( openprint::Service::find('name'=>'AqueousMakeReady') ) {
+	print "Converting Service Aqueous MakeReady\n";
+	$S->name('Aqueous Gloss MakeReady');
+	$S->description('Aqueous Gloss MakeReady');
+	$S->save();
+	my $S2 = $S->copy();
+	$S2->name('Aqueous Matte MakeReady');
+	$S2->description('Aqueous Matte MakeReady');
+	$S2->save();
+	foreach my $P ( $S->prices() ) {
+		$P = $P->copy();
+		$P->service_id( $S2->id() );
+		$P->save();
+	} # end foreach
+} # end if
+if ( ! openprint::ServiceType::find('name'=>'Varnish') ) {
+	my $S = new openprint::ServiceType();
+	$S->save({
+		'name'	=>	'Varnish',
+		'description'	=>	'Varnish',
+		'type'		=>	'Varnish',
+		'category'	=>	'Printing',
+		'url'		=>	'spec/Varnish.html',
+		'create_visible'	=>	0,
+		'view_visible'		=>	1,
+});
+} # end if
+foreach my $S ( openprint::Service::find('name'=>'VarnishInLine') ) {
+	print "Converting VarnishInLine to coatings\n";
+	$S->name('Varnish Gloss Overall');
+	$S->description('Varnish Gloss Overall');
+	$S->category('Coating');
+	$S->save();
+
+	my $S2 = $S->copy();
+	$S2->name('Varnish Gloss Spot');
+	$S2->description('Varnish Gloss Spot');
+	$S2->save();
+	foreach my $P ( $S->prices() ) {
+		$P = $P->copy();
+		$P->service_id( $S2->id() );
+		$P->save();
+	} # end foreach
+	$S2 = $S->copy();
+	$S2->name('Varnish Matte Overall');
+	$S2->description('Varnish Matte Overall');
+	$S2->save();
+	foreach my $P ( $S->prices() ) {
+		$P = $P->copy();
+		$P->service_id( $S2->id() );
+		$P->save();
+	} # end foreach
+	$S2 = $S->copy();
+	$S2->name('Varnish Matte Spot');
+	$S2->description('Varnish Matte Spot');
+	$S2->save();
+	foreach my $P ( $S->prices() ) {
+		$P = $P->copy();
+		$P->service_id( $S2->id() );
+		$P->save();
+	} # end foreach
+} # end if
+foreach my $S ( openprint::Service::find('name'=>'VarnishMakeReady') ) {
+	print "Converting VarnishInLineMake Readies\n";
+	$S->name('Varnish Gloss Overall MakeReady');
+	$S->description('Varnish Gloss Overall MakeReady');
+	$S->save();
+
+	my $S2 = $S->copy();
+	$S2->name('Varnish Gloss Spot MakeReady');
+	$S2->description('Varnish Gloss Spot MakeReady');
+	$S2->save();
+
+	foreach my $P ( $S->prices() ) {
+		$P = $P->copy();
+		$P->service_id( $S2->id() );
+		$P->save();
+	} # end foreach
+
+	$S2 = $S->copy();
+	$S2->name('Varnish Matte Overall MakeReady');
+	$S2->description('Varnish Matte Overall MakeReady');
+	$S2->save();
+	foreach my $P ( $S->prices() ) {
+		$P = $P->copy();
+		$P->service_id( $S2->id() );
+		$P->save();
+	} # end foreach
+	$S2 = $S->copy();
+	$S2->name('Varnish Matte Spot MakeReady');
+	$S2->description('Varnish Matte Spot MakeReady');
+	$S2->save();
+	foreach my $P ( $S->prices() ) {
+		$P = $P->copy();
+		$P->service_id( $S2->id() );
+		$P->save();
+	} # end foreach
+}
+
+foreach my $E ( openprint::Equipment::find('Specifications'=>{'Aqueous Coating'=>'Y'}) ) {
+	my $S = $E->Specification('Aqueous Coating');
+	$S->name('Aqueous Capable');
+	$S->save();
+} # end foreach
 
 $dbh->disconnect();
 1;

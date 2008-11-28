@@ -272,7 +272,7 @@
 	</p>
 </div>
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
-
+<? if ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
 <p>
 	<label>Base:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -328,6 +328,22 @@
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
+<? else ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+
+		<input type="hidden" id="OverSetup<?QTYIndex?>" name="OverSetup<?QTYIndex?>" value="<? echo ( $$variable{'OverSetup'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" id="OverrideSetup<?QTYIndex?>" name="OverrideSetup<?QTYIndex?>" value="<? echo (  $$variable{'OverrideSetup'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" id="OverBase<?QTYIndex?>" name="OverBase<?QTYIndex?>" value="<? echo ( $$variable{'OverBase'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" id="OverrideBase<?QTYIndex?>" name="OverrideBase<?QTYIndex?>" value="<? echo (  $$variable{'OverrideBase'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" id="OverRun<?QTYIndex?>" name="OverRun<?QTYIndex?>" value="<? echo ( $$variable{'OverRun'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" id="OverrideRun<?QTYIndex?>" name="OverrideRun<?QTYIndex?>" value="<? echo (  $$variable{'OverrideRun'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" id="TotalBaseSetupRun<?QTYIndex?>" name="TotalBaseSetupRun<?QTYIndex?>" value="<? echo ( $$variable{'TotalBaseSetupRun'.$$variable{'QTYIndex'}} ) ?>" />
+		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? endif ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
 <p>
 	<label>Stock Quantity:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>

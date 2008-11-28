@@ -202,11 +202,11 @@ sub Fold {
 
 	foreach my $Fold ( @{$$self{'Folds'}} ) {
 		if ( $$params{pages} and ($$Fold{pages} != $$params{pages} ) ) {
-			#$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
+			$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
 			next;
 		} # end if
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
-			#$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
+			$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
 			next;
 		} # end if
 
@@ -255,9 +255,14 @@ sub Fold {
 			$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
 			next;
 		} # end if
-		#$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
-		next if $$Fold{'min_imposition'} and $$params{'imposition'} and ($$Fold{'min_imposition'} > $$params{'imposition'});
-		next if $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'});
+		if ( $$Fold{'min_imposition'} and $$params{'imposition'} and ($$Fold{'min_imposition'} > $$params{'imposition'}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
+			next;
+		} # end if
+		if ( $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
+			next;
+		} # end if
 		$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
 		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
 		if ( $$params{'gsm'} ) {

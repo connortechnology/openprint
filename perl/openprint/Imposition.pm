@@ -3,7 +3,7 @@ use vars qw( $AUTOLOAD );
 
 
 my @fields = (
-	'start_imposition',
+	'start_imposition','start_columns','start_rows',
 	'imposition','rows','columns',
 	'dutch_rows','dutch_columns', 'dutch_orientation',
 	'image_width','image_height', # dimensions + bleed
@@ -83,8 +83,8 @@ sub AUTOLOAD {
 } # end sub AUTOLOAD
 
 sub display {
-	my $self = shift;
-	$openprint::log->debug(sprintf('Imp: %dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s',
+	my ( $self, $prefix ) = @_;
+	$openprint::log->debug(sprintf('Imp %s: %dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s', $prefix,
 	@$self{'start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'}) );
 } # end sub display
 
@@ -318,17 +318,17 @@ sub page_height {
 sub sheet_width {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
-		return $self->paper()->height();
+		return $self->Paper()->height();
 	} else {
-		return $self->paper()->width();
+		return $self->Paper()->width();
 	} # end if
 } # end sub sheet_width
 sub sheet_height {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
-		return $self->paper()->width();
+		return $self->Paper()->width();
 	} else {
-		return $self->paper()->height();
+		return $self->Paper()->height();
 	} # end if
 } # end sub sheet_height
 

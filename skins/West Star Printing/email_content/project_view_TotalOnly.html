@@ -1,0 +1,128 @@
+	<table class="List" style="table-layout: auto;">
+		<tr> 
+			<th align="left">Quantity</th>
+			<? if ( $$variable{'Quantity1'} ) ?><th width="210" align="right"><?Quantity1?></th><? endif ( $$variable{'Quantity1'} ) ?>
+			<? if ( $$variable{'Quantity2'} ) ?><th width="210" align="right"><?Quantity2?></th><? endif ( $$variable{'Quantity2'} ) ?>
+			<? if ( $$variable{'Quantity3'} ) ?><th width="210" align="right"><?Quantity3?></th><? endif ( $$variable{'Quantity3'} ) ?>
+		</tr>
+
+<? echo (
+	my $html = '';
+	my $services = $$variable{'Project'}->services();
+	
+	foreach my $category ( 'Prepress','Printing','Paper','Bindery','Packaging','Shipping','Custom Services' ) {
+		my @totals;
+		my @ServiceTypes = openprint::ServiceType::find( 'category' => $category );
+		if ( $category eq 'Printing' ) {
+			if ( ! $$services{'AdditionalSignature'} ) {
+				my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{''}[0] );
+				foreach my $qty_index ( 1 .. 3 ) {
+					next if ! $$variable{'Project'}->quantity( $qty_index );
+					$totals[$qty_index] += $$specs{'txtPrice'.$qty_index};
+				} # end foreach qty_index	
+			} # end if
+		} elsif ( ! @ServiceTypes ) {
+			next;
+		} # end if
+		foreach my $ServiceType ( @ServiceTypes ) {
+			if ( $$services{$ServiceType->name()} ) {
+				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+					my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
+					foreach my $qty_index ( 1 .. 3 ) {
+						next if ! $$variable{'Project'}->quantity( $qty_index );
+						$totals[$qty_index] += $$specs{'txtPrice'.$qty_index};
+					} # end foreach qty_index	
+				} # end foreach s_id
+			} # end if
+		} # end foreach ServiceType
+		next if ! ( $totals[1] or $totals[2] or $totals[3] );
+		
+		$html .= sprintf('<tr><td>%s</td>', $category );
+		foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $$variable{'Project'}->quantity( $qty_index );
+		$html .= sprintf('<td align="right">%s%.2f</td>', $$variable{'CurrencySymbol'}, $totals[$qty_index] );
+		} # end foreach qty_index
+		$html .= '</tr>';
+	} # end foreach category
+
+
+	return $html;
+) ?>
+		<tr class="totals" style="font-weight: bold;"> 
+			<td align="right" style="font-size: large;">Price:</td>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right" style="font-size: large;"><?CurrencySymbol?><?Total1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right" style="font-size: large;"><?CurrencySymbol?><?Total2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right" style="font-size: large;"><?CurrencySymbol?><?Total3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+		</tr>
+	<? endif ( sets::isin( $openprint::session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
+
+<? echo ( 
+	my $html = '<tr><td>Total Paper Required:</td>';
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $$variable{'Project'}->quantity( $qty_index );
+		$html .= '<td>&nbsp;</td>';
+	} # end foreach qty_index
+	$html .= '</tr>';
+	my %totals;
+	my %sheets;
+	foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
+		my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $$variable{'QTYIndex'} );
+		my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
+		if ( $Paper->type() eq 'Roll' ) {
+			$string .= sprintf(' %s&quot; Roll', $Paper->width() );
+		} else {
+			$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
+		} # end if
+		foreach my $qty_index ( 1 .. 3 ) {
+			next if ! $$variable{'Project'}->quantity( $qty_index );
+			my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $qty_index );
+			if ( $Paper->type() eq 'Roll' ) {
+				$totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'hdnImpressionQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi()) ;
+			} else {
+				$totals{$string}[$qty_index] += sprintf('%.0f', $$sig_specs{'SheetQuantity'.$qty_index} * $Paper->area() * $Paper->wpsi() );
+				$sheets{$string}[$qty_index] += $$sig_specs{'SheetQuantity'.$qty_index};
+			} # end if
+		} # end foreach qty_index
+
+	} # end foreach
+	foreach my $string ( keys %totals ) {
+		$html .= '<tr><td align="right">'.$string.'</td>';
+		foreach my $qty_index ( 1 .. 3 ) {
+			next if ! $$variable{'Project'}->quantity( $qty_index );
+			$html .= '<td align="right">';
+			$html .= $sheets{$string}[$qty_index] . 'sheets ' if $sheets{$string};
+			$html .= $totals{$string}[$qty_index] . 'lbs</td>';
+		} # end foreach qty_index
+		$html .= '</tr>';
+	} # end foreach
+	return $html;
+) ?>
+<? echo ( 
+	my $services = $$variable{'Project'}->services();
+
+	my $html = '<tr class="totals"><td>Shipping Weight:</td>';
+
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $$variable{'Project'}->quantity( $qty_index );
+
+		my $total_weight = 0;
+
+		if ( $$services{'BulkSkids'} ) {
+			foreach my $s_id ( @{$$services{'BulkSkids'}} ) {
+				my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
+				$total_weight += $$specs{'totalWeight'.$qty_index};
+			} # end foreach
+		} # end if Bulk Skids
+		if ( $$services{'SpecialSkids'} ) {
+			foreach my $s_id ( @{$$services{'BulkSkids'}} ) {
+				my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
+				$total_weight += $$specs{'totalWeight'.$qty_index};
+			} # end foreach
+		} # end if Bulk Skids
+		$html .= sprintf('<td align="right">%.0flbs</td>', $total_weight);
+	} # end foreach qty_index
+
+	return $html;
+) ?>
+	</table>
