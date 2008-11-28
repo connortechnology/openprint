@@ -5,7 +5,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.1"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.2"></script>
 		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.0"></script>
@@ -29,12 +29,15 @@
 		<link href="/css/button.css" rel="stylesheet" type="text/css" />
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
+		<? if ( $r->uri() =~ /purchase_order/ ) ?>
+		<link href="/css/purchase_order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /purchase_order/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
 	<? eval (
-		$openprint::session{'menu'} = $openprint::param{'menu'} if exists $openprint::param{'menu'};
+		$session{'menu'} = $openprint::param{'menu'} if exists $openprint::param{'menu'};
 		) ?>
-	<? if ( ( ! exists $openprint::session{'menu'} ) or $openprint::session{'menu'} ) ?>
+	<? if ( ( ! exists $session{'menu'} ) or $session{'menu'} ) ?>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div id="Header">	
 			<div id="Logo">
@@ -48,7 +51,7 @@
 				<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
 					<select name="select_currency_id" onchange="this.form.submit();">
 					<? echo (
-							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
+							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $session{'Currency_id'} );
 							) ?>
 					</select>
 				</form>
@@ -58,15 +61,15 @@
 						<li class="off"><a href="/employee/index.html">HOME</a></li>
 						<li id="AccountMenu" class="<? echo ( $r->uri() =~ /employee\/account/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('AccountMenu'), 'off', 'on');return false;">ACCOUNT</a>
 							<ul>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 								<li><a href="/employee/account/logout.html">&raquo; Logout</a></li>
-								<li><a href="/employee/account/profile.html">&raquo; Profile</a></li>
-<? else ( $openprint::session{'user_id'} ) ?>
+								<li><a href="/employee/account/profile.html">&raquo; User Profiles</a></li>
+<? else ( $session{'user_id'} ) ?>
 								<li><a href="/employee/account/login.html">&raquo; Login</a></li>
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>
 							</ul>
 						</li>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 						<li id="ProductionMenu" class="<? echo ( $r->uri() =~ /employee\/production/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
 							<ul>
 								<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
@@ -76,14 +79,14 @@
 <!--
 								<li><a href="/employee/production/press_schedule.html;NOSSL">&raquo; New Press Schedule</a></li>
 -->
-								<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+								<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/production/duc_interface.html;NOSSL">&raquo; Set Schedule</a></li>
-								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/production/bindery_overview.html;NOSSL">&raquo; Bindery Overview</a></li>
 								<li><a href="/employee/production/bindery_schedule.html;NOSSL">&raquo; Bindery Schedule</a></li>
 							</ul>
 						</li>
-						<? if ( openprint::usergroup::is_user_in( ['Marketing'], $openprint::session{'user_id'} ) ) ?>
+						<? if ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
 						<li id="MarketingMenu" class="<? echo ( $r->uri() =~ /employee\/marketing/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MarketingMenu'), 'off', 'on');return false;">MARKETING</a>
 							<ul>
 								<li><a href="/employee/marketing/categories.html;NOSSL">&raquo; Marketing Categories</a></li>
@@ -92,28 +95,28 @@
 								<li><a href="/employee/marketing/surveys.html;NOSSL">&raquo; Surveys</a></li>
 							</ul>
 						</li>
-						<? endif ( openprint::usergroup::is_user_in( ['Marketing'], $openprint::session{'user_id'} ) ) ?>
-						<? if ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $openprint::session{'user_id'} ) ) ?>
+						<? endif ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
+						<? if ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
 						<li id="ReportsMenu" class="<? echo ( $r->uri() =~ /employee\/reports/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ReportsMenu'), 'off', 'on');return false;">REPORTS</a>
 							<ul>
 								<li><a href="/employee/reports/project_history.html;NOSSL">&raquo; Project History</a></li>
 								<li><a href="/employee/reports/order_history.html;NOSSL">&raquo; Order History</a></li>
-								<? if ( openprint::usergroup::is_user_in( ['Reporting'], $openprint::session{'user_id'} ) ) ?>
+								<? if ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/reports/delivery.html;NOSSL">&raquo; Delivery</a></li>
 								<li><a href="/employee/reports/turnaround.html;NOSSL">&raquo; Turnaround</a></li>
-								<? endif ( openprint::usergroup::is_user_in( ['Reporting'], $openprint::session{'user_id'} ) ) ?>
+								<? endif ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/reports/prepress_overview.html;NOSSL">&raquo; Prepress Overview</a></li>
 							</ul>
 						</li>
-						<? endif ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $openprint::session{'user_id'} ) ) ?>
-						<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
+						<? endif ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
+						<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 						<li id="AccountingMenu" class="<? echo ( $r->uri() =~ /employee\/accounting/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('AccountingMenu'), 'off', 'on');return false;">ACCOUNTING</a>
 							<ul>
 								<li><a href="/employee/accounting/search.html;NOSSL">&raquo; Outstanding</a></li>
 								<li><a href="/employee/accounting/credit.html;NOSSL">&raquo; Customer Credit</a></li>
 							</ul>
 						</li>
-						<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
+						<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 						<li id="InventoryMenu" class="<? echo ( $r->uri() =~ /employee\/inventory/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 							<ul>
 								<li><a href="/employee/inventory/purchase_orders.html;NOSSL">&raquo; Purchase Orders</a></li>
@@ -140,7 +143,7 @@
 								<li><a href="/employee/support/returns.html;NOSSL">&raquo; Returns</a></li>
 							</ul>
 						</li>
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>
 					</ul>
 				</div><!-- Menu -->
 			</div><!-- Header -->
@@ -150,11 +153,11 @@
 			</div>
 		</div>
 	</body>
-	<? else ( ( ! exists $openprint::session{'menu'} ) or $openprint::session{'menu'} ) ?>
+	<? else ( ( ! exists $session{'menu'} ) or $session{'menu'} ) ?>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();" style="background-image: none; padding: 5px;">
 			<div id="ContentInner"> 
 				<?PageContent?>
 			</div>
 	</body>
-	<? endif ( ( ! exists $openprint::session{'menu'} ) or $openprint::session{'menu'} ) ?>
+	<? endif ( ( ! exists $session{'menu'} ) or $session{'menu'} ) ?>
 </html>

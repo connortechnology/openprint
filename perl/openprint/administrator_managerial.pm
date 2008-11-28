@@ -132,7 +132,7 @@ sub user_profiles {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Destroy' ) {
 		$User->destroy();
 		$User = $User->Next( 'type'=>$openprint::param{'ddmUserRole'}, 'company_id'=>$openprint::param{'ddmCustomer'} );
-        $$variable{'information'} = "Record deleted.";
+        $$variable{'information'} = 'Record deleted.';
 
 	} elsif ($openprint::param{'btnFunction'} eq 'Save') {
 		if ( $openprint::param{'password'} ne $openprint::param{'verifypassword'} ) {

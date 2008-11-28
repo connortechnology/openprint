@@ -127,7 +127,6 @@ $openprint::log->debug("Page: $page");
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
 				my $file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, $filename );
-				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
@@ -143,7 +142,6 @@ $openprint::log->debug("Page: $page");
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-	#$log->debug("[[[[ $file ]]]]");
 				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
@@ -153,7 +151,7 @@ $openprint::log->debug("Page: $page");
 			} # end while
 		} # end if _
 		if ( $template ) {
-			$log->debug("parsing template!");
+			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
 		} else {
 			$log->warn("No template!");
@@ -174,7 +172,7 @@ $openprint::log->debug("Page: $page");
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client!  This is really smart.
 	openprint::service::init_cache();
-	openprint::pricing::clear_cache( );
+	openprint::pricing::clear_cache();
 	openprint::Object::init_cache();
 	return Apache2::Const::OK;
 } # end sub handler

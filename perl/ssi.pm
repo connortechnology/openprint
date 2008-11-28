@@ -21,7 +21,6 @@ sub do_new_substitution {
 			my $middle = $1;
 			my $end = $2;
 			my $replacement_text = '';
-#$dataname = variable_substitution( $r, $log, $dbh, $dataname, $variable );
 			while ( 1 ) {
 				$_ = eval $dataname;
 				$log->error( "Eval error of ($dataname), Reason: " . $@ ) if $@;
@@ -402,6 +401,17 @@ sub writeTip {
 	my $word = shift;
 return qq{<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('$word',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('$word');}">$word</span>};
 }
+
+sub setup_date_select {
+    my ( $page, $prefix, $delta ) = @_;
+    if ( ( ! $session{$page.'?'.$prefix.'_start_year'} ) or ( time - $session{'lastupdated'} > 3600 ) ) {
+        @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $delta );
+        @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Today();
+    } else {
+        @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} );
+        @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} );
+    } # end if
+} # end sub setup_date_select
 
 sub date_select {
 	 my ( $prefix, $value, $onchange ) = @_;

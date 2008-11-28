@@ -259,6 +259,31 @@ $dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+if ( ! $data ) {
+} else {
+	if ( ! exists $$data{'federaltax_charge'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add federaltax_charge BOOLEAN');
+	} # end if
+	if ( ! exists $$data{'statetax_charge'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add statetax_charge BOOLEAN');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );
+if ( ! $data ) {
+	$dbh->do('
+CREATE TABLE PurchaseOrder_COntents (
+    id SERIAL NOT NULL,
+    po_id   INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
+    qty     float,
+    price   float,
+    total   float,
+    item    text,
+    docket  text,
+    description text,
+    PRIMARY KEY (id)
+);');
+} # en dif
 
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM RFIDScanners LIMIT 1', {} );

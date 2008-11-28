@@ -133,13 +133,17 @@ sub credit {
 		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
-		my @errors;
-		foreach my $order_id ( ref $param{'PAID'} eq 'ARRAY' ? @{$param{'PAID'}} : $param{'PAID'} ) {
-			my $Order = new openprint::Order( $order_id );
-			push @errors, $Order->pay();
-		} # end foreach
-		if ( @errors ) {
-			$variable{'error'} = join('<br/>', @errors );
+		if ( ! $param{'PAID'} ) {
+			$variable{'error'} = 'Please select an order to pay.<br/>';
+		} else {
+			my @errors;
+			foreach my $order_id ( ref $param{'PAID'} eq 'ARRAY' ? @{$param{'PAID'}} : $param{'PAID'} ) {
+				my $Order = new openprint::Order( $order_id );
+				push @errors, $Order->pay();
+			} # end foreach
+			if ( @errors ) {
+				$variable{'error'} = join('<br/>', @errors );
+			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		my $customer_credit = new openprint::customer_credit( $company_index );

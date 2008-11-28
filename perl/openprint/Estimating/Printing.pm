@@ -911,30 +911,6 @@ $openprint::log->debug("Grabbing UV Specs");
 				} # end foreach
 
 			} elsif ( $$specs{'txtSignatureType'} eq 'Interior Spreads' ) {
-# if the cover is digital, then we need digital
-# if another interior spread is digital, then we need digital
-# if the cover is offset, then we need offset
-# if the cover is waterless, then we can do waterless, or offset
-				my $cover_specs;
-				foreach my $index ( $Project->signatures('Cover Spreads') ) {
-					$cover_specs = openprint::service::get_specs_ref( $project_index, $index );
-				} # end foreach
-				if ( $cover_specs ) {
-					if ( sets::isin( $$cover_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
-						if ( $$cover_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-							$$specs{'PrintingTypes'} = ['Digital'];
-						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
-							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
-						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
-							$$specs{'PrintingTypes'} = ['Offset'];
-						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Web' ) {
-							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
-							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-						} # end if
-					} # end if
-				} # end if
-				if ( ! $$specs{'PrintingTypes'} ) {
 
 					foreach my $index ( $Project->signatures('Interior Spreads') ) {
 						next if $index == $service_index;
@@ -955,11 +931,40 @@ $openprint::log->debug("Grabbing UV Specs");
 						} # end if
 						last if $$specs{'PrintingTypes'};
 					} # end foreach
+# if the cover is digital, then we need digital
+# if another interior spread is digital, then we need digital
+# if the cover is offset, then we need offset
+# if the cover is waterless, then we can do waterless, or offset
+				if ( ! $$specs{'PrintingTypes'} ) {
+				my $cover_specs;
+				foreach my $index ( $Project->signatures('Cover Spreads') ) {
+					$cover_specs = openprint::service::get_specs_ref( $Project, $index );
+				} # end foreach
+				if ( $cover_specs ) {
+					if ( sets::isin( $$cover_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
+						if ( $$cover_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
+							$$specs{'PrintingTypes'} = ['Digital'];
+						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
+							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
+						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
+							$$specs{'PrintingTypes'} = ['Offset'];
+						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
+						} # end if
+					} # end if
+				} # end if
 				} # end if PrintingTypes
 				
 			} # end if Spread Type
 		} # end if printing_specs{'PrintingType'}
-
+if ( $debug or 1 ) {
+$openprint::log->debug('PrintingTypes');
+if ( $$specs{'PrintingTypes'} ) {
+$openprint::log->debug(join(',',@{$$specs{'PrintingTypes'}} ));
+}
+}
 		my %PlateCounts;
 		foreach my $index ( $Project->signatures() ) {
 	# Get plates in each previous signature, so we can get qty discounts
@@ -1478,7 +1483,7 @@ sub breakdown {
 	$breakdown .= sprintf( "\tPlates: \%d plates * \$%.2f per plate = \$%.2f<br/>", @$price{'txtPlateQuantity','Plate Cost','Plate Price'});
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 	my $stock_qty = $$price{'Stock Quantity'};
-	$breakdown .= sprintf( 'Overs: Base:%s Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
+	$breakdown .= sprintf( 'Overs: Base:%s Setup: %s Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
 	if ( $Paper->type() ne 'Roll' ) {
 		$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
 		$breakdown .= "\tPaper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
@@ -1557,7 +1562,82 @@ sub get_project_price {
 #}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
 #$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
-		} # end if
+if ( 1 ) {
+            my %imps;
+
+            my $max_pages = 0;
+            foreach my $imp ( @impositions ) {
+                $max_pages = $imp->pages() if $imp->pages() > $max_pages;
+            } # end foreach
+            $max_pages /= 2;
+            foreach my $imp ( @impositions ) {
+				if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') {
+					if ( ( $imp->Paper()->width() != $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$specs{"OverrideStockHeight$qty_index"} )) {
+						next;
+					} # end if
+				} elsif ($max_pages >= $imp->pages()) {
+					next;
+				} # end if
+
+				if ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() != $$specs{"CutOff$qty_index"} ) ) {
+					next;
+				} # end if
+
+				my $add = 1;
+                my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
+                if ( $imps{$str} ) {
+                    for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
+                        my $I = $imps{$str}[$j];
+
+                        if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+                            next;
+                        } elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+                            next;
+                        } # end if
+                        if ( $$specs{'PreviousStockType'} and ( $I->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
+            $openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() ) if $debug;
+                            $add = 0;
+                            next;
+                        } # end if
+                        if ( $$specs{'PreviousGrainDirection'} and ( $I->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
+            $openprint::log->debug("Not consider imposition cuz it's not the previous ($$specs{'PreviousGrainDirection'}) grain direction " . $imp->grain_direction() ) if $debug;
+                            $add = 0;
+                            next;
+                        } # end if
+                        my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
+                        my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+                        if (
+                                ( $I->Paper()->area() >= $imp->Paper()->area() )
+                                and
+                                ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
+                                and
+                                ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
+                                and
+                                ( ! ( ! $I->Paper()->is_cut() and $imp->Paper()->is_cut() ) )
+                           ) {
+                            splice @{$imps{$str}}, $j, 1;
+                            $j -= 1;
+                        } elsif (
+                                ( $I->Paper()->area() < $imp->Paper()->area() )
+                                and
+                                ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
+                                and
+                                ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
+                                and
+                                ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
+                                ) {
+# Already have a much better sheet
+							$add = 0;
+#last;
+						} # end if
+                   } # end for
+                } # end if overriden or not or cached
+                push @{$imps{$str}}, $imp if $add;
+            } # end foreach imp
+            @impositions = map {@{$_}} values %imps;
+} # end if turn filters on/off
+
+		} # end if SpreadLayout
 # Gives us both inline and offline folding options
 		if ( $$project{'HasFolding'} ) {
 			@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $$project{'FoldingSpecs'}, $specs, $qty_index ) } @impositions;
@@ -2137,7 +2217,7 @@ sub calc_price {
 
 	$run_overs = $base_impressions * $over_rate;
 	#my $gross_qty = $impressions;
-	my $gross_qty = sprintf( '%.0f', $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
+	my $gross_qty = ceil( $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
 	my $additional_overs=0;
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
@@ -2184,7 +2264,7 @@ sub calc_price {
 			'Bindery Overs'				=> $price{'SpinePaste MakeReady Overs'},
 			'Run Overs'					=> $run_overs,
 			'Additional Plate Overs'	=> $additional_overs,
-			'Total Overs'				=> $impressions,
+			'Total Overs'				=> ($setup_overs > $run_overs ? $setup_overs : $run_overs )+ $additional_overs + $fm_overs,
 			'Weight'					=> ( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() ),
 			'FM Overs'					=> $$specs{'ScreenType'} eq 'FM' ? 1*$fm_overs : 0,
 			);

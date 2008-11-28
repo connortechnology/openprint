@@ -43,10 +43,8 @@
 				<? echo (
 					my $html;
 					foreach my $Company ( $$variable{'Category'}->companies( 'order' => 'lower(strName)' ) ) {
-						$html .= '<p>';
 						$html .= sprintf( q{<input type="checkbox" id="chkDelete%d" name="chkDelete" value="%d" />}, $Company->id(), $Company->id() );
-						$html .= sprintf( q{<label class="radio" for="chkDelete%d">%s</label>}, $Company->id(), $Company->name() );
-						$html .= '</p>';
+						$html .= sprintf( q{<label class="radio" for="chkDelete%d">%s</label><br/>}, $Company->id(), $Company->name() );
 					} # end while
 					return $html;
 				) ?>
