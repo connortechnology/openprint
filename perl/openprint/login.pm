@@ -153,7 +153,7 @@ sub verify_login {
 		if ( $site eq 'A' ) {
 		$$variable{'Redirect'} = '/administrator/account/change_password.html';
 		} elsif ( $site eq 'E' ) {
-		$$variable{'Redirect'} = '/employee/employee/change_password.html';
+		$$variable{'Redirect'} = '/employee/account/change_password.html';
 		} else {
 		$$variable{'Redirect'} = '/main/account/change_password.html';
 		} # end if

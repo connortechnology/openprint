@@ -418,7 +418,7 @@ sub notifications {
 	if ( $$self{'id'} and ! exists $$self{'notifications'} ) {
 		@{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
 	} # end if
-	return $$self{'notification'} ? @{$$self{'notifications'}} : ();
+	return $$self{'notifications'} ? @{$$self{'notifications'}} : ();
 } # end sub notifications
 
 1;
