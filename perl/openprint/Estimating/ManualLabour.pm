@@ -23,6 +23,8 @@ require openprint::print;
 require openprint::service;
 
 my @variables = (
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'BasePrice', 'Units',
 );
@@ -32,6 +34,8 @@ sub variables {
 } # end sub variables
 
 my @no_output = (
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1', 'Markup2', 'Markup3',
 	'Hours1', 'Hours2', 'Hours3','Units','BasePrice',
 	'ProjectIndex','ServiceIndex','ServiceType',
 );
@@ -65,7 +69,11 @@ sub calc {
 		} elsif ( $$specs{'Units'} eq 'Per M' ) {
 			$price = $$specs{'BasePrice'} * $Project->quantity($qty_index)/1000;
 		} # end if
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $price );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 	} # end foreach
 
 	return 'calculated';

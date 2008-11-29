@@ -21,7 +21,37 @@ There is no current project.
 <form name="f1" method="post" action="">
 	<input type="hidden" name="btnFunction" value=""/>
 	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
-	<span style="float: right;">
+<p class="unprintable">
+	Please confirm services, prices and quantities before clicking &quot;Add to 
+	Quote&quot; or &quot;Add to Order&quot;. If changes are required, please use 
+	the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
+</p>
+<div style="float:left; p\osition: relative; height: 19px;">
+	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', '', '/main/project/summary.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Summary' ); ) ?>
+	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();", '', 'Delete' ); ) ?>
+	<? endif ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
+	<? echo ( ssi::writeButton( $log, $dbh, 'CopyProject', 'copyProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Copy' ); ) ?>
+</div>
+<div style="float: right; p\osition: relative; height: 19px;">
+	<? if ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' ); ) ?>
+	<? endif ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
+	<? if ( $$variable{'ProjectStatus'} eq 'Unordered' ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
+	<? endif ( $$variable{'ProjectStatus'} eq 'Unordered' ) ?>
+	<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>
+	<? endif ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
+	<? echo ( 
+		my $html = '';
+		if ( $$variable{'Project'}->order_id() and sets::isin( $$variable{'Project'}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
+			$html .= ssi::writeButton( $log, $dbh, 'ContinueOrder', 'continueorder.gif', "f1.action='/main/order/information.html?OrderID=".$$variable{'Project'}->order_id()."';f1.btnFunction.value='';f1.submit();", '', 'Continue Order' );
+		} # end if
+		return $html;
+	 ) ?>
 		<? echo (
 			my $html;
 			if ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) and $$variable{'OrderStatus'} ) {
@@ -46,20 +76,16 @@ if ( $$variable{'HiddenSignatures'} ) {
 			} # end if
 			return $html;
 		) ?>
-	</span>
-<p class="unprintable">
-	Please confirm services, prices and quantities before clicking &quot;Add to 
-	Quote&quot; or &quot;Add to Order&quot;. If changes are required, please use 
-	the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
-</p>
+</div>
 	<br class="spacer"/>
+<br class="spacer"/>
 	<!--#include virtual="/includes/project_header.html" -->
 	<table class="List" style="table-layout: auto;">
 		<tr> 
 			<th align="left">Services</th>
-			<? if ( $$variable{'Quantity1'} ) ?><th width="160" align="right"><?Quantity1?></th><? endif ( $$variable{'Quantity1'} ) ?>
-			<? if ( $$variable{'Quantity2'} ) ?><th width="160" align="right"><?Quantity2?></th><? endif ( $$variable{'Quantity2'} ) ?>
-			<? if ( $$variable{'Quantity3'} ) ?><th width="160" align="right"><?Quantity3?></th><? endif ( $$variable{'Quantity3'} ) ?>
+			<? if ( $$variable{'Quantity1'} ) ?><th width="210" align="right"><?Quantity1?></th><? endif ( $$variable{'Quantity1'} ) ?>
+			<? if ( $$variable{'Quantity2'} ) ?><th width="210" align="right"><?Quantity2?></th><? endif ( $$variable{'Quantity2'} ) ?>
+			<? if ( $$variable{'Quantity3'} ) ?><th width="210" align="right"><?Quantity3?></th><? endif ( $$variable{'Quantity3'} ) ?>
 			<th width="90" align="right">Status</th>
 			<th class="unprintable" width="70" align="right">Changes</th>
 		</tr>
@@ -84,8 +110,11 @@ if ( $$variable{'HiddenSignatures'} ) {
 				} # end if
 				return '';
 			) ?>
-			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price1?></b><br/>
-			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 ); ) ?>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?><?price1?></b><br/>
+			<? echo ( my $summary = openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 );
+				$summary =~ s/\n/<br\/>/g;
+				return $summary;
+			 ) ?>
 			</td>
 	<? endif ( $$variable{'Quantity1'} ) ?>
 	<? if ( $$variable{'Quantity2'} ) ?>
@@ -97,7 +126,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 				} # end if
 				return '';
 			) ?>
-			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price2?></b><br/>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?><?price2?></b><br/>
 			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 2 ); ) ?>
 			</td>
 	<? endif ( $$variable{'Quantity2'} ) ?>
@@ -110,7 +139,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 				} # end if
 				return '';
 			) ?>
-			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price3?></b><br/>
+			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?><?price3?></b><br/>
 			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 3 ); ) ?>
 			</td>
 	<? endif ( $$variable{'Quantity3'} ) ?>
@@ -133,17 +162,17 @@ if ( $$variable{'HiddenSignatures'} ) {
 	<? endif ( @{$$variable{'SERVICES'}} ) ?>
 		<tr class="totals"> 
 			<td align="left">Unit Prices:</td>
-	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice1?></td><? endif ( $$variable{'Quantity1'} ) ?>
-	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice2?></td><? endif ( $$variable{'Quantity2'} ) ?>
-	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?><?UnitPrice1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?><?UnitPrice2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?><?UnitPrice3?></td><? endif ( $$variable{'Quantity3'} ) ?>
 			<td align="right">&nbsp;</td>
 			<td class="unprintable" align="right">&nbsp;</td>
 		</tr>
 		<tr> 
 			<td align="left">Total Before Taxes:</td>
-	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total1?></td><? endif ( $$variable{'Quantity1'} ) ?>
-	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total2?></td><? endif ( $$variable{'Quantity2'} ) ?>
-	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?Total3?></td><? endif ( $$variable{'Quantity3'} ) ?>
+	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?><?Total1?></td><? endif ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Quantity2'} ) ?><td align="right"><?CurrencySymbol?><?Total2?></td><? endif ( $$variable{'Quantity2'} ) ?>
+	<? if ( $$variable{'Quantity3'} ) ?><td align="right"><?CurrencySymbol?><?Total3?></td><? endif ( $$variable{'Quantity3'} ) ?>
 			<td align="right">&nbsp;</td>
 			<td class="unprintable" align="right">&nbsp;</td>
 		</tr>
@@ -170,36 +199,6 @@ if ( $$variable{'HiddenSignatures'} ) {
 <span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
 <? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
 <span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
-<br class="spacer"/>
-<br/>
-<div style="float:left; p\osition: relative; height: 19px;">
-	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', "f1.action='/main/project/summary.html';f1.btnFunction.value='Project Summary';f1.submit();", '', 'Summary' ); ) ?>
-	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();", '', 'Delete' ); ) ?>
-	<? endif ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
-	<? echo ( ssi::writeButton( $log, $dbh, 'ReuseProject', 'reUseProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Reuse Project' ); ) ?>
-</div>
-<div style="float: right; p\osition: relative; height: 19px;">
-	<? if ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' ); ) ?>
-	<? endif ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
-	<? if ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated'] ) ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
-	<? endif ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated'] ) ) ?>
-	<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>
-	<? endif ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
-	<? echo ( 
-		my $html = '';
-		if ( $$variable{'Project'}->order_id() and sets::isin( $$variable{'Project'}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'ContinueOrder', 'continueorder.gif', "f1.action='/main/order/information.html?OrderID=".$$variable{'Project'}->order_id()."';f1.btnFunction.value='';f1.submit();", '', 'Continue Order' );
-		} # end if
-		return $html;
-	 ) ?>
-</div>
-	<br class="spacer"/>
 </form>
 <br class="spacer"/>
 <? if ( $$variable{'Project'}->docket() ) ?>
@@ -210,6 +209,6 @@ name and then make changes. If you have any questions please click on our <a hre
 <br class="spacer"/>
 
 <? endif ( $$variable{'Project'}->docket() ) ?>
-<!--#include virtual="/skins/<?SiteTitle?>/includes/projectview_disclaimer.html"-->
+<? echo ( $config{'ProjectViewDisclaimer'} ) ?>
 <? endif ( $$variable{'ProjectIndex'} eq '' ) ?>
 </div>

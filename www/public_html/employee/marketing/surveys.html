@@ -39,6 +39,7 @@
         <p class="buttons">
             <? echo ( join('',
                 ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
+                ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
                 ssi::writeButton( $log, $dbh, 'Copy','copy.gif',"f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
                 ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
                 ); ) ?>

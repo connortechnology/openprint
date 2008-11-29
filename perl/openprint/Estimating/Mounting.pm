@@ -25,6 +25,8 @@ require sql;
 
 my @variables = (
 	'txtFinalWidth','txtFinalHeight','chkOverrideDimensions',
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 	#'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
@@ -53,7 +55,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-my %services = $Project->get_services();
+	my %services = $Project->get_services();
 	if ( ! $services{''} ) {
 		$$specs{'alert'} .= 'No Project Service!<br/>';
 		return 'uncalculated';
@@ -76,7 +78,7 @@ my %services = $Project->get_services();
 		return 'uncalculated';
 	} # end if
 
-	my %MinimumCharge = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
+	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
 	my %MaterialPrice;
 	if ( my @Materials = openprint::Material::find('name'=>$$specs{'MountingType'}) ) {
 		%MaterialPrice = $Materials[0]->get_price( undef, undef );
@@ -93,8 +95,8 @@ my %services = $Project->get_services();
 
 		my %bestPrice;
 
-			my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}, undef, undef );
-			my %SetupPrice = openprint::service::get_price_object( $log, $dbh, $variable, $$specs{'ServiceType'}.'MakeReady', undef, undef );
+			my %ServicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, undef );
+			my %SetupPrice = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', undef, undef );
 
 			my $price = $SetupPrice{'Price'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tSetup: \$ %.2f\n", $SetupPrice{'Price'});
@@ -121,8 +123,12 @@ my %services = $Project->get_services();
 			} # end if
 		$bestPrice{'Price'} = $MinimumCharge{Price} if $bestPrice{'Price'} < $MinimumCharge{Price};
 
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'Price'} );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $bestPrice{'Price'}/$qty );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'Price'}*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'Price'}/$qty );
 	} # end foreach qty_index
 	return 'calculated';
 } # end sub calc

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 
-apt-get -y install postgresql
+apt-get -y install lm-sensors sensord smartmontools liblinux-inotify2-perl
+apt-get -y install make postgresql
 apt-get -y install apache2 libapache2-mod-perl2 libapache2-request-perl libapache-session-perl libtext-csv-perl libxml-dom-perl
 
 apt-get -y install libmail-sendmail-perl
@@ -20,4 +21,10 @@ ln -sf /etc/apache2/mods-available/rewrite.load   /etc/apache2/mods-enabled/
 ln -sf /etc/apache2/mods-available/apreq.load /etc/apache2/mods-enabled/
 
 mkdir /etc/apache2/lib
-ln -sf /etc/apache2/lib/perl /var/www/topknotch/perl
+ln -sf /etc/apache2/lib/perl /var/www/$1/perl
+
+perl -MCPAN -e shell << EOF
+force install Date::Handler
+force install Date::Parse
+force install Math::Units
+EOF

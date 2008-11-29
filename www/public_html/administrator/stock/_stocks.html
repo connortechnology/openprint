@@ -1,0 +1,88 @@
+<? eval (
+	if ( %openprint::param and ! $param{'btnFunction'} ) {
+		foreach my $key ( 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations' ) {
+			if ( ref $session{"/administrator/stock/list.html?$key"} eq 'ARRAY' ) {
+				$openprint::session{"/administrator/stock/list.html?$key"} = join(';', @{$openprint::param{$key}} );
+			} else {
+				$openprint::session{"/administrator/stock/list.html?$key"} = $openprint::param{$key}; 
+			} # end if
+		} # end foreach
+	} # end if
+	@{$$variable{'Stocks'}} = ();
+	foreach my $Stock ( openprint::Paper::find( 
+		'group_id'		=> $openprint::session{'/administrator/stock/list.html?Group'},
+		'owner_id'		=> $openprint::session{'/administrator/stock/list.html?Owner'},
+		'manufacturer_id'		=> $openprint::session{'/administrator/stock/list.html?Manufacturer'},
+		'name_id'	=> $openprint::session{'/administrator/stock/list.html?Name'},
+		'finish_id'	=> $openprint::session{'/administrator/stock/list.html?Finish'},
+		'colour_id'	=> $openprint::session{'/administrator/stock/list.html?Colour'},
+		'weight_id'	=> $openprint::session{'/administrator/stock/list.html?Weight'}, 
+		'material_id'	=> $openprint::session{'/administrator/stock/list.html?material_id'}, 
+		'type'		=> [ split(';', $openprint::session{'/administrator/stock/list.html?Types'} ) ],
+		'fsc_code'	=> $openprint::session{'/administrator/stock/list.html?fsc_code'}, 
+		'order'		=> 'name,finish,colour,weight, width, height'
+		);
+		next if $Stock->recommendations() and ! sets::isin( 1, split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) );
+		next if ( ! $Stock->recommendations() ) and ! sets::isin( 0, split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) );
+		push @{$$variable{'Stocks'}}, $Stock;
+	} # end foreach
+) ?>
+<? if ( @{$$variable{'Stocks'}} ) ?>
+	<table class="List sortable" style="table-layout: auto;">
+		<thead>
+			<tr>
+				<th style="text-align:center;" width="20"><input type="checkbox" onclick="select_all(document.f1, 'chkStock', this.checked );"/></th>
+				<th align="left">Inventory #</th>
+				<th align="left">Group</th>
+				<th align="left">Manufacturer</th>
+				<th align="left">Name</th>
+				<th align="left">Finish</th>
+				<th align="left">Colour</th>
+				<th align="left">Weight</th>
+				<th align="left" width="80" class="area">Size</th>
+				<th align="left" width="50">Calliper</th>
+				<th align="right" width="50">MWeight</th>
+				<th align="right" width="50">GSM</th>
+				<th align="left" width="25">SPP</th>
+				<th align="left" width="50">Pricing CWT</th>
+			</tr>
+		</thead>
+		<tbody>
+<? while ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
+	<tr>
+		<td style="text-align:center;"><input type="checkbox" id="chkStock<? echo ( $$variable{'Stock'}{id} ) ?>" name="chkStock" value="<? echo ( $$variable{'Stock'}{'id'} ) ?>"/></td>
+		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? hecho ( $$variable{'Stock'}->inventory_number() ) ?></a></td>
+		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->group() ) ?></a></td>
+		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->manufacturer() ) ?></a></td>
+		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->name() ) ?></a></td>
+		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->finish() ) ?></a></td>
+		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->colour() ) ?></a></td>
+		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->weight() ) ?></a></td>
+		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->size() ) ?></a></td>
+		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->calliper() ) ?></a></td>
+		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Stock'}->mweight() ); ) ?></a></td>
+		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Stock'}->gsm() ); ) ?></a></td>
+		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->sheets_per_package() ) ?></a></td>
+		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( 
+my @Price = $$variable{'Stock'}->prices();
+return sprintf('%.0f*%.0f%=%.0f', @{$Price[0]}{'Cost','Markup','Price'} );
+ ) ?></a></td>
+	</tr>
+<? endwhile ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
+		</tbody>
+	</table>
+	<br/>
+	<fieldset>
+		<p class="buttons">
+			<? echo ( join('',
+ssi::writeButton( $log, $dbh, 'applychanges', 'applychanges.gif', "popup_window(f1);", '', 'Make Changes' ),
+				ssi::writeButton($log, $dbh, 'New2','new.gif',"",'stock.html','Add A New Stock'),
+				ssi::writeButton($log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete Checked Stocks'),
+				#ssi::writeButton($log, $dbh, 'Save2','blah.gif',"show_div('StockRecommendations', event );",'','Set Stock Recommendations'),
+				ssi::writeButton( $log, $dbh, "Copy2", 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
+			); ) ?>
+		</p>
+	</fieldset>
+<? else ( @{$$variable{'Stocks'}} ) ?>
+There were no matching stocks.
+<? endif ( @{$$variable{'Stocks'}} ) ?>

@@ -1,64 +1,51 @@
-<div class="row"> 
-	<span class="required">*</span>
-	<span class="label">Will you be supplying a <? echo ( ssi::writeTip( 'custom die'); ) ?>?</span>
-	<span class="input">
-		<input type="radio" id="rdbSuppliedDieY" name="rdbSuppliedDie" value="Y" onclick="if ( this.checked ) { remove_div('CustomDie' ); } calc('f1');" <? echo ( 'checked' if $$variable{'rdbSuppliedDie'} eq 'Y' ) ?> />
-		<label for="rdbSuppliedDieY">Yes</label>
-		<input type="radio" id="rdbSuppliedDieN" name="rdbSuppliedDie" value="N" onclick="if ( this.checked ) { add_div('CustomDie' ); } calc('f1');" <? echo ( 'checked' if $$variable{'rdbSuppliedDie'} ne 'Y' ) ?> />
-		<label for="rdbSuppliedDieN">No</label>
-	</span>
-</div>
-<div id="CustomDie" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>" >
-	<div class="row"> 
-		<span class="required">*</span>
-		<span class="label">What are the dimensions of the die cut image? (WxH In Inches)</span>
-		<span class="input">
-			<input name="txtDieWidth" size="9" value="<?txtDieWidth?>" onkeyup="calc('f1');" /> x <input name="txtDieHeight" size="9" value="<?txtDieHeight?>" onkeyup="calc('f1');" />
-			<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverrideDimensions"} eq 'Y' ) ?> />
-			<label for="chkOverrideDimensions">Override</label>
-		</span>
-	</div>
-	<div class="row"> 
-		<span class="required">*</span>
-		<span class="label">What type of die is required for the project? If known, please 
-			input the amount of steel rule that will be required to create the die.</span>
-		<span class="input">
-				<input type="radio" id="rdbDieCuttingSimple" name="rdbDieCutting" value="Simple" onclick="calc('f1');" <? echo ( 'checked' if $$variable{'rdbDieCutting'} eq 'Simple' ) ?> />
-				<label for="rdbDieCuttingSimple">Simple</label>
-				<input type="radio" id="rdbDieCuttingAverage" name="rdbDieCutting" value="Average" onclick="calc('f1');" <? echo ( 'checked' if $$variable{'rdbDieCutting'} eq 'Average' ) ?> />
-				<label for="rdbDieCuttingAverage">Average</label>
-				<input type="radio" id="rdbDieCuttingComplex" name="rdbDieCutting" value="Complex" onclick="calc('f1');" <? echo ( 'checked' if $$variable{'rdbDieCutting'} eq 'Complex' ) ?> />
-				<label for="rdbDieCuttingComplex">Complex</label>
-			<br/>
-				<input name="txtSteelRuleLength" size="9" value="<?txtSteelRuleLength?>"  onkeyup="calc('f1');" /> 
-				Linear Inches
-		</span>
-	</div>
+<p> 
+	<label>Will you be supplying the die:</label>
+	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>Y" name="rdbSuppliedDie-<?SignatureIndex?>" value="Y" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>' ).hide(); } calc(this.form.name);" <? echo ( $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>Y">Yes</label>
+	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>N" name="rdbSuppliedDie-<?SignatureIndex?>" value="N" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>').show(); } calc(this.form.name);" <? echo ( $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ne 'Y' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>N">No</label>
+</p>
+<div id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>" >
+	<p> 
+		<label>Die image size? (WxH In Inches)</label>
+		<input name="txtDieWidth-<?SignatureIndex?>" size="9" value="<?txtDieWidth?>" onkeyup="calc(this.form.name);" /> x <input name="txtDieHeight-<?SignatureIndex?>" size="9" value="<?txtDieHeight?>" onkeyup="calc(this.form.name);" />
+		<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverrideDimensions"} eq 'Y' ) ?> />
+		<label class="radio" for="chkOverrideDimensions">Override</label>
+	</p>
+	<p> 
+		<label>Die Type:</label>
+		<input type="radio" id="rdbDieCutting-<?SignatureIndex?>Simple" name="rdbDieCutting-<?SignatureIndex?>" value="Simple" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbDieCutting-'.$$variable{'SignatureIndex'}} eq 'Simple' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbDieCutting-<?SignatureIndex?>Simple">Simple</label>
+		<input type="radio" id="rdbDieCutting-<?SignatureIndex?>Average" name="rdbDieCutting-<?SignatureIndex?>" value="Average" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbDieCutting'.$$variable{'SignatureIndex'}} eq 'Average' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbDieCutting-<?SignatureIndex?>Average">Average</label>
+		<input type="radio" id="rdbDieCutting-<?SignatureIndex?>Complex" name="rdbDieCutting-<?SignatureIndex?>" value="Complex" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbDieCutting'.$$variable{'SignatureIndex'}} eq 'Complex' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbDieCutting-<?SignatureIndex?>Complex">Complex</label>
+		<br/>
+		<input name="txtSteelRuleLength-<?SignatureIndex?>" size="9" value="<? echo ( $$variable{'txtSteelRuleLength-'.$$variable{'SignatureIndex'}} ) ?>"  onkeyup="calc(this.form.name);" /> 
+		Linear Inches
+	</p>
 <!--
-	<div class="row"> 
+	<p> 
 		<span class="required">*</span>
 		<span class="input">
-			<input name="txtDieCutBends" size="9" value="<?txtDieCutBends?>"  onkeyup="calc('f1');" />
+			<input name="txtDieCutBends" size="9" value="<?txtDieCutBends?>"  onkeyup="calc(this.form.name);" />
 			Quantity of Die Rule Bends
 		</span>
-		<span class="label">How many bends are included in your die cut image. (ie. Circles - 4 Bends, Half Moon - 2 Bends, Five Point Star Burst - 10 bends.)</span>
+		<label>How many bends are included in your die cut image. (ie. Circles - 4 Bends, Half Moon - 2 Bends, Five Point Star Burst - 10 bends.)</span>
 		<br class="spacer"/>
-	</div>
-	<div class="row"> 
+	</p>
+	<p> 
 		<span class="required">*</span>
-		<span class="input"> <input name="txtDieCutPunches" size="9" value="<?txtDieCutPunches?>"  onkeyup="calc('f1');" />
+		<span class="input"> <input name="txtDieCutPunches" size="9" value="<?txtDieCutPunches?>"  onkeyup="calc(this.form.name);" />
 			Quantity of Die Cut Punches</span>
-		<span class="label">Does your die cut image require any die cut areas smaller 
+		<label>Does your die cut image require any die cut areas smaller 
 			than 1&quot; in diameter? If yes, please specify how many areas need to 
 			be die cut punched to a diameter of 1&quot; or less.</span>
 		<br class="spacer"/>
-	</div>
+	</p>
 -->
 </div>
-<div class="row"> 
-	<span class="required">*</span>
-	<span class="label"># of holes to clear:</span>
-	<span class="input">
-		<input name="txtHoleClearingHoles" size="9" value="<?txtHoleClearingHoles?>" onkeyup="calc('f1');" />
-	</span>
-</div>
+<p> 
+	<label># of holes to clear:</label>
+	<input name="txtHoleClearingHoles-<?SignatureIndex?>" size="4" value="<? echo ( $$variable{'txtHoleClearingHoles-'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc(this.form.name);" />
+</p>

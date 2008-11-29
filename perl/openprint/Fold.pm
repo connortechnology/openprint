@@ -9,7 +9,14 @@ require sql;
 
 my $debug = 0;
 
-my %fields = (
+use vars qw( $table $serial $log $dbh %fields %transforms %defaults );
+
+$table = 'folds';
+$serial= 'fold_id_seq';
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+%fields = (
 	'id'					=>	'id',
 	'equipment_id'			=>	'equipment_id',
 	'type'					=>	'type',
@@ -18,11 +25,14 @@ my %fields = (
 	'max_width'				=>	'max_width',
 	'min_height'			=>	'min_height',
 	'max_height'			=>	'max_height',
+	'min_calliper'			=>	'min_calliper',
+	'max_calliper'			=>	'max_calliper',
 	'pages'					=>	'pages',
 	'page_columns'			=>	'page_columns',
 	'page_rows'				=>	'page_rows',
 	'min_imposition'		=>	'min_imposition',
 	'max_imposition'		=>	'max_imposition',
+	'cutting'				=>	'cutting',
 	'stitching'				=>	'stitching',
 	'perfectbind'			=>	'perfectbind',
 	'spinepaste'			=>	'spinepaste',
@@ -32,26 +42,34 @@ my %fields = (
 	'makeready_overs_units'	=>	'makeready_overs_units',
 	'run_overs_units'		=>	'run_overs_units',
 	'run_overs'				=>	'run_overs',
+	'folds'					=>	'folds',
+	'angles'				=>	'angles',
 );
-my %transforms = (
+%transforms = (
 	'min_width' => [ 's/[^\d\.]//g' ],
 	'max_width' => [ 's/[^\d\.]//g' ],
 	'min_height' => [ 's/[^\d\.]//g' ],
 	'max_height' => [ 's/[^\d\.]//g' ],
+	'min_calliper' => [ 's/[^\d\.]//g' ],
+	'max_calliper' => [ 's/[^\d\.]//g' ],
 	'min_imposition' => [ 's/\D//g' ],
 	'max_imposition' => [ 's/\D//g' ],
 	'pages' => [ 's/\D//g' ],
 	'page_columns' => [ 's/\D//g' ],
 	'page_rows' => [ 's/\D//g' ],
-	'makeready_time' => [ 's/\D//g' ],
-	'makeready_overs' => [ 's/\D//g' ],
-	'run_overs' => [ 's/\D//g' ],
+	'makeready_time' => [ 's/[^\d\.]//g' ],
+	'makeready_overs' => [ 's/[^\d\.]//g' ],
+	'run_overs' => [ 's/[^\d\.]//g' ],
+	'folds' => [ 's/\D//g' ],
+	'angles' => [ 's/\D//g' ],
 );
-my %defaults = (
+%defaults = (
 	'min_width'			=>	undef,
 	'max_width'			=>	undef,
 	'min_height'		=>	undef,
 	'max_height'		=>	undef,
+	'min_calliper'		=>	undef,
+	'max_calliper'		=>	undef,
 	'min_imposition'	=>	undef,
 	'max_imposition'	=>	undef,
 	'pages'		=>	undef,
@@ -63,8 +81,14 @@ my %defaults = (
 	'stitching'	=> undef,
 	'perfectbind'	=> undef,
 	'spinepaste'	=> undef,
+	'folds'			=> undef,
+	'angles'		=> undef,
 );
 
+sub to_string {
+	my ( $self ) = @_;
+	return sprintf('%s %dx%d=%d pages min:%d max:%d impo', @$self{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'} );
+} # end sub to_string
 
 sub find {
 	my %params = @_;
@@ -96,76 +120,25 @@ sub find {
 
 		$sql .= " OR $params{'or'}" if $params{'or'};
 		$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-		my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 		if ( ! $data ) {
-			$openprint::log->error( "Error loading Fold ($sql) (@values) :" . $openprint::dbh->errstr );
+			$log->error( "Error loading Fold ($sql) (@values) :" . $dbh->errstr );
 		} elsif ( $debug ) {
-			$openprint::log->debug( $sql . join(',',@values) . ' Number of results: ' . @$data );
+			$log->debug( $sql . join(',',@values) . ' Number of results: ' . @$data );
 		} # end if
 		
 		return map { new openprint::Fold( $_->{id}, $_ ) } @$data;
 	} # end if
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Folds WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	my %sql;
-    foreach my $k ( keys %fields ) {
-		if ( $param and exists $$param{$k} ) {
-			$$self{$k} = $$param{$k};
-		} # end if
-
-        my @transforms = @{$transforms{$k}} if $transforms{$k};
-        foreach my $transform ( @transforms ) {
-            eval '$$self{$k} =~ ' . $transform;
-        } # end foreach
-
-        if ( ( ( ! defined $$self{$k} ) or ( $$self{$k} eq '' ) ) and exists $defaults{$k} ) {
-            $openprint::log->debug("Setting default for $k $defaults{$k}");
-            $sql{$fields{$k}} = $defaults{$k};
-        } else {
-            $sql{$fields{$k}} = $$self{$k};
-        } # end if
-    } # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-
-	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('Fold_id_seq')} );
-		$sql{id} = $$self{id};
-
-		if ( ( my $error = sql::insert( undef, undef, 'Folds', \%sql ) ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} else {
-		if ( ( my $error = sql::update( undef, undef, 'Folds', ['id=?',$$self{id}], \%sql ) ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
-
 sub delete {
 	my ( $self ) = @_;
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, q{DELETE FROM Fold_Specifications WHERE fold_id=?}, $$self{id} );
 	if ( ! sql::execute( undef, undef, q{DELETE FROM Folds WHERE id=?}, $$self{id} ) ) {
 		delete $openprint::Object::cache{ref $self}{$$self{id}};
 	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 } # end sub delete
 
 sub copy {
@@ -180,6 +153,7 @@ sub Equipment {
 	my $self = shift;
 	return new openprint::Equipment( $$self{equipment_id} );
 } # end sub Equipment
+
 sub Specifications {
 	my $self = shift;
 	if ( ! $$self{'Specifications'} ) {
@@ -200,7 +174,7 @@ sub Specification {
 	} # end if
 
 	if ( $$self{'Specifications'}[0]{weight_units} eq 'lbs' )  {
-$openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $range ) ) if $debug;
+$log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $range ) ) if $debug;
 		$range = openprint::Paper::gsm_to_weight( $range );
 	} # end if
 
@@ -210,8 +184,8 @@ $openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_we
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}[$i];
-#$openprint::log->debug("Examining: (" . $Spec->min() .     ') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
-		return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max} == $range );
+$log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . "(" . $Spec->min_weight() .     ') (' . $Spec->max_weight() . $Spec->weight_units(). ') (' . $Spec->runspeed() .') ('.$Spec->interpolate() ) if $debug;
+		return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max_weight} == $range );
 
 		return $Spec if (
 				(! $$Spec{interpolate})
@@ -221,17 +195,17 @@ $openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_we
 
 # first step, find one less than the min
 		last if 1*$$Spec{min_weight} > $range;
-#last if ( $Spec->max() eq '' and ! $Spec->interpolate() );
+		last if ( $Spec->max_weight() eq '' and ! $Spec->interpolate() );
 	} # end if
 
    if ( $i and $i <= @{$$self{'Specifications'}} ) {
         $i -= 1;
         # back up
 		$x = $$self{'Specifications'}[$i];
-#$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+$log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight() . ' : ' . $x->runspeed() ) if $debug;
 		return if ( (1*$$x{max_weight}) and ( $$x{max_weight} < $range ) and ! $$x{interpolate} );
    } else {
-	   $openprint::log->debug("Couldn't find monimum for $range ") if $debug;
+	   $log->debug("Couldn't find monimum for $range ") if $debug;
 	   return;
    } # end if
 
@@ -245,11 +219,20 @@ $openprint::log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_we
    if ( $i and $i < @{$$self{'Specifications'}} ) {
 # back up
 	   $y = $$self{'Specifications'}[$i];
-#$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+$log->debug("Found spec max " . $y->min_weight() . ' ' . $y->max_weight() . ' : ' . $y->runspeed() ) if $debug;
    } else {
-#$openprint::log->debug("Couldn't find maximum") if $debug;
+$log->debug("Couldn't find maximum") if $debug;
 	   return;
    } # end if
+
+    if ( $$x{id} == $$y{id} ) {
+        return $x->runspeed();
+    } elsif ( $$x{interpolate} ) {
+        my $S = $x->copy();
+        $$S{min_weight} = $$S{max_weight} = $range;
+        $$S{runspeed} = $$x{runspeed} + ($range - $$x{min_weight})*($$y{runspeed}-$$x{runspeed})/($$y{min_weight}-$$x{min_weight});
+        return $S;
+    } # end if
 
 } # end sub Specification
 

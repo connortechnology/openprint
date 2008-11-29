@@ -19,7 +19,9 @@
 		<label>Reference:</label>
 		<textarea name="Reference<?ProjectIndex?>" rows="10"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
 	</p>
+<? if ( @{$$variable{'Quantities'}} > 1 ) ?>
 <!--#include virtual="_quantity_select.html"-->
+<? endif ( @{$$variable{'Quantities'}} > 1 ) ?>
 <? if ( ! $$variable{'Project'}->requested_date() ) ?>
 <!--#include virtual="_required_by.html"-->
 <? endif ( ! $$variable{'Project'}->requested_date() ) ?>

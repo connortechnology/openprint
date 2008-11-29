@@ -12,7 +12,7 @@
 			<label>Service Type:</label>
 			<select name="ServiceType_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">Select a Service Type</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType::find('category'=>$openprint::param{'SearchCategory'}, 'order'=>'lower(name)') ], $openprint::param{'ServiceType_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType::find('category'=>$openprint::param{'SearchCategory'}, 'order'=>'lower(name)') ], $$variable{'ServiceType'}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons"> 
@@ -22,6 +22,7 @@
 				ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
 				ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 				ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+				ssi::writeButton( $log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';fmChange=3;fmCheck(f1);",'','Copy'),
 				ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
 			); ) ?>
 		</p>
@@ -29,16 +30,26 @@
 	<fieldset>
 		<p> 
 			<label>Name:</label>
-			<input type="text" name="name" value="<? echo ( $$variable{'ServiceType'}->name() ) ?>" /> 
+			<input type="text" name="name" value="<? echo ( $$variable{'ServiceType'}->name() ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}" />
 		</p>
 		<p> 
 			<label>Description:</label>
-			<input type="text" name="description" value="<? echo ( $$variable{'ServiceType'}->description() ) ?>" /> 
+			<input type="text" id="description" name="description" value="<? echo ( $$variable{'ServiceType'}->description() ) ?>" /> 
 		</p>
 		<p> 
 			<label>Category:</label>
 			<input type="text" name="category" value="<? echo ( $$variable{'ServiceType'}->category() ) ?>" /> 
 		</p>
+<? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+		<p> 
+			<label>Type:</label>
+			<input type="text" name="type" value="<? echo ( $$variable{'ServiceType'}->type() ) ?>" /> 
+		</p>
+		<p> 
+			<label>URL:</label>
+			<input type="text" name="url" value="<? echo ( $$variable{'ServiceType'}->url() ) ?>" /> 
+		</p>
+<? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p>
 			<label>Visible in Project Create:</label>
 			<input type="radio" id="create_visible1" name="create_visible" value="1"  <? echo ( 'checked="checked"' if $$variable{'ServiceType'}->create_visible(); ) ?> />

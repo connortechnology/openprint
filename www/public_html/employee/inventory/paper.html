@@ -1,7 +1,7 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <? eval ( 
-	foreach my $key ( 'Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code', 'width','height','OrLarger' ) {
+	foreach my $key ( 'Group','Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code', 'width','height','OrLarger' ) {
 		$openprint::session{'/employee/inventory/paper.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
 	} # end foreach
 	$openprint::session{'/employee/inventory/paper.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/employee/inventory/paper.html?Owner'};
@@ -29,6 +29,14 @@ Please select a Paper to view/edit.<br>
 		</p>
 	</fieldset>
 	<fieldset class="filters"><legend>Or</legend>
+			<label>Group:</label>
+			<select id="Group" name="Group" size="1" onchange="filter_onChange(this,'','Group');">
+				<option value="">select</option>
+			<? echo (
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup::find('order'=>'lower(name)') ], $openprint::session{'/employee/inventory/paper.html?Group'} );
+					) ?>
+			</select>
+		</p>
 		<p>
 			<label>Manufacturer:</label>
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">

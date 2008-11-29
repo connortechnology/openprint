@@ -26,32 +26,32 @@ Please enter the specifications for your proofs. In most cases these are automat
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
 					$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
 					$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
-					$$variable{'Reference'} .= openprint::service::summary( $$variable{'Project'}->id(), @$variable{'SignatureServiceIndex','QTYIndex'} );
-					$$variable{'Reference'} = ssi::htmlize( $$variable{'Reference'} );
+					$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), @$variable{'SignatureServiceIndex','QTYIndex'} );
+					$$variable{'Reference'} = $$variable{'Reference'};
 				) ?>
 			<table>
-				<tr><td valign="top" rowspan="<? echo ( int(@{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}}/6)+2) ?>"><?Reference?></td>
+				<tr><td valign="top" rowspan="<? echo ( int(@{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}}/6)+2) ?>"><br/><?Reference?></td>
 <th width="40">Qty</th>
 <th width="170">Dimensions</th>
-<th>Type</th>
-<th width="110">Unit Price</th>
+<th width="105" align="left">Type</th>
+<th width="105">Unit Price (<?CurrencySymbol?>)</th>
 <th width="105">&nbsp;</th>
 </tr>
 	<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}},0,6; ) ?>
 				<tr>
-					<td align="center"><input type="text" name="txtProofQuantity-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofQuantity?>" size="3" onkeyup="calc('f1')"  /></td>
+					<td align="center"><input type="text" name="txtProofQuantity-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofQuantity?>" size="3" onkeyup="calc(this.form.name)"  /></td>
 					<td align="center">
-						<input type="text" name="txtProofWidth-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofWidth?>" size="6" onkeyup="calc('f1')"	 />
+						<input type="text" name="txtProofWidth-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofWidth?>" size="6" onkeyup="calc(this.form.name)"	 />
 						x 
-						<input type="text" name="txtProofHeight-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofHeight?>" size="6" onkeyup="calc('f1')"  /><br/>
+						<input type="text" name="txtProofHeight-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofHeight?>" size="6" onkeyup="calc(this.form.name)"  /><br/>
 					</td>
-					<td><select name="ddmProofType-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" onchange="calc('f1');">
+					<td><select name="ddmProofType-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" onchange="calc(this.form.name);">
 					<option value="">select one</option>
 					<?ddmProofType?>
 					</select></td>
-					<td><?CurrencySymbol?><input type="text" name="txtProofUnitPrice-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+					<td><input type="text" name="txtProofUnitPrice-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
 					<td>
-					<input type="checkbox" id="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" name="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverride-$$variable{'SignatureIndex'}-$$variable{'ProofIndex'}-$$variable{'QTYIndex'}"} ) ?> onchange="if ( ! this.checked ) calc('f1');" />
+					<input type="checkbox" id="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" name="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverride-$$variable{'SignatureIndex'}-$$variable{'ProofIndex'}-$$variable{'QTYIndex'}"} ) ?> onchange="if ( ! this.checked ) calc(this.form.name);" />
 					<label for="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>">Override</label>
 					<input type="hidden" name="txtProofIndex-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofIndex?>"/>
 					</td>
@@ -71,7 +71,7 @@ Please enter the specifications for your proofs. In most cases these are automat
 <? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}}; ) ?>
 			<table>
 				<tr>
-					<td align="right"><b>Total Service Price:</b></td>
+					<td align="right"><b>Total Service Price (<?CurrencySymbol?>):</b></td>
 					<td width="105"><?CurrencySymbol?><input name="txtPrice<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
 					<td width="105"><? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin($openprint::session{'user_type'}, ['A','E'] ); ) ?></td>
 				</tr>

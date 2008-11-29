@@ -1,17 +1,39 @@
 <fieldset><legend>Overrides</legend>
-	Warning: Use of these overrides may result in a sub-optimal quote.
+	<p>
+		<label>Stock Format:</label>
+		<input type="radio" id="StockType<?Signature?>Auto" name="StockType<?Signature?>" value="" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq '' ); ) ?> />
+		<label class="radio" for="StockType<?Signature?>Auto">Auto</label>
+		<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ); ) ?> />
+		<label class="radio" for="StockType<?Signature?>Sheet">Sheet</label>
+		<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ); ) ?> />
+		<label class="radio" for="StockType<?Signature?>Roll">Roll</label>
+	</p>
 	<p>
 		<label>Runstyle:</label>
-		<select name="ddmRunStyle<?Signature?>" size="1" onchange="calc(this.form.name);">
+		<select name="ddmRunStyle<?Signature?>" size="1">
 			<option value="">Auto</option>
 			<? echo ( ssi::make_drop_down( $$variable{'RunStyleOptions'}, $$variable{"ddmRunStyle$$variable{Signature}"} ); ) ?>
 		</select>
 	</p>
 	<p>
 		<label>Press:</label>
-		<select name="ddmPress<?Signature?>" size="1" onchange="calc(this.form.name);">
+		<select name="ddmPress<?Signature?>" size="1">
 			<option value="">Auto</option>
 			<? echo ( ssi::make_drop_down( $$variable{'ddmPressOptions'}, $$variable{"ddmPress$$variable{Signature}"} ); ) ?>
 		</select>
 	</p>
+<? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
+<p>
+    <label>Printing type:</label>
+    <select name="PrintingType<?Signature?>" size="1">
+			<option value="">Auto</option>
+        <? echo (
+            my $html;
+
+            ssi::make_drop_down( [
+sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{"PrintingType$$variable{Signature}"} );
+        ) ?>
+    </select>
+</p>
+<? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
 </fieldset>

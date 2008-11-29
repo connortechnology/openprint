@@ -1,0 +1,199 @@
+<? eval (
+	if ( ! exists $openprint::session{'/administrator/stock/list.html?Types'} ) {
+		$openprint::session{'/administrator/stock/list.html?Types'} = join(';', 'Sheet','Roll' );
+	} # end if
+    if ( ! exists $openprint::session{'/administrator/paper/list.html?recommendations'} ) {
+        $openprint::session{'/administrator/paper/list.html?recommendations'} = join(';', 1,0 );
+    } # end if
+    $openprint::session{'/administrator/stock/list.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/administrator/stock/list.html?Owner'};
+) ?>
+<script type="text/javascript" src="/javascripts/paper.js"></script>
+<script type="text/javascript" src="/administrator/stock/stock.js"></script>
+<script type="text/javascript">
+	var popupWin;
+	function popup_window( form ) {
+		var stock_ids = $A(form.chkStock).filter(function(e){return e.checked});
+		if ( ! stock_ids.length ) {
+			alert('Please select stocks to apply changes to.');
+			return;
+		} // end if
+		if ( ! popupWin ) {
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:700} );
+			// Set up a windows observer, check ou debug window to get messages
+			myObserver = {
+	onDestroy: function(eventName, win) {
+				   if (win == popupWin) {
+					   popupWin = null;
+					   Windows.removeObserver(this);
+				   }
+			   }
+			}
+			Windows.addObserver(myObserver);
+		} // end if
+		popupWin.setHTMLContent('Loading... please wait');
+		popupWin.showCenter();
+		var url = '/administrator/stock/_popup.html?' + stock_ids.map(function(e){return 'stock_ids=' + e.value}).join('&');
+
+		popupWin.setAjaxContent(url, null , true);
+	} // end function popup_window
+
+	function calc(formName) {
+		new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {method:'get',
+				onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
+				onSuccess:function(){ TableKit.Sortable.reload('StocksTable'); },
+				parameters:Form.serialize($(formName))});
+				//evalScripts:true, 
+	}
+	function body_onLoad() {
+	}
+-->
+</script>
+<form id="f1" name="f1" method="post" action="list.html">
+	<fieldset class="filters"><legend>Search Information</legend>
+		<div class="leftColumn">
+		<p>
+			<label>Owner:</label>
+			<select id="Owner" name="Owner" size="1" onchange="calc(this.form.name);">
+				<option value=""> All </option>
+				<? echo ( openprint::Company::get_dropdown( $openprint::session{'/administrator/stock/list.html?Owner'} ); ) ?>
+			</select>
+		</p>
+		<p>
+			<label>Group:</label>
+			<select id="Group" name="Group" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>
+				<? echo (
+                    return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup::find('order'=>'lower(name)') ], $openprint::session{'/administrator/stock/list.html?Group'} );
+					) ?>
+			</select>
+		</p>
+		<p>
+			<label>Manufacturer:</label>
+			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>
+				<? echo (
+                    return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $openprint::session{'/administrator/stock/list.html?Manufacturer'} );
+					) ?>
+			</select>
+		</p>
+		<p>
+			<label>Name:</label>
+			<select name="Name" onchange="calc(this.form.name);">
+				<option value="">select</option>
+				<? echo (
+                    return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $openprint::session{'/administrator/stock/list.html?Name'} );
+					) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Finish:</label>
+			<select name="Finish" size="1" onchange="calc(this.form.name);">
+				<option value=""> select one </option>
+			<? echo (
+					my %finishes;
+					foreach my $Stock ( openprint::Paper::find( 
+							'name_id'=>$openprint::session{'/administrator/stock/list.html?Name'},
+							'manufacturer_id'=>$openprint::session{'/administrator/stock/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/stock/list.html?Group'}
+							) ) {
+						$finishes{$Stock->finish()} = $Stock->finish_id();
+					} # end foreach
+                    return ssi::make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], $openprint::session{'/administrator/stock/list.html?Finish'} );
+                ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Colour:</label>
+			<select name="Colour" size="1" onchange="calc(this.form.name);">
+				<option value=""> select one </option>
+			<? echo (
+					my %colours;
+					foreach my $Stock ( openprint::Paper::find( 'name_id'=>$openprint::session{'/administrator/stock/list.html?Name'},
+							'finish_id'=>$openprint::session{'/administrator/stock/list.html?Finish'},
+							'manufacturer_id'=>$openprint::session{'/administrator/stock/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/stock/list.html?Group'},
+							) ) {
+						$colours{$Stock->colour()} = $Stock->colour_id();
+					} # end foreach
+                    return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $openprint::session{'/administrator/stock/list.html?Colour'} );
+                ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Weight:</label>
+			<select name="Weight" size="1" onchange="calc(this.form.name);">
+				<option value=""> select one </option>
+			<? echo (
+					my %colours;
+					foreach my $Stock ( openprint::Paper::find( 'name_id'=>$openprint::session{'/administrator/stock/list.html?Name'},
+							'finish_id'=>$openprint::session{'/administrator/stock/list.html?Finish'},
+							'colour_id'=>$openprint::session{'/administrator/stock/list.html?Colour'},
+							'manufacturer_id'=>$openprint::session{'/administrator/stock/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/stock/list.html?Group'},
+							) ) {
+						$colours{$Stock->weight()} = $Stock->weight_id();
+					} # end foreach
+                    return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $openprint::session{'/administrator/stock/list.html?Colour'} );
+                ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Material:</label>
+			<select name="material_id" size="1" onchange="calc(this.form.name);">
+				<option value=""> select one </option>
+			<? echo (
+					my %materials;
+					foreach my $Stock ( openprint::Paper::find( 'name_id'=>$openprint::session{'/administrator/stock/list.html?Name'},
+							'finish_id'=>$openprint::session{'/administrator/stock/list.html?Finish'},
+							'colour_id'=>$openprint::session{'/administrator/stock/list.html?Colour'},
+							'manufacturer_id'=>$openprint::session{'/administrator/stock/list.html?Manufacturer'},
+							'group_id'=>$openprint::session{'/administrator/stock/list.html?Group'},
+							'weight_id'=>$openprint::session{'/administrator/stock/list.html?Weight'},
+							) ) {
+						$materials{$Stock->material()} = $Stock->material_id();
+					} # end foreach
+                    return ssi::make_drop_down( [map { $materials{$_}, $_ } sort keys %materials ], $openprint::session{'/administrator/stock/list.html?material_id'} );
+                ) ?>
+			</select>
+		</p>
+		</div>
+		<div class="rightColumn">
+		<p> 
+			<label>Type:</label>
+			<input type="checkbox" id="TypesSheet" name="Types" value="Sheet" <? echo ( 'checked="checked"' if sets::isin( 'Sheet', split(';', $openprint::session{'/administrator/stock/list.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
+			<label class="radio" for="TypesSheet">Sheet</label>
+			<input type="checkbox" id="TypesRoll" name="Types" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', split(';', $openprint::session{'/administrator/stock/list.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
+			<label class="radio" for="TypesRoll">Roll</label>
+		</p>
+        <p>
+            <label>Recommendations:</label>
+            <input type="checkbox" id="recommendations1" name="recommendations" value="1" <? echo ( ssi::checked( sets::isin( '1', split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
+            <label class="radio" for="recommendations1">Yes</label>
+            <input type="checkbox" id="recommendations0" name="recommendations" value="0" <? echo ( ssi::checked( sets::isin( '0', split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
+            <label class="radio" for="recommendations0">No</label>
+        </p>
+		<p>
+            <label>FSC Code:</label>
+            <input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $openprint::session{'/administrator/stock/list.html?fsc_code'} ) ?>" size="13" style="width: auto;" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
+        </p>
+		<p>
+            <label>Inventory Code:</label>
+            <input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $openprint::session{'/administrator/stock/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
+        </p>
+		</div><br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join('',
+ssi::writeButton( $log, $dbh, 'applychanges1', 'applychanges.gif', "popup_window(f1);", '', 'Make Changes' ),
+				ssi::writeButton($log, $dbh, 'New1','new.gif',"",'stock.html','Add A New Stock'),
+				ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete Checked Stocks'),
+				#ssi::writeButton($log, $dbh, 'Save1','blah.gif',"show_div('StockRecommendations', event );",'','Set Stock Recommendations'),
+				ssi::writeButton( $log, $dbh, "Copy1", 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<br/>
+	<div id="Stocks"><!--#include virtual="_stocks.html"--></div>
+	<input type="hidden" name="btnFunction"/>
+</form>

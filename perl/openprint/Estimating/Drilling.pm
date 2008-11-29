@@ -26,6 +26,7 @@ require openprint::service;
 require sql;
 
 my @variables = (
+		'Markup1', 'Markup2', 'Markup3',
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtHoleQty',
@@ -87,6 +88,8 @@ sub calc {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		next if ! $qty;
+		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		my $bestPrice = 0;
 		my $bestEquipment = '';
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty):<br/>";
@@ -125,23 +128,26 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= " Too thick.\n";
 				next;
 			} # end if
+			if ( ! $Equipment->specification('Number of Drills') ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= " has no drills!\n";
+				next;
+			} # end if
 
-			my $minPrice = openprint::service::get_price( $log, $dbh, $variable, 'DrillingChargeMinimum', undef, $Equipment );
+			my $minPrice = openprint::service::get_price( 'DrillingChargeMinimum', undef, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum Charge: $%.2f<br/>', $minPrice );
 
 			my $price = 0;
 
-			my $makeReady = openprint::service::get_price( $log, $dbh, $variable, 'DrillingMakeReady', $$specs{'txtHoleQty'}, $Equipment );
+			my $makeReady = openprint::service::get_price( 'DrillingMakeReady', $$specs{'txtHoleQty'}, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= "MakeReadyPrice: $makeReady<br/>";
-			my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Drilling', $qty, $Equipment);
+			my %servicePrice = openprint::service::get_price_object( 'Drilling', $qty, $Equipment);
 			if ( ! %servicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No Service Price found for this quantity.<br/>";
 				next;
 			} # end if
 			if ( sets::isin( $servicePrice{'units'}, 'Per M', 'Per 1000' ) ) {
-				$qty *= $$printing_specs{'txtTotalSpreadQuantity'}*2 if $$printing_specs{'txtTotalSpreadQuantity'};
 				my $runs = ceil( $$specs{'txtHoleQty'} / $Equipment->specification('Number of Drills'));
-				%servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Drilling', $runs * $qty, $Equipment);
+				%servicePrice = openprint::service::get_price_object( 'Drilling', $runs * $qty, $Equipment);
 
 				$servicePrice{'Total'} = $runs * $qty * ($servicePrice{Price}/1000);
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f %s = $%.2f<br/>',$qty, $servicePrice{'Price'}/1000, @servicePrice{'units','Total'} );
@@ -179,8 +185,12 @@ sub calc {
 
 		my $unitPrice = 0;
 		$unitPrice = $bestPrice / $qty;
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
 		$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
 
 	} # end foreach qty_index
@@ -199,6 +209,11 @@ sub display {
 }  # end sub display
 
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	if ( $qty_index ) {
+	} else {
+		return $$specs{'txtHoleQty'} . ' ' . $$specs{'txtHoleSize'} . '&quot; holes';
+	} # end if
 	return '';
 } # end sub summary
 

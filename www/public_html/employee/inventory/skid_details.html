@@ -274,9 +274,9 @@ The following errors occurred:<br/>
 			<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'saveLeft', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", '', 'Save' ); ) ?>
 			</p>
-			<? endif ( ! $$variable{'Skid'}->id() ) ?>
-
+			<? else ( ! $$variable{'Skid'}->id() ) ?>
 			<!--#include virtual="/employee/inventory/_skid_contents.html"-->
+			<? endif ( ! $$variable{'Skid'}->id() ) ?>
 		</div><!-- column -->
 		<div class="column">
 			<fieldset><legend onclick="toggleContent( 'AddPaper', '/employee/inventory/_add_paper_show.html', null, '/employee/inventory/_add_paper_hide.html' );">Add Paper - click to hide/show</legend>
@@ -308,7 +308,7 @@ The following errors occurred:<br/>
 <fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<?skid_id?>) );">Allocations - click to hide/show</legend>
 <div id="Allocations" style="display: none;"></div>
 </fieldset>
-<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', new Array('skid_id',<?skid_id?>) );">Inventory Log - click to hide/show</legend>
+<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id:<?skid_id?>} );">Inventory Log - click to hide/show</legend>
 <div id="Log"><!--#include virtual="_skid_log.html"--></div>
 </fieldset>
 <fieldset><legend onclick="toggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', new Array('skid_id',<?skid_id?>) );">Verification Log - click to hide/show</legend>

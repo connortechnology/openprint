@@ -108,13 +108,6 @@ The following errors occurred:<br/>
 						) ?>
 				</select>
 			</p>
-			<p>
-				<label>Monitor:</label>
-				<input type="radio" id="monitor1" name="monitor" value="1" <? echo ( ssi::checked( $$variable{'RFIDScanner'}->monitor() ) ) ?> />
-				<label class="radio" for="monitor1">Yes</label>
-				<input type="radio" id="monitor0" name="monitor" value="0" <? echo ( ssi::checked( ! $$variable{'RFIDScanner'}->monitor() ) ) ?> />
-				<label class="radio" for="monitor0">No</label>
-			</p>
 			<p class="buttons">
 				<? echo ( 
 						my $html;

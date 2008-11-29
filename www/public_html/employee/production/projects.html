@@ -1,6 +1,7 @@
 <script type="text/javascript">
 	function load_projects( form ) {
-		LoadContent('ProjectList','/employee/production/_project_list.html', Serialize( form ) );
+		$('ProjectList').innerHTML = 'Please wait...';
+		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
 </script>
 

@@ -7,7 +7,7 @@
 	} else {
 		if ( %openprint::param ) {
 			foreach my $key ( 'QuotedFor', 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay' ) {
-				$openprint::session{'/main/quote/history.html?'.$key} = $openprint::param{$key};
+				$openprint::session{'/main/quote/history.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
 			} # end foreach
 		} # end if
 		$openprint::session{'/main/quote/history.html?lastupdated'} = time;
@@ -89,7 +89,7 @@
 		) ?>
 		<tr<?rowclass?>> 
 			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
-			<td align="left"><? echo ( ssi::htmlize($$variable{'Quote'}->for_name()); ) ?></td>
+			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? hecho ( $$variable{'Quote'}->for_name(); ) ?></a></td>
 			<td align="right"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
 			<td align="right"><? echo ( sprintf( '%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Quote'}->total1()*$$variable{conversion_rate} ); ) ?></td>
 			<td align="right"><? echo ( sprintf( '%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Quote'}->total2()*$$variable{conversion_rate} ); ) ?></td>
@@ -100,6 +100,7 @@
 		<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
 	</table>
 	<div class="unprintable" style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f2.btnFunction.value='Delete';delete_confirm(f2);", '', 'Delete' ); ) ?></div>
+	<input type="hidden" name="btnFunction" />
 </form>
 	<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name(); ) ?>.</span>
 <? endif ( @{$$variable{'Quotes'}} == 0 ) ?>

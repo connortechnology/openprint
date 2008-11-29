@@ -2,7 +2,6 @@
 	<h1>QUOTE</h1>
 	<h2>View Quote <? echo ( $$variable{'Quote'}->id(); ) ?></h2>
 </div>
-<link href="/css/quote.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
 function delete_confirm(form) {
 	if ( confirm("Are you sure you wish to delete this quote from history?\nClicking OK will take you back to the quote history page.") ) {
@@ -15,13 +14,25 @@ To save, process a new quote or process an order from this quotation, please cli
 <br/>
 </span>
 <div style="float: right;">
+	<form name="f1" method="post" action="/main/quote/quote_history.html">
+		<input type="hidden" name="btnFunction" value="Delete Quote"/>
+		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id(); ) ?>"/>
 	<? echo ( my $html = '';
 			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?quote_id=".$$variable{'Quote'}->id()."', 800 );", '', 'View Log' );
 			} # end if
+			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'deleteFromHist.gif', "f1.action='/main/quote/history.html';delete_confirm(f1);", '', 'Delete' );
+			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy' );
+				$html .= ssi::writeButton( $log, $dbh, 'Resend', 'reSendQuote.gif', "f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", '', 'Resend' );
+				$html .= ssi::writeButton( $log, $dbh, 'Order', 'processOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Order' );
+			} else {
+				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' );
+			} # end if
 			return $html;
 		) ?>
+	</form>
 </div>
 <b>Attention:</b> <br/>
 Projects listed in red have changed price from the time this quote was originally generated.<br/>
@@ -39,28 +50,29 @@ Projects listed in red have changed price from the time this quote was originall
 		<th width="90" align="right">Std.Price</th>
 		<th width="90" align="right">Price</th>
 	</tr>
-	<? while ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+	<? eval ( @{$$variable{'Projects'}} = $$variable{'Quote'}->Quoted_Projects() ) ?>
+	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 	<tr<?rowclass?>> 
-		<td><font color="<?colour?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? hecho ( new openprint::Project( $$variable{'project_index'} )->reference() ) ?></a></font></td>
+		<td><font color="<?colour?>"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->project_id() ) ?>"><? hecho ( $$variable{'Project'}->Project()->reference() ) ?></a></font></td>
 		<td colspan="5">
 			<table>
-				<? while ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+				<? while ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'Project'}->project_id()}},0,6; ) ?>
 				<? if ( $$variable{'qty'} ) ?>
 				<tr> 
 					<td width="130" align="right"><font color="<?colour?>">
 					<? echo (
-						my $Project = new openprint::Project( $$variable{'project_index'} );
-						my %services = $Project->get_services();
+						my $Project = $$variable{'Project'}->Project();
+						my $services = $Project->services();
 						my $weight;
 
-						if ( $services{'BulkSkids'} ) {
-							my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
+						if ( $$services{'BulkSkids'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
 							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
-						} elsif ( $services{'PlainCartons'} ) {
-							my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
+						} elsif ( $$services{'PlainCartons'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
 							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
 						} else {
-							$weight = openprint::print::get_finished_weight( $log, $dbh, $Project->id() ) * $$variable{qty};
+							$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{qty};
 						} # end if
 						my $g = Math::Units::convert( $weight, 'lbs','g');
 						if ( $g > 1000 ) {
@@ -75,12 +87,12 @@ Projects listed in red have changed price from the time this quote was originall
 					<td width="90" align="right"><font color="<?colour?>"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?newprice?></font></td>
 				</tr>
 				<? endif ( $$variable{'qty'} ) ?>
-				<? endwhile ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+				<? endwhile ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'Project'}->project_id()}},0,6; ) ?>
 				</table>
 			</td>
 		</tr>
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 </table>
 <? else ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <table class="List">
@@ -111,7 +123,7 @@ Projects listed in red have changed price from the time this quote was originall
 							my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
 							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
 						} elsif ( ! $weight ) {
-							$weight = openprint::print::get_finished_weight( $log, $dbh, $Project->id() ) * $$variable{qty};
+							$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{qty};
 						} # end if
 						my $g = Math::Units::convert( $weight, 'lbs','g');
 							if ( $g > 1000 ) {
@@ -152,26 +164,7 @@ Projects listed in red have changed price from the time this quote was originall
 	</tr>
 	<tr>
 		<td colspan="3" align="left"><br/>
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/quote_disclaimer.html"-->
+		<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
 		</td>
 	</tr>
 </table>
-<br/>
-<div style="float: right;">
-	<form name="f1" method="post" action="/main/quote/quote_history.html">
-		<input type="hidden" name="btnFunction" value="Delete Quote"/>
-		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id(); ) ?>"/>
-		<? echo ( 
-			my $html;
-			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'deleteFromHist.gif', "f1.action='/main/quote/history.html';delete_confirm(f1);", '', 'Delete' );
-			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy' );
-				$html .= ssi::writeButton( $log, $dbh, 'Resend', 'reSendQuote.gif', "f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", '', 'Resend' );
-				$html .= ssi::writeButton( $log, $dbh, 'Order', 'processOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Order' );
-			} else {
-				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' );
-			} # end if
-			return $html;
-		) ?>
-	</form>
-</div>

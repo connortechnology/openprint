@@ -1,6 +1,7 @@
 <? eval (
+	require openprint::StockPurpose;
    if ( $param{StartYear} ) {
-		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','withrfid','withoutrfid','location_id','verification_code' ) {
+		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','purpose_id','withrfid','withoutrfid','location_id','verification_code' ) {
 			if ( ref $param{$key} eq 'ARRAY' ) {
 				$session{'/employee/inventory/skids.html?'.$key} = join(';', @{$param{$key}} );
 			} else {
@@ -49,6 +50,7 @@
 			'/employee/inventory/skids.html?UpdatedEndMonth',
 			'/employee/inventory/skids.html?UpdatedEndDay'} ) : undef,
 		'fsc_code'				=>	$session{'/employee/inventory/skids.html?fsc_code'},
+		'purpose_id'			=>	$session{'/employee/inventory/skids.html?purpose_id'},
 		'order'		=>	'id',
 		);
 	} # end if
@@ -118,12 +120,13 @@
 				$html .= "<tr$rowclass>";
 				
 				$html .= '<td>&nbsp;</td><td colspan="5">';
-				foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-					my $Paper = new openprint::Paper( $paper_id );
-					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s - %d %s</a><br/>',
+				foreach my $c ( $Skid->contents() ) {
+					my $Paper = new openprint::Paper( $c->paper_id() );
+					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s %s - %d %s</a><br/>',
 					$$Skid{'id'},
 					$Paper->to_string(),
-					$$Skid{'Paper'}{$paper_id},
+					new openprint::StockPurpose( $c->purpose_id() )->name(),
+					$c->quantity(),
 					$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
 					);
 				} # end foreach

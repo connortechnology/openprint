@@ -15,6 +15,9 @@ use vars qw( $log $dbh );
 $log = new logger( 'warn' );
 
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
+$src_db = 'point-one' if ! $src_db;
+$dst_db = 'point-one' if ! $dst_db;
+$src_host = 'www2.point-one.com' if ! $src_host;
 `/etc/init.d/apache2 reload`;
 if ( $year ) {
 	( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) if ! $month;
@@ -52,4 +55,11 @@ if ( $year ) {
 `chmod +x /etc/apache2/lib/perl/tools/db_update.pl`;
 print "upgrading structures 2...";
 `/etc/apache2/lib/perl/tools/db_update.pl $dst_db point-one point-one` or $log->error($!);
+print "upgrading signatures...";
+`/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db point-one point-one` or $log->error($!);
+print "done\n";
+print 'Turning off backups...';
+$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
+my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
+sql::insert( undef, undef, 'database_info', 'version', $version, 'backup', 'false' );
 print "done\n";

@@ -1,5 +1,4 @@
-<style type="text/css">
-	<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/quote.css' ); ) ?></style>
+<style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?></style>
 <!--#include virtual="/includes/quote_header.html"-->
 <!--#include virtual="/includes/quote_prepared_by.html"-->
 <!--#include virtual="/includes/quote_prepared_for.html"-->
@@ -44,7 +43,7 @@ $weight = $$specs{'totalWeight'.$$variable{qty_index}};
 my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
 $weight = $$specs{'totalWeight'.$$variable{qty_index}};
 } else {
-$weight = openprint::print::get_finished_weight( $log, $dbh, $Project->id() ) * $$variable{'qty'};
+$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{'qty'};
 } # end if
 my $g = Math::Units::convert( $weight, 'lbs','g');
 if ( $g > 1000 ) {

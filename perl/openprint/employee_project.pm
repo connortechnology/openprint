@@ -41,9 +41,9 @@ sub view {
 			$info{'Project'} = $Project;
 			$info{'Docket'} = $Project->docket();
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rush_job_notification.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 			$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-			$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) );
+			$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my $From = new openprint::User( $openprint::session{'user_id'} );
 			my @To = openprint::User::find('usergroup'=>'Production');
@@ -135,6 +135,15 @@ sub view {
 							$$variable{'error'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 						} # end if
 						$openprint::param{'rdbComplete'} = 'No';
+					} elsif ( 0 < Date::Calc::Delta_Days( @openprint::param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
+						my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+						if ( @ServiceTypes ) {
+							$$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
+							$$variable{'ErrorMessage'} = 'You cannot select a date in the past. Please try again.';
+						} else {
+							$$variable{'error'} = 'You cannot select a duedate in the past. Please try again.';
+						} # end if
+						$openprint::param{'rdbComplete'} = 'No';
 					} else {
 						my $duedate = join('-', @openprint::param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
 						$Project->due_date( $duedate );
@@ -182,6 +191,15 @@ sub view {
 								$$variable{'ErrorMessage'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 							} else {
 								$$variable{'error'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
+							} # end if
+							$openprint::param{'rdbApproved'} = 'N';
+						} elsif ( 0 < Date::Calc::Delta_Days( @openprint::param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
+							my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+							if ( @ServiceTypes ) {
+								$$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
+								$$variable{'ErrorMessage'} = 'You cannot select a date in the past. Please try again.';
+							} else {
+								$$variable{'error'} = 'You cannot select a duedate in the past. Please try again.';
 							} # end if
 							$openprint::param{'rdbApproved'} = 'N';
 						} else {
@@ -436,10 +454,10 @@ sub send_additional_charges_notifications {
 	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
 	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
 
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 
 #$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_csr_notification.html\"-->";
-#$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
+#$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 #my @body = ('', $_, 'text/html', 'quoted-printable');
 #my %mail = (
 #SMTP    => $openprint::config{'Mail Server'},
@@ -453,7 +471,7 @@ sub send_additional_charges_notifications {
 #misc::send_email_with_attachment( $log, \%mail, @body );
 
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $openprint::config{'Mail Server'},
@@ -568,10 +586,10 @@ sub send_proofs_complete_email {
 	$info{'CompletionDate'} = Date::Format::time2str( $openprint::config{'DateTimeFormat'}, time );
 
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_complete.html' );
-	$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+	$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) );
+	$_ = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $openprint::config{'Mail Server'},
@@ -587,7 +605,7 @@ sub send_proofs_complete_email {
 #my $sales_person_email = sprintf( "%s %s <%s>", sql::execute( $log, $dbh, $_ ) );
 #if ( $sales_person_email ne '  <>' ) {
 #$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_complete-sales_rep.html\"-->";
-#$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
+#$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 #my @body = ('', $_, 'text/html', 'quoted-printable');
 #my %mail = (
 #SMTP    => $openprint::config{'Mail Server'},
@@ -626,9 +644,9 @@ sub send_proofs_approved_email {
 	my $sales_person_email = sprintf( "%s %s <%s>", $CSR->firstname(), $CSR->lastname(), $CSR->email() );
 	if ( $sales_person_email ne '  <>' ) {
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_approved-sales_rep.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+		$_ = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+		$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},
@@ -657,9 +675,9 @@ sub send_duedate_change_notification {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() ) {
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},

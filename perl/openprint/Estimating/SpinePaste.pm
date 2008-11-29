@@ -21,14 +21,16 @@ require openprint::service;
 require sql;
 
 my @variables = (
-'chkOverrideCalliper',
-'txtCalliper',
-'Trimming','Gluing',
+		'chkOverrideCalliper',
+		'txtCalliper',
+		'Trimming','Gluing',
         'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
         'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
+		'Runspeed1', 'Runspeed2', 'Runspeed3',
+		'OverrideRunspeed1', 'OverrideRunspeed2', 'OverrideRunspeed3',
         );
 sub variables {
     return @variables;
@@ -45,7 +47,7 @@ sub neccessary {
         return 0;
     } # end if
 
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $services{''}[0] );
 
     if ( $$printing_specs{'rdbTemplateType'} eq 'SpinePaste' ) {
         return 1;
@@ -59,7 +61,7 @@ sub signature_calc {
 
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	my @Equipment = openprint::Equipment::find('Specifications'=>{'SpinePaste Capable'=>'Y'});
+	my @Equipment = openprint::Equipment::find('Specifications'=>{'SpinePaste Capable'=>'Y'},'UseInEstimating'=>'Y');
 	my %Results;
 	if ( ! @Equipment ) {
 		$Results{'Status'} = 'uncalculated';
@@ -72,7 +74,7 @@ sub signature_calc {
 		if ( $Equipment->specification('Type') eq 'Press' ) {
 # Inline pasting
 			if ( $Equipment->id() != $I->Press()->id() ) {
-				$openprint::log->debug("Not printing on " . $Equipment->strid() . '<br/>' );
+				#$openprint::log->debug("Not printing on " . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
 			if ( $Equipment->specification('SpinePaste Maximum Imposition') and $I->imposition() > $Equipment->specification('SpinePaste Maximum Imposition') ) {
@@ -100,7 +102,7 @@ sub signature_calc {
 				next;
 			} # end if
 		} # end if
-		my %Price = calc_price( $$specs{'txtQuantity'.$qty_index}, $Equipment, $I->pages(), $I->imposition(), $$folding_results{'RunSpeed'}, $services, $specs );
+		my %Price = calc_price( $qty_index, $$specs{'txtQuantity'.$qty_index}, $Equipment, $I->pages(), $I->imposition(), $$folding_results{'RunSpeed'}, $services, $specs );
 		if ( (!defined $best{'Price'}) or ($Price{'Total'} < $best{'Price'}{'Total'}) ) {
 			$best{'Price'} = \%Price;
 			$best{'Equipment'} = $Equipment;
@@ -127,8 +129,10 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
-		$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
+
+	if ( $Project->signatures() > 1 ) {
+		$$specs{'alert'} .= 'Spine Pasting requires there to be only 1 signature.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	my @Equipment = openprint::Equipment::find('Specifications'=>{'SpinePaste Capable'=>'Y'});
@@ -146,13 +150,24 @@ sub calc {
 		return $$specs{'Status'}='calculated';
 	} # end if
 
+	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
+		$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
+	} # end if
+
+	my $folding_specs;
+	if ( $$services{'Folding'} ) {
+		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+	} # end if
+
 	my $pages = 0;
 	if ( $$services{''} ) {
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		$pages = $$printing_specs{'txtTotalPageQuantity'};
 	} # end if
 
-	foreach my $qty_index ( 1 ..3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{'txtQuantity'.$qty_index};
 		next if ! $qty;
@@ -167,41 +182,47 @@ sub calc {
 
 		my %best;
 		my $folding_results;
+		my @sigs = $Project->signatures();
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+		my $I = new openprint::Imposition;
+		$I->load( $sig_specs, $qty_index );	
 
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s<br/>', $Equipment->strid() );
 
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 # Inline pasting
-				my @sigs = $Project->signatures();
 				if ( @sigs > 1 ) {
 					$openprint::log->debug("Can only spine paste 1 signature for " . $Equipment->strid() );
 					next;
 				} # end if
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-				my $I = new openprint::Imposition;
-				$I->load( $sig_specs, $qty_index );	
 				if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Not printing on " . $Equipment->strid();
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on ' . $Equipment->strid().'<br/>';
 					next;
 				} # end if
 				if ( $Equipment->specification('SpinePaste Maximum Imposition') and $I->imposition() > $Equipment->specification('SpinePaste Maximum Imposition') ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Imposition too large " . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid();
+					$$specs{'hdnBreakdown'.$qty_index} .= "Imposition too large " . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid() . '<br/>';
 					next;
 				} # end if
 				if ( $Equipment->specification('SpinePaste Maximum Pages') and $Equipment->specification('SpinePaste Maximum Pages') and $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Too many pages for " . $Equipment->strid();
+					$$specs{'hdnBreakdown'.$qty_index} .= "Too many pages for " . $Equipment->strid() . '<br/>';
 					next;
 				} # end if
 				if ( $folding_results ) {
 					if ( $$folding_results{'Equipment'}->id() != $Equipment->id() ) {
-						$$specs{'hdnBreakdown'.$qty_index} .="Must also be folded on " . $Equipment->strid();
+						$$specs{'hdnBreakdown'.$qty_index} .="Must also be folded on " . $Equipment->strid() . '<br/>';
 						next;
 					} # end if
 				} # end if
 				$imposition = $I->imposition();
-			} # end if
-			my %Price = calc_price( $qty, $Equipment, $pages, $imposition, undef, $services, $specs );
+			} # end if is a Press
+			my $folding_runspeed = 0;
+			foreach my $fold_index ( 1 .. 4 ) {
+				$folding_runspeed = $$folding_specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"};
+				last if $folding_runspeed;
+			} # end foreach fold_index
+
+			my %Price = calc_price( $qty_index, $qty, $Equipment, $pages, $imposition, $folding_runspeed, $services, $specs );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Run Speed: %d/hr<br/>', $Price{'RunSpeed'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f<br/>', $Price{'MakeReady'}{'Price'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReadyTime: %dminutes<br/>', $Price{'MakeReadyTime'} );
@@ -219,14 +240,20 @@ sub calc {
 		} # end foreach Equipment
 
 		if ( ! %best ) {
+			$$specs{'Runspeed'.$qty_index} = '' if $$specs{'OverrideRunspeed'.$qty_index} ne 'Y';
 			$$specs{'ddmEquipment'.$qty_index} = '';
 			$$specs{"txtPrice$qty_index"} = '';
 			$$specs{"txtUnitPrice$qty_index"} = '';
 			$$specs{'Status'} = 'uncalculated';
 		} else {
+			$$specs{'Runspeed'.$qty_index} = $best{'Price'}{'RunSpeed'} if $$specs{'OverrideRunspeed'.$qty_index} ne 'Y';
 			$$specs{'ddmEquipment'.$qty_index} = $best{'Equipment'}->id();
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $best{'Price'}{'Total'} );
-			$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $best{'Price'}{'ServicePrice'}{'Total'} / $qty );
+			if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $best{'Price'}{'Total'} * (1+$$specs{"Markup$qty_index"}/100) );
+			} else {
+				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			} # end if
+			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $best{'Price'}{'ServicePrice'}{'Total'} / $qty );
 			$$specs{'Status'} = 'calculated';
 		} # end if
     } # end foreach qty_index
@@ -236,15 +263,24 @@ sub calc {
 } # end sub calc
 
 sub calc_price {
-	my ( $qty, $Equipment, $pages, $imposition, $runspeed, $services, $specs ) = @_;
+	my ( $qty_index, $qty, $Equipment, $pages, $imposition, $runspeed, $services, $specs ) = @_;
 	my %Price;
 	my %MakeReady;
 	my %ServicePrice;
 
+	if ( ! ( %MakeReady = openprint::service::get_price_object( 'SpinePasteMakeReady'.$pages.'Page'.$imposition.'out', $qty, $Equipment ) ) ) {
+		if ( ! ( %MakeReady = openprint::service::get_price_object( 'SpinePasteMakeReady'.$pages.'Page', $qty, $Equipment ) ) ) {
+			%MakeReady = openprint::service::get_price_object( 'SpinePasteMakeReady', $qty, $Equipment );
+		} # end if
+	} # end if
+	$Price{'MakeReady'} = \%MakeReady;
+	
+	$Price{'MakeReadyTime'} = $Equipment->specification('SpinePaste MakeReady Time');
+
 	if ( $$specs{'Gluing'} ne 'N' ) {
-		if ( ! ( %MakeReady = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable,  'SpinePasteMakeReady'.$pages.'Page'.$imposition.'out', $qty, $Equipment ) ) ) {
-			if ( ! ( %MakeReady = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable,'SpinePasteMakeReady'.$pages.'Page', $qty, $Equipment ) ) ) {
-				%MakeReady = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable,'SpinePasteMakeReady', $qty, $Equipment );
+		if ( ! ( %MakeReady = openprint::service::get_price_object( 'SpinePasteMakeReady'.$pages.'Page'.$imposition.'out', $qty, $Equipment ) ) ) {
+			if ( ! ( %MakeReady = openprint::service::get_price_object( 'SpinePasteMakeReady'.$pages.'Page', $qty, $Equipment ) ) ) {
+				%MakeReady = openprint::service::get_price_object( 'SpinePasteMakeReady', $qty, $Equipment );
 			} # end if
 		} # end if
 		$Price{'MakeReady'} = \%MakeReady;
@@ -253,11 +289,16 @@ sub calc_price {
 		$Price{'MakeReadyOvers'} = $Equipment->specification('SpinePaste MakeReady Overs');
 
 		$openprint::log->debug("Starting Runspeed $runspeed ");
-		if ( ( my $RunSpeed = $Equipment->Specification('SpinePaste RunSpeed') ) ) {
+		if ( $$specs{'OverrideRunspeed'.$qty_index} eq 'Y' ) {
+			$Price{'RunSpeed'} = $$specs{'Runspeed'.$qty_index};
+		} elsif ( ( my $RunSpeed = $Equipment->Specification('SpinePaste RunSpeed') ) ) {
 			if ( $RunSpeed->units() eq 'Percent' ) {
 				$Price{'RunSpeed'} = $runspeed * ( 1 + $RunSpeed->value()/100 );
-			} else {
+			} elsif ( $RunSpeed->value() < $runspeed ) {
+				# Can't go faster than folding
 				$Price{'RunSpeed'} = $RunSpeed->value();
+			} else {
+				$Price{'RunSpeed'} = $runspeed;
 			} # end if
 		} else {
 			$openprint::log->debug("No Runspeed set");
@@ -266,9 +307,9 @@ sub calc_price {
 			$Price{'RunSpeed'} = $MaxRunSpeed;
 		} # end if Maximum Run SPeed
 		$openprint::log->debug("Runspeed is " . $Price{'RunSpeed'});
-		if ( ! ( %ServicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePaste'.$pages.'Pages'.$imposition.'out', $qty, $Equipment ) ) ) {
-			if ( ! ( %ServicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePaste'.$pages.'Pages', $qty, $Equipment ) ) ) {
-				%ServicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePaste', $qty, $Equipment );
+		if ( ! ( %ServicePrice = openprint::service::get_price_object( 'SpinePaste'.$pages.'Pages'.$imposition.'out', $qty, $Equipment ) ) ) {
+			if ( ! ( %ServicePrice = openprint::service::get_price_object( 'SpinePaste'.$pages.'Pages', $qty, $Equipment ) ) ) {
+				%ServicePrice = openprint::service::get_price_object( 'SpinePaste', $qty, $Equipment );
 			} # end if
 		} # end if
 		if ( $ServicePrice{'units'} eq 'Per M' ) {
@@ -281,12 +322,12 @@ sub calc_price {
 	if ( $$specs{'Trimming'} ne 'N' ) {
 		#if ( $$services{'Cutting'} ) {
 			my %TrimmingMakeReady;
-			if ( %TrimmingMakeReady = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePasteTrimmingMakeReady', undef, $Equipment ) ) {
+			if ( %TrimmingMakeReady = openprint::service::get_price_object( 'SpinePasteTrimmingMakeReady', undef, $Equipment ) ) {
 				$Price{'TrimmingMakeReady'} = \%TrimmingMakeReady;
 				$Price{'Total'} += $TrimmingMakeReady{'Price'};
 			} # end if
 			my %TrimmingPrice;
-			if ( %TrimmingPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePasteTrimming', $qty, $Equipment ) ) {
+			if ( %TrimmingPrice = openprint::service::get_price_object( 'SpinePasteTrimming', $qty, $Equipment ) ) {
 				$Price{'TrimmingPrice'} = \%TrimmingPrice;
 $openprint::log->debug("Trimming price: $TrimmingPrice{'Price'} - $ServicePrice{'Price'}");
 				$TrimmingPrice{'Price'} -= $ServicePrice{'Price'};
@@ -313,6 +354,17 @@ sub summary {
 	} # end if
 	return $html;
 } # end sub summary
+
+sub display {
+    my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+
+    my @equipment = openprint::Equipment::find( 'Specifications' => {'SpinePaste Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+    foreach my $qty_index ( 1 .. 3 ) {
+        $$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
+    } # end foreach qty_index
+
+} # end sub display
+
 
 1;
 

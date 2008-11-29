@@ -1,0 +1,42 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+	<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<fieldset><legend><?ServiceTypeName?></legend>
+		<!--#include virtual="/includes/main/proj/finished_calliper.html"-->
+		<p>
+			<label>Spine Length:</label>
+				<input type="text" name="txtFinalHeight" size="9" onkeyup="calc('f1');" />
+				<input type="checkbox" name="chkOverrideFinalHeight" value="Y" onchange="if ( ! this.checked ) calc('f1');" <? echo ( 'checked' if $$variable{'chkOverrideFinalHeight'} eq 'Y' ) ?> /> Override
+		</p>
+       <p>
+            <label>Material used<br/>(in inches):</label>
+                <input type="text" name="txtMaterialLength" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/>
+				<input type="checkbox" id="chkOverrideMaterialLength" name="chkOverrideMaterialLength" value="Y" onchange="if ( ! this.checked ) calc('f1');" <? echo ( 'checked' if $$variable{'chkOverrideMaterialLength'} eq 'Y' ) ?> />
+				<label for="chkOverrideMaterialLength">Override</label>
+        </p>
+
+		<!-- The rest is done for each qty -->
+		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+			<hr/>
+			<div class="row"><b>The following results are for Quantity <?QTYIndex?> (<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>)</b></div>
+				<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<!-- End of Results -->
+		</fieldset>
+
+        <!--#include virtual="/includes/main/proj/add_to_project.html"-->
+        <input type="hidden" name="btnFunction" value="Save Service"/>
+        <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+        <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+        <input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
+        <input type="hidden" name="ContinueProject" value="Y" />
+		<div id="hdnBreakdown1" style="display: none;"></div>
+		<div id="hdnBreakdown2" style="display: none;"></div>
+		<div id="hdnBreakdown3" style="display: none;"></div>
+	</form>
+</div>

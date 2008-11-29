@@ -81,12 +81,14 @@ function AjaxToggleContent( divID, show_url, inputs, hide_url ) {
 function toggleContent( divID, page_to_display, inputs, page_to_hide ) {
 	var div = $( divID );
 	if ( div.style.display == 'none' ) {
-		add_div( divID );
-		LoadContent( divID, page_to_display, inputs );
+		div.show();
+		new Ajax.Updater(divID,page_to_display, {method:'get',parameters:inputs});
+		//LoadContent( divID, page_to_display, inputs );
 	} else {
-		remove_div( divID );
+		div.hide();
 		if ( page_to_hide )
-			LoadContent( divID, page_to_hide, inputs );
+			new Ajax.Updater(divID,page_to_hide, {method:'get',parameters:inputs});
+			//LoadContent( divID, page_to_hide, inputs );
 	} // end if
 
 } // end function toggleContent

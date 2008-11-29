@@ -1,6 +1,97 @@
+function versions_onkeyup( e ) {
+	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { method: 'get', parameters: e.form.serialize() } );
+}
 
+function filter_colours( side, signature ) {
+	// For each of the colours
+	for ( var index = 1; index < 10; index += 1 ) {
+		var type_element = $('ColourCoatingType'+side+index+signature);
+		if ( ! type_element ) continue;
+		var type = type_element.value;
+		if ( ! type ) continue;
+		// we can have many PMS's
+		if ( type == 'PMS' ) continue;
+
+		// clear my selected type out of the other dropdowns
+		for ( var j = index+1; j <= 10; j += 1 ) {
+			var t = $('ColourCoatingType'+side+j+signature);
+			if ( ! t ) continue;
+
+			var option_index = get_option_index( t, type );
+			if ( -1 != option_index ) {
+				t.options[option_index] = null;
+				continue;
+			} // end if
+		} // end for each colour
+	} // end for each colour index
+} // end function filter_colours
+
+function SpecialColour_onchange( element, side, index, signature ) {
+	var spec = 'ColourCoating'+side+index+signature;
+
+	var type_element = $('ColourCoatingType'+side+index+signature);
+	var type = type_element.value;
+	if ( type ) {
+		element.form.elements[spec].checked=true;
+
+		if ( ! $('ColourCoating'+side+(1+parseInt(index))+signature) ) {
+			// Add another colour
+			new Ajax.Request('/includes/main/proj/_additional_colour_coating.html', { 
+				method: 'get', 
+				parameters: { 
+					'Side': side, 
+					'index' : 1+parseInt(index),
+					'Signature' : signature 
+				},
+				onSuccess: function(response){
+					new Insertion.After($(spec), response.responseText);
+					filter_colours(side,signature);
+					
+					}
+			} );
+		} else {
+			filter_colours(side,signature);
+		} // end if
+	} else {
+		element.form.elements[spec].checked=false;
+
+		if ( type != 'PMS' ) {
+			for ( var i = 1; i < 10; i += 1 ) {
+				if ( i == index ) continue;
+
+				// if the colour exists
+				var t = $('ColourCoatingType'+side+i+signature);
+				if ( t ) {
+
+					for ( var m = 0; m < type_element.options.length; m += 1 ) {
+						var v = type_element.options[m].value;
+						// see if it is in there
+						if ( ! isin_ddm( t, v ) ) {
+							add_option( t, v, type_element.options[m].text );
+							sort_ddm( t );
+							// need tos ort, add later FIXME
+						} // end if
+					} // end for each colour
+				} // end if
+			} // end for each option in type_element
+		} // end if
+	} // end if
+
+	if ( (!type) || ( -1 != type.indexOf('Overall') ) ) {
+		$('ColourCoatingCoverage'+side+index+signature).hide();
+	} else {
+		$('ColourCoatingCoverage'+side+index+signature).show();
+	} // end if
+	if ( -1 != type.indexOf('PMS') ) {
+		$('ColourCoatingColour'+side+index+signature).show();
+	} else {
+		$('ColourCoatingColour'+side+index+signature).hide();
+	} // end if
+	calc(element.form.name);
+} // end function
 
 function chkSpecial_onClick(chkBox) {
+	return;
 	var name = 'txt' + chkBox.name.substr(3);
 	var form = chkBox.form;
 
@@ -33,7 +124,7 @@ function validate_data(formName) {
 		stockWeight = form.txtSpecificStockCalliper.value;
 	} // end if
 	
-	if ( stockBrand == '' && form.txtSpecificStockBrand.value == '' ) {
+	if ( stockBrand == '' && form.txtSpecificStockBrand && form.txtSpecificStockBrand.value == '' ) {
 		text += "Please Select a Paper Brand\n";
 	} // end if
 	if ( form.elements['txtSpecificStockWidth'] && form.elements['txtSpecificStockHeight'] && form.txtSpecificStockWidth.value && form.txtSpecificStockHeight.value ) {
@@ -44,13 +135,13 @@ function validate_data(formName) {
 			text += "The sheet size you have entered is too small for the dimesions of your project, please enter a larger sheet size.";	
 		} // end if
 	} // end if
-	if ( ! ( stockFinish || form.txtSpecificStockFinish.value ) ) {
+	if ( ! ( stockFinish || (form.txtSpecificStockFinish && form.txtSpecificStockFinish.value ) ) ) {
 		text += "Please Select a Paper Finish\n";
 	} // end if
-	if ( ! ( stockColour || form.txtSpecificStockColour.value ) ) {
+	if ( ! ( stockColour || ( form.txtSpecificStockColour && form.txtSpecificStockColour.value ) ) ) {
 		text += "Please Select a Paper Colour\n";
 	} // end if
-	if ( ! ( stockWeight  || form.txtSpecificStockWeight.value ) ) {
+	if ( ! ( stockWeight  || ( form.txtSpecificStockWeight && form.txtSpecificStockWeight.value ) ) ) {
 		text += "Please Select a Paper Weight\n";
 	} // end if
 
@@ -71,27 +162,31 @@ function calc_print( formName, force ) {
 
 	var form = getFormObj( formName );
 
-	clear_price_data(form);
-
 	if ( gettingNewPrice && ! force ) {
 		// This prevents concurrent price getting
-		if ( timeout )
-			clearTimeout( timeout );
+		if ( timeout ) clearTimeout( timeout );
 		timeout = setTimeout("calc('f1');", 1000 );	
 		return;
 	} // end if
-	timeout = null;
+	//timeout = null;
 
+	clear_price_data(form);
+	var div = $('InformationDiv');
+	if ( div ) {
+		div.innerHTML = 'Calculating....';
+		div.show();
+	} // end if
 	jsrsExecute( '/jsrs.htm', cbFillPrintResults, 'openprint::service::external_calc', get_variables(formName,'Printing') );
 	return;
 } // end calc_print
+
 
 function clear_price_data( form ) {
 
 	for ( var qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
 		if ( quantities[qtyNum-1] > 0 ) {
 			if ( form.elements['StockType'+qtyNum] ) form.elements["StockType"+qtyNum].value = '';
-			if ( form.elements['txtPrice'+qtyNum] ) form.elements["txtPrice"+qtyNum].value = '';
+			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! form.elements['OverridePrice'+qtyNum].checked ) form.elements["txtPrice"+qtyNum].value = '';
 			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
 			if ( form.elements["txtPressSheetQty"+qtyNum] ) form.elements["txtPressSheetQty"+qtyNum].value = '';
 			if ( form.elements["txtPlateQuantity"+qtyNum] ) form.elements["txtPlateQuantity"+qtyNum].value = '';
@@ -146,7 +241,7 @@ function cbFillPrintResults( results ) {
 		if ( ddm.selectedIndex == -1 || ddm.selectedIndex == 0 ) {
 			var width = form.elements['StockWidth'+i].value;
 			var height = form.elements['StockHeight'+i].value;
-			var type = form.elements['StockType'+i].value;
+			var type = get_value( form.elements['StockType'+i] );
 		
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {
@@ -155,7 +250,7 @@ function cbFillPrintResults( results ) {
 			} else if ( type == 'Roll' ) {
 				if ( ! ddm_select_by_value( ddm, width, false ) ) {
 					ddm.options[ddm.options.length] = new Option( width + '" Roll', width, true );
-					ddm_select_by_value( ddm, width + '" Roll' );
+					ddm_select_by_value( ddm, width );
 				} // end if
 			} // end if
 		} // end if

@@ -1,0 +1,22 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<? eval (
+	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+	$$variable{'Columns'} = 'Three';
+	} else {
+	$$variable{'Columns'} = 'Two';
+	} # end if
+) ?>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+	<fieldset><legend><?ServiceTypeName?></legend>
+		<p><label># of hours:</label>
+			<input type="text" name="txtQuantity" value="<?txtQuantity?>" size="9" onkeyup="calc(this.form.name);" />
+		</p>
+		<!--#include virtual="/includes/main/proj/_service_price.html"-->
+		
+	</fieldset>
+	<hr/>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_all.html"-->
+	</form>
+</div>

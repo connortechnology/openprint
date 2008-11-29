@@ -33,7 +33,8 @@ CREATE	TABLE	tbl_Projects	(
 	currency_id				INTEGER, FOREIGN KEY (currency_id) REFERENCES currencies (id),
 	order_id				INTEGER, FOREIGN KEY (order_id) REFERENCES orders (index),
 	due_date				date,
-
+	rush					BOOLEAN default false,
+	style_id				INTEGER, FOREIGN KEY (style_id) REFERENCES QuoteLevels (id),
 	PRIMARY	KEY	(Index)
 );
 

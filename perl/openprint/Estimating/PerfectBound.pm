@@ -20,31 +20,59 @@ use strict;
 require openprint::service;
 require sql;
 
-my @variables = (
-'chkOverrideCalliper',
-'txtCalliper',
-        'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
-        'txtPrice1', 'txtPrice2', 'txtPrice3',
-        'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
-        'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
-        'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
+my $debug = 1;
+
+my %variables = (
+        'ProjectIndex'=>[],'ServiceIndex'=>[],
+        'hdnBreakdown1'=>['output'],'hdnBreakdown2'=>['output'],'hdnBreakdown3'=>['output'],
+        'txtQuantity1'=>['save'], 'txtQuantity2'=>['save'], 'txtQuantity3'=>['save'],
+        'ServiceType'=>[],
+        'alert'=>['output'],
+        'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
+        'txtCalliper'=>['save','output'],
+        'Imposition1'=>['save','output'], 'Imposition2'=>['save','output'], 'Imposition3'=>['save','output'],
+        'ddmEquipment1'=>['save','output'], 'ddmEquipment2'=>['save','output'], 'ddmEquipment3'=>['save','output'],
+        'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],
+        'chkOverrideEquipment1'=>['save'], 'chkOverrideEquipment2'=>['save'], 'chkOverrideEquipment3'=>['save'],
+        'rdbGateFoldFit'=>['save'],
+        'txtUnitPrice1'=>['output'], 'txtUnitPrice2'=>['output'], 'txtUnitPrice3'=>['output'],
+        'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],
+        'txtRunTime1'=>['save'], 'txtRunTime2'=>['save'], 'txtRunTime3'=>['save'],
+		'glue_id' => ['save'], 'override_glue_id' => ['save'],
+		'Markup1'=>['save'], 'Markup2'=>['save'], 'Markup3'=>['save'],
+		'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
         );
+
 sub variables {
-    return @variables;
-}
+	my ( $p_id, $s_id, $specs ) = @_;
+    my @v;
+    foreach my $k ( keys %variables ) {
+        push @v, $k, if sets::isin( 'save', $variables{$k} );
+    } # end foreach;
+    if ( int $$specs{'txtInsertQuantity'} ) {
+        foreach my $insert_id ( 1 .. int $$specs{'txtInsertQuantity'} ) {
+            push @v, 'txtInsertPage1-'.$insert_id, 'txtInsertPage2-'.$insert_id;
+        } # end foreach
+    } # end if
+	foreach my $qty_index ( 1 .. 3 ) {
+		foreach my $k ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40 ) {
+			push @v, 'txtSignatureQty'.$k.'Page-'.$qty_index;
+		} # end foreach
+	} # end foreach
+
+    return @v;
+} # end sub variables
 
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
-	if ( $services{'NoBindery'} ) {
-        $log->debug(" ** Project is marked as No bindery, Hand Assembly not needed ! ** ");
+	if ( $$services{'NoBindery'} ) {
         return 0;
     } # end if
 
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
     if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
         return 1;
@@ -53,76 +81,535 @@ sub neccessary {
 	return 0;	
 } # end sub neccessary
 
+sub signature_calc {
+	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_service_index, @Impositions ) = @_;
+
+	my $services = $Project->services();
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
+	# Need to figure out which dimension the spine bisects
+	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
+		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+	} else {
+		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+	} # end if
+
+	my $imposition = 2;
+	$$specs{"txtPockets$qty_index"} = 0;
+
+	# Calculate the # of pockets, and the imposition to bind at
+	foreach my $I ( @Impositions ) {
+		$$specs{"txtPockets$qty_index"} += 1;
+		if ( $imposition > 1 ) {
+			$imposition = 1 if (
+					($$I{'imposition'} % 2 ) or
+					($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) or
+					($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
+					(sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'}%4)
+					);
+		} # end if
+	} # end foreach signature
+	my $I = $Impositions[0];
+
+#$openprint::log->debug( "PerfectBind Impo: " . $imposition ) if $debug;
+	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
+		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
+			$$specs{'alert'} .= "Can't perfectbind $$specs{'Imposition'.$qty_index} out";
+		} # end if
+	} else {
+		$$specs{'Imposition'.$qty_index} = $imposition;
+	} # end if
+
+	my $error;
+	# THe Equipment::find call gets cached... and the rest is impo-specific... so we can't really cache this.
+	my @possible_equipment = get_equipment( $specs, \$error );
+
+	my @equipment = ();
+
+	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
+$openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_index"} );
+		@equipment = openprint::Equipment::find( 'id' => $$specs{"ddmEquipment$qty_index"} );
+	} else {
+		@equipment = @possible_equipment;
+	} # end if
+
+	my $bestPrice;
+	my $bestEquipment;
+#$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
+	foreach my $Equipment ( @equipment ) {
+		if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
+			next;
+		} # end if
+		if ( $Equipment->specification('Minimum Spine Length') and ( $$specs{'Height'} < $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
+			next;
+		} # end if
+
+		if ( $Equipment->specification('Type') eq 'Press' ) {
+			next if $$specs{'txtPockets'.$qty_index} > 1;
+			my @sigs = $Project->signatures();
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+			if ( $I->Press()->id() != $Equipment->id() ) {
+				$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
+				next;
+			} # end if
+			if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
+				$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
+				next;
+			} # end if
+		} # end if
+
+		my $price = get_price( $Equipment, $specs, $qty_index );
+		if ( ( ! $bestPrice ) or $$price{'Price'} < $$bestPrice{'Price'} ) {
+			$bestEquipment = $Equipment;
+			$bestPrice = $price;
+		} # end if
+	} # end foreach Equipment
+
+	my %results;
+	$results{'alert'} = $error;
+	$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . ($bestEquipment ? $bestEquipment->strid() : '') . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets ';
+	$results{'Imposition'} = $$bestPrice{'Imposition'};
+	$results{'Equipment'} = $bestEquipment;
+#$openprint::log->debug( "PerfectBind Impo REsults: " . $results{'Imposition'} ) if $debug;
+	if ( $$bestPrice{'Imposition'} ) {
+		$results{'Status'} = 'calculated';
+		$results{'Price'} = $$bestPrice{'Price'};
+	} else {
+		$results{'Status'} = 'uncalculated';
+	} # end if
+	return \%results;
+} # end sub signature_calc
+
+sub get_equipment {
+	my ( $specs, $error ) = @_;
+
+	my @possible_equipment;
+	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	$$error .= 'There are no perfect binders in the system.<br/>' if ! @all_equipment;
+
+	foreach my $Equipment ( @all_equipment ) {
+		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
+			$$error .= "For " . $Equipment->name() . ': Too big.<br/>';
+			next;
+		} # end if
+		if ( $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $Equipment->specification('Minimum Spread Width') ) ) {
+			$$error .= "For " . $Equipment->name() . ": Too small.<br/>";
+			next;
+		} # end if
+		if ( $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $Equipment->specification('Maximum Calliper') ) ) {
+			$$error .= "For " . $Equipment->name() . ": Too thick.<br/>";
+			next;
+		} # end if
+		if ( $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $Equipment->specification('Minimum Calliper') ) ) {
+			$$error .= "For " . $Equipment->name() . ": Too thin.<br/>";
+			next;
+		} # end if
+		push @possible_equipment, $Equipment;
+	} # end foreach equipment
+	return @possible_equipment;
+} # end sub get_equipment
+
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
-
 	my $Project = new openprint::Project( $project_index );
 
+	my $services = $Project->services();
+	if ( ! $$services{'Folding'} ) {
+		$$specs{'alert'} .= 'Project must be folded.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	my $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
-		$$specs{'txtCalliper'} = 0;
-		foreach my $signature_service_index ( $Project->signatures('Interior Spreads') ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-			my $calliper = $$sig_specs{'txtSignatureSpreadQuantity'} ? $$sig_specs{'txtSignatureSpreadQuantity'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-			$$specs{'txtCalliper'} += $calliper * $$sig_specs{'txtSpreadSize'}/2;
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			$$specs{'txtCalliper'} = 0;
+			foreach my $signature_service_index ( $Project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+				# All but the cover
+				next if $$sig_specs{'Group'} == 1;
+				my $calliper = $$sig_specs{'PageQuantity'.$qty_index} ? ($$sig_specs{'PageQuantity'.$qty_index}/2) * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
+				$$specs{'txtCalliper'} += $calliper;
+			} # end foreach
+			last if $$specs{'txtCalliper'};
 		} # end foreach
 	} # end if
 
-	my $equipment;
-	my @Equipment = openprint::Equipment::find('strid'=>'PerfectBinder');
+# Need to figure out which dimension the spine bisects
+	@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
+		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+	} # end if
+
+	my @Materials = openprint::Material::find('category'=>'PerfectBound Glue');
+	if ( $$specs{'override_glue_id'} eq 'Y' ) {
+	} else {
+		foreach my $ss_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
+
+			my $Paper;
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				next if ! $Project->quantity( $qty_index );
+				$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				last;
+			} # end foreach
+			foreach my $Material ( @Materials ) {
+				if ( sets::isin( $Paper->grade(), misc::trim(split(',',$Material->specification('Recommended For Stock Grade'))) ) ) {
+					$$specs{'glue_id'} = $Material->id();
+					last;
+				} # end if
+			} # end foreach Material
+		} # end foreach sig
+	} # end if
+
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		next if ! $$specs{'txtQuantity'.$qty_index};
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g; ;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf( $openprint::config{'UnitPriceFormat'}, 0 );
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
+		my $imposition = 2;
+
+		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
+			foreach my $pages ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
+				$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = '';
+			} # end foreach
+
+			$$specs{"txtPockets$qty_index"} = 0;
+
+			foreach my $signature_service_index ( $Project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+				next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
+				if ( 
+						($$sig_specs{'txtImposition'.$qty_index} % 2) or 
+						($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'} % 2 ) or 
+						($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and $$sig_specs{'hdnImpositionColumns'} % 2 ) or
+						(sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 ) 
+				   ) {
+					$imposition = 1
+				} # end if
+
+				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
+					next;
+				} # end if
+				if ( ! $$sig_specs{'txtSpreadSize'} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spread size.<br/>";
+					next;
+				} # end if
+				if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no pages.<br/>";
+					next;
+				} # end if
+
+				my %pages;
+				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
+				if ( $folding_specs ) {
+					foreach my $pages ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
+						$pages{$pages} += $$folding_specs{$pages.'PageSignatureFold-Qty-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index};
+					} # end foreach
+				} # end if
+
+# If not all pages have been folde, then revert to just pull from the sig.
+				if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
+					$$specs{"txtPockets$qty_index"} += 1;
+					$$specs{'txtSignatureQty'.$sig_pages.'Page-'.$qty_index} += 1;
+				} else {
+					foreach my $page ( keys %pages ) {
+						$$specs{"txtPockets$qty_index"} += $pages{$page};
+						$$specs{'txtSignatureQty'.$page.'Page-'.$qty_index} += $pages{$page};
+					} # end foreach
+				} # end if
+
+			} # end foreach signature
+		} else { # Override Pockets
+			foreach my $pages ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
+				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
+			} # end foreach
+		} # end if
+
+		if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
+			$openprint::log->debug("Overriding imposiion");
+			if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
+				$$specs{'alert'} .= "Can't bind $$specs{'Imposition'.$qty_index} out";
+			} # end if
+		} else {
+			$$specs{'Imposition'.$qty_index} = $imposition;
+		} # end if
+	} # end foreach qty_index
+
+	my $error;
+	my @Equipment = get_equipment( $specs, \$error );
 	if ( ! @Equipment ) {
 		$$specs{'alert'} .= 'We are unable to automatically provide a price for Perfect Binding.  You may enter your own price in the price fields, or contact your CSR for a quote.';
-
 		foreach my $qty_index ( 1 ..3 ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= $error;
 			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 			my $qty = $$specs{'txtQuantity'.$qty_index};
-			if ( $qty and ! $$specs{'txtPrice'.$qty_index} ) {
+#$openprint::log->debug("QTY: $qty " . $$specs{'txtPrice'.$qty_index});
+			if ( $qty and ! (1*$$specs{'txtPrice'.$qty_index}) ) {
+#$openprint::log->debug("uncalc");
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end foreach
-		
-		return 'calculated';
+#$openprint::log->debug("calc");
+		return $$specs{'Status'} = 'calculated';
 	} # end if
-
-	$equipment = $Equipment[0];
 	
-	my $valid_price = 0;
-	foreach my $qty_index ( 1 ..3 ) {
+	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{'txtQuantity'.$qty_index};
 		next if ! $qty;
 
-		my $price = 0;
-		my $unitPrice = 0;
-		my $additionalPrice = 0;
+		my $bestPrice;
 
-		my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'PerfectBound', $qty, $equipment );
-		$$specs{'hdnBreakdown'.$qty_index} .= "Service Price: \$ $servicePrice{'Price'} $servicePrice{'units'}\n";
-		my $servicePrice;
-		if ( $servicePrice{'units'} eq 'Per M' ) {
-			$servicePrice = $servicePrice{'Price'} / 1000;
+		foreach my $Equipment ( @Equipment ) {
+			my $Price = get_price( $Equipment, $specs, $qty_index );
+			if ( ( ! defined $bestPrice ) or ( $$bestPrice{'Price'} > $$Price{'Price'} ) ) {
+				$bestPrice = $Price;
+			} # end if
+
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Quantity: %d on %s with %d pockets<br/>',$$specs{"txtQuantity$qty_index"},$Equipment->name(), $Equipment->specification('Number of Pockets') );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$Price{'RunTime'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$Price{'Passes'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$Price{'Imposition'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%<br/>', @$Price{'RunCost Discount','Imposition Discount'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', @$Price{'Calliper Markup'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$Price{'MakeReady'}).",<br/>";
+			if ( my $servicePrice = $$Price{'ServicePrice'} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %d passes at $%.2f%s=$%.2f<br/>', $$Price{'Passes'} - 1, @$servicePrice{'Price','units','Total'});
+			} # end if
+			my $servicePrice = $$Price{'LastPassServicePrice'};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: last pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
+			if ( my $GluePrice = $$Price{'GluePrice'} ) {
+$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $$Price{'Glue'}->description(), @$GluePrice{'Price','units','Total'}, @$specs{'Width','txtCalliper'} );
+
+			} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'Price'})).'<br/><br/>';
+		} # end foreach Equipment
+
+		if ( $$bestPrice{'Equipment'} ) {
+			$$specs{'ddmEquipment'.$qty_index} = $$bestPrice{'Equipment'}->id();
+		} else {
+			$$specs{'ddmEquipment'.$qty_index} = '';
 		} # end if
-		my $makeReady =  openprint::service::get_price( $log, $dbh, $variable, 'PerfectBoundMakeReady', $qty, $equipment );
-		$$specs{'hdnBreakdown'.$qty_index} .= "MakeReady: \$ $makeReady\n";
-		$price = $servicePrice * $qty + $makeReady;
-		$unitPrice = $servicePrice;
-
-		$valid_price = 1 if ( $price > 0 );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'Price'}*(1+$$specs{"Markup$qty_index"}/100) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'Price'} / $qty );
     } # end foreach
-
-	if ( $valid_price == 0 ) {
-		$status = 'uncalculated';
-	} # end if
 
 	$log->debug(" END Perfect Bound!!!!!!!!!!!!!!!!!!");
 	return $status;
 } # end sub calc
 
+sub get_price {
+	my ( $Equipment, $specs, $qty_index ) = @_;
+
+	my %price = (
+		'Equipment'	=> $Equipment,
+		'MakeReady' => 0,
+		'Service'	=> 0,
+		'Insert'	=> 0,
+		'Price'		=> 0,
+		'RunTime'	=> 0,
+		'Passes'	=> 0,
+		'Imposition' => $$specs{'Imposition'.$qty_index},
+	);
+
+	my $qty = $$specs{'txtQuantity'.$qty_index};
+#$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition'));
+	if ( $Equipment->specification('Maximum Imposition') and ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty_index} ) ) {
+		$price{'Imposition'} = 1;
+		#$openprint::log->debug("Maximum Imposition: " . $Equipment->specification('Maximum Imposition')  ) if $debug;
+	} elsif ( $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) and $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) < $$specs{'Height'} ) {
+		#$openprint::log->debug("Maximum Spine Length: $$specs{'Height'} > " . $Equipment->specification('Maximum Spine Length',$price{'Imposition'})  ) if $debug;
+		$price{'Imposition'} = 1;
+	} # end if
+
+	my %MakeReady = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady'. $$specs{"txtPockets$qty_index"}.'Pockets', $price{'Imposition'}, $Equipment );
+	if ( ! %MakeReady ) {
+		%MakeReady = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+	} # end if
+	my $pocketMakeReady = openprint::service::get_price( $$specs{'ServiceType'}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
+	$price{'MakeReady'} = $MakeReady{'Price'} + ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 ));
+
+	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
+	my $neededPockets = $$specs{"txtPockets$qty_index"};
+	$price{'RunTime'} += $neededPockets * $Equipment->specification( 'Pocket Make Ready' );
+
+# Calculate Full Passes
+	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
+# Loaded here, so we don't do it in the loop many times
+		my %servicePrice;
+		if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
+			%servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $maxPockets, $Equipment );
+		} # end if
+		$price{'ServicePrice'} = \%servicePrice;
+		
+		my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
+		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+			$price{'RunTime'} += $runtime * 360;
+		my $loopbreak_pockets = $neededPockets;
+		while ( $neededPockets > $maxPockets ) {
+			if ( $servicePrice{'units'} eq 'Per M' ) {
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
+				$price{'Service'} += $servicePrice{'Total'};
+			} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
+				$price{'Service'} += $servicePrice{'Total'}
+			} else {
+				$openprint::log->debug("Unknown Unit Type: ($servicePrice{'units'}) on $$specs{'ServiceType'}");
+			} # end if
+
+			# The minus 1 is because the result of the first pass, takes up one pocket
+			$neededPockets -= ( $maxPockets - 1 );
+			last if $neededPockets == $loopbreak_pockets;
+			$price{'Passes'} += 1;
+		} # end while
+	} # end if
+
+# Calculate Last Pass
+	my %servicePrice;
+	if ( ! ( %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}.$neededPockets.'Pockets', $qty, $Equipment ) ) ) {
+		%servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, $neededPockets, $Equipment );
+	} # end if
+	$price{'LastPassServicePrice'} = \%servicePrice;
+	my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
+	my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+	$price{'RunTime'} += $runtime * 360;
+	if ( $servicePrice{'units'} eq 'Per M' ) {
+		$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
+		$price{'Service'} += $servicePrice{'Total'};
+	} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+		$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
+		$price{'Service'} += $servicePrice{'Total'}
+	} else {
+		$openprint::log->debug("Unknown Unit Type: $servicePrice{'units'} for $$specs{'ServiceType'} range($neededPockets) equipment(".$Equipment->strid().")");
+	} # end if
+	$price{'Passes'} += 1;
+
+	if ( $$specs{'glue_id'} ) {
+		my $Material = new openprint::Material( $$specs{'glue_id'} );
+		my %GluePrice = $Material->get_price( $$specs{"txtQuantity$qty_index"}, undef );
+		if ( $GluePrice{units} eq 'Per Square Inch' ) {
+			$GluePrice{'Total'} = $GluePrice{Price} * $$specs{'Width'} * $$specs{'txtCalliper'} * $$specs{"txtQuantity$qty_index"};
+			$price{'GluePrice'} = \%GluePrice;
+		} elsif ( $GluePrice{units} eq 'Per Square Foot' ) {
+			$GluePrice{'Total'} = $GluePrice{Price} * $$specs{'Width'} * $$specs{'txtCalliper'} * $$specs{"txtQuantity$qty_index"} / 144;
+			$price{'GluePrice'} = \%GluePrice;
+		} # end if
+
+		$price{'Glue'} = $Material;
+	} # end if Glues
+
+	if ( $$specs{'txtInsertQuantity'} > 0 ) {
+		$price{'Insert'} = openprint::service::get_price( $$specs{'ServiceType'}.'Insert', $$specs{'txtInsertQuantity'}, $Equipment) * $$specs{'txtInsertQuantity'};
+# Convert to cost per thousand
+		$price{'Insert'} = ($price{'Insert'}*$qty)/1000;
+	} # end if
+
+	my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
+	if ( $$specs{'rdbGateFoldFit'} eq 'Exact' and $gateFolds > 0 ) {
+		$price{'Service'} += openprint::service::get_price( $$specs{'ServiceType'}, $gateFolds, $Equipment );
+		$price{'MakeReady'} += $MakeReady{'Price'} + ( $pocketMakeReady * ( $gateFolds + 1 ) );
+	} # end if
+
+	$price{'Calliper Markup'} = $Equipment->specification( 'Calliper Price Adjustment', $$specs{'txtCalliper'} );
+	$price{'Service'} *= ( 1 + $price{'Calliper Markup'}/100);
+
+	$price{'RunCost Discount'} = $Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} );
+	$price{'Service'} *= ( 1 - $price{'RunCost Discount'}/100);
+
+	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
+	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
+
+	$price{'Price'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'} + $price{'GluePrice'}{'Total'};
+#$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
+	return \%price;
+} # end sub get_price
+
+sub display {
+	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+
+	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+
+} # end sub display
+
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	if ( $qty_index ) {
+		if ( $$specs{'Imposition'.$qty_index} ) {
+			return $$specs{'Imposition'.$qty_index} .'out';
+		} # end if
+	} # end if
+
+	if ( $$specs{'glue_id'} ) {
+		my $Material = new openprint::Material( $$specs{'glue_id'} );
+		return 'Using ' . $Material->description();
+	} # end if
+	return '';
 } # end sub summary
+
+sub runtime {
+	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
+
+	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
+	my @Equipment = openprint::Equipment::find( 'id' => $$specs{'ddmEquipment'.$qty_index} );
+	return 0 if @Equipment != 1;
+
+	my $Equipment = $Equipment[0];
+
+	my $runTime;
+
+# Count the # of signatures
+	my $pockets = 0;
+	foreach my $spec ( keys %$specs ) {
+		if ( $spec =~ /^txtSignatureQty(.*)$/ ) {
+			$pockets += int($$specs{$spec});
+		} # end if
+	} # end foreach
+
+	$pockets += int( $$specs{'txtInsertQuantity'} );
+	my $gateFolds = int($$specs{'txtSignatureQtySingleGateFolded'} ) + int($$specs{'txtSignatureQtyDoubleGateFolded'});
+	if ( $$specs{'rdbGateFoldFit'} eq 'Exact' ) {
+		$pockets -= $gateFolds;
+	} # end if
+
+	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
+	my $makereadytime = $Equipment->specification( 'Pocket Make Ready' ) * 60;
+	#$openprint::log->debug("MakeReadyTime: $makereadytime");
+	$runTime += $pockets * $makereadytime;
+
+# Calculate Full Passes
+	if ( $pockets > $maxPockets ) {
+# Loaded here, so we don't do it in the loop many times
+		if ( my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) ) {
+			$runTime += ($$specs{"txtQuantity$qty_index"}*3600/$unitsPerHour) * int ( $pockets / $maxPockets );
+			$pockets = $pockets % $maxPockets;
+		} # end if
+	} # end if
+
+# Calculate Last Pass
+	if ( my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $pockets ) ) {
+		$runTime += $$specs{"txtQuantity$qty_index"}*3600/$unitsPerHour; # in seconds
+	} # end if
+	return $runTime;
+} # end sub get_runtime
+
+
+1;
+__END__
 
 1;
 

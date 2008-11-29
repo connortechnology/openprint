@@ -46,6 +46,9 @@ sub save_service {
 	} else {
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
 	} # end if
+	if ( $r->param('additional_service') eq 'Y' ) {
+		openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );
+	} # end if
 } # end sub save_service
 
 # Adds completed/edited services, and then displays the status of the project
@@ -59,11 +62,6 @@ sub view_services {
 		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		my $Project = new openprint::Project( $project_index );
-		$Project->Currency( openprint::Currency::get_current() );
-		foreach my $signature_service_index ( $Project->signatures() ) {
-			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
-		} # end foreach
-		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 		$Project->save();
 	} # end if
@@ -102,6 +100,9 @@ sub view_services {
 					# Only do this if all signatures have been specified, otherwise it is a waste of time
 					$log->info("********* Auto Calculate  ( PrintingService eq 'Y' ) *************");
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
+				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste'] ) ) {
+					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index );
 				} # end if
 				$Project->Currency( openprint::Currency::get_current() );
 				$Project->save();
@@ -167,13 +168,16 @@ sub view_services {
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
-				foreach my $signature_service_index ( sort $Project->signatures() ) {
-					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
-				} # end foreach
+				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
 				$Project->save();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
+				$openprint::session{'project_id'} = $project_index;
+				$Project->currency_id( $openprint::session{Currency_id} );
+				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+				$Project->save();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
 				$project_index = openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_index );
@@ -223,6 +227,7 @@ sub print_prices {
 
     $$variable{'Cutting'} = $$services{'Cutting'} ? 'YES' : 'NO';
     $$variable{'Folding'} = $$services{'Folding'} ? 'YES' : 'NO';
+    $$variable{'NoPrinting'} = $$services{'NoPrinting'};
 
 	$$variable{'Mode'} = $Project->mode();
 
@@ -270,7 +275,7 @@ sub multipage_signatures {
 	my ( $param, $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-    $log->debug(" **** STARTING MULTIPAGE SIGNATURES FUNCTION **** ");
+    $openprint::log->debug(" **** STARTING MULTIPAGE SIGNATURES FUNCTION **** ");
 
 	if ( ! $$param{'txtSpreadSize'} ) {
 		# now we have finished the first step for a new book, and have a basic signature set in place.
@@ -287,42 +292,61 @@ sub multipage_signatures {
 		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['CornerStitching', 'Cerlox', 'PlasticCoil','MetalCoil'] ) ) {
 			$$param{'txtSpreadSize'} = 2;
 		} else {
-			$log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );
+			$openprint::log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );
 			$$param{'txtSpreadSize'} = 4;
 		} # end if
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
 	} # end if
 
-	if ( ! $$param{'txtTotalSpreadQuantity'} ) {
-		$$param{'txtTotalSpreadQuantity'} = $$param{'txtTotalPageQuantity'} / $$param{'txtSpreadSize'};
-		$log->warn("INSANITY: TotalSpreadQuantity Not Specified. Setting to $$param{'txtTotalSpreadQuantity'}");
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtTotalSpreadQuantity', $$param{'txtTotalSpreadQuantity'});
-	} # end if
+	my $max_group;
+	my %needed_pages;
+	$needed_pages{'Cover Pages'} = $$param{'OverrideGroupPageQuantity1'} eq 'Y' ? $$param{'GroupPageQuantity1'} : ($$param{'rdbCover'} eq 'Different' ? 4 : 0);
+	$needed_pages{'Gate Folded Spreads'} = $$param{'txtGateFoldedPageQuantity'};
+	$needed_pages{'Interior Pages'} = ( $$param{'txtTotalPageQuantity'} - $needed_pages{'Cover Pages'} ) - $needed_pages{'Gate Folded Spreads'};
 
-	if ( ! $$param{'txtInteriorSpreadQuantity'} ) {
-		# Can happen if all signatures are gatefolded...
-		$log->warn('INSANITY: No interiorspreadquantity!');
-		my $txtInteriorSpreadQuantity = int($$param{'txtTotalSpreadQuantity'}) - int($$param{'txtGateFoldedSpreadQuantity'});
-		if ( $$param{'rdbCover'} eq 'Different' ) {
-			if ( $$param{'txtSpreadSize'} == 4 ) {
-				$txtInteriorSpreadQuantity -= 1;
-			} else {
-				$txtInteriorSpreadQuantity -= 2;
+	my %specified_pages;
+
+	foreach my $k ( keys %$param ) {
+		if ( $k =~ /txtSignatureType(\d*)/ ) {
+			my $group_id = $1;
+
+			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
+				my $ac = sql::start_transaction( $dbh );
+				$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+				my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', $group_id );
+				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+				my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', ++$signature_count );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
+				sql::end_transaction( $dbh, $ac );
+			} # end if
+
+			$specified_pages{$$param{$k}} += $$param{'GroupPageQuantity'.$group_id};
+			if ( $group_id > $max_group ) {
+				$max_group = $group_id;
 			} # end if
 		} # end if
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtInteriorSpreadQuantity', $txtInteriorSpreadQuantity);
-	} # end if
+	} # end foreach param
 
+foreach my $k ( keys %specified_pages ) {
+$openprint::log->debug("$k => $specified_pages{$k}" );
+} # end foreach
+$openprint::log->debug("Max group: $max_group");
 
 	if ( $$param{'rdbCover'} eq 'Different' ) {
 # now add a cover spread if we need one.
 # First, see if we have one.
-		if ( ! $Project->signatures('Cover Spreads') ) {
+		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 			my ($cover_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtSignatureType', 'Cover Spreads');
+			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtSignatureType', 'Cover Pages');
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtServiceDescription', 'Cover');
+			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'Group', 1 );
 # Used to give each signature a # for reference in proofs, etc.
 			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
@@ -331,19 +355,24 @@ sub multipage_signatures {
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtSpreadSize', 4 );
 			# Width and Height will be added on auto-calc
 			sql::end_transaction( $dbh, $ac );
+
+		} # end if
+
+		# Prime this for saving later
+		if ( ( ! $$param{'GroupPageQuantity1'} ) and ( $$param{'OverrideGroupPageQuantity1'} ne 'Y' ) ) {
+			$$param{'GroupPageQuantity1'} = $needed_pages{'Cover Pages'};
 		} # end if
 	} else {
-		# Don't need a cover, so get rid of it
-		foreach ( $Project->signatures('Cover Spreads') ) {
-		openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+# Don't need a cover, so get rid of it
+		foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
+			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 		} # end foreach
-	} # end if
-
+	} # end if Self or Different Cover
 
 # On each call to this, we save, then check to see if there are any unspecified signatures
 
 	# Now, make sure that we have all the gate spreads that we need
-	my @gate_spread_services = $Project->signatures('GateFolded Spreads');
+	my @gate_spread_services = $Project->signatures({'type'=>'GateFolded Spreads'});
 	my $need_gate_spreads = int($$param{'txtGateFoldedSpreadQuantity'}) - scalar @gate_spread_services;
 	while ( $need_gate_spreads > 0 ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -351,6 +380,7 @@ sub multipage_signatures {
 		my ($gate_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'txtSignatureType', 'GateFolded Spreads');
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'txtServiceDescription', 'Gate Fold Spread');
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'Group', 3 );
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'SignatureIndex', ++$signature_count );
@@ -359,13 +389,14 @@ sub multipage_signatures {
 		$need_gate_spreads -= 1;
 	} # end while need_gate_spreads
 
-	if ( ! $Project->signatures('Interior Spreads') ) {
+	if ( ! $Project->signatures({'type'=>'Interior Pages'}) ) {
 # Must have at least 1 interioer signature
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Spreads' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Spreads' );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', 2 );
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', ++$signature_count );
@@ -373,14 +404,30 @@ sub multipage_signatures {
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
 		sql::end_transaction( $dbh, $ac );
 	} # end if
+	if ( ( ! $$param{'GroupPageQuantity2'} ) and ( $$param{'OverrideGroupPageQuantity2'} ne 'Y' ) ) {
+		$$param{'GroupPageQuantity2'} = $needed_pages{'Interior Pages'};
+	} # end if
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
-		my $type = $$sig_specs{'txtSignatureType'};
-		$type =~ s/\s//g;
+		my $type = $$sig_specs{'Group'};
+		if ( $type == 1 ) {
+			my $services = $Project->services();
+			# Presentation Folder Cover -> Make sure required services like Die Cutting and Gluing are present
+			if ( sets::isin( $$param{'rdbTemplateType'.$type}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+				if ( my @ProjectTypes = openprint::ProjectType::find('strid'=>'PresentationFolders') ) {
+					foreach my $ServiceType ( $ProjectTypes[0]->required_ServiceTypes() ) {
+						if ( ! $$services{$ServiceType->name()} ) {
+							push @{$$services{$ServiceType->name()}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType );
+						} # end if
+					} # end foreach servicetype
+				} # end if
+			} # end if
+		} # end if
 
 		# We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec ( 
+				'txtSignatureType',
 				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
@@ -391,47 +438,79 @@ sub multipage_signatures {
 				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
 				'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
 				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
-				'SideOneUVCoatingType','SideTwoUVCoatingType',
 				'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
-				'chkSpecialSideOneColour1', 'txtSpecialSideOneColour1', 'txtSpecialSideOneColourInkPercent1',
-				'chkSpecialSideOneColour2', 'txtSpecialSideOneColour2', 'txtSpecialSideOneColourInkPercent2',
-				'chkSpecialSideOneColour3', 'txtSpecialSideOneColour3', 'txtSpecialSideOneColourInkPercent3',
-				'chkSpecialSideOneColour4', 'txtSpecialSideOneColour4', 'txtSpecialSideOneColourInkPercent4',
-				'chkSpecialSideOneColour5', 'txtSpecialSideOneColour5', 'txtSpecialSideOneColourInkPercent5',
-				'chkSpecialSideOneColour6', 'txtSpecialSideOneColour6', 'txtSpecialSideOneColourInkPercent6',
-				'chkSpecialSideOneColour7', 'txtSpecialSideOneColour7', 'txtSpecialSideOneColourInkPercent7',
-				'chkSpecialSideOneColour8', 'txtSpecialSideOneColour8', 'txtSpecialSideOneColourInkPercent8',
-				'rdbAqueousSideOne',
-				'chkVarnishSpotGlossSideOne','chkVarnishSpotMatteSideOne','chkVarnishOverallGlossSideOne','chkVarnishOverallMatteSideOne','chkVarnishDryTrapSideOne',
+				'ColourCoatingSideOne1', 'ColourCoatingTypeSideOne1', 'ColourCoatingColourSideOne1','ColourCoatingCoverageSideOne1',
+				'ColourCoatingSideOne2', 'ColourCoatingTypeSideOne2', 'ColourCoatingColourSideOne2','ColourCoatingCoverageSideOne2',
+				'ColourCoatingSideOne3', 'ColourCoatingTypeSideOne3', 'ColourCoatingColourSideOne3','ColourCoatingCoverageSideOne3',
+				'ColourCoatingSideOne4', 'ColourCoatingTypeSideOne4', 'ColourCoatingColourSideOne4','ColourCoatingCoverageSideOne4',
+				'ColourCoatingSideOne5', 'ColourCoatingTypeSideOne5', 'ColourCoatingColourSideOne5','ColourCoatingCoverageSideOne5',
+				'ColourCoatingSideOne6', 'ColourCoatingTypeSideOne6', 'ColourCoatingColourSideOne6','ColourCoatingCoverageSideOne6',
+				'ColourCoatingSideOne7', 'ColourCoatingTypeSideOne7', 'ColourCoatingColourSideOne7','ColourCoatingCoverageSideOne7',
+				'ColourCoatingSideOne8', 'ColourCoatingTypeSideOne8', 'ColourCoatingColourSideOne8','ColourCoatingCoverageSideOne8',
+				'ColourCoatingSideOne9', 'ColourCoatingTypeSideOne9', 'ColourCoatingColourSideOne9','ColourCoatingCoverageSideOne9',
+
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
-				'chkSpecialSideTwoColour1', 'txtSpecialSideTwoColour1', 'txtSpecialSideTwoColourInkPercent1',
-				'chkSpecialSideTwoColour2', 'txtSpecialSideTwoColour2', 'txtSpecialSideTwoColourInkPercent2',
-				'chkSpecialSideTwoColour3', 'txtSpecialSideTwoColour3', 'txtSpecialSideTwoColourInkPercent3',
-				'chkSpecialSideTwoColour4', 'txtSpecialSideTwoColour4', 'txtSpecialSideTwoColourInkPercent4',
-				'chkSpecialSideTwoColour5', 'txtSpecialSideTwoColour5', 'txtSpecialSideTwoColourInkPercent5',
-				'chkSpecialSideTwoColour6', 'txtSpecialSideTwoColour6', 'txtSpecialSideTwoColourInkPercent6',
-				'chkSpecialSideTwoColour7', 'txtSpecialSideTwoColour7', 'txtSpecialSideTwoColourInkPercent7',
-				'chkSpecialSideTwoColour8', 'txtSpecialSideTwoColour8', 'txtSpecialSideTwoColourInkPercent8',
-				'rdbAqueousSideTwo',
-				'chkVarnishSpotGlossSideTwo','chkVarnishSpotMatteSideTwo','chkVarnishOverallGlossSideTwo','chkVarnishOverallMatteSideTwo','chkVarnishDryTrapSideTwo',
+				'ColourCoatingSideTwo1', 'ColourCoatingTypeSideTwo1', 'ColourCoatingColourSideTwo1','ColourCoatingCoverageSideTwo1',
+				'ColourCoatingSideTwo2', 'ColourCoatingTypeSideTwo2', 'ColourCoatingColourSideTwo2','ColourCoatingCoverageSideTwo2',
+				'ColourCoatingSideTwo3', 'ColourCoatingTypeSideTwo3', 'ColourCoatingColourSideTwo3','ColourCoatingCoverageSideTwo3',
+				'ColourCoatingSideTwo4', 'ColourCoatingTypeSideTwo4', 'ColourCoatingColourSideTwo4','ColourCoatingCoverageSideTwo4',
+				'ColourCoatingSideTwo5', 'ColourCoatingTypeSideTwo5', 'ColourCoatingColourSideTwo5','ColourCoatingCoverageSideTwo5',
+				'ColourCoatingSideTwo6', 'ColourCoatingTypeSideTwo6', 'ColourCoatingColourSideTwo6','ColourCoatingCoverageSideTwo6',
+				'ColourCoatingSideTwo7', 'ColourCoatingTypeSideTwo7', 'ColourCoatingColourSideTwo7','ColourCoatingCoverageSideTwo7',
+				'ColourCoatingSideTwo8', 'ColourCoatingTypeSideTwo8', 'ColourCoatingColourSideTwo8','ColourCoatingCoverageSideTwo8',
+				'ColourCoatingSideTwo9', 'ColourCoatingTypeSideTwo9', 'ColourCoatingColourSideTwo9','ColourCoatingCoverageSideTwo9',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
+				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription','rdbTemplateType',
+				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
+				'txtFinalWidth','txtFinalHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
-		
 		} # end foreach spec
 		foreach my $spec ( 'Press','RunStyle' ) {
 			next if ! exists $$param{'ddm'.$spec.$type};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $$param{'ddm'.$spec.$type} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.$type} );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, 'Y' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.$type} );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, 'Y' );
 				} else {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, '' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, '' );
 				} # end if
 			} # end foreach qty_index
 		} # end foreach spec
-	} # end foreach signature
+		foreach my $spec ( 'PrintingType','StockType' ) {
+			next if ! exists $$param{$spec.$type};
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				if ( $$param{$spec.$type} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.$type} );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, 'Y' );
+				} else {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, '' );
+				} # end if
+			} # end foreach qty_index
+		} # end foreach spec
+		
+	} # end foreach
+
+	if ( misc::sum( values %specified_pages ) < $$param{'txtTotalPageQuantity'} ) {
+# Must have at least 1 interioer signature
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', $max_group + 1 );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'GroupPageQuantity', $needed_pages{'Interior Pages'} - $specified_pages{'Interior Pages'} );
+		$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
+		$signature_count += 1;
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', $signature_count );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
+		sql::end_transaction( $dbh, $ac );
+		$$variable{'Redirect'} = '/main/project/prin/prin_multi.html';
+		return;
+	} # end if
 
 	my %services = $Project->get_services();
 	my $old_bindery_type = get_book_type( $project_index );
@@ -466,7 +545,7 @@ sub multipage_signatures {
 		push @{$services{$$param{'rdbTemplateType'}}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $$param{'rdbTemplateType'} ) if ! $services{$$param{'rdbTemplateType'}};
 	} # end if
 
-	if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound') ) ) {
+	if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound','Unbound') ) ) {
 		# Saddle and Loop Stitching requires Folding
 		push @{$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' ) if ! $services{'Folding'};
 		push @{$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' ) if ! $services{'Cutting'};
@@ -480,7 +559,7 @@ sub get_book_type {
 	my $services = $Project->services();
 
 # the way we cut down the book depends on how it is being bound, so we need this for the signature information.
-	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire, Cerlox','NoBindery' ) {
+	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','NoBindery' ) {
 		
 		if ( $$services{$service} ) {
 			return $service;
@@ -491,15 +570,16 @@ sub get_book_type {
 
 
 sub publication_pages {
-	my ( $r, $log, $dbh, $cookie, $variable ) = @_;
+	my ( $r, $log, $dbh, $variable ) = @_;
     my $service_index = $openprint::param{'ServiceIndex'};
     my $project_index = $openprint::param{'ProjectIndex'};
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION *******************************");
-	
+
 	@{$$variable{'ddmPressOptions'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strcategory='Printing' AND (UseInEstimating IS true) ORDER BY lower(strName)} );
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
+	
 	load_template_sizes ( $log, $dbh, $$variable{'ProjectTypeID'}, $variable );
 
 	$$variable{'rdbGateFoldNo'} = $$variable{'rdbGateFoldYes'} eq '' ? 'checked' : '';
@@ -507,8 +587,7 @@ sub publication_pages {
 	my $Project = new openprint::Project( $project_index );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
-			my $type = $$sig_specs{'txtSignatureType'};
-			$type =~ s/\s//g;
+		my $type = $$sig_specs{'Group'};
 		foreach my $spec ( 
 				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
@@ -517,35 +596,37 @@ sub publication_pages {
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
 				'basis_width','basis_height','basis_mweight','StockGrade',
 				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
-				'chkSpecialSideOneColour1', 'txtSpecialSideOneColour1', 'txtSpecialSideOneColourInkPercent1',
-				'chkSpecialSideOneColour2', 'txtSpecialSideOneColour2', 'txtSpecialSideOneColourInkPercent2',
-				'chkSpecialSideOneColour3', 'txtSpecialSideOneColour3', 'txtSpecialSideOneColourInkPercent3',
-				'chkSpecialSideOneColour4', 'txtSpecialSideOneColour4', 'txtSpecialSideOneColourInkPercent4',
-				'chkSpecialSideOneColour5', 'txtSpecialSideOneColour5', 'txtSpecialSideOneColourInkPercent5',
-				'chkSpecialSideOneColour6', 'txtSpecialSideOneColour6', 'txtSpecialSideOneColourInkPercent6',
-				'chkSpecialSideOneColour7', 'txtSpecialSideOneColour7', 'txtSpecialSideOneColourInkPercent7',
-				'chkSpecialSideOneColour8', 'txtSpecialSideOneColour8', 'txtSpecialSideOneColourInkPercent8',
-				'rdbAqueousSideOne',
-				'chkVarnishSpotGlossSideOne','chkVarnishSpotMatteSideOne','chkVarnishOverallGlossSideOne','chkVarnishOverallMatteSideOne','chkVarnishDryTrapSideOne',
+				'ColourCoatingSideOne1', 'ColourCoatingTypeSideOne1', 'ColourCoatingColourSideOne1','ColourCoatingCoverageSideOne1',
+				'ColourCoatingSideOne2', 'ColourCoatingTypeSideOne2', 'ColourCoatingColourSideOne2','ColourCoatingCoverageSideOne2',
+				'ColourCoatingSideOne3', 'ColourCoatingTypeSideOne3', 'ColourCoatingColourSideOne3','ColourCoatingCoverageSideOne3',
+				'ColourCoatingSideOne4', 'ColourCoatingTypeSideOne4', 'ColourCoatingColourSideOne4','ColourCoatingCoverageSideOne4',
+				'ColourCoatingSideOne5', 'ColourCoatingTypeSideOne5', 'ColourCoatingColourSideOne5','ColourCoatingCoverageSideOne5',
+				'ColourCoatingSideOne6', 'ColourCoatingTypeSideOne6', 'ColourCoatingColourSideOne6','ColourCoatingCoverageSideOne6',
+				'ColourCoatingSideOne7', 'ColourCoatingTypeSideOne7', 'ColourCoatingColourSideOne7','ColourCoatingCoverageSideOne7',
+				'ColourCoatingSideOne8', 'ColourCoatingTypeSideOne8', 'ColourCoatingColourSideOne8','ColourCoatingCoverageSideOne8',
+				'ColourCoatingSideOne9', 'ColourCoatingTypeSideOne9', 'ColourCoatingColourSideOne9','ColourCoatingCoverageSideOne9',
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
-				'chkSpecialSideTwoColour1', 'txtSpecialSideTwoColour1', 'txtSpecialSideTwoColourInkPercent1',
-				'chkSpecialSideTwoColour2', 'txtSpecialSideTwoColour2', 'txtSpecialSideTwoColourInkPercent2',
-				'chkSpecialSideTwoColour3', 'txtSpecialSideTwoColour3', 'txtSpecialSideTwoColourInkPercent3',
-				'chkSpecialSideTwoColour4', 'txtSpecialSideTwoColour4', 'txtSpecialSideTwoColourInkPercent4',
-				'chkSpecialSideTwoColour5', 'txtSpecialSideTwoColour5', 'txtSpecialSideTwoColourInkPercent5',
-				'chkSpecialSideTwoColour6', 'txtSpecialSideTwoColour6', 'txtSpecialSideTwoColourInkPercent6',
-				'chkSpecialSideTwoColour7', 'txtSpecialSideTwoColour7', 'txtSpecialSideTwoColourInkPercent7',
-				'chkSpecialSideTwoColour8', 'txtSpecialSideTwoColour8', 'txtSpecialSideTwoColourInkPercent8',
-				'rdbAqueousSideTwo',
-				'chkVarnishSpotGlossSideTwo','chkVarnishSpotMatteSideTwo','chkVarnishOverallGlossSideTwo','chkVarnishOverallMatteSideTwo','chkVarnishDryTrapSideTwo',
+				'ColourCoatingSideTwo1', 'ColourCoatingTypeSideTwo1', 'ColourCoatingColourSideTwo1','ColourCoatingCoverageSideTwo1',
+				'ColourCoatingSideTwo2', 'ColourCoatingTypeSideTwo2', 'ColourCoatingColourSideTwo2','ColourCoatingCoverageSideTwo2',
+				'ColourCoatingSideTwo3', 'ColourCoatingTypeSideTwo3', 'ColourCoatingColourSideTwo3','ColourCoatingCoverageSideTwo3',
+				'ColourCoatingSideTwo4', 'ColourCoatingTypeSideTwo4', 'ColourCoatingColourSideTwo4','ColourCoatingCoverageSideTwo4',
+				'ColourCoatingSideTwo5', 'ColourCoatingTypeSideTwo5', 'ColourCoatingColourSideTwo5','ColourCoatingCoverageSideTwo5',
+				'ColourCoatingSideTwo6', 'ColourCoatingTypeSideTwo6', 'ColourCoatingColourSideTwo6','ColourCoatingCoverageSideTwo6',
+				'ColourCoatingSideTwo7', 'ColourCoatingTypeSideTwo7', 'ColourCoatingColourSideTwo7','ColourCoatingCoverageSideTwo7',
+				'ColourCoatingSideTwo8', 'ColourCoatingTypeSideTwo8', 'ColourCoatingColourSideTwo8','ColourCoatingCoverageSideTwo8',
+				'ColourCoatingSideTwo9', 'ColourCoatingTypeSideTwo9', 'ColourCoatingColourSideTwo9','ColourCoatingCoverageSideTwo9',
 				'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
 				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
 				'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
-				'SideOneUVCoatingType','SideTwoUVCoatingType',
+				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
+				'txtSignatureType','rdbTemplateType',
+				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
+				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {
 			$$variable{$spec.$type} = $$sig_specs{$spec};
+$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");
 		} # end foreach spec
 	} # end foreach ss_id
 
@@ -570,8 +651,7 @@ sub get_insert_specs {
 } # end sub
 
 sub get_finished_weight {
-	my ( $log, $dbh, $project_index ) = @_; 
-	my $debug = 0;
+	my ( $project_index ) = @_; 
 	my $project_weight;
 
 	my $Project = new openprint::Project( $project_index );
@@ -582,18 +662,18 @@ sub get_finished_weight {
 		next if ! $Project->quantity($qty_index);
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-			next if $$specs{'txtSignatureType'} and ! $$specs{'PageQuantity'.$qty_index};
-			my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $specs, $qty_index );
+			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			next if $$sig_specs{'txtSignatureType'} and ! $$sig_specs{'PageQuantity'.$qty_index};
+			my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
 			if ( ! $sig_weight ) {
 				# unable to get weight for a sig, must recalc printing service
 				return 0;
 			} # end if
 			$project_weight += $sig_weight;
-		} # end foreach
+		} # end foreach signature_service_index
 		last;
-	} # end foreach
-	$log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{'WeightMarkup'}/100));
+	} # end foreach qty_index
+	#$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{'WeightMarkup'}/100));
 	
 	# This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
 	return $project_weight * (1+$openprint::config{'WeightMarkup'}/100);
@@ -603,25 +683,30 @@ sub get_finished_weight {
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
 	my ( $project_index ) = @_; 
-	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE *********************************");
 
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
 	my $folding_specs;	
-	my $folding_service_index = $services{'Folding'}[0] if $services{'Folding'};
+	my $folding_service_index = $$services{'Folding'}[0] if $$services{'Folding'};
 	if ( $folding_service_index ) {
 		$folding_specs = openprint::service::get_specs_ref( $project_index, $folding_service_index );
 	} # end if
 
+	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
+
 	my $finished_calliper;
     foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		my $calliper = $$sig_specs{'txtSignatureSpreadQuantity1'} ? $$sig_specs{'txtSignatureSpreadQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-		if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
-			$finished_calliper += $calliper * 2;
-		} elsif ( $$sig_specs{'ProjectType'} eq 'ScratchPads' ) {
-			$finished_calliper += $$sig_specs{'PageQuantity'} * $calliper;
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+		my $calliper = $$sig_specs{'txtSpecificStockCalliper'};
+
+		if ( $Project->Type()->strid() eq 'ScratchPads' ) {
+			$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
+		} elsif ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
+			if ( $$sig_specs{'PageQuantity1'} ) {
+				$calliper *= $$sig_specs{'PageQuantity1'}/2;
+			} # end if
+			$finished_calliper += $calliper;
 		} else {
 				my $pages = 1;
 				if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
@@ -641,10 +726,10 @@ sub get_finished_calliper {
 				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
 					$pages = 6;
 				} #// end if
-				$finished_calliper += $pages * $$sig_specs{'txtSpecificStockCalliper'};
+				$finished_calliper += $pages * $calliper;
 		} # end if
 	} # end foreach
-$openprint::log->debug("Calliper: $finished_calliper");
+	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER $finished_calliper *********************************");
 	return $finished_calliper;
 } # end sub get_finished_calliper
 

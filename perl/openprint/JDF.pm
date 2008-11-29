@@ -51,9 +51,9 @@ my %coatings = (
 
 sub ProductType {
 	my ( $Project, $sig_specs ) = @_;
-	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 		return 'Cover';
-	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' ) {
+	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Pages' ) {
 		return 'Body';
 	} elsif ( sets::isin( $Project->Type->strid(), [ 'Brochures','Flyers' ] ) ) {
 		return 'Brochure';
@@ -121,8 +121,8 @@ $openprint::log->debug("Starting JDF Prepress");
 	$RunListFile->setAttribute('ID','RNL'.$$sig_specs{'SignatureIndex'}.'_File');
 	$RunListFile->setAttribute('Class','Parameter');
 	$RunListFile->setAttribute('Status','Available');
-	if ( $$sig_specs{'txtSpreadSize'}*$$sig_specs{'txtSignatureSpreadQuantity'.$Project->ordered_quantity_index()} ) {
-		$RunListFile->setAttribute('NPage',$$sig_specs{'txtSpreadSize'}*$$sig_specs{'txtSignatureSpreadQuantity'.$Project->ordered_quantity_index()} );
+	if ( $$sig_specs{'PageQuantity'.$Project->ordered_quantity_index()} ) {
+		$RunListFile->setAttribute('NPage',$$sig_specs{'PageQuantity'.$Project->ordered_quantity_index()} );
 	} elsif ( @side_one_colours and @side_two_colours ) {
 		$RunListFile->setAttribute('NPage',2);
 	} else {
@@ -240,7 +240,7 @@ $openprint::log->debug("Starting JDF BinderySignature");
 		if ( $$sig_specs{'rdbTemplateType'} ) {
 			$BinderySignature->setAttribute('FoldCatalog',$folds{$$sig_specs{'rdbTemplateType'}} );
 		} else {
-			$BinderySignature->setAttribute('FoldCatalog',$folds{$$sig_specs{'txtSpreadSize'}*$$sig_specs{'txtSignatureSpreadQuantity'.$Project->ordered_quantity_index()}.'PageFold'} );
+			$BinderySignature->setAttribute('FoldCatalog',$folds{$$sig_specs{'PageQuantity'.$Project->ordered_quantity_index()}.'PageFold'} );
 		} # end if
 	} elsif ( $services{'DieCutting'} ) {
 		#$BinderySignature->setAttribute('BinderySignatureType','Die');
@@ -315,7 +315,7 @@ $openprint::log->debug("Starting JDF StrippingParams");
 		$StripCellParams->setAttribute('MillingDepth',0);
 		$StripCellParams->setAttribute('Spine',0 );
 		my $lap = .25 * 72;
-		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 			if ( $Paper->gsm() >= 216 ) { # ROughly 80lb
 # Cover doesn't need lap, unless it is off center or under 80lb
 				$lap = 0;
@@ -602,7 +602,7 @@ sub JDF_ImpositionIntent {
 	$LayoutLink->setAttribute('Usage','Input');
 	$LayoutLink->setAttribute('rRef',$Layout->getAttribute('ID') );
 
-	my $Pages = $$sig_specs{'txtSignatureSpreadQuantity'.$Project->ordered_quantity_index()}*$$sig_specs{'txtSpreadSize'};
+	my $Pages = $$sig_specs{'PageQuantity'.$Project->ordered_quantity_index()};
 	$Pages = 2 if ! $Pages;
 
 	{
@@ -747,11 +747,11 @@ if ( 1 ) {
 					0
 					) );
 	} # end if
-	if ( $$sig_specs{'txtSignatureSpreadQuantity'.$Project->ordered_quantity_index()} ) {
+	if ( $$sig_specs{'PageQuantity'.$Project->ordered_quantity_index()} ) {
 		my $Pages = $LayoutIntent->appendChild( $doc->createElement('Pages'));
 		$Pages->setAttribute('DataType','IntegerSpan');
-		$Pages->setAttribute('Actual',$$sig_specs{'txtSignatureSpreadQuantity'.$Project->ordered_quantity_index()}*$$sig_specs{'txtSpreadSize'} );
-		$Pages->setAttribute('Preferred',$$sig_specs{'txtSignatureSpreadQuantity'.$Project->ordered_quantity_index()}*$$sig_specs{'txtSpreadSize'} );
+		$Pages->setAttribute('Actual',$$sig_specs{'pageQuantity'.$Project->ordered_quantity_index()});
+		$Pages->setAttribute('Preferred',$$sig_specs{'PageQuantity'.$Project->ordered_quantity_index()});
 	} # end if
 	
 	my $LayoutIntentLink  = $ResourceLinkPool->appendChild( $doc->createElement('LayoutIntentLink') );

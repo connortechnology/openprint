@@ -1,12 +1,67 @@
-<link href="/css/quote.css" rel="stylesheet" type="text/css">
-<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
-If you would like to send a copy of this quotation to someone on your behalf 
-please fill in the necessary information below. This quote will be stored in 
-quote history. If it is for your own personal reference leave the &quot;Prepared 
-For&quot; fields blank.<br/>
-<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
+<script type="text/javascript">
+	function company_onchange( e ) {
+		new Ajax.Request( '_company_information.json', { method: 'get', parameters: { company_id: e.value }, onSUccess: function(response){fill_form_from_xml($('f1'), response.responseXML);} } );
+	} // end function
+	function user_onchange( e ) {
+		new Ajax.Request( '_user_information.json', { method: 'get', parameters: { user_id: e.value } } );
+	} // end function
+
+	function get_element_index( form, elem ) {
+		for ( var i=0; i < form.elements.length; i+= 1 ) {
+			if ( form.elements[i] == elem ) {
+				return i;
+			} // end if 
+		} // end for
+		return -1;
+	} // end function get_element_index( form, elem ) 
+
+	function calc_from_markup( form, elem ) {
+		var index = get_element_index( form, elem );
+		var newprice = form.elements[index+1].value * ((elem.value/100)+1);
+
+		form.elements[index+2].value = do_decimals( newprice,2 );
+		calc_subtotal( form );
+	} // end function calc_from_markup( elem ) 
+
+	function calc_from_price( form, elem ) {
+		var index = get_element_index( form, elem );
+		var markup = ( elem.value*100 / form.elements[index-1].value ) - 100;
+
+		form.elements[index-2].value = do_decimals( markup,2 );
+		calc_subtotal( form );
+	} // end function calc_from_price( elem ) 
+
+	function calc_subtotal(form) {
+		var subTotals = new Array();
+
+		for ( var i=0; i < form.elements.length-3; i += 1 ) {
+			name = form.elements[i].name.substr(0,11);
+			if ( name == 'txtNewPrice' ) {
+				var priceIndex = parseInt(form.elements[i].name.substr(11,1));
+				if ( null == subTotals[priceIndex-1] ) {
+					subTotals[priceIndex-1] = parseFloat(form.elements[i].value);
+				} else {
+					subTotals[priceIndex-1] += parseFloat(form.elements[i].value);
+				} // end if
+			} // end if
+		} // end for
+		for ( var i = 0; i < subTotals.length; i += 1 ) {
+			form.elements['subTotal'+(i+1)].value = do_decimals( subTotals[i],2 );
+		} // end for
+	} // end function recalculate_quote(form)
+</script>
+<? if ( ! $$variable{'Quote'}->id() ) ?>
+	There is no current quote.
+<? else ( ! $$variable{'Quote'}->id() ) ?>
+
+	<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
+	If you would like to send a copy of this quotation to someone on your behalf 
+	please fill in the necessary information below. This quote will be stored in 
+	quote history. If it is for your own personal reference leave the &quot;Prepared 
+	For&quot; fields blank.<br/>
+	<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <br/>
-<form method="post" name="f1" action="submit.html"/>
+<form method="post" id="f1" name="f1" action="submit.html"/>
 	<div class="QuoteInformation"/>
 <? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset style="float: left; width: 49%;"/>
@@ -58,15 +113,15 @@ For&quot; fields blank.<br/>
 			</p>
 			<p> 
 				<label>&nbsp;
-<? echo (
-if ( $openprint::config{'Country'} eq 'US' ) {
-	return 'State';
-} elsif ( $openprint::config{'Country'} eq 'CA' ) {
-	return 'Province';
-} else {
-	return 'State/Province';
-} # end if
-) ?>:</label>
+				<? echo (
+				if ( $openprint::config{'Country'} eq 'US' ) {
+					return 'State';
+				} elsif ( $openprint::config{'Country'} eq 'CA' ) {
+					return 'Province';
+				} else {
+					return 'State/Province';
+				} # end if
+				) ?>:</label>
 				<select name="ByStateProvince">
 					<option value=""> Select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'ByStateProvince'}); ) ?>
@@ -78,15 +133,15 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 			</p>
 			<p> 
 				<label>&nbsp;
-<? echo (
-if ( $openprint::config{'Country'} eq 'US' ) {
-	return 'Zip Code';
-} elsif ( $openprint::config{'Country'} eq 'CA' ) {
-	return 'Postal Code';
-} else {
-	return 'Zip/Postal Code';
-} # end if
-) ?>:</label>
+				<? echo (
+				if ( $openprint::config{'Country'} eq 'US' ) {
+					return 'Zip Code';
+				} elsif ( $openprint::config{'Country'} eq 'CA' ) {
+					return 'Postal Code';
+				} else {
+					return 'Zip/Postal Code';
+				} # end if
+				) ?>:</label>
 				<input type="text" name="ByPostalCode" value="<?ByPostalCode?>" />
 			</p>
 			<p> 
@@ -105,9 +160,28 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 		</fieldset>
 <? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset style="float:right; width: 49%;"/><legend>Prepared For:</legend>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) or $config{'ProtectCustomerDatabase'} eq 'N' ) ?>
+			<p> 
+				<label>&nbsp;Company:</label>
+				<input type="text" style="width: auto;" onkeyup="if ( filterDDM(this, this.form.company_id) ) company_onchange($('company_id'));" onkeydown="if(event.keyCode == 13){company_onchange($('company_id'));}" size="4"/>
+				<select id="company_id" name="company_id" onchange="company_onchange(this);">
+					<option value="">select</option>
+					<? echo ( openprint::Company::get_dropdown( ) ) ?>
+				</select>	
+			</p>
+			<p> 
+				<label>&nbsp;Contact:</label>
+				<input type="text" style="width: auto;" onkeyup="if(filterDDM(this, this.form.user_id))user_onchange($('user_id'));;" onkeydown="if(event.keyCode == 13){user_onchange($('user_id'));}" size="4"/>
+				<select id="user_id" name="user_id" onchange="user_onchange(this);">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id'=>$session{'company_id'},'order'=>'lower(strfirstname),lower(strlastname)' ) ] ); ) ?>
+				</select>	
+			</p>
+			<br/>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) or $config{'ProtectCustomerDatabase'} eq 'N' ) ?>
 			<p> 
 				<label>&nbsp;Company Name:</label>
-				<input type="text" name="ForCompanyName" value="<?ForCompanyName?>" />
+				<input type="text" id="ForCompanyName" name="ForCompanyName" value="<?ForCompanyName?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Salutation:</label>
@@ -122,84 +196,208 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 			</p>
 			<p> 
 				<label>*First Name:</label>
-				<input type="text" name="ForFirstName" value="<?ForFirstName?>" />
+				<input type="text" id="ForFirstName" name="ForFirstName" value="<?ForFirstName?>" />
 			</p>
 			<p> 
 				<label>*Last Name:</label>
-				<input type="text" name="ForLastName" value="<?ForLastName?>" />
+				<input type="text" id="ForLastName" name="ForLastName" value="<?ForLastName?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Title:</label>
-				<input type="text" name="ForTitle" value="<?ForTitle?>" />
+				<input type="text" id="ForTitle" name="ForTitle" value="<?ForTitle?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Address:</label>
-				<input type="text" name="ForAddress1" value="<?ForAddress1?>" />
+				<input type="text" id="ForAddress1" name="ForAddress1" value="<?ForAddress1?>" />
 			</p>
 			<p> 
 				<label>&nbsp;</label>
-				<input type="text" name="ForAddress2" value="<?ForAddress2?>" />
+				<input type="text" id="ForAddress2" name="ForAddress2" value="<?ForAddress2?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Country:</label>
-				<select name="ForCountry" onchange="Country_onchange( this, this.form.ForStateProvince );">
+				<select id="ForCountry" name="ForCountry" onchange="Country_onchange( this, this.form.ForStateProvince );">
 					<option value=""> Select </option>
 					<? echo ( ssi::return_countries($$variable{'ForCountry'}); ) ?>
 				</select>
 			</p>
 			<p> 
 				<label>&nbsp;
-<? echo (
-if ( $openprint::config{'Country'} eq 'US' ) {
-	return 'State';
-} elsif ( $openprint::config{'Country'} eq 'CA' ) {
-	return 'Province';
-} else {
-	return 'State/Province';
-} # end if
-) ?>:</label>
-				<select name="ForStateProvince" >
+				<? echo (
+				if ( $openprint::config{'Country'} eq 'US' ) {
+					return 'State';
+				} elsif ( $openprint::config{'Country'} eq 'CA' ) {
+					return 'Province';
+				} else {
+					return 'State/Province';
+				} # end if
+				) ?>:</label>
+				<select id="ForStateProvince" name="ForStateProvince" >
 					<option value=""> Select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'ForStateProvince'}); ) ?>
 				</select>
 			</p>
 			<p> 
 				<label>&nbsp;City:</label>
-				<input type="text" name="ForCity" value="<?ForCity?>" />
+				<input type="text" id="ForCity" name="ForCity" value="<?ForCity?>" />
 			</p>
 			<p> 
 				<label>&nbsp;
-<? echo (
-if ( $openprint::config{'Country'} eq 'US' ) {
-	return 'Zip Code';
-} elsif ( $openprint::config{'Country'} eq 'CA' ) {
-	return 'Postal Code';
-} else {
-	return 'Zip/Postal Code';
-} # end if
-) ?>:</label>
-				<input type="text" name="ForPostalCode" value="<?ForPostalCode?>" />
+				<? echo (
+				if ( $openprint::config{'Country'} eq 'US' ) {
+					return 'Zip Code';
+				} elsif ( $openprint::config{'Country'} eq 'CA' ) {
+					return 'Postal Code';
+				} else {
+					return 'Zip/Postal Code';
+				} # end if
+				) ?>:</label>
+				<input type="text" id="ForPostalCode" name="ForPostalCode" value="<?ForPostalCode?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Phone:</label>
-				<input type="text" name="ForPhone" value="<?ForPhone?>" size="15" style="width:auto;"/> ext:
-				<input type="text" name="ForExtension" value="<?ForExtension?>" size="4" style="width: auto;"/>
+				<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" size="15" style="width:auto;"/> ext:
+				<input type="text" id="ForExtension" name="ForExtension" value="<?ForExtension?>" size="4" style="width: auto;"/>
 			</p>
 			<p> 
 				<label>&nbsp;Fax:</label>
-				<input type="text" name="ForFax" value="<?ForFax?>" />
+				<input type="text" id="ForFax" name="ForFax" value="<?ForFax?>" />
 			</p>
 			<p> 
 				<label>*E-mail Address:</label>
-				<input type="text" name="ForEmail" value="<?ForEmail?>" />
+				<input type="text" id="ForEmail" name="ForEmail" value="<?ForEmail?>" />
 			</p>
 		</fieldset>
 		<br class="spacer"/>
-<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
-		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' ); ) ?>
-		</p>
+	<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 	</div>
-	<input type="hidden" name="btnFunction"/>
-</form>
-<br class="spacer"/>
+	<br class="spacer"/>
+	<? if ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+			No projects
+	<? else ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+		<? if ( new openprint::Company($openprint::session{'company_id'})->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
+		<table class="List"> 
+			<tr> 
+				<th align="left">Project</th>
+				<th width="90">Markup %</th>
+				<th width="50" align="right">Qty</th>
+				<th width="70" align="right">Price</th>
+				<th width="110" align="right">New Price</th>
+				<th width="100" align="right">Changes</th>
+			</tr>
+			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+			<? eval ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+			<tr<?rowclass?>> 
+				<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?>&nbsp;</a></td>
+				<td align="center"> 
+					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
+				</td>
+				<td align="right"><?qty?></td>
+				<td align="right"> 
+					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
+					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?>
+				</td>
+				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
+					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right;" value="<?newprice?>" onkeyup="calc_from_price( f1, this );" />
+				</td>
+				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&remove=<?project_index?>">Remove</a></td>
+			</tr>
+			<? while ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+			<? if ( $$variable{'qty'} ) ?>
+			<tr<?rowclass?>> 
+				<td>&nbsp;</td>
+				<td align="center"> 
+					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6"  value="<?markup?>" onkeyup="calc_from_markup(f1, this);"/>
+				</td>
+				<td align="right"><?qty?></td>
+				<td align="right"> 
+					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
+					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?>
+				</td>
+				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
+					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right; margin: 0px;" value="<?newprice?>"  onkeyup="calc_from_price( f1, this );" />
+				</td>
+				<td align="right">&nbsp;</td>
+			</tr>
+			<? endif ( $$variable{'qty'} ) ?>
+			<? endwhile ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+			<? endwhile ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+			<tr> 
+				<td colspan="6" align="right">
+					<br>
+					<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+					Prices are subject to applicable taxes.<br/>
+					Prices are calculated to the best of our ability, 
+					if changes are necessary you will be notified.
+				</td>
+			</tr>
+		</table>
+		<? else ( new openprint::Company($openprint::session{'company_id'})->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
+		<table class="List">
+			<tr> 
+				<th align="left">Project</th>
+				<th width="50" align="right">Qty</th>
+				<th width="150" align="right">Price</th>
+				<th width="100" align="right">Changes</th>
+			</tr>
+			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+			<? eval ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+			<tr<?rowclass?>> 
+				<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?>&nbsp;</a></td>
+				<td align="right"><?qty?></td>
+				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> <?stdprice?> </td>
+				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?remove=<?project_index?>">Remove</a></td>
+			</tr>
+			<? while ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+			<? if ( $$variable{'qty'} ) ?>
+			<tr<?rowclass?>> 
+				<td>&nbsp;</td>
+				<td align="right"><?qty?></td>
+				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> <?stdprice?> </td>
+				<td align="right">&nbsp;</td>
+			</tr>
+			<? endif ( $$variable{'qty'} ) ?>
+			<? endwhile ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+			<? endwhile ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+			<tr> 
+				<td colspan="4" height="5"><hr/></td>
+			</tr>
+			<tr> 
+				<td colspan="4" align="right"><br>
+					<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+					Prices are subject to applicable taxes.<br/>
+					Prices are calculated to the best of our ability, 
+					if changes are necessary you will be notified.</td>
+			</tr>
+			<tr> 
+				<td colspan="4" height="10"></td>
+			</tr>
+			<tr> 
+				<td colspan="4"> 
+					<? if ( ! $openprint::session{'user_id'} ) ?>
+					<div align="right"><b>Note:</b><br>
+						If you would like to store this quote in history for future reference, 
+						you must be logged in.<br>
+						If you are a registered user already and would like to login, click 
+						<a href="/main/account/login.html"><b>here</b></a>.<br>
+						If you would like to register, click <a href="/main/account/registration.html"><b>here</b></a>.<br>
+						<? endif ( ! $openprint::session{'user_id'} ) ?>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<? endif ( new openprint::Company($openprint::session{'company_id'})->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
+		<? endif ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+		<p class="buttons">
+				<? echo ( 
+					my $html;
+					$html .= ssi::writeButton( $log, $dbh, 'AddFromHistory','add_project_from_history.gif','','/main/project/history.html','Add Project From History' ) if $openprint::session{'user_id'};
+					$html .= ssi::writeButton( $log, $dbh, 'CreateNewProject','add_new_project.gif','','/main/project/create_edit.html','Add New Project' );
+					$html .= ssi::writeButton( $log, $dbh, 'Continue','continue.gif',"f1.btnFunction.value='Continue';f1.submit();",'','Continue' );
+					) ?>
+		</p>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+<? endif ( ! $$variable{'Quote'}->id() ) ?>

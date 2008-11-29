@@ -9,7 +9,6 @@ use Apache2::RequestIO ();
 
 use GD::Barcode::UPCE;
 use GD::Barcode;
-use Barcode::Code128;
 use Image::Magick;
 
 use strict;
@@ -42,6 +41,7 @@ sub handler {
 		} # end if
 		$blob = $barcode->plot(NoText=>$no_text, Height => $height )->png;
 	} elsif ( $codetype eq 'Code128' ) {
+		require Barcode::Code128;
 		$barcode = new Barcode::Code128;
 		$blob = $barcode->png($code, {'height'=>$height,'border'=>0, 'font_align'=>'center','show_text'=>!$no_text,'transparent_text'=>1});
 	} # end if

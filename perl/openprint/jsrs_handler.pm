@@ -28,7 +28,7 @@ require openprint::Estimating::Shipping;
 require openprint::service;
 require	openprint::Estimating::Lamination;
 require	openprint::Object;
-require openprint::administrator_paper;
+require openprint::administrator_stock;
 require openprint::employee_schedule;
 
 use openprint ();
@@ -65,6 +65,9 @@ sub handler {
 	openprint::usergroup::init_cache();
 	openprint::Material::init_cache();
 	openprint::Service::init_cache();
+	openprint::ServiceType::init_cache();
+	openprint::Equipment::init_cache();
+	openprint::Paper::init_cache();
 
 	foreach my $key ( $r->param() ) {
 $log->debug("Paramter: $key => " . $r->param($key) );
@@ -96,7 +99,7 @@ $log->debug("Paramter: $key => " . $r->param($key) );
 
 		close file_handle;
 
-		$file_data = ssi::variable_substitution( $r, $r->log, $dbh, \$file_data, \%variable );
+		$file_data = ssi::variable_substitution( \$file_data, \%variable );
 
 		$r->print( $file_data );
 	} # end if
@@ -138,7 +141,7 @@ sub load_content {
 	} # end while
 
 	my $content = misc::load_file( $log,  $ENV{'DOCUMENT_ROOT'}.$page );
-	return jsrs::encode_pairs( 'Div', $div, 'Content', ssi::variable_substitution( $r, $r->log, $dbh, \$content, $variable ) );
+	return jsrs::encode_pairs( 'Div', $div, 'Content', ssi::variable_substitution( \$content, $variable ) );
 } # end sub load_content
 
 sub fill_ddm {
@@ -173,7 +176,7 @@ sub exec {
 	} # end while
 
 	my $content = eval $function.'($r, $log, $dbh, $variable);';
-	return jsrs::encode_pairs( 'Div', $div, 'Content', ssi::variable_substitution( $r, $r->log, $dbh, \$content, $variable ) );
+	return jsrs::encode_pairs( 'Div', $div, 'Content', ssi::variable_substitution( \$content, $variable ) );
 } # end sub load_content
 
 1;

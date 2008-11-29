@@ -1,0 +1,342 @@
+<script type="text/javascript" src="/administrator/stock/stock.js"></script>
+<style type="text/css">
+	span.input {
+		float: right;
+	}
+	fieldset p {
+		padding: 0px;
+		text-align: right;
+	}
+	fieldset p label {
+		width: auto;
+		margin: 0px;
+	}
+</style>
+<div class="error"><?error?></div>
+<div class="information"><?information?></div>
+<form name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{'Stock'}->id(); ) ?>">
+	<p class="buttons">
+		<? echo ( join('',
+		ssi::writeButton($log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='Prev';fmChange=1;fmCheck(f1);",'','<<'),
+		ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';f1.submit();",'','>>'),
+		#ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);",'','>>'),
+		ssi::writeButton($log, $dbh, 'Add1','add.gif',"f1.action='stock.html';f1.btnFunction.value='';f1.submit();",'','Add New'),
+		ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
+		ssi::writeButton($log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';f1.submit();",'','Copy'),
+		ssi::writeButton($log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+		ssi::writeButton($log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
+); ) ?>
+	</p>
+	<br class="spacer"/>
+	<fieldset class="Stock"><legend>Stock Information: (<? echo ( $$variable{'Stock'}->id(); ) ?>)</legend>
+		<div class="leftColumn">
+			<p>
+				<label for="ddmOwner">Owner:</label>
+				<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( openprint::Company::get_dropdown( $$variable{'Stock'}->owner_id() ); ) ?></select>
+			</p>
+			<p>
+				<label for="txtGroup" onclick="$('Group').toggle();$('txtGroup').toggle();">Group:</label>
+				<select id="Group" name="Group" size="1">
+					<option value="">select</option>
+				<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup::find('order'=>'lower(name)') ], $$variable{'Stock'}->group_id() );
+						) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtGroup" name="txtGroup" />
+			</p>
+			<p>
+				<label for="txtManufacturer" onclick="$('ddmManufacturer').toggle();$('txtManufacturer').toggle();">Manufacturer:</label>
+				<select id="ddmManufacturer" name="ddmManufacturer" size="1">
+					<option value="">select</option>
+				<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->manufacturer_id() );
+						) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
+			</p>
+			<p>
+				<label for="txtName" onclick="$('txtName').toggle();$('ddmName').toggle();">Name:</label>
+				<select id="ddmName" name="ddmName" size="1" onchange="f1.txtName.value='';">
+					<option value="">select</option>
+					<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->name_id() );
+					) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="ddm_select_by_index( f1.ddmName, 0 );" />
+			</p>
+			<p>
+				<label for="txtFinish" onclick="$('txtFinish').toggle();$('ddmFinish').toggle();">Finish:</label>
+				<select id="ddmFinish" name="ddmFinish" size="1" onchange="f1.txtFinish.value='';">
+					<option value="">select</option>
+				<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->finish_id() );
+				) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.ddmFinish, 0 );" />
+			</p>
+			<p>
+				<label for="txtColour" onclick="$('txtColour').toggle();$('ddmColour').toggle();">Colour:</label>
+				<select id="ddmColour" name="ddmColour" size="1" onchange="f1.txtColour.value='';">
+					<option value="">select</option>
+					<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->colour_id() );
+					) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.ddmColour, 0 );" />
+			</p>
+			<p>
+				<label for="txtWeight" onclick="$('txtWeight').toggle();$('ddmWeight').toggle();">Weight:</label>
+				<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';">
+					<option value="">select</option>
+				<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->weight_id() );
+						) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
+			</p>
+			<p>
+				<label for="txtQuality" onclick="$('txtQuality').toggle();$('ddmQuality').toggle();">Quality:</label>
+				<select id="ddmQuality" name="ddmQuality" size="1">
+					<option value="">select</option>
+				<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockQuality::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->quality_id() );
+						) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.ddmQuality, 0 ) ;" />
+			</p>
+			<p>
+                <label for="material" onclick="$('material').toggle();$('material_id').toggle();">Material:</label>
+                <select id="material_id" name="material_id" size="1" onchange="f1.material.value='';">
+                    <option value="">select</option>
+                <? echo (
+                        return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockMaterial::find('order'=>'lower(name)') ], $$variable{'Stock'}->material_id() );
+                        ) ?>
+                </select>
+                <input style="display: none;" type="text" id="material" name="material" onfocus="ddm_select_by_index( f1.material_id, 0 );" />
+            </p>
+			<p>
+				<label for="grade">Grade:</label>
+				<select id="grade" name="grade" size="1">
+				<? echo (
+					my @options = ( '', 'select one',1,'1 Gloss-coated stock',2,'2 Matte-coated stock',3,'3 Gloss-coated, web stock', 4, '4 Uncoated, white stock', 5, '5 Uncoated, yellow stock' );
+					return ssi::make_drop_down( \@options, $$variable{'Stock'}->grade() );
+				) ?>
+				</select>
+			</p>
+			<p> 
+				<label>Calliper:</label>
+				<input type="text" name="calliper" value="<? echo ( $$variable{'Stock'}->calliper(); ) ?>"  size="12" style="width: auto;"> inches
+			</p>
+			<p>
+				<label>Type:</label>
+				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('StockHeight').show();$('BasisSize').hide();$('MWeight').show();$('QuantityPerPackageUnits').innerHTML='sheets';$('MinimumOrderUnits').innerHTML='sheets';" <? echo ( 'checked="checked"' if $$variable{'Stock'}->type() ne 'Roll'; ) ?> />
+                <label class="radio" for="typeSheet">Sheet</label>
+                <input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('StockHeight').hide();$('BasisSize').show();$('MWeight').hide();$('QuantityPerPackageUnits').innerHTML='lbs';$('MinimumOrderUnits').innerHTML='lbs';" <? echo ( 'checked="checked"' if $$variable{'Stock'}->type() eq 'Roll'; ) ?> />
+                <label class="radio" for="typeRoll">Roll</label>
+			</p>
+			<p>
+				<label>Size:</label>
+				<input type="text" name="width" value="<? echo ( $$variable{'Stock'}->width(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
+				<span id="StockHeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>> x
+				<input type="text" name="height" value="<? echo ( $$variable{'Stock'}->height(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
+			
+				</span> inches
+			</p>
+			<p id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>> 
+				<label>MWeight:</label>
+				<input type="text" name="mweight" value="<? echo ( $$variable{'Stock'}->mweight(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm( this.form );" />
+			</p>
+			<p id="BasisSize" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() ne 'Roll' ) ?>>
+				<label>Basis MWeight:</label><input type="text" name="basis_mweight" size="9" value="<? echo ( $$variable{Stock}->basis_mweight() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm(this.form);" style="width: auto;" /><br/>
+				<label>Basis Size:</label>
+				<input type="text" name="basis_width" size="9" value="<? echo ( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
+				<input type="text" name="basis_height" size="9" value="<? echo ( $$variable{Stock}->basis_height() ?  $$variable{Stock}->basis_height() : 38 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
+			</p>
+			<p> 
+				<label>GSM:</label>
+				<input type="text" name="gsm" value="<? echo ( $$variable{'Stock'}->gsm(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );" />
+			</p>
+			<p> 
+				<label>Grain Direction:</label>
+				<input type="radio" name="grain_direction" id="grain_directionLong" value="Long" <? echo ( 'checked="checked"' if $$variable{'Stock'}->grain_direction() eq 'Long' ) ?> />
+				<label class="radio" for="grain_directionLong">Long</label>
+				<input type="radio" name="grain_direction" id="grain_directionShort" value="Short" <? echo ( 'checked="checked"' if $$variable{'Stock'}->grain_direction() eq 'Short' ) ?> />
+				<label class="radio" for="grain_directionShort">Short</label>
+			</p>
+			<p> 
+				<label>Customer Supplied:</label>
+				<input type="radio" name="supplied" id="supplied1" value="1" <? echo ( $$variable{'Stock'}->supplied() ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="supplied1">Yes</label>
+				<input type="radio" name="supplied" id="supplied0" value="0" <? echo ( $$variable{'Stock'}->supplied()eq '0' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="supplied0">No</label>
+				<input type="radio" name="supplied" id="supplied" value="" <? echo ( $$variable{'Stock'}->supplied() eq '' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="supplied">Both</label>
+			</p>
+			<p> 
+				<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>):</label>
+				<input type="text" name="sheets_per_package" value="<? echo ( $$variable{'Stock'}->sheets_per_package(); ) ?>"  size="12" style="width: auto;"> 
+			</p>
+	</div><!--left-->
+	<div class="rightColumn">
+		<p> 
+			<label>Order Full Packages:</label>
+			<input type="radio" name="full_packages" id="full_packages1" value="1" <? echo ( $$variable{'Stock'}->full_packages() ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="full_packages1">Yes</label>
+			<input type="radio" name="full_packages" id="full_packages0" value="0" <? echo ( $$variable{'Stock'}->full_packages()eq '0' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="full_packages0">No</label>
+		</p>
+		<p>
+			<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>):</label>
+			<input type="text" name="minimum_order" value="<? echo ( $$variable{'Stock'}->minimum_order(); ) ?>"  size="13" style="width: auto;">
+		</p>
+		<p> 
+			<label>FSC Code:</label>
+			<input type="text" name="fsc_code" value="<? echo ( $$variable{'Stock'}->fsc_code(); ) ?>"  size="13" style="width: auto;"> 
+		</p>
+		<p> 
+			<label>Inventory #:</label>
+			<input type="text" name="inventory_number" value="<? echo ( $$variable{'Stock'}->inventory_number(); ) ?>"  size="40" style="width: auto;"> 
+		</p>
+		<p> 
+			<label>Message:</label>
+			<textarea name="message" rows="2" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Stock'}->message(); ) ?></textarea>
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="cuttableY" name="cuttable" value="1" <? echo ( 'checked' if $$variable{'Stock'}->cuttable() ) ?> />
+				<label class="radio" for="cuttableY">Yes</label>
+				<input type="radio" id="cuttableN" name="cuttable" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->cuttable() ) ?> />
+				<label class="radio" for="cuttableN">No</label>
+			</span>
+			Can this stock be cut?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="doublesidedY" name="doublesided" value="1" <? echo ( 'checked' if $$variable{'Stock'}->doublesided(); ) ?> />
+				<label class="radio" for="doublesidedY">Yes</label>
+				<input type="radio" id="doublesidedN" name="doublesided" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->doublesided(); ) ?> />
+				<label class="radio" for="doublesidedN">No</label>
+			</span>
+			Is this stock double sided?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="multipartY" name="multipart" value="1" <? echo ( 'checked' if $$variable{'Stock'}->multipart(); ) ?> />
+				<label class="radio" for="multipartY">Yes</label>
+				<input type="radio" id="multipartN" name="multipart" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->multipart(); ) ?> />
+				<label class="radio" for="multipartN">No</label>
+			</span>
+			Does this stock have multiple parts (eg: forms)?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="perfectingY" name="perfecting" value="1" <? echo ( 'checked' if $$variable{'Stock'}->perfecting(); ) ?> />
+				<label class="radio" for="perfectingY">Yes</label>
+				<input type="radio" id="perfectingN" name="perfecting" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->perfecting(); ) ?> />
+				<label class="radio" for="perfectingN">No</label>
+			</span>
+			Is this stock stiff enough to perfect without gutters?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="scoringY" name="scoring" value="1" <? echo ( 'checked' if $$variable{'Stock'}->score_required(); ) ?> />
+				<label class="radio" for="scoringY">Yes</label>
+				<input type="radio" id="scoringN" name="scoring" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->score_required(); ) ?> />
+				<label class="radio" for="scoringN">No</label>
+			</span>
+			Does this stock require folder scoring before folding?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="diescoringY" name="diescoring" value="1" <? echo ( 'checked' if $$variable{'Stock'}->req_die_scoring(); ) ?> />
+				<label class="radio" for="diescoringY">Yes</label>
+				<input type="radio" id="diescoringN" name="diescoring" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->req_die_scoring(); ) ?> />
+				<label class="radio" for="diescoringN">No</label>
+			</span>
+			Does this stock require die scoring before folding?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="digitalY" name="digital" value="1" <? echo ( 'checked' if $$variable{'Stock'}->digital(); ) ?> />
+				<label class="radio" for="digitalY">Yes</label>
+				<input type="radio" id="digitalN" name="digital" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->digital(); ) ?> />
+				<label class="radio" for="digitalN">No</label>
+			</span>
+			Is this stock suitable for digital printing?:
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="bladecleaningY" name="bladecleaning" value="1" <? echo ( 'checked' if $$variable{'Stock'}->bladecleaning(); ) ?> />
+				<label class="radio" for="bladecleaningY">Yes</label>
+				<input type="radio" id="bladecleaningN" name="bladecleaning" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->bladecleaning(); ) ?> />
+				<label class="radio" for="bladecleaningN">No</label>
+			</span>
+			Does this stock require blade cleaning after cutting?:
+		</p>
+		<hr class="spacer"/>
+		<p> <b>Tax Information</b> </p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="taxexempt1Y" name="taxexempt1" value="1" <? echo ( 'checked' if $$variable{'Stock'}->taxexempt1(); ) ?> />
+				<label class="radio" for="taxexempt1Y">Yes</label>
+				<input type="radio" id="taxexempt1N" name="taxexempt1" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->taxexempt1(); ) ?> />
+				<label class="radio" for="taxexempt1N">No</label>
+			</span>
+			Federal Tax Exemption?
+		</p>
+		<p> 
+			<span class="input">
+				<input type="radio" id="taxexempt2Y" name="taxexempt2" value="1" <? echo ( 'checked' if $$variable{'Stock'}->taxexempt2(); ) ?> />
+				<label class="radio" for="taxexempt2Y">Yes</label>
+				<input type="radio" id="taxexempt2N" name="taxexempt2" value="0" <? echo ( 'checked' if ! $$variable{'Stock'}->taxexempt2(); ) ?> />
+				<label class="radio" for="taxexempt2N">No</label>
+			</span>
+			Prov/State Tax Exemption?
+		</p>
+			<p>
+				<span class="input">
+					<? echo ( $$variable{'Stock'}->in_stock(); ) ?>
+				</span>
+				In Stock:
+			</p>
+			<p>
+				<span class="input">
+					<? echo ( $$variable{'Stock'}->back_ordered(); ) ?>
+				</span>
+				Ordered:
+			</p>
+	</div><!-- left-->
+</fieldset>
+<style type="text/css">
+ul.Recommendations {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+ul.Recommendations li {
+	float: left;
+	width: 25%;
+	margin: 0px;
+	padding: 0px;
+}
+	
+</style>
+<fieldset><legend>Recomended For</legend>
+	<ul class="Recommendations">
+		<? echo ( 
+			my $html;
+			foreach my $ProjectType ( openprint::ProjectType::find('order'=>'lower(strid)') ) {
+				$html .= sprintf('<li><input type="checkbox" id="chkPRF%1$s" name="chkPRF%1$s" %2$s /><label class="radio" for="chkPRF%1$s">%1$s</label></li>',
+					$ProjectType->strid(),
+					( sets::isin( $ProjectType->strid(), [ $$variable{'Stock'}->recommendations() ] ) ? 'checked' : '' ),
+					);
+			} # end foreach
+			return $html;
+) ?>
+	</ul>
+</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+<? if ( $$variable{'stock_id'} ) ?>
+<!--#include virtual="/administrator/stock/stock_prices.html" -->
+<? endif ( $$variable{'stock_id'} ) ?>

@@ -2,11 +2,16 @@ package openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %variable $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
-
+use vars qw( %variable $AUTOLOAD %cache %fields %defaults %transforms $no_cache $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
 
+my $debug;
 $no_cache = 0;
 
 sub init_cache {
@@ -33,11 +38,9 @@ sub new {
 	my $self = {};
 	bless $self, $parent;
 
-	$$self{'log'} = $openprint::log;
-	$$self{'dbh'} = $openprint::dbh;
-	if ( ( $$self{'id'} = $id ) or $data ) {
-		$self->load( $data );
-	} # end if
+    if ( ( $$self{'id'} = $id ) or $data ) {
+        $self->load( $data );
+    } # end if
 	if ( ! $no_cache ) {
 		if ( $$self{'id'} ) {
 			$openprint::Object::cache{$parent}{$id} = $self;
@@ -51,15 +54,16 @@ sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
 
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . q{ WHERE id=?}, {}, $$self{'id'} );
 		if ( ! $data ) {
-			$log->error( 'Failure to load ' . ref $self . " $$self{'id'}: Reason: " . $dbh->errstr );
+			$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
 			return;
 		} # end if
 	} # end if
+
+	my %fields = eval '%'.$type.'::fields';
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 
 } # end sub load
@@ -111,18 +115,19 @@ sub AUTOLOAD {
 } # end sub AUTOLOAD
 
 sub get {
-	my $self = shift;
-	my @requested_fields = @_;
+    my $self = shift;
+	if ( $debug ) {
+		my $type = ref $self;
+		my %fields = eval ('%'.$type.'::fields');
 
-	my $type = ref $self;
-	my %fields = eval ('%'.$type.'::fields');
-	foreach my $field ( @requested_fields ) {
-		if ( ! defined $fields{$field} ) {
-			$log->warn( "$type: Invalid field requested: ($field)." );
-		} # end if
-	} # end foreach
+		foreach my $field ( @_ ) {
+			if ( ! defined $fields{$field} ) {
+				$openprint::log->warn( $type . ": Invalid field requested: ($field)." );
+			} # end if
+		} # end foreach
+	} # end if
 
-	return @$self{@requested_fields};
+    return @$self{@_};
 } # end sub get
 
 sub set {
@@ -131,6 +136,9 @@ sub set {
 
 	my $type = ref $self;
 	my %fields = eval ('%'.$type.'::fields');
+	if ( ! %fields ) {
+$openprint::log->warn('Object::set called on an object with no fields');
+	} # end if
 
 	foreach my $field ( keys %fields ) {
 		
@@ -151,15 +159,37 @@ sub set {
 
 		my %defaults = eval('%'.$type . '::defaults');
 
-		if ( (!$$self{$field})  and exists $defaults{$field} ) {
-#$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+		if ( ((! defined $$self{$field} ) or $$self{$field} eq '' )  and exists $defaults{$field} ) {
+$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
+		} else {
+$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 		} # end if
-		#} else {
-			#$openprint::log->warn("Object::Set::Invalid field requested: $type ($field)." );
 	} # end foreach
 	return @set_fields;
 } # end sub set
+
+sub delete {
+    my ( $self ) = @_;
+	my $type = ref $self;
+	my $table = eval '$'.$type.'::table';
+    sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+	delete $openprint::Object::cache{$type}{$$self{id}};
+} # end sub delete
+
+sub copy {
+	my $self = shift;
+
+	my $type = ref $self;
+	my $new = new $type;
+	my %fields = eval ('%'.$type.'::fields');
+	@$new{keys %fields} = @$self{keys %fields};
+	delete $$new{id};
+	$$new{'name'} = 'Copy of ' . $$new{'name'};
+
+	return $new;
+} # end sub copy
+
 
 1;
 __END__

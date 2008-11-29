@@ -77,6 +77,15 @@ Please select a Skid to view/edit.<br>
 			</span>
 		</p>
 		<p>
+			<label>Purpose:</label>
+			<select name="purpose_id">
+				<option value=""> all </option>
+				<? echo (
+					return ssi::make_drop_down( [ sql::execute( undef, undef, q{SELECT id,name FROM StockPurposes ORDER BY lower(name)} ) ], $openprint::session{'/employee/inventory/skids.html?purpose_id'} );
+				) ?>
+			</select>
+		</p>
+		<p>
 			<label>FSC Code:</label>
 			<input type="text" name="fsc_code" size="13" value="<? echo ( $openprint::session{'/employee/inventory/skids.html?fsc_code'} ) ?>"  />
 		</p>

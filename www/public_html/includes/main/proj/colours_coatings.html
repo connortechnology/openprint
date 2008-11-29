@@ -3,7 +3,7 @@
 		<? echo ( 
 			my $html;
 			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-				$html .= sprintf('<span id="%sSpotColourSideOnei%s" class="SpotColour" style="%s">', $colour, $$variable{'Signature'},($$variable{'PrintingType'} eq 'Digital' ? 'display:none;' :'') );
+				$html .= sprintf('<span id="%sSpotColourSideOne%s" class="SpotColour" style="%s">', $colour, $$variable{'Signature'},($$variable{'PrintingType'} eq 'Digital' ? 'display:none;' :'') );
 				$html .= sprintf(q`<input type="checkbox" id="chk%1$sSideOne%2$s" name="chk%1$sSideOne%2$s" value="%1$s" onclick="if ( this.checked ) { $('%1$sSpotSideOneCoverages%2$s').show() } else { $('%1$sSpotSideOneCoverages%2$s').hide() } calc(this.form.name);" %3$s />`, $colour, $$variable{'Signature'}, $$variable{'chk'.$colour.'SideOne'.$$variable{'Signature'}} eq $colour ? 'checked="checked"' : '' );
 				$html .= sprintf('<label for="chk%1$sSideOne%2$s">', $colour, $$variable{'Signature'} ) . ssi::writeTip($colour) . '</label>';
 				$html .= sprintf('<span id="%1$sSpotSideOneCoverages%2$s" %4$s ><input type="text" id="%1$sSpotSideOneCoverage%2$s" name="%1$sSpotSideOneCoverage%2$s" value="%3$s" onkeyup="calc(this.form.name);" size="3" />%</span>', $colour, $$variable{'Signature'}, $$variable{'CyanSpotSideOneCoverage'.$$variable{'Signature'}}, $$variable{'chk'.$colour.'SideOne'.$$variable{'Signature'}} eq $colour ? '' : 'style="display:none;"'  );
@@ -24,111 +24,29 @@
 			<br class="spacer"/>
 			<? echo ( 
 				my $html;
+				$$variable{'Side'} = 'SideOne';
+				my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_additional_colour_coating.html' );
+				$$variable{index} = 0;
 				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
-					$html .= qq`<span class="SpecialColour">
-						<span class="checkOption">
-							<input type="checkbox" name="chkSpecialSideOneColour$index$$variable{'Signature'}" value="Y" onclick="calc(this.form.name);" `;
-					$html .= 'checked="checked"' if $$variable{'chkSpecialSideOneColour'.$index.$$variable{'Signature'}} eq 'Y';
-					$html .= qq` /> Colour #$index
-							</span>
-							<input type="text" name="txtSpecialSideOneColour$index$$variable{'Signature'}" value="$$variable{'txtSpecialSideOneColour'.$index.$$variable{'Signature'}}" size="9"  onkeyup="this.form.elements['chkSpecialSideOneColour$index$$variable{'Signature'}'].checked=true;calc(this.form.name);"/> 
-							<input type="text" name="txtSpecialSideOneColourInkPercent$index$$variable{'Signature'}" value="$$variable{'txtSpecialSideOneColourInkPercent'.$index.$$variable{'Signature'}}" size="4"  onkeyup="this.form.elements['chkSpecialSideOneColour$index$$variable{'Signature'}'].checked=true;calc(this.form.name);"/> %
-							
-						</span>
-				`;
+					next if ! $$variable{"ColourCoating$$variable{Side}$index$$variable{Signature}"};
+					$$variable{index} = $index;
+					$html .= ssi::variable_substitution( \$fragment, $variable );
 				} # end foreach
+				$$variable{index} += 1;
+				$html .= ssi::variable_substitution( \$fragment, $variable );
 				return $html;
 			) ?>
 		</div>
 		<br class="spacer"/>
-		<div class="CoatingsFront" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
-			<p>
-				<label><b><? echo ( ssi::writeTip( 'Varnish' ); ) ?>:</b></label>
-				<span class="SpecialColour">
-				<span class="checkOption">
-					<input type="checkbox" id="chkVarnishSpotGlossSideOne<?Signature?>" name="chkVarnishSpotGlossSideOne<?Signature?>" value="SpotGloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishSpotGlossSideOne'.$$variable{'Signature'}} eq 'SpotGloss' ) ?> />
-					<label for="chkVarnishSpotGlossSideOne<?Signature?>"><? echo ( ssi::writeTip( 'Spot Gloss' ); ) ?></label>
-				</span>
-				<span id="VarnishSpotGlossSideOneCoverage<?Signature?>" class="VarnishCoverage">
-					<input type="text" name="VarnishSpotGlossSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotGlossSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />%</span>
-				</span>
-				<span class="SpecialColour">
-				<span class="checkOption">
-					<input type="checkbox" id="chkVarnishSpotMatteSideOne<?Signature?>" name="chkVarnishSpotMatteSideOne<?Signature?>" value="SpotMatte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishSpotMatteSideOne'.$$variable{'Signature'}} eq 'SpotMatte' ) ?> />
-					<label for="VarnishSpotMatteSideOneCoverage<?Signature?>"><? echo ( ssi::writeTip( 'Spot Matte' ); ) ?></label>
-				</span>
-					<span id="VarnishSpotMatteSideOneCoverage<?Signature?>" class="VarnishCoverage">
-					<input type="text" name="VarnishSpotMatteSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotMatteSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />%</span>
-				</span>
-				<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-				<? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-				<span class="SpecialColour">
-				<span class="checkOption">
-					<input type="checkbox" id="chkVarnishOverallGlossSideOne<?Signature?>" name="chkVarnishOverallGlossSideOne<?Signature?>" value="OverallGloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishOverallGlossSideOne'.$$variable{'Signature'}} eq 'OverallGloss' ) ?> />
-					<label for="chkVarnishOverallGlossSideOne<?Signature?>"><? echo ( ssi::writeTip( 'Overall Gloss' ); ) ?></label>
-				</span>
-				</span>
-				<span class="SpecialColour">
-				<span class="checkOption">
-					<input type="checkbox" id="chkVarnishOverallMatteSideOne<?Signature?>" name="chkVarnishOverallMatteSideOne<?Signature?>" value="OverallMatte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishOverallMatteSideOne'.$$variable{'Signature'}} eq 'OverallMatte' ) ?> />
-					<label for="chkVarnishOverallMatteSideOne<?Signature?>"><? echo ( ssi::writeTip( 'Overall Matte' ); ) ?></label>
-				</span>
-				</span>
-				<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-				<? if ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
-				<span class="SpecialColour">
-				<span class="checkOption">
-					<input type="checkbox" id="chkVarnishDryTrapSideOne<?Signature?>" name="chkVarnishDryTrapSideOne<?Signature?>" value="DryTrap" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishDryTrapSideOne'.$$variable{'Signature'}} eq 'DryTrap' ) ?> />
-					<label for="chkVarnishDryTrapSideOne<?Signature?>"><? echo ( ssi::writeTip( 'Dry Trap' ); ) ?></label>
-				</span>
-				</span>
-				<? endif ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
-			</p>
-			<br class="spacer"/>
-			<p>
-				<label><b><? echo ( ssi::writeTip( 'Aqueous' ); ) ?>:</b></label>
-				<span class="checkOption">
-					<input type="radio" id="rdbAqueousSideOneGloss<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Gloss' ) ?> />
-					<label class="radio" for="rdbAqueousSideOneGloss<?Signature?>"><? echo ( ssi::writeTip( 'Gloss' ); ) ?></label>
-				</span>
-				<span class="checkOption">
-					<input type="radio" id="rdbAqueousSideOneMatte<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Matte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Matte' ) ?> />
-					<label class="radio" for="rdbAqueousSideOneMatte<?Signature?>"><? echo ( ssi::writeTip( 'Matte' ); ) ?></label>
-				</span>
-				<span class="checkOption">
-					<input type="radio" id="rdbAqueousSideOneNone<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}}, 'Gloss', 'Matte' ); ) ?> />
-					<label class="radio" for="rdbAqueousSideOneNone<?Signature?>">None</label>
-				</span>
-			</p>
-<? eval (
-		@{$$variable{'uvoptions'}} = ();
-		push @{$$variable{'uvoptions'}}, 'Overall' if openprint::Service::find('name'=>'UVCoatingOverall');
-		push @{$$variable{'uvoptions'}}, 'Spot' if openprint::Service::find('name'=>'UVCoatingSpot');
-		push @{$$variable{'uvoptions'}}, 'None';
-) ?>
-<? if ( @{$$variable{'uvoptions'}} > 1 ) ?>
-		<br class="spacer"/>
-		<p>
-			<label><b><? echo ( ssi::writeTip( 'UV Coating' ); ) ?>:</b></label>
-			 <? echo (
-				my $html;
-				foreach my $type ( @{$$variable{'uvoptions'}} ) {
-					$html .= '<span class="checkOption">';
-					$html .= qq`<input type="radio" id="SideOneUVCoatingType$type$$variable{'Signature'}" name="SideOneUVCoatingType$$variable{Signature}" value="$type" onclick="calc(this.form.name);" `;
-					$html .= 'checked="checked"' if ( $$variable{'SideOneUVCoatingType'.$$variable{'Signature'}} eq $type ) or ( $type eq 'None' and ! $$variable{"SideOneUVCoatingType$$variable{'Signature'}"} );
-					$html .= " />\n";
-					$html .= qq`<label class="radio" for="SideOneUVCoatingType$type$$variable{Signature}">$type</label>\n`;
-					$html .= '</span>';
-				} # end foreach
-				return $html;
-			) ?>
-		</p>
-<? endif ( @{$$variable{'uvoptions'}} > 1 ) ?>
-		</div>
 	</fieldset>
 </div>
 <div class="InksBack">
 	<fieldset><legend>Back</legend>
+<div class="SidesTheSame">
+<input type="checkbox" id="sides_the_same<?Signature?>" name="sides_the_same<?Signature?>" value="Y" onclick="if(this.checked){$('InksOnBackQuestions').hide();}else{$('InksOnBackQuestions').show();}calc(this.form.name);" <? echo ( $$variable{"sides_the_same$$variable{Signature}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+<label class="radio" for="sides_the_same<?Signature?>">Same as front?</label>
+</div>
+		<div id="InksOnBackQuestions" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>
 		<? echo (
             my $html;
             foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
@@ -153,100 +71,21 @@
 			<br class="spacer"/>
 			<? echo ( 
 				my $html;
+				my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_additional_colour_coating.html' );
+				$$variable{'Side'} = 'SideTwo';
+				$$variable{index} = 0;
 				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
-					$html .= qq`<span class="SpecialColour">
-						<span class="checkOption">
-							<input type="checkbox" name="chkSpecialSideTwoColour$index$$variable{'Signature'}" value="Y" onclick="calc(this.form.name);" `;
-					$html .= 'checked="checked"' if $$variable{'chkSpecialSideTwoColour'.$index.$$variable{'Signature'}} eq 'Y';
-					$html .= qq` /> Colour #$index
-						</span>
-						<input type="text" name="txtSpecialSideTwoColour$index$$variable{'Signature'}" value="$$variable{'txtSpecialSideTwoColour'.$index.$$variable{'Signature'}}" size="9"  onkeyup="this.form.elements['chkSpecialSideTwoColour$index$$variable{'Signature'}'].checked=true;calc(this.form.name);"/> 
-						<input type="text" name="txtSpecialSideTwoColourInkPercent$index$$variable{'Signature'}" value="$$variable{'txtSpecialSideTwoColourInkPercent'.$index.$$variable{'Signature'}}" size="4"  onkeyup="this.form.elements['chkSpecialSideTwoColour$index$$variable{'Signature'}'].checked=true;calc(this.form.name);"/> %
-						
-					</span>
-		`;
+					next if ! $$variable{"ColourCoating$$variable{Side}$index$$variable{Signature}"};
+					$$variable{index} = $index;
+					$html .= ssi::variable_substitution( \$fragment, $variable );
 				} # end foreach
+				$$variable{index} += 1;
+				$html .= ssi::variable_substitution( \$fragment, $variable );
 				return $html;
 			) ?>
 		</div>
-			<br class="spacer"/>
-		<div class="CoatingsBack" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
-			<p>
-			<label><b><? echo ( ssi::writeTip( 'Varnish' ); ) ?>:</b></label>
-			<span class="SpecialColour">
-			<span class="checkOption">
-				<input type="checkbox" id="chkVarnishSpotGlossSideTwo<?Signature?>" name="chkVarnishSpotGlossSideTwo<?Signature?>" value="SpotGloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishSpotGlossSideTwo'.$$variable{'Signature'}} eq 'SpotGloss' ) ?> />
-				<label for="chkVarnishSpotGlossSideTwo<?Signature?>"><? echo ( ssi::writeTip( 'Spot Gloss' ); ) ?></label>
-			</span>
-				<span id="VarnishSpotGlossSideTwoCoverage<?Signature?>" class="VarnishCoverage">
-				<input type="text" name="VarnishSpotGlossSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotGlossSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />%</span>
-			</span>
-			<span class="SpecialColour">
-			<span class="checkOption">
-				<input type="checkbox" id="chkVarnishSpotMatteSideTwo<?Signature?>" name="chkVarnishSpotMatteSideTwo<?Signature?>" value="SpotMatte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishSpotMatteSideTwo'.$$variable{'Signature'}} eq 'SpotMatte' ) ?> />
-				<label for="chkVarnishSpotMatteSideTwo<?Signature?>"><? echo ( ssi::writeTip( 'Spot Matte' ); ) ?></label>
-			</span>
-				<span id="VarnishSpotMatteSideTwoCoverage<?Signature?>" class="VarnishCoverage">
-				<input type="text" name="VarnishSpotMatteSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'VarnishSpotMatteSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />%</span>
-			</span>
-			<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-			<? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-			<span class="SpecialColour">
-			<span class="checkOption">
-				<input type="checkbox" id="chkVarnishOverallGlossSideTwo<?Signature?>" name="chkVarnishOverallGlossSideTwo<?Signature?>" value="OverallGloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishOverallGlossSideTwo'.$$variable{'Signature'}} eq 'OverallGloss' ) ?> />
-				<label for="chkVarnishOverallGlossSideTwo<?Signature?>"><? echo ( ssi::writeTip( 'Overall Gloss' ); ) ?></label>
-			</span>
-			</span>
-			<span class="SpecialColour">
-			<span class="checkOption">
-				<input type="checkbox" id="chkVarnishOverallMatteSideTwo<?Signature?>" name="chkVarnishOverallMatteSideTwo<?Signature?>" value="OverallMatte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishOverallMatteSideTwo'.$$variable{'Signature'}} eq 'OverallMatte' ) ?> />
-				<label for="chkVarnishOverallMatteSideTwo<?Signature?>"><? echo ( ssi::writeTip( 'Overall Matte' ); ) ?></label>
-			</span>
-			</span>
-			<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-				<? if ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
-			<span class="SpecialColour">
-			<span class="checkOption">
-				<input type="checkbox" id="chkVarnishDryTrapSideTwo<?Signature?>" name="chkVarnishDryTrapSideTwo<?Signature?>" value="DryTrap" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkVarnishDryTrapSideTwo'.$$variable{'Signature'}} eq 'DryTrap' ) ?> />
-				<label for="chkVarnishDryTrapSideTwo<?Signature?>"><? echo ( ssi::writeTip( 'Dry Trap' ); ) ?></label>
-			</span>
-			</span>
-				<? endif ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
-		</p>
-		<br class="spacer"/>
-		<p>
-			<label><b><? echo ( ssi::writeTip( 'Aqueous' ); ) ?>:</b></label>
-			<span class="checkOption">
-				<input type="radio" id="rdbAqueousSideTwoGloss<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Gloss' ) ?> />
-				<label class="radio" for="rdbAqueousSideTwoGloss<?Signature?>"><? echo ( ssi::writeTip('Gloss'); ) ?></label>
-			</span>
-			<span class="checkOption">
-				<input type="radio" id="rdbAqueousSideTwoMatte<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Matte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Matte' ) ?> />
-				<label class="radio" for="rdbAqueousSideTwoMatte<?Signature?>"><? echo ( ssi::writeTip('Matte'); ) ?></label>
-			</span>
-			<span class="checkOption">
-				<input type="radio" id="rdbAqueousSideTwoNone<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}}, 'Gloss', 'Matte' ) ) ?> />
-				<label class="radio" for="rdbAqueousSideTwoNone<?Signature?>">None</label>
-			</span>
-		</p>
-<? if ( @{$$variable{'uvoptions'}} > 1 ) ?>
-		<br class="spacer"/>
-		<p>
-			<label><b><? echo ( ssi::writeTip( 'UV Coating' ); ) ?>:</b></label>
-			 <? echo (
-				my $html;
-				foreach my $type ( @{$$variable{'uvoptions'}} ) {
-					$html .= '<span class="checkOption">';
-					$html .= qq`<input type="radio" id="SideTwoUVCoatingType$type$$variable{'Signature'}" name="SideTwoUVCoatingType$$variable{Signature}" value="$type" onclick="calc(this.form.name);" `;
-					$html .= 'checked="checked"' if ( $$variable{"SideTwoUVCoatingType$$variable{'Signature'}"} eq $type ) or ( $type eq 'None' and ! $$variable{"SideTwoUVCoatingType$$variable{'Signature'}"} );
-					$html .= " />\n";
-					$html .= qq`<label class="radio" for="SideTwoUVCoatingType$type$$variable{Signature}">$type</label>\n`;
-					$html .= '</span>';
-				} # end foreach
-				return $html;
-			) ?>
-			</p>
-<? endif ( @{$$variable{'uvoptions'}} > 1 ) ?>
 		</div>
 	</fieldset>
+	<br class="spacer"/>
 </div>
+<br class="spacer"/>

@@ -11,23 +11,25 @@
 <? echo ( 
 	my $html;
 	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
-	$html .= '<table style="float: right; width:50%;">';
-	$html .= sprintf('<tr><td>ID:</td><td align="right"><img style="margin-bottom: 7px;" src="/barcode.png?code=p%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'paper_id'} );
-	$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} );
-	$html .= '</table>';
-	my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
-	$paper_detail .= '<br/>';
-	if ( $Paper->type() eq 'Roll' ) {
-	$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
-	} else {
-	$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
-	} # end if
-	if ( length $paper_detail > 80 ) {
-		$html .= '<span style="font-size: x-small;">'.$paper_detail.'</span>';
-	} else {
-		$html .= $paper_detail;
-	} # end if
-	$html .= '<br/><b>'. $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
+	foreach my $c ( $$variable{'Skid'}->contents( 'paper_id'=>$$variable{'paper_id'} ) ) {
+		$html .= '<table style="float: right; width:50%;">';
+		$html .= sprintf('<tr><td>ID:</td><td align="right"><img style="margin-bottom: 7px;" src="/barcode.png?code=R%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'paper_id'} );
+		$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $c->quantity() );
+		$html .= '</table>';
+		my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
+		$paper_detail .= '<br/>';
+		if ( $Paper->type() eq 'Roll' ) {
+			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
+		} else {
+			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
+		} # end if
+		if ( length $paper_detail > 80 ) {
+			$html .= '<span style="font-size: x-small;">'.$paper_detail.'</span>';
+		} else {
+			$html .= $paper_detail;
+		} # end if
+		$html .= '<br/><b>'. $c->quantity() . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
+	} # end foreach
 return $html;
 ) ?>
 <? endif ( $$variable{'paper_id'} ) ?>
@@ -35,17 +37,25 @@ return $html;
 <? echo (
 	if ( $$variable{'paper_id'} ) {
 		my $html;
-		my @data = sql::execute( $log, $dbh, q{SELECT (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), quantity FROM Paper_Allocations WHERE paper_id=? AND skid_id=? ORDER BY created_on}, $$variable{'paper_id'}, $$variable{'Skid'}{'id'} );
-		my %totals;
-		while ( @data ) {
-			$totals{shift @data} += shift @data;
-		} # end while
+		foreach my $c ( $$variable{'Skid'}->contents( 'paper_id'=>$$variable{'paper_id'} ) ) {
+			if ( sets::isin( $c->purpose(),['House','Sample']) ) {
+				$html .= '<div style="padding:0px 0px 0px 0px;font-size: 93pt; text-align: center;"><b>';
+				$html .= $c->purpose();
+				$html .= '</b></div><br class="pagebreak"/>';
+			} else {
+				my @data = sql::execute( $log, $dbh, q{SELECT (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), quantity FROM Paper_Allocations WHERE paper_id=? AND skid_id=? ORDER BY created_on}, $$variable{'paper_id'}, $$variable{'Skid'}{'id'} );
+				my %totals;
+				while ( @data ) {
+					$totals{shift @data} += shift @data;
+				} # end while
 
-		foreach my $docket ( sort keys %totals ) {
-			$html .= '<div style="padding:0px 7px 0px 7px;">';
-			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$docket+&amp;NoText=1&amp;Height=30"/><b>Docket:</b><br class="spacer"/>`;
-			$html .= '<img style="float: right;" src="/barcode.png?code=Q'.$totals{$docket}.'+&amp;NoText=1&amp;Height=30"><b>Allocated:</b>';
-			$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$docket</b></div></div><br class="pagebreak"/>`;
+				foreach my $docket ( sort keys %totals ) {
+					$html .= '<div style="padding:0px 7px 0px 7px;">';
+					$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$docket+&amp;NoText=1&amp;Height=30"/><b>Docket:</b><br class="spacer"/>`;
+					$html .= '<img style="float: right;" src="/barcode.png?code=Q'.$totals{$docket}.'+&amp;NoText=1&amp;Height=30"><b>Allocated:</b>';
+					$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$docket</b></div></div><br class="pagebreak"/>`;
+				} # end foreach
+			} # end if
 		} # end foreach
 		
 		return $html;

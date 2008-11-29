@@ -29,7 +29,23 @@ sub edit {
 		$Service->delete();
 		$Service = $Service->Next( {'category_id'=>$openprint::param{'ddmSearchCategory'}} );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
-        $Service->save( \%openprint::param );
+		if ( $openprint::param{'new_category'} ) {
+			if ( my @Categories = openprint::ServiceCategory::find('name'=>$openprint::param{'new_category'} ) ) {
+				$openprint::param{'category_id'} = $Categories[0]->id();
+			} else {
+				my $Category = new openprint::ServiceCategory();
+				$Category->name( $openprint::param{'new_category'} );
+				if ( $_ = $Category->save() ) {
+					$$variable{'error'} .= $_;
+					return;
+				} else {
+					$openprint::param{'category_id'} = $Category->id();
+				} # end if
+			} # end if
+		} # end if
+
+		$$variable{'error'} .= $Service->save( \%openprint::param );
+		if ( ! $$variable{'error'} ) {
 
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $List ( openprint::Pricelist::find() ) {
@@ -74,6 +90,7 @@ sub edit {
 			$price_set->save();
 		} # end foreach 
 		sql::end_transaction( $dbh, $ac );
+		} # end if not error
     } elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
         my @prices = $Service->prices();
         

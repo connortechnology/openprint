@@ -3,7 +3,6 @@ use lib "/etc/apache2/lib/perl";
 use strict;
 
 
-require configuration;
 require sql;
 require logger;
 require misc;

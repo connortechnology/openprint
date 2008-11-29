@@ -28,6 +28,20 @@ sub edit {
 		$Material->delete();
 		$Material = $Material->Next( 'category_id'=>$openprint::param{'ddmSearchCategory'} );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
+		if ( $openprint::param{'new_category'} ) {
+			if ( my @Categories = openprint::MaterialCategory::find('name'=>$openprint::param{'new_category'} ) ) {
+				$openprint::param{'category_id'} = $Categories[0]->id();
+			} else {
+				my $Category = new openprint::MaterialCategory();
+				$Category->name( $openprint::param{'new_category'} );
+				if ( $_ = $Category->save() ) {
+					$$variable{'error'} .= $_;
+					return;
+				} else {
+					$openprint::param{'category_id'} = $Category->id();
+				} # end if
+			} # end if
+		} # end if
 		$Material->save( \%openprint::param );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $List ( openprint::Pricelist::find( 'id'=>$openprint::param{'ddmPriceList'} ) ) {
@@ -83,15 +97,24 @@ $openprint::log->debug("Doing price ( $list $equipment_index $1)");
 	} elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
 		my @prices = $Material->prices();
 
-		$$Material{'name'} = 'Copy of ' . $$Material{'name'};
-		delete $$Material{'id'};
-		$Material->save();
-		openprint::logs::insertLogRecord('43', "Material Index: " . $$Material{'id'} . " - " . $$Material{'name'},); # Add record to audit log - action "Copy Material".
-		foreach my $price ( @prices ) {
-			$$price{'MaterialIndex'} = $$Material{'id'};
-			delete $$price{'id'};
-			$price->save();	
-		} # end foreach
+		my $NewMaterial = $Material->copy();
+        
+        if ( $_ = $NewMaterial->save() ) {
+			$$variable{'error'} = $_;
+		} else {
+			openprint::logs::insertLogRecord('43', "Material Index: " . $$Material{'id'} . " - " . $$Material{'name'},); # Add record to audit log - action "Copy Material".
+			foreach my $price ( @prices ) {
+				$$price{'material_id'} = $$NewMaterial{'id'};
+				delete $$price{'id'};
+				$price->save();
+			} # end foreach
+			foreach my $Spec ( $Material->Specifications() ) {
+				$Spec = $Spec->copy();
+				$$Spec{'material_id'} = $NewMaterial->id();
+				$Spec->save();
+			} # end foreach
+			$Material = $NewMaterial;
+		} # end if
 	} # end if
 	$$variable{'Material'} = $Material;
 

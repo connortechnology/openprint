@@ -7,7 +7,7 @@ function validate_data(formName) {
     var form = getFormObj(formName);
     var text = '';
 
-	if ( ! ( 0 < parseFloat( form.txtQuantity.value ) ) ) {
+	if ( form.txtQuantity.value == '' ) {
         text += "Please specify the quantity.\n";
     } // end if
 

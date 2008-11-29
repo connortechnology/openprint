@@ -55,6 +55,16 @@ CREATE TABLE PaperQualities (
 		PRIMARY KEY (id)
 );
 
+DROP SEQUENCE StockPurposes_id_seq;
+CREATE SEQUENCE StockPurposes_id_seq;
+DROP TABLE StockPurposes;
+CREATE TABLE StockPurposes (
+	id  INTEGER NOT NULL default nextval('StockPurposes_id_seq'),
+	name   TEXT NOT NULL,
+	PRIMARY KEY (id)
+);
+
+
 DROP SEQUENCE Paper_id_seq;
 CREATE SEQUENCE Paper_id_seq;
 
@@ -87,5 +97,7 @@ CREATE TABLE Papers (
 	grain_direction	text,
 	grade			integer,	
 	fsc_code		text,
+	message			text,
+	purpose_id		integer, foreign key (purpose_id) REFERENCES stockpurposes (id),
 	PRIMARY KEY (id)
 );

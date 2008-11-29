@@ -5,8 +5,15 @@ use openprint ();
 use openprint::Equipment;
 require sql;
 
-my %fields = (
-	'id'			=>	'lngindex',
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+$table = 'tbl_Equipment_Specifications';
+$serial = 'tbl_equipment_specifications_id_seq';
+
+%fields = (
+	'id'			=>	'id',
 	'equipment_id'	=>	'lngequipmentindex',
 	'min'			=>	'dblmin',
 	'max'			=>	'dblmax',
@@ -15,9 +22,17 @@ my %fields = (
 	'value'			=>	'strvalue',
 	'interpolate'	=>	'interpolate',
 );
+%transforms = (
+	'min' => [ 's/[^\d\.]//g' ],
+	'max' => [ 's/[^\d\.]//g' ],
+);
+%defaults = (
+	'min'	=>	undef,
+	'max'	=>	undef,
+);
 
 my $debug = 0;
-# Returns a paper object specified by the parameters
+
 sub find {
 	my %params = @_;
 
@@ -43,25 +58,25 @@ sub find {
 
 		$sql .= " OR $params{'or'}" if $params{'or'};
 		$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-		my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 		if ( ! $data ) {
-			$openprint::log->error( "Error loading Equipment Specification ($sql) (@values) :" . $openprint::dbh->errstr );
+			$log->error( "Error loading Equipment Specification ($sql) (@values) :" . $dbh->errstr );
 		} elsif ( $debug ) {
-		#$openprint::log->debug( 'Number of results: ' . @$data );
-			$openprint::log->debug( $sql . join(',',@values) );
+		#$log->debug( 'Number of results: ' . @$data );
+			$log->debug( $sql . join(',',@values) );
 		} # end if
 		
-		return map { new openprint::EquipmentSpecification( $_->{lngindex}, $_ ) } @$data;
+		return map { new openprint::EquipmentSpecification( $_->{id}, $_ ) } @$data;
 	} # end if
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM tbl_Equipment_Specifications WHERE lngIndex=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
+sub copy {
+	my ( $self ) = @_;
+	my $new = new openprint::EquipmentSpecification();
+	@$new{keys %fields} = @$self{keys %fields};
+	delete $$new{id};
+	return $new;
+} # end sub copy
 
 sub Equipment {
 	my $self = shift;

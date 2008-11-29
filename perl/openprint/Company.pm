@@ -8,6 +8,7 @@ use openprint ();
 
 require sql;
 require openprint::Object;
+require openprint::User;
 
 %fields = (
 		'id'						=>	'index',
@@ -366,6 +367,10 @@ sub CSR {
 	return new openprint::User( $$self{'salesrep_id'} );
 }
 
+sub Users {
+	my $self = shift;
+	return openprint::User::find('company_id'=>$$self{'id'} );
+} # end sub Users
 sub taxexempt1 {
 	return $_[0]{gst_exempt};
 }

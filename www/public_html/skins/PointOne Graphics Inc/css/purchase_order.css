@@ -16,6 +16,7 @@
 
 .PO table {
 	border-top: 1px solid #3b5e91;
+	table-layout: fixed;
 }
 .PO table td {
 	border: 1px solid #aebdd2;
