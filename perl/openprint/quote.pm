@@ -156,12 +156,12 @@ sub get_finished_quote_contents {
 		@{$$variable{'PROJECT_PRICES_'.$QP->project_id()}} = ();
 		my $colour = 'black';
 		if ( 
-				( $QP->quantity1() != $Project->quantity1() ) or 
-				( $QP->quantity2() != $Project->quantity2() ) or 
-				( $QP->quantity3() != $Project->quantity3() ) or
-				( $Project->price1() != $QP->price1() ) or 
-				( $Project->price2() != $QP->price2() ) or
-				( $Project->price3() != $QP->price3() ) 
+				( $QP->quantity(1) != $Project->quantity(1) ) or 
+				( $QP->quantity(2) != $Project->quantity(2) ) or 
+				( $QP->quantity(3) != $Project->quantity(3) ) or
+				( $Project->price(1) != $QP->price(1) ) or 
+				( $Project->price(2) != $QP->price(2) ) or
+				( $Project->price(3) != $QP->price(3) ) 
 				) {
 			$colour = 'red';
 		} # end if
