@@ -6,7 +6,13 @@
 	$$variable{'ProjectType'} = shift @projecttypes if @projecttypes;
 ) ?>
 <div id="Specials" align="center">
-	<h2>Individual Run Specials for
+	<h2>
+<? if ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters'] ) ) ?>
+Individual
+<? else ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters'] ) ) ?>
+Group
+<? endif ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters'] ) ) ?>
+ Run Specials for
 <? echo (
 require Date::Calc;
 my ( $y, $m, $d ) = Date::Calc::Today();
