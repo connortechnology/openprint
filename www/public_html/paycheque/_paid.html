@@ -1,0 +1,31 @@
+<fieldset><legend>Timetracks paid by this paycheque</legend>
+	<table class="List sortable">
+		<tr>
+			<th>Timetrack</th>
+			<th width="110">Starting</th>	
+			<th width="110">Ending</th>	
+			<th width="50">Interval</th>	
+			<th width="50">Wage</th>	
+			<th width="10">&nbsp;</th>
+		</tr>
+	<? echo (
+		my $html = '';
+		my $total_wage = 0;
+		$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+		foreach my $Timetrack ( openprint::Timetrack::find('paycheque_id'=>$$variable{'Paycheque'}->id(), 'order'=>'id') ) {
+			$html .= sprintf( q`<tr title="%s" onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');">`, $Timetrack->description() );
+			$html .= sprintf('<td><a href="/timetrack/edit.html?timetrack_id=%1$d">%1$d</a></td>', $Timetrack->id() );
+			$html .= sprintf('<td>%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $Timetrack->starting() ) ) );
+			$html .= sprintf('<td>%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $Timetrack->ending() ) ) );
+			$html .= sprintf('<td>%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) );
+			my $wage = $Timetrack->elapsed() * $Timetrack->User()->wage() / 3600;
+			$total_wage += $wage;
+			$html .= sprintf('<td>%s%.2f</td>', $Timetrack->Currency()->symbol(), $wage );
+			$html .= sprintf('<td>%s</td>', ssi::writeButton( $log, $dbh, 'del'.$Timetrack->id(), '', 'del_timetrack('.$Timetrack->id().');', '', '-' ) );
+			$html .= '</tr>';
+		} # end foreach Timetrack
+		$html .= '<tr class="totals"><td colspan="4">Total:</td><td>'.sprintf('%.2f', $total_wage).'</td><td>&nbsp;</td></tr>';
+		return $html;
+	) ?>
+	</table>
+</fieldset>

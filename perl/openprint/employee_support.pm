@@ -63,16 +63,17 @@ sub rma {
 	my $rma = $r->param('rma_id');
 
 
-	$_ = q{SELECT company_id, (SELECT strName FROM Company WHERE Index=company_id),
+	$_ = q{SELECT company_id,
 		to_char(dtmRequestDate,'MM/DD/YYYY'), chrRMAType, strDescription, ysnApprove, txtComments,strRMANumber,
 		order_id, (SELECT dtmOrderDate FROM Orders WHERE Orders.Index=RMA.order_id),
 		project_id, (SELECT strReference FROM tbl_Projects WHERE tbl_Projects.Index=project_id)
 		FROM RMA WHERE id=?};
-	@$variable{'CustomerIndex', 'CompanyName', 
+	@$variable{'CustomerIndex', 
 		'RequestDate', 'RMAType','Problem','Verdict','txtAdminComments','RMANumber',
 		'OrderID', 'OrderDate',
 		'ProjectIndex','ProjectReference'
 	} = sql::execute( $log, $dbh, $_, $rma );
+	$$variable{'CompanyName'} = new openprint::Company( $$variable{'CustomerIndex'} )->name();
 
 
 	$$variable{'rmatype'} = 'Credit' if $$variable{'RMAType'} eq 'C';
@@ -148,18 +149,20 @@ sub returns {
 		);
 
 		my %info;
-		$_ = "SELECT (SELECT strName FROM Company WHERE Index=company_id),\n".
-			"(SELECT strSalutation || '' || strFirstName || ' ' || strLastName FROM Users WHERE Index=user_id),\n".
-			"(SELECT strEmail FROM Users WHERE Index=user_id),\n".
+		$_ = 'SELECT company_id,user_id,'.
 			"to_char(dtmRequestDate,'MM/DD/YYYY'), chrRMAType, strDescription, ysnApprove, txtComments, strRMANumber,\n".
 			"order_id, (SELECT dtmOrderDate FROM Orders WHERE Index=RMA.order_id),\n".
 			"project_id, (SELECT strReference FROM tbl_Projects WHERE tbl_Projects.Index=RMA.project_id)\n".
 			"FROM RMA WHERE id=?";
-		@info{'CompanyName', 'UserName','Email',
+		@info{'company_id', 'user_id',
 			'RequestDate', 'RMAType','Problem','Verdict','txtAdminComments','RMANumber',
 			'OrderID', 'OrderDate',
 			'ProjectIndex','ProjectReference'
 		} = sql::execute( $log, $dbh, $_, $rma );
+		$$variable{'CompanyName'} = new openprint::Company( $$variable{'company_id'} )->name();
+		$$variable{'UserName'} = join( ' ', new openprint::User( $$variable{'user_id'} )->get('salutation','firstname','lastname') );
+		$$variable{'Email'} = new openprint::User( $$variable{'user_id'} )->email();
+
 		$info{'SecureSiteURL'} = $r->dir_config('SecureSiteURL');
 		$info{'siteURL'} = $r->dir_config('siteURL');
 
@@ -185,7 +188,7 @@ sub returns {
 			$r->param('ddmEndMonth'),
 			$r->param('ddmEndDay') );
 
-	$_ = "SELECT id, (SELECT strName FROM Company WHERE Index=company_id), order_id, to_char(dtmRequestDate,'MM/DD/YYYY'), ysnApprove FROM RMA\n";
+	$_ = "SELECT id, (SELECT name FROM Companies WHERE id=company_id), order_id, to_char(dtmRequestDate,'MM/DD/YYYY'), ysnApprove FROM RMA\n";
 	$_ .= "WHERE dtmRequestDate BETWEEN '$$variable{'StartDate'} 00:00:00' AND '$$variable{'EndDate'} 23:59:59'\n";
 	$_ .= "AND ysnReviewed = '".$r->param('ddmReviewed')."'\n" if $r->param('ddmReviewed');
 	$_ .= "AND company_id = '".$r->param('ddmCustomers')."'\n" if $r->param('ddmCustomers');

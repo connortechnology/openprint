@@ -18,6 +18,7 @@ require openprint::Order;
 require openprint::OrderedProduct;
 require openprint::usergroup;
 require openprint::press_schedule;
+require openprint::Payment;
 
 sub delete_order {
 	my ( $log, $dbh, $order_id ) = @_;
@@ -32,7 +33,7 @@ sub delete_unfinished_orders {
 	foreach my $order ( sql::execute( $log, $dbh, q{SELECT Index FROM Orders WHERE strSessionID=? AND strStatus='Incomplete'}, $cookie ) ) {
 		delete_order( $log, $dbh, $order );
 	} # end foreach
-	sql::update( $log, $dbh, 'Orders', "strSessionID='$cookie'", 'strSessionID', undef );
+	sql::update( $log, $dbh, 'Orders', ['strSessionID=?', $cookie], 'strSessionID', undef );
 	sql::end_transaction( $dbh, $ac );
 } # end sub delete_unfinished_orders
 
@@ -54,10 +55,10 @@ sub get_unfinished_order {
 		if ( $order_id ) {
 			if ( $cust_id != $openprint::session{'company_id'} ) {
 				my ( $emp_id ) = sql::execute( $log, $dbh, q{SELECT lngSalesPerson FROM Company WHERE Index=?}, $openprint::session{'company_id'} );
-				sql::update( $log, $dbh, 'Orders', ['Index=?', $order_id ], 'CompanyIndex', $openprint::session{'company_id'}, 'EmployeeIndex', $emp_id );
+				sql::update( $log, $dbh, 'Orders', ['Index=?',$order_id], 'CompanyIndex', $openprint::session{'company_id'}, 'EmployeeIndex', $emp_id );
 			} # end if
 			if ( $user_id != $openprint::session{'user_id'} ) {
-				sql::update( $log, $dbh, 'Orders', "Index = '$order_id'", 'UserIndex', $openprint::session{'user_id'} );
+				sql::update( $log, $dbh, 'Orders', ['Index=?',$order_id], 'UserIndex', $openprint::session{'user_id'} );
 			} # end if
 		} # end if
 	} # end if
@@ -86,17 +87,32 @@ sub add_product {
 	$order_id = get_unfinished_order( $openprint::log, $openprint::dbh, $openprint::session{_session_id}, $openprint::variable ) if ! $order_id;
 	$order_id = create_order( $openprint::log, $openprint::dbh, $openprint::session{_session_id}, $openprint::variable ) if ! $order_id;
 
+	my $Product;
 	if ( my @Products = openprint::OrderedProduct::find( 'order_id'=>$order_id, 'product_id'=>$product_id ) ) {
-		my $Product = shift @Products;
+		$Product = shift @Products;
 		$Product->quantity( $Product->quantity() + $quantity );
 		$error .= $Product->save();
 	} else {
-		my $Product = new openprint::OrderedProduct();
+		$Product = new openprint::OrderedProduct();
 		$Product->product_id( $product_id );
 		$Product->order_id( $order_id );
 		$Product->quantity( $quantity );
 		$error .= $Product->save();
 	} # end if	
+	my $Project = $Product->Project();
+	$Project->order_id( $order_id );
+	$Project->quantity1( $Product->quantity() );
+	foreach my $service_index ( sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() ) ) {
+
+		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $service_index, 'txtQuantity1', $Project->quantity1() );
+	} # end foreach
+	foreach my $signature_service_index ( sort $Project->signatures() ) {
+		openprint::service::internal_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Project->id(), $signature_service_index, 'Printing' );
+	} # end foreach
+	openprint::service::auto_calculate( $openprint::r, $openprint::log, $openprint::dbh, $openprint::variable, $Project->id(), undef );
+	#$Project->price1( $Product->price() );
+	$Project->save();
+	#$error .= add_project_to_order( $openprint::log, $openprint::dbh, $openprint::cookie, $openprint::variable, $Product->project_id(), $order_id );
 $openprint::log->debug("E: $error");
 
 	return ( $order_id, $error );
@@ -135,9 +151,9 @@ sub add_project_to_order {
 	if ( $num_qtys == 1 ) {
 		$sql{'intQuantityIndex'}=$qty_index;
 	} # end if
-	my %services = $Project->get_services();
-	if ( $services{'Turnaround'} ) {
-		my $specs = openprint::service::get_specs_ref( $project_index, $services{'Turnaround'}[0] );
+	my $services = $Project->services();
+	if ( $$services{'Turnaround'} ) {
+		my $specs = openprint::service::get_specs_ref( $project_index, $$services{'Turnaround'}[0] );
 		my ( $year, $month, $day ) = Date::Calc::Today();
 		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, $$specs{'TurnaroundDays'} );
 		if ( Date::Calc::Day_of_Week( $year, $month, $day ) == 6 ) {
@@ -150,7 +166,7 @@ sub add_project_to_order {
 	my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
 	if ( @ShippingServices ) {
 		foreach my $ShippingType ( @ShippingServices ) {
-			if ( $services{$ShippingType->name()} ) {
+			if ( $$services{$ShippingType->name()} ) {
 				$sql{'ShippingType'}=$ShippingType->name();
 				last;
 			} # end if
@@ -309,6 +325,12 @@ sub save_project_information {
 		$sql{'intQuantityIndex'}=$openprint::param{"rdbQuantity$project_index"};
 		$qty = $openprint::param{"rdbQuantity$project_index"};
 		$Project->ordered_quantity_index( $qty );
+	} elsif ( ! $Project->ordered_quantity_index() ) {
+		my @qtys = $Project->quantity_indexes();
+		if ( 1 == scalar @qtys ) {
+			$Project->ordered_quantity_index( $qtys[0] );
+			$qty = $qtys[0];
+		} # end if
 	} else {
 		$qty = $Project->ordered_quantity_index();
 	} # end if
@@ -396,7 +418,9 @@ sub information {
 		$Project->update_status();
 		sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, $order_id, $openprint::param{'remove'});
 		sql::end_transaction( $dbh, $ac );
-
+	} elsif ( $openprint::param{'btnFunction'} eq 'New Order' ) {
+		# Re order situation
+		$order_id = make_order_from_order( $log, $dbh, $cookie, $order_id, $variable );
 	} elsif ( $openprint::param{'btnFunction'} eq 'ReOpen' ) {
 		delete_unfinished_orders( $log, $dbh, $cookie );
 		if ( $order_id = $openprint::param{'OrderID'} ) {
@@ -630,16 +654,28 @@ sub verify_order {
 			$$variable{'Error'} .= save_project_information( $r, $log, $dbh, $variable, $order_id, $project_index );
 		} # end foreach
 		foreach my $Product ( $Order->Products() ) {
-			$Product->quantity( $openprint::param{'ProductQuantity'.$Product->id()} );
-			my %price = $Product->Product()->get_price( $Product->quantity() );
-			$Product->price( $price{Price} );
-			if ( Date::Calc::check_date( @openprint::param{'ProductDueDateYear'.$Product->id(),'ProductDueDateMonth'.$Product->id(),'ProductDueDateDay'.$Product->id()} ) ) {
-			$Product->requested_for( join('-', @openprint::param{'ProductDueDateYear'.$Product->id(),'ProductDueDateMonth'.$Product->id(),'ProductDueDateDay'.$Product->id()} ) );
-			$Product->shipping_type( $openprint::param{'ProductShippingType'.$Product->id()} );
-			$$variable{'Error'} .= $Product->save();
-			} else {
-			$$variable{'Error'} .= 'Invalid date<br/>';
+			if ( exists $openprint::param{'ProductQuantity'.$Product->id()} ) {
+				$openprint::param{'ProductQuantity'.$Product->id()} =~ s/\D//g;
+				$Product->quantity( $openprint::param{'ProductQuantity'.$Product->id()} );
 			} # end if
+			#my %price = $Product->Product()->get_price( $Product->quantity() );
+			#$Product->price( $price{Price} );
+			$$variable{'Error'} .= save_project_information( $r, $log, $dbh, $variable, $order_id, $Product->Project()->id() );
+			# Need to update price to include shipping costs
+			my %Price = $Product->Product()->get_price( $Product->quantity() );
+$openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{'Price'} );
+			my $Project = $Product->Project();
+			my $services = $Project->services();
+			foreach my $ShippingType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+				next if ! $$services{$ShippingType->name()};
+				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
+					my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
+					$Price{'Price'} += $$specs{'txtPrice1'};
+				} # end foreach service_id
+			} # end foreach
+			$Product->price( $Price{'Price'} );
+			$Product->requested_for( sprintf('%.4d-%.2d-%.2d', @openprint::param{'ddmDueDateYear'.$$Project{'id'},'ddmDueDateMonth'.$$Project{'id'},'ddmDueDateDay'.$$Project{'id'}} ) ) if exists $openprint::param{'ddmDueDateYear'.$$Project{'id'}};
+			$Product->save();
 		} # end foreach Product
 
 		$$variable{'Error'} .= store_order_info( $r, $log, $dbh, $cookie, $variable );
@@ -707,7 +743,7 @@ sub verify_order {
 	$$variable{'Currency'} = $Currency;
 
 	# get taxes
-	$_ = q{SELECT dblStatePercent, dblHarmonisedPercent, dblFederalPercent FROM Taxes WHERE State=? AND Country=?};
+	$_ = q{SELECT statetax, harmonisedtax, federaltax FROM Taxes WHERE State=? AND Country=?};
 	my ( $pst_rate, $hst_rate, $gst_rate ) = sql::execute( $log, $dbh, $_, $Order->state(), $Order->country() );
 	
 	my $Company = new openprint::Company( $openprint::session{'company_id'} );
@@ -791,7 +827,7 @@ sub finalise_order {
 
 		# Commit Project Information
 		# get taxes
-		$_ = q{SELECT dblStatePercent, dblHarmonisedPercent, dblFederalPercent FROM Taxes WHERE State=? AND Country=?};
+		$_ = q{SELECT Statetax, Harmonisedtax, federaltax FROM Taxes WHERE State=? AND Country=?};
 		my ( $pst_rate, $hst_rate, $gst_rate ) = sql::execute( $log, $dbh, $_, $Order->state(), $Order->country() );
 
 		$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
@@ -1192,15 +1228,16 @@ sub history_details {
             return misc::error( $log, $dbh, $variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
         } # end if
 
-        my $error = sql::insert( $log, $dbh, 'Payments',
-            'Order_Id',     $order_id,
-            'Company_Id',   $Order->company_id(),
-            'curAmount',    $openprint::param{'Amount'},
-            'dtmDate',      'NOW()',
-            'strMethod',    'Manual',
-            'currency_id',  $Order->currency_id(),
-            'strDescription',   $openprint::param{'Description'},
-        );
+		my $Payment = new openprint::Payment();
+		my $error .= $Payment->save( {
+				'order_id'		=> $order_id,
+				'company_id'	=> $Order->company_id(),
+				'amount'		=> $openprint::param{'Amount'},
+				'method'		=> 'Manual',
+				'currency_id'	=> $Order->currency_id(),
+				'description'	=> $openprint::param{'Description'},
+				'completed'		=> 1,
+				} );
         if ( $error ) {
             return misc::error( $log, $dbh, $variable, 'Error Saving Payment', $error );
         } # end if
@@ -1210,7 +1247,7 @@ sub history_details {
         if ( $$variable{'DepositDue'} > 0 ) {
             foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
                 sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
-                sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
+                sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?',$project_index, 'Ordered'], 'strStatus', 'Pending Deposit' );
             } # end foreach
         } else {
             $Order->status('In Production') if $Order->status() eq 'Pending Deposit';
@@ -1224,13 +1261,18 @@ sub history_details {
             } # end if
             $Order->save();
         } # end if
-   } elsif ( $openprint::param{'btnFunction'} eq 'Delete Payment' ) {
-        my $payment_index = $openprint::param{'payment_id'};
-        $payment_index =~ s/\D//g;
-        if ( $payment_index ) {
-            sql::execute( $log, $dbh, 'DELETE FROM Payments WHERE id=?', $payment_index );
-        } # end if
-		$Order->update_status();
+	} elsif ( $openprint::param{'btnFunction'} eq 'Delete Payment' ) {
+		my $Payment = new openprint::Payment( $openprint::param{'payment_id'} );
+		if ( ! $Payment->id() ) {
+			$$variable{'error'} .= 'Invalid payment id specified.<br/>';
+		} else {
+			if ( my $error = $Payment->delete() ) {
+				$$variable{'error'} .= 'Payment not deleted: <br/>' . $error . '<br/>';
+			} else {
+				$$variable{'information'} .= 'Payment deleted successfully.<br/>';
+				$Order->update_status();
+			} # end if
+		} # end if
    } elsif ( $openprint::param{'btnFunction'} eq 'Invoice' ) {
 	   $Order->invoice_id( $openprint::param{'invoice_id'} );
 	   $Order->invoiced_on( 'NOW()' );
@@ -1246,15 +1288,10 @@ sub display_order {
 
 	if ( $order_id ) {
 		get_invoice_to( $log, $dbh, $variable, $order_id );
-		#get_ship_to( $log, $dbh, $variable, $order_id );
 		get_misc( $log, $dbh, $variable, $order_id );
 		get_projects( $log, $dbh, $variable, $order_id );
 		$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'txtCity','txtStateProvince','txtCountry'} );
 		$$variable{'OrderID'} = $order_id;
-		if ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) {
-			$_ = q{SELECT id, to_char(dtmDate,'MM/DD/YYYY'), strMethod, strDescription, curAmount, currency_id FROM Payments WHERE strSessionID IS NULL AND Order_Id=? ORDER BY dtmDate};
-			@{$$variable{'PAYMENTS'}} = sql::execute( $log, $dbh, $_, $order_id );
-		} # end if
 	} # end if
 } # end sub display_order
 
@@ -1262,12 +1299,12 @@ sub display_order {
 sub make_order_from_order {
 	my ( $log, $dbh, $cookie, $src_order_id, $variable ) = @_;
 
-	my ( $status, $total ) = sql::execute( $log, $dbh, q{SELECT strStatus, curTotalSale FROM Orders WHERE Index=?}, $src_order_id );
-	return if check_credit( $log, $dbh, $$variable, $total );
+	my $SRC_Order = new openprint::Order( $src_order_id );
+	return if check_credit( $log, $dbh, $variable, $SRC_Order->total() );
 
-	if ( $status eq '' ) {
+	if ( $SRC_Order->status() eq '' ) {
 		return misc::error( 'Can\'t re-order.', 'Order does not exist.' );
-	} elsif ( ! sets::isin( $status, 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
+	} elsif ( ! sets::isin( $SRC_Order->status(), 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
 		return misc::error( 'Can\'t re-order.', 'The given order is not complete.' );
 	} else {
 		# this goes before get_order_id so that we re-use orderids
@@ -1277,28 +1314,12 @@ sub make_order_from_order {
 		my @contents = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?}, $src_order_id );
 
 		my $order_id = make_order( $log, $dbh, $cookie, $variable, @contents );
-	
 		if ( $order_id ) {
-			$_ = q{SELECT strShippingCompanyName, strShippingFirstName, strShippingLastName, strShippingSalutation, strShippingAddress1, strShippingAddress2, strShippingCity, strShippingState, strShippingPostalCode, strShippingCountry, strShippingPhone, strShippingExt, strShippingFax, strShippingEmail, lngShipVia FROM Orders WHERE Index=?};
-			my @data = sql::execute( $log, $dbh, $_, $src_order_id );
-
-			sql::update( $log, $dbh, 'Orders', "Index=$order_id",
-				'strShippingCompanyName',	shift @data,
-				'strShippingFirstName',		shift @data,
-				'strShippingLastName',		shift @data,
-				'strShippingSalutation',	shift @data,
-				'strShippingAddress1',		shift @data,
-				'strShippingAddress2',		shift @data,
-				'strShippingCity',			shift @data,
-				'strShippingState',			shift @data,
-				'strShippingPostalCode',	shift @data,
-				'strShippingCountry',		shift @data,
-				'strShippingPhone',			shift @data,
-				'strShippingExt',			shift @data,
-				'strShippingFax',			shift @data,
-				'strShippingEmail',			shift @data,
-				'lngShipVia',				shift @data,
-			);
+			foreach my $Product ( $SRC_Order->Products() ) {
+				my $NewProduct = $Product->copy();
+				$NewProduct->order_id( $order_id );
+				$NewProduct->save();
+			} # end foreach
 		} # end if
 	} # end if
 	return 0;
@@ -1422,14 +1443,6 @@ sub add_to_log {
 				] 
 			);
 }
-sub get_log {
-	my ( $log, $dbh, $order_id ) = @_;
-
-	$_ = "SELECT Company_Id, (SELECT strName FROM Company WHERE Index=Company_Id), ".
-		"User_Id, (SELECT strFirstName || ' ' || strLastName FROM Users WHERE Index=User_Id), ".
-		"to_char(dtmwhen,'HH12:MIpm MM/DD/YYYY'), Description FROM Order_Log WHERE Order_Id=? ORDER BY dtmwhen";
-	return sql::execute( $log, $dbh, $_, $order_id );
-} # end sub get_log
 
 sub list_orders {
 	my ( $log, $dbh, @orders ) = @_;
@@ -1448,7 +1461,7 @@ sub list_orders {
 	my $row_class = '';
 	foreach my $order_id ( @orders ) {
 		my ( $date, $name, $status, $total, $payment, $currency_id ) = sql::execute( $log, $dbh,
-				q{SELECT	to_char(dtmOrderDate, 'MM/DD/YYYY'), strFirstName || ' ' || strLastName, strStatus, curTotalSale,(SELECT SUM(curAmount) FROM Payments WHERE order_id=? AND strSessionID IS NULL), currency_id FROM Orders WHERE Index=?}, $order_id, $order_id );
+				q{SELECT	to_char(dtmOrderDate, 'MM/DD/YYYY'), strFirstName || ' ' || strLastName, strStatus, curTotalSale,(SELECT SUM(amount) FROM Payments WHERE order_id=? AND (deleted=false OR deleted IS NULL) AND completed=true), currency_id FROM Orders WHERE Index=?}, $order_id, $order_id );
 		$report_total += $total;
 		$report_balance += $total-$payment;
 		$total = sprintf('%.2f', $total );

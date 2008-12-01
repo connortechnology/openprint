@@ -83,12 +83,16 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	openprint::session_init();
-	openprint::usergroup::init_cache();
-	openprint::Material::init_cache();
-	openprint::Service::init_cache();
-	openprint::ServiceType::init_cache();
-	openprint::Equipment::init_cache();
-	openprint::Paper::init_cache();
+
+	foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
+		eval "openprint::$o::init_cache();";
+	} # end foreach
+	#openprint::usergroup::init_cache();
+	#openprint::Material::init_cache();
+	#openprint::Service::init_cache();
+	#openprint::ServiceType::init_cache();
+	#openprint::Equipment::init_cache();
+	#openprint::Paper::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -211,7 +215,7 @@ $openprint::log->debug("Getfile");
 		if ( $session{'user_type'} ne 'A' ) {
 			# If the page requires you to be logged in, check that we are logged in.
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
-				if ( sql::execute( $log, $dbh, q{SELECT chrType FROM Users WHERE chrType='A'} ) ) {
+				if ( sql::execute( $log, $dbh, q{SELECT type FROM Users WHERE type='A'} ) ) {
 					$variable{'Redirect'} = '/administrator/error/login.html';
 					$variable{'Destination'} = misc::get_destination( $r, $log );
 					return $status;

@@ -405,7 +405,7 @@ sub writeButton {
 	if ( $href eq '' ) {
 		$href='#';
 	} # end if
-	my $html = qq{<a id="$name" href="$href" class="buttonImageOff" };
+	my $html = qq{<a id="Button$name" href="$href" class="buttonImageOff" };
 	if ( $onclick ne '' ) {
 		$html .= 'onclick="';
 		if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
@@ -413,9 +413,9 @@ sub writeButton {
 		} # end if
 		$html .= $onclick."return false;\" ";
 	} # end if
-	$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('$name');}\">";
+	$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\">";
 	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
-		$html .= "<img src=\"/images/buttons/off/$gif\" border=\"0\" name=\"$name\"";
+		$html .= "<img src=\"/images/buttons/off/$gif\" border=\"0\" name=\"Button$name\"";
 		if ( $text ne '' ) {
 			$html .= "alt=\"$text\"";
 		} # end if
@@ -436,14 +436,15 @@ sub checked {
 
 sub writeTip {
 	my $word = shift;
-return qq{<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('$word',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('$word');}">$word</span>};
+return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('%s',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('%s');}">%s</span>`, $word );
 }
 
 sub setup_date_select {
-	my ( $page, $prefix, $delta ) = @_;
-	if ( ( ! $session{$page.'?'.$prefix.'_start_year'} ) or ( time - $session{'lastupdated'} > 3600 ) ) {
-		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $delta );
-		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Today();
+	my ( $page, $prefix, $start_delta, $end_delta ) = @_;
+	if ( ( ! $session{$page.'?'.$prefix.'_start_year'} ) or ( time - $session{$page.'lastupdated'} > 3600 ) ) {
+$openprint::log->debug("Reset date");
+		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $start_delta );
+		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $end_delta );
 	} else {
 		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} );
 		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} );
@@ -451,48 +452,61 @@ sub setup_date_select {
 } # end sub setup_date_select
 
 sub date_select {
-	 my ( $prefix, $value, $onchange ) = @_;
+	my ( $prefix, $value, $onchange ) = @_;
 
-	 my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
+	my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
 
-	 my $html = '';
-	 $html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
-	 $html .= return_years( undef, undef, $year );
-	 $html .= '</select>';
-	 $html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $onchange );
-	 $html .= getmonths( $month );
-	 $html .= '</select>';
-	 $html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
-	 $html .= getdays( $day, $year, $month );
-	 $html .= '</select></span>';
-	 return $html;
+	my $html = '';
+	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
+	$html .= return_years( undef, undef, $year );
+	$html .= '</select>';
+	$html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $onchange );
+	$html .= getmonths( $month );
+	$html .= '</select>';
+	$html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
+	$html .= getdays( $day, $year, $month );
+	$html .= '</select></span>';
+	return $html;
 } # end sub date_select
 
 sub datetime_select {
-	 my ( $prefix, $value, $onchange ) = @_;
+	my ( $prefix, $value, $onchange ) = @_;
 
-	 my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
+	my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
 $openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
 
-	 my $html = '';
-	 $html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
-	 $html .= return_years( undef, undef, $year );
-	 $html .= '</select>';
-	 $html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $onchange );
-	 $html .= getmonths( $month );
-	 $html .= '</select>';
-	 $html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
-	 $html .= getdays( $day, $year, $month );
-	 $html .= '</select></span>';
-	 $html .= sprintf('<span id="%1$s_time"><select name="%1$s_hour" onchange="%2$s">', $prefix, $onchange );
-	 $html .= make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour );
-	 $html .= '</select>';
-	 $html .= ':';
-	 $html .= sprintf('<select name="%1$s_minute" onchange="%2$s">', $prefix, $onchange );
-	 $html .= make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $min );
-	 $html .= '</select></span>';
-	 return $html;
+	my $html = '';
+	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
+	$html .= return_years( undef, undef, $year );
+	$html .= '</select>';
+	$html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $onchange );
+	$html .= getmonths( $month );
+	$html .= '</select>';
+	$html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
+	$html .= getdays( $day, $year, $month );
+	$html .= '</select></span>';
+	$html .= sprintf('<span id="%1$s_time"><select name="%1$s_hour" onchange="%2$s">', $prefix, $onchange );
+	$html .= make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour );
+	$html .= '</select>';
+	$html .= ':';
+	$html .= sprintf('<select name="%1$s_minute" onchange="%2$s">', $prefix, $onchange );
+	$html .= make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $min );
+	$html .= '</select></span>';
+	return $html;
 } # end sub datetime_select
+
+sub save_params {
+	my ( $url, @keys ) = @_;
+	$session{$url.'?lastupdated'} = time;
+
+	foreach ( @keys ) {
+		if ( ref $param{$_} eq 'ARRAY' ) {
+			$session{"$url?$_"} = join(';', @{$param{$_}} );
+		} elsif ( exists $param{$_} ) {
+			$session{"$url?$_"} = $param{$_};
+		} # end if
+	} # end foreach
+} # end sub save_params
 
 1;
 

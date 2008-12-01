@@ -1,15 +1,15 @@
 
-DROP TABLE Material_Specifications;
-DROP	SEQUENCE MaterialSpecification_id_seq;
+DROP TABLE IF EXISTS Material_Specifications;
+DROP	SEQUENCE IF EXISTS MaterialSpecification_id_seq;
 CREATE	SEQUENCE MaterialSpecification_id_seq;
 
 CREATE TABLE Material_Specifications (
 	id	INTEGER NOT NULL DEFAULT nextval('MaterialSpecification_id_seq'),
-	material_id	INTEGER NOT NULL, FOREIGN KEY (material_id) REFERENCES tbl_Materials (lngIndex),
+	material_id	INTEGER NOT NULL, FOREIGN KEY (material_id) REFERENCES Materials (id),
 	min				NUMERIC(10,4),
 	max				NUMERIC(10,4),
 	units			TEXT,
-	name				TEXT,
+	name			TEXT,
 	value			TEXT,
 	PRIMARY KEY (id)
 );

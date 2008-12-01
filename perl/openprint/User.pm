@@ -17,28 +17,28 @@ use vars qw(%variable $log $dbh %config);
 my $debug = 1;
 
 my %fields = (
-	'company_id'		=>	'companyindex',
-	'salutation'		=>	'strsalutation',
-	'title'				=>	'strtitle',
-	'firstname'			=>	'strfirstname',
-	'lastname'			=>	'strlastname',
-	'email'				=>	'stremail',
-	'phone'				=>	'strphone',
+	'company_id'		=>	'company_id',
+	'salutation'		=>	'salutation',
+	'title'				=>	'title',
+	'firstname'			=>	'firstname',
+	'lastname'			=>	'lastname',
+	'email'				=>	'email',
+	'phone'				=>	'phone',
 	'mobile'			=>	'mobile',
 	'sms'				=>	'sms',
-	'extension'			=>	'strext',
-	'fax'				=>	'strfax',
+	'fax'				=>	'fax',
 	'mailinglist'		=>	'ysnmailinglist',
-	'greeting'			=>	'strcustomgreeting',
-	'created_on'		=>	'dtmdateentered',
-	'updated_on'		=>	'dtmlastmodified',
-	'type'				=>	'chrtype',
+	'greeting'			=>	'greeting',
+	'created_on'		=>	'created_on',
+	'updated_on'		=>	'updated_on',
+	'type'				=>	'usertype',
 	'changepassword'	=>	'ysnchangepassword',
 	'commission'		=>	'dblcommission',
+	'wage'				=>	'wage',
 	'administrator'		=>	'ysnadministrator',
 	'password',			=>	'strpassword',
 	'ftp_active'		=>	'ftp_active',
-	'web_active'		=>	'ysnaccountactivation',
+	'web_active'		=>	'web_active',
 	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
 	'quote_level'		=>	'quote_level',
@@ -61,7 +61,7 @@ my %defaults = (
 	'changepassword'	=>	'N',
 	'administrator'		=>	'N',
 	'commission'		=>	undef,
-	'quote_level'	=> undef,
+	'quote_level'		=> undef,
 );
 
 sub get {
@@ -75,7 +75,7 @@ sub load {
 
 	my @fields = keys %fields;
 	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( 'SELECT * FROM Users WHERE Index=?', {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( 'SELECT * FROM Users WHERE id=?', {}, $$self{'id'} );
 		if ( ! $data ) {
 			$log->error( "Error loading User( $$self{'id'} ): " . $dbh->errstr() );
 		} # end if
@@ -175,8 +175,8 @@ sub save {
 
 	my $ac = sql::start_transaction( $dbh );
 	if ( ! $self->{id} ) {
-		@$self{id} = sql::execute( $log, $dbh, q{SELECT nextval('Users_Index_seq')} );
-		$sql{index} = $$self{id};
+		@$self{id} = sql::execute( $log, $dbh, q{SELECT nextval('users_id_seq')} );
+		$sql{id} = $$self{id};
 		if ( my $error = sql::insert( $log, $dbh, 'Users', \%sql ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
@@ -187,7 +187,7 @@ sub save {
 			return $error;
 		} # end if
 	} else {
-		if ( my $error = sql::update( $log, $dbh, 'Users', ['Index=?',$$self{id}], \%sql ) ) {
+		if ( my $error = sql::update( $log, $dbh, 'Users', ['id=?',$$self{id}], \%sql ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
@@ -238,7 +238,7 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM paper_purchase_orders WHERE userindex=?', $$self{'id'} );
 
 
-	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE Index=?', $$self{'id'} );
+	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{'id'} );
 
 	sql::end_transaction( $dbh, $ac );
 
@@ -249,18 +249,18 @@ sub next {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MIN(strFirstName) FROM Users WHERE strFirstName > ?';
+	my $sql = 'SELECT MIN(FirstName) FROM Users WHERE FirstName > ?';
 	my @values = ( $$self{firstname} );
 	if ( $params{'company_id'} ) {
-		$sql .= ' AND companyindex=?';
+		$sql .= ' AND company_id=?';
 		push @values, $params{'company_id'};
 	} # end if
 	if ( $params{'type'} ) {
-		$sql .= ' AND chrtype=?';
+		$sql .= ' AND usertype=?';
 		push @values, $params{'type'};
 	} # end if
 
-	$sql = qq{SELECT Index FROM Users WHERE strFirstName = ($sql)};
+	$sql = qq{SELECT id FROM Users WHERE FirstName = ($sql)};
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
@@ -273,18 +273,18 @@ sub prev {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MAX(strFirstName) FROM Users WHERE strFirstName < ?';
+	my $sql = 'SELECT MAX(FirstName) FROM Users WHERE FirstName < ?';
 	my @values = ( $$self{firstname} );
 	if ( $params{'company_id'} ) {
-		$sql .= ' AND companyindex=?';
+		$sql .= ' AND company_id=?';
 		push @values, $params{'company_id'};
 	} # end if
 	if ( $params{'type'} ) {
-		$sql .= ' AND chrtype=?';
+		$sql .= ' AND usertype=?';
 		push @values, $params{'type'};
 	} # end if
 
-	$sql = qq{SELECT Index FROM Users WHERE strFirstName = ($sql)};
+	$sql = qq{SELECT id FROM Users WHERE FirstName = ($sql)};
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
@@ -326,43 +326,47 @@ sub find {
 
 	if ( $param{'id'} ) {
 		if ( ref $param{'id'} eq 'ARRAY' ) {
-			$sql .= q{ AND index IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
+			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
 			push @values, @{$param{'id'}};
 		} else {
-			$sql .= q{ AND index=?};
+			$sql .= q{ AND id=?};
 			push @values, $param{'id'};
 		} # end if
 	} # end if
 
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {
-			$sql .= q{ AND chrType IN ('} . join("','", @{$param{'type'}}) . q{')};
+			$sql .= q{ AND usertype IN ('} . join("','", @{$param{'type'}}) . q{')};
 		} else {
-			$sql .= q{ AND chrType = ?};
+			$sql .= q{ AND usertype = ?};
 			push @values, $param{'type'};
 		} # end if
 	} # end if
 	if ( $param{'company_id'} ) {
-		$sql .= q{ AND companyindex=?};
+		$sql .= q{ AND company_id=?};
 		push @values, $param{'company_id'};
 	} # end if
 	if ( $param{'usergroup'} ) {
-		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=(SELECT id FROM usergroups WHERE name=?))};
+		$sql .= q{ AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=(SELECT id FROM usergroups WHERE name=?))};
 		push @values, $param{'usergroup'};
 	} # end if
 	if ( $param{'usergroups'} ) {
-		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id IN (SELECT id FROM usergroups WHERE name IN ('} . join("','", @{$param{'usergroups'}}) . q{')))};
+		$sql .= q{ AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id IN (SELECT id FROM usergroups WHERE name IN ('} . join("','", @{$param{'usergroups'}}) . q{')))};
 	} # end if
 	if ( $param{'email'} ) {
-		$sql .= ' AND strEmail=?';
+		$sql .= ' AND email=?';
 		push @values, lc $param{'email'};
+	} # end if
+	if ( $param{'password'} ) {
+		$sql .= ' AND strpassword=?';
+		push @values, $param{'password'};
 	} # end if
 	if ( exists $param{'web_active'} ) {
 		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
 		$param{'web_active'} = 'N' if $param{'web_active'} == 0;
 		$param{'web_active'} = 'Y' if $param{'web_active'} == 1;
 		} # end if
-		$sql .= ' AND ysnaccountactivation=?';
+		$sql .= ' AND web_active=?';
 		push @values, $param{'web_active'};
 	} # end if
 	if ( exists $param{'deleted'} ) {
@@ -385,9 +389,9 @@ sub find {
 		$log->error( "Error loading Users: ($sql) (@values)" );
 		return;
 	} elsif ( $debug ) {
-		$log->debug( "loading Users: ($sql) (@values)" );
+		$log->debug( "loading Users: ($sql) (@values) " . $data );
 	} # end if
-	return map { new openprint::User( $_->{index}, $_ ) } @$data;
+	return map { new openprint::User( $_->{id}, $_ ) } @$data;
 } # end sub find
 
 sub assistant_ids {

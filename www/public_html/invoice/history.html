@@ -1,0 +1,96 @@
+<div class="PageTitle">
+	<h1>Invoices</h1>
+	<h2>History</h2>
+</div>
+<script type="text/javascript">
+<!--
+	function delete_confirm(form) {
+		var number_of_deleted_invoices = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_invoices += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_invoices == 0 ) {
+			alert("To Delete Invoices, click the checkbox beside the invoice.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_invoices + " invoices from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_invoices( form ) {
+		$('InvoiceList').innerHTML = 'Please wait...';
+		new Ajax.Updater('InvoiceList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+<? if ( $session{'user_id'} ) ?>
+<form id="f1" name="f1" method="post" action="/invoice/history.html">
+	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+		<div class="leftColumn">
+			<p>
+				<label>Company:</label>
+				<select name="company_id" id="company_id" onchange="load_invoices(this.form);">
+					<option value="">All</option>
+					<? echo ( openprint::Company::get_dropdown( $session{'/invoice/history.html?company_id'} ); ) ?>
+				</select>
+			</p>
+<? eval (
+	ssi::setup_date_select( '/invoice/history.html', 'created_on', -31, 365 );
+	ssi::setup_date_select( '/invoice/history.html', 'due_on', -31, 365 );
+
+	$session{'/invoice/history.html?invoiced'} = '0' if ! $session{'/invoice/history.html?invoiced'};
+	$session{'/invoice/history.html?paid'} = '0' if ! $session{'/invoice/history.html?paid'};
+	$session{'/invoice/history.html?employee_id'} = $session{'user_id'} if ! exists $session{'/invoice/history.html?employee_id'};
+) ?>
+			<p>
+				<label>Created:</label>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'created_on_start', join('-', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ), 'load_invoices(this.form);' ); ) ?>
+					to 
+				</span>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'created_on_end', join('-', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ), 'load_invoices(this.form);' ); ) ?>
+				</span>
+			</p>
+			<p>
+				<label>Due:</label>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'due_on_start', join('-', @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ), 'load_invoices(this.form);' ); ) ?>
+					to 
+				</span>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'due_on_end', join('-', @session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'} ), 'load_invoices(this.form);' ); ) ?>
+				</span>
+			</p>
+		</div>
+		<div class="rightColumn">
+			<p><label>Paid?:</label>
+				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
+				<label class="radio" for="paid_1">Yes</label>
+				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
+				<label class="radio" for="paid_0">No</label>
+				<input type="radio" id="paid_2" name="paid" value="2" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
+				<label class="radio" for="paid_2">Both</label>
+			</p>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_invoices(f1);", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'edit.html', 'New Invoice' ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="InvoiceList"><!--#include virtual="_history.html"--></div>
+</form>
+<? else ( $session{'user_id'} ) ?>
+	Only logged in users have an invoice history.
+<? endif ( $session{'user_id'} ) ?>

@@ -722,7 +722,6 @@ my $master_time = gettimeofday();
 			$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 			$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 			$variables{'rdbTemplateType'} = [ sets::exclude( ['output'], $variables{'rdbTemplateType'} ) ];
-
 		} # end if
 	} # end if
 	if ( $$specs{'txtSignatureType'} ) {
@@ -1610,6 +1609,7 @@ $i->display();
 								$add = 0;
 								#last;
 							} # end if
+
 						} # end for
 					} # end if overriden or not or cached
 					push @{$imps{$str}}, $imp if $add > 0;
@@ -1849,7 +1849,7 @@ $i->display();
 		} # end if
 		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
 		$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
-#$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	} # end foreach quantity
 
 	return $$specs{'Status'};
@@ -2075,6 +2075,11 @@ $imp->display();
 			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after filter:' . @impositions) if $debug or 0;
 		} # end if
 		if ( $$sig_specs{'versions'} > 1 and @impositions < 30 ) {
+$openprint::log->debug("Calling do_versions, # of imps: " . @impositions );
+			@impositions = openprint::imposition::do_versions( $versions, \@impositions );
+$openprint::log->debug("Back from do_versions, # of imps: " . @impositions );
+		} # end if
+		if ( $$specs{'versions'} > 1 and @impositions < 30 ) {
 $openprint::log->debug("Calling do_versions, # of imps: " . @impositions );
 			@impositions = openprint::imposition::do_versions( $versions, \@impositions );
 $openprint::log->debug("Back from do_versions, # of imps: " . @impositions );
@@ -3732,7 +3737,15 @@ sub get_weight {
 	return $sig_weight;
 } # end sub get_weight
 
-sub summary {
+sub trimstr {
+	my ( $teststring ) = @_;
+	$teststring =~ s/^\s+//;
+	$teststring =~ s/\s+$//;
+	return $teststring;
+}
+
+#################################################
+sub summaryTEST {
 	my ( $Project, $service_index, $specs, $qty_index ) = @_;
 
 	my $services = $Project->services();
@@ -3799,7 +3812,6 @@ sub summary {
 		foreach my $k ( keys %$specs ) {
 			if ( my ( $index ) = $k =~ /ColourCoating$side(\d+)/ ) {
 				my $type = $$specs{"ColourCoatingType$side$index"};
-
 				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
 					$front_coatings .= '+'.$$specs{"ColourCoatingType$side$index"};
 				} elsif ( $type =~ /PMS/i ) {
@@ -3895,6 +3907,7 @@ sub summary {
 		} # end if
 	} # end if
 } # end sub summary
+
 
 sub save {
 	my ( $p_id, $s_id, $param ) = @_;

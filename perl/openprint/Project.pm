@@ -25,6 +25,7 @@ my $debug = 1;
 sub delete {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
+	sql::update( undef, undef, 'Ordered_Products', ['project_id=?', $$self{'id'}], 'project_id', undef );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_Log WHERE project_id=?}, $$self{'id'} );
@@ -489,6 +490,11 @@ sub find {
 		$sql .= " AND index::text LIKE '$params{'id_like'}%'";
 	} # end if
 
+	if ( exists $params{'predefined'} ) {
+		$sql .= ' AND predefined=?';
+		push @values, $params{'predefined'};
+	} # end if
+
 	if ( $params{'reference'} ) {
 		$sql .= q{ AND strprojectreference LIKE ?};
 		push @values, '%'.$params{'reference'}.'%';
@@ -631,9 +637,11 @@ sub save {
 
 	@$self{ keys %hash } = @hash{keys %hash};
 
+	$$self{'currency_id'} = $openprint::session{'Currency_id'} if ! $$self{'currency_id'};
 	$$self{'company_id'} = $openprint::session{'company_id'} if ! $$self{'company_id'};
 	$$self{'user_id'} = $openprint::session{'user_id'} if ! $$self{'user_id'};
 	$$self{'status'} = 'uncalculated' if ! $$self{'status'};
+	$$self{'predefined'} = '0' if $$self{'predefined'} != 1;
 	my @sql = (
 				'strProjectReference',	$$self{'reference'},
 				'strComments',			$$self{'comments'},
@@ -657,8 +665,8 @@ sub save {
 				'lngdocketnumber',		$$self{'docket'} ? $$self{'docket'} : undef,
 				'due_date',				$$self{'due_date'} ? $$self{'due_date'} : undef,
 				'style_id',			 $$self{'style_id'} ? $$self{'style_id'} : undef,
+				'predefined',			$$self{'predefined'} ? $$self{'predefined'} : 'N',
 				'rush',					$$self{'rush'},
-				
 	);
 	if ( ! $$self{'created_on'} ) {
 		push @sql, 'dtmCreationDate','NOW()';
@@ -700,6 +708,15 @@ sub Currency {
 	} # end if
 	return new openprint::Currency( $$self{'currency_id'} );
 } # end sub Currency
+sub quantity_indexes {
+	my ( $self ) = @_;
+	my @indexes;
+	foreach my $qty_index ( 1 .. 3 ) {
+		push @indexes, $qty_index if $$self{"quantity$qty_index"};
+	} # end foreach qty_index
+	return @indexes;
+} # end sub quantity_indexes
+
 sub quantity_indexes {
 	my ( $self ) = @_;
 	my @indexes;
@@ -766,6 +783,48 @@ sub copy {
 	} # end foreach
 	delete $$new{'id'};
 	delete $$new{'created_on'};
+	$new->save();
+
+	my @dont_copy = (
+			'ServiceIndex','ProjectIndex','TemplateType',
+			'txtEmployeeComments','rdbComplete','rdbApproved','ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
+			'ddmCompletionDate.*','txtRunHours','txtDowntimeHours',
+			'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
+			'UsedPaper.*',
+			'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
+			);
+
+# Make this all one transaction... Don't need locking because a reload would get a different projectindex
+	my $ac = sql::start_transaction( $openprint::dbh );
+	my @contents = sql::execute( undef, undef, q{SELECT lngServiceIndex, servicetype_id, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+
+	while ( @contents ) {
+		my ( $service_index, $servicetype_id, $status ) = splice @contents, 0, 3;
+
+# uncalc->uncalc,   *->calc
+		if ( $status ne '' and sets::isin( $status, [ 'Pending Deposit', 'Ordered', 'Proofs Out', 'Approved', 'Complete' ] ) ) {
+			$status = 'calculated';
+		} # end if
+
+		my ( $new_service_index ) = sql::execute( undef, undef, q{SELECT nextval('ContentsServiceIndex_seq')} );
+		sql::insert( undef, undef, 'tbl_Project_Contents',[
+				'lngProjectIndex',  $$new{id},
+				'lngServiceIndex', $new_service_index,
+				'servicetype_id',   $servicetype_id,
+				'strStatus',    $status
+				] );
+		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ProjectIndex', $new->id(), 1 );
+		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ServiceIndex', $new_service_index, 1 );
+
+		my $specs = openprint::service::get_specs_ref( $self->id(), $service_index );
+		foreach my $key ( keys %$specs ) {
+			if ( ! sets::isin_regx( $key, @dont_copy ) ) {
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, $key, $$specs{$key}, 1 );
+			} # end if
+		} # end foreach
+	} # end while contents
+	sql::end_transaction( $openprint::dbh, $ac );
+
 	return $new;
 } # end sub copy
 
@@ -773,14 +832,14 @@ sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref(
-	 q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM tbl_Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
- , {}, $$self{'id'} );
+				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM tbl_Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
+				, {}, $$self{'id'} );
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
 	} # endif
-	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date rush/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date rush/};
+	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
 	return;
 } # end sub load
 
@@ -788,15 +847,6 @@ sub type {
 	my $self = shift;
 	return new openprint::ProjectType( $$self{'type_id'} );
 } # end sub type
-
-sub get_log {
-	my ( $log, $dbh, $project_id ) = @_;
-
-	$_ = q{SELECT Company_id, (SELECT strName FROM Company WHERE Index=Company_ID),
-		User_Id, (SELECT strFirstName || ' ' || strLastName FROM Users
-		WHERE Index=User_Id), to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), Description FROM Project_Log WHERE Project_Id=? ORDER BY dtmTimestamp};
-	return sql::execute( $log, $dbh, $_, $project_id );
-} # end sub get_log
 
 sub add_to_log {
 	my ( $self, $cust_id, $user_id, $text ) = @_;

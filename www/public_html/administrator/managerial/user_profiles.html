@@ -52,7 +52,7 @@ Please select a company or user to obtain login information.<br/>
 		</fieldset>
 		<fieldset>
 			<p> 
-				<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Company Info.<? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
+				<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Company Info.</a><? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
 				
 				<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
 				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
@@ -70,11 +70,11 @@ Please select a company or user to obtain login information.<br/>
 		<fieldset><legend>User Information:</legend>
 			<div class="leftColumn">
 			<p> 
-				<label>Company Name:</label>
+				<label>Company:</label>
 				<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" style="width: auto;" />
 				<select name="company_id">
 					<option value=""> Select </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(strname)') ], $$variable{'User'}->company_id() ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(name)') ], $$variable{'User'}->company_id() ); ) ?>
 				</select>
 			</p>
 			<p>
@@ -163,6 +163,7 @@ Please select a company or user to obtain login information.<br/>
 			<p> 
 				<label>Quote Level:</label>
 				<select name="quote_level">
+					<option value=""> select </option>
 					<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ); ) ?>
 				</select>
 			</p>
@@ -170,7 +171,11 @@ Please select a company or user to obtain login information.<br/>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<p> 
 			<label>Commission Rate:</label>
-			<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" />
+			<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />%
+		</p>
+		<p> 
+			<label>Wage:</label>
+			<input type="text" name="wage" value="<? echo ( $$variable{'User'}->wage() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />/Hr
 		</p>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<p> 
@@ -193,9 +198,6 @@ Please select a company or user to obtain login information.<br/>
 				} # end foreach
 				return $html . '</ul>';
 			) ?>
-		</fieldset>
-		<fieldset><legend>Service Defaults</legend>
-			<!--#include virtual="_service_defaults.html"-->
 		</fieldset>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<fieldset><legend>Assistant To</legend>
@@ -265,6 +267,9 @@ Please select a company or user to obtain login information.<br/>
 				<input type="radio" id="ChangePasswordN" name="changepassword" <? echo ( 'checked="checked"' if $$variable{'User'}->changepassword() ne 'Y' ) ?> value="N"/>
 				<label for="ChangePasswordN" class="radio">No</label>
 			</p>
+		</fieldset>
+		<fieldset><legend>Service Defaults</legend>
+			<!--#include virtual="_service_defaults.html"-->
 		</fieldset>
 		<fieldset>
 		<p>

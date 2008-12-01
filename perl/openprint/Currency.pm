@@ -2,6 +2,7 @@ package openprint::Currency;
 @ISA = qw(openprint::Object);
 
 use strict;
+use Number::Format;
 use openprint ();
 require openprint::Object;
 require sql;
@@ -54,7 +55,11 @@ sub conversions {
 	my ( $self, $to ) = @_;
 	return 1 if $$self{id} == $to;
 	if ( ! exists $$self{'Conversions'} ) {
-		%{$$self{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$self{'id'} );
+		if ( $$self{'id'} ) {
+			%{$$self{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$self{'id'} );
+		} else {
+			%{$$self{'Conversions'}} = ();
+		} # end if
 	} # end if
 	if ( $to ) {
 		if ( $$self{'Conversions'}{$to} ) {
@@ -98,7 +103,7 @@ sub convert {
 		if ( $$DST_Currency{'id'} != $$Price{'currency_id'} ) {
 			my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
 			my $rate = $SRC_Currency->conversions( $DST_Currency->id() );
-			$$Price{'Price'} *= $rate;
+			$$Price{'Price'} *= $rate if $rate;
 			$$Price{'currency_id'} = $DST_Currency->id();
 		} # end if
 	} # end if
@@ -116,10 +121,22 @@ sub get_current {
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$openprint::session{'Currency_id'} = $Pricelist->currency_id();
 	} # end if
-	if ( $openprint::session{'Currency_id'} ) {
-		return new openprint::Currency( $openprint::session{'Currency_id'} );
-	} # end if
+	return new openprint::Currency( $openprint::session{'Currency_id'} );
 } # end sub get_currenct
+
+sub format {
+    my ( $price, $precision ) = @_;
+
+    $precision = 2 if ! defined $precision;
+    my $Currency = get_current();
+
+    my $Formatter = new Number::Format(
+            -decimal_digits     =>  $precision,
+            -int_curr_symbol    =>  $Currency->symbol(),
+            );
+    return $Formatter->format_price( $price );
+} # end sub format
+
 1;
 
 __END__

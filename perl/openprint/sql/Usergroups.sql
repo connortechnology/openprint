@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS Usergroups;
+CREATE TABLE UserGroups (
+	id	SERIAL NOT NULL,
+	name	TEXT,
+	PRIMARY KEY (id)
+);

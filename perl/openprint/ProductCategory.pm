@@ -4,7 +4,7 @@ package openprint::ProductCategory;
 use strict;
 
 use openprint ();
-use vars qw(%variable $AUTOLOAD );
+use vars qw(%variable);
 *variable = \%openprint::variable;
 
 require sql;

@@ -32,16 +32,15 @@ sub projects {
             $r->param('ddmEndMonth'),
             $r->param('ddmEndDay') );
 
-    $_ = "SELECT DISTINCT strStatus, strStatus FROM tbl_Projects ORDER BY strStatus";
+    $_ = 'SELECT name,name FROM Project_Statuses ORDER BY name';
     $$variable{'ddmStatus'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmStatus') );
 
-	$_ = "SELECT lngIndex, strName FROM tbl_Equipment ORDER BY strName";
-	$$variable{'ddmEquipment'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmEquipment') );
+	$$variable{'ddmEquipment'} = ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strName)') ], $r->param('ddmEquipment') );
 
 	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
 		my @header = ('Docket #', 'Project Reference','Company Name', 'Creation Date','Status');
 		$_ = "SELECT Index, SUBSTR(strProjectReference,0,50),\n".
-				"(SELECT strName FROM Company WHERE Index = CompanyIndex),\n".
+				"(SELECT Name FROM Companies WHERE id = tbl_Projects.CompanyIndex),\n".
 				"to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus\n".
 				"FROM tbl_Projects ".
 				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
@@ -54,15 +53,15 @@ sub projects {
 		my @data = sql::execute( $log, $dbh, $_ );
 		misc::export_csv( $r, $log, $variable, 'project_report.csv', \@header, \@data );
 	} else {
-		$_ = "SELECT DISTINCT (SELECT Index FROM Company WHERE Index = CompanyIndex),\n".
-			"				(SELECT strName FROM Company WHERE Index = CompanyIndex),\n".
+		$_ = "SELECT DISTINCT (SELECT id FROM Companies WHERE id = CompanyIndex),\n".
+			"				(SELECT Name FROM Companies WHERE id = CompanyIndex),\n".
 			"				Index, SUBSTR(strProjectReference,0,50), to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus \n".
 				"FROM tbl_Projects	".
 				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
 		$_ .= "AND UserIndex = '".$r->param('ddmEstimator')."'\n" if $r->param('ddmEstimator');
 		$_ .= "AND strStatus = '".$r->param('ddmStatus')."' \n" if $r->param('ddmStatus');
 		$_ .= "AND CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		$_ .= "AND CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesperson='".$r->param('ddmEmployees')."')\n" if $r->param('ddmEmployees') ne '';
+		$_ .= "AND CompanyIndex IN ( SELECT id FROM Companies WHERE salesrep_id='".$r->param('ddmEmployees')."')\n" if $r->param('ddmEmployees') ne '';
 		$_ .= "ORDER BY Index";
 		@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $_ );
 	} # end if
@@ -184,7 +183,7 @@ sub orders {
 		$_ .= "	AND Orders.CompanyIndex = '" . $r->param('ddmCustomers') ."' \n" if $r->param('ddmCustomers') ne '';
 		$_ .= " AND Orders.CompanyIndex IN ( SELECT DISTINCT CompanyIndex FROM Companys_In_Categories WHERE lngCategoryID='".$r->param('ddmMarketingCategory')."')\n" if $r->param('ddmMarketingCategory') ne '';
 		#$_ .= "	AND Orders.lngEmployeeID = '" . $r->param('ddmEmployees') . "' \n" if $r->param('ddmEmployees') ne '';
-		$_ .= " AND Orders.CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesPerson='".$r->param('ddmEmployees')."')" if $r->param('ddmEmployees') ne '';
+		$_ .= " AND Orders.CompanyIndex IN ( SELECT Index FROM Company WHERE salesrep_id='".$r->param('ddmEmployees')."')" if $r->param('ddmEmployees') ne '';
 		$_ .= " AND Orders.curTotalSale BETWEEN " . $r->param('dblTotal1') . " AND " . $r->param('dblTotal2') . "\n" if $r->param('dblTotal1') and $r->param('dblTotal2');
 		$_ .= " AND Orders.strCurrencyName = '" . $r->param('ddmCurrency') . "'" if $r->param('ddmCurrency') ne '';
 		$_ .= "ORDER BY Index";
@@ -278,7 +277,7 @@ sub customer_login {
 			$r->param('ddmLastOrderEndYear'), $r->param('ddmLastOrderEndMonth'),$r->param('ddmLastOrderEndDay') );
 
 	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my $query = "SELECT strName, strFirstName || ' ' || strLastName, Users.strPhone, strEmail,";
+		my $query = "SELECT name, givenname || ' ' || surname, Users.phone, email,";
 		$query .=  "strCity, strProvState, date(Company.dtmdateentered),";
 		$query .=  "(SELECT strFirstName || ' ' || strLastName FROM Users WHERE Index = lngSalesPerson ),";
 		$query .=  "(SELECT COUNT(Index) FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
@@ -292,9 +291,9 @@ sub customer_login {
 		$query .=  "AND Users.Index = (SELECT MIN(Index) FROM Users WHERE Users.CompanyIndex = Company.Index ) ";
       if ( $r->param('ddmEmployees') ) {
             if ( $r->param('ddmEmployees') eq 'None' ) {
-                $query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
+                $query .= " AND salesrep_id IS NULL OR salesrep_id NOT IN ( SELECT id FROM Users WHERE Type='E' AND strEmployeeType='Sales')";
             } else {
-                $query .= " AND lngsalesperson=" . $r->param('ddmEmployees');
+                $query .= " AND salesrep_id=" . $r->param('ddmEmployees');
             } # end if
         } # end if
 
@@ -338,9 +337,9 @@ sub customer_login {
 
 		if ( $r->param('ddmEmployees') ) {
 			if ( $r->param('ddmEmployees') eq 'None' ) {
-				$query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
+				$query .= " AND salesrep_id IS NULL OR salesrep_id NOT IN ( SELECT id FROM Users WHERE type='E' AND strEmployeeType='Sales')";
 			} else {
-				$query .= " AND lngsalesperson=" . $r->param('ddmEmployees');
+				$query .= " AND salesrep_id=" . $r->param('ddmEmployees');
 			} # end if
 		} # end if
 
@@ -394,7 +393,7 @@ sub CustomerServiceReps {
 
 	my %ordered_projects;
 
-	my $query = "SELECT Index, strStatus, (SELECT lngSalesPerson FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex),
+	my $query = "SELECT Index, strStatus, (SELECT salesrep_id FROM Companies WHERE id=tbl_Projects.CompanyIndex),
 	   ";
 	$query .= "(SELECT curSalesPrice FROM Order_Contents, Orders WHERE Orders.Index=Order_Contents.OrderIndex AND Order_Contents.lngProjectIndex=tbl_Projects.Index AND Orders.lngDocketNumber=tbl_Projects.lngDocketNumber),";
 	$query .= "(SELECT currency_id FROM Orders WHERE Orders.lngDocketNumber=tbl_Projects.lngDocketNumber)";
@@ -432,7 +431,7 @@ sub order_details {
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $r->param('btnFunction') eq 'Delete' ) {
-		if ( sql::execute( undef, undef, q{SELECT * FROM Payments WHERE strSessionID IS NULL AND Order_Id=?}, $order_id ) ) {
+		if ( openprint::Payment::find('order_id'=>$order_id ) ) {
 			$$variable{'error'} .= "Order $order_id appears to have payments.  Please delete the payments before deleting the order.";
 		} else {
 		$Order->delete();
@@ -440,7 +439,7 @@ sub order_details {
 		return;
 		} # en dif
 	} elsif ( $r->param('btnFunction') eq 'Resend' ) {
-		sql::update( $log, $dbh, 'Orders',"Index=$order_id", 'strComments',$r->param('txtComments') );
+		sql::update( $log, $dbh, 'Orders',['Index=?', $order_id], 'strComments',$r->param('txtComments') );
 		openprint::order::order_send_email( $r, $log, $dbh, $order_id );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Pay' ) {
 		$Order->pay();
@@ -450,15 +449,17 @@ sub order_details {
 			return misc::error( $log, $dbh, $variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
 		} # end if
 
-		my $error = sql::insert( $log, $dbh, 'Payments',
-				'Order_Id',     $order_id,
-				'Company_Id',   $Order->company_id(),
-				'curAmount',    $openprint::param{'Amount'},
-				'dtmDate',      'NOW()',
-				'strMethod',    'Manual',
-				'currency_id',  $Order->currency_id(),
-				'strDescription',   $openprint::param{'Description'},
-				);
+		my $Payment = new openprint::Payment();
+		
+		my $error = $Payment->save({
+				'order_id'		=>	$order_id,
+				'recipient_id'	=>	new openprint::User( $openprint::session{'user_id'} )->company_id(), 
+				'payor_id'		=>	$Order->company_id(),
+				'amount'		=>	$openprint::param{'Amount'},
+				'method'		=>	'Manual',
+				'currency_id'	=>	$Order->currency_id(),
+				'memo'			=>	$openprint::param{'Description'},
+				} );
 		if ( $error ) {
 			return misc::error( $log, $dbh, $variable, 'Error Saving Payment', $error );
 		} # end if
@@ -483,10 +484,10 @@ sub order_details {
 			$Order->save();
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete Payment' ) {
-		my $payment_index = $openprint::param{'payment_id'};
-		$payment_index =~ s/\D//g;
-		if ( $payment_index ) {
-			sql::execute( $log, $dbh, 'DELETE FROM Payments WHERE id=?', $payment_index );
+		$openprint::param{'payment_id'} =~ s/\D//g;
+		if ( $openprint::param{'payment_id'} ) {
+			my $Payment = new openprint::Payment( $openprint::param{'payment_id'} );
+			$Payment->delete();
 		} # end if
 		$Order->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Invoice' ) {

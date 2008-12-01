@@ -38,7 +38,7 @@
 	<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) and $openprint::param{'ProjectID'} ) ?>
         <? eval (
                 @{$$variable{'Projects'}} = openprint::Project::find(
-                'id_like'=>$openprint::param{'ProjectID'},
+                'id'=>$openprint::param{'ProjectID'},
                 );
         ) ?>
 		There were no projects matching your search criteria for your currently selected Company.<br/>

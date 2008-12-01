@@ -15,8 +15,8 @@ require openprint::logs;
 sub load {
     my ( $log, $dbh, $user_id, $variable ) = @_;
 
-	$_ = "SELECT strEmail, strPassword, strTitle, strFirstName, strLastName, strSalutation, strPhone, strExt, strFax, ysnChangePassword, chrType, ysnMailingList, CompanyIndex, dblCommission, strCustomGreeting, ysnAccountActivation, ysnAdministrator, dtmdateentered, dtmlastmodified, ftp_active\n".
-			"FROM Users WHERE Index=?";
+	$_ = "SELECT strEmail, strPassword, strTitle, strFirstName, strLastName, strSalutation, strPhone, strExt, strFax, ysnChangePassword, type, ysnMailingList, CompanyIndex, dblCommission, strCustomGreeting, ysnAccountActivation, ysnAdministrator, dtmdateentered, dtmlastmodified, ftp_active\n".
+			"FROM Users WHERE id=?";
 	@$variable{'txtEmail',
 		'txtPassword',
 		'txtTitle',
@@ -135,7 +135,7 @@ sub save {
 			( defined $r->param('txtFax') ? ( 'strFax', $r->param('txtFax') ) : () ),
 			( defined $r->param('txtCommission') ? ( 'dblCommission', ( $r->param('txtCommission') ne '' ? $r->param('txtCommission') : '0' ) ) : () ),
 			( defined $r->param('txtCustomGreeting') ? ( 'strCustomGreeting', $r->param('txtCustomGreeting') ) : () ),
-			( defined $r->param('ddmUserType') ? ( 'chrType', $r->param('ddmUserType') ) : () ),
+			( defined $r->param('ddmUserType') ? ( 'type', $r->param('ddmUserType') ) : () ),
 			( $r->param('txtPassword') ne '' ? ( 'strPassword', $r->param('txtPassword') ) : () ),
 			( defined $r->param('rdbChangePassword') ? ( 'ysnChangePassword', $r->param('rdbChangePassword') ) : () ),
 			( defined $r->param('rdbMailingList') ? ( 'ysnMailingList', $r->param('rdbMailingList') ) : () ),
@@ -158,7 +158,7 @@ sub add {
 
 	sql::insert( $log, $dbh, 'Users',
 			'CompanyIndex', $cust_id,
-			'chrType', ( defined $r->param('ddmUserType') ? $r->param('ddmUserType') : 'C' ),
+			'type', ( defined $r->param('ddmUserType') ? $r->param('ddmUserType') : 'C' ),
 			'strEmail', $email,
 			( defined $r->param('txtPassword') ? ( 'strPassword', $password ) : () ),
 			( defined $r->param('txtTitle')             ? ( 'strTitle',             $r->param('txtTitle') ) : () ),

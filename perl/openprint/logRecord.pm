@@ -8,6 +8,19 @@ require openprint::logAction;
 my $debug = 1;
 
 use strict;
+use vars qw( %fields );
+
+%fields = (
+	'id'	=>	'id',
+	'action_type'	=>	'action_type',
+	'user_id'		=>	'user_id',
+	'date_time'		=>	'date_time',
+	'ip_address'	=>	'ip_address',
+	'hostname'		=>	'hostname',
+	'url'			=>	'url',
+	'note'			=>	'note',
+	'company_id'	=>	'company_id',
+);
 
 sub load {
 	my ( $self, $data ) = @_;

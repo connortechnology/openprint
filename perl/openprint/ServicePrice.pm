@@ -5,6 +5,14 @@ use strict;
 require sql;
 require openprint::Object;
 require openprint::logs;
+use openprint;
+use vars qw( %variable %session %param %config $log $dbh %fields %transforms %defaults );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 my $debug = 1;
 
@@ -16,17 +24,17 @@ $table = 'tbl_Service_prices';
 $serial = 'serviceprices_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'pricelist_id'	=>	'lnglistindex',
-	'service_id'	=>	'lngserviceindex',
-	'equipment_id'	=>	'lngequipmentindex',
-	'min'			=>	'lngmin',
-	'max'			=>	'lngmax',
-	'units'			=>	'strunits',
-	'cost'			=>	'dblcost',
-	'markup'		=>	'dblmarkup',
-	'price'			=>	'dblprice',
-	'discountable'	=>	'ysndiscountable',
+	'owner_id'		=>	'owner_id',
+	'pricelist_id'	=>	'pricelist_id',
+	'service_id'	=>	'service_id',
+	'equipment_id'	=>	'equipment_id',
+	'min'			=>	'min',
+	'max'			=>	'max',
+	'units'			=>	'units',
+	'cost'			=>	'cost',
+	'markup'		=>	'markup',
+	'price'			=>	'price',
+	'discountable'	=>	'discountable',
 	'interpolate'	=>	'interpolate',
 );
 
@@ -48,35 +56,35 @@ $serial = 'serviceprices_id_seq';
 
 sub find {
 	my %params = @_;
-	my $sql = 'SELECT * FROM tbl_Service_Prices WHERE 1>0';
+	my $sql = 'SELECT * FROM Service_Prices WHERE 1>0';
 	my @values;
 
 	if ( $params{'pricelist_id'} ) {
-		$sql .= ' AND lngpricelistindex=?';
+		$sql .= ' AND pricelist_id=?';
 		push @values, $params{'pricelist_id'};
 	} # end if
 	if ( $params{'Pricelist'} ) {
-		$sql .= ' AND lnglistindex=?';
+		$sql .= ' AND pricelist_id=?';
 		push @values, $params{'Pricelist'}->id();
 	} # end if
 	if ( $params{'service_id'} ) {
-		$sql .= ' AND lngserviceindex=?';
+		$sql .= ' AND service_id=?';
 		push @values, $params{'service_id'};
 	} # end if
 	if ( $params{'Service'} ) {
-		$sql .= ' AND lngserviceindex=?';
+		$sql .= ' AND service_id=?';
 		push @values, $params{'Service'}->id();
 	} # end if
 	if ( $params{'equipment_id'} ) {
-		$sql .= ' AND lngEquipmentIndex=?';
+		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
 	} # end if
 	if ( $params{'Equipment'} ) {
 		if ( $params{'Equipment'}->id() ) {
-		$sql .= ' AND lngEquipmentIndex=?';
-		push @values, $params{'Equipment'}->id();
+			$sql .= ' AND equipment_id=?';
+			push @values, $params{'Equipment'}->id();
 		} else {
-		$sql .= ' AND lngEquipmentIndex IS NULL';
+			$sql .= ' AND equipment_id IS NULL';
 		} # end if
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};

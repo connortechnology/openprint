@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<title><?PageTitle?></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+		<link rel="stylesheet" href="/css/common.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/main.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/button.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/tempstylesheet.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/common-print.css" type="text/css" media="print"/>
+		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
+		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? if ( $r->uri() =~ /\/content\/prin/ ) ?>
+               <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+               <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+               <script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
+		<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
+		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/content\/prin/ ) ?>
+
+		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
+		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
+
+		<link rel="shortcut icon" href="/images/favicon.ico"/>
+	</head>
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
+		<div id="content_container">
+         <!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
+         <div id="menu">
+            <div id="menu_links">
+               <!--#include virtual="/skins/<?SiteTitle?>/includes/menu.html"-->
+            </div>
+         </div>
+         <div id="main_content">
+            <div id="main_content_inner">
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? else ( $r->uri() =~ /\/main\/order/ ) ?>
+               <!--#include virtual="/skins/<?SiteTitle?>/includes/left_sidebar.html"-->
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+               <div id="main_page">
+               <div id="main_page2">
+                  <div class="top_shadow">
+                     <div class="shadow_tl"></div>
+                     <div class="shadow_tr"></div>
+                  </div>
+                  <div id="main_page_content">
+                     <div id="main_page_inner">
+                        <?PageContent?>
+                     </div>
+                  </div>
+                  <div class="bottom_shadow">
+                     <div class="shadow_bl"></div>
+                     <div class="shadow_br"></div>
+                  </div>
+               </div>
+               </div>
+            </div>
+         </div>
+         &nbsp;
+      </div>
+	</body>
+</html>
