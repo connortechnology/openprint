@@ -38,6 +38,16 @@ sub history {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		$variable{'error'} .= $Invoice->send();
 		$variable{'information'} .= 'Invoice sent.<br/>';
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
+		if ( ! ( $variable{'error'} .= $Invoice->delete() ) ) {
+			$variable{'information'} .= 'Invoice deleted.<br/>';
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
+		if ( ! ( $variable{'error'} .= $Invoice->destroy() ) ) {
+			$variable{'information'} .= 'Invoice destroy.<br/>';
+		} # end if
 	} # end if
 } # end sub history
 

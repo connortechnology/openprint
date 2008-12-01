@@ -10,11 +10,15 @@
 				my $html = '';
 				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
 				if ( $$variable{'Invoice'}->id() ) {
-				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					if ( $$variable{'Invoice'}->deleted() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					} else {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+						$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?invoice_id='.$$variable{'Invoice'}->id(), 'Edit' );
+						$html .= ssi::writeButton( $log, $dbh, 'send', 'send.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
+						$html .= ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print()', '', 'Print' );
+					} # end if
 				} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?invoice_id='.$$variable{'Invoice'}->id(), 'Edit' );
-				$html .= ssi::writeButton( $log, $dbh, 'send', 'send.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
-				$html .= ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print()', '', 'Print' );
 				return $html;
 			) ?>
 		</p>

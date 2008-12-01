@@ -375,7 +375,7 @@ sub send {
 	push @attachments, 'Invoice '.$$self{'id'}.'.html', encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 
 	#my @recipients = ('iconnor@connortechnology.com');
-	my @recipients = map { sprintf('"%s" <%s>', $_->get('name','email') ) } $self->Invoicee()->AccountingContacts();
+	my @recipients = map { sprintf('"%s" <%s>', $_->name(), $_->email() ) } $self->Invoicee()->AccountingContacts();
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
 			FROM    => $config{'AccountingEmail'},

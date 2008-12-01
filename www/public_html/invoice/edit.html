@@ -86,14 +86,18 @@
 			<? echo (
 				my $html = '';
 				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
-				if ( $$variable{'Invoice'}->id() ) {
-				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
-				} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
-				if ( $$variable{'Invoice'}->posted() ) {
-					$html .= ssi::writeButton( $log, $dbh, 'unpost', 'unpost.gif', "f1.btnFunction.value='UnPost';f1.submit();", '', 'UnPost' );
-				} else {
-					$html .= ssi::writeButton( $log, $dbh, 'post', 'post.gif', "f1.btnFunction.value='Post';f1.submit();", '', 'Post' );
+				if ( $$variable{'Invoice'}->id() ) {
+					if ( $$variable{'Invoice'}->deleted() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					} else {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+					} # end if
+					if ( $$variable{'Invoice'}->posted() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'unpost', 'unpost.gif', "f1.btnFunction.value='UnPost';f1.submit();", '', 'UnPost' );
+					} else {
+						$html .= ssi::writeButton( $log, $dbh, 'post', 'post.gif', "f1.btnFunction.value='Post';f1.submit();", '', 'Post' );
+					} # end if
 				} # end if
 				return $html;
 			) ?>
