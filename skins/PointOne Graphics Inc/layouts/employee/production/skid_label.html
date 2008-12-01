@@ -1,0 +1,16 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<title><?PageTitle?></title>	
+		<LINK REL="SHORTCUT ICON" HREF="/favicon.ico">
+		        <link href="/styles/common.css" rel="stylesheet" type="text/css">
+
+	</head>
+	<body>
+		<div class="Content">
+		<div class="ContentInner">
+				<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+		</div><!--ContentInner-->
+		</div><!--Content-->
+	</body>
+</html>
