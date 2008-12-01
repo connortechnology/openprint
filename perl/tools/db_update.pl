@@ -23,7 +23,7 @@ use vars qw( $log $dbh );
 *dbh = \$openprint::dbh;
 $openprint::Object::no_cache = 1;
 
-$log = new logger( 'warn' );
+$log = new logger( 'debug' );
 
 $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[0] if ! $ARGV[2];

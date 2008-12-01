@@ -21,7 +21,7 @@
 		'type'		=> [ split(';', $openprint::session{'/administrator/stock/list.html?Types'} ) ],
 		'fsc_code'	=> $openprint::session{'/administrator/stock/list.html?fsc_code'}, 
 		'order'		=> 'name,finish,colour,weight, width, height'
-		);
+		) ) {
 		next if $Stock->recommendations() and ! sets::isin( 1, split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) );
 		next if ( ! $Stock->recommendations() ) and ! sets::isin( 0, split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) );
 		push @{$$variable{'Stocks'}}, $Stock;

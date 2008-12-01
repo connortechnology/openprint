@@ -3105,8 +3105,6 @@ $price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 
 	$setup_overs += $fm_overs;
 
-	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
-	$setup_overs = $min_overs if $setup_overs < $min_overs;
 	my $total_overs = 0;
 
 	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
@@ -3121,6 +3119,8 @@ $price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 	} else {
 		$total_overs = ceil( $total_overs + $run_overs + $setup_overs );
 	} # end if
+	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
+	$total_overs = $min_overs if $total_overs < $min_overs;
 
 	my $additional_overs=0;
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
