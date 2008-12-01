@@ -1176,7 +1176,6 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Aqueous Coating'=
 	$S->name('Aqueous Capable');
 	$S->save();
 } # end foreach
->>>>>>> 302aa2e6d72873ab1b43569f4d83f597b4158133:perl/tools/db_update.pl
 
 $dbh->disconnect();
 1;
