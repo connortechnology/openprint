@@ -1,0 +1,17 @@
+<tr id="Price-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>">
+	<td class="Range">
+		<input class="text" type="text" name="min-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
+		<input class="text" type="text" name="max-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
+	</td>
+	<td class="Cost"><input class="text" type="text" name="costcwt-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
+	<td class="Markup"><input class="text" type="text" name="markup-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
+	<td class="Price"><input class="text" type="text" name="pricecwt-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
+	<td class="Discount">
+		<input class="radio" type="radio" id="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>Y" name="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="Y" checked="checked"/>
+		<label for="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>Y">Yes</label>
+		<input class="radio" type="radio" id="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>N" name="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="N" />
+		<label for="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>N">No</label>
+	</td>
+	<td>&nbsp;</td>
+</tr>
+

@@ -1,0 +1,37 @@
+<form name="f1" method="post" action="import_export.html" enctype="multipart/form-data">
+	<div class="row"> 
+		<b>Paper Definitions:</b>
+	</div>
+	<div class="row"> 
+		Paper definition files <b>must</b> be in 
+			a comma separated values (CSV) format and the columns must be in the 
+			following order <br>
+			<br>
+			PaperID, Owner, Manufacturer, Paper Name, Finish, Colour, M Weight, Weight, 
+			Calliper, Sheet Width, Sheet Height,  
+			Supplier,
+			Double Sided Paper (Y/N), Can be Cut into Smaller Sheets (Y/N), Has mulitple parts (# of Parts) , Perfecting (Y/N), Scoring Required (Y/N), Sort Order, Recommendations<br>
+	</div>
+	<div class="row"> 
+		First, select a file containing your new database in CSV format. Then click on the import button.<br>
+			Clicking on the export button will download 
+			the current paper definitions in CSV format.<br>
+			You can then open this in a spreadsheet program such as Microsoft Excel.
+	</div>
+	<div class="row"> 
+		<span class="label">CSV File:</span>
+		<span class="input"> 
+			<input type="file" name="filePaper">
+		</span>
+	</div>
+	<div class="row"> 
+		<span class="label">&nbsp;</span>
+		<span class="input">
+			<script type="text/javascript">
+				writeButton('Import', 'import.gif', "f1.action='import_export.html?Import';f1.btnFunction.value='Import Paper';f1.submit();",'','Import' );
+				writeButton('Export', 'export.gif', "f1.action='import_export.html?Export';f1.btnFunction.value='Export Paper';f1.submit();",'','Export' );
+			</script>
+		</span>
+	</div>
+	<input type="hidden" name="btnFunction"/>
+</form>
