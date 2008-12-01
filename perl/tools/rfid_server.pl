@@ -133,7 +133,7 @@ sub process_request {
 					$Tag->save( {'id'=>$tag_id} );
 				} # end if
 if ( 1 ) {
-				if ( time - Date::Parse::str2time($Scanner->updated_on()) > 10 ) {
+				if ( time - Date::Parse::str2time($Scanner->updated_on()) > 60 ) {
 					if ( my $error = $Scanner->save() ) {
 						$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $self->{server}->{peeraddr}, $error ));
 					} # end if
