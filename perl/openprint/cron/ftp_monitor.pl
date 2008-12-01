@@ -320,7 +320,6 @@ EOT
 		} else {
 			$to = $config{'OrderingEmail'};
 		} # end if
-		$to = 'iconnor@penultima.org';
 		my %variable;
 		$variable{'Company'} = $Company;
 		$variable{'User'} = $User;
