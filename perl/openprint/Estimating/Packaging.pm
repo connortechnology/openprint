@@ -83,7 +83,7 @@ sub calc {
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
 	my $minCharge = openprint::service::get_price( $ServiceType->name().'Minimum', undef, undef );
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
@@ -102,15 +102,15 @@ sub calc {
 		if ( %ServicePrice ) {
 			if ( lc $ServicePrice{'units'} eq 'per m' ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 			} elsif ( lc $ServicePrice{'units'} eq 'each' ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 			} elsif ( lc $ServicePrice{'units'} eq 'per bundle' ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $package_qty;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $package_qty );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $package_qty );
 			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No units set for %s (%s)<br/>', $$specs{'ServiceType'}, $ServicePrice{'units'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No units set for %s (%s)<br/>', $ServiceType->name(), $ServicePrice{'units'} );
 			} # end if
 			$unitPrice += $ServicePrice{'Total'};
 		} # end if

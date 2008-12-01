@@ -280,9 +280,9 @@
 			<tr> 
 				<th align="left">Project</th>
 				<th width="90">Markup %</th>
-				<th width="50" align="right">Qty</th>
+				<th width="60" align="right">Qty</th>
 				<th width="70" align="right">Price</th>
-				<th width="110" align="right">New Price</th>
+				<th width="115" align="right">New Price</th>
 				<th width="100" align="right">Changes</th>
 			</tr>
 			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
@@ -290,7 +290,7 @@
 			<tr<?rowclass?>> 
 				<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?>&nbsp;</a></td>
 				<td align="center"> 
-					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
+					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="5" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
 				</td>
 				<td align="right"><?qty?></td>
 				<td align="right"> 

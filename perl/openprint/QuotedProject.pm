@@ -12,7 +12,7 @@ use vars qw( $log $dbh %session %config %fields %transforms %defaults );
 require sql;
 require openprint::QuoteLevel;
 
-my $debug = 1;
+my $debug = 0;
 
 
 %fields = (

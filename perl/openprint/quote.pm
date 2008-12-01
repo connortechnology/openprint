@@ -155,9 +155,14 @@ sub get_finished_quote_contents {
 
 		@{$$variable{'PROJECT_PRICES_'.$QP->project_id()}} = ();
 		my $colour = 'black';
-		if ( $QP->quantity1() != $Project->quantity1() or $QP->quantity2() != $Project->quantity2() or $QP->quantity3() != $Project->quantity3() ) {
-			$colour = 'red';
-		} elsif ( $Project->price1() != $QP->price1() or $Project->price2() != $QP->price2() or $Project->price3() != $QP->price3() ) {
+		if ( 
+				( $QP->quantity1() != $Project->quantity1() ) or 
+				( $QP->quantity2() != $Project->quantity2() ) or 
+				( $QP->quantity3() != $Project->quantity3() ) or
+				( $Project->price1() != $QP->price1() ) or 
+				( $Project->price2() != $QP->price2() ) or
+				( $Project->price3() != $QP->price3() ) 
+				) {
 			$colour = 'red';
 		} # end if
 		foreach my $qty_index ( 1 .. 3 ) {
@@ -173,7 +178,7 @@ sub get_project_info {
 	my $Project = new openprint::Project( $project_index );
 	my $reference = $Project->reference();
 
-	return ( $reference, $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->price1(), $Project->price2(), $Project->price3() );
+	return ( $reference, $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->price(1), $Project->price(2), $Project->price(3) );
 } # end sub get_project_info
 
 1;

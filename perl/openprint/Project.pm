@@ -1029,7 +1029,10 @@ sub prices {
 	return @$self{'price1','price2','price3'};
 }
 sub price {
-	my ( $self, $qty_index ) = @_;
+	my ( $self, $qty_index, $new ) = @_;
+	if ( defined $new ) {
+		$$self{'price'.$qty_index} = $new;
+	} # end if
 	return sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
 } # end sub price
 sub unit_price {

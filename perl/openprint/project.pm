@@ -156,21 +156,20 @@ $openprint::log->debug("Viewing Project $project_index");
 		push @{$$variable{'SERVICES'}}, $statuses{$service_index};
 	} # end foreach
 
-	if ( 
-			( $$variable{'Project'}->price1() != $$variable{'Total1'} ) or 
-			( $$variable{'Project'}->price2() != $$variable{'Total2'} ) or 
-			( $$variable{'Project'}->price3() != $$variable{'Total3'} ) 
-	   ) {
+	my $save = 0;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 
-		$$variable{'Project'}->price1( $$variable{'Total1'} );
-		$$variable{'Project'}->price2( $$variable{'Total2'} );
-		$$variable{'Project'}->price3( $$variable{'Total3'} );
-		$$variable{'Project'}->save();
-	} # end if
-	foreach my $qty_index ( 1 .. 3 ) {
+		$$variable{"Total$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$variable{"Total$qty_index"} );
+		$$variable{"UnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$variable{"UnitPrice$qty_index"} );
+$openprint::log->debug("Prices $qty_index P" . $$variable{'Project'}->price($qty_index) . ' T' .  $$variable{'Total'.$qty_index} );
+		if ( $$variable{'Project'}->price($qty_index) != $$variable{'Total'.$qty_index} ) {
+			$$variable{'Project'}->price( $qty_index, $$variable{'Total'.$qty_index} );
+			$save = 1;
+		} # end if
 		$$variable{"Total$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$variable{"Total$qty_index"}*$conversion_rate );
 		$$variable{"UnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$variable{"UnitPrice$qty_index"}*$conversion_rate );
 	} # end foreach
+	$$variable{'Project'}->save() if $save;
 
 	@$variable{'CurrencyName', 'CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'ProjectIndex'} = $project_index;

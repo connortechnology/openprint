@@ -316,7 +316,7 @@ sub confirmation {
 			foreach my $qty_index ( 1 .. 3 ) {
 				$Project->quantity( $Project->Project()->quantity() );
 				$Project->price( $qty_index, $Project->Project()->price($qty_index)*(1+($Project->markup( $qty_index )/100)) );	
-				$subtotals[$qty_index] += $Project->price();
+				$subtotals[$qty_index] += $Project->price( $qty_index );
 			} # end foreach
 			$Project->description( $Project->reference() );
 			$Project->save();
