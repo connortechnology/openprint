@@ -23,10 +23,11 @@
 			$('SignatureGroup1').show();
 		} // end if
 		if ( ( form.remaining_pages.value > 0 ) && ! $('SignatureGroup'+form.next_group_id.value) ) {
-			new Ajax.Updater( 'alert', '_signature.html', { methood: 'get', 
-					parameters: { 'next_group_id' : form.next_group_id.value,
-					},
-					onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc(form.name);} } );
+			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { method: 'get', 
+					parameters: { 'next_group_id' : form.next_group_id.value, },
+					onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+form.next_group_id.value)){calc(form.name);}}
+					//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+				 } );
 		} // end if
 	} // end function cbBookResults
 
@@ -117,6 +118,7 @@
 					$$variable{'txtServiceDescription1'} = 'Cover Pages';
 					$$variable{'txtSignatureType1'} = 'Cover Pages';
 				} # end if
+					$$variable{'txtSignatureType1'} = 'Cover Pages';
 				if ( ! sets::isin( 2, \@Groups ) ) {
 					# Ensure 1 interior pages
 					push @Groups, 2;

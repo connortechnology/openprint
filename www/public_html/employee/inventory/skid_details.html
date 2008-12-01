@@ -1,4 +1,3 @@
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript">
 function convert_lbs_to_kg( from, to ) {
@@ -250,6 +249,9 @@ The following errors occurred:<br/>
 					<a href="rfidtag_details.html?rfidtag_id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>">View Tag</a>
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
 			</p>
+			<p><label>Verification:</label>
+				<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" />
+			</p>
 			<p>
 				<label>Location:</label>
 				<select id="ddmLocation" name="ddmLocation">
@@ -303,11 +305,14 @@ The following errors occurred:<br/>
 	</fieldset>
 </form>
 <? if ( $$variable{'skid_id'} ) ?>
-<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', {skid_id:<?skid_id?>} );">Allocations - click to hide/show</legend>
+<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<?skid_id?>) );">Allocations - click to hide/show</legend>
 <div id="Allocations" style="display: none;"></div>
 </fieldset>
 <fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id:<?skid_id?>} );">Inventory Log - click to hide/show</legend>
 <div id="Log"><!--#include virtual="_skid_log.html"--></div>
+</fieldset>
+<fieldset><legend onclick="toggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', new Array('skid_id',<?skid_id?>) );">Verification Log - click to hide/show</legend>
+<div id="VerificationLog"><!--#include virtual="_verification_log.html"--></div>
 </fieldset>
 <? endif ( $$variable{'skid_id'} ) ?>
 <script type="text/javascript">document.jump.skid_id.focus();</script>

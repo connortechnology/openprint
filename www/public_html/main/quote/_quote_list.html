@@ -7,7 +7,7 @@
 	} else {
 		if ( %openprint::param ) {
 			foreach my $key ( 'QuotedFor', 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay' ) {
-				$openprint::session{'/main/quote/history.html?'.$key} = $openprint::param{$key};
+				$openprint::session{'/main/quote/history.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
 			} # end foreach
 		} # end if
 		$openprint::session{'/main/quote/history.html?lastupdated'} = time;
@@ -100,6 +100,7 @@
 		<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
 	</table>
 	<div class="unprintable" style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f2.btnFunction.value='Delete';delete_confirm(f2);", '', 'Delete' ); ) ?></div>
+	<input type="hidden" name="btnFunction" />
 </form>
 	<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name(); ) ?>.</span>
 <? endif ( @{$$variable{'Quotes'}} == 0 ) ?>

@@ -1,0 +1,17 @@
+<? echo (
+	$r->content_type('text/javascript');
+	my $Vendor = new openprint::Company( $param{'supplier_id'} );
+	my $html = '';
+	$html .= "
+		\$('vendor_name').value = '$$Vendor{name}';
+		\$('vendor_address1').value = '$$Vendor{address1}';
+		\$('vendor_address2').value = '$$Vendor{address2}';
+		\$('vendor_city').value = '$$Vendor{city}';
+		ddm_select_by_value( \$('vendor_country'), '$$Vendor{country}' );
+		ddm_select_by_value( \$('vendor_state'), '$$Vendor{state}' );
+		\$('vendor_postalcode').value = '$$Vendor{postalcode}';
+		\$('vendor_phone').value = '$$Vendor{phone}';
+		\$('vendor_fax').value = '$$Vendor{fax}';
+	";
+	return $html;
+) ?>

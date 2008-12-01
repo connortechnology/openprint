@@ -7,32 +7,18 @@
 		<title><?PageTitle?></title>	
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
 		<script type="text/javascript" src="/javascripts/barcode.js"></script>
-		<link href="/css/handheld-menu.css" rel="stylesheet" type="text/css"/>
+		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
 		<link href="/css/handheld-main.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
 	</head>
 	<body>
-			<div bgcolor="#ffffff" color="#353c91" style="border-bottom: 1px solid #353c91; color:#353c91; margin-bottom: 5px; padding: 2px;">
-				<? echo ( 
-					my $html;
-					$html .= q{<span style="float: left;">};
-					$html .= ssi::writeButton( $log, $dbh, 'Home', '', '', '/handheld/index.html', 'PointOne Graphics Inc.' );
-					$html .= q{</span>};
-					$html .= q{<span style="float: right;">};
-					if ( $$variable{'user_id'} ) {
-						$html .= ssi::writeButton( $log, $dbh, 'Logout', '', '', '/handheld/index.html?action=Logout', 'Logout' );
-					} # end if
-					$html .= q{</span>};
-					return $html;
-				) ?>
-				<br class="spacer"/>
-			</div>
 			<? echo (
 				my @options = ('<a href="/handheld/index.html">HOME</a>');
-				push @options, '<a href="/handheld/paper_inventory/skid.html">Inventory</a>';
+				push @options, '<a href="/handheld/paper_inventory/index.html">Inventory</a>';
 				return join('&raquo;',@options);
 			) ?>
-				<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+			<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 	</body>
 </html>

@@ -104,14 +104,27 @@ sub find {
 	if ( $params{'SalesPerson'} ) {
 		if ( ref $params{'SalesPerson'} eq 'ARRAY' ) {
 			if ( @{$params{'SalesPerson'}} == 1 ) {
-			$sql .= q{ AND lngSalesPerson=?};
+				$sql .= q{ AND lngSalesPerson=?};
 			} elsif ( @{$params{'SalesPerson'}} ) {
-            $sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'SalesPerson'}} ).')';
+				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'SalesPerson'}} ).')';
 			} # end if
             push @values, @{$params{'SalesPerson'}};
 		} else {
 		$sql .= q{ AND lngSalesPerson=?};
 		push @values, $params{'SalesPerson'};
+		} # end if
+	} # end if
+	if ( $params{'salesrep_id'} ) {
+		if ( ref $params{'salesrep_id'} eq 'ARRAY' ) {
+			if ( @{$params{'salesrep_id'}} == 1 ) {
+				$sql .= q{ AND lngSalesPerson=?};
+			} elsif ( @{$params{'salesrep_id'}} ) {
+				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'salesrep_id'}} ).')';
+			} # end if
+            push @values, @{$params{'salesrep_id'}};
+		} else {
+			$sql .= q{ AND lngSalesPerson=?};
+			push @values, $params{'salesrep_id'};
 		} # end if
 	} # end if
 	if ( $params{'marketing_category_id'} ) {
@@ -121,6 +134,10 @@ sub find {
 	if ( $params{'supplier'} ) {
 		$sql .= ' AND ysnSupplier=?';
 		push @values, $params{'supplier'};
+	} # end if
+	if ( $params{'reseller'} ) {
+		$sql .= ' AND ysnReseller=?';
+		push @values, $params{'reseller'};
 	} # end if
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
@@ -139,6 +156,7 @@ sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Company WHERE Index=?', {}, $$self{'id'} );
+		if ( ! $data ) { $openprint::log->warn("Error loading company $$self{id} " . $openprint::dbh->errstr() ); }
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
@@ -191,7 +209,7 @@ sub delete {
    openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'}");
 } # end sub delete
 sub save {
-    my $self = shift;
+    my ( $self, $params ) = @_;
 	my %sql;
 	foreach my $k ( keys %fields ) {
 		my @transforms = @{$transforms{$k}} if $transforms{$k};
@@ -213,6 +231,11 @@ sub save {
     if ( ! $$self{'id'} ) {
         @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('CompanyIndex_seq')} );
 		$sql{index} = $$self{'id'};
+        if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
+			$openprint::dbh->rollback();
+			return $e;
+		} # end if
+	} elsif ( $$params{'force_insert'} ) {
         if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
 			$openprint::dbh->rollback();
 			return $e;
@@ -328,7 +351,7 @@ sub get_dropdown {
 	my $sql = 'SELECT Index, strName FROM Company';
 	my @values;
 
-	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) {
+	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
 		$sql .= ' WHERE Index=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
@@ -348,6 +371,12 @@ sub Users {
 	my $self = shift;
 	return openprint::User::find('company_id'=>$$self{'id'} );
 } # end sub Users
+sub taxexempt1 {
+	return $_[0]{gst_exempt};
+}
+sub taxexempt2 {
+	return $_[0]{pst_exempt};
+}
 
 1;
 __END__

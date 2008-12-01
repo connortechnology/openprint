@@ -98,8 +98,16 @@ sub press_schedule {
 		my $service_index = $openprint::param{'ServiceIndex'};
 		my $project_index = $openprint::param{'ProjectIndex'};
 		my $Project = new openprint::Project( $project_index );
-		my ( $starttime ) = sql::execute( $log, $dbh, q{SELECT starttime FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
-		my ( $year, $month, $day, $hours, $minutes, $seconds ) = $starttime =~ /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/;
+		my ( $starttime, $equipment_id ) = sql::execute( $log, $dbh, q{SELECT starttime, equipment_id FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
+		if ( ! $starttime ) {
+			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=?}, $equipment_id );
+		} # end if
+		my ( $year, $month, $day, $hours, $minutes, $seconds );
+		if ( ! $starttime ) {
+			( $year, $month, $day, $hours, $minutes, $seconds ) = Date::Calc::Today_and_Now();
+		} else {
+			( $year, $month, $day, $hours, $minutes, $seconds ) = $starttime =~ /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/;
+		} # end if
 		$seconds = 0;
 		$minutes = 0;
 		if ( $hours < 12 ) {
@@ -109,18 +117,16 @@ sub press_schedule {
 			$hours = 0;
 		} # end if
 		if ( $year ) {
-			my $starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $hours, $minutes, $seconds );
-			sql::update( $log, $dbh, 'Schedule', "ProjectIndex=$project_index AND ServiceIndex=$service_index", 'starttime', $starttime );
+			$starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $hours, $minutes, $seconds );
+			sql::update( $log, $dbh, 'Schedule', ['ProjectIndex=? AND ServiceIndex=?', $project_index, $service_index], 'starttime', $starttime );
 			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Job bumped to next shift: $starttime " );
 		} # end if
 
 	} elsif ( $openprint::param{'btnFunction'} eq 'CompleteJob' ) {
 # Actually this is complete Signature
-		my $service_index = $openprint::param{'ServiceIndex'};
-		my $project_index = $openprint::param{'ProjectIndex'};
-		my $Project = new openprint::Project( $project_index );
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Job Completed from print schedule." );
-		complete_signature( $log, $dbh, $variable, $project_index, $service_index );
+		my $Project = new openprint::Project( $openprint::param{'project_id'} );
+		$Project->add_to_log( $openprint::session{'company_id'}, $openprint::param{'operator_id'}, "Job Completed from print schedule." );
+		complete_signature( $log, $dbh, $variable, @openprint::param{'project_id', 'service_id'} );
 		$Project->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $openprint::param{'schedule_id'} ) {

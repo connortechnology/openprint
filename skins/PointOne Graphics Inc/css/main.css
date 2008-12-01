@@ -297,3 +297,7 @@ div#AlertDiv {
 	font-weight: bold;
 	color: red;
 }
+.SidesTheSame {
+	top: -22px; left: 50px; position: relative; width: 120px;padding-left: 5px;
+	background-color: #DEDCB7;
+}

@@ -44,7 +44,7 @@ sub variables {
 	my @v = @variables;
 	foreach my $s_s_id ( $Project->signatures() ) {
 		my $specs = openprint::service::get_specs_ref( $p_id, $s_s_id );
-		foreach my $qty_index ( 1 .. 3 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, 
 				 "ddmEquipment-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index",
 				 "txtImposition-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$specs{'SignatureIndex'}-$qty_index",
@@ -67,7 +67,7 @@ sub variables {
 	'hdnBreakdown1',
 	'hdnBreakdown2',
 	'hdnBreakdown3',
-'alert',
+	'alert',
 );
 sub outputs {
 	return @outputs;
@@ -107,8 +107,7 @@ sub calc {
 
 	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
 
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity($qty_index);
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
@@ -123,6 +122,8 @@ sub calc {
 			$qty *= $$specs{'txtPressSheetComboItems'};
 		} # end if
 
+		my %MakeReadies;
+
 		my $GrandTotal = 0;
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -132,7 +133,10 @@ sub calc {
 				$$specs{'alert'} .= 'No imposition was found for printing. Please complete the printing estimation first.<br/>';
 				next;
 			} # end if
-			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $qty_index );
+			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
+			$MakeReadies{$results{'Equipment'}->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{'Equipment'};
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
 					"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
@@ -144,21 +148,23 @@ sub calc {
 					"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index",
 					);	
 			if ( $$specs{"OverrideMakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
-			$$specs{"MakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'MakeReady'} );
+				$$specs{"MakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'MakeReady'} );
 			} # end if
 			if ( $$specs{"OverrideBlanketPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
-			$$specs{"BlanketPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Blanket'} );
+				$$specs{"BlanketPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Blanket'} );
 			} # end if
 			if ( $$specs{"OverrideServicePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
-			$$specs{"ServicePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Service'} );
+				$$specs{"ServicePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Service'} );
 			} # end if
 			if ( $$specs{"OverrideMaterialPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
-			$$specs{"MaterialPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Material'} );
+				$$specs{"MaterialPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Material'} );
 			} # end if
 			if ( $$specs{"OverrideSignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
-			$$specs{"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Total'} );
+				$$specs{"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Total'} );
 			} # end if
-			$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
+			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
+			} # end if
 			if ( $results{'Status'} eq 'uncalculated' ) {
 				$status = 'uncalculated';
 				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -195,7 +201,7 @@ sub calc {
 } # end sub calc
 
 sub signature_calc {
-    my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition ) = @_;
+    my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
 
 	my %bestPrice;
 	$bestPrice{'Status'} = 'uncalculated';
@@ -241,13 +247,7 @@ sub signature_calc {
 		@equipment = @all_equipment;
 	} # endif
 
-# Get the impositions to consider
-	if ( ! $imposition ) {
-		$imposition = new openprint::Imposition();
-		$imposition->load( $sig_specs, $qty_index );
-	} else {
-		$imposition = $imposition->copy();
-	} # end if
+	$imposition = $imposition->copy();
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
@@ -263,7 +263,7 @@ sub signature_calc {
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
 		#$openprint::log->debug('After get all Cutting' . @imps);
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			$openprint::log->debug("Imposition: " . $imps[$i]{'Imposition'});
+			$openprint::log->debug("Imposition: " . $imps[$i]{'imposition'} . 'out' );
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} == $imps[$i]->imposition() )
 			   ) {
@@ -316,17 +316,26 @@ sub signature_calc {
 				@types = (@front_aq, @back_aq);
 			} # end if
 			foreach my $type ( @types ) {
-				my $setupPrice = openprint::service::get_price( $type.' MakeReady', $run_qty/$imp->imposition(), $Equipment );
-				$Price{'MakeReady'} += $setupPrice;
+
+				my $setupPrice;
+
+				if ( $$MakeReadies{$Equipment->id()} and (
+							(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * 1.10 ) > $$MakeReadies{$Equipment->id()} ) and
+							(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * .90 ) < $$MakeReadies{$Equipment->id()} )
+							) ) {
+				} else {
+					$setupPrice = openprint::service::get_price( $type.' MakeReady', $run_qty/$imp->imposition(), $Equipment );
+					$Price{'MakeReady'} += $setupPrice;
+				} # end if
 				
 				my $BlanketCutPrice = 0;
 				if ( $type =~ /Spot/ ) {
 					$BlanketCutPrice = openprint::service::get_price( 'BlanketCut', undef, $Equipment );
 				} # end if type is spot
-					$Price{'BlanketCut'} += $BlanketCutPrice;
+				$Price{'BlanketCut'} += $BlanketCutPrice;
 
 				my %ServicePrice = openprint::service::get_price_object( $type, $run_qty/$imp->imposition(), $Equipment );
-				if ( lc $ServicePrice{'units'} eq 'per m' ) {
+				if ( sets::isin( lc $ServicePrice{'units'}, [ 'per m', 'per 1000' ] ) ) {
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / 1000;
 				} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / $Equipment->specification('AqueousRunSpeed') if $Equipment->specification('AqueousRunSpeed');
@@ -371,7 +380,7 @@ sub signature_calc {
 		} # end foreach equipment
 	} # end foreach imposition
 
-	if ( $bestPrice{'Total'} ) {
+	if ( defined $bestPrice{'Total'} ) {
 		$bestPrice{'Status'} = 'calculated';
 	} # end if
 

@@ -123,7 +123,7 @@ sub insert {
 	# we can use push and pop in here, because we actually don't acre about order, only pairing
 	my $command = "INSERT INTO $table (".join( ',', keys %commands ).') VALUES (';
 	my $print_command = $command;
-	$print_command .= join(',', @values ) if @values;
+	$print_command .= join(',', map { defined $_ ? $_ : 'undef' } @values ) if @values;
 	$print_command .= ')';
 
 	$command .= join(',', map { '?' } @values ).')';
@@ -171,13 +171,15 @@ sub update {
 	} else {
 		$command .= " WHERE $condition";
 	} # end if
+    my $print_command = $command;
+    $print_command =~ s/\?/\%s/g;
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
-		$log->error( "Error Preparing SQL Statement: ($command):" . $d->errstr ) if $log;
+		$log->error( 'Error Preparing SQL Statement: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr ) if $log;
 		return $d->errstr;
 	} # end if
 	if ( ! $sth->execute( values %commands, @conditions ) ) {
-		$log->error("SQL statement execution failed: ($command):" . $d->errstr) if $log;
+		$log->error('SQL statement execution failed: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr) if $log;
 		return $d->errstr;
 	} # end if
 	

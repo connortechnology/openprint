@@ -7,21 +7,23 @@
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="campaign_id" value="<? echo ( $$variable{'Campaign'}->id(); ) ?>"/>
 	<fieldset>
-		<p><label>Name:</label><input type="text" name="name" value="<?name?>"  /></p>
-		<p><label>Query:</label><textarea name="query" cols="50" rows="8" onkeyup="textarea_resize( this );" ><?query?></textarea></p>
-		<p><label>Email From:</label><input type="text" name="email_from" value="<?email_from?>"  /></p>
-		<p><label>Email Subject:</label><input type="text" name="email_subject" value="<?email_subject?>"  /></p>
-		<p><label>Email Body:</label><textarea name="email_text" rows="8" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'email_text'} ) ?></textarea></p>
-		<p><label>Times to send:</label><input type="text" name="timestosend" value="<?timestosend?>"  /></p>
-		<p><label>Time of day to send:</label><input type="text" name="timeofday" value="<?timeofday?>"  /></p>
-		<p><label>Interval between emails:</label><input type="text" name="interval" value="<?interval?>"  /></p>
+		<p><label>Name:</label><input type="text" name="name" value="<? echo ( $$variable{'Campaign'}->name() ) ?>" /></p>
+		<p><label>Query:</label><textarea name="query" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->query() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->query() ) ?></textarea></p>
+		<p><label>Email From:</label><input type="text" name="email_from" value="<? echo ( $$variable{'Campaign'}->email_from() ) ?>"  /></p>
+		<p><label>Email Subject:</label><input type="text" name="email_subject" value="<? echo ( $$variable{'Campaign'}->email_subject() ) ?>"  /></p>
+		<p><label>Template:</label><select name="template_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate::find('order'=>'lower(name)') ], $$variable{'Campaign'}->template_id() ); ) ?></select></p>
+		<p><label>Email Body:</label><textarea name="email_text" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->email_text() ) ?></textarea></p>
+		<p><label>Attachments:</label><textarea name="attachments" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->attachments() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->attachments() ) ?></textarea></p>
+		<p><label>Times to send:</label><input type="text" name="timestosend" value="<? echo ( $$variable{'Campaign'}->timestosend() ) ?>"  /></p>
+		<p><label>Time of day to send:</label><input type="text" name="timeofday" value="<? echo ( $$variable{'Campaign'}->timeofday() ) ?>"  /></p>
+		<p><label>Interval between emails:</label><input type="text" name="interval" value="<? echo ( $$variable{'Campaign'}->interval() ) ?>"  /></p>
 		<p><label>Active:</label>
-		<input type="radio" id="activeY" name="active" value="Y" <? echo ( $$variable{'active'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+		<input type="radio" id="activeY" name="active" value="Y" <? echo ( $$variable{'Campaign'}->active() eq 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label for="activeY" class="radio">Yes</label>
-		<input type="radio" id="activeN" name="active" value="N" <? echo ( $$variable{'active'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
+		<input type="radio" id="activeN" name="active" value="N" <? echo ( $$variable{'Campaign'}->active() ne 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label for="activeN" class="radio">No</label>
 		</p>
-		<p> <label>Last Run:</label><?lastrun?></p>
+		<p> <label>Last Run:</label><? echo ( $$variable{'Campaign'}->lastrun() ) ?></p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'DeleteBottom', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),

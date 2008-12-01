@@ -42,6 +42,7 @@ my %fields = (
 	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
 	'quote_level'		=>	'quote_level',
+	'email_quotes_to_myself'        =>      'email_quotes_to_myself',
 ); # end %fields
 
 my %transforms = (
@@ -147,7 +148,7 @@ sub save {
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		#$email_template = ssi::variable_substitution( \$email_template, \%info );
+		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},
@@ -180,6 +181,11 @@ sub save {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
+	} elsif ( $$params{'force_insert'} ) {
+		if ( my $error = sql::insert( $openprint::log, $openprint::dbh, 'Users', \%sql ) ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return $error;
+		} # end if
 	} else {
 		if ( my $error = sql::update( $log, $dbh, 'Users', ['Index=?',$$self{id}], \%sql ) ) {
 			sql::end_transaction( $dbh, $ac );
@@ -199,6 +205,11 @@ sub save {
 
 sub delete {
 	my $self = shift;
+	sql::update( undef, undef, 'Users', ['index=?', $$self{'id'}], 'deleted', 1 );
+} # end sub delete
+
+sub destroy {
+	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
@@ -209,6 +220,7 @@ sub delete {
 	foreach my $Order ( openprint::Order::find('user_id'=>$$self{'id'}) ) {
 		$Order->delete();
 	} # end foreach
+	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
 	foreach my $Project ( openprint::Project::find('user_id'=>$$self{'id'}) ) {
 		$Project->delete();
 	} # end foreach
@@ -309,11 +321,19 @@ sub id {
 
 sub find {
 	my %param = @_;
-	if ( $param{'id'} ) {
-		return new openprint::User( $param{'id'} );
-	} # end if
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;
+
+	if ( $param{'id'} ) {
+		if ( ref $param{'id'} eq 'ARRAY' ) {
+			$sql .= q{ AND index IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
+			push @values, @{$param{'id'}};
+		} else {
+			$sql .= q{ AND index=?};
+			push @values, $param{'id'};
+		} # end if
+	} # end if
+
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {
 			$sql .= q{ AND chrType IN ('} . join("','", @{$param{'type'}}) . q{')};
@@ -346,8 +366,13 @@ sub find {
 		push @values, $param{'web_active'};
 	} # end if
 	if ( exists $param{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $param{'deleted'};
+		if ( ref $param{'deleted'} eq 'ARRAY' ) {
+			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$param{'deleted'}}) . '))';
+			push @values, @{$param{'deleted'}};
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $param{'deleted'};
+		} # end if
 	} else {
 		$sql .= ' AND (deleted=? OR deleted IS NULL)';
 		push @values, 0;

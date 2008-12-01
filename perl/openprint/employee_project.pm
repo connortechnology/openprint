@@ -17,6 +17,7 @@ require openprint::press_schedule;
 require sql;
 require openprint::MXML;
 require openprint::JDF;
+require openprint::PaperAllocation;
 
 sub view {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -31,7 +32,40 @@ sub view {
 	} # end if
 	$$variable{'OrderID'} = $order_id;
 
-	if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
+	if ( ( $openprint::param{'btnFunction'} eq 'Rush' ) and ! $Project->rush() ) {
+		$Project->rush( 1 );
+		$$variable{'error'} .= $Project->save();
+		if ( ! $$variable{'error'} ) {
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Project marked as a rush job." );
+			my %info;
+			$info{'Project'} = $Project;
+			$info{'Docket'} = $Project->docket();
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rush_job_notification.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
+			my @body = ('', $_, 'text/html', 'quoted-printable');
+			my $From = new openprint::User( $openprint::session{'user_id'} );
+			my @To = openprint::User::find('usergroup'=>'Production');
+			if ( ! sets::isin( $Project->Order()->salesrep_id(), map { $_->id() } @To ) ) {
+				push @To, new openprint::User( $Project->Order()->salesrep_id() );
+			} # end if
+
+			foreach my $To ( @To ) {
+				my %mail = (
+						SMTP    => $openprint::config{'Mail Server'},
+						FROM    => sprintf( '"%s %s" <%s>', $From->get( 'firstname','lastname','email') ),
+						To		=> sprintf( '"%s %s" <%s>', $To->get( 'firstname','lastname','email') ),
+						SUBJECT => "Docket $info{'Docket'} Rushed!",
+						);
+				misc::send_email_with_attachment( $log, \%mail, @body );
+			} # end foreach To
+		} # end if
+	} elsif ( $openprint::param{'btnFunction'} eq 'No Rush' ) {
+		$Project->rush( 0 );
+		$$variable{'error'} .= $Project->save();
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Project marked as a non-rush job." );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf(1.2)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export MXML' ) {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [new openprint::MXML($Project)->toString()] );
@@ -58,6 +92,11 @@ sub view {
 				if ( $complete ) {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Complete' );	
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'All signatures complete - marking printing complete.' );
+					foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
+						next if $PA->Paper()->type() ne 'Roll';
+						$PA->delete();
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+					} # end foreach
 				} else {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Ordered' );	
 				} # end if
@@ -254,12 +293,17 @@ sub view {
 
 # There is now a set of press completion buttons for each signature
 			if ( $complete ) {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
+				openprint::service::status( $project_index, $service_index, 'Complete' );
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Printed from $status" );
+				foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
+					next if $PA->Paper()->type() ne 'Roll';
+					$PA->delete();
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+				} # end foreach
 # shuffle jobs on the print schedule
 
 			} else {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$service_index", 'strStatus', 'Ordered' );
+				openprint::service::status( $project_index, $service_index, 'Ordered' );
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Ordered from $status" );
 			} #nd if
 		} elsif ( $service_type eq 'AdditionalSignature' ) {
@@ -281,7 +325,7 @@ sub view {
 			} # end foreach
 		} # end if
 
-		openprint::project::update_status( $log, $dbh, $variable, $project_index );
+		$Project->update_status();
 		$order_id = $Project->order_id() if ! $order_id;
 		openprint::order::update_order_status( $r, $log, $dbh, $order_id );
 		sql::end_transaction( $dbh, $ac );
@@ -413,7 +457,7 @@ sub send_additional_charges_notifications {
 	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 
 #$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_csr_notification.html\"-->";
-#$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
+#$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 #my @body = ('', $_, 'text/html', 'quoted-printable');
 #my %mail = (
 #SMTP    => $openprint::config{'Mail Server'},
@@ -427,7 +471,7 @@ sub send_additional_charges_notifications {
 #misc::send_email_with_attachment( $log, \%mail, @body );
 
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $openprint::config{'Mail Server'},
@@ -542,10 +586,10 @@ sub send_proofs_complete_email {
 	$info{'CompletionDate'} = Date::Format::time2str( $openprint::config{'DateTimeFormat'}, time );
 
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_complete.html' );
-	$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+	$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
 	$_ = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) );
+	$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $openprint::config{'Mail Server'},
@@ -561,7 +605,7 @@ sub send_proofs_complete_email {
 #my $sales_person_email = sprintf( "%s %s <%s>", sql::execute( $log, $dbh, $_ ) );
 #if ( $sales_person_email ne '  <>' ) {
 #$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_complete-sales_rep.html\"-->";
-#$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
+#$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 #my @body = ('', $_, 'text/html', 'quoted-printable');
 #my %mail = (
 #SMTP    => $openprint::config{'Mail Server'},
@@ -600,9 +644,9 @@ sub send_proofs_approved_email {
 	my $sales_person_email = sprintf( "%s %s <%s>", $CSR->firstname(), $CSR->lastname(), $CSR->email() );
 	if ( $sales_person_email ne '  <>' ) {
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_approved-sales_rep.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		$_ = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) );
+		$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},
@@ -633,7 +677,7 @@ sub send_duedate_change_notification {
 	if ( $CSR->email() ) {
 		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},

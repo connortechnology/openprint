@@ -1,0 +1,6 @@
+
+<? echo ( $$variable{'From'}->name() ) ?> has created a purchase order.<br/>
+<br/>
+Please use the following link to view it.<br/>
+<br/>
+<? echo ( sprintf('<a href="%1$s/employee/inventory/purchase_order_view.html?inventory_id=%2$d">Purchase Order %2$d</a>', $config{'InternalSiteURL'}, $$variable{'PurchaseOrder'}->id() ); ) ?><br/>

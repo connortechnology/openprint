@@ -2,6 +2,10 @@
 <h1>PROJECTS</h1>
 <h2>History</h2>
 </div>
+<? if ( $$variable{'error'} ) ?>
+<div class="error"><?error?></div>
+<? endif ( $$variable{'error'} ) ?>
+
 <script type="text/javascript">
 <!--
 	function delete_confirm(form) {
@@ -16,6 +20,10 @@
 		} // end for
 		if ( number_of_deleted_projects == 0 ) {
 			alert("To Delete Projects, click the checkbox beside the project.");
+		} else if ( number_of_deleted_projects == 1 ) {
+			if ( confirm("Are you sure you wish to delete this project from history?\n") ) {
+				form.submit();
+			} // end if
 		} else {
 			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_projects + " projects from history?\n") ) {
 				form.submit();

@@ -167,7 +167,7 @@ $openprint::log->debug("Page: $page");
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();
-	openprint::pricing::clear_cache( );
+	openprint::pricing::clear_cache();
 	openprint::Object::init_cache();
 	return Apache2::Const::OK;
 } # end sub handler
@@ -383,7 +383,9 @@ $variable{'ServiceIndex'} = $service_index;
 					} elsif ( $filename eq 'multipage_signatures.html' ) {
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} elsif ( $filename eq 'prin_multi.html' ) {
-						$status = openprint::print::publication_pages( $r, $log, $dbh, $session{_session_id}, \%variable );
+						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
+					} elsif ( $filename eq 'ScratchPads.html' ) {
+						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
 					} else {
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} # end if

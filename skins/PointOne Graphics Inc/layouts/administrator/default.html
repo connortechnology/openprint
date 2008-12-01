@@ -40,10 +40,10 @@
 						</ul>
 					</li> 
 <? if ( $openprint::session{'user_type'} eq 'A' ) ?>
-					<li class="<? echo ( $r->uri() =~ /administrator\/paper/ ? 'on' : 'off' ) ?>" id="PaperMenu"><a href="#" onclick="toggleMenu($('PaperMenu'), 'off', 'on');return false;">PAPER</a>
+					<li class="<? echo ( $r->uri() =~ /administrator\/stock/ ? 'on' : 'off' ) ?>" id="StockMenu"><a href="#" onclick="toggleMenu($('StockMenu'), 'off', 'on');return false;">STOCK</a>
 						<ul>
-							<li><a href="/administrator/paper/list.html;SSL">&raquo; View/Edit</a></li>
-							<li><a href="/administrator/paper/import_export.html;SSL">&raquo; Import/Export</a></li>
+							<li><a href="/administrator/stock/list.html;SSL">&raquo; View/Edit</a></li>
+							<li><a href="/administrator/stock/import_export.html;SSL">&raquo; Import/Export</a></li>
 							<li><a href="/administrator/production/pricelists.html;SSL">&raquo; Pricelists</a></li>
 						</ul>
 					</li>
@@ -89,7 +89,7 @@
 		</div>
 		<div id="Content"> 
 		<div id="ContentInner"> 
-				<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+			<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 		</div>
 		</div>
 	</body>

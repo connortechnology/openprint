@@ -1,15 +1,15 @@
 <? eval (
 	if ( %openprint::param and ! $param{'btnFunction'} ) {
-		foreach my $key ( 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id' ) {
-			$openprint::session{'/administrator/stock/list.html?'.$key} = $openprint::param{$key};
+		foreach my $key ( 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations' ) {
+			if ( ref $session{"/administrator/stock/list.html?$key"} eq 'ARRAY' ) {
+				$openprint::session{"/administrator/stock/list.html?$key"} = join(';', @{$openprint::param{$key}} );
+			} else {
+				$openprint::session{"/administrator/stock/list.html?$key"} = $openprint::param{$key}; 
+			} # end if
 		} # end foreach
-		if ( ref $openprint::param{'Types'} eq 'ARRAY' ) {
-			$openprint::session{'/administrator/stock/list.html?Types'} = join(';', @{$openprint::param{'Types'}} );
-		} else {
-			$openprint::session{'/administrator/stock/list.html?Types'} = $openprint::param{'Types'}; 
-		} # end if
 	} # end if
-    @{$$variable{'Stocks'}} = openprint::Paper::find( 
+	@{$$variable{'Stocks'}} = ();
+	foreach my $Stock ( openprint::Paper::find( 
 		'group_id'		=> $openprint::session{'/administrator/stock/list.html?Group'},
 		'owner_id'		=> $openprint::session{'/administrator/stock/list.html?Owner'},
 		'manufacturer_id'		=> $openprint::session{'/administrator/stock/list.html?Manufacturer'},
@@ -22,6 +22,10 @@
 		'fsc_code'	=> $openprint::session{'/administrator/stock/list.html?fsc_code'}, 
 		'order'		=> 'name,finish,colour,weight, width, height'
 		);
+		next if $Stock->recommendations() and ! sets::isin( 1, split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) );
+		next if ( ! $Stock->recommendations() ) and ! sets::isin( 0, split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) );
+		push @{$$variable{'Stocks'}}, $Stock;
+	} # end foreach
 ) ?>
 <? if ( @{$$variable{'Stocks'}} ) ?>
 	<table class="List sortable" style="table-layout: auto;">

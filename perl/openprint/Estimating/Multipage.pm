@@ -61,12 +61,12 @@ sub no_outputs {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	if ( sets::isin( $$specs{'rdbTemplateType'}, ['MetalCoil','PlasticCoil','PlasticComb','DoubleLoopWire'] ) ) {
+	if ( sets::isin( $$specs{'rdbTemplateType'}, ['SaddleStitching', 'LoopStitching', 'MetalCoil','PlasticCoil','PlasticComb','DoubleLoopWire'] ) ) {
 		$$specs{'txtSpreadSize'} = 4;
 	} elsif ( sets::isin( $$specs{'rdbTemplateType'}, ['CornerStitching','PerfectBound','SpinePaste'] ) ) {
 		$$specs{'txtSpreadSize'} = 2;
 	} else {
-		$$specs{'txtSpreadSize'} = 4;
+		$$specs{'txtSpreadSize'} = 2;
 	} # end if
 	
 	if ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'rdbCover'} ne 'Different' ) {
@@ -103,6 +103,7 @@ sub calc {
 			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 				$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
+				last if $override_pages{$group_id};
 			} # end foreach signature
 		} # end if
 		$remaining_pages -= $override_pages{$group_id};
@@ -207,20 +208,23 @@ $openprint::log->debug("Starting Multipage::calculate_signatures");
 	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'GateFolded Spreads'});
 	@signatures = $Project->signatures() if ! @signatures;
+$openprint::log->debug( "Signature: @signatures");
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
 
 # Clear these so that when we start recalculating, we get large signatures first.
-		foreach my $qty_index ( 1 .. 3 ) {
+if ( 0 ) {
+		# Not neccessary anymore?
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
 				openprint::service::insert_service_specs( $log, $dbh, $project_index, $signatures[$i], 'PageQuantity'.$qty_index, '' );
 			} # end if
 		} # end foreach
+} # end if
 
 		if ( $$printing_specs{'PrintingType'} ) {
-			$log->debug("PrintingType: $$printing_specs{'PrintingType'}");
 			if ( 
 				 ( $Project->quantity1() and ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} ) )
 				 or ( $Project->quantity2() and ( $$sig_specs{'PrintingType2'} ne $$printing_specs{'PrintingType'} ) )
@@ -231,7 +235,7 @@ $openprint::log->debug("Starting Multipage::calculate_signatures");
 				for ( my $j = $i+1; $j < @signatures; $j += 1 ) {
 					my $specs2 = openprint::service::get_specs_ref( $Project, $signatures[$j] );
 					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $specs2 ) ) {
-$openprint::log->warn('Deleting due to incorrect printing type');
+#$openprint::log->warn('Deleting due to incorrect printing type');
 						openprint::print_project::delete_service( $log, $dbh, $project_index, $signatures[$j] );
 						splice @signatures, $j, 1;
 						$j-=1;
@@ -244,12 +248,12 @@ $openprint::log->warn('Deleting due to incorrect printing type');
 	my @groups = sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
 	if ( ! @groups ) {
 		foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
+			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
 		} # end if
 	} else {
 	foreach my $group ( @groups ) {
 		my @sigs = sort $Project->signatures( {'Group'=>$group} );
-$openprint::log->debug("Sigs in group $group : " . scalar @sigs );
+$openprint::log->debug("Sigs in group $group : @sigs " );
 		next if ! @sigs;
 		my $ss_id = shift @sigs;
 
@@ -293,7 +297,7 @@ $openprint::log->debug("Sigs in group $group : " . scalar @sigs );
 				my $ac = sql::start_transaction( $openprint::dbh );
 				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
 
-				foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $sig_specs, \%specs ) ) {
+				foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $new_sig_specs, \%specs ) ) {
 					openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $specs{$key} );
 				} # end foreach
 				sql::end_transaction( $openprint::dbh, $ac );

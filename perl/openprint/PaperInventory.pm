@@ -57,6 +57,14 @@ sub find {
 		$sql .= ' AND skid_id=?';
 		push @values, $params{'skid_id'};
 	} # end if
+	if ( exists $params{'paper_id'} ) {
+		if ( defined $params{'paper_id'} ) {
+		$sql .= ' AND paper_id=?';
+		push @values, $params{'paper_id'};
+		} else {
+		$sql .= ' AND paper_id IS NULL';
+		} # end if
+	} # end if
 	if ( exists $params{'comment_like'} ) {
 		$sql .= ' AND comment LIKE ?';
 		push @values, $params{'comment_like'};

@@ -16,7 +16,7 @@
 
 package openprint::Estimating::UVCoating;
 use strict;
-use warnings;
+#use warnings;
 
 require sql;
 require openprint::service;
@@ -43,8 +43,8 @@ sub variables {
 	my $Project = new openprint::Project( $p_id );
 	my @v = @variables;
 	foreach my $s_s_id ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $p_id, $s_s_id );
-		foreach my $qty_index ( 1 .. 3 ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, 
 				 "ddmEquipment-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index",
 				 "txtImposition-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$specs{'SignatureIndex'}-$qty_index",
@@ -106,8 +106,7 @@ sub calc {
 
 	@all_equipment = openprint::Equipment::find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
 
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity($qty_index);
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -121,6 +120,8 @@ sub calc {
 			$qty *= $$specs{'txtPressSheetComboItems'};
 		} # end if
 
+		my %MakeReadies;
+
 		my $GrandTotal = 0;
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -130,7 +131,10 @@ sub calc {
 				$$specs{'alert'} .= 'No imposition was found for printing. Please complete the printing estimation first.<br/>';
 				next;
 			} # end if
-			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $qty_index );
+			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
+			$MakeReadies{$results{'Equipment'}->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{'Equipment'};
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index", 
 					"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
@@ -157,7 +161,9 @@ sub calc {
             $$specs{"SignaturePrice-$$sig_specs{'SignatureIndex'}-$qty_index"} = sprintf($openprint::config{ProjectMoneyFormat}, $results{'Total'} );
             } # end if
 
-			$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
+			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
+			} # end if
 			if ( $results{'Status'} eq 'uncalculated' ) {
 				$status = 'uncalculated';
 				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -194,7 +200,7 @@ sub calc {
 } # end sub calc
 
 sub signature_calc {
-    my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition ) = @_;
+    my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
 
 	my %bestPrice;
 	$bestPrice{'Status'} = 'uncalculated';
@@ -237,12 +243,7 @@ sub signature_calc {
 	} # endif
 
 # Get the impositions to consider
-	if ( ! $imposition ) {
-		$imposition = new openprint::Imposition();
-		$imposition->load( $sig_specs, $qty_index );
-	} else {
-		$imposition = $imposition->copy();
-	} # end if
+	$imposition = $imposition->copy();
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
@@ -280,7 +281,7 @@ sub signature_calc {
 
 	foreach my $Equipment ( @equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().',<br/>';
-			my %minimum = openprint::service::get_price_object( 'UVCoatingMinimumCharge', undef, $Equipment );
+		my %minimum = openprint::service::get_price_object( 'UVCoatingMinimumCharge', undef, $Equipment );
 
 		foreach my $imp ( @impositions ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tImposition: \%dx\%d+\%dx\%d=\%dout :", @$imp{'columns','rows','dutch_columns','dutch_rows','imposition'} );
@@ -301,6 +302,16 @@ sub signature_calc {
 			my %Price;
 			my $run_qty = $qty;
 
+			my $Paper = $imposition->Paper()->clone();
+            $Paper->width( $width );
+            $Paper->height( $height );
+
+            if ( $Paper->area() != $Paper->start_area() ) {
+                my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $imposition );
+                $Price{'Cutting'} = $results{'Price'};
+                $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Stock cutting cost: %.2f<br/>', $results{'Price'} );
+            } # end if
+
 			my @types;
 			if ( sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
 # need to merge any overalls into spots
@@ -317,8 +328,16 @@ sub signature_calc {
 
 # Two sided job
 			foreach my $type ( @types ) {
-				my $setupPrice += openprint::service::get_price( $type.' MakeReady', $run_qty/$imp->imposition(), $Equipment );
-				$Price{'MakeReady'} += $setupPrice;
+			
+				my $setupPrice;
+				if ( $$MakeReadies{$Equipment->id()} and (
+							(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * 1.10 ) > $$MakeReadies{$Equipment->id()} ) and
+							(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * .90 ) < $$MakeReadies{$Equipment->id()} )
+							) ) {
+				} else {
+					$setupPrice += openprint::service::get_price( $type.' MakeReady', $run_qty/$imp->imposition(), $Equipment );
+					$Price{'MakeReady'} += $setupPrice;
+				} # end if
 
 				my $BlanketCutPrice = 0;
 				if ( $type =~ /Spot/ ) {
@@ -355,7 +374,7 @@ sub signature_calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%s MR: $%.2f + BC: $%.2f + Service: $%.2f%s=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>', $type,
 					$setupPrice, $BlanketCutPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
 			} # end foreach type
-			$Price{'Total'} = $Price{'MakeReady'} + $Price{'Service'} + $Price{'Material'} + $Price{'Blanket'};
+			$Price{'Total'} = $Price{'Cutting'} + $Price{'MakeReady'} + $Price{'Service'} + $Price{'Material'} + $Price{'Blanket'};
 			if ( $Price{'Total'} < $minimum{Price} ) {
 				$Price{'Total'} = $minimum{Price};
 			} # end if
@@ -366,13 +385,14 @@ sub signature_calc {
 				$bestPrice{'Service'} = $Price{'Service'};
 				$bestPrice{'Material'} = $Price{'Material'};
 				$bestPrice{'Blanket'} = $Price{'Blanket'};
+				$bestPrice{'Cutting'} = $Price{'Cutting'};
 				$bestPrice{'Equipment'} = $Equipment;
 				$bestPrice{'Imposition'} = $imp;
 			} # end if
 		} # end foreach equipment
 	} # end foreach imposition
 
-	if ( $bestPrice{'Total'} ) {
+	if ( defined $bestPrice{'Total'} ) {
 		$bestPrice{'Status'} = 'calculated';
 	} # end if
 	if ( $$specs{"OverrideMakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -403,7 +423,7 @@ sub save {
 	my ( $p_id, $s_id, $params ) = @_;
 	my $Project = new openprint::Project( $p_id );
 	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $p_id, $ss_id );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		#openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $ss_id, 'SideOneUVCoatingType', $$params{'SideOneCoatingType-'.$$sig_specs{'SignatureIndex'}} );
 		#openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $ss_id, 'SideTwoUVCoatingType', $$params{'SideTwoCoatingType-'.$$sig_specs{'SignatureIndex'}} );
 	} # end foreach

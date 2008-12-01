@@ -1,23 +1,22 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript">
-function check_inputs(form ) {
-	if ( form.skid_id && form.skid_id.value ) {
-		if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
-			alert( 'Skids cannot contain more than 10000lbs' );
+	function check_inputs(form ) {
+		if ( form.skid_id && form.skid_id.value ) {
+			if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
+				alert( 'Skids cannot contain more than 10000lbs' );
+				return false;
+			} // end if
+			if ( form.Units && get_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
+				alert( 'Skids cannot contain more than 10000lbs' );
+				return false;
+			} // end if
+		} // end if
+		if ( form.available_quantity && form.Quantity.value > form.available_quantity.value ) {
+			alert( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available' );
 			return false;
 		} // end if
-		if ( form.Units && get_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
-			alert( 'Skids cannot contain more than 10000lbs' );
-			return false;
-		} // end if
-	} // end if
-	if ( form.available_quantity && form.Quantity.value > form.available_quantity.value ) {
-		alert( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available' );
-		return false;
-	} // end if
-	return true;
-
-}
+		return true;
+	}
 
 var allocateWin;
 function allocate_window(paper_id) {
@@ -91,6 +90,7 @@ The following errors occurred:<br/>
 				<label>ID #:</label>
 				<?paper_id?>
 			</p>
+<? if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 			<p>
 				<label for="txtManufacturer" onclick="f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
 				<select id="Manufacturer" name="Manufacturer" size="1">
@@ -187,29 +187,52 @@ The following errors occurred:<br/>
 				<label for="Owner">Owner:</label>
 				<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() || $openprint::session{'company_id'} ); ) ?></select>
 			</p>
+<? else ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+<p>
+<label>Description:</label><? echo ( $$variable{'Paper'}->to_string(); ) ?>
+</p>
+<? if ( $$variable{'Paper'}->type() ne 'Roll' ) ?>
+			<p>
+				<label>MWeight:</label>
+				<? echo ( $$variable{'Paper'}->mweight(); ) ?>M
+			</p>
+<? endif ( $$variable{'Paper'}->type() ne 'Roll' ) ?>
+<? if ( $$variable{'Paper'}->gsm() ) ?>
+			<p>
+				<label>GSM:</label>
+				<? echo ( $$variable{'Paper'}->gsm(); ) ?>
+			</p>
+<? endif ( $$variable{'Paper'}->gsm() ) ?>
+<? if ( $$variable{'Paper'}->calliper() ) ?>
+			<p>
+				<label>Calliper:</label>
+				<? echo ( $$variable{'Paper'}->calliper(); ) ?>inches
+			</p>
+<? endif ( $$variable{'Paper'}->calliper() ) ?>
+<? if ( $$variable{'Paper'}->fsc_code() ) ?>
+			<p>
+				<label>FSC Code:</label>
+				<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>
+			</p>
+<? endif ( $$variable{'Paper'}->fsc_code() ) ?>
+			<p>
+				<label for="Owner">Owner:</label>
+<? echo ( $$variable{'Paper'}->Owner()->name(); ) ?>
+			</p>
+<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 		</div>
 		<div style="float: right; width: 48%;">
 			<p>
 				<label>Entered:</label>
-				<? echo ( $$variable{'Paper'}->created_on(); ) ?>
+				<? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paper'}->created_on() ) ); ) ?>
 			</p>
 			<p>
 				<label>In Stock:</label>
-				<span style="float: right;">
-				<? echo (
-						my $html;
-						$html .= ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' );
-						$html .= ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' );
-						return $html;
-						) ?>
-				</span>
-				<? echo ( $$variable{'Paper'}->in_stock(); ) ?>
-				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
+				<? echo ( $$variable{'Paper'}->in_stock() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' );  ) ?>
 			</p>
 			<p>
 				<label>Allocated:</label>
-				<? echo ( int $$variable{'Paper'}->allocated(); ) ?>
-				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
+				<? echo ( int $$variable{'Paper'}->allocated() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ); ) ?>
 			</p>
 			<p>
 				<label>Unallocated:</label>
@@ -223,11 +246,18 @@ The following errors occurred:<br/>
 			</p>
 		</div>
 		<div style="float: right;">
-			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-				ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
-				ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset()', '', 'Reset' ),
-			); ) ?>
+			<? echo (
+					if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
+						return join('',
+							ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' ),
+							ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' ),
+							ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
+							ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
+							ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset()', '', 'Reset' ),
+							);
+					} # end if
+					return;
+			) ?>
 		</div>
 	</fieldset>
  <? if ( $$variable{Paper}->id() ) ?>

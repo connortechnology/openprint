@@ -14,6 +14,7 @@ require openprint::Paper;
 require openprint::PaperInventory;
 require openprint::SkidContent;
 require openprint::RFIDTag;
+require openprint::Skid_Verification;
 require openprint::Project;
 
 my $debug = 1;
@@ -32,6 +33,11 @@ sub find {
             push @values, $params{id};
         } # end if
     } # end if
+
+	if ( $params{'verification_code'} ) {
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?)';
+		push @values, $params{'verification_code'};
+	} # end if
 
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
@@ -417,6 +423,10 @@ sub rfidtag_id {
 	} # end if
 	return $$self{'rfidtag_id'};
 } # end sub rfidtag_id
+
+sub RFIDTag {
+	return new openprint::RFIDTag( $_[0]{rfidtag_id} );
+} # end sub RFIDTag
 
 1;
 __END__

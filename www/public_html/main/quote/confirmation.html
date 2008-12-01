@@ -1,1 +1,12 @@
-Thank you. Your information has been received. You will receive a copy of the quote via e-mail shortly.
+Thank you. Your information has been received.
+<? if ( $$variable{'Quote'}->for_email() ne $$variable{'Quote'}->by_email() ) ?>
+	<? if ( $$variable{'Quote'}->for_firstname() ) ?>
+		<? echo ( $$variable{'Quote'}->for_firstname() ) ?> will receive the quote by e-mail shortly.
+	<? else ( $$variable{'Quote'}->for_firstname() ) ?>
+		The quote will be received by e-mail shortly.
+	<? endif ( $$variable{'Quote'}->for_firstname() ) ?>
+<? else ( $$variable{'Quote'}->for_email() ne $$variable{'Quote'}->by_email() ) ?>
+	<? if ( new openprint::User( $session{'user_id'} )->email_quotes_to_myself() ) ?>
+	You will receive a copy of the quote via e-mail shortly.
+	<? endif ( new openprint::User( $session{'user_id'} )->email_quotes_to_myself() ) ?>
+<? endif ( $$variable{'Quote'}->for_email() ne $$variable{'Quote'}->by_email() ) ?>

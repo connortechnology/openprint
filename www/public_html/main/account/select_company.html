@@ -42,9 +42,7 @@
 				<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, f1.ddmCompany);" size="4"/>
 				<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">Select a Company</option>
-	<? echo ( 
-	 openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} );
-	) ?>
+					<? echo ( return openprint::Company::get_dropdown( $openprint::session{'company_id'} );) ?>
 				</select>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'f1.submit();', '', 'Submit' ); ) ?>
 			</p>

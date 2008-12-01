@@ -81,6 +81,7 @@ $openprint::log->debug("Viewing Project $project_index");
 
 # now do printing service
 	$$variable{'ProjectTypeName'} = $ProjectType->name();
+	@{$$variable{'SERVICES'}} = ();
 	my @services = ();
 
 	my %services = $$variable{'Project'}->get_services();

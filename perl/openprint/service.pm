@@ -62,31 +62,26 @@ sub get_id_by_index {
 } # end sub get_id_by_index
 
 sub get_price {
-	my ( $service, $range, $equipment ) = @_;
+	my ( $service, $range, $Equipment ) = @_;
 
-	my %price = get_price_object( $service, $range, $equipment );
+	my %price = get_price_object( $service, $range, $Equipment );
 	return $price{'Price'};
 } # end sub get_price
 
 sub get_price_object {
-	my ( $service, $range, $equipment ) = @_;
+	my ( $service, $range, $Equipment ) = @_;
 
 	my $index = get_index_by_id( $service );
 	return if ! $index;
 
-	if ( ref $equipment eq 'openprint::Equipment' ) {
-		$equipment = $equipment->id();
-	} # end if
-
-	my $list_id = openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable );
-	my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $index, $list_id, 'openprint::service_priceset', $range, $equipment );
+	my $list_id = openprint::pricing::get_pricelist_id( );
+	my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $index, $list_id, 'openprint::service_priceset', $range, $$Equipment{'id'} );
 	return if ! %price;
 
 	my $Pricelist = new openprint::Pricelist( $list_id );
-	$price{'currency_id'} = $Pricelist->currency_id();
+	$price{'currency_id'} = $$Pricelist{'currency_id'};
 	openprint::Currency::convert( \%price );
 	return %price;
-
 } # end sub get_price_object
 
 sub save_service {
@@ -184,7 +179,7 @@ sub get_specs_ref {
 		$openprint::log->error("********* Called get_specs_ref with Project Index or Service Index ****************");
 		return;
 	} # end if
-	if ( ref $p_id eq 'openprint::Project' ) {
+	if ( sets::isin( ref $p_id, [ 'openprint::Project', 'openprint::QuotedProject' ] ) ) {
 		$p_id = $p_id->id();
 	} # end if
 	if ( ! exists $specs_cache{$s_id} ) {
@@ -273,7 +268,6 @@ sub auto_calculate {
 			} # end if
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Folding");
 	if ( openprint::Estimating::Paper::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $services{'Paper'} ) {
 			push @{$services{'Paper'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Paper' );
@@ -306,25 +300,25 @@ $openprint::log->debug("Apres PF");
 			push @{$services{'SaddleStitching'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'SaddleStitching' );
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Stitch");
+
 	if ( openprint::Estimating::ThreeKnifeTrim::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $services{'ThreeKnifeTrim'} ) {
 			push @{$services{'ThreeKnifeTrim'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'ThreeKnifeTrim' );
 		} # end if
 	} # end if
-$openprint::log->debug("Apres TKT");
+
 	if ( openprint::Estimating::Tipping::neccessary( $Project ) ) {
 		if ( ! $services{'Tipping'} ) {
 			push @{$services{'Tipping'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Tipping' );
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Tip");
+
 	if ( openprint::Estimating::Blowing::neccessary( $Project ) ) {
 		if ( ! $services{'Blowing'} ) {
 			push @{$services{'Blowing'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Blowing' );
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Blow");
+
 	if ( openprint::Estimating::Collating::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $services{'Collating'} ) {
 			push @{$services{'Collating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Collating' );
@@ -362,6 +356,12 @@ $openprint::log->debug("Apres porrat");
 	} # end if
 $openprint::log->debug("Apres Skdis");
 
+	if ( ! $services{'PlainCartons'} ) {
+		if ( openprint::Estimating::Skids::neccessary( $Project, 'PlainCartons' ) ) {
+			push @{$services{'PlainCartons'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'PlainCartons' );
+		} # end if
+	} # end if
+
 	if ( ! $services{'Scoring'} ) {
 		if ( openprint::Estimating::Scoring::neccessary( $Project ) ) {
 			push @{$services{'Scoring'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Scoring' );
@@ -373,13 +373,13 @@ $openprint::log->debug("Apres Skdis");
 	} # end if
 
 	# Order for these is important.  Stitching must be calc'd before Folding
-	foreach my $type ( 'SaddleStitching','LoopStitching','Folding' ) {
+	foreach my $type ( 'Folding','SaddleStitching','LoopStitching' ) {
 		next if ! $services{$type};
 		foreach my $service_index ( @{$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
 			eval "require openprint::Estimating::$service_type";
-			$openprint::log->error('Error requiring openAprint::Estimating::$service_type: ' . $@ ) if $@;
+			$openprint::log->error("Error requiring openprint::Estimating::$service_type: " . $@ ) if $@;
 			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
@@ -426,6 +426,16 @@ sub status {
 	( $_ ) = sql::execute( undef, undef, q{SELECT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
 	return $_;
 } # end sub status
+
+sub operator_id {
+	my ( $project_index, $service_index, $operator_id ) = @_;
+	if ( defined $operator_id ) {
+		sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'operator_id', $operator_id );
+		return $operator_id;
+	} # end if
+	( $_ ) = sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
+	return $_;
+} # end sub operator_id
 
 
 sub external_calc {

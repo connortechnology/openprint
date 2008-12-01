@@ -107,3 +107,11 @@ span.Currency {
 	width: 100%;
 	text-align: center;
 }
+div.leftColumn {
+	float: left;
+	width: 48%;
+}
+div.rightColumn {
+	float: right;
+	width: 48%;
+}

@@ -457,7 +457,7 @@ $openprint::log->debug("Making order from quote");
 		} # end while
 		if ( @errors ) {
 			$$variable{'error'} = join('<br/>', @errors );
-			$openprint::log->error( "Order Error: $$variable{'error'}" );
+			#$openprint::log->error( "Order Error: $$variable{'error'}" );
 		} # end if
 	} # end if
 
@@ -768,7 +768,7 @@ sub verify_order {
 	get_invoice_to( $log, $dbh, $variable, $order_id );
 	$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'txtCity','txtStateProvince','txtCountry'} );
 
-	if ( $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) {
+	if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 		$$variable{'AdministratorName'} = new openprint::User( $openprint::session{'user_id'} )->name();
 	} # end if
 
@@ -883,7 +883,8 @@ sub finalise_order {
 			( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
 		} # end if
 
-		$Order->company_id( $openprint::session{'company_id'} );
+		# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
+		$Order->company_id( $openprint::session{'company_id'} ) if ! $Order->company_id();
 		$Order->salesrep_id( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() );
 		$Order->federal_tax( $gst_total );
 		$Order->state_tax( $pst_total );
@@ -1122,7 +1123,11 @@ sub send_sales_order {
 
 	my @admin_emails = split( ',', $openprint::config{'OrderingEmail'} );
 	@admin_emails = map { lc; misc::trim($_) } @admin_emails;
-	@admin_emails = sets::union( @admin_emails, $sales_person_email );
+
+	my @accounting_emails = split( ',', $openprint::config{'AccountingEmail'} );
+	@accounting_emails = map { lc; misc::trim($_) } @accounting_emails;
+
+	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
 
 	if ( @admin_emails ) {
 		my %mail = (

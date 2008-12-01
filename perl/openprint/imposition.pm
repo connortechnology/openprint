@@ -120,8 +120,8 @@ sub check_setup {
 
 	if ( sets::isin( $setup->runstyle(),[ 'Sheet Work', 'Web' ] ) ) {
 		#$log->debug(" *** Runstyle is:	Sheet Work ***");
-	} elsif ( $setup->runstyle() eq 'Perfecting' ) {
-		#$openprint::log->debug("*** Runstyle is: Perfecting Imposition is : $$setup{'Imposition'} ***" . $setup->Paper()->perfecting() );
+	} elsif ( $setup->runstyle() eq 'Perfecting' and ! $$specs{'ComboItems'} ) {
+		#$openprint::log->debug("*** Runstyle is: Perfecting Items: $$specs{'ComboItems'} Imposition is : $$setup{'Imposition'} ***" . $setup->Paper()->perfecting() );
 
 		if ( ! $setup->Paper()->perfecting() ) {
 			# check to make sure that the gutter space is actually where it needs to be.
@@ -182,8 +182,13 @@ sub calc_setup_object {
 	$setup1->runstyle( $run_style );
 	$setup1->image_orientation('Vertical');
 	$setup1->spread_size( $$specs{'txtSpreadSize'} );
+	if ( 1 ) {
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
+	} else {
+	$setup1->spread_rows( sprintf('%.0f', $$specs{'image_height'}/$$specs{'final_height'}));
+	$setup1->spread_columns(sprintf('%.0f', $$specs{'image_width'}/$$specs{'final_width'}));
+	}
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
@@ -194,8 +199,13 @@ sub calc_setup_object {
 	$setup2->runstyle( $run_style );
 	$setup2->image_orientation('Horizontal');
 	$setup2->spread_size( $$specs{'txtSpreadSize'} );
+	if ( 1 ) {
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);
+	} else {
+	$setup2->spread_rows( sprintf('%.0f', $$specs{'image_height'}/$$specs{'final_height'}));
+	$setup2->spread_columns(sprintf('%.0f', $$specs{'image_width'}/$$specs{'final_width'}));
+	}
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
 	$setup2->Press( $Press );
@@ -304,11 +314,7 @@ sub calc_setup_object {
 	$setup1->grip( $$specs{'Grip Size'} );
 	$setup2->grip( $$specs{'Grip Size'} );
 
-	if ( 
-			( ! $grain_direction )
-			or ($grain_direction eq 'width' and $setup1->rotate_sheet() == 1) 
-			or ($grain_direction eq 'height' and $setup1->rotate_sheet() == 0)
-	   ) {
+	if ( ( ! $grain_direction ) or ($grain_direction eq $setup1->grain_direction() ) ) {
 
 # Setup 1. Width to Width
 		if ( $run_style eq 'Perfecting' and ! $Paper->perfecting() ) {
@@ -458,11 +464,7 @@ $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 	} # end if grain_direction
 
 # Only consider the rotated view if teh grain direction is unspecified or is correct for this.
-	if ( 
-			( ! $grain_direction )
-			or ($grain_direction eq 'width' and $setup2->rotate_sheet() == 1) 
-			or ($grain_direction eq 'height' and $setup2->rotate_sheet() == 0)
-	   ) {
+	if ( ( ! $grain_direction ) or ($grain_direction eq $setup2->grain_direction() ) ) {
 		my $gutters = $$specs{'Gutter'};
 		$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 		if ( sets::isin( 'Top', \@bleed_locations ) ) {
@@ -557,23 +559,22 @@ $openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if $debug;
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.
 #	if no grain direction is specified, then use the larger imposition
 				$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? 'height' : 'width' );
-				if ( $setup2->imposition() ) {
-					if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
-						push @results, calc_dutch( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height, $specs );
-					} # end if
-					if ( ! $setup2->paper()->width() ) {
-						$setup2->paper()->width( $setup2->used_width() );
-					} # end if
-					fix_height( $setup2, $specs );
-					push @results, $setup2;
+				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
+					push @results, calc_dutch( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height, $specs );
 				} # end if
+				if ( ! $setup2->paper()->width() ) {
+					$setup2->paper()->width( $setup2->used_width() );
+				} # end if
+				fix_height( $setup2, $specs );
+				push @results, $setup2;
+			} elsif ( $debug ) {
+				$openprint::log->debug(' failed check_setup');
 			} # end if
 		} elsif ( $run_style eq 'Work & Turn' ) {
 			calc_setup( $setup2, $image_height, $image_width, $adjusted_paper_width/2, $adjusted_paper_height );
 			$openprint::log->debug( sprintf('CHECK 2 Work&Turn Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $image_height, $image_width, $setup2->imposition(), $setup2->columns(), $setup2->rows() ) ) if $debug;
 			if ( $setup2->imposition() ) {
 				$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? 'height' : 'width' );
-
 
 				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
 					foreach my $imp ( calc_dutch( $setup2, $image_height, $image_width, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
@@ -667,6 +668,7 @@ sub add_imposition {
 		} elsif ( ($Paper->type() eq 'Roll') and ($Press->specification('W&TonRoll') eq 'N') and sets::isin( $run_style, ['Work & Turn','Work & Tumble'] ) ) {
 			next;
 		} else {
+$openprint::log->debug("Calling calc_setup_object") if $debug;
 			foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $override_grain_direction, $Press ) ) {
 				if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
 					if ( ($versions * 2) > $i->imposition() ) {
@@ -676,11 +678,11 @@ sub add_imposition {
 				} elsif ( $versions > $i->imposition() ) {
 					next;
 				} # end if
-				if ( $run_style eq 'Perfecting' ) {
+				#if ( $run_style eq 'Perfecting' ) {
 # make sure that we do not get any 1up perfecting!
 # Can only do 1 up perfecting if we are using perfecting paper, which doesn't need rollers
-					next if ( $i->imposition() == 1 and ! $Paper->perfecting() );
-				} # end if
+					#next if ( $i->imposition() == 1 and ! $Paper->perfecting() );
+				#} # end if
 				push @impositions, $i;
 			} # end foreach
 		} # end if
@@ -698,12 +700,13 @@ sub add_imposition {
 
 sub permutate_versions {
 	my ( $versions, $set_size ) = @_;
+# versions is a point to an array of permutations
 	
 	my @perms;
 	if ( $set_size == 1 ) {
 		foreach my $v ( @$versions ) {
 			$$v{imposition} = 1;
-		}
+		} # end foreach
 		@perms = ( [ @$versions ] );
 		return @perms;
 	} # end if
@@ -739,6 +742,31 @@ $openprint::log->debug("PI: $pi, PJ: $pj K: $k");
 		
 	return @perms;
 } # end sub permutate_versions
+
+# Generate the set of integer partitions of n.
+# #  Ex. 5 becomes [5], [4,1], [3,2], [3,1,1], [2,2,1], [2,1,1,1], [1,1,1,1,1]
+sub partitions {
+	my ( $n ) = @_;
+
+	return []  if $n == 0;
+	return [1] if $n == 1;
+
+	my @set;
+	foreach my $p ( partitions($n - 1) ) {
+		my $append = [@$p, 1];
+
+# Any set that's a singleton or whose first field is less than the
+# second, gets the first field incremented. (ie. [3+1], [2,1+1])
+		if ( (@$p == 1) or ($$p[-1] < $$p[-2]) ) {
+			$$p[-1] += 1;
+			push @set, $p;
+		} # end if
+
+		push @set, $append;
+	} # end foreach
+	return @set;
+} # end sub partitions
+
 
 # $versions is a pointer to an array of Version objects, sorted by descreasing quantity
 sub do_versions {
@@ -794,6 +822,7 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 			$blocks{21}	=	[ [3,7],[7,3] ];
 			$blocks{22}	=	[ [3,8],[8,3] ];
 			$blocks{24}	=	[ [6,4],[4,6],[2,12],[12,2],[3,8],[8,3] ];
+			$blocks{32}	=	[ [8,4],[4,8],[2,16],[16,2] ];
 	} # end if
 
 
@@ -804,10 +833,11 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;
-		#foreach my $signature_size ( reverse 1 .. $start ) {
-		my $a = int($start/2);
-		$a -= 1 if $a % 2;
-		foreach my $signature_size ( reverse $a .. $start ) {
+		foreach my $signature_size ( reverse 1 .. $start ) {
+		#my $a = int($start/3);
+		#$a -= 1 if $a % 3;
+#$openprint::log->debug("Convert: Desired: $desired_signature_size From $a to $start" );
+		#foreach my $signature_size ( reverse $a .. $start ) {
 			next if ! $blocks{$signature_size};
 #Now figure out how to cut up the imposition
 #$openprint::log->debug("Considering sig size: $signature_size") if $debug;
@@ -816,6 +846,10 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 			my $imp_cols = $imp->columns();
 			foreach my $block ( @{$blocks{$signature_size}} ) {
 				my ( $col, $row ) = @$block;
+			
+				#next if $imp_cols % $col;
+				#next if $imp_rows % $row;	
+
 				$cols = int( $imp_cols / $col );
 				$rows = int( $imp_rows / $row );
 				#$openprint::log->debug("Trying $signature_size: IMP: $imp_cols x $imp_rows BLOCK: $col x $row Got $cols x $rows") if $debug;
@@ -878,6 +912,35 @@ sub get_all_impositions {
 	@imps = get_all_impositions( @imps ) if @imps;
 	return (@_, @imps);
 }
+
+sub breakup_impositions {
+	my ( $I ) = @_;
+
+	my @imposition = @_;
+
+	my @results = ( [$I] );
+	if ( $I->dutch_columns() ) {
+		my $I2 = $I->copy();
+		$I2->dutch_columns(0);
+		$I2->dutch_rows(0);
+		my $I3 = $I->copy();
+		$I3->columns( $I->dutch_columns() );
+		$I3->rows( $I->dutch_rows() );
+		push @results, [ $I2, $I3 ];
+		@imposition = ( $I2, $3 );
+	} # end if
+
+	foreach my $i ( @imposition ) {
+		my @result;
+		foreach my $p1 ( openprint::imposition::partitions( $$i{columns} ) ) {
+			foreach my $p2 ( openprint::imposition::partitions( $$i{rows} ) ){
+				
+			} # end foreach p2
+		} # end foreach p1
+	
+	} # end foreach
+
+} # end sub breakup_impositions
 
 1;
 __END__

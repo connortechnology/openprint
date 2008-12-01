@@ -137,7 +137,7 @@ sub calc {
 					} else {
 						my $type = $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"};
 $openprint::log->debug("Type $type");
-						if ( sets::isin( $type, ['PolaProof','EpsonProof','FujiFinalProof'] ) ) {
+						if ( sets::isin( $type, ['PolaProof','CanonProof','EpsonProof','FujiFinalProof'] ) ) {
 							if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ne 'Y' ) {
 $openprint::log->debug("setting size Type $type : $$sig_specs{'txtWidth'} $$sig_specs{'txtWidth'}");
 								$$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} = $$sig_specs{'txtWidth'};
@@ -566,6 +566,8 @@ sub summary {
 
 sub breakupsummary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	my $Currency = openprint::Currency::get_current();
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	if ( $qty_index ) {
 		my %proof_totals;
@@ -597,10 +599,12 @@ sub breakupsummary {
 				} # end if
 			} # end foreach key
 		} # end foreach signature
-		my $summary = '<table style="width:auto;table-layout:auto;">';
+##		my $summary = '<table class = "insideservice" style="width:auto;table-layout:auto;">';
+		my $summary = '<table style="width:100%;table-layout:auto;">';
+
 		foreach my $k ( keys %proof_totals ) {
-			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;</td>'.$k.'&nbsp;</td>';
-			$summary .= '<td align="right"><b>'.sprintf("%.2f",$Totprice{$k}).'</b></td></tr>';
+			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;&nbsp;&nbsp;</td>'.$k.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>';
+			$summary .= '<td align="right"><b>'.sprintf('%s%.2f',$Currency->symbol(), $Totprice{$k}).'</b></td></tr>';
 #$openprint::log->debug("TESTING TEXT : ".$Totprice{$k}." |||||| ".$k." ENDING TEXT");
 		} # end foreach
 		return $summary.'</table>';
