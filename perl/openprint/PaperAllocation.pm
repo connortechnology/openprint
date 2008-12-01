@@ -5,8 +5,10 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable %fields);
+use vars qw(%variable $dbh $log %fields %transforms %defaults );
 *variable = \%openprint::variable;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 
 require sql;
@@ -14,6 +16,8 @@ require ssi;
 require misc;
 require configuration;
 require openprint::Skid;
+require openprint::User;
+require openprint::Project;
 require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
@@ -31,6 +35,9 @@ my $debug = 1;
 	'quantity'		=>	'quantity',
 );
 
+%defaults = (
+	'created_on'	=> 'NOW()',
+);
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;
@@ -73,13 +80,13 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading paper allocations SQL($sql)" . DBI->errstr );
+		$log->debug("Error loading paper allocations SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
-		$openprint::log->debug('No paper allocations loaded (' . $sql . ") (@values)" );
+		$log->debug('No paper allocations loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded paper allocations ($sql) (@values) records:" . @$data );
+		$log->debug("Debug loaded paper allocations ($sql) (@values) records:" . @$data );
 	} # end if
 	return map { new openprint::PaperAllocation( $_->{id}, $_ ) } @$data;
 } # end sub find
@@ -87,9 +94,13 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Paper_Allocations WHERE id=?}, {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( q{SELECT * FROM Paper_Allocations WHERE id=?}, {}, $$self{'id'} );
+		if ( ! $data ) {
+			$log->warn('Non-existent Paper Allocation Loaded: ' . $dbh->errstr() );
+		} # end if
 	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
+
+	@$self{keys %fields} = @$data{keys %fields};
 } # end sub load
 
 sub save {
@@ -99,24 +110,24 @@ sub save {
 		$self->set( $hash );
 	} # end if
 	
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_allocation_id_seq')} );
 
 		if ( my $error = sql::insert( undef, undef, 'Paper_Allocations', [map { $_, $$self{$_} } keys %fields ] ) ) {
 			$$self{'id'} = undef;
-			sql::end_transaction( $openprint::dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 
     } else {
         if ( my $error = sql::update( undef, undef, 'Paper_Allocations', ['id=?',$$self{'id'}], [ map { $_, $$self{$_} } keys %fields ] ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
     } # end if
 
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return;
 } # end sub save

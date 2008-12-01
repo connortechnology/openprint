@@ -1,9 +1,19 @@
+<? if ( $$variable{'error'} ) ?>
+<div class="error">
+<?error?>
+</div>
+<? endif ( $$variable{'error'} ) ?>
+<? if ( $$variable{'information'} ) ?>
+<div class="information">
+<?information?>
+</div>
+<? endif ( $$variable{'information'} ) ?>
 <form name="f1" id="f1" method="post">
-	<input type="hidden" name="rfidtag_ids" value="<? echo ( join(';', @openprint::param{'rfidtag_ids','rfidtag_id'} ); ) ?>" />
+	<input type="hidden" name="rfidtag_ids" value="<? echo ( join(';', @{$$variable{'IDS'}} ); ) ?>" />
 	<fieldset><legend>Enter RFID #'s</legend>
 		<p>
 			<label>RFID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize()} );}" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
 		</p>
 	</fieldset>
 	<fieldset>
@@ -150,7 +160,14 @@
     </p>
     <p>
         <label>Docket:</label>
-        <input type="text" id="Docket" name="Docket" value="<? echo ( $openprint::param{'Docket'} ) ?>" size="10" style="width: auto;" />
+        <input type="text" id="Docket" name="Docket" value="<? echo ( $openprint::param{'Docket'} ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');if(this.value){$('allocate').show();} else {$('allocate').hide()}" />
+    </p>
+    <p id="allocate" <? echo ( $openprint::param{'Docket'} ? '' : 'style="display:none;"' ) ?>>
+        <label>Allocate:</label>
+		<input type="radio" name="allocate" value="Specific" id="allocateSpecific" <? echo ( $openprint::param{'allocate'} eq 'Specific' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="allocateSpecific">These Rolls</label>
+		<input type="radio" name="allocate" value="Pool" id="allocatePool" <? echo ( $openprint::param{'allocate'} ne 'Specific' ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="allocatePool">Pool</label>
     </p>
 	</div>
 </fieldset>
@@ -160,14 +177,17 @@
 		<th>RFIDTAG ID</th>
 		<th>Quantity (lbs)</th>
 		<th>Quantity (kgs)</th>
+		<th width="30">&nbsp;</th>
 	</tr>
 	<? echo (
 		my $html = '';
 		foreach my $tag_id ( @{$$variable{'IDS'}} ) {
 			next if ! $tag_id;
-			$html .= sprintf('<tr><td>%s</td>', $tag_id );
+			$html .= sprintf('<tr id="tr-%1$s"><td>%1$s</td>', $tag_id );
 			# Inventory
-			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td></tr>}, $tag_id, @openprint::param{"qty_lbs-$tag_id","qty_kgs-$tag_id"} );
+			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td>}, $tag_id, @openprint::param{"qty_lbs-$tag_id","qty_kgs-$tag_id"} );
+			$html .= '<td>' . ssi::writeButton( $log, $dbh, 'X'.$tag_id, 'x.gif', qq`f1.remove.value='$tag_id';new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: \$('f1').serialize(), evalScripts: true} );`, '', 'X' ) . '</td>';
+			$html .= '</tr>';
 		
 		} # end foreach tag_id
 		return $html;
@@ -176,6 +196,7 @@
 	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Submit' ); ) ?>
 	</p>
+	<input type="hidden" name="remove" />
 	<input type="hidden" name="btnFunction" />
 </form>
 <script type="text/javascript">$('rfidtag_id').focus();</script>

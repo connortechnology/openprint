@@ -375,13 +375,13 @@ $openprint::log->debug('admin');
 # options available to non-company administrators
 	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
 
-		my $error = "";
-		$error .= "Password fields do not match.<br/>" if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
-		$error .= "First Name cannot be blank.<br/>" if ! $openprint::param{'firstname'};
-		$error .= "Last Name cannot be blank.<br/>" if ! $openprint::param{'lastname'};
-		$error .= "Salutation cannot be blank.<br/>" if ! $openprint::param{'salutation'};
-		$error .= "Phone cannot be blank.<br/>" if ! $openprint::param{'phone'};
-		$error .= "Email Cannot be blank.<br/>" if ! $openprint::param{'email'};
+		my $error = '';
+		$error .= 'Password fields do not match.<br/>' if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
+		$error .= 'First Name cannot be blank.<br/>' if ! $openprint::param{'firstname'};
+		$error .= 'Last Name cannot be blank.<br/>' if ! $openprint::param{'lastname'};
+		$error .= 'Salutation cannot be blank.<br/>' if ! $openprint::param{'salutation'};
+		$error .= 'Phone cannot be blank.<br/>' if ! $openprint::param{'phone'};
+		$error .= 'Email Cannot be blank.<br/>' if ! $openprint::param{'email'};
 		if ( $error ne '' ) {
 			return misc::error( $log, $dbh, $variable, 'Bad Field', $error );
 		} # end if

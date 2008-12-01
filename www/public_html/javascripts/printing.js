@@ -162,7 +162,6 @@ function calc_print( formName, force ) {
 
 	var form = getFormObj( formName );
 
-
 	if ( gettingNewPrice && ! force ) {
 		// This prevents concurrent price getting
 		if ( timeout ) clearTimeout( timeout );
@@ -172,6 +171,11 @@ function calc_print( formName, force ) {
 	//timeout = null;
 
 	clear_price_data(form);
+	var div = $('InformationDiv');
+	if ( div ) {
+		div.innerHTML = 'Calculating....';
+		div.show();
+	} // end if
 	jsrsExecute( '/jsrs.htm', cbFillPrintResults, 'openprint::service::external_calc', get_variables(formName,'Printing') );
 	return;
 } // end calc_print
@@ -237,7 +241,7 @@ function cbFillPrintResults( results ) {
 		if ( ddm.selectedIndex == -1 || ddm.selectedIndex == 0 ) {
 			var width = form.elements['StockWidth'+i].value;
 			var height = form.elements['StockHeight'+i].value;
-			var type = form.elements['StockType'+i].value;
+			var type = get_value( form.elements['StockType'+i] );
 		
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {

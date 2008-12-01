@@ -9,6 +9,10 @@
 		} // end for
 		if ( number_of_deleted_quotes == 0 ) {
 			alert("To Delete Quotes, click the checkbox beside the quote.");
+		} else if ( number_of_deleted_quotes == 1 ) {
+			if ( confirm("Are you sure you wish to delete this quote from history?\n") ) {
+				form.submit();
+			} // end if
 		} else {
 			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_quotes + " quotes from history?\n") ) {
 				form.submit();

@@ -1,8 +1,8 @@
 <? eval (
 		foreach my $key ( 'ddmCustomer','ddmStatus','ddmEmployee','ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','dblTotal1','dblTotal2' ) {
-			$openprint::session{'/employee/accounting/search.html?'.$key} = $openprint::param{$key} if ( defined $openprint::param{$key} );
+			$openprint::session{'/employee/accounting/search.html?'.$key} = $openprint::param{$key} if defined $openprint::param{$key};
 		} # end foreach
-		if ( $openprint::session{'/employee/accounting/search.html?ddmStatus'} ) {
+		if ( ! $openprint::session{'/employee/accounting/search.html?ddmStatus'} ) {
 			$openprint::session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
 		} # end if
 	if ( ! $openprint::session{'/employee/accounting/search.html?ddmStartYear'} ) {
@@ -19,18 +19,6 @@
 	} # end if
 ) ?>
 <script language="javascript" src="/javascripts/barcode.js"></script>
-<script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f1.ddmStartYear.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);
-            setDaysDropDown(document.f1.ddmEndYear.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-</script>
-
 Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
 <br>
 <form name="f1" method="post" action="search.html">
@@ -63,7 +51,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" />
 			<select name="ddmCustomer" size="1">
 				<option value="">All Customers</option>
-				<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $variable, $openprint::session{'/employee/accounting/search.html?ddmCustomer'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $openprint::session{'/employee/accounting/search.html?ddmCustomer'} ); ) ?>
 			</select>
 		</p>
 		<p> 

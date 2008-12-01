@@ -50,25 +50,26 @@ Projects listed in red have changed price from the time this quote was originall
 		<th width="90" align="right">Std.Price</th>
 		<th width="90" align="right">Price</th>
 	</tr>
-	<? while ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+	<? eval ( @{$$variable{'Projects'}} = $$variable{'Quote'}->Quoted_Projects() ) ?>
+	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 	<tr<?rowclass?>> 
-		<td><font color="<?colour?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? hecho ( new openprint::Project( $$variable{'project_index'} )->reference() ) ?></a></font></td>
+		<td><font color="<?colour?>"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->project_id() ) ?>"><? hecho ( $$variable{'Project'}->Project()->reference() ) ?></a></font></td>
 		<td colspan="5">
 			<table>
-				<? while ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+				<? while ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'Project'}->project_id()}},0,6; ) ?>
 				<? if ( $$variable{'qty'} ) ?>
 				<tr> 
 					<td width="130" align="right"><font color="<?colour?>">
 					<? echo (
-						my $Project = new openprint::Project( $$variable{'project_index'} );
-						my %services = $Project->get_services();
+						my $Project = $$variable{'Project'}->Project();
+						my $services = $Project->services();
 						my $weight;
 
-						if ( $services{'BulkSkids'} ) {
-							my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
+						if ( $$services{'BulkSkids'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
 							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
-						} elsif ( $services{'PlainCartons'} ) {
-							my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
+						} elsif ( $$services{'PlainCartons'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
 							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
 						} else {
 							$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{qty};
@@ -86,12 +87,12 @@ Projects listed in red have changed price from the time this quote was originall
 					<td width="90" align="right"><font color="<?colour?>"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?newprice?></font></td>
 				</tr>
 				<? endif ( $$variable{'qty'} ) ?>
-				<? endwhile ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+				<? endwhile ( @$variable{'qty_index','markup','qty', 'stdprice', 'newprice', 'colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'Project'}->project_id()}},0,6; ) ?>
 				</table>
 			</td>
 		</tr>
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( @$variable{'project_index','project_name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 </table>
 <? else ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
 <table class="List">

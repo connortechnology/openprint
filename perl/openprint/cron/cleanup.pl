@@ -13,6 +13,7 @@ require openprint::Quote;
 require openprint::Order;
 require openprint::Project;
 require openprint::RFIDTag;
+require openprint::RFIDScannerHistory;
 require openprint::PaperInventory;
 use Date::Calc;
 use Apache::Session::Postgres;
@@ -233,18 +234,27 @@ foreach my $Skid ( openprint::Skid::find() ) {
 }
 
 if ( 0 ) {
-require openprint::PaperInventory;
-foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Removed%' ) ) {
-	$PI->comment() =~ /Removed (.*)/;
-	$PI->comment( "Checked out $1" );
-	$PI->save();
-} # end foreach
-foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Skid checked%' ) ) {
-	$PI->comment() =~ /Skid checked (.*)/;
-	$PI->comment( "Checked $1" );
-	$PI->save();
-} # end foreach
+	require openprint::PaperInventory;
+	foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Removed%' ) ) {
+		$PI->comment() =~ /Removed (.*)/;
+		$PI->comment( "Checked out $1" );
+		$PI->save();
+	} # end foreach
+	foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Skid checked%' ) ) {
+		$PI->comment() =~ /Skid checked (.*)/;
+		$PI->comment( "Checked $1" );
+		$PI->save();
+	} # end foreach
 } # end if 1
+
+my @Hs = openprint::RFIDScannerHistory::find(
+		'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
+		'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
+ );
+$log->warn( "History Entries: " . @Hs );
+foreach my $H ( @Hs ) {
+	$H->delete();
+} # end foreach H
 
 $dbh->disconnect();
 1;

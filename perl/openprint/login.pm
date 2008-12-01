@@ -13,19 +13,20 @@ require openprint::usergroup;
 require openprint::logs;
 
 use openprint ();
-use vars qw(%variable %param %session);
+use vars qw( $r %variable %param %session);
+*r = \$openprint::r;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *session = \%openprint::session;
 
 # displays the login page, and populates the destination variable
 sub save_destination {
-	my ( $r, $log, $dbh, $variable, $destination ) = @_;
+	my ( $destination ) = @_;
 
 	if ( ! $destination ) {
 		$destination = $r->uri();
-		if ( %openprint::param ) {
-			$destination .= '?' . join('&', map { $_ . '=' . $openprint::param{$_}} keys %openprint::param );
+		if ( %param ) {
+			$destination .= '?' . join('&', map { $_ . '=' . $param{$_}} keys %param );
 		} # end if
 	} # end if
 

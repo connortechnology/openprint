@@ -1,0 +1,45 @@
+<? eval (
+	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
+		if ( $openprint::param{'id'} ) {
+			sql::update( undef, undef, 'Testimonials', ['id=?', $openprint::param{'id'} ], 'text', $openprint::param{'text'} );
+		} else {
+			sql::insert( undef, undef, 'Testimonials', 'text', $openprint::param{'text'} );
+		} # end if
+	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
+		if ( $openprint::param{'id'} ) {
+			sql::execute( undef, undef, 'DELETE FROM Testimonials WHERE id=?', $openprint::param{'id'} );
+		} # end if
+	} # end if
+) ?>
+<ul class="Testimonials">
+<? echo (
+	my $html;
+	my @data = sql::execute(undef,undef, q{SELECT id, text from testimonials order by created_on desc} );
+	while ( @data ) {
+		my ( $id, $text ) = splice @data, 0 ,2;
+		$html .= qq{<li><span id="Testimonial$id">$text</span>};
+		if ( $openprint::session{'user_type'} eq 'A' ) {
+		$html .= '<p class="buttons">';
+		$html .= ssi::writeButton( $log, $dbh, 'edit'.$id, 'edit.gif', "f1.text.value=\$('Testimonial' + $id).innerHTML;f1.elements['id'].value=$id;", '', 'Edit' );
+		$html .= ssi::writeButton( $log, $dbh, 'edit'.$id, 'edit.gif', '', '/testimonials.html?btnFunction=Delete&id='.$id, 'Delete' );
+		$html .= '</p>';
+		} # end if
+	$html .= '</li>';
+	} # end while
+	return $html;
+) ?>
+</ul>
+<? if ( $openprint::session{'user_type'} eq 'A' ) ?>
+<form name="f1" method="post" action="testimonials.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="id"/>
+	<fieldset><legend>New Testimonial</legend>
+	<p><label>Text:</label>
+	<textarea name="text" type="text" style="width: 100%;" rows="5"></textarea>
+	</p>
+	<p class="buttons">
+	<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ); ) ?>
+	</p>
+	</fieldset>
+</form>
+<? endif ( $openprint::session{'user_type'} eq 'A' ) ?>

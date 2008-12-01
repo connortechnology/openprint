@@ -14,21 +14,33 @@
 		@openprint::session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} = Date::Calc::Today();
 	} # end if
 	@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, @openprint::session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} );
+	$openprint::session{'/employee/inventory/inventory_log.html?StartHour'} = 0 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartHour'};
+	$openprint::session{'/employee/inventory/inventory_log.html?StartMinute'} if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartMinute'};
+	$openprint::session{'/employee/inventory/inventory_log.html?EndHour'} = 23 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndHour'};
+	$openprint::session{'/employee/inventory/inventory_log.html?EndMinute'} = 59 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndMinute'};
 ) ?>
-<form name="LogForm" id="LogForm">
+<form name="LogForm" id="LogForm" method="post">
 	<fieldset><legend>Filters</legend>
 	<p>
 		<label>Date:</label>
-		<span class="DateSelector">
+		<span class="DateTimeSelector">
 			<select name="StartYear" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?StartYears?></select>
 			<select name="StartMonth" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?StartMonths?></select>
 			<select name="StartDay" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?StartDays?></select>
+-
+			<select name="StartHour" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $openprint::session{'/employee/inventory/inventory_log.html?StartHour'} ); ) ?></select>:
+			<select name="StartMinute" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $openprint::session{'/employee/inventory/inventory_log.html?StartMinute'} ); ) ?></select>
+			<? echo ( ssi::writeButton( $log, $dbh, 'StartToday', 't.gif', 'set_today( LogForm.StartYear, LogForm.StartMonth, LogForm.StartDay );', '', 'T' ); ) ?>
 			to
 		</span>
-		<span class="DateSelector">
+		<span class="DateTimeSelector">
 			<select name="EndYear" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndYears?></select>
 			<select name="EndMonth" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndMonths?></select>
 			<select name="EndDay" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndDays?></select>
+-
+			<select name="EndHour" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $openprint::session{'/employee/inventory/inventory_log.html?EndHour'} ); ) ?></select>:
+			<select name="EndMinute" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $openprint::session{'/employee/inventory/inventory_log.html?EndMinute'} ); ) ?></select>
+			<? echo ( ssi::writeButton( $log, $dbh, 'EndToday', 't.gif', 'set_today( LogForm.EndYear, LogForm.EndMonth, LogForm.EndDay );', '', 'T' ); ) ?>
 		</span>
 	</p>
 	<p><label>Ins/Outs</label>
@@ -46,10 +58,12 @@
             <label class="radio" for="TypeUnknown">Unknown</label>
         </p>
 	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );", '', 'Load' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "LogForm.btnFunction.value='';new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );", '', 'Load' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "LogForm.btnFunction.value='Download';LogForm.submit();", '', 'Download' ); ) ?>
 	</p>
 	</fieldset>
 	<fieldset><legend>Results</legend>
 		<div id="Log"><!--#include virtual="_inventory_log.html"--></div>
 	</fieldset>
+	<input type="hidden" name="btnFunction" />
 </form>

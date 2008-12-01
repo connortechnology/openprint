@@ -15,6 +15,9 @@ use vars qw( $log $dbh );
 $log = new logger( 'warn' );
 
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
+$src_db = 'point-one' if ! $src_db;
+$dst_db = 'point-one' if ! $dst_db;
+$src_host = 'www2.point-one.com' if ! $src_host;
 `/etc/init.d/apache2 reload`;
 if ( $year ) {
 	( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) if ! $month;

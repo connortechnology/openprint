@@ -1,0 +1,49 @@
+body {
+	background: none;
+} 
+#Content {
+    padding-top: 5px;
+    padding-bottom: 0px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin: 0px;
+    background: none;
+}
+.Header {
+    background: none;
+}
+
+#ContentLeft {
+	display: none;
+} 
+.ContentInner {
+	margin:0px;
+	border: none;
+}
+
+#Menu,.Menu, ul#menubar {
+display: none;
+}
+
+.unprintable {
+    display: none;
+}
+
+.filters {
+    display: none;
+}
+
+.colRow {
+    background-color: #dddddd;
+}
+.Service div.templates {
+    display: none;
+}
+
+#QuickLogin, #CurrencySelection {
+	display: none;
+}
+
+.GrayGradient {
+	display: none;
+}

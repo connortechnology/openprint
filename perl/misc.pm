@@ -103,8 +103,8 @@ sub build_city_prov_country {
 	return $cpc;
 } # end sub build_city_prov_country
 
-sub export_csv {
-	my ( $r, $log, $variable, $filename, $header, $data ) = @_;
+sub data_to_csv {
+	my ( $header, $data ) = @_;
 
 	my @data;
 	my $csv = Text::CSV_XS->new( {'binary'=>1});
@@ -121,6 +121,13 @@ sub export_csv {
 		my $status = $csv->combine( splice( @{$data}, 0, $columns ) );    # combine columns into a string
 		push @data, $csv->string() . "\n";
 	} # end while
+
+	return @data;
+} # end sub data_to_csv
+
+sub export_csv {
+	my ( $r, $log, $variable, $filename, $header, $data ) = @_;
+	my @data = data_to_csv( $header, $data );
 	return export( $r, $log, $variable, $filename, \@data );
 } # end sub
 
@@ -130,7 +137,7 @@ sub export {
 	$r->content_type( "application/octet-stream; name=\"$filename\"" );
 	#$r->content_encoding( "binary" );
 	$$variable{'Download'} = $filename;
-	@{$$variable{'File_Data'}} = @{$data};
+	return @{$$variable{'File_Data'}} = @{$data};
 } # end sub export
 
 sub get_destination {

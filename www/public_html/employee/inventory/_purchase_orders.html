@@ -1,0 +1,70 @@
+<? eval (
+	if ( $param{'docket'} ) {
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+			'docket'=>$param{'docket'}, 
+			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
+			'order' => 'id desc');
+	} else {
+		my %search = (
+			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
+			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ),
+			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ),
+			'order',			'id desc',
+		);
+		$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'},;
+
+		@{$$variable{'PurchaseOrders'}} = ();
+		foreach my $PO ( openprint::PurchaseOrder::find( %search ) ) {
+			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' and ! $PO->authorized_by();
+			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' and $PO->authorized_by();
+			push @{$$variable{'PurchaseOrders'}}, $PO;
+		} # end foreach PO
+	} # end if
+) ?>
+	<? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
+	There are no purchase orders matching your search criteria.
+	<? else ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
+	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
+<table class="List sortable">
+	<tr>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+		<th width="20"><input type="checkbox" onclick="select_all( this.form, 'po_id', this.checked );"/></th>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
+		<th width="30">ID</th>
+		<th width="110" style="text-align: left;">Date</th>
+		<th style="text-align: left;">Supplier</th>
+		<th style="text-align: left;">Created By</th>
+		<th style="text-align: left;">Authorized By</th>
+		<th width="110" style="text-align: right;">Total</th>
+	</tr>
+	<? echo ( 
+		my $html = '';
+		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
+			$html .= q`<tr onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`;
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= '<td><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
+			} # end if
+
+			$html .= sprintf( q`
+				<td>&nbsp;<a href="purchase_order_view.html?po_id=%1$d">%1$d</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%2$s</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%3$s</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%4$s</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%7$s</a></td>
+				<td style="text-align: right;">%5$s%6$.2f</td>
+			</tr>`, $PO->id(), Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total(), $PO->Authorized_By()->name() );
+		} # end while
+		return $html;
+	) ?>
+	</table>
+	<p class="buttons">
+		<? echo (
+			my $html;
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= ssi::writeButton($log, $dbh, 'Authorize', 'authorize.gif', "f1.btnFunction.value='Authorize';f1.submit();", '', 'Authorize Selected' );
+				$html .= ssi::writeButton($log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete Selected' );
+			} # end if
+			return $html;
+		) ?>
+	</p>
+<? endif ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
