@@ -19,6 +19,7 @@ require openprint::Currency;
 require openprint::User;
 require openprint::Tax;
 require openprint::PurchaseOrder_Content;
+require openprint::PurchaseOrder_Log;
 
 my $debug = 0;
 
@@ -278,7 +279,7 @@ sub send_to_vendor {
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
 			);
 
-	my $results = 'PO ' . $$self{'id'} . ' email to the following recipients:<br/>';
+	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	if ( $self->vendor_email() ) {
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
@@ -299,6 +300,13 @@ sub send_to_vendor {
 			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
 		} # end foreach U
 	} # end if
+
+	my $L = new openprint::PurchaseOrder_Log();
+	$L->save({
+			'user_id'	=>	$session{'user_id'},
+			'po_id'		=>	$$self{'id'},
+			'reason'	=>	$results,
+			});
 
 	return $results;
 
@@ -415,8 +423,14 @@ sub notifications {
 	if ( $$self{'id'} and ! exists $$self{'notifications'} ) {
 		@{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
 	} # end if
-	return $$self{'notification'} ? @{$$self{'notifications'}} : ();
+	return $$self{'notifications'} ? @{$$self{'notifications'}} : ();
 } # end sub notifications
+
+sub Logs {
+	my ( $self ) = @_;
+
+	return openprint::PurchaseOrder_Log::find( 'po_id'=>$$self{'id'}, 'order'=>'created_on DESC' );
+} # end sub Logs
 
 1;
 #__END__

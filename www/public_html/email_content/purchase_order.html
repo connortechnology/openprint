@@ -146,6 +146,21 @@
 		<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 			</div>
 			<br class="spacer"/>
+			<fieldset><legend>Logs</legend>
+				<table class="List">
+					<tr>
+						<th align="left" width="120">When</th>
+						<th align="left">Description</th>
+					</tr>
+					<? echo (
+						my $html = '';
+						foreach my $L ( $$variable{'PurchaseOrder'}->Logs() ) {
+							$html .= sprintf('<tr><td>%s</td><td>%s</td></tr>',  Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
+						} # end foreach
+						return $html;
+					) ?>
+				</table>
+			</fieldset>
 		</div><!--PO-->
 	</body>
 </html>
