@@ -21,7 +21,6 @@ function keepCompany( form ){
 <? if ( $$variable{'information'} ) ?>
 <div class="error"><?information?></div>
 <? endif ( $$variable{'information'} ) ?>
-Please select a company or user to obtain login information.<br/>
 <br/>
 <div id="UserProfile">
 	<form name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
@@ -31,7 +30,7 @@ Please select a company or user to obtain login information.<br/>
 				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
 				<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">All Companies</option>
-					<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomer'} ); ) ?>
+					<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
 				</select>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 			</p>
@@ -39,7 +38,7 @@ Please select a company or user to obtain login information.<br/>
 				<label>User Type:</label>
 				<select name="ddmUserRole" onchange="f1.submit();">
 					<option value="">All User Types</option>
-					<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $openprint::param{'ddmUserRole'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{'ddmUserRole'} ); ) ?>
 				</select>
 			</p>
 			<p>
@@ -205,7 +204,7 @@ Please select a company or user to obtain login information.<br/>
 				require openprint::Usergroup;
 				my $html = '<ul>';
 				my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
-				foreach my $CSR ( openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)' ) ) {
+				foreach my $CSR ( openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) {
 					$html .= sprintf('<li><input type="checkbox" id="csr_ids%1$d" name="csr_ids" value="%1$d" %3$s /><label>%2$s</label></li>', $CSR->id(), $CSR->name(), sets::isin( $CSR->id(), $$variable{'User'}->csr_ids() ) ? 'checked="checked"' : '' );
 				} # end foreach
 				return $html . '</ul>';
@@ -213,7 +212,7 @@ Please select a company or user to obtain login information.<br/>
 			</fieldset>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<? if ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
-		<? if ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) ) ?>
+		<? if ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $session{user_id} ) ) ?>
 		<fieldset><legend>Email Settings:</legend>
 			<p>
 				<label>Password:</label>
@@ -245,7 +244,7 @@ Please select a company or user to obtain login information.<br/>
 				<label class="radio" for="VacationState0">Disabled</label>
 			</p>
 		</fieldset>
-		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) ) ?>
+		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $session{user_id} ) ) ?>
 		<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 		<fieldset><legend>Login Information:</legend> 
 			<p> 

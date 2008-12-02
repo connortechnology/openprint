@@ -30,7 +30,7 @@ sub open_sql {
 sub execute {
 	my ( $l, $d, $sql, @values ) = @_;
 	my @return_array = ();
-	my $print_sql = '';
+	my $print_sql = $sql;
 	my $starttime;
 
 	$l = $log if ! defined $l;

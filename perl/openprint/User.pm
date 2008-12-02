@@ -326,8 +326,10 @@ sub find {
 
 	if ( $param{'id'} ) {
 		if ( ref $param{'id'} eq 'ARRAY' ) {
-			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
-			push @values, @{$param{'id'}};
+			if ( @{$param{'id'}} ) {
+				$sql .= q{ AND id IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
+				push @values, @{$param{'id'}};
+			} # end if
 		} else {
 			$sql .= q{ AND id=?};
 			push @values, $param{'id'};
@@ -336,7 +338,9 @@ sub find {
 
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {
-			$sql .= q{ AND usertype IN ('} . join("','", @{$param{'type'}}) . q{')};
+			if ( @{$param{'type'}} ) {
+				$sql .= q{ AND usertype IN ('} . join("','", @{$param{'type'}}) . q{')};
+			} # end if
 		} else {
 			$sql .= q{ AND usertype = ?};
 			push @values, $param{'type'};

@@ -293,7 +293,7 @@ sub company_profiles {
 			'txtDownpayment'    =>  'Downpayment',
 			);
 
-	my $index = $openprint::param{'ddmCustomer'};
+	my $index = $openprint::param{'ddmCustomer'} ? $openprint::param{'ddmCustomer'} : $openprint::session{'company_id'};
 	my $Company = new openprint::Company( $index );
 
 	if ( $openprint::param{'btnFunction'} eq '<<' ) {

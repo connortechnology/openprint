@@ -19,7 +19,7 @@
 			<label>Sales Rep:</label>
 			<select name="search_salesrep_id" onchange="f1.btnFunction.value='Go';this.form.submit();">
 				<option value=""> All </option>
-				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } openprint::User::find('id'=>[sql::execute( undef, undef, 'select distinct lngsalesperson from company')],'deleted'=>[0,1],'order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::param{'search_salesrep_id'} ); ) ?>
+				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } openprint::User::find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ], $param{'search_salesrep_id'} ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -29,8 +29,8 @@
 				<option value=""> select </option>
 				<? echo ( 
 					my %params = (
-							'salesrep_id'=>$openprint::param{'search_salesrep_id'},
-							'order'=>'lower(strname)',
+							'salesrep_id'=>$param{'search_salesrep_id'},
+							'order'=>'lower(name)',
 					);
 					if ( $param{'search_type'} eq 'Suppliers' ) {
 						$params{'supplier'} ='Y';
@@ -41,7 +41,7 @@
 						$params{'reseller'} = 'N';
 					} # end if
 
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( %params ) ], $openprint::param{'ddmCustomer'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( %params ) ], $param{'ddmCustomer'} ? $param{'ddmCustomer'} : $session{'company_id'} );
 				) ?>
 			</select>
 			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
@@ -84,7 +84,7 @@
 			<label class="radio" for="resellerN">No</label>
 		</p>
 		<p> 
-			<label>Pricing List:</label>
+			<label>Price List:</label>
 			<select name="pricelist_id">
 				<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist::find('order'=>'lower(name)') ], $$variable{'Company'}->pricelist_id() ); ) ?>
