@@ -185,12 +185,12 @@ sub bindery_overview {
 		} # end if
 	} # end foreach
 
-	$_ = "SELECT tbl_Projects.Index, Orders.Index, tbl_Projects.lngDocketNumber, tbl_Projects.CompanyIndex";
-	$_ .= ", intQuantityIndex, due_date, tbl_Projects.strStatus\n";
-	$_ .=" FROM tbl_Projects, Order_Contents, Orders";
-	$_ .= " WHERE tbl_Projects.strStatus IN ( '". join("','", @statuses ) ."' )";
+	$_ = "SELECT Projects.Index, Orders.Index, Projects.lngDocketNumber, Projects.CompanyIndex";
+	$_ .= ", intQuantityIndex, due_date, Projects.strStatus\n";
+	$_ .=" FROM Projects, Order_Contents, Orders";
+	$_ .= " WHERE Projects.strStatus IN ( '". join("','", @statuses ) ."' )";
 	$_ .= " AND Orders.Index=Order_Contents.OrderIndex AND Orders.strStatus='In Production'";
-	$_ .= " AND tbl_Projects.Index = Order_Contents.lngProjectIndex";
+	$_ .= " AND Projects.Index = Order_Contents.lngProjectIndex";
 	$_ .= " AND due_date BETWEEN '$$variable{'StartDate'}' AND '$$variable{'EndDate'}'";
 	$_ .= " AND Orders.lngEmployeeID=".$r->param('ddmSalesRep') if $r->param('ddmSalesRep');
 	$_ .= " ORDER BY due_date";

@@ -41,7 +41,7 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
 
-	my %Price = openprint::service::get_price_object( $ProjectType->strid().'Turnaround', $$specs{'TurnaroundDays'} );
+	my %Price = openprint::service::get_price_object( $ProjectType->name().'Turnaround', $$specs{'TurnaroundDays'} );
 	if ( ! %Price ) {
 		%Price = openprint::service::get_price_object( 'Turnaround', $$specs{'TurnaroundDays'} );
 	} # end if

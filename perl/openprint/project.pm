@@ -31,7 +31,7 @@ sub get_header {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 
 	$$variable{'Project'} = new openprint::Project( $project_index );
-	$_ = q{SELECT order_id, lngDocketNumber, strProjectReference, strComments, to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus, intQuantity1, intQuantity2, intQuantity3,Currency_id, strDesign, CompanyIndex, UserIndex, to_char(due_date,'MM/DD/YYYY'), to_char(due_date, 'Day Mon DD/YYYY')  FROM tbl_Projects WHERE Index=?};
+	$_ = q{SELECT order_id, lngDocketNumber, strProjectReference, strComments, to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus, intQuantity1, intQuantity2, intQuantity3,Currency_id, strDesign, CompanyIndex, UserIndex, to_char(due_date,'MM/DD/YYYY'), to_char(due_date, 'Day Mon DD/YYYY')  FROM Projects WHERE Index=?};
 	@$variable{'order_id','DocketNumber','ProjectReference', 'Comments', 'CreationDate','ProjectStatus','Quantity1','Quantity2','Quantity3','currency_id','ddmDesign','company_id','user_id','DueDate','RequiredDateAlternate'} = sql::execute( $log, $dbh, $_, $project_index );
 
 	my $Company = new openprint::Company( $$variable{'company_id'} );

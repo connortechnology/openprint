@@ -357,20 +357,20 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 				my $ProjectType = $variable{'Project'}->Type();
-				@variable{'ProjectTypeID','ProjectTypeName'} = ($ProjectType->strid(), $ProjectType->name() );
+				@variable{'ProjectTypeID','ProjectTypeName'} = ($ProjectType->name(), $ProjectType->description() );
 				$variable{'ServiceType'} = openprint::print::get_ServiceType( @variable{'ProjectIndex','ServiceIndex'} );
 				
 				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-#, sql::execute( $log, $dbh, q{SELECT currency_id from tbl_Projects where index=?}, $variable{'ProjectIndex'} ) );
+#, sql::execute( $log, $dbh, q{SELECT currency_id from Projects where index=?}, $variable{'ProjectIndex'} ) );
 				my $project_index = $variable{'ProjectIndex'};
 				my $service_index = $variable{'ServiceIndex'};
 
 				# Things like UPS SHipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
-					my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+					my $specs = openprint::service::get_specs_ref( $variable{'Project'}, $service_index );
 					@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
 $openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");

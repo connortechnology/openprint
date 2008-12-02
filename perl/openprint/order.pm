@@ -466,7 +466,7 @@ $openprint::log->debug("Making order from quote");
 		# Only check for errors if we don't have any yet
 		my @errors;
 		# If there are any unspecified quantities, keep looping on the selection page.
-		my @data = sql::execute( $log, $dbh, q{SELECT intQuantityIndex, ShippingType, lngProjectIndex, (SELECT strProjectReference FROM tbl_Projects WHERE Index=lngProjectIndex) FROM Order_Contents WHERE OrderIndex=?}, $order_id );
+		my @data = sql::execute( $log, $dbh, q{SELECT intQuantityIndex, ShippingType, lngProjectIndex, (SELECT strProjectReference FROM Projects WHERE Index=lngProjectIndex) FROM Order_Contents WHERE OrderIndex=?}, $order_id );
 		while ( my ( $qty, $shipping, $project_index, $ref ) = splice @data, 0, 4 ) {
 			if ( ! $qty ) {
 				push @errors, "Please select the quantity to order for project $project_index<br/>";
@@ -1246,14 +1246,14 @@ sub history_details {
 
         if ( $$variable{'DepositDue'} > 0 ) {
             foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-                sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+                sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
                 sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?',$project_index, 'Ordered'], 'strStatus', 'Pending Deposit' );
             } # end foreach
         } else {
             $Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
             foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-                sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+                sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
                 sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
             } # end foreach
             if ( $$variable{'AmountPaid'} >= $$variable{'TOTAL'} ) {
@@ -1339,7 +1339,7 @@ sub quantity_select_display {
 		if ( $order_id = $openprint::param{'OrderID'} ) {
 			sql::update( $log, $dbh, 'Orders', "Index=$order_id", 'strStatus', 'Re-Opened', 'strSessionID', $cookie );
 			foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', "Index=$project_index", 'strStatus', 'Unordered' );
+				sql::update( $log, $dbh, 'Projects', "Index=$project_index", 'strStatus', 'Unordered' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus NOT IN ('Complete','Proofs Out','Approved')", 'strStatus', 'calculated' );
 			} # end foreach
 			add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Re-Opened' );

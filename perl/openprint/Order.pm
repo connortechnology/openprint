@@ -212,7 +212,7 @@ sub delete {
 	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex IN ( SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Log WHERE order_id=?}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
-	sql::update( undef, undef, 'tbl_Projects', [ 'order_id=?', $$self{'id'}], [ 'order_id', undef ] );
+	sql::update( undef, undef, 'Projects', [ 'order_id=?', $$self{'id'}], [ 'order_id', undef ] );
 	sql::update( undef, undef, 'payments', [ 'order_id=?', $$self{'id'}], [ 'order_id', undef ] );
 	sql::execute( $log, $dbh, q{DELETE FROM Orders WHERE Index=?}, $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
@@ -328,7 +328,7 @@ sub update_status {
 	my $self = shift;
 
 	# selects are very lightweight, so let's only update when we have to!
-	$_ = q{SELECT DISTINCT(strStatus) FROM tbl_Projects WHERE Index IN (SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)};
+	$_ = q{SELECT DISTINCT(strStatus) FROM Projects WHERE Index IN (SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)};
 	my @statuses = sql::execute( $log, $dbh, $_, $$self{id} );
 
 	if ( sets::isin( 'Pending Deposit', \@statuses ) and $self->status() ne 'Pending Deposit' ) {

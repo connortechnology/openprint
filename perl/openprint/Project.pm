@@ -40,7 +40,7 @@ sub delete {
 		$Quote->add_log('Deleted Project ' . $$self{'id'} );
 	} # end foreach
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_projects WHERE Index=?}, $$self{'id'} );
+	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM projects WHERE Index=?}, $$self{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
@@ -465,7 +465,7 @@ sub update_status {
 
 sub find {
 	my %params = @_;
-	my $sql = q{SELECT * FROM tbl_Projects WHERE 1>0};
+	my $sql = q{SELECT * FROM Projects WHERE 1>0};
 	my @values;
 	if ( $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -678,19 +678,19 @@ sub save {
 
 		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('lngProjectIndex_seq'::text)} );
 
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'tbl_Projects', 'Index',	@$self{'id'}, @sql ) ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'Index',	@$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
 	} elsif ( $hash{'force_install'} ) {
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'tbl_Projects', 'Index',    @$self{'id'}, @sql ) ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'Index',    @$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
 	} else {
-		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'tbl_Projects', "Index=$$self{'id'}", @sql ) ) {
+		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Projects', "Index=$$self{'id'}", @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
@@ -832,7 +832,7 @@ sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref(
-				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM tbl_Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
+				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
 				, {}, $$self{'id'} );
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );

@@ -428,12 +428,12 @@ sub usage {
 	} # end if
 
 
-	my $query = "SELECT tbl_Projects.lngProjectIndex,lngDocketNumber, intQuantityIndex, (SELECT strName FROM Company WHERE Index=CompanyIndex) FROM tbl_Projects, Order_Contents WHERE tbl_Projects.Index=lngProjectIndex AND strStatus IN ( 'Ordered','Complete','Printed','Proofs Out','Approved','In Prepress' )\n";
+	my $query = "SELECT Projects.lngProjectIndex,lngDocketNumber, intQuantityIndex, (SELECT strName FROM Company WHERE Index=CompanyIndex) FROM Projects, Order_Contents WHERE Projects.Index=lngProjectIndex AND strStatus IN ( 'Ordered','Complete','Printed','Proofs Out','Approved','In Prepress' )\n";
 	$query .= "AND due_date BETWEEN '$variable{'StartDate'}' AND '$variable{'EndDate'}' ";
 	if ( $param{'ddmCustomer'} ) {
-		$query .= "AND tbl_Projects.CompanyIndex = $param{'ddmCustomer'}\n";
+		$query .= "AND Projects.CompanyIndex = $param{'ddmCustomer'}\n";
 	} # end if
-	$query .= "ORDER BY due_date, tbl_Projects.Index";
+	$query .= "ORDER BY due_date, Projects.Index";
 	my @projects = sql::execute( $log, $dbh, $query );
 
 	if ( 1 ) {

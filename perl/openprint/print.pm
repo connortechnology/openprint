@@ -418,7 +418,7 @@ $openprint::log->debug("Max group: $max_group");
 			my $services = $Project->services();
 			# Presentation Folder Cover -> Make sure required services like Die Cutting and Gluing are present
 			if ( sets::isin( $$param{'rdbTemplateType'.$type}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-				if ( my @ProjectTypes = openprint::ProjectType::find('strid'=>'PresentationFolders') ) {
+				if ( my @ProjectTypes = openprint::ProjectType::find('name'=>'PresentationFolders') ) {
 					foreach my $ServiceType ( $ProjectTypes[0]->required_ServiceTypes() ) {
 						if ( ! $$services{$ServiceType->name()} ) {
 							push @{$$services{$ServiceType->name()}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType );
@@ -703,7 +703,7 @@ sub get_finished_calliper {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		my $calliper = $$sig_specs{'txtSpecificStockCalliper'};
 
-		if ( $Project->Type()->strid() eq 'ScratchPads' ) {
+		if ( $Project->Type()->name() eq 'ScratchPads' ) {
 			$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
 		} elsif ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
 			if ( $$sig_specs{'PageQuantity1'} ) {

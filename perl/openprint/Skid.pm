@@ -68,7 +68,7 @@ sub find {
 		push @values, $params{'updated_on_end'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT Index FROM Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'fsc_code'} ) {
