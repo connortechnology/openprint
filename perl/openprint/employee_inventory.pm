@@ -1343,6 +1343,14 @@ sub purchase_order_view {
 		$param{'federaltax_charge'} = $param{'federaltax_charge'} ? 1 : 0;
 		$param{'statetax_charge'} = $param{'statetax_charge'} ? 1 : 0;
 		$variable{'error'} .= $PO->save( \%param );
+		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+				'user_id'	=>	$session{'user_id'},
+				'po_id'		=>	$PO->id(),
+				'reason'	=>	$param{'reason'},
+				});
+		} # end if
 	} # end if btnFunction
 
 	$variable{'PurchaseOrder'} = $PO;

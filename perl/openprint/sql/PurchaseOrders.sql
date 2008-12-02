@@ -1,5 +1,10 @@
 
-DROP TABLE IF EXISTS  PurchaseOrders;
+DROP TABLE IF EXISTS PurchaseOrder_Logs;
+DROP TABLE IF EXISTS PurchaseOrder_Notifications;
+DROP TABLE IF EXISTS PurchaseOrder_ContentTypes;
+DROP TABLE IF EXISTS PurchaseOrder_Contents;
+DROP TABLE IF EXISTS PurchaseOrders;
+
 CREATE TABLE PurchaseOrders (
 	id	SERIAL NOT NULL,
 	currency_id	INTEGER NOT NULL, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
@@ -45,8 +50,6 @@ CREATE TABLE PurchaseOrders (
 	PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS PurchaseOrder_ContentTypes;
-DROP TABLE IF EXISTS PurchaseOrder_Contents;
 
 CREATE TABLE PurchaseOrder_COntents (
 	id SERIAL NOT NULL,
@@ -61,7 +64,7 @@ CREATE TABLE PurchaseOrder_COntents (
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE PurchaseOrder_COntentTypes (
+CREATE TABLE PurchaseOrder_ContentTypes (
 	id SERIAL NOT NULL,
 	name	TEXT,
 	PRIMARY KEY (id)
@@ -71,4 +74,13 @@ CREATE TABLE PurchaseOrder_Notifications (
 	po_id	INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
 	user_id	INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (index),
 	PRIMARY KEY (po_id, user_id)
+);
+
+CREATE TABLE PurchaseOrder_Logs (
+	id		SERIAL NOT NULL,
+	po_id	INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
+	user_id	INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (index),
+	created_on	timestamp with time zone default NOW(),	
+	reason		TEXT,
+	PRIMARY KEY (id)
 );

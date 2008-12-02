@@ -24,11 +24,6 @@ sub profile {
 	$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
 
 	my $User = new openprint::User( $param{'user_id'} );
-	if ( $User->company_id() != $param{'company_id'} ) {
-		$log->error('User not in Company!');
-		$variable{'error'} = 'User not in company. This should not happen. Please file a bug report.<br/>';
-		return;
-	} # end if
 
     if ( $param{'btnFunction'} eq 'Save' ) {
 		if ( $param{'password'} ) {

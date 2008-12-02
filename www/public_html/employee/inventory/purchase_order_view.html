@@ -14,9 +14,7 @@
 	} # end if
 	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 	if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
-		if ( $$variable{'PurchaseOrder'}->vendor_email() ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Email Vendor';f1.submit();", '', 'Send Email' );
-		} # end if
+		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Email Vendor';f1.submit();", '', 'Send Email' );
 		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'purchase_order_edit.html?po_id='.$$variable{'PurchaseOrder'}->id(), 'Edit' );
 		$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
 	} # end if
@@ -222,6 +220,21 @@
 <? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 		</div>
 		<br class="spacer"/>
+		<fieldset><legend>Logs</legend>
+			<table class="List">
+				<tr>
+					<th align="left" width="120">When</th>
+					<th align="left">Description</th>
+				</tr>
+				<? echo (
+					my $html = '';
+					foreach my $L ( $$variable{'PurchaseOrder'}->Logs() ) {
+						$html .= sprintf('<tr><td>%s</td><td>%s</td></tr>',  Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
+					} # end foreach
+					return $html;
+				) ?>
+			</table>
+		</fieldset>
 	</div><!--PO-->
 	<br class="spacer"/>
 </form>
