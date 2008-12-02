@@ -1434,6 +1434,13 @@ if ( $data ) {
 		$dbh->do('ALTER TABLE tbl_Equipment ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
 	} # end if
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM survey_question_available_answers LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE survey_question_available_answers ADD id SERIAL NOT NULL');
+		$dbh->do('ALTER TABLE survey_question_available_answers ADD PRIMARY KEY (id)');
+	} # end if
+}
 
 $dbh->disconnect();
 1;

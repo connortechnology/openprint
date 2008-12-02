@@ -5,10 +5,21 @@ use strict;
 require sql;
 require openprint::SurveyQuestion;
 
-my @fields = (
-	'id',
-	'name',
-	'description',
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+$table = 'Surveys';
+$serial = 'survey_id_seq';
+
+%fields = (
+	'id',			'id',
+	'name',			'name',
+	'description',	'description',
+);
+%transforms = (
+);
+%defaults = (
+	'id'		=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -35,58 +46,18 @@ sub find {
 	} # end if
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Surveys WHERE id=?}, {}, $$self{'id'} );
-        if ( ! $data ) {
-            $openprint::log->error( "Failure to load Surveys $$self{'id'}: Reason: " . $openprint::dbh->errstr );
-            return;
-        } # end if
-    } # end if
-    foreach my $key ( keys %{$data} ) {
-        $$self{$key} = $$data{$key};
-    } # end foreach
-} # end sub load
-
-sub save {
-	my ( $self, $data ) = @_;
-
-	my %sql;
-	foreach ( @fields ) {
-		$$self{$_} = $$data{$_} if $$data{$_};
-		$sql{$_} = $$self{$_};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = @sql{'id'} = sql::execute( undef, undef, q{SELECT nextval('survey_id_seq')} );
-		if ( my $e = sql::insert( undef, undef, 'Surveys', \%sql ) ) {
-            $openprint::dbh->rollback();
-        } # end if
-	} else {
-		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Surveys', ['id=?', $$self{'id'}], \%sql ) ) {
-            $openprint::dbh->rollback();
-        } # end i
-	} # end if
-    sql::end_transaction( $openprint::dbh, $ac );
-
-	$self->load();
-} # end sub save
 
 sub delete {
 	my $self = shift;
 	my $ac = sql::start_transaction();
-	sql::execute( undef, undef, q{DELETE FROM Survey_Questions WHERE survey_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM Survey_Answers WHERE survey_id=?}, $$self{id} );
 	foreach my $Q ( $self->Questions() ) {
 		foreach my $A ( $Q->AvailableAnswers() ) {
 			$A->delete();
 		} # end foreach
 		$Q->delete();
 	} # end foreach Question
+	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM Survey_Answers WHERE survey_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Surveys WHERE id=?}, $$self{id} );
 	sql::end_transaction( $ac );
 } # end sub delete
