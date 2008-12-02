@@ -78,6 +78,7 @@ sub save {
 sub delete {
 	my $self = shift;
 	my $ac = sql::start_transaction();
+	sql::execute( undef, undef, q{DELETE FROM Survey_Questions WHERE survey_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Survey_Answers WHERE survey_id=?}, $$self{id} );
 	foreach my $Q ( $self->Questions() ) {

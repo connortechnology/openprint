@@ -326,8 +326,12 @@ sub find {
 
 	if ( $param{'id'} ) {
 		if ( ref $param{'id'} eq 'ARRAY' ) {
-			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
-			push @values, @{$param{'id'}};
+			if ( @{$param{'id'}} ) {
+				$sql .= q{ AND id IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
+				push @values, @{$param{'id'}};
+			} else {
+				$sql .= q{ AND id IS NULL };
+			} # end if
 		} else {
 			$sql .= q{ AND id=?};
 			push @values, $param{'id'};
