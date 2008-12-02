@@ -2033,6 +2033,10 @@ sub get_project_price {
 				if ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
 					next;
 				} # end if
+				# Previous Imposition is when we are inline folding a 2out, so don't consider additional 1 outs
+				if ( $$sig_specs{'PreviousImposition'} and ( $imp->imposition() != $$sig_specs{'PreviousImposition'} ) ) {
+					next;
+				} # end if
 
 				my $add = 1;
 				my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
@@ -2265,6 +2269,9 @@ if ( 1 ) {
 
 						$new_specs{'PreviousStockType'} = $imp->Paper()->type();
 						$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
+						if ( $imp->Press()->id() == $imp->Folder()->id() ) {
+							$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
+						} # end if	
 						$new_specs{'Impositions'} = $$price{'Impositions'};
 
 						if ( ( $new_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $new_specs{'PageQuantity'.$qty_index} > $upq ) ) {
