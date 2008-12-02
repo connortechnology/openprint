@@ -1,10 +1,7 @@
 
-DROP SEQUENCE EmailCampaign_Id_seq;
-CREATE SEQUENCE EmailCampaign_Id_seq;
-
-DROP TABLE EmailCampaigns;
+DROP TABLE IF EXISTS EmailCampaigns;
 CREATE TABLE EmailCampaigns (
-	id	INTEGER NOT NULL default nextval('EmailCampaign_id_seq'),
+	id	SERIAL NOT NULL,
 	Name	TEXT NOT NULL,
 	Query	TEXT NOT NULL,
 	Interval	INTERVAL NOT NULL,

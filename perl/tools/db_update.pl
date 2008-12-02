@@ -1435,6 +1435,27 @@ if ( $data ) {
 	} # end if
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM EmailCampaigns LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM EmailTemplates LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/EmailTemplates.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Surveys LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Surveys.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} 
 $dbh->disconnect();
 1;
 __END__
