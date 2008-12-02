@@ -299,6 +299,14 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE RFIDScanners ADD monitor boolean not null default false');
 	} # end if
 } # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'location_id'} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment ADD location_id INTEGER');
+		$dbh->do('ALTER TABLE tbl_Equipment ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__

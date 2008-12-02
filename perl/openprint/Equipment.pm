@@ -24,6 +24,7 @@ my %fields = (
 	'cost_center'		=>	'cost_center',
 	'jdf_id'			=> 	'jdf_id',
 	'jdf_name'			=> 	'jdf_name',
+	'location_id'		=>	'location_id',
 );
 
 sub init_cache {
