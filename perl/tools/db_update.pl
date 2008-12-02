@@ -520,9 +520,9 @@ if ( $version < 1902 ) {
 	$version = 1902;
 } # end if
     my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
-$dbh->do(q{alter table papers add minimum_order integer}) if ! exists $$blah{'minimum_order'};
-$dbh->do(q{alter table papers add inventory_number	text}) if ! exists $$blah{'inventory_number'};
-$dbh->do(q{alter table papers add full_packages boolean}) if ! exists $$blah{'full_packages'};
+$dbh->do(q{alter table papers add minimum_order integer}) if ! exists $$data{'minimum_order'};
+$dbh->do(q{alter table papers add inventory_number	text}) if ! exists $$data{'inventory_number'};
+$dbh->do(q{alter table papers add full_packages boolean}) if ! exists $$data{'full_packages'};
 if ( $version < 1905 ) {
 	print "Updating to version 1905\n";
 	my $ac = sql::start_transaction( $dbh );
@@ -1312,9 +1312,11 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1
 my $ac = sql::start_transaction( $dbh );
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if $$data{'currencyindex'};
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
+sql::end_transaction( $dbh, $ac );
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Prices LIMIT 1', {} );
 if ( $data ) {
+my $ac = sql::start_transaction( $dbh );
 	$dbh->do('ALTER TABLE tbl_Service_Prices RENAME TO Service_Prices');
 	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lnglistindex TO pricelist_id');
 	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngserviceindex TO service_id');
@@ -1326,6 +1328,7 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN ysndiscountable TO discountable');
 	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmin TO min');
 	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmax TO max');
+sql::end_transaction( $dbh, $ac );
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ordered_products LIMIT 1', {} );
 if ( $data and ! exists $$data{'project_id'} ) {
@@ -1352,17 +1355,77 @@ print "Adding predefined to Projects\n";
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
 if ( $data ) {
 	if ( ! exists $$data{'deleted'} ) {
-	my $ac = sql::start_transaction( $dbh );
-	$dbh->do(q`alter table Users add deleted boolean`);
-	$dbh->do(q`alter table Users alter deleted set default false`);
-	$dbh->do(q`update Users set deleted=false`);
-	$dbh->do(q`alter table Users alter deleted set not null`);
-	sql::end_transaction( $dbh, $ac );
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do(q`alter table Users add deleted boolean`);
+		$dbh->do(q`alter table Users alter deleted set default false`);
+		$dbh->do(q`update Users set deleted=false`);
+		$dbh->do(q`alter table Users alter deleted set not null`);
+		sql::end_transaction( $dbh, $ac );
 	} 
 	if ( ! exists $$data{'wage'} ) {
-	$dbh->do(q`alter table Users add wage float`);
+		$dbh->do(q`alter table Users add wage float`);
 	} # end if
+	if ( exists $$data{'strfirstname'} ) {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do(q`alter table Users rename column strfirstname to firstname`);
+		$dbh->do(q`alter table Users rename column strlastname to lastname`);
+		$dbh->do(q`alter table Users rename column stremail to email`);
+		$dbh->do(q`alter table Users rename column strphone to phone`);
+		$dbh->do(q`alter table Users rename column strfax to fax`);
+		$dbh->do(q`alter table Users rename column strtitle to title`);
+		$dbh->do(q`alter table Users rename column strsalutation to salutation`);
+		$dbh->do(q`alter table Users rename column dtmdateentered to created_on`);
+		$dbh->do(q`alter table Users rename column dtmlastmodified to updated_on`);
+		$dbh->do(q`alter table Users rename column chrtype to usertype`);
+		sql::end_transaction( $dbh, $ac );
+	}
 } # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Company LIMIT 1', {} );
+if ( $data ) {
+	print "Renaming company to companies\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do(q`alter table Company rename to companies`);
+	$dbh->do(q`alter table Companies rename column index to id`);
+	$dbh->do(q`alter table Companies rename column strname to name`);
+	$dbh->do(q`alter table Companies rename column straddress1 to address1`);
+	$dbh->do(q`alter table Companies rename column straddress2 to address2`);
+	$dbh->do(q`alter table Companies rename column strcity to city`);
+	$dbh->do(q`alter table Companies rename column strcountry to country`);
+	$dbh->do(q`alter table Companies rename column strprovstate to state`);
+	$dbh->do(q`alter table Companies rename column strpostalcode to postalcode`);
+	$dbh->do(q`alter table Companies rename column lngsalesperson to salesrep_id`);
+	$dbh->do(q`alter table Companies rename column strphone to phone`);
+	$dbh->do(q`alter table Companies rename column strfax to fax`);
+	$dbh->do(q`alter table Companies rename column strweburl to url`);
+	$dbh->do(q`alter table Companies rename column strcustomgreeting to greeting`);
+	$dbh->do(q`alter table Companies rename column dblpricingpercent to discount`);
+	$dbh->do(q`alter table Companies rename column lngpricelist to pricelist_id`);
+	$dbh->do(q`alter table Companies rename column strbusinesstype to business_type`);
+	$dbh->do(q`alter table Companies rename column strlegalbusname to business_name`);
+	$dbh->do(q`alter table Companies rename column legalform to business_form`);
+	$dbh->do(q`alter table Companies rename column strpresidentowner to president_owner`);
+	$dbh->do(q`alter table Companies rename column dtmbusinessstartdate to established`);
+	$dbh->do(q`alter table Companies rename column dtmdateentered to created_on`);
+	$dbh->do(q`alter table Companies rename column dtmlastmodified to updated_on`);
+	$dbh->do(q`alter table Companies rename column stremployees to employees`);
+	$dbh->do(q`alter table Companies rename column strannualsales to annual_sales`);
+	$dbh->do(q`alter table Companies rename column strbankname to bank_name`);
+	$dbh->do(q`alter table Companies rename column strbankbranch to bank_branch`);
+	$dbh->do(q`alter table Companies rename column strbankphone to bank_phone`);
+	$dbh->do(q`alter table Companies rename column strbankaccountno to bank_account`);
+	$dbh->do(q`alter table Companies rename column strbankaccountmanager to bank_manager`);
+	$dbh->do(q`alter table Companies rename column strbankfax to bank_fax`);
+	$dbh->do(q`alter table Companies rename column strbankemail to bank_email`);
+	$dbh->do('CREATE SEQUENCE companies_id_seq');
+	$dbh->do(q`SELECT setval('companies_id_seq', (SELECT MAX(id) FROM Companies))`);
+	$dbh->do(q`ALTER TABLE companies alter id set default nextval('companies_id_seq')`);
+	$dbh->do('DROP SEQUENCE IF EXISTS tbl_Customer_lngCustomerID_seq');
+	$dbh->do('DROP SEQUENCE IF EXISTS companyindex_seq');
+	sql::end_transaction( $dbh, $ac );
+} # end if
+
+sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment,Paper', 'type','text');
 
 $dbh->disconnect();
 1;

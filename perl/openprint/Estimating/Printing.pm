@@ -1995,18 +1995,17 @@ sub get_project_price {
 				$SpreadLayout = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$sig_specs{'txtSpreadSize'};
 			} # end if
 		} # end if
-		if ( 1 ) {
+		if ( $debug ) {
 			$openprint::log->debug("QTY: $qty_index before " . @impositions );
 			foreach my $imp ( @impositions ) {
 				$imp->display();
 			} # end foreach
 		} # end if
 		if ( $SpreadLayout > 0 ) {
-			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 0;
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, \@impositions );
-			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 0;
+			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 1;
 
-if ( 1 ) {
 			my %imps;
 
 			my $max_pages = 0;
@@ -2071,15 +2070,9 @@ $imp->display();
 				push @{$imps{$str}}, $imp if $add;
 			} # end foreach imp
 			@impositions = map {@{$_}} values %imps;
-} # end if
-			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after filter:' . @impositions) if $debug or 0;
+			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after filter:' . @impositions) if $debug or 1;
 		} # end if
 		if ( $$sig_specs{'versions'} > 1 and @impositions < 30 ) {
-$openprint::log->debug("Calling do_versions, # of imps: " . @impositions );
-			@impositions = openprint::imposition::do_versions( $versions, \@impositions );
-$openprint::log->debug("Back from do_versions, # of imps: " . @impositions );
-		} # end if
-		if ( $$specs{'versions'} > 1 and @impositions < 30 ) {
 $openprint::log->debug("Calling do_versions, # of imps: " . @impositions );
 			@impositions = openprint::imposition::do_versions( $versions, \@impositions );
 $openprint::log->debug("Back from do_versions, # of imps: " . @impositions );
@@ -3737,15 +3730,7 @@ sub get_weight {
 	return $sig_weight;
 } # end sub get_weight
 
-sub trimstr {
-	my ( $teststring ) = @_;
-	$teststring =~ s/^\s+//;
-	$teststring =~ s/\s+$//;
-	return $teststring;
-}
-
-#################################################
-sub summaryTEST {
+sub summary {
 	my ( $Project, $service_index, $specs, $qty_index ) = @_;
 
 	my $services = $Project->services();

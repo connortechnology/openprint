@@ -3,8 +3,10 @@ package openprint::Company;
 use strict;
 use Text::Unaccent;
 
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $log $dbh $table $serial %fields %defaults %transforms );
 use openprint ();
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 require sql;
 require openprint::Object;
@@ -150,12 +152,12 @@ sub find {
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error Loading Companies: ($sql) (@values): " . $openprint::dbh->errstr );
+		$log->error("Error Loading Companies: ($sql) (@values): " . $dbh->errstr );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Companies: ($sql) (@values) :" . @$data );
+		$log->debug("Loading Companies: ($sql) (@values) :" . @$data );
 	} # end if
 	return map { new openprint::Company( $_->{index}, $_ ) } @$data;
 } # end sub find
@@ -167,7 +169,7 @@ sub Currency {
 
 sub delete {
 	my $self = shift;
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 # i'm not sure why we did this, for now we are going to delete the users
 #sql::update( undef, undef, 'Company_Users', "CompanyIndex = '$index'", 'lngCustomerID', 0 );
 	sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE Company_id =?', $$self{'id'} );
@@ -196,7 +198,7 @@ sub delete {
 	sql::execute( undef, undef, 'DELETE FROM Order_log WHERE Company_Id=?', $$self{'id'} );
 	foreach my $Project ( openprint::Project::find('company_id'=>$$self{'id'} ) ) {
 		$Project->delete();	
-		last if $openprint::dbh->errstr();
+		last if $dbh->errstr();
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{'id'} );
 	foreach my $User ( openprint::User::find('company_id'=>$$self{'id'} ) ) {
@@ -204,7 +206,7 @@ sub delete {
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{'id'} );
 
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 
    # Add record to audit log - action "Delete Company Profile".
    openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'}");
@@ -221,28 +223,28 @@ sub save {
 	delete $sql{'created_on'};
 	$sql{'name'} = Text::Unaccent::unac_string('LATIN1', $sql{'name'} );
 
-    my $ac = sql::start_transaction( $openprint::dbh );
+    my $ac = sql::start_transaction( $dbh );
     if ( ! $$self{'id'} ) {
         @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('companies_id_seq')} );
 		$sql{id} = $$self{'id'};
         if ( my $e = sql::insert( undef, undef, 'Companies', \%sql ) ) {
-			$openprint::dbh->rollback();
+			$dbh->rollback();
 			return $e;
 		} # end if
-	} elsif ( $$params{'force_insert'} ) {
+	} elsif ( $$param{'force_insert'} ) {
         if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
-			$openprint::dbh->rollback();
+			$dbh->rollback();
 			return $e;
 		} # end if
     } else {
         if ( my $e = sql::update( undef, undef, 'Companies', ['id=?', $$self{'id'}], \%sql ) ) {
-			$openprint::dbh->rollback();
+			$dbh->rollback();
 			return $e;
 		} # end if
     } # end if
 
     $self->load();
-    sql::end_transaction( $openprint::dbh, $ac );
+    sql::end_transaction( $dbh, $ac );
 	return;
 
 } # end sub save
@@ -278,7 +280,7 @@ sub load_tradereferences {
 sub save_tradereferences {
 	my ( $self, $param ) = @_;
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
     sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE company_id=?', $$self{id} );
 	foreach my $tr ( 1 .. 3 ) {
 		my %sql = (
@@ -295,7 +297,7 @@ sub save_tradereferences {
 
 		sql::insert( undef, undef, 'Trade_References', \%sql );
 	} # end foreach
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	return;
 } # end sub save_tradereferences
 
@@ -348,7 +350,7 @@ sub Pricelist {
 	if ( $$self{'pricelist_id'} ) {
 		return new openprint::Pricelist( $$self{'pricelist_id'} );
 	} else {
-		return new openprint::Pricelist( openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable ));
+		return new openprint::Pricelist( openprint::pricing::get_pricelist_id());
 	} # end if
 } # end sub Pricelist
 

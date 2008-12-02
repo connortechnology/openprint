@@ -85,7 +85,8 @@ sub handler {
 	openprint::session_init();
 
 	foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
-		eval "openprint::$o::init_cache();";
+		eval sprintf('openprint::%s::init_cache();', $o );
+		$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
 	} # end foreach
 	#openprint::usergroup::init_cache();
 	#openprint::Material::init_cache();
