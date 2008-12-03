@@ -1445,6 +1445,56 @@ if ( $data ) {
 		$dbh->do('ALTER TABLE survey_question_available_answers ADD PRIMARY KEY (id)');
 	} # end if
 }
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Payments LIMIT 1', {} );
+if ( ! $data ) {
+		$_ = misc::load_file( $log, q{../openprint/sql/Payments.sql});
+		foreach my $st ( split(';', $_ ) ) {
+			$dbh->do($st);
+		}
+} else {
+	if ( ! exists $$data{'owner_id'} ) {
+		$dbh->do('ALTER TABLE Payments add owner_id INTEGER');
+		$dbh->do('ALTER TABLE Payments add FOREIGN KEY (owner_id) REFERENCES Companies (id)');
+	} # end if
+	if ( exists $$data{'company_id'} ) {
+		$dbh->do('ALTER TABLE Payments rename column company_id to payor_id');
+		$dbh->do('ALTER TABLE Payments add FOREIGN KEY (payor_id) REFERENCES Companies (id)');
+	} # end if
+	if ( exists $$data{'curamount'} ) {
+		$dbh->do('ALTER TABLE Payments rename column curamount to amount');
+	} # end if
+	if ( ! exists $$data{'updated_on'} ) {
+		$dbh->do('ALTER TABLE Payments add updated_on timestamp with time zone not null default NOW()');
+	} # end if
+	if ( exists $$data{'dtmdate'} ) {
+		$dbh->do('ALTER TABLE Payments rename column dtmdate to date');
+	} # end if
+	if ( exists $$data{'strmethod'} ) {
+		$dbh->do('ALTER TABLE Payments rename column strmethod to method');
+	} # end if
+	if ( exists $$data{'strtransactionid'} ) {
+		$dbh->do('ALTER TABLE Payments rename column strtransactionid to transaction_id');
+	} # end if
+	if ( exists $$data{'strdescription'} ) {
+		$dbh->do('ALTER TABLE Payments rename column strdescription to memo');
+	} # end if
+	if ( ! exists $$data{'completed'} ) {
+		$dbh->do('ALTER TABLE Payments add completed boolean NOT NULL default false;');
+	} # end if
+	if ( ! exists $$data{'remaining'} ) {
+		$dbh->do('ALTER TABLE Payments add remaining float;');
+	} # end if
+	if ( ! exists $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE Payments add deleted boolean NOT NULL default false;');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+if ( ! $data ) {
+} else {
+	if ( exists $$data{'lngindex'} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment rename  column lngindex to id;');
+	} # end if
+} # end if
 
 $dbh->disconnect();
 1;

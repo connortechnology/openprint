@@ -1,13 +1,13 @@
 <form name="Prices">
 	<? eval ( 
-		$$variable{'Stock'} = new openprint::Paper( $openprint::param{'stock_id'} );
+		$$variable{'Stock'} = new openprint::Paper( $param{'stock_id'} );
 		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(Name)');
 		) ?>
 	<input type="hidden" name="width" value="<? echo ( $$variable{'Stock'}->width() ) ?>" />
 	<input type="hidden" name="height" value="<? echo ( $$variable{'Stock'}->height() ) ?>" />
 	<input type="hidden" name="mweight" value="<? echo ( sprintf('%.3f', $$variable{'Stock'}->mweight() ); ) ?>" />
 	<input type="hidden" name="wpsi" value="<? echo ( sprintf('%.3f', $$variable{'Stock'}->wpsi() ); ) ?>" />
-	<input type="hidden" name="stock_id" value="<? echo ( $openprint::param{'stock_id'} ) ?>"/>
+	<input type="hidden" name="stock_id" value="<? echo ( $param{'stock_id'} ) ?>"/>
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
 	<div class="Pricelist">
 		Prices for Pricelist: <? echo ( ssi::htmlize( $$variable{'Pricelist'}->name() ); ) ?><br/>

@@ -145,13 +145,11 @@ sub create_edit_display {
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
 	);
 
-	my %services = $Project->get_services();
-	@{$$variable{'SelectedServices'}} = keys %services;
+	my $services = $Project->services();
+	@{$$variable{'SelectedServices'}} = keys %{$services};
 
 	my $sql = q{SELECT name,description FROM Service_Types WHERE category=? AND create_visible=true ORDER BY Sorting, lower(name)};
 	@{$$variable{'PrepressServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Prepress' );
-	#push @{$$variable{'PrepressServiceTypes'}}, sql::execute( $log, $dbh, $sql, 'Proofs' );
-
 	@{$$variable{'BinderyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Bindery' );
 	@{$$variable{'SpecialtyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Specialty' );
 	@{$$variable{'PackagingServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Packaging' );

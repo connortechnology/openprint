@@ -16,7 +16,7 @@ $serial = 'Equipment_Index_seq';
 my $debug = 0;
 my %find_cache;
 %fields = (
-	'id'	=>	'lngindex',
+	'id'	=>	'id',
 	'strid'	=>	'strid',
 	'name'	=>	'strname',
 	'description'	=>	'strdescription',
@@ -56,14 +56,14 @@ sub find {
 	if ( exists $params{'id'} ) {
 		if ( ref $params{id} eq 'ARRAY' ) {
 			if ( @{$params{id}} > 1 ) {
-			$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
+			$sql .= ' AND id IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
 			push @values, @{$params{id}};
 			} else {
-			$sql .= ' AND lngindex=?';
+			$sql .= ' AND id=?';
 			push @values, $params{id};
 			} # en dif
 		} else {
-			$sql .= ' AND lngindex=?';
+			$sql .= ' AND id=?';
 			push @values, $params{id};
 		} # end if
 	} # end if
@@ -119,7 +119,7 @@ sub find {
 		$openprint::log->debug( $sql . join(',',@values) . ' records:'. @$data );
 	} # end if
 	
-	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{lngindex}, $_ ) } @$data;
+	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{id}, $_ ) } @$data;
 	return @{$find_cache{$hash_key}};
 } # end sub find
 
@@ -490,7 +490,7 @@ sub next {
 		push @values, $$params{category_id};
 	} # end if
 	my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM tbl_Equipment WHERE strid=?}, $name );
 	return $_;
 } # end sub next
 
@@ -508,7 +508,7 @@ sub prev {
 		push @values, $$params{category_id};
 	} # end if
 	my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM tbl_Equipment WHERE strid=?}, $name );
 	return $_;
 } # end sub next
 

@@ -100,11 +100,12 @@ sub debt {
     my $self = shift;
     $_ = q{SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )};
     my ( $debt ) = sql::execute( undef, undef, $_, $$self{'customer_index'} );
-    $_ = q{SELECT SUM(amount) FROM Payments WHERE (deleted=false OR deleted IS NULL) AND completed=true AND company_id=?};
+    $_ = q{SELECT SUM(amount) FROM Payments WHERE (deleted=false OR deleted IS NULL) AND completed=true AND payor_id=?};
     my ( $payments ) = sql::execute( undef, undef, $_, $self->{customer_index} );
 
     return $debt - $payments;
 } # end sub get_debt
+
 sub remaining {
 	my $self = shift;
 

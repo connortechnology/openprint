@@ -424,11 +424,12 @@ sub pay {
 	my $Payment = new openprint::Payment();
     my $error = $Payment->save( {
             'order_id'		=> $$self{id},
-            'company_id'	=> $$self{company_id},
+			'recipient_id'	=>	new openprint::User( $openrpint::session{'user_id'} )->company_id(),
+            'payor_id'		=> $$self{company_id},
             'amount'		=> $amount - $paid,
             'method'		=> 'Manual',
             'currency_id',	=> $$self{currency_id},
-            'description'	=> 'Order marked paid',
+            'memo'			=> 'Order marked paid',
 			'completed'		=> 1,
             } );
     if ( ! $error ) {

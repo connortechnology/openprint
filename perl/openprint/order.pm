@@ -1231,7 +1231,8 @@ sub history_details {
 		my $Payment = new openprint::Payment();
 		my $error .= $Payment->save( {
 				'order_id'		=> $order_id,
-				'company_id'	=> $Order->company_id(),
+				'payor_id'		=> $Order->company_id(),
+				'recipient_id'	=> new openprint::User( $openprint::session{'user_id'} )->company_id(),
 				'amount'		=> $openprint::param{'Amount'},
 				'method'		=> 'Manual',
 				'currency_id'	=> $Order->currency_id(),

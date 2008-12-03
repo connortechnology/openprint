@@ -7,9 +7,12 @@ CREATE TABLE Payments (
 	payor_id			INTEGER NOT NULL, FOREIGN KEY (payor_id) REFERENCES Companies (id),
 	amount				FLOAT,
 	created_on			TIMESTAMP WITH TIME ZONE,
+	updated_on			TIMESTAMP WITH TIME ZONE,
 	method				TEXT,
-	currency_id			INTEGER NOT NULL, FOREIGN KEY (currency_id) REFERENCES Currency (index),
+	currency_id			INTEGER NOT NULL, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
 	transaction_id		TEXT,
 	description			TEXT,
+	completed			BOOLEAN not null default false,
+	deleted				BOOLEAN not NULL default false,
 	PRIMARY KEY( id )
 );
