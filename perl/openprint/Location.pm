@@ -108,7 +108,7 @@ sub Parent {
 } # end sub parent
 sub Root {
 	my $self = shift;
-	my $P = $self->Parent();
+	my $P = $self;
 	while ( $P->parent_id() ) {
 		$P = $P->Parent();
 	} # end while 
