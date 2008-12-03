@@ -65,7 +65,7 @@ sub edit {
 		} # end if
 		my @header = ( 'Material ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
         $_ = "SELECT (SELECT name FROM Materials WHERE id = lngMaterialIndex) AS strID,\n".
-				"(SELECT strID FROM tbl_Equipment WHERE lngIndex = lngEquipmentIndex) AS EquipmentID,\n".
+				"(SELECT strID FROM tbl_Equipment WHERE Id = lngEquipmentIndex) AS EquipmentID,\n".
 				"lngMin, lngMax, strUnits, dblCost, dblMarkup, dblPrice, ysnDiscountable\n".
                 "FROM tbl_Material_Prices\n".
                 "WHERE lngListIndex = '$id'\n".
@@ -104,7 +104,7 @@ sub edit {
 		} # end if
 		my @header = ( 'Service ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
         $_ = "SELECT (SELECT name FROM Services WHERE id = service_id) AS strID,\n".
-				"(SELECT strID FROM tbl_Equipment WHERE lngIndex = equipment_id) AS EquipmentID,\n".
+				"(SELECT strID FROM tbl_Equipment WHERE Id = equipment_id) AS EquipmentID,\n".
 				"lngMin, lngMax, Units, Cost, Markup, Price, ysnDiscountable\n".
                 "FROM Service_Prices\n".
                 "WHERE pricelist_id = '$id'\n".

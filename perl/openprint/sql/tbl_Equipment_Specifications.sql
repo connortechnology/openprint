@@ -5,7 +5,7 @@ CREATE	SEQUENCE EquipmentSpecification_seq;
 
 CREATE TABLE tbl_Equipment_Specifications (
 	lngIndex	INT4 NOT NULL DEFAULT nextval('EquipmentSpecification_seq'),
-	lngEquipmentIndex	INT4 NOT NULL, FOREIGN KEY (lngEquipmentIndex) REFERENCES tbl_Equipment (lngIndex),
+	lngEquipmentIndex	INT4 NOT NULL, FOREIGN KEY (lngEquipmentIndex) REFERENCES tbl_Equipment (Id),
 	dblMin				NUMERIC(10,4),
 	dblMax				NUMERIC(10,4),
 	strUnits			TEXT,
