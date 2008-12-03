@@ -315,7 +315,7 @@ sub paper_details {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Paper->delete();
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
-		allocate( undef, @param{'paper_id','Quantity','Project','Docket'} );
+		allocate( undef, @param{'paper_id','Quantity','Project','Docket','specific'} );
 	} elsif ( $param{'btnFunction'} eq 'Delete Allocation' ) {
 		if ( $param{'allocation_id'} ) {
 			my $PA = new openprint::PaperAllocation( $param{'allocation_id'} );
@@ -883,7 +883,31 @@ sub stock_allocation_notification {
 	$info{'OldSkids'} = $old_skids;
 
 	my @recipients = openprint::User::find( 'usergroup'=>'InventoryManager' );
-	push @recipients, $Project->Company()->CSR() if @$old_skids;
+
+    my $offsite = 0;
+	my $nolocation = 0;
+    foreach my $sig_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+        my @Presses;
+        if ( $$sig_specs{'UsePress'} ) {
+            @Presses = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'});
+        } else {
+            @Presses = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
+        } # endif
+		if ( @Presses ) {
+			foreach my $PA ( @{$allocations} ) {
+				if ( ! $PA->Skid()->location_id() ) {
+					$nolocation = 1;
+				} elsif ( $PA->Skid()->Location()->Root()->id() != $Presses[0]->Location()->Root()->id() ) {
+					$offsite = 1;
+				} # end if
+			} # end foreach PA
+		} # end if
+    } # end foreach sig
+	$info{'offsite'} = $offsite;
+	$info{'nolocation'} = $nolocation;
+
+	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @$old_skids;
 
 	foreach my $User ( @recipients ) {
 		my $From = new openprint::User( $session{'user_id'} );

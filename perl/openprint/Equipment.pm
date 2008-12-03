@@ -5,6 +5,7 @@ require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
 require openprint::Fold;
+require openprint::Location;
 require sql;
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
@@ -517,6 +518,9 @@ sub Previous {
 	return new openprint::Equipment( $self->prev($params) );
 } # end sub Next
 
+sub Location {
+	return new openprint::Location( $_[0]{location_id} );
+} # end sub Location
 
 1;
 __END__
