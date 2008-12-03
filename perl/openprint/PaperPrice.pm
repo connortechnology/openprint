@@ -3,7 +3,9 @@ package openprint::PaperPrice;
 
 my $debug = 0;
 
-use vars qw( %fields %transforms %defaults );
+use vars qw( $table $serial %fields %transforms %defaults );
+$table = 'Paper_Prices';
+$serial = 'paper_prices_id_seq';
 
 use strict;
 
@@ -22,8 +24,8 @@ require sql;
 	'Discountable'	=>	'ysndiscountable',
 );
 %transforms = (
-	'Min' => [ 's/(\d*)/$1/g' ],
-	'Max' => [ 's/(\d*)/$1/g' ],
+	'Min' => [ 's/,//g', 's/(\d*)/$1/g' ],
+	'Max' => [ 's/,//g', 's/(\d*)/$1/g' ],
 	'Cost' => [ 's/[^\d\.]//g' ],
 	'Price' => [ 's/[^\d\.]//g' ],
 	'Markup' => [ 's/[^\d\.]//g' ],
@@ -71,60 +73,12 @@ sub find {
 	return map { new openprint::PaperPrice( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Paper_Prices WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{qw/id pricelist_id paper_id Min Max Units Cost Markup Price Discountable/} = 
-		@$data{qw/id lnglistindex lngpaperindex lngmin lngmax strunits dblcost dblmarkup dblprice ysndiscountable/};
-
-} # end sub load
-
 sub delete {
 	my $self = shift;
     sql::execute( undef, undef, q{DELETE FROM Paper_Prices WHERE id=?}, $$self{'id'} );
 	my $Paper = $self->Paper();
 	delete $$Paper{'Prices'};
 } # end sub delete
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	$$self{Price} = $$self{Cost} * ( 1+($$self{Markup}/100) ) if ( ! $$self{Price} );
-
-	my @sql = (
-			'lngListIndex',			$$self{'pricelist_id'},
-			'lngPaperIndex',		$$self{'paper_id'},
-			'lngMin',				$$self{'Min'} eq '' ? undef : $$self{'Min'},
-			'lngMax',				$$self{'Max'} eq '' ? undef : $$self{'Max'},
-			'strUnits',				$$self{'Units'},
-			'dblCost',				1*$$self{'Cost'},
-			'dblMarkup',			1*$$self{'Markup'},
-			'dblPrice',				1*$$self{'Price'},
-			'ysnDiscountable',		$$self{'Discountable'},
-			);
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_prices_id_seq')});
-		if ( my $error = sql::insert( undef, undef, 'Paper_Prices', [ 'id', $$self{'id'}, @sql ] ) ) {
-			return $error;
-		} # end if
-	} else {
-		if ( my $error = sql::update( undef, undef, 'Paper_Prices', ['id=?', $$self{'id'}], \@sql ) ) {
-			return $error;
-		} # end if
-	} # end if
-} # end sub save
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::PaperPrice();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
 
 sub Paper {
 	my $self = shift;

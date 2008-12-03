@@ -819,6 +819,10 @@ foreach my $E ( openprint::Equipment::find() ) {
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
 if ( ! $data ) {
+		$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql});
+		foreach my $st ( split(';', $_ ) ) {
+			$dbh->do($st);
+		}
 } else {
 	if ( ! exists $$data{'federaltax_charge'} ) {
 		$dbh->do('ALTER TABLE purchaseorders add federaltax_charge BOOLEAN');

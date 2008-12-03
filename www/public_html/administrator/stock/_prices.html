@@ -27,8 +27,8 @@
 		<? while ( $$variable{'Price'} = shift @{$$variable{'Prices'}} ) ?>
 			<tr>	
 				<td class="Range">
-					<input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( misc::CommaFormatted($$variable{'Price'}->Min() ) ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');$('Prices').addClassName('changed');" />
-					<input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( misc::CommaFormatted($$variable{'Price'}->Max()) ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
+					<input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( Number::Format::format_number($$variable{'Price'}->Min() ) ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');$('Prices').addClassName('changed');" />
+					<input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( Number::Format::format_number($$variable{'Price'}->Max()) ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
 				</td>
 				<td class="Cost"><input class="text" type="text" name="costcwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
 				<td class="Cost"><input class="text" type="text" name="costperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->costperm() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>

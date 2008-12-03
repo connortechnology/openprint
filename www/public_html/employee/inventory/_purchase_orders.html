@@ -7,8 +7,8 @@
 	} else {
 		my %search = (
 			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
-			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ),
-			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ),
+			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/purchase_orders.html?created_on_start_year','/employee/inventory/purchase_orders.html?created_on_start_month','/employee/inventory/purchase_orders.html?created_on_start_day'} ),
+			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?created_on_end_year','/employee/inventory/purchase_orders.html?created_on_end_month','/employee/inventory/purchase_orders.html?created_on_end_day'} ),
 			'order',			'id desc',
 		);
 		$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'},;
