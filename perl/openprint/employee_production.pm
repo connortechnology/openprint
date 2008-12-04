@@ -21,6 +21,8 @@ require openprint::MXML;
 require openprint::JDF;
 require openprint::LabelType;
 require openprint::Label;
+require openprint::PurchaseOrder;
+require openprint::PurchaseOrder_Content;
 
 sub print_overview {
 	press_schedule( @_ );
@@ -1032,6 +1034,9 @@ sub _labels {
 	} # end if
 	$openprint::variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} );
 } # end sub _labels
+
+sub _paper_details {
+}
 
 1;
 

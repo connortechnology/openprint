@@ -1342,6 +1342,13 @@ sub purchase_order_view {
 						'total'         =>  $param{'total-'.$content_id},
 						'type_id'		=>	$param{'type_id-'.$content_id},
 						});
+				if ( $C->docket() ) {
+					foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
+						$P->add_to_log( @session{'company_id','user_id'}, 
+								sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
+									$PO->id(), $C->qty(), $C->units(), $C->description() ) );
+					} # end foreach Project
+				} # end if docket
 			} # end if
 		} # end foreach
 		if ( ! $param{'supplier_id'} ) {
@@ -1409,13 +1416,13 @@ sub purchase_order_edit {
 			'shipto_name'		=>	$C->name(),
 			'shipto_address1'	=>	$C->address1(),
 			'shipto_address2'	=>	$C->address2(),
-			'shipto_city'	=>	$C->city(),
-			'shipto_state'	=>	$C->state(),
+			'shipto_city'		=>	$C->city(),
+			'shipto_state'		=>	$C->state(),
 			'shipto_country'	=>	$C->country(),
 			'shipto_postalcode'	=>	$C->postalcode(),
-			'shipto_phone'	=>	$C->phone(),
-			'shipto_fax'	=>	$C->fax(),
-			'shipto_email'	=>	$U->email(),
+			'shipto_phone'		=>	$C->phone(),
+			'shipto_fax'		=>	$C->fax(),
+			'shipto_email'		=>	$U->email(),
 		} );
 		$PO->save();
 	} # end if

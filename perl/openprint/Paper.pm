@@ -1076,7 +1076,7 @@ sub load_from_signature {
 #following line added on june-30-2008
 		$Paper->req_die_scoring( $Paper->calliper() > 0.008 );
 		if ( $$specs{'StockType'} ne 'Roll' ) {
-		$Paper->mweight( $$specs{'txtCustomMWeight'} );
+			$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
@@ -1104,15 +1104,6 @@ sub load_from_signature {
 		} # end if
 		$Paper = shift @Papers if @Papers;
 		$Paper = new openprint::Paper() if ! $Paper;
-		if ( $qty_index ) {
-			if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
-				$Paper = $Paper->clone();
-				$Paper->width( $$specs{'StockWidth'.$qty_index} );
-				$Paper->height( $$specs{'StockHeight'.$qty_index} );
-#$openprint::log->debug(sprintf('Paper %sx%s = %s', $Paper->width(), $Paper->height(), $Paper->area() ) );
-				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
-			} # end if
-		} # end if
 		if ( $$specs{'rdbSuppliedStock'} eq 'Y' and ! $Paper->supplied() ) {
 			$Paper->supplied(1);
 		} # end if
@@ -1121,9 +1112,14 @@ sub load_from_signature {
 $openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
 		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
 	} # end if
-	if ( $qty_index and ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) ) {
-$openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
-		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
+
+	if ( $qty_index ) {
+		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
+			$Paper = $Paper->clone();
+			$Paper->width( $$specs{'StockWidth'.$qty_index} );
+			$Paper->height( $$specs{'StockHeight'.$qty_index} );
+			$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
+		} # end if
 	} # end if
 	return $Paper;
 	

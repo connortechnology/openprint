@@ -174,6 +174,7 @@ $openprint::log->debug("Prices $qty_index P" . $$variable{'Project'}->price($qty
 	@$variable{'CurrencyName', 'CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'ProjectIndex'} = $project_index;
 	$$variable{'OrderID'} = $$variable{'order_id'};
+	delete $$variable{'Project'}{'Services'};
 } # end sub view
 
 # This is sortof a state engine.	This function should update a project's status to whatever it should be.

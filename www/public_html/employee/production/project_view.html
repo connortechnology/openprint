@@ -21,20 +21,23 @@ function open_window( page ) {
 <form name="f1" method="post" action="project_view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
 		<tr> 
-			<th align="left">Service</th>
-			<th width="100" align="right">
-			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
-			Price
-			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
-			</th>
-			<th width="200" align="right">Status</th>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<th width="20">&nbsp;</th>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<th align="left">Service</th>
+			<th width="200" align="right">Status</th>
+			<th width="100" align="right">
+			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+			Price
+			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+			</th>
 		</tr>
 		<? while ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
 		<? eval ( $$variable{'rowclass'} = ' class="colRowRed"' if $$variable{'status'} eq 'Waiting For Customer Approval' ) ?>
 		<tr<?rowclass?>> 
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<td><input type="checkbox" name="chkDelete-<?index?>" /></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<td>
 <? if ( $$variable{'url'} ne '' ) ?>
 <a href="/employee/proj/<?url?>?OrderID=<?OrderID?>&ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?index?>"><?name?></a>
@@ -44,148 +47,146 @@ function open_window( page ) {
 <? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
 <? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, $$variable{'Project'}->ordered_quantity_index() ); ) ?>
 &nbsp;</td>
-			<td align="right">
-			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
-			<? echo ( sprintf('$%.2f', $$variable{'price'.$$variable{'OrderedQuantityIndex'}} ); ) ?>
-			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
-			</td>
 			<td align="right">&nbsp;<?status?></td>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
-			<td><input type="checkbox" name="chkDelete-<?index?>" /></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<td align="right">
+			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+			<? echo ( sprintf('$%.2f', $$variable{'price'.$$variable{'OrderedQuantityIndex'}} ); ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+			</td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 		<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Prepress'], $openprint::session{'user_id'} ) ) ?>
+		<? if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
 		<tr>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<th colspan="4"></th>
-			<? else ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? else ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<th colspan="3"></th>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		</tr>
 <? echo ( 
-	if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
-		use POSIX qw(ceil);
-		my %totals;
-		my %sheets;
-		my $Project = $$variable{'Project'};
-		my $qty_index = $Project->ordered_quantity_index();
+	use POSIX qw(ceil);
+	my %totals;
+	my %sheets;
+	my %prices;
+	my $Project = new openprint::Project( $$variable{'ProjectIndex'} );
+	my $qty_index = $Project->ordered_quantity_index();
 
-		foreach my $ss_id ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+$openprint::log->debug("Stock: ".$Project->id() );
 
-				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
-				if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
-					$impressions /= 2
-				} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
-					my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-					my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
-					if ( @side_one_colours and @side_two_colours ) {
-						$impressions /= 2
-					} # end if
-				} # end if
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+$openprint::log->debug("Ssignature $$sig_specs{SignatureIndex}: "  );
 
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			if ( $Paper->type() eq 'Roll' ) {
-
-				$totals{$Paper->id()} += ceil($impressions * $Paper->area() * $Paper->wpsi());
-			} elsif ( $Paper->type() eq 'Sheet' ) {
-				my $sheets = $impressions;
-				$sheets /= ( $Paper->start_area() /$Paper->area() );
-				$sheets = ceil( $sheets );
-				$totals{$Paper->id()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
-				$sheets{$Paper->id()} += $sheets;
+		my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+		if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
+			$impressions /= 2
+		} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
+			my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+			my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
+			if ( @side_one_colours and @side_two_colours ) {
+				$impressions /= 2
 			} # end if
-		} # end foreach signature
+		} # end if
 
-		my $html = '<tr><td><b>Stock:</b><br/>';
-        foreach my $paper_id ( sort keys %totals ) {
-			my $Paper = new openprint::Paper( $paper_id );
-			$html .= 'Customer Supplied ' if $Paper->supplied();
-			$html .= $Paper->to_string();
-if ( 0 ) {
-			$html .= sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
-			if ( $Paper->type() eq 'Roll' ) {
-				$html .= sprintf(' %s&quot; Roll', $Paper->width() );
-			} elsif ( $Paper->type() eq 'Sheet' ) {
-				$html .= sprintf(' %s&quot;x%s&quot;', $Paper->start_width(), $Paper->start_height() );
-			} # end if
-} # end if
-			$html .= '<br/>';
-		} # end foreach paper_id
-		$html .= '<td colspan="2" align="right"><br/>';
-        foreach my $paper_id ( sort keys %totals ) {
-			my $Paper = new openprint::Paper( $paper_id );
-			if ( $totals{$paper_id} ) {
-				if ( $sheets{$paper_id} ) {
-					$html .= $sheets{$paper_id}.'sheets '.$totals{$paper_id}.'lbs';
+		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+$openprint::log->debug("Paper: " . $Paper->to_string() );
+		if ( $Paper->type() eq 'Roll' ) {
+			$totals{$Paper->to_string()} += ceil($impressions * $Paper->area() * $Paper->wpsi());
+		} elsif ( $Paper->type() eq 'Sheet' ) {
+			my $sheets = $impressions;
+			$sheets /= ( $Paper->start_area() /$Paper->area() );
+			$sheets = ceil( $sheets );
+			$totals{$Paper->to_string()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
+			$sheets{$Paper->to_string()} += $sheets;
+		} # end if
+		if ( ! $Paper->supplied() ) {
+			if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
+				my %price = $Paper->get_price( $totals{$Paper->to_string()} );
+				$price{'Total'} = $price{'100lb Price'} * $totals{$Paper->to_string()} / 100;
+				$prices{$Paper->to_string()} = sprintf('* $%.2f/100lb = $%.2f', @price{'100lb Price','Total'} );
+			} # end if in Accounting
+		} # endif Supplied
+	} # end foreach signature
+
+	if ( keys %totals ) {
+		my $html = '<tr>';
+		if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
+			$html .= '<td>&nbsp;</td>';
+		} # end if
+		$html .= '<td><b>Stock:</b><br/>';
+		foreach my $string ( sort keys %totals ) {
+			$html .= $string . '<br/>';
+		} # end foreach string
+	
+		$html .= '</td><td colspan="2" align="right"><br/>';
+		foreach my $string ( sort keys %totals ) {
+			if ( $totals{$string} ) {
+				if ( $sheets{$string} ) {
+					$html .= $sheets{$string}.'sheets '.$totals{$string}.'lbs';
 				} else {
-					$html .= $totals{$paper_id}.'lbs';
+					$html .= $totals{$string}.'lbs';
 				} # end if
 			} else {
 				$html .= 'none';
 			} # end if
-            if ( ! $Paper->supplied() ) {
-                my %price = $Paper->get_price( $totals{$paper_id} );
-                $price{'Total'} = $price{'100lb Price'} * $totals{$paper_id} / 100;
-				$html .= sprintf('* $%.2f/100lb = $%.2f', @price{'100lb Price','Total'} );
-            } # endif
+			$html .= $prices{$string};
 			$html .= '<br/>';
 		} # end foreach key
 		$html .= '</td>';
 		$html .= '</tr>';
 		return $html;
 	} # end if
+	return '';
 ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+		<? if ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin'], $session{'user_id'} ) ) ?>
 		<tr class="unprintable">
 			<td colspan="2">Add Service:<select name="NewServiceType"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType::find('order'=>'lower(name)') ] ); ) ?></select>
 			</td>
 			<td 
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			colspan="2"
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddServiceType', 'add.gif', "f1.btnFunction.value='Add Service';f1.submit();", '', 'Add Service' ); ) ?></td>
 		</tr>
-		<? endif ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+		<? endif ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin'], $session{'user_id'} ) ) ?>
 		<tr class="unprintable">
 			<td><input name="txtServiceName" style="width: 100%;" /></td>
 			<td><input name="txtPrice" style="width: 100%;" /></td>
 			<td
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			colspan="2"
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			>
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddToProject', 'addToProject.gif', "f1.btnFunction.value='Add Service';f1.submit();", '', 'Add Custom Service' ); ) ?>
 			</td>
 		</tr>
-		<? endif ( openprint::usergroup::is_user_in( ['Prepress'], $openprint::session{'user_id'} ) ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
+		<? endif ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
+		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<tr>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<th colspan="4"></th>
-			<? else ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? else ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<th colspan="3"></th>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		</tr>
 		<tr>
 			<td align="right"><b>Total:</b></td>
 			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Total'.$$variable{'OrderedQuantityIndex'}} ); ) ?></td>
 			<td
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			colspan="2"
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			></td>
 		</tr>
-		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
+		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	</table>
-<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
-	<? if ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+	<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
 	<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
-	<? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+	<? endif ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
 	<span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
-<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	<br/>
 	<span style="float: left;">
 		<? echo ( join('',
@@ -208,7 +209,7 @@ if ( 0 ) {
 				$html .= ssi::writeButton( $log, $dbh, 'NoRush', 'norush.gif', "f1.btnFunction.value='No Rush';f1.submit();", '', 'No Rush' );
 			} # end if
 			
-			if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
 				my @schedule = openprint::press_schedule::find('project_id'=>$$variable{'ProjectIndex'} );
 				if ( ! @schedule ) {
 					$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule', 'addtopressschedule.gif', "f1.btnFunction.value='AddToPressSchedule';f1.submit();", '', 'Add To Press Schedule' );
@@ -217,7 +218,7 @@ if ( 0 ) {
 			if ( $$variable{'ProjectStatus'} eq 'Printed' and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'AddToBinderySchedule', 'addtobinderyschedule.gif', "f1.btnFunction.value='AddToBinderySchedule';f1.submit();", '', 'Add To Bindery Schedule' );
 			} # end if
-			#if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $openprint::session{'user_id'} ) ) {
+			#if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
 			#$html .= ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', "f1.btnFunction.value='Complete';f1.submit();", '', 'Complete' );
 			#} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'CompleteBindery', 'completeBindery.gif', "f1.btnFunction.value='BinderyComplete';f1.submit();", '', 'Complete Bindery' );
@@ -231,9 +232,9 @@ if ( 0 ) {
 				} # end if
 			} # end if
 			if ( $$variable{'ShippingType'} eq 'Customer Pickup' and $$variable{'ProjectStatus'} ne 'Picked Up' ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
+				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
 			} # end if
-			if ( openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) {
+			if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='DeleteServices';f1.submit();", '', 'Delete Checked Services' );
 			} # end if
 
@@ -263,25 +264,28 @@ if ( 0 ) {
 </form>
 <br/>
 <div class="leftColumn">
-<fieldset><legend>Inventory</legend>
-<table class="List">
-    <tr><th align="left">Stock</th><th align="right" width="100">Required</th></tr>
-    <? echo (
-        my $html;
-        my %Papers;
-        foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
-            my $sig_specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $ss_id );
-            my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
-            $Papers{$Paper->id()} += $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()};
-        } # end foreach
-        foreach my $paper_id ( keys %Papers ) {
-            my $Paper = new openprint::Paper( $paper_id );
-            $html .= sprintf('<tr><td>%1$s</td><td align="right">%2$d%3$s</td></tr>', $Paper->to_string(), $Papers{$paper_id}, $Paper->type() eq 'Roll' ? 'lbs':'sheets' );
-        } # end foreach
-        return $html;
-    ) ?>
+<? eval (
+	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() );
+) ?>
+<? if ( @{$$variable{'PurchaseOrders'}} ) ?>
+<fieldset><legend>Purchase Orders:</legend>
+	<table class="List">
+		<tr><th width="50" align="left">PO</th><th align="left">Description</th><th width="75" align="left">Quantity</th></tr>
+<? echo (
+	my $html = '';
+	foreach my $PO_Content ( @{$$variable{'PurchaseOrders'}} ) {
+		$html .= sprintf('<tr><td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$d%4$s</td></tr>', 
+			$PO_Content->po_id(),
+			$PO_Content->description(),
+			$PO_Content->qty(),
+			$PO_Content->units(),
+			);
+	} # end foreach
+	return $html;
+) ?>
 	</table>
-	</fieldset>
+</fieldset>
+<? endif ( @{$$variable{'PurchaseOrders'}} ) ?>
 </div>
 <div class="rightColumn">
 	<form name="LabelForm" id="LabelForm" method="post" action="/employee/production/labels/label.html">
@@ -315,9 +319,9 @@ if ( 0 ) {
 					my $Skid = $Allocation->Skid();
 					$total += $Allocation->quantity();
 					$html .= sprintf( '<tr><td>&nbsp;</td><td>%3$s</td><td>%4$s</td><td>%5$s</td>', $Allocation->paper_id(), $Allocation->Paper()->to_string(), $Skid->id(), $Skid->rfidtag_id(), $Skid->Location()->name() );
-				$html .= sprintf( '<td>%1$d%2$s</td></tr>', $Allocation->quantity(), $Allocation->units() );
+				$html .= sprintf( '<td align="right">%1$d%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
 				} # end foreach
-				$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td>'.$total . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
+				$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
 			} # end foreach
 			return $html;
 		) ?>

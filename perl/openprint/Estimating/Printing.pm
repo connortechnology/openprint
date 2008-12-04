@@ -1738,7 +1738,7 @@ $i->display();
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 		if ( $Paper->type() eq 'Roll' ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . '" Roll';
-			$$specs{'txtPressSheetQty'.$qty_index} = sprintf('%.0f lbs', $best_price{'Stock Weight'});
+			$$specs{'txtPressSheetQty'.$qty_index} = $best_price{'Stock Weight'}.'lbs';
 			$$specs{'minimum_stock_size'.$qty_index} = $Imposition->used_width().'&quot;';
 		} elsif ( $Paper->type() eq 'Sheet' ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . 'x' . $Paper->height();
