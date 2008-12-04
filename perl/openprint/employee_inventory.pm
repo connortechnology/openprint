@@ -20,6 +20,7 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::PaperAllocation;
 require openprint::PurchaseOrder;
+require openprint::PurchaseOrder_Content;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -1487,6 +1488,9 @@ sub _po_notifications {
 	} # end if
 	$variable{'PurchaseOrder'} = $PO;
 } # end if
+
+sub _paper_details {
+}
 
 1;
 __END__

@@ -1032,6 +1032,11 @@ sub _labels {
 	$openprint::variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} );
 } # end sub _labels
 
+sub _paper_details {
+require openprint::PurchaseOrder;
+require openprint::PurchaseOrder_Content;
+}
+
 1;
 
 __END__

@@ -78,6 +78,10 @@ sub find {
 		$sql .= ' AND description LIKE ?';
 		push @values, $params{'description_like'};
 	} # end if
+	if ( $params{'docket'} ) {
+		$sql .= 'AND docket=?';
+		push @values, $params{'docket'};
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
 		push @values, @params{'created_on_start','created_on_end'}

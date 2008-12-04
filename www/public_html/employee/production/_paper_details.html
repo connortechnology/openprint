@@ -1,3 +1,26 @@
+<? eval (
+	my $Project = new openprint::Project( $param{'project_id'} );
+	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content::find( 'docket'=>$Project->docket() );
+) ?>
+<? if ( @{$$variable{'PurchaseOrders'}} ) ?>
+<fieldset><legend>Ordered Paper:</legend>
+	<table class="List">
+		<tr><th width="50" align="left">PO</th><th align="left">Description</th><th width="75" align="left">Quantity</th></tr>
+<? echo (
+	my $html = '';
+	foreach my $PO_Content ( @{$$variable{'PurchaseOrders'}} ) {
+		$html .= sprintf('<tr><td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$d%4$s</td></tr>', 
+			$PO_Content->po_id(),
+			$PO_Content->description(),
+			$PO_Content->qty(),
+			$PO_Content->Type()->name() eq 'Roll Stock' ? 'lbs' : 'sheets',
+			);
+	} # end foreach
+	return $html;
+) ?>
+	</table>
+</fieldset>
+<? endif ( @{$$variable{'PurchaseOrders'}} ) ?>
 <fieldset><legend>Allocated Paper:</legend>
 <? echo ( 
 	require openprint::PaperAllocation;

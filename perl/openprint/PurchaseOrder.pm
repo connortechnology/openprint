@@ -149,7 +149,7 @@ sub find {
 		push @values, 0;
 	} # end if
 	if ( $params{'docket'} ) {
-		$sql .= ' AND id IN ( SELECT po_id FROM PurchaseOrder_Contents WHERE docket=?)';
+		$sql .= ' AND id IN (SELECT po_id FROM PurchaseOrder_Contents WHERE docket=?)';
 		push @values, $params{'docket'};
 	} # end if
 
@@ -226,14 +226,6 @@ sub destroy {
     sql::execute( undef, undef, q{DELETE FROM PurchaseOrders WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::PurchaseOrder();
-	@$new{keys %fields} = @$self{keys %fields};
-	delete $$new{'id'};
-	return $new;
-} # end sub copy
 
 sub Currency {
 	my ( $self ) = @_;
