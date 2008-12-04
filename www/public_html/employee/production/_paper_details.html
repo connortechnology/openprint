@@ -13,7 +13,7 @@
 			$PO_Content->po_id(),
 			$PO_Content->description(),
 			$PO_Content->qty(),
-			$PO_Content->Type()->name() eq 'Roll Stock' ? 'lbs' : 'sheets',
+			$PO_Content->units(),
 			);
 	} # end foreach
 	return $html;

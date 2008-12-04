@@ -20,6 +20,8 @@ require openprint::MXML;
 require openprint::JDF;
 require openprint::LabelType;
 require openprint::Label;
+require openprint::PurchaseOrder;
+require openprint::PurchaseOrder_Content;
 
 sub print_overview {
 	press_schedule( @_ );
@@ -1033,8 +1035,6 @@ sub _labels {
 } # end sub _labels
 
 sub _paper_details {
-require openprint::PurchaseOrder;
-require openprint::PurchaseOrder_Content;
 }
 
 1;
