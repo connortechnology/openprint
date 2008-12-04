@@ -52,6 +52,7 @@ BEGIN {
 	use openprint::Quote;
 	use openprint::paper;
 	use openprint::JDF;
+	use Number::Format;
 
 use MapImage;
 
