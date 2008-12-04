@@ -1,12 +1,12 @@
 <form method="post" action="taxes.html" id="f1" name="f1">
 	<table class="List sortable">
 		<tr>
+			<th width="20">&nbsp;</th>
 			<th align="left">Country</th>
 			<th align="left">State/Province</th>
 			<th width="80">Federal (%)</th>
 			<th width="80">State (%)</th>
-			<th width="80">Harmonised (%)</th>
-			<th width="20">&nbsp;</th>
+			<!--<th width="80">Harmonised (%)</th>-->
 		</tr>
 		<? eval (
 				@{$$variable{'TAXES'}} = openprint::Tax::find('order'=>'lower(state)');
