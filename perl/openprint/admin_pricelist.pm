@@ -65,7 +65,7 @@ sub edit {
 		} # end if
 		my @header = ( 'Material ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
         $_ = "SELECT (SELECT name FROM Materials WHERE id = lngMaterialIndex) AS strID,\n".
-				"(SELECT strID FROM tbl_Equipment WHERE lngIndex = lngEquipmentIndex) AS EquipmentID,\n".
+				"(SELECT strID FROM tbl_Equipment WHERE Id = lngEquipmentIndex) AS EquipmentID,\n".
 				"lngMin, lngMax, strUnits, dblCost, dblMarkup, dblPrice, ysnDiscountable\n".
                 "FROM tbl_Material_Prices\n".
                 "WHERE lngListIndex = '$id'\n".
@@ -103,11 +103,11 @@ sub edit {
 			return misc::error( $log, $dbh, $variable, 'No pricelist selected.', 'You must select a pricelist before exporting.');
 		} # end if
 		my @header = ( 'Service ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
-        $_ = "SELECT (SELECT name FROM Services WHERE id = lngServiceIndex) AS strID,\n".
-				"(SELECT strID FROM tbl_Equipment WHERE lngIndex = lngEquipmentIndex) AS EquipmentID,\n".
-				"lngMin, lngMax, strUnits, dblCost, dblMarkup, dblPrice, ysnDiscountable\n".
-                "FROM tbl_Service_Prices\n".
-                "WHERE lngListIndex = '$id'\n".
+        $_ = "SELECT (SELECT name FROM Services WHERE id = service_id) AS strID,\n".
+				"(SELECT strID FROM tbl_Equipment WHERE Id = equipment_id) AS EquipmentID,\n".
+				"lngMin, lngMax, Units, Cost, Markup, Price, ysnDiscountable\n".
+                "FROM Service_Prices\n".
+                "WHERE pricelist_id = '$id'\n".
 				"ORDER BY strID, EquipmentID, lngMin";
         my @data = sql::execute( $log, $dbh, $_ );
 		misc::export_csv( $r, $log, $variable, $Pricelist->name() . 'ServicePrices.csv', \@header, \@data );
@@ -127,7 +127,7 @@ sub edit {
 		my $pricelist = new openprint::pricelist( $log, $dbh, $id );
 
 		# An import replaces the current pricelist, so delete verything in the current one.
-		sql::execute( $log, $dbh, "DELETE FROM tbl_Service_Prices WHERE lngListIndex=$id" );
+		sql::execute( $log, $dbh, "DELETE FROM Service_Prices WHERE pricelist_id=$id" );
 
 		# get the upload.
 		my $upload = $r->upload( 'filePrices' );

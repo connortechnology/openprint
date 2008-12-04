@@ -117,7 +117,7 @@
 					
 					$line_html .= sprintf('<td class="status">%s</td>', $statuses{$s_id} ) if ! $$variable{'Quote'};
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-						$line_html .= sprintf('<td class="price">%s%.2f<br/>%s</td>', $$variable{'Currency'}->symbol(), $$specs{'txtPrice'.$qty_index}*$conversion_rate,openprint::service::summary($$variable{'Project'}, $s_id, $qty_index ) );
+						$line_html .= sprintf('<td class="price">%s%s<br/>%s</td>', $$variable{'Currency'}->symbol(), Number::Format::format_number($$specs{'txtPrice'.$qty_index}*$conversion_rate,2,2),openprint::service::summary($$variable{'Project'}, $s_id, $qty_index ) );
 						$totals[$qty_index] += $$specs{'txtPrice'.$qty_index}*$conversion_rate;
 					} # end foreach qty_index	
 
@@ -171,7 +171,7 @@
 		$html .= '<tr class="totals"><td>&nbsp;</td>';
 		$html .= '<td class="status">&nbsp;</td>' if ! $$variable{'Quote'};
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-			$html .= sprintf('<td class="price" style="font-weight:bold;">%s%.2f</td>', $$variable{'Currency'}->symbol(), $totals[$qty_index] );
+			$html .= sprintf('<td class="price" style="font-weight:bold;">%s%s</td>', $$variable{'Currency'}->symbol(), Number::Format::format_number( $totals[$qty_index],2,2) );
 		} # end foreach
 		$html .= '</tr>';
 		$html .= '</table>';	
@@ -212,7 +212,7 @@
 			<td align="right" style="font-size: large;">Unit Price:</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= '<td class="price" style="font-size: large;">'.$$variable{'Currency'}->symbol().$$variable{'Project'}->unit_price( $qty_index ).'</td>';
+		$html .= '<td class="price" style="font-size: large;">'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'Project'}->unit_price( $qty_index ),4,4).'</td>';
 	} # end foreach qty_index
 	return $html;
 ) ?>
@@ -221,7 +221,7 @@
 			<td align="right" style="font-size: large;">1000 Price:</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= '<td class="price" style="font-size: large;">'.$$variable{'Currency'}->symbol().$$variable{'Project'}->m_price( $qty_index ).'</td>';
+		$html .= '<td class="price" style="font-size: large;">'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'Project'}->m_price( $qty_index ),4,4).'</td>';
 	} # end foreach qty_index
 	return $html;
 ) ?>
@@ -230,7 +230,7 @@
 			<td align="right" style="font-size: large;">Price:</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= '<td class="price" style="font-size: large;">'.$$variable{'Currency'}->symbol().$$variable{'Project'}->price( $qty_index ).'</td>';
+		$html .= '<td class="price" style="font-size: large;">'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'Project'}->price( $qty_index ),2,2).'</td>';
 	} # end foreach qty_index
 	return $html;
 ) ?>

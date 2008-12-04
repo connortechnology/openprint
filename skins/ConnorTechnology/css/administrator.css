@@ -1,0 +1,123 @@
+
+div.row {
+	p\osition: relative;
+	clear: both;
+	margin-bottom: 10px;
+	padding: 1px;
+}
+div.row .required {
+	width: 10px;
+	float:left;
+	height: 100%;
+}
+div.row .label {
+	width: 180px;
+	text-align: left;
+	p\osition: relative;
+	float:left;
+}
+
+div.row .input {
+	text-align: left;
+	float:left;
+	p\osition: relative;
+	vertical-align: top;
+	padding: 5px;
+}
+div.row .buttons {
+    margin-left: 180px;
+	float: left;
+	p\osition: relative;
+	padding: 5px;
+}
+
+fieldset.leftColumn p input[type="text"], fieldset .leftColumn p input[type="text"] {
+	width: 80%;
+}
+fieldset.leftColumn p select, fieldset .leftColumn p select {
+	width: 80%;
+}
+.Add {
+	width: 20px;
+	text-align: center;
+}
+.Range  {
+	width: auto;
+	text-align: center;
+}
+table.List tr td.Range input, table.List tr td.Range input[type="text"] {
+	width: 40%;
+}
+
+.Units {
+	width: 120px;
+	text-align: center;
+}
+.Cost {
+	width: 90px;
+	text-align: center;
+}
+.Markup {
+	width: 80px;
+	text-align: center;
+}
+.Price {
+	width: 90px;
+	text-align: center;
+}
+.Discount {
+	width: 95px;
+	text-align: center;
+}
+
+.Equipment {
+	margin-bottom: 5px;
+	background-color: #f1eee5;
+	border: 1px solid;
+}
+
+#UserProfile ul {
+    list-style: none;
+	width: auto;
+	float: left;
+}
+#UserProfile ul li {
+    float: left;
+    width: 200px;
+}
+#UserProfile ul:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html #UserProfile ul {height: 1%;}
+*     #UserProfile ul {display:block;}
+/* End hide from IE-mac */
+#Configuration fieldset p {
+	padding-left: 405px;
+}
+#Configuration fieldset p label {
+	width: 400px;
+	margin-left: -405px;
+}
+#Configuration label.radio {
+	width: auto;
+	margin: 0px;
+	padding: 0px;
+}
+	
+#Configuration input[type="text"], #Configuration textarea, #Configuration select {
+	width: 95%;
+}
+ul#menubar li#Managerial a {
+	width: 135px;
+}
+ul#menubar li#Reports a {
+	width: 150px;
+}
+ul#menubar li#Setup a {
+	width: 120px;
+}

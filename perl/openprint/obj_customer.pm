@@ -8,17 +8,17 @@ require openprint::Pricelist;
 require openprint::logs;
 
 my %fields = (
-	'Name'				=>	'strName',
+	'Name'				=>	'name',
 	'AccountNumber'		=>	'strAccountNum',
-	'Address1'			=>	'strAddress1',
-	'Address2'			=>	'strAddress2',
-	'City'				=>	'strCity',
-	'StateProvince'		=>	'strProvState',
-	'PostalCode'		=>	'strPostalCode',
-	'Country'			=>	'strCountry',
-	'Phone'				=>	'strPhone',
+	'Address1'			=>	'address1',
+	'Address2'			=>	'address2',
+	'City'				=>	'city',
+	'StateProvince'		=>	'state',
+	'PostalCode'		=>	'postalcode',
+	'Country'			=>	'country',
+	'Phone'				=>	'phone',
 	'Extension'			=>	'strExt',
-	'Fax'				=>	'strFax',
+	'Fax'				=>	'fax',
 	'MailingList'		=>	'ysnMailingList',
 	'LegalForm'			=>	'LegalForm',
 	'LegalBusinessName'	=>	'strLegalBusName',
@@ -28,10 +28,10 @@ my %fields = (
 	'PresidentOwner'	=>	'strPresidentOwner',
 	'Employees'			=>	'strEmployees',
 	'AnnualSales'		=>	'strAnnualSales',
-	'TaxNumber1'		=>	'strGSTNumber',
-	'TaxNumber2'		=>	'strPSTNumber',
-	'TaxExempt1'		=>	'ysnGSTExempt',
-	'TaxExempt2'		=>	'ysnPSTExempt',
+	'TaxNumber1'		=>	'fedtaxnumber',
+	'TaxNumber2'		=>	'statetaxnumber',
+	'TaxExempt1'		=>	'ysngstexempt',
+	'TaxExempt2'		=>	'ysnpstexempt',
 	'BankName'			=>	'strBankName',
 	'BankBranch'		=>	'strBankBranch',
 	'BankAccountNumber'	=>	'strBankAccountNo',
@@ -39,12 +39,11 @@ my %fields = (
 	'BankPhone'			=>	'strBankPhone',
 	'BankFax'			=>	'strBankFax',
 	'BankEmail'			=>	'strBankEmail',
-	'PriceList'			=>	'lngPriceList',
+	'PriceList'			=>	'pricelist_id',
 	'Currency'			=>	'currency_id',
 	'Discount'			=>	'dblPricingPercent',
-	'SalesPerson'		=>	'lngSalesPerson',
+	'SalesPerson'		=>	'salesrep_id',
 	'AccountActivation'	=>	'ysnAccountActivation',
-	'AccountTypes'		=>	'strAccountType',
 	'Reseller'			=>	'ysnReseller',
 	'Supplier'			=>	'ysnSupplier',
 	'CustomGreeting'	=>	'strCustomGreeting',
@@ -116,8 +115,8 @@ sub load_values {
 	if ( @get_fields and $self->{index} ) {
 		my @db_fields = @fields{@get_fields};
 		if ( @db_fields ) {
-		$_ = "SELECT " . join( ',',@fields{@get_fields}) . " FROM Company WHERE Index = '" . $self->{index} . "'";
-		@$values{@get_fields} = sql::execute( $self->{log}, $self->{dbh}, $_ );
+		$_ = 'SELECT ' . join( ',',@fields{@get_fields}) . ' FROM Companies WHERE id = ?';
+		@$values{@get_fields} = sql::execute( $self->{log}, $self->{dbh}, $_, $self->{index} );
 		} else {
 			$$self{'log'}->warn("Company->load_values(@get_fields) No fields to get.");
 		} # end if
@@ -159,12 +158,12 @@ sub set {
 		if ( ! $self->{index} ) {
 			$_ = "SELECT nextval('CompanyIndex_seq')";
 			( $self->{index} ) = sql::execute( $self->{log}, $self->{dbh}, $_ );
-			sql::insert( $self->{log}, $self->{dbh}, 'Company', 'Index', $self->{index}, 'dtmDateEntered', 'NOW', @set_fields );
+			sql::insert( $self->{log}, $self->{dbh}, 'Companies', 'id', $self->{index}, 'dtmDateEntered', 'NOW', @set_fields );
 
          # Add record to audit log - action "New Company Profile".
          openprint::logs::insertLogRecord('68', "ID: " . $self->{index} . " Name: " . $params->{'Name'},);
 		} else {
-			sql::update( $self->{log}, $self->{dbh}, 'Company', 'Index = '.$self->{index}, 'dtmLastModified', 'NOW', @set_fields );
+			sql::update( $self->{log}, $self->{dbh}, 'Companies', 'id = '.$self->{index}, 'dtmLastModified', 'NOW', @set_fields );
 
          # Add record to audit log - action "Update Company Profile".
          openprint::logs::insertLogRecord('69', "ID: " . $self->{index} . " Name: " . $params->{'Name'},);
@@ -177,7 +176,7 @@ sub set {
 sub get_shipping_address {
 	my $self = shift;
 
-	my ( $address_index ) = sql::execute( @$self{'log', 'dbh'}, "SELECT MAX(lngIndex) FROM tbl_Addresses WHERE Company_id=$self->{index}" );
+	my ( $address_index ) = sql::execute( @$self{'log', 'dbh'}, 'SELECT MAX(lngIndex) FROM tbl_Addresses WHERE Company_id=?', $self->{index} );
 	my $address = new openprint::address( $self->{log}, $self->{dbh}, $address_index, $self->{index} );
 	return $address;
 } # end sub get_shipping_address

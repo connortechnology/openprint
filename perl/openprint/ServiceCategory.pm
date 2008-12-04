@@ -3,7 +3,6 @@ package openprint::ServiceCategory;
 use openprint ();
 require openprint::Service;
 
-
 use vars qw($log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -31,8 +30,8 @@ sub find {
 		$sql .= qq{ ORDER BY $params{'order'} };
 	} # end if
 	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$log->error("Error loading Service Categories: ($sql) (@values)");
+	if ( ( ! $data ) and $dbh->errstr ) {
+		$log->error("Error loading Service Categories: ($sql) (@values) :" . $dbh->errstr );
 		return;
 	} # end if
 	return map { new openprint::ServiceCategory( $_->{id}, $_ ) } @$data;

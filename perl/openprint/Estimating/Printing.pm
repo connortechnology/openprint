@@ -722,7 +722,6 @@ my $master_time = gettimeofday();
 			$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 			$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 			$variables{'rdbTemplateType'} = [ sets::exclude( ['output'], $variables{'rdbTemplateType'} ) ];
-
 		} # end if
 	} # end if
 	if ( $$specs{'txtSignatureType'} ) {
@@ -1610,6 +1609,7 @@ $i->display();
 								$add = 0;
 								#last;
 							} # end if
+
 						} # end for
 					} # end if overriden or not or cached
 					push @{$imps{$str}}, $imp if $add > 0;
@@ -1849,7 +1849,7 @@ $i->display();
 		} # end if
 		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
 		$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
-#$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	} # end foreach quantity
 
 	return $$specs{'Status'};
@@ -1995,18 +1995,17 @@ sub get_project_price {
 				$SpreadLayout = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$sig_specs{'txtSpreadSize'};
 			} # end if
 		} # end if
-		if ( 1 ) {
+		if ( $debug ) {
 			$openprint::log->debug("QTY: $qty_index before " . @impositions );
 			foreach my $imp ( @impositions ) {
 				$imp->display();
 			} # end foreach
 		} # end if
 		if ( $SpreadLayout > 0 ) {
-			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 0;
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, \@impositions );
-			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 0;
+			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 1;
 
-if ( 1 ) {
 			my %imps;
 
 			my $max_pages = 0;
@@ -2032,6 +2031,10 @@ if ( 1 ) {
 					next;
 				} # end if
 				if ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
+					next;
+				} # end if
+				# Previous Imposition is when we are inline folding a 2out, so don't consider additional 1 outs
+				if ( $$sig_specs{'PreviousImposition'} and ( $imp->imposition() != $$sig_specs{'PreviousImposition'} ) ) {
 					next;
 				} # end if
 
@@ -2071,8 +2074,7 @@ $imp->display();
 				push @{$imps{$str}}, $imp if $add;
 			} # end foreach imp
 			@impositions = map {@{$_}} values %imps;
-} # end if
-			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after filter:' . @impositions) if $debug or 0;
+			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after filter:' . @impositions) if $debug or 1;
 		} # end if
 		if ( $$sig_specs{'versions'} > 1 and @impositions < 30 ) {
 $openprint::log->debug("Calling do_versions, # of imps: " . @impositions );
@@ -2267,6 +2269,9 @@ if ( 1 ) {
 
 						$new_specs{'PreviousStockType'} = $imp->Paper()->type();
 						$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
+						if ( $imp->Press()->id() == $imp->Folder()->id() ) {
+							$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
+						} # end if	
 						$new_specs{'Impositions'} = $$price{'Impositions'};
 
 						if ( ( $new_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $new_specs{'PageQuantity'.$qty_index} > $upq ) ) {
@@ -3799,7 +3804,6 @@ sub summary {
 		foreach my $k ( keys %$specs ) {
 			if ( my ( $index ) = $k =~ /ColourCoating$side(\d+)/ ) {
 				my $type = $$specs{"ColourCoatingType$side$index"};
-
 				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
 					$front_coatings .= '+'.$$specs{"ColourCoatingType$side$index"};
 				} elsif ( $type =~ /PMS/i ) {
@@ -3895,6 +3899,7 @@ sub summary {
 		} # end if
 	} # end if
 } # end sub summary
+
 
 sub save {
 	my ( $p_id, $s_id, $param ) = @_;

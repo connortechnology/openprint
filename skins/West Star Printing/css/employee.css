@@ -29,3 +29,15 @@ div.row .buttons {
 div.row br {
     clear: both;
 }
+ul#menubar li#ProductionMenu a {
+	width: 105px;
+}
+ul#menubar li#AccountingMenu a {
+	width: 95px;
+}
+ul#menubar li#MarketingMenu a {
+	width: 95px;
+}
+ul#menubar li#InventoryMenu a {
+	width: 95px;
+}

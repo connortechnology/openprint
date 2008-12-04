@@ -55,6 +55,8 @@ BEGIN {
 	use openprint::Quote;
 	use openprint::paper;
 	use openprint::JDF;
+	use	openprint::Timetrack;
+	use	openprint::Currency;
 
 #use MapImage;
 

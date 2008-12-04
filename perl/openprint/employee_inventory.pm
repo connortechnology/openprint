@@ -315,7 +315,7 @@ sub paper_details {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Paper->delete();
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
-		allocate( undef, @param{'paper_id','Quantity','Project','Docket'} );
+		allocate( undef, @param{'paper_id','Quantity','Project','Docket','specific'} );
 	} elsif ( $param{'btnFunction'} eq 'Delete Allocation' ) {
 		if ( $param{'allocation_id'} ) {
 			my $PA = new openprint::PaperAllocation( $param{'allocation_id'} );
@@ -560,20 +560,7 @@ sub skid_details {
 			return;
 		} # end if
 
-		if ( ( ! $param{'skid_quantity'} ) and @skid_ids ) {
-			foreach my $skid_id ( @skid_ids ) {
-				$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
-				my $S = new openprint::Skid( $skid_id );
-				save_skid( $S );
-				if ( ! $variable{'Paper'} ) {
-					if ( my @c = $S->contents() ) {
-						$variable{'paper_id'} = $c[0]->paper_id();
-						$variable{'Paper'} = new openprint::Paper( $variable{'paper_id'} );
-					} # end of
-				} # end of
-			} # end foreach
-		} else {
-			$param{'skid_quantity'} = 1 if ! $param{'skid_quantity'};
+		if ( $param{'skid_quantity'} ) {
 			if ( (@quantities>1) and ( @quantities != $param{'skid_quantity'} ) ) {
 				$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
 				return;
@@ -595,7 +582,7 @@ sub skid_details {
 					$SV->save({
 						'skid_id'	=>	$S->id(),
 						'code'		=>	$param{'verification_code'},
-						'user_id'	=>	$openprint::session{'user_id'},
+						'user_id'	=>	$session{'user_id'},
 					});
 				} # end if verification_code
 			} # end foreach
@@ -609,7 +596,7 @@ sub skid_details {
 					$SV->save({
 						'skid_id'	=>	$skid_id,
 						'code'		=>	$param{'verification_code'},
-						'user_id'	=>	$openprint::session{'user_id'},
+						'user_id'	=>	$session{'user_id'},
 					});
 				} # end if verification_code
 			} # end foreach
@@ -765,7 +752,7 @@ sub check_in {
 			$weight += $c->quantity();
 		} # end foreach
 		if ( $weight + $quantity > 10000 ) {
-			$$variable{'error'} .= "Skid cannot hold more than 10000lbs.<br/>";
+			$variable{'error'} .= "Skid cannot hold more than 10000lbs.<br/>";
 			return;
 		} # end if
 	} # end if
@@ -896,7 +883,31 @@ sub stock_allocation_notification {
 	$info{'OldSkids'} = $old_skids;
 
 	my @recipients = openprint::User::find( 'usergroup'=>'InventoryManager' );
-	push @recipients, $Project->Company()->CSR() if @$old_skids;
+
+    my $offsite = 0;
+	my $nolocation = 0;
+    foreach my $sig_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+        my @Presses;
+        if ( $$sig_specs{'UsePress'} ) {
+            @Presses = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'});
+        } else {
+            @Presses = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
+        } # endif
+		if ( @Presses ) {
+			foreach my $PA ( @{$allocations} ) {
+				if ( ! $PA->Skid()->location_id() ) {
+					$nolocation = 1;
+				} elsif ( $PA->Skid()->Location()->Root()->id() != $Presses[0]->Location()->Root()->id() ) {
+					$offsite = 1;
+				} # end if
+			} # end foreach PA
+		} # end if
+    } # end foreach sig
+	$info{'offsite'} = $offsite;
+	$info{'nolocation'} = $nolocation;
+
+	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @$old_skids;
 
 	foreach my $User ( @recipients ) {
 		my $From = new openprint::User( $session{'user_id'} );
@@ -1366,6 +1377,14 @@ sub purchase_order_view {
 		$param{'federaltax_charge'} = $param{'federaltax_charge'} ? 1 : 0;
 		$param{'statetax_charge'} = $param{'statetax_charge'} ? 1 : 0;
 		$variable{'error'} .= $PO->save( \%param );
+		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+				'user_id'	=>	$session{'user_id'},
+				'po_id'		=>	$PO->id(),
+				'reason'	=>	$param{'reason'},
+				});
+		} # end if
 	} # end if btnFunction
 
 	$variable{'PurchaseOrder'} = $PO;
@@ -1404,9 +1423,10 @@ sub purchase_order_edit {
 } # end sub purchase_order_edit
 
 sub purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id' ) {
+    foreach my $key ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','authorized','supplier_id' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'created_on', -31 );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -1432,7 +1452,7 @@ sub purchase_orders {
 } # end sub purchase_orders
 
 sub _purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id' ) {
+    foreach my $key ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','authorized','supplier_id' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 } # end sub _purchase_orders

@@ -15,6 +15,7 @@ apt-get -y install  libdbi-perl libapache-dbi-perl libdbd-pg-perl
 apt-get -f -y install libxml-libxml-common-perl libxml-libxml-perl libxml-namespacesupport-perl libxml-sax-perl
 apt-get -f -y --force-yes install perlmagick libgd-barcode-perl 
 apt-get -f -y --force-yes install  libbarcode-code128-perl
+apt-get -f -y --force-yes install  libnumber-format-perl
 # Also need Barcode-Code128-2.00
 
 ln -sf /etc/apache2/mods-available/rewrite.load   /etc/apache2/mods-enabled/
@@ -23,8 +24,11 @@ ln -sf /etc/apache2/mods-available/apreq.load /etc/apache2/mods-enabled/
 mkdir /etc/apache2/lib
 ln -sf /etc/apache2/lib/perl /var/www/$1/perl
 
+apt-get -y install libsoap-lite-perl
+
 perl -MCPAN -e shell << EOF
 force install Date::Handler
 force install Date::Parse
 force install Math::Units
+force install Business::PayPal
 EOF

@@ -1,13 +1,13 @@
 <form name="Prices">
 	<? eval ( 
-		$$variable{'Stock'} = new openprint::Paper( $openprint::param{'stock_id'} );
+		$$variable{'Stock'} = new openprint::Paper( $param{'stock_id'} );
 		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(Name)');
 		) ?>
 	<input type="hidden" name="width" value="<? echo ( $$variable{'Stock'}->width() ) ?>" />
 	<input type="hidden" name="height" value="<? echo ( $$variable{'Stock'}->height() ) ?>" />
 	<input type="hidden" name="mweight" value="<? echo ( sprintf('%.3f', $$variable{'Stock'}->mweight() ); ) ?>" />
 	<input type="hidden" name="wpsi" value="<? echo ( sprintf('%.3f', $$variable{'Stock'}->wpsi() ); ) ?>" />
-	<input type="hidden" name="stock_id" value="<? echo ( $openprint::param{'stock_id'} ) ?>"/>
+	<input type="hidden" name="stock_id" value="<? echo ( $param{'stock_id'} ) ?>"/>
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
 	<div class="Pricelist">
 		Prices for Pricelist: <? echo ( ssi::htmlize( $$variable{'Pricelist'}->name() ); ) ?><br/>
@@ -27,8 +27,8 @@
 		<? while ( $$variable{'Price'} = shift @{$$variable{'Prices'}} ) ?>
 			<tr>	
 				<td class="Range">
-					<input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( misc::CommaFormatted($$variable{'Price'}->Min() ) ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');$('Prices').addClassName('changed');" />
-					<input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( misc::CommaFormatted($$variable{'Price'}->Max()) ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
+					<input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( Number::Format::format_number($$variable{'Price'}->Min() ) ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');$('Prices').addClassName('changed');" />
+					<input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( Number::Format::format_number($$variable{'Price'}->Max()) ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
 				</td>
 				<td class="Cost"><input class="text" type="text" name="costcwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
 				<td class="Cost"><input class="text" type="text" name="costperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->costperm() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>

@@ -34,8 +34,8 @@ my %variables = (
     'txtPackageWeight2'=>['save','output'],
     'txtPackageWeight3'=>['save','output'],
 	'FromCompanyName'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
-	'FromFirstName'=>['save'],'FromLastName'=>['save'],
 	'ToCompanyName'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
+	'FromFirstName'=>['save'],'FromLastName'=>['save'],
 	'ToFirstName'=>['save'],'ToLastName'=>['save'],
 	'alert'=>['save','output'],
 

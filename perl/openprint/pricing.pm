@@ -6,7 +6,7 @@ require openprint::pricelist;
 require openprint::priceset;
 require openprint::price;
 
-my $debug = 0;
+my $debug = 1;
 
 my %price_cache;
 
@@ -140,7 +140,7 @@ sub split_by_equipment {
 sub get_best_prices {
 	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty ) = @_;
 
-	my $hash_index = "$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
+	my $hash_index = "$list_id-$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
 
 	if ( ! defined $price_cache{$hash_index} ) {
 

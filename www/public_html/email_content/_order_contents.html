@@ -57,7 +57,7 @@
 <table class="List">
 	<tr class="totals"> 
 		<td colspan="2" align="right">Sub-Total:</td>
-		<td width="120" align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'SUB_TOTAL'} ); ) ?></td>
+		<td width="120" align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->sub_total() ); ) ?></td>
 	</tr>
 	<? if ( $$variable{'GST'} ) ?>
 	<tr> 

@@ -1,14 +1,10 @@
 <fieldset>
 	<? eval (
-		@{$$variable{'Quantities'}} = ();
-		foreach ( 1 .. 3 ) {
-			push @{$$variable{'Quantities'}}, $$variable{"Quantity$_"} if $$variable{"Quantity$_"};
-		} # end foreach
 		$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ( ! $$variable{'Project'} );
 	) ?>
 	<legend>Project # <? echo ( $$variable{'Project'}->id() ) ?></legend>
 	<span style="float: right;">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'ProjectIndex'}, '', '', "information.html?OrderID=$$variable{'OrderID'}&remove=$$variable{'ProjectIndex'}", 'Remove' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'ProjectIndex'}, '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'ProjectIndex'}", 'Remove' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'ProjectIndex'}, '', '', "/main/project/view.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Edit Project' ); ) ?>
 	</span>
 	<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>">
@@ -17,32 +13,13 @@
 	<br class="spacer"/>
 	<p>
 		<label>Reference:</label>
-		<textarea name="Reference<?ProjectIndex?>" rows="10"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
+		<textarea name="Reference<?ProjectIndex?>" cols="" rows="<? echo ( scalar split("\n",  $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
 	</p>
-<? if ( @{$$variable{'Quantities'}} > 1 ) ?>
+<? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <!--#include virtual="_quantity_select.html"-->
-<? endif ( @{$$variable{'Quantities'}} > 1 ) ?>
+<? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <? if ( ! $$variable{'Project'}->requested_date() ) ?>
 <!--#include virtual="_required_by.html"-->
 <? endif ( ! $$variable{'Project'}->requested_date() ) ?>
 <!--#include virtual="_shipping_type_select.html"-->
-<? echo ( 
-	my $html;
-
-	my $services = $$variable{'Project'}->services();
-
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
-		next if ! $$services{$ServiceType->name()};
-		foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
-			$$variable{'ServiceIndex'} = $service_id;
-			$$variable{'ServiceType'} = $ServiceType->name();
-			my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/order/_'.$ServiceType->name().'.html');
-			$html .= ssi::variable_substitution( $r, $log, $dbh, \$h, $variable );
-
-		} # end foreach service_id
-
-	} # end foreach ServiceType
-
-	return $html;
-) ?>
 </fieldset>

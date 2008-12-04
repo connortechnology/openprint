@@ -55,26 +55,6 @@ There is no current project.
 	<span class="Currency">All prices in <?CurrencyName?>.</span>
 <br>
 <br class="spacer"/>
-<fieldset>
-	<legend>Modification History</legend>
-	<table class="List">
-		<tr>
-			<th align="left" width="200">Customer</th>
-			<th align="left" width="200">User</th>
-			<th align="left" width="150">When</th>
-			<th align="left">Description</th>
-		</tr>
-		<? eval ( @{$$variable{'ProjectLog'}} = openprint::project::get_log( $log, $dbh, $$variable{'ProjectIndex'}); ) ?>
-		<? while ( @$variable{'CustomerIndex','CustomerName','UserIndex','UserName','When','Description'} = splice @{$$variable{'ProjectLog'}},0,6; ) ?>
-		<tr<?rowclass?>>
-			<td><?CustomerName?></td>
-			<td><?UserName?></td>
-			<td><?When?></td>
-			<td><?Description?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq '' ? ' class="colRow"' : ''; ) ?>
-		<? endwhile ( @$variable{'CustomerIndex','CustomerName','UserIndex','UserName','When','Description'} = splice @{$$variable{'ProjectLog'}},0,6; ) ?>
-	</table>
-</fieldset>
+<!--#include virtual="/main/project/_view_log.html"-->
 <br/>
 <? endif ( $$variable{'ProjectIndex'} eq '' ) ?>

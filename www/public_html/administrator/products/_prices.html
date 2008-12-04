@@ -1,9 +1,3 @@
-<? eval (
-	if ( $openprint::param{'btnFunction'} ) {
-		require openprint::administrator_products;
-		openprint::administrator_products::prices( );
-	} # end if
-) ?>
 <style type="text/css">
 	.Add {
 		width: 20px;
@@ -49,12 +43,12 @@ border: 1px solid;
 <form id="PricesForm" name="PricesForm" method="post" action="prices.html" enctype="multipart/form-data">
 	
 	<? eval ( 
-		@{$$variable{'Pricelists'}} = openprint::Pricelist::find();
+		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(name)');
 		$$variable{'Product'} = new openprint::Product( $openprint::param{'product_id'} ) if ! $$variable{'Product'};
 	) ?>
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
 	<fieldset><legend>Prices for Price List: <? echo ( $$variable{'Pricelist'}->name(); ) ?></legend>
-		<? eval ( @{$$variable{'Prices'}} = openprint::ProductPrice::find( 'product' => $$variable{'Product'}, 'pricelist' => $$variable{'Pricelist'}, 'order' => 'min' ); ) ?>
+		<? eval ( @{$$variable{'Prices'}} = openprint::ProductPrice::find( 'Product' => $$variable{'Product'}, 'Pricelist' => $$variable{'Pricelist'}, 'order' => 'min' ); ) ?>
 		<div class="Equipment">
 			<table class="List">
 				<tr>
@@ -68,22 +62,22 @@ border: 1px solid;
 			</tr>
 			<? while ( $$variable{'Price'} = shift @{$$variable{'Prices'}}; ) ?>
 			<tr> 
-				<td class="Add"><input type="checkbox" name="chk-<? echo ( $$variable{'Price'}->id(); ) ?>" checked="checked" /></span>
+				<td class="Add"><input type="checkbox" id="chk-<? echo ( $$variable{'Price'}->id(); ) ?>" name="chk-<? echo ( $$variable{'Price'}->id(); ) ?>" checked="checked" /></span>
 				<td class="Range"> 
-					<input type="text" name="min-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->min(); ) ?>" >
-					<input type="text" name="max-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->max(); ) ?>" >
+					<input type="text" name="min-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->min(); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;"/>
+					<input type="text" name="max-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->max(); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;" />
 				</td>
 				<td class="Units"> 
-					<input type="text" name="units-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->units(); ) ?>" >
+					<input type="text" name="units-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->units(); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;" />
 				</td>
 				<td class="Cost"> 
-					<input type="text" name="cost-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->cost(); ) ?>"  onkeyup="calc_from_cost(this);">
+					<input type="text" name="cost-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->cost(); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_cost(this);">
 				</td>
 				<td class="Markup"> 
-					<input type="text" name="markup-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->markup(); ) ?>"  onkeyup="calc_from_markup(this);">
+					<input type="text" name="markup-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->markup(); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);">
 				</td>
 				<td class="Price"> 
-					<input type="text" name="price-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->price(); ) ?>"  onkeyup="calc_from_price(this);">
+					<input type="text" name="price-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->price(); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);">
 				</td>
 				<td class="Discount"> 
 					<input type="radio" id="discount-<? echo ( $$variable{'Price'}->id(); ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id(); ) ?>" value='Y' 
@@ -100,22 +94,22 @@ border: 1px solid;
 <? endif ( @{$$variable{'PRICES_'.$$variable{'listid'}.'-'.$$variable{'equipment_index'}}} ) ?>
 		<? endwhile ( @$variable{'equipment_index','equipment'} = splice @{$$variable{'Equipment'.$$variable{'listid'}}},0,2; ) ?>
 			<tr>
-				<td class="Add"><input type="checkbox" name="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" /></td>
+				<td class="Add"><input type="checkbox" id="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" name="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" /></td>
 				<td class="Range"> 
-					<input type="text" name="min-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" />
-					<input type="text" name="max-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" />
+					<input type="text" name="min-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />
+					<input type="text" name="max-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />
 				</td>
 				<td class="Units"> 
-					<input type="text" name="units-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" />
+					<input type="text" name="units-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;" />
 				</td>
 				<td class="Cost"> 
-					<input type="text" name="cost-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="calc_from_cost(this);" />
+					<input type="text" name="cost-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_cost(this);" />
 				</td>
 				<td class="Markup"> 
-					<input type="text" name="markup-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="6"  onkeyup="calc_from_markup(this);" />
+					<input type="text" name="markup-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="6"  onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);" />
 				</td>
 				<td class="Price"> 
-					<input type="text" name="price-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="9"  onkeyup="calc_from_price(this);" />
+					<input type="text" name="price-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="9"  onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);" />
 				</td>
 				<td class="Discount"> 
 					<input type="radio" id="discount-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-NewY" name="rdbDiscount-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" value='Y' checked="checked"  />
@@ -132,7 +126,7 @@ border: 1px solid;
 	<input type="hidden" name="product_id" value="<? echo ( $$variable{'Product'}->id() ) ?>" />
 </form>
 <p class="buttons"><? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'SavePrices','save.gif',"document.PricesForm.btnFunction.value='Save';LoadContent('Prices','/administrator/products/_prices.html',Serialize(document.forms['PricesForm']) );",'','Save'),
+		ssi::writeButton( $log, $dbh, 'SavePrices','save.gif',"document.PricesForm.btnFunction.value='Save';new Ajax.Updater('Prices','_prices.html', { method: 'get', parameters: document.forms['PricesForm'].serialize() } );",'','Save'),
 		ssi::writeButton( $log, $dbh, 'ResetPrices','reset.gif','PricesForm.reset();','','Reset'),
 		); ) ?>
 </p>

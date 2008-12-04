@@ -1,0 +1,100 @@
+<div class="PageTitle">
+<h1>Timetracks</h1>
+<h2>History</h2>
+</div>
+<script type="text/javascript">
+<!--
+	function delete_confirm(form) {
+		var number_of_deleted_timetracks = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_timetracks += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_timetracks == 0 ) {
+			alert("To Delete Projects, click the checkbox beside the timetrack.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_timetracks + " timetracks from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_timetracks( form ) {
+		$('ProjectList').innerHTML = 'Please wait...';
+		new Ajax.Updater('ProjectList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<? if ( $session{'user_id'} ) ?>
+<form id="f1" name="f1" method="post" action="/timetrack/history.html">
+   <div class="ProjectHistory">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+			<div class="leftColumn">
+			<p>
+				<label>Company:</label>
+				<select name="company_id" id="company_id" onchange="load_timetracks(this.form);">
+					<option value="">All</option>
+					<? echo ( openprint::Company::get_dropdown( $session{'/timetrack/history.html?company_id'} ); ) ?>
+				</select>
+			</p>
+<? eval (
+	ssi::setup_date_select( '/timetrack/history.html', 'starting', -31 );
+
+	$session{'/timetrack/history.html?invoiced'} = '0' if ! $session{'/timetrack/history.html?invoiced'};
+	$session{'/timetrack/history.html?paid'} = '0' if ! $session{'/timetrack/history.html?paid'};
+	$session{'/timetrack/history.html?employee_id'} = $session{'user_id'} if ! exists $session{'/timetrack/history.html?employee_id'};
+) ?>
+			<p>
+				<label>Dates:</label>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'starting_start', join('-', @session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_start_day'} ), 'load_timetracks(this.form);' ); ) ?>
+					to 
+				</span>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'starting_end', join('-', @session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ), 'load_timetracks(this.form);' ); ) ?>
+				</span>
+			</p>
+			</div>
+			<div class="rightColumn">
+			<p><label>Invoiced?:</label>
+				<input type="radio" id="invoiced_1" name="invoiced" value="1" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '1' ); ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="invoiced_1">Yes</label>
+				<input type="radio" id="invoiced_0" name="invoiced" value="0" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '0' ); ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="invoiced_0">No</label>
+				<input type="radio" id="invoiced_0;1" name="invoiced" value="0;1" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '0;1' ) ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="invoiced_0;1">Both</label>
+			</p>
+			<p><label>Paid?:</label>
+				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '1' ); ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="paid_1">Yes</label>
+				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '0' ); ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="paid_0">No</label>
+				<input type="radio" id="paid_0;1" name="paid" value="0;1" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '0;1' ); ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="paid_0;1">Both</label>
+			</p>
+			<p>
+				<label>Employee:</label>
+				<select name="employee_id" id="employee_id" onchange="load_timetracks(this.form);">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)') ], $session{'/timetrack/history.html?employee_id'} ); ) ?>
+				</select>
+			</p>
+			</div>
+			<br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_timetracks(f1);", '', 'Show Results' ),
+					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'edit.html', 'New Timetrack' ),
+					); ) ?>
+			</p>
+		</fieldset>
+	</div>
+		<div id="ProjectList"><!--#include virtual="_history.html"--></div>
+	</form>
+<? else ( $session{'user_id'} ) ?>
+	Only logged in customers have a timetrack history.
+<? endif ( $session{'user_id'} ) ?>

@@ -1,9 +1,7 @@
-DROP SEQUENCE Project_Statuses_id_seq;
-CREATE SEQUENCE Project_Statuses_id_seq;
 
 DROP TABLE Project_Statuses;
 CREATE TABLE Project_Statuses (
-	id	INTEGER NOT NULL default nextval('Project_Statuses_id_seq'),
+	id	SERIAL NOT NULL,
 	name	TEXT NOT NULL,
 	sort	integer,
 	UNIQUE (name),

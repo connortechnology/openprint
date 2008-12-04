@@ -1,0 +1,215 @@
+html {
+	height: 100%;
+}
+body {
+	background-color: #C5C5C5;
+	margin: 0px;
+	padding: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-style: normal;
+	height: 100%;
+}
+
+.Header {
+	margin: 0px;
+	margin-top:10px;
+	margin-bottom: 10px;
+	background-color: #ffffff;
+	border: 1px solid black;
+}
+.Header .Content {
+	padding: 5px;
+}
+.Header A {
+	background-color: #fafafa;
+	text-decoration: none;
+}
+.Header IMG.Logo {
+	height: 85px;
+	border: none;
+}
+.Header p {
+	margin: 0px;
+	padding: 0px;
+}
+.Header p label {
+	width: 40px;
+	float: left;
+	text-align: right;
+}
+#Content {
+	height: auto;
+	margin: 0px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	background-color: #ffffff;
+	border: 1px solid black;
+	display: block;
+	overflow: hidden;
+}
+@media screen {
+	.Header {
+		width: 785px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	#Content {
+		width: 785px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+}
+@media print {
+	.Header {
+		width: auto;
+		height: 85px;
+	}
+	#Content {
+		width: auto;
+	}
+}
+.Content {
+	margin: 5px;
+	padding: 10px;
+	width: auto;
+}
+.MainBox {
+}
+.MainBox .Content {
+		margin: 0px;
+		padding: 10px;
+}
+@media print {
+	.Menu {
+		display: none;
+	}
+	.MainBox .Content {
+		padding: 10px;
+	}
+	.MainBox .ProjectTypeBox {
+		display: none;
+	}
+}
+@media screen {
+	.MainBox .Content {
+		margin-left: 190px;
+	}
+
+	.MainBox .ProjectTypeBox {
+		float: left;
+		width: 182px;
+		background-color: #eeeeee;
+		border-right: 1px solid;
+		margin: 0px;
+		clear: none;
+		padding: 5px;
+		padding-top: 10px;
+		height: 100%;
+		padding-bottom: 32767px;
+		margin-bottom: -32767px;
+	}
+}
+img#Butterfly {
+	margin-top: 10px;
+	width: 130px;
+}
+.ProjectTypes {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: normal;
+	padding: 3px;
+	padding-left: 20px;
+	margin: 0px;
+}
+.ProjectTypes li {
+	margin-left: 0px;
+}
+.ProjectTypes A {
+	color: #000000;
+	text-decoration: none;
+}
+.ProjectTypes a:hover {
+	color: #ff00ff;
+/*
+	text-decoration: underline;
+*/
+}
+
+.Estimate {
+	font-size: 10px;
+}
+#Estimate A IMG {
+	border: 1px solid black;
+}
+.Order {
+	padding: 5px;
+}
+.Content {
+	padding: 5px;
+}
+
+.Service {
+}
+.Service div.row {
+	width: 100%;
+	p\osition: relative;
+	clear: both;
+	margin-bottom: 5px;
+	padding-bottom: 5px;
+	float: none;
+}
+.Service div.row span.required {
+	margin-right: 10px;
+	float: left;
+}
+ .Service div.row span.label {
+	width: auto;
+	text-align: left;
+	float: left;
+}
+
+.Service div.row span.input {
+	margin-left: 10px;
+	width: 50%;
+	text-align: left;
+	float: right;
+	
+}
+div.row:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.row {height: 1%;}
+/* End hide from IE-mac */
+.PageTitle {
+	font-weight: bold;
+	font-size: 13pt;
+	margin-bottom: 5px;
+}
+.ProjectHistory fieldset p, .OrderHistory fieldset p {
+	padding-left: 100px;
+}
+.ProjectHistory fieldset p label, .OrderHistory fieldset p label {
+	width: 95px;
+	margin-left: -100px;
+}
+fieldset.SelectCustomer p {
+	padding-left: 100px;
+}
+fieldset.SelectCustomer p label {
+	width: 95px;
+	margin-left: -100px;
+}
+div#lastLogins {
+padding-top: .6em;
+margin-top: .6em;
+}
+img#HomeCollage {
+	float: right;
+}

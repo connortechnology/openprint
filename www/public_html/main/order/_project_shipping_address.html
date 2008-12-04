@@ -1,4 +1,9 @@
 <? eval (
+	$$variable{'ServiceIndex'} = $openprint::param{'service_id'} if $openprint::param{'service_id'} and ! $$variable{'ServiceIndex'};
+	$$variable{'ProjectIndex'} = $openprint::param{'project_id'} if $openprint::param{'project_id'} and ! $$variable{'ProjectIndex'};
+	$$variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} ) if $openprint::param{'project_id'} and ! $$variable{'Project'};
+	my $Company = new openprint::Company( $openprint::session{'company_id'} );
+
 	my $specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
 
 	if ( ! ( $$specs{'ToCompanyName'} and $$specs{'ToAddress1'} and $$specs{'ToCity'} and $$specs{'ToCountry'} ) ) {
@@ -44,6 +49,15 @@
 			'ToFax'             =>  'ToFax',
 			'ToEmail'           =>  'ToEmail',
 		);
+	$$specs{'ToCompanyName'} = $Company->business_name() if ! $$specs{'ToCompanyName'};
+	$$specs{'ToCompanyName'} = $Company->name() if ! $$specs{'ToCompanyName'};
+	$$specs{'ToAddress1'} = $Company->address1() if ! $$specs{'ToAddress1'};
+	$$specs{'ToAddress2'} = $Company->address2() if ! $$specs{'ToAddress2'};
+	$$specs{'ToCity'} = $Company->city() if ! $$specs{'ToCity'};
+	$$specs{'ToStateProvince'} = $Company->state() if ! $$specs{'ToStateProvince'};
+	$$specs{'ToCountry'} = $Company->country() if ! $$specs{'ToCountry'};
+	$$specs{'ToPostalCode'} = $Company->postalcode() if ! $$specs{'ToPostalCode'};
+	
 	foreach my $spec ( keys %shipping_fields ) {
 		$$variable{"$spec-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} = $$specs{$spec};
 	} # end foreach

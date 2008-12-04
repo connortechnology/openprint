@@ -27,9 +27,9 @@
 	<body>
 		<div class="Header">
 			<a style="float: left;" href="/employee/index.html"><img id="Logo" src="/images/logo.png" alt="West Star Printing"/></a>
-			<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+			<? if ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
 			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
-			<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+			<? endif ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
 			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
 			<br class="spacer"/>
 		</div>

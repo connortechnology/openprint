@@ -1,10 +1,10 @@
 /* 
 */
 
-DROP SEQUENCE PaperName_id_seq;
+DROP SEQUENCE IF EXISTS PaperName_id_seq;
 CREATE SEQUENCE PaperName_id_seq;
 
-DROP TABLE PaperNames;
+DROP TABLE IF EXISTS PaperNames;
 CREATE TABLE PaperNames (
 	id 	INTEGER NOT NULL default nextval('PaperName_id_seq'),
 	shortname	TEXT NOT NULL,
@@ -12,10 +12,10 @@ CREATE TABLE PaperNames (
 	PRIMARY KEY (id)
 );
 
-DROP SEQUENCE PaperFinish_id_seq;
+DROP SEQUENCE IF EXISTS PaperFinish_id_seq;
 CREATE SEQUENCE PaperFinish_id_seq;
 
-DROP TABLE PaperFinishes;
+DROP TABLE IF EXISTS PaperFinishes;
 CREATE TABLE PaperFinishes (
 		id  INTEGER NOT NULL default nextval('PaperFinish_id_seq'),
 		shortname   TEXT NOT NULL,
@@ -23,10 +23,10 @@ CREATE TABLE PaperFinishes (
 		PRIMARY KEY (id)
 		);
 
-DROP SEQUENCE PaperColour_id_seq;
+DROP SEQUENCE IF EXISTS PaperColour_id_seq;
 CREATE SEQUENCE PaperColour_id_seq;
 
-DROP TABLE PaperColours;
+DROP TABLE IF EXISTS PaperColours;
 CREATE TABLE PaperColours (
 		id  INTEGER NOT NULL default nextval('PaperColour_id_seq'),
 		shortname   TEXT NOT NULL,
@@ -34,10 +34,10 @@ CREATE TABLE PaperColours (
 		PRIMARY KEY (id)
 		);
 
-DROP SEQUENCE PaperWeight_id_seq;
+DROP SEQUENCE IF EXISTS PaperWeight_id_seq;
 CREATE SEQUENCE PaperWeight_id_seq;
 
-DROP TABLE PaperWeights;
+DROP TABLE IF EXISTS PaperWeights;
 CREATE TABLE PaperWeights (
 		id  INTEGER NOT NULL default nextval('PaperWeight_id_seq'),
 		shortname   TEXT NOT NULL,
@@ -45,9 +45,9 @@ CREATE TABLE PaperWeights (
 		PRIMARY KEY (id)
 		);
 
-DROP SEQUENCE PaperQuality_id_seq;
+DROP SEQUENCE IF EXISTS PaperQuality_id_seq;
 CREATE SEQUENCE PaperQuality_id_seq;
-DROP TABLE PaperQualities;
+DROP TABLE IF EXISTS PaperQualities;
 CREATE TABLE PaperQualities (
 		id  INTEGER NOT NULL default nextval('PaperQuality_id_seq'),
 		shortname   TEXT NOT NULL,
@@ -55,9 +55,9 @@ CREATE TABLE PaperQualities (
 		PRIMARY KEY (id)
 );
 
-DROP SEQUENCE StockPurposes_id_seq;
+DROP SEQUENCE IF EXISTS StockPurposes_id_seq;
 CREATE SEQUENCE StockPurposes_id_seq;
-DROP TABLE StockPurposes;
+DROP TABLE IF EXISTS StockPurposes;
 CREATE TABLE StockPurposes (
 	id  INTEGER NOT NULL default nextval('StockPurposes_id_seq'),
 	name   TEXT NOT NULL,
@@ -65,14 +65,14 @@ CREATE TABLE StockPurposes (
 );
 
 
-DROP SEQUENCE Paper_id_seq;
+DROP SEQUENCE IF EXISTS Paper_id_seq;
 CREATE SEQUENCE Paper_id_seq;
 
-DROP TABLE Papers;
+DROP TABLE IF EXISTS Papers;
 
 CREATE TABLE Papers (
 	id			INTEGER NOT NULL default nextval('Paper_id_seq'),
-	owner_id	INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Company (Index),
+	owner_id	INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (id),
 	manufacturer_id	INTEGER NOT NULL, FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id),
 	name_id		INTEGER NOT NULL, FOREIGN KEY (name_id) REFERENCES PaperNames (id),
 	finish_id	INTEGER NOT NULL, FOREIGN KEY (finish_id) REFERENCES PaperFinishes (id),

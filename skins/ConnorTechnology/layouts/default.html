@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<title>Connor Technology</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link type="text/css" rel="stylesheet" href="/css/common.css"/>
+		<link type="text/css" rel="stylesheet" href="/css/handheld.css" media="handheld"/>
+		<link type="text/css" rel="stylesheet" href="/css/print.css" media="print"/>
+		<link type="text/css" rel="stylesheet" href="/css/main.css"/>
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? if ( $r->uri() =~ /\/invoice/ ) ?>
+		<link href="/css/invoice.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/invoice/ ) ?>
+		<link rel="shortcut icon" href="/images/favicon.ico" />
+		<script type="text/javascript" src="/javascripts/buttons.js"></script>
+        <script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+        <script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
+        <script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
+        <script type="text/javascript" src="/javascripts/fastinit.js"></script>
+        <script type="text/javascript" src="/javascripts/tablekit.js?version=1.2.1"></script>
+
+		<script type="text/javascript">
+<!--
+		var startList = function() {
+			if (document.all && document.getElementById) {
+				var navRoot = document.getElementById("menubar");
+				if ( navRoot ) {
+					for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
+						var node = navRoot.childNodes[i];
+						if (node.nodeName=="LI") {
+							node.onmouseover=function() {
+								this.className+=' over';
+}
+							node.onmouseout=function() {
+this.className=this.className.replace(' over', '');
+}
+						} // end if
+					} // end for
+				} // end if
+			}
+		}
+		window.onload=startList;
+-->
+		</script>
+	</head>
+	<body>
+		<div id="top">
+			<div id="top-left">
+				<div id="top-right">
+				</div>
+			</div>
+		</div>
+		<div id="middle">
+			<div id="left">
+			<div id="right">
+			<div id="content"> 
+			<div id="header"><a href="/"><img id="header-logo" src="/images/logo.gif" alt="Connor Technology Home" width="344" height="71"/></a>
+				<div id="header-text" class="unprintable">
+					We sell and support <a class="orange" href="http://www.connortechnology.com/home/products/intelligentquote.html/">Intelligent Quote</a>, a web based estimation and workflow package that is geared to increase productivity and revenue...
+				</div>
+			</div>
+			<ul id="menubar" class="unprintable">
+<? if ( $session{user_id} ) ?>
+				<li class="off"><a href="#">Accounts</a>
+					<ul>
+						<li><a href="/administrator/managerial/company_profiles.html">Companies</a></li>
+						<li><a href="/administrator/managerial/user_profiles.html">Users</a></li>
+						<li><a href="/account/logout.html">Logout</a></li>
+					</ul>
+				</li>
+				<li class="off"><a href="/timetrack/history.html">Timetracks</a>
+<!--
+					<ul>
+						<li><a href="/todos/list">Todos</a></li>
+						<li><a href="/bugs/list">Bugs</a></li>
+					</ul>
+-->
+				</li>
+				<li class="off"><a href="#">Accounting</a>
+					<ul>
+						<li><a href="/invoice/history.html">Invoices</a></li>
+						<li><a href="/payment/history.html">Payments</a></li>
+						<li><a href="/paycheque/history.html">Paycheques</a></li>
+<!--
+						<li><a href="/ledger/list">Ledger</a></li>
+-->
+					</ul>
+				</li>
+				<li class="off"><a href="#">Marketing</a>
+					<ul>
+						<li><a href="/employee/marketing/email_campaigns.html">Email Campaigns</a></li>
+						<li><a href="/employee/marketing/email_templates.html">Email Templates</a></li>
+						<li><a href="/employee/marketing/categories.html">Categories</a></li>
+						<li><a href="/employee/marketing/surveys.html">Surveys</a></li>
+					</ul>
+				</li>
+				<li class="off"><a href="#">Pricing</a>
+					<ul>
+						<li><a href="/administrator/services/edit.html">Services</a></li>
+						<li><a href="/administrator/products/edit.html">Products</a></li>
+						<li><a href="/administrator/production/pricelists.html">Pricelists</a></li>
+					</ul>
+				</li>
+<? else ( $session{user_id} ) ?>
+<li class="off"><a href="/account/login.html">Login</a></li>
+				<li class="off"><a href="/home/services/show.html">Services</a>
+					<ul>
+						<li><a href="/home/services/it_support.html">IT Support</a></li>
+						<li><a href="/home/services/offsite_backups.html">Offsite Backups</a></li>
+						<li><a href="/home/services/webhosting.html">Web Hosting</a></li>
+						<li><a href="/home/services/webdesign.html">Website Design</a></li>
+					</ul>
+				</li>
+				<li class="off"><a href="/home/products/show.html">Products</a>
+					<ul>
+						<li><a href="/home/products/intelligentquote.html">IntelligentQuote</a></li>
+						<li><a href="/home/products/servers.html">Servers</a></li>
+					</ul>
+				</li>
+				<li class="off"><a href="/home/contact.html">Contact</a></li>
+				<li class="off"><a href="/home/sitemap.html">Sitemap</a></li>
+<? endif ( $session{user_id} ) ?>
+				<li style="width: auto;"><a style="width: auto;">&nbsp;</a></li>
+			</ul>
+			<div id="content2">
+				<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+			</div>
+		<div id="footer"><a href="/"><img id="bottom-logo" src="/images/bottom-logo.png" alt="Home" /></a></div>
+			</div><!--content-->
+			</div><!--right-->
+</div><!--left-->
+		</div>
+		<div id="bottom-left">
+			<div id="bottom-right">
+				<div id="bottom">
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

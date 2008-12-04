@@ -11,38 +11,59 @@ require openprint::Currency;
 require openprint::logs;
 use openprint ();
 
+my $debug = 1;
+use vars qw( %fields );
+
+%fields = (
+	'id'			=>	'id',
+	'name'			=>	'name',
+	'owner_id'		=>	'owner_id',
+	'currency_id'	=>	'currency_id',
+	'description'	=>	'description',
+);
+
 sub find {
 	my %params = @_;
 
+	my @values;
+	my $sql = q{SELECT * FROM Pricelists WHERE 1>0};
 	if ( $params{'id'} ) {
-		return new openprint::Pricelist( $params{'id'} );
-	} else {
-		my @values;
-		my $sql = q{SELECT index FROM Pricelists WHERE 1>0};
-		if ( $params{'name'} ) {
-			$sql .= q{ AND name =?};
-			push @values, $params{'name'};
-		} # end if
-		$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-		return map { new openprint::Pricelist( $_ ) } sql::execute( $openprint::log, $openprint::dbh, $sql, @values );
+		$sql .= q{ AND id =?};
+		push @values, $params{'id'};
 	} # end if
+	if ( $params{'name'} ) {
+		$sql .= q{ AND name =?};
+		push @values, $params{'name'};
+	} # end if
+	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	if ( ! $data ) {
+		$openprint::log->error("Error Loading Pricelist: ($sql) (@values): " . $openprint::dbh->errstr );
+		return;
+	} elsif ( $debug ) {
+		$openprint::log->debug("Loading Pricelist: ($sql) (@values) :" . @$data );
+	} # end if
+	return map { new openprint::Pricelist( $_->{id}, $_ ) } @$data;
 
 } # end sub find
 
 sub load {
-	my $self = shift;
-	@$self{'id','name','Description', 'currency_id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT index, name, Description, CurrencyIndex FROM Pricelists WHERE Index=?}, $$self{'id'} );
+	my ( $self, $data ) = @_;
+	if ( ! $data ) {
+		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists WHERE id=?', {}, $$self{'id'} );
+	} # end if
+	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
 
 sub delete {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
-    sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Service_Prices WHERE lngListIndex=?}, $$self{id} );
+    sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Service_Prices WHERE pricelist_id=?}, $$self{id} );
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Material_Prices WHERE lngListIndex=?}, $$self{id} );
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Paper_Prices WHERE lngListIndex=?}, $$self{id} );
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Product_Prices WHERE pricelist_id=?}, $$self{id} );
-    sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Pricelists WHERE Index=?}, $$self{id} );
+    sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Pricelists WHERE id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 	openprint::logs::insertLogRecord('9', "Price List Index: " . $$self{id},);
 } # end sub delete
@@ -55,14 +76,14 @@ sub save {
 		$$self{'currency_id'} = $$param{'Currency'};
 	} # end if
 	my @sql = (
-		'name', $$self{'name'}, 'Description', $$self{'description'}, 'CurrencyIndex', $$self{'currency_id'},
+		'name', $$self{'name'}, 'Description', $$self{'description'}, 'currency_id', $$self{'currency_id'},
 );
 	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('PricelistIndex_seq'::text)} );
-		sql::insert( $openprint::log, $openprint::dbh, 'Pricelists', 'Index', $$self{'id'}, @sql );
+		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('pricelists_id_seq'::text)} );
+		sql::insert( $openprint::log, $openprint::dbh, 'Pricelists', 'id', $$self{'id'}, @sql );
 		openprint::logs::insertLogRecord('30', "Price List Index: " . $$self{'id'} . " - " . $$self{'name'},);
 	} else { #save
-		sql::update( $openprint::log, $openprint::dbh, 'Pricelists', "Index = $$self{'id'}",@sql );
+		sql::update( $openprint::log, $openprint::dbh, 'Pricelists', ['Id=?', $$self{'id'}],@sql );
 		openprint::logs::insertLogRecord('31', "Price List Index: " . $$self{'id'} . " - " . $$self{'name'},);
 	} # end if
 } # end sub save
@@ -79,7 +100,7 @@ sub getPrices {
 	} # end if
 
 	if ( ( ! $type ) or $type eq 'Service' ) {
-		my @indexes = sql::execute( $openprint::log, $openprint::dbh, q{SELECT id FROM tbl_Service_Prices WHERE lngListIndex=?}, $$self{'id'} );
+		my @indexes = sql::execute( $openprint::log, $openprint::dbh, q{SELECT id FROM Service_Prices WHERE pricelist_id=?}, $$self{'id'} );
 		while ( @indexes ) {
 			push @prices, new openprint::ServicePrice( shift @indexes );
 		} # end while
@@ -99,17 +120,17 @@ sub getPrices {
 
 sub Next {
 	my $self = shift;
-	my $New = new openprint::Pricelist( sql::execute( $openprint::log, $openprint::dbh, q{SELECT MIN(Index) FROM pricelists WHERE Index > ?}, $$self{'id'} ) );
+	my $New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MIN(id) FROM pricelists WHERE id > ?}, $$self{'id'} ) );
 	if ( ! $New->id() ) {
-		$New = new openprint::Pricelist( sql::execute( $openprint::log, $openprint::dbh, q{SELECT MAX(Index) FROM pricelists WHERE Index <=?},  $$self{'id'} ) );
+		$New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MAX(id) FROM Pricelists WHERE id <=?},  $$self{'id'} ) );
 	} # end if
 	return $New;
 } # end sub next
 sub Previous {
 	my $self = shift;
-	my $New = new openprint::Pricelist( sql::execute( $openprint::log, $openprint::dbh, q{SELECT MAX(Index) FROM pricelists WHERE Index < ?}, $$self{'id'} ) );
+	my $New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MAX(Id) FROM pricelists WHERE Id < ?}, $$self{'id'} ) );
 	if ( ! $New->id() ) {
-		$New = new openprint::Pricelist( sql::execute( $openprint::log, $openprint::dbh, q{SELECT MIN(Index) FROM pricelists WHERE Index >=?},  $$self{'id'} ) );
+		$New = new openprint::Pricelist( sql::execute( $openprint::log, $openprint::dbh, q{SELECT MIN(Id) FROM pricelists WHERE Id >=?},  $$self{'id'} ) );
 	} # end if
 	return $New;
 } # end sub prev

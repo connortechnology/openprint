@@ -55,7 +55,7 @@
 			<td align="right" style="font-size: 11pt;">Price:</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= '<td style="text-align: right; font-size: 11pt;">'.$$variable{'Currency'}->symbol().$$variable{'Project'}->price( $qty_index ).'</td>';
+		$html .= '<td style="text-align: right; font-size: 11pt;">'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'Project'}->price( $qty_index ),2,2).'</td>';
 	} # end foreach qty_index
 	return $html;
 ) ?>

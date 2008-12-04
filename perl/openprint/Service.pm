@@ -91,7 +91,7 @@ sub delete {
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
 
 	my $ac = sql::start_transaction( $openprint::dbh );
-    sql::execute( undef, undef, q{DELETE FROM tbl_Service_Prices WHERE lngServiceIndex=?}, $$self{id} );
+    sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Services WHERE id=?}, $$self{id} );
 	openprint::logs::insertLogRecord('10', "Service Index: " . $$self{id},);
 	sql::end_transaction( $openprint::dbh, $ac );
@@ -138,13 +138,14 @@ sub find {
 } # end sub find
 
 sub get_price {
-    my ( $self, $quantity, $Equipment ) = @_;
+    my ( $self, $quantity, $Equipment, $Pricelist ) = @_;
 
-    my $list_id = openprint::pricing::get_pricelist_id();
-    my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{id}, $list_id, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
+	if ( ! $Pricelist ) {
+		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable ));
+	} # end if
+    my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
     return if ! %price;
 
-    my $Pricelist = new openprint::Pricelist( $list_id );
 	$price{'currency_id'} = $Pricelist->currency_id();
 	openprint::Currency::convert( \%price );
     return %price;

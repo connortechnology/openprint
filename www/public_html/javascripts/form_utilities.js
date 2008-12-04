@@ -614,20 +614,20 @@ function checkInputData( inputItem ) {
 function checkLoginData( usernameInput, passwordInput ) {
 	if( ! checkInputData(usernameInput) ) {
 		// Display login name error.
-		add_div( 'missingLoginMessage' );
+		$( 'missingLoginMessage' ).show();
 		usernameInput.focus();
 		return false;
 	} else {
-		remove_div( 'missingLoginMessage' );
+		$( 'missingLoginMessage' ).hide();
 	}
 
 	if( passwordInput && !checkInputData(passwordInput) ) {
 		// Display login password error.
-		add_div( 'missingPasswordMessage' );
+		$( 'missingPasswordMessage' ).show();
 		passwordInput.focus();
 		return false;
 	} else {
-		remove_div( 'missingPasswordMessage' );
+		$( 'missingPasswordMessage' ).hide();
 	}
 
 	usernameInput.form.submit();
@@ -757,13 +757,6 @@ function textarea_resize( element ) {
 	element.rows = countLines(element.value,element.cols);
 } // end function textarea_resize
 
-function set_today( e_y, e_m, e_d ) {
-	var d = new Date();
-	ddm_select_by_value( e_y, d.getYear() );
-	ddm_select_by_value( e_m, d.getMonth()+1 );
-	ddm_select_by_value( e_d, d.getDate() );
-} // end function set_today
-
 function do_decimals( number, precision ) {
 	var a = number.toString();
 	number = parseFloat( 1* a.replace(/[^\d\-\.]/g, '' ) );
@@ -883,3 +876,10 @@ function disableDiv(elm) {
 
 	document.getElementsByTagName("body")[0].appendChild(overlay);
 }
+
+function set_today( e_y, e_m, e_d ) {
+	var d = new Date();
+	ddm_select_by_value( e_y, d.getYear() );
+	ddm_select_by_value( e_m, d.getMonth()+1 );
+	ddm_select_by_value( e_d, d.getDate() );
+} // end function set_today

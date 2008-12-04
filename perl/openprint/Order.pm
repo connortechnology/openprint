@@ -11,6 +11,7 @@ use vars qw(%variable $log $dbh %fields);
 require sql;
 require openprint::logs;
 require openprint::OrderedProduct;
+require openprint::Payment;
 
 %fields = (
 	'id'						=> 'index',
@@ -51,7 +52,7 @@ require openprint::OrderedProduct;
 sub find {
 	my %params = @_;
 	my @values;
-	my $sql = 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE order_id=Index) AS paid FROM Orders WHERE 1>0';
+	my $sql = 'SELECT *,(SELECT SUM(amount) FROM Payments WHERE (deleted=false or deleted IS NULL) AND order_id=Index) AS paid FROM Orders WHERE 1>0';
 	if ( $params{'id'} ) {
 		$sql .= ' AND index=?';
 		push @values, $params{'id'};
@@ -153,7 +154,7 @@ sub copy {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE order_id=Index) AS paid FROM Orders WHERE Index=?', {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( 'SELECT *,(SELECT SUM(amount) FROM Payments WHERE (deleted=false or deleted IS NULL) AND order_id=Index) AS paid FROM Orders WHERE Index=?', {}, $$self{'id'} );
 $openprint::log->debug("Loaded order: " . $$self{'id'} );
 		if ( ( ! $data ) and $openprint::dbh->errstr() ) {
 			$openprint::log->error('Error loading Order: ' . $openprint::dbh->errstr() );
@@ -238,7 +239,7 @@ sub created_by_id {
 sub approve {
 	my $self = shift;
 # get taxes
-	$_ = q{SELECT dblStatePercent, dblHarmonisedPercent, dblFederalPercent FROM Taxes WHERE State=(SELECT strState FROM Orders WHERE Index=?)};
+	$_ = q{SELECT statetax, harmonisedtax, federaltax FROM Taxes WHERE State=(SELECT strState FROM Orders WHERE Index=?)};
 	my ( $pst_rate, $hst_rate, $gst_rate ) = sql::execute( $log, $dbh, $_, $$self{'id'} );
 
 	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
@@ -321,6 +322,7 @@ sub status {
 	} # end if
 	return $$self{'status'};
 } # end sub set_status
+
 # Adding Waiting For Pickup, Shipped, Picked Up
 sub update_status {
 	my $self = shift;
@@ -412,22 +414,24 @@ sub Currency {
 
 sub pay {
     my $self = shift;
-    $_ = 'SELECT CompanyIndex, currencyindex, curTotalSale, (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND order_id=Orders.Index) FROM Orders WHERE Index=?';
+    $_ = 'SELECT CompanyIndex, currencyindex, curTotalSale, (SELECT SUM(amount) FROM Payments WHERE (deleted=false or deleted IS NULL) AND completed=true AND order_id=Orders.Index) FROM Orders WHERE Index=?';
     my ( $company_index, $currency_id, $amount, $paid ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{id} );
     if ( $amount - $paid <= 0 ) {
         $self->update_status();
         return "Order $$self{id} is already paid!<br/>";
     } # end if
 
-    my ( $error ) = sql::insert( $openprint::log, $openprint::dbh, 'Payments',
-            'order_id',     $$self{id},
-            'company_id',   $$self{company_id},
-            'curAmount',        $amount - $paid,
-            'dtmDate',          'NOW()',
-            'strMethod',        'Manual',
-            'currency_id',      $$self{currency_id},
-            'strDescription',   'Order marked paid',
-            );
+	my $Payment = new openprint::Payment();
+    my $error = $Payment->save( {
+            'order_id'		=> $$self{id},
+			'recipient_id'	=>	new openprint::User( $openrpint::session{'user_id'} )->company_id(),
+            'payor_id'		=> $$self{company_id},
+            'amount'		=> $amount - $paid,
+            'method'		=> 'Manual',
+            'currency_id',	=> $$self{currency_id},
+            'memo'			=> 'Order marked paid',
+			'completed'		=> 1,
+            } );
     if ( ! $error ) {
         $self->update_status();
     } # end if

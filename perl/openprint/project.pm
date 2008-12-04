@@ -184,15 +184,6 @@ sub update_status {
 	return $Project->update_status( $variable );
 } # end sub update_project_status
 
-sub get_log {
-	my ( $log, $dbh, $project_id ) = @_;
-
-	$_ = q{SELECT Company_id, (SELECT strName FROM Company WHERE Index=Company_ID),
-		User_Id, (SELECT strFirstName || ' ' || strLastName FROM Users
-		WHERE Index=User_Id), to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), Description FROM Project_Log WHERE Project_Id=? ORDER BY dtmTimestamp};
-	return sql::execute( $log, $dbh, $_, $project_id );
-} # end sub get_log
-
 sub insert_into_log {
 	my ( $log, $dbh, $cust_id, $user_id, $project_id, $text ) = @_;
 	my $Project = new openprint::Project( $project_id );

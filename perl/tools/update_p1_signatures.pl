@@ -34,7 +34,7 @@ sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',7.598],
 sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',7.598], 'strvalue',37.990);
 }
 
-foreach my $Project ( openprint::Project::find('id'=>300385, 'id_start'=>300000,'company_id'=>6) ) {
+foreach my $Project ( openprint::Project::find('id_start'=>300000,'company_id'=>6) ) {
 	foreach my $sig_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		foreach my $side ( 'SideOne','SideTwo' ) {

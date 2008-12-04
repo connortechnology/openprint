@@ -2,10 +2,9 @@
 		if ( $param{'btnFunction'} eq 'Agree' ) {
 			$session{'AgreedToDisclaimer'} = 1;
 		} elsif ( $param{'btnFunction'} eq 'Disagree' ) {
-$openprint::log->debug("Logout");
 			openprint::login::logout();
-$openprint::log->debug("$session{user_type}");
 		} # end if
+$openprint::log->debug("$session{user_type}");
 	) ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -88,7 +87,7 @@ $openprint::log->debug("$session{user_type}");
 							<label>Currency:</label>
 							<select name="select_currency_id" onchange="this.form.submit();">
 								<? echo (
-										ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
+										ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $session{'Currency_id'} );
 								) ?>
 							</select>
 				<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
@@ -98,19 +97,19 @@ $openprint::log->debug("$session{user_type}");
 				<? echo ( ssi::writeButton( $log, $dbh, 'GoAdministrator', 'administrator.gif', '', '/administrator/', 'Administrators' ); ) ?>
 				<? endif ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
 						</p>
-<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 						<p>
 							<label>Company:</label>
 							<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
 							<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.submit();">
 								<option value="">Select a Company</option>
 								<? echo (
-										openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} );
+										openprint::Company::get_dropdown( $session{'company_id'} );
 										) ?>
 							</select>
 							<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'SelectCurrency.submit();', '', 'Submit' ); ) ?>
 						</p>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 						<input type="hidden" name="btnFunction" value="SelectCompany" />
 					</form>
                 </div>

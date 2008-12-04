@@ -1,0 +1,227 @@
+<? if ( $$variable{'Invoice'}->id() ) ?>
+<script type="text/javascript">
+    function add_timetrack( timetrack_id ) {
+        new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
+                method:'get',
+                parameters: {
+                    invoice_id:<? echo ( $$variable{'Invoice'}->id() ) ?>,
+                    timetrack_id: timetrack_id
+                },
+                onSuccess: function(transport) {
+                    new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
+                        method:'get',
+                        parameters: { invoice_id:<? echo ( $$variable{'Invoice'}->id() ) ?> }
+                        } );
+                },
+                onFailure: function(transport) {
+                    alert('failure to include');
+                }
+        } );
+    } // end function add_timetrack( invoice_id)
+    function del_timetrack( timetrack_id ) {
+        new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
+                method:'get',
+                parameters: {
+                    invoice_id:<? echo ( $$variable{'Invoice'}->id() ) ?>,
+                    timetrack_id: timetrack_id
+                },
+                onSuccess: function(transport) {
+                    new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
+                        method:'get',
+                        parameters: { invoice_id:<? echo ( $$variable{'Invoice'}->id() ) ?> }
+                        } );
+                },
+                onFailure: function(transport) {
+                    alert('failure to unpay');
+                }
+            } );
+    } // end function del_timetrack(invoice_id)
+
+</script>
+<? endif ( $$variable{'Invoice'}->id() ) ?>
+<? if ( $$variable{'error'} ) ?>
+<div class="error"><?error?></div>
+<? endif ( $$variable{'error'} ) ?>
+<form name="f1" id="f1" action="<? echo ( $$variable{'Invoice'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{'Invoice'}->id() ) ?>" />
+	<fieldset><legend><? echo ( $$variable{'Invoice'}->id() ? 'Editing Invoice ' . $$variable{'Invoice'}->id() : 'New Invoice' ) ?></legend>
+		<div class="leftColumn">
+			<p><label for="invoicee_id">Company:</label>
+				<select id="invoicee_id" name="invoicee_id">
+					<option value=""> select </option>
+					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
+				</select>
+			</p>
+<!--
+			<p><label>Created On:</label>
+			<span class="DateSelector"><? echo ( ssi::date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?></span>
+			</p>
+-->
+			<p><label>Due On:</label>
+			<span class="DateSelector"><? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?></span>
+			</p>
+			<p><label for="monthly_interest">Interest Rate</label>
+				<input type="text" name="monthly_interest" id="monthly_interest" value="<? echo ( $$variable{'Invoice'}->id() ? $$variable{'Invoice'}->monthly_interest() : $config{'Default Interest'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="2" />%
+			</p>
+			<p><label for="federaltaxrate">Federal Tax Rate</label>
+				<input type="text" name="federaltaxrate" id="federaltaxrate" value="<? echo ( $$variable{'Invoice'}->id() ? $$variable{'Invoice'}->federaltaxrate() : $config{'Default Federal Tax'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="2" />%
+			</p>
+			<p><label for="statetaxrate">State/Provincial Tax Rate</label>
+				<input type="text" name="statetaxrate" id="statetaxrate" value="<? echo ( $$variable{'Invoice'}->id() ? $$variable{'Invoice'}->statetaxrate() : $config{'Default State Tax'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="2" />%
+			</p>
+		</div>
+		<div class="rightColumn">
+			<p>
+				<label for="external_notes">External Notes</label>
+				<textarea cols="40" id="external_notes" name="external_notes" rows="<? echo ( $$variable{'Invoice'}->external_notes() ? scalar split("\n", $$variable{'Invoice'}->external_notes()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->external_notes() ) ?></textarea>
+			</p>
+			<p>
+				<label for="internal_notes">Internal Notes</label>
+				<textarea cols="40" id="internal_notes" name="internal_notes" rows="<? echo ( $$variable{'Invoice'}->internal_notes() ? scalar split("\n", $$variable{'Invoice'}->internal_notes()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
+			</p>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				if ( $$variable{'Invoice'}->id() ) {
+					if ( $$variable{'Invoice'}->deleted() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					} else {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+					} # end if
+					if ( $$variable{'Invoice'}->posted() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'unpost', 'unpost.gif', "f1.btnFunction.value='UnPost';f1.submit();", '', 'UnPost' );
+					} else {
+						$html .= ssi::writeButton( $log, $dbh, 'post', 'post.gif', "f1.btnFunction.value='Post';f1.submit();", '', 'Post' );
+					} # end if
+				} # end if
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+<? if ( $$variable{'Invoice'}->id() ) ?>
+<div id="InvoicedTimetracks">
+	<!--#include virtual="_invoiced_timetracks.html"-->
+</div>
+<div id="AvailableTimetracks">
+	<!--#include virtual="_available_timetracks.html"-->
+</div>
+<? if ( $$variable{'Invoice'}->Products() > 0 ) ?>
+	<fieldset><legend>Products</legend>
+		<table class="List">
+			<tr>
+				<th align="left">Product</th>
+				<th style="text-align: right; width: 100px;">Price</th>
+				<th style="text-align: right; width: 50px;">Qty</th>
+				<th style="text-align: right; width: 100px;">Total</th>
+				<th style="text-align: right; width: 100px;" class="unprintable">Actions</th>
+			</tr>
+			<? echo ( 
+				my $html = '';
+				my $$variable{'product_total'} = 0;
+				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
+					$html .= '<tr>';
+					$html .= sprintf('<td align="left">%s</td>', $Product->name() );
+
+					$html .= sprintf('<td align="right"><input type="text" id="product-price-%1$d" name="product-price-%1$d" value="%2$s"/></td>', $Product->id(), $Product->price() );
+					$html .= sprintf('<td align="right">%2$d</td>', $Product->id(), $Product->quantity() );
+					$html .= sprintf('<td align="right">%2$.2f</td>', $Product->id(), $Product->total() );
+					$html .= '<td align="right" class="unprintable">';
+$html .= ssi::writeButton( $log, $dbh, 'Remove'.$Product->id(), '','','Remove' );
+					$html .= '</td>';
+					$html .= '</tr>';
+					$$variable{'product_total'} += $Product->total();
+				} # end foreach Product
+				return $html;
+			) ?>
+			<tr class="totals">
+				<td colspan="3" align="right"><b>Totals:</b></td>
+				<td align="right"><b><? echo ( openprint::Currency::format( $$variable{'product_total'} ); ) ?></b></td>
+				<td class="unprintable">&nbsp;</td>
+			</tr>
+		</table>
+	</fieldset>
+<? endif ( $$variable{'Invoice'}->Products() > 0 ) ?>
+
+</form>
+<div class="leftColumn">
+	<fieldset><legend>Payments</legend>
+		<table>
+			<tr><th>ID</th><th align="left">When</th><th>Notes</th><th style="text-align:right;">Amount</th></tr>
+			<? echo ( 
+				my $html = '';
+				$$variable{'payment_total'} = 0;
+				foreach my $Payment ( $$variable{'Invoice'}->Payments() ) {
+					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr>', $Payment->id(), $Payment->received_on(), $Payment->memo(), $Payment->amount() );
+					$$variable{'payment_total'} += $Payment->amount();
+				} # end foreach
+				return $html;
+			) ?>
+			<tr>
+				<td align="right" colspan="3">Total:</td>
+				<td align="right"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
+			</tr>
+		</table>
+	</fieldset>
+</div>
+<div class="rightColumn">
+	<fieldset><legend>Taxes &amp; Totals</legend>
+		<table>
+			<tr>
+				<td align="right">Sub Total:</td>
+				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
+			</tr>
+			<? if ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
+			<tr>
+				<td align="right">GST:</td>
+				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
+			</tr>
+			<? endif ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
+			<? if ( $$variable{'Invoice'}->statetax() ne '' ) ?>
+			<tr>
+				<td align="right">PST:</td>
+				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->statetax() ); ) ?></td>
+			</tr>
+			<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>
+			<tr>
+				<td align="right"><b>Total:</b></td>
+				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></b></td>
+			</tr>
+			<? if ( $$variable{'Invoice'}->interest() ne '' ) ?>
+			<tr>
+				<td align="right"><b>Interest:</b></td>
+				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></b></td>
+			</tr>
+			<? endif ( $$variable{'Invoice'}->interest() ne '' ) ?>
+			<tr>
+				<td align="right">Amount Paid:</td>
+				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->paid() ); ) ?></td>
+			</tr>
+			<tr>
+				<td align="right"><b>Amount Owing</b>:</td>
+				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></b></td>
+			</tr>
+		</table>
+		<span style="float:right;">All amounts in <? echo ( $$variable{'Invoice'}->Currency()->name(); ) ?>.</span>
+	</fieldset>
+</div>
+<br class="spacer">
+<fieldset><legend>Logs</legend>
+	<table>
+		<tr><th>When</th><th>Who</th><th>Description</th></tr>
+		<? echo ( 
+			my $html = '';
+			foreach my $Log ( $$variable{'Invoice'}->Logs() ) {
+				$html .= sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>', 
+					Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time($Log->created_on())),
+					$Log->user_id() ? $Log->User()->name() : 'System', $Log->description() );
+			} # end foreach Log
+			return $html;
+		) ?>
+	</table>
+</fieldset>
+<? endif ( $$variable{'Invoice'}->id() ) ?>

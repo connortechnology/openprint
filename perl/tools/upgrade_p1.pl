@@ -73,6 +73,7 @@ foreach my $Service ( openprint::Service::find('name'=>'Imposition') ) {
 	} # end foreach
 } # end foreach
 
+if ( 0 ) {
 sql::update( undef, undef, 'Configuration', ['name=?', 'Press Run Overs Rate'], 'name','MakeReady Overs Rate' );
 foreach my $E ( openprint::Equipment::find('strid'=>'Web1') ) {
 	foreach my $Spec ( $E->Specifications() ) {
@@ -88,3 +89,4 @@ foreach my $E ( openprint::Equipment::find('strid'=>'Web1') ) {
 		} # end if
 	} # end foreach
 } # end foreach
+}

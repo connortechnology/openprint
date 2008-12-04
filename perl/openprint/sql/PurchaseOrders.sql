@@ -1,12 +1,17 @@
 
-DROP TABLE IF EXISTS  PurchaseOrders;
+DROP TABLE IF EXISTS PurchaseOrder_Logs;
+DROP TABLE IF EXISTS PurchaseOrder_Notifications;
+DROP TABLE IF EXISTS PurchaseOrder_ContentTypes;
+DROP TABLE IF EXISTS PurchaseOrder_Contents;
+DROP TABLE IF EXISTS PurchaseOrders;
+
 CREATE TABLE PurchaseOrders (
 	id	SERIAL NOT NULL,
 	currency_id	INTEGER NOT NULL, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
-	complany_id	INTEGER,
+	company_id	INTEGER,
 	supplier_id	INTEGER,
 	total		float,
-	created_by	INTEGER NOT NULL, FOREIGN KEY (created_by) REFERENCES Users (index),
+	created_by	INTEGER NOT NULL, FOREIGN KEY (created_by) REFERENCES Users (id),
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	subtotal	float,
@@ -16,7 +21,7 @@ CREATE TABLE PurchaseOrders (
 	statetax	float,
 	statetax_rate	float,
 	statetax_charge	boolean,
-	authorized_by	INTEGER, FOREIGN KEY (authorized_by) REFERENCES Users (index),
+	authorized_by	INTEGER, FOREIGN KEY (authorized_by) REFERENCES Users (id),
 	authorized_on	TIMESTAMP WITH TIME ZONE,
 	delivered_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	deleted		BOOLEAN NOT NULL default false,
@@ -45,8 +50,12 @@ CREATE TABLE PurchaseOrders (
 	PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS PurchaseOrder_ContentTypes;
-DROP TABLE IF EXISTS PurchaseOrder_Contents;
+
+CREATE TABLE PurchaseOrder_ContentTypes (
+	id SERIAL NOT NULL,
+	name	TEXT,
+	PRIMARY KEY (id)
+);
 
 CREATE TABLE PurchaseOrder_COntents (
 	id SERIAL NOT NULL,
@@ -61,14 +70,17 @@ CREATE TABLE PurchaseOrder_COntents (
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE PurchaseOrder_COntentTypes (
-	id SERIAL NOT NULL,
-	name	TEXT,
-	PRIMARY KEY (id)
-);
-
 CREATE TABLE PurchaseOrder_Notifications (
 	po_id	INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
-	user_id	INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (index),
+	user_id	INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
 	PRIMARY KEY (po_id, user_id)
+);
+
+CREATE TABLE PurchaseOrder_Logs (
+	id		SERIAL NOT NULL,
+	po_id	INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
+	user_id	INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
+	created_on	timestamp with time zone default NOW(),	
+	reason		TEXT,
+	PRIMARY KEY (id)
 );

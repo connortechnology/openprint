@@ -114,6 +114,13 @@
 			<label>JDF Name:</label>
 			<input type="text" name="jdf_name" value="<? hecho ( $$variable{'Equipment'}->jdf_name(); ) ?>"  />
 		</p>
+		<p>
+			<label>Location:</label>
+			<select id="location_id" name="location_id">
+				<option value="">select</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $$variable{'Equipment'}->location_id() ); ) ?>
+			</select>
+		</p>
 		</div>
 	</fieldset>
 <? if ( $$variable{'Equipment'}->id() ) ?>

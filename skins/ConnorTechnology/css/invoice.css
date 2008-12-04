@@ -1,0 +1,33 @@
+div.Invoicee {
+	float: left;
+	width: 40%;
+}
+div.Invoicer {
+	float: right;
+	width: 40%;
+}
+div.Notes {
+	float: left;
+	width: 60%;
+}
+div.Totals {
+	float: right;
+	width: 40%;
+}
+div#Invoice div.PageTitle {
+	position: absolute;
+	top:0px;
+	right: 10px;
+}
+td.Date, th.Date {
+	width: 110px;
+	text-align: right;
+}
+td.Price, th.Price {
+	width: 75px;
+	text-align: right;
+}
+td.Rate, th.Rate {
+	width: 75px;
+	text-align: right;
+}
