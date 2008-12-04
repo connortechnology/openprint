@@ -245,7 +245,7 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
-	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'});
+	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Contents
 
 sub send_to_vendor {

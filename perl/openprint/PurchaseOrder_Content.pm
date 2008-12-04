@@ -119,5 +119,15 @@ sub Type {
 	return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
 } # end sub Type
 
+sub units {
+	my ( $self ) = @_;
+	if ( $self->Type()->name() eq 'Roll Stock' ) {
+		return 'lbs';
+	} elsif ( $self->Type()->name() eq 'Sheet Stock' ) {
+		return 'sheets';
+	} # end if
+	return;
+} # end sub units
+
 1;
 __END__
