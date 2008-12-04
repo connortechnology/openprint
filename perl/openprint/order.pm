@@ -19,6 +19,7 @@ require openprint::OrderedProduct;
 require openprint::usergroup;
 require openprint::press_schedule;
 require openprint::Payment;
+require openprint::Tax;
 
 sub delete_order {
 	my ( $log, $dbh, $order_id ) = @_;
@@ -742,9 +743,8 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 	@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'Currency'} = $Currency;
 
-	# get taxes
-	$_ = q{SELECT statetax, harmonisedtax, federaltax FROM Taxes WHERE State=? AND Country=?};
-	my ( $pst_rate, $hst_rate, $gst_rate ) = sql::execute( $log, $dbh, $_, $Order->state(), $Order->country() );
+	my @Taxes = openprint::Tax::find('state'=>$Order->state(),'country'=>$Order->country() );
+	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
 	
 	my $Company = new openprint::Company( $openprint::session{'company_id'} );
 	my ( $pst_exempt, $gst_exempt ) = ( $Company->pst_exempt(), $Company->gst_exempt() );
@@ -827,8 +827,8 @@ sub finalise_order {
 
 		# Commit Project Information
 		# get taxes
-		$_ = q{SELECT Statetax, Harmonisedtax, federaltax FROM Taxes WHERE State=? AND Country=?};
-		my ( $pst_rate, $hst_rate, $gst_rate ) = sql::execute( $log, $dbh, $_, $Order->state(), $Order->country() );
+		my @Taxes = openprint::Tax::find('state'=>$Order->state(),'country'=>$Order->country() );
+		my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
 
 		$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
 		my ( $pst_exempt, $gst_exempt ) = sql::execute( $log, $dbh, $_, $openprint::session{'company_id'} );

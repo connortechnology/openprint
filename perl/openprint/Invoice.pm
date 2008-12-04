@@ -13,6 +13,7 @@ require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
 require openprint::InvoiceLog;
+require openprint::Tax;
 
 my $debug = 1;
 
@@ -294,9 +295,12 @@ sub federaltax {
 		if ( ! $self->Invoicer()->gst_number() ) {
 			return '';
 		} # end if
-		my ( $tax ) = sql::execute( undef, undef, 'SELECT Federaltax FROM Taxes WHERE State=? AND Country=?', $self->Invoicee()->get('state','country') );
-		return '' if ! $tax;
-		return $self->subtotal() * ( $tax/100 );
+		my @Taxes = openprint::Tax::find('country'=>$self->Invoicee()->country(), 'state'=>$self->Invoicee()->state() );
+		if ( ! @Taxes ) {
+			return '';
+		} else {
+			return $self->subtotal() * ( $Taxes[0]->federaltax_rate()/100 );
+		}
 	} # end if
 	return $$self{'federaltax'};
 } # end sub federaltax
@@ -310,9 +314,12 @@ sub statetax {
 		if ( ! $self->Invoicer()->pst_number() ) {
 			return '';
 		} # end if
-		my ( $tax ) = sql::execute( undef, undef, 'SELECT Statetax FROM Taxes WHERE State=? AND Country=?', $self->Invoicee()->get('state','country') );
-		return '' if ! $tax;
-		return $self->subtotal() * ($tax/100 );
+		my @Taxes = openprint::Tax::find('country'=>$self->Invoicee()->country(), 'state'=>$self->Invoicee()->state() );
+		if ( ! @Taxes ) {
+			return '';
+		} else {
+			return $self->subtotal() * ($Taxes[0]->statetax_rate()/100 );
+		} # end if
 	} # end if
 	return $$self{'statetax'};
 } # end sub statetax

@@ -1,5 +1,5 @@
-<form method="post" action="taxes.html" name="f1">
-	<table class="List">
+<form method="post" action="taxes.html" id="f1" name="f1">
+	<table class="List sortable">
 		<tr>
 			<th align="left">Country</th>
 			<th align="left">State/Province</th>
@@ -9,41 +9,35 @@
 			<th width="20">&nbsp;</th>
 		</tr>
 		<? eval (
-				$_ = 'SELECT Country, State, dblFederalPercent, dblStatePercent, dblHarmonisedPercent FROM Taxes ORDER BY lower(State)';
-				@{$$variable{'TAXES'}} = sql::execute( $log, $dbh, $_ );
+				@{$$variable{'TAXES'}} = openprint::Tax::find('order'=>'lower(state)');
 				) ?>
-		<? while ( @$variable{'country','state','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
-		<tr<?rowclass?>>
-			<td><? echo ( $countries::countries{$$variable{'country'}} ? $countries::countries{$$variable{'country'}} : $$variable{'country'} ) ?></td>
+		<? while ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
+		<tr>
+			<td><input type="checkbox" id="chkDelete-<? echo ( $$variable{'Tax'}->id() ) ?>" name="chkDelete-<? echo ( $$variable{'Tax'}->id() ) ?>" /></td>
+			<td><? echo ( $countries::countries{$$variable{'Tax'}->country()} ? $countries::countries{$$variable{'Tax'}->country()} : $$variable{'Tax'}->country() ) ?></td>
 			<td><? echo (
-				if ( $$variable{'country'} eq 'CA' and $provinces::provinces{$$variable{'state'}} ) {
-					return $provinces::provinces{$$variable{'state'}};
-				} elsif ( $$variable{'country'} eq 'US' and $states::states{$$variable{'state'}} ) {
-					return $states::states{$$variable{'state'}};
+				if ( $$variable{'Tax'}->country() eq 'CA' and $provinces::provinces{$$variable{'Tax'}->state()} ) {
+					return $provinces::provinces{$$variable{'Tax'}->state()};
+				} elsif ( $$variable{'Tax'}->country() eq 'US' and $states::states{$$variable{'Tax'}->state()} ) {
+					return $states::states{$$variable{'Tax'}->state()};
 				} else {
-					return $$variable{'state'};
+					return $$variable{'Tax'}->state();
 				} # end if
 				) ?></td>
 			<td> 
-				<input type="text" name="txtFST<?state?>" value="<?gst?>" />
+				<input type="text" name="federaltax_rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->federaltax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</td>
 			<td> 
-				<input type="text" name="txtSST<?state?>" value="<?pst?>" />
+				<input type="text" name="statetax_rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->statetax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</td>
-			<td> 
-				<input type="text" name="txtHST<?state?>" value="<?hst?>" />
-			</td>
-			<td><input type="checkbox" id="chkDelete-<?country?>-<?state?>" name="chkDelete-<?country?>-<?state?>" /></td>
 		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-		<? endwhile ( @$variable{'country','state','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
+		<? endwhile ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
 		<tr class="totals">
-			<td><input type="text" name="txtCountryNew"/></td>
-			<td><input type="text" name="txtStateNew"/></td>
-			<td><input type="text" name="txtFSTNew" /></td>
-			<td><input type="text" name="txtSSTNew" /></td>
-			<td><input type="text" name="txtHSTNew" /></td>
 			<td>&nbsp;</td>
+			<td><input type="text" name="country-New"/></td>
+			<td><input type="text" name="state-New"/></td>
+			<td><input type="text" name="federaltax_rate-New" /></td>
+			<td><input type="text" name="statetax_rate-New" /></td>
 		</tr>
 	</table>
 	<p class="buttons"> 

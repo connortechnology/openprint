@@ -12,6 +12,7 @@ require sql;
 require openprint::logs;
 require openprint::OrderedProduct;
 require openprint::Payment;
+require openprint::Tax;
 
 %fields = (
 	'id'						=> 'index',
@@ -239,8 +240,8 @@ sub created_by_id {
 sub approve {
 	my $self = shift;
 # get taxes
-	$_ = q{SELECT statetax, harmonisedtax, federaltax FROM Taxes WHERE State=(SELECT strState FROM Orders WHERE Index=?)};
-	my ( $pst_rate, $hst_rate, $gst_rate ) = sql::execute( $log, $dbh, $_, $$self{'id'} );
+	my @Taxes = openprint::Tax::find('state'=>$self->state() );
+	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
 
 	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
 	my ( $pst_exempt, $gst_exempt ) = sql::execute( $log, $dbh, $_, $openprint::session{'company_id'} );

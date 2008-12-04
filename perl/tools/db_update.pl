@@ -1517,6 +1517,16 @@ if ( ! $data ) {
 		$dbh->do($st);
 	}
 } 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Taxes LIMIT 1', {} );
+if ( ! $data ) {
+} else {
+	if ( exists $$data{'dblfederalpercent'} ) {
+		$dbh->do( 'ALTER TABLE Taxes rename column dblfederalpercent to federaltax' );
+	} # end if
+	if ( exists $$data{'dblstatepercent'} ) {
+		$dbh->do( 'ALTER TABLE Taxes rename column dblstatepercent to statetax' );
+	} # end if
+}
 $dbh->disconnect();
 1;
 __END__
