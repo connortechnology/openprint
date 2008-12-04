@@ -50,6 +50,13 @@ if ( $version < $new_version ) {
 } # end if
 
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+if ( ! $data ) {
+} else {
+	if ( exists $$data{'lngindex'} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment rename  column lngindex to id;');
+	} # end if
+} # end if
 
 my $new_version = 1274;
 if ( $version < $new_version ) {
@@ -448,6 +455,22 @@ if ( $version < 1900 ) {
 	sql::insert( undef, undef, 'database_info', 'version', 1900, 'backup', $backup );
 	$version = 1900;
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Prices LIMIT 1', {} );
+if ( $data ) {
+my $ac = sql::start_transaction( $dbh );
+	$dbh->do('ALTER TABLE tbl_Service_Prices RENAME TO Service_Prices');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lnglistindex TO pricelist_id');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngserviceindex TO service_id');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngequipmentindex TO equipment_id');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblcost TO cost');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblmarkup TO markup');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblprice TO price');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN strunits TO units');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN ysndiscountable TO discountable');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmin TO min');
+	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmax TO max');
+sql::end_transaction( $dbh, $ac );
+} # end if
 if ( $version < 1901 ) {
 	print "Updating to version 1901\n";
 	my $ac = sql::start_transaction( $dbh );
@@ -523,16 +546,13 @@ if ( $version < 1902 ) {
 $dbh->do(q{alter table papers add minimum_order integer}) if ! exists $$data{'minimum_order'};
 $dbh->do(q{alter table papers add inventory_number	text}) if ! exists $$data{'inventory_number'};
 $dbh->do(q{alter table papers add full_packages boolean}) if ! exists $$data{'full_packages'};
-if ( $version < 1905 ) {
-	print "Updating to version 1905\n";
-	my $ac = sql::start_transaction( $dbh );
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Folds LIMIT 1', {} );
+if ( ! $data ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
-	die if sql::insert( undef, undef, 'database_info', 'version', 1905, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1905;
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment_Specifications LIMIT 1', {} );
 if ( $data ) {
@@ -1318,22 +1338,6 @@ $dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
 sql::end_transaction( $dbh, $ac );
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Prices LIMIT 1', {} );
-if ( $data ) {
-my $ac = sql::start_transaction( $dbh );
-	$dbh->do('ALTER TABLE tbl_Service_Prices RENAME TO Service_Prices');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lnglistindex TO pricelist_id');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngserviceindex TO service_id');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngequipmentindex TO equipment_id');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblcost TO cost');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblmarkup TO markup');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblprice TO price');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN strunits TO units');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN ysndiscountable TO discountable');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmin TO min');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmax TO max');
-sql::end_transaction( $dbh, $ac );
-} # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ordered_products LIMIT 1', {} );
 if ( $data and ! exists $$data{'project_id'} ) {
 print "Adding project_id to ordered_Products\n";
@@ -1486,13 +1490,6 @@ if ( ! $data ) {
 	} # end if
 	if ( ! exists $$data{'deleted'} ) {
 		$dbh->do('ALTER TABLE Payments add deleted boolean NOT NULL default false;');
-	} # end if
-} # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
-if ( ! $data ) {
-} else {
-	if ( exists $$data{'lngindex'} ) {
-		$dbh->do('ALTER TABLE tbl_Equipment rename  column lngindex to id;');
 	} # end if
 } # end if
 
