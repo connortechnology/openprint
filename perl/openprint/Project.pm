@@ -963,6 +963,7 @@ sub Order {
 sub signatures {
 	my $self = shift;
 	if ( ! exists $$self{'signatures'} ) {
+$openprint::log->debug('no sigs, loading');
 		my $services = $self->services();
 		if ( $$services{'AdditionalSignature'} ) {
 			@{$$self{'signatures'}} = @{$$services{'AdditionalSignature'}};
@@ -980,7 +981,8 @@ sub signatures {
 		return @sigs;
 	} # end if
 	if ( $$self{'signatures'} ) {
-	return @{$$self{'signatures'}};
+$openprint::log->debug(' sigs' . @{$$self{'signatures'}});
+		return @{$$self{'signatures'}};
 	} # end if
 	return ();
 } # end sub signatures
