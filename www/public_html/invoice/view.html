@@ -13,6 +13,9 @@
 					if ( $$variable{'Invoice'}->deleted() ) {
 						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
 					} else {
+						if ( Date::Parse::str2time($$variable{'Invoice'}->due_on()) < time ) {
+							$html .= ssi::writeButton( $log, $dbh, 'interest', 'interest.gif', "f1.action='view.html';f1.btnFunction.value='Calculate Interest';f1.submit();", '', 'Calculate Interest' );
+						} # end if
 						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
 						$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?invoice_id='.$$variable{'Invoice'}->id(), 'Edit' );
 						$html .= ssi::writeButton( $log, $dbh, 'send', 'send.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
@@ -97,7 +100,7 @@
 			</tr>
 			<? echo ( 
 				my $html = '';
-				my $$variable{'product_total'} = 0;
+				$$variable{'product_total'} = 0;
 				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
 					$html .= '<tr>';
 					$html .= sprintf('<td align="left">%s</td>', $Product->name() );

@@ -22,9 +22,9 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
-*session = \%session;
-*param = \%param;
-*config = \%config;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
 
 sub configuration {
 
@@ -256,7 +256,7 @@ sub user_profiles {
 	} # end if
 	$variable{'selectUserCategories'} = ssi::make_select( \@available_categories, \@users_categories );
 
-} # end sub edit
+} # end sub user_profiles
 
 
 sub company_profiles {
@@ -427,7 +427,7 @@ if ( 0 ) {
 	} # end if
 
 	# Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
-	my @available_categories = sql::execute( $log, $dbh, 'SELECT id, name FROM Marketing_Categories' );
+	my @available_categories = map { $_->id(), $_->name() } openprint::MarketingCategory::find();
 	
 	# get categories this customer is in we do it this way to limit databse transaction to 2.
 	my @customers_categories;
@@ -448,7 +448,7 @@ if ( 0 ) {
 		( $payments ) = misc::sum( map { $_->amount() } openprint::Payment::find('completed'=>1, 'payor_id'=>$index, 'recipient_id'=>$session{'company_id'} ) );
 	} # end if
 
-	$variable{'CreditBalance'} = '$ '.sprintf( "%.2f", ( $total - $payments ) );
+	$variable{'CreditBalance'} = '$ '.sprintf( '%.2f', ( $total - $payments ) );
 	if ( $variable{'txtCreditLimit'} < ($total - $payments) ) {
 		$variable{'CreditRemaining'} = '$ 0.00';
 	} else {

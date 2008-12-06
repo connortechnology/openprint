@@ -6,7 +6,7 @@
 		ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id') );
 	} # end if
 
-$$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
+$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Invoices'}} = ();
 	foreach my $Invoice ( openprint::Invoice::find( 
 		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ),
@@ -26,7 +26,7 @@ $$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$varia
 		} # end if
 		push @{$$variable{'Invoices'}}, $Invoice;
 		$$variable{'subtotal'} += $Invoice->subtotal();
-		$$variable{'gst_total'} += $Invoice->gst();
+		$$variable{'federaltax_total'} += $Invoice->federaltax();
 		$$variable{'total'} += $Invoice->total();
 		$$variable{'interest_total'} += $Invoice->interest();
 		$$variable{'owing_total'} += $Invoice->owing();
@@ -71,7 +71,7 @@ $$variable{'subtotal'} = $$variable{'gst_total'} = $$variable{'total'} = $$varia
 		<tr class="totals">
 			<td colspan="3">Totals:</td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'gsttotal'} ); ) ?></td>	
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'federaltax_total'} ); ) ?></td>	
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>	
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?></td>	
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'owing_total'} ); ) ?></td>	

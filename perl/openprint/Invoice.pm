@@ -14,6 +14,7 @@ require openprint::Company;
 require openprint::Service;
 require openprint::InvoiceLog;
 require openprint::Tax;
+require openprint::Invoiced_Product;
 
 my $debug = 1;
 
@@ -252,6 +253,7 @@ sub subtotal {
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
 		$$self{'subtotal'} = 0;
 		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack::find('invoice_id'=>$$self{id});
+		map { $$self{'subtotal'} += $_->price() } openprint::Invoiced_Product::find('invoice_id'=>$$self{id});
 	} # end if
 	return $$self{'subtotal'};
 } # end sub subtotal
@@ -295,12 +297,7 @@ sub federaltax {
 		if ( ! $self->Invoicer()->gst_number() ) {
 			return '';
 		} # end if
-		my @Taxes = openprint::Tax::find('country'=>$self->Invoicee()->country(), 'state'=>$self->Invoicee()->state() );
-		if ( ! @Taxes ) {
-			return '';
-		} else {
-			return $self->subtotal() * ( $Taxes[0]->federaltax_rate()/100 );
-		}
+			return $self->subtotal() * ( $self->federaltaxrate()/100 );
 	} # end if
 	return $$self{'federaltax'};
 } # end sub federaltax
@@ -314,12 +311,7 @@ sub statetax {
 		if ( ! $self->Invoicer()->pst_number() ) {
 			return '';
 		} # end if
-		my @Taxes = openprint::Tax::find('country'=>$self->Invoicee()->country(), 'state'=>$self->Invoicee()->state() );
-		if ( ! @Taxes ) {
-			return '';
-		} else {
-			return $self->subtotal() * ($Taxes[0]->statetax_rate()/100 );
-		} # end if
+		return $self->subtotal() * ($self->statetaxrate()/100 );
 	} # end if
 	return $$self{'statetax'};
 } # end sub statetax
@@ -394,6 +386,10 @@ sub send {
 	return 'Sent.';
 
 } # end sub send
+
+sub Products {
+	return openprint::Invoiced_Product::find('invoice_id'=>$_[0]{'id'});
+} # end sub Products
 
 1;
 

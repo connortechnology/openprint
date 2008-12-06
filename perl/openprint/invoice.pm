@@ -12,6 +12,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *r = \$openprint::r;
 
 require openprint::Invoice;
+require openprint::Invoice_Interest;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Save' ) {
@@ -65,6 +66,60 @@ sub edit {
 } # end sub edit
 sub view {
 	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
+	if ( $param{'btnFunction'} eq 'Calculate Interest' ) {
+		if ( ! $variable{'Invoice'}->monthly_interest() ) {
+			$variable{'error'} .= 'Invoice has no monthly interest rate!';
+		} elsif ( ! $variable{'Invoice'}->due_on() ) {
+			$variable{'error'} .= 'Invoice has no due date!';
+		} # end if
+
+		my $changed = 0;
+
+		my ( $year, $month, $day ) = $variable{'Invoice'}->due_on() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
+		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
+		while ( Date::Calc::Date_to_Time( $year, $month, $day,0, 0, 0 ) <= time ) {
+
+			my $paid = 0;
+			my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);
+			foreach my $P ( openprint::Payment::find('invoice_id'=>$variable{'Invoice'}->id(), 'received_on_end'=>$date_string )) {
+				next if $P->compounded_on() eq $date_string;
+				$paid += $P->amount();
+			} # end foreach
+
+			# Includes tax
+			my $total = $variable{'Invoice'}->total();
+			foreach my $I ( openprint::Invoice_Interest::find('invoice_id'=>$variable{'Invoice'}->id(), 'compounded_on_end'=>$date_string )) {
+				next if $I->compounded_on() eq $date_string;
+				$total += $I->amount();
+			} # end foreach InvoiceInterest
+			if ( ! openprint::Invoice_Interest::find('invoice_id'=>$variable{'Invoice'}->id(), 'compounded_on'=>$date_string ) ) {
+				my $I = new openprint::Invoice_Interest();
+				$_ = $I->save({
+						'invoice_id'=>$variable{'Invoice'}->id(),
+						'amount'	=>	sprintf('%.2f', ($total - $paid) * $variable{'Invoice'}->monthly_interest()/100),
+						'compounded_on'	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
+						});
+				if ( ! $_ ) {
+					$variable{'Invoice'}->add_to_log(sprintf('Added %s%.2f interest for %s', 
+								$variable{'Invoice'}->Currency()->symbol(), 
+								$I->amount(),
+								$date_string,
+								));
+				} else {
+					$variable{'error'} .= $_;
+					last;
+				} # end if
+				$changed = 1;
+			} # end if No interest for this date.
+			($year,$month,$day) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
+		} # end while
+
+		if ( $changed ) {
+			delete $variable{'Invoice'}{'interest'};
+			$variable{'Invoice'}->interest();
+			$variable{'Invoice'}->save();
+		} # end if
+	} # end if
 } # end sub view
 sub _invoiced_timetracks {
 	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
