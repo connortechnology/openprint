@@ -15,8 +15,9 @@
 
 		@{$$variable{'PurchaseOrders'}} = ();
 		foreach my $PO ( openprint::PurchaseOrder::find( %search ) ) {
-			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' and ! $PO->authorized_by();
-			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' and $PO->authorized_by();
+			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
+			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' and $PO->authorized() ne '0';
+			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'U' and $PO->authorized() ne '';
 			push @{$$variable{'PurchaseOrders'}}, $PO;
 		} # end foreach PO
 	} # end if
@@ -34,7 +35,7 @@
 		<th width="110" style="text-align: left;">Date</th>
 		<th style="text-align: left;">Supplier</th>
 		<th style="text-align: left;">Created By</th>
-		<th style="text-align: left;">Authorized By</th>
+		<th style="text-align: left;">Authorized/Declined By</th>
 		<th width="110" style="text-align: right;">Total</th>
 	</tr>
 	<? echo ( 
@@ -42,11 +43,11 @@
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
 			$html .= q`<tr onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`;
 			if ( $session{'user_type'} eq 'A' ) {
-				$html .= '<td><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
+				$html .= '<td><input type="checkbox" id="po_id" name="po_id" value="'.$PO->id().'"/></td>';
 			} # end if
 
 			$html .= sprintf( q`
-				<td>&nbsp;<a href="purchase_order_view.html?po_id=%1$d">%1$d</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%1$d</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%2$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%3$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%4$s</a></td>
@@ -61,6 +62,7 @@
 		<? echo (
 			my $html;
 			if ( $session{'user_type'} eq 'A' ) {
+				$html .= ssi::writeButton($log, $dbh, 'Decline', 'decline.gif', "open_decline_window(f1);", '', 'Decline Selected' );
 				$html .= ssi::writeButton($log, $dbh, 'Authorize', 'authorize.gif', "f1.btnFunction.value='Authorize';f1.submit();", '', 'Authorize Selected' );
 				$html .= ssi::writeButton($log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete Selected' );
 			} # end if

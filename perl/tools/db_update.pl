@@ -268,6 +268,10 @@ if ( ! $data ) {
 	if ( ! exists $$data{'statetax_charge'} ) {
 		$dbh->do('ALTER TABLE purchaseorders add statetax_charge BOOLEAN');
 	} # end if
+	if ( ! exists $$data{'authorized'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add authorized BOOLEAN');
+		$dbh->do('UPDATE purchaseorder set authorized=true WHERE authorized_on IS NOT NULL');
+	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );
 if ( ! $data ) {
