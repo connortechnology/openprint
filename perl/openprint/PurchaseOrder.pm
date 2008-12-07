@@ -412,7 +412,7 @@ sub authorize {
 	$L->save({
 			'po_id'		=> $$self{'id'},
 			'user_id'	=> $session{'user_id'},
-			'reason'	=> 'Authorized by ' . new openprint::User( $session{'user_id'} )->name() . ': ' . $reason,
+			'reason'	=> 'Authorized by ' . new openprint::User( $session{'user_id'} )->name(),
 			});
 	return $self->save();
 } # end sub authorize
@@ -421,7 +421,7 @@ sub decline {
 	my ( $self, $reason ) = @_;
 	$$self{'authorized'} = 0;
 	$$self{'authorized_by'} = $session{'user_id'};
-	$$self{'authorized_on'} = undef;
+	$$self{'authorized_on'} = 'NOW()';
 	my $L = new openprint::PurchaseOrder_Log();
 	$L->save({
 			'po_id'		=> $$self{'id'},

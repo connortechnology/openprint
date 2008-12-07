@@ -211,13 +211,20 @@
 		<br/>
 		<br/>
 			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?></i><br/></div>
-<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+<? if ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 		<br/>
 		<br class="spacer"/>
 		<hr/>
 			<div class="leftColumn"><i>Authorized by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></i></div>
 			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
-<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+<? endif ( $$variable{'PurchaseOrder'}->authorized() ) ?>
+<? if ( $$variable{'PurchaseOrder'}->authorized() eq '0' ) ?>
+		<br/>
+		<br class="spacer"/>
+		<hr/>
+			<div class="leftColumn"><i>Declined by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></i></div>
+			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
+<? endif ( $$variable{'PurchaseOrder'}->authorized() eq '0' ) ?>
 		</div>
 		<br class="spacer"/>
 		<fieldset><legend>Logs</legend>
