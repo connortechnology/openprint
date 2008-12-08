@@ -35,8 +35,8 @@ function calc( formName, force ) {
 					<label class="radio" for="chkOverrideDimensions">Override</label>
 					<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 				</p>
-			</div>
 <? if ( $$variable{'Group'} == 1 ) ?>
+			</div>
 			<div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
 			<? echo (
 				my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );

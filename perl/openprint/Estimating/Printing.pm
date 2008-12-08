@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 my %folding_cache;
@@ -2276,7 +2276,9 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 
 			my $services = $Project->services();
 			my %PlateCounts = %$PlateCounts;
-			#$imp = $imp->copy();
+
+			# Imp still gets modified in calc_price, Folding adds Folder member
+			$imp = $imp->copy();
 #my $time = gettimeofday();
 			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
@@ -2387,7 +2389,7 @@ if ( 1 ) {
 
 						$new_specs{'PreviousStockType'} = $imp->Paper()->type();
 						$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
-						if ( $imp->Press()->id() == $imp->Folder()->id() ) {
+						if ( $$imp{'Folder'} and ( $imp->Press()->id() == $$imp{'Folder'}->id() ) ) {
 							$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
 						} # end if	
 						$new_specs{'Impositions'} = $$price{'Impositions'};
@@ -2795,6 +2797,7 @@ sub calc_price {
 			#$$Imposition{'folding_results'} = \%folding_results;
 		} # end if
 
+		delete $$Imposition{'Folder'};
 		if ( ( $folding_results{'Status'} eq 'uncalculated' ) or ! $folding_results{'Equipment'} ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
 			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
