@@ -566,3 +566,6 @@ form.inplaceeditor-form input[type="submit"] { /* The submit button */
 
 form.inplaceeditor-form a { /* The cancel link */
 }
+#Versions {
+display: none;
+}

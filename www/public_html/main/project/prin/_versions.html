@@ -1,13 +1,13 @@
-<fieldset><legend>Versions</legend>
+<fieldset id="Versions"><legend>Versions</legend>
 This feature does not work yet<br class="spacer"/>
 	<p>
 		<label># of versions:</label>
 		<input type="text" name="versions" id="versions" value="<?versions?>" onkeyup="this.value=this.value.replace(/\D/,'');versions_onkeyup(this);" />
-		<div id="Version_Descriptions">
+		<span id="Version_Descriptions">
 			<? if ( $$variable{'versions'} > 1 ) ?>
 			<!--#include virtual="_version_descriptions.html"-->
 			<? endif ( $$variable{'versions'} > 1 ) ?>
-		</div>
+		</span>
 	</p>
 </fieldset>
 <br class="spacer"/>
