@@ -56,7 +56,7 @@ sub verify_login {
 	# attribute on the strEmail field.
 	$_ = q{SELECT Index, CompanyIndex, strSalutation, strFirstName, strLastName, chrType, ysnAccountActivation, ysnChangePassword } .
 		q{, (SELECT ysnAccountActivation FROM Company WHERE Index=CompanyIndex)}.
-		q{FROM Users WHERE strEmail = ? AND strPassword=?};
+		q{FROM Users WHERE strEmail = ? AND strPassword=? AND deleted != true};
 	my ( $user_id, $cust_id, $salutation, $first_name, $last_name, $user_type, $user_activated, $changepass, $company_activated ) = sql::execute( $log, $dbh, $_, $email, $password );
 
 	if ( ! $user_id ) {
