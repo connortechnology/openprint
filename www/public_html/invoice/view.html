@@ -59,7 +59,7 @@
 				<th class="Date">Date</th>
 				<th>Description</th>
 				<th width="75" class="Interval">Interval</th>
-				<th width="75" class="Rate">Rate</th>	
+				<th class="Rate">Rate</th>	
 				<th width="75" class="Price">Price</th>
 			</tr>
 			<? echo (
@@ -125,6 +125,7 @@
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
         <table class="List">
+            <tr><td width="105">Created On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->created_on() ) ); ) ?></td></tr>
             <tr><td width="105">Posted On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->posted_on() ) ); ) ?></td></tr>
             <tr><td><b>Due On:</b></td><td><b><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->due_on() ) ); ) ?></b></td></tr>
             <tr><td>Notes:</td><td><? echo ( $$variable{'Invoice'}->external_notes() ) ?></td></tr>
@@ -183,12 +184,12 @@
 				my $html = '';
 				$$variable{'payment_total'} = 0;
 				foreach my $Payment ( $$variable{'Invoice'}->Payments() ) {
-					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr>', $Payment->id(), $Payment->received_on(), $Payment->memo(), $Payment->amount() );
+					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td style="text-align:right;">%4$s</td></tr>', $Payment->id(), $Payment->received_on(), $Payment->memo(), openprint::Currency::format( $Payment->amount() ) );
 					$$variable{'payment_total'} += $Payment->amount();
 				} # end foreach
 				return $html;
 			) ?>
-			<tr>
+			<tr class="totals">
 				<td align="right" colspan="3">Total:</td>
 				<td align="right"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
 			</tr>

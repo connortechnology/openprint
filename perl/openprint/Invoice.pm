@@ -45,6 +45,7 @@ require sql;
 	'currency_id'		=>	'currency_id',
 	'paid'				=>	'paid',
 	'interest'			=>	'interest',
+	'bad_debt'			=>	'bad_debt',
 );
 
 %transforms = (
@@ -60,6 +61,7 @@ require sql;
 	'federaltax'	=> undef,
 	'statetaxrate'		=> undef,
 	'federaltaxrate'	=> undef,
+	'bad_debt'			=> 0,
 );
 
 sub find {
@@ -253,7 +255,7 @@ sub subtotal {
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
 		$$self{'subtotal'} = 0;
 		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack::find('invoice_id'=>$$self{id});
-		map { $$self{'subtotal'} += $_->price() } openprint::Invoiced_Product::find('invoice_id'=>$$self{id});
+		map { $$self{'subtotal'} += $_->total() } openprint::Invoiced_Product::find('invoice_id'=>$$self{id});
 	} # end if
 	return $$self{'subtotal'};
 } # end sub subtotal

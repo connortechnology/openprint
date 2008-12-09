@@ -3,34 +3,52 @@
 	require Date::Format;
 
 	if ( $param{'created_on_start_year'} ) {
-		ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id') );
+		ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id','bad_debt') );
 	} # end if
 
 $$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Invoices'}} = ();
-	foreach my $Invoice ( openprint::Invoice::find( 
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ),
-		'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ),
-		'due_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'} ),
-		'invoicee_id'		=> $session{'/invoice/history.html?company_id'},
-		'invoicer_id'		=> $session{'company_id'},
-		'order'				=> 'id',
-		) ) {
-		if ( $session{'/invoice/history.html?paid'} ne '' ) {
-			if ( $Invoice->is_paid() ) {
-				next if $session{'/invoice/history.html?paid'} == 0;
-			} else {
-				next if $session{'/invoice/history.html?paid'} == 1;
+	if ( $param{'invoice_id'} ) {
+		foreach my $Invoice ( openprint::Invoice::find( 'id'=>$param{'invoice_id'} ) ) {
+			push @{$$variable{'Invoices'}}, $Invoice;
+			$$variable{'subtotal'} += $Invoice->subtotal();
+			$$variable{'federaltax_total'} += $Invoice->federaltax();
+			$$variable{'total'} += $Invoice->total();
+			$$variable{'interest_total'} += $Invoice->interest();
+			$$variable{'owing_total'} += $Invoice->owing();
+		} # end foreach
+	} else {
+		foreach my $Invoice ( openprint::Invoice::find( 
+			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ),
+			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ),
+			'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ),
+			'due_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'} ),
+			'invoicee_id'		=> $session{'/invoice/history.html?company_id'},
+			'invoicer_id'		=> $session{'company_id'},
+			'order'				=> 'id',
+			) ) {
+			if ( $session{'/invoice/history.html?paid'} ne '' ) {
+				if ( $Invoice->is_paid() ) {
+					next if $session{'/invoice/history.html?paid'} == 0;
+				} else {
+					next if $session{'/invoice/history.html?paid'} == 1;
+				} # end if
 			} # end if
-		} # end if
-		push @{$$variable{'Invoices'}}, $Invoice;
-		$$variable{'subtotal'} += $Invoice->subtotal();
-		$$variable{'federaltax_total'} += $Invoice->federaltax();
-		$$variable{'total'} += $Invoice->total();
-		$$variable{'interest_total'} += $Invoice->interest();
-		$$variable{'owing_total'} += $Invoice->owing();
-	} # end foreach Invoice
+			if ( $session{'/invoice/history.html?bad_debt'} != 2 ) {
+				if ( $Invoice->bad_debt() ) {
+					next if $session{'/invoice/history.html?bad_debt'} == 0;
+				} elsif ( $Invoice->bad_debt() eq '0' ) {
+					next if $session{'/invoice/history.html?bad_debt'} == 1;
+				} # end if
+			} # end if
+			push @{$$variable{'Invoices'}}, $Invoice;
+			$$variable{'subtotal'} += $Invoice->subtotal();
+			$$variable{'federaltax_total'} += $Invoice->federaltax();
+			$$variable{'total'} += $Invoice->total();
+			$$variable{'interest_total'} += $Invoice->interest();
+			$$variable{'owing_total'} += $Invoice->owing();
+		} # end foreach Invoice
+	} # end if
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 ) ?>

@@ -49,6 +49,38 @@ sub history {
 		if ( ! ( $variable{'error'} .= $Invoice->destroy() ) ) {
 			$variable{'information'} .= 'Invoice destroy.<br/>';
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Download' ) {
+		my @Header = ('ID','Due On','Company','SubTotal','GST','Total','Interest','Owing');
+		my @Data;
+
+		my ($subtotal, $federaltax_total, $interest_total, $total, $owing_total );
+
+		foreach my $Invoice ( openprint::Invoice::find( 
+					'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ),
+					'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ),
+					'due_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ),
+					'due_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'due_on_end_year','due_on_end_month','due_on_end_day'} ),
+					'invoicee_id'       => $param{'company_id'},
+					'invoicer_id'       => $session{'company_id'},
+					'order'             => 'id',
+					) ) {
+			if ( $param{'paid'} ne '' ) {
+				if ( $Invoice->is_paid() ) {
+					next if $param{'paid'} == 0;
+				} else {
+					next if $param{'paid'} == 1;
+				} # end if
+			} # end if
+			$subtotal += $Invoice->subtotal();
+			$federaltax_total += $Invoice->federaltax();
+			$total += $Invoice->total();
+			$interest_total += $Invoice->interest();
+			$owing_total += $Invoice->owing();
+			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), $Invoice->federaltax(), $Invoice->total(), $Invoice->interest(), $Invoice->owing();
+		} # end foreach Invoice
+		push @Data, 'Totals:', '', '', $subtotal, $federaltax_total, $total, $interest_total, $owing_total;
+
+		misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
 	} # end if
 } # end sub history
 

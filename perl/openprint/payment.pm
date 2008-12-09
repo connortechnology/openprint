@@ -20,6 +20,9 @@ sub history {
 		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->save(\%param);
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		my $Payment = new openprint::Payment( $param{'payment_id'} );
+		$variable{'error'} .= $Payment->delete();
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->destroy();

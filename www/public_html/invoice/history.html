@@ -32,6 +32,14 @@
 <? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/invoice/history.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters">
+		<p>
+			<label>Go to ID:</label>
+			<input type="text" name="invoice_id" id="invoice_id" onkeyup="this.value=this.value.replace(/\D/,'');" onkeydown="if(event.keyCode == 13){load_invoices( this.form );}"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_invoices( \$('f1') );", '', 'Go' ); ) ?>
+		</p>
+	</fieldset>
 	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 		<div class="leftColumn">
 			<p>
@@ -79,11 +87,20 @@
 				<input type="radio" id="paid_2" name="paid" value="2" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
 				<label class="radio" for="paid_2">Both</label>
 			</p>
+			<p><label>Bad Debt?:</label>
+				<input type="radio" id="bad_debt_1" name="bad_debt" value="1" <? echo ( ssi::checked( $session{'/invoice/history.html?bad_debt'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
+				<label class="radio" for="bad_debt_1">Yes</label>
+				<input type="radio" id="bad_debt_0" name="bad_debt" value="0" <? echo ( ssi::checked( $session{'/invoice/history.html?bad_debt'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
+				<label class="radio" for="bad_debt_0">No</label>
+				<input type="radio" id="bad_debt_2" name="bad_debt" value="2" <? echo ( ssi::checked( $session{'/invoice/history.html?bad_debt'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
+				<label class="radio" for="bad_debt_2">Both</label>
+			</p>
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_invoices(f1);", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.invoice_id.value='';load_invoices(f1);", '', 'Show Results' ),
+ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f1.btnFunction.value='Download';f1.submit();", '', 'Download' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
 				ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'edit.html', 'New Invoice' ),
 				); ) ?>
