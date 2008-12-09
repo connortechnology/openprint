@@ -80,14 +80,14 @@ sub find {
 	$sql = q{SELECT * FROM Company WHERE 1>0};
 
 	if ( $params{'id'} ) {
-        if ( ref $params{'id'} eq 'ARRAY' ) {
-            $sql .= q{ AND index IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
-            push @values, @{$params{'id'}};
-        } else {
-            $sql .= q{ AND index=?};
-            push @values, $params{'id'};
-        } # end if
-    } # end if
+		if ( ref $params{'id'} eq 'ARRAY' ) {
+			$sql .= q{ AND index IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
+			push @values, @{$params{'id'}};
+		} else {
+			$sql .= q{ AND index=?};
+			push @values, $params{'id'};
+		} # end if
+	} # end if
 
 	if ( $params{'Name'} ) {
 		$sql .= q{ AND strName=?};
@@ -108,7 +108,7 @@ sub find {
 			} elsif ( @{$params{'SalesPerson'}} ) {
 				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'SalesPerson'}} ).')';
 			} # end if
-            push @values, @{$params{'SalesPerson'}};
+			push @values, @{$params{'SalesPerson'}};
 		} else {
 		$sql .= q{ AND lngSalesPerson=?};
 		push @values, $params{'SalesPerson'};
@@ -121,7 +121,7 @@ sub find {
 			} elsif ( @{$params{'salesrep_id'}} ) {
 				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'salesrep_id'}} ).')';
 			} # end if
-            push @values, @{$params{'salesrep_id'}};
+			push @values, @{$params{'salesrep_id'}};
 		} else {
 			$sql .= q{ AND lngSalesPerson=?};
 			push @values, $params{'salesrep_id'};
@@ -138,6 +138,18 @@ sub find {
 	if ( $params{'reseller'} ) {
 		$sql .= ' AND ysnReseller=?';
 		push @values, $params{'reseller'};
+	} # end if
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+			push @values, @{$params{'deleted'}};
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
 	} # end if
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
@@ -201,7 +213,8 @@ sub delete {
 	foreach my $User ( openprint::User::find('company_id'=>$$self{'id'} ) ) {
 		$User->delete();
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Company WHERE Index=?',$$self{'id'} );
+	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 1 );
+	#sql::execute( undef, undef, 'DELETE FROM Company WHERE Index=?',$$self{'id'} );
 
 	sql::end_transaction( $openprint::dbh, $ac );
 
@@ -209,7 +222,7 @@ sub delete {
    openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'}");
 } # end sub delete
 sub save {
-    my ( $self, $params ) = @_;
+	my ( $self, $params ) = @_;
 
 	$self->set( $params ) if $params;
 	my %sql;
@@ -219,43 +232,43 @@ sub save {
 	$sql{dtmlastmodified} = 'NOW()';
 	$sql{'strname'} = Text::Unaccent::unac_string('LATIN1', $sql{'strname'} );
 
-    my $ac = sql::start_transaction( $openprint::dbh );
-    if ( ! $$self{'id'} ) {
-        @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('CompanyIndex_seq')} );
+	my $ac = sql::start_transaction( $openprint::dbh );
+	if ( ! $$self{'id'} ) {
+		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('CompanyIndex_seq')} );
 		$sql{index} = $$self{'id'};
-        if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
+		if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
 			$openprint::dbh->rollback();
 			return $e;
 		} # end if
 	} elsif ( $$params{'force_insert'} ) {
-        if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
+		if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
 			$openprint::dbh->rollback();
 			return $e;
 		} # end if
-    } else {
-        if ( my $e = sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], \%sql ) ) {
+	} else {
+		if ( my $e = sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], \%sql ) ) {
 			$openprint::dbh->rollback();
 			return $e;
 		} # end if
-    } # end if
+	} # end if
 
-    $self->load();
-    sql::end_transaction( $openprint::dbh, $ac );
+	$self->load();
+	sql::end_transaction( $openprint::dbh, $ac );
 	return;
 
 } # end sub save
 
 sub next {
-    my $self = shift;
+	my $self = shift;
 
-    ( $_ ) = sql::execute( undef, undef, 'SELECT Index FROM Company WHERE strName = ( SELECT MIN(strName) FROM Company WHERE strName > (SELECT strName FROM Company WHERE Index=? ) )', $$self{id} );
-    return $_;
+	( $_ ) = sql::execute( undef, undef, 'SELECT Index FROM Company WHERE strName = ( SELECT MIN(strName) FROM Company WHERE strName > (SELECT strName FROM Company WHERE Index=? ) )', $$self{id} );
+	return $_;
 } # end sub next
 
 sub prev {
-    my $self = shift;
-    ( $_ ) = sql::execute( undef, undef, 'SELECT Index FROM Company WHERE strName = ( SELECT MAX(strName) FROM Company WHERE strName < (SELECT strName FROM Company WHERE Index=? ) )', $$self{id} );
-    return $_;
+	my $self = shift;
+	( $_ ) = sql::execute( undef, undef, 'SELECT Index FROM Company WHERE strName = ( SELECT MAX(strName) FROM Company WHERE strName < (SELECT strName FROM Company WHERE Index=? ) )', $$self{id} );
+	return $_;
 } # end sub prev
 
 sub load_tradereferences {
@@ -270,14 +283,14 @@ sub load_tradereferences {
 			'tradereference'.$index.'_email',
 			'tradereference'.$index.'_creditlimit',
 			} = sql::execute( undef, undef, 
-        'SELECT CompanyName, Contact, Phone, Ext, Fax, Email, CreditLimit FROM Trade_References WHERE company_id = ? AND ID = ?', $$self{id}, $index );
+		'SELECT CompanyName, Contact, Phone, Ext, Fax, Email, CreditLimit FROM Trade_References WHERE company_id = ? AND ID = ?', $$self{id}, $index );
 } # end load_tradereferences
 
 sub save_tradereferences {
 	my ( $self, $param ) = @_;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
-    sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE company_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE company_id=?', $$self{id} );
 	foreach my $tr ( 1 .. 3 ) {
 		my %sql = (
 			'CompanyName'	=>	$$param{'tradereference'.$tr.'_companyname'},
@@ -320,9 +333,9 @@ sub get_dropdown {
 	} # end if
 	$sql .= ' ORDER BY lower(strname)';
 
-    my @company = sql::execute( undef, undef, $sql, @values );
+	my @company = sql::execute( undef, undef, $sql, @values );
 
-    return ssi::make_drop_down( \@company, $selected );
+	return ssi::make_drop_down( \@company, $selected );
 } # sub get_customer_dropdown
 
 sub CSR {
