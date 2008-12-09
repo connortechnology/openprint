@@ -16,8 +16,6 @@ require openprint::press_schedule;
 require openprint::employee_project;
 
 require sql;
-require openprint::MXML;
-require openprint::JDF;
 require openprint::LabelType;
 require openprint::Label;
 require openprint::PurchaseOrder;

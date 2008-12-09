@@ -68,7 +68,9 @@ sub view {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
 		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf(1.2)->toString()] );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export MXML' ) {
-		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [new openprint::MXML($Project)->toString()] );
+		my $MXML = new openprint::MXML($Project);
+		misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'-Metrix.mxml', [$MXML->toString()] );
+		return;
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		my $service_index = $openprint::param{'ServiceIndex'};
 		my $status = openprint::service::status( $project_index, $service_index );
