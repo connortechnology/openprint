@@ -1712,7 +1712,8 @@ $i->display();
 		my $b_price = $prices{$qty_index};
 
 		if ( ! $b_price ) {
-			$$specs{'alert'} .= 'Unable to calculate a price';
+			$$specs{'alert'} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
+			$$specs{'Status'} = 'uncalculated';
 			next;
 		} # end if
 
@@ -2312,14 +2313,36 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 
 				while ( $upq > 0 ) {
 					if ( $s_id ) {
+						# Look for overrides first. 
 						for ( my $j = 0; $j < @signatures; $j += 1 ) {
 							if ( $signatures[$j] > $s_id ) {
-								$s_id = $signatures[$j];
-								@signatures = splice @signatures, $j, 1;
-								%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
-								last;
+								my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$j] );
+								foreach my $override ( 'chkOverridePageQuantity','chkOverrideImposition', 'chkOverridePress') {
+									if ( $$sig_specs{$override.$qty_index} eq 'Y' ) {
+										$s_id = $signatures[$j];
+										@signatures = splice @signatures, $j, 1;
+										%new_specs = %{$sig_specs};
+										last;
+									} # end if
+								}
+								last if $s_id != $service_index;
+			
+							} else {
+								splice @signatures, $j, 1;
+								$j -= 1;
 							} # end if
 						} # end foreach
+
+						if ( $s_id == $service_index ) {
+							for ( my $j = 0; $j < @signatures; $j += 1 ) {
+								if ( $signatures[$j] > $s_id ) {
+									$s_id = $signatures[$j];
+									@signatures = splice @signatures, $j, 1;
+									%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
+									last;
+								} # end if
+							} # end foreach
+						} # end if
 					} # end if
 # If we didn't get a new s_id, then we are using fake services
 					if ( $s_id == $service_index ) {
@@ -2610,8 +2633,6 @@ $imp->display();
 		} # end foreach imposition
 	} # end foreach Press
 	if ( ! %best_price ) {
-		$$service_specs{'alert'} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
-		$$service_specs{'Status'} = 'uncalculated';
 		return;
 	} else {
 #$openprint::log->warn( "After calc imp: " . $best_price{'Imposition'}->imposition() );
