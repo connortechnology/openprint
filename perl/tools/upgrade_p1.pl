@@ -54,7 +54,7 @@ if ( $year ) {
 
 `chmod +x /etc/apache2/lib/perl/tools/db_update.pl`;
 print "upgrading structures 2...";
-`/etc/apache2/lib/perl/tools/db_update.pl $dst_db point-one point-one` or $log->error($!);
+`/etc/apache2/lib/perl/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
 print "upgrading signatures...";
 `/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db point-one point-one` or $log->error($!);
 print "done\n";

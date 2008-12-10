@@ -215,3 +215,10 @@ span.SpotColour label, span.Coverages label {
 	float: left;
 	width: 49%;
 }
+
+.ColourCoverage {
+	width: 35px;
+}
+fieldset legend label {
+	font-weight: normal;
+}

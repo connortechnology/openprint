@@ -1376,7 +1376,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 				} # end if
 
-				my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Overall Varnish Gloss','Overall Varnish Matte','Spot Varnish Gloss','Spot Varnish Matte'], [ @side_one_colours, @side_two_colours ] );
+				my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @side_one_colours, @side_two_colours ] );
 
 				if ( ! $$specs{'rdbColourBar'} ) {
 					if ( @c ) {
