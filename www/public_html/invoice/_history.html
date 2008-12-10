@@ -29,15 +29,19 @@ $$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = 
 			) ) {
 			if ( $session{'/invoice/history.html?paid'} ne '' ) {
 				if ( $Invoice->is_paid() ) {
+$openprint::log->debug("Next cuz paid " . $Invoice->id() );
 					next if $session{'/invoice/history.html?paid'} == 0;
 				} else {
+$openprint::log->debug("Next cuz not paid " . $Invoice->id() );
 					next if $session{'/invoice/history.html?paid'} == 1;
 				} # end if
 			} # end if
 			if ( $session{'/invoice/history.html?bad_debt'} != 2 ) {
 				if ( $Invoice->bad_debt() ) {
+$openprint::log->debug("Next cuz bad debt " . $Invoice->id() );
 					next if $session{'/invoice/history.html?bad_debt'} == 0;
 				} elsif ( $Invoice->bad_debt() eq '0' ) {
+$openprint::log->debug("Next cuz not bad debt " . $Invoice->id() );
 					next if $session{'/invoice/history.html?bad_debt'} == 1;
 				} # end if
 			} # end if

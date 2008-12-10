@@ -17,6 +17,14 @@ require openprint::Invoice_Interest;
 sub history {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
+
+		foreach my $Product ( $Invoice->Products() ) {
+			$Product->save({
+				'description'	=>	$param{'product-description-'.$Product->id()},
+				'price'			=>	$param{'product-price-'.$Product->id()},
+				'qty'			=>	$param{'product-qty-'.$Product->id()},
+				});
+		} # end foreach
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
 		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{'due_on'};
 		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
@@ -169,3 +177,13 @@ sub _available_timetracks {
 		$Timetrack->save();
 	} # end if
 } # end sub _available_timetracks
+sub _invoiced_products {
+	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
+	if ( $param{'action'} eq 'new' ) {
+		my $IP = new openprint::Invoiced_Product( );
+		$variable{'error'} .= $IP->save({
+				'invoice_id'=>$variable{'Invoice'}->id(),
+				'quantity'	=> 1
+				});
+	} # end if
+} # end sub _invoiced_products

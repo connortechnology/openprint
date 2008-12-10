@@ -53,6 +53,10 @@
 		</div>
 		<br class="spacer"/>
 	</fieldset>
+<? eval (
+@{$$variable{'Timetracks'} = openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting');
+) ?>
+<? if ( @{$$variable{'Timetracks'}} ) ?>
 	<fieldset><legend>Services</legend>
 		<table class="List">
 			<tr>
@@ -67,7 +71,7 @@
 				$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 				$$variable{'service_total'} = 0;
 				my $rowclass = '';
-				foreach my $Timetrack ( openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
+				foreach my $Timetrack ( @{$$variable{'Timetracks'}} ) {
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 					$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
 					$html .= sprintf('<td class="Service">%s</td>', $Timetrack->Service()->name() );
@@ -89,6 +93,7 @@
 			</tr>
 		</table>
 	</fieldset>
+<? endif ( @{$$variable{'Timetracks'}} ) ?>
 <? if ( $$variable{'Invoice'}->Products() > 0 ) ?>
 	<fieldset><legend>Products</legend>
 		<table class="List">
@@ -103,7 +108,7 @@
 				$$variable{'product_total'} = 0;
 				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
 					$html .= '<tr>';
-					$html .= sprintf('<td align="left">%s</td>', $Product->name() );
+					$html .= sprintf('<td align="left">%s</td>', $Product->description() );
 
 					$html .= sprintf('<td align="right">%2$s</td>', $Product->id(), $Product->price() );
 					$html .= sprintf('<td align="right">%2$d</td>', $Product->id(), $Product->quantity() );

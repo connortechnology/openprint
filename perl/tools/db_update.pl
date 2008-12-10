@@ -1527,6 +1527,13 @@ if ( ! $data ) {
 		$dbh->do( 'ALTER TABLE Taxes rename column dblstatepercent to statetax' );
 	} # end if
 }
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Invoiced_Products LIMIT 1', {} );
+if ( ! $data ) {
+} else {
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE Invoiced_Products add description text');
+	} # end if
+}
 $dbh->disconnect();
 1;
 __END__

@@ -25,6 +25,7 @@ require sql;
 	'quantity'			=>	'quantity',
 	'invoice_id'		=>	'invoice_id',
 	'product_id'		=>	'product_id',
+	'description'		=>	'description',
 );
 
 %transforms = (
@@ -100,6 +101,14 @@ sub total {
 	my ( $self ) = @_;
 	return $$self{'quantity'} * $$self{'price'};
 } # end sub total
+
+sub description {
+	my ( $self ) = @_;
+	if ( ( ! $$self{'description'} ) and $$self{'product_id'} ) {
+		$$self{'description'} = $self->Product()->name();
+	} # end if
+	return $$self{'description'};
+} # end if
 
 1;
 

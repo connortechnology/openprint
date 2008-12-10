@@ -16,7 +16,7 @@
 			$$variable{'service_total'} = 0;
 			foreach my $Timetrack ( openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
 				$html .= sprintf( q`<tr title="%s" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`, ssi::htmlize( $Timetrack->description() ) );
-				$html .= sprintf('<td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d">%2$s</a></td>', $Timetrack->id(), ssi::htmlize( $Timetrack->Employee()->name() ) );
+				$html .= sprintf('<td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%3$d">%2$s</a></td>', $Timetrack->id(), ssi::htmlize( $Timetrack->Employee()->name() ), $$variable{'Invoice'}->id() );
 				$html .= sprintf('<td class="Service">%s</td>', ssi::htmlize( $Timetrack->Service()->name() ) );
 				$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $Timetrack->starting() ) ) );
 				$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $Timetrack->ending() ) ) );
