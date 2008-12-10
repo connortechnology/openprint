@@ -1,6 +1,6 @@
 <? eval ( 
 	if ( defined $param{'Owner'} ) {
-		foreach my $key ( 'Owner','Manufacturer','Name','Finish','Colour','Weight','Type','fsc_code','width','height','OrLarger', 'last_seen' ) {
+		foreach my $key ( 'Owner','Manufacturer','Name','Finish','Colour','Weight','Type','fsc_code','width','height','OrLarger', 'last_seen','location_id' ) {
 			if ( ref $param{$key} eq 'ARRAY' ) {
 				$session{'/employee/inventory/available_paper.html?'.$key} = join(';', @{$param{$key}} );
 			} else {
@@ -179,7 +179,7 @@ Please select a Paper to view/edit.<br>
                             'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
                             'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'},
                             #'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
-			    'type'=>[split(';', $session{'/employee/inventory/available_paper.html?Type'})],
+							'type'=>[split(';', $session{'/employee/inventory/available_paper.html?Type'})],
                             ) ) {
                         $data{$Stock->colour()} = $Stock->colour_id();
                     } # end foreach
@@ -256,6 +256,13 @@ Please select a Paper to view/edit.<br>
 			<label>FSC Code:</label>
 			<input type="text" name="fsc_code" style="width: auto;" size="13" onkeyup="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );"/>
 		</p>
+		<p>
+			<label>Location:</label>
+			<select id="location_id" name="location_id" onchange="f1.submit();">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ], $session{'/employee/inventory/available_paper.html?location_id'} ); ) ?>
+			</select>
+		</p>
 		</div>
 	</fieldset>
 <div id="Results">
@@ -291,6 +298,9 @@ Please select a Paper to view/edit.<br>
 				foreach my $Skid ( $Paper->skids() ) {
 					if ( $session{'/employee/inventory/available_paper.html?last_seen'} ) {
 						next if Date::Parse::str2time($Skid->updated_on()) < ( time - ( $session{'/employee/inventory/available_paper.html?last_seen'} * 24 * 60 * 60 ) );
+					} # end if
+					if ( $session{'/employee/inventory/available_paper.html?location_id'} ) {
+						next if $Skid->Location()->Root()->id() != $session{'/employee/inventory/available_paper.html?location_id'};
 					} # end if
 					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->created_on());
 					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
