@@ -42,9 +42,14 @@
 </div>
 <div class="InksBack">
 	<fieldset><legend>Back
-<input type="checkbox" id="sides_the_same<?Signature?>" name="sides_the_same<?Signature?>" value="Y" onclick="if(this.checked){$('InksOnBackQuestions').hide();}else{$('InksOnBackQuestions').show();}calc(this.form.name);" <? echo ( $$variable{"sides_the_same$$variable{Signature}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-<label class="radio" for="sides_the_same<?Signature?>">Same as front?</label>
-	</legend>
+<? if ( ! $$variable{'txtSignatureType'} ) ?>
+same as front?
+<input type="radio" id="sides_the_same<?Signature?>Y" name="sides_the_same<?Signature?>" value="Y" onclick="$('InksOnBackQuestions').hide();calc(this.form.name);" <? echo ( ssi::checked($$variable{"sides_the_same$$variable{Signature}"} eq 'Y'); ) ?> />
+<label class="radio" for="sides_the_same<?Signature?>Y">Yes</label>
+<input type="radio" id="sides_the_same<?Signature?>N" name="sides_the_same<?Signature?>" value="N" onclick="$('InksOnBackQuestions').show();calc(this.form.name);" <? echo ( ssi::checked($$variable{"sides_the_same$$variable{Signature}"} ne 'Y' ); ) ?> />
+<label class="radio" for="sides_the_same<?Signature?>N">No</label>
+<? endif ( ! $$variable{'txtSignatureType'} ) ?>
+</legend>
 		<div id="InksOnBackQuestions" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>
 		<? echo (
             my $html;

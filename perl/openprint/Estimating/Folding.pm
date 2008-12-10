@@ -35,7 +35,6 @@ my @variables = (
 		'MPrice1', 'MPrice2', 'MPrice3',
 		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
-		'Runspeed1','Runspeed2','Runspeed3',
 		);
 
 sub variables {
@@ -413,15 +412,16 @@ sub signature_calc {
 	if ( $Imposition->runstyle() eq 'Work & Turn' ) {
 		my $i = $Imposition->copy();
 		$i->columns( $i->columns()/2 );
-		push @Set_Of_Impositions, $i;
+		$$i{'quantity'} = 2;
 		push @Set_Of_Impositions, $i;
 	} elsif ( $Imposition->runstyle() eq 'Work & Tumble' ) {
 		my $i = $Imposition->copy();
 		$i->rows( $i->rows()/2 );
-		push @Set_Of_Impositions, $i;
+		$$i{'quantity'} = 2;
 		push @Set_Of_Impositions, $i;
 	} else {
 		my $i = $Imposition->copy();
+		$$i{'quantity'} = 1;
 		push @Set_Of_Impositions, $i;
 	} # end if
 	if ( ! $$sig_specs{'txtSignatureType'} ) {
@@ -430,6 +430,7 @@ sub signature_calc {
 	my @Impositions = ();
 	my $modified = 0;
 	foreach my $I ( @Set_Of_Impositions ) {
+#$openprint::log->debug("QTY: " . $I->quantity() );
 		if ( $I->dutch_columns() ) {
 			my $i = $I->copy();
 			$i->dutch_columns(0);
@@ -469,43 +470,38 @@ sub signature_calc {
 			my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 			if ( $width_folds and $height_folds ) {
 # All impositions must be 1 out. This may not be true
-				foreach my $i ( 1 .. $I->imposition() ) {
-					my $Singleton = $I->copy();
-					$Singleton->rows( 1 );
-					$Singleton->columns( 1 );
-					push @Set_Of_Impositions, $Singleton;
-				} # end foreach
+				my $Singleton = $I->copy();
+				$Singleton->rows( 1 );
+				$Singleton->columns( 1 );
+				$Singleton->quantity( $I->imposition() );
+				push @Set_Of_Impositions, $Singleton;
 			} elsif ( $width_folds ) {
 				if ( $I->image_orientation() eq 'Vertical' ) {
 					$max_out = $I->rows();
-					foreach my $i ( 1 .. $I->columns() ) {
-						my $Singleton = $I->copy();
-						$Singleton->columns( 1 );
-						push @Set_Of_Impositions, $Singleton;
-					} # end foreach
+					my $Singleton = $I->copy();
+					$Singleton->columns( 1 );
+					$Singleton->quantity( $I->columns );
+					push @Set_Of_Impositions, $Singleton;
 				} else {
 					$max_out = $I->columns();
-					foreach my $i ( 1 .. $I->rows() ) {
-						my $Singleton = $I->copy();
-						$Singleton->rows( 1 );
-						push @Set_Of_Impositions, $Singleton;
-					} # end foreach
+					my $Singleton = $I->copy();
+					$Singleton->quantity( $I->rows );
+					$Singleton->rows( 1 );
+					push @Set_Of_Impositions, $Singleton;
 				} # end if
 			} elsif ( $height_folds ) {
 				if ( $I->image_orientation() eq 'Vertical' ) {
 					$max_out = $I->columns();
-					foreach my $i ( 1 .. $I->rows() ) {
-						my $Singleton = $I->copy();
-						$Singleton->rows( 1 );
-						push @Set_Of_Impositions, $Singleton;
-					} # end foreach
+					my $Singleton = $I->copy();
+					$Singleton->quantity( $I->rows );
+					$Singleton->rows( 1 );
+					push @Set_Of_Impositions, $Singleton;
 				} else {
 					$max_out = $I->rows();
-					foreach my $i ( 1 .. $I->columns() ) {
-						my $Singleton = $I->copy();
-						$Singleton->columns( 1 );
-						push @Set_Of_Impositions, $Singleton;
-					} # end foreach
+					my $Singleton = $I->copy();
+					$Singleton->quantity( $I->columns );
+					$Singleton->columns( 1 );
+					push @Set_Of_Impositions, $Singleton;
 				} # end if Orientation
 			} else {
 				push @Set_Of_Impositions, $I;
@@ -688,11 +684,11 @@ sub signature_calc {
 							last if ! $$sig_specs{'PageQuantity'.$qty_index};
 
 # If we have to cut it down
-if ( $I->imposition() > 1 ) {
-	push @folds, cut_imposition( $I );
-} else {
-	push @folds, cut_spreads( $I ) if $I->spreads() > 1;
-} # end if
+							if ( $I->imposition() > 1 ) {
+								push @folds, cut_imposition( $I );
+							} else {
+								push @folds, cut_spreads( $I ) if $I->spreads() > 1;
+							} # end if
 						} # end while spreads
 
 						if ( @folds ) {
@@ -723,7 +719,10 @@ if ( $I->imposition() > 1 ) {
 					$found = 0;
 					foreach my $key ( keys %folds ) {
 						my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
-						my $qty = @{$folds{$key}};
+						my $qty = 0;
+						foreach (@{$folds{$key}}) {
+							$qty += $_->Imposition()->quantity();
+						} # end foreach
 
 						if ( $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ne $fold_type ) {
 $openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ne $fold_type`);
@@ -762,9 +761,11 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 				last if ! $imposition;
 
 				my $Fold = $folds{$key}[0];
-				#$Fold->imposition( $imposition );
-				#foreach my $Fold ( @{$folds{$key}} ) {
-				my $qty = $$specs{"txtQuantity$qty_index"}/$imposition;
+				my $qty = 0;
+				#foreach (@{$folds{$key}}) {
+					#$qty += $_->Imposition()->quantity();
+				#} # end foreach
+				$qty = $$specs{"txtQuantity$qty_index"}/$Fold->Imposition()->imposition();
 
 				#$openprint::log->debug("Pricing $qty $imposition out of fold $fold_type on " . $Equipment->name()) if $debug;
 
@@ -1069,7 +1070,11 @@ sub calc {
 
 						$openprint::log->debug("Foldtype: $fold_type " . @{$$folds{$key}} . ' ' . $Fold->Imposition()->imposition() . "out $$Fold{name} $$Fold{folds} $$Fold{angles}" ) if $debug;
 						$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $fold_type;
-						$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = scalar @{$$folds{$key}};
+						my $qty = 0;
+						foreach (@{$$folds{$key}}) {
+							$qty += $_->Imposition()->quantity();
+						} # end foreach
+						$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $qty;
 						$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->Imposition()->imposition();
 						$$specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->Imposition()->columns();
 						$$specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->Imposition()->rows();
