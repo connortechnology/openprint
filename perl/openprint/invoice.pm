@@ -58,7 +58,7 @@ sub history {
 			$variable{'information'} .= 'Invoice destroy.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Download' ) {
-		my @Header = ('ID','Due On','Company','SubTotal','GST','Total','Interest','Owing');
+		my @Header = ('ID','Due On','Company','SubTotal','GST Rate', 'GST','Total','Interest','Owing');
 		my @Data;
 
 		my ($subtotal, $federaltax_total, $interest_total, $total, $owing_total );
@@ -84,7 +84,7 @@ sub history {
 			$total += $Invoice->total();
 			$interest_total += $Invoice->interest();
 			$owing_total += $Invoice->owing();
-			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), $Invoice->federaltax(), $Invoice->total(), $Invoice->interest(), $Invoice->owing();
+			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), $Invoice->federaltaxrate(), $Invoice->federaltax(), $Invoice->total(), $Invoice->interest(), $Invoice->owing();
 		} # end foreach Invoice
 		push @Data, 'Totals:', '', '', $subtotal, $federaltax_total, $total, $interest_total, $owing_total;
 

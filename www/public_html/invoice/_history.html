@@ -71,6 +71,7 @@ $openprint::log->debug("Next cuz not bad debt " . $Invoice->id() );
 			<th>Company</th>
 			<th width="75" style="text-align:right;">SubTotal</th>
 			<th width="75" style="text-align:right;">GST</th>
+			<th width="75" style="text-align:right;">GST Total</th>
 			<th width="75" style="text-align:right;">Total</th>
 			<th width="75" style="text-align:right;">Interest</th>
 			<th width="75" style="text-align:right;">Owing</th>
@@ -84,6 +85,7 @@ $openprint::log->debug("Next cuz not bad debt " . $Invoice->id() );
 			<td><a href="/invoice/<? echo ( $$variable{'Invoice'}->posted() ? 'view' : 'edit' ) ?>.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->due_on(); ) ?></a></td>
 			<td><a href="/invoice/<? echo ( $$variable{'Invoice'}->posted() ? 'view' : 'edit' ) ?>.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? hecho ( $$variable{'Invoice'}->Invoicee()->name(); ) ?></a></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
+			<td align="right"><? echo ( $$variable{'Invoice'}->federaltaxrate(); ) ?>%</td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></td>
