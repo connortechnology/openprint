@@ -72,11 +72,8 @@ function open_window( page ) {
 	my $Project = new openprint::Project( $$variable{'ProjectIndex'} );
 	my $qty_index = $Project->ordered_quantity_index();
 
-$openprint::log->debug("Stock: ".$Project->id() );
-
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-$openprint::log->debug("Ssignature $$sig_specs{SignatureIndex}: "  );
 
 		my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
 		if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
@@ -90,7 +87,6 @@ $openprint::log->debug("Ssignature $$sig_specs{SignatureIndex}: "  );
 		} # end if
 
 		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-$openprint::log->debug("Paper: " . $Paper->to_string() );
 		if ( $Paper->type() eq 'Roll' ) {
 			$totals{$Paper->to_string()} += ceil($impressions * $Paper->area() * $Paper->wpsi());
 		} elsif ( $Paper->type() eq 'Sheet' ) {
@@ -101,7 +97,7 @@ $openprint::log->debug("Paper: " . $Paper->to_string() );
 			$sheets{$Paper->to_string()} += $sheets;
 		} # end if
 		if ( ! $Paper->supplied() ) {
-			if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
+			if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
 				my %price = $Paper->get_price( $totals{$Paper->to_string()} );
 				$price{'Total'} = $price{'100lb Price'} * $totals{$Paper->to_string()} / 100;
 				$prices{$Paper->to_string()} = sprintf('* $%.2f/100lb = $%.2f', @price{'100lb Price','Total'} );
