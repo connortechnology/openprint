@@ -79,6 +79,14 @@ sub history {
 					next if $param{'paid'} == 1;
 				} # end if
 			} # end if
+            if ( $param{'/invoice/history.html?bad_debt'} != 2 ) {
+                if ( $Invoice->bad_debt() ) {
+                    next if $param{'/invoice/history.html?bad_debt'} == 0;
+                } elsif ( $Invoice->bad_debt() eq '0' ) {
+                    next if $param{'/invoice/history.html?bad_debt'} == 1;
+                } # end if
+            } # end if
+
 			$subtotal += $Invoice->subtotal();
 			$federaltax_total += $Invoice->federaltax();
 			$total += $Invoice->total();
@@ -86,7 +94,7 @@ sub history {
 			$owing_total += $Invoice->owing();
 			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), $Invoice->federaltaxrate(), $Invoice->federaltax(), $Invoice->total(), $Invoice->interest(), $Invoice->owing();
 		} # end foreach Invoice
-		push @Data, 'Totals:', '', '', $subtotal, $federaltax_total, $total, $interest_total, $owing_total;
+		push @Data, 'Totals:', '', '', $subtotal, '', $federaltax_total, $total, $interest_total, $owing_total;
 
 		misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
 	} # end if
