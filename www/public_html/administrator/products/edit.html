@@ -1,130 +1,133 @@
+<script type="text/javascript" src="/javascripts/pricing.js"></script>
 <div class="error"><?error?></div>
-<form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
-	Please select a product to view/edit. 
-	<fieldset class="filters"><legend>Search Information</legend>
-		<p> 
-			<label>Product Category:</label>
-			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
-				<option value="">Show all Categories</option>
-				<option value="">-----------------</option>
-				<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory::find('order'=>'lower(name)') ], $openprint::param{'ddmSearchCategory'} );
-						) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Product:</label>
-			<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.btnFunction.value='';f1.submit();}">
-				<option value="">Select a Product</option>
-				<option value="">-----------------</option>
-				<? echo (
-	  return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product::find( 'category_id'=>$openprint::param{'ddmSearchCategory'},'order'=>'lower(name)' ) ], $$variable{'Product'}->id() );
-				) ?>
-			</select>
-		</p>
-		<hr/>
-		<p class="buttons">
-			<? echo ( join( '', 
-					ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<'),
-					ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>'),
-					ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
-					ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-					ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-					ssi::writeButton( $log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';fmCheck(f1);",'','Copy'),
-					ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
-				); ) ?>
-		</p>
-		<p class="buttons">
-				<b>CSV File:</b>
-				<input type="file" name="fileImport" />
-	<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ImportDefinitions','import.gif',"f1.btnFunction.value='Import Definitions';f1.action='edit.html';f1.submit();",'','Import Definitions'),
-				ssi::writeButton( $log, $dbh, 'ExportDefinitions','export.gif',"f1.btnFunction.value='Export Definitions';f1.action='edit.html?Download';f1.submit();",'','Export Definitions'),
-				ssi::writeButton( $log, $dbh, 'ImportSpecifications','import.gif',"f1.btnFunction.value='Import Specifications';f1.action='edit.html';f1.submit();",'','Import Specifications'),
-				ssi::writeButton( $log, $dbh, 'ExportSpecifications','export.gif',"f1.btnFunction.value='Export Specifications';f1.action='edit.html?Download';f1.submit();",'','Export Specifications'),
-	); ) ?>
-		</p>
-	</fieldset>
-	<br class="spacer"/><hr/><br class="spacer"/>
-	<div class="leftColumn">
-	<fieldset><legend>Product Information</legend>
-		<p> 
-			<label>Product Name:</label>
-			<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
-		</p>
-		<p> 
-			<label>Category:</label>
-			<select name="category_id">
-				<option value="">Select a category</option>
-				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory::find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
-				) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Description:</label>
-			<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
-		</p>
-		<p>
-			<label>Sort:</label>
-			<input type="text" name="sort" value="<? echo ( $$variable{'Product'}->sort(); ) ?>" />
-		</p>
-		<p>
-			<label>Template:</label>
-			<select name="project_id" id="project_id">
-				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project::find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
-			</select>
-		</p>
-	</fieldset>
-<!--
-	<fieldset><legend> Purchasing Information</legend>
-		<p> 
-			<label>Supplier:</label>
-			<select name="ddmSupplier">
-				<option value="">Select a supplier</option>
-				<?ddmSupplier?>
-			</select>
-		</p>
-	</fieldset>
--->
-	<fieldset><legend>Tax Information</legend>
-		<p> 
-			<label>Federal Exemption:</label>
-			<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( $$variable{'Product'}->taxexempt1() eq 'Y' ? 'checked="checked"' : '' ) ?> />
-			<label class="radio" for="taxexempt1Y">Yes</label>
-			<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( $$variable{'Product'}->taxexempt1() ne 'Y' ? 'checked="checked"' : '' ) ?> />
-			<label class="radio" for="taxexempt1N">No</label>
-		</p>
-		<p> 
-			<label>Prov/State Exemption:</label>
-			<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( 'checked' if $$variable{'Product'}->taxexempt2() eq 'Y' ) ?> />
-			<label class="radio" for="taxexempt2Y">Yes</label>
-			<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( 'checked' if $$variable{'Product'}->taxexempt2() eq 'N' ) ?> />
-			<label class="radio" for="taxexempt2N">No</label>
-		</p>
-	</fieldset>
-	<input type="hidden" name="btnFunction"/>
-</div>
-</form>
-<div class="rightColumn">
-<fieldset><legend>Specifications</legend>
-	<div id="Specifications">
-<? if ( $$variable{'Product'}->id() ) ?>
-		<!--#include virtual="_specifications.html"-->
-<? else ( $$variable{'Product'}->id() ) ?>
-		Please save your new Product before setting specifications.
-<? endif ( $$variable{'Product'}->id() ) ?>
+<div class="Product">
+	<form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+		Please select a product to view/edit. 
+		<fieldset class="filters"><legend>Search Information</legend>
+			<p> 
+				<label>Product Category:</label>
+				<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
+					<option value="">Show all Categories</option>
+					<option value="">-----------------</option>
+					<? echo (
+							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory::find('order'=>'lower(name)') ], $openprint::param{'ddmSearchCategory'} );
+							) ?>
+				</select>
+			</p>
+			<p> 
+				<label>Product:</label>
+				<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.btnFunction.value='';f1.submit();}">
+					<option value="">Select a Product</option>
+					<option value="">-----------------</option>
+					<? echo (
+		  return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product::find( 'category_id'=>$openprint::param{'ddmSearchCategory'},'order'=>'lower(name)' ) ], $$variable{'Product'}->id() );
+					) ?>
+				</select>
+			</p>
+			<hr/>
+			<p class="buttons">
+				<? echo ( join( '', 
+						ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<'),
+						ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>'),
+						ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
+						ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
+						ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+						ssi::writeButton( $log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';fmCheck(f1);",'','Copy'),
+						ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
+					); ) ?>
+			</p>
+			<p class="buttons">
+					<b>CSV File:</b>
+					<input type="file" name="fileImport" />
+		<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'ImportDefinitions','import.gif',"f1.btnFunction.value='Import Definitions';f1.action='edit.html';f1.submit();",'','Import Definitions'),
+					ssi::writeButton( $log, $dbh, 'ExportDefinitions','export.gif',"f1.btnFunction.value='Export Definitions';f1.action='edit.html?Download';f1.submit();",'','Export Definitions'),
+					ssi::writeButton( $log, $dbh, 'ImportSpecifications','import.gif',"f1.btnFunction.value='Import Specifications';f1.action='edit.html';f1.submit();",'','Import Specifications'),
+					ssi::writeButton( $log, $dbh, 'ExportSpecifications','export.gif',"f1.btnFunction.value='Export Specifications';f1.action='edit.html?Download';f1.submit();",'','Export Specifications'),
+		); ) ?>
+			</p>
+		</fieldset>
+		<br class="spacer"/><hr/><br class="spacer"/>
+		<div class="leftColumn">
+		<fieldset><legend>Product Information</legend>
+			<p> 
+				<label>Product Name:</label>
+				<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
+			</p>
+			<p> 
+				<label>Category:</label>
+				<select name="category_id">
+					<option value="">Select a category</option>
+					<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory::find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
+					) ?>
+				</select>
+			</p>
+			<p> 
+				<label>Description:</label>
+				<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
+			</p>
+			<p>
+				<label>Sort:</label>
+				<input type="text" name="sort" value="<? echo ( $$variable{'Product'}->sort(); ) ?>" />
+			</p>
+			<p>
+				<label>Template:</label>
+				<select name="project_id" id="project_id">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project::find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
+				</select>
+			</p>
+		</fieldset>
+	<!--
+		<fieldset><legend> Purchasing Information</legend>
+			<p> 
+				<label>Supplier:</label>
+				<select name="ddmSupplier">
+					<option value="">Select a supplier</option>
+					<?ddmSupplier?>
+				</select>
+			</p>
+		</fieldset>
+	-->
+		<fieldset><legend>Tax Information</legend>
+			<p> 
+				<label>Federal Exemption:</label>
+				<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt1() eq 'Y' ); ) ?> />
+				<label class="radio" for="taxexempt1Y">Yes</label>
+				<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt1() ne 'Y' ); ) ?> />
+				<label class="radio" for="taxexempt1N">No</label>
+			</p>
+			<p> 
+				<label>Prov/State Exemption:</label>
+				<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt2() eq 'Y' ); ) ?> />
+				<label class="radio" for="taxexempt2Y">Yes</label>
+				<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt2() ne 'Y' ); ) ?> />
+				<label class="radio" for="taxexempt2N">No</label>
+			</p>
+		</fieldset>
+		<input type="hidden" name="btnFunction"/>
 	</div>
-</fieldset>
-</div>
-<br class="spacer"/>
-<fieldset><legend>Prices</legend>
-	<div id="Prices">
-<? if ( $$variable{'Product'}->id() ) ?>
-		<!--#include virtual="_prices.html"-->
-<? else ( $$variable{'Product'}->id() ) ?>
-		Please save your new Product before setting pricing.
-<? endif ( $$variable{'Product'}->id() ) ?>
+	</form>
+	<div class="rightColumn">
+	<fieldset><legend>Specifications</legend>
+		<div id="Specifications">
+	<? if ( $$variable{'Product'}->id() ) ?>
+			<!--#include virtual="_specifications.html"-->
+	<? else ( $$variable{'Product'}->id() ) ?>
+			Please save your new Product before setting specifications.
+	<? endif ( $$variable{'Product'}->id() ) ?>
+		</div>
+	</fieldset>
 	</div>
-</fieldset>
+	<br class="spacer"/>
+	<fieldset><legend>Prices</legend>
+		<div id="Prices">
+	<? if ( $$variable{'Product'}->id() ) ?>
+			<!--#include virtual="_prices.html"-->
+	<? else ( $$variable{'Product'}->id() ) ?>
+			Please save your new Product before setting pricing.
+	<? endif ( $$variable{'Product'}->id() ) ?>
+		</div>
+	</fieldset>
+</div>

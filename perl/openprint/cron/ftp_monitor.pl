@@ -342,7 +342,7 @@ EOT
                    );
         misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
 	
-	} else {
+	} elsif ( 0 ) {
 		my $email_info = {
 			smtp => $smtp_server,
 			From => $from,
