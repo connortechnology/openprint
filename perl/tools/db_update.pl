@@ -751,16 +751,21 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 		} # end if
 	} # end foreach
 } # end foreach
-if ( $version < 1906 ) {
-	print "Updating to version 1906\n";
-	my $ac = sql::start_transaction( $dbh );
-	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_Log LIMIT 1', {} );
-	if ( ( ! $blah ) or ( $$blah{'dtmwhen'} ) ) {
+my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_Log LIMIT 1', {} );
+if ( ! $blah ) {
+} else {
+	if ( $$blah{'dtmwhen'} ) {
 		$dbh->do(q{alter table quote_log rename column dtmwhen to created_on});
 	} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1906, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1906;
+	if ( ! exists $$blah{'id'} ) {
+		$dbh->do(q{alter table quote_log add id SERIAL NOT NULL});
+		$dbh->do(q{alter table quote_log drop constraint quote_log_pkey});
+		$dbh->do(q{alter table quote_log add PRIMARY KEY (id)});
+	} # end if
+	if ( ! exists $$blah{'company_id'} ) {
+		$dbh->do(q{alter table quote_log add company_id INTEGER});
+		$dbh->do(q{alter table quote_log add FOREIGN KEY (company_id) REFERENCES companies (id)});
+	} 
 } # end if
 if ( $version < 1907 ) {
 	print "Updating to version 1907\n";
