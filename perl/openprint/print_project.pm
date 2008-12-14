@@ -822,56 +822,20 @@ sub reuse_project {
 		openprint::main_account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
 	} # end if
 
-
-	my @dont_copy = (
-			'ServiceIndex','ProjectIndex','TemplateType',
-			'txtEmployeeComments','rdbComplete','rdbApproved','ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
-			'ddmCompletionDate.*','txtRunHours','txtDowntimeHours',
-			'ddmPressCompletionDate.*',	'UsePress.*', 'rdbPressComplete.*',
-			'UsedPaper.*',
-			'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
-			);
-
 	# Make this all one transaction... Don't need locking because a reload would get a different projectindex
 	my $ac = sql::start_transaction( $dbh );
-
-	my @contents = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, servicetype_id, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
+	foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $NewProject->id() ) ) {
 			
-	while ( @contents ) {
-		my ( $service_index, $servicetype_id, $status ) = splice @contents, 0, 3;
-
-		# uncalc->uncalc,	*->calc
-		if ( $status ne '' and sets::isin( $status, [ 'Pending Deposit', 'Ordered', 'Proofs Out', 'Approved', 'Complete' ] ) ) {
-			$status = 'calculated';
-		} # end if
-
-		my ( $new_service_index ) = sql::execute( $log, $dbh, q{SELECT nextval('ContentsServiceIndex_seq')} );
-		sql::insert( $log, $dbh, 'tbl_Project_Contents',[
-				'lngProjectIndex',	$NewProject->id(),
-				'lngServiceIndex', $new_service_index,
-				'servicetype_id',   $servicetype_id,
-				'strStatus',	$status
-				] );
-		openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'ProjectIndex', $NewProject->id(), 1 );
-		openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'ServiceIndex', $new_service_index, 1 );
-
-		my $specs = openprint::service::get_specs_ref( $Project->id(), $service_index );
-		foreach my $key ( keys %$specs ) {
-			if ( ! sets::isin_regx( $key, @dont_copy ) ) {
-				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, $key, $$specs{$key}, 1 );
-			} # end if
-		} # end foreach
 		if ( $Project->quantity1() != $NewProject->quantity1() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'txtQuantity1', $NewProject->quantity1() );
+			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity1', $NewProject->quantity1() );
 		} # end if
 		if ( $Project->quantity2() != $NewProject->quantity2() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'txtQuantity2', $NewProject->quantity2() );
+			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity2', $NewProject->quantity2() );
 		} # end if
 		if ( $Project->quantity3() != $NewProject->quantity3() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'txtQuantity3', $NewProject->quantity3() );
+			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity3', $NewProject->quantity3() );
 		} # end if
-
-	} # end while
+	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()
@@ -1223,9 +1187,73 @@ sub calc {
 		$services = $project->services();
 
 		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Proofs' ) if ! $$services{'Proofs'};
+$openprint::log->debug("Proofs: $specs{'proof_type'}");
+		if ( exists $specs{'proof_type'} ) {
+			my $proof_specs = openprint::service::get_specs_ref( $project, $$services{'Proofs'}[0] );
+			my %proof_indexes;
+			foreach my $signature_service_index ( $project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $project, $signature_service_index );
+				my $signature_index = $$sig_specs{'SignatureIndex'};
+				foreach my $key ( keys %{$proof_specs} ) {
+					if ( $key =~ /^txtProofIndex-$signature_index-(\d*)-1$/ ) {
+						push @{$proof_indexes{$signature_index}}, $1;
+					} # end if
+				} # end foreach keys
+
+				if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
+					push @{$proof_indexes{$signature_index}}, 1;
+					openprint::Estimating::Proofs::insert_layout_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 1, 1, $proof_specs );
+				} # end if
+				if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
+					push @{$proof_indexes{$signature_index}}, 2;
+					openprint::Estimating::Proofs::insert_colour_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 2, 1, $proof_specs );
+				} # end if
+$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
+				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
+$openprint::log->debug("Adding press proof");
+					push @{$proof_indexes{$signature_index}}, 3;
+					openprint::Estimating::Proofs::insert_press_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 3, 1, $proof_specs );
+				} # end if
+				my $proof_index = 0;
+				if ( $specs{'proof_type'} ) {
+					foreach ( @{$proof_indexes{$signature_index}} ) {
+$openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature_index-$_-1"} . ' for ' . $specs{'proof_type'} );
+						if ( $$proof_specs{"ddmProofType-$signature_index-$_-1"} eq $specs{'proof_type'} ) {
+							$proof_index = $_;
+							last;
+						} # end if
+					} # end foreach proof_index
+					if ( ! $proof_index ) {
+						$proof_index = sets::max( $proof_indexes{$signature_index} ) + 1;
+	$openprint::log->debug("Adding proof $proof_index");
+						foreach my $qty_index ( $project->quantity_indexes() ) {
+							#$$proof_specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} = 1;
+							#$$proof_specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} = $specs{'proof_type'};
+							#$$proof_specs{"txtProofIndex-$signature_index-$proof_index-$qty_index"} = $proof_index;
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofQuantity-$signature_index-$proof_index-$qty_index", 1);
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofWidth-$signature_index-$proof_index-$qty_index", '' );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofHeight-$signature_index-$proof_index-$qty_index", '' );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "ddmProofType-$signature_index-$proof_index-$qty_index", $specs{'proof_type'} );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofIndex-$signature_index-$proof_index-$qty_index", $proof_index );
+						} # end foreach qty_index
+					} # end if ! $proof_index
+				} # end if $specs{'proof_type'}
+
+				foreach ( @{$proof_indexes{$signature_index}} ) {
+					if ( ( $_ > 3 ) and ( $_ != $proof_index ) ) {
+						foreach my $qty_index ( $project->quantity_indexes() ) {
+
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "ddmProofType-$signature_index-$_-$qty_index", '' );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofQuantity-$signature_index-$_-$qty_index", 0 );
+						} # end foreach qty_index
+					} # end if
+				} # end foreach proof_index
+			} # end foreach signature
+
+		} # end if
 
 		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
-$openprint::log->error('Adding Folding');
+			$openprint::log->error('Adding Folding');
 			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {
 				$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';

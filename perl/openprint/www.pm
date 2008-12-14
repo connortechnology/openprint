@@ -491,6 +491,7 @@ $variable{'ServiceIndex'} = $service_index;
 			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
 		} # end if main:$second
+
 	} else {
 		
 		my $module = 'openprint::' . $first;

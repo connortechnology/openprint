@@ -24,9 +24,7 @@
 	my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
 	my $services = $$variable{'Project'}->services();
 	foreach my $ServiceType ( @ShippingServices ) {
-$openprint::log->debug("Service " . $ServiceType->name() );
 		next if ! $$services{$ServiceType->name()};
-$openprint::log->debug("Service " . $ServiceType->name() );
 
 		foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
 			my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_index );

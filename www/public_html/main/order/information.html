@@ -96,11 +96,7 @@
 				<? eval ( $$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ); ) ?>
 				<!--#include virtual="_project_information.html"-->
 				<? endwhile ( @$variable{'ProjectIndex','Reference','SelectedQuantityIndex','ShippingType','Quantity1','Quantity2','Quantity3'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
-				<? if ( @{$$variable{'PRODUCTS'}} ) ?>
-				<span id="Products">
-				<!--#include virtual="_product_information.html"-->
-				</span>
-				<? endif ( @{$$variable{'PRODUCTS'}} ) ?>
+				<div id="Products"><!--#include virtual="_product_information.html"--></div>
 			<? else ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
 				<p>This order appears to be empty.</p>
 			<? endif ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>

@@ -6,6 +6,8 @@ require sql;
 require logger;
 require openprint::Object;
 require openprint::Paper;
+require openprint::Equipment;
+require openprint::EquipmentSpecification;
 
 use openprint ();
 use vars qw( $log $dbh );
@@ -215,9 +217,10 @@ $dbh->do(q{alter table users add howdidyouhearaboutusother text});
 } # end if
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
 	my $ac = sql::start_transaction( $dbh );
-$dbh->do(q{alter table products rename column ysntaxexempt1 to taxexempt1});
-$dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
+	$dbh->do(q{alter table products rename column ysntaxexempt1 to taxexempt1}) if $$data{ysntaxexempt1};
+	$dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2}) if $$data{ysntaxexempt2};
 	sql::insert( undef, undef, 'database_info', 'version', 1897, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1897;
@@ -231,7 +234,7 @@ $dbh->do(q{alter table paper_inventory rename column updatetime to updated_on}) 
 if ( ! exists $$data{'id'} ) {
 $dbh->do(q{alter table paper_inventory add id integer});
 $dbh->do(q{create sequence paperinventory_id_seq});
-$dbh->do(q{alter table paper_inventory alter id set nextval('paperinventory_id_seq')});
+$dbh->do(q{alter table paper_inventory alter id set default nextval('paperinventory_id_seq')});
 $dbh->do(q{update paper_inventory set id=nextval('paperinventory_id_seq')});
 $dbh->do(q{alter table paper_inventory alter id set not null});
 $dbh->do(q{alter table paper_inventory add primary key(id)});
@@ -240,6 +243,61 @@ $dbh->do(q{alter table paper_inventory add primary key(id)});
 	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1898;
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ordered_products LIMIT 1', {} );
+if ( $data and ! exists $$data{'project_id'} ) {
+print "Adding project_id to ordered_Products\n";
+	$dbh->do(q`alter table ordered_products add project_id INTEGER`);
+	$dbh->do(q`alter table ordered_products add FOREIGN KEY (project_id) REFERENCES tbl_Projects (index)`);
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
+if ( $data and ! exists $$data{'project_id'} ) {
+print "Adding project_id to Products\n";
+	$dbh->do(q`alter table products add project_id INTEGER`);
+	$dbh->do(q`alter table products add FOREIGN KEY (project_id) REFERENCES tbl_Projects (index)`);
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
+if ( $data and ! exists $$data{'predefined'} ) {
+print "Adding predefined to Projects\n";
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do(q`alter table tbl_Projects add predefined boolean`);
+	$dbh->do(q`alter table tbl_Projects alter predefined set default false`);
+	$dbh->do(q`update tbl_Projects set predefined=false`);
+	$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
+	sql::end_transaction( $dbh, $ac );
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
+if ( $data and ! exists $$data{'deleted'} ) {
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do(q`alter table Users add deleted boolean`);
+	$dbh->do(q`alter table Users alter deleted set default false`);
+	$dbh->do(q`update Users set deleted=false`);
+	$dbh->do(q`alter table Users alter deleted set not null`);
+	sql::end_transaction( $dbh, $ac );
+} # end if
+
+foreach my $E ( openprint::Equipment::find('Specifications'=>{'Type'=>'Press'}) ) {
+	print "Looking for Feed on " . $E->strid();
+    my $Spec = $E->Specification('Feed');
+    if ( ! $Spec ) {
+print "No Feed found, adding it.\n";
+        $Spec = new openprint::EquipmentSpecification();
+        $Spec->equipment_id( $E->id() );
+        $Spec->name( 'Feed' );
+        $Spec->value('Sheet');
+        print $Spec->save();
+    } elsif ( $Spec->value() eq 'Web' ) {
+print "Web found, converting to Roll.\n";
+        $Spec->value('Roll');
+        print $Spec->save();
+    } # end if
+print "no change.\n";
+} # end foreach
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+if ( $data ) {
+	$dbh->do(q`alter table tbl_equipment add jdf_name text`) if ! exists $$data{'jdf_name'};
+	$dbh->do(q`alter table tbl_equipment add jdf_id text`) if ! exists $$data{'jdf_id'};
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );

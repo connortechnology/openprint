@@ -37,17 +37,22 @@ function validate_data(formName) {
 			<? if ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<p> 
 				<label>Country:</label>
-				<select name="Country" onchange="calc(this.form.name);">
+				<select name="ToCountry" onchange="calc(this.form.name);">
 					<option value=""> Select </option>
-					<? echo ( ssi::return_countries( $$variable{'Country'} ? $$variable{'Country'} : $openprint::session{'Country'} ); ) ?>
+					<? echo ( ssi::return_countries( $$variable{'ToCountry'} ? $$variable{'ToCountry'} : $openprint::session{'Country'} ); ) ?>
 				</select>
 			</p>
 			<p> 
 				<label>Zip/Postal Code:</label>
-				<input type="text" size="10" name="PostalCode" value="<?PostalCode?>" onkeyup="calc(this.form.name);"/>
+				<input type="text" size="10" name="ToPostalCode" value="<?ToPostalCode?>" onkeyup="calc(this.form.name);"/>
 			</p>
 			<? else ( $$variable{'Mode'} eq 'Simple' ) ?>
-				<!--#include virtual="/includes/main/proj/shipping_address.html"-->
+			<div class="leftColumn">
+				<!--#include virtual="/includes/main/proj/shipping_from_address.html"-->
+			</div>
+			<div class="rightColumn">
+				<!--#include virtual="/includes/main/proj/shipping_to_address.html"-->
+			</div>
 			<? endif ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<p>
 				<label>Service Type:</label>

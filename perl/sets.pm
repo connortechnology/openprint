@@ -107,6 +107,15 @@ sub exclude {
 	return @results;
 } # end sub exclude
 
+sub max {
+	my $max;
+
+	foreach ( ( ( @_ == 1 ) and ( ref $_[0] eq 'ARRAY' ) ) ? @{$_[0]} : @_ ) {
+		$max = $_ if ( ! defined $max ) or  ($max < $_ );
+	} # end foreach
+	return $max;
+} # end sub max
+
 1;
 
 __END__

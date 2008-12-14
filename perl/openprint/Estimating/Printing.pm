@@ -378,7 +378,7 @@ my $master_time = gettimeofday();
 		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'rdbPocketSize'} ) ) {
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
-			$$specs{'alert'} .= 'Please select where you would the pockets.';
+			$$specs{'alert'} .= 'Please select where you would like the pockets.';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
@@ -750,14 +750,8 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{'NoBindery'} ) {
-		if ( $$services{'DieCutting'} ) {
-			$project{'NeedFolding'} = 0;
-			$project{'NeedScoring'} = 0;
-		} else {	
-			$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
-			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
-		} # end if
-
+		$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
+		$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
 		$project{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $log, $dbh, $project_index, $specs );
 	} else {
 		$project{'NeedScoring'} = 0;
@@ -1222,11 +1216,12 @@ $openprint::log->debug("No spread layout for you!");
 					} # end while cutting it
 				} # end if Web or Sheet
 
-#$openprint::log->debug("Sorting");	
-#foreach my $i ( @imps ) {
-#$i->display();
-#}
-				if ( 1 ) {
+if ( 0 ) {
+$openprint::log->debug("Sorting");	
+foreach my $i ( @imps ) {
+$i->display();
+}
+} # end if 0
 				foreach my $imp ( @imps ) {
 					my $add = 1;
 					my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
@@ -1247,6 +1242,10 @@ $openprint::log->debug("No spread layout for you!");
 							} # end if
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+#$openprint::log->debug( sprintf( 'Comparing %sx%s %s %s %s to %sx%s %s %s %s', 
+	#$I->Paper()->width(), $I->Paper()->height(), $I->Paper()->minimum_order(), $BiggerPrice{'100lb'}, $I->Paper()->is_cut(),
+	#$imp->Paper()->width(), $imp->Paper()->height(), $imp->Paper()->minimum_order(), $SmallerPrice{'100lb'}, $imp->Paper()->is_cut(),
+#) );
 							if ( 
 									( $I->Paper()->area() >= $imp->Paper()->area() ) 
 									and
@@ -1274,10 +1273,6 @@ $openprint::log->debug("No spread layout for you!");
 					} # end if
 					push @{$imps{$str}}, $imp if $add > 0;
 				} # end foreach imp
-				} else {
-				push @impositions, @imps;
-				} # end if
-
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
@@ -1510,6 +1505,8 @@ sub breakdown {
 	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
 	$breakdown .= $$price{'Stitching Breakdown'};
 	$breakdown .= $$price{'SpinePaste Breakdown'};
+    $breakdown .= $$price{'UVCoating Breakdown'};
+    $breakdown .= $$price{'Aqueous Breakdown'};
 	$breakdown .= $$price{'AdditionalSignature Breakdown'};
 	$breakdown .= sprintf("Comparison Cost: \%.2f<br/>", $$price{'Comparison Cost'});
 	return $breakdown;
@@ -2509,9 +2506,9 @@ $openprint::log->debug("Perforating");
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if
 	if ( $$project{'HasUVCoating'} ) {
-		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
 		if ( $uv_results{'Status'} eq 'uncalculated' ) {
-			$price{'UV Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} else {
 			$price{'UVCoating Breakdown'} .= "UVCoating Price: $uv_results{'Total'}<br/>";
