@@ -1,55 +1,63 @@
 <? eval (
 	require openprint::RFIDTag;
 
-	if ( %openprint::param ) {
+	if ( %param ) {
 		foreach my $key ( 'Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','assigned','notassigned','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
-			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-				$openprint::session{'/employee/inventory/rfidtags.html?'.$key} = join(';', @{$openprint::param{$key}} );
+			if ( ref $param{$key} eq 'ARRAY' ) {
+				$session{'/employee/inventory/rfidtags.html?'.$key} = join(';', @{$param{$key}} );
 			} else {
-				$openprint::session{'/employee/inventory/rfidtags.html?'.$key} = $openprint::param{$key};
+				$session{'/employee/inventory/rfidtags.html?'.$key} = $param{$key};
 			}
 		} # end foreach
 	} # end if
 
-$openprint::log->debug('checkdate: ' . Date::Calc::check_date( @openprint::session{
-            '/employee/inventory/rfidtags.html?StartYear',
-            '/employee/inventory/rfidtags.html?StartMonth',
-            '/employee/inventory/rfidtags.html?StartDay'} ) );
+	if ( $param{'rfidtag_id'} ) {
+	@{$$variable{'RFIDTags'}} = openprint::RFIDTag::find( 
+		'id_like'	=> '%'.$param{'rfidtag_id'}.'%',
+		'order'		=>	'id',
+		);
+	} elsif ( $param{'rfidtag_hex'} ) {
+	@{$$variable{'RFIDTags'}} = openprint::RFIDTag::find( 
+		'id_like'	=> '%'.hex($param{'rfidtag_hex'}).'%',
+		'order'		=>	'id',
+		);
+	} else {
+	
 
 	@{$$variable{'RFIDTags'}} = openprint::RFIDTag::find( 
-		'id_like'	=> $openprint::param{'rfidtag_like'},
-		'owner_id'	=>	( defined $openprint::session{'/employee/inventory/rfidtags.html?Owner'} ? $openprint::session{'/employee/inventory/rfidtags.html?Owner'} : undef ),
-		'created_on_start'	=>	Date::Calc::check_date( @openprint::session{
+		'owner_id'	=>	( defined $session{'/employee/inventory/rfidtags.html?Owner'} ? $session{'/employee/inventory/rfidtags.html?Owner'} : undef ),
+		'created_on_start'	=>	Date::Calc::check_date( @session{
 			'/employee/inventory/rfidtags.html?StartYear',
 			'/employee/inventory/rfidtags.html?StartMonth',
-			'/employee/inventory/rfidtags.html?StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
+			'/employee/inventory/rfidtags.html?StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
 			'/employee/inventory/rfidtags.html?StartYear',
 			'/employee/inventory/rfidtags.html?StartMonth',
 			'/employee/inventory/rfidtags.html?StartDay'} ) : undef,
-		'created_on_end'	=>	Date::Calc::check_date( @openprint::session{
+		'created_on_end'	=>	Date::Calc::check_date( @session{
 			'/employee/inventory/rfidtags.html?EndYear',
 			'/employee/inventory/rfidtags.html?EndMonth',
-			'/employee/inventory/rfidtags.html?EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
+			'/employee/inventory/rfidtags.html?EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
 			'/employee/inventory/rfidtags.html?EndYear',
 			'/employee/inventory/rfidtags.html?EndMonth',
 			'/employee/inventory/rfidtags.html?EndDay'} ) : undef,
-		'updated_on_start'	=>	Date::Calc::check_date( @openprint::session{
+		'updated_on_start'	=>	Date::Calc::check_date( @session{
 			'/employee/inventory/rfidtags.html?UpdatedStartYear',
 			'/employee/inventory/rfidtags.html?UpdatedStartMonth',
-			'/employee/inventory/rfidtags.html?UpdatedStartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
+			'/employee/inventory/rfidtags.html?UpdatedStartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
 			'/employee/inventory/rfidtags.html?UpdatedStartYear',
 			'/employee/inventory/rfidtags.html?UpdatedStartMonth',
 			'/employee/inventory/rfidtags.html?UpdatedStartDay'} ) : undef,
-		'updated_on_end'	=>	Date::Calc::check_date( @openprint::session{
+		'updated_on_end'	=>	Date::Calc::check_date( @session{
 			'/employee/inventory/rfidtags.html?UpdatedEndYear',
 			'/employee/inventory/rfidtags.html?UpdatedEndMonth',
-			'/employee/inventory/rfidtags.html?UpdatedEndDay'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
+			'/employee/inventory/rfidtags.html?UpdatedEndDay'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
 			'/employee/inventory/rfidtags.html?UpdatedEndYear',
 			'/employee/inventory/rfidtags.html?UpdatedEndMonth',
 			'/employee/inventory/rfidtags.html?UpdatedEndDay'} ) : undef,
-		'type_id'			=> $openprint::session{'/employee/inventory/rfidtags.html?Type'} ? $openprint::session{'/employee/inventory/rfidtags.html?Type'} : undef,
+		'type_id'			=> $session{'/employee/inventory/rfidtags.html?Type'} ? $session{'/employee/inventory/rfidtags.html?Type'} : undef,
 		'order'		=>	'id',
 		);
+	} # end if
 ) ?>
 <? if ( @{$$variable{'RFIDTags'}} ) ?>
 <form id="RFIDTagResults" name="RFIDTagResults" action="rfidtags.html" method="post">
@@ -66,14 +74,14 @@ $openprint::log->debug('checkdate: ' . Date::Calc::check_date( @openprint::sessi
 			my $html;
 			my $rowclass;
 			foreach my $RFIDTag ( @{$$variable{'RFIDTags'}} ) {
-if ( ! $openprint::session{'/employee/inventory/rfidtags.html?assigned'} ) {
+if ( ! $session{'/employee/inventory/rfidtags.html?assigned'} ) {
 	if ( $RFIDTag->type() eq 'Skid' ) {
 		next if openprint::Skid::find('rfidtag_id'=>$RFIDTag->id() );
 	} elsif ( $RFIDTag->type() eq 'Location' ) {
 		next if $RFIDTag->location_id();
 	} # end if
 } # end if
-if ( ! $openprint::session{'/employee/inventory/rfidtags.html?notassigned'} ) {
+if ( ! $session{'/employee/inventory/rfidtags.html?notassigned'} ) {
 	if ( $RFIDTag->type() eq 'Skid' ) {
 		next if ! openprint::Skid::find('rfidtag_id'=>$RFIDTag->id() );
 	} elsif ( $RFIDTag->type() eq 'Location' ) {

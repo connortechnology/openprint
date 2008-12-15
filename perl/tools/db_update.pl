@@ -262,6 +262,21 @@ $dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
 if ( ! $data ) {
 } else {
+	if ( ! exists $$data{'po_id'} ) {
+		$dbh->do('ALTER TABLE Manifests add po_id INTEGER');
+		$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id)');
+	} # end if
+	if ( ! exists $$data{'supplier_id'} ) {
+		$dbh->do('ALTER TABLE Manifests add supplier_id INTEGER');
+		$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (supplier_id) REFERENCES Company (index)');
+	} # end if
+	if ( ! exists $$data{'docket'} ) {
+		$dbh->do('ALTER TABLE Manifests add docket INTEGER');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+if ( ! $data ) {
+} else {
 	if ( ! exists $$data{'federaltax_charge'} ) {
 		$dbh->do('ALTER TABLE purchaseorders add federaltax_charge BOOLEAN');
 	} # end if
@@ -271,6 +286,10 @@ if ( ! $data ) {
 	if ( ! exists $$data{'authorized'} ) {
 		$dbh->do('ALTER TABLE purchaseorders add authorized BOOLEAN');
 		$dbh->do('UPDATE purchaseorder set authorized=true WHERE authorized_on IS NOT NULL');
+	} # end if
+	if ( ! exists $$data{'manifest_id'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add manifest_id TEXT');
+		$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (manifest_id) REFERENCES Manifests (id)');
 	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );

@@ -72,6 +72,7 @@ $serial = 'Purchaseorders_id_seq';
 	'shipto_phone'		=>	'shipto_phone',
 	'shipto_fax'		=>	'shipto_fax',
 	'shipto_email'		=>	'shipto_email',
+	'manifest_id'		=>	'manifest_id',
 );
 
 %transforms = (
@@ -91,6 +92,7 @@ $serial = 'Purchaseorders_id_seq';
 	'federaltax_rate'	=>	undef,
 	'statetax'		=>	undef,
 	'statetax_rate'	=>	undef,
+	'manifest_id'	=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -122,9 +124,24 @@ sub find {
 		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
 			$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
 			push @values, @{$params{'supplier_id'}};
-		} elsif ( $params{'supplied_id'} ) {
+		} elsif ( $params{'supplier_id'} ) {
 			$sql .= ' AND supplier_id=?';
 			push @values, $params{'supplier_id'};
+		} # end if
+	} # end if
+	if ( exists $params{'manifest_id'} ) {
+		if ( ref $params{'manifest_id'} eq 'ARRAY' ) {
+			if ( @{$params{'manifest_id'}} ) {
+				$sql .= ' AND manifest_id IN ('. join(',', map {'?'} @{$params{'manifest_id'}} ) . ')';
+				push @values, @{$params{'manifest_id'}};
+			} else {
+				return ();
+			} # end if
+		} elsif ( $params{'manifest_id'} ) {
+			$sql .= ' AND manifest_id=?';
+			push @values, $params{'manifest_id'};
+		} else {
+			$sql .= ' AND manifest_id IS NULL';
 		} # end if
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
