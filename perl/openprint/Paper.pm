@@ -823,7 +823,7 @@ $openprint::log->warn('Using override price');
 		my @Prices = $self->prices( $list_id );
 		if ( (! $$self{'supplied'} ) and ! @Prices ) {
 			$openprint::log->warn( 'No prices for paper for pricelist ' . $list_id );
-			return;
+			return %price;
 		} # end if
 		foreach my $Price ( @Prices ) {
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->Min(), $Price->Max(), $Price->Price() ) );

@@ -18,9 +18,13 @@ sub find {
 		my @values;
 		my $sql;
 		$sql = q{SELECT * FROM Locations WHERE 1>0};
-		if ( $params{'parent_id'} ) {
-			$sql .= q{ AND parent_id=?};
-			push @values, $params{'parent_id'};
+		if ( exists $params{'parent_id'} ) {
+			if ( $params{'parent_id'} ) {
+				$sql .= q{ AND parent_id=?};
+				push @values, $params{'parent_id'};
+			} else {
+				$sql .= q{ AND parent_id IS NULL};
+			} # end if
 		} # end if
 		if ( $params{'name'} ) {
 			$sql .= q{ AND lower(name) = lower(?)};

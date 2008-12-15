@@ -1430,7 +1430,7 @@ sub purchase_order_edit {
 } # end sub purchase_order_edit
 
 sub purchase_orders {
-    foreach my $key ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','authorized','supplier_id' ) {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'created_on', -31 );
@@ -1450,6 +1450,15 @@ sub purchase_orders {
 				$variable{'error'} .= $_ . '<br/>';
 			} else {
 				$variable{'information'} .= 'PO ' . $po_id . ' has been authorized.<br/>';
+			} # end if
+		} # end foreach po_id
+	} elsif ( $param{'btnFunction'} eq 'Decline' ) {
+		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : split(',',$param{'po_id'}) ) {
+			my $PO = new openprint::PurchaseOrder( $po_id );
+			if ( $_ = $PO->decline( $param{'reason'} ) ) {
+				$variable{'error'} .= $_ . '<br/>';
+			} else {
+				$variable{'information'} .= 'PO ' . $po_id . ' has been declined.<br/>';
 			} # end if
 		} # end foreach po_id
 	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {

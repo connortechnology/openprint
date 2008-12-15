@@ -5,9 +5,6 @@
 	} else {
 	$$variable{'Columns'} = 'Two';
 	} # end if
-	push @{$$variable{'uvoptions'}}, 'Overall' if openprint::Service::find('name'=>'UVCoatingOverall');
-	push @{$$variable{'uvoptions'}}, 'Spot' if openprint::Service::find('name'=>'UVCoatingSpot');
-	push @{$$variable{'uvoptions'}}, 'None';
 ) ?>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">

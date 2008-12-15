@@ -178,6 +178,12 @@ if ( ! $data1 ) {
 	} # end if
 } # end if
 sql::end_transaction( $dbh, $ac );
+my $data1 = $openprint::dbh->selectrow_hashref( 'SELECT * FROM companies LIMIT 1', {} );
+if ( $data1 ) {
+if ( ! exists $$data1{'deleted'} ) {
+		$dbh->do(q`ALTER TABLE companies add deleted BOOLEAN default false`);
+} # end if
+} # end if
 
 if ( $version < 1275 ) {
 	print "Updating to version 1275\n";
@@ -513,6 +519,7 @@ if ( $version < 1899 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1899;
 } # end if
+
 if ( $version < 1900 ) {
 	print "Updating to version 1900\n";
 	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_log LIMIT 1', {} );
@@ -928,6 +935,10 @@ if ( ! $data ) {
 	} # end if
 	if ( ! exists $$data{'statetax_charge'} ) {
 		$dbh->do('ALTER TABLE purchaseorders add statetax_charge BOOLEAN');
+	} # end if
+	if ( ! exists $$data{'authorized'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add authorized BOOLEAN');
+		$dbh->do('UPDATE purchaseorder set authorized=true WHERE authorized_on IS NOT NULL');
 	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );

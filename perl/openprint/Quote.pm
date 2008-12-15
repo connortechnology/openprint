@@ -118,7 +118,7 @@ sub find {
 		$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 		if ( ! $data ) {
-			$log->error("Error loading Quotes: ($sql) (@values)");
+			$log->warn("Error loading Quotes: ($sql) (@values)");
 			return;
 		} elsif ( $debug ) {
 			$log->debug("Loading Quotes: ($sql) (@values)");

@@ -47,6 +47,36 @@
 		</div>
 		<br class="spacer"/>
 		<hr/>
+<? eval (
+	if ( ! $param{'Name'} ) {
+$log->debug("Loading paper info");
+		my $Paper;
+		foreach my $C ( openprint::ManifestContent::find('manifest_id'=>$$variable{'Manifest'}->id() ) ) {
+			my $Skid = $C->Skid();
+			foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
+				$Paper = new openprint::Paper( $paper_id );
+				last;
+			} # end foreach paper_id
+			last;
+		}
+		if ( $Paper ) {
+$log->debug("Found paper info");
+			$param{'Owner'} = $Paper->owner_id();
+			$param{'Manufacturer'} = $Paper->manufacturer_id();
+			$param{'Name'} = $Paper->name_id();
+			$param{'Finish'} = $Paper->finish_id();
+			$param{'Colour'} = $Paper->colour_id();
+			$param{'Weight'} = $Paper->weight_id();
+			$param{'Quality'} = $Paper->quality_id();
+			$param{'type'} = $Paper->type();
+			$param{'calliper'} = $Paper->calliper();
+			$param{'width'} = $Paper->width();
+			$param{'height'} = $Paper->height();
+			$param{'gsm'} = $Paper->gsm();
+			$param{'fsc_code'} = $Paper->fsc_code();
+		} # end if
+	} # end if
+) ?>
 		<div class="leftColumn">
 			<p>
 				<label for="Owner">Owner:</label>
@@ -173,7 +203,7 @@
 <br/>
 <table class="List sortable">
 	<tr>
-		<th>RFIDTAG ID</th>
+		<th align="left" width="200">RFIDTAG ID</th>
 		<th>Quantity (lbs)</th>
 		<th>Quantity (kgs)</th>
 		<th width="30">&nbsp;</th>
@@ -182,9 +212,9 @@
 		my $html = '';
 		foreach my $C ( openprint::ManifestContent::find('manifest_id'=>$$variable{'Manifest'}->id() ) ) {
 			my $tag_id = $C->Skid()->rfidtag_id();
-			$html .= sprintf('<tr id="tr-%1$s"><td>%1$s</td>', $tag_id );
+			$html .= sprintf('<tr id="tr-%1$s"><td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $tag_id );
 			# Inventory
-			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td>}, $tag_id, $C->quantity(), undef );
+			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td>}, $tag_id, $C->quantity(), $C->quantity()*0.45 );
 			$html .= '<td>' . ssi::writeButton( $log, $dbh, 'X'.$tag_id, 'x.gif', qq`f1.remove.value='$tag_id';new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: \$('f1').serialize(), evalScripts: true} );`, '', 'X' ) . '</td>';
 			$html .= '</tr>';
 		

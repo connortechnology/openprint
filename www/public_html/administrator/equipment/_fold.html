@@ -107,7 +107,7 @@
 			<label>Stitching:</label>
 			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching1" name="stitching" value="1" <? echo ( ssi::checked( $$variable{'Fold'}->stitching() ); ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');"/>
 			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching1">Yes</label>
-			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching0" name="stitching" value="0" <? echo ( ssi::checked( $$variable{'Fold'}->stitching() ); ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');" />
+			<input type="radio" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching0" name="stitching" value="0" <? echo ( ssi::checked( ! $$variable{'Fold'}->stitching() ); ) ?> onclick="$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');" />
 			<label class="radio" for="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-stitching0">No</label>
 		</p>
 		<p>

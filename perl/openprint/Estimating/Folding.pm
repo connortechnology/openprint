@@ -344,15 +344,21 @@ sub signature_calc {
 		} # end if
 		push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 	} else {
-		my @folding_capable = ('Y');
-		push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
-		push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
-		@my_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable} );
+		if ( $Press->specification('Sheeter') eq 'Y' ) {
+			my @folding_capable = ('Y');
+			push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'Presentation Folders';
+			push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
+			push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
+			@my_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable} );
+		} # end if
 
 		$openprint::log->debug("Press: $$sig_specs{'ddmPress'.$qty_index}" . $Press->strid() ) if $debug;
 		my $add = 1;
 		my $capable = $Press->specification('Folding Capable');	
 		if ( $capable and ( $capable ne 'N' ) ) {
+			if ( $$sig_specs{'PreviousImposition'} and $$sig_specs{'PreviousImposition'} != $Imposition->imposition() ) {
+				$add = 0;
+			} # end if
 
 			if ( $$services{'UVCoating'} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
 				$uv_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] ) if ! $uv_specs;
@@ -367,11 +373,7 @@ sub signature_calc {
 				} # end if
 			} # end if
 			if ( $add ) {
-				if ( $Press->specification('Sheeter') ne 'Y' ) {
-					@my_equipment = ( $Press );
-				} else {
-					unshift @my_equipment, $Press;
-				} # end if
+				unshift @my_equipment, $Press;
 			} # end if
 		} # end if
 	} # end if override or lookup equipment
@@ -606,7 +608,7 @@ sub signature_calc {
 						push @{$folds{$Imposition->pages().'PageFold-'.$Imposition->imposition().'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if $debug;
 					} else {
-						$Breakdown .= 'Didnt find fold<br/>';
+						$Breakdown .= sprintf('Didnt find fold %dx%d %s, %dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() );
 						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() ) ) if $debug;
 						next;
 					} # end if
@@ -1116,15 +1118,12 @@ sub display {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+	my @folding_capable = ('Y','When Printing');
+	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'Presentation Folders';
+	push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
+	push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
 
-	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' );
-	push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Printing'}, 'order'=>'lower(strname)' );
-	if ( $$services{'PerfectBound'} ) {
-		push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When PerfectBound'}, 'order'=>'lower(strname)' );
-	} # end if
-	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
-		push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Stitching'}, 'order'=>'lower(strname)' );
-	} # end if
+	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>\@folding_capable, 'order'=>'lower(strname)' );
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 } # end sub display
 

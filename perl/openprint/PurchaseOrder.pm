@@ -33,6 +33,7 @@ $serial = 'Purchaseorders_id_seq';
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
 	'created_by'		=>	'created_by',
+	'authorized'		=>	'authorized',
 	'authorized_by'		=>	'authorized_by',
 	'authorized_on'		=>	'authorized_on',
 	'delivered_on'		=>	'delivered_on',
@@ -401,10 +402,31 @@ sub Company {
 
 sub authorize {
 	my ( $self ) = @_;
+	$$self{'authorized'} = 1;
 	$$self{'authorized_by'} = $session{'user_id'};
 	$$self{'authorized_on'} = 'NOW()';
+	my $L = new openprint::PurchaseOrder_Log();
+	$L->save({
+			'po_id'		=> $$self{'id'},
+			'user_id'	=> $session{'user_id'},
+			'reason'	=> 'Authorized by ' . new openprint::User( $session{'user_id'} )->name(),
+			});
 	return $self->save();
 } # end sub authorize
+
+sub decline {
+	my ( $self, $reason ) = @_;
+	$$self{'authorized'} = 0;
+	$$self{'authorized_by'} = $session{'user_id'};
+	$$self{'authorized_on'} = 'NOW()';
+	my $L = new openprint::PurchaseOrder_Log();
+	$L->save({
+			'po_id'		=> $$self{'id'},
+			'user_id'	=> $session{'user_id'},
+			'reason'	=> 'Declined by ' . new openprint::User( $session{'user_id'} )->name() . ': ' . $reason,
+			});
+	return $self->save();
+} # end sub decline
 
 sub notifications {
 	my ( $self, $new ) = @_;
