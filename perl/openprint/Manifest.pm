@@ -15,6 +15,8 @@ require ssi;
 require misc;
 
 require openprint::ManifestContent;
+require openprint::PurchaseOrder;
+require openprint::Company;
 
 
 my $debug = 1;
@@ -24,16 +26,25 @@ my $debug = 1;
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'received_on'	=>	'received_on',
+	'po_id'			=>	'po_id',
+	'docket'		=>	'docket',
+	'supplier_id'	=>	'supplier_id',
 );
 
 %transforms = (
 	'updated_on'	=> [ 's/.*//g' ],
+	'po_id'			=>	[ 's/\D//g' ],
+	'docket'		=>	[ 's/\D//g' ],
+	'supplier_id'	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 	'received_on'	=>	'NOW()',
+	'po_id'			=>	undef,
+	'docket'		=>	undef,
+	'supplier_id'	=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -54,6 +65,45 @@ sub find {
 	} # end if
 	if ( $params{'id_like'} ) {
 		$sql .= " AND id LIKE '%$params{id_like}%'";
+	} # end if
+	if ( exists $params{'po_id'} ) {
+		if ( ref $params{'po_id'} eq 'ARRAY' ) {
+			if ( @{$params{'po_id'}} ) {
+				$sql .= ' AND po_id IN ('. join(',', map {'?'} @{$params{'po_id'}} ) . ')';
+				push @values, @{$params{'po_id'}};
+			} else {
+				return ();
+			} # end if
+		} else {
+			$sql .= ' AND po_id=?';
+			push @values, $params{'po_id'};
+		} # end if
+	} # end if
+	if ( exists $params{'supplier_id'} ) {
+		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
+			if ( @{$params{'supplier_id'}} ) {
+				$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
+				push @values, @{$params{'supplier_id'}};
+			} else {
+				return ();
+			} # end if
+		} else {
+			$sql .= ' AND supplier_id=?';
+			push @values, $params{'supplier_id'};
+		} # end if
+	} # end if
+	if ( exists $params{'docket'} ) {
+		if ( ref $params{'docket'} eq 'ARRAY' ) {
+			if ( @{$params{'docket'}} ) {
+				$sql .= ' AND docket IN ('. join(',', map {'?'} @{$params{'docket'}} ) . ')';
+				push @values, @{$params{'docket'}};
+			} else {
+				return ();
+			} # end if
+		} else {
+			$sql .= ' AND docket=?';
+			push @values, $params{'docket'};
+		} # end if
 	} # end if
 
 	if ( $params{'received_on_start'} and $params{'received_on_end'} ) {
@@ -147,6 +197,9 @@ $openprint::log->debug("Updated: $$self{updated_on}");
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
+	foreach my $PO ( openprint::PurchaseOrder::find('manifest_id'=>$$self{'id'}) ) {
+		$PO->save({'manifest_id'=>undef});
+	} # end foreach $PO
     sql::execute( undef, undef, q{DELETE FROM ManifestContents WHERE manifest_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Manifests WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
@@ -157,6 +210,10 @@ sub delete {
 sub Contents {
 	return openprint::ManifestContent::find('manifest_id'=>$_[0]{id});
 } # end sub Contents
+
+sub Vendor {
+	return new openprint::Company( $_[0]{'supplier_id'} );
+} # end sub Vendor
 
 1;
 __END__
