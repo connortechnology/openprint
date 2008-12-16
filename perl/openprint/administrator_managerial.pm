@@ -175,20 +175,20 @@ sub user_profiles {
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
-		sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $user_id );
+		sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
 
 		# add them back in 
 		my $sth = $dbh->prepare( q{INSERT INTO Users_in_Marketing_Categories (category_id,user_id) VALUES ( ?, ? )} );
 		foreach my $cat ( ref $openprint::param{'selectUserCategories'} eq 'ARRAY' ? @{$openprint::param{'selectUserCategories'}} : $openprint::param{'selectUserCategories'} ) {
 			if ( sets::isin( $cat, \@categories ) ) {
-				$sth->execute( $cat, $user_id ) or $log->error( DBI->errstr );
+				$sth->execute( $cat, $User->id() ) or $log->error( DBI->errstr );
 			} # end if
 		} # end foreach
 
-		sql::execute( $log, $dbh, q{DELETE FROM Users_in_UserGroups WHERE User_Id=?}, $user_id );
+		sql::execute( $log, $dbh, q{DELETE FROM Users_in_UserGroups WHERE User_Id=?}, $User->id() );
 		if ( $openprint::param{'UserGroups'} ) {
 			foreach my $group_id ( ref $openprint::param{'UserGroups'} eq 'ARRAY' ? @{$openprint::param{'UserGroups'}} : $openprint::param{'UserGroups'} ) {
-				sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $user_id ] );
+				sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $User->id() ] );
 			} # end foreach
 		} # end if
 
