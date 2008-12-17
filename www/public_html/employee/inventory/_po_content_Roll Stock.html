@@ -3,7 +3,7 @@
 	$C = new openprint::PurchaseOrder_Content( $param{'content_id'} ) if $param{'content_id'};
 	my $html .= sprintf(q{<td><input type="text" class="RollQTY" name="qty-%1$d" id="qty-%1$d" value="%2$d" onkeyup="calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}" />lbs</td>}, $C->id(), $C->qty() );
 	$html .= sprintf(q{<td><input type="text" name="item-%1$d" id="item-%1$d" value="%2$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}"/></td>}, $C->id(), $C->item() );
-	my $rows = scalar split($C->description, "\n" );
+	my $rows = scalar split("\n", $C->description() );
 	$rows = 1 if ! $rows;
 	$html .= sprintf(q{<td>
 					<input type="text" name="description-%1$d" id="description-%1$d" value="%2$s"/>

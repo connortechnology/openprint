@@ -3,7 +3,7 @@
 <? echo ( 
 	my $html = '';
 	if ( $param{'supplier_id'} or $param{'Docket'} ) {
-		$html .= '<ul>';
+		$html .= '<table>';
 		my %filters = (
 			'order'			=>	'id',
 			'manifest_id'	=>	undef,
@@ -11,9 +11,13 @@
 		$filters{'supplier_id'} = $param{'supplier_id'} if $param{'supplier_id'};
 		$filters{'docket'} = $param{'Docket'} if $param{'Docket'};
 		foreach my $PO ( openprint::PurchaseOrder::find(%filters) ) {
-			$html .= sprintf( q`<li onclick="$('po_id').value=%1$d;">%1$d</li>`, $PO->id() );
+			$html .= sprintf( q`<tr onclick="$('po_id').value=%1$d;"><td>%1$d</td><td>`, $PO->id() );
+			foreach my $C ( $PO->Contents() ) {
+				$html .= sprintf('%1$d %2$s<br/>', $C->docket(), $C->description() );
+			} # end foreach C
+			$html .= '</td></tr>';
 		} # end foreach PO
-		$html .= '<ul/>';
+		$html .= '</table>';
 	} else {
 		'Please select a vendor and/or enter a docket # to show relevant POs';
 	} # end if

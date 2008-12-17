@@ -1094,6 +1094,7 @@ sub update_inventory {
 		my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
 		$Manifest->id( $param{'manifest_id'} ) if ! $Manifest->id();
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
+		$Manifest->docket( $param{'Docket'} );
 
 		$variable{'error'} .= $Manifest->save( \%param );
 		delete $param{'rfidtag_id'};

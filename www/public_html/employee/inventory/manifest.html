@@ -83,7 +83,7 @@
 			</p>
 			<p><label>Vendor:</label>
 				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-				<select name="supplier_id" onchange="load('Results',this.form);">
+				<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('Docket').value} } );">
 					<option value="">All</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'Manifest'}->supplier_id() ); ) ?>
 				</select>
@@ -202,12 +202,13 @@
     </p>
     <p>
         <label>Docket:</label>
-        <input type="text" id="Docket" name="Docket" value="<? echo ( $param{'Docket'} ) ?>" size="10" style="width: auto;" />
+        <input type="text" id="Docket" name="Docket" value="<? echo ( $$variable{'Manifest'}->docket() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('Docket').value} } );"/>
     </p>
     <p>
         <label>Purchase Order:</label>
-        <input type="text" id="po_id" name="po_id" value="<? echo ( $$variable{'Manifest'}->po_id() ) ?>" size="10" style="width: auto;" />
+        <input type="text" id="po_id" name="po_id" value="<? echo ( $$variable{'Manifest'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" />
     </p>
+		<div id="PurchaseOrders"><!--#include virtual="_manifest_purchase_orders.html"--></div>
 	</div>
 </fieldset>
 <br/>
