@@ -119,7 +119,7 @@
 		<th width="90">LINE TOTAL</th>
 		<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	</tr>
-<? echo ( my $html = 'blah';
+<? echo ( my $html = '';
 	foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
 		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
 		if ( $C->Type()->name() eq 'Roll Stock' ) {

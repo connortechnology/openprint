@@ -13,7 +13,9 @@
 		foreach my $PO ( openprint::PurchaseOrder::find(%filters) ) {
 			$html .= sprintf( q`<tr onclick="$('po_id').value=%1$d;"><td>%1$d</td><td>`, $PO->id() );
 			foreach my $C ( $PO->Contents() ) {
-				$html .= sprintf('%1$d %2$s<br/>', $C->docket(), $C->description() );
+				my $desc = $C->description();
+				$desc =~ s/\n/<br\/>/g;
+				$html .= sprintf('%1$d %2$s<br/>', $C->docket(), $desc );
 			} # end foreach C
 			$html .= '</td></tr>';
 		} # end foreach PO
