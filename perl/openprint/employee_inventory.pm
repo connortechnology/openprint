@@ -1115,7 +1115,7 @@ sub update_inventory {
 			} # end if
 		} # end if
 		if ( $param{'po_id'} ) {
-			my $PO = openprint::PurchaseOrder( $param{'po_id'} );
+			my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 			if ( $PO->id() ) {
 				$variable{'error'} .= $PO->save({'manifest_id'=>$Manifest->id()});
 			} else {
