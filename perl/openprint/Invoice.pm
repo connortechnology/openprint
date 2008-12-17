@@ -381,6 +381,7 @@ sub send {
 			SMTP    => $config{'Mail Server'},
 			FROM    => $config{'AccountingEmail'},
 			TO      => join(',', @recipients ),
+			BCC		=> sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
 			SUBJECT => sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
 			);
 	misc::send_email_with_attachment( $log, \%mail, @attachments );

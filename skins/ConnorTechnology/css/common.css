@@ -566,3 +566,8 @@ td.Rate, th.Rate {
 	width: 75px;
 	text-align: right;
 }
+
+th.EmployeeName {
+	text-align: left;
+	width: 80px;
+}
