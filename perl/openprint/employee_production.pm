@@ -1033,6 +1033,7 @@ sub _labels {
 } # end sub _labels
 
 sub _paper_details {
+	require openprint::PaperInventory;
 }
 
 1;

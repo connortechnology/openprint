@@ -31,6 +31,7 @@ my $debug = 1;
 	'comment'		=>	'comment',
 	'skid_id'		=>	'skid_id',
 	'units'			=>	'units',
+	'docket'		=>	'docket',
 );
 
 # Returns a paper object specified by the parameters
@@ -59,6 +60,14 @@ sub find {
 		push @values, $params{'paper_id'};
 		} else {
 		$sql .= ' AND paper_id IS NULL';
+		} # end if
+	} # end if
+	if ( exists $params{'docket'} ) {
+		if ( defined $params{'docket'} ) {
+			$sql .= ' AND docket=?';
+			push @values, $params{'docket'};
+		} else {
+			$sql .= ' AND docket IS NULL';
 		} # end if
 	} # end if
 	if ( exists $params{'comment_like'} ) {
