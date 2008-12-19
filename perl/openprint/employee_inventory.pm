@@ -1238,6 +1238,7 @@ sub inventory_log {
 } # end sub inventory_log
 
 sub _inventory_log {
+	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub inventory_log
 
 sub _paper_allocations {
