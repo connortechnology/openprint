@@ -320,7 +320,6 @@ EOT
 		} else {
 			$to = $config{'OrderingEmail'};
 		} # end if
-		$to = 'iconnor@penultima.org';
 		my %variable;
 		$variable{'Company'} = $Company;
 		$variable{'User'} = $User;
@@ -343,7 +342,7 @@ EOT
                    );
         misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
 	
-	} else {
+	} elsif ( 0 ) {
 		my $email_info = {
 			smtp => $smtp_server,
 			From => $from,
