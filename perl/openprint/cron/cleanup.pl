@@ -38,6 +38,7 @@ $openprint::Object::no_cache = 1;
 
 
 # Clear out old sessions
+my $deleted_session_count = 0;
 foreach my $session ( sql::execute( $log, $dbh, q{SELECT id FROM sessions} ) ) {
     $session =~ s/\s//g;
     my %session;
@@ -51,12 +52,13 @@ foreach my $session ( sql::execute( $log, $dbh, q{SELECT id FROM sessions} ) ) {
         untie %session;
     } elsif ( time - $session{'lastupdated'} > ( 60*60*24*7 ) ) {
         untie %session;
-		sql::execute( $log, $dbh, q{DELETE FROM sessions where id=?}, $session );
+		sql::execute( 0, $dbh, q{DELETE FROM sessions where id=?}, $session );
+		$deleted_session_count += 1;
 	} else {
 		untie %session;
 	} # end if
-
 } # end foreach
+$log->debug("Deleted $deleted_session_count sessions");
 
 if ( 0 ) {
 # Clean out uncalculated projects
