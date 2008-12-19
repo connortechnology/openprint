@@ -5,7 +5,9 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable %fields);
+use vars qw($log $dbh %variable %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
 
 
@@ -32,6 +34,18 @@ my $debug = 1;
 	'skid_id'		=>	'skid_id',
 	'units'			=>	'units',
 	'docket'		=>	'docket',
+);
+%transforms = (
+	'paper_id'	=>	[ 's/\D//g' ],
+	'skid_id'	=>	[ 's/\D//g' ],
+	'user_id'	=>	[ 's/\D//g' ],
+	'instock'	=>	[ 's/\D//g' ],
+	'docket'	=>	[ 's/\D//g' ],
+	'delta'		=>	[ 's/[^\d\-]//g' ],
+);
+%defaults = (
+	'updated_on'	=>	'NOW()',
+	'docket'		=>	undef,
 );
 
 # Returns a paper object specified by the parameters
