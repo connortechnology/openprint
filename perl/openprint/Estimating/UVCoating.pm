@@ -254,7 +254,7 @@ $openprint::log->debug("@different_types");
 
 			my $complete = 1;
 			my $totalPrice = 0;
-			my $breakdown;
+			my $breakdown = '<b>'.$Equipment->name() . '</b><br/>';;
 
 			if ( @$impositions > 1 ) {
 				my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $openprint::log, $openprint::dbh, $openprint::variable, $Project, $service_index, $sig_specs, {}, $qty_index, $$impositions[0]->Paper() );
@@ -287,7 +287,7 @@ $openprint::log->debug('W&T: ' . $breakdown ) if $debug;
 					last;
 				} # end if
 
-				if ( $_ = $Equipment->fits( $imp->Paper()->width(), $imp->Paper()->height(), $$sig_specs{'txtSpecificStockCalliper'} ) ) {
+				if ( $_ = $Equipment->fits( $imp->Paper()->width(), $imp->Paper()->height(), $imp->Paper()->calliper() ) ) {
 					$breakdown .= "Doesn't fit. $_<br/>";
 $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 					$complete = 0;
