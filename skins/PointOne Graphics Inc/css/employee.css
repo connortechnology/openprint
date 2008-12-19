@@ -31,3 +31,9 @@ fieldset p label.radio, #Allocate fieldset p label.radio {
 	width: auto;
 	margin-left: 0px;
 }
+
+.Manifest #PurchaseOrders ul {
+	list-style: none;
+	padding: 0px;
+	margin: 0px;
+}

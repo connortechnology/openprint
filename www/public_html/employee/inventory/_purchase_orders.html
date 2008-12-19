@@ -4,6 +4,11 @@
 			'docket'=>$param{'docket'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'order' => 'id desc');
+	} elsif ( $param{'manifest_id'} ) {
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+			'manifest_id'=>$param{'manifest_id'}, 
+			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
+			'order' => 'id desc');
 	} else {
 		my %search = (
 			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
@@ -11,7 +16,7 @@
 			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?created_on_end_year','/employee/inventory/purchase_orders.html?created_on_end_month','/employee/inventory/purchase_orders.html?created_on_end_day'} ),
 			'order',			'id desc',
 		);
-		$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'},;
+		$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'};
 
 		@{$$variable{'PurchaseOrders'}} = ();
 		foreach my $PO ( openprint::PurchaseOrder::find( %search ) ) {
@@ -36,6 +41,7 @@
 		<th style="text-align: left;">Supplier</th>
 		<th style="text-align: left;">Created By</th>
 		<th style="text-align: left;">Authorized/Declined By</th>
+		<th style="text-align: left;">Manifest</th>
 		<th width="110" style="text-align: right;">Total</th>
 	</tr>
 	<? echo ( 
@@ -52,8 +58,9 @@
 				<td><a href="purchase_order_view.html?po_id=%1$d">%3$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%4$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%7$s</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%8$s</a></td>
 				<td style="text-align: right;">%5$s%6$.2f</td>
-			</tr>`, $PO->id(), Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total(), $PO->Authorized_By()->name() );
+			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total(), $PO->Authorized_By()->name(), $PO->manifest_id() );
 		} # end while
 		return $html;
 	) ?>

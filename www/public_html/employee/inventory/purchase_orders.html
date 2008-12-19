@@ -29,6 +29,10 @@
 			<input type="text" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $(f1) );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load('Results', f1);",'','Go' ); ) ?>
 		</p>
+		<p><label>Manifest:</label>
+			<input type="text" id="manifest_id" name="manifest_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $(f1) );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load('Results', f1);",'','Go' ); ) ?>
+		</p>
 		<hr/>
 		<p><label>Vendor:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />

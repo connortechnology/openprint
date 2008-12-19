@@ -1104,7 +1104,9 @@ sub update_inventory {
 		my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
 		$Manifest->id( $param{'manifest_id'} ) if ! $Manifest->id();
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
-		$variable{'error'} .= $Manifest->save();
+		$Manifest->docket( $param{'Docket'} );
+
+		$variable{'error'} .= $Manifest->save( \%param );
 		delete $param{'rfidtag_id'};
 
 		my $total_qty = 0;
@@ -1123,6 +1125,14 @@ sub update_inventory {
 				$Project = $Projects[0];
 			} # end if
 		} # end if
+		if ( $param{'po_id'} ) {
+			my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+			if ( $PO->id() ) {
+				$variable{'error'} .= $PO->save({'manifest_id'=>$Manifest->id()});
+			} else {
+				$variable{'error'} .= 'Purchase Order ' . $param{'po_id'} . ' was not found in the system.';
+			} # end if
+		} # end if po_id
 
 		foreach my $tag_id ( @ids ) {
 			next if ! $tag_id;
@@ -1238,6 +1248,7 @@ sub inventory_log {
 } # end sub inventory_log
 
 sub _inventory_log {
+	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub inventory_log
 
 sub _paper_allocations {
@@ -1514,6 +1525,12 @@ sub _po_notifications {
 	} # end if
 	$variable{'PurchaseOrder'} = $PO;
 } # end if
+
+sub _manifest_purchase_orders {
+} # end sub _manifest_purchase_orders
+
+sub _rfidtags_results {
+} # end sub _rfidtags_results
 
 1;
 __END__
