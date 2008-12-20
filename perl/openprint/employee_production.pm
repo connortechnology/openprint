@@ -99,7 +99,7 @@ sub press_schedule {
 		my $project_index = $param{'ProjectIndex'};
 		my $Project = new openprint::Project( $project_index );
 		mark_proofs_approved( $log, $dbh, \%variable, $project_index );
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus?', $project_index, 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
+		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
 		$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from print overview' );
 		$Project->update_status();
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
