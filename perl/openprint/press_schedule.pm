@@ -244,7 +244,7 @@ sub get_li {
 		$html .= sprintf( '<span class="Forms">%d %s</span>', $specs{'SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
 		$html .= sprintf( '<span class="Impressions">%d imps</span>', $specs{'ImpressionQuantity'} );
 		$html .= '<span class="Buttons">';
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Paper'.$$row{'serviceindex'}, '', "popup_window('_paper_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Paper'.$$row{'serviceindex'}, '', "popup_window('_stock_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
 		$html .= '</span>';
 	} # end if
 	$html .= '<br/></li>';
