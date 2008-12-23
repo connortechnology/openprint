@@ -19,7 +19,7 @@
 						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
 						$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?invoice_id='.$$variable{'Invoice'}->id(), 'Edit' );
 						$html .= ssi::writeButton( $log, $dbh, 'send', 'send.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
-						$html .= ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print()', '', 'Print' );
+						$html .= ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print();', '', 'Print' );
 					} # end if
 				} # end if
 				return $html;

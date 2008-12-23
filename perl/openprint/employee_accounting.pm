@@ -179,6 +179,10 @@ sub credit {
 	} # end if customer_index
 } # end sub credit
 
+sub ledger {
+	require openprint::Ledger;
+} # end sub ledger
+
 1;
 
 __END__

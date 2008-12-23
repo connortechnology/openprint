@@ -1,0 +1,109 @@
+package openprint::Ledger;
+@ISA = qw(openprint::Object);
+require openprint::Object;
+use MIME::QuotedPrint;
+
+use strict;
+use openprint ();
+use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
+*variable = \%openprint::variable;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+*session = \%openprint::session;
+
+require sql;
+require ssi;
+require misc;
+
+my $debug = 0;
+
+$table = 'Ledgers';
+$serial = 'ledgers_id_seq';
+
+%fields = (
+	'id'				=>	'id',
+	'owner_id'			=>	'owner_id',
+	'payor_id'			=>	'payor_id',
+	'memo'				=>	'memo',
+	'credit'			=>	'credit',
+	'debit'				=>	'debit',
+	'payment_id'		=>	'payment_id',
+	'created_on'		=>	'created_on',
+	'total'				=>	'total',
+	'when'				=>	'when',
+	'currency_id'		=>	'currency_id',
+	'account_id'		=>	'account_id',
+);
+
+%transforms = (
+	'id'			=>	[ 's/\D//g' ],
+	'owner_id'		=>	[ 's/\D//g' ],
+	'payor_id'		=>	[ 's/\D//g' ],
+	'payment_id'	=>	[ 's/\D//g' ],
+	'currency_id'	=>	[ 's/\D//g' ],
+	'account_id'	=>	[ 's/\D//g' ],
+	'credit'		=>	[ 's/[^\d\.\-]//g' ],
+	'debit'			=>	[ 's/[^\d\.\-]//g' ],
+	'total'			=>	[ 's/[^\d\.\-]//g' ],
+);
+
+%defaults = (
+);
+
+my %find_cache;
+# Returns a paper object specified by the parameters
+sub find {
+	my %params = @_;
+	@params{lc keys %params} = @params{keys %params};
+	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
+	return @{$find_cache{$hash_key}} if $find_cache{$hash_key};
+
+#$openprint::log->debug("Hash key: $hash_key");
+	my @values;
+	my $sql = 'SELECT * FROM Ledgers WHERE 1>0';
+
+	if ( exists $params{'id'} ) {
+		if ( ref $params{'id'} eq 'ARRAY' ) {
+			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
+			push @values, @{$params{'id'}};
+		} else {
+			$sql .= ' AND id=?';
+			push @values, $params{'id'};
+		} # end if
+	} # end if
+	if ( $params{'when_start'} and $params{'when_end'} ) {
+		$sql .= ' AND ( when BETWEEN ? AND ? )';
+		push @values, @params{'when_start','when_end'};
+	} elsif ( $params{'when_start'} ) {
+		$sql .= ' AND when >= ?';
+		push @values, $params{'when_start'};
+	} elsif ( $params{'when_end'} ) {
+		$sql .= ' AND when <= ?';
+		push @values, $params{'when_end'};
+	} # end if
+	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	if ( ! $data ) {
+		$log->debug("Error loading Ledgeres SQL($sql)" . DBI->errstr );
+	} elsif ( ! @$data ) {
+		$log->debug('No Ledgers loaded (' . $sql . ") (@values)" );
+	} elsif ( $debug ) {
+		$log->debug("Debug loaded Ledgers ($sql) (@values) records:" . @$data );
+	} # end if
+	@{$find_cache{$hash_key}} = map { new openprint::Ledger( $_->{id}, $_ ) } @$data;
+	return @{$find_cache{$hash_key}};
+} # end sub find
+
+sub delete {
+	my $self = shift;
+    sql::execute( undef, undef, q{DELETE FROM Ledgers WHERE id=?}, $$self{'id'} );
+} # end sub delete
+
+sub Payor {
+	return new openprint::Company( $_[0]{'payor_id'} );
+} # end sub Payor
+
+1;
+#__END__
