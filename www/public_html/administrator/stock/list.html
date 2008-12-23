@@ -2,8 +2,8 @@
 	if ( ! exists $session{'/administrator/stock/list.html?Types'} ) {
 		$session{'/administrator/stock/list.html?Types'} = join(';', 'Sheet','Roll' );
 	} # end if
-    if ( ! exists $session{'/administrator/paper/list.html?recommendations'} ) {
-        $session{'/administrator/paper/list.html?recommendations'} = join(';', 1,0 );
+    if ( ! exists $session{'/administrator/stock/list.html?recommendations'} ) {
+        $session{'/administrator/stock/list.html?recommendations'} = join(';', 1,0 );
     } # end if
     $session{'/administrator/stock/list.html?Owner'} = $session{'company_id'} if ! exists $session{'/administrator/stock/list.html?Owner'};
 ) ?>

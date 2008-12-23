@@ -203,7 +203,7 @@
 				ssi::make_drop_down( [ sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{'PrintingType'.$$variable{'QTYIndex'}} );
 			) ?>
 		</select>
-		<input type="checkbox" id="OverridePrintingType<?QTYIndex?>" name="OverridePrintingType<?QTYIndex?>" value="Y" <? echo ( ssi::checked( $$variable{"OverridePrintingType$$variable{'QTYIndex'}"} eq 'Y'); ) ?> onclick="if (this.checked == false) calc(this.form.name);" />
+		<input type="checkbox" id="OverridePrintingType<?QTYIndex?>" name="OverridePrintingType<?QTYIndex?>" value="Y" <? echo ( ssi::checked( $$variable{"OverridePrintingType$$variable{'QTYIndex'}"} eq 'Y'); ) ?> onclick="calc(this.form.name);" />
 		<label class="radio" for="OverridePrintingType<?QTYIndex?>">Override</label>
 </span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>

@@ -43,8 +43,7 @@ sub variables {
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity( $qty_index );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, (
 				 "txtVerticalQty-$$sig_specs{'SignatureIndex'}", "VerticalTeeth-$$sig_specs{SignatureIndex}",
 				 "txtHorizontalQty-$$sig_specs{'SignatureIndex'}", "HorizontalTeeth-$$sig_specs{SignatureIndex}",
@@ -124,6 +123,13 @@ sub calc {
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'alert'} = 'Printing calculations are not complete.';
 				$status = 'uncalculated';
+				next;
+			} # end if
+			if ( ! ( $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) ) {
+				$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
+				$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
+				$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
+$openprint::log->debug("Signature $$sig_specs{SignatureIndex} no veritcal or horizontal");
 				next;
 			} # end if
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
@@ -386,7 +392,7 @@ sub signature_calc {
 			if ( $vertical_rule ) {
 				if ( my @Materials = openprint::Material::find('name'=>'ScoringWheel') ) {
 					%vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );
-					if ( sets::isin( lc $horizontal_price{'units'},['per rule','each'] ) ) {
+					if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_rule;
 						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f2$%s * %4$d wheels=%3$.2f', @vertical_price{'Price','units','Total'}, $vertical_rule );
 					} elsif ( lc $vertical_price{'units'} eq 'per inch' ) {

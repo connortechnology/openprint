@@ -261,7 +261,7 @@ sub get_unspecified_pages {
 		$specified_pages += $$sig_specs{"PageQuantity$qty_index"};
 	} # end foreach
 
-	$openprint::log->debug("Unspec: Q$qty_index G$$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) );
+	$openprint::log->debug("Unspec: Qty$qty_index G$$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) );
 	return $$specs{'GroupPageQuantity'} - $specified_pages;
 } # end sub get_unspecified_pages
 
@@ -864,11 +864,9 @@ my $master_time = gettimeofday();
 		if ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) {
 		$$specs{'txtSpreadSize'} = 2*sprintf('%.0f', $$specs{'txtWidth'}/$$specs{'txtFinalWidth'})*sprintf('%.0f', $$specs{'txtHeight'}/$$specs{'txtFinalHeight'} );
 		} # end if
-		
 #$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 #$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 	} # end if
-
 	if ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) {
 		$$specs{'alert'} .= "Please enter Width and Height<br/>";
 		return $$specs{'Status'} = 'uncalculated';
@@ -1083,7 +1081,7 @@ my $master_time = gettimeofday();
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	if ( $debug ) {
+	if ( $debug or 1 ) {
 		foreach my $P ( @Papers ) {
 			$openprint::log->debug("Paper: " . $P->to_string() );
 		} # end foreach
@@ -1144,8 +1142,8 @@ my $master_time = gettimeofday();
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 		} # end if
 
-		delete $$specs{'PreviousGrainDirection'};
 		delete $$specs{'PreviousStockType'};
+		delete $$specs{'PreviousGrainDirection'};
 		foreach my $index ( $Project->signatures({'Group'=>$$specs{'Group'}}) ) {
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
@@ -1209,7 +1207,7 @@ my $master_time = gettimeofday();
 					last if $$specs{'PrintingTypes'};
 				} # end foreach
 
-				if ( ! $$specs{'PrintingTypes'} ) {
+				if ( ( ! $$specs{'PrintingTypes'} ) and ( $$specs{'OverridePrintingType'.$qty_index} ne 'Y' ) ) {
 					my $cover_specs;
 					foreach my $index ( $Project->signatures({'type'=>'Cover Pages'}) ) {
 						$cover_specs = openprint::service::get_specs_ref( $Project, $index );
@@ -1230,7 +1228,6 @@ my $master_time = gettimeofday();
 							} # end if
 						} # end if
 					} # end if
-
 				} # end if PrintingTypes
 			} # end if Spread Type
 		} # end if printing_specs{'PrintingType'}
@@ -1251,7 +1248,7 @@ my $master_time = gettimeofday();
 			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 		} # end foreach $index
 
-$$project{print_sides} = 1;
+		$$project{print_sides} = 1;
 		if ( ( @side_two_colours > 0 ) and ( @side_one_colours > 0 ) ) {
 			$$project{print_sides} = 2;
 		} # end if
@@ -1282,7 +1279,7 @@ $$project{print_sides} = 1;
 		} else {
 			$variables{'ddmRunStyle'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmRunStyle'.$qty_index}} ) ];
 		} # end if
-$openprint::log->debug("SignatureType: $$specs{'txtSignatureType'} Group: $$specs{'Group'} " . $$specs{'txtUnspecifiedPageQuantity'.$qty_index});
+#$openprint::log->debug("SignatureType: $$specs{'txtSignatureType'} Group: $$specs{'Group'} " . $$specs{'txtUnspecifiedPageQuantity'.$qty_index});
 		if ( $Project->Type()->strid() eq 'ScratchPads' ) {
 			delete $$project{'SpreadLayout'};
 
@@ -1311,14 +1308,14 @@ $openprint::log->debug("SignatureType: $$specs{'txtSignatureType'} Group: $$spec
 		foreach my $Press ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : @possible_presses ) {
 # These should be cached by the underlying layer anyways
 
-			$openprint::log->debug("Trying press " . $Press->strid()) if $debug;
+			$openprint::log->debug("Trying press " . $Press->strid()) if $debug or 1;
 			if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 				if ( $Press->specification('Printing Type') ne $$specs{'PrintingType'.$qty_index} ) {
 					$openprint::log->error("Press Printing Type (" . $Press->specification('Printing Type') .") is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if $debug;
 					next;
 				} # end if
 			} else {
-				if ( $$specs{'PrintingTypes'} and ! sets::isin( $Press->specification('Printing Type'), $$specs{'PrintingTypes'} ) ) {
+				if ( $$specs{'PrintingTypes'} and ($$specs{'OverridePrintingType'.$qty_index} ne 'Y' ) and ! sets::isin( $Press->specification('Printing Type'), $$specs{'PrintingTypes'} ) ) {
 					if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
 						$$specs{'alert'} .= 'Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} ) . '<br/>';
 					} # end if
@@ -1556,7 +1553,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( $debug ) {
+if ( $debug or 1 ) {
 $openprint::log->debug("Sorting");
 foreach my $i ( @imps ) {
 $i->display();
@@ -1950,7 +1947,7 @@ sub get_imposition_price {
 
 sub get_project_price {
 	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $versions, $PlateCounts, $previous_forms_cache, $signatures, $best_price ) = @_;
-
+$openprint::log->debug("get_project_price");
 	my %previous_forms_cache;
 	my %best_price;
 	$best_price{'Comparison Cost'} = $best_price if $best_price;
@@ -1979,7 +1976,7 @@ sub get_project_price {
 		} # end if
 
 		# When calculating the get_project_price for remaining sigs, we must make sure that we stay with the same type
-		if ( $$sig_specs{'PrintingTypes'} and @{$$sig_specs{'PrintingTypes'}} and ! sets::isin( $Press->specification('Printing Type'), $$sig_specs{'PrintingTypes'} ) ) {
+		if ( $$sig_specs{'PrintingTypes'} and @{$$sig_specs{'PrintingTypes'}} and ($$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) and ! sets::isin( $Press->specification('Printing Type'), $$sig_specs{'PrintingTypes'} ) ) {
 			$openprint::log->debug("Wrong type " . $Press->strid() . " : " . $Press->specification('Printing Type') . ': want ' . join(',', @{$$sig_specs{'PrintingTypes'}} ) ) if $debug;
 			next;
 		} # end if
@@ -2000,6 +1997,7 @@ sub get_project_price {
 				$imp->display();
 			} # end foreach
 		} # end if
+$openprint::log->debug("SPread Layout: $SpreadLayout");
 		if ( $SpreadLayout > 0 ) {
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, \@impositions );
