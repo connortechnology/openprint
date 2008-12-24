@@ -67,9 +67,10 @@ sub no_outputs {
 
 # A function that is smart enough to return true if the project needs perfing, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $Project ) = @_;
+	my ( $Project ) = @_;
 
-    #$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+    $Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+	return 1 if ( $Project->signatures({'type'=>'PerfReplyCard'}) );
 #
     #my %services = $Project->get_services( );
     #if ( $services{'NoBindery'} ) {
@@ -91,7 +92,7 @@ sub calc {
 
 	$log->debug("BEGIN PERFING!!!!!!!!!!!!!!!!!!");
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -125,14 +126,13 @@ sub calc {
 				$status = 'uncalculated';
 				next;
 			} # end if
+			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
 			if ( ! ( $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) ) {
 				$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
 				$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
 				$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
-$openprint::log->debug("Signature $$sig_specs{SignatureIndex} no veritcal or horizontal");
 				next;
 			} # end if
-			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
 			if ( $Price{'Equipment'} ) {
 				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->id();
 				$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->imposition();
@@ -225,6 +225,10 @@ sub signature_calc {
 	$Results{'Breakdown'} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
 
 	#@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
+	if ( ( $$sig_specs{'txtSignatureType'} eq 'PerfReplyCard' ) and ! ( $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) ) {
+		$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 1;
+		@no_output = sets::exclude( [ "txtVerticalQty-$$sig_specs{'SignatureIndex'}" ], \@no_output );
+	} # end if
 
 	my $rule_qty = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
 	if ( ! $rule_qty ) {
@@ -240,7 +244,7 @@ sub signature_calc {
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
-			$$specs{'alert'} = "The specified imposition is not possible.";
+			$$specs{'alert'} = 'The specified imposition is not possible.';
 			$Results{'Status'} = 'uncalculated';
 			return %Results;
 		} # end if

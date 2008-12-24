@@ -20,6 +20,7 @@ my $debug = 0;
 my $master_time;
 
 my %folding_cache;
+my @recursion_depth;
 
 use strict;
 #use warnings;
@@ -726,7 +727,7 @@ my $master_time = gettimeofday();
 	} # end if
 	if ( $$specs{'txtSignatureType'} ) {
 
-		if ( $$specs{'txtSignatureType'} eq 'GateFolded Spreads' ) {
+		if ( $$specs{'txtSignatureType'} eq 'Gate Folded Pages' ) {
 			if ( $$specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
 				if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
 					if ( ! $$specs{'txtWidth'} ) {
@@ -1672,6 +1673,7 @@ $i->display();
 		my @signatures = sort $Project->signatures({'Group'=>$$specs{'Group'}});
 		my @versions = get_versions( $specs, $qty_index );
 # Only thread qtys 2 and 3
+		$recursion_depth[$qty_index] = 1;
 		if ( $threading and ($qty_index > 1) ) {
 			$threads{$qty_index} = threads->create( sub { 
 					$openprint::dbh = sql::open_sql( $openprint::log, 
@@ -2407,7 +2409,12 @@ if ( 0 ) {
 						$new_specs{'Impositions'} = $$price{'Impositions'};
 
 						my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+						if ( $recursion_depth[$qty_index] == 3 ) {
+							
+						} else {
+							$recursion_depth[$qty_index] += 1;
 						$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $versions, \%PlateCounts, \%previous_forms_cache, \@signatures, %best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0 );
+						} # end if
 
 						if ( ( ! $$sig_price{'complete'} ) and ( $new_specs{'chkOverridePageQuantity'.$qty_index} or $new_specs{'chkOverridePress'.$qty_index} or $new_specs{'chkOverrideImposition'.$qty_index} ) ) {
 							$new_specs{'chkOverrideImposition'.$qty_index} = '';

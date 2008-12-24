@@ -35,6 +35,7 @@ my %variables = (
 	'txtInsertQuantity'=>['save'],
 	'TippingQuantity'=>['save'],
 	'BlowingQuantity'=>['save'],
+	'ReplyCardQuantity'=>['save'],
 	'txtSpreadSize'=>['save','output'],'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
@@ -92,14 +93,22 @@ sub calc {
 
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
+
+	if ( $$specs{ReplyCardQuantity} ) {
+		my $group_id = sets::max( @Groups );
+		foreach ( 1 .. $$specs{ReplyCardQuantity} ) {
+			push @Groups, $group_id + $_;
+			$override_pages{$group_id+$_} = 2;
+		} # end foreach
+	} # end if
+
 	foreach my $group_id ( @Groups ) {
 #$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
-		next if $override_pages{$group_id};
-
-		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
+		if ( $override_pages{$group_id} ) {
+# DO nothing
+		} elsif ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
 			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id} if $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y';
 		} else {
-
 			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 				$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
@@ -189,6 +198,7 @@ sub calc {
 			} # end if
 		} # end if
 	} # end if
+	$$specs{'groups'} = join(',', @Groups );
 
 	return 'calculated';
 } # end sub calc
@@ -206,7 +216,7 @@ $openprint::log->debug("Starting Multipage::calculate_signatures");
 
 	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
-	push @signatures, sort $Project->signatures({'type'=>'GateFolded Spreads'});
+	push @signatures, sort $Project->signatures({'type'=>'Gate Folded Pages'});
 	@signatures = $Project->signatures() if ! @signatures;
 $openprint::log->debug( "Signature: @signatures");
 
