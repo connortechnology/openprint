@@ -237,7 +237,7 @@ sub print_prices {
 	@{$$variable{'ddmPressOptions'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strcategory='Printing' AND (UseInEstimating IS true) ORDER BY lower(strName)} );
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
-	load_template_sizes( $log, $dbh, $$variable{'ProjectTypeID'}, $variable );
+	#load_template_sizes( $log, $dbh, $$variable{'ProjectTypeID'}, $variable );
 } # end sub print_prices
 
 sub load_template_sizes {
@@ -629,7 +629,7 @@ sub publication_pages {
 				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {
 			$$variable{$spec.$type} = $$sig_specs{$spec};
-$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");
+#$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");
 		} # end foreach spec
 	} # end foreach ss_id
 

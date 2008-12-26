@@ -7,9 +7,9 @@
 <script type="text/javascript">
 	var quantities=new Array();
 	<?QUANTITIES?>
-	<?TemplateSizes?>
 	var projectType = "<?ProjectTypeID?>";
 </script>
+<!--#include virtual="/main/project/prin/_templates.html"-->
 <? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 <script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js?version=1.0"></script>
 <script type="text/javascript">
@@ -17,7 +17,7 @@
 		calc_presentation_folder('f1');
 	}
 </script>
-<script type="text/javascript" src="/javascripts/templates/presentation_folders.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/presentation_folders.js?version=1.0"></script>
 <? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 <script type="text/javascript">
 	function calc( formName, force ) {
@@ -25,7 +25,6 @@
 	}
 </script>
 <? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-<script type="text/javascript" src="/javascripts/templates/brochures.js?version=1.0"></script>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->

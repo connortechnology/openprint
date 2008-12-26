@@ -39,7 +39,7 @@ my %variables = (
 	'txtSpreadSize'=>['save','output'],'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
-	'remaining_pages'=>['output'],'next_group_id'=>['output'],
+	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
 );
 
 sub variables {
@@ -94,20 +94,17 @@ sub calc {
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
 
-	if ( $$specs{ReplyCardQuantity} ) {
-		my $group_id = sets::max( @Groups );
-		foreach ( 1 .. $$specs{ReplyCardQuantity} ) {
-			push @Groups, $group_id + $_;
-			$override_pages{$group_id+$_} = 2;
-		} # end foreach
-	} # end if
-
 	foreach my $group_id ( @Groups ) {
 #$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 		if ( $override_pages{$group_id} ) {
 # DO nothing
 		} elsif ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
 			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id} if $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y';
+		} elsif ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
+			$override_pages{$group_id} = 2;
+			if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
+				$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
+			} # end if
 		} else {
 			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
@@ -148,10 +145,11 @@ sub calc {
 				$max_group = $g_id;
 			} # end if
 		} # end foreach g_id
-		$$specs{'next_group_id'} = $max_group + 1;
-	} else {
-		$$specs{'next_group_id'} = '';
+		$max_group += 1;
+		push @Groups, $max_group;
+		$$specs{'GroupPageQuantity'.$max_group} = $remaining_pages;
 	} # end if
+	$$specs{'groups'} = join(',', @Groups );
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'help'} = 'Please select the dimensions.';
@@ -198,7 +196,6 @@ sub calc {
 			} # end if
 		} # end if
 	} # end if
-	$$specs{'groups'} = join(',', @Groups );
 
 	return 'calculated';
 } # end sub calc

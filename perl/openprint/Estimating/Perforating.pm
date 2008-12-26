@@ -361,7 +361,7 @@ sub signature_calc {
 				$horizontal_rule = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} * $imposition->columns();
 				$horizontal_length = $horizontal_rule * $$sig_specs{'txtHeight'};
 			} # end if
-		$openprint::log->debug("Horizontal: $horizontal_rule");	
+		#$openprint::log->debug("Horizontal: $horizontal_rule");	
 			if ( $horizontal_rule ) {
 				if ( my @Materials = openprint::Material::find('name'=>'PerforatingRule') ) {
 					%horizontal_price = $Materials[0]->get_price( $horizontal_rule, $Equipment );
@@ -392,7 +392,7 @@ sub signature_calc {
 				$vertical_length = $vertical_rule * $$sig_specs{'txtWidth'};
 			} # end if
 
-		$openprint::log->debug("Vertical: $vertical_rule");	
+		#$openprint::log->debug("Vertical: $vertical_rule");	
 			if ( $vertical_rule ) {
 				if ( my @Materials = openprint::Material::find('name'=>'ScoringWheel') ) {
 					%vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );

@@ -373,9 +373,9 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 					my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
 					@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
-$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+#$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
 if ( ! $variable{'ServiceIndex'} ) {
-$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+#$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
 $variable{'ServiceIndex'} = $service_index;
 } # end if
 
@@ -391,6 +391,13 @@ $variable{'ServiceIndex'} = $service_index;
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
 					} elsif ( $filename eq 'ScratchPads.html' ) {
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
+					} elsif ( $filename =~ /^_.*\.html$/ ) {
+			eval( 'require openprint::'.join('_', @path ) );
+$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} else {
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} # end if

@@ -16,27 +16,27 @@ require openprint::service;
 
 sub _signature {
 
-	my $Project = new openprint::Project( $param{'ProjectIndex'} );
-    if ( $param{'next_group_id'} ) {
-        $variable{'Group'} = $param{'next_group_id'};
-        $variable{'Signature'} = $param{'next_group_id'};
-
-        my $ac = sql::start_transaction( $dbh );
-        $dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-        my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
-        openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Pages' );
-        openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Pages' );
-        openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'Group', $param{'next_group_id'} );
-        openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'GroupPageQuantity', $param{'remaining_pages'} );
-        $_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-        my ( $signature_count ) = sql::execute( $log, $dbh, $_, $Project->id() );
-        $signature_count += 1;
-        openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $signature_count );
-        sql::end_transaction( $dbh, $ac );
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $print_service_index );
-        foreach my $k ( keys %$sig_specs ) {
-            $variable{$k.$variable{'Group'}} = $$sig_specs{$k};
-        } # end foreach k
+	my $Project = new openprint::Project( $param{'project_id'} );
+	if ( $param{'group_id'} ) {
+        $variable{'Group'} = $param{'group_id'};
+        $variable{'Signature'} = $param{'group_id'};
+		if ( ! $Project->signatures({'Group'=>$param{'group_id'}}) ) {
+			my $ac = sql::start_transaction( $dbh );
+			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+			my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Pages' );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Pages' );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'Group', $param{'group_id'} );
+			$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $Project->id() );
+			$signature_count += 1;
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $signature_count );
+			sql::end_transaction( $dbh, $ac );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $print_service_index );
+			foreach my $k ( keys %$sig_specs ) {
+				$variable{$k.$variable{'Group'}} = $$sig_specs{$k};
+			} # end foreach k
+		} # end if
     } # end if
 
 } # end sub _signature

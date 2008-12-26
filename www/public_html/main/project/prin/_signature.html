@@ -34,9 +34,10 @@
 		</div>
 		<p>
 			<label>Signature Type:</label>
-			<select name="txtSignatureType<?Group?>">
+			<select name="txtSignatureType<?Group?>" onchange="calc(this.form.name);">
 <? echo (
 	my @options = (
+		'unknown', 'Please select',
 		'Cover Pages', 'Cover Pages',
 		'Interior Pages',	'Interior Pages',
 		'Gate Folded Pages', 	'Gate Fold Pages',

@@ -36,9 +36,9 @@ function selectProjectTemplate( formName ) {
 				add_option( ddm, options[type][x].text, options[type][x].value );
 			} // end for
 		} else {
-				if ( type ) {
-					alert("We do not have common dimensions for the selected project template at this time.\n\nPlease select custom in the dimension pull down and input you own finished and flat dimesnions in the supplied text boxes below.");
-				} // type
+			if ( type ) {
+				alert("We do not have common dimensions for the selected project template at this time.\n\nPlease select custom in the dimension pull down and input you own finished and flat dimesnions in the supplied text boxes below.");
+			} // type
 		} // end if
 		if ( type != 'PF1Pocket' && type != 'PF2Pocket' ) {
 			add_option( form.ddmProjectSize, 'Custom','Custom' );
@@ -48,18 +48,3 @@ function selectProjectTemplate( formName ) {
 	} // end if ddm
 
 } // end function selectProjectTemplate( form );
-
-function ddmProjectSize_onChange( form ) {
-	var index = form.ddmProjectSize.selectedIndex;
-	if (index > -1 && form.ddmProjectSize.options[index]&& form.ddmProjectSize.options[index].value != 'Custom' ) {
-		var dimensions = form.ddmProjectSize.options[form.ddmProjectSize.selectedIndex].value.split(',');
-		var finished = dimensions[0].split('x');
-		var flat = dimensions[1].split('x');
-		form.txtFinalWidth.value = finished[0];
-		form.txtFinalHeight.value = finished[1];
-		form.txtWidth.value = flat[0];
-		form.txtHeight.value = flat[1];
-	} // end if
-	calc( form.name );
-} // end function ddmProjectSize_onChange();
-

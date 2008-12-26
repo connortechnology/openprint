@@ -26,14 +26,21 @@
 		var Groups = form.groups.value.split(',');
 		for ( var i = 0; i < Groups.length; i += 1 ) {
 			var group_id = Groups[i];
+			if ( ! group_id ) {
+				next;
+			} // end if
 			if ( ! $('SignatureGroup'+group_id) ) {
 				new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { method: 'get', 
-						parameters: { 'group_id' : group_id, },
+						parameters: { 
+							'project_id' : form.ProjectIndex.value,
+							'group_id' : group_id, },
 						onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+group_id)){calc(form.name);}}
 						//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
 					 } );
 			} // end if Group exists
 		} // end for each group
+
+if ( 0 ) {
 		if ( ( form.remaining_pages.value > 0 ) && ! $('SignatureGroup'+form.next_group_id.value) ) {
 			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { method: 'get', 
 					parameters: { 'next_group_id' : form.next_group_id.value, },
@@ -42,6 +49,7 @@
 				 } );
 		} // end if
 	} // end function cbBookResults
+} 
 
 	function validate_data(formName) {
 		var form = getFormObj(formName);
@@ -56,24 +64,21 @@
 
 		return 1;
 	} // end function
-
-	<?TemplateSizes?>
 </script>
-<script type="text/javascript" src="/javascripts/templates/brochures.js?version=1.0"></script>
+<!--#include virtual="/main/project/prin/_templates.html"-->
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<input type="hidden" name="groups" />
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend><?ProjectTypeName?></legend>
 			<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
 			<!--#include virtual="/includes/main/proj/dimensions.html" -->
-<div id="OtherSpecifications">
-<fieldset><legend>Other Specifications</legend>
-		<!--#include virtual="/includes/main/proj/multipage_printing_type.html"-->
-		<!--#include virtual="/includes/main/proj/screen_type.html"-->
-</fieldset>
-</div>
+			<div id="OtherSpecifications">
+				<fieldset><legend>Other Specifications</legend>
+					<!--#include virtual="/includes/main/proj/multipage_printing_type.html"-->
+					<!--#include virtual="/includes/main/proj/screen_type.html"-->
+				</fieldset>
+			</div>
 			<br class="spacer"/>
 			<fieldset><legend>Book Specifications</legend>
 				<div id="PagesCover">

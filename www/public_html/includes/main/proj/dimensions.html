@@ -6,11 +6,11 @@
 			</select>
 		</div>
 		<div class="rightColumn">
-			<input type="text" name="txtFinalWidth" size="7" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> 
-			<input type="text" name="txtFinalHeight" size="7" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> 
+			<input type="text" id="txtFinalWidth" name="txtFinalWidth" size="7" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> 
+			<input type="text" id="txtFinalHeight" name="txtFinalHeight" size="7" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> 
 			(<? echo ( ssi::writeTip( 'Finished' ); ) ?> - W x H in inches)<br/>
-			<input type="text" name="txtWidth" size="7" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> 
-			<input type="text" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> 
+			<input type="text" id="txtWidth" name="txtWidth" size="7" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> 
+			<input type="text" id="txtHeight" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> 
 			(<? echo ( ssi::writeTip( 'Flat' ); ) ?> - W x H in inches)
 		</div>
 	</fieldset>
