@@ -17,6 +17,7 @@
 			'order',			'id desc',
 		);
 		$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'};
+		$search{'created_by'} = $session{'/employee/inventory/purchase_orders.html?created_by'} if $session{'/employee/inventory/purchase_orders.html?created_by'};
 
 		@{$$variable{'PurchaseOrders'}} = ();
 		foreach my $PO ( openprint::PurchaseOrder::find( %search ) ) {
@@ -42,7 +43,7 @@
 		<th style="text-align: left;">Created By</th>
 		<th style="text-align: left;">Authorized/Declined By</th>
 		<th style="text-align: left;">Manifest</th>
-		<th width="110" style="text-align: right;">Total</th>
+		<th width="75" style="text-align: right;">Total</th>
 	</tr>
 	<? echo ( 
 		my $html = '';
