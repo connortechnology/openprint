@@ -471,7 +471,7 @@ sub get_scores {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
 		} # end if
-	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Gate Fold Spreads' ) {
+	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Gate Folded Pages' ) {
 	} else { # normal printing
 		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'Portrait', 'Landscape' ) ) {
 # needs no folding

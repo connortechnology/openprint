@@ -367,6 +367,11 @@ $openprint::log->debug("Apres Skdis");
 			push @{$services{'Scoring'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Scoring' );
 		} # end if
 	} # end if
+	if ( ! $services{'Perforating'} ) {
+		if ( openprint::Estimating::Perforating::neccessary( $Project ) ) {
+			push @{$services{'Perforating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Perforating' );
+		} # end if
+	} # end if
 
 	if ( openprint::Estimating::Counting::neccessary( $Project ) ) {
 		push @{$services{'Counting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' ) if ! $services{'Counting'};

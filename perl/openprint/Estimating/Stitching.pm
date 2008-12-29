@@ -687,7 +687,7 @@ sub get_price {
 			} # end if Exact
 		} # end if requires exact or not
 	} # end if
-	if ( $Project->signatures({'type'=>'GateFoldedPages'}) ) {
+	if ( $Project->signatures({'type'=>'Gate Folded Pages'}) ) {
 		my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
 		if ( $$specs{'rdbGateFoldFit'} eq 'Exact' and $gateFolds > 0 ) {
 			$price{'Service'} += openprint::service::get_price( $$ServiceType{'name'}, $gateFolds, $Equipment );

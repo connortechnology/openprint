@@ -350,7 +350,7 @@ sub get_services_in_category {
 	if ( $category eq 'Printing' ) {
 #The entire point of this is to sort the signature groups
 		if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
-			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','GateFolded Spreads','Cover Pages') ORDER BY lngServiceIndex";
+			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','Gate Folded Pages','Cover Pages') ORDER BY lngServiceIndex";
 			my @signatures = sql::execute( $log, $dbh, $_, $project_index );
 			
 			while ( @signatures ) {
