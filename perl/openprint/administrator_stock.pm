@@ -275,7 +275,7 @@ sub import_export {
 				$calliper =~ s/[^\d\.]//g;
 				$width =~ s/[^\d\.]//g;
 				$height =~ s/[^\d\.]//g;
-				$gsm =~ s/[^\d]//g;
+				$gsm =~ s/[^\d\.]//g;
 				$spp =~ s/[^\d]//g;
 
 				my $Paper = $papers{$paper_id} ? $papers{$paper_id} : new openprint::Paper();
