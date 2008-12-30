@@ -867,7 +867,7 @@ sub allocate {
 	if ( @allocations ) {
 		stock_allocation_notification( $Projects[0], $Paper, \@allocations, \@old_skids );
 	} # end if
-	$variable{'information'} .= "Allocated $quantity$units to docket " . $Projects[0]->docket() . '<br/>';
+	$variable{'information'} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?ProjectIndex=%d">%d</a><br/>', $quantity, $units, $Projects[0]->id(), $Projects[0]->docket() );
 } # end sub allocate
 
 sub stock_allocation_notification {
