@@ -65,12 +65,8 @@
 		} // end for
 	} // end function highlight_paper
 </script>
-<? if ( $$variable{'error'} ) ?>
-<p class="error"><?error?></p>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<p class="information"><?information?></p>
-<? endif ( $$variable{'information'} ) ?>
+<? if ( $$variable{'error'} ) ?><p class="error"><?error?></p><? endif ( $$variable{'error'} ) ?>
+<? if ( $$variable{'information'} ) ?><p class="information"><?information?></p><? endif ( $$variable{'information'} ) ?>
 Please select a Paper to view/edit.<br>
 <form name="f1" method="post" action="available_paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>

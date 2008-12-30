@@ -776,7 +776,7 @@ sub check_in {
 sub allocate {
 	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket, $specific ) = @_;
 	if ( ! $paper_id ) {
-		$variable{'error'} .= "Paper not specified. No paper allocated.<br/>";
+		$variable{'error'} .= 'Paper not specified. No paper allocated.<br/>';
 		return;
 	} # end if
 
@@ -791,8 +791,13 @@ sub allocate {
 	$docket =~ s/\D//g;
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
+	if ( $docket and ! @Projects ) {
+		if ( my @Orders = openprint::Order::find('docket'=>$docket) ) {
+			@Projects = $Orders[0]->Projects();
+		} # end if
+	} # end if
 	if ( ! @Projects ) {
-		$variable{'error'} .= "An invalid Docket or Project # was given. No paper allocated.<br/>";
+		$variable{'error'} .= 'An invalid Docket or Project # was given. No paper allocated. This can happen if the order has been left re-opened.<br/>';
 		return;
 	} # end if
 
@@ -862,7 +867,7 @@ sub allocate {
 	if ( @allocations ) {
 		stock_allocation_notification( $Projects[0], $Paper, \@allocations, \@old_skids );
 	} # end if
-	$variable{'information'} .= "Allocated $quantity $units to docket " . $Projects[0]->docket() . '<br/>';
+	$variable{'information'} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?ProjectIndex=%d">%d</a><br/>', $quantity, $units, $Projects[0]->id(), $Projects[0]->docket() );
 } # end sub allocate
 
 sub stock_allocation_notification {
@@ -1431,7 +1436,7 @@ sub purchase_order_edit {
 } # end sub purchase_order_edit
 
 sub purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id' ) {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 	if ( $param{'btnFunction'} eq 'Delete' ) {
@@ -1468,7 +1473,7 @@ sub purchase_orders {
 } # end sub purchase_orders
 
 sub _purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id' ) {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id','created_by' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 } # end sub _purchase_orders
