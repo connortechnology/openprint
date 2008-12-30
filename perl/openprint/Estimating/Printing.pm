@@ -2004,9 +2004,11 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 
 			my %imps;
 
+			my %max_impositions;
 			my $max_pages = 0;
 			foreach my $imp ( @impositions ) {
 				$max_pages = $imp->pages() if $imp->pages() > $max_pages;
+				$max_impositions{$imp->pages()} = $imp->imposition() if $imp->imposition() > $max_impositions{$imp->pages()};
 			} # end foreach
 			$max_pages /= 2;
 			my @dont_do_pages = split(',', $Press->specification('DontDoPages'));
@@ -2020,7 +2022,10 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 					if ( $imp->Paper()->height() != $$sig_specs{"CutOff$qty_index"} ) {
 						next;
 					} # end if
-				} elsif ($max_pages >= $imp->pages()) {
+				} elsif (($max_pages >= $imp->pages() ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
+					# Only do this if not sheet size overrides
+					next;
+				} elsif ($max_impositions{$imp->pages()}/2 >= $imp->imposition()) {
 					# Only do this if not sheet size overrides
 					next;
 				} # end if
@@ -2050,7 +2055,7 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 						} # end for
 					} # end if overriden or not or cached
 				} elsif ( $imp->runstyle() eq 'Work & Turn' ) {
-					my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
+					my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows'}, 'Work & Tumble', $$imp{'image_orientation'} );
 					if ( $imps{$str} ) {
 						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 							my $I = $imps{$str}[$j];
@@ -2059,7 +2064,7 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 							if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
 									and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 									and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
-									and ( ! ( ( ! $I->Paper()->is_cut() ) and $imp->Paper()->is_cut() ) )
+									and ( $I->Paper()->is_cut() or ! $imp->Paper()->is_cut() )
 							   ) {
 								splice @{$imps{$str}}, $j, 1;
 								$j -= 1;
@@ -2083,7 +2088,7 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 						if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
 								and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 								and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
-								and ( ! ( ( ! $I->Paper()->is_cut() ) and $imp->Paper()->is_cut() ) )
+								and ( $I->Paper()->is_cut() or ! $imp->Paper()->is_cut() )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
