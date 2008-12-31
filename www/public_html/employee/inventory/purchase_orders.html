@@ -34,6 +34,13 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load('Results', f1);",'','Go' ); ) ?>
 		</p>
 		<hr/>
+		<p><label>Created By:</label>
+			<select name="created_by" onchange="load('Results',this.form);">
+				<option value="">All</option>
+				<? echo ( 
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)','type'=>['A','E'] ) ], $session{'/employee/inventory/purchase_orders.html?created_by'} ); ) ?>
+			</select>
+		</p>
 		<p><label>Vendor:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 			<select name="supplier_id" onchange="load('Results',this.form);">

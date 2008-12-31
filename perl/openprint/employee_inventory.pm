@@ -784,7 +784,7 @@ sub check_in {
 sub allocate {
 	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket, $specific ) = @_;
 	if ( ! $paper_id ) {
-		$variable{'error'} .= "Paper not specified. No paper allocated.<br/>";
+		$variable{'error'} .= 'Paper not specified. No paper allocated.<br/>';
 		return;
 	} # end if
 
@@ -799,8 +799,13 @@ sub allocate {
 	$docket =~ s/\D//g;
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
+	if ( $docket and ! @Projects ) {
+		if ( my @Orders = openprint::Order::find('docket'=>$docket) ) {
+			@Projects = $Orders[0]->Projects();
+		} # end if
+	} # end if
 	if ( ! @Projects ) {
-		$variable{'error'} .= "An invalid Docket or Project # was given. No paper allocated.<br/>";
+		$variable{'error'} .= 'An invalid Docket or Project # was given. No paper allocated. This can happen if the order has been left re-opened.<br/>';
 		return;
 	} # end if
 
@@ -870,7 +875,7 @@ sub allocate {
 	if ( @allocations ) {
 		stock_allocation_notification( $Projects[0], $Paper, \@allocations, \@old_skids );
 	} # end if
-	$variable{'information'} .= "Allocated $quantity $units to docket " . $Projects[0]->docket() . '<br/>';
+	$variable{'information'} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?ProjectIndex=%d">%d</a><br/>', $quantity, $units, $Projects[0]->id(), $Projects[0]->docket() );
 } # end sub allocate
 
 sub stock_allocation_notification {
@@ -1106,6 +1111,24 @@ sub update_inventory {
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 		$Manifest->docket( $param{'Docket'} );
 
+		if ( $param{'supplier'} and ! $param{'supplier_id'} ) {
+			my @Companies = openprint::Company::find( 'name'=>$param{'supplier'} );
+			if ( ! @Companies ) {
+				my $C = new openprint::Company();
+				$C->save({
+						'supplier'      => 'Y',
+						'name'          => $param{'supplier'},
+						'business_name' => $param{'supplier'},
+						} );
+				$param{'supplier_id'} = $C->id();
+			} elsif ( @Companies == 1 ) {
+				if ( $Companies[0]->supplier() ne 'Y' ) {
+					$Companies[0]->save( {'supplier'=>'Y'} );
+				} # end if
+				$param{'supplier_id'} = $Companies[0]->id();
+			} # end if
+		} # end if
+
 		$variable{'error'} .= $Manifest->save( \%param );
 		delete $param{'rfidtag_id'};
 
@@ -1180,6 +1203,26 @@ sub update_inventory {
 
 
 sub _update_inventory {
+
+	# Create new vendor if neccessary
+	if ( $param{'supplier'} and ! $param{'supplier_id'} ) {
+		my @Companies = openprint::Company::find( 'name'=>$param{'supplier'} );
+		if ( ! @Companies ) {
+			my $C = new openprint::Company();
+			$C->save({
+					'supplier'      => 'Y',
+					'name'          => $param{'supplier'},
+					'business_name' => $param{'supplier'},
+					} );
+			$param{'supplier_id'} = $C->id();
+		} elsif ( @Companies == 1 ) {
+			if ( $Companies[0]->supplier() ne 'Y' ) {
+				$Companies[0]->save( {'supplier'=>'Y'} );
+			} # end if
+			$param{'supplier_id'} = $Companies[0]->id();
+		} # end if
+	} # end if
+
 	my @ids = split(';', $param{'rfidtag_ids'} );
     if ( $param{'rfidtag_id'} ) {
 		($param{'rfidtag_id'}) = misc::trim($param{'rfidtag_id'});
@@ -1441,7 +1484,7 @@ sub purchase_order_edit {
 } # end sub purchase_order_edit
 
 sub purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id' ) {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'created_on', -31 );
@@ -1479,7 +1522,7 @@ sub purchase_orders {
 } # end sub purchase_orders
 
 sub _purchase_orders {
-    foreach my $key ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','authorized','supplier_id' ) {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id','created_by' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 } # end sub _purchase_orders

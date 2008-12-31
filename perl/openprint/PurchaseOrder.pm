@@ -126,6 +126,15 @@ sub find {
 			push @values, $params{'supplier_id'};
 		} # end if
 	} # end if
+	if ( exists $params{'created_by'} ) {
+		if ( ref $params{'created_by'} eq 'ARRAY' ) {
+			$sql .= ' AND created_by IN ('. join(',', map {'?'} @{$params{'created_by'}} ) . ')';
+			push @values, @{$params{'created_by'}};
+		} elsif ( $params{'created_by'} ) {
+			$sql .= ' AND created_by=?';
+			push @values, $params{'created_by'};
+		} # end if
+	} # end if
 	if ( exists $params{'manifest_id'} ) {
 		if ( ref $params{'manifest_id'} eq 'ARRAY' ) {
 			if ( @{$params{'manifest_id'}} ) {

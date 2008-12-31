@@ -57,11 +57,14 @@ sub find {
 	if ( exists $params{'id'} ) {
 		if ( ref $params{id} eq 'ARRAY' ) {
 			if ( @{$params{id}} > 1 ) {
-			$sql .= ' AND id IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
-			push @values, @{$params{id}};
+				$sql .= ' AND id IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
+				push @values, @{$params{id}};
+			} elsif ( @{$params{id}} == 1 ) {
+				$sql .= ' AND id=?';
+				push @values, $params{id};
 			} else {
-			$sql .= ' AND id=?';
-			push @values, $params{id};
+				$sql .= ' AND id=?';
+				push @values, $params{id};
 			} # en dif
 		} else {
 			$sql .= ' AND id=?';
