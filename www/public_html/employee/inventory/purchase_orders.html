@@ -72,6 +72,10 @@
 			<input type="radio" name="authorized" id="authorizedAll" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq '' ) ) ?> onclick="load('Results',this.form);" />
 			<label class="radio" for="authorizedAll">All</label>
 		</p>
+		<p>
+			<label>Contains</label>
+			<input type="text" id="contains" name="contains" onkeyup="load('Results',this.form);" />
+		</p>
 		<p class="buttons">
 				<? echo ( join( '',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),

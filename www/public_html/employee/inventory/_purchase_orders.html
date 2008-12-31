@@ -24,6 +24,16 @@
 			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
 			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' and $PO->authorized() ne '0';
 			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'U' and $PO->authorized() ne '';
+			if ( $param{'contains'} ) {
+				my $next = 1;
+				foreach my $C ($PO->Contents()) {
+					if ( $C->description() =~ /$param{'contains'}/i ) {
+						$next = 0;
+						last;
+					} # end if
+				} # end foreach
+				next if $next;
+			} # end if
 			push @{$$variable{'PurchaseOrders'}}, $PO;
 		} # end foreach PO
 	} # end if
