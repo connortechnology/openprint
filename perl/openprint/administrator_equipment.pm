@@ -116,9 +116,9 @@ sub _specification {
 	my $Specification = new openprint::EquipmentSpecification( $param{'id'} );
 	if ( $param{'action'} eq 'add' ) {
 		foreach my $k ( 'name','min','max','value','units','interpolate','equipment_id' ) {
-			$$Specification{$k} = ssi::unhtmlize($param{$k});
+			$param{$k} = ssi::unhtmlize($param{$k});
 		} # end foreach
-		$Specification->save();
+		$Specification->save(\%param);
 	} elsif ( $param{'action'} eq 'delete' ) {
 		$Specification->delete();
 		$variable{'PageContent'} = ' ';
