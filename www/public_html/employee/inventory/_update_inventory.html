@@ -1,13 +1,5 @@
-<? if ( $$variable{'error'} ) ?>
-<div class="error">
-<?error?>
-</div>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<div class="information">
-<?information?>
-</div>
-<? endif ( $$variable{'information'} ) ?>
+<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
 <div class="Manifest">
 	<form name="f1" id="f1" method="post">
 		<input type="hidden" name="rfidtag_ids" value="<? echo ( join(';', @{$$variable{'IDS'}} ); ) ?>" />
@@ -48,12 +40,16 @@
 					<input type="text" onkeyup="filterDDM(this, this.form.Owner);" class="filter" />
 					<select id="Owner" name="Owner"><? echo ( openprint::Company::get_dropdown( $param{'Owner'} ? $param{'Owner'} : $session{'company_id'} ); ) ?></select>
 				</p>
-				<p><label>Vendor:</label>
-					<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('Docket').value} } );">
-						<option value="">select</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $param{'supplier_id'} ); ) ?>
-					</select>
+				<p><label onclick="f1.txtFinish.value='';$('supplier_id').selectedIndex=0;$('supplier_ddm').toggle();$('supplier').toggle();">Vendor:</label>
+	
+					<input type="text" name="supplier" id="supplier" style="display:none;" onkeyup="$('supplier_id').selectedIndex=0;" />
+					<span id="supplier_ddm">	
+						<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+						<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('Docket').value} } );">
+							<option value="">select</option>
+							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $param{'supplier_id'} ); ) ?>
+						</select>
+					</span>
 				</p>
 	<p>
 		<label for="txtManufacturer" onclick="f1.txtManufacturer.value='';f1.Manufacturer.selectedIndex=0;f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
