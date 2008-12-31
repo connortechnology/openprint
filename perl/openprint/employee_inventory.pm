@@ -1101,6 +1101,24 @@ sub update_inventory {
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 		$Manifest->docket( $param{'Docket'} );
 
+		if ( $param{'supplier'} and ! $param{'supplier_id'} ) {
+			my @Companies = openprint::Company::find( 'name'=>$param{'supplier'} );
+			if ( ! @Companies ) {
+				my $C = new openprint::Company();
+				$C->save({
+						'supplier'      => 'Y',
+						'name'          => $param{'supplier'},
+						'business_name' => $param{'supplier'},
+						} );
+				$param{'supplier_id'} = $C->id();
+			} elsif ( @Companies == 1 ) {
+				if ( $Companies[0]->supplier() ne 'Y' ) {
+					$Companies[0]->save( {'supplier'=>'Y'} );
+				} # end if
+				$param{'supplier_id'} = $Companies[0]->id();
+			} # end if
+		} # end if
+
 		$variable{'error'} .= $Manifest->save( \%param );
 		delete $param{'rfidtag_id'};
 
@@ -1175,6 +1193,26 @@ sub update_inventory {
 
 
 sub _update_inventory {
+
+	# Create new vendor if neccessary
+	if ( $param{'supplier'} and ! $param{'supplier_id'} ) {
+		my @Companies = openprint::Company::find( 'name'=>$param{'supplier'} );
+		if ( ! @Companies ) {
+			my $C = new openprint::Company();
+			$C->save({
+					'supplier'      => 'Y',
+					'name'          => $param{'supplier'},
+					'business_name' => $param{'supplier'},
+					} );
+			$param{'supplier_id'} = $C->id();
+		} elsif ( @Companies == 1 ) {
+			if ( $Companies[0]->supplier() ne 'Y' ) {
+				$Companies[0]->save( {'supplier'=>'Y'} );
+			} # end if
+			$param{'supplier_id'} = $Companies[0]->id();
+		} # end if
+	} # end if
+
 	my @ids = split(';', $param{'rfidtag_ids'} );
     if ( $param{'rfidtag_id'} ) {
 		($param{'rfidtag_id'}) = misc::trim($param{'rfidtag_id'});
