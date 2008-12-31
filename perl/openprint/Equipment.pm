@@ -46,11 +46,12 @@ sub find {
 	if ( exists $params{'id'} ) {
 		if ( ref $params{id} eq 'ARRAY' ) {
 			if ( @{$params{id}} > 1 ) {
-			$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}  ) . ')';
-			push @values, @{$params{id}};
+				$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}  ) . ')';
+				push @values, @{$params{id}};
+			} elsif ( @{$params{id}} == 1 ) {
+				$sql .= ' AND lngindex=?';
+				push @values, $params{id};
 			} else {
-			$sql .= ' AND lngindex=?';
-			push @values, $params{id};
 			} # en dif
 		} else {
 			$sql .= ' AND lngindex=?';
