@@ -11,16 +11,18 @@ use vars qw( $log $dbh %fields %transforms %defaults $table $serial );
 my $debug = 1;
 
 %fields = (
-'skid_id'	=>	'skid_id',
-'paper_id'	=>	'paper_id',
-'quantity'	=>	'purpose_id',
-'units'		=>	'units',
+'skid_id'		=>	'skid_id',
+'paper_id'		=>	'paper_id',
+'quantity'		=>	'quantity',
+'purpose_id'	=>	'purpose_id',
+'units'			=>	'units',
 );
 %defaults = (
 );
 %transforms = (
 );
 $table = 'Skid_Contents';
+$serial = 'skid_contents_id_seq';
 
 
 sub find {

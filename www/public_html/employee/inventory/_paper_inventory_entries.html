@@ -41,15 +41,13 @@
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td><b>Totals</b></td>
-				<td>&nbsp;</td>
-				<td>&nbsp;</td>
+				<td colspan="4"><b>Totals</b></td>
 				<td align="right"><?InventoryTotal?> <? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
 				<td>&nbsp;</td>
 			</tr>
 			<tr class="totals">
 				<td colspan="2">Enter new inventory:</td>
-				<td>
+				<td colspan="2">
 					<select id="Location" name="Location">
 						<? echo (
 							my @data = ( '', 'select', sql::execute( $log, $dbh, q{SELECT id, name FROM Locations ORDER BY lower(name)} ) );
