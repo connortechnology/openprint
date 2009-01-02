@@ -1043,11 +1043,17 @@ sub _stock_checkout {
 
 	if ( $param{'action'} eq 'Add' ) {
 		$param{'skid_id'} =~ s/\D//g;
+		$param{'rfidtag_id'} =~ s/[^a-zA-Z0-9]//g;
 		my $Skid;
 		if ( $param{'skid_id'} ) {
 			$Skid = new openprint::Skid( $param{'skid_id'} );
 		} elsif ( $param{'rfidtag_id'} ) {
-			$Skid = new openprint::RFIDTag( $param{'rfidtag_id'} )->Skid();
+			my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
+			if ( ! $RFIDTag->id() ) {
+				$variable{'error'} .= 'RFID Tag ' .  $param{'rfidtag_id'} . ' is not in the system.<br/>';
+			} else {
+				$Skid = $RFIDTag->Skid();
+			} # end if
 		} else {
 			$variable{'error'} .='Please scan the barcode on the skid label or rfid tag.<br/>';
 		} # end if
@@ -1068,6 +1074,8 @@ sub _stock_checkout {
 						'skid_id'	=>	$Skid->id(),
 						'units'		=>	$C->units(),
 						});
+				$C->quantity( 0 );
+				$C->save();
 			} else {
 				if ( $PI[0]->Paper()->type() eq 'Roll' ) {
 					$variable{'error'} .= 'Roll ' . $Skid->id() . ' has already been checked out.<br/>';
