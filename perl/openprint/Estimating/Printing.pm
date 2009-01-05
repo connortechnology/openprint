@@ -870,9 +870,13 @@ $openprint::log->debug("Grabbing UV Specs");
 
 		delete $$specs{'PreviousGrainDirection'};
 		delete $$specs{'PreviousStockType'};
+		my $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] ) if $$services{'Folding'};
 		foreach my $index ( $Project->signatures($$specs{'txtSignatureType'}) ) {
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			if ( new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} )->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) {
+				$$specs{'PreviousImposition'} = $$sig_specs{'txtImposition'.$qty_index};
+			} # end if
 			next if $$sig_specs{'ddmStockBrand'} ne $$specs{'ddmStockBrand'};
 			next if $$sig_specs{'txtSpecificStockBrand'} ne $$specs{'txtSpecificStockBrand'};
 			next if $$sig_specs{'ddmStockFinish'} ne $$specs{'ddmStockFinish'};
@@ -1796,6 +1800,11 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 
 							$new_specs{'PreviousStockType'} = $imp->Paper()->type();
 							$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
+							if ( $$imp{'Folder'} and ( $imp->Press()->id() == $$imp{'Folder'}->id() ) ) {
+#This is used in Folding to tell it not to mix impositions when inline folded
+								$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
+							} # end if  
+
 #$openprint::log->warn("Doing full calc $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} <= " . $imp->spreads() );
 							$sig_price = get_project_price( $Project, $s_id, $side_one_colours, $side_two_colours, $filtered_colours, $special_colours, $inkCoverage, $mixed_colours, $washed_colours, $project, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, \%PlateCounts );
 
@@ -2147,11 +2156,14 @@ sub calc_price {
 	if ( $$project{'NeedFolding'} ) {
 #my $time = gettimeofday();
 		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
+		delete $$Imposition{'Folder'};
 #$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		if ( $folding_results{'Status'} eq 'uncalculated' ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
 			$price{'Comparison Cost'} += 1000000; 
 			$openprint::log->debug("Unable to fold spreads:" . $Imposition->spreads() . ' alert:'. $$project{'FoldingSpecs'}{'alert'} ) if $debug;
+		} else {
+			$$Imposition{'Folder'} = $folding_results{'Equipment'};
 		} # end if
 		$price{'FoldingImposition'} = $folding_results{'Imposition'};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
