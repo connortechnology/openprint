@@ -120,7 +120,7 @@
 <div id="InvoicedProducts">
 	<!--#include virtual="_invoiced_products.html"-->
 </div>
-<? echo ( ssi::writeButton( $log, $dbh, 'NewProduct', 'new_product.gif', q`new Ajax.Updater( 'InvoicedProducts','_invoiced_products.html', { method: 'get', parameters: { invoice_id: `.$$variable{'Invoice'}->id().q`, action: 'new' } } );`, '', 'Add New' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'NewProduct', 'new_product.gif', q`new Ajax.Updater( 'InvoicedProducts','_invoiced_products.html', { method: 'get', parameters: { invoice_id: `.$$variable{'Invoice'}->id().q`, action: 'new' } } );`, '', 'Add New Product' ); ) ?>
 
 </form>
 <div class="leftColumn">

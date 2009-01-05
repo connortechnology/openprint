@@ -307,17 +307,18 @@ $openprint::log->debug("Getfile");
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 			} # end if
 		} elsif ( $second eq 'accounting' ) {
-			if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
-				require openprint::employee_accounting;
-				openprint::employee_accounting::search( $r, $log, $dbh, \%variable )		if $filename eq 'search.html';
-				openprint::employee_accounting::details( $r, $log, $dbh, \%variable )	if $filename eq 'details.html';
-				openprint::employee_accounting::credit( $r, $log, $dbh, \%variable )		if $filename eq 'credit.html';
-			} else {
-				$variable{'error'} = "Unauthorized";
-				$variable{'details'} = "You are not authorized to view this page.";
+			if ( ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
+				$variable{'error'} = 'Unauthorized';
+				$variable{'details'} = 'You are not authorized to view this page.';
 				$variable{'Redirect'} = $config{'errorpage'};
 				return;
-			} # endif
+			} else {
+			eval( 'require openprint::'.join('_', @path ) );
+$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+			} # end if
 		} else {
 			eval( 'require openprint::'.join('_', @path ) );
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;

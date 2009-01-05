@@ -1,4 +1,4 @@
-package openprint::Ledger;
+package openprint::Expenditure;
 @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
@@ -18,37 +18,30 @@ require misc;
 
 my $debug = 0;
 
-$table = 'Ledgers';
-$serial = 'ledgers_id_seq';
+$table = 'expenditures';
+$serial = 'expenditures_id_seq';
 
 %fields = (
 	'id'				=>	'id',
 	'owner_id'			=>	'owner_id',
-	'payor_id'			=>	'payor_id',
-	'memo'				=>	'memo',
-	'credit'			=>	'credit',
-	'debit'				=>	'debit',
-	'payment_id'		=>	'payment_id',
+	'description'		=>	'description',
+	'amount'			=>	'amount',
 	'created_on'		=>	'created_on',
-	'total'				=>	'total',
 	'occurred_on'		=>	'occurred_on',
 	'currency_id'		=>	'currency_id',
-	'account_id'		=>	'account_id',
+	'federaltax_rate'	=>	'federaltax_rate',
 );
 
 %transforms = (
-	'id'			=>	[ 's/\D//g' ],
-	'owner_id'		=>	[ 's/\D//g' ],
-	'payor_id'		=>	[ 's/\D//g' ],
-	'payment_id'	=>	[ 's/\D//g' ],
-	'currency_id'	=>	[ 's/\D//g' ],
-	'account_id'	=>	[ 's/\D//g' ],
-	'credit'		=>	[ 's/[^\d\.\-]//g' ],
-	'debit'			=>	[ 's/[^\d\.\-]//g' ],
-	'total'			=>	[ 's/[^\d\.\-]//g' ],
+	'id'				=>	[ 's/\D//g' ],
+	'owner_id'			=>	[ 's/\D//g' ],
+	'currency_id'		=>	[ 's/\D//g' ],
+	'amount'			=>	[ 's/[^\d\.\-]//g' ],
+	'federaltax_rate'	=>	[ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
+	'occurred_on'		=>	'NOW()',
 );
 
 my %find_cache;
@@ -61,7 +54,7 @@ sub find {
 
 #$openprint::log->debug("Hash key: $hash_key");
 	my @values;
-	my $sql = 'SELECT * FROM Ledgers WHERE 1>0';
+	my $sql = 'SELECT * FROM Expenditures WHERE 1>0';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -86,44 +79,28 @@ sub find {
 
 	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->debug("Error loading Ledgeres SQL($sql)" . DBI->errstr );
+		$log->debug("Error loading Expenditurees SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
-		$log->debug('No Ledgers loaded (' . $sql . ") (@values)" );
+		$log->debug('No Expenditures loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$log->debug("Debug loaded Ledgers ($sql) (@values) records:" . @$data );
+		$log->debug("Debug loaded Expenditures ($sql) (@values) records:" . @$data );
 	} # end if
-	@{$find_cache{$hash_key}} = map { new openprint::Ledger( $_->{id}, $_ ) } @$data;
+	@{$find_cache{$hash_key}} = map { new openprint::Expenditure( $_->{id}, $_ ) } @$data;
 	return @{$find_cache{$hash_key}};
 } # end sub find
-
-sub delete {
-	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM Ledgers WHERE id=?}, $$self{'id'} );
-} # end sub delete
 
 sub Payor {
 	return new openprint::Company( $_[0]{'payor_id'} );
 } # end sub Payor
 
-sub credit {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'credit'} = int($_[0] * 100);
-	} # end if
-	return sprintf('%.2f', $$self{'credit'} / 100 );
-} # end sub credit
-
-sub debit {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'debit'} = int($_[0] * 100);
-	} # end if
-	return sprintf('%.2f', $$self{'debit'} / 100 );
-} # end sub debit
-
 sub Currency {
 	return new openprint::Currency( $_[0]{'currency_id'} );
 } # end sub Currency
+
+sub federaltax {
+	my $self = shift;
+	return sprintf('%.2f', $$self{'amount'} * $$self{'federaltax_rate'}/100 );
+} # end sub federaltax
 
 1;
 #__END__
