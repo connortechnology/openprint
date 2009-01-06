@@ -71,7 +71,7 @@ sub variables {
 	'hdnBreakdown1',
 	'hdnBreakdown2',
 	'hdnBreakdown3',
-'alert',
+'alert','Status',
 );
 sub outputs {
 	return @outputs;
