@@ -25,7 +25,6 @@
 				var matches = re.exec( data[0] );
 				if ( matches ) {
 					if ( data[1] > 0 ) {
-alert('matched ' + data[0]  + ': ' + data[1] );
 						$('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]).show();
 					} else {
 						$('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]).hide();

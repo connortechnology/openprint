@@ -568,14 +568,15 @@ sub signature_calc {
 			} # end if
 			# At this point, we don't modify the Set_Of_Impositions, we modify the equipment-specific copy of it.
 			my @Impositions = @$Set_Of_Impositions;
-#$openprint::log->debug("Impositions in this set: " . @Impositions );
+$openprint::log->debug("Impositions in this set: " . @Impositions );
 			my $complete = 1;
 
 			my %folds;
-			foreach my $Imposition ( @Impositions ) {
+			for ( my $imp_index = 0; $imp_index < @Impositions; $imp_index += 1 ) {
+				my $Imposition = $Impositions[$imp_index];
 
 				if ( $debug and 0 ) {
-					$openprint::log->debug("Trying: ");
+					$openprint::log->debug("trying: ");
 					$Imposition->display();
 				} # end if
 
@@ -641,71 +642,58 @@ sub signature_calc {
 							} # end if
 						} # end if
 					} else { # No template, might be a book
-						my @folds = ( $Imposition->copy() );
-						my %good_folds;
-						while ( @folds ) {
-							my $I = shift @folds;
-							last if ! $I->spreads();
-							$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$I->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
+$openprint::log->debug("$Imposition");
+						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
 
 # See if it fits
-							$_ = $Equipment->fits( $I->layout_width(), $I->layout_height() );
+						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height() );
 
-							if ( ! $_ )  {
+						if ( ! $_ )  {
 
-								my $Fold = $Equipment->Fold(
-										'pages'				=>	$I->pages(),
-										'page_columns'		=>	$I->page_columns(),
-										'page_rows'			=>	$I->page_rows(),
-										'spine_direction'	=>	$$I{'image_orientation'},
-										'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-										'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
-										'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
-										'gsm'				=>	$Paper->gsm(),
-										'calliper'			=>	$Paper->calliper(),
-										'imposition'		=>	$$I{'imposition'},
-										);
-								if ( $Fold ) {
-									my $RunSpeed = $Fold->Specification( $Paper->gsm() );
-									$Fold = $Fold->copy();
-									$Fold->Imposition( $I );
-									$Fold->runspeed( $$RunSpeed{'runspeed'} );
+							my $Fold = $Equipment->Fold(
+									'pages'				=>	$Imposition->pages(),
+									'page_columns'		=>	$Imposition->page_columns(),
+									'page_rows'			=>	$Imposition->page_rows(),
+									'spine_direction'	=>	$$Imposition{'image_orientation'},
+									'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
+									'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
+									'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
+									'gsm'				=>	$Paper->gsm(),
+									'calliper'			=>	$Paper->calliper(),
+									'imposition'		=>	$$Imposition{'imposition'},
+									);
+							if ( $Fold ) {
+								my $RunSpeed = $Fold->Specification( $Paper->gsm() );
+								$Fold = $Fold->copy();
+								$Fold->Imposition( $Imposition );
+								$Fold->runspeed( $$RunSpeed{'runspeed'} );
 
-									push @{$good_folds{$Fold->pages().'PageFold-'.$I->imposition().'out'}}, $Fold;
-									$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $I->page_columns(), $I->page_rows(),$I->image_orientation(), $I->imposition()) ) if $debug;
-									next;
-								} else {
-									$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $I->page_columns(), $I->page_rows(), $I->image_orientation(), $I->imposition() ) ) if $debug;
-								} # end if
-							} elsif ( $debug or ( @my_equipment == 1 ) ) {
-								$Breakdown .= "Doesn't fit $_.<br/>";
-							} # end if
-
-# This tells us whether it's a book or not
-							last if ! $$sig_specs{'PageQuantity'.$qty_index};
-
-# If we have to cut it down
-							if ( $I->imposition() > 1 ) {
-								push @folds, cut_imposition( $I );
+								push @{$folds{$Fold->pages().'PageFold-'.$Imposition->imposition().'out'}}, $Fold;
+								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),$Imposition->image_orientation(), $Imposition->imposition()) ) if $debug;
+								next;
 							} else {
-								push @folds, cut_spreads( $I ) if $I->spreads() > 1;
+								$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() ) ) if $debug;
 							} # end if
-						} # end while spreads
+						} elsif ( $debug or ( @my_equipment == 1 ) ) {
+							$Breakdown .= "Doesn't fit $_.<br/>";
+						} # end if
 
-						if ( @folds ) {
-							$Breakdown .= "Unable to fold all pages.<br/>";
+						if ( $Imposition->imposition() > 1 ) {
+							my @new_impositions = @Impositions;
+							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
+							push @All_Impositions, \@new_impositions;
 							$complete = 0;
-							next;
-						} else {
-							foreach my $k ( keys %good_folds ) {
-								foreach my $F ( @{$good_folds{$k}} ) {
-									push @{$folds{$k}}, $F;
-								} # end foreach
-							} # end foreach
-						} # end if able to fold all
+						} elsif ( $Imposition->spreads() > 1 ) {
+							my @new_impositions = @Impositions;
+							splice @new_impositions, $imp_index, 1, cut_spreads( $Imposition );
+							push @All_Impositions, \@new_impositions;
+							$complete = 0;
+						} # end if
 					} # end if template or book
 
-					last if ! $complete;
+					if ( ! $complete ) {
+						%folds = ();
+					} # end if 
 				} # end foreach Imposition out of possible Impositions
 			} # end if press/who knows
 			next if ! %folds;
@@ -1194,7 +1182,7 @@ sub cut_imposition {
 		$i1->rows(int $$I{rows}/2);
 		$i2->rows( $$I{rows} - $$i1{rows} );
 	} # end if
-	#$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) );
+	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) );
 	return ( $i1, $i2 );
 } # end sub cut_imposition
 
