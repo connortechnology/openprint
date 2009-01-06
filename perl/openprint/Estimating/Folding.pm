@@ -467,7 +467,6 @@ sub signature_calc {
 		my @Impositions = @Set_Of_Impositions;
 		@Set_Of_Impositions = ();
 		foreach my $I ( @Impositions ) {
-			
 			my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} )-1 );
 			my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 			if ( $width_folds and $height_folds ) {
@@ -768,13 +767,14 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 					#$qty += $_->Imposition()->quantity();
 				#} # end foreach
 				$qty = $$specs{"txtQuantity$qty_index"}/$Fold->Imposition()->imposition();
+				$qty *= $Fold->Imposition()->quantity() if $Fold->Imposition()->quantity();
 
 				#$openprint::log->debug("Pricing $qty $imposition out of fold $fold_type on " . $Equipment->name()) if $debug;
 
 				my $width_folds;
 				my $height_folds;
 				if ( $$sig_specs{'txtFinalWidth'} ) {
-					$width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} )-1 );
+					$width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
 					$height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 				} else {
 					$width_folds = sprintf('%.0f', ($Imposition->image_width() / $Imposition->object_width())-1 );
