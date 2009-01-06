@@ -23,7 +23,7 @@ use vars qw( $log $dbh );
 *dbh = \$openprint::dbh;
 $openprint::Object::no_cache = 1;
 
-$log = new logger( 'warn' );
+$log = new logger( 'debug' );
 
 $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[0] if ! $ARGV[2];
@@ -629,7 +629,8 @@ if ( $version < 1902 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1902;
 } # end if
-    my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
 $dbh->do(q{alter table papers add minimum_order integer}) if ! exists $$data{'minimum_order'};
 $dbh->do(q{alter table papers add inventory_number	text}) if ! exists $$data{'inventory_number'};
 $dbh->do(q{alter table papers add full_packages boolean}) if ! exists $$data{'full_packages'};
@@ -639,8 +640,9 @@ if ( ! $data ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
-	}
+	} # end foreach
 } # end if
+
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment_Specifications LIMIT 1', {} );
 if ( $data ) {
 	if ( exists $$data{'lngindex'} ) {
@@ -651,6 +653,7 @@ if ( $data ) {
 		$dbh->do("SELECT setval('tbl_equipment_specifications_id_seq', (SELECT MAX(id) FROM tbl_equipment_specifications) )");
 	} # end if
 } # end if
+
 foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'Y'}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		if ( $Spec->name() =~ /^(\d+)PageSignatureFoldRunSpeed$/ ) {

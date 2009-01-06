@@ -14,7 +14,7 @@
 			<? eval ( 
 				$$variable{'sig_specs'} = openprint::service::get_specs_ref( @$variable{'Project','SignatureServiceIndex'} ); 
 				$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
-				$$variable{'Reference'} = ssi::htmlize( $$variable{'Reference'} );
+				#$$variable{'Reference'} = ssi::htmlize( $$variable{'Reference'} );
 				$$variable{'SignatureIndex'} = $$variable{'sig_specs'}{'SignatureIndex'};
 				$$variable{'FrontCoatings'} = $$variable{'BackCoatings'} = '';
 				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
@@ -113,7 +113,6 @@
 					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 					</p>
-					<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
 					<!--#include virtual="/includes/main/proj/signature_equipment.html"-->
 				</div>
 				<br class="spacer"/>
