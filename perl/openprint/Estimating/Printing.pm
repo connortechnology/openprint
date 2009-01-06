@@ -2014,6 +2014,7 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 			my @dont_do_pages = split(',', $Press->specification('DontDoPages'));
 			foreach my $imp ( @impositions ) {
 				next if ( sets::isin( $imp->pages(), \@dont_do_pages ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') );
+				next if ( $$sig_specs{'PreviousImposition'} and ( $$sig_specs{'PreviousImposition'} > $imp->imposition() ) );
 				if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') {
 					if ( ( $imp->Paper()->width() != $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$sig_specs{"OverrideStockHeight$qty_index"} )) {
 						next;

@@ -154,9 +154,10 @@ $openprint::log->debug("Page: $page");
 			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
-			#$log->warn("No template!" . $r->content_type());
-			#$log->warn($variable{'PageContent'});
-			$r->print( ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) );
+			$log->warn("No template!" . $r->content_type());
+			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable );
+			$log->warn($_);
+			$r->print( $_ );
 		} # end if
 	} # end if
 

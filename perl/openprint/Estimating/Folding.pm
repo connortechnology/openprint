@@ -646,7 +646,7 @@ sub signature_calc {
 						while ( @folds ) {
 							my $I = shift @folds;
 							last if ! $I->spreads();
-							$openprint::log->debug("Trying spreads:" . $Imposition->spreads() . ' ' . join('x',$I->image_width(), $I->image_height()).' on ' . $Equipment->name()) if $debug;
+							$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$I->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
 
 # See if it fits
 							$_ = $Equipment->fits( $I->layout_width(), $I->layout_height() );
@@ -767,7 +767,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 					#$qty += $_->Imposition()->quantity();
 				#} # end foreach
 				$qty = $$specs{"txtQuantity$qty_index"}/$Fold->Imposition()->imposition();
-				$qty *= $Fold->Imposition()->quantity() if $Fold->Imposition()->quantity();
+				#$qty *= $Fold->Imposition()->quantity() if $Fold->Imposition()->quantity();
 
 				#$openprint::log->debug("Pricing $qty $imposition out of fold $fold_type on " . $Equipment->name()) if $debug;
 
@@ -1023,7 +1023,7 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
 
 			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
-				for ( my $index = 0; $index <= 4; $index += 1 ) {
+				foreach my $index ( 1 .. 4 ) {
 					$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
 					$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = 0;
 					$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
@@ -1200,35 +1200,44 @@ sub cut_imposition {
 
 sub cut_spreads {
 	my ( $I ) = @_;
-	my $i1 = $I->copy();
-	my $i2 = $I->copy();
-	if ( $I->spread_rows() > $I->spread_columns() ) {
-		if ( $I->spread_rows() % 2 ) {
+	if ( $I->layout_height() > $I->layout_width() ) {
+	#if ( $I->spread_rows() > $I->spread_columns() ) {
+		if ( ( $I->spread_rows() > 1 ) and ( $I->spread_rows() % 2 ) ) {
+			my $i1 = $I->copy();
+			my $i2 = $I->copy();
 			$i1->spread_rows(1);
 			$i1->image_height( $I->image_height()/$I->spread_rows() );
 			$i2->spread_rows( $i2->spread_rows() - 1 );
 			$i2->image_height( ($i2->image_height()/($i2->spread_rows()+1))*$i2->spread_rows() );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) );
+			return ( $i1, $i2 );
 		} else {
+			my $i1 = $I->copy();
 			$i1->spread_rows( $i1->spread_rows()/2 );
-			$i1->image_height( $i1->image_height() /2 );
-			$i2->spread_rows( $i2->spread_rows()/2 );
-			$i2->image_height( $i2->image_height() /2 );
+			$i1->image_height( $i1->image_height()/2 );
+			$i1->quantity( $i1->quantity() * 2 );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) );
+			return $i1;
 		} # end if
 	} else {
-		if ( $I->spread_columns() % 2 ) {
+		if ( ( $I->spread_columns() > 1 ) and ( $I->spread_columns() % 2 ) ) {
+			my $i1 = $I->copy();
+			my $i2 = $I->copy();
 			$i1->spread_columns(1);
 			$i1->image_width( $I->image_width()/$I->spread_columns() );
 			$i2->spread_columns( $I->spread_columns() - 1 );
 			$i2->image_width( ($I->image_width()/($I->spread_columns()+1))*$I->spread_columns() );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) );
+			return ( $i1, $i2 );
 		} else {
+			my $i1 = $I->copy();
 			$i1->spread_columns( $i1->spread_columns()/2 );
 			$i1->image_width( $i1->image_width()/2 );
-			$i2->spread_columns( $i2->spread_columns()/2 );
-			$i2->image_width( $i2->image_width()/2 );
+			$i1->quantity( $i1->quantity() * 2 );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) );
+			return $i1;
 		} # end if
 	} # end if
-	#$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) );
-	return ( $i1, $i2 );
 } # end cut_spreads
 1;
 
