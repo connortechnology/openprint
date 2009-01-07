@@ -298,15 +298,14 @@ The following errors occurred:<br/>
 	<!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
 	</div>
 	</fieldset>
-<div>
 	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
 	<div id="Allocations">
 	<!--#include virtual="/employee/inventory/_paper_allocations.html" -->
 	</div>
 	</fieldset>
-</div>
-<br class="spacer"/>
 <fieldset class="filters"><legend onclick="toggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log - click to hide/show</legend>
-<div id="Log" style="display: none;"> </div>
+<div id="Log"> 
+	<!--#include virtual="/employee/inventory/_paper_log.html" -->
+</div>
 </fieldset>
 <? endif ( $$variable{'paper_id'} ) ?>

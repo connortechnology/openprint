@@ -1575,6 +1575,7 @@ if ( 1 ) {
             } # end foreach
             $max_pages /= 2;
             foreach my $imp ( @impositions ) {
+				next if ( $$specs{'PreviousImposition'} and ( $$specs{'PreviousImposition'} > $imp->imposition() ) );
 				if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') {
 					if ( ( $imp->Paper()->width() != $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$specs{"OverrideStockHeight$qty_index"} )) {
 						next;
@@ -1789,18 +1790,18 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 						} else {
 							my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 							$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
-							$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
+							#$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
 							$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}*$$specs{'txtSpreadSize'};
 	#$openprint::log->debug("Additional pages:" .  $new_specs{'PageQuantity'.$qty_index} );
 							#$new_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} = 'Y';
 							$new_specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
-							$new_specs{'chkOverridePress'.$qty_index} = 'Y';
+							#$new_specs{'chkOverridePress'.$qty_index} = 'Y';
 							$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 							$new_specs{'chkOverrideImposition'.$qty_index} = '';
 
 							$new_specs{'PreviousStockType'} = $imp->Paper()->type();
 							$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
-							if ( $$imp{'Folder'} and ( $imp->Press()->id() == $$imp{'Folder'}->id() ) ) {
+							if ( $$imp{'Folder'} and (! $new_specs{'PreviousImposition'}) and ( $imp->Press()->id() == $$imp{'Folder'}->id() ) ) {
 #This is used in Folding to tell it not to mix impositions when inline folded
 								$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
 							} # end if  

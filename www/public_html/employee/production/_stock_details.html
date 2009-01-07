@@ -1,3 +1,4 @@
+<h3>Stock information for Docket <? echo ( $$variable{'Project'}->docket() ) ?></h3>
 <div id="StockCheckout"><!--#include virtual="_stock_checkout.html"--></div>
 <? eval (
 	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() );

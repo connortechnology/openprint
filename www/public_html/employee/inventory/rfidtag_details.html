@@ -37,7 +37,7 @@ The following errors occurred:<br/>
 	<fieldset class="filters"><legend>Choose RFIDTag</legend>
 		<p>
 			<label for="rfidtag_id">Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="90" value="<?rfidtag_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="30" value="<?rfidtag_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}",'','Go' ),
 				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
