@@ -429,6 +429,9 @@
 			if ( $$variable{'ScheduleEnd'} ) {
 				$end = Date::Calc::Delta_Days( split('-', $$variable{'ScheduleStart'}), split('-', $$variable{'ScheduleEnd'} ) ) + 1;
 			} # end if
+			if ( $end > 31 ) {
+				return 'Cannot display more than a month of schedule.<br/>';
+			} # end if
 			my $shifts = $openprint::dbh->selectall_arrayref( q{SELECT name, starttime, duration FROM Shifts WHERE equipment_id=? ORDER BY starttime}, {Slice=>{}}, $E->id() );
 
 			foreach ( 1 .. $end ) {

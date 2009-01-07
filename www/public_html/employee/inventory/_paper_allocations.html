@@ -6,12 +6,12 @@
 		<tr>
 			<th align="left" width="130">Date</th>
 			<th align="left"><? echo ( 
-				return 'Skid' if $openprint::param{'paper_id'};
-				return 'Paper' if $openprint::param{'skid_id'};
+				return 'Skid' if $param{'paper_id'};
+				return 'Paper' if $param{'skid_id'};
 			) ?></th>
-			<? if ( $openprint::config{'RFID'} eq 'Y' ) ?>
+			<? if ( $config{'RFID'} eq 'Y' ) ?>
 			<th align="left" width="120">RFID</th>
-			<? endif ( $openprint::config{'RFID'} eq 'Y' ) ?>
+			<? endif ( $config{'RFID'} eq 'Y' ) ?>
 			<th align="left" width="120">Location</th>
 			<th align="left" width="60">Docket</th>
 			<th align="right" width="120">Amount</th>
@@ -20,19 +20,19 @@
 		<? echo (
 			my $html;
 			my @data;
-			@data = sql::execute( $log, $dbh, q{SELECT id, created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), skid_id, paper_id, quantity, units FROM Paper_Allocations WHERE paper_id=? ORDER BY created_on}, $openprint::param{'paper_id'} ) if $openprint::param{'paper_id'};
-			@data = sql::execute( $log, $dbh, q{SELECT id, created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), skid_id, paper_id, quantity, units FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $openprint::param{'skid_id'} ) if $openprint::param{'skid_id'};
+			@data = sql::execute( $log, $dbh, q{SELECT id, created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), skid_id, paper_id, quantity, units FROM Paper_Allocations WHERE paper_id=? ORDER BY created_on}, $param{'paper_id'} ) if $param{'paper_id'};
+			@data = sql::execute( $log, $dbh, q{SELECT id, created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), skid_id, paper_id, quantity, units FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $param{'skid_id'} ) if $param{'skid_id'};
 			my $rowclass;
 			while ( my ( $id, $time, $project_id, $docket, $skid_id, $paper_id, $quantity, $units ) = splice @data, 0, 8 ) {
 
 				$html .= sprintf( '<tr%1$s><td>%2$s</td>', $rowclass, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ) );
-				if ( $openprint::param{'skid_id'} ) {
+				if ( $param{'skid_id'} ) {
 					$html .= sprintf('<td><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $paper_id, new openprint::Paper( $paper_id )->to_string() );
 				} else {
 					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $skid_id );
 				} # end if
 				my $Skid = new openprint::Skid( $skid_id );
-				if ( $openprint::config{'RFID'} eq 'Y' ) {
+				if ( $config{'RFID'} eq 'Y' ) {
 					$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%1$d</a></td>', $Skid->rfidtag_id() );
 				} # end if
 				$html .= sprintf('<td>%1$s</td>', $Skid->Location()->name() );
@@ -50,9 +50,9 @@
 			return $html;
 		) ?>
 		<tr class="totals">
-			<? if ( $openprint::config{'RFID'} eq 'Y' ) ?>
+			<? if ( $config{'RFID'} eq 'Y' ) ?>
 			<td>&nbsp;</td>
-			<? endif ( $openprint::config{'RFID'} eq 'Y' ) ?>
+			<? endif ( $config{'RFID'} eq 'Y' ) ?>
 			<td colspan="4" align="right"><b>Totals:</b></td>
 			<td align="right"><?TotalAllocated?> <? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
 			<td>&nbsp;</td>
@@ -67,7 +67,7 @@
 		</tr>
 <? endif ( 0 ) ?>
 	</table>
-	<input type="hidden" name="paper_id" value="<? echo ( $openprint::param{paper_id} ) ?>" />
+	<input type="hidden" name="paper_id" value="<? echo ( $param{paper_id} ) ?>" />
 	<input type="hidden" name="action" value="Add" />
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="allocation_id" />
