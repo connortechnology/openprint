@@ -552,6 +552,7 @@ $openprint::log->debug("Calc:From:Imposition:Paper " . $Paper->type() . ':' . $P
 		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
 		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000;
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
+		$$specs{'txtSpecificStockCalliper'} = $Imposition->Paper()->calliper();
 		if ( $Paper->type() eq 'Roll' ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . '" Roll';
 			$$specs{'txtPressSheetQty'.$qty_index} = sprintf('%.0f lbs', $$price{'Stock Weight'} );
@@ -1408,6 +1409,8 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 			my %imps;
 
 			foreach my $Paper ( @Papers ) {
+				#Paper might have different callipers
+				$$project{'Calliper'} = $Paper->calliper();
 				if ( ( $$specs{'OverrideStockType'.$qty_index} eq 'Y' ) and ( $Paper->type() ne $$specs{'StockType'.$qty_index} ) ) {
 					next;
 				} # end if
@@ -1730,6 +1733,7 @@ $i->display();
 		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
 		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000;
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
+		$$specs{'txtSpecificStockCalliper'} = $Imposition->Paper()->calliper();
 		if ( $Paper->type() eq 'Roll' ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . '" Roll';
 			$$specs{'txtPressSheetQty'.$qty_index} = $best_price{'Stock Weight'}.'lbs';
@@ -2713,6 +2717,7 @@ sub calc_price {
 	$$specs{'hdnImageOrientation'.$qty_index} = $$Imposition{image_orientation};
 	$$specs{"txtSignaturePageQuantity$qty_index"} = $Imposition->pages();
 	$$specs{'txtStockGSM'} = $Paper->gsm();
+	$$specs{'txtSpecificStockCalliper'} = $Imposition->Paper()->calliper();
 
 	my %price;
 	$price{'Imposition'} = $Imposition;

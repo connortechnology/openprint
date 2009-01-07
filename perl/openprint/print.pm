@@ -693,22 +693,25 @@ sub get_finished_calliper {
 	my $folding_specs;	
 	my $folding_service_index = $$services{'Folding'}[0] if $$services{'Folding'};
 	if ( $folding_service_index ) {
-		$folding_specs = openprint::service::get_specs_ref( $project_index, $folding_service_index );
+		$folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index );
 	} # end if
 
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 	my $finished_calliper;
     foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		my $calliper = $$sig_specs{'txtSpecificStockCalliper'};
+		my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*1000);
 
 		if ( $Project->Type()->strid() eq 'ScratchPads' ) {
 			$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
 		} elsif ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
-			if ( $$sig_specs{'PageQuantity1'} ) {
-				$calliper *= $$sig_specs{'PageQuantity1'}/2;
-			} # end if
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
+					$calliper *= int($$sig_specs{'PageQuantity'.$qty_index}/2);
+					last;
+				} # end if
+			} # end foreach qty_index
 			$finished_calliper += $calliper;
 		} else {
 				my $pages = 1;
@@ -733,7 +736,7 @@ sub get_finished_calliper {
 		} # end if
 	} # end foreach
 	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER $finished_calliper *********************************");
-	return $finished_calliper;
+	return sprintf('%.3f', $finished_calliper/1000);
 } # end sub get_finished_calliper
 
 sub get_quantities {
