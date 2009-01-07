@@ -340,3 +340,23 @@ function ddmProjectSize_onChange( form ) {
 	calc( form.name );
 } // end function ddmProjectSize_onChange();
 
+function dimensions_onChange( form ) {
+    if ( ! form.ddmProjectSize )
+        return;
+    var index = form.ddmProjectSize.selectedIndex;
+    if (form.ddmProjectSize.options[index] && form.ddmProjectSize.options[index].value != 'Custom' ) {
+        var dimensions = form.ddmProjectSize.options[form.ddmProjectSize.selectedIndex].value.split(',');
+        var finished = dimensions[0].split('x');
+        var flat = dimensions[1].split('x');
+        if (
+                ( parseFloat(form.txtFinalWidth.value) != parseFloat(finished[0]) )
+                || ( parseFloat(form.txtFinalHeight.value) != parseFloat(finished[1]) )
+                || ( parseFloat(form.txtWidth.value) != parseFloat(flat[0]) )
+                || ( parseFloat(form.txtHeight.value) != parseFloat(flat[1]) )
+           ) {
+            ddm_select_by_value(form.ddmProjectSize, 'Custom');
+        } // end if
+    } // end if
+	calc(form.name);
+} // end function dimensions_onChange
+
