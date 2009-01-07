@@ -1426,18 +1426,14 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					my @cut_offs;
 					if ( $Press->specification('Cut Off') ) {
 						@cut_offs = sort split(',',$Press->specification('Cut Off'));
-					} elsif ( $Press->specification('Cut Off Minimum') ) {
-						if ( 1 ) {
-							my $min = $Press->specification('Cut Off Minimum');
-							$min = $Press->specification('Minimum Sheet Length') if ! $min;
-							my $increment = $Press->specification('Cut Off Increment');
-							my $cut_off = $Press->specification('Cut Off Maximum');
-							while ( $cut_off >= $min ) {
-								push @cut_offs, $cut_off;
-								# Neccessary due to floating point arithmetic errors
-								$cut_off = sprintf('%.5f', $cut_off - $increment );
-							} # end while cutoff < max
-						} # end if
+					} elsif ( my $min = $Press->specification('Cut Off Minimum') ) {
+						my $increment = $Press->specification('Cut Off Increment');
+						my $cut_off = $Press->specification('Cut Off Maximum');
+						while ( $cut_off >= $min ) {
+							push @cut_offs, $cut_off;
+							# Neccessary due to floating point arithmetic errors
+							$cut_off = sprintf('%.5f', $cut_off - $increment );
+						} # end while cutoff > min
 					} # end if
 
 					if ( @cut_offs ) {
@@ -1552,8 +1548,8 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( $debug ) {
-$openprint::log->debug('Sorting');
+if ( $debug or 1) {
+$openprint::log->debug('Sorting results from paper: ' . $Paper->to_string() );
 foreach my $i ( @imps ) {
 $i->display();
 }
@@ -1561,7 +1557,10 @@ $i->display();
 				foreach my $imp ( @imps ) {
 					my $add = 1;
 					my $str = sprintf('%dx%d+%dx%d-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
-					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->type() eq 'Sheet' )
+							and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
+							and ( $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )
+					   ) {
 						#$add = 1;
 					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 						#$add = 1;
@@ -1571,7 +1570,7 @@ $i->display();
 						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 							my $I = $imps{$str}[$j];
 
-							if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+							if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
 								next;
 							} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 								next;
@@ -1613,7 +1612,7 @@ $i->display();
 			push @impositions, map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-			if ( $debug ) {
+			if ( $debug or 1) {
 				$openprint::log->warn('Impositions');
 				foreach my $I ( @impositions ) {
 					$I->display();
@@ -2360,12 +2359,12 @@ $imp->display($recursion_depth . ' Starting');
 					$new_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $upq;
 
 					my $additional_price;
-					my $sig_price = 0;
+					my $sig_price = {};
 					my $sigs = 1;
 					if ( $upq >= $imp->pages() 
-						and ( ($new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($new_specs{'PageQuantity'.$qty_index} == $imp->pages()) ) 
-						and ( ($new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($new_specs{'txtImposition'.$qty_index} == $imp->imposition()) ) 
-						and ( ($new_specs{'chkOverridePress'.$qty_index} ne 'Y') or ($new_specs{'ddmPress'.$qty_index} eq $imp->Press()->strid()) )
+						#and ( ($new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($new_specs{'PageQuantity'.$qty_index} == $imp->pages()) ) 
+						#and ( ($new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($new_specs{'txtImposition'.$qty_index} == $imp->imposition()) ) 
+						#and ( ($new_specs{'chkOverridePress'.$qty_index} ne 'Y') or ($new_specs{'ddmPress'.$qty_index} eq $imp->Press()->strid()) )
 ) {
 
 						$sig_price = calc_price( $Project, $s_id, $imp, $project, $services, \%new_specs, $qty, $qty_index, \%PlateCounts );
@@ -2419,10 +2418,11 @@ if ( 0 ) {
 						$new_specs{'Impositions'} = $$price{'Impositions'};
 
 						my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-						if ( $recursion_depth > 3 ) {
+						if ( $recursion_depth >= 3 ) {
 							if ( $debug or 1 ) {
 								$imp->display('Recursion Depth :' . $recursion_depth );
 							} # en dif
+							$$sig_price{'complete'} = 0;
 						} else {
 							$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $versions, \%PlateCounts, \%previous_forms_cache, \@signatures, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), $recursion_depth + 1 );
 						} # end if

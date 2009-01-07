@@ -562,23 +562,23 @@ sub signature_calc {
 			} # end if
 		} # end if
 
-		foreach my $Set_Of_Impositions ( @All_Impositions ) {
+		for ( my $set_index = 0; $set_index < @All_Impositions; $set_index += 1 ) {
+			my $Set_Of_Impositions = $All_Impositions[$set_index];
 			if ( $$Equipment{id} == $$Press{id} ) {
 				next if scalar @$Set_Of_Impositions != 1;
 			} # end if
 			# At this point, we don't modify the Set_Of_Impositions, we modify the equipment-specific copy of it.
-			my @Impositions = @$Set_Of_Impositions;
-$openprint::log->debug("Impositions in this set: " . @Impositions );
+#$openprint::log->debug("Impositions in this set: " . @Impositions );
 			my $complete = 1;
 
 			my %folds;
-			for ( my $imp_index = 0; $imp_index < @Impositions; $imp_index += 1 ) {
-				my $Imposition = $Impositions[$imp_index];
+			for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
+				my $Imposition = $$Set_Of_Impositions[$imp_index];
 
-				if ( $debug and 0 ) {
-					$openprint::log->debug("trying: ");
-					$Imposition->display();
-				} # end if
+				#if ( $debug and 0 ) {
+					#$openprint::log->debug("trying: ");
+					#$Imposition->display();
+				#} # end if
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 				if ( $$Equipment{id} == $$Press{id} ) {
@@ -642,7 +642,6 @@ $openprint::log->debug("Impositions in this set: " . @Impositions );
 							} # end if
 						} # end if
 					} else { # No template, might be a book
-$openprint::log->debug("$Imposition");
 						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
 
 # See if it fits
@@ -678,14 +677,19 @@ $openprint::log->debug("$Imposition");
 							$Breakdown .= "Doesn't fit $_.<br/>";
 						} # end if
 
-						if ( $Imposition->imposition() > 1 ) {
-							my @new_impositions = @Impositions;
+						if ( $set_index < @All_Impositions-1 ) {
+							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
+							$complete = 0;
+						} elsif ( $Imposition->imposition() > 1 ) {
+							my @new_impositions = @$Set_Of_Impositions;
 							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
+							@new_impositions = compact_impositions( @new_impositions );
 							push @All_Impositions, \@new_impositions;
 							$complete = 0;
 						} elsif ( $Imposition->spreads() > 1 ) {
-							my @new_impositions = @Impositions;
+							my @new_impositions = @$Set_Of_Impositions;
 							splice @new_impositions, $imp_index, 1, cut_spreads( $Imposition );
+							@new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 2;
 							push @All_Impositions, \@new_impositions;
 							$complete = 0;
 						} # end if
@@ -1227,6 +1231,24 @@ sub cut_spreads {
 		} # end if
 	} # end if
 } # end cut_spreads
+
+# Takes an array of impositions(Folds) and merges duplicates. 
+sub compact_impositions {
+	my @results;
+	while ( @_ ) {
+		my $Imposition = shift @_;
+		push @results, $Imposition;
+
+		for ( my $index = 0; $index < @_; $index += 1 ) {
+			if ( $Imposition->imposition() == $_[$index]->imposition() and $Imposition->spreads() == $_[$index]->spreads() ) {
+				$$Imposition{'quantity'} += $_[$index]->quantity();
+				splice @_, $index, 1;
+				$index -= 1;
+			} # end if
+		} # end for each index
+	} # end while @_
+	return @results;
+} # end sub compact_impositions
 1;
 
 __END__
