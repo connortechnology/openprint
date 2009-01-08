@@ -18,6 +18,12 @@ require sql;
 require openprint::MXML;
 require openprint::JDF;
 require openprint::PaperAllocation;
+require openprint::LabelType;
+require openprint::Label;
+require openprint::PurchaseOrder;
+require openprint::PurchaseOrder_Content;
+require openprint::PaperInventory;
+
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;

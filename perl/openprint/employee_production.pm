@@ -374,7 +374,7 @@ sub projects {
 		} # end if
 		if ( @projects == 1 ) {
 			$order_id = $projects[0]->order_id();
-			$variable{'Redirect'} = '/employee/production/project_view.html';
+			$variable{'Redirect'} = '/employee/project/view.html';
 			$param{'OrderID'} = $order_id;
 			$param{'ProjectIndex'} = @projects[0]->id();
 			return;
@@ -894,7 +894,7 @@ sub barcode {
 	} # end if
 	if ( $param{'Action'} ) {
 		add_to_barcode_log( $log, $dbh, \%variable, $Project->id(), $docket_id, $param{'Operator'}, $message );
-#$variable{'Results'} = sprintf('<tr><td>%.4d-%.2d-%.2d %.2d:%.2d:%.2d</td><td>%s</td><td><a href="project_view.html?ProjectIndex=%d&OrderID=%d">%d</a></td><td>%s</td></tr>', Date::Calc::Today_and_Now(), $operators{$operator}, $project_index, $order_id, $docket_id, $message ) . $variable{'Results'};
+#$variable{'Results'} = sprintf('<tr><td>%.4d-%.2d-%.2d %.2d:%.2d:%.2d</td><td>%s</td><td><a href="/employee/project/view.html?ProjectIndex=%d&OrderID=%d">%d</a></td><td>%s</td></tr>', Date::Calc::Today_and_Now(), $operators{$operator}, $project_index, $order_id, $docket_id, $message ) . $variable{'Results'};
 		$Project->update_status();
 		openprint::order::update_order_status( $r, $log, $dbh, $param{'Order'} );
 	} # end if

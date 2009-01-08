@@ -28,12 +28,18 @@
 				$html .= sprintf( '<tr%1$s><td>%2$s</td>', $rowclass, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ) );
 				if ( $param{'skid_id'} ) {
 					$html .= sprintf('<td><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $paper_id, new openprint::Paper( $paper_id )->to_string() );
-				} else {
+				} elsif ( $skid_id ) {
 					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $skid_id );
+				} else {
+					$html .= '<td>&nbsp;</td>';
 				} # end if
 				my $Skid = new openprint::Skid( $skid_id );
 				if ( $config{'RFID'} eq 'Y' ) {
-					$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%1$d</a></td>', $Skid->rfidtag_id() );
+					if ( $Skid->rfidtag_id() ) {
+						$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%1$d</a></td>', $Skid->rfidtag_id() );
+					} else {
+						$html .= '<td>&nbsp;</td>';
+					} # end if
 				} # end if
 				$html .= sprintf('<td>%1$s</td>', $Skid->Location()->name() );
 				$html .= sprintf('<td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td><td>',
