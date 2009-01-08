@@ -1133,8 +1133,6 @@ sub manifest {
 		} # end if
 
 		$variable{'error'} .= $Manifest->save( \%param );
-		delete $param{'rfidtag_id'};
-
 		my $total_qty = 0;
 
 		my $Paper = save_Paper();
@@ -1180,7 +1178,8 @@ sub manifest {
 			} # end if
 			last if $variable{'error'};
 		} # end foreach tag_id
-		if ( $Project and ( $param{'allocate'} ne 'Specific' ) ) {
+		if ( $total_qty and $Project and ( $param{'allocate'} ne 'Specific' ) ) {
+			
 			$Paper->allocate( undef, $Project->id(), $total_qty, $param{'Units'} );
 			$variable{'information'} .= "Allocated $total_qty $param{'Units'} to docket $param{'Docket'}.<br/>";
 		} # end if
@@ -1203,7 +1202,7 @@ sub _manifest_contents {
 	my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
 
     if ( $param{'rfidtag_id'} or $param{'skid_id'} ) {
-		@param{'rfidtag_id','skid_id'} = misc::trim(@param{'rfidtag_id-','skid_id-'});
+		@param{'rfidtag_id','skid_id'} = misc::trim(@param{'rfidtag_id','skid_id'});
 		my $Tag = new openprint::RFIDTag( $param{'rfidtag_id'} );
 		$variable{'error'} .= $Tag->save({'id'=>$param{'rfidtag_id'}}) if $param{'rfidtag_id'} and ! $Tag->id();
 		my $Skid = new openprint::Skid( $param{'skid_id'} );

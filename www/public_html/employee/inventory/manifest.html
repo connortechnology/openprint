@@ -1,4 +1,6 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript">
 function convert_lbs_to_kg( from, to ) {
 	var qtys = from.value.split(',');
@@ -187,9 +189,9 @@ function gsm_to_mweight( form ) {
 			</div>
 			<div class="rightColumn">
 			<p><label>Type:</label>
-				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('MWeight').show();$('KgDIV').hide();" <? echo ( 'checked="checked"' if $param{'type'} eq 'Sheet'; ) ?> />
+				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('MWeight').show();" <? echo ( 'checked="checked"' if $param{'type'} eq 'Sheet'; ) ?> />
 				<label class="radio" for="typeSheet">Sheet</label>
-				<input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('MWeight').hide();$('KgDIV').show();" <? echo ( 'checked="checked"' if $param{'type'} eq 'Roll'; ) ?> />
+				<input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('MWeight').hide();" <? echo ( 'checked="checked"' if $param{'type'} eq 'Roll'; ) ?> />
 				<label class="radio" for="typeRoll">Roll</label>
 			</p>
 			<p>
