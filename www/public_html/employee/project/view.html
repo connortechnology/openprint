@@ -313,7 +313,7 @@ function open_window( page ) {
 				my $Allocation = shift @{$Allocations{$paper_id}};
 				my $Skid = $Allocation->Skid();
 				$total += $Allocation->quantity();
-				$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $Skid->id() );
+				$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$s</a></td>', $Skid->id() );
 				$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
 				$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
 
