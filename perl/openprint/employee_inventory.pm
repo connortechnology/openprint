@@ -1366,6 +1366,18 @@ sub purchase_order_view {
 	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
 		$variable{'error'} = $PO->send_to_vendor();
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
+	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+		my $New = $PO->copy();
+		if ( ! ( $variable{'error'} = $New->save() ) ) {
+			foreach my $C ( $PO->Contents() ) {
+				$C = $C->copy();
+				$C->po_id( $New->id() );
+				$C->save();
+			} # end foreach
+			$New->save();
+			$variable{'information'} .= 'PO ' . $PO->id() . ' copied to PO ' . $New->id() .'<br/>';
+			$PO = $New;
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{'po_id'} ) {
 			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>new openprint::User( $session{'user_id'} )->company_id() } );
