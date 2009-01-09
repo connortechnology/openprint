@@ -63,6 +63,7 @@ sub view_services {
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		my $Project = new openprint::Project( $project_index );
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+		$Project->summary(undef);
 		$Project->save();
 	} # end if
 
@@ -108,6 +109,7 @@ sub view_services {
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index );
 				} # end if
 				$Project->Currency( openprint::Currency::get_current() );
+				$Project->summary(undef);
 				$Project->save();
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
 				my $service_name = $openprint::param{'txtServiceName'};
@@ -173,6 +175,7 @@ sub view_services {
 				$Project->currency_id( $openprint::session{Currency_id} );
 				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+				$Project->summary(undef);
 				$Project->save();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
@@ -180,6 +183,7 @@ sub view_services {
 				$Project->currency_id( $openprint::session{Currency_id} );
 				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+				$Project->summary(undef);
 				$Project->save();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {

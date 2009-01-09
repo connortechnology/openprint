@@ -33,7 +33,7 @@ my %variables = (
 		'hdnBreakdown1'=>['output'],'hdnBreakdown2'=>['output'],'hdnBreakdown3'=>['output'],
         'txtQuantity1'=>['save'], 'txtQuantity2'=>['save'], 'txtQuantity3'=>['save'],
         'ServiceType'=>[],
-		'alert'=>['output'],
+		'alert'=>['output'],'Status'=>['output'],
 		'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
 		'txtCalliper'=>['save','output'],
 		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
@@ -409,7 +409,7 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{"txtQuantity$qty_index"};
 
 		if ( $$specs{'txtInsertQuantity'} > 0 ) {

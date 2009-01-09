@@ -169,7 +169,10 @@ $openprint::log->debug("Prices $qty_index P" . $$variable{'Project'}->price($qty
 		$$variable{"Total$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$variable{"Total$qty_index"}*$conversion_rate );
 		$$variable{"UnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$variable{"UnitPrice$qty_index"}*$conversion_rate );
 	} # end foreach
-	$$variable{'Project'}->save() if $save;
+	if ( $save ) {
+		$$variable{'Project'}->summary(undef);
+		$$variable{'Project'}->save();
+	} # end if
 
 	@$variable{'CurrencyName', 'CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'ProjectIndex'} = $project_index;

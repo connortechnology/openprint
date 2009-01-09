@@ -51,6 +51,13 @@ if ( $data ) {
 		$dbh->do(q`update tbl_Projects set predefined=false`);
 		$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
 	} # end if
+	if ( ! exists $$data{'summary'} ) {
+		$dbh->do(q`alter table tbl_Projects add summary text`);
+		foreach my $P ( openprint::Project::find() ) {
+			my $summary = $P->summary();
+			sql::update( undef, undef, 'tbl_Projects', ['index=?', $P->id()], 'summary', $summary );
+		} # end foreach
+	} # end if
 	sql::end_transaction( $dbh, $ac );
 } # end if
 

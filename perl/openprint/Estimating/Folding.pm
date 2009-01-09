@@ -759,7 +759,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 					#$qty += $_->Imposition()->quantity();
 				#} # end foreach
 				$qty = $$specs{"txtQuantity$qty_index"}/$Fold->Imposition()->imposition();
-				#$qty *= $Fold->Imposition()->quantity() if $Fold->Imposition()->quantity();
+				$qty *= $Fold->Imposition()->quantity() if $Fold->Imposition()->quantity();
 
 				#$openprint::log->debug("Pricing $qty $imposition out of fold $fold_type on " . $Equipment->name()) if $debug;
 
