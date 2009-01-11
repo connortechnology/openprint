@@ -896,7 +896,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 				} else {
 
 					$Breakdown .= qq`No Units ($servicePrice{'units'}) given for `.$Fold->name().' on '.$Equipment->name().',<br/>';
-					next;
+					$servicePrice{'Total'} += 1000000;
 				} # end if
 
 				$totalPrice += $servicePrice{'Total'};
@@ -1115,7 +1115,7 @@ sub display {
 	push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
 	push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
 
-	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>\@folding_capable, 'order'=>'lower(strname)' );
+	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 } # end sub display
 

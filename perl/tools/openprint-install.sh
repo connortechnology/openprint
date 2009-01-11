@@ -32,3 +32,8 @@ force install Date::Parse
 force install Math::Units
 force install Business::PayPal
 EOF
+
+echo > /etc/apache2/conf.d/perl << EOF
+PerlRequire      startup.pl
+APREQ2_ReadLimit 1024M
+EOF
