@@ -109,8 +109,11 @@ sub find {
 		} # end if
 		if ( defined $params{'pages'} ) {
 			$sql .= q{ AND pages=?};
-			
 			push @values, $params{'pages'} ? $params{'pages'} : undef;
+		} # end if
+		if ( defined $params{'type'} ) {
+			$sql .= q{ AND type=?};
+			push @values, $params{'type'} ? $params{'type'} : undef;
 		} # end if
 
 		if ( $params{'name'} ) {

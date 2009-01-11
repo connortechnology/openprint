@@ -1,12 +1,12 @@
 <? eval (
-	if ( $openprint::param{'id'} ) {
-		@{$$variable{'Folds'}} = ( new openprint::Fold( $openprint::param{'id'} ) );
+	if ( $param{'id'} ) {
+		@{$$variable{'Folds'}} = ( new openprint::Fold( $param{'id'} ) );
 	} else {
-		$$variable{'Equipment'} = new openprint::Equipment( $openprint::param{'equipment_id'} );
-		if ( $openprint::param{'pages'} eq 'all' ) {
-			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'},'order'=>'lower(name)' );
+		$$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+		if ( $param{'type'} eq 'all' ) {
+			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$param{'equipment_id'},'order'=>'lower(name)' );
 		} else {
-			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$openprint::param{'equipment_id'}, 'pages'=>$openprint::param{'pages'},'order'=>'lower(name)' );
+			@{$$variable{'Folds'}} = openprint::Fold::find( 'equipment_id'=>$param{'equipment_id'}, 'type'=>$param{'type'},'order'=>'lower(name)' );
 		} # end if
 	} # end if
 ) ?>

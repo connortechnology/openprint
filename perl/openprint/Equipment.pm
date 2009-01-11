@@ -310,6 +310,8 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range ) = @_;
 
+	return if ! $$self{'id'};
+
 	if ( ! $$self{'Specifications'} ) {
 		foreach my $Spec ( openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
