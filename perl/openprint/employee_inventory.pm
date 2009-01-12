@@ -1056,10 +1056,8 @@ sub rfidtag_details {
 		my @Tags = openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'} );
 		if ( ! @Tags ) {
 			$variable{'error'} .= 'Tag ID not found.';
-			return;
 		} elsif ( @Tags > 1 ) {
 			@{$variable{'Tags'}} = @Tags;
-			return;
 		} else {
 			$param{'rfidtag_id'} = $Tags[0]->id();
 		} # end if
@@ -1193,13 +1191,16 @@ sub manifest {
 sub _manifest_contents {
 
 	if ( ! $param{'manifest_id'} ) {
-		$variable{'error'} .= 'Unknown manifest.  Please save the manifest before adding items to it.<br/>';
+		$variable{'error'} .= 'No manifest id.  Please enter the manifest id before adding items to it.<br/>';
 		return;
 	} # end if
 	if ( $param{'remove'} ) {
 		$variable{'error'} .= new openprint::ManifestContent( $param{'remove'} )->delete();
 	} # end if
 	my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
+	if ( $param{'manifest_id'} and ! $Manifest->id() ) {
+		$variable{'error'} .= $Manifest->save({'id'=>$param{'manifest_id'}});
+	} # end if
 
     if ( $param{'rfidtag_id'} or $param{'skid_id'} ) {
 		@param{'rfidtag_id','skid_id'} = misc::trim(@param{'rfidtag_id','skid_id'});

@@ -61,7 +61,7 @@ Please select a Manifest to view/edit.<br>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_manifests.html', Serialize( document.forms.f2 ) );", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'manifest_details.html', 'Add New Manifest' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'manifest.html', 'Add New Manifest' ),
 				); ) ?>
 		</p>
 	</fieldset>
