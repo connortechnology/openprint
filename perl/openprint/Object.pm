@@ -103,7 +103,7 @@ sub save {
 
 sub AUTOLOAD {
 	my $self = shift;
-	my $type = ref($self);
+	#my $type = ref($self);
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
 
