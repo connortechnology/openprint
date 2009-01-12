@@ -271,6 +271,24 @@ sub pages {
 	return $$self{'spreads'} * $$self{'spread_size'};
 }
 
+sub grain_direction {
+    my $self = shift;
+    if ( $$self{'rotate_sheet'} ) {
+        if ( $$self{'image_orientation'} eq 'Vertical' ) {
+            return 'width';
+        } else {
+            return 'height';
+        } # end if
+    } else {
+        if ( $$self{'image_orientation'} eq 'Vertical' ) {
+            return 'height';
+        } else {
+            return 'width';
+        } # end if
+    } # end if
+} # end sub grain_direction
+
+
 1;
 
 __END__
