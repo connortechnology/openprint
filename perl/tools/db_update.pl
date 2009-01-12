@@ -1510,6 +1510,21 @@ if ( ! $data ) {
 	} # end if
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_contents LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('alter table skid_contents add id serial');
+		$dbh->do('alter table skid_contents drop constraint skid_contents_pkey');
+		$dbh->do('alter table skid_contents add primary key (id)');
+		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifestcontents LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'docket'} ) {
+		$dbh->do('alter table manifestcontents add docket integer');
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__

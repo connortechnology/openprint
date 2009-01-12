@@ -350,7 +350,7 @@
 	@{$$variable{'Presses'}} = ();
 	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
-		push @{$$variable{'Presses'}}, $_ if sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
+		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
 	} # end foreach press
 
 	if ( $session{'/employee/production/print_overview.html?Presses'} ) {
@@ -428,6 +428,9 @@
 			my $end = 1;
 			if ( $$variable{'ScheduleEnd'} ) {
 				$end = Date::Calc::Delta_Days( split('-', $$variable{'ScheduleStart'}), split('-', $$variable{'ScheduleEnd'} ) ) + 1;
+			} # end if
+			if ( $end > 31 ) {
+				return 'Cannot display more than a month of schedule.<br/>';
 			} # end if
 			my $shifts = $openprint::dbh->selectall_arrayref( q{SELECT name, starttime, duration FROM Shifts WHERE equipment_id=? ORDER BY starttime}, {Slice=>{}}, $E->id() );
 

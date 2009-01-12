@@ -208,7 +208,11 @@ sub delete {
 } # end sub delete
 
 sub Contents {
-	return openprint::ManifestContent::find('manifest_id'=>$_[0]{id});
+	my ( $self, %params ) = @_;
+	if ( $$self{'id'} ) {
+		return openprint::ManifestContent::find('manifest_id'=>$$self{id}, %params );
+	} # end if
+	return;
 } # end sub Contents
 
 sub Vendor {

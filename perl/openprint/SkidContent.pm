@@ -22,6 +22,7 @@ my $debug = 1;
 %transforms = (
 );
 $table = 'Skid_Contents';
+$serial = 'skid_contents_id_seq';
 
 
 sub find {

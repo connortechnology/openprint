@@ -178,7 +178,7 @@
 <? if ( $$variable{'duedate'} lt $$variable{'Today'} ) ?> style="color: #ff0000;"<? endif ( $$variable{'duedate'} lt $$variable{'Today'} ) ?>
 >
 				<span class="Docket"><?docket?></span>
-				<span class="Company"><a href="project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?company?></a></span>
+				<span class="Company"><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?company?></a></span>
 				<span class="DueDate"><?duedate?></span>
 				<? eval ( @{$$variable{'temp_services'}} = @{$$variable{'Services'}} ) ?>
 				<? while ( $$variable{'service_type'} = shift @{$$variable{'temp_services'}}; ) ?>

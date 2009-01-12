@@ -16,6 +16,7 @@
 	if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Email Vendor';f1.submit();", '', 'Send Email' );
 		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'purchase_order_edit.html?po_id='.$$variable{'PurchaseOrder'}->id(), 'Edit' );
+		$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.action='purchase_order_view.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
 		$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
 	} # end if
 	return $html;

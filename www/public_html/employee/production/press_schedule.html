@@ -394,7 +394,7 @@ $html .= '</td>';
 		$html .= '</tr>';
 
 		#$html .= '<li'$colRow.'>';
-		#$html .= '<a href="/employee/production/project_view.html?ProjectIndex='.$Project->id().'">'.$Project->docket() . '</a> ';
+		#$html .= '<a href="/employee/project/view.html?ProjectIndex='.$Project->id().'">'.$Project->docket() . '</a> ';
 		#$html .= '</li>';
 		$colRow = $colRow ? '' : ' class="colRow"';
 	} # end foreach
@@ -413,7 +413,7 @@ $html .= '</td>';
 	foreach my $job ( @jobs ) {
 		my $Project = new openprint::Project( $$job{'projectindex'} );
 		$html .= '<li style="list-style: none;">';
-		$html .= '<a href="/employee/production/project_view.html?ProjectIndex='.$Project->id.'">'.$Project->docket().'</a> ' . $Project->Company->name() .  openprint::service::summary( @$job{'projectindex','serviceindex'}, $Project->ordered_quantity_index() );
+		$html .= '<a href="/employee/project/view.html?ProjectIndex='.$Project->id.'">'.$Project->docket().'</a> ' . $Project->Company->name() .  openprint::service::summary( @$job{'projectindex','serviceindex'}, $Project->ordered_quantity_index() );
 $html .= '<span style="float: right;">'.ssi::writeButton( $log, $dbh, 'Add'.$$job{'id'}, 'add.gif', "", '/employee/production/press_schedule.html?btnFunction=Schedule&id='.$$job{id}, 'Add' );
 		$html .= '</li>';
 	} # end foreach

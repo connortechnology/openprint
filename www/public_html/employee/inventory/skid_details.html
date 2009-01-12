@@ -177,6 +177,7 @@ The following errors occurred:<br/>
 <div class="error"><?error?></div>
 <? endif ( $$variable{'error'} ) ?>
 <div class="information"><?information?></div>
+<? eval ( @$variable{'error','information'} = (); ) ?>
 <? if ( $openprint::param{'skid_quantity'} ) ?>
 <? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$openprint::param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
 <? endif ( $openprint::param{'skid_quantity'} ) ?>
@@ -280,11 +281,11 @@ The following errors occurred:<br/>
 		</div><!-- column -->
 		<div class="column">
 			<fieldset><legend onclick="toggleContent( 'AddPaper', '/employee/inventory/_add_paper_show.html', null, '/employee/inventory/_add_paper_hide.html' );">Add Paper - click to hide/show</legend>
-				<? if ( $openprint::session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
+				<? if ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
 				<div id="AddPaper"><!--#include virtual="/employee/inventory/_add_paper_show.html"--></div>
-				<? else ( $openprint::session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
+				<? else ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
 				<div id="AddPaper" style="display: none;"></div>
-				<? endif ( $openprint::session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
+				<? endif ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
 			</fieldset>
 		</div>
 		<div style="float: right;">
@@ -305,13 +306,13 @@ The following errors occurred:<br/>
 	</fieldset>
 </form>
 <? if ( $$variable{'skid_id'} ) ?>
-<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<?skid_id?>) );">Allocations - click to hide/show</legend>
-<div id="Allocations" style="display: none;"></div>
+<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', {skid_id:<?skid_id?>} );">Allocations - click to hide/show</legend>
+<div id="Allocations"><!--#include virtual="_skid_allocations.html"--></div>
 </fieldset>
 <fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id:<?skid_id?>} );">Inventory Log - click to hide/show</legend>
 <div id="Log"><!--#include virtual="_skid_log.html"--></div>
 </fieldset>
-<fieldset><legend onclick="toggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', new Array('skid_id',<?skid_id?>) );">Verification Log - click to hide/show</legend>
+<fieldset><legend onclick="toggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', {skid_id:<?skid_id?>} );">Verification Log - click to hide/show</legend>
 <div id="VerificationLog"><!--#include virtual="_verification_log.html"--></div>
 </fieldset>
 <? endif ( $$variable{'skid_id'} ) ?>

@@ -12,5 +12,6 @@ CREATE TABLE ManifestContents (
 	skid_id		INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES Skids (id),
 	quantity	INTEGER NOT NULL,
 	cost		FLOAT,	
+	docket		INTEGER,
 	PRIMARY KEY (id)
 );

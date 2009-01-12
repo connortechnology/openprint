@@ -3,12 +3,13 @@
 	<head>
 		<title><?PageTitle?></title>	
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.0"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.2"></script>
 		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0"></script>
 		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
 		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/common-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
@@ -38,7 +39,6 @@
 		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
 		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
-		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
 
 		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
@@ -54,12 +54,6 @@
 				</div>
 				<div id="Menu">
 					<ul id="menubar">
-<? if ( $session{'user_type'} eq 'A' ) ?>
-						<li id="MenuAdministrator" class="off"><a href="/administrator/index.html">Admin Side</a></li>
-<? endif ( $session{'user_type'} eq 'A' ) ?>
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-						<li id="MenuEmployee" class="off"><a href="/employee/index.html">Employee Side</a></li>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 						<li id="MenuAbout" class="<? echo ( ($r->uri() =~ /main\/company/ or $r->uri() eq '/index.html' or $r->uri() eq '') ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuAbout'), 'off', 'on');return false;">ABOUT POINTONE</a>
 							<ul>
 								<li><a href="/main/company/about.html">&raquo; Corporate Video</a></li>
@@ -183,7 +177,7 @@
 			</div>
 		<div id="Content">
 			<div id="ContentInner">
-				<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+				<?PageContent?>
 			</div><!--ContentInner-->
 		</div><!--Content-->
 	</body>

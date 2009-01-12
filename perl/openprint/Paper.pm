@@ -730,15 +730,20 @@ sub allocate {
 
 	$skid_id = $skid_id->id() if ref $skid_id eq 'openprint::Skid';
 
-	my $PA = new openprint::PaperAllocation();
-	$PA->save( {
-			'paper_id'		=>	$$self{'id'},
-			'skid_id'		=>	$skid_id,
-			'quantity'		=>	$quantity,
-			'units'			=>	$units,
-			'project_id'	=>	$project_id,
-			'operator_id'	=>	$openprint::session{'user_id'},
-			} );
+	my $PA;
+	if ( my @PA = openprint::PaperAllocation::find('project_id'=>$project_id, 'paper_id'=>$$self{'id'} ) ) {
+		$PA = $PA[0];
+	} else {
+		$PA = new openprint::PaperAllocation();
+		$PA->save( {
+				'paper_id'		=>	$$self{'id'},
+				'skid_id'		=>	$skid_id,
+				'quantity'		=>	$quantity,
+				'units'			=>	$units,
+				'project_id'	=>	$project_id,
+				'operator_id'	=>	$openprint::session{'user_id'},
+				} );
+	} # end if
 	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . ($skid_id?qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} : '') );
 	delete $$self{allocated};
 	return $PA;

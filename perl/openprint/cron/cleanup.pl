@@ -23,7 +23,7 @@ use vars qw($log $dbh %config);
 *config = \$openprint::config;
 
 my $r;
-$log = logger->new('debug');
+$log = logger->new('warn');
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],

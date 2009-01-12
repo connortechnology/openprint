@@ -191,7 +191,7 @@ sub get_li {
 	$html .= sprintf( '<li id="item_%d" class="%s">', $$row{'id'}, $colour );
 	if ( ( ! $previous_row ) or ( $$row{'projectindex'} != $$previous_row{'projectindex'} ) ) {
 		$html .= '<div class="Company">';
-		$html .= sprintf( '<a class="docket" href="project_view.html?ProjectIndex=%1$d&Docket=%2$d">%2$d</a>', $$row{'projectindex'}, $Project->docket() );
+		$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&Docket=%2$d">%2$d</a>', $$row{'projectindex'}, $Project->docket() );
 		my $n = $Project->Company()->name();
 		$n =~ s/The //gi;
 		$html .= ssi::htmlize( $n );
