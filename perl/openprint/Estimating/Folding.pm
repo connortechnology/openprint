@@ -413,11 +413,13 @@ sub signature_calc {
     # IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $SignatureImposition->runstyle() eq 'Work & Turn' ) {
 		my $i = $SignatureImposition->copy();
+		$i->runstyle('Sheet Work');
 		$i->columns( $i->columns()/2 );
 		$$i{'quantity'} = 2;
 		push @Set_Of_Impositions, $i;
 	} elsif ( $SignatureImposition->runstyle() eq 'Work & Tumble' ) {
 		my $i = $SignatureImposition->copy();
+		$i->runstyle('Sheet Work');
 		$i->rows( $i->rows()/2 );
 		$$i{'quantity'} = 2;
 		push @Set_Of_Impositions, $i;
@@ -437,12 +439,14 @@ sub signature_calc {
 			my $i = $I->copy();
 			$i->dutch_columns(0);
 			$i->dutch_rows(0);
+			$i->quantity('1');
 			push @Impositions, $i;
 			my $i = $I->copy();
 			$i->columns( $i->dutch_columns() );
 			$i->rows( $i->dutch_rows() );
 			$i->dutch_columns(0);
 			$i->dutch_rows(0);
+			$i->quantity('1');
 			push @Impositions, $i;
 			$modified = 1;
 		} else {
@@ -481,12 +485,12 @@ sub signature_calc {
 					$max_out = $I->rows();
 					my $Singleton = $I->copy();
 					$Singleton->columns( 1 );
-					$Singleton->quantity( $I->quantity()*$I->columns );
+					$Singleton->quantity( $I->quantity()*$I->columns() );
 					push @Set_Of_Impositions, $Singleton;
 				} else {
 					$max_out = $I->columns();
 					my $Singleton = $I->copy();
-					$Singleton->quantity( $I->quantity()*$I->rows );
+					$Singleton->quantity( $I->quantity()*$I->rows() );
 					$Singleton->rows( 1 );
 					push @Set_Of_Impositions, $Singleton;
 				} # end if
@@ -494,13 +498,13 @@ sub signature_calc {
 				if ( $I->image_orientation() eq 'Vertical' ) {
 					$max_out = $I->columns();
 					my $Singleton = $I->copy();
-					$Singleton->quantity( $I->quantity()*$I->rows );
+					$Singleton->quantity( $I->quantity()*$I->rows() );
 					$Singleton->rows( 1 );
 					push @Set_Of_Impositions, $Singleton;
 				} else {
 					$max_out = $I->rows();
 					my $Singleton = $I->copy();
-					$Singleton->quantity( $I->quantity()*$I->columns );
+					$Singleton->quantity( $I->quantity()*$I->columns() );
 					$Singleton->columns( 1 );
 					push @Set_Of_Impositions, $Singleton;
 				} # end if Orientation

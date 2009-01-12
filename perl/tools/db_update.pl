@@ -1548,6 +1548,13 @@ foreach my $ServiceType ( openprint::ServiceType::find() ) {
 		$ServiceType->save();
 	} # end if
 } # end foreach ServiceType
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_Prices LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'owner_id'} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
+		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES companies(id)');
+	} # end if
+} # end if
 
 $dbh->disconnect();
 1;
