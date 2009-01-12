@@ -776,7 +776,7 @@ sub check_in {
 sub allocate {
 	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket, $specific ) = @_;
 	if ( ! $paper_id ) {
-		$variable{'error'} .= "Paper not specified. No paper allocated.<br/>";
+		$variable{'error'} .= 'Paper not specified. No paper allocated.<br/>';
 		return;
 	} # end if
 
@@ -791,8 +791,13 @@ sub allocate {
 	$docket =~ s/\D//g;
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
+	if ( $docket and ! @Projects ) {
+		if ( my @Orders = openprint::Order::find('docket'=>$docket) ) {
+			@Projects = $Orders[0]->Projects();
+		} # end if
+	} # end if
 	if ( ! @Projects ) {
-		$variable{'error'} .= "An invalid Docket or Project # was given. No paper allocated.<br/>";
+		$variable{'error'} .= 'An invalid Docket or Project # was given. No paper allocated. This can happen if the order has been left re-opened.<br/>';
 		return;
 	} # end if
 
@@ -862,7 +867,7 @@ sub allocate {
 	if ( @allocations ) {
 		stock_allocation_notification( $Projects[0], $Paper, \@allocations, \@old_skids );
 	} # end if
-	$variable{'information'} .= "Allocated $quantity $units to docket " . $Projects[0]->docket() . '<br/>';
+	$variable{'information'} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?ProjectIndex=%d">%d</a><br/>', $quantity, $units, $Projects[0]->id(), $Projects[0]->docket() );
 } # end sub allocate
 
 sub stock_allocation_notification {
@@ -1044,6 +1049,20 @@ sub rfidtags {
 } # end sub rfidtags
 
 sub rfidtag_details {
+	if ( $param{'btnFunction'} eq 'Go' ) {
+		if ( $param{'rfidtag_id'} =~ /^\s*\((.*)\)\s*$/ ) {
+			$param{'rfidtag_id'} = hex( $1 );
+		} # end if
+		my @Tags = openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'} );
+		if ( ! @Tags ) {
+			$variable{'error'} .= 'Tag ID not found.';
+		} elsif ( @Tags > 1 ) {
+			@{$variable{'Tags'}} = @Tags;
+		} else {
+			$param{'rfidtag_id'} = $Tags[0]->id();
+		} # end if
+	} # end if
+		
 	my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
 	$RFIDTag->id( $param{'rfidtag_id'} ) if ! $RFIDTag->id();
 	
@@ -1085,18 +1104,33 @@ sub rfidscanner_details {
 	$variable{'RFIDScanner'} = $RFIDScanner;
 } # end sub rfidscanner_details
 
-sub update_inventory {
-	@{$variable{'IDS'}} = ();
-	if ( $param{'btnFunction'} eq 'Submit' ) {
-		my @ids = misc::trim( split(';', $param{'rfidtag_ids'} ) );
-		@{$variable{'IDS'}} = @ids;
+sub manifest {
 
-		my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
+	my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
+	if ( $param{'btnFunction'} eq 'Submit' ) {
 		$Manifest->id( $param{'manifest_id'} ) if ! $Manifest->id();
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
-		$variable{'error'} .= $Manifest->save();
-		delete $param{'rfidtag_id'};
+		$Manifest->docket( $param{'Docket'} );
 
+		if ( $param{'supplier'} and ! $param{'supplier_id'} ) {
+			my @Companies = openprint::Company::find( 'name'=>$param{'supplier'} );
+			if ( ! @Companies ) {
+				my $C = new openprint::Company();
+				$C->save({
+						'supplier'      => 'Y',
+						'name'          => $param{'supplier'},
+						'business_name' => $param{'supplier'},
+						} );
+				$param{'supplier_id'} = $C->id();
+			} elsif ( @Companies == 1 ) {
+				if ( $Companies[0]->supplier() ne 'Y' ) {
+					$Companies[0]->save( {'supplier'=>'Y'} );
+				} # end if
+				$param{'supplier_id'} = $Companies[0]->id();
+			} # end if
+		} # end if
+
+		$variable{'error'} .= $Manifest->save( \%param );
 		my $total_qty = 0;
 
 		my $Paper = save_Paper();
@@ -1113,74 +1147,96 @@ sub update_inventory {
 				$Project = $Projects[0];
 			} # end if
 		} # end if
-
-		foreach my $tag_id ( @ids ) {
-			next if ! $tag_id;
-			my $Tag = new openprint::RFIDTag( $tag_id );
-			if ( ! $Tag->id() ) {
-				$variable{'error'} .= $Tag->save( {'id'=>$tag_id} );
-				last if $variable{'error'};
+		if ( $param{'po_id'} ) {
+			my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+			if ( $PO->id() ) {
+				$variable{'error'} .= $PO->save({'manifest_id'=>$Manifest->id()});
+			} else {
+				$variable{'error'} .= 'Purchase Order ' . $param{'po_id'} . ' was not found in the system.';
 			} # end if
-			my $Skid = $Tag->Skid();
-			my $qty = sprintf('%d', $param{"qty_lbs-$tag_id"});
+		} # end if po_id
+
+		# Save any changes to teh contents
+		_manifest_contents();
+
+		# Perform allocations, etc.
+		foreach my $C ( $Manifest->Contents() ) {
+			my $Skid = $C->Skid();
+			my $qty = sprintf('%d', $param{"qty_lbs-$$C{id}"});
 			$total_qty += $qty;
 			save_inventory( $Skid, $Paper, $qty );
 			if ( $Project and ( $param{'allocate'} eq 'Specific' ) ) {
 				$Paper->allocate( $Skid, $Project->id(), $qty, $param{'Units'} );
-				$variable{'information'} .= "Allocated $qty $param{'Units'} to docket $param{'Docket'}.<br/>";
+				$variable{'information'} .= "Allocated $qty $param{'Units'} to docket $$C{'docket'}.<br/>";
 			} # end if
 			#save_skid( $Skid, $param{"qty_lbs-$tag_id"} );
 			if ( openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ) {
+				# If the stock has already been checked out, add a subtraction to keep counts in line.
 				save_inventory( $Skid, $Paper, -1*$qty );
 			} # end if
 			last if $variable{'error'};
-
-			my $MC = new openprint::ManifestContent();
-			$variable{'error'} .= $MC->save( {
-					'manifest_id'	=>	$Manifest->id(),
-					'skid_id'		=>	$Skid->id(),
-					'quantity'		=>	$qty,
-					'cost'			=>	$param{"cost"},
-					} );
-			last if $variable{'error'};
 		} # end foreach tag_id
-		if ( $Project and ( $param{'allocate'} ne 'Specific' ) ) {
+		if ( $total_qty and $Project and ( $param{'allocate'} ne 'Specific' ) ) {
+			
 			$Paper->allocate( undef, $Project->id(), $total_qty, $param{'Units'} );
 			$variable{'information'} .= "Allocated $total_qty $param{'Units'} to docket $param{'Docket'}.<br/>";
 		} # end if
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= 'Information successfully stored.';
-			foreach my $k ( keys %param ) {
-				delete $param{$k};
-			} # end foreach
-			@{$variable{'IDS'}} = ();
 		} # end if
 	} # end if
-} # end sub update_inventory
+	$variable{'Manifest'} = $Manifest;
+} # end sub manifest
 
+sub _manifest_contents {
 
-sub _update_inventory {
-	my @ids = split(';', $param{'rfidtag_ids'} );
-    if ( $param{'rfidtag_id'} ) {
-		($param{'rfidtag_id'}) = misc::trim($param{'rfidtag_id'});
-        if ( sets::isin( $param{'rfidtag_id'}, \@ids ) ) {
-            $variable{'error'} .= 'RFID Tag ' . $param{'rfidtag_id'} . ' has already been scanned.';
+	if ( ! $param{'manifest_id'} ) {
+		$variable{'error'} .= 'No manifest id.  Please enter the manifest id before adding items to it.<br/>';
+		return;
+	} # end if
+	if ( $param{'remove'} ) {
+		$variable{'error'} .= new openprint::ManifestContent( $param{'remove'} )->delete();
+	} # end if
+	my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
+	if ( $param{'manifest_id'} and ! $Manifest->id() ) {
+		$variable{'error'} .= $Manifest->save({'id'=>$param{'manifest_id'}});
+	} # end if
+
+    if ( $param{'rfidtag_id'} or $param{'skid_id'} ) {
+		@param{'rfidtag_id','skid_id'} = misc::trim(@param{'rfidtag_id','skid_id'});
+		my $Tag = new openprint::RFIDTag( $param{'rfidtag_id'} );
+		$variable{'error'} .= $Tag->save({'id'=>$param{'rfidtag_id'}}) if $param{'rfidtag_id'} and ! $Tag->id();
+		my $Skid = new openprint::Skid( $param{'skid_id'} );
+		$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
+		$variable{'error'} .= $Skid->save() if ! $Skid->id();
+
+		if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
+			$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been scanned.';
+		} elsif ( $Skid->id() and sets::isin( $Skid->id(), map { $_->skid_id() } $Manifest->Contents() ) ) {
+			$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been scanned.';
         } else {
-            push @ids, $param{'rfidtag_id'}
+			my $MC = new openprint::ManifestContent();
+			$variable{'error'} .= $MC->save( {
+					'skid_id'		=>	$Skid->id(),
+					'manifest_id'	=>	$Manifest->id(),
+					'docket'		=>	$param{'docket-'},
+					'quantity'		=>	sprintf('%d', $param{"qty_lbs-"}),
+					'cost'			=>	$param{"cost"},
+					} );
         } # end if
     } # end if
-	if ( $param{'remove'} ) {
-		@ids = sets::exclude( [ $param{'remove'} ], \@ids );
-	} # end if
-    @{$variable{'IDS'}} = @ids;
-	if ( $param{'manifest_id'} ) {
-		my @Manifests = openprint::Manifest::find('id'=>$param{'manifest_id'});
-		if ( @Manifests ) {
-			$variable{'error'} .= "Manifest $param{'manifest_id'} has already been entered.";
-			$param{'manifest_id'} = '';
-		} # end if
-	} # end if
-} # end sub _update_inventory
+
+	# Save data for the rest of the contents
+	foreach my $C ( $Manifest->Contents() ) {
+		next if ! exists $param{"qty_lbs-$$C{id}"};
+		$variable{'error'} .= $C->save( {
+				'docket'		=>	$param{'docket-'.$C->id()},
+				'quantity'		=>	sprintf('%d', $param{"qty_lbs-$$C{id}"}),
+				'cost'			=>	$param{"cost"},
+				} );
+	} # end foreach tag_id
+	$variable{'Manifest'} = $Manifest;
+} # end sub _manifest_contents
 
 sub manifests {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
@@ -1191,6 +1247,7 @@ sub manifests {
 		} # end foreach manifest_id
 	} # end if
 } # end sub manifests
+
 sub inventory_log {
   if ( $param{'btnFunction'} eq 'Download' ) {
         my @Header = ('When','Skid','RFIDTag','Paper','Amount','Allocated','In Stock','Location','Comment' );
@@ -1228,6 +1285,7 @@ sub inventory_log {
 } # end sub inventory_log
 
 sub _inventory_log {
+	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub inventory_log
 
 sub _paper_allocations {
@@ -1274,10 +1332,6 @@ sub _skid_allocations {
     $variable{'skid_id'} = $param{'skid_id'};
 } # end sub _skid_allocations
 
-sub manifest {
-	update_inventory();
-	$variable{'Manifest'} = new openprint::Manifest( $param{'manifest_id'} );
-} # end sub manifest
 
 sub available_paper {
 	if ( $param{'btnFunction'} eq 'Allocate' ) {
@@ -1313,6 +1367,18 @@ sub purchase_order_view {
 	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
 		$variable{'error'} = $PO->send_to_vendor();
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
+	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+		my $New = $PO->copy();
+		if ( ! ( $variable{'error'} = $New->save() ) ) {
+			foreach my $C ( $PO->Contents() ) {
+				$C = $C->copy();
+				$C->po_id( $New->id() );
+				$C->save();
+			} # end foreach
+			$New->save();
+			$variable{'information'} .= 'PO ' . $PO->id() . ' copied to PO ' . $New->id() .'<br/>';
+			$PO = $New;
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{'po_id'} ) {
 			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>new openprint::User( $session{'user_id'} )->company_id() } );
@@ -1420,7 +1486,7 @@ sub purchase_order_edit {
 } # end sub purchase_order_edit
 
 sub purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id' ) {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 	if ( $param{'btnFunction'} eq 'Delete' ) {
@@ -1457,7 +1523,7 @@ sub purchase_orders {
 } # end sub purchase_orders
 
 sub _purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id' ) {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id','created_by' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 } # end sub _purchase_orders
@@ -1503,6 +1569,12 @@ sub _po_notifications {
 	} # end if
 	$variable{'PurchaseOrder'} = $PO;
 } # end if
+
+sub _manifest_purchase_orders {
+} # end sub _manifest_purchase_orders
+
+sub _rfidtags_results {
+} # end sub _rfidtags_results
 
 1;
 __END__

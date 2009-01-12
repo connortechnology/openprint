@@ -159,5 +159,17 @@ sub set {
 	return @set_fields;
 } # end sub set
 
+sub copy {
+	my $self = shift;
+
+	my $type = ref $self;
+	my %fields = eval ('%'.$type.'::fields');
+
+	my $New = new $type;
+	@$New{keys %fields} = @$self{keys %fields};
+	delete $$New{'id'};
+	return $New;
+} # end sub copy
+
 1;
 __END__

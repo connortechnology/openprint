@@ -184,7 +184,7 @@ sub get_li {
 	#$html .= sprintf('<span id="sizer_%d" class="sizer"></span>', $$row{'serviceindex'} );
 	if ( ( ! $previous_row ) or ( $$row{'projectindex'} != $$previous_row{'projectindex'} ) ) {
 		#$html .= '<div class="Company">';
-		$html .= sprintf( '<a class="docket" href="project_view.html?ProjectIndex=%1$d&Docket=%2$d">%2$d</a>', $$row{'projectindex'}, $Project->docket() );
+		$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&Docket=%2$d">%2$d</a>', $$row{'projectindex'}, $Project->docket() );
 		#$html .= $Project->Company->name();
 		#$html .= '</div>';
 #$html .= $$row{'starttime'} . ' ';
