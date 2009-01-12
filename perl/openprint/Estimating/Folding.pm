@@ -1186,7 +1186,7 @@ sub cut_imposition {
 		$i1->rows(int $$I{rows}/2);
 		$i2->rows( $$I{rows} - $$i1{rows} );
 	} # end if
-	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) );
+	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if $debug;
 	return ( $i1, $i2 );
 } # end sub cut_imposition
 
@@ -1201,14 +1201,14 @@ sub cut_spreads {
 			$i1->image_height( $I->image_height()/$I->spread_rows() );
 			$i2->spread_rows( $i2->spread_rows() - 1 );
 			$i2->image_height( ($i2->image_height()/($i2->spread_rows()+1))*$i2->spread_rows() );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) ) if $debug;
 			return ( $i1, $i2 );
 		} else {
 			my $i1 = $I->copy();
 			$i1->spread_rows( $i1->spread_rows()/2 );
 			$i1->image_height( $i1->image_height()/2 );
 			$i1->quantity( $i1->quantity() * 2 );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if $debug;
 			return $i1;
 		} # end if
 	} else {
@@ -1219,14 +1219,14 @@ sub cut_spreads {
 			$i1->image_width( $I->image_width()/$I->spread_columns() );
 			$i2->spread_columns( $I->spread_columns() - 1 );
 			$i2->image_width( ($I->image_width()/($I->spread_columns()+1))*$I->spread_columns() );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) ) if $debug;
 			return ( $i1, $i2 );
 		} else {
 			my $i1 = $I->copy();
 			$i1->spread_columns( $i1->spread_columns()/2 );
 			$i1->image_width( $i1->image_width()/2 );
 			$i1->quantity( $i1->quantity() * 2 );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if $debug;
 			return $i1;
 		} # end if
 	} # end if
