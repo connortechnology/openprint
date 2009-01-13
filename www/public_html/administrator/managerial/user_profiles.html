@@ -239,10 +239,10 @@ Please select a company or user to obtain login information.<br/>
 			</p>
 			<p> 
 				<label>User must change password on next login?</label>
-				<input type="radio" id="ChangePasswordY" name="changepassword" <? echo ( 'checked="checked"' if $$variable{'User'}->changepassword() eq 'Y' ) ?> value="Y"/>
-				<label for="ChangePasswordY" class="radio">Yes</label>
-				<input type="radio" id="ChangePasswordN" name="changepassword" <? echo ( 'checked="checked"' if $$variable{'User'}->changepassword() ne 'Y' ) ?> value="N"/>
-				<label for="ChangePasswordN" class="radio">No</label>
+				<input type="radio" id="change_passwordY" name="change_password" <? echo ( ssi::checked( $$variable{'User'}->change_password() eq 'Y' ); ) ?> value="Y"/>
+				<label for="change_passwordY" class="radio">Yes</label>
+				<input type="radio" id="change_passwordN" name="change_password" <? echo ( ssi::checked( $$variable{'User'}->change_password() ne 'Y' ); ) ?> value="N"/>
+				<label for="change_passwordN" class="radio">No</label>
 			</p>
 		</fieldset>
 		<fieldset>

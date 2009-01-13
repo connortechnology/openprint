@@ -337,8 +337,6 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
-# We assume that we are authorized to be here now.
-
 	my $User = new openprint::User( $session{'user_id'} );
 	my $Me = new openprint::User( $session{'user_id'} );
 
@@ -393,6 +391,7 @@ sub user_profile {
 			$User->company_id( $session{company_id} ) if ! $User->company_id();
 		} # end if
 		my $oldpassword = $User->password();
+		$param{'change_password'} = 'N' if $param{'password'};
 		$variable{'error'} .= $User->save( \%param );
 
 		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
