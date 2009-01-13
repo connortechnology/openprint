@@ -1551,7 +1551,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( $debug or 1) {
+if ( $debug ) {
 $openprint::log->debug('Sorting results from paper: ' . $Paper->to_string() );
 foreach my $i ( @imps ) {
 $i->display();
@@ -2038,6 +2038,7 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 					next;
 				} # end if
 				if ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
+$imp->display('Dropping due to previous grain direction');
 					next;
 				} # end if
 
@@ -2400,14 +2401,8 @@ $imp->display($recursion_depth . ' Starting');
 					} else {
 						# Not identical, so clear this so we get charged setups, etc
 						$new_specs{'PreviousForms'.$qty_index} = 0;
-$openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() ) if $upq >= $imp->pages();
+$openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $new_specs{'PageQuantity'.$qty_index} ) if $upq >= $imp->pages();
 
-if ( 0 ) {
-						if ( $new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
-							$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
-							$new_specs{'PageQuantity'.$qty_index} = $upq;
-						} # end if
-} # end if
 						if ( ( $new_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $new_specs{'PageQuantity'.$qty_index} > $upq ) ) {
 							$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
 						} # end if

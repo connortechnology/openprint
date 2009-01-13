@@ -53,10 +53,12 @@ if ( $data ) {
 	} # end if
 	if ( ! exists $$data{'summary'} ) {
 		$dbh->do(q`alter table tbl_Projects add summary text`);
-		foreach my $P ( openprint::Project::find() ) {
+if ( 0 ) {
+		foreach my $P ( openprint::Project::find('created_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ) ) ) {
 			my $summary = $P->summary();
 			sql::update( undef, undef, 'tbl_Projects', ['index=?', $P->id()], 'summary', $summary );
 		} # end foreach
+}
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 } # end if
@@ -699,6 +701,19 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 		}
 	} 
 }
+
+my $FoldingService;
+my @FoldingServices = openprint::Service::find('name'=>'Folding');
+if ( ! @FoldingServices ) {
+	$FoldingService = new openprint::Service();
+	$FoldingService->save({
+		'name'	=>	'Folding',
+		'description'	=>	'Folding',
+});
+} else {
+	$FoldingService = $FoldingServices[0];
+} # en dif
+	
 foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'When Printing'}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		if ( $Spec->name() =~ /^(\d)x(\d)-(\d*)Page-(\w*)SignatureFoldDescription$/ ) {
@@ -766,8 +781,21 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			} # end while
 			$Spec->delete();
 		} # end if
-	} # end foreach
-} # end foreach
+	} # end foreach Spec
+	if ( ! openprint::ServicePrice::find('service_id'=>$FoldingService->id(), 'equipment_id'=>$E->id() ) ) {
+		foreach my $Pricelist ( openprint::Pricelist::find() ) {
+		my $ServicePrice = new openprint::ServicePrice();
+		$ServicePrice->save({
+			'service_id'=>$FoldingService->id(),
+			'pricelist_id'=>$Pricelist->id(),
+			'equipment_id'	=>	$E->id(),
+			'units'			=>	'Per M',
+			'cost'			=>	0,
+			'price'			=>	0,
+			});
+		} # end foreach Pricelist
+	} # end if
+} # end foreach Web Press
 my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_Log LIMIT 1', {} );
 if ( ! $blah ) {
 } else {
@@ -1525,6 +1553,24 @@ if ( $data ) {
 		$dbh->do('alter table manifestcontents add docket integer');
 	} # end if
 } # end if
+foreach my $ServiceType ( openprint::ServiceType::find() ) {
+	if ( $ServiceType->name() eq 'PerfectBound' ) {
+		$ServiceType->type('PerfectBound') if ( $ServiceType->type() ne 'PerfectBound' );
+		if ( $ServiceType->url() ne 'bind/PerfectBound.html' ) {
+			$ServiceType->url('bind/PerfectBound.html');
+			$log->warn('URL: ' . $ServiceType->url() );
+		} # end if
+		$ServiceType->save();
+	} # end if
+} # end foreach ServiceType
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_Prices LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'owner_id'} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
+		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES companies(id)');
+	} # end if
+} # end if
+
 $dbh->disconnect();
 1;
 __END__
