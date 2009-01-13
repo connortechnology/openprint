@@ -456,8 +456,8 @@ sub change_password_confirmation {
 		
 		if ( $User->password() eq $openprint::param{'txtOldPassword'} ) {
 			$User->password( $openprint::param{'txtNewPassword'} );
-			$User->changepassword( 'N' );
-			$User->save();
+			$User->change_password( 'N' );
+			$$variable{'error'} .= $User->save();
 		} else {
 			$$variable{'error'} = 'You entered the wrong old password.<br/>';
 			$$variable{'Redirect'} = '/main/account/change_password.html';
