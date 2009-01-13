@@ -2839,7 +2839,11 @@ sub calc_price {
 
 			foreach my $k ( keys %{$folding_results{'Folds'}} ) {
 				my ( $fold_type, $imposition ) = $k =~ /(.*)-(\d+)out$/;
-				$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s', scalar @{$folding_results{'Folds'}{$k}}, $folding_results{'Folds'}{$k}[0]->name(), @folding_results{'Imposition','RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+				my $fold_qty = 0;
+				foreach my $Fold ( @{$folding_results{'Folds'}{$k}} ) {
+					$fold_qty += $Fold->Imposition()->quantity();
+				} # end foreach
+				$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s', $fold_qty, $folding_results{'Folds'}{$k}[0]->name(), $imposition, @folding_results{'RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 			} # end foreach
 			if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 				$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();

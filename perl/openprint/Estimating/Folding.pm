@@ -334,6 +334,10 @@ sub signature_calc {
 	my $Breakdown;
 	
 	my @my_equipment;
+	
+	if ($debug) {
+		$SignatureImposition->display('Signature Imposition:');
+	} # end if
 
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 		$openprint::log->debug("Overriding Folding Equipment for sig $$sig_specs{'SignatureIndex'} to " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
@@ -431,40 +435,46 @@ sub signature_calc {
 	if ( ! $$sig_specs{'txtSignatureType'} ) {
 
 	# Get rid of dutches
-	my @Impositions = ();
-	my $modified = 0;
-	foreach my $I ( @Set_Of_Impositions ) {
-#$openprint::log->debug("QTY: " . $I->quantity() );
-		if ( $I->dutch_columns() ) {
-			my $i = $I->copy();
-			$i->dutch_columns(0);
-			$i->dutch_rows(0);
-			$i->quantity('1');
-			push @Impositions, $i;
-			my $i = $I->copy();
-			$i->columns( $i->dutch_columns() );
-			$i->rows( $i->dutch_rows() );
-			$i->dutch_columns(0);
-			$i->dutch_rows(0);
-			$i->quantity('1');
-			push @Impositions, $i;
-			$modified = 1;
-		} else {
-			push @Impositions, $I;
+	if ( $SignatureImposition->dutch_columns() ) {
+		my @Impositions = ();
+		my $modified = 0;
+		foreach my $I ( @Set_Of_Impositions ) {
+			if ( $I->dutch_columns() ) {
+				my $i = $I->copy();
+				$i->dutch_columns(0);
+				$i->dutch_rows(0);
+				$i->quantity('1');
+				push @Impositions, $i;
+				my $i = $I->copy();
+				$i->columns( $i->dutch_columns() );
+				$i->rows( $i->dutch_rows() );
+				$i->dutch_columns(0);
+				$i->dutch_rows(0);
+				$i->quantity('1');
+				$i->image_orientation($I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical');
+				push @Impositions, $i;
+				$modified = 1;
+			} else {
+				push @Impositions, $I;
+			} # end if
+		} # end foreach
+
+		@Set_Of_Impositions = @Impositions if $modified;
+		if ( $debug and 0 ) {
+			foreach my $I ( @Impositions ) {
+				$I->display('Results from dutch cuts');
+			} # end foreach
 		} # end if
-	} # end foreach
+	} # end if
 
-	@Set_Of_Impositions = @Impositions if $modified;
-
-	my $max_out;
 	my $cut_dimension = '';
 	if ( $$services{'SaddleStitching'} ) {
-		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
-		$max_out = $$stitching_specs{'Imposition'.$qty_index};
+		#my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
+		#$max_out = $$stitching_specs{'Imposition'.$qty_index};
 #$openprint::log->debug("Got impo from SaddleStitching: $max_out out") if $debug;
 	} elsif ( $$services{'LoopStitching'} ) {
-		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
-		$max_out = $$stitching_specs{'Imposition'.$qty_index};
+		#my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
+		#$max_out = $$stitching_specs{'Imposition'.$qty_index};
 #$openprint::log->debug("Got impo from LoopStitching: $imposition out") if $debug;
 	} else {
 		# Something else entirely
@@ -482,13 +492,11 @@ sub signature_calc {
 				push @Set_Of_Impositions, $Singleton;
 			} elsif ( $width_folds ) {
 				if ( $I->image_orientation() eq 'Vertical' ) {
-					$max_out = $I->rows();
 					my $Singleton = $I->copy();
-					$Singleton->columns( 1 );
 					$Singleton->quantity( $I->quantity()*$I->columns() );
+					$Singleton->columns( 1 );
 					push @Set_Of_Impositions, $Singleton;
 				} else {
-					$max_out = $I->columns();
 					my $Singleton = $I->copy();
 					$Singleton->quantity( $I->quantity()*$I->rows() );
 					$Singleton->rows( 1 );
@@ -496,13 +504,11 @@ sub signature_calc {
 				} # end if
 			} elsif ( $height_folds ) {
 				if ( $I->image_orientation() eq 'Vertical' ) {
-					$max_out = $I->columns();
 					my $Singleton = $I->copy();
 					$Singleton->quantity( $I->quantity()*$I->rows() );
 					$Singleton->rows( 1 );
 					push @Set_Of_Impositions, $Singleton;
 				} else {
-					$max_out = $I->rows();
 					my $Singleton = $I->copy();
 					$Singleton->quantity( $I->quantity()*$I->columns() );
 					$Singleton->columns( 1 );
@@ -513,22 +519,16 @@ sub signature_calc {
 			} # end if
 		} # end foreach I in the set of impositons
 	} # end if
-	$max_out = 1 if ! $max_out;
 	# Now we have a base set of Maximal Impositions.  Now some of the I's in this set may have an imposition > 1.  
 	# Problem is that we apparently also need to price the situation of doing them 1 out, and everything in between.  
+		if ( $debug and 1 ) {
+			foreach my $I ( @Set_Of_Impositions ) {
+				$I->display('Results after initial cuts');
+			} # end foreach
+		} # end if
 
-	# Remove duplicates
-	if ( 0 ) {
-		my %imps;
-		foreach my $I ( @Set_Of_Impositions ) {
-			my $desc = join('x', @$I{'imposition','columns','rows','runstyle'}, $I->pages() );
-			$imps{$desc} = $I if ! $imps{$desc};
-		} # end foreac $I
-		@Set_Of_Impositions = values %imps;
-	} # end if
-	    
 	@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
-	if ( $debug ) {
+	if ( $debug and 1 ) {
 		$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
 		foreach my $Set ( @All_Impositions ) {
 			$openprint::log->debug("Impositions in set: " . @$Set);
@@ -538,7 +538,7 @@ sub signature_calc {
 		} # end foreach set
 	} # end if debug
 
-	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout Max: %dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition(), $max_out ) ) if $debug;
+	$openprint::log->debug(sprintf('Sign info: %dx%d*%d,%dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition() ) ) if $debug;
 } else {
 	@All_Impositions = ( \@Set_Of_Impositions );
 } # end if
@@ -614,7 +614,8 @@ sub signature_calc {
 					} else {
 						$Breakdown .= sprintf('Didnt find fold %dx%d %s, %dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() );
 						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() ) ) if $debug;
-						next;
+						%folds = ();
+						last;
 					} # end if
 				} else { # Not a press
 
@@ -625,8 +626,7 @@ sub signature_calc {
 #$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if $debug;
 						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height() );
 						if ( $_ ) {
-							$Breakdown .= "Doesn't fit: $_<br/>";
-							$complete = 0;
+							#$Breakdown .= "Doesn't fit: $_<br/>";
 						} else {
 							my $Fold = $Equipment->Fold(
 									'type'				=>	$$sig_specs{'rdbTemplateType'},
@@ -640,11 +640,12 @@ sub signature_calc {
 								$Fold->Imposition( $Imposition );
 								$Fold->runspeed( $$RunSpeed{'runspeed'} );
 								push @{$folds{$$sig_specs{'rdbTemplateType'}.'-'.$$Imposition{'imposition'}.'out'}}, $Fold;
+								next;
 							} else {
-								$Breakdown .= "Can't fold that:<br/>";
-								$complete = 0;
+								#$Breakdown .= "Can't fold that:<br/>";
 							} # end if
 						} # end if
+						$complete = 0;
 					} else { # No template, might be a book
 						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
 
@@ -681,26 +682,26 @@ sub signature_calc {
 							$Breakdown .= "Doesn't fit $_.<br/>";
 						} # end if
 
+						# If we get here, then we couldn't find the fold
+						$complete = 0;
 						if ( $set_index < @All_Impositions-1 ) {
 							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
-							$complete = 0;
 						} elsif ( $Imposition->imposition() > 1 ) {
 							my @new_impositions = @$Set_Of_Impositions;
 							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
 							@new_impositions = compact_impositions( @new_impositions );
 							push @All_Impositions, \@new_impositions;
-							$complete = 0;
 						} elsif ( $Imposition->spreads() > 1 ) {
 							my @new_impositions = @$Set_Of_Impositions;
 							splice @new_impositions, $imp_index, 1, cut_spreads( $Imposition );
 							@new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 2;
 							push @All_Impositions, \@new_impositions;
-							$complete = 0;
 						} # end if
 					} # end if template or book
 
 					if ( ! $complete ) {
 						%folds = ();
+						last;
 					} # end if 
 				} # end foreach Imposition out of possible Impositions
 			} # end if press/who knows
@@ -751,6 +752,16 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 			my $totalTime = $Equipment->specification('Station Make Ready') * 60;
 
 			my $totalPrice;
+if ( $debug ) {
+			foreach my $key ( keys %folds ) {
+				my $impo_qty = 0;
+				foreach (@{$folds{$key}}) {
+					$impo_qty += $_->Imposition()->quantity();
+				} # end foreach
+$openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
+			} # end foreach
+
+} # end if
 
 			# Folds is a hash containing all the folds for the signature
 			foreach my $key ( keys %folds ) {
@@ -758,15 +769,14 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 				last if ! $imposition;
 
 				my $Fold = $folds{$key}[0];
-				my $qty = 0;
+				my $impo_qty = 0;
 				foreach (@{$folds{$key}}) {
-					$qty += $_->Imposition()->quantity();
+					$impo_qty += $_->Imposition()->quantity();
 				} # end foreach
 				my $Imposition = $Fold->Imposition();
-				$qty = ( $qty * $$specs{"txtQuantity$qty_index"} )/$SignatureImposition->imposition();
-				#$qty *= $Imposition->imposition();
+				my $run_qty = ( $impo_qty * $$specs{"txtQuantity$qty_index"} )/$SignatureImposition->imposition();
 
-				#$openprint::log->debug("Pricing $qty $imposition out of fold $fold_type on " . $Equipment->name()) if $debug;
+				#$openprint::log->debug("Pricing $impo_qty $imposition out of fold $fold_type on " . $Equipment->name()) if $debug;
 
 				my $width_folds;
 				my $height_folds;
@@ -807,7 +817,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 					} # end if
 				} # end if
 
-				$Breakdown .= sprintf( '%s: %dx%dout qty: %d<br/>', $Fold->name(), scalar @{$folds{$key}}, $imposition, $qty );
+				$Breakdown .= sprintf( '%s: %dx%dout qty: %d<br/>', $Fold->name(), $impo_qty, $imposition, $run_qty );
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
@@ -854,43 +864,43 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 					last;
 				} # end if
 #$openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() );
-				my $runTime = sprintf( '%.4f', $qty / $Fold->runspeed() );
+				my $runTime = sprintf( '%.4f', $run_qty / $Fold->runspeed() );
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
-				my %servicePrice = openprint::service::get_price_object( $Fold->type(), $qty, $Equipment );
+				my %servicePrice = openprint::service::get_price_object( $Fold->type(), $run_qty, $Equipment );
 				if ( ! %servicePrice ) {
-					%servicePrice = openprint::service::get_price_object( 'Folding'.$imposition.'up', $qty, $Equipment );
+					%servicePrice = openprint::service::get_price_object( 'Folding'.$imposition.'up', $run_qty, $Equipment );
 				} # end if
 				if ( ! %servicePrice ) {
 					%servicePrice = openprint::service::get_price_object( 'Folding',$imposition, $Equipment );
 				} # end if
-				my %AnglePrice = openprint::service::get_price_object( 'FoldingAngle'.$imposition.'up', $qty, $Equipment );
+				my %AnglePrice = openprint::service::get_price_object( 'FoldingAngle'.$imposition.'up', $run_qty, $Equipment );
 				%AnglePrice = openprint::service::get_price_object( 'FoldingAngle', $imposition, $Equipment ) if ! %AnglePrice;
 
 				if ( lc $servicePrice{'units'} eq 'per hour' ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * $runTime;
 					$Breakdown .= sprintf('&nbsp;Run: $%.2f%s * %.2d:%.2d:%.2d = $%.2f<br/>', @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per m', 'per 1000'] ) ) {
-					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $qty/1000 );
-					$Breakdown .= sprintf('&nbsp;Run: $%.2f%s * %d = $%.2f<br/>', @servicePrice{'Price','units'}, $qty, $servicePrice{'Total'} );
+					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $run_qty/1000 );
+					$Breakdown .= sprintf('&nbsp;Run: $%.2f%s * %d = $%.2f<br/>', @servicePrice{'Price','units'}, $run_qty, $servicePrice{'Total'} );
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch per m'] ) ) {
-					$servicePrice{'Total'} = $servicePrice{'Price'} * $width * $qty / 1000;
+					$servicePrice{'Total'} = $servicePrice{'Price'} * $width * $run_qty / 1000;
 					if ( $height_folds ) {
 						if ( ! %AnglePrice ) {
 							%AnglePrice = %servicePrice;
 						} # end if
-						$AnglePrice{'Total'} = $AnglePrice{'Price'} * $width * $qty / 1000;
+						$AnglePrice{'Total'} = $AnglePrice{'Price'} * $width * $run_qty / 1000;
 					} # end if
 
 					$Breakdown .= sprintf('&nbsp;Run: ($%1$.4f%4$s * %4$s&quot;=$%3$.2f) + (%5$.4f%8$s * %4$s&quot;=%7$.2f) = $%8$.2f<br/>', @servicePrice{'Price','units','Total'}, $width, @AnglePrice{'Price','units','Total'}, $servicePrice{'Total'} );
 					$servicePrice{'Total'} += $AnglePrice{'Total'};
 				} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch of width per m'] ) ) {
-					$servicePrice{'Total'} = $servicePrice{'Price'} * $Imposition->image_width() * $qty / 1000;
+					$servicePrice{'Total'} = $servicePrice{'Price'} * $Imposition->image_width() * $run_qty / 1000;
 					if ( $height_folds ) {
 						if ( ! %AnglePrice ) {
 							%AnglePrice = %servicePrice;
 						} # end if
-						$AnglePrice{'Total'} = $AnglePrice{'Price'} * $Imposition->image_width() * $qty / 1000;
+						$AnglePrice{'Total'} = $AnglePrice{'Price'} * $Imposition->image_width() * $run_qty / 1000;
 					} # end if
 
 					$Breakdown .= sprintf('Run: ($%3$.4f%4$s * %6$s&quot;=$%5$.2f) + (%7$.4f%8$s * %6$s&quot;=%9$.2f) = $%10$.2f<br/>', undef, $Fold->name(), @servicePrice{'Price','units','Total'}, $Imposition->image_width(), @AnglePrice{'Price','units','Total'}, $servicePrice{'Total'}+$AnglePrice{'Total'} );
@@ -909,7 +919,6 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
 					last;
 				} # end if
-#} # end foreach fold
 			} # end foreach fold_type
 
 			$Breakdown .= 'Total: ' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . '<br/><br/>';
@@ -921,7 +930,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 				$bestRunTime = int($totalTime);
 				$bestFolds = \%folds;
 			} # end if
-		} # end foreach set of folds
+
+		} # end foreach set of Impositions
 		# The idea is that if we find a price on the press, then we are done, cuz nothing else will be better.... 
 		last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 	} # end foreach Equipment
@@ -943,11 +953,10 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 
 	foreach my $key ( @keys ) {
 		my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
-		next if ! $imposition;
+		#next if ! $imposition;
 #$openprint::log->debug("$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index $imposition: " . scalar @{$$bestFolds{$key}} );
 		my $Fold = $$bestFolds{$key}[0];
 
-		#foreach my $Fold ( @{$$bestFolds{$key}} ) {
 		$results{'MakeReadyTime'} += $Fold->makeready_time();
 		if ( $Fold->makeready_overs_units() eq 'Percent' ) {
 			$results{'MakeReadyOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$SignatureImposition->imposition()) * $Fold->makeready_overs() /100;
@@ -959,7 +968,6 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 #$openprint::log->debug("SettingRunspeed $key : $fold_type : $imposition " . $Fold->name() . ' ' . $Fold->runspeed() );
 		$results{'RunOvers'} += $Fold->run_overs();
 		$results{'RunOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$SignatureImposition->imposition()) * $Fold->run_overs() /100;
-		#} # end foreach Fold
 	} # end foreach
 	
 	$$specs{'Status'} = $bestEquipment ? 'calculated' : 'uncalculated';
@@ -1149,6 +1157,7 @@ sub runtime {
 	return $runTime;
 } # end sub runtime
 
+# The purpose is to cut any Impos > 1 into singletons
 sub reduce_impositions {
 	my ( $impositions ) = @_;
 	my @results = ( $impositions );
@@ -1164,10 +1173,10 @@ sub reduce_impositions {
 				my $I2 = $new[$i]->copy();
 				my $I3 = $new[$i]->copy();
 				if ( $I2->columns() > 1 ) {
-					$I2->columns( $I2->columns() - 1 );
+					$I2->columns( int($I2->columns()/2) );
 					$I3->columns( $I3->columns() - $I2->columns() );
 				} else {
-					$I2->rows( $I2->rows() - 1 );
+					$I2->rows( int($I2->rows()/2) );
 					$I3->rows( $I3->rows() - $I2->rows() );
 				} # end if
 
@@ -1175,6 +1184,7 @@ sub reduce_impositions {
 				$i += 1;
 			} # end if
 		} # end foreach I
+		@new = compact_impositions( @new );
 		push @results, reduce_impositions( \@new );
 	} # end if
 	return @results;
@@ -1242,6 +1252,7 @@ sub compact_impositions {
 	my @results;
 	while ( @_ ) {
 		my $Imposition = shift @_;
+		$Imposition = $Imposition->copy();
 		push @results, $Imposition;
 
 		for ( my $index = 0; $index < @_; $index += 1 ) {
