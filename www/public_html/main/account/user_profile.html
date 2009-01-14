@@ -36,6 +36,16 @@
 			</fieldset>
    			<fieldset>
    			   <legend>User Information:</legend>
+<? if ( $$variable{'User'}->Company()->notes() ) ?>
+<p><label>Company Notes:</label>
+<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
+</p>
+<? endif ( $$variable{'User'}->Company()->notes() ) ?>
+<? if ( $$variable{'User'}->notes() ) ?>
+<p><label>User Notes:</label>
+<b><? echo ( $$variable{'User'}->notes() ) ?></b>
+</p>
+<? endif ( $$variable{'User'}->notes() ) ?>
    				<p> 
    					<label>Salutation: <span class="requiredFieldIndicator">*</span></label>
 					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
@@ -101,6 +111,10 @@
    					<input type="radio" id="AdministratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" /> 
    					<label class="radio" for="AdministratorN">No</label>
    				</p>
+				<p>
+					<label>Notes:</label>
+					<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'User'}->notes() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->notes() ) ?></textarea>
+				</p>
 			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $$variable{'Me'}->id(), $$variable{'Me'}->csr_ids() ] ) ) ?>
    			</fieldset>
    			<fieldset>
