@@ -41,6 +41,16 @@
 <p>* denotes required information.<br/></p>
 <div class="column">
 	<fieldset><legend>User Information</legend>
+<? if ( $$variable{'User'}->Company()->notes() ) ?>
+<p><label>Company Notes:</label>
+<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
+</p>
+<? endif ( $$variable{'User'}->Company()->notes() ) ?>
+<? if ( $$variable{'User'}->notes() ) ?>
+<p><label>User Notes:</label>
+<b><? echo ( $$variable{'User'}->notes() ) ?></b>
+</p>
+<? endif ( $$variable{'User'}->notes() ) ?>
 		<p> 
 			<label for="title">&nbsp;Title:</label>
 			<input type="text" id="title" name="title" value="<? hecho ( $$variable{'User'}->title() ) ?>" />
