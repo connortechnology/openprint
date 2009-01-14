@@ -75,11 +75,7 @@ sub calc {
 
 	my @signature_service_indices = $Project->signatures();
 
-	foreach my $qty_index ( 1 ..3 ) {
-		if ( ! $Project->quantity($qty_index) ) {
-			$$specs{"txtPrice$qty_index"} = '';
-			next;
-		} # end if
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $totalPrice = 0;
 		my $totalQuantity = 0;
 
@@ -92,10 +88,9 @@ sub calc {
 			} # end if
         } # end foreach
 
-
 		# First, build a hash containing the quantities of each proof.  The reason for this is to honour quantity discounts.
 		foreach my $signature_service_index ( @signature_service_indices ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
