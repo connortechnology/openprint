@@ -345,11 +345,11 @@ $openprint::log->debug("Scores: $score_qty");
 			my $servicePrice;
 			my $materialPrice = 0;
 
-			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Scoring', $score_qty, $Equipment );
+			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Scoring', $qty, $Equipment );
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
-				$servicePrice = $servicePrice{'Price'} * $qty *$score_qty/ 1000;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d=%.2f<br/>', @servicePrice{'Price','units'}, $score_qty*$qty, $servicePrice );
+				$servicePrice = $servicePrice{'Price'} * $qty / 1000;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d=%.2f<br/>', @servicePrice{'Price','units'}, $qty, $servicePrice );
 			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
 				my $hours = $qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
 				$servicePrice = $servicePrice{'Price'} * $hours;
