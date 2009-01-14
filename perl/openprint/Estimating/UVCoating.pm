@@ -54,7 +54,7 @@ my @outputs = (
 	'hdnBreakdown1',
 	'hdnBreakdown2',
 	'hdnBreakdown3',
-'alert',
+'alert','Status',
 );
 sub outputs {
 	return @outputs;
@@ -124,7 +124,7 @@ sub calc {
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $GrandTotal );
 	} # end foreach qty
 
-	return $status;
+	return $$specs{'Status'} = $status;
 
 } # end sub calc
 
