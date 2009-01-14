@@ -30,6 +30,7 @@ CREATE TABLE Users (
 	strMailServerUsername	TEXT,
 	strMailServerPassword	TEXT,
 	LastLogin				timestamp with time zone,
+	notes					TEXT,
 	PRIMARY KEY (Index)
 );
 CREATE INDEX UserEmail_Index ON Users (strEmail);

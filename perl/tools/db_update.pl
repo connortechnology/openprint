@@ -345,6 +345,21 @@ if ( $data ) {
 		$dbh->do('alter table manifestcontents add docket integer');
 	} # end if
 } # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM company LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'notes'} ) {
+		$dbh->do('alter table company add notes text');
+	} # end if
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM users LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'notes'} ) {
+		$dbh->do('alter table users add notes text');
+	} # end if
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

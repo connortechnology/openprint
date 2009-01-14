@@ -37,6 +37,7 @@ my %fields = (
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
 	'purchasing_limit'	=>	'purchasing_limit',
 	'purchasing_total_limit'	=>	'purchasing_total_limit',
+	'notes'				=>	'notes',
 ); # end %fields
 
 my %transforms = (

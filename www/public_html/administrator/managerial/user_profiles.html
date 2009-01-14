@@ -68,6 +68,7 @@ Please select a company or user to obtain login information.<br/>
 			</p>
 		</fieldset>
 		<fieldset><legend>User Information:</legend>
+<div class="leftColumn">
 			<p> 
 				<label>Company Name:</label>
 				<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" style="width: auto;" />
@@ -116,6 +117,8 @@ Please select a company or user to obtain login information.<br/>
 				<label>Fax:</label>
 				<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 			</p>
+</div>
+<div class="rightColumn">
 			<p> 
 				<label>Add to our Mailing List</label>
 				<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
@@ -147,8 +150,15 @@ Please select a company or user to obtain login information.<br/>
 			</p>
 			<p> 
 				<label>Custom Greeting</label>
-				<input type="text" name="greeting" value="<? hecho ( $$variable{'User'}->greeting() ) ?>" />
+				<textarea id="greeting" name="greeting" cols="" rows="<? echo ( split("\n", $$variable{'User'}->greeting() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->greeting() ) ?></textarea>
 			</p>
+			<p>
+				<label>Notes:</label>
+				<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'User'}->notes() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->notes() ) ?></textarea>
+			</p>
+</div>
+<br class="spacer"/>
+<div class="leftColumn">
 			<p> 
 				<label>User Type</label>
 				<select name="type">
@@ -168,6 +178,8 @@ Please select a company or user to obtain login information.<br/>
 			<label>Purchasing Limit (Total)</label>
 			<input type="text" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 		</p>
+</div>
+<div class="rightColumn">
 		<p>
 			<label>Assistant to:</label>
 			<select name="csr_ids" size="4" multiple="multiple">
@@ -188,6 +200,7 @@ Please select a company or user to obtain login information.<br/>
 			<?selectUserCategories?>
 			</select>
 		</p>
+</div>
 		</fieldset>
 		<? if ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) ) ?>

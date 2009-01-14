@@ -51,6 +51,7 @@ CREATE TABLE Company (
 	strWebURL				TEXT,
 	ysnMailingList			CHAR(1) DEFAULT 'N' NOT NULL,
 	quote_project_breakdown	CHAR(1) DEFAULT 'N',
+	notes					TEXT,
 	PRIMARY KEY (Index)
 );
 CREATE UNIQUE INDEX CompanyName_Index on Company (Index);
