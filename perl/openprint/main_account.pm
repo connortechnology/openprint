@@ -90,7 +90,7 @@ sub registration {
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $openprint::param{'email'} );
 	$error .= 'Empty Password.<br/>' if $openprint::param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
-	if ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+	if ( ( ! $session{'user_id'} ) and ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		require Authen::Captcha;
         my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $ENV{'DOCUMENT_ROOT'}.'/skins/'.$openprint::config{'SiteTitle'}.'/images/captcha');
 		if ( 1 != $Captcha->check_code( $openprint::param{'Captcha'}, $openprint::param{'MD5SUM'} ) ) {
