@@ -593,6 +593,11 @@ sub add_inventory {
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
+	my $docket;
+	if ( $description =~ /docket (\d+)/ ) {
+		$docket = $1;
+	} # end if
+
 	$Skid = new openprint::Skid( $Skid ) if ref $Skid ne 'openprint::Skid';
 	#Skid{Paper}{paper_id} has already been adjusted
 
@@ -607,6 +612,7 @@ sub add_inventory {
         'Comment',  $description,
         'skid_id',  $Skid->id(),
 		'units',	$units,
+		'docket',	$docket,
         );
 	delete $$self{allocated};
 	delete $$self{in_stock};

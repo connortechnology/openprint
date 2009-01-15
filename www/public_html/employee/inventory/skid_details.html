@@ -172,15 +172,13 @@ function gsm_to_mweight( form ) {
 		width: 70%;
 	}
 </style>
-<? if ( $$variable{'error'} ) ?>
-The following errors occurred:<br/>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<div class="information"><?information?></div>
-<? eval ( @$variable{'error','information'} = (); ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $openprint::param{'skid_quantity'} ) ?>
 <? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$openprint::param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
 <? endif ( $openprint::param{'skid_quantity'} ) ?>
+<? if ( $$variable{'Skid'}->deleted() ) ?>
+<div class="error">Warning: This skid has been deleted.</div>
+<? endif ( $$variable{'Skid'}->deleted() ) ?>
 
 <form name="jump" method="get" action="skid_details.html">
 	<fieldset class="filters"><legend>Choose Skid</legend>
@@ -267,6 +265,19 @@ The following errors occurred:<br/>
 				ssi::writeButton( $log, $dbh, 'showMap', 'show.gif', "open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{'skid_id'}','Location','width=400,height=400,scrollbars=yes');", '', 'Map' ),
 				); ) ?>
 			</p>
+<? if ( $$variable{'Skid'}->id() ) ?>
+			<p>
+				<label>Manifest:</label>
+				<? echo (
+					my $html = '';
+					my @ManifestContents = openprint::ManifestContent::find('skid_id'=>$$variable{'Skid'}->id() );
+					foreach my $MC ( @ManifestContents ) {
+					$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a><br/>', $MC->manifest_id() );
+					} # end foreach MC
+					return $html;
+				) ?>
+			</p>
+<? endif ( $$variable{'Skid'}->id() ) ?>
 			<p>
 				<label for="Docket">Docket:</label>
 				<input type="text" id="Docket" name="Docket" size="10" value="<? echo ( $openprint::param{'Docket'} ) ?>" />

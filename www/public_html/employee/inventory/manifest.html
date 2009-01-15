@@ -225,7 +225,11 @@ function gsm_to_mweight( form ) {
 				<label>Purchase Order:</label>
 				<input type="text" id="po_id" name="po_id" value="<? echo ( $$variable{'Manifest'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Manifest'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO', 'go.gif', '', '/employee/inventory/purchase_order_view.html?po_id='.$$variable{'Manifest'}->po_id(), 'Go' ) : '' ) ?>
 			</p>
-				<div id="PurchaseOrders"><!--#include virtual="_manifest_purchase_orders.html"--></div>
+				<div id="PurchaseOrders">
+<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
+					<!--#include virtual="_manifest_purchase_orders.html"-->
+<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
+				</div>
 			</div>
 		</fieldset>
 		<br/>

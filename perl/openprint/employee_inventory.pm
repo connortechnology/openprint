@@ -447,16 +447,16 @@ sub save_Paper {
 } # end sub save_Paper
 
 sub save_inventory {
-	my ( $Skid, $Paper, $qty ) = @_;
+	my ( $Skid, $Paper, $qty, $comment ) = @_;
 	my $delta = $Skid->add( $Paper, $qty );
-	$Paper->add_inventory( $Skid, $delta, $param{'Units'} );
+	$Paper->add_inventory( $Skid, $delta, $param{'Units'}, $comment );
 #FIXME
 	if ( $delta > 0 ) {
-		$variable{'information'} .= "Added $delta $param{'Units'} to inventory.<br/>";
+		$variable{'information'} .= sprintf( 'Added %1$d%2$s to inventory for skid <a href="/employee/inventory/skid_details.html?skid_id=%3$d">%3$d</a>.<br/>', $delta,$Paper->type() eq 'Roll' ? 'lbs' : 'sheets', $Skid->id() );
 	} elsif ( $delta < 0 ) {
-		$variable{'information'} .= "Removed $delta $param{'Units'} from inventory.<br/>";
+		$variable{'information'} .= sprintf( 'Removed %1$d%2$s from inventory for skid <a href="/employee/inventory/skid_details.html?skid_id=%3$d">%3$d</a>.<br/>', $delta,$Paper->type() eq 'Roll' ? 'lbs' : 'sheets', $Skid->id() );
 	} else {
-		$variable{'information'} .= "No change was made to inventory.<br/>";
+		$variable{'information'} .= sprintf( 'No change was made to inventory for skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>.<br/>', $Skid->id() );
 	}# end if
 
 	$Skid->save();
@@ -1164,7 +1164,7 @@ sub manifest {
 			my $Skid = $C->Skid();
 			my $qty = sprintf('%d', $param{"qty_lbs-$$C{id}"});
 			$total_qty += $qty;
-			save_inventory( $Skid, $Paper, $qty );
+			save_inventory( $Skid, $Paper, $qty, sprintf('Inventory adjusted from manifest <a href=/employee/inventory/manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
 			if ( $Project and ( $param{'allocate'} eq 'Specific' ) ) {
 				$Paper->allocate( $Skid, $Project->id(), $qty, $param{'Units'} );
 				$variable{'information'} .= "Allocated $qty $param{'Units'} to docket $$C{'docket'}.<br/>";
@@ -1172,7 +1172,7 @@ sub manifest {
 			#save_skid( $Skid, $param{"qty_lbs-$tag_id"} );
 			if ( openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ) {
 				# If the stock has already been checked out, add a subtraction to keep counts in line.
-				save_inventory( $Skid, $Paper, -1*$qty );
+				save_inventory( $Skid, $Paper, -1*$qty, 'Automatic checkout after manifest inventory update.' );
 			} # end if
 			last if $variable{'error'};
 		} # end foreach tag_id
@@ -1182,7 +1182,7 @@ sub manifest {
 			$variable{'information'} .= "Allocated $total_qty $param{'Units'} to docket $param{'Docket'}.<br/>";
 		} # end if
 		if ( ! $variable{'error'} ) {
-			$variable{'information'} .= 'Information successfully stored.';
+			$variable{'information'} .= 'Information successfully stored.<br/>';
 		} # end if
 	} # end if
 	$variable{'Manifest'} = $Manifest;
