@@ -1,5 +1,4 @@
-<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
-<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="profile.html">
 	<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 	<fieldset class="filters"><legend>Choose User</legend>
