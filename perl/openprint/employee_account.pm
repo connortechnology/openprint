@@ -29,6 +29,7 @@ sub profile {
 		if ( $param{'password'} ) {
 			if ( ! $param{'VerifyPassword'} ) {
 				$variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
+				delete $param{'password'};
 			} else {
 				$variable{'error'} .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'VerifyPassword'};
 			} # end if
