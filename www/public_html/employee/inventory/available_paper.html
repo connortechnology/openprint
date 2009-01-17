@@ -76,7 +76,7 @@ Please select a Paper to view/edit.<br>
 				<select name="Owner" size="1" onchange="f1.submit();">
 				<option value=""> All </option>
 				<? echo ( 
-					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(strName)' ) ], $session{'/employee/inventory/available_paper.html?Owner'} ? $session{'/employee/inventory/available_paper.html?Owner'} : $session{'company_id'} );
+					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(name)' ) ], $session{'/employee/inventory/available_paper.html?Owner'} ? $session{'/employee/inventory/available_paper.html?Owner'} : $session{'company_id'} );
 				) ?>
 				</select>
 			</p>

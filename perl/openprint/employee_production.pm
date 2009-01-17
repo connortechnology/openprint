@@ -204,7 +204,7 @@ sub bindery_overview {
 	$_ .= " ORDER BY due_date";
 	my @projects = sql::execute( $log, $dbh, $_ );
 
-	@{$$variable{'Projects'}} = ();
+	@{$variable{'Projects'}} = ();
 	while ( my ( $project_index, $order_id, $docket, $company_id, $qty_index, $date_required, $status ) = splice @projects, 0, 7 ) {
 		my %times;
 
@@ -218,7 +218,7 @@ sub bindery_overview {
 					if ( $statuses{$service_index} eq 'Complete' ) {
 						$times{'Stitch'} = 'done';
 					} else {
-						my ( $runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
+						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
 						$times{'Stitch'} += int $runtime;
 						$complete = 0;
 					} # end if
@@ -316,8 +316,8 @@ sub bindery_overview {
 		} # end if
 
 		if ( sets::intersection( @Services, keys %service_indices ) ) {
-			push @{$$variable{'Projects'}}, $project_index, $order_id, $docket, new openprint::Company( $company_id )->name(), $description,$date_required;
-			foreach my $service_type ( @{$$variable{'Services'}} ) {
+			push @{$variable{'Projects'}}, $project_index, $order_id, $docket, new openprint::Company( $company_id )->name(), $description,$date_required;
+			foreach my $service_type ( @{$variable{'Services'}} ) {
 				if ( defined $times{$service_type} ) {
 					if ( $times{$service_type} ne 'done' ) {
 						$times{$service_type} = int($times{$service_type}/360) . ':' . int(($times{$service_type}%360)/60);

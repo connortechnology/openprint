@@ -11,7 +11,7 @@
             <input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
-			<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::param{'ddmCustomer'} ); ) ?>
+			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
             </select>
             <? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
 		</p>

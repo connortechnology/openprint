@@ -127,7 +127,7 @@ sub credit {
 
 	if ( $param{'btnFunction'} eq 'Go' ) {
 		 if ( $param{'txtSearchAccountNum'} ne '' ) {
-			( $company_index ) = sql::execute( $log, $dbh,'SELECT Index from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'} );
+			( $company_index ) = sql::execute( $log, $dbh,'SELECT id FROM Companies WHERE strAccountNum=?',$param{'txtSearchAccountNum'} );
 		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {

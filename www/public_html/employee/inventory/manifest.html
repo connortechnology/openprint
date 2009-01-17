@@ -103,7 +103,7 @@ function gsm_to_mweight( form ) {
 					<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('Docket').value} } );">
 						<option value="">All</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'Manifest'}->supplier_id() ); ) ?>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $$variable{'Manifest'}->supplier_id() ); ) ?>
 					</select>
 				</p>
 				<p>

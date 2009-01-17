@@ -123,7 +123,7 @@
 				<select name="ddmSalesRep" size="1" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)">
 					<option value="">All Employees</option>
 					 <? echo ( 
-							 ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['A','E'],'order'=>'lower(strfirstname),lower(strlastname)' ) ], $openprint::param{'ddmSalesRep'} );
+							 ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['A','E'],'order'=>'lower(firstname),lower(lastname)' ) ], $openprint::param{'ddmSalesRep'} );
 						) ?>
 				</select>
 		</p>

@@ -8,7 +8,7 @@
 			<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
 			<select name="company_id" id="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(strname)' ) ], $param{'company_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(name)' ) ], $param{'company_id'} ); ) ?>
 			</select>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
@@ -19,7 +19,7 @@
 				<? echo ( 
 					my %params = (
 						'company_id'=>$param{'company_id'}, 
-						'order'=>'lower(strfirstname),lower(strlastname)'
+						'order'=>'lower(firstname),lower(lastname)'
 					);
 					if ( $session{'user_type'} ne 'A' ) {
 						$params{'type'} = ['C','E'];
@@ -137,7 +137,7 @@
 		<p>
 			<label>Assistant to:</label>
 			<select name="csr_ids" size="4" multiple="multiple">
-				<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+				<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
 			</select>
 		</p>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
