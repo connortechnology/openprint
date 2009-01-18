@@ -44,9 +44,8 @@ sub variables {
 
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $p_id, $s_s_id );
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity( $qty_index );
+		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "txtWidth-$$specs{'SignatureIndex'}", "txtHeight-$$specs{'SignatureIndex'}",
 				"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index",
 				"txtImposition-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$specs{'SignatureIndex'}-$qty_index",
@@ -119,10 +118,13 @@ sub calc {
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
+
+
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
 			next;
@@ -231,20 +233,17 @@ sub signature_calc {
 		@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 	} else {
-		if ( ! @all_equipment ) {
-			@all_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>['Y','When Printing','When PerfectBinding','When Stitching']} );
-			if ( $stitching_service_index and $$services{'Folding'} ) {
-
-				push @all_equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Scoring Capable'=>'When Folding'} );
-			} # end if
-
-			my @stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'} );
-			if ( ! $stitching_service_index ) {
-				@all_equipment = sets::exclude( \@stitchers, \@all_equipment );
-			} # end if
-		} # end if
-		@equipment = @all_equipment;
+		my @capabilities = 'Y','When Printing';
+		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'Presentation Folders';
+		push @capabilities, 'When Folding' if $$services{'Folding'};
+		push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
+		push @capabilities, 'When Stitching' if $stitching_service_index;
+		
+		@equipment = openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
 	} # endif
+	foreach my $E ( @equipment ) {
+		$openprint::log->debug( "Equipment: " . $E->strid() );
+	}
 
 # Get the impositions to consider
 	if ( ! $imposition ) {
@@ -350,8 +349,8 @@ sub signature_calc {
 			my %servicePrice = openprint::service::get_price_object( 'Scoring', $score_qty, $Equipment );
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
-				$servicePrice = $servicePrice{'Price'} * $qty / 1000;
-				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d=%.2f<br/>', @servicePrice{'Price','units'}, $qty, $servicePrice );
+				$servicePrice = $servicePrice{'Price'} * $qty *$score_qty/ 1000;
+				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice );
 			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
 				my $hours = $qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
 				$servicePrice = $servicePrice{'Price'} * $hours;
@@ -472,7 +471,7 @@ sub get_scores {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
 		} # end if
-	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Gate Fold Spreads' ) {
+	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Gate Folded Pages' ) {
 	} else { # normal printing
 		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'Portrait', 'Landscape' ) ) {
 # needs no folding
@@ -500,6 +499,9 @@ sub get_scores {
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'PF1Pocket', 'PF2Pocket' ) ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 2;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '2Panel2Pocket' ) ) {
+			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
+			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 		} else {
 			if ( $$specs{'txtFinalWidth'} ) {
 				my $cols = $$sig_specs{'txtWidth'} / $$specs{'txtFinalWidth'};
@@ -528,15 +530,16 @@ sub get_specs {
 
 	@{$$variable{'SignatureGroups'}} = ();
 
-	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
-	push @{$$variable{'Equipment'}}, openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>'When Printing'}, 'UseInEstimating'=>'Y','order'=>'strName');
-
-	if ( $$services{'Folding'} ) {
-		push @{$$variable{'Equipment'}}, openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>'When Folding'}, 'UseInEstimating'=>'Y','order'=>'strName');
-	} # end if
+	my @capabilities = 'Y', 'When Printing';
+	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'Presentation Folders';
+	push @capabilities, 'When Folding' if $$services{'Folding'};
+	push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
+	push @capabilities, 'When Stitching' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+	
+	@{$$variable{'Equipment'}} = map{ $_->id() } openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		push @{$$variable{'SignatureGroups'}}, @$sig_specs{'SignatureIndex','txtServiceDescription'};
 	} # end foreach
 } # end sub get_specs

@@ -1,29 +1,24 @@
 <? eval (
-	if ( %openprint::param and ! $param{'btnFunction'} ) {
-		foreach my $key ( 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations' ) {
-			if ( ref $session{"/administrator/stock/list.html?$key"} eq 'ARRAY' ) {
-				$openprint::session{"/administrator/stock/list.html?$key"} = join(';', @{$openprint::param{$key}} );
-			} else {
-				$openprint::session{"/administrator/stock/list.html?$key"} = $openprint::param{$key}; 
-			} # end if
-		} # end foreach
+	if ( %param and ! $param{'btnFunction'} ) {
+		ssi::save_params('/administrator/stock/list.html', 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations' );
 	} # end if
+
 	@{$$variable{'Stocks'}} = ();
 	foreach my $Stock ( openprint::Paper::find( 
-		'group_id'		=> $openprint::session{'/administrator/stock/list.html?Group'},
-		'owner_id'		=> $openprint::session{'/administrator/stock/list.html?Owner'},
-		'manufacturer_id'		=> $openprint::session{'/administrator/stock/list.html?Manufacturer'},
-		'name_id'	=> $openprint::session{'/administrator/stock/list.html?Name'},
-		'finish_id'	=> $openprint::session{'/administrator/stock/list.html?Finish'},
-		'colour_id'	=> $openprint::session{'/administrator/stock/list.html?Colour'},
-		'weight_id'	=> $openprint::session{'/administrator/stock/list.html?Weight'}, 
-		'material_id'	=> $openprint::session{'/administrator/stock/list.html?material_id'}, 
-		'type'		=> [ split(';', $openprint::session{'/administrator/stock/list.html?Types'} ) ],
-		'fsc_code'	=> $openprint::session{'/administrator/stock/list.html?fsc_code'}, 
-		'order'		=> 'name,finish,colour,weight, width, height'
-		);
-		next if $Stock->recommendations() and ! sets::isin( 1, split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) );
-		next if ( ! $Stock->recommendations() ) and ! sets::isin( 0, split(';', $openprint::session{'/administrator/stock/list.html?recommendations'} ) );
+			'group_id'		=> $session{'/administrator/stock/list.html?Group'},
+			'owner_id'		=> $session{'/administrator/stock/list.html?Owner'},
+			'manufacturer_id'		=> $session{'/administrator/stock/list.html?Manufacturer'},
+			'name_id'	=> $session{'/administrator/stock/list.html?Name'},
+			'finish_id'	=> $session{'/administrator/stock/list.html?Finish'},
+			'colour_id'	=> $session{'/administrator/stock/list.html?Colour'},
+			'weight_id'	=> $session{'/administrator/stock/list.html?Weight'}, 
+			'material_id'	=> $session{'/administrator/stock/list.html?material_id'}, 
+			'type'		=> [ split(';', $session{'/administrator/stock/list.html?Types'} ) ],
+			'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'}, 
+			'order'		=> 'name,finish,colour,weight, width, height'
+		) ) {
+		next if $Stock->recommendations() and ! sets::isin( 1, split(';', $session{'/administrator/stock/list.html?recommendations'} ) );
+		next if ( ! $Stock->recommendations() ) and ! sets::isin( 0, split(';', $session{'/administrator/stock/list.html?recommendations'} ) );
 		push @{$$variable{'Stocks'}}, $Stock;
 	} # end foreach
 ) ?>

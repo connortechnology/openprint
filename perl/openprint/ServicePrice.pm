@@ -20,7 +20,7 @@ use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$table = 'tbl_Service_prices';
+$table = 'Service_Prices';
 $serial = 'serviceprices_id_seq';
 
 %fields = (

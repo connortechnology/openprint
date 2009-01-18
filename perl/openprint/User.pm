@@ -329,6 +329,8 @@ sub find {
 			if ( @{$param{'id'}} ) {
 				$sql .= q{ AND id IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
 				push @values, @{$param{'id'}};
+			} else {
+				$sql .= q{ AND id IS NULL };
 			} # end if
 		} else {
 			$sql .= q{ AND id=?};

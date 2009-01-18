@@ -63,6 +63,7 @@
 	</fieldset>
 	<fieldset><legend>Sales Information:</legend>
 <div class="leftColumn">
+		<p><label>ID #</label><?CustomerIndex?></p>
 		<p> 
 			<label><b>Account Activated:</b></label>
 			<input type="radio" name="activation" value="Y" id="activationY" <? echo ( ssi::checked( $$variable{'Company'}->activation() eq 'Y' ); ) ?> />

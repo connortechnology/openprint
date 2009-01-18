@@ -3,16 +3,6 @@
 <h2>Turnaround</h2>
 </div>
 <script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f1.DateStartYear.value,document.f1.DateStartMonth.value,document.f1.DateStartDay,document.f1.DateStartDay.value);
-            setDaysDropDown(document.f1.DateEndYear.value,document.f1.DateEndMonth.value,document.f1.DateEndDay,document.f1.DateEndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-
 	function load_projects( form ) {
 		LoadContent('Results','/employee/reports/_turnaround_results.html', Serialize( form ) );
 	} // end function
@@ -25,8 +15,8 @@
 				<select name="CSR" size="1" onchange="load_projects(this.form);">
 				<? echo ( 
 					my @options = ( '', 'All' );
-					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)','usergroup'=>'Sales');
-					return ssi::make_drop_down( \@options, $openprint::param{'CSR'} );
+					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)','usergroup'=>'Sales');
+					return ssi::make_drop_down( \@options, $param{'CSR'} );
 				 ) ?>
 				
 				</select>

@@ -730,16 +730,21 @@ sub allocate {
 
 	$skid_id = $skid_id->id() if ref $skid_id eq 'openprint::Skid';
 
-	my $PA = new openprint::PaperAllocation();
-	$PA->save( {
-			'paper_id'		=>	$$self{'id'},
-			'skid_id'		=>	$skid_id,
-			'quantity'		=>	$quantity,
-			'units'			=>	$units,
-			'project_id'	=>	$project_id,
-			'operator_id'	=>	$openprint::session{'user_id'},
-			} );
-	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} );
+	my $PA;
+	if ( my @PA = openprint::PaperAllocation::find('project_id'=>$project_id, 'paper_id'=>$$self{'id'} ) ) {
+		$PA = $PA[0];
+	} else {
+		$PA = new openprint::PaperAllocation();
+		$PA->save( {
+				'paper_id'		=>	$$self{'id'},
+				'skid_id'		=>	$skid_id,
+				'quantity'		=>	$quantity,
+				'units'			=>	$units,
+				'project_id'	=>	$project_id,
+				'operator_id'	=>	$openprint::session{'user_id'},
+				} );
+	} # end if
+	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . ($skid_id?qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} : '') );
 	delete $$self{allocated};
 	return $PA;
 } # end sub allocate
@@ -823,7 +828,7 @@ $openprint::log->warn('Using override price');
 		my @Prices = $self->prices( $list_id );
 		if ( (! $$self{'supplied'} ) and ! @Prices ) {
 			$openprint::log->warn( 'No prices for paper for pricelist ' . $list_id );
-			return;
+			return %price;
 		} # end if
 		foreach my $Price ( @Prices ) {
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->Min(), $Price->Max(), $Price->Price() ) );
@@ -1076,7 +1081,7 @@ sub load_from_signature {
 #following line added on june-30-2008
 		$Paper->req_die_scoring( $Paper->calliper() > 0.008 );
 		if ( $$specs{'StockType'} ne 'Roll' ) {
-		$Paper->mweight( $$specs{'txtCustomMWeight'} );
+			$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
@@ -1104,15 +1109,6 @@ sub load_from_signature {
 		} # end if
 		$Paper = shift @Papers if @Papers;
 		$Paper = new openprint::Paper() if ! $Paper;
-		if ( $qty_index ) {
-			if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
-				$Paper = $Paper->clone();
-				$Paper->width( $$specs{'StockWidth'.$qty_index} );
-				$Paper->height( $$specs{'StockHeight'.$qty_index} );
-#$openprint::log->debug(sprintf('Paper %sx%s = %s', $Paper->width(), $Paper->height(), $Paper->area() ) );
-				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
-			} # end if
-		} # end if
 		if ( $$specs{'rdbSuppliedStock'} eq 'Y' and ! $Paper->supplied() ) {
 			$Paper->supplied(1);
 		} # end if
@@ -1121,9 +1117,14 @@ sub load_from_signature {
 $openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
 		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
 	} # end if
-	if ( $qty_index and ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) ) {
-$openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
-		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
+
+	if ( $qty_index ) {
+		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
+			$Paper = $Paper->clone();
+			$Paper->width( $$specs{'StockWidth'.$qty_index} );
+			$Paper->height( $$specs{'StockHeight'.$qty_index} );
+			$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
+		} # end if
 	} # end if
 	return $Paper;
 	

@@ -1,3 +1,14 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+
+<script type="text/javascript">
+	tinyMCE.init({
+
+		mode : "textareas",
+
+		theme : "simple"
+
+	});
+</script>
 <? if ( $$variable{'Results'} ) ?>
 <b>The following are the results of your email campaign:</b><br/>
 <?Results?><br/>
@@ -9,7 +20,7 @@
 	<fieldset>
 		<p><label>Name:</label><input type="text" name="name" value="<? echo ( $$variable{'Campaign'}->name() ) ?>" /></p>
 		<p><label>Query:</label><textarea name="query" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->query() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->query() ) ?></textarea></p>
-		<p><label>Email From:</label><input type="text" name="email_from" value="<? echo ( $$variable{'Campaign'}->email_from() ) ?>"  /></p>
+		<p><label>Email From:</label><input type="text" name="email_from" value="<? hecho ( $$variable{'Campaign'}->email_from() ) ?>"  /></p>
 		<p><label>Email Subject:</label><input type="text" name="email_subject" value="<? echo ( $$variable{'Campaign'}->email_subject() ) ?>"  /></p>
 		<p><label>Template:</label><select name="template_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate::find('order'=>'lower(name)') ], $$variable{'Campaign'}->template_id() ); ) ?></select></p>
 		<p><label>Email Body:</label><textarea name="email_text" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->email_text() ) ?></textarea></p>

@@ -293,20 +293,19 @@ The following errors occurred:<br/>
 
 </form>
 <? if ( $$variable{'paper_id'} ) ?>
-	<fieldset><legend onclick="toggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory - click to hide/show</legend>
+	<fieldset><legend onclick="AjaxToggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory - click to hide/show</legend>
 	<div id="CurrentInventory">
 	<!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
 	</div>
 	</fieldset>
-<div>
-	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
+	<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
 	<div id="Allocations">
 	<!--#include virtual="/employee/inventory/_paper_allocations.html" -->
 	</div>
 	</fieldset>
-</div>
-<br class="spacer"/>
-<fieldset class="filters"><legend onclick="toggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log - click to hide/show</legend>
-<div id="Log" style="display: none;"> </div>
-</fieldset>
+	<fieldset class="filters"><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log - click to hide/show</legend>
+	<div id="Log"> 
+		<!--#include virtual="/employee/inventory/_paper_log.html" -->
+	</div>
+	</fieldset>
 <? endif ( $$variable{'paper_id'} ) ?>

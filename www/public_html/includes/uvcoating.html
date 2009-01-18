@@ -16,7 +16,7 @@
     my $html;
     foreach my $type ( @{$$variable{'uvoptions'}} ) {
         $html .= qq`<input type="radio" id="SideOneCoatingType$type" name="SideOneCoatingType" value="$type" onclick="calc(this.form.name);" ` . ( $$variable{"SideOneCoatingType"} eq $type ? 'checked="checked"' : '' ) . " />\n";
-        $html .= qq`<label for="SideOneCoatingType$type">$type</label>\n`;
+        $html .= qq`<label class="radio" for="SideOneCoatingType$type">$type</label>\n`;
     } # end foreach
     return $html;
 ) ?>
@@ -29,7 +29,7 @@
     my $html;
     foreach my $type ( @{$$variable{'uvoptions'}} ) {
         $html .= qq`<input type="radio" id="SideTwoCoatingType$type" name="SideTwoCoatingType" value="$type" onclick="calc(this.form.name);" ` . ( $$variable{"SideTwoCoatingType"} eq $type ? 'checked="checked"' : '' ) . " />\n";
-        $html .= qq`<label for="SideTwoCoatingType$type">$type</label>\n`;
+        $html .= qq`<label class="radio" for="SideTwoCoatingType$type">$type</label>\n`;
     } # end foreach
     return $html;
 ) ?>

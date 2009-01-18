@@ -1,12 +1,16 @@
 <p class="error"><?error?></p>
-<? if ( sets::isin( $openprint::session{'user_type'},['E','A'] ) ) ?>
-	<? if ( $openprint::param{'ddmCompany'} ) ?>
-		Any actions you perform during the course of this login will be stored in <? echo ( new openprint::Company($openprint::session{company_id})->name() ) ?>'s history.<br/>
+<? if ( sets::isin( $session{'user_type'},['E','A'] ) ) ?>
+	<? if ( $param{'ddmCompany'} ) ?>
+		Any actions you perform during the course of this login will be stored in <? echo ( new openprint::Company($session{company_id})->name() ) ?>'s history.<br/>
 <br>
-  <? eval ( $$variable{'Company'} = new openprint::Company( $openprint::session{'company_id'} ); ) ?>
+  <? eval ( $$variable{'Company'} = new openprint::Company( $session{'company_id'} ); ) ?>
+<? if ( $$variable{'Company'}->salesrep_id() ) ?>
   The CSR for <? echo ( $$variable{'Company'}->name() ) ?> is <? echo ( $$variable{'Company'}->CSR()->name() ) ?>.<br/>
+<? else ( $$variable{'Company'}->salesrep_id() ) ?>
+<? echo ( $$variable{'Company'}->name() ) ?> has no CSR assigned.<br/>
+<? endif ( $$variable{'Company'}->salesrep_id() ) ?>
 		<br/>
-		Prices will be displayed in <? echo ( new openprint::Currency( $openprint::session{'Currency_id'} )->name() ) ?>.<br/>
+		Prices will be displayed in <? echo ( new openprint::Currency( $session{'Currency_id'} )->name() ) ?>.<br/>
 		<br/>
 <fieldset><legend>Last 10 Login Attempts</legend>
     <table class="List" style="table-layout: auto;">
@@ -20,7 +24,7 @@
 		<? echo ( 
 			require openprint::logRecord;
 			my $html = '';
-			foreach my $Log ( openprint::logRecord::find('company_id'=>$openprint::session{'company_id'}, 'action_type'=>[2,3,78,79], 'order'=>'date_time DESC','limit'=>10 ) ) {
+			foreach my $Log ( openprint::logRecord::find('company_id'=>$session{'company_id'}, 'action_type'=>[2,3,78,79], 'order'=>'date_time DESC','limit'=>10 ) ) {
 			     $html .= sprintf('<tr><td>%s</td><td>%s</td><td style="overflow:hidden;">%s</td><td>%s</td><td>%s</td></tr>',
 					 Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),$Log->User()->name(),
 					 $Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Action()->description(),$Log->note() );
@@ -30,9 +34,9 @@
 		) ?>
 	</table>
 </fieldset>
-	<? else ( $openprint::param{'ddmCompany'} ) ?>
+	<? else ( $param{'ddmCompany'} ) ?>
 	<br/>
-	You are currently representing <? echo ( new openprint::Company( $openprint::session{'company_id'} )->name(); ) ?>.<br/>
+	You are currently representing <? echo ( new openprint::Company( $session{'company_id'} )->name(); ) ?>.<br/>
 	To represent another company, please select it from the dropdown and click submit. <br/>
 	Any orders or quotes you make will be recorded in the selected company's history.<br/>
 	<form name="f1" action="select_company.html" method="post">
@@ -42,7 +46,7 @@
 				<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, f1.ddmCompany);" size="4"/>
 				<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">Select a Company</option>
-					<? echo ( return openprint::Company::get_dropdown( $openprint::session{'company_id'} );) ?>
+					<? echo ( return openprint::Company::get_dropdown( $session{'company_id'} );) ?>
 				</select>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'f1.submit();', '', 'Submit' ); ) ?>
 			</p>
@@ -50,6 +54,6 @@
 		<input type="hidden" name="btnFunction" value="SelectCompany"/>
 	</form>
 	<script type="text/javascript">document.f1.CompanyFilter.focus();</script>
-	<? endif ( $openprint::param{'ddmCompany'} ) ?>
-<? endif ( sets::isin( $openprint::session{'user_type'},['E','A'] ) ) ?>
+	<? endif ( $param{'ddmCompany'} ) ?>
+<? endif ( sets::isin( $session{'user_type'},['E','A'] ) ) ?>
 

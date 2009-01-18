@@ -15,10 +15,10 @@
 		<input type="checkbox" name="chkProcessColourSideOne<?Signature?>" <? echo ( 'checked="checked"' if $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} eq 'ProcessColour' ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideOne<?Signature?>').show() } else { $('ProcessCoveragesSideOne<?Signature?>').hide() } calc(this.form.name);" /> 
 		<? echo ( ssi::writeTip( '4 Colour Process' ); ) ?>
 		<span id="ProcessCoveragesSideOne<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} ne 'ProcessColour' ) ?> >
-			<label for="CyanSideOneCoverage<?Signature?>">C</label><input type="text" id="CyanSideOneCoverage<?Signature?>" name="CyanSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'CyanSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="3" />%
-			<label for="MagentaSideOneCoverage<?Signature?>">M</label><input type="text" id="MagentaSideOneCoverage<?Signature?>" name="MagentaSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'MagentaSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="3" />%
-			<label for="YellowSideOneCoverage<?Signature?>">Y</label><input type="text" id="YellowSideOneCoverage<?Signature?>" name="YellowSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'YellowSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="3" />%
-			<label for="BlackSideOneCoverage<?Signature?>">K</label><input type="text" id="BlackSideOneCoverage<?Signature?>" name="BlackSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'BlackSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="3" />%
+			<label for="CyanSideOneCoverage<?Signature?>">C</label><input type="text" id="CyanSideOneCoverage<?Signature?>" name="CyanSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'CyanSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
+			<label for="MagentaSideOneCoverage<?Signature?>">M</label><input type="text" id="MagentaSideOneCoverage<?Signature?>" name="MagentaSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'MagentaSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
+			<label for="YellowSideOneCoverage<?Signature?>">Y</label><input type="text" id="YellowSideOneCoverage<?Signature?>" name="YellowSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'YellowSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
+			<label for="BlackSideOneCoverage<?Signature?>">K</label><input type="text" id="BlackSideOneCoverage<?Signature?>" name="BlackSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'BlackSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
 		</span>
 		<div id="SpecialColoursSideOne<?Signature?>" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 			<br class="spacer"/>
@@ -41,11 +41,15 @@
 	</fieldset>
 </div>
 <div class="InksBack">
-	<fieldset><legend>Back</legend>
-<div class="SidesTheSame">
-<input type="checkbox" id="sides_the_same<?Signature?>" name="sides_the_same<?Signature?>" value="Y" onclick="if(this.checked){$('InksOnBackQuestions').hide();}else{$('InksOnBackQuestions').show();}calc(this.form.name);" <? echo ( $$variable{"sides_the_same$$variable{Signature}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-<label class="radio" for="sides_the_same<?Signature?>">Same as front?</label>
-</div>
+	<fieldset><legend>Back
+<? if ( ! $$variable{'txtSignatureType'} ) ?>
+same as front?
+<input type="radio" id="sides_the_same<?Signature?>Y" name="sides_the_same<?Signature?>" value="Y" onclick="$('InksOnBackQuestions').hide();calc(this.form.name);" <? echo ( ssi::checked($$variable{"sides_the_same$$variable{Signature}"} eq 'Y'); ) ?> />
+<label class="radio" for="sides_the_same<?Signature?>Y">Yes</label>
+<input type="radio" id="sides_the_same<?Signature?>N" name="sides_the_same<?Signature?>" value="N" onclick="$('InksOnBackQuestions').show();calc(this.form.name);" <? echo ( ssi::checked($$variable{"sides_the_same$$variable{Signature}"} ne 'Y' ); ) ?> />
+<label class="radio" for="sides_the_same<?Signature?>N">No</label>
+<? endif ( ! $$variable{'txtSignatureType'} ) ?>
+</legend>
 		<div id="InksOnBackQuestions" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>
 		<? echo (
             my $html;
@@ -62,10 +66,10 @@
         <input type="checkbox" name="chkProcessColourSideTwo<?Signature?>" <? echo ( 'checked="checked"' if $$variable{'chkProcessColourSideTwo'.$$variable{'Signature'}} eq 'ProcessColour' ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideTwo<?Signature?>').show() } else { $('ProcessCoveragesSideTwo<?Signature?>').hide() } calc(this.form.name);" />
       <? echo ( ssi::writeTip( '4 Colour Process' ); ) ?>
         <span id="ProcessCoveragesSideTwo<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideTwo'.$$variable{'Signature'}} ne 'ProcessColour' ) ?> >
-            <label for="CyanSideTwoCoverage<?Signature?>">C</label><input type="text" id="CyanSideTwoCoverage<?Signature?>" name="CyanSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'CyanSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="3" />%
-            <label for="MagentaSideTwoCoverage<?Signature?>">M</label><input type="text" id="MagentaSideTwoCoverage<?Signature?>" name="MagentaSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'MagentaSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="3" />%
-            <label for="YellowSideTwoCoverage<?Signature?>">Y</label><input type="text" id="YellowSideTwoCoverage<?Signature?>" name="YellowSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'YellowSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="3" />%
-            <label for="BlackSideTwoCoverage<?Signature?>">K</label><input type="text" id="BlackSideTwoCoverage<?Signature?>" name="BlackSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'BlackSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="3" />%
+            <label for="CyanSideTwoCoverage<?Signature?>">C</label><input type="text" id="CyanSideTwoCoverage<?Signature?>" name="CyanSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'CyanSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
+            <label for="MagentaSideTwoCoverage<?Signature?>">M</label><input type="text" id="MagentaSideTwoCoverage<?Signature?>" name="MagentaSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'MagentaSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
+            <label for="YellowSideTwoCoverage<?Signature?>">Y</label><input type="text" id="YellowSideTwoCoverage<?Signature?>" name="YellowSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'YellowSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
+            <label for="BlackSideTwoCoverage<?Signature?>">K</label><input type="text" id="BlackSideTwoCoverage<?Signature?>" name="BlackSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'BlackSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
         </span>
 		<div id="SpecialColoursSideTwo<?Signature?>" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 			<br class="spacer"/>

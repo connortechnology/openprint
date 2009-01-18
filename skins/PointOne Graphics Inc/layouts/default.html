@@ -54,6 +54,12 @@
 				</div>
 				<div id="Menu">
 					<ul id="menubar">
+<? if ( $session{'user_type'} eq 'A' ) ?>
+						<li id="MenuAdministrator" class="off"><a href="/administrator/index.html">Admin Side</a></li>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+						<li id="MenuEmployee" class="off"><a href="/employee/index.html">Employee Side</a></li>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 						<li id="MenuAbout" class="<? echo ( ($r->uri() =~ /main\/company/ or $r->uri() eq '/index.html' or $r->uri() eq '') ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuAbout'), 'off', 'on');return false;">ABOUT POINTONE</a>
 							<ul>
 								<li><a href="/main/company/about.html">&raquo; Corporate Video</a></li>
@@ -92,7 +98,6 @@
 						</li>
 						<li id="MenuProjects" class="<? echo ( $r->uri() =~ /main\/project/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuProjects'), 'off', 'on');return false;">PROJECTS</a>
 							<ul>
-								<li><a href="/main/project/overview.html;NOSSL">&raquo; Overview</a></li>
 								<li><a href="/main/project/create_edit.html;NOSSL">&raquo; Create Project</a></li>
 								<li><a href="/main/project/view.html;NOSSL">&raquo; Current Project</a></li>
 								<li><a href="/main/project/history.html;NOSSL">&raquo; History</a></li>
@@ -100,14 +105,12 @@
 						</li>
 						<li id="MenuQuotes" class="<? echo ( $r->uri() =~ /main\/quote/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuQuotes'), 'off', 'on');return false;">QUOTES</a>
 							<ul>
-								<li><a href="/main/quote/overview.html;NOSSL">&raquo; Overview</a></li>
 								<li><a href="/main/quote/details.html;NOSSL">&raquo; Current Quote</a></li>
 								<li><a href="/main/quote/history.html;NOSSL">&raquo; History</a></li>
 							</ul>
 						</li>
 						<li id="MenuOrders" class="<? echo ( $r->uri() =~ /main\/order/ ? 'on' : 'off' ) ?>"><a href="#"  onclick="toggleMenu($('MenuOrders'), 'off', 'on');return false;">ORDERS</a>
 							<ul>
-								<li><a href="/main/order/overview.html;NOSSL">&raquo; Overview</a></li>
 								<li><a href="/main/order/information.html;NOSSL">&raquo; Current Order</a></li>
 								<li><a href="/main/order/history.html;NOSSL">&raquo; History</a></li>
 							</ul>

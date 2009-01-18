@@ -16,13 +16,14 @@ require openprint::logs;
 require openprint::MarketingCategory;
 
 use openprint ();
-use vars qw( $r $log $dbh %variable %param %session);
+use vars qw( $r $log $dbh %variable %param %session %config);
 *r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *session = \%openprint::session;
+*config = \%openprint::config;
 
 # called when a salesperson selects a customer to be
 sub select_company {
@@ -57,7 +58,7 @@ sub select_company {
 sub registration {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	if ( $openprint::param{'btnFunction'} ne 'Register' ) {
+	if ( $param{'btnFunction'} ne 'Register' ) {
 		$openprint::log->debug("Not registering");
 		return;
 	} else {
@@ -65,34 +66,34 @@ sub registration {
 	} # end if
 
 	# Need to strip out characters that don't work well in filesystems - this is for FTP/Fileserver integration
-	$openprint::param{'business_name'} = $openprint::param{'name'} if ! $openprint::param{'business_name'};
+	$param{'business_name'} = $param{'name'} if ! $param{'business_name'};
 
 	# perform input field validation
 	my $error = '';
-	$error .= 'Missing company name.<br/>' if ! $openprint::param{'name'};
-	$error .= 'Missing contact first name.<br/>' if ! $openprint::param{'firstname'};
-	$error .= 'Missing contact last name.<br/>' if ! $openprint::param{'lastname'};
-	$error .= 'Missing Salutation.<br/>' if ! $openprint::param{'salutation'};
-	$error .= 'Missing position.<br/>' if ! $openprint::param{'title'};
-	$error .= 'Missing address.<br/>' if ! $openprint::param{'address1'};
-	$error .= 'Missing city.<br/>' if ! $openprint::param{'city'};
-	$error .= 'Missing state/province.<br/>' if ! $openprint::param{'state'}; 
-	$error .= 'Missing country.<br/>' if ! $openprint::param{'country'};
-	$error .= 'Missing Postal Code.<br/>' if ! $openprint::param{'postalcode'};
-	$error .= 'Postal Code too long.<br/>' if length $openprint::param{'postalcode'} > 12;
-	$error .= 'Missing Phone Number.<br/>' if ! $openprint::param{'phone'};
-	if ( exists $openprint::param{'howdidyouhearaboutus'} ) {
-	$error .= 'Please tell us how you heard about us.<br/>' if ! $openprint::param{'howdidyouhearaboutus'};
-	$error .= 'Please tell us how you heard about us.<br/>' if ( $openprint::param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $openprint::param{'howdidyouhearaboutusother'} );
+	$error .= 'Missing company name.<br/>' if ! $param{'name'};
+	$error .= 'Missing contact first name.<br/>' if ! $param{'firstname'};
+	$error .= 'Missing contact last name.<br/>' if ! $param{'lastname'};
+	$error .= 'Missing Salutation.<br/>' if ! $param{'salutation'};
+	$error .= 'Missing position.<br/>' if ! $param{'title'};
+	$error .= 'Missing address.<br/>' if ! $param{'address1'};
+	$error .= 'Missing city.<br/>' if ! $param{'city'};
+	$error .= 'Missing state/province.<br/>' if ! $param{'state'}; 
+	$error .= 'Missing country.<br/>' if ! $param{'country'};
+	$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
+	$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
+	$error .= 'Missing Phone Number.<br/>' if ! $param{'phone'};
+	if ( exists $param{'howdidyouhearaboutus'} ) {
+	$error .= 'Please tell us how you heard about us.<br/>' if ! $param{'howdidyouhearaboutus'};
+	$error .= 'Please tell us how you heard about us.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $param{'howdidyouhearaboutusother'} );
 	} # end if
-	$error .= 'Missing E-mail Address.<br/>' if ! $openprint::param{'email'};
-	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $openprint::param{'email'} );
-	$error .= 'Empty Password.<br/>' if $openprint::param{'password'} eq '';
-	$error .= 'Passwords do not match.<br/>' if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
+	$error .= 'Missing E-mail Address.<br/>' if ! $param{'email'};
+	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
+	$error .= 'Empty Password.<br/>' if $param{'password'} eq '';
+	$error .= 'Passwords do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
 	if ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) {
 		require Authen::Captcha;
         my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $openprint::config{'SkinPath'}.'/images/captcha');
-		if ( 1 != $Captcha->check_code( $openprint::param{'Captcha'}, $openprint::param{'MD5SUM'} ) ) {
+		if ( 1 != $Captcha->check_code( $param{'Captcha'}, $param{'MD5SUM'} ) ) {
 			$error .= 'Validation Code incorrect.  Please try again.';
 		} # end if
 	} # end if
@@ -103,9 +104,9 @@ sub registration {
 	} # end if
 
 	# enforce unique email addresses.
-	$openprint::param{'email'} =~ tr/[A-Z]/[a-z]/;
-	if ( openprint::User::find('email'=>$openprint::param{email} ) ) {
-		$$variable{'error'} = $openprint::param{'email'} .' is already a user!';
+	$param{'email'} =~ tr/[A-Z]/[a-z]/;
+	if ( openprint::User::find('email'=>$param{email} ) ) {
+		$$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
 
@@ -114,25 +115,25 @@ sub registration {
 	
 	# No errors, We are in go status
 	my %info;
-	foreach my $key ( keys %openprint::param ) {
-		$info{$key} = $openprint::param{$key};
+	foreach my $key ( keys %param ) {
+		$info{$key} = $param{$key};
 	} # end foreach
 
 	$info{'date'} = localtime;
 	$info{'CustomerServiceEmail'} = $openprint::config{'CustomerServiceEmail'};
 
 	# CLean up the postal code
-	$openprint::param{'postalcode'} =~ s/[^\w]//g;
-	$openprint::param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
+	$param{'postalcode'} =~ s/[^\w]//g;
+	$param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
 
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
-	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Companies WHERE lower(name) = lower(?) AND upper(strPostalCode) = ?}, @openprint::param{'name','postalcode'} );
+	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Companies WHERE lower(name) = lower(?) AND upper(strPostalCode) = ? AND (deleted=false OR deleted IS NULL)}, @param{'name','postalcode'} );
 	if ( ! $cust_id ) {
 
 		my $Company = new openprint::Company();
-		$Company->set( \%openprint::param );
-		$Company->taxexempt1( $openprint::param{'gstnumber'} ? 'Y' : 'N' );
-		$Company->taxexempt2( $openprint::param{'pstnumber'} ? 'Y' : 'N' );
+		$Company->set( \%param );
+		$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
+		$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
 		$Company->activation( $openprint::config{'NewCustomerAccountActivation'} );
 		if ( sets::isin( new openprint::User($openprint::session{'user_id'})->type(), ['E','A'] ) ) {
 			$Company->salesrep_id( $openprint::session{'user_id'} );
@@ -154,15 +155,15 @@ sub registration {
 		$customer_credit->set( \%params );
 
 		my $User = new openprint::User();
-		$User->set( \%openprint::param );
+		$User->set( \%param );
 		$User->company_id( $Company->id() );
 		$User->web_active( $openprint::config{'NewFirstUserAccountActivation'} );
 		$User->ftp_active( 'Y' );
 		$User->administrator( 'Y' );
 		$User->type( 'C' );
 		$User->change_password( 'N' );
-		$User->howdidyouhearaboutus( $openprint::param{'howdidyouhearaboutus'} );
-		$User->howdidyouhearaboutusother( $openprint::param{'howdidyouhearaboutusother'} );
+		$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
+		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
 		$$variable{'error'} .= $User->save();		
 		return if $$variable{'error'};
 
@@ -207,15 +208,15 @@ sub registration {
 		my $Company = new openprint::Company( $cust_id );
 
 		my $User = new openprint::User();
-		$User->set( \%openprint::param );
+		$User->set( \%param );
 		$User->company_id( $Company->id() );
 		$User->web_active( $openprint::config{'NewNonFirstUserAccountActivation'} );
 		$User->ftp_active( 'Y' );
 		$User->administrator( 'N' );
 		$User->type( 'C' );
 		$User->change_password( 'N' );
-		$User->howdidyouhearaboutus( $openprint::param{'howdidyouhearaboutus'} );
-		$User->howdidyouhearaboutusother( $openprint::param{'howdidyouhearaboutusother'} );
+		$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
+		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
 		$$variable{'error'} .= $User->save();		
 		return if $$variable{'error'};
 
@@ -266,7 +267,7 @@ sub registration {
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 		} # end if
 
-		if ( $openprint::param{'rdbReasonForPurchase'} eq 'Reseller' ) {
+		if ( $param{'rdbReasonForPurchase'} eq 'Reseller' ) {
 			if ( $Company->reseller() ne 'Y' ) {
 				$$variable{'Redirect'} = '/main/account/reseller_application.html';
 			} # end if
@@ -336,86 +337,110 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
 # We assume that we are authorized to be here now.
 
-	my $User = new openprint::User( $openprint::session{'user_id'} );
-	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	my $User = new openprint::User( $session{'user_id'} );
+	my $Me = new openprint::User( $session{'user_id'} );
 
-	if ( ( $Me->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $Me->id() ) ) {
-$openprint::log->debug('admin');
+	if ( ( $Me->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $Me->id(), $Me->csr_ids()]  ) ) {
 
 		# IF it's empty, then we are adding a new user! Otherwise editing one
-		if ( exists $openprint::param{'ddmUser'} ) {
-		$User = new openprint::User( $openprint::param{'ddmUser'} );
-		} elsif ( $openprint::session{'company_id'} != $Me->company_id() ) {
-			my @Users = openprint::User::find('company_id'=>$openprint::session{'company_id'} );
+		if ( exists $param{'ddmUser'} ) {
+		$User = new openprint::User( $param{'ddmUser'} );
+		} elsif ( $session{'company_id'} != $Me->company_id() ) {
+			my @Users = openprint::User::find('company_id'=>$session{'company_id'} );
 			if ( @Users == 1 ) {
 				$User = $Users[0];
 			} # end if
 		} # end if
-		if ( $openprint::param{'ddmUser'} ) {
+		if ( $param{'ddmUser'} ) {
 # Enforce that we can only edit users from our company
-			if ( $User->company_id() != $openprint::session{'company_id'} ) {
-				$User = new openprint::User( $openprint::session{'user_id'} );
+			if ( $User->company_id() != $session{'company_id'} ) {
+				$User = new openprint::User( $session{'user_id'} );
 			} # end if
 		} # end if
 
-		if ( $openprint::param{'btnFunction'} eq '<<' ) {
-			$User = $User->Prev( 'company_id'=>$openprint::session{'company_id'} );
-		} elsif ( $openprint::param{'btnFunction'} eq '>>' ) {
-			$User = $User->Next( 'company_id'=>$openprint::session{'company_id'} );
-		} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
+		if ( $param{'btnFunction'} eq '<<' ) {
+			$User = $User->Prev( 'company_id'=>$session{'company_id'} );
+		} elsif ( $param{'btnFunction'} eq '>>' ) {
+			$User = $User->Next( 'company_id'=>$session{'company_id'} );
+		} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 			$User->delete();
-			$User = $User->Next( 'company_id'=>$openprint::session{'company_id'} );
+			$User = $User->Next( 'company_id'=>$session{'company_id'} );
 		} # end if
 	} # end if Company Admin
 
 # options available to non-company administrators
-	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'btnFunction'} eq 'Save' ) {
 
 		my $error = '';
-		$error .= 'Password fields do not match.<br/>' if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
-		$error .= 'First Name cannot be blank.<br/>' if ! $openprint::param{'firstname'};
-		$error .= 'Last Name cannot be blank.<br/>' if ! $openprint::param{'lastname'};
-		$error .= 'Salutation cannot be blank.<br/>' if ! $openprint::param{'salutation'};
-		$error .= 'Phone cannot be blank.<br/>' if ! $openprint::param{'phone'};
-		$error .= 'Email Cannot be blank.<br/>' if ! $openprint::param{'email'};
+		$error .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
+		$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
+		$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
+		$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
+		$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
+		$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
 		if ( $error ne '' ) {
-			return misc::error( $log, $dbh, $variable, 'Bad Field', $error );
+			return misc::error( $log, $dbh, \%variable, 'Bad Field', $error );
 		} # end if
 
-			foreach my $U ( openprint::User::find('email'=>lc $openprint::param{'email'}) ) {
-				if ( $U->id() != $User->id() ) {
-					return misc::error( $log, $dbh, $variable, 'User already exists.', $openprint::param{'email'} . " is already a user." );
-				} # end if
-			} # end foreach
-		if ( ! $openprint::param{'ddmUser'} ) { # add
-			$User->company_id( $openprint::session{company_id} ) if ! $User->company_id();
+		foreach my $U ( openprint::User::find('email'=>lc $param{'email'}) ) {
+			if ( $U->id() != $User->id() ) {
+				return misc::error( $log, $dbh, \%variable, 'User already exists.', $param{'email'} . " is already a user." );
+			} # end if
+		} # end foreach
+		if ( ! $param{'ddmUser'} ) { # add
+			$User->company_id( $session{company_id} ) if ! $User->company_id();
 		} # end if
-		$$variable{'error'} .= $User->save( \%openprint::param );
+		my $oldpassword = $User->password();
+		$variable{'error'} .= $User->save( \%param );
+
+		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
+# Send password change email
+			if ( my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' ) ) {
+				my %info = (
+						'User' =>$User,
+						);
+
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/changed_password.html' );
+				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+				$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+				my @body = ('', $_, 'text/html', 'quoted-printable');
+
+				my %mail = (
+						SMTP    => $config{'Mail Server'},
+						FROM    => $config{'AdministratorEmail'},
+						TO      => sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+						SUBJECT => 'Password Changed',
+						);
+				misc::send_email_with_attachment( $log, \%mail, @body );
+				$variable{'information'} = 'The user has been notified by email of the password change.';
+			} else {
+				$variable{'error'} = 'We were unable to email the new password. Please contact support.';
+			} # end if
+		} # end if to send changed password notification
+
 	} # end if
 
-	$$variable{'Me'} = $Me;
-	if ( $User->company_id() != $openprint::session{company_id} ) {
+	$variable{'Me'} = $Me;
+	if ( $User->company_id() != $session{'company_id'} ) {
 		$User = new openprint::User();
 	} # end if
-	$$variable{'User'} = $User;
-} # end sub user_edit
+	$variable{'User'} = $User;
+} # end sub user_profile
 
 sub change_password {
 }
 sub change_password_confirmation {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-		if ( $openprint::param{'txtNewPassword'} ne $openprint::param{'txtConfirmPassword'} ) {
+		if ( $param{'txtNewPassword'} ne $param{'txtConfirmPassword'} ) {
 			$$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
 			$$variable{'Redirect'} = '/main/account/change_password.html';
 			return;
 		} # end if
 
-		if ( $openprint::param{'txtNewPassword'} eq '' ) {
+		if ( $param{'txtNewPassword'} eq '' ) {
 			$$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
 			$$variable{'Redirect'} = '/main/account/change_password.html';
 			return;
@@ -423,14 +448,14 @@ sub change_password_confirmation {
 
 		my $User = new openprint::User( $openprint::session{'user_id'} );
 
-		if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
+		if ( $param{'txtNewPassword'} eq $User->password() ) {
 			$$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
 			$$variable{'Redirect'} = '/main/account/change_password.html';
 			return;
 		} # end if
 		
-		if ( $User->password() eq $openprint::param{'txtOldPassword'} ) {
-			$User->password( $openprint::param{'txtNewPassword'} );
+		if ( $User->password() eq $param{'txtOldPassword'} ) {
+			$User->password( $param{'txtNewPassword'} );
 			$User->changepassword( 'N' );
 			$User->save();
 		} else {
@@ -441,14 +466,14 @@ sub change_password_confirmation {
 } # sub change_password
 
 sub login {
-	if ( $openprint::param{'btnFunction'} eq 'Forgotten Password' ) {
-		if ( ! $openprint::param{'email'} ) {
+	if ( $param{'btnFunction'} eq 'Forgotten Password' ) {
+		if ( ! $param{'email'} ) {
 			$openprint::variable{'error'} = 'Please enter the email address of the account to retrieve.';
 			return;
 		} # end if
 
-		$openprint::param{'email'} =~ tr/[A-Z]/[a-z]/;
-		my @Users = openprint::User::find('email'=>$openprint::param{'email'} );
+		$param{'email'} =~ tr/[A-Z]/[a-z]/;
+		my @Users = openprint::User::find('email'=>$param{'email'} );
 		if ( ! @Users ) {
 			$variable{'error'} = 'The account you entered does not exist.';
 			return;
@@ -475,7 +500,7 @@ sub login {
 		} else {
 			$variable{'error'} = 'We were unable to email your password to you.	Please contact support.';
 		} # end if
-	} elsif ( $openprint::param{'btnFunction'} eq 'Login' ) {
+	} elsif ( $param{'btnFunction'} eq 'Login' ) {
 		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 	} # end if
 } # end sub login

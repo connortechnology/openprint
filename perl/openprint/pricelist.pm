@@ -8,6 +8,7 @@ require openprint::paper_priceset;
 require openprint::product_priceset;
 require openprint::logs;
 require sql;
+require openprint::ServicePrice;
 
 sub new {
 	my ( $type, $log, $dbh, $list_index ) = @_;
@@ -35,7 +36,9 @@ sub save {
 		} # end foreach
 	} # end if
 	if ( keys %{$self->{servicespricesets}} ) {
-        sql::execute( undef, undef, 'DELETE FROM tbl_Service_Prices WHERE lngListIndex=?', $self->{list_index} );
+		foreach ( openprint::ServicePrice::find('pricelist_id'=>$self->{list_index}) ) {
+			$_->delete();
+		} # end foreach
 		foreach my $product_index ( keys %{$self->{servicespricesets}} ) {
 			$self->{servicespricesets}{$product_index}->save();
 		} # end foreach

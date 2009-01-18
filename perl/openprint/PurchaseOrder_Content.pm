@@ -78,6 +78,10 @@ sub find {
 		$sql .= ' AND description LIKE ?';
 		push @values, $params{'description_like'};
 	} # end if
+	if ( $params{'docket'} ) {
+		$sql .= 'AND docket=?';
+		push @values, $params{'docket'};
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
 		push @values, @params{'created_on_start','created_on_end'}
@@ -114,6 +118,16 @@ sub PurchaseOrder {
 sub Type {
 	return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
 } # end sub Type
+
+sub units {
+	my ( $self ) = @_;
+	if ( $self->Type()->name() eq 'Roll Stock' ) {
+		return 'lbs';
+	} elsif ( $self->Type()->name() eq 'Sheet Stock' ) {
+		return 'sheets';
+	} # end if
+	return;
+} # end sub units
 
 1;
 __END__

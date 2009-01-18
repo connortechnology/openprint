@@ -33,6 +33,7 @@ $serial = 'Purchaseorders_id_seq';
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
 	'created_by'		=>	'created_by',
+	'authorized'		=>	'authorized',
 	'authorized_by'		=>	'authorized_by',
 	'authorized_on'		=>	'authorized_on',
 	'delivered_on'		=>	'delivered_on',
@@ -70,6 +71,7 @@ $serial = 'Purchaseorders_id_seq';
 	'shipto_phone'		=>	'shipto_phone',
 	'shipto_fax'		=>	'shipto_fax',
 	'shipto_email'		=>	'shipto_email',
+	'manifest_id'		=>	'manifest_id',
 );
 
 %transforms = (
@@ -87,6 +89,7 @@ $serial = 'Purchaseorders_id_seq';
 	'federaltax_rate'	=>	undef,
 	'statetax'		=>	undef,
 	'statetax_rate'	=>	undef,
+	'manifest_id'	=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -118,9 +121,33 @@ sub find {
 		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
 			$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
 			push @values, @{$params{'supplier_id'}};
-		} elsif ( $params{'supplied_id'} ) {
+		} elsif ( $params{'supplier_id'} ) {
 			$sql .= ' AND supplier_id=?';
 			push @values, $params{'supplier_id'};
+		} # end if
+	} # end if
+	if ( exists $params{'created_by'} ) {
+		if ( ref $params{'created_by'} eq 'ARRAY' ) {
+			$sql .= ' AND created_by IN ('. join(',', map {'?'} @{$params{'created_by'}} ) . ')';
+			push @values, @{$params{'created_by'}};
+		} elsif ( $params{'created_by'} ) {
+			$sql .= ' AND created_by=?';
+			push @values, $params{'created_by'};
+		} # end if
+	} # end if
+	if ( exists $params{'manifest_id'} ) {
+		if ( ref $params{'manifest_id'} eq 'ARRAY' ) {
+			if ( @{$params{'manifest_id'}} ) {
+				$sql .= ' AND manifest_id IN ('. join(',', map {'?'} @{$params{'manifest_id'}} ) . ')';
+				push @values, @{$params{'manifest_id'}};
+			} else {
+				return ();
+			} # end if
+		} elsif ( $params{'manifest_id'} ) {
+			$sql .= ' AND manifest_id=?';
+			push @values, $params{'manifest_id'};
+		} else {
+			$sql .= ' AND manifest_id IS NULL';
 		} # end if
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
@@ -146,7 +173,7 @@ sub find {
 		push @values, 0;
 	} # end if
 	if ( $params{'docket'} ) {
-		$sql .= ' AND id IN ( SELECT po_id FROM PurchaseOrder_Contents WHERE docket=?)';
+		$sql .= ' AND id IN (SELECT po_id FROM PurchaseOrder_Contents WHERE docket=?)';
 		push @values, $params{'docket'};
 	} # end if
 
@@ -224,14 +251,6 @@ sub destroy {
     sql::end_transaction( undef, $ac );
 } # end sub delete
 
-sub copy {
-	my $self = shift;
-	my $new = new openprint::PurchaseOrder();
-	@$new{keys %fields} = @$self{keys %fields};
-	delete $$new{'id'};
-	return $new;
-} # end sub copy
-
 sub Currency {
 	my ( $self ) = @_;
 	if ( ! $$self{'currency_id'} ) {
@@ -250,7 +269,7 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
-	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'});
+	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Contents
 
 sub send_to_vendor {
@@ -409,10 +428,31 @@ sub Company {
 
 sub authorize {
 	my ( $self ) = @_;
+	$$self{'authorized'} = 1;
 	$$self{'authorized_by'} = $session{'user_id'};
 	$$self{'authorized_on'} = 'NOW()';
+	my $L = new openprint::PurchaseOrder_Log();
+	$L->save({
+			'po_id'		=> $$self{'id'},
+			'user_id'	=> $session{'user_id'},
+			'reason'	=> 'Authorized by ' . new openprint::User( $session{'user_id'} )->name(),
+			});
 	return $self->save();
 } # end sub authorize
+
+sub decline {
+	my ( $self, $reason ) = @_;
+	$$self{'authorized'} = 0;
+	$$self{'authorized_by'} = $session{'user_id'};
+	$$self{'authorized_on'} = 'NOW()';
+	my $L = new openprint::PurchaseOrder_Log();
+	$L->save({
+			'po_id'		=> $$self{'id'},
+			'user_id'	=> $session{'user_id'},
+			'reason'	=> 'Declined by ' . new openprint::User( $session{'user_id'} )->name() . ': ' . $reason,
+			});
+	return $self->save();
+} # end sub decline
 
 sub notifications {
 	my ( $self, $new ) = @_;

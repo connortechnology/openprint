@@ -52,8 +52,7 @@ if ( $year ) {
 
 } # end if
 
-`chmod +x /etc/apache2/lib/perl/tools/db_update.pl`;
 print "upgrading db ...";
-`/etc/apache2/lib/perl/tools/db_update.pl $dst_db topknotch topknotch` or $log->error($!);
+`./db_update.pl $dst_db topknotch topknotch` or $log->error($!);
 print "done\n";
 #$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'topknotch', 'password'=>'topknotch') );

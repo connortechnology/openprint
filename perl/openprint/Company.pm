@@ -90,14 +90,14 @@ sub find {
 	$sql = q{SELECT * FROM Companies WHERE 1>0};
 
 	if ( $params{'id'} ) {
-        if ( ref $params{'id'} eq 'ARRAY' ) {
-            $sql .= q{ AND index IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
-            push @values, @{$params{'id'}};
-        } else {
-            $sql .= q{ AND index=?};
-            push @values, $params{'id'};
-        } # end if
-    } # end if
+		if ( ref $params{'id'} eq 'ARRAY' ) {
+			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
+			push @values, @{$params{'id'}};
+		} else {
+			$sql .= q{ AND id=?};
+			push @values, $params{'id'};
+		} # end if
+	} # end if
 
 	if ( $params{'Name'} ) {
 		$sql .= q{ AND name=?};
@@ -118,7 +118,7 @@ sub find {
 			} elsif ( @{$params{'SalesPerson'}} ) {
 				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'SalesPerson'}} ).')';
 			} # end if
-            push @values, @{$params{'SalesPerson'}};
+			push @values, @{$params{'SalesPerson'}};
 		} else {
 		$sql .= q{ AND lngSalesPerson=?};
 		push @values, $params{'SalesPerson'};
@@ -131,14 +131,14 @@ sub find {
 			} elsif ( @{$params{'salesrep_id'}} ) {
 				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'salesrep_id'}} ).')';
 			} # end if
-            push @values, @{$params{'salesrep_id'}};
+			push @values, @{$params{'salesrep_id'}};
 		} else {
 			$sql .= q{ AND lngSalesPerson=?};
 			push @values, $params{'salesrep_id'};
 		} # end if
 	} # end if
 	if ( $params{'marketing_category_id'} ) {
-		$sql .= q{ AND Index IN (SELECT company_id FROM companies_in_marketing_categories WHERE category_id=?)};
+		$sql .= q{ AND id IN (SELECT company_id FROM companies_in_marketing_categories WHERE category_id=?)};
 		push @values, $params{'marketing_category_id'};
 	} # end if
 	if ( $params{'supplier'} ) {
@@ -148,6 +148,18 @@ sub find {
 	if ( $params{'reseller'} ) {
 		$sql .= ' AND ysnReseller=?';
 		push @values, $params{'reseller'};
+	} # end if
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+			push @values, @{$params{'deleted'}};
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
 	} # end if
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
@@ -159,7 +171,7 @@ sub find {
 	} elsif ( $debug ) {
 		$log->debug("Loading Companies: ($sql) (@values) :" . @$data );
 	} # end if
-	return map { new openprint::Company( $_->{index}, $_ ) } @$data;
+	return map { new openprint::Company( $_->{id}, $_ ) } @$data;
 } # end sub find
 
 sub Currency {
@@ -171,7 +183,7 @@ sub delete {
 	my $self = shift;
 	my $ac = sql::start_transaction( $dbh );
 # i'm not sure why we did this, for now we are going to delete the users
-#sql::update( undef, undef, 'Company_Users', "CompanyIndex = '$index'", 'lngCustomerID', 0 );
+#sql::update( undef, undef, 'Company_Users', "CompanyIndex = '$id'", 'lngCustomerID', 0 );
 	sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE Company_id =?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM HelpDesk WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM RMA WHERE Company_Id=?', $$self{'id'} );
@@ -204,7 +216,8 @@ sub delete {
 	foreach my $User ( openprint::User::find('company_id'=>$$self{'id'} ) ) {
 		$User->delete();
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{'id'} );
+	sql::update( undef, undef, 'Company', ['id=?', $$self{'id'}], 'deleted', 1 );
+	#sql::execute( undef, undef, 'DELETE FROM Company WHERE id=?',$$self{'id'} );
 
 	sql::end_transaction( $dbh, $ac );
 
@@ -241,7 +254,7 @@ sub save {
 			$dbh->rollback();
 			return $e;
 		} # end if
-    } # end if
+	} # end if
 
     $self->load();
     sql::end_transaction( $dbh, $ac );
@@ -250,7 +263,7 @@ sub save {
 } # end sub save
 
 sub next {
-    my $self = shift;
+	my $self = shift;
 
     ( $_ ) = sql::execute( undef, undef, 'SELECT id FROM Companies WHERE Name = ( SELECT MIN(Name) FROM Companies WHERE Name > (SELECT Name FROM Companies WHERE id=? ) )', $$self{id} );
     return $_;
@@ -274,7 +287,7 @@ sub load_tradereferences {
 			'tradereference'.$index.'_email',
 			'tradereference'.$index.'_creditlimit',
 			} = sql::execute( undef, undef, 
-        'SELECT CompanyName, Contact, Phone, Ext, Fax, Email, CreditLimit FROM Trade_References WHERE company_id = ? AND ID = ?', $$self{id}, $index );
+		'SELECT CompanyName, Contact, Phone, Ext, Fax, Email, CreditLimit FROM Trade_References WHERE company_id = ? AND ID = ?', $$self{id}, $index );
 } # end load_tradereferences
 
 sub save_tradereferences {
@@ -315,16 +328,16 @@ sub Credit {
 sub get_dropdown {
 	my $selected = shift;
 
-	my $sql = 'SELECT id, name FROM Companies';
+	my $sql = 'SELECT id, name FROM Companies WHERE (deleted=false or deleted IS NULL)';
 	my @values;
 
 	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
-		$sql .= ' WHERE id=(SELECT company_id FROM users WHERE id=?) OR salesrep_id IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
+		$sql .= ' AND id=(SELECT company_id FROM users WHERE id=?) OR salesrep_id IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
 	$sql .= ' ORDER BY lower(name)';
 
-    my @company = sql::execute( undef, undef, $sql, @values );
+	my @company = sql::execute( undef, undef, $sql, @values );
 
     return ssi::make_drop_down( \@company, $selected );
 } # sub get_dropdown

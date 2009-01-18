@@ -4,11 +4,26 @@ package openprint::ProductCategory;
 use strict;
 
 use openprint ();
-use vars qw(%variable);
+use vars qw($serial $table $log $dbh %variable %fields %transforms %defaults );
 *variable = \%openprint::variable;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 require sql;
 require openprint::logs;
+
+$serial = 'Product_Category_Id_seq';
+$table = 'Product_Categories';
+
+%fields = (
+			'name'				=>	'name',
+			'description'		=>	'description',
+			'projecttype_id'	=>	'projecttype_id',
+);
+
+%defaults = (
+		'projecttype_id'	=>	undef,
+);
 
 my $debug = 1;
 
@@ -64,38 +79,6 @@ sub copy {
 	return $copy;
 } # end sub copy
 
-sub save {
-	my ( $self, $params ) = @_;
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	my @sql = (
-			'name',			$params ? $$params{name} : $$self{'name'},
-			'description',	$params ? $$params{description} : $$self{'description'},
-			'projecttype_id',		$params ? $$params{projecttype_id} : $$self{'projecttype_id'},
-			);
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('Product_Category_Id_seq')} );
-		if ( my $error = sql::insert( $openprint::log, $openprint::dbh, 'Product_Categories', @sql, 'id', $$self{'id'} ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-
-		# Add record to audit log - action "New Product Category".
-		openprint::logs::insertLogRecord('61', "Product Category ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
-	} else {
-		if ( my $error = sql::update( $openprint::log, $openprint::dbh, 'Product_Categories', ['id=?', $$self{'id'}], \@sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-
-		# Add record to audit log - action "Update Product Category".
-		openprint::logs::insertLogRecord('62', "Product Category ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
-	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-	return '';
-} # end sub save
-
 sub delete {
 	my $self = shift;
 	sql::update( undef, undef, 'Product_Categories', ['id=?', $$self{id}], 'deleted', 1 );
@@ -115,15 +98,6 @@ sub destroy {
 	# Add record to audit log - action "Delete Product Category".
 	openprint::logs::insertLogRecord('16', "Product Category ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
 } # end sub delete
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( ! $data ) {
-        $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Product_Categories WHERE id=?', {}, $$self{'id'} );
-    } # end if
-    @$self{keys %$data} = @$data{keys %$data};
-} # end sub load
 
 sub products {
 	my $self = shift;

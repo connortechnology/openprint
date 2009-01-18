@@ -5,6 +5,7 @@ require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
 require openprint::Fold;
+require openprint::Location;
 require sql;
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
@@ -16,7 +17,7 @@ $serial = 'Equipment_Index_seq';
 my $debug = 0;
 my %find_cache;
 %fields = (
-	'id'	=>	'lngindex',
+	'id'	=>	'id',
 	'strid'	=>	'strid',
 	'name'	=>	'strname',
 	'description'	=>	'strdescription',
@@ -56,14 +57,17 @@ sub find {
 	if ( exists $params{'id'} ) {
 		if ( ref $params{id} eq 'ARRAY' ) {
 			if ( @{$params{id}} > 1 ) {
-			$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
-			push @values, @{$params{id}};
+				$sql .= ' AND id IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
+				push @values, @{$params{id}};
+			} elsif ( @{$params{id}} == 1 ) {
+				$sql .= ' AND id=?';
+				push @values, $params{id};
 			} else {
-			$sql .= ' AND lngindex=?';
-			push @values, $params{id};
+				$sql .= ' AND id=?';
+				push @values, $params{id};
 			} # en dif
 		} else {
-			$sql .= ' AND lngindex=?';
+			$sql .= ' AND id=?';
 			push @values, $params{id};
 		} # end if
 	} # end if
@@ -76,16 +80,20 @@ sub find {
 		push @values, $params{'Name'};
 	} # end if
 	if ( $params{'Specifications'} ) {
-		# Assume specificatiosn is a hash of key/values to match
-		foreach my $name ( keys %{$params{'Specifications'}} ) {
-			if ( ref $params{'Specifications'}{$name} eq 'ARRAY' ) {
-				$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1) IN ( } . join(',', map {'?'} @{$params{'Specifications'}{$name}}	) . ' )';
-				push @values, $name, @{$params{'Specifications'}{$name}};
-			} else {
-				$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1)=?};
-				push @values, $name, $params{'Specifications'}{$name};
-			} # end if
-		} # end foreach
+# Assume specificatiosn is a hash of key/values to match
+		if ( ref $params{'Specifications'} eq 'HASH' ) {
+			foreach my $name ( keys %{$params{'Specifications'}} ) {
+				if ( ref $params{'Specifications'}{$name} eq 'ARRAY' ) {
+					$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1) IN ( } . join(',', map {'?'} @{$params{'Specifications'}{$name}}	) . ' )';
+					push @values, $name, @{$params{'Specifications'}{$name}};
+				} else {
+					$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)=?};
+					push @values, $name, $params{'Specifications'}{$name};
+				} # end if
+			} # end foreach
+		} else {
+$openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $params{'Specifications'}  );
+		} # end if
 	} # end if
 	if ( $params{'UseInEstimating'} ) {
 		$sql .= ' AND UseInEstimating=?';
@@ -119,7 +127,7 @@ sub find {
 		$openprint::log->debug( $sql . join(',',@values) . ' records:'. @$data );
 	} # end if
 	
-	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{lngindex}, $_ ) } @$data;
+	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{id}, $_ ) } @$data;
 	return @{$find_cache{$hash_key}};
 } # end sub find
 
@@ -302,6 +310,8 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range ) = @_;
 
+	return if ! $$self{'id'};
+
 	if ( ! $$self{'Specifications'} ) {
 		foreach my $Spec ( openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
@@ -454,7 +464,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE lngIndex=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE Id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 
 	openprint::logs::insertLogRecord('6', "Equipment Index: $$self{id} - " . $$self{name}, );
@@ -490,7 +500,7 @@ sub next {
 		push @values, $$params{category_id};
 	} # end if
 	my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM tbl_Equipment WHERE strid=?}, $name );
 	return $_;
 } # end sub next
 
@@ -508,7 +518,7 @@ sub prev {
 		push @values, $$params{category_id};
 	} # end if
 	my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM tbl_Equipment WHERE strid=?}, $name );
 	return $_;
 } # end sub next
 
@@ -517,6 +527,9 @@ sub Previous {
 	return new openprint::Equipment( $self->prev($params) );
 } # end sub Next
 
+sub Location {
+	return new openprint::Location( $_[0]{location_id} );
+} # end sub Location
 
 1;
 __END__

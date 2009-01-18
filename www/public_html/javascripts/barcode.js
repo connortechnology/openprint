@@ -5,7 +5,9 @@ function change_handler( element ) {
 	for ( var i = 0; i < element.value.length; i += 1 ) {
 		var c = element.value.charCodeAt(i);
 		// 57 is '9'. Anything above is not a number
-		if ( c > 57 ) {
+		if ( c < 48 ) {
+			break;
+		} else if ( c > 57 ) {
 			// Start a command
 			var j;
 			for ( j = i+1; j < element.value.length; j+= 1 ) {

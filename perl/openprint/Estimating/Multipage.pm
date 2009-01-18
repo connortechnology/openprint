@@ -35,10 +35,11 @@ my %variables = (
 	'txtInsertQuantity'=>['save'],
 	'TippingQuantity'=>['save'],
 	'BlowingQuantity'=>['save'],
+	'ReplyCardQuantity'=>['save'],
 	'txtSpreadSize'=>['save','output'],'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
-	'remaining_pages'=>['output'],'next_group_id'=>['output'],
+	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
 );
 
 sub variables {
@@ -92,14 +93,19 @@ sub calc {
 
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
+
 	foreach my $group_id ( @Groups ) {
 #$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
-		next if $override_pages{$group_id};
-
-		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
+		if ( $override_pages{$group_id} ) {
+# DO nothing
+		} elsif ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
 			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id} if $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y';
+		} elsif ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
+			$override_pages{$group_id} = 2;
+			if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
+				$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
+			} # end if
 		} else {
-
 			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 				$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
@@ -139,10 +145,11 @@ sub calc {
 				$max_group = $g_id;
 			} # end if
 		} # end foreach g_id
-		$$specs{'next_group_id'} = $max_group + 1;
-	} else {
-		$$specs{'next_group_id'} = '';
+		$max_group += 1;
+		push @Groups, $max_group;
+		$$specs{'GroupPageQuantity'.$max_group} = $remaining_pages;
 	} # end if
+	$$specs{'groups'} = join(',', @Groups );
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'help'} = 'Please select the dimensions.';
@@ -206,7 +213,7 @@ $openprint::log->debug("Starting Multipage::calculate_signatures");
 
 	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
-	push @signatures, sort $Project->signatures({'type'=>'GateFolded Spreads'});
+	push @signatures, sort $Project->signatures({'type'=>'Gate Folded Pages'});
 	@signatures = $Project->signatures() if ! @signatures;
 $openprint::log->debug( "Signature: @signatures");
 

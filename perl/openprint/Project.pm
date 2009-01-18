@@ -667,6 +667,7 @@ sub save {
 				'style_id',			 $$self{'style_id'} ? $$self{'style_id'} : undef,
 				'predefined',			$$self{'predefined'} ? $$self{'predefined'} : 'N',
 				'rush',					$$self{'rush'},
+				'summary',				$$self{'summary'},
 	);
 	if ( ! $$self{'created_on'} ) {
 		push @sql, 'dtmCreationDate','NOW()';
@@ -838,8 +839,8 @@ sub load {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
 	} # endif
-	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
+	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
+		@$data{qw/index summary lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
 	return;
 } # end sub load
 
@@ -902,129 +903,136 @@ sub services {
 sub summary {
 	my $self = shift;
 
-	my $summary = $self->Type()->name() . ' ';
+	if ( @_ ) {
+		$$self{'summary'} = shift;
+	} # end if
+	if ( ! $$self{'summary'} ) {
+		my $summary = $self->Type()->name() . ' ';
 
-	my $services = $self->services();
-	if ( $$services{''} ) {
-		my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
-		if ( $$printing_specs{'Versions'} ) {
-			$summary .= $$printing_specs{'Versions'} .= ' versions ';
-		} # end if
-
-		if ( $$printing_specs{'txtTotalPageQuantity'} ) {
-			$summary .= sprintf( '%s&quot;x%s&quot; ', 1*$$printing_specs{'txtFinalWidth'},1*$$printing_specs{'txtFinalHeight'});
-			if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
-				my $cover_pages = 0;
-				foreach my $ss_id ( $self->signatures({'Group'=>1}) ) {
-					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
-					$cover_pages += $$sig_specs{'GroupPageQuantity'};
-					last;
-				} # end foreach
-				$summary .= sprintf('%dpg+Cover ', $$printing_specs{'txtTotalPageQuantity'} - $cover_pages );
-			} else {
-				$summary .= sprintf('%dpg ', $$printing_specs{'txtTotalPageQuantity'} );
-				$summary .= $$printing_specs{'rdbCover'}.' Cover';
+		my $services = $self->services();
+		if ( $$services{''} ) {
+			my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
+			if ( $$printing_specs{'Versions'} ) {
+				$summary .= $$printing_specs{'Versions'} .= ' versions ';
 			} # end if
-#block remarked as not required now june-25-2008
-#			if ( ( ! $$services{'NoPrinting'} ) and $specs{'PrintingType'} ) {
-#				$summary .= ' printed ' . $specs{'PrintingType'} . ' ';
-#			} # end if
 
-			$summary .= '<br/>';
-			my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' );
-
-#modified block june-24-2008
-			my $lastgroupid = '';
-
-			foreach my $group_id ( sort @groups ) {
-				foreach my $ss_id ( $self->signatures({'Group'=>$group_id}) ) {
-					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
-					$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
-#general::writetofile('Testing ?'.openprint::service::summary(	$$self{'id'}, $ss_id ) );
-#general::writetofile('Testing ? '. $$self{'id'}.'	'. $ss_id	);
-					next if ( $lastgroupid eq $group_id );
-					foreach my $prn ( keys %$sig_specs ) {
-						if ( $prn =~ /^PrintingType/i ) {
-							if ( $$sig_specs{'Group'} eq $group_id ) {
-								if ( $$sig_specs{$prn} eq 'Web' ) { 
-									$summary .= ', '. 'Printed Web,<br/>';
-								} else {
-									$summary .= ', '. 'Printed Sheetfed,<br/>';
-								} #endif Web
-								last;
-							} #endif group_id
-						} #endif $prn
-					} #end foreach $prn	
-					last;
-				} # end foreach signature
-				$lastgroupid = $group_id;
-			} # end foreach Group
-		} else {
-# normal printing services
-			foreach my $ss_id ( $self->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
-				$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
-			} # end foreach signature
-			my $flgfound = '';
-			if ( ! $$services{'NoPrinting'} ) {
-				if ( $$printing_specs{'PrintingType'} ) {
-					$summary .= ' printed ' . $$printing_specs{'PrintingType'};
-					$flgfound = 'found';
-				} elsif ( $$printing_specs{'OverridePrintingType1'} ) {
-					$summary .= ' printed ' . $$printing_specs{'PrintingType1'};
-					$flgfound = 'found';
-				} elsif ( $$printing_specs{'OverridePrintingType2'} ) {
-					$summary .= ' printed ' . $$printing_specs{'PrintingType2'};
-					$flgfound = 'found';
-				} elsif ( $$printing_specs{'OverridePrintingType3'} ) {
-					$summary .= ' printed ' . $$printing_specs{'PrintingType3'};
-					$flgfound = 'found';
+			if ( $$printing_specs{'txtTotalPageQuantity'} ) {
+				$summary .= sprintf( '%s&quot;x%s&quot; ', 1*$$printing_specs{'txtFinalWidth'},1*$$printing_specs{'txtFinalHeight'});
+				if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
+					my $cover_pages = 0;
+					foreach my $ss_id ( $self->signatures({'Group'=>1}) ) {
+						my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
+						$cover_pages += $$sig_specs{'GroupPageQuantity'};
+						last;
+					} # end foreach
+					$summary .= sprintf('%dpg+Cover ', $$printing_specs{'txtTotalPageQuantity'} - $cover_pages );
+				} else {
+					$summary .= sprintf('%dpg ', $$printing_specs{'txtTotalPageQuantity'} );
+					$summary .= $$printing_specs{'rdbCover'}.' Cover';
 				} # end if
-			} # end if
+	#block remarked as not required now june-25-2008
+	#			if ( ( ! $$services{'NoPrinting'} ) and $specs{'PrintingType'} ) {
+	#				$summary .= ' printed ' . $specs{'PrintingType'} . ' ';
+	#			} # end if
 
-			if ( $flgfound ne 'found' ) {
+				$summary .= '<br/>';
+				my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' );
+
+	#modified block june-24-2008
+				my $lastgroupid = '';
+
+				foreach my $group_id ( sort @groups ) {
+					foreach my $ss_id ( $self->signatures({'Group'=>$group_id}) ) {
+						my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
+						$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
+	#general::writetofile('Testing ?'.openprint::service::summary(	$$self{'id'}, $ss_id ) );
+	#general::writetofile('Testing ? '. $$self{'id'}.'	'. $ss_id	);
+						next if ( $lastgroupid eq $group_id );
+						foreach my $prn ( keys %$sig_specs ) {
+							if ( $prn =~ /^PrintingType/i ) {
+								if ( $$sig_specs{'Group'} eq $group_id ) {
+									if ( $$sig_specs{$prn} eq 'Web' ) { 
+										$summary .= ', '. 'Printed Web,<br/>';
+									} else {
+										$summary .= ', '. 'Printed Sheetfed,<br/>';
+									} #endif Web
+									last;
+								} #endif group_id
+							} #endif $prn
+						} #end foreach $prn	
+						last;
+					} # end foreach signature
+					$lastgroupid = $group_id;
+				} # end foreach Group
+			} else {
+	# normal printing services
 				foreach my $ss_id ( $self->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
-					foreach my $prn ( keys %$sig_specs ) {
-						if ( $prn =~ /^PrintingType/i ) {
-							if ( $$sig_specs{$prn} eq 'Web' ) { 
-								$summary .= ', '. 'Printed Web, <br/>';
-							} else {
-								$summary .= ', '. 'Printed Sheetfed, <br/>';
-							} #endif Web
-							last;
-						} # end if
-					} # end foreach key
-				} # end foreach sig
-			} # flgfound
-		} # end if book or not
-	} # end if
-
-	foreach my $category ('Paper', 'Options', 'Prepress','Bindery','Packaging','Shipping' ) {
-		foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {
-			next if ! $$services{$ServiceType->name()};
-			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
-				my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
-				my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
-				if ( $project_summary ) {
-					$summary .= $project_summary;
-				} else {
-					$summary .= ' ' . $ServiceType->description();
-					if ( $_ = eval( 'openprint::Estimating::'.$ServiceType->type().'::summary( $self, $service_id, $service_specs );' ) ) {
-						$summary .= ' :'.$_ . '<br/> ';
-					} else {
-						$summary .= ',';
+					$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
+				} # end foreach signature
+				my $flgfound = '';
+				if ( ! $$services{'NoPrinting'} ) {
+					if ( $$printing_specs{'PrintingType'} ) {
+						$summary .= ' printed ' . $$printing_specs{'PrintingType'};
+						$flgfound = 'found';
+					} elsif ( $$printing_specs{'OverridePrintingType1'} ) {
+						$summary .= ' printed ' . $$printing_specs{'PrintingType1'};
+						$flgfound = 'found';
+					} elsif ( $$printing_specs{'OverridePrintingType2'} ) {
+						$summary .= ' printed ' . $$printing_specs{'PrintingType2'};
+						$flgfound = 'found';
+					} elsif ( $$printing_specs{'OverridePrintingType3'} ) {
+						$summary .= ' printed ' . $$printing_specs{'PrintingType3'};
+						$flgfound = 'found';
 					} # end if
 				} # end if
-			} # end foreach service
-		} # end foreach ServiceType
-	} # end foreach category
-	$summary =~ s/(.*),$/$1/m;
-	if ( $$services{'Turnaround'} ) {
-		my $specs = openprint::service::get_specs_ref( $self, $$services{'Turnaround'}[0] );
-		$summary .= sprintf(' in %ddays', $$specs{'TurnaroundDays'} );
+
+				if ( $flgfound ne 'found' ) {
+					foreach my $ss_id ( $self->signatures() ) {
+						my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
+						foreach my $prn ( keys %$sig_specs ) {
+							if ( $prn =~ /^PrintingType/i ) {
+								if ( $$sig_specs{$prn} eq 'Web' ) { 
+									$summary .= ', '. 'Printed Web, <br/>';
+								} else {
+									$summary .= ', '. 'Printed Sheetfed, <br/>';
+								} #endif Web
+								last;
+							} # end if
+						} # end foreach key
+					} # end foreach sig
+				} # flgfound
+			} # end if book or not
+		} # end if
+
+		foreach my $category ('Paper', 'Options', 'Prepress','Bindery','Packaging','Shipping' ) {
+			foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {
+				next if ! $$services{$ServiceType->name()};
+				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
+					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
+					if ( $project_summary ) {
+						$summary .= $project_summary;
+					} else {
+						$summary .= ' ' . $ServiceType->description();
+						if ( $_ = eval( 'openprint::Estimating::'.$ServiceType->type().'::summary( $self, $service_id, $service_specs );' ) ) {
+							$summary .= ' :'.$_ . '<br/> ';
+						} else {
+							$summary .= ',';
+						} # end if
+					} # end if
+				} # end foreach service
+			} # end foreach ServiceType
+		} # end foreach category
+		$summary =~ s/(.*),$/$1/m;
+		if ( $$services{'Turnaround'} ) {
+			my $specs = openprint::service::get_specs_ref( $self, $$services{'Turnaround'}[0] );
+			$summary .= sprintf(' in %ddays', $$specs{'TurnaroundDays'} );
+		} # end if
+		$$self{'summary'} = $summary;
 	} # end if
-	return $summary;
+	
+	return $$self{'summary'};
 } # end sub summary
 
 sub company {

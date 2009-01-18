@@ -12,19 +12,18 @@ require openprint::Object;
 require openprint::Quote;
 require openprint::Order;
 require openprint::Project;
-require openprint::RFIDTag;
-require openprint::RFIDScannerHistory;
 require openprint::PaperInventory;
 use Date::Calc;
 use Apache::Session::Postgres;
 
 use openprint ();
-use vars qw($log $dbh);
+use vars qw($log $dbh %config);
 *dbh = \$openprint::dbh;
 *log = \$openprint::log;
+*config = \$openprint::config;
 
 my $r;
-$log = logger->new('debug');
+$log = logger->new('warn');
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],
@@ -36,8 +35,10 @@ $dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 $openprint::Object::no_cache = 1;
 
+configuration::init_cache( $log, $dbh );
 
 # Clear out old sessions
+my $deleted_session_count = 0;
 foreach my $session ( sql::execute( $log, $dbh, q{SELECT id FROM sessions} ) ) {
     $session =~ s/\s//g;
     my %session;
@@ -51,12 +52,13 @@ foreach my $session ( sql::execute( $log, $dbh, q{SELECT id FROM sessions} ) ) {
         untie %session;
     } elsif ( time - $session{'lastupdated'} > ( 60*60*24*7 ) ) {
         untie %session;
-		sql::execute( $log, $dbh, q{DELETE FROM sessions where id=?}, $session );
+		sql::execute( 0, $dbh, q{DELETE FROM sessions where id=?}, $session );
+		$deleted_session_count += 1;
 	} else {
 		untie %session;
 	} # end if
-
 } # end foreach
+$log->debug("Deleted $deleted_session_count sessions");
 
 if ( 0 ) {
 # Clean out uncalculated projects
@@ -170,28 +172,6 @@ if ( 0 ) {
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-# Searchf or duplicate papers
-if ( 0 ) {
-# Fix fucked up rfidtags
-my @Tags = openprint::RFIDTag::find();
-$log->warn("Looking at " . @Tags . ' tags' );
-foreach my $Tag ( @Tags ) {
-	if ( length $Tag->id() != 15 ) {
-		my ( $type, $data ) = $Tag->id() =~ /(\d)(\d*)/;
-		my $new_id = sprintf('%d%.15d', $type, $data );
-		$log->warn("Bad id: $$Tag{id}, new id: $new_id");
-		my $NewTag = new openprint::RFIDTag( $new_id );
-		if ( ! $NewTag->id() ) {
-			$NewTag->save( {'id'=>$new_id} );
-		} # end if
-		if ( $Tag->location_id() and ! $NewTag->location_id() ) {
-			$NewTag->location_id( $Tag->location_id() );
-			$NewTag->save();
-		} # end if
-		$Tag->delete();
-	} # end if
-} # end foreach Tag
-}
 if ( 0 ) {
 foreach my $Skid ( openprint::Skid::find() ) {
 
@@ -247,14 +227,18 @@ if ( 0 ) {
 	} # end foreach
 } # end if 1
 
-my @Hs = openprint::RFIDScannerHistory::find(
-		'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
-		'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
- );
-$log->warn( "History Entries: " . @Hs );
-foreach my $H ( @Hs ) {
-	$H->delete();
-} # end foreach H
+if ( $config{'RFID Enabled'} ) {
+	require openprint::RFIDTag;
+	require openprint::RFIDScannerHistory;
+	my @Hs = openprint::RFIDScannerHistory::find(
+			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
+			'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
+			);
+	$log->warn( "History Entries: " . @Hs );
+	foreach my $H ( @Hs ) {
+		$H->delete();
+	} # end foreach H
+} # end if
 
 $dbh->disconnect();
 1;

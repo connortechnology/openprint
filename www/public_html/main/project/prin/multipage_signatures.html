@@ -20,38 +20,39 @@ function calc( formName, force ) {
 		<? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
 
 		<fieldset><legend><?txtSignatureType?></legend>
+<? if ( $$variable{'Group'} == 1 ) ?>
 			<div class="leftColumn">
+<? endif ( $$variable{'Group'} == 1 ) ?>
 				<p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
 				<p>
 					<label>Spread dimensions:</label>
-						<input type="text" name="txtWidth" size="9" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x 
-						<input type="text" name="txtHeight" size="9" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> ->
-						<input type="text" name="txtFinalWidth" size="9" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
-						<input type="text" name="txtFinalHeight" size="9" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
-					<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-					<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( 'checked="checked"' if $$variable{'chkOverrideDimensions'} eq 'Y' ) ?> />
+						<input type="text" name="txtWidth" size="7" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x 
+						<input type="text" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> ->
+						<input type="text" name="txtFinalWidth" size="7" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
+						<input type="text" name="txtFinalHeight" size="7" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+					<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( ssi::checked( $$variable{'chkOverrideDimensions'} ); ) ?> />
 					<label class="radio" for="chkOverrideDimensions">Override</label>
-					<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+					<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 				</p>
+<? if ( $$variable{'Group'} == 1 ) ?>
 			</div>
 			<div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
 			<? echo (
-				if ( $$variable{'Group'} == 1 ) {
-					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
-					return variable_substitution( \$html, $variable );
-				} # end if
-				return;
+				my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
+				return variable_substitution( \$html, $variable );
 			) ?>
 			</div>
+<? endif ( $$variable{'Group'} == 1 ) ?>
 			<br class="spacer"/>
 
 			<!--#include virtual="/includes/main/proj/screen_type.html"-->
 			<!--#include virtual="/includes/main/proj/colours_coatings.html"-->	
 			<!--#include virtual="/includes/main/proj/bleeds_colourbars.html"-->	
 			<!--#include virtual="/includes/main/proj/paper_dropdowns.html"-->
+		<br class="spacer"/>
 		</fieldset>
 		<!-- End of Input - Start of Results -->
-		<br class="spacer"/>
 		<fieldset><legend>Results</legend>
 			<!--#include virtual="/includes/main/proj/printing_results.html"-->
 		</fieldset>
@@ -61,13 +62,5 @@ function calc( formName, force ) {
 		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
 		<input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
 		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>" />
-<!--
-		<input type="hidden" name="StitchingImposition1" />
-		<input type="hidden" name="StitchingImposition2" />
-		<input type="hidden" name="StitchingImposition3" />
-		<input type="hidden" name="FoldingImposition1" />
-		<input type="hidden" name="FoldingImposition2" />
-		<input type="hidden" name="FoldingImposition3" />
--->
 	</form>
 </div><!--Service-->

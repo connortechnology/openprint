@@ -39,9 +39,12 @@ my $debug = 1;
 		);
 
 my %cache;
+my $cache_init;
 
 sub init_cache {
-	%cache = map { $_->name(), $_->id() } find();
+	$cache_init = 0;
+	%cache = ();
+#map { $_->name(), $_->id() } find();
 } # end sub init_cache
 
 sub delete {
@@ -49,12 +52,12 @@ sub delete {
 
 	delete $openprint::Object::cache{'openprint::Material'}{$$self{id}} if $openprint::Object::cache{'openprint::Material'};	
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, q{DELETE FROM Material_Specifications WHERE material_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngMaterialIndex=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM Materials WHERE id=?}, $$self{'id'} );
 	openprint::logs::insertLogRecord('8', "Material Id: $$self{'id'} Material Name: $$self{'name'}" );
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 
 	init_cache();
 } # end sub delete
@@ -159,16 +162,19 @@ sub find {
 		# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
 		if ( ( keys %params ) == 1 ) {
 			#if ( ( exists $cache{$params{name}} ) and $cache{$params{name}} ) {
-			if ( %cache ) {
-				if ( exists $cache{$params{'name'}} ) {
+			if ( ! $cache_init ) {
+				%cache = map { $_->name(), $_->id() } find();
+				$cache_init = 1;
+			}
+			if ( exists $cache{$params{'name'}} ) {
 				return ( new openprint::Material( $cache{$params{'name'}} ) );
-				} else {
-					return;
-				} # end if
+			} else {
+				return;
 			} # end if
+		} else {
+			$sql .= ' AND name=?';
+			push @values, $params{'name'};
 		} # end if
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
 	} # end if
 	if ( $params{'name_like'} ) {
 		$sql .= ' AND name LIKE ?';

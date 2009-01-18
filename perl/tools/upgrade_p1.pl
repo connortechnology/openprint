@@ -54,7 +54,7 @@ if ( $year ) {
 
 `chmod +x /etc/apache2/lib/perl/tools/db_update.pl`;
 print "upgrading structures 2...";
-`/etc/apache2/lib/perl/tools/db_update.pl $dst_db point-one point-one` or $log->error($!);
+`/etc/apache2/lib/perl/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
 print "upgrading signatures...";
 `/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db point-one point-one` or $log->error($!);
 print "done\n";
@@ -73,6 +73,7 @@ foreach my $Service ( openprint::Service::find('name'=>'Imposition') ) {
 	} # end foreach
 } # end foreach
 
+if ( 0 ) {
 sql::update( undef, undef, 'Configuration', ['name=?', 'Press Run Overs Rate'], 'name','MakeReady Overs Rate' );
 foreach my $E ( openprint::Equipment::find('strid'=>'Web1') ) {
 	foreach my $Spec ( $E->Specifications() ) {
@@ -88,3 +89,4 @@ foreach my $E ( openprint::Equipment::find('strid'=>'Web1') ) {
 		} # end if
 	} # end foreach
 } # end foreach
+}

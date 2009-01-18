@@ -23,6 +23,8 @@ require openprint::print;
 require openprint::service;
 require openprint::Estimating::Printing;
 
+my $debug = 1;
+
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -68,7 +70,7 @@ sub calc {
 
 	my $status = 'calculated';
 
-	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)");
+	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)") if $debug;
 	my $Project = new openprint::Project( $project_index );
 
 	my @signature_service_indices = $Project->signatures();
@@ -135,11 +137,8 @@ sub calc {
 					} elsif ( $proof_index == 3 ) {
 						insert_press_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 3, $qty_index, $specs );
 					} else {
-						my $type = $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"};
-$openprint::log->debug("Type $type");
-						if ( sets::isin( $type, ['PolaProof','CanonProof','EpsonProof','FujiFinalProof'] ) ) {
+						if ( sets::isin( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}, ['PolaProof','CanonProof','EpsonProof','FujiFinalProof'] ) ) {
 							if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ne 'Y' ) {
-$openprint::log->debug("setting size Type $type : $$sig_specs{'txtWidth'} $$sig_specs{'txtWidth'}");
 								$$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} = $$sig_specs{'txtWidth'};
 								$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} = $$sig_specs{'txtHeight'};
 							} # end if
@@ -147,7 +146,7 @@ $openprint::log->debug("setting size Type $type : $$sig_specs{'txtWidth'} $$sig_
 					} # end if
 				} else {
 
-					if ( ($proof_index == 1 ) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux' ) and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
+					if ( ($proof_index == 1) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux' ) and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
 						$$specs{'alert'} .= "We require Dylux Proofs<br/>";
 						insert_layout_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 1, $specs );
 						@output = sets::union( @output,
@@ -632,6 +631,22 @@ sub project_summary {
 	} # end foreach signature
 	return ' ' . join(',', keys %types) . ' Proofs<br/>';
 } # end sub project_summary
+sub get_next_proof_index {
+	my ( $sig_specs ) = @_;
+
+	my @proof_indexes;
+	my $signature_index = $$sig_specs{'SignatureIndex'};
+	if ( ( ! sets::isin( 1, \@proof_indexes ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
+		push @proof_indexes, 1;
+	} # end if
+	if ( ( ! sets::isin( 2, \@proof_indexes ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
+		push @proof_indexes, 2;
+	} # end if
+	if ( ( ! sets::isin( 3, \@proof_indexes ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
+		push @proof_indexes, 3;
+	} # end if
+	return sets::max( \@proof_indexes ) + 1;
+}
 
 1;
 __END__

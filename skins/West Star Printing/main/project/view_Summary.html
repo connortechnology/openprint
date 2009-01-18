@@ -72,10 +72,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #plate cost
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Plate Cost:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf( '<b>$%.2f * %d Plates =  $%.2f</b><br/>',$$printing_specs{'PerPlateCost'.$qty_index},$$printing_specs{'txtPlateQuantity'.$qty_index},$$printing_specs{'PlateTotalCost'.$qty_index});
+				$line_html .= sprintf( '<b>$%.2f * %d Plates =  $%s</b><br/>',$$printing_specs{'PerPlateCost'.$qty_index},$$printing_specs{'txtPlateQuantity'.$qty_index},Number::Format::format_number($$printing_specs{'PlateTotalCost'.$qty_index},2,2) );
 				$line_html .= '</td>';
 			} # end foreach qty_index
 			if ( ! $$variable{'Quote'} ) {
@@ -84,10 +83,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #plate make ready
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Plate Make Ready:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf( '<b>$%.2f * %d Plates =  $%.2f</b><br/>',$$printing_specs{'PerPlateMkRd'.$qty_index},$$printing_specs{'txtPlateQuantity'.$qty_index},$$printing_specs{'PlateMakeReady'.$qty_index});
+				$line_html .= sprintf( '<b>$%.2f * %d Plates =  $%s</b><br/>',$$printing_specs{'PerPlateMkRd'.$qty_index},$$printing_specs{'txtPlateQuantity'.$qty_index},Number::Format::format_number($$printing_specs{'PlateMakeReady'.$qty_index},2,2) );
 				$line_html .= '</td>';
 			} # end foreach qty_index
 			if ( ! $$variable{'Quote'} ) {
@@ -96,11 +94,10 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #run charge total
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run Charge Total:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('Base:%d,Setup:%d,Run:%d = %d <br/><b>$%.2f</b><br/>',$$printing_specs{'OverBase'.$qty_index},
-				$$printing_specs{'OverSetup'.$qty_index},$$printing_specs{'OverRun'.$qty_index},$$printing_specs{'TotalOvers'.$qty_index},$$printing_specs{'RunChargeTotal'.$qty_index});
+				$line_html .= sprintf('Base:%d,Setup:%d,Run:%d = %d <br/><b>$%s</b><br/>',$$printing_specs{'OverBase'.$qty_index},
+				$$printing_specs{'OverSetup'.$qty_index},$$printing_specs{'OverRun'.$qty_index},$$printing_specs{'TotalOvers'.$qty_index},Number::Format::format_number($$printing_specs{'RunChargeTotal'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 			if ( ! $$variable{'Quote'} ) {
@@ -109,10 +106,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #PMS ink mix charge
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PMS Ink Mix Charge:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('<b>$%.2f</b><br/>',$$printing_specs{'InkMixCharge'.$qty_index});
+				$line_html .= sprintf('<b>$%s</b><br/>', Number::Format::format_number( $$printing_specs{'InkMixCharge'.$qty_index},2,2 ) );
 				$line_html .= '</td>';
 			} # end foreach qty_index
 			if ( ! $$variable{'Quote'} ) {
@@ -121,10 +117,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #Press wash charge
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Press Wash Charge:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('<b>$%.2f * %d Washes =  $%.2f</b><br/>',$$printing_specs{'PressWashPrice'.$qty_index},$$printing_specs{'PressWashes'.$qty_index},$$printing_specs{'PressWashCharge'.$qty_index});
+				$line_html .= sprintf('<b>$%.2f * %d Washes =  $%s</b><br/>',$$printing_specs{'PressWashPrice'.$qty_index},$$printing_specs{'PressWashes'.$qty_index}, Number::Format::format_number($$printing_specs{'PressWashCharge'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 			if ( ! $$variable{'Quote'} ) {
@@ -133,10 +128,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #Imposition charge
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Imposition Charge:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('<b>$%.2f</b><br/>',$$printing_specs{'ImpositionCharge'.$qty_index}+$$printing_specs{'PageCharge'.$qty_index}+$$printing_specs{'SteppingCharge'.$qty_index});
+				$line_html .= sprintf('<b>$%s</b><br/>',Number::Format::format_number( $$printing_specs{'ImpositionCharge'.$qty_index}+$$printing_specs{'PageCharge'.$qty_index}+$$printing_specs{'SteppingCharge'.$qty_index},2,2) );
 				$line_html .= '</td>';
 			} # end foreach qty_index
 			if ( ! $$variable{'Quote'} ) {
@@ -145,10 +139,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #Ink total charge
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ink Total Charge:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('<b>$%.2f</b><br/>',$$printing_specs{'InkTotalCharge'.$qty_index});
+				$line_html .= sprintf('<b>$%s</b><br/>', Number::Format::format_number( $$printing_specs{'InkTotalCharge'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 			if ( ! $$variable{'Quote'} ) {
@@ -188,8 +181,7 @@
 
                         if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( \%sig_specs, $sig_specs2 ) ) {
 							$sig_qty += 1;
-							foreach my $qty_index ( 1 .. 3 ) {
-								next if ! $$variable{'Project'}->quantity( $qty_index );
+							foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 								$sig_specs{'txtPrice'.$qty_index} += $$sig_specs2{'txtPrice'.$qty_index}*$conversion_rate;
 								$sig_specs{'txtPressSheetQty'.$qty_index} =~ s/\D//g;
 								my $sheet_qty = $$sig_specs2{'txtPressSheetQty'.$qty_index};
@@ -244,8 +236,7 @@
 #following modified on july-17-2008
 #for multipage 
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Breakdown</b></td>', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1"></td>';
 			}
 					if ( ! $$variable{'Quote'} ) {
@@ -254,10 +245,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #plate cost
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Plate Cost:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf( '<b>$%.2f * %d Plates =  $%.2f</b><br/>',$sig_specs{'PerPlateCost'.$qty_index},$sig_specs{'txtPlateQuantity'.$qty_index},$sig_specs{'PlateTotalCost'.$qty_index});
+				$line_html .= sprintf( '<b>$%.2f * %d Plates =  %s%s</b><br/>',$sig_specs{'PerPlateCost'.$qty_index},$sig_specs{'txtPlateQuantity'.$qty_index},$$variable{'Currency'}->symbol(), Number::Format::format_number($sig_specs{'PlateTotalCost'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 					if ( ! $$variable{'Quote'} ) {
@@ -266,10 +256,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #plate make ready
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Plate Make Ready:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf( '<b>$%.2f * %d Plates =  $%.2f</b><br/>',$sig_specs{'PerPlateMkRd'.$qty_index},$sig_specs{'txtPlateQuantity'.$qty_index},$sig_specs{'PlateMakeReady'.$qty_index});
+				$line_html .= sprintf( '<b>$%.2f * %d Plates =  %s%s</b><br/>',$sig_specs{'PerPlateMkRd'.$qty_index},$sig_specs{'txtPlateQuantity'.$qty_index},$$variable{'Currency'}->symbol(), Number::Format::format_number($sig_specs{'PlateMakeReady'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 					if ( ! $$variable{'Quote'} ) {
@@ -278,11 +267,10 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #run charge total
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run Charge Total:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('Base:%d,Setup:%d,Run:%d = %d <br/><b>$%.2f</b><br/>',$sig_specs{'OverBase'.$qty_index},
-				$sig_specs{'OverSetup'.$qty_index},$sig_specs{'OverRun'.$qty_index},$sig_specs{'TotalOvers'.$qty_index},$sig_specs{'RunChargeTotal'.$qty_index});
+				$line_html .= sprintf('Base:%d,Setup:%d,Run:%d = %d <br/><b>%s%s</b><br/>',$sig_specs{'OverBase'.$qty_index},
+				$sig_specs{'OverSetup'.$qty_index},$sig_specs{'OverRun'.$qty_index},$sig_specs{'TotalOvers'.$qty_index},$$variable{'Currency'}->symbol(), Number::Format::format_number($sig_specs{'RunChargeTotal'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 					if ( ! $$variable{'Quote'} ) {
@@ -291,10 +279,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #PMS ink mix charge
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PMS Ink Mix Charge:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('<b>$%.2f</b><br/>',$sig_specs{'InkMixCharge'.$qty_index});
+				$line_html .= sprintf('<b>%s%s</b><br/>',$$variable{'Currency'}->symbol(), Number::Format::format_number($sig_specs{'InkMixCharge'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 					if ( ! $$variable{'Quote'} ) {
@@ -303,10 +290,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #Press wash charge
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Press Wash Charge:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('<b>$%.2f * %d Washes =  $%.2f</b><br/>',$sig_specs{'PressWashPrice'.$qty_index},$sig_specs{'PressWashes'.$qty_index},$sig_specs{'PressWashCharge'.$qty_index});
+				$line_html .= sprintf('<b>$%.2f * %d Washes =  %s%s</b><br/>',$sig_specs{'PressWashPrice'.$qty_index},$sig_specs{'PressWashes'.$qty_index},$$variable{'Currency'}->symbol(), Number::Format::format_number($sig_specs{'PressWashCharge'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 					if ( ! $$variable{'Quote'} ) {
@@ -315,10 +301,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #Imposition charge
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Imposition Charge:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('<b>$%.2f</b><br/>',$sig_specs{'ImpositionCharge'.$qty_index}+$sig_specs{'PageCharge'.$qty_index}+$sig_specs{'SteppingCharge'.$qty_index});
+				$line_html .= sprintf('<b>%s%s</b><br/>',$$variable{'Currency'}->symbol(), Number::Format::format_number($sig_specs{'ImpositionCharge'.$qty_index}+$sig_specs{'PageCharge'.$qty_index}+$sig_specs{'SteppingCharge'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 					if ( ! $$variable{'Quote'} ) {
@@ -327,10 +312,9 @@
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 #Ink total charge
 			$line_html .= sprintf('<tr%s style="line-height:17px;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ink Total Charge:', $rowclass,);
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$variable{'Project'}->quantity( $qty_index );
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$line_html .= '<td class="price1">';
-				$line_html .= sprintf('<b>$%.2f</b><br/>',$sig_specs{'InkTotalCharge'.$qty_index});
+				$line_html .= sprintf('<b>%s%s</b><br/>',$$variable{'Currency'}->symbol(), Number::Format::format_number($sig_specs{'InkTotalCharge'.$qty_index},2,2));
 				$line_html .= '</td>';
 			} # end foreach qty_index
 					if ( ! $$variable{'Quote'} ) {
@@ -359,7 +343,7 @@
 					} # end if
 					
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-						$line_html .= sprintf('<td class="price1"><b>%s%.2f</b><br/>%s</td>', $$variable{'Currency'}->symbol(), $$specs{'txtPrice'.$qty_index}*$conversion_rate,openprint::service::summary($$variable{'Project'}, $s_id, $qty_index ) );
+						$line_html .= sprintf('<td class="price1"><b>%s%s</b><br/>%s</td>', $$variable{'Currency'}->symbol(), Number::Format::format_number($$specs{'txtPrice'.$qty_index}*$conversion_rate),openprint::service::summary($$variable{'Project'}, $s_id, $qty_index ) );
 						$totals[$qty_index] += $$specs{'txtPrice'.$qty_index}*$conversion_rate;
 					} # end foreach qty_index	
 
@@ -407,9 +391,9 @@
 
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 						if ( $ServiceType->name() =~ /^Proofs$/i ){
-							$line_html .= sprintf('<td class="price1"><b>%s%.2f</b><br/>%s</td>', $$variable{'Currency'}->symbol(), $$specs{'txtPrice'.$qty_index}*$conversion_rate,openprint::service::breakupsummary($$variable{'Project'}, $s_id, $qty_index ) );
+							$line_html .= sprintf('<td class="price1"><b>%s%s</b><br/>%s</td>', $$variable{'Currency'}->symbol(), Number::Format::format_number($$specs{'txtPrice'.$qty_index}*$conversion_rate,2,2),openprint::service::breakupsummary($$variable{'Project'}, $s_id, $qty_index ) );
 						} else {
-							$line_html .= sprintf('<td class="price1"><b>%s%.2f</b><br/>%s</td>', $$variable{'Currency'}->symbol(), $$specs{'txtPrice'.$qty_index}*$conversion_rate,openprint::service::summary($$variable{'Project'}, $s_id, $qty_index ) );
+							$line_html .= sprintf('<td class="price1"><b>%s%s</b><br/>%s</td>', $$variable{'Currency'}->symbol(), Number::Format::format_number($$specs{'txtPrice'.$qty_index}*$conversion_rate,2,2),openprint::service::summary($$variable{'Project'}, $s_id, $qty_index ) );
 						}
 						$totals[$qty_index] += $$specs{'txtPrice'.$qty_index}*$conversion_rate;
 #if ( $ServiceType->name() =~ /^Proofs$/i ){
@@ -478,7 +462,7 @@ $openprint::log->debug( 'QTYS' . ( $$variable{'Project'}->quantity_indexes() ) )
 			<td align="right">Unit Price:</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= '<td class="price1">'.$$variable{'Currency'}->symbol().$$variable{'Project'}->unit_price( $qty_index ).'</td>';
+		$html .= '<td class="price1">'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'Project'}->unit_price( $qty_index ),4,4).'</td>';
 	} # end foreach qty_index
 	return $html;
 ) ?>
@@ -491,7 +475,7 @@ $openprint::log->debug( 'QTYS' . ( $$variable{'Project'}->quantity_indexes() ) )
 			<td align="right">1000 Price:</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= '<td class="price1">'.$$variable{'Currency'}->symbol().$$variable{'Project'}->m_price( $qty_index ).'</td>';
+		$html .= '<td class="price1">'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'Project'}->m_price( $qty_index ),4,4).'</td>';
 	} # end foreach qty_index
 	return $html;
 ) ?>
@@ -504,7 +488,7 @@ $openprint::log->debug( 'QTYS' . ( $$variable{'Project'}->quantity_indexes() ) )
 			<td align="right">Price:</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= '<td class="price1">'.$$variable{'Currency'}->symbol().$$variable{'Project'}->price( $qty_index ).'</td>';
+		$html .= '<td class="price1">'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'Project'}->price( $qty_index ),2,2).'</td>';
 	} # end foreach qty_index
 	return $html;
 ) ?>

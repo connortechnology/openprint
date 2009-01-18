@@ -1,7 +1,9 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
+<? if ( $$variable{'error'} ) ?>
+<p class="error"><?error?></p>
+<? endif ( $$variable{'error'} ) ?>
 <? if ( $$variable{'information'} ) ?>
 <p class="information"><?information?></p>
-<hr/>
 <? endif ( $$variable{'information'} ) ?>
 Please select a Manifest to view/edit.<br>
 <form name="f1" method="post" action="manifest_details.html">
@@ -13,30 +15,47 @@ Please select a Manifest to view/edit.<br>
 			<input type="text" id="manifest_like" name="manifest_like" size="10" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_manifests.html', Serialize( document.forms.f1 ) );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_manifests.html', Serialize( document.forms.f1 ) );",'','Show' ); ) ?>
 		</p>
+		<p>
+			<label for="po_id">Purchase Order:</label>
+			<input type="text" id="po_id" name="po_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', 'f1.submit();','','Go' ); ) ?>
+		</p>
+		<p>
+			<label for="docket">Docket:</label>
+			<input type="text" id="docket" name="docket" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', 'f1.submit();','','Go' ); ) ?>
+		</p>
 	</fieldset>
 </form>
 <form name="f2" method="post" action="manifests.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
+		<p><label>Vendor:</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+			<select name="supplier_id" onchange="load('Results',this.form);">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
+			</select>
+		</p>
 		<? eval (
-			if ( ! $openprint::session{'/employee/inventory/manifests.html?StartYear'} ) {
-				@openprint::session{'/employee/inventory/manifests.html?StartYear','/employee/inventory/manifests.html?StartMonth','/employee/inventory/manifests.html?StartDay'} = Date::Calc::Today();
+			if ( ! $session{'/employee/inventory/manifests.html?StartYear'} ) {
+				@session{'/employee/inventory/manifests.html?StartYear','/employee/inventory/manifests.html?StartMonth','/employee/inventory/manifests.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 );
 			} # end if
-			if ( ! $openprint::session{'/employee/inventory/manifests.html?EndYear'} ) {
-				@openprint::session{'/employee/inventory/manifests.html?EndYear','/employee/inventory/manifests.html?EndMonth','/employee/inventory/manifests.html?EndDay'} = Date::Calc::Today();
+			if ( ! $session{'/employee/inventory/manifests.html?EndYear'} ) {
+				@session{'/employee/inventory/manifests.html?EndYear','/employee/inventory/manifests.html?EndMonth','/employee/inventory/manifests.html?EndDay'} = Date::Calc::Today();
 			} # end if
 		) ?>
 		<p>
 			<label>Received On:</label>
 			<span class="DateSelector">
-			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/manifests.html?StartYear'} ? $openprint::session{'/employee/inventory/manifests.html?StartYear'} : ''); ) ?></select>
-			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/manifests.html?StartMonth'} ? $openprint::session{'/employee/inventory/manifests.html?StartMonth'} : ''); ) ?></select>
-			<select name="StartDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/manifests.html?StartDay'} ? $openprint::session{'/employee/inventory/manifests.html?StartDay'} : ''); ) ?></select>
+			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $session{'/employee/inventory/manifests.html?StartYear'} ? $session{'/employee/inventory/manifests.html?StartYear'} : ''); ) ?></select>
+			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $session{'/employee/inventory/manifests.html?StartMonth'} ? $session{'/employee/inventory/manifests.html?StartMonth'} : ''); ) ?></select>
+			<select name="StartDay"><option value=""> </option><? echo ( ssi::getdays( $session{'/employee/inventory/manifests.html?StartDay'} ? $session{'/employee/inventory/manifests.html?StartDay'} : ''); ) ?></select>
 			to 
 			</span>
 			<span class="DateSelector">
-			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/manifests.html?EndYear'} ? $openprint::session{'/employee/inventory/manifests.html?EndYear'} : ''); ) ?></select>
-			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/manifests.html?EndMonth'} ? $openprint::session{'/employee/inventory/manifests.html?EndMonth'} : ''); ) ?></select>
-			<select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/manifests.html?EndDay'} ? $openprint::session{'/employee/inventory/manifests.html?EndDay'} : ''); ) ?></select>
+			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $session{'/employee/inventory/manifests.html?EndYear'} ? $session{'/employee/inventory/manifests.html?EndYear'} : ''); ) ?></select>
+			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $session{'/employee/inventory/manifests.html?EndMonth'} ? $session{'/employee/inventory/manifests.html?EndMonth'} : ''); ) ?></select>
+			<select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $session{'/employee/inventory/manifests.html?EndDay'} ? $session{'/employee/inventory/manifests.html?EndDay'} : ''); ) ?></select>
 			</span>
 		</p>
 		<p class="buttons">

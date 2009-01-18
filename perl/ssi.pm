@@ -436,7 +436,7 @@ sub checked {
 
 sub writeTip {
 	my $word = shift;
-return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('%s',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('%s');}">%s</span>`, $word );
+return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('%1$s',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('%1$s');}">%1$s</span>`, $word );
 }
 
 sub setup_date_select {

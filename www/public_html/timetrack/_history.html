@@ -45,8 +45,8 @@
 			<th width="50" align="right">Inv?</th>
 			<th width="50" align="right">Paid?</th>
 			<th align="left">Service</th>
-			<th width="60" align="right" style="text-align: right;">Billable</th>
 			<th width="60" align="right" style="text-align: right;">Wage</th>
+			<th width="60" align="right" style="text-align: right;">Billable</th>
 		</tr>
 		<? while ( $$variable{'Timetrack'} = shift @{$$variable{'Timetracks'}}; ) ?>
 		<? eval ( 
@@ -61,8 +61,8 @@
 			<td align="center"><? echo ( $$variable{'Timetrack'}->invoiced() ? 'Y' : 'N'; ) ?></td>
 			<td align="center"><? echo ( $$variable{'Timetrack'}->paid() ? 'Y' : 'N'; ) ?></td>
 			<td align="left"><? hecho ( $$variable{'Timetrack'}->Service()->name(); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Timetrack'}->value() ); ) ?></td>
 			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Timetrack'}->wage() ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Timetrack'}->value() ); ) ?></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Timetrack'} = shift @{$$variable{'Timetracks'}}; ) ?>
@@ -70,13 +70,10 @@
 			<td colspan="4" align="right">Totals:</td>
 			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
 			<td colspan="3">&nbsp;</td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'value_total'} ); ) ?></td>
 			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'wage_total'} ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'value_total'} ); ) ?></td>
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
-<span class="unprintable" style="float: right;">
-<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
-</span>
 <? endif ( @{$$variable{'Timetracks'}} == 0 ) ?>

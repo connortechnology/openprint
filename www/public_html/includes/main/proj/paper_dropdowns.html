@@ -95,7 +95,7 @@
 			</p>
 			<p>
 				<label for="minimum_order<?Signature?>">Minimum Order (<span id="minimum_order_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>):</label>
-				<input type="text" name="minimum_order<?Signature?>" size="9" value="<? echo ( $$variable{'minimum_order'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
+				<input type="text" id="minimum_order<?Signature?>" name="minimum_order<?Signature?>" size="9" value="<? echo ( $$variable{'minimum_order'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
 
 			</p>
 		</div><!-- Specific -->

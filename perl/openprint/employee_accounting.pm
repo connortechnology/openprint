@@ -49,9 +49,7 @@ sub details {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $payment_index = $param{'PaymentIndex'};
 		$payment_index =~ s/\D//g;
-		if ( $payment_index ) {
-			sql::execute( $log, $dbh, "DELETE FROM Payments WHERE id=$payment_index" );
-		} # end if
+		new openprint::Payment( $payment_index )->delete();
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
 		$Order->pay();
 	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
@@ -67,11 +65,12 @@ sub details {
 		my $Payment = new openprint::Payment();
 		my $error = $Payment->save( {
 			'order_id'		=> $order_id,
-			'company_id'	=> $Order->company_id(),
+			'payor_id'		=> $Order->company_id(),
+			'recipient_id'	=>	new openprint::User( $session{'user_id'} )->company_id(),
 			'amount'		=> $param{'Amount'},
 			'method'		=> 'Manual',
 			'currency_id'	=> $Order->currency_id(),
-			'description'	=> $param{'Description'},
+			'memo'			=> $param{'Description'},
 			'completed'		=> 1,
 		} );
 		if ( $error ) {
@@ -128,7 +127,7 @@ sub credit {
 
 	if ( $param{'btnFunction'} eq 'Go' ) {
 		 if ( $param{'txtSearchAccountNum'} ne '' ) {
-			( $company_index ) = sql::execute( $log, $dbh,'SELECT Index from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'} );
+			( $company_index ) = sql::execute( $log, $dbh,'SELECT id FROM Companies WHERE strAccountNum=?',$param{'txtSearchAccountNum'} );
 		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {

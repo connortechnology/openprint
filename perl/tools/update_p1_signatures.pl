@@ -26,15 +26,7 @@ $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 
-if ( 0 ) {
-sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',9.488], 'strvalue',37.952);
-sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',9.528], 'strvalue',37.952);
-sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',4.724], 'strvalue',18.896);
-sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',7.598], 'strvalue',37.990);
-sql::update( undef, undef, 'tbl_Equipment_SPecifications', ['strvalue=?',7.598], 'strvalue',37.990);
-}
-
-foreach my $Project ( openprint::Project::find('id'=>300385, 'id_start'=>300000,'company_id'=>6) ) {
+foreach my $Project ( openprint::Project::find('id_start'=>304000,'company_id'=>6) ) {
 	foreach my $sig_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		foreach my $side ( 'SideOne','SideTwo' ) {
@@ -55,7 +47,7 @@ foreach my $Project ( openprint::Project::find('id'=>300385, 'id_start'=>300000,
 			} # end foreach index
 			if ( sets::isin( $$sig_specs{'rdbAqueous'.$side}, ['Gloss','Matte'] ) ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoating'.$side.$index, 'Y' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$side.$index, 'Aqueous '.$$sig_specs{'rdbAqueous'.$side} );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$side.$index, 'Aqueous '.$$sig_specs{'rdbAqueous'.$side}.' Overall' );
 				$index += 1;
 			} # end if
 			if ( $$sig_specs{'chkVarnishOverallGloss'.$side} ) {

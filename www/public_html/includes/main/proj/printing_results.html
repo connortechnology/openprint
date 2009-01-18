@@ -27,7 +27,7 @@
 			$html .= sprintf('<input type="radio" id="StockType%1$dRoll" name="StockType%1$d" value="Roll" %2$s onclick="calc(this.form.name);" />', $qty_index,	ssi::checked( $$variable{'StockType'.$qty_index} eq 'Roll' ) );
 			$html .= sprintf(' <label class="radio" for="StockType%1$dRoll">Roll</label> ', $qty_index );
 			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= sprintf('<input type="checkbox" id="OverrideStockType%1$d" name="OverrideStockType%1$d" value="Y" onclick="if(!this.checked){calc(this.form.name);};" %2$s /> <label class="radio" for="OverrideStocokType%1$d">Override</label>', $qty_index, ssi::checked( $$variable{'OverrideStockType'.$qty_index} eq 'Y' ) );
+				$html .= sprintf('<input type="checkbox" id="OverrideStockType%1$d" name="OverrideStockType%1$d" value="Y" onclick="if(!this.checked){calc(this.form.name);};" %2$s /> <label class="radio" for="OverrideStockType%1$d">Override</label>', $qty_index, ssi::checked( $$variable{'OverrideStockType'.$qty_index} eq 'Y' ) );
 			} else {
 				$html .= sprintf('<input type="hidden" name="OverrideStockType%1$d" value="%2$s" />', $qty_index, $$variable{'OverrideStockType'.$qty_index} );
 			} # end if
@@ -203,7 +203,7 @@
 				ssi::make_drop_down( [ sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{'PrintingType'.$$variable{'QTYIndex'}} );
 			) ?>
 		</select>
-		<input type="checkbox" id="OverridePrintingType<?QTYIndex?>" name="OverridePrintingType<?QTYIndex?>" value="Y" <? echo ( ssi::checked( $$variable{"OverridePrintingType$$variable{'QTYIndex'}"} eq 'Y'); ) ?> onclick="if (this.checked == false) calc(this.form.name);" />
+		<input type="checkbox" id="OverridePrintingType<?QTYIndex?>" name="OverridePrintingType<?QTYIndex?>" value="Y" <? echo ( ssi::checked( $$variable{"OverridePrintingType$$variable{'QTYIndex'}"} eq 'Y'); ) ?> onclick="calc(this.form.name);" />
 		<label class="radio" for="OverridePrintingType<?QTYIndex?>">Override</label>
 </span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
