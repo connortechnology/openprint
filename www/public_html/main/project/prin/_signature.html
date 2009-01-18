@@ -1,7 +1,7 @@
-<fieldset id="SignatureGroup<?Group?>" <? echo ( ( $$variable{'Group'} == 1 and $$variable{'rdbCover'} ne 'Different' ) ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
-<? if ( $$variable{'Group'} == 1 ) ?>
+<fieldset id="SignatureGroup<?Group?>" <? echo ( ( $$variable{'Group'} == 1 and ( $$variable{'rdbCover'} ne 'Different' and $$variable{'Backing'} ne 'Printed' ) ) ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
+<? if ( $$variable{'SignatureType'.$$variable{'Group'}} eq 'Cover Pages' ) ?>
 	<!--#include virtual="/includes/main/proj/templates/signatures.html" -->
-<? endif ( $$variable{'Group'} == 1 ) ?>
+<? endif ( $$variable{'SignatureType'.$$variable{'Group'}} eq 'Cover Pages' ) ?>
 
 	<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ? $$variable{'txtServiceDescription'.$$variable{'Group'}} : ( $$variable{'Group'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
 	<div class="leftColumn">
@@ -22,7 +22,8 @@
 			<label class="radio" for="chkOverrideDimensions<?Group?>">Override</label>
 		</p>
 	</div>
-	<div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{'Group'}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+	<div class="rightColumn">
+		<div id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{'Group'}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
 	<? echo (
 		if ( $$variable{'Group'} == 1 ) {
 			my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
@@ -30,13 +31,32 @@
 		} # end if
 		return;
 	) ?>
+		</div>
+		<p>
+			<label>Signature Type:</label>
+			<select name="txtSignatureType<?Group?>" onchange="calc(this.form.name);">
+<? echo (
+	my @options = (
+		'unknown', 'Please select',
+		'Cover Pages', 'Cover Pages',
+		'Interior Pages',	'Interior Pages',
+		'Gate Folded Pages', 	'Gate Fold Pages',
+		'PerfReplyCard',	'Perforated Reply Card',
+		);
+		return ssi::make_drop_down( \@options, $$variable{'txtSignatureType'.$$variable{'Group'}} );
+) ?>
+			</select>
+		</p>
 	</div>
 	<br class="spacer"/>
-	<input type="hidden" name="txtSignatureType<?Group?>" value="<? echo ( $$variable{'txtSignatureType'.$$variable{'Group'}} ) ?>" />
 	<? echo (
 		my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
 		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/bleeds_colourbars.html' );
 		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
+		if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
+			$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_overrides.html' );
+		} # end if
+
 		return variable_substitution( \$html, $variable );
 	) ?>
 <? eval (
@@ -60,4 +80,3 @@
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 </fieldset>
-

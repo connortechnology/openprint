@@ -56,15 +56,15 @@
 }
 </style>
 <div id="CAR">
-	<? if ( $openprint::param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+	<? if ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
 	Invalid CAR # specified.
-	<? else ( $openprint::param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+	<? else ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
 
 	<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>
 		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{'CAR'}->id() ) ?></span></h3>
 		<? echo (
 			my $html;
-			if ( ( ! $openprint::param{'car_id'} ) ) {
+			if ( ( ! $param{'car_id'} ) ) {
 				$html .= '<div id="Part1">';
 				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_edit_part1.html' );
 				$html .= '</div>';
@@ -90,7 +90,7 @@
 				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part4.html' );
 				$html .= '</div>';
 			} # end if
-			return ssi::variable_substitution( $r, $log, $dbh, \$html, $variable );
+			return ssi::variable_substitution( \$html, $variable );
 		) ?>
-	<? endif ( $openprint::param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+	<? endif ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
 </div>

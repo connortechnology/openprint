@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<title><? echo ( $config{'SiteTitle'} ) ?></title>
+		<style type="text/css">
+		<? echo ( misc::load_file( $log, $config{'SkinPath'}.'/css/email.css' ); ) ?>
+		<? echo ( misc::load_file( $log, $config{'SkinPath'}.'/css/purchase_order.css' ); ) ?>
+		</style>
+		<base href="<? echo ( $openprint::config{'ExternalSiteURL'} ) ?>"/>
+	</head>
+	<body>
+		<div class="PO">
+			<div class="Header">
+				<div class="Logo">
+					<table><tr>
+					<td width="70"><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
+					<td align="left">
+						<a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
+					</td>
+					</tr></table>
+					<table class="HeaderText">
+						<tr>
+							<td colspan="2">
+					<? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?>
+							</td>
+						</tr>
+						<tr>
+							<td>Phone:<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
+							<td>Fax:<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
+						</tr>
+					</table>
+				</div>
+				<div class="PageTitle" style="text-align: left;">
+					<h1>PURCHASE ORDER</h1><br/>
+					P.O. # [ <? echo ( $$variable{'PurchaseOrder'}->id() ) ?> ]<br/>
+					Date: 
+					<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->created_on() ) ) ) ?><br/>
+				</div>
+				<br class="spacer"/>
+			</div>
+			<br class="spacer"/>
+			<div class="leftColumn">
+			<p>
+				<label>VENDOR:</label>
+		<? echo (
+		my $html = '';
+		$html .= $$variable{'PurchaseOrder'}->vendor_contact().'<br/>' if $$variable{'PurchaseOrder'}->vendor_contact();
+		$html .= $$variable{'PurchaseOrder'}->vendor_name().'<br/>' if $$variable{'PurchaseOrder'}->vendor_name();
+		$html .= $$variable{'PurchaseOrder'}->vendor_address1().'<br/>' if $$variable{'PurchaseOrder'}->vendor_address1();
+		$html .= $$variable{'PurchaseOrder'}->vendor_address2().'<br/>' if $$variable{'PurchaseOrder'}->vendor_address2();
+		$html .= sprintf('%s %s, %s', $$variable{'PurchaseOrder'}->get('vendor_city','vendor_state', 'vendor_postalcode')) . '<br/>';
+		$html .= 'Phone: ' . $$variable{'PurchaseOrder'}->vendor_phone().'<br/>' if $$variable{'PurchaseOrder'}->vendor_phone();
+		$html .= 'Fax: '.$$variable{'PurchaseOrder'}->vendor_fax().'<br/>' if $$variable{'PurchaseOrder'}->vendor_fax();
+		$html .= $$variable{'PurchaseOrder'}->vendor_email().'<br/>' if $$variable{'PurchaseOrder'}->vendor_email();
+		return $html;
+		) ?>
+			</p>
+			</div>
+			<div class="rightColumn">
+				<p>
+					<label>SHIP TO:</label>
+		<? echo (
+		my $html = '';
+		$html .= $$variable{'PurchaseOrder'}->shipto_contact().'<br/>' if $$variable{'PurchaseOrder'}->shipto_contact();
+		$html .= $$variable{'PurchaseOrder'}->shipto_name().'<br/>' if $$variable{'PurchaseOrder'}->shipto_name();
+		$html .= $$variable{'PurchaseOrder'}->shipto_address1().'<br/>' if $$variable{'PurchaseOrder'}->shipto_address1();
+		$html .= $$variable{'PurchaseOrder'}->shipto_address2().'<br/>' if $$variable{'PurchaseOrder'}->shipto_address2();
+		$html .= sprintf('%s %s, %s', $$variable{'PurchaseOrder'}->get('shipto_city','shipto_state', 'shipto_postalcode')) . '<br/>';
+		$html .= 'Phone: ' . $$variable{'PurchaseOrder'}->shipto_phone().'<br/>' if $$variable{'PurchaseOrder'}->shipto_phone();
+		$html .= 'Fax: ' . $$variable{'PurchaseOrder'}->shipto_fax().'<br/>' if $$variable{'PurchaseOrder'}->shipto_fax();
+		$html .= $$variable{'PurchaseOrder'}->shipto_email().'<br/>' if $$variable{'PurchaseOrder'}->shipto_email();
+		return $html;
+		) ?>
+				</p>
+			</div>
+			<br class="spacer"/><br/>
+			<table style="table-layout: fixed;">
+				<tr>
+					<th>Shipping Method</th>
+					<th>Shipping Terms</th>
+					<th width="183">Delivery Date</th>
+				</tr>
+				<tr>
+					<td><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
+					<td><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
+					<td><? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : 'ASAP' ) ?></td>
+				</tr>
+			</table>
+			<br class="spacer"/>
+		<table>
+		<tr>
+			<th width="90" style="text-align: center;">QTY</th>
+			<th>ITEM</th>
+			<th>DESCRIPTION</th>
+			<th width="90">DOCKET</th>
+			<th width="90">UNIT PRICE</th>
+			<th width="90">LINE TOTAL</th>
+		</tr>
+		<? echo ( my $html = '';
+		foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
+			$html .= sprintf('<tr>
+				<td style="text-align: center;">%1$d</td>
+				<td>%2$s</td>
+				<td>%3$s</td>
+				<td>%4$s</td>
+				<td style="text-align: right;">%5$s</td>
+				<td style="text-align: right;">%6$s</td>
+			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+		} # end foreach C
+		return $html;
+		) ?>
+		<tr>
+			<td colspan="5" class="totals">SUBTOTAL</td>
+			<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
+		</tr>
+		<tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_charge() ? '' : ' style="display:none;"' ) ?>>
+			<td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?></td>
+			<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
+		</tr>
+		<tr<? echo ( $$variable{'PurchaseOrder'}->statetax_charge() ? '' : ' style="display:none;"' ) ?>>
+			<td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?></td>
+			<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
+		</tr>
+		<tr>
+			<td colspan="5" class="totals">TOTAL</td>
+			<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
+		</tr>
+		</table>
+			<div class="leftColumn">
+				<ol>
+					<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>
+					<li> Please indicate this Purchase Order # in your invoice, packing slip / delivery note.</li>
+					<li> Please notify us immediately if you are unable to ship as specified.</li>
+				</ol>
+			</div>
+			<div class="rightColumn" style="text-align: right;">
+			All prices are in <? echo ( $$variable{'PurchaseOrder'}->Currency()->name() ) ?>.
+			<br/>
+		<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+				<div class="leftColumn"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><br/></div>
+				<div class="rightColumn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?><br/></div>
+				<br class="spacer"/>
+				<hr/>
+				<div class="leftColumn"><i>Authorized by</i></div>
+				<div class="rightColumn"><i>Date</i></div>
+		<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+			</div>
+			<br class="spacer"/>
+			<fieldset><legend>Logs</legend>
+				<table class="List">
+					<tr>
+						<th align="left" width="120">When</th>
+						<th align="left">Description</th>
+					</tr>
+					<? echo (
+						my $html = '';
+						foreach my $L ( $$variable{'PurchaseOrder'}->Logs() ) {
+							$html .= sprintf('<tr><td>%s</td><td>%s</td></tr>',  Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
+						} # end foreach
+						return $html;
+					) ?>
+				</table>
+			</fieldset>
+		</div><!--PO-->
+	</body>
+</html>

@@ -1,0 +1,16 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/proj/prepress.js"></script>
+<div class="Service">
+	<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	<form name="f1" method="post" action="/main/project/view.html">
+	<fieldset><legend><?ServiceTypeName?></legend>
+		<p> 
+			<label># of files:</label>
+			<input name="txtQuantity" value="<?txtQuantity?>" type="text" size="9" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+		</p>
+		<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
+	</fieldset>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+	</form>
+</div><!--Service-->

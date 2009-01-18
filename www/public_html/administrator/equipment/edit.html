@@ -114,6 +114,13 @@
 			<label>JDF Name:</label>
 			<input type="text" name="jdf_name" value="<? hecho ( $$variable{'Equipment'}->jdf_name(); ) ?>"  />
 		</p>
+		<p>
+			<label>Location:</label>
+			<select id="location_id" name="location_id">
+				<option value="">select</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $$variable{'Equipment'}->location_id() ); ) ?>
+			</select>
+		</p>
 		</div>
 	</fieldset>
 <? if ( $$variable{'Equipment'}->id() ) ?>
@@ -185,7 +192,13 @@
 <? if ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
 		Select the # of pages of the folds that you would like to edit.  To add a new fold click Add.
-		<p><label>Pages:</label><select style="width: auto;" id="pages" name="pages" onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{'Equipment'}->id() ) ?>, pages: $('pages').getValue() } } );"><option value="">select</option><option value="all">All</option><? echo ( ssi::make_drop_down( [ map { $_, $_ } sql::execute(undef,undef,q{SELECT DISTINCT pages FROM folds WHERE equipment_id=?}, $$variable{'Equipment'}->id() ) ] ); ) ?></select>
+		<p>
+			<label>Type:</label>
+			<select style="width: auto;" id="type" name="type" onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{'Equipment'}->id() ) ?>, type: $('type').getValue() } } );">
+				<option value="">select</option>
+				<option value="all">All</option>
+<? echo ( ssi::make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ] );) ?>
+			</select>
 <? echo ( ssi::writeButton( $log, $dbh, 'AddFold', 'add.gif',"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{'Equipment'}->id() ."', { method: 'get', onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
 		</p>
 		<div id="Folds"> </div>

@@ -13,7 +13,15 @@
 			<label>Pages per pad:</label>
 			<input type="text" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
 		</p>
-		<!--#include virtual="/includes/main/proj/cardboard_backing.html"-->
+		<p>
+			<label>Backing:</label>
+			<input type="radio" id="BackingCardboard" name="Backing" value="Cardboard" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Cardboard' ); ) ?> />
+			<label class="radio" for="BackingCardboard">Cardboard</label>
+			<input type="radio" id="BackingPrinted" name="Backing" value="Printed" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Printed' ); ) ?> />
+			<label class="radio" for="BackingPrinted">Printed</label>
+			<input type="radio" id="BackingNone" name="Backing" value="None" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'None' ); ) ?> />
+			<label class="radio" for="BackingNone">None</label>
+		</p>
 		<!--#include virtual="/includes/main/proj/padding.html"-->
 <? eval ( 
 	@{$$variable{'GlueTypes'}} = openprint::Material::find('category'=>'Padding Glue');

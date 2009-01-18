@@ -166,9 +166,8 @@ $openprint::log->debug("Loaded order: " . $$self{'id'} . ', company_id: ' . $$se
 } # end sub load
 
 sub save {
-	my $self = shift;
+	my ( $self, $params ) = @_;
 	my $ac = sql::start_transaction( $dbh );
-
 	
 	my @sql;
 	foreach my $key ( keys %fields ) {
@@ -180,6 +179,11 @@ sub save {
 	if ( ! $$self{'id'} ) {
 		#@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
 		$$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if	
+	} elsif ( $$params{'force_insert'} ) {
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
@@ -420,11 +424,12 @@ sub pay {
 	my $Payment = new openprint::Payment();
     my $error = $Payment->save( {
             'order_id'		=> $$self{id},
-            'company_id'	=> $$self{company_id},
+			'recipient_id'	=>	new openprint::User( $openrpint::session{'user_id'} )->company_id(),
+            'payor_id'		=> $$self{company_id},
             'amount'		=> $amount - $paid,
             'method'		=> 'Manual',
             'currency_id',	=> $$self{currency_id},
-            'description'	=> 'Order marked paid',
+            'memo'			=> 'Order marked paid',
 			'completed'		=> 1,
             } );
     if ( ! $error ) {

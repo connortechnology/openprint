@@ -52,6 +52,12 @@ sub save {
 		$openprint::log->debug("Set params");
 	} # end if
 
+	if ( $$self{'category'} and ! $$self{'category_id'} ) {
+		$_ = new openprint::ServiceCategory();
+		$_->save({'name'=>$$self{'category'}});
+		$$self{'category_id'} = $_->id();
+	} # end if
+
 	my %sql;
 	foreach my $k ( keys %fields ) {
 		$sql{$k} = $$self{$k};
@@ -132,16 +138,12 @@ sub find {
 } # end sub find
 
 sub get_price {
-    my ( $self, $quantity, $equipment, $Pricelist ) = @_;
+    my ( $self, $quantity, $Equipment, $Pricelist ) = @_;
 
-    if ( ref $equipment eq 'openprint::Equipment' ) {
-        $equipment = $equipment->id();
-    } # end if
 	if ( ! $Pricelist ) {
 		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable ));
 	} # end if
-
-    my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $equipment );
+    my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
     return if ! %price;
 
 	$price{'currency_id'} = $Pricelist->currency_id();
@@ -184,17 +186,21 @@ sub Previous {
 	my ($self, $params) = shift;
 	return new openprint::Service( $self->prev($params) );
 } # end sub Next
-# Returns a copy of the paper object.
-# Will also save the data to db
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Service( );
-	@$new{keys %fields} = @$self{keys %fields};
-	delete $$new{id};
-	$$new{'name'} = 'Copy of ' . $$new{'name'};
 
-	return $new;
-} # end sub copy
+sub category {
+    my ( $self, $category ) = @_;
+
+    if ( defined $category ) {
+        $category =~ s/^\s*(.*)\s*$/$1/;
+		@$self{'category_id','category'} = sql::execute( undef, undef, q{SELECT id, name FROM Service_Categories WHERE lower(name)=?}, lc $category );
+		if ( ! $$self{'category_id'} ) {
+			$$self{'category'} = $category;
+		} # end if
+    } elsif ( $$self{'category_id'} and ! $$self{'category'} ) {
+        $$self{'category'} = new openprint::ServiceCategory( $$self{'category_id'} )->name();
+    } # end if
+    return $$self{'category'};
+} # end sub category
 
 
 1;

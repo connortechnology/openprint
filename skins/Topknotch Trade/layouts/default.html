@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<title><?PageTitle?></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
+		<link href="/css/main.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
+		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
+		<? if ( $r->uri() =~ /\/content\/prin/ ) ?>
+               <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+               <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+               <script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
+		<link href="/css/estimating.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/content\/prin/ ) ?>
+		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
+		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link rel="shortcut icon" href="/images/favicon.ico"/>
+<script type="text/javascript">
+<!--
+        var startList = function() {
+            if (document.all && document.getElementById) {
+                var navRoot = document.getElementById("menubar");
+                if ( navRoot ) {
+                    for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
+                        var node = navRoot.childNodes[i];
+                        if (node.nodeName=="LI") {
+                            node.onmouseover=function() {
+                                this.className+=' over';
+                            }
+                            node.onmouseout=function() {
+                                this.className=this.className.replace(' over', '');
+                            }
+                        } // end if
+                    } // end for
+                } // end if
+            }
+        }
+        window.onload=startList;
+-->
+        </script>
+
+	</head>
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
+		<div class="Content">
+			<!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
+			<div class="ContentInner">
+				<br/>
+				<!--#include virtual="/skins/<?SiteTitle?>/includes/customer-menu.html"-->
+				<div id="MainBox">
+					<!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
+					<div style="float: right; p\osition: relative; margin:0px; width: 100%; padding: 0px;">
+					<?PageContent?>
+					</div>
+				</div>
+				<span class="unprintable">
+					<br class="spacer"/>
+					<br/>
+				</span>
+<!--#include virtual="/skins/<?SiteTitle?>/includes/footer.html"-->
+			</div><!--ContentInner-->
+		</div><!--Content-->
+	</body>
+</html>

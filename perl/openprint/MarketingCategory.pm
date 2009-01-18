@@ -4,12 +4,20 @@ use strict;
 
 require sql;
 
-my @fields = (
-	'id',
-	'name',
-	'description',
-	'greeting',
+use openprint ();
+
+use vars qw( $log $dbh %fields %transforms %defaults $table $serial );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+%fields = (
+	'id'			=>	'id',
+	'name'			=>	'name',
+	'description'	=>	'description',
+	'greeting'		=>	'greeting',
 );
+$table = 'Marketing_Categories';
+$serial = 'Marketing_Category_id_seq';
 
 # Returns a paper object specified by the parameters
 sub find {
@@ -22,9 +30,9 @@ sub find {
 		my @values;
 		$sql = q{SELECT * FROM Marketing_Categories WHERE 1>0};
 
-		if ( $params{'Name'} ) {
-			$sql .= q{ AND strName=?};
-			push @values, $params{'Name'};
+		if ( $params{'name'} ) {
+			$sql .= q{ AND name=?};
+			push @values, $params{'name'};
 		} # end if
 		if ( $params{'company_id'} ) {
 			$sql .= ' AND id IN (SELECT category_id FROM Companies_in_Marketing_Categories WHERE company_id=?)';
@@ -37,50 +45,17 @@ sub find {
 		$sql .= " OR $params{'or'}" if $params{'or'};
 		$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
 
-		my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 		if ( ! $data ) {
-			$openprint::log->debug("Error loading Marketing Categories: ($sql)".DBI->errstr );
+			$log->debug("Error loading Marketing Categories: ($sql)".DBI->errstr );
 			return;
 		} elsif ( ! @$data ) {
-			$openprint::log->debug("No Marketing Categories: ($sql)".DBI->errstr );
+			$log->debug("No Marketing Categories: ($sql)".DBI->errstr );
 			return;
 		} # end if
 		return map { new openprint::MarketingCategory( $_->{id}, $_ ) } @$data;
 	} # end if
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-$openprint::log->debug("Marketing Category load");
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Marketing_Categories WHERE id=?}, {}, $$self{'id'} );
-        if ( ! $data ) {
-            $openprint::log->error( "Failure to load Marketing Cateogry $$self{'id'}: Reason: " . $openprint::dbh->errstr );
-            return;
-        } # end if
-    } # end if
-    foreach my $key ( keys %{$data} ) {
-        $$self{$key} = $$data{$key};
-    } # end foreach
-} # end sub load
-
-sub save {
-	my ( $self, $data ) = @_;
-
-	my %sql;
-	foreach ( @fields ) {
-		$$self{$_} = $$data{$_} if $$data{$_};
-		$sql{$_} = $$self{$_};
-	} # end foreach
-	
-	if ( ! $$self{'id'} ) {
-		($$self{'id'}) = ($sql{'id'}) = sql::execute( undef, undef, q{SELECT nextval('Marketing_Category_id_seq')} );
-		sql::insert( undef, undef, 'Marketing_Categories', \%sql );
-	} else {
-		sql::update( undef, undef, 'Marketing_Categories', "id=$$self{id}", \%sql );
-	} # end if
-	$self->load();
-} # end sub save
 
 sub delete {
 	my $self = shift;

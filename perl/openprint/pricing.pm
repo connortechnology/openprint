@@ -17,11 +17,8 @@ sub clear_cache {
 sub get_pricelist_id {
 
 	if ( $openprint::session{'Pricelist_id'} ) {
-		my $Pricelist = new openprint::Pricelist( $openprint::session{'Pricelist_id'} );
-		if ( $Pricelist->id() ) {
-#$openprint::log->debug("openprint::pricing::get_pricelist_id returning cached Pricelist " . $Pricelist->id() . ' ' . $Pricelist->name() ) if $debug;
-			return $Pricelist->id();
-		} # end if
+		# Validity of session variables is the job of openprint.pm, so it is done once per hit
+		return $openprint::session{'Pricelist_id'};
 	} # end if
 
 	my $list_id;

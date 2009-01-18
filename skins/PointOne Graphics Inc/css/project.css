@@ -1,0 +1,224 @@
+
+div.ProjectHeader {
+    border-bottom: 1px solid #000088;
+    margin-bottom: 5px;
+}
+div.ProjectHeader:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.ProjectHeader {height: 1%;}
+/* End hide from IE-mac */
+div.ProjectHeader fieldset {
+/*
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+*/
+	margin: 0px;
+    margin-bottom: 0px;
+    padding: 6px;
+    width: 47%;
+    text-align: left;
+}
+div.ProjectHeader fieldset#ProjectInformation {
+    float: left;
+    width: 47%;
+}
+div.ProjectHeader fieldset#ContactInformation {
+    float: right;
+    width: 47%;
+}
+div.ProjectHeader fieldset#Reference {
+    float: left;
+    text-align: left;
+    width: 47%;
+}
+div.ProjectHeader fieldset#Description {
+    float: right;
+    text-align: left;
+    width: 47%;
+}
+
+
+div.ProjectHeader fieldset p {
+    text-align: right;
+    padding: 0px;
+    margin: 0px;
+}
+div.ProjectHeader fieldset p label {
+    margin: 0px;
+    padding: 0px;
+    float: left;
+    font-weight: bold;
+    text-align: left;
+    width: auto;
+}
+div.Service div.row {
+    margin: 0px;
+    margin-bottom: 10px;
+    padding: 0px;
+    padding-left: 10px;
+    padding-right: 330px;
+    padding-bottom: 5px;
+    clear: none;
+    width: auto;
+    display: inline-block;
+}
+div.Service div.row:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Service div.row {height: 1%;}
+*   div.Service div.row {display:block;}
+/* End hide from IE-mac */
+
+div.Service div.row .required {
+    width: 10px;
+    float:left;
+    margin-left: -10px;
+    right: 10px;
+    height: 100%;
+}
+
+div.Service div.row span.label {
+    width: auto;
+    text-align: left;
+    float: left;
+    display:inline;
+    margin: 0px;
+    padding: 0px;
+    height: 100%;
+}
+
+div.ProjectSummary {
+}
+
+div.ProjectSummary div.row {
+	margin-bottom: 2px;
+	padding-bottom: 2px;
+}
+div.ProjectSummary div.row:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.ProjectSummary div.row {height: 1%;}
+/* End hide from IE-mac */
+
+div.ProjectSummary div.row span.label {
+	margin-right: 1%;
+	text-align: right;
+	float: left;
+}
+
+div.ProjectSummary div.row span.value {
+	margin-left: 1%;
+	text-align: left;
+	p\osition: relative;
+	float: left;
+	width: 100px;
+}
+div#ProjectView table tr td input {
+	width: 99%;
+}
+.InksFront {
+	float: left;
+	width: 50%;
+}
+.InksBack {
+	float: left;
+	width: 50%;
+}
+.BleedsColourBars {
+	float: left;
+	width: 50%;
+}
+.Stock {
+	float: left;
+	width: 50%;
+}
+div.Service #GateFoldFit {
+	float: left;
+	width: 49%;
+}
+div.Service #Inserts {
+	float: right;
+	width: 49%;
+}
+.VarnishCoverage {
+	float: none;
+}
+.VarnishCoverage input, .VarnishCoverage input[type="text"] {
+	width: 35px;
+}
+div.Service fieldset p span.checkOption label {
+	clear: none;
+	width: auto;
+	float: none;
+	margin: 0px;
+	padding: 0px;
+}
+div.Service fieldset {
+	margin: 2px;
+	padding: 4px;
+}
+.AddToProjectButtons {
+	float: right;
+}
+
+span.SpotColour {
+	float: left;
+	width: 25%;
+}
+span.SpotColour label, span.Coverages label {
+	clear: none;
+	width: auto;
+	float: none;
+	margin: 0px;
+	padding: 0px 0px 0px 2px;
+}
+
+.checkOption {
+	float: left;
+	width: 30%;
+}
+.bleedOption {
+	float: left;
+	width: 100px;
+}
+.SpecialColour {
+	float: left;
+	width: 100%;
+}
+.SpecialColour .checkOption {
+	float: left;
+	width: 135px;
+}
+.colourOption {
+	float: left;
+	width: 104px;
+}
+.PerforationSignature {
+	float: left;
+	width: 49%;
+}
+
+.ColourCoverage {
+	width: 35px;
+}
+fieldset legend label {
+	font-weight: normal;
+}

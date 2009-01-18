@@ -18,9 +18,11 @@ sub init_cache {
 	} # end foreach
 	
 	# Anything specified in dir_config override configuration
-	foreach my $key (keys %{$apr_table}) {
-		$cache{$key} = $$apr_table{$key};
-	} # end foreach
+	if ( $apr_table ) {
+		foreach my $key (keys %{$apr_table}) {
+			$cache{$key} = $$apr_table{$key};
+		} # end foreach
+	} # end if
 	#return %cache;
 }
 

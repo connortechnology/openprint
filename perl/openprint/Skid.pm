@@ -3,17 +3,21 @@ package openprint::Skid;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %variable );
+use vars qw( $log $dbh %variable %session  );
 *variable = \%openprint::variable;
+*session = \%openprint::session;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
 require sql;
 require openprint::Location;
 require openprint::Paper;
+require openprint::PaperInventory;
 require openprint::SkidContent;
 require openprint::RFIDTag;
+require openprint::Skid_Verification;
 require openprint::Project;
+require openprint::SkidContent;
 
 my $debug = 1;
 
@@ -31,6 +35,11 @@ sub find {
             push @values, $params{id};
         } # end if
     } # end if
+
+	if ( $params{'verification_code'} ) {
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?)';
+		push @values, $params{'verification_code'};
+	} # end if
 
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
@@ -105,7 +114,7 @@ sub copy {
 		$newcontent->skid_id( $new->id() );
 		$newcontent->save();
 
-		$Paper->add_inventory( $new->id(), $content->quantity() );
+		$Paper->add_inventory( $new, $content->quantity() );
 		my @data = sql::execute( $openprint::log,$openprint::dbh, q{SELECT project_id, quantity, units FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $Paper->id );
 		while ( @data ) {
 			$Paper->allocate( $new->id(), splice @data, 0, 3 );
@@ -130,14 +139,14 @@ sub load {
 
 sub save {
 	my $self = shift;
-	$$self{'created_by_id'} = $openprint::session{'user_id'} if ! $$self{'created_by_id'};
+	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	my $ac = sql::start_transaction( $dbh );
 	my @sql = ( 
 		'rfidtag_id',	$$self{'rfidtag_id'} ? $$self{'rfidtag_id'} : undef,
 		'location_id',	$$self{'location_id'} ? $$self{'location_id'} : undef,
 		'created_by_id',$$self{'created_by_id'},	
 		'updated_on',	'NOW()',
-		'updated_by',	$openprint::session{'user_id'},
+		'updated_by',	$session{'user_id'},
 		);
 		
 	if ( ! $$self{'id'} ) {
@@ -296,13 +305,13 @@ sub created_by_id {
 	return $$self{'created_by_id'};
 } # end sub created_by_id
 
-sub contents {
-	my $self = shift;
-	my %params = @_;
-	$params{'skid_id'} = $$self{'id'};
+sub Contents {
+    my $self = shift;
+    my %params = @_;
+    $params{'skid_id'} = $$self{'id'};
 
-	return openprint::SkidContent::find( %params );
-	
+    return openprint::SkidContent::find( %params );
+
 } # end sub contents
 
 sub allocation {
@@ -320,29 +329,46 @@ sub allocateable {
 
 # Checkout all paper on the skid
 sub checkout {
-	my ( $self ) = @_;
+	my ( $self, $c ) = @_;
 	my @contents = openprint::SkidContent::find('skid_id'=>$$self{id});
 	if ( ! @contents ) {
-		sql::insert( undef, undef, 'Paper_Inventory',
-				'paper_id', undef,
-				'user_id',  $openprint::session{'user_id'},
-				'POIndex',  undef,
-				'InStock',  0,
-				'updated_on',   'NOW()',
-				'delta',    0,
-				'Comment',  'Skid checked out',
-				'skid_id',  $$self{'id'},
-				'units',    'unknown',
-				);
-		return;
+		if ( ! openprint::PaperInventory::find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
+			my $PI = new openprint::PaperInventory();
+			my $e = $PI->save({
+					'paper_id'	=>	undef,
+					'user_id'	=>	$session{'user_id'},
+					'instock'	=>	0,
+					'delta'		=>	0,
+					'comment'	=>	'Checked out' . $c,
+					'skid_id'	=>	$$self{'id'},
+					'units'		=>	'unknown',
+					});
+			$log->error($e);
+		} # end if
+		return 1;
 	} # end if
 
 	foreach my $C ( @contents ) {
-		my ( $project_id ) = sql::execute( undef, undef, q{SELECT project_id FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $C->paper() );
-		$C->Paper->add_inventory( $$self{id}, -1*$C->quantity(), $C->units(), 'Removed' . ($project_id ? ' for docket ' . new openprint::Project($project_id)->docket() : '' ) );
-		$C->quantity( 0 );
-		$C->save();
+		if ( ! openprint::PaperInventory::find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
+			my ( $project_id ) = sql::execute( undef, undef, q{SELECT project_id FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $C->paper() );
+			my $desc = 'Checked out' . ($project_id ? ' for docket ' . new openprint::Project($project_id)->docket() : '');
+			my $PI = new openprint::PaperInventory();
+			my $e = $PI->save({
+					'paper_id'  =>  $C->paper_id(),
+					'user_id'   =>  $session{'user_id'},
+					'instock'   =>  $C->Paper()->in_stock() - $C->quantity(),
+					'delta'     =>  -1*$C->quantity(),
+					'comment'   =>  $desc.$c,
+					'skid_id'   =>  $$self{id},
+					'units'     =>  $C->units(),
+					} );
+			$C->quantity( 0 );
+			$e .=   $C->save();
+			$log->error( $e ) if $e;
+			return 1;
+		} # end if not already checked out
 	} # end foreach Content
+	return 0;
 } # end sub checkout
 
 sub previous {
@@ -372,7 +398,7 @@ sub allocate {
 			'project_id',	$project_id ? $project_id : undef,
 			'operator_id',	$variable{'user_id'},
 			);
-	(new openprint::Project( $project_id ))->add_to_log( @openprint::session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
+	(new openprint::Project( $project_id ))->add_to_log( @session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
 	sql::end_transaction( undef, $ac );
 } # end sub allocate
 
@@ -392,11 +418,15 @@ sub rfidtag_id {
 	if ( $rfidtag_id ) {
 		my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
 		my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
-		$openprint::log->error( $error ) if $error;
+		$log->error( $error ) if $error;
 		$$self{'rfidtag_id'} = $rfidtag_id;
 	} # end if
 	return $$self{'rfidtag_id'};
 } # end sub rfidtag_id
+
+sub RFIDTag {
+	return new openprint::RFIDTag( $_[0]{rfidtag_id} );
+} # end sub RFIDTag
 
 1;
 __END__

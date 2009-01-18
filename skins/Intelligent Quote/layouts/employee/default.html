@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<title><?PageTitle?></title>	
+		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/employee.css" rel="stylesheet" type="text/css"/>
+		<script type="text/javascript" src="/javascripts/buttons.js"></script>
+		<script type="text/javascript" src="/javascripts/popups.js"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
+        <script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
+        <!-- calendar stylesheet -->
+        <link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
+        <script type="text/javascript" src="/javascripts/jscalendar/calendar.js"></script>
+        <script type="text/javascript" src="/javascripts/jscalendar/lang/calendar-en.js"></script>
+        <script type="text/javascript" src="/javascripts/jscalendar/calendar-setup.js"></script>
+
+		<link rel="shortcut icon" href="/favicon.ico"/>
+	</head>
+	<body>
+		<div class="Content"> 
+		<div class="ContentInner"> 
+			<div class="Header">
+					<span style="float: left;"><img src="/images/IQ_logo.png" alt="Intelligent Quote Demo"/></span>
+					<span style="float: left;"><img src="/images/IQ_text.png" alt="Intelligent Quote Demo"/></span>
+					<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+					<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
+					<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+					<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+					<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
+					<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+					<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
+			</div>
+			<br/>
+			<!--#include virtual="/skins/<?SiteTitle?>/includes/employee_menu.html"-->
+			<?PageContent?>
+			<br/>
+		</div><!--ContentInner-->
+		</div><!--Content-->
+	</body>
+</html>

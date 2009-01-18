@@ -78,8 +78,10 @@
 				<td><input type="text" name="markup-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
 				<td><input type="text" name="price-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
 				<td>
-					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" value='Y' checked="checked" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" /> Yes
-					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" value='N'  onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" /> No
+					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" id="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0Y" value='Y' checked="checked" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" />
+					<label class="radio" for="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0Y">Yes</label>
+					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" id="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0N" value='N'  onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" />
+					<label class="radio" for="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0N">No</label>
 				</td>
 			</tr>
 			</table>

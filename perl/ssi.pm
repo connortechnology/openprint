@@ -161,6 +161,30 @@ sub htmlize {
 	return @_;
 } # end sub htmlize
 
+sub unhtmlize {
+	return if ! @_;
+	if ( @_ == 1 ) {
+		$_ = shift;
+		return if ! defined $_;
+		$_ =~ s/&amp;/&/mg;
+		$_ =~ s/&quot;/"/mg;
+		$_ =~ s/&lt;/</mg;
+		$_ =~ s/&gt;/>/mg;
+		$_ =~ s/<br\/>/\n/mg;
+		return $_;
+	} # end if
+	for( $_ = 0; $_ < @_; $_ += 1 ) {
+		next if ! defined $_[$_];
+		$_[$_] =~ s/&amp;/&/mg;
+		$_[$_] =~ s/&quot;/"/mg;
+		$_[$_] =~ s/&lt;/</mg;
+		$_[$_] =~ s/&gt;/>/mg;
+		$_[$_] =~ s/<br\/>/\n/mg;
+	} # end for
+	return @_;
+} # end sub unhtmlize
+
+
 sub make_drop_down {
 	my ( $search_data, $checkval, $length ) = @_;
 	my ( $temp, $checked );
@@ -340,7 +364,7 @@ sub get_dates {
 			getmonths($month),
 			getdays($day, $year, $month ),
 			$year ? join('-', $year, $month, $day ) : undef,
-		   );
+			);
 }
 
 sub get_start_end_dates {
@@ -371,10 +395,8 @@ sub get_start_end_dates {
 	$$variable{'ddmStartDay'} = $$variable{'startdays'} = getdays($startDay);
 	$$variable{'ddmEndDay'} = $$variable{'enddays'} = getdays($endDay ? $endDay : (localtime(time))[3]);
 
-	$$variable{'StartDate'} = $startYear . '-' .  $startMonth . '-' .
-		( $startDay ? $startDay : 1 );
-	$$variable{'EndDate'} = $endYear . '-' . $endMonth . '-' .
-		( $endDay ? $endDay : (localtime(time))[3] );
+	$$variable{'StartDate'} = join( '-', $startYear, $startMonth, ( $startDay ? $startDay : 1 ) );
+	$$variable{'EndDate'} = join( '-', $endYear, $endMonth, ( $endDay ? $endDay : (localtime(time))[3] ) );
 
 } # end sub get_start_end_dates
 
@@ -406,15 +428,15 @@ sub writeButton {
 } # end sub writeButton
 
 sub checked {
-    if ( $_[0] ) {
-        return 'checked="checked"';
-    } # end if
-    return '';
+	if ( $_[0] ) {
+		return 'checked="checked"';
+	} # end if
+	return '';
 } # end sub checked
 
 sub writeTip {
 	my $word = shift;
-return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('%s',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('%s');}">%s</span>`, $word );
+return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('%1$s',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('%1$s');}">%1$s</span>`, $word );
 }
 
 sub setup_date_select {
@@ -427,7 +449,6 @@ $openprint::log->debug("Reset date");
 		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} );
 		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} );
 	} # end if
-	$session{$page.'lastupdated'} = time;
 } # end sub setup_date_select
 
 sub date_select {
@@ -486,7 +507,8 @@ sub save_params {
 		} # end if
 	} # end foreach
 } # end sub save_params
+
 1;
 
 __END__
-~       
+~		 

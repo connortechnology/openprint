@@ -5,7 +5,9 @@ function change_handler( element ) {
 	for ( var i = 0; i < element.value.length; i += 1 ) {
 		var c = element.value.charCodeAt(i);
 		// 57 is '9'. Anything above is not a number
-		if ( c > 57 ) {
+		if ( c < 48 ) {
+			break;
+		} else if ( c > 57 ) {
 			// Start a command
 			var j;
 			for ( j = i+1; j < element.value.length; j+= 1 ) {
@@ -87,6 +89,8 @@ function change_handler( element ) {
 			return;
 		} else if ( first == 'T' ) {
 			newelement = element.form.Time;
+		} else if ( first == 'V' ) {
+			newelement = element.form.verification_code;
 		} else if ( first == 'W' ) {
 			newelement = element.form.Weekday;
 		} // end if
@@ -200,16 +204,12 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 82 || character == 114 ) { // R
-		if ( element.form.rfidtag_id ) {
-			element.form.rfidtag_id.focus();
-			element.form.rfidtag_id.value='';
-		} // end if
-		return false;
-	} else if ( character == 87 || character == 119 ) { // W
-		if ( element.form.Weekday ) {
-			element.form.Weekday.focus();
-			element.form.Weekday.value='';
-		} // end if
+		for ( var x = 0; x < document.forms.length; x+=1 ) {
+			if ( document.forms[x].rfidtag_id ) {
+				document.forms[x].rfidtag_id.focus();
+				document.forms[x].rfidtag_id.value='';
+			} // end if
+		} // end for
 		return false;
 	} else if ( character == 83 || character == 115 ) { // S
 		if ( typeof(submit_handler)==  'function' ) {
@@ -225,6 +225,21 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 85 || character == 117 ) { // U
+	} else if ( character == 86 || character == 118 ) { // V
+		for ( var x = 0; x < document.forms.length; x+=1 ) {
+			if ( document.forms[x].verification_code ) {
+				document.forms[x].verification_code.focus();
+				document.forms[x].verification_code.value='';
+				break;
+			} // end if
+		} // end for
+		return false;
+	} else if ( character == 87 || character == 119 ) { // W
+		if ( element.form.Weekday ) {
+			element.form.Weekday.focus();
+			element.form.Weekday.value='';
+		} // end if
+		return false;
 	} else if ( character == 13 || character == 8 || character == 0 || character == 9 || character == 16 || character == 45 ) { // enter
 		return true;
 	} else if ( character == 43 ) {

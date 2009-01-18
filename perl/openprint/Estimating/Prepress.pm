@@ -74,5 +74,22 @@ sub calc {
 	return $status;
 } # end sub calc
 
+sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	if ( $qty_index ) {
+	} else {
+		if ( $$specs{'ServiceType'} eq 'CDBurning' ) {
+			return 1*$$specs{'txtQuantity'}.' cd' . ( $$specs{'txtQuantity'} == 1 ? '' : 's' );
+		} elsif ( $$specs{'ServiceType'} eq 'RetrieveFile' ) {
+			return 1*$$specs{'txtQuantity'}.' file' . ( $$specs{'txtQuantity'} == 1 ? '' : 's' );
+		} else {
+			return 1*$$specs{'txtQuantity'}.' hour' . ( $$specs{'txtQuantity'} == 1 ? '' : 's');
+		} # end if
+	} # end if
+	return '';
+} # end sub summary
+
 1;
 __END__

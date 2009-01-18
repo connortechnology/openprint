@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title><?PageTitle?></title>	
+<link rel="shortcut icon" href="/images/favicon.ico"/>
+<link href="/css/button.css" rel="stylesheet" type="text/css"/>
+<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print" />
+<style type="text/css">
+br.pagebreak {
+    height: 0px;
+    page-break-after: always;
+}
+.spacer {
+	height: 0px;
+	clear: both;
+}
+
+</style>
+</head>
+<body>
+			<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+</body>
+</html>

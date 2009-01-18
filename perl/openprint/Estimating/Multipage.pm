@@ -35,9 +35,11 @@ my %variables = (
 	'txtInsertQuantity'=>['save'],
 	'TippingQuantity'=>['save'],
 	'BlowingQuantity'=>['save'],
+	'ReplyCardQuantity'=>['save'],
 	'txtSpreadSize'=>['save','output'],'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
+	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
 );
 
 sub variables {
@@ -60,14 +62,14 @@ sub no_outputs {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	if ( sets::isin( $$specs{'rdbTemplateType'}, ['MetalCoil','PlasticCoil','PlasticComb','DoubleLoopWire'] ) ) {
+	if ( sets::isin( $$specs{'rdbTemplateType'}, ['SaddleStitching', 'LoopStitching', 'MetalCoil','PlasticCoil','PlasticComb','DoubleLoopWire'] ) ) {
 		$$specs{'txtSpreadSize'} = 4;
 	} elsif ( sets::isin( $$specs{'rdbTemplateType'}, ['CornerStitching','PerfectBound','SpinePaste'] ) ) {
 		$$specs{'txtSpreadSize'} = 2;
 	} else {
-		$$specs{'txtSpreadSize'} = 4;
+		$$specs{'txtSpreadSize'} = 2;
 	} # end if
-
+	
 	if ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'rdbCover'} ne 'Different' ) {
 		$variables{'rdbCover'} = [sets::union('output', @{$variables{'rdbCover'}})];
 		$$specs{'rdbCover'} = 'Different';
@@ -91,17 +93,23 @@ sub calc {
 
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
+
 	foreach my $group_id ( @Groups ) {
 #$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
-		next if $override_pages{$group_id};
-
-		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
+		if ( $override_pages{$group_id} ) {
+# DO nothing
+		} elsif ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
 			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id} if $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y';
+		} elsif ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
+			$override_pages{$group_id} = 2;
+			if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
+				$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
+			} # end if
 		} else {
-
 			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 				$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
+				last if $override_pages{$group_id};
 			} # end foreach signature
 		} # end if
 		$remaining_pages -= $override_pages{$group_id};
@@ -119,7 +127,7 @@ sub calc {
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
-		if ( ! $override_pages{$group_id} ) {
+		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
 			$remaining_pages = 0;
 		} # end if
@@ -128,10 +136,23 @@ sub calc {
 			$$specs{'txtFinalWidth'.$group_id} = $$specs{'txtFinalWidth'};
 			$$specs{'txtFinalHeight'.$group_id} = $$specs{'txtFinalHeight'};
 		} # end if
-	} # end foreach
+	} # end foreach group_id
+
+	if ( $$specs{'remaining_pages'} = $remaining_pages ) {
+		my $max_group = 0;
+		foreach my $g_id ( @Groups ) {
+			if ( $g_id > $max_group ) {
+				$max_group = $g_id;
+			} # end if
+		} # end foreach g_id
+		$max_group += 1;
+		push @Groups, $max_group;
+		$$specs{'GroupPageQuantity'.$max_group} = $remaining_pages;
+	} # end if
+	$$specs{'groups'} = join(',', @Groups );
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'help'} .= 'Please select the dimensions.';
+		$$specs{'help'} = 'Please select the dimensions.';
 		return 'uncalculated';
 	} # end if
 	$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
@@ -147,12 +168,12 @@ sub calc {
 	} # end if
 
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
-		$$specs{'help'} .= 'Please enter the # of pages';
+		$$specs{'help'} = 'Please enter the # of pages';
 		return 'uncalculated';
 	} # end if
 
 	if ( ! $$specs{'rdbCover'} ) {
-		$$specs{'help'} .= 'Please select the cover type.';
+		$$specs{'help'} = 'Please select the cover type.';
 		return 'uncalculated';
 	} # end if
 
@@ -179,52 +200,6 @@ sub calc {
 	return 'calculated';
 } # end sub calc
 
-sub check_signature_inputs {
-	my ( $specs, $signature ) = @_;
-	if ( $$specs{'rdbSpecificStock'.$signature} eq 'Y' ) {
-		if ( ! $$specs{'txtSpecificStockCalliper'.$signature} ) {
-			$$specs{'alert'} .= "Please enter the stock calliper for $signature";
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
-		if ( ! $$specs{'StockType'.$signature} ) {
-			$$specs{'alert'} .= "Please select the stock format for $signature";
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
-		if ( ! $$specs{'CustomStockPrice'.$signature} ) {
-			$$specs{'alert'} .= "Please enter the stock cost in order to achieve an accurate imposition for $signature";
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
-		if ( ! $$specs{'CustomStockPriceUnits'.$signature} ) {
-			$$specs{'alert'} .= "Please select the units for the stock price for $signature";
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
-		if ( ( ! $$specs{'StockGrade'.$signature} ) and $$specs{'txtSpecificStockFinish'.$signature} ) {
-			if ( $$specs{'txtSpecificStockFinish'.$signature} =~ /gloss/i ) {
-				if ( $$specs{'StockType'.$signature} eq 'Roll' ) {
-					$$specs{'StockGrade'.$signature} = 3;
-				} else {
-					$$specs{'StockGrade'.$signature} = 1;
-				} # end if
-			} elsif ( $$specs{'txtSpecificStockFinish'.$signature} =~ /matte/i ) {
-				$$specs{'StockGrade'.$signature} = 2;
-			} elsif ( $$specs{'txtSpecificStockFinish'.$signature} =~ /offset/i ) {
-				$$specs{'StockGrade'.$signature} = 4;
-			} else {
-				$$specs{'StockGrade'.$signature} = 3;
-			} # end if
-			$variables{'StockGrade'.$signature} = [ sets::union( 'output', @{$variables{'StockGrade'.$signature}} ) ];
-		
-		} else {
-			$variables{'StockGrade'.$signature} = [ sets::exclude( ['output'], $variables{'StockGrade'.$signature} ) ];
-		} # end if
-		if ( ! $$specs{'StockGrade'.$signature} ) {
-			$$specs{'alert'} .= "Please select the grade of stock for $signature";
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
-	} # end if
-
-} # end sub check_signature_inputs
-
 sub calculate_signatures {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 
@@ -238,22 +213,25 @@ $openprint::log->debug("Starting Multipage::calculate_signatures");
 
 	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
-	push @signatures, sort $Project->signatures({'type'=>'GateFolded Spreads'});
+	push @signatures, sort $Project->signatures({'type'=>'Gate Folded Pages'});
 	@signatures = $Project->signatures() if ! @signatures;
+$openprint::log->debug( "Signature: @signatures");
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
 
 # Clear these so that when we start recalculating, we get large signatures first.
-		foreach my $qty_index ( 1 .. 3 ) {
+if ( 0 ) {
+		# Not neccessary anymore?
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
 				openprint::service::insert_service_specs( $log, $dbh, $project_index, $signatures[$i], 'PageQuantity'.$qty_index, '' );
 			} # end if
 		} # end foreach
+} # end if
 
 		if ( $$printing_specs{'PrintingType'} ) {
-			$log->debug("PrintingType: $$printing_specs{'PrintingType'}");
 			if ( 
 				 ( $Project->quantity1() and ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} ) )
 				 or ( $Project->quantity2() and ( $$sig_specs{'PrintingType2'} ne $$printing_specs{'PrintingType'} ) )
@@ -264,7 +242,7 @@ $openprint::log->debug("Starting Multipage::calculate_signatures");
 				for ( my $j = $i+1; $j < @signatures; $j += 1 ) {
 					my $specs2 = openprint::service::get_specs_ref( $Project, $signatures[$j] );
 					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $specs2 ) ) {
-$openprint::log->warn('Deleting due to incorrect printing type');
+#$openprint::log->warn('Deleting due to incorrect printing type');
 						openprint::print_project::delete_service( $log, $dbh, $project_index, $signatures[$j] );
 						splice @signatures, $j, 1;
 						$j-=1;
@@ -277,12 +255,12 @@ $openprint::log->warn('Deleting due to incorrect printing type');
 	my @groups = sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
 	if ( ! @groups ) {
 		foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
+			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
 		} # end if
 	} else {
 	foreach my $group ( @groups ) {
 		my @sigs = sort $Project->signatures( {'Group'=>$group} );
-$openprint::log->debug("Sigs in group $group : " . scalar @sigs );
+$openprint::log->debug("Sigs in group $group : @sigs " );
 		next if ! @sigs;
 		my $ss_id = shift @sigs;
 
@@ -326,7 +304,7 @@ $openprint::log->debug("Sigs in group $group : " . scalar @sigs );
 				my $ac = sql::start_transaction( $openprint::dbh );
 				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
 
-				foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $sig_specs, \%specs ) ) {
+				foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $new_sig_specs, \%specs ) ) {
 					openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $specs{$key} );
 				} # end foreach
 				sql::end_transaction( $openprint::dbh, $ac );

@@ -49,7 +49,7 @@
         if ( 0 and $openprint::param{'Manifest'} ) {
             @{$$variable{'Skids'}} = @skid_ids;
             my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/inventory/paper_manifest.html' );
-            $html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+            $html .= ssi::variable_substitution( \$content, $variable );
         } # end if
 
 		return $html;

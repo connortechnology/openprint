@@ -5,12 +5,19 @@ require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
 require openprint::Fold;
+require openprint::Location;
 require sql;
+
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openrpint::log;
+*dbh = \$openrpint::dbh;
+$table = 'tbl_Equipment';
+$serial = 'Equipment_Index_seq';
 
 my $debug = 0;
 my %find_cache;
-my %fields = (
-	'id'	=>	'lngindex',
+%fields = (
+	'id'	=>	'id',
 	'strid'	=>	'strid',
 	'name'	=>	'strname',
 	'description'	=>	'strdescription',
@@ -24,6 +31,12 @@ my %fields = (
 	'cost_center'		=>	'cost_center',
 	'jdf_id'			=> 	'jdf_id',
 	'jdf_name'			=> 	'jdf_name',
+	'location_id'		=>	'location_id',
+);
+%transforms = (
+);
+%defaults = (
+	'location_id'	=>	undef,
 );
 
 sub init_cache {
@@ -44,14 +57,17 @@ sub find {
 	if ( exists $params{'id'} ) {
 		if ( ref $params{id} eq 'ARRAY' ) {
 			if ( @{$params{id}} > 1 ) {
-			$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
-			push @values, @{$params{id}};
+				$sql .= ' AND id IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
+				push @values, @{$params{id}};
+			} elsif ( @{$params{id}} == 1 ) {
+				$sql .= ' AND id=?';
+				push @values, $params{id};
 			} else {
-			$sql .= ' AND lngindex=?';
-			push @values, $params{id};
+				$sql .= ' AND id=?';
+				push @values, $params{id};
 			} # en dif
 		} else {
-			$sql .= ' AND lngindex=?';
+			$sql .= ' AND id=?';
 			push @values, $params{id};
 		} # end if
 	} # end if
@@ -64,16 +80,20 @@ sub find {
 		push @values, $params{'Name'};
 	} # end if
 	if ( $params{'Specifications'} ) {
-		# Assume specificatiosn is a hash of key/values to match
-		foreach my $name ( keys %{$params{'Specifications'}} ) {
-			if ( ref $params{'Specifications'}{$name} eq 'ARRAY' ) {
-				$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1) IN ( } . join(',', map {'?'} @{$params{'Specifications'}{$name}}	) . ' )';
-				push @values, $name, @{$params{'Specifications'}{$name}};
-			} else {
-				$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.lngIndex AND strName=? LIMIT 1)=?};
-				push @values, $name, $params{'Specifications'}{$name};
-			} # end if
-		} # end foreach
+# Assume specificatiosn is a hash of key/values to match
+		if ( ref $params{'Specifications'} eq 'HASH' ) {
+			foreach my $name ( keys %{$params{'Specifications'}} ) {
+				if ( ref $params{'Specifications'}{$name} eq 'ARRAY' ) {
+					$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1) IN ( } . join(',', map {'?'} @{$params{'Specifications'}{$name}}	) . ' )';
+					push @values, $name, @{$params{'Specifications'}{$name}};
+				} else {
+					$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)=?};
+					push @values, $name, $params{'Specifications'}{$name};
+				} # end if
+			} # end foreach
+		} else {
+$openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $params{'Specifications'}  );
+		} # end if
 	} # end if
 	if ( $params{'UseInEstimating'} ) {
 		$sql .= ' AND UseInEstimating=?';
@@ -107,17 +127,9 @@ sub find {
 		$openprint::log->debug( $sql . join(',',@values) . ' records:'. @$data );
 	} # end if
 	
-	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{lngindex}, $_ ) } @$data;
+	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{id}, $_ ) } @$data;
 	return @{$find_cache{$hash_key}};
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM tbl_Equipment WHERE lngIndex=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
 
 sub fits {
 	my ( $self, $width, $height, $calliper, $service ) = @_;
@@ -201,48 +213,75 @@ sub Fold {
 #}
 
 	foreach my $Fold ( @{$$self{'Folds'}} ) {
-		#$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
-		next if $$params{pages} and ($$Fold{pages} != $$params{pages} );
-		#$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
-		next if $$params{type} and ( $$Fold{type} ne $$params{type} );
+		if ( $$params{pages} and ($$Fold{pages} != $$params{pages} ) ) {
+			$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
+			next;
+		} # end if
+		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
+			$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
+			next;
+		} # end if
 
-		#$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
-		next if $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching};
-		#$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
-		next if $$params{perfectbind} and defined $$Fold{perfectbind} and $$params{perfectbind} != $$Fold{perfectbind};
-		#$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
-		next if $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste};
+		#$openprint::log->debug( 'Fold: ' . $Fold->name() );
+		if ( $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching} ) {
+			$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
+			next;
+		} # end if
 
-		#$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
-		next if $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} );
-		#$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;
-		next if $$Fold{page_rows} and $$params{page_rows} and ($$Fold{page_rows} != $$params{page_rows} );
+		if ( $$params{perfectbind} and defined $$Fold{perfectbind} and $$params{perfectbind} != $$Fold{perfectbind} ) {
+			$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
+			next;
+		} # end if
+		if ( $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste} ) {
+			$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
+			next;
+		} # end if
 
-		#$openprint::log->debug("Wanted Page_width: $$params{page_width}, have min:$$Fold{min_width} max:$$Fold{max_width}") if $debug;
-		next if ( $params{page_width} and (
+		if ( $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} ) ) {
+			$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
+			next;
+		} # end if
+		if ( $$Fold{page_rows} and $$params{page_rows} and ($$Fold{page_rows} != $$params{page_rows} ) ) {
+			$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;
+			next;
+		} # end if
+
+		if ( $params{page_width} and (
 				( $$Fold{min_width} and $$Fold{min_width} > $$params{page_width} ) or
 				( $$Fold{max_width} and $$Fold{max_width} < $$params{page_width} )
-				)) ;
-		#$openprint::log->debug("Wanted Page_height: $$params{page_height}, have min:$$Fold{min_height} max:$$Fold{max_height}") if $debug;
-		next if ( $$params{page_height} and (
+				)) {
+			$openprint::log->debug("Wanted Page_width: $$params{page_width}, have min:$$Fold{min_width} max:$$Fold{max_width}") if $debug;
+			next;
+		} # end if
+		if ( $$params{page_height} and (
 				( $$Fold{min_height} and $$Fold{min_height} > $$params{page_height} ) or
 				( $$Fold{max_height} and $$Fold{max_height} < $$params{page_height} )
-				) );
-		#$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
-		next if ( $$params{calliper} and (
+				) ) {
+			$openprint::log->debug("Wanted Page_height: $$params{page_height}, have min:$$Fold{min_height} max:$$Fold{max_height}") if $debug;
+			next;
+		} # end if
+		if ( $$params{calliper} and (
 				( $$Fold{min_calliper} and $$Fold{min_calliper} > $$params{calliper} ) or
 				( $$Fold{max_calliper} and $$Fold{max_calliper} < $$params{calliper} )
-				) );
-		#$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{'max_imposition}") if $debug;
-		next if $$Fold{min_imposition} and $$params{imposition} and ($$Fold{min_imposition} > $$params{imposition});
-		next if $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition});
-		#$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if $debug;
-		next if $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} );
-		if ( $$params{gsm} ) {
-			#$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
-			my $RunSpeed = $Fold->Specification( $$params{gsm} );
+				) ) {
+			$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
+			next;
+		} # end if
+		if ( $$Fold{'min_imposition'} and $$params{'imposition'} and ($$Fold{'min_imposition'} > $$params{'imposition'}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
+			next;
+		} # end if
+		if ( $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
+			next;
+		} # end if
+		$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
+		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
+		if ( $$params{'gsm'} ) {
+			$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
+			my $RunSpeed = $Fold->Specification( $$params{'gsm'} );
 			if ( ! $RunSpeed ) {
-#$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
+$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
 				next;
 			} else {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
@@ -270,6 +309,8 @@ sub specification {
 
 sub Specification {
 	my ( $self, $name, $range ) = @_;
+
+	return if ! $$self{'id'};
 
 	if ( ! $$self{'Specifications'} ) {
 		foreach my $Spec ( openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax' ) ) {
@@ -423,59 +464,11 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE lngIndex=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE Id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 
 	openprint::logs::insertLogRecord('6', "Equipment Index: $$self{id} - " . $$self{name}, );
 } # end sub delete
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		if ( $param and exists $$param{$k} ) {
-			$sql{$fields{$k}} = $$param{$k};
-		} else {
-			$sql{$fields{$k}} = $$self{$k};
-		} # end if
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-
-	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('Equipment_Index_seq')} );
-		$sql{lngindex} = $$self{id};
-		sql::insert( undef, undef, 'tbl_Equipment', \%sql );
-		openprint::logs::insertLogRecord('34', "Equipment: " . $self->strid(). " - " . $self->name(),);
-	} else {
-		sql::update( undef, undef, 'tbl_Equipment', ['lngIndex=?',$$self{id}], \%sql );
-		openprint::logs::insertLogRecord('35', "Equipment: " . $self->strid(). ' - ' . $self->name(),);
-	} # end if
-
-if ( 0 ) {
-	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
-	foreach my $key ( keys %$param ) {
-		if ( $key =~ /SName(.*)/ and $$param{$key} ne '' ) {
-			my $i = $1;
-			$$param{'SMin'.$i} =~ s/[^\d\.]//g;
-			$$param{'SMax'.$i} =~ s/[^\d\.]//g;
-			sql::insert( undef, undef, 'tbl_Equipment_Specifications', [
-					'lngEquipmentIndex',	$$self{id},
-					'dblMin',				( $$param{'SMin'.$1} ne '' ? $$param{'SMin'.$1} : undef ),
-					'dblMax',				( $$param{'SMax'.$1} ne '' ? $$param{'SMax'.$1} : undef ),
-					'strUnits',			 $$param{'SUnits'.$1},
-					'strName',				$$param{'SName'.$1},
-					'strValue',			 $$param{'SValue'.$1},
-					'interpolate',			$$param{'i'.$1},
-					] );
-		} # end if
-	} # end foreach
-} # end if
-
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-} # end sub save
 
 sub update_schedule {
 	my $self = shift;
@@ -507,7 +500,7 @@ sub next {
 		push @values, $$params{category_id};
 	} # end if
 	my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM tbl_Equipment WHERE strid=?}, $name );
 	return $_;
 } # end sub next
 
@@ -525,7 +518,7 @@ sub prev {
 		push @values, $$params{category_id};
 	} # end if
 	my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT lngindex FROM tbl_Equipment WHERE strid=?}, $name );
+	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM tbl_Equipment WHERE strid=?}, $name );
 	return $_;
 } # end sub next
 
@@ -534,6 +527,9 @@ sub Previous {
 	return new openprint::Equipment( $self->prev($params) );
 } # end sub Next
 
+sub Location {
+	return new openprint::Location( $_[0]{location_id} );
+} # end sub Location
 
 1;
 __END__

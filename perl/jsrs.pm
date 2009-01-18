@@ -26,8 +26,9 @@ sub Dispatch {
 sub Return {
 	my ( $r, $log, $variable, $payload ) = @_;
 	if ( $debug ) {
+$log->debug('Payload:');
 	foreach my $pair ( sort split('\|', $payload) ) {
-		$log->debug( "Payload: $pair" ); 
+		$log->debug( $pair ); 
 	}
 	}
 

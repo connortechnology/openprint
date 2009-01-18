@@ -1,20 +1,26 @@
 <? eval (
 	foreach my $p ( 'QTYIndex','index','SignatureIndex' ) {
-		if ( ( exists $openprint::param{$p} ) and ! $$variable{$p} ) {
-			$$variable{$p} = $openprint::param{$p};
+		if ( ( exists $param{$p} ) and ! $$variable{$p} ) {
+			$$variable{$p} = $param{$p};
 		} # end if
 	} # end foreach
 ) ?>
-<span id="Fold-<?SignatureIndex?>-<?QTYIndex?>-<?index?>">
-	<input type="text" id="FoldQty-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldQty-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldQty-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" size="2" onkeyup="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );" />
-	<select id="FoldType-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldType-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" onchange="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );">
+<tr id="Fold-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" <? echo ( ($$variable{'index'} == 4 or $$variable{"FoldQty-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"})  ? '' : 'style="display:none;"' ) ?>>
+	<td><input type="text" id="FoldQty-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldQty-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldQty-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" size="2" onkeyup="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );" /></td>
+	<td>
+		<input type="text" id="FoldImposition-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldImposition-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldImposition-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" size="2" onkeyup="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );" />
+		<input type="hidden" id="FoldColumns-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldColumns-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldColumns-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" />
+		<input type="hidden" id="FoldRows-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldRows-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldRows-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" />
+	</td>
+	<td><select id="FoldType-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldType-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" onchange="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );">
 		<option value="">select fold</option>
 		<? echo ( 
 			my @options;
 			push @options, map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types;
 			return ssi::make_drop_down( \@options, $$variable{"FoldType-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} );
 		) ?>
-	</select>
-	<input type="text" id="FoldFolds-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldFolds-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldFolds-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" size="2" onkeyup="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );" /> Folds +
-	<input type="text" id="FoldAngles-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldAngles-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldAngles-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" size="2" onkeyup="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );" /> Angles<br/>
-</span>
+	</select></td>
+	<td><input type="text" id="FoldFolds-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldFolds-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldFolds-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" size="2" onkeyup="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );" /></td>
+	<td><input type="text" id="FoldAngles-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldAngles-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldAngles-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" size="2" onkeyup="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );" /></td>
+	<td><input type="text" id="FoldRunspeed-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" name="FoldRunspeed-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" value="<? echo ( $$variable{"FoldRunspeed-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} ) ?>" size="6" onkeyup="Fold_onchange(this, '<?SignatureIndex?>', '<?QTYIndex?>', '<?index?>' );" /></td>
+</tr>

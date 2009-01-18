@@ -1,0 +1,29 @@
+<div id="Header">
+	<a href="/index.html"><img style="float: left; height:65px;" src="/images/logo.gif" alt="Topknotch Trade" /></a>
+	<img style="float: left; margin-left: 15px;" src="/images/main/header/us-ca.jpg" alt="Flags" width="139" height="48" border="0" usemap="#Map" class="unprintable"/>
+	<map name="Map" id="Map">
+		<area shape="rect" coords="2,2,68,46" href="http://www.topknotchtrade.com?Currency=USD" alt="US"/>
+		<area shape="rect" coords="72,3,137,47" href="http://www.topknotchtrade.ca?Currency=CDN" alt="CA"/>
+	</map>
+<? if ( ! $openprint::session{'user_id'} ) ?>
+					<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
+						<fieldset><legend>Quick Login</legend>
+						<p><label>Email:</label><input type="text" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/>
+								<? echo ( ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ) ) ?>
+						</p>
+						<p><label>Password:</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/>
+							<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register Now' );) ?>
+						</p>
+						</fieldset>
+						<input type="hidden" name="btnFunction" />
+					</form>
+<? endif ( ! $openprint::session{'user_id'} ) ?>
+	<div style="float: right;">
+		<p><label>Tel:</label>(866) 382-5100</p>
+		<p><label>Tel:</label>(905) 624-5100</p>
+		<p><label>Fax:</label>(905) 624-6800</p>
+	</div>
+	<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+	<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
+	<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+</div><!--Header-->

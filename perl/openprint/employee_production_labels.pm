@@ -21,12 +21,17 @@ sub index {
 sub _label {
 	my $Label = new openprint::Label( $param{'id'} );
 	if ( $param{'action'} eq 'update' ) {
+		$param{'value'} =~ s/<br\/>/\n/ig;
 		$Label->set_data($param{'field'}=>$param{'value'});
 		$Label->save();
 		$variable{'PageContent'} = ssi::htmlize(join('',$Label->get_data($param{'field'})));
 $openprint::log->debug("_label get " . join('',$Label->get_data($param{'field'})));
 	} elsif ( $param{'action'} eq 'get' ) {
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
+	} elsif ( $param{'action'} eq 'getnohtml' ) {
+		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
+		$openprint::log->debug('filtering');
+		$variable{'PageContent'} =~ s/<br\/>/\n/ig;
 	} # end if
 } # end sub _label
 

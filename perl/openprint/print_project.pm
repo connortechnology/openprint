@@ -145,13 +145,11 @@ sub create_edit_display {
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
 	);
 
-	my %services = $Project->get_services();
-	@{$$variable{'SelectedServices'}} = keys %services;
+	my $services = $Project->services();
+	@{$$variable{'SelectedServices'}} = keys %{$services};
 
 	my $sql = q{SELECT name,description FROM Service_Types WHERE category=? AND create_visible=true ORDER BY Sorting, lower(name)};
 	@{$$variable{'PrepressServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Prepress' );
-	#push @{$$variable{'PrepressServiceTypes'}}, sql::execute( $log, $dbh, $sql, 'Proofs' );
-
 	@{$$variable{'BinderyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Bindery' );
 	@{$$variable{'SpecialtyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Specialty' );
 	@{$$variable{'PackagingServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Packaging' );
@@ -301,19 +299,19 @@ sub try_to_delete_project {
 	my $proj_reference = $Project->reference();
 
 	if ( $Project->company_id() != $openprint::session{'company_id'} ) {
-		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br>";
+		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br/>";
 		$delete = 0;
 	} # end if
 	$_ = "SELECT Orders.Index FROM Orders,Order_Contents WHERE Orders.Index=Order_Contents.OrderIndex AND lngProjectIndex=? AND Orders.strStatus != 'Incomplete'";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
-		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br>";
+		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br/>";
 		$delete = 0;
 	} # end if
 	$_ = "SELECT tbl_Quotes.Index FROM tbl_Quotes,tbl_Quote_Details WHERE tbl_Quotes.Index=tbl_Quote_Details.QuoteIndex AND ProjectIndex=? AND tbl_Quotes.strStatus != 'Incomplete'";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
-		$error .= "Project $proj_reference is in quote <a href=\"/main/quote/history_details.html?quote_id=$_\">$_</a>.	You must delete the quote before you can delete the project.<br>";
+		$error .= "Project $proj_reference is in quote <a href=\"/main/quote/history_details.html?quote_id=$_\">$_</a>.	You must delete the quote before you can delete the project.<br/>";
 		$delete = 0;
 	} # end if
 	if ( $delete ) {
@@ -325,19 +323,13 @@ sub try_to_delete_project {
 sub history_list {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $error = '';
 	foreach my $key ( $r->param() ) {
 		if ( $key =~ /chkDelete(\d*)/ ) {
-			$error = try_to_delete_project( $log, $dbh, $variable, $1 );
+			$$variable{'error'} .= try_to_delete_project( $log, $dbh, $variable, $1 );
 		} elsif ( $key eq 'btnFunction' and $r->param($key) eq 'Delete Project' ) {
-			$error = try_to_delete_project( $log, $dbh, $variable, $r->param('ProjectIndex') );
+			$$variable{'error'} .= try_to_delete_project( $log, $dbh, $variable, $r->param('ProjectIndex') );
 		} # end if
 	} # end foreach
-
-	if ( $error ne '' ) {
-		return misc::error( $log, $dbh, $variable, 'Error',$error );
-	} # end if
-
 } # end sub history_list 
 
 sub view_pdfs {
@@ -358,7 +350,7 @@ sub get_services_in_category {
 	if ( $category eq 'Printing' ) {
 #The entire point of this is to sort the signature groups
 		if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
-			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','GateFolded Spreads','Cover Pages') ORDER BY lngServiceIndex";
+			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','Gate Folded Pages','Cover Pages') ORDER BY lngServiceIndex";
 			my @signatures = sql::execute( $log, $dbh, $_, $project_index );
 			
 			while ( @signatures ) {
@@ -1192,9 +1184,9 @@ sub calc {
 			} # end foreach
 			if ( $specs{'PrintingType'} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'PrintingType1', $specs{'PrintingType'} );
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'chkOverridePrintingType1', 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'OverridePrintingType1', 'Y' );
 			} else {
-				openprint::service::delete_service_spec( $$project{'id'}, $printing_service_index, 'chkOverridePrintingType1' );
+				openprint::service::delete_service_spec( $$project{'id'}, $printing_service_index, 'OverridePrintingType1' );
 			} # end if
 			if ( $specs{'ProjectType'} eq 'PresentationFolders' ) {
 				foreach my $spec ( 'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketRight','chkPocketCenter' ) {
@@ -1231,9 +1223,73 @@ sub calc {
 		$services = $project->services();
 
 		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Proofs' ) if ! $$services{'Proofs'};
+$openprint::log->debug("Proofs: $specs{'proof_type'}");
+		if ( exists $specs{'proof_type'} ) {
+			my $proof_specs = openprint::service::get_specs_ref( $project, $$services{'Proofs'}[0] );
+			my %proof_indexes;
+			foreach my $signature_service_index ( $project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $project, $signature_service_index );
+				my $signature_index = $$sig_specs{'SignatureIndex'};
+				foreach my $key ( keys %{$proof_specs} ) {
+					if ( $key =~ /^txtProofIndex-$signature_index-(\d*)-1$/ ) {
+						push @{$proof_indexes{$signature_index}}, $1;
+					} # end if
+				} # end foreach keys
+
+				if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
+					push @{$proof_indexes{$signature_index}}, 1;
+					openprint::Estimating::Proofs::insert_layout_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 1, 1, $proof_specs );
+				} # end if
+				if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
+					push @{$proof_indexes{$signature_index}}, 2;
+					openprint::Estimating::Proofs::insert_colour_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 2, 1, $proof_specs );
+				} # end if
+$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
+				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
+$openprint::log->debug("Adding press proof");
+					push @{$proof_indexes{$signature_index}}, 3;
+					openprint::Estimating::Proofs::insert_press_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 3, 1, $proof_specs );
+				} # end if
+				my $proof_index = 0;
+				if ( $specs{'proof_type'} ) {
+					foreach ( @{$proof_indexes{$signature_index}} ) {
+$openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature_index-$_-1"} . ' for ' . $specs{'proof_type'} );
+						if ( $$proof_specs{"ddmProofType-$signature_index-$_-1"} eq $specs{'proof_type'} ) {
+							$proof_index = $_;
+							last;
+						} # end if
+					} # end foreach proof_index
+					if ( ! $proof_index ) {
+						$proof_index = sets::max( $proof_indexes{$signature_index} ) + 1;
+	$openprint::log->debug("Adding proof $proof_index");
+						foreach my $qty_index ( $project->quantity_indexes() ) {
+							#$$proof_specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} = 1;
+							#$$proof_specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} = $specs{'proof_type'};
+							#$$proof_specs{"txtProofIndex-$signature_index-$proof_index-$qty_index"} = $proof_index;
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofQuantity-$signature_index-$proof_index-$qty_index", 1);
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofWidth-$signature_index-$proof_index-$qty_index", '' );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofHeight-$signature_index-$proof_index-$qty_index", '' );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "ddmProofType-$signature_index-$proof_index-$qty_index", $specs{'proof_type'} );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofIndex-$signature_index-$proof_index-$qty_index", $proof_index );
+						} # end foreach qty_index
+					} # end if ! $proof_index
+				} # end if $specs{'proof_type'}
+
+				foreach ( @{$proof_indexes{$signature_index}} ) {
+					if ( ( $_ > 3 ) and ( $_ != $proof_index ) ) {
+						foreach my $qty_index ( $project->quantity_indexes() ) {
+
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "ddmProofType-$signature_index-$_-$qty_index", '' );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofQuantity-$signature_index-$_-$qty_index", 0 );
+						} # end foreach qty_index
+					} # end if
+				} # end foreach proof_index
+			} # end foreach signature
+
+		} # end if
 
 		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
-$openprint::log->error('Adding Folding');
+			$openprint::log->error('Adding Folding');
 			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {
 				$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';

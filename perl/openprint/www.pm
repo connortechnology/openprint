@@ -61,7 +61,7 @@ sub handler {
 	$log	= $r->log;
 
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
-	foreach my $key ( sets::union( $r->param ) ) {
+	foreach my $key ( sort sets::union( $r->param ) ) {
 		my @values = $r->param($key);
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
@@ -85,7 +85,8 @@ sub handler {
 	openprint::session_init();
 
 	foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
-		eval "openprint::$o::init_cache();";
+		eval sprintf('openprint::%s::init_cache();', $o );
+		$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
 	} # end foreach
 	#openprint::usergroup::init_cache();
 	#openprint::Material::init_cache();
@@ -118,7 +119,7 @@ $openprint::log->debug("Page: $page");
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
-		if ( ! $variable{'PageContent'} ) {
+		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
 			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
 				$content = misc::load_file( $log, $_ );
@@ -150,12 +151,13 @@ $openprint::log->debug("Page: $page");
 			} # end while
 		} # end if _
 		if ( $template ) {
-			$log->debug("parsing template!");
+			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			$log->warn("No template!" . $r->content_type());
-			$log->warn($variable{'PageContent'});
-			$r->print( ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) );
+			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable );
+			$log->warn($_);
+			$r->print( $_ );
 		} # end if
 	} # end if
 
@@ -171,7 +173,7 @@ $openprint::log->debug("Page: $page");
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();
-	openprint::pricing::clear_cache( );
+	openprint::pricing::clear_cache();
 	openprint::Object::init_cache();
 	return Apache2::Const::OK;
 } # end sub handler
@@ -369,12 +371,12 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				# Things like UPS SHipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
-				my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
-				@variable{keys %$specs} = @$specs{keys %$specs};
+					my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+					@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
-$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+#$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
 if ( ! $variable{'ServiceIndex'} ) {
-$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
+#$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
 $variable{'ServiceIndex'} = $service_index;
 } # end if
 
@@ -387,7 +389,16 @@ $variable{'ServiceIndex'} = $service_index;
 					} elsif ( $filename eq 'multipage_signatures.html' ) {
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} elsif ( $filename eq 'prin_multi.html' ) {
-						$status = openprint::print::publication_pages( $r, $log, $dbh, $session{_session_id}, \%variable );
+						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
+					} elsif ( $filename eq 'ScratchPads.html' ) {
+						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
+					} elsif ( $filename =~ /^_.*\.html$/ ) {
+			eval( 'require openprint::'.join('_', @path ) );
+$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} else {
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} # end if
@@ -471,6 +482,7 @@ $openprint::log->debug("$1");
 			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
 			} # end if
 		} # end if main:$second
+
 	} else {
 		
 		my $module = 'openprint::' . $first;

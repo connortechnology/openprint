@@ -1,27 +1,27 @@
-<? if ( $openprint::param{'btnFunction'} eq 'Send' ) ?>
-<? eval (
-    my @body = ('', "
-	<fieldset><legend>Bug Report</legend>
-	<p><label>Server:</label>$openprint::param{'server'}</p>
-	<p><label>When:</label> $openprint::param{'when'}</p>
-	<p><label>Name:</label> $openprint::param{'user'}</p>
-	<p><label>Company:</label> $openprint::param{'company'}</p>
-	<p><label>Comment:</label> $openprint::param{'comment'}</p>
-	</fieldset>
-", 'text/html', 'quoted-printable');
+<? if ( $param{'btnFunction'} eq 'Send' ) ?>
+	<? eval (
+		my @body = ('', "
+			<fieldset><legend>Bug Report</legend>
+				<p><label>Server:</label>$param{'server'}</p>
+				<p><label>When:</label> $param{'when'}</p>
+				<p><label>Name:</label> $param{'user'}</p>
+				<p><label>Company:</label> $param{'company'}</p>
+				<p><label>Comment:</label> $param{'comment'}</p>
+			</fieldset>
+		", 'text/html', 'quoted-printable');
 
-    my %mail = (
-        SMTP   => $openprint::config{'Mail Server'},
-        FROM   => sprintf('"%s %s" <%s>', new openprint::User( $openprint::session{user_id} )->get('firstname','lastname','email') ),
-        TO     => 'iconnor@connortechnology.com',
-        SUBJECT => "Bug Report",
-);
-    misc::send_email_with_attachment( $log, \%mail, @body );
+		my %mail = (
+			SMTP   => $config{'Mail Server'},
+			FROM   => sprintf('"%s %s" <%s>', new openprint::User( $session{user_id} )->get('firstname','lastname','email') ),
+			TO     => 'iconnor@connortechnology.com',
+			SUBJECT => "Bug Report",
+	);
+		misc::send_email_with_attachment( $log, \%mail, @body );
 
-) ?>
-	Bug Report sent.<br/>
+	) ?>
+		Bug Report sent.<br/>
 		<? echo ( ssi::writeButton( $log, $dbh, 'Close', 'close.gif', 'contentWin.destroy();', '', 'Close' ); ) ?>
-<? else ( $openprint::param{'btnFunction'} eq 'Send' ) ?>
+<? else ( $param{'btnFunction'} eq 'Send' ) ?>
 <div id="BugReport">
 <form name="bug_report">
 	<fieldset><legend>Bug Report</legend>
@@ -35,17 +35,19 @@
 	</p>
 	<p>
 		<label>Name:</label>
-		<input type="text" name="user" value="<? echo ( join(' ', new openprint::User( $openprint::session{user_id} )->get( 'firstname','lastname' ) ); ) ?>" />
+		<input type="text" name="user" value="<? echo ( join(' ', new openprint::User( $session{user_id} )->get( 'firstname','lastname' ) ); ) ?>" />
 	</p>
 	<p>
 		<label>Company:</label>
-		<input type="text" name="company" value="<? echo ( new openprint::Company( $openprint::session{company_id} )->name(); ) ?>" />
+		<input type="text" name="company" value="<? echo ( new openprint::Company( $session{company_id} )->name(); ) ?>" />
 	</p>
 	<p>
 		<label>Description:</label>
-	
-		<textarea name="comment" rows="10" wrap="virtual">
-<? if ( $openprint::session{'project_id'} ) ?> Current Project ID: <? echo ( $openprint::session{'project_id'} ) ?> <? endif ( $openprint::session{'project_id'} ) ?>
+<textarea name="comment" rows="10" wrap="virtual">
+<? if ( $session{'project_id'} ) ?>
+Current Project ID: <? echo ( $session{'project_id'} ) ?>
+<? echo ( new openprint::Project( $session{'project_id'} )->summary(); ) ?>
+<? endif ( $session{'project_id'} ) ?>
 </textarea>
 	</p>
 	<p class="buttons">
@@ -55,4 +57,4 @@
 	<input type="hidden" name="btnFunction" value="Send"/>
 </form>
 </div>
-<? endif ( $openprint::param{'btnFunction'} eq 'Send' ) ?>
+<? endif ( $param{'btnFunction'} eq 'Send' ) ?>

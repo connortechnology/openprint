@@ -1,0 +1,17 @@
+<script type="text/javascript">
+	var options = new Array();
+
+<? echo (
+	my $html = '';
+	foreach my $ProjectType ( openprint::ProjectType::find('strid'=>$$variable{'ProjectTypeID'}) ) {
+		my %types = map { $_->type(), 1 } $ProjectType->Templates();
+		foreach my $type ( keys %types ) {
+			$html .= "options['$type'] = new Array();\n";
+		} # end foreach
+		foreach my $Template ( $ProjectType->Templates() ) {
+		$html .= sprintf("options['\%1\$s'][options['\%1\$s'].length] = new Option ('\%3\$sx\%4\$s,\%5\$sx\%6\$s','\%2\$s');\n", $Template->get('type','description'), map { 1*$_} $Template->get('finished_width','finished_height','flat_width','flat_height') );
+		} # end foreach Template
+	} # end foreach ProjectType
+	return $html;
+) ?>
+</script>

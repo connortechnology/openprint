@@ -1,14 +1,21 @@
 package openprint::ServiceCategory;
 @ISA = qw( openprint::Object );
+use openprint ();
 require openprint::Service;
 
-use vars qw( %config $log $dbh );
-*config = \%openprint::config;
+use vars qw($log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+$table = 'Service_Categories';
+$serial = 'Service_Categories_id_seq';
 
-my @fields = (
-	'name',
+%fields = (
+	'id','id',
+	'name','name',
+);
+%transforms = (
+);
+%defaults = (
 );
 
 sub find {
@@ -29,42 +36,6 @@ sub find {
 	} # end if
 	return map { new openprint::ServiceCategory( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT id, name FROM Service_Categories WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{'id','name'} = @$data{qw/id name/};
-} # end sub load
-
-sub save {
-	my $self = shift;
-
-	my @sql = map { $_, $$self{$_} } @fields;
-
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! $$self{'id'} ) {
-		if ( ! ( @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Service_Categories_id_seq')} ) ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return 'Error allocating new Service Category';
-		} # end if
-		$sql{'id'} = $$self{'id'};
-
-		if ( $_ = sql::insert( undef, undef, 'Service_Categories', \@sql ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return "Error inserting Service Category $$self{'name'} : $_<br>";
-		} # end if
-	} else {
-		if ( $_ = sql::update( undef, undef, 'Service_Categories', ['id=?', $$self{'id'}], \@sql ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return "Error updating Service Category $$self{'name'} : $_<br>";
-		} # end if
-	} # end if
-	sql::end_transaction( $dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
 
 sub Services {
 	my $self = shift;

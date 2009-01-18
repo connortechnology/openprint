@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<title><?PageTitle?></title>	
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/employee.css" rel="stylesheet" type="text/css"/>
+		<script type="text/javascript" src="/javascripts/buttons.js"></script>
+		<script type="text/javascript" src="/javascripts/popups.js"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
+        <script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
+        <!-- calendar stylesheet -->
+        <link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
+        <script type="text/javascript" src="/javascripts/jscalendar/calendar.js"></script>
+        <script type="text/javascript" src="/javascripts/jscalendar/lang/calendar-en.js"></script>
+        <script type="text/javascript" src="/javascripts/jscalendar/calendar-setup.js"></script>
+		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
+		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
+
+		<link rel="shortcut icon" href="/images/favicon.ico"/>
+	</head>
+	<body>
+		<div class="Header">
+			<a style="float: left;" href="/employee/index.html"><img id="Logo" src="/images/logo.png" alt="West Star Printing"/></a>
+			<? if ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
+			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
+			<? endif ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
+			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
+			<br class="spacer"/>
+		</div>
+		<div class="GrayGradient"><img src="/images/gray-gradient.gif" alt=""/></div>
+		<? echo ( ssi::include( $config{'SkinPath'} . '/includes/employee_menu.html', $variable ); ) ?>
+		<div class="Content"> 
+		<div class="ContentInner"> 
+			<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+			<br/>
+		</div><!--ContentInner-->
+		</div><!--Content-->
+	</body>
+</html>

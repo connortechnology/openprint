@@ -481,7 +481,7 @@ $openprint::log->debug("Making order from quote");
 		} # end while
 		if ( @errors ) {
 			$$variable{'error'} = join('<br/>', @errors );
-			$openprint::log->error( "Order Error: $$variable{'error'}" );
+			#$openprint::log->error( "Order Error: $$variable{'error'}" );
 		} # end if
 	} # end if
 
@@ -804,7 +804,7 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 	get_invoice_to( $log, $dbh, $variable, $order_id );
 	$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'txtCity','txtStateProvince','txtCountry'} );
 
-	if ( $openprint::session{'user_type'} eq 'A' or $openprint::session{'user_type'} eq 'E' ) {
+	if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 		$$variable{'AdministratorName'} = new openprint::User( $openprint::session{'user_id'} )->name();
 	} # end if
 
@@ -1159,7 +1159,11 @@ sub send_sales_order {
 
 	my @admin_emails = split( ',', $openprint::config{'OrderingEmail'} );
 	@admin_emails = map { lc; misc::trim($_) } @admin_emails;
-	@admin_emails = sets::union( @admin_emails, $sales_person_email );
+
+	my @accounting_emails = split( ',', $openprint::config{'AccountingEmail'} );
+	@accounting_emails = map { lc; misc::trim($_) } @accounting_emails;
+
+	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
 
 	if ( @admin_emails ) {
 		my %mail = (
@@ -1227,7 +1231,8 @@ sub history_details {
 		my $Payment = new openprint::Payment();
 		my $error .= $Payment->save( {
 				'order_id'		=> $order_id,
-				'company_id'	=> $Order->company_id(),
+				'payor_id'		=> $Order->company_id(),
+				'recipient_id'	=> new openprint::User( $openprint::session{'user_id'} )->company_id(),
 				'amount'		=> $openprint::param{'Amount'},
 				'method'		=> 'Manual',
 				'currency_id'	=> $Order->currency_id(),

@@ -39,7 +39,7 @@ sub projects {
 
 	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
 		my @header = ('Docket #', 'Project Reference','Company Name', 'Creation Date','Status');
-		$_ = "SELECT lngProjectIndex, SUBSTR(strProjectReference,0,50),\n".
+		$_ = "SELECT Index, SUBSTR(strProjectReference,0,50),\n".
 				"(SELECT Name FROM Companies WHERE id = tbl_Projects.CompanyIndex),\n".
 				"to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus\n".
 				"FROM tbl_Projects ".
@@ -48,7 +48,7 @@ sub projects {
 		$_ .= "AND strStatus = '".$r->param('ddmStatus')."' \n" if $r->param('ddmStatus');
 		$_ .= "AND CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
 		$_ .= "AND CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesperson='".$r->param('ddmEmployees')."')\n" if $r->param('ddmEmployees') ne '';
-		$_ .= "ORDER BY lngProjectIndex";
+		$_ .= "ORDER BY Index";
 
 		my @data = sql::execute( $log, $dbh, $_ );
 		misc::export_csv( $r, $log, $variable, 'project_report.csv', \@header, \@data );
@@ -496,6 +496,9 @@ sub order_details {
 		$Order->save();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Cancel' ) {
 		openprint::order::cancel_order( $log, $dbh, $order_id );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
+		$Order->company_id( $openprint::param{'company_id'} );
+		$$variable{'error'} .= $Order->save();
     } # end if
 	$$variable{'Order'} = $Order;
     openprint::order::display_order( $log, $dbh, $variable, $order_id );

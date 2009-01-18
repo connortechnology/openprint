@@ -1,21 +1,27 @@
 var timeout;
 
 function body_onLoad() {
-	if ( typeof(calc) == 'function' )
+	if ( typeof(selectProjectTemplate) == 'function' ) {
+		selectProjectTemplate( 'f1' );
+	} else if ( typeof(calc) == 'function' ) {
 		calc('f1');
+	} // end if
 }
 
-function calc( formName ) {
+function calc( formName, force ) {
 	var form = getFormObj( formName );
 	if ( form && form.ServiceType ) {
-		if ( gettingNewPrice ) {
+		if ( gettingNewPrice && ! force ) {
 			if ( timeout )
 				clearTimeout( timeout );
 			timeout = setTimeout( "calc('" + formName + "');", 1000 );
 		} else {
 			timeout = null;
 			remove_div('AlertDiv');
-			remove_div('InformationDiv');
+			var div = $('InformationDiv');
+			if ( div ) {
+				div.innerHTML = 'Calculating';
+			} // end if
 			gettingNewPrice = true;
 			jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
 		} // end if

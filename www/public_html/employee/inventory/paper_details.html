@@ -224,25 +224,15 @@ The following errors occurred:<br/>
 		<div style="float: right; width: 48%;">
 			<p>
 				<label>Entered:</label>
-				<? echo ( $$variable{'Paper'}->created_on(); ) ?>
+				<? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paper'}->created_on() ) ); ) ?>
 			</p>
 			<p>
 				<label>In Stock:</label>
-				<span style="float: right;">
-				<? echo (
-						my $html;
-						$html .= ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' );
-						$html .= ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' );
-						return $html;
-						) ?>
-				</span>
-				<? echo ( $$variable{'Paper'}->in_stock(); ) ?>
-				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
+				<? echo ( $$variable{'Paper'}->in_stock() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' );  ) ?>
 			</p>
 			<p>
 				<label>Allocated:</label>
-				<? echo ( int $$variable{'Paper'}->allocated(); ) ?>
-				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
+				<? echo ( int $$variable{'Paper'}->allocated() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ); ) ?>
 			</p>
 			<p>
 				<label>Unallocated:</label>
@@ -259,6 +249,8 @@ The following errors occurred:<br/>
 			<? echo (
 					if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
 						return join('',
+							ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' ),
+							ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' ),
 							ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
 							ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
 							ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset()', '', 'Reset' ),
@@ -301,20 +293,19 @@ The following errors occurred:<br/>
 
 </form>
 <? if ( $$variable{'paper_id'} ) ?>
-	<fieldset><legend onclick="toggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory - click to hide/show</legend>
+	<fieldset><legend onclick="AjaxToggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory - click to hide/show</legend>
 	<div id="CurrentInventory">
 	<!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
 	</div>
 	</fieldset>
-<div>
-	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
+	<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
 	<div id="Allocations">
 	<!--#include virtual="/employee/inventory/_paper_allocations.html" -->
 	</div>
 	</fieldset>
-</div>
-<br class="spacer"/>
-<fieldset class="filters"><legend onclick="toggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log - click to hide/show</legend>
-<div id="Log" style="display: none;"> </div>
-</fieldset>
+	<fieldset class="filters"><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log - click to hide/show</legend>
+	<div id="Log"> 
+		<!--#include virtual="/employee/inventory/_paper_log.html" -->
+	</div>
+	</fieldset>
 <? endif ( $$variable{'paper_id'} ) ?>

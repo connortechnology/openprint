@@ -18,14 +18,14 @@
 		<td colspan="1">Assigned To:</td>
 		<td colspan="4">
 <? if ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
-<select id="issued_to_id" name="issued_to_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->issued_to_id() ); ) ?></select>
+<select id="issued_to_id" name="issued_to_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'CAR'}->issued_to_id() ); ) ?></select>
 <? else ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <? echo ( $$variable{'CAR'}->issued_to()->name() ) ?>
 <? endif ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 
 		</td>
 		<td colspan="1">Issued By:</td>
-		<td colspan="4"><select name="issued_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'CAR'}->issued_by_id() ? $$variable{'CAR'}->issued_by_id() : $openprint::session{'user_id'} ); ) ?></select></td>
+		<td colspan="4"><select name="issued_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'CAR'}->issued_by_id() ? $$variable{'CAR'}->issued_by_id() : $openprint::session{'user_id'} ); ) ?></select></td>
 	</tr>
 	<tr>
 		<td colspan="1">Issue Date:</td>
@@ -192,7 +192,7 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 	<tr>
 		<td colspan="2">Approved by:</td>
 		<td colspan="3">
-			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'usergroup'=>'Reprint Approvals','order'=>'lower(strfirstname),lower(strlastname)') ], $openprint::session{'user_id'} ); ) ?></select>
+			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'usergroup'=>'Reprint Approvals','order'=>'lower(firstname),lower(lastname)') ], $openprint::session{'user_id'} ); ) ?></select>
 		</td>
 		<td colspan="1">Approved on:</td>
 		<td colspan="4">

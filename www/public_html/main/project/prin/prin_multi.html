@@ -1,14 +1,17 @@
-<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/service.js?version=1.1"></script>
 <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.2"></script>
-<script type="text/javascript" src="/javascripts/printing.js?version=1.2"></script>
+<script type="text/javascript" src="/javascripts/printing.js?version=1.4"></script>
 <script type="text/javascript">
 	function calc( formName ) {
 		var form = getFormObj( formName );
 		if ( gettingNewPrice ) {
+			if ( timeout ) {
+				clearTimeout( timeout );
+			} // end if
 			setTimeout( "calc('"+formName+"');", 1000 );
 			return;
 		} // end if
-
+		timeout = null;
 		gettingNewPrice = true;
 		jsrsExecute( '/jsrs.htm', cbBookResults, 'openprint::service::external_calc', get_variables(formName,'Multipage') );
 	}
@@ -20,7 +23,33 @@
 		} else {
 			$('SignatureGroup1').show();
 		} // end if
+		var Groups = form.groups.value.split(',');
+		for ( var i = 0; i < Groups.length; i += 1 ) {
+			var group_id = Groups[i];
+			if ( ! group_id ) {
+				next;
+			} // end if
+			if ( ! $('SignatureGroup'+group_id) ) {
+				new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { method: 'get', 
+						parameters: { 
+							'project_id' : form.ProjectIndex.value,
+							'group_id' : group_id, },
+						onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+group_id)){calc(form.name);}}
+						//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+					 } );
+			} // end if Group exists
+		} // end for each group
+
+if ( 0 ) {
+		if ( ( form.remaining_pages.value > 0 ) && ! $('SignatureGroup'+form.next_group_id.value) ) {
+			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { method: 'get', 
+					parameters: { 'next_group_id' : form.next_group_id.value, },
+					onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+form.next_group_id.value)){calc(form.name);}}
+					//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+				 } );
+		} // end if
 	} // end function cbBookResults
+} 
 
 	function validate_data(formName) {
 		var form = getFormObj(formName);
@@ -35,23 +64,21 @@
 
 		return 1;
 	} // end function
-
-	<?TemplateSizes?>
 </script>
-<script type="text/javascript" src="/javascripts/templates/brochures.js?version=1.0"></script>
+<!--#include virtual="/main/project/prin/_templates.html"-->
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<input type="hidden" name="groups" />
 		<fieldset><legend><?ProjectTypeName?></legend>
 			<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
 			<!--#include virtual="/includes/main/proj/dimensions.html" -->
-<div id="OtherSpecifications">
-<fieldset><legend>Other Specifications</legend>
-		<!--#include virtual="/includes/main/proj/multipage_printing_type.html"-->
-		<!--#include virtual="/includes/main/proj/screen_type.html"-->
-</fieldset>
-</div>
+			<div id="OtherSpecifications">
+				<fieldset><legend>Other Specifications</legend>
+					<!--#include virtual="/includes/main/proj/multipage_printing_type.html"-->
+					<!--#include virtual="/includes/main/proj/screen_type.html"-->
+				</fieldset>
+			</div>
 			<br class="spacer"/>
 			<fieldset><legend>Book Specifications</legend>
 				<div id="PagesCover">
@@ -70,27 +97,28 @@
 				<div id="GateInsert">
 				<p>
 					<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages:</label>
-					<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="4"  onkeyup="calc(this.form.name);" />
+					<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="4" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
 				</p>
 				<p>
 					<label>Supplied Inserts:</label>
-					<input name="txtInsertQuantity" size="4" value="<?txtInsertQuantity?>"/>
+					<input name="txtInsertQuantity" size="4" value="<?txtInsertQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				</p>
 			<? if ( openprint::ServiceType::find('name'=>'Tipping') ) ?>
 				<p>
 					<label># of tip-ins:</label>
-					<input name="TippingQuantity" size="4" value="<?TippingQuantity?>"/>
+					<input name="TippingQuantity" size="4" value="<?TippingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				</p>
 			<? endif ( openprint::ServiceType::find('name'=>'Tipping') ) ?>
 			<? if ( openprint::ServiceType::find('name'=>'Blowing') ) ?>
 				<p>
 					<label># of blow-ins:</label>
-					<input name="BlowingQuantity" size="4" value="<?BlowingQuantity?>"/>
+					<input name="BlowingQuantity" size="4" value="<?BlowingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				</p>
 			<? endif ( openprint::ServiceType::find('name'=>'Blowing') ) ?>
 				</div>
 			</fieldset>
 			<br class="spacer"/>
+			<div id="SignatureGroups">
 			<? echo (
 				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
 				if ( ! sets::isin( 1, \@Groups ) ) {
@@ -108,6 +136,7 @@
 					$$variable{'txtServiceDescription1'} = 'Cover Pages';
 					$$variable{'txtSignatureType1'} = 'Cover Pages';
 				} # end if
+					$$variable{'txtSignatureType1'} = 'Cover Pages';
 				if ( ! sets::isin( 2, \@Groups ) ) {
 					# Ensure 1 interior pages
 					push @Groups, 2;
@@ -132,6 +161,7 @@
 				} # end foreach
 				return $html;
 			) ?>
+			</div>
 		</fieldset>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
@@ -144,8 +174,7 @@
 		<input type="hidden" name="NewBook" value="Y"/>
 		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>"/>
 		<input type="hidden" name="ServiceType" value="Multipage"/>
+		<input type="hidden" name="remaining_pages" />
+		<input type="hidden" name="next_group_id" />
 	</form>
 </div><!--Service-->
-<script type="text/javascript">
-selectProjectTemplate( 'f1' );
-</script>

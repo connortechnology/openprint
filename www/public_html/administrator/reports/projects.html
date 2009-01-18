@@ -1,16 +1,3 @@
-<script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f1.ddmStartYear.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);
-            setDaysDropDown(document.f1.ddmEndYear.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-
-</script>
-<br/>
 <form name="f1" method="post" action="projects.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
@@ -20,7 +7,7 @@
 		</p>
 		<p>
 			<label>Company:</label>
-			<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomers);" size="4" />
+			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4" />
 			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();" >
 				<option value=""> Select a Customer</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(strname)')], $openprint::param{'ddmCustomers'} ); ) ?>
@@ -28,7 +15,7 @@
 		</p>
 		<p>
 			<label>Estimator:</label>
-			<select  name="ddmEstimator" size="1"> 
+			<select name="ddmEstimator" size="1"> 
 				<option value="">All Estimators</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'web_active'=>'Y', 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ], $$variable{'ddmEstimator'} ); ) ?>
 			</select>
@@ -63,7 +50,7 @@
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='reports_orders.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
+				ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='projects.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
 ); ) ?>
 		</p>

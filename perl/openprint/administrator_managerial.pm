@@ -128,13 +128,13 @@ sub user_profiles {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		$User->delete();
 		$User = $User->Next( 'type'=>$openprint::param{'ddmUserRole'}, 'company_id'=>$openprint::param{'ddmCustomer'} );
-        $$variable{'information'} = "Record deleted.";
+        $$variable{'information'} = 'User marked deleted.';
+	} elsif ( $openprint::param{'btnFunction'} eq 'Destroy' ) {
+		$User->destroy();
+		$User = $User->Next( 'type'=>$openprint::param{'ddmUserRole'}, 'company_id'=>$openprint::param{'ddmCustomer'} );
+        $$variable{'information'} = 'Record deleted.';
 
 	} elsif ($openprint::param{'btnFunction'} eq 'Save') {
-		if ( $openprint::param{'password'} eq '' ) {
-			return misc::error( $log, $dbh, $variable, "Empty Password.", 'We insist on a non-empty password.');
-		} # end if
-
 		if ( $openprint::param{'password'} ne $openprint::param{'verifypassword'} ) {
 			return misc::error( $log, $dbh, $variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
@@ -146,6 +146,7 @@ sub user_profiles {
 
 		#$openprint::param{'assistant_ids'} = '' if ! exists $openprint::param{'assistant_ids'};
 		#$openprint::param{'csr_ids'} = '' if ! exists $openprint::param{'csr_ids'};
+		delete $openprint::param{'password'} if ! $openprint::param{'password'};
 		my $error = $User->save( \%openprint::param );
 
 		if ( $error ) {
@@ -174,20 +175,20 @@ sub user_profiles {
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
-		sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $user_id );
+		sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
 
 		# add them back in 
 		my $sth = $dbh->prepare( q{INSERT INTO Users_in_Marketing_Categories (category_id,user_id) VALUES ( ?, ? )} );
 		foreach my $cat ( ref $openprint::param{'selectUserCategories'} eq 'ARRAY' ? @{$openprint::param{'selectUserCategories'}} : $openprint::param{'selectUserCategories'} ) {
 			if ( sets::isin( $cat, \@categories ) ) {
-				$sth->execute( $cat, $user_id ) or $log->error( DBI->errstr );
+				$sth->execute( $cat, $User->id() ) or $log->error( DBI->errstr );
 			} # end if
 		} # end foreach
 
-		sql::execute( $log, $dbh, q{DELETE FROM Users_in_UserGroups WHERE User_Id=?}, $user_id );
+		sql::execute( $log, $dbh, q{DELETE FROM Users_in_UserGroups WHERE User_Id=?}, $User->id() );
 		if ( $openprint::param{'UserGroups'} ) {
 			foreach my $group_id ( ref $openprint::param{'UserGroups'} eq 'ARRAY' ? @{$openprint::param{'UserGroups'}} : $openprint::param{'UserGroups'} ) {
-				sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $user_id ] );
+				sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $User->id() ] );
 			} # end foreach
 		} # end if
 

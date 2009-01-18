@@ -31,7 +31,7 @@ require sql;
 	'completed'			=>	'completed',
 	'received_on'		=>	'date',
 	'remaining'			=>	'remaining',
-	
+	'deleted'			=>	'deleted',
 );
 
 %transforms = (
@@ -41,6 +41,7 @@ require sql;
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 	'completed'		=>	0,
+	'deleted'		=>	0,
 );
 
 sub find {

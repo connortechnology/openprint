@@ -37,13 +37,13 @@
 		<label for="rdbTemplateType12pg3PanelRollFold">Half + 3 Panel Roll</label>
 	</span>
 <? endif ( $$variable{'Templates'}{'12pg3PanelRollFold'} ) ?>
-<? if ( $$variable{'Templates'}{'8PageSignatureFold'} ) ?>
+<? if ( $$variable{'Templates'}{'8PageFold'} ) ?>
     <span class="templateOption">
-		<img src="/images/templates/8PageSignatureFold.gif" alt=""/>
-		<input type="radio" id="rdbTemplateType8PageSignatureFold" name="rdbTemplateType" value="8PageSignatureFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '8PageSignatureFold' ) ?> /> 
-		<label for="rdbTemplateType8PageSignatureFold">8 Page Fold</label>
+		<img src="/images/templates/8PageFold.gif" alt=""/>
+		<input type="radio" id="rdbTemplateType8PageFold" name="rdbTemplateType" value="8PageFold" onclick="selectProjectTemplate(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '8PageFold' ) ?> /> 
+		<label for="rdbTemplateType8PageFold">8 Page Fold</label>
 	</span>
-<? endif ( $$variable{'Templates'}{'8PageSignatureFold'} ) ?>
+<? endif ( $$variable{'Templates'}{'8PageFold'} ) ?>
     <span class="templateOption">
 		<img src="/images/templates//4PanelFolds.gif" alt=""/>
 		<input type="radio" id="rdbTemplateType4PanelFold" name="rdbTemplateType" value="4PanelFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '4PanelFold' ) ?> /> 

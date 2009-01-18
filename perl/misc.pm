@@ -137,7 +137,7 @@ sub export {
 	$r->content_type( "application/octet-stream; name=\"$filename\"" );
 	#$r->content_encoding( "binary" );
 	$$variable{'Download'} = $filename;
-	return @{$$variable{'File_Data'}} = @{$data};
+	return $$variable{'File_Data'} = $data;
 } # end sub export
 
 sub get_destination {

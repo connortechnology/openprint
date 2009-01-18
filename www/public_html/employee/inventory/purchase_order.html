@@ -1,6 +1,4 @@
-<script language="javascript" src="/javascripts/service.js"></script>
-<script language="javascript" src="paper.js"></script>
-<link href="purchase_order.css" rel="stylesheet" type="text/css">
+<link href="/css/purchase_order.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
 function save ( form ) {
 	var error = '';
@@ -31,183 +29,107 @@ function save ( form ) {
 	form.submit();
 }
 </script>
-<form name="f1" action="purchase_order.html" method="post">
+<form name="f1" action="purchase_order.html?po_id=<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" method="post">
 	<? if ( $$variable{'Error'} ) ?>
 	<div class="ErrorMessage">
 	<?Error?>
 	</div>
 	<? endif ( $$variable{'Error'} ) ?>
 	<div class="PO">
-		<h1>Purchase Order</h1>
-
+		<div class="PageTitle">
+		<h1>PURCHASE ORDER</h1>
+		</div>
+		<fieldset>
+		<div class="leftColumn">
+		<p>
+			<label>VENDOR</label>
+		</p>
+		</div>
+		<div class="rightColumn">
+			<p>
+				<label>SHIP TO</label>
+				Shipping &amp; Receiving<br/>
+				<? echo ( 
+					my $Company = new openprint::User( $openprint::session{'user_id'} )->Company();
+					return join('<br/>', $Company->get( 'name','address1'),
+						sprintf('%s %s, %s', $Company->get('city','state', 'postalcode')), $Company->phone() );
+				) ?>
+			</p>
+		</div>
+		</fieldset>
 		<table>
 			<tr>
-				<td>To:</td>
-				<td><input type="text" name="To" value="<?To?>"/></td>
-				<td>Date:</td>
-				<td><?Date?></td>
+				<th>Shipping Method</th>
+				<th>Shipping Terms</th>
+				<th>Delivery Date</th>
 			</tr>
 			<tr>
-				<td>Attn:</td>
-				<td><input type="text" name="Attn" value="<?Attn?>"/></td>
-				<td>Fax No.</td>
-				<td><input type="text" name="FaxNo" value="<?FaxNo?>"/></td>
+				<td></td>
+				<td></td>
+				<td><? echo ( ssi::date_select('delivered_on', $$variable{'PurchaseOrder'}->delivered_on() ); ) ?></td>
+			</tr>
+		</table>
+		<br/>
+		<table>
+			<tr>
+				<th>QTY</th>
+				<th>ITEM</th>
+				<th>DESCRIPTION</th>
+				<th>DOCKET</th>
+				<th>UNIT PRICE</th>
+				<th>LINE TOTAL</th>
+			</tr>
+			<? echo ( my $html = '';
+				foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
+				} # end foreach C
+				return $html;
+			) ?>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
 			</tr>
 			<tr>
-				<td>From:</td>
-				<td><input type="text" name="From" value="<?From?>"/></td>
-				<td>P.O. No.</td>
-				<td><input type="text" name="PONum" value="<?PONum?>"/></td>
+				<td colspan="5" class="totals">SUBTOTAL</td>
+				<td><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 			</tr>
-			<tr class="unprintable">
-				<td>Currency:</td>
-				<td><select name="Currency">
+			<tr>
+				<td colspan="5" class="totals">SALES TAX</td>
+				<td><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->tax() ); ) ?></td>
+			</tr>
+			<tr>
+				<td colspan="5" class="totals">TOTAL</td>
+				<td><? echo ( sprintf('%s%.2f', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->total() ); ) ?></td>
+			</tr>
+		</table>
+		<div class="leftColumn">
+	<ol>
+<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>
+<li> Please indicate this Purchase Order # in your invoice, packing slip / delivery note.</li>
+<li> Please notify us immediately if you are unable to ship as specified.</li>
+</ol>
+		</div>
+		<div class="rightColumn">
+			<br/><br/><hr/>
+			<div class="leftColumn"><i>Authorized by</i></div>
+			<div class="rightColumn"><i>Date</i></div>
+		</div>
+			
+				
+
+				Currency:
+				<select name="Currency">
 					<option value=""> select one </option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'CurrencyIndex'} ); ) ?>
 				</select>
-				</td>
-			</tr>
-		</table>
-		<br/>
-		<div>
-			<table class="List">
-				<tr>
-					<th class="Actions">Actions</th>
-					<th class="Amount">Amount</th>
-					<th class="Qty"># Sheets</th>
-					<th class="Price">PER M Price</th>
-					<th class="Price">CWT</th>
-					<th class="Size">Size</th>
-					<th class="Weight">Weight</th>
-					<th class="Finish">Finish</th>
-					<th class="Name">Paper Name<span class="unprintable"><br/>click to load</span></th>
-				</tr>
-			<? while ( @$variable{'Index','Description','Brand','Finish','Weight','Size','CWT','Price','Qty','Amount'} = splice @{$$variable{'Contents'}},0,10; ) ?>
-			<tr>
-				<td class="Actions">
-				<? echo ( ssi::writeButton( $log, $dbh, 'Delete'.$$variable{'Index'}, 'delete.gif', "", '/employee/inventory/purchase_order.html?PaperPurchaseOrderIndex='.$$variable{'PaperPurchaseOrderIndex'}.'&amp;PaperIndex='.$$variable{'Index'}.'&amp;btnFunction=DeletePaper', 'Delete' ); ) ?>
-				</td>
-				<td class="Amount">&nbsp;<?CurrencySymbol?><?Amount?></td>
-				<td class="Qty">&nbsp;<?Qty?></td>
-				<td class="Price">&nbsp;<?CurrencySymbol?><?Price?></td>
-				<td class="Price">&nbsp;<?CurrencySymbol?><?CWT?></td>
-				<td class="Size">&nbsp;<?Size?></td>
-				<td class="Weight">&nbsp;<?Weight?></td>
-				<td class="Finish"><?Finish?>&nbsp;</td>
-				<td class="Name"><a href="#" onclick="loadPaper( 'f1', '<?PaperPurchaseOrderIndex?>','<?Index?>' ); return false;"><?Description?>&nbsp;</a></td>
-			</tr>
-			<? endwhile ( @$variable{'Index','Description','Brand','Finish','Weight','Size','CWT','Price','Qty','Amount'} = splice @{$$variable{'Contents'}},0,10; ) ?>
-<? if ( $$variable{'SubTotal'} ) ?>
-			<tr class="totals">
-				<td class="Amount">&nbsp;<?CurrencySymbol?><?SubTotal?></td>
-				<td class="Label">Sub-Total</td>
-			</tr>
-			<? if ( $$variable{'CurrencyName'} =~ /Canadian/ ) ?> 
-			<tr>
-				<td class="Amount">&nbsp;<?CurrencySymbol?><?GST?></td>
-				<td class="Label">G.S.T.</td>
-			</tr>
-			<? endif ( $$variable{'CurrencyName'} =~ /Canadian/ ) ?> 
-			<tr>
-				<td class="Amount">&nbsp;<?CurrencySymbol?><?Total?></td>
-				<td class="Label"><b>Total</b></td>
-			</tr>
-<? endif ( $$variable{'SubTotal'} ) ?>
-		</table>
-		</div>
-		<br/>
 		<br class="spacer"/>
 		<? if ( $$variable{'CurrencyName'} ) ?>
 		<div align="right">All prices listed in <?CurrencyName?>.</div>
 		<? endif ( $$variable{'CurrencyName'} ) ?>
 	</div><!--PO-->
-<? if ( $$variable{'Status'} eq 'Incomplete' ) ?>
-	<div class="AddNew">
-		<h3>Add/Edit Paper:</h3>
-		<p class="paper">
-			<label>Brand:</label>
-			<select name="PaperBrand" size="1" onchange="PaperBrand_onchange('<?id?>');">
-			<option value="<?PaperBrand?>"></option>
-			</select>
-		</p>
-		<p class="paper">
-			<label>Description:</label>
-			<input type="text" name="PaperDescription" value="<?PaperDescription?>"/>
-		</p>
-		<p class="paper">
-			<label>Finish:</label>
-				<select name="PaperFinish" size="1" onchange="PaperFinish_onchange('id');">
-				<option value="<?PaperFinish?>"></option>
-				</select>
-		</p>
-		<p class="paper">
-			<label>Colour:</label>
-				<select name="PaperColour" size="1" onchange="PaperColour_onchange('id');">
-				<option value="<?PaperColour?>"></option>
-				</select>
-		</p>
-		<p class="paper">
-			<label>Weight:</label>
-				<select name="PaperWeight" size="1" onchange="PaperWeight_onchange('id');">
-				<option value="<?PaperWeight?>"></option>
-				</select>
-		</p>
-		<p class="paper">
-			<label>Size:</label>
-				<select name="PaperSheetSize" size="1" onchange="PaperSheetSize_onchange('id');">
-				<option value="<?PaperSheetSize?>"></option>
-				</select>
-		</p>
-		<p class="paper">
-			<label># of Sheets:</label>
-			<input type="text" name="PaperQuantity" value="<?PaperQuantity?>"/>
-		</p>
-		<p class="paper">
-			<label>MWeight:</label>
-			<input type="text" name="PaperMWeight" value="<?PaperMWeight?>"/>
-		</p>
-		<p class="paper">
-			<label>Width:</label>
-			<input type="text" name="PaperWidth" value="<?PaperWidth?>"/>
-		</p>
-		<p class="paper">
-			<label>Height:</label>
-			<input type="text" name="PaperHeight" value="<?PaperHeight?>"/>
-		</p>
-		<p class="paper">
-			<label>Price Per 100lb:</label>
-			<input type="text" name="PaperPrice" value="<?PaperPrice?>"/>
-		</p>
-		<br class="spacer"/>
-		<br class="spacer"/>
-	</div><!--AddNew-->
-<? endif ( $$variable{'Status'} eq 'Incomplete' ) ?>
-<? if ( $$variable{'Status'} eq 'Sent' ) ?>
-	<p>
-		<label>Date Received:</label>
-		
-			<? eval ( $$variable{'days'} = ssi::getdays((localtime(time))[3]); ) ?>
-			<? eval ( $$variable{'months'} = ssi::getmonths((localtime(time))[4]+1); ) ?>
-			<? eval ( $$variable{'years'} = ssi::getyears((localtime(time))[5]+1900); ) ?>
-			<select name="ddmReceivedDateMonth" size="1"> <?months?> </select>
-			<select name="ddmReceivedDateDay" size="1"> <?days?> </select>
-			<select name="ddmReceivedDateYear" size="1"> <?years?> </select>
-	</p>
-	<p>
-		<label>Warehouse Location:</label>
-		<input type="text" name="WarehouseLocation" value="<?WarehouseLocation?>"/>
-	</p>
-<? endif ( $$variable{'Status'} eq 'Sent' ) ?>
-<? if ( $$variable{'Status'} eq 'Received' ) ?>
-	<p>
-		<label>Date Received:</label>
-		<?ReceivedDate?>
-	</p>
-	<p>
-		<label>Warehouse Location:</label>
-		<?WarehouseLocation?>
-	</p>
-<? endif ( $$variable{'Status'} eq 'Received' ) ?>
 	<br class="spacer"/>
 	<p class="buttons">
 <? echo ( 
@@ -223,6 +145,5 @@ if ( $$variable{'Status'} eq 'Incomplete' ) {
 } # end if
 ) ?>
 	</p>
-	<input type="hidden" name="PaperPurchaseOrderIndex" value="<?PaperPurchaseOrderIndex?>"/>
 	<input type="hidden" name="btnFunction"/>
 </form>

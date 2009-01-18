@@ -5,7 +5,9 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable %fields);
+use vars qw($log $dbh %variable %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
 
 
@@ -31,6 +33,23 @@ my $debug = 1;
 	'comment'		=>	'comment',
 	'skid_id'		=>	'skid_id',
 	'units'			=>	'units',
+	'docket'		=>	'docket',
+);
+%transforms = (
+	'paper_id'	=>	[ 's/\D//g' ],
+	'skid_id'	=>	[ 's/\D//g' ],
+	'user_id'	=>	[ 's/\D//g' ],
+	'instock'	=>	[ 's/\D//g' ],
+	'docket'	=>	[ 's/\D//g' ],
+	'delta'		=>	[ 's/[^\d\-]//g' ],
+);
+%defaults = (
+	'updated_on'	=>	'NOW()',
+	'docket'		=>	undef,
+);
+
+%defaults = (
+	'updated_on'	=>	'NOW()',
 );
 
 # Returns a paper object specified by the parameters
@@ -59,6 +78,14 @@ sub find {
 		push @values, $params{'paper_id'};
 		} else {
 		$sql .= ' AND paper_id IS NULL';
+		} # end if
+	} # end if
+	if ( exists $params{'docket'} ) {
+		if ( defined $params{'docket'} ) {
+			$sql .= ' AND docket=?';
+			push @values, $params{'docket'};
+		} else {
+			$sql .= ' AND docket IS NULL';
 		} # end if
 	} # end if
 	if ( exists $params{'comment_like'} ) {

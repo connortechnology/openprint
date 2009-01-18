@@ -1,11 +1,11 @@
-
-DROP TABLE Quote_Log;
+DROP TABLE IF EXISTS Quote_Log;
 
 CREATE TABLE Quote_Log (
+	id SERIAL NOT NULL,
 	quote_id	INTeger	NOT NULL, FOREIGN KEY(quote_Id) REFERENCES tbl_Quotes (index),
-	Company_id	INTeger	NOT NULL, FOREIGN KEY(company_id) REFERENCES Company (index),
-	User_id		INTeger	NOT NULL, FOREIGN KEY(user_id) REFERENCES Users (index),
-	dtmwhen		timestamp with time zone NOT NULL default(NOW()),
-	Description			TEXT,
-	PRIMARY KEY (quote_Id,dtmwhen)
+	company_id	INTeger	NOT NULL, FOREIGN KEY(company_id) REFERENCES Companies (id),
+	User_id		INTeger	NOT NULL, FOREIGN KEY(user_id) REFERENCES Users (id),
+	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	description 	TEXT,
+	PRIMARY KEY (id)
 );

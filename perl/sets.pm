@@ -108,20 +108,11 @@ sub exclude {
 } # end sub exclude
 
 sub max {
-	my $max = undef;
-	if ( @_ == 1 and ref $_[0] eq 'ARRAY' ) {
-		foreach ( @{$_[0]} ) {
-			if ( $_ > $max or ! defined $max ) {
-				$max = $_;
-			} # end if
-		} # end foreach
-	} else {
-		foreach ( @_ ) {
-			if ( $_ > $max or ! defined $max ) {
-				$max = $_;
-			} # end if
-		} # end foreach
-	} # end if
+	my $max;
+
+	foreach ( ( ( @_ == 1 ) and ( ref $_[0] eq 'ARRAY' ) ) ? @{$_[0]} : @_ ) {
+		$max = $_ if ( ! defined $max ) or  ($max < $_ );
+	} # end foreach
 	return $max;
 } # end sub max
 

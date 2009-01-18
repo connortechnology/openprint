@@ -21,16 +21,19 @@ my $debug = 1;
 	'manifest_id'	=>	'manifest_id',
 	'skid_id'		=>	'skid_id',
 	'quantity'		=>	'quantity',
+	'docket'		=>	'docket',
 );
 
 %transforms = (
 	'quantity'	=> [ 's/\D//g' ],
+	'docket'	=> [ 's/\D//g' ],
 	'cost'		=> [ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
 	'quantity'	=> 0,
 	'cost'		=> undef,
+	'docket'	=> undef,
 );
 
 # Returns a paper object specified by the parameters

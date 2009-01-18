@@ -1,0 +1,117 @@
+body {
+	background-color: #ffffff;
+	font-family: Arial, Helvetica, Sans-Serif; 
+	font-size: small;
+	padding: 5px;
+	margin: 0px;
+	max-width: 1024px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    table-layout: fixed;
+	border: none;
+}
+table.List {
+    border-bottom: 1px solid #000088;
+}
+table.List th {
+    border-bottom: 1px solid #000088;
+    background: transparent;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+table.List td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    vertical-align: top;
+}
+table.List tr.totals {
+    border-top: 1px solid #000088;
+}
+
+table.List input.text {
+    width: 100%;
+}
+
+
+.Title {
+	background-color: #353c91;
+	color: #ffffff;
+}
+.Title a {
+	color: #ffffff;
+}
+
+.title {
+	background-color: #e2e4f0;
+	color: #FFFFFF;
+}
+.small {font-family: Arial, Helvetica, Sans-Serif; font-size:11px;}
+a {
+	text-decoration: none;
+	border: none;
+	margin: 0px;
+	padding: 0px;
+}
+a:link { color: #000066; }
+a:active { color: #000066; }
+a:visited { color: #333399; }
+a:hover { color: #6666CC; }
+hr {
+	width: 100%;
+	margin: 1px;
+	padding: 0px;
+	height: 1px;
+	border: 0px;
+	color: #353c91;
+	background-color: #353c91;
+}
+
+.spacer {
+	clear: both;
+	height: 0px;
+}
+
+.colRow { background-color: #E3E4F0 }
+.colRowRed {
+    color: red;
+}/* alternating row color in generated tables */
+
+img {
+	border: none;
+	margin: 0px;
+	padding: 0px;
+}
+td.Content {
+	padding: 10px;
+}
+fieldset {
+	border-right: none;
+	border-left: none;
+	border-top: 1px solid #000088;
+	border-bottom: none;
+	padding-bottom: 30px;
+}
+fieldset legend {
+	font-weight: bold;
+	color: #000088;
+}
+fieldset label {
+}
+span.Currency {
+	display: block;
+	margin-top: 10px;
+	width: 100%;
+	text-align: center;
+}
+div.leftColumn {
+	float: left;
+	width: 48%;
+}
+div.rightColumn {
+	float: right;
+	width: 48%;
+}

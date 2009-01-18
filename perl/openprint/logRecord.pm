@@ -96,6 +96,11 @@ sub User {
 return new openprint::User( $$self{user_id} );	
 } # end sub User
 
+sub Company {
+	my $self = shift;
+	return new openprint::Company( $$self{company_id} );	
+} # end sub Company
+
 sub Action {
 	my $self = shift;
 	return new openprint::logAction( $$self{action_type} );	
