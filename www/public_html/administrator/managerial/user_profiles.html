@@ -67,6 +67,18 @@ function keepCompany( form ){
 			</p>
 		</fieldset>
 		<fieldset><legend>User Information:</legend>
+			<? if ( $$variable{'User'}->Company()->notes() ) ?>
+			<p>
+				<label>Company Notes:</label>
+				<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
+			</p>
+			<? endif ( $$variable{'User'}->Company()->notes() ) ?>
+			<? if ( $$variable{'User'}->notes() ) ?>
+				<p>
+					<label>User Notes:</label>
+					<b><? echo ( $$variable{'User'}->notes() ) ?></b>
+				</p>
+			<? endif ( $$variable{'User'}->notes() ) ?>
 			<div class="leftColumn">
 			<p> 
 				<label>Company:</label>
@@ -148,9 +160,16 @@ function keepCompany( form ){
 				<label class="radio" for="ftp_active0">No</label>
 			</p>
 			<p> 
-				<label>Custom Greeting:</label>
-				<input type="text" name="greeting" value="<? hecho ( $$variable{'User'}->greeting() ) ?>" />
+				<label>Custom Greeting</label>
+				<textarea id="greeting" name="greeting" cols="" rows="<? echo ( split("\n", $$variable{'User'}->greeting() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->greeting() ) ?></textarea>
 			</p>
+			<p>
+				<label>Notes:</label>
+				<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'User'}->notes() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->notes() ) ?></textarea>
+			</p>
+</div>
+<br class="spacer"/>
+<div class="leftColumn">
 			<p> 
 				<label>User Type:</label>
 				<select name="type">
@@ -175,6 +194,22 @@ function keepCompany( form ){
 		<p> 
 			<label>Wage:</label>
 			<input type="text" name="wage" value="<? echo ( $$variable{'User'}->wage() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />/Hr
+		</p>
+		<p>
+			<label>Purchasing Limit (per PO)</label>
+			<input type="text" name="purchasing_limit" value="<? echo ( $$variable{'User'}->purchasing_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+		</p>
+		<p> 
+			<label>Purchasing Limit (Total)</label>
+			<input type="text" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+		</p>
+</div>
+<div class="rightColumn">
+		<p>
+			<label>Assistant to:</label>
+			<select name="csr_ids" size="4" multiple="multiple">
+				<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+			</select>
 		</p>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<p> 
@@ -261,10 +296,10 @@ function keepCompany( form ){
 			</p>
 			<p> 
 				<label>User must change password on next login?</label>
-				<input type="radio" id="ChangePasswordY" name="changepassword" <? echo ( 'checked="checked"' if $$variable{'User'}->changepassword() eq 'Y' ) ?> value="Y"/>
-				<label for="ChangePasswordY" class="radio">Yes</label>
-				<input type="radio" id="ChangePasswordN" name="changepassword" <? echo ( 'checked="checked"' if $$variable{'User'}->changepassword() ne 'Y' ) ?> value="N"/>
-				<label for="ChangePasswordN" class="radio">No</label>
+				<input type="radio" id="change_passwordY" name="change_password" <? echo ( ssi::checked( $$variable{'User'}->change_password() eq 'Y' ); ) ?> value="Y"/>
+				<label for="change_passwordY" class="radio">Yes</label>
+				<input type="radio" id="change_passwordN" name="change_password" <? echo ( ssi::checked( $$variable{'User'}->change_password() ne 'Y' ); ) ?> value="N"/>
+				<label for="change_passwordN" class="radio">No</label>
 			</p>
 		</fieldset>
 		<fieldset><legend>Service Defaults</legend>

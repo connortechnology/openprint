@@ -1592,6 +1592,31 @@ if ( ! $data ) {
 		$dbh->do($st);
 	}
 } 
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM company LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'notes'} ) {
+		$dbh->do('alter table company add notes text');
+	} # end if
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM users LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'notes'} ) {
+		$dbh->do('alter table users add notes text');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Skids LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'type'} ) {
+		$dbh->do('alter table skids add type text');
+		$dbh->do('alter table skids add deleted boolean not null default false');
+	} # end if
+} # end if
+foreach my $PI ( openprint::PaperInventory::find('docket'=>undef) ) {
+	$PI->save() if $PI->docket();
+} # end foreach
+
 $dbh->disconnect();
 1;
 __END__

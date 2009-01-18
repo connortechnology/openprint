@@ -60,6 +60,7 @@ $serial = 'companies_id_seq';
 		'bank_email'				=>	'bank_email',
 		'detail_level'				=>	'detail_level',
 		'quote_project_breakdown'	=>	'quote_project_breakdown',
+		'notes'						=>	'notes',
 		);
 %transforms = (
 	'name' => [ 's/\.//g' ],

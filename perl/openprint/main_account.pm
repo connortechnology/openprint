@@ -90,7 +90,7 @@ sub registration {
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
 	$error .= 'Empty Password.<br/>' if $param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
-	if ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+	if ( ( ! $session{'user_id'} ) and ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		require Authen::Captcha;
         my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $openprint::config{'SkinPath'}.'/images/captcha');
 		if ( 1 != $Captcha->check_code( $param{'Captcha'}, $param{'MD5SUM'} ) ) {
@@ -337,8 +337,6 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
-# We assume that we are authorized to be here now.
-
 	my $User = new openprint::User( $session{'user_id'} );
 	my $Me = new openprint::User( $session{'user_id'} );
 
@@ -393,6 +391,7 @@ sub user_profile {
 			$User->company_id( $session{company_id} ) if ! $User->company_id();
 		} # end if
 		my $oldpassword = $User->password();
+		$param{'change_password'} = 'N' if $param{'password'};
 		$variable{'error'} .= $User->save( \%param );
 
 		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
@@ -457,7 +456,7 @@ sub change_password_confirmation {
 		if ( $User->password() eq $param{'txtOldPassword'} ) {
 			$User->password( $param{'txtNewPassword'} );
 			$User->changepassword( 'N' );
-			$User->save();
+			$$variable{'error'} .= $User->save();
 		} else {
 			$$variable{'error'} = 'You entered the wrong old password.<br/>';
 			$$variable{'Redirect'} = '/main/account/change_password.html';

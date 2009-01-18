@@ -12,6 +12,7 @@ CREATE TABLE Skids (
 	updated_on	timestamp with time zone default NOW(),
 	created_by_id	INTEGER NOT NULL,  FOREIGN KEY (created_by_id) REFERENCES Users (Id),
 	owner_id		INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (Id),
+	type			TEXT,
 	PRIMARY KEY (id)
 );
 

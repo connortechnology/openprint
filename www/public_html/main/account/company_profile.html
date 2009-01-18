@@ -18,6 +18,9 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 		</fieldset>
 		<fieldset>
 			<legend>Company Information:</legend>
+<? if ( $$variable{'Company'}->notes() ) ?>
+<p><b><? echo ( $$variable{'Company'}->notes() ) ?></b></p>
+<? endif ( $$variable{'Company'}->notes() ) ?>
 			<p> 
 				<label for="name">Company Name:</label>
 				<input type="text" name="companyname" value="<? hecho ( $$variable{'Company'}->name() ) ?>"  />

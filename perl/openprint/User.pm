@@ -43,6 +43,9 @@ my %fields = (
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
 	'quote_level'		=>	'quote_level',
 	'email_quotes_to_myself'        =>      'email_quotes_to_myself',
+	'purchasing_limit'	=>	'purchasing_limit',
+	'purchasing_total_limit'	=>	'purchasing_total_limit',
+	'notes'				=>	'notes',
 ); # end %fields
 
 my %transforms = (
@@ -58,7 +61,7 @@ my %defaults = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 	'type'			=>	'C',
-	'changepassword'	=>	'N',
+	'change_password'	=>	'N',
 	'administrator'		=>	'N',
 	'commission'		=>	undef,
 	'quote_level'		=> undef,

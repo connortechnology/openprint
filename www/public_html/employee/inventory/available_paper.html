@@ -254,9 +254,19 @@ Please select a Paper to view/edit.<br>
 		</p>
 		<p>
 			<label>Location:</label>
-			<select id="location_id" name="location_id" onchange="f1.submit();">
-				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ], $session{'/employee/inventory/available_paper.html?location_id'} ); ) ?>
+			<select id="location_id" name="location_id" multiple="multiple" onchange="f1.submit();">
+				<? echo ( 
+					my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') );
+					my @selected = split(';', $session{'/employee/inventory/available_paper.html?location_id'} );
+					if ( ! @selected ) {
+						foreach my $L ( openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ) {
+							next if $L->name() eq 'Missing';
+							push @selected, $L->id();
+						} # end foreach $L
+						 $session{'/employee/inventory/available_paper.html?location_id'} = join(';', @selected);
+					} # end if
+					return ssi::make_select( \@options, \@selected );
+				) ?>
 			</select>
 		</p>
 		</div>
@@ -286,6 +296,12 @@ Please select a Paper to view/edit.<br>
 			my $html;
 			my $rowclass;
 			my $selected;
+			my @location_ids;
+			foreach ( split(';', $session{'/employee/inventory/available_paper.html?location_id'} ) ) {
+				next if $_ eq 'All';
+				push @location_ids, $_;
+			} # end foreach
+
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
 				next if $Paper->in_stock() - $Paper->allocated() <= 0;
 				my %skid_age;
@@ -295,9 +311,14 @@ Please select a Paper to view/edit.<br>
 					if ( $session{'/employee/inventory/available_paper.html?last_seen'} ) {
 						next if Date::Parse::str2time($Skid->updated_on()) < ( time - ( $session{'/employee/inventory/available_paper.html?last_seen'} * 24 * 60 * 60 ) );
 					} # end if
-					if ( $session{'/employee/inventory/available_paper.html?location_id'} ) {
-						next if $Skid->Location()->Root()->id() != $session{'/employee/inventory/available_paper.html?location_id'};
-					} # end if
+
+					if ( @location_ids ) {
+						if ( $Skid->Location()->Root()->id() ) {
+							next if ! sets::isin( $Skid->Location()->Root()->id(), \@location_ids );
+						} elsif( ! sets::isin( 'Unknown', \@location_ids ) ) {
+							next;
+						} # end if 
+					} # end if 
 					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->created_on());
 					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
 					$skid_age{$days} += 1;

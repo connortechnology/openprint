@@ -460,6 +460,7 @@ if ( 0 ) {
 		$$variable{'CreditRemaining'} = '$ '.sprintf( '%.2f', ( $$variable{'txtCreditLimit'} - ($total - $payments) ) );
 	} # end if
 
+	$$variable{'Company'} = $Company;
 	$$variable{'CustomerIndex'} = $index;
 	$$variable{'Company'} = $Company;
 } # end sub company_profiles

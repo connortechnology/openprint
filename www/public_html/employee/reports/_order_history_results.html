@@ -65,6 +65,7 @@
 	) ?>
 	<? endif ( exists $$variable{'Companies'}{int($$variable{'Order'}->company_id())} ) ?>
 	<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
+<? if ( $$variable{'Count'} ) ?>
 	<tr class="totals">
 		<td align="right">Count:</td>
 		<td><?Count?></td>
@@ -73,6 +74,7 @@
 		<td colspan="2" align="right">Total:</td>
 		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Total'} ); ) ?></td>
 	</tr>
+<? endif ( $$variable{'Count'} ) ?>
 </table>
 <? else ( @{$$variable{'Orders'}} ) ?>
 There were no orders matching your criteria.  Please try again.

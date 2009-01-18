@@ -705,9 +705,19 @@ sub add_inventory {
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
-	# force recalc;
+	if ( ref $Skid ne 'openprint::Skid' ) {
+		$Skid = new openprint::Skid( $Skid );
+		$openprint::log->debug('Please update call to add_inventory to pass a Skid instead of skid_id');
+	} # end if
+
+# force recalc;
 	delete $$self{'in_stock'};
 	my $in_stock = $self->in_stock();
+
+	my $docket;
+	if ( $description =~ /docket (\d+)/ ) {
+		$docket = $1;
+	} # end if
 
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
 	new openprint::PaperInventory()->save({
@@ -719,9 +729,11 @@ sub add_inventory {
 			'comment'		=> $description,
 			'skid_id'		=> $Skid->id(),
 			'units'			=> $units,
+			'docket'		=> $docket,
 			} );
 
 	delete $$self{allocated};
+	delete $$self{in_stock};
 } # end sub add_inventory
 
 sub allocate {

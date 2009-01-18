@@ -170,5 +170,19 @@ sub User {
 	return new openprint::User( $_[0]{'user_id'} );
 } # end sub User
 
+sub docket {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'docket'} = shift;
+		$$self{'docket'} =~ s/\D//g;
+	} # end if
+	if ( ! $$self{'docket'} ) {
+		if ( $$self{'comment'} =~ /docket (\d+)/ ) {
+			$$self{'docket'} = $1;
+		} # end if
+	} # end if
+	return $$self{'docket'};
+} # end sub docket
+
 1;
 __END__

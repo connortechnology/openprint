@@ -48,6 +48,7 @@ my %fields = (
 	'Supplier'			=>	'ysnSupplier',
 	'CustomGreeting'	=>	'strCustomGreeting',
 	'Website'			=>	'strWebURL',	
+	'notes'				=>	'notes',
 
 ); # end %fields
 
