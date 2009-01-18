@@ -103,10 +103,10 @@ sub find {
 
 	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$log->warn("Error loading Invoice_Interests: ($sql) (@values)" . $dbh->errstr );
+		$log->warn("Error loading Invoice_Interest: ($sql) (@values)" . $dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$log->debug("openprint::Invoice_Interest::find($sql) (@values)");
+		$log->debug("openprint::Invoice_Interest::find($sql) (@values) " . @$data . ' records');
 	} # end if
 	return map { new openprint::Invoice_Interest( $_->{id}, $_ ); } @$data;
 } # end sub find

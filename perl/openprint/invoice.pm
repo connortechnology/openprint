@@ -111,7 +111,11 @@ sub edit {
 		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
 		$variable{'error'} .= $variable{'Invoice'}->save(\%param);
 	} # end if
+	if ( ! $variable{'Invoice'}->id() ) {
+		$variable{'Invoice'}->due_on( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 15 ) ) );
+	} # end if
 } # end sub edit
+
 sub view {
 	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
 	if ( $param{'btnFunction'} eq 'Calculate Interest' ) {
@@ -195,3 +199,14 @@ sub _invoiced_products {
 				});
 	} # end if
 } # end sub _invoiced_products
+
+sub _interests {
+
+	if ( $param{'action'} eq 'delete' ) {
+		my $Interest = new openprint::Invoice_Interest( $param{'interest_id'} );
+		$variable{'Invoice'} = $Interest->Invoice();
+		$variable{'error'} .= $Interest->delete();	
+		$variable{'Invoice'}->interest(undef);
+		$variable{'error'} = $variable{'Invoice'}->save();
+	} # end if
+} # end sub _interests

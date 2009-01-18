@@ -15,6 +15,7 @@ require openprint::Service;
 require openprint::InvoiceLog;
 require openprint::Tax;
 require openprint::Invoiced_Product;
+require openprint::Invoice_Interest;
 
 my $debug = 1;
 
@@ -271,7 +272,10 @@ sub total {
 } # end sub total
 
 sub interest {
-	my ( $self ) = @_;
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'interest'} = shift;
+	} # end if
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'interest'} ) ) {
 		$$self{'interest'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoice_interests WHERE invoice_id=?', $$self{'id'} ) );
@@ -393,6 +397,18 @@ sub send {
 sub Products {
 	return openprint::Invoiced_Product::find('invoice_id'=>$_[0]{'id'});
 } # end sub Products
+
+sub Interests {
+	my $self = shift;
+	my %args = @_;
+	$args{'invoice_id'} = $$self{'id'};
+	$args{'order'} = 'compounded_on' if ! $args{'order'};
+	return openprint::Invoice_Interest::find(%args);
+} # end sub Interests
+
+sub calculate_interests {
+	my $self = shift;
+} # end sub calculate_interests
 
 1;
 

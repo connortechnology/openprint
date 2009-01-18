@@ -33,7 +33,7 @@
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/invoice/history.html">
 	<input type="hidden" name="btnFunction"/>
-	<fieldset class="filters">
+	<fieldset class="filters unprintable">
 		<p>
 			<label>Go to ID:</label>
 			<input type="text" name="invoice_id" id="invoice_id" onkeyup="this.value=this.value.replace(/\D/,'');" onkeydown="if(event.keyCode == 13){load_invoices( this.form );}"/>

@@ -124,6 +124,9 @@
 
 </form>
 <div class="leftColumn">
+	<div id="Interests">
+	<!--#include virtual="_interests.html"-->
+	</div>
 	<fieldset><legend>Payments</legend>
 		<table>
 			<tr><th>ID</th><th align="left">When</th><th>Notes</th><th style="text-align:right;">Amount</th></tr>
@@ -164,12 +167,12 @@
 			<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>
 			<tr>
 				<td align="right"><b>Total:</b></td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></b></td>
+				<td align="right" width="100"><b><span id="Total"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></span></b></td>
 			</tr>
 			<? if ( $$variable{'Invoice'}->interest() ne '' ) ?>
 			<tr>
 				<td align="right"><b>Interest:</b></td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></b></td>
+				<td align="right" width="100"><b><span id="Interest_Total"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></span></b></td>
 			</tr>
 			<? endif ( $$variable{'Invoice'}->interest() ne '' ) ?>
 			<tr>
@@ -178,7 +181,7 @@
 			</tr>
 			<tr>
 				<td align="right"><b>Amount Owing</b>:</td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></b></td>
+				<td align="right" width="100"><b><span id="Owing"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></span></b></td>
 			</tr>
 		</table>
 		<span style="float:right;">All amounts in <? echo ( $$variable{'Invoice'}->Currency()->name(); ) ?>.</span>
