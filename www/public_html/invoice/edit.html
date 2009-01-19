@@ -80,6 +80,13 @@
 				<label for="internal_notes">Internal Notes</label>
 				<textarea cols="40" id="internal_notes" name="internal_notes" rows="<? echo ( $$variable{'Invoice'}->internal_notes() ? scalar split("\n", $$variable{'Invoice'}->internal_notes()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
 			</p>
+			<p>
+				<label>Bad Debt?:</label>
+				<input type="radio" id="bad_debt1" name="bad_debt" value="1" <? echo ( ssi::checked( $$variable{'Invoice'}->bad_debt() ) ) ?> />
+				<label class="radio" for="bad_debt1">Yes</label>
+				<input type="radio" id="bad_debt0" name="bad_debt" value="0" <? echo ( ssi::checked( ! $$variable{'Invoice'}->bad_debt() ) ) ?> />
+				<label class="radio" for="bad_debt0">No</label>
+			</p>
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">
@@ -110,45 +117,16 @@
 <div id="AvailableTimetracks">
 	<!--#include virtual="_available_timetracks.html"-->
 </div>
-<? if ( $$variable{'Invoice'}->Products() > 0 ) ?>
-	<fieldset><legend>Products</legend>
-		<table class="List">
-			<tr>
-				<th align="left">Product</th>
-				<th style="text-align: right; width: 100px;">Price</th>
-				<th style="text-align: right; width: 50px;">Qty</th>
-				<th style="text-align: right; width: 100px;">Total</th>
-				<th style="text-align: right; width: 100px;" class="unprintable">Actions</th>
-			</tr>
-			<? echo ( 
-				my $html = '';
-				my $$variable{'product_total'} = 0;
-				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
-					$html .= '<tr>';
-					$html .= sprintf('<td align="left">%s</td>', $Product->name() );
-
-					$html .= sprintf('<td align="right"><input type="text" id="product-price-%1$d" name="product-price-%1$d" value="%2$s"/></td>', $Product->id(), $Product->price() );
-					$html .= sprintf('<td align="right">%2$d</td>', $Product->id(), $Product->quantity() );
-					$html .= sprintf('<td align="right">%2$.2f</td>', $Product->id(), $Product->total() );
-					$html .= '<td align="right" class="unprintable">';
-$html .= ssi::writeButton( $log, $dbh, 'Remove'.$Product->id(), '','','Remove' );
-					$html .= '</td>';
-					$html .= '</tr>';
-					$$variable{'product_total'} += $Product->total();
-				} # end foreach Product
-				return $html;
-			) ?>
-			<tr class="totals">
-				<td colspan="3" align="right"><b>Totals:</b></td>
-				<td align="right"><b><? echo ( openprint::Currency::format( $$variable{'product_total'} ); ) ?></b></td>
-				<td class="unprintable">&nbsp;</td>
-			</tr>
-		</table>
-	</fieldset>
-<? endif ( $$variable{'Invoice'}->Products() > 0 ) ?>
+<div id="InvoicedProducts">
+	<!--#include virtual="_invoiced_products.html"-->
+</div>
+<? echo ( ssi::writeButton( $log, $dbh, 'NewProduct', 'new_product.gif', q`new Ajax.Updater( 'InvoicedProducts','_invoiced_products.html', { method: 'get', parameters: { invoice_id: `.$$variable{'Invoice'}->id().q`, action: 'new' } } );`, '', 'Add New Product' ); ) ?>
 
 </form>
 <div class="leftColumn">
+	<div id="Interests">
+	<!--#include virtual="_interests.html"-->
+	</div>
 	<fieldset><legend>Payments</legend>
 		<table>
 			<tr><th>ID</th><th align="left">When</th><th>Notes</th><th style="text-align:right;">Amount</th></tr>
@@ -156,12 +134,12 @@ $html .= ssi::writeButton( $log, $dbh, 'Remove'.$Product->id(), '','','Remove' )
 				my $html = '';
 				$$variable{'payment_total'} = 0;
 				foreach my $Payment ( $$variable{'Invoice'}->Payments() ) {
-					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr>', $Payment->id(), $Payment->received_on(), $Payment->memo(), $Payment->amount() );
+					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td align="right">%4$s</td></tr>', $Payment->id(), $Payment->received_on(), $Payment->memo(), openprint::Currency::format( $Payment->amount() ) );
 					$$variable{'payment_total'} += $Payment->amount();
 				} # end foreach
 				return $html;
 			) ?>
-			<tr>
+			<tr class="totals">
 				<td align="right" colspan="3">Total:</td>
 				<td align="right"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
 			</tr>
@@ -189,12 +167,12 @@ $html .= ssi::writeButton( $log, $dbh, 'Remove'.$Product->id(), '','','Remove' )
 			<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>
 			<tr>
 				<td align="right"><b>Total:</b></td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></b></td>
+				<td align="right" width="100"><b><span id="Total"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></span></b></td>
 			</tr>
 			<? if ( $$variable{'Invoice'}->interest() ne '' ) ?>
 			<tr>
 				<td align="right"><b>Interest:</b></td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></b></td>
+				<td align="right" width="100"><b><span id="Interest_Total"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></span></b></td>
 			</tr>
 			<? endif ( $$variable{'Invoice'}->interest() ne '' ) ?>
 			<tr>
@@ -203,7 +181,7 @@ $html .= ssi::writeButton( $log, $dbh, 'Remove'.$Product->id(), '','','Remove' )
 			</tr>
 			<tr>
 				<td align="right"><b>Amount Owing</b>:</td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></b></td>
+				<td align="right" width="100"><b><span id="Owing"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></span></b></td>
 			</tr>
 		</table>
 		<span style="float:right;">All amounts in <? echo ( $$variable{'Invoice'}->Currency()->name(); ) ?>.</span>

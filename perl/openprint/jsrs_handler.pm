@@ -62,12 +62,10 @@ sub handler {
 			);
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	openprint::session_init();
-	openprint::usergroup::init_cache();
-	openprint::Material::init_cache();
-	openprint::Service::init_cache();
-	openprint::ServiceType::init_cache();
-	openprint::Equipment::init_cache();
-	openprint::Paper::init_cache();
+	foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
+		eval sprintf('openprint::%s::init_cache();', $o );
+		$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
+	} # end foreach
 
 	foreach my $key ( $r->param() ) {
 $log->debug("Paramter: $key => " . $r->param($key) );

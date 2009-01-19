@@ -20,6 +20,14 @@ sub history {
 		$param{'ending'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_year','ending_month','ending_day','ending_hour','ending_minute'} );
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );
 		$variable{'error'} .= $Timetrack->save(\%param);
+		if ( $param{'referrer_invoice_id'} ) {
+			$_ = $param{'referrer_invoice_id'};
+			%param = ();
+			$param{'invoice_id'} = $_;
+			$variable{'Redirect'} = '/invoice/edit.html';
+		} else {
+			$session{'/timetrack/edit.html?last_ending'} = $param{'ending'};
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );
 		$variable{'error'} .= $Timetrack->destroy();
@@ -35,4 +43,6 @@ sub edit {
 		$variable{'error'} .= $variable{'Timetrack'}->save(\%param);
 		$variable{'Redirect'} = '/timetrack/history.html';
 	} # end if
+	$variable{'Timetrack'}->ending( $session{'/timetrack/edit.html?last_ending'} ) if ! $variable{'Timetrack'}->ending();
+	$variable{'Timetrack'}->starting( $session{'/timetrack/edit.html?last_ending'} ) if ! $variable{'Timetrack'}->starting();
 } # end sub edit

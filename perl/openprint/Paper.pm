@@ -174,11 +174,11 @@ sub find {
 		push @values, 1*$params{'height_start'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id IN (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id IN (SELECT Index FROM Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'project_type_name'} ) {
-		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT lngIndex FROM Project_Types WHERE strID = ?))';
+		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT Id FROM Project_Types WHERE name = ?))';
 		push @values, $params{'project_type_name'};
 	} # end if
 	if ( $params{'project_type_id'} ) {

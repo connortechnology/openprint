@@ -83,7 +83,11 @@
 				my $html = '';
 				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
 				if ( $$variable{'Payment'}->id() ) {
-				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					if ( $$variable{'Payment'}->deleted() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'destroy', 'destroy.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					} else {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+					} # end if
 				} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
 				return $html;

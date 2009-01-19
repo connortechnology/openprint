@@ -40,9 +40,9 @@ sub projects {
 	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
 		my @header = ('Docket #', 'Project Reference','Company Name', 'Creation Date','Status');
 		$_ = "SELECT Index, SUBSTR(strProjectReference,0,50),\n".
-				"(SELECT Name FROM Companies WHERE id = tbl_Projects.CompanyIndex),\n".
+				"(SELECT Name FROM Companies WHERE id = Projects.CompanyIndex),\n".
 				"to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus\n".
-				"FROM tbl_Projects ".
+				"FROM Projects ".
 				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
 		$_ .= "AND UserIndex = '".$r->param('ddmEstimator')."'\n" if $r->param('ddmEstimator');
 		$_ .= "AND strStatus = '".$r->param('ddmStatus')."' \n" if $r->param('ddmStatus');
@@ -56,7 +56,7 @@ sub projects {
 		$_ = "SELECT DISTINCT (SELECT id FROM Companies WHERE id = CompanyIndex),\n".
 			"				(SELECT Name FROM Companies WHERE id = CompanyIndex),\n".
 			"				Index, SUBSTR(strProjectReference,0,50), to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus \n".
-				"FROM tbl_Projects	".
+				"FROM Projects	".
 				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
 		$_ .= "AND UserIndex = '".$r->param('ddmEstimator')."'\n" if $r->param('ddmEstimator');
 		$_ .= "AND strStatus = '".$r->param('ddmStatus')."' \n" if $r->param('ddmStatus');
@@ -280,8 +280,8 @@ sub customer_login {
 		my $query = "SELECT name, givenname || ' ' || surname, Users.phone, email,";
 		$query .=  "strCity, strProvState, date(Company.dtmdateentered),";
 		$query .=  "(SELECT strFirstName || ' ' || strLastName FROM Users WHERE Index = lngSalesPerson ),";
-		$query .=  "(SELECT COUNT(Index) FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
-        $query .= "(SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
+		$query .=  "(SELECT COUNT(Index) FROM Projects WHERE Projects.CompanyIndex = Company.Index ),";
+        $query .= "(SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM Projects WHERE Projects.CompanyIndex = Company.Index ),";
 		$query .=  "(SELECT COUNT(Index) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
 		$query .=  "'\$' || (SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
         $query .= " (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) AS LastOrderDate ";
@@ -299,12 +299,12 @@ sub customer_login {
 
         if ( $r->param('ddmLastProjectStartYear') and $r->param('ddmLastProjectStartMonth') and $r->param('ddmLastProjectStartDay') ) {
             if ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
-                $query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastProjectStart'}') AND date('$$variable{'LastProjectEnd'}')";
+                $query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM Projects WHERE Projects.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastProjectStart'}') AND date('$$variable{'LastProjectEnd'}')";
             } else {
-                $query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) > date('$$variable{'LastProjectStart'}')";
+                $query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM Projects WHERE Projects.CompanyIndex = Company.Index ) > date('$$variable{'LastProjectStart'}')";
             } # end if
         } elsif ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
-            $query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) < date('$$variable{'LastProjectEnd'}')";
+            $query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM Projects WHERE Projects.CompanyIndex = Company.Index ) < date('$$variable{'LastProjectEnd'}')";
         } # end if
 
         if ( $r->param('ddmLastOrderStartYear') and $r->param('ddmLastOrderStartMonth') and $r->param('ddmLastOrderStartDay') ) {
@@ -327,8 +327,8 @@ sub customer_login {
        my $query = "SELECT Company.Index, strName, ";
         $query .=  "strProvState, date(Company.dtmdateentered),";
         $query .=  "(SELECT strFirstName || ' ' || strLastName FROM Users WHERE Index = lngSalesPerson ),";
-        $query .=  "(SELECT COUNT(Index) FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
-        $query .= "(SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
+        $query .=  "(SELECT COUNT(Index) FROM Projects WHERE Projects.CompanyIndex = Company.Index ),";
+        $query .= "(SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM Projects WHERE Projects.CompanyIndex = Company.Index ),";
         $query .=  "(SELECT COUNT(Orders.Index) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
         $query .=  "(SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index )";
         $query .= ", (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) AS LastOrderDate ";
@@ -345,12 +345,12 @@ sub customer_login {
 
 		if ( $r->param('ddmLastProjectStartYear') and $r->param('ddmLastProjectStartMonth') and $r->param('ddmLastProjectStartDay') ) {
 			if ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
-				$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastProjectStart'}') AND date('$$variable{'LastProjectEnd'}')";
+				$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM Projects WHERE Projects.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastProjectStart'}') AND date('$$variable{'LastProjectEnd'}')";
 			} else {
-				$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) > date('$$variable{'LastProjectStart'}')";
+				$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM Projects WHERE Projects.CompanyIndex = Company.Index ) > date('$$variable{'LastProjectStart'}')";
 			} # end if
 		} elsif ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
-			$query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) < date('$$variable{'LastProjectEnd'}')";
+			$query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM Projects WHERE Projects.CompanyIndex = Company.Index ) < date('$$variable{'LastProjectEnd'}')";
 		} # end if
 
         if ( $r->param('ddmLastOrderStartYear') and $r->param('ddmLastOrderStartMonth') and $r->param('ddmLastOrderStartDay') ) {
@@ -393,12 +393,12 @@ sub CustomerServiceReps {
 
 	my %ordered_projects;
 
-	my $query = "SELECT Index, strStatus, (SELECT salesrep_id FROM Companies WHERE id=tbl_Projects.CompanyIndex),
+	my $query = "SELECT Index, strStatus, (SELECT salesrep_id FROM Companies WHERE id=Projects.CompanyIndex),
 	   ";
-	$query .= "(SELECT curSalesPrice FROM Order_Contents, Orders WHERE Orders.Index=Order_Contents.OrderIndex AND Order_Contents.lngProjectIndex=tbl_Projects.Index AND Orders.lngDocketNumber=tbl_Projects.lngDocketNumber),";
-	$query .= "(SELECT currency_id FROM Orders WHERE Orders.lngDocketNumber=tbl_Projects.lngDocketNumber)";
+	$query .= "(SELECT curSalesPrice FROM Order_Contents, Orders WHERE Orders.Index=Order_Contents.OrderIndex AND Order_Contents.lngProjectIndex=Projects.Index AND Orders.lngDocketNumber=Projects.lngDocketNumber),";
+	$query .= "(SELECT currency_id FROM Orders WHERE Orders.lngDocketNumber=Projects.lngDocketNumber)";
 
-	$query .= " FROM tbl_Projects ";
+	$query .= " FROM Projects ";
 	$query .= "WHERE dtmcreationdate BETWEEN '$$variable{'StartDate'} 00:00:00' AND '$$variable{'EndDate'} 23:59:59' ";
 	$query .= "AND UserIndex = $estimator\n" if $estimator;
 	my @data = sql::execute( $log, $dbh, $query );
@@ -468,14 +468,14 @@ sub order_details {
 
 		if ( $$variable{'DepositDue'} > 0 ) {
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
 			} # end foreach
 		} else {
 			$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
 			} # end foreach
 			if ( $$variable{'AmountPaid'} >= $$variable{'TOTAL'} ) {

@@ -347,7 +347,7 @@ sub sort_schedule {
 	my @schedule = find( 
 			{'operator'=>'AND', 'fields'=>[
 			#{'field'=>'starttime', 'operator'=>'>=', 'value'=>sprintf( '%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() )},
-			{'field'=>'(SELECT strStatus FROM tbl_Projects WHERE Index=projectindex)', 'operator'=>'=', 'value'=>'Approved' },
+			{'field'=>'(SELECT strStatus FROM Projects WHERE Index=projectindex)', 'operator'=>'=', 'value'=>'Approved' },
 			{'field'=>'starttime', 'operator'=>'IS NOT NULL'},
 			] }, {'operator'=>'order', 'value'=>'projectindex' },
 			);

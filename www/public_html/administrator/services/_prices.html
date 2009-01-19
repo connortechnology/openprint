@@ -8,6 +8,7 @@
 		<? while ( @{$$variable{'Equipment_ids'}} ) ?>
 			<? eval ( $$variable{Equipment} = new openprint::Equipment( shift @{$$variable{'Equipment_ids'}} ); ) ?>
 			<fieldset class="Equipment">
+<? if ( openprint::Equipment::find() ) ?>
 				<p>
 					<label>Equipment:</label>
 					<select name="ddmEquipment-<? echo ( $$variable{Pricelist}->id() ) ?>-<? echo ( $$variable{Equipment}->id() ) ?>">
@@ -15,6 +16,7 @@
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strID)') ], $$variable{Equipment}->id() ); ) ?>
 					</select>
 				</p>
+<? endif ( openprint::Equipment::find() ) ?>
 				<table class="List">
 					<tr> 
 						<th class="Add">&nbsp;</th>
@@ -49,6 +51,7 @@
 		<? endwhile ( @{$$variable{'Equipment_ids'}} ) ?>
 		<? endif ( @{$$variable{'Prices'}} = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
 		<fieldset class="Equipment"><legend>Add New</legend>
+<? if ( openprint::Equipment::find() ) ?>
 			<p>
 				<label>Equipment</label>
 				<select multiple="multiple" size="4" name="ddmEquipment-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New">
@@ -56,6 +59,7 @@
 					<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strID)') ] ); ) ?>
 				</select>
 			</p>
+<? endif ( openprint::Equipment::find() ) ?>
 			<table class="List">
 			<tr> 
 				<th class="Add">&nbsp;</th>

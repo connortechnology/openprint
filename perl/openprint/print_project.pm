@@ -20,14 +20,14 @@ require openprint::Estimating::Multipage;
 
 sub delete_project {
 	my ( $log, $dbh, $project_id ) = @_;
-	sql::update( $log, $dbh, 'tbl_Projects', ['Index=?', $project_id], ['strStatus', 'Deleted'] );
+	sql::update( $log, $dbh, 'Projects', ['Index=?', $project_id], ['strStatus', 'Deleted'] );
 	openprint::logs::insertLogRecord('20', "Project ID: " . $project_id,);
 } # end sub delete_project
 
 sub insert_project_type {
 	my ( $r, $log, $dbh, $project_index, $project_type_id ) = @_;
 
-	my ( $project_type_index ) = sql::execute( $log, $dbh, q{SELECT lngIndex FROM Project_Types WHERE strID=?}, $project_type_id );
+	my ( $project_type_index ) = sql::execute( $log, $dbh, q{SELECT Id FROM Project_Types WHERE name=?}, $project_type_id );
 	if ( $project_type_index ) {
 
 		# Make this all one transaction...
@@ -137,9 +137,9 @@ sub create_edit_display {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@{$$variable{'ProjectTypes'}} = map { $_->strid(), $_->name() } openprint::ProjectType::find( 'order'=>'lngsort, lower(strname)' );
+	@{$$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType::find( 'order'=>'sorting, lower(name)' );
 	# Check the appropriate button for project type
-	@$variable{'SelectedProjectType'} = $Project->Type()->strid();
+	@$variable{'SelectedProjectType'} = $Project->Type()->name();
 
 	@$variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
@@ -716,7 +716,7 @@ sub create_edit_process {
 	# Because we do some low-level crappy stuff, we need to clear the caches, cuz they are stale
 	openprint::service::init_cache();
 
-	my @project_types = openprint::ProjectType::find( 'strid' => $openprint::param{'rdbProjectType'} );
+	my @project_types = openprint::ProjectType::find( 'name' => $openprint::param{'rdbProjectType'} );
 	my $ProjectType = shift @project_types;
 	my $OldProjectType = $Project->Type();
 
@@ -729,7 +729,7 @@ sub create_edit_process {
 	$Project->currency_id( $openprint::session{'Currency_id'} ) if ! $Project->currency_id();
 
 # Handle ProjectType
-	if ( $OldProjectType->strid() ne $ProjectType->strid() ) {
+	if ( $OldProjectType->name() ne $ProjectType->name() ) {
 		$recalculate = 1;
 		if ( $services{''} ) {
 			foreach ( @{$services{''}} ) { delete_service( $log, $dbh, $Project->id(), $_ ); };
@@ -905,7 +905,7 @@ sub calc {
 	$specs{'alert'} = '';
 	$specs{'txtQuantity1'} =~ s/\D//g;
 
-	my @project_types = openprint::ProjectType::find( 'strid' => $specs{'ProjectType'} );
+	my @project_types = openprint::ProjectType::find( 'name' => $specs{'ProjectType'} );
 	return if ! @project_types;
 	my $ProjectType = shift @project_types;
 
@@ -945,7 +945,7 @@ sub calc {
 			my @args = ( $specs{'ProjectType'}, $width, $height );
 
 			if ( $type eq 'Flat' ) {
-				$_ = q{SELECT dblfinishedwidth::float, dblfinishedheight::float FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?) AND dblFlatWidth=? AND dblFlatHeight=?};
+				$_ = q{SELECT dblfinishedwidth::float, dblfinishedheight::float FROM projecttemplate WHERE projecttype_id = (SELECT Id FROM project_types where name=?) AND dblFlatWidth=? AND dblFlatHeight=?};
 				if ( $specs{'FoldType'} ) {
 					$_ .= q{ AND type=?};
 					push @args, $specs{'FoldType'};
@@ -964,7 +964,7 @@ sub calc {
 					} # end if
 				} # end if
 			} else {
-				$_ = q{SELECT dblFlatWidth::float, dblFlatHeight::float FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?) AND dblFinishedWidth=? AND dblFinishedHeight=?};
+				$_ = q{SELECT dblFlatWidth::float, dblFlatHeight::float FROM projecttemplate WHERE projecttype_id = (SELECT Id FROM project_types WHERE name=?) AND dblFinishedWidth=? AND dblFinishedHeight=?};
 				if ( $specs{'FoldType'} ) {
 					$_ .= q{ AND type=?};
 					push @args, $specs{'FoldType'};
@@ -1535,9 +1535,9 @@ sub create_calc {
 		$Project->quantity3( $specs{'txtQuantity3'} );
 	} # end if
 
-	my @project_types = openprint::ProjectType::find( 'strid' => $specs{'rdbProjectType'} );
+	my @project_types = openprint::ProjectType::find( 'name' => $specs{'rdbProjectType'} );
 	my $ProjectType = shift @project_types;
-	if ( $Project->Type()->strid() ne $ProjectType->strid() ) {
+	if ( $Project->Type()->name() ne $ProjectType->name() ) {
 		my @oldRequiredServiceTypes = $Project->Type()->required_ServiceTypes();
 		my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();
 

@@ -829,7 +829,7 @@ my $master_time = gettimeofday();
 				$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 			} # end if
 		} else {
-			if ( $Project->Type()->strid() eq 'ScratchPads' ) {
+			if ( $Project->Type()->name() eq 'ScratchPads' ) {
 				$$specs{'txtSpreadSize'} = 1;
 # if it's a book signature, then auto-populate the width and height
 			} elsif ( $$specs{'GroupPageQuantity'} % 4 ) {
@@ -991,7 +991,7 @@ my $master_time = gettimeofday();
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		@Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
-				'project_type_id'=>$Project->type()->id(),
+				'project_type_id'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
 #if ( $debug ) {
@@ -1280,7 +1280,7 @@ my $master_time = gettimeofday();
 			$variables{'ddmRunStyle'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmRunStyle'.$qty_index}} ) ];
 		} # end if
 #$openprint::log->debug("SignatureType: $$specs{'txtSignatureType'} Group: $$specs{'Group'} " . $$specs{'txtUnspecifiedPageQuantity'.$qty_index});
-		if ( $Project->Type()->strid() eq 'ScratchPads' ) {
+		if ( $Project->Type()->name() eq 'ScratchPads' ) {
 			delete $$project{'SpreadLayout'};
 
 			$qty *= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
@@ -1983,7 +1983,7 @@ $openprint::log->debug("get_project_price");
 			next;
 		} # end if
 		my $SpreadLayout;
-		if ( $Project->Type()->strid() eq 'ScratchPads' ) {
+		if ( $Project->Type()->name() eq 'ScratchPads' ) {
 			$SpreadLayout = 0;
 			#$qty *= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 		} elsif ( $$sig_specs{'txtSignatureType'} ) {
@@ -3474,7 +3474,7 @@ sub select_presses {
 		} # end if
 	} # end if
 
-	my $project_type = $Project->Type()->strid();
+	my $project_type = $Project->Type()->name();
 #$log->debug(" ** Current Project Types is: $project_type ** ");
 
 	my @presses = openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y', 'order'=>'strid' );

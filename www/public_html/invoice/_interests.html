@@ -1,0 +1,28 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<? eval ( @{$$variable{'Interests'}} = $$variable{'Invoice'}->Interests(); ) ?>
+<? if ( @{$$variable{'Interests'}} ) ?>
+<fieldset><legend>Interest</legend>
+	<table>
+		<tr><th align="left">When</th><th>Description</th><th style="text-align:right;width:75px;">Amount</th><th width="20">&nbsp;</th></tr>
+		<? echo ( 
+			my $html = '';
+			$$variable{'interest_total'} = 0;
+			foreach my $Interest ( @{$$variable{'Interests'}} ) {
+				$html .= sprintf('<tr><td>%2$s</td><td>%3$s</td><td align="right">%4$s</td><td>%5$s</td></tr>', $Interest->id(), $Interest->compounded_on(), $Interest->description(), openprint::Currency::format( $Interest->amount() ),
+					ssi::writeButton( $log, $dbh, 'deleteInterest'.$Interest->id(), 'delete.gif', q`new Ajax.Updater('Interests', '_interests.html', { method: 'get', evalScripts:true, parameters: { action: 'delete', interest_id: '` . $Interest->id() . q`'} } );`, '', 'X' ),
+					);
+				$$variable{'interest_total'} += $Interest->amount();
+			} # end foreach
+			return $html;
+		) ?>
+		<tr class="totals">
+			<td align="right" colspan="2">Total:</td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?></td>
+		</tr>
+	</table>
+</fieldset>
+<? endif ( @{$$variable{'Interests'}} ) ?>
+<script type="text/javascript">
+$('Interest_Total').innerHTML = '<? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?>';
+$('Owing').innerHTML = '<? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?>';A
+</script>

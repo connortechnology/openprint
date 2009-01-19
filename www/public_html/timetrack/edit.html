@@ -60,7 +60,8 @@
 	} // end function update_duration
 </script>
 <form name="f1" id="f1" action="history.html" method="post">
-	<fieldset><legend>Editing timetrack</legend>
+	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" />
+	<fieldset><legend>Editing timetrack<? echo ( $$variable{'Timetrack'}->id() ? '('.$$variable{'Timetrack'}->id().')' : '' ) ?></legend>
 		<? if ( $$variable{'Timetrack'}->deleted() ) ?>
 		<span class="warning">This timetrack has been deleted</span>
 		<? endif ( $$variable{'Timetrack'}->deleted() ) ?>

@@ -58,6 +58,7 @@ BEGIN {
 	use	openprint::Timetrack;
 	use	openprint::Currency;
 	use Number::Format;
+	use	openprint::Ledger;
 
 #use MapImage;
 

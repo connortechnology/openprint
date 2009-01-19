@@ -79,7 +79,7 @@ sub signature_needs {
 
 	my $services = $Project->services();
 
-	if ( $Project->Type()->strid() eq 'Envelopes' ) {
+	if ( $Project->Type()->name() eq 'Envelopes' ) {
         $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
 		return 0;
 	} # end if 
@@ -89,7 +89,7 @@ sub signature_needs {
         return 0;
     } # end if
 
-	if ( $Project->Type()->strid() eq 'Envelopes' ) {
+	if ( $Project->Type()->name() eq 'Envelopes' ) {
         $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
 		return 0;
 	} # end if 

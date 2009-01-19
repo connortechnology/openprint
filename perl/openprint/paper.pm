@@ -61,8 +61,7 @@ sub select_paper {
 
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $type ) {
-		my $ProjectType = $Project->type();
-		$type = $ProjectType->strid();
+		$type = $Project->Type()->name();
 	} # end if
 
 	my @types = ('Sheet');
@@ -233,8 +232,7 @@ sub select_by_name {
 	my ( $r, $log, $dbh, $variable, $name, $finish, $colour, $weight, $supplied, $press, $project_index, $type, $specific_width, $specific_height ) = @_;
 	if ( ! $type ) {
 		my $Project = new openprint::Project( $project_index );
-		my $ProjectType = $Project->type();
-		$type = $ProjectType->strid();
+		$type = $Project->Type()->name();
 	} # end if
 	
 	return join( '|', 
@@ -252,8 +250,7 @@ sub select_by_finish {
 
 	if ( ! $type ) {
 		my $Project = new openprint::Project( $project_index );
-		my $ProjectType = $Project->type();
-		$type = $ProjectType->strid();
+		$type = $Project->Type()->name();
 	} # end if
 	
 	return join( '|', 
@@ -269,8 +266,7 @@ sub select_by_colour {
 	
 	if ( ! $type ) {
 		my $Project = new openprint::Project( $project_index );
-		my $ProjectType = $Project->type();
-		$type = $ProjectType->strid();
+		$type = $Project->Type()->name();
 	} # end if
 	return join( '|', 
 			select_finish( $r, $log, $dbh, $variable, $name, $finish, $colour, $weight, $supplied, $press, $project_index, $type ), 

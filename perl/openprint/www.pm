@@ -308,17 +308,18 @@ $openprint::log->debug("Getfile");
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 			} # end if
 		} elsif ( $second eq 'accounting' ) {
-			if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
-				require openprint::employee_accounting;
-				openprint::employee_accounting::search( $r, $log, $dbh, \%variable )		if $filename eq 'search.html';
-				openprint::employee_accounting::details( $r, $log, $dbh, \%variable )	if $filename eq 'details.html';
-				openprint::employee_accounting::credit( $r, $log, $dbh, \%variable )		if $filename eq 'credit.html';
-			} else {
-				$variable{'error'} = "Unauthorized";
-				$variable{'details'} = "You are not authorized to view this page.";
+			if ( ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
+				$variable{'error'} = 'Unauthorized';
+				$variable{'details'} = 'You are not authorized to view this page.';
 				$variable{'Redirect'} = $config{'errorpage'};
 				return;
-			} # endif
+			} else {
+			eval( 'require openprint::'.join('_', @path ) );
+$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+			} # end if
 		} else {
 			eval( 'require openprint::'.join('_', @path ) );
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
@@ -358,20 +359,20 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 				my $ProjectType = $variable{'Project'}->Type();
-				@variable{'ProjectTypeID','ProjectTypeName'} = ($ProjectType->strid(), $ProjectType->name() );
+				@variable{'ProjectTypeID','ProjectTypeName'} = ($ProjectType->name(), $ProjectType->description() );
 				$variable{'ServiceType'} = openprint::print::get_ServiceType( @variable{'ProjectIndex','ServiceIndex'} );
 				
 				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-#, sql::execute( $log, $dbh, q{SELECT currency_id from tbl_Projects where index=?}, $variable{'ProjectIndex'} ) );
+#, sql::execute( $log, $dbh, q{SELECT currency_id from Projects where index=?}, $variable{'ProjectIndex'} ) );
 				my $project_index = $variable{'ProjectIndex'};
 				my $service_index = $variable{'ServiceIndex'};
 
 				# Things like UPS SHipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
-					my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+					my $specs = openprint::service::get_specs_ref( $variable{'Project'}, $service_index );
 					@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
 #$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");

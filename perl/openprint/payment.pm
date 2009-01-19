@@ -15,11 +15,16 @@ require openprint::Payment;
 require openprint::Invoice;
 
 sub history {
+	ssi::save_params('/payment/history.html',  'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day', 'company_id' );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'recipient_id'} = $session{'company_id'} if ! $param{'recipient_id'};
 		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
+		$Payment->remaining( undef ); # force update
 		$variable{'error'} .= $Payment->save(\%param);
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		my $Payment = new openprint::Payment( $param{'payment_id'} );
+		$variable{'error'} .= $Payment->delete();
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->destroy();
@@ -27,6 +32,7 @@ sub history {
 } # end sub history
 
 sub _history {
+	ssi::save_params('/payment/history.html',  'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day', 'company_id' );
 } # end sub _history
 
 sub edit {

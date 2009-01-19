@@ -13,6 +13,9 @@ require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
 require openprint::InvoiceLog;
+require openprint::Tax;
+require openprint::Invoiced_Product;
+require openprint::Invoice_Interest;
 
 my $debug = 1;
 
@@ -43,6 +46,7 @@ require sql;
 	'currency_id'		=>	'currency_id',
 	'paid'				=>	'paid',
 	'interest'			=>	'interest',
+	'bad_debt'			=>	'bad_debt',
 );
 
 %transforms = (
@@ -58,6 +62,7 @@ require sql;
 	'federaltax'	=> undef,
 	'statetaxrate'		=> undef,
 	'federaltaxrate'	=> undef,
+	'bad_debt'			=> 0,
 );
 
 sub find {
@@ -251,6 +256,7 @@ sub subtotal {
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
 		$$self{'subtotal'} = 0;
 		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack::find('invoice_id'=>$$self{id});
+		map { $$self{'subtotal'} += $_->total() } openprint::Invoiced_Product::find('invoice_id'=>$$self{id});
 	} # end if
 	return $$self{'subtotal'};
 } # end sub subtotal
@@ -266,7 +272,10 @@ sub total {
 } # end sub total
 
 sub interest {
-	my ( $self ) = @_;
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'interest'} = shift;
+	} # end if
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'interest'} ) ) {
 		$$self{'interest'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoice_interests WHERE invoice_id=?', $$self{'id'} ) );
@@ -294,9 +303,7 @@ sub federaltax {
 		if ( ! $self->Invoicer()->gst_number() ) {
 			return '';
 		} # end if
-		my ( $tax ) = sql::execute( undef, undef, 'SELECT Federaltax FROM Taxes WHERE State=? AND Country=?', $self->Invoicee()->get('state','country') );
-		return '' if ! $tax;
-		return $self->subtotal() * ( $tax/100 );
+			return $self->subtotal() * ( $self->federaltaxrate()/100 );
 	} # end if
 	return $$self{'federaltax'};
 } # end sub federaltax
@@ -310,9 +317,7 @@ sub statetax {
 		if ( ! $self->Invoicer()->pst_number() ) {
 			return '';
 		} # end if
-		my ( $tax ) = sql::execute( undef, undef, 'SELECT Statetax FROM Taxes WHERE State=? AND Country=?', $self->Invoicee()->get('state','country') );
-		return '' if ! $tax;
-		return $self->subtotal() * ($tax/100 );
+		return $self->subtotal() * ($self->statetaxrate()/100 );
 	} # end if
 	return $$self{'statetax'};
 } # end sub statetax
@@ -380,6 +385,7 @@ sub send {
 			SMTP    => $config{'Mail Server'},
 			FROM    => $config{'AccountingEmail'},
 			TO      => join(',', @recipients ),
+			BCC		=> sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
 			SUBJECT => sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
 			);
 	misc::send_email_with_attachment( $log, \%mail, @attachments );
@@ -387,6 +393,22 @@ sub send {
 	return 'Sent.';
 
 } # end sub send
+
+sub Products {
+	return openprint::Invoiced_Product::find('invoice_id'=>$_[0]{'id'});
+} # end sub Products
+
+sub Interests {
+	my $self = shift;
+	my %args = @_;
+	$args{'invoice_id'} = $$self{'id'};
+	$args{'order'} = 'compounded_on' if ! $args{'order'};
+	return openprint::Invoice_Interest::find(%args);
+} # end sub Interests
+
+sub calculate_interests {
+	my $self = shift;
+} # end sub calculate_interests
 
 1;
 

@@ -6,7 +6,11 @@
 		<link type="text/css" rel="stylesheet" href="/css/common.css"/>
 		<link type="text/css" rel="stylesheet" href="/css/handheld.css" media="handheld"/>
 		<link type="text/css" rel="stylesheet" href="/css/print.css" media="print"/>
+<? if ( $r->uri() =~ /\/administrator/ ) ?>
+		<link type="text/css" rel="stylesheet" href="/css/administrator.css"/>
+<? else ( $r->uri() =~ /\/administrator/ ) ?>
 		<link type="text/css" rel="stylesheet" href="/css/main.css"/>
+<? endif ( $r->uri() =~ /\/administrator/ ) ?>
 		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
@@ -72,22 +76,14 @@ this.className=this.className.replace(' over', '');
 						<li><a href="/account/logout.html">Logout</a></li>
 					</ul>
 				</li>
-				<li class="off"><a href="/timetrack/history.html">Timetracks</a>
-<!--
-					<ul>
-						<li><a href="/todos/list">Todos</a></li>
-						<li><a href="/bugs/list">Bugs</a></li>
-					</ul>
--->
-				</li>
 				<li class="off"><a href="#">Accounting</a>
 					<ul>
+						<li><a href="/timetrack/history.html">Timetracks</a></li>
 						<li><a href="/invoice/history.html">Invoices</a></li>
 						<li><a href="/payment/history.html">Payments</a></li>
 						<li><a href="/paycheque/history.html">Paycheques</a></li>
-<!--
-						<li><a href="/ledger/list">Ledger</a></li>
--->
+						<li><a href="/employee/accounting/expenditures.html">Expenditures</a></li>
+						<li><a href="/employee/accounting/ledger.html">Ledger</a></li>
 					</ul>
 				</li>
 				<li class="off"><a href="#">Marketing</a>
@@ -98,6 +94,7 @@ this.className=this.className.replace(' over', '');
 						<li><a href="/employee/marketing/surveys.html">Surveys</a></li>
 					</ul>
 				</li>
+<? if ( $session{'user_type'} eq 'A' ) ?>
 				<li class="off"><a href="#">Pricing</a>
 					<ul>
 						<li><a href="/administrator/services/edit.html">Services</a></li>
@@ -105,6 +102,14 @@ this.className=this.className.replace(' over', '');
 						<li><a href="/administrator/production/pricelists.html">Pricelists</a></li>
 					</ul>
 				</li>
+				<li class="off"><a href="#">Administrator</a>
+					<ul>
+						<li><a href="/administrator/managerial/configuration.html">Configuration</a></li>
+						<li><a href="/administrator/managerial/currency.html">Currencies</a></li>
+						<li><a href="/administrator/managerial/taxes.html">Taxes</a></li>
+					</ul>
+				</li>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
 <? else ( $session{user_id} ) ?>
 <li class="off"><a href="/account/login.html">Login</a></li>
 				<li class="off"><a href="/home/services/show.html">Services</a>

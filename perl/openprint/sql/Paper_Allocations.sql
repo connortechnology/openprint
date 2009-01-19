@@ -7,7 +7,7 @@ CREATE TABLE Paper_Allocations (
 	paper_id	INTEGER, FOREIGN KEY (paper_id) REFERENCES Papers (id),
 	skid_id		INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES Skids (id),
 	quantity	INTEGER NOT NULL,
-	project_id	INTEGER NOT NULL, FOREIGN KEY (project_id) REFERENCES tbl_Projects (Index),
+	project_id	INTEGER NOT NULL, FOREIGN KEY (project_id) REFERENCES Projects (Index),
 	operator_id	INTEGER NOT NULL, FOREIGN KEY (operator_id) REFERENCES Users (Index),
 	created_on	timestamp with time zone default NOW()
 );

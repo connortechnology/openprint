@@ -84,7 +84,7 @@
 				my $$variable{'product_total'} = 0;
 				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
 					$html .= '<tr>';
-					$html .= sprintf('<td align="left">%s</td>', $Product->name() );
+					$html .= sprintf('<td align="left">%s</td>', $Product->description() );
 
 					$html .= sprintf('<td align="right">%2$s</td>', $Product->id(), $Product->price() );
 					$html .= sprintf('<td align="right">%2$d</td>', $Product->id(), $Product->quantity() );
@@ -120,13 +120,13 @@
 			</tr>
 			<? if ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
 			<tr>
-				<td align="right">GST:</td>
+				<td align="right">GST (<? echo ( $$variable{'Invoice'}->federaltaxrate() ) ?>%):</td>
 				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
 			</tr>
 			<? endif ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
 			<? if ( $$variable{'Invoice'}->statetax() ne '' ) ?>
 			<tr>
-				<td align="right">PST:</td>
+				<td align="right">PST (<? echo ( $$variable{'Invoice'}->statetaxrate() ) ?>%):</td>
 				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->statetax() ); ) ?></td>
 			</tr>
 			<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>

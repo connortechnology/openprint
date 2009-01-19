@@ -263,25 +263,26 @@ sub Price {
 	if ( $$self{'rate'} ) {
 		$Price{'Cost'} = $Price{'Price'} = $$self{'rate'};
 	} # end if
-	$Price{'Total'} = $Price{'Price'} * $elapsed / 3600;
+
+	if ( lc $Price{'units'} eq '/month' ) {
+		$elapsed = sprintf('%.0f',$elapsed/(60*60*24*30));
+		$openprint::log->debug('Month pricing ' . $elapsed );
+		$Price{'Total'} = $Price{'Price'} * $elapsed;
+	} elsif ( lc $Price{'units'} eq '/hr.' ) {
+		$Price{'Total'} = $Price{'Price'} * $elapsed / 3600;
+	} else {
+		$openprint::log->warn('Unknown units in Timetrack Service ('.$Service->name().') ('.$Price{'units'}.') assuming Hrs');
+		$Price{'Total'} = $Price{'Price'} * $elapsed / 3600;
+	} # end if
 	return \%Price;
 } # end sub Price
 
 sub value {
 	my ( $self ) = @_;
-	my $elapsed = $self->elapsed();
-
-	if ( ! $$self{'rate'} ) {
-		my $Service = $self->Service();
-		my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-#$openprint::log->debug( "Elapsed: $elapsed : " . $elapsed/3600 . ' : Service: ' .$Service->name() .' Price:' . $Price{'Price'} );
-		return $Price{'Price'} * $elapsed / 3600;
-	} else {
-#$openprint::log->debug( "Elapsed: $elapsed : " . $elapsed/3600 . ' : Rate:' . $$self{'rate'} );
-		return $$self{'rate'} * $elapsed / 3600;
-	} # end if
-	
+	my $Price = $self->Price();
+	return $$Price{'Total'};
 } # end sub value 
+
 sub wage {
 	my ( $self ) = @_;
 	my $elapsed = $self->elapsed();

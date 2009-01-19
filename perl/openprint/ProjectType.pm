@@ -1,22 +1,44 @@
 package openprint::ProjectType;
 @ISA = qw(openprint::Object);
+use strict;
 require openprint::Object;
 require openprint::logs;
 require openprint::ProjectType_Template;
+use openprint ();
 
-use strict;
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+$table = 'Project_Types';
+$serial = 'project_types_id_seq';
+
+%fields = (
+	'id'	=>	'id',
+	'name'	=>	'name',	
+	'description'	=>	'description',
+	'category_id'	=>	'category_id',
+	'url'			=>	'url',
+	'sorting'		=>	'sorting',
+);
+%transforms = (
+);
+%defaults = (
+	'id'			=>	undef,
+	'category_id'	=>	undef,
+	'sorting'		=>	undef,
+);
 
 sub find {
 	my %params = @_;
 	my @values;
 	my $sql = q{SELECT * FROM Project_Types WHERE 1>0};
 	if ( $params{'name'} ) {
-		$sql .= ' AND strName=?';
+		$sql .= ' AND name=?';
 		push @values, $params{'name'};
 	} # end if
-	if ( exists $params{'strid'} ) {
-		$sql .= ' AND strID=?';
-		push @values, $params{'strid'};
+	if ( exists $params{'description'} ) {
+		$sql .= ' AND description=?';
+		push @values, $params{'description'};
 	} # end if
 	if ( $params{'category_id'} ) {
 		$sql .= ' AND category_id=?';
@@ -28,72 +50,40 @@ sub find {
 		$openprint::log->error("Error loading ProjectTypes: ($sql) (@values)");
 		return;
 	} # end if
-	return map { new openprint::ProjectType( $_->{lngindex}, $_ ); } @$data;
+	return map { new openprint::ProjectType( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Project_Types WHERE lngIndex=?', {}, $$self{'id'} );
-	} # end if
-	@$self{qw/strid name url category_id sort/} = @$data{qw/strid strname strdetailedurl category_id lngsort/};
-} # end sub load
-
 sub save {
-	my $self = shift;
+	my ( $self, $params ) = @_;
 
-	my $ac = sql::start_transaction( $openprint::dbh );
-	my @sql = (
-			'strID',            $$self{'strid'},
-			'strName',          $$self{'name'},
-			'strDetailedURL',   $$self{'url'},
-			'category_id',		$$self{'category_id'} ? $$self{'category_id'} : undef,
-			'lngSort',          $$self{'sort'} ? $$self{'sort'} : undef,
-			);
-	if ( ! $$self{'id'} ) {
-		if ( ! ( @$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('ProjectTypeIndex')} ) ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return 'Error allocating new Project Type<br/>';
-		} # end if
-		push @sql, ( 'lngIndex',			$$self{'id'} );
-		if ( $_ = sql::insert( $openprint::log, $openprint::dbh, 'Project_Types', \@sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return "Error inserting Project Type $$self{'strid'} : $_<br>";
-		} # end if
-		# Add record to audit log - action "New Project Type".
-		openprint::logs::insertLogRecord('47', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'name'},);
+
+	if ( ( my $error = $self->SUPER::save( $params ) ) ) {
+		return $error;
 	} else {
-		if ( $_ = sql::update( $openprint::log, $openprint::dbh, 'Project_Types', ['lngIndex=?', $$self{'id'}], \@sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return "Error updating Project Type $$self{'strid'} : $_<br>";
+		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
+		if ( $$self{'required_services'} ) {
+			# The union gets rid of duplicates
+			foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
+				sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{'id'}, 'ServiceType_id', $servicetype_id ] );
+			} # end foreach
 		} # end if
-		# Add record to audit log - action "Update Project Type".
-		openprint::logs::insertLogRecord('48', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'name'},);
 	} # end if
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
-	if ( $$self{'required_services'} ) {
-		# The union gets rid of duplicates
-		foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
-			sql::insert( $openprint::log, $openprint::dbh, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{'id'}, 'ServiceType_id', $servicetype_id ] );
-		} # end foreach
-	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
+	return;	
 } # end sub save
 
 sub next {
 	my $self = shift;
-	($_) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT lngIndex FROM Project_Types WHERE lngIndex = (SELECT MIN(strID) FROM Project_Types WHERE strID>?)}, $$self{'strid'} );
+	($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE Id = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
 	if ( ! $_ ) {
-		( $_ ) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT lngIndex FROM Project_Types WHERE lngIndex = (SELECT MAX(strID) FROM Project_Types WHERE strID<?)}, $$self{'strid'} );
+		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE id = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
 	} # end if
 	return new openprint::ProjectType( $_ );
 } # end sub next
 sub prev {
 	my $self = shift;
-	($_) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT lngIndex FROM Project_Types WHERE lngIndex = (SELECT MAX(strID) FROM Project_Types WHERE strID<?)}, $$self{'strid'} );
+	($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE Id = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
 	if ( ! $_ ) {
-		( $_ ) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT lngIndex FROM Project_Types WHERE lngIndex = (SELECT MIN(strID) FROM Project_Types WHERE strID>?)}, $$self{'strid'} );
+		( $_ ) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE Id = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
 	} # end if
 	return new openprint::ProjectType( $_ );
 } # end sub prev
@@ -111,7 +101,7 @@ sub required_services {
 			@{$$self{'required_services'}} = ($_);
 		} # end if
 	} elsif ( ! $$self{'required_services'} ) {
-		@{$$self{'required_services'}} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT ServiceType_id FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
+		@{$$self{'required_services'}} = sql::execute( undef, undef, q{SELECT ServiceType_id FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
 	} # end if
 	return @{$$self{'required_services'}} if $$self{'required_services'};
 } # end sub required_services
@@ -124,15 +114,14 @@ sub required_ServiceTypes {
 sub delete {
 	my $self = shift;
 
-	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_projecttype_defaults WHERE lngProjectTypeIndex=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM ProjectTemplate WHERE ProjectType_Id=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_Id=?}, $$self{'id'} );
-	sql::update( $openprint::log, $openprint::dbh, 'tbl_Projects', "type_id=$$self{'id'}", 'type_id', undef );
-#sql::execute( $log, $dbh, q{DELETE FROM tbl_Projects WHERE Type_Id=?}, $id );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_Types WHERE lngIndex=?}, $$self{'id'} );
-	sql::end_transaction( $openprint::dbh, $ac );
+	my $ac = sql::start_transaction( $dbh );
+	sql::execute( undef, undef, q{DELETE FROM tbl_projecttype_defaults WHERE lngProjectTypeIndex=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE ProjectType_Id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_Id=?}, $$self{'id'} );
+	sql::update( undef, undef, 'Projects', ['type_id=?',$$self{'id'}], 'type_id', undef );
+	sql::execute( undef, undef, q{DELETE FROM Project_Types WHERE Id=?}, $$self{'id'} );
+	sql::end_transaction( $dbh, $ac );
 	
 	# Add record to audit log - action "Delete Project Type".
 	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'strName'},);

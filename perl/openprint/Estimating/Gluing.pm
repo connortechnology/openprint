@@ -81,7 +81,7 @@ sub neccessary {
         return 0;
     } # end if
 
-    if ( $Project->Type()->strid() eq 'PresentationFolders' ) {
+    if ( $Project->Type()->name() eq 'PresentationFolders' ) {
         return 1;
     } # end if
 	foreach my $ss_id ( $Project->signatures() ) {

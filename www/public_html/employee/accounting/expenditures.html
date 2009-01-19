@@ -1,0 +1,64 @@
+<div class="PageTitle">
+	<h1>Accounting</h1>
+	<h2>Expenditures</h2>
+</div>
+<script type="text/javascript">
+<!--
+	function delete_confirm(form) {
+		var number_of_deleted_expendituress = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_expendituress += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_expendituress == 0 ) {
+			alert("To Delete Expenditures, click the checkbox beside the expenditures.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_expendituress + " expendituress from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_expendituress( form ) {
+		$('ExpenditureList').innerHTML = 'Please wait...';
+		new Ajax.Updater('ExpenditureList','_expenditures.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+<form id="f1" name="f1" method="post" action="/employee/accounting/expenditures.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+		<div class="leftColumn">
+<? eval (
+	ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on', -31, 365 );
+) ?>
+			<p>
+				<label>Date:</label>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'occurred_on_start', join('-', @session{'/employee/accounting/expenditures.html?occurred_on_start_year','/employee/accounting/expenditures.html?occurred_on_start_month','/employee/accounting/expenditures.html?occurred_on_start_day'} ), 'load_expendituress(this.form);' ); ) ?>
+					to 
+				</span>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'occurred_on_end', join('-', @session{'/employee/accounting/expenditures.html?occurred_on_end_year','/employee/accounting/expenditures.html?occurred_on_end_month','/employee/accounting/expenditures.html?occurred_on_end_day'} ), 'load_expendituress(this.form);' ); ) ?>
+				</span>
+			</p>
+		</div>
+		<div class="rightColumn">
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_expendituress(f1);", '', 'Show Results' ),
+ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f1.btnFunction.value='Download';f1.submit();", '', 'Download' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'expenditure.html', 'New Expenditure' ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="ExpenditureList"><!--#include virtual="_expenditures.html"--></div>
+</form>

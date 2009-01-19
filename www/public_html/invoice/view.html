@@ -13,10 +13,13 @@
 					if ( $$variable{'Invoice'}->deleted() ) {
 						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
 					} else {
+						if ( Date::Parse::str2time($$variable{'Invoice'}->due_on()) < time ) {
+							$html .= ssi::writeButton( $log, $dbh, 'interest', 'interest.gif', "f1.action='view.html';f1.btnFunction.value='Calculate Interest';f1.submit();", '', 'Calculate Interest' );
+						} # end if
 						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
 						$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?invoice_id='.$$variable{'Invoice'}->id(), 'Edit' );
 						$html .= ssi::writeButton( $log, $dbh, 'send', 'send.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
-						$html .= ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print()', '', 'Print' );
+						$html .= ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print();', '', 'Print' );
 					} # end if
 				} # end if
 				return $html;
@@ -50,13 +53,17 @@
 		</div>
 		<br class="spacer"/>
 	</fieldset>
+<? eval (
+@{$$variable{'Timetracks'}} = openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting');
+) ?>
+<? if ( @{$$variable{'Timetracks'}} ) ?>
 	<fieldset><legend>Services</legend>
 		<table class="List">
 			<tr>
 				<th class="Date">Date</th>
 				<th>Description</th>
 				<th width="75" class="Interval">Interval</th>
-				<th width="75" class="Rate">Rate</th>	
+				<th class="Rate">Rate</th>	
 				<th width="75" class="Price">Price</th>
 			</tr>
 			<? echo (
@@ -64,7 +71,7 @@
 				$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 				$$variable{'service_total'} = 0;
 				my $rowclass = '';
-				foreach my $Timetrack ( openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
+				foreach my $Timetrack ( @{$$variable{'Timetracks'}} ) {
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 					$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
 					$html .= sprintf('<td class="Service">%s</td>', $Timetrack->Service()->name() );
@@ -86,6 +93,7 @@
 			</tr>
 		</table>
 	</fieldset>
+<? endif ( @{$$variable{'Timetracks'}} ) ?>
 <? if ( $$variable{'Invoice'}->Products() > 0 ) ?>
 	<fieldset><legend>Products</legend>
 		<table class="List">
@@ -97,10 +105,10 @@
 			</tr>
 			<? echo ( 
 				my $html = '';
-				my $$variable{'product_total'} = 0;
+				$$variable{'product_total'} = 0;
 				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
 					$html .= '<tr>';
-					$html .= sprintf('<td align="left">%s</td>', $Product->name() );
+					$html .= sprintf('<td align="left">%s</td>', $Product->description() );
 
 					$html .= sprintf('<td align="right">%2$s</td>', $Product->id(), $Product->price() );
 					$html .= sprintf('<td align="right">%2$d</td>', $Product->id(), $Product->quantity() );
@@ -122,6 +130,7 @@
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
         <table class="List">
+            <tr><td width="105">Created On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->created_on() ) ); ) ?></td></tr>
             <tr><td width="105">Posted On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->posted_on() ) ); ) ?></td></tr>
             <tr><td><b>Due On:</b></td><td><b><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->due_on() ) ); ) ?></b></td></tr>
             <tr><td>Notes:</td><td><? echo ( $$variable{'Invoice'}->external_notes() ) ?></td></tr>
@@ -138,13 +147,13 @@
 			</tr>
 			<? if ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
 			<tr>
-				<td align="right">GST:</td>
+				<td align="right">GST (<? echo ( $$variable{'Invoice'}->federaltaxrate() ) ?>%):</td>
 				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
 			</tr>
 			<? endif ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
 			<? if ( $$variable{'Invoice'}->statetax() ne '' ) ?>
 			<tr>
-				<td align="right">PST:</td>
+				<td align="right">PST (<? echo ( $$variable{'Invoice'}->statetaxrate() ) ?>%):</td>
 				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->statetax() ); ) ?></td>
 			</tr>
 			<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>
@@ -180,12 +189,12 @@
 				my $html = '';
 				$$variable{'payment_total'} = 0;
 				foreach my $Payment ( $$variable{'Invoice'}->Payments() ) {
-					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr>', $Payment->id(), $Payment->received_on(), $Payment->memo(), $Payment->amount() );
+					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td style="text-align:right;">%4$s</td></tr>', $Payment->id(), $Payment->received_on(), $Payment->memo(), openprint::Currency::format( $Payment->amount() ) );
 					$$variable{'payment_total'} += $Payment->amount();
 				} # end foreach
 				return $html;
 			) ?>
-			<tr>
+			<tr class="totals">
 				<td align="right" colspan="3">Total:</td>
 				<td align="right"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
 			</tr>

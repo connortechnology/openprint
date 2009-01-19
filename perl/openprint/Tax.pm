@@ -23,8 +23,8 @@ $serial = 'taxes_id_seq';
 
 %fields = (
 	'id'				=>	'id',
-	'federaltax_rate'	=>	'dblfederalpercent',
-	'statetax_rate'		=>	'dblstatepercent',
+	'federaltax_rate'	=>	'federaltax',
+	'statetax_rate'		=>	'statetax',
 	'state'				=>	'state',
 	'country'			=>	'country',
 );
@@ -34,8 +34,8 @@ $serial = 'taxes_id_seq';
 );
 
 %defaults = (
-	'federal'	=>	undef,
-	'state'		=>	undef,
+	'federaltax_rate'	=>	undef,
+	'statetax_rate'		=>	undef,
 );
 
 my %find_cache;

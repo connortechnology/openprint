@@ -6,6 +6,8 @@ use strict;
 require openprint::Payment;
 require openprint::order;
 require openprint::Order;
+require openprint::Ledger;
+require openprint::Expenditure;
 require misc;
 require sql;
 
@@ -81,14 +83,14 @@ sub details {
 
 		if ( $variable{'DepositDue'} > 0 ) {
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
 			} # end foreach
 		} else {
 			$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
 			} # end foreach
 			if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {
@@ -178,6 +180,43 @@ sub credit {
 	} # end if customer_index
 } # end sub credit
 
+sub ledger {
+	ssi::save_params( '/employee/accounting/ledger.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
+} # end sub ledger
+
+sub _ledger {
+	ssi::save_params( '/employee/accounting/ledger.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
+} # end sub _ledger
+
+sub expenditures {
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
+		my $Expenditure = new openprint::Expenditure( $param{'expenditure_id'} );
+		if ( $variable{'error'} .= $Expenditure->save( \%param ) ) {
+			$variable{'Redirect'} = '/employee/accounting/expenditure.html';
+			return;	
+		} # end if
+		delete $param{'expenditure_id'};
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		my $Expenditure = new openprint::Expenditure( $param{'expenditure_id'} );
+		if ( $variable{'error'} .= $Expenditure->delete() ) {
+			$variable{'Redirect'} = '/employee/accounting/expenditure.html';
+			return;	
+		} # end if
+		delete $param{'expenditure_id'};
+	} else {
+		ssi::save_params( '/employee/accounting/expenditures.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
+	} # end if
+
+} # end sub expenditures
+
+sub _expenditures {
+	ssi::save_params( '/employee/accounting/expenditures.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
+} # end sub _expenditures
+
+sub expenditure {
+	$variable{'Expenditure'} = new openprint::Expenditure( $param{'expenditure_id'} );
+} # end sub expenditure
 1;
 
 __END__

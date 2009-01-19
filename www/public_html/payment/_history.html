@@ -2,17 +2,6 @@
 	require Date::Parse;
 	require Date::Format;
 
-	$openprint::session{'/payment/history.html?lastupdated'} = time;
-
-	foreach ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day',
-'company_id') {
-		if ( ref $openprint::param{$_} eq 'ARRAY' ) {
-			$openprint::session{"/payment/history.html?$_"} = join(';', @{$openprint::param{$_}} );
-		} elsif ( exists $openprint::param{$_} ) {
-			$openprint::session{"/payment/history.html?$_"} = $openprint::param{$_};
-		} # end if
-	} # end foreach
-
 	@{$$variable{'Payments'}} = ();
 	foreach my $Payment ( openprint::Payment::find( 
 		'received_on_start'	=> sprintf('%.4d-%.2d-%.2d', @openprint::session{'/payment/history.html?received_on_start_year','/payment/history.html?received_on_start_month','/payment/history.html?received_on_start_day'} ),

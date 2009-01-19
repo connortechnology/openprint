@@ -37,7 +37,7 @@
 	</div>
 	<table class="List">
 		<tr> 
-			<th width="70" align="left">Employee</th>
+			<th class="EmployeeName">Employee</th>
 			<th align="left">Company</th>
 			<th width="110" align="left">Start</th>
 			<th width="110" align="left">End</th>
@@ -70,8 +70,8 @@
 			<td colspan="4" align="right">Totals:</td>
 			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
 			<td colspan="3">&nbsp;</td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'wage_total'} ); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'value_total'} ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'value_total'},2,2) ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'wage_total'},2,2) ); ) ?></td>
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
