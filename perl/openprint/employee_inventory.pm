@@ -315,11 +315,6 @@ sub paper_details {
 		$Paper->delete();
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
 		allocate( undef, @param{'paper_id','Quantity','Project','Docket','specific'} );
-	} elsif ( $param{'btnFunction'} eq 'Delete Allocation' ) {
-		if ( $param{'allocation_id'} ) {
-			my $PA = new openprint::PaperAllocation( $param{'allocation_id'} );
-			$PA->delete();
-		} # end if
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
 		check_out( undef, @param{'paper_id','Quantity','Project','Docket'} );
 	} elsif ( $param{'btnFunction'} eq 'Merge' ) {
@@ -1302,6 +1297,11 @@ sub _paper_allocations {
 			$variable{'Paper'}->allocate( $param{'skid_id'}, $Projects[0]->id(), $param{'AllocationQuantity'} );
         } # end if
         delete $param{'skid_id'};
+	} elsif ( $param{'action'} eq 'Delete Allocation' ) {
+		if ( $param{'allocation_id'} ) {
+			my $PA = new openprint::PaperAllocation( $param{'allocation_id'} );
+			$variable{'error'} .= $PA->delete();
+		} # end if
     } # end if
 } # end sub _paper_allocations
 

@@ -257,6 +257,7 @@ function open_window( page ) {
 	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 </form>
 <br/>
+<? if ( $$variable{'Project'}->docket() ) ?>
 <div class="leftColumn">
 <? eval (
 	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() );
@@ -289,6 +290,7 @@ function open_window( page ) {
 		</fieldset>
 	</form>
 </div>
+<? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend>Allocated</legend>
 	<table class="List">
@@ -331,9 +333,11 @@ function open_window( page ) {
 		) ?>
 	</table>
 </fieldset>
+<? if ( $$variable{'Project'}->docket() ) ?>
 <div id="StockCheckout">
 <!--#include virtual="/employee/project/_stock_checkout.html"-->
 </div>
+<? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend>Modification History</legend>
 	<table class="List">

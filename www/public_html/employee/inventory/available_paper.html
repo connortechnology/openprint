@@ -287,8 +287,8 @@ Please select a Paper to view/edit.<br>
 			<th align="left" width="105">FSC</th>
 			<th align="left" width="60">GSM</th>
 			<th align="left" width="60">MWeight</th>
-			<th align="left" width="75">Available</th>
-			<th align="left" width="110">Age</th>
+			<th align="right" width="75">Available</th>
+			<th align="left" width="115">Age</th>
 			<th align="left" width="120">Location</th>
 			<th width="75" class="unprintable">&nbsp;</th>
 		</tr>
@@ -343,7 +343,7 @@ $selected = 'style="background-color:yellow;"';
 $selected = '';
 }
 
-				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%s</td><td>%.0f</td><td>%.0f</td><td>%s</td><td>%s</td><td>%s</td>',
+				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%s</td><td>%.0f</td><td>%.0f</td><td align="right">%s&nbsp;</td><td>%s</td><td>%s</td>',
 					$rowclass,
 					$$Paper{'id'},
 					$selected,
