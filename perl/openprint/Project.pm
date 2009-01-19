@@ -508,9 +508,9 @@ sub find {
 				$openprint::log->warn("EMpty company array passed to openprint::Project::find");
 			} # end if
 		} elsif ( ! defined $params{'company_id'} ) {
-			$sql .= q{ AND companyindex IS NULL};
+			$sql .= q{ AND company_id IS NULL};
 		} else {
-			$sql .= q{ AND companyindex=?};
+			$sql .= q{ AND company_id=?};
 			push @values, $params{'company_id'};
 		} # end if
 	} # end if
@@ -840,7 +840,7 @@ sub load {
 		} # end if
 	} # endif
 	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
-		@$data{qw/index summary lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
+		@$data{qw/index summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
 	return;
 } # end sub load
 
