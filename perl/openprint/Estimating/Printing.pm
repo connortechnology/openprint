@@ -1591,7 +1591,9 @@ if ( 1 ) {
 				if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
 					next;
 				} # end if
-				if ( $$specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
+				if ( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
+					next if $imp->grain_direction() ne $$specs{'rdbGrainDirection'.$qty_index};	
+				} elsif ( $$specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
 					next;
 				} # end if
 
@@ -1659,7 +1661,9 @@ $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
 				#$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() ) if $debug;
 				next;
 			} # end if
-			if ( $$specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
+			if ( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
+				next if $imp->grain_direction() ne $$specs{'rdbGrainDirection'.$qty_index};	
+			} elsif ( $$specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
 				#$openprint::log->debug("Not consider imposition cuz it's not the previous grain direction " . $imp->grain_direction() ) if $debug;
 				next;
 			} # end if
