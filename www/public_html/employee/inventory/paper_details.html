@@ -262,6 +262,7 @@ The following errors occurred:<br/>
 	</fieldset>
  <? if ( $$variable{Paper}->id() ) ?>
  <? eval ( @{$$variable{Duplicates}} = openprint::Paper::find(
+		'owner_id'				=>$$variable{Paper}->owner_id(),
 		'manufacturer_id'		=>$$variable{Paper}->manufacturer_id(),
 		'name_id'				=>$$variable{Paper}->name_id(),
 		'finish_id'				=>$$variable{Paper}->finish_id(),
@@ -280,7 +281,7 @@ The following errors occurred:<br/>
 				my $rowclass;
 				while ( my $Duplicate = shift @{$$variable{'Duplicates'}} ) {
 						next if $Duplicate->id() == $$variable{Paper}->id();
-						$html .= sprintf('<tr%s><td>%d</td><td>%s</td></tr>', $rowclass, $Duplicate->id(), $Duplicate->to_string() );
+						$html .= sprintf('<tr%1$s><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%2$d</a></td><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%3$s</a></td></tr>', $rowclass, $Duplicate->id(), $Duplicate->to_string() );
 						$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end while
 				return $html;

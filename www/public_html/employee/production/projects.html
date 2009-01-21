@@ -19,7 +19,7 @@
 		<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" onkeydown="if(event.keyCode == 13){load_projects(f1);}" /> &nbsp;
 		<select name="ddmCustomer" onchange="load_projects(this.form);">
 			<option value="">All Companies</option>
-			<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomer'} ); ) ?>
+			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
 		</select>
 		<? echo ( ssi::writeButton( $log, $dbh, 'CompanyGo', 'go.gif', q{load_projects(f1);}, '', 'Go' ); ) ?>
 	</p>
@@ -29,7 +29,7 @@
 			<option value="">All Employees</option>
 <? echo (
 	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname)', 'usergroups'=>['Prepress'], 'type'=>['E','A'] ) ],
-	$openprint::param{'ddmEmployee'} );
+	$param{'ddmEmployee'} );
 )?>
 			</select>
 	</p>
@@ -38,9 +38,9 @@
 		<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
 			<option value="">All Employees</option>
 <? echo (
-$openprint::session{'/employee/production/projects.html?ddmSalesRep'} = $openprint::session{'user_id'} if ! $openprint::session{'/employee/production/projects.html?ddmSalesRep'};
+$session{'/employee/production/projects.html?ddmSalesRep'} = $session{'user_id'} if ! $session{'/employee/production/projects.html?ddmSalesRep'};
 ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'type'=>['E','A'],'usergroups'=>['Sales']) ],
-$openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
+$session{'/employee/production/projects.html?ddmSalesRep'} );
 ) ?>
 		</select>
 	</p>
@@ -52,6 +52,8 @@ $openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
 			'Pending Deposit',
 			'In Prepress',
 			'Proofs Out',
+			'Waiting For Customer Approval',
+			'Waiting For QA Approval',
 			'Approved',
 			'Printed',
 			'Complete',
@@ -60,29 +62,29 @@ $openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
 			'Shipped',
 			);
 
-	if ( %openprint::param ) {
-		if ( ref $openprint::param{'ddmStatus'} eq 'ARRAY' ) {
-			$openprint::session{'/employee/production/projects.html?ddmStatus'} = join(';', @{$openprint::param{'ddmStatus'}} );
+	if ( %param ) {
+		if ( ref $param{'ddmStatus'} eq 'ARRAY' ) {
+			$session{'/employee/production/projects.html?ddmStatus'} = join(';', @{$param{'ddmStatus'}} );
 		} else {
-			$openprint::session{'/employee/production/projects.html?ddmStatus'} = $openprint::param{'ddmStatus'};
+			$session{'/employee/production/projects.html?ddmStatus'} = $param{'ddmStatus'};
 		} # end if
 	} # end if
 
-		my @status_filter = split(';', $openprint::session{'/employee/production/projects.html?ddmStatus'} );
+		my @status_filter = split(';', $session{'/employee/production/projects.html?ddmStatus'} );
 
 		if ( ! @status_filter ) {
-			if ( openprint::usergroup::is_user_in( ['Prepress'], $openprint::session{'user_id'} ) ) {
+			if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) {
 				@status_filter = ( 'In Prepress', 'Proofs Out' );
-			} elsif ( openprint::usergroup::is_user_in( ['Press'], $openprint::session{'user_id'} ) ) {
+			} elsif ( openprint::usergroup::is_user_in( ['Press'], $session{'user_id'} ) ) {
 				@status_filter = ( 'Approved' );
-			} elsif ( openprint::usergroup::is_user_in( ['Bindery'], $openprint::session{'user_id'} ) ) {
+			} elsif ( openprint::usergroup::is_user_in( ['Bindery'], $session{'user_id'} ) ) {
 				@status_filter = ( 'Printed' );
 			} else {
 				@status_filter = @statuses;
 			} # end if
 		} # end if
 
-		$openprint::session{'/employee/production/projects.html?ProjectStatus'} = join(';',@status_filter );
+		$session{'/employee/production/projects.html?ProjectStatus'} = join(';',@status_filter );
 		return ssi::make_select( [ map { $_, $_ } @statuses ], \@status_filter );
 ) ?>
 			</select>
@@ -92,38 +94,38 @@ $openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
 			<select name="ddmPress" onchange="load_projects(this.form);">
 				<option value="">All Presses</option>
 <? echo (
-		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $openprint::param{'ddmPress'} );
+		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $param{'ddmPress'} );
 ) ?>
 			</select>
 	</p>
 <? eval (
-	if ( %openprint::param ) {
+	if ( %param ) {
 		foreach my $param ( 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay' ) {
-			@openprint::session{"/employee/production/projects.html?$param"} = $openprint::param{$param};
+			@session{"/employee/production/projects.html?$param"} = $param{$param};
 		} # end foreach
 	} 
-	if ( ! $openprint::session{'/employee/production/projects.html?DueDateStartYear'} )  {
-		@openprint::session{
+	if ( ! $session{'/employee/production/projects.html?DueDateStartYear'} )  {
+		@session{
 		'/employee/production/projects.html?DueDateStartYear',
 		'/employee/production/projects.html?DueDateStartMonth',
 		'/employee/production/projects.html?DueDateStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -3 );
 	} # end if
-	if ( ! $openprint::session{'/employee/production/projects.html?DueDateEndYear'} )  {
-		@openprint::session{
+	if ( ! $session{'/employee/production/projects.html?DueDateEndYear'} )  {
+		@session{
 		'/employee/production/projects.html?DueDateEndYear',
 		'/employee/production/projects.html?DueDateEndMonth',
 		'/employee/production/projects.html?DueDateEndDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 );
 	} # end if
 
 	@$variable{'DueDateStartYears','DueDateStartMonths','DueDateStartDays','DueDateStart'} = ssi::get_dates( $log, $dbh,
-		@openprint::session{
+		@session{
 		'/employee/production/projects.html?DueDateStartYear',
 		'/employee/production/projects.html?DueDateStartMonth',
 		'/employee/production/projects.html?DueDateStartDay'}
 		);
 
 	@$variable{'DueDateEndYears','DueDateEndMonths','DueDateEndDays','DueDateEnd'} = ssi::get_dates( $log, $dbh,
-			@openprint::session{
+			@session{
 			'/employee/production/projects.html?DueDateEndYear',
 			'/employee/production/projects.html?DueDateEndMonth',
 			'/employee/production/projects.html?DueDateEndDay'}
