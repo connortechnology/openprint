@@ -289,3 +289,6 @@ text-align:center;
 width: 95px;
 outline: 0;
 }
+div#NewDimensions {
+	display: none;
+}

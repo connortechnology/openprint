@@ -4,20 +4,28 @@ use openprint ();
 
 require openprint::ProjectTypeCategory;
 
+use vars qw( $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+
 sub list {
-	my ( $r, $log, $dbh, $variable ) = @_;
-	my $ProjectTypeCategory = new openprint::ProjectTypeCategory( $openprint::param{'category_id'} );
-	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
-		$ProjectTypeCategory->name( $openprint::param{'name'} );
-		$ProjectTypeCategory->description( $openprint::param{'description'} );
-		$$variable{'error'} = $ProjectTypeCategory->save();
-	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
-		$ProjectTypeCategory->delete();
+	my $ProjectTypeCategory = new openprint::ProjectTypeCategory( $param{'category_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $ProjectTypeCategory->save(\%param);
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $ProjectTypeCategory->delete();
 	} # end if
-	$$variable{'ProjectTypeCategory'} = $ProjectTypeCategory;
+	$variable{'ProjectTypeCategory'} = $ProjectTypeCategory;
 } # end sub list
 
 sub edit {
+	my $ProjectTypeCategory = new openprint::ProjectTypeCategory( $param{'category_id'} );
+	$variable{'ProjectTypeCategory'} = $ProjectTypeCategory;
 } # end sub edit
 
 1;

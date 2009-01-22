@@ -2,6 +2,31 @@
 <br/>
 <a target="_blank" href="/images/fullsize/Brochure.jpg"><img src="/images/small/Brochure.jpg" alt=""/></a>
 <img id="FoldType" src="/images/templates/NoFold.gif" alt="FoldType"/>
+<div id="NewDimensions">
+<? echo ( 
+	$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars'] );
+
+	if ( $$variable{'DimensionsDisplay'} eq 'Finished' ) {
+		$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?)};
+	} else {
+		$_ = q{SELECT DISTINCT dblFlatWidth::float || 'x' || dblFlatHeight::float || 'Flat' AS size, dblFlatWidth::float || '" x ' || dblFlatHeight::float || '" Flat' FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?)};
+	} # end if
+	
+	my @options;
+	if ( $$variable{'FoldType'} ) {
+		@options = sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', @$variable{'ProjectTypeName','FoldType'} );
+	} else {
+		@options = sql::execute( undef, undef, $_, $$variable{'ProjectTypeName'} );
+	} # end if
+
+	my @output;
+	while ( my ( $value, $text ) = splice @options, 0, 2 ) {
+		push @output, sprintf(q`<a href="#" onclick="ddm_select_by_value( $('Dimensions'), '%1$s' );Dimensions_onchange($('Dimensions'));">%2$s</a>`, $value, $text );
+	} # end while
+	return join( '|', @output );
+) ?>
+</div>
+
 <p>Standard Size Brochures are listed as dropdowns, please choose custom from the dropdown list for custom sizes.</p>
 <p>Brochures are normally printed on Gloss Txt and Euroart Silk Txt. Stock thickness ranges from 60lb upto 115lb text. If you need a sturdy brochure then you can print them on either Gloss Cover C2S or Euroart Silk Cover ranging from 7pt to 14pt.</p>
 <p>Stocks thicker than 80lb text might have be to scored before they are folded depending on the design of the file.</p>
