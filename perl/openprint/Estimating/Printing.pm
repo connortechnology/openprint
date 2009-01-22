@@ -1848,6 +1848,7 @@ if ( 1 ) {
 $PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 						$additional_price = $$sig_price{'Comparison Cost'};
+						$additional_price -= $$sig_price{'Plate Comparison Cost'};
 
 						if ( ! $$sig_price{'Imposition'} ) {
 #$openprint::log->debug("No Imposition found.");
@@ -1871,8 +1872,8 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 					$$price{'Comparison Cost'} += $additional_price;
 					if ( $$sig_price{'Imposition'} ) {
 						$$price{'AdditionalSignature Breakdown'} .= sprintf($sigs . ' Additional Sig %dpages %dout %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $additional_price ) . '<br/>';
-						#`:w
-						#$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
+						#
+						$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $specs );
 					} else {
 						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 					} # end if
@@ -1910,12 +1911,14 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 				$$price{'Comparison Cost'} += $$price{'Film Cost'};
 				$$price{'Total Cost'} += $$price{'Film Cost'};
 			} # end if
+			$$price{'Plate Comparison Cost'} = 0;
 			foreach my $plate_id ( keys %PlateCounts ) {
 				if ( my @materials = openprint::Material::find( 'name'=>$plate_id ) ) {
 				%plate_price = $materials[0]->get_price( $PlateCounts{$plate_id}, undef );
-				$$price{'Comparison Cost'} += $plate_price{'Price'} * $PlateCounts{$plate_id};
+				$$price{'Plate Comparison Cost'} += $plate_price{'Price'} * $PlateCounts{$plate_id};
 				} # end if
 			} # end foreach plate_id
+			$$price{'Comparison Cost'} += $$price{'Plate Comparison Cost'};
 			$$price{'Total Cost'} += $$price{'Plate Price'} + $$price{'Blank Plate Price'};
 
 			if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
@@ -2071,7 +2074,7 @@ sub calc_price {
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
 	my $setup_rate = $Press->specification( 'Press Run Overs Rate', scalar @colours );
-	my $setup_overs = $setup_rate * scalar @colours;
+	my $setup_overs = ceil( $setup_rate * scalar @colours );
 	my $fm_overs = $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
 	$setup_overs += $fm_overs;
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
@@ -2081,7 +2084,7 @@ sub calc_price {
 		$over_rate *= 2;
 	} # end if
 	my $run_overs = $base_impressions * $over_rate;
-	my $impressions = sprintf( '%.0f', $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
+	my $impressions = ceil( $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
 
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		my $additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
@@ -2224,12 +2227,12 @@ sub calc_price {
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
 	$setup_rate = $Press->specification( 'Press Run Overs Rate', $plate_setup{'Plate Count'} );
-	$setup_overs = $setup_rate * ( $plate_setup{'Plate Count'} );
+	$setup_overs = ceil($setup_rate * ( $plate_setup{'Plate Count'} ));
 	$setup_overs += $fm_overs;
 	$setup_overs += $price{'SpinePaste MakeReady Overs'};
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
 
-	$run_overs = $base_impressions * $over_rate;
+	$run_overs = ceil($base_impressions * $over_rate);
 	#my $gross_qty = $impressions;
 	my $gross_qty = ceil( $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
 	my $additional_overs=0;
