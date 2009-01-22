@@ -1206,7 +1206,8 @@ sub manifest {
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= 'Information successfully stored.<br/>';
 		} # end if
-	} # end if
+		%param = ();
+	} # end if btnfunction
 	$variable{'Manifest'} = $Manifest;
 } # end sub manifest
 

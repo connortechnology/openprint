@@ -247,16 +247,15 @@ The following errors occurred:<br/>
 		</div>
 		<div style="float: right;">
 			<? echo (
+					my $html = '';
 					if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
-						return join('',
-							ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' ),
-							ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' ),
-							ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-							ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
-							ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset()', '', 'Reset' ),
-							);
+							$html .= ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' );
+							$html .= ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' );
+							$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ) if ! $$variable{'Paper'}->in_stock();
+							$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset()', '', 'Reset' );
 					} # end if
-					return;
+					return $html;
 			) ?>
 		</div>
 	</fieldset>

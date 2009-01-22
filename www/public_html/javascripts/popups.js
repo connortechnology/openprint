@@ -63,9 +63,11 @@ function AjaxToggleContent( divID, show_url, inputs, hide_url ) {
 	var div = $( divID );
 
 	var params = new Array();
+	if ( inputs ) {
 	while ( inputs.length ) {
 		params[params.length] = inputs.shift() + '=' + inputs.shift();
 	}
+	} // end if
 
 
 	if ( div.style.display == 'none' ) {

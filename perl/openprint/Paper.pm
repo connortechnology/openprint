@@ -28,6 +28,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 my $debug = 0;
 
 my @fields = (
+		'id',
 		'owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
@@ -205,7 +206,7 @@ sub load {
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Papers WHERE id=?}, {}, $$self{'id'} );
 	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
+	@$self{@fields} = @$data{@fields};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
 } # end sub load
 
