@@ -37,7 +37,7 @@ The following errors occurred:<br/>
 	<fieldset class="filters"><legend>Choose RFIDTag</legend>
 		<p>
 			<label for="rfidtag_id">Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="30" value="<?rfidtag_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);"  onkeydown="if(event.keyCode == 13){jump.btnFunction.value='Go';jump.submit();}" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="30" value="<?rfidtag_id?>" onkeyup="this.value=this.value.replace(/\s/,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event);"  onkeydown="if(event.keyCode == 13){jump.btnFunction.value='Go';jump.submit();}" />
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}",'','Go' ),
 				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
@@ -108,10 +108,17 @@ The following errors occurred:<br/>
 				<label for="skid_id">Skid #:</label>
 				<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
 				<? echo ( 
-					if ( $$variable{'RFIDTag'}->skid_id() ) {
-					return ssi::writeButton( $log, $dbh, 'SkidGo', 'go.gif', '', 'skid_details.html?skid_id='.$$variable{'RFIDTag'}->skid_id(), 'Go' );
+					my @Skids = openprint::Skid::find('rfidtag_id'=>$$variable{'RFIDTag'}->id());
+					if ( ! @Skids ) {
+						return ssi::writeButton( $log, $dbh, 'SkidAllocate', 'allocate.gif', '', 'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q{&btnFunction=AllocateSkid}, 'Allocate' );
+					} elsif ( 1 == @Skids ) {
+						return ssi::writeButton( $log, $dbh, 'SkidGo', 'go.gif', '', 'skid_details.html?skid_id='.$$variable{'RFIDTag'}->skid_id(), 'Go' );
 					} else {
-					return ssi::writeButton( $log, $dbh, 'SkidAllocate', 'allocate.gif', '', 'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q{&btnFunction=AllocateSkid}, 'Allocate' );
+                        my $html = '<br/><span class="error">There are multiple skids with this RFIDTag.  Please correct.</span><br/>';
+                        foreach my $Skid ( @Skids ) {
+                            $html .= sprintf('<a href="skid_details.html?skid_id=%1$d">%1$d</a><br/>', $Skid->id() );
+                        } # end foreach Skid
+                        return $html;
 					} # end if
 				) ?>
 			</p>

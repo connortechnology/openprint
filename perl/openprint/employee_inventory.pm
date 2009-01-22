@@ -54,6 +54,32 @@ sub skids {
 				$variable{'information'} .= "Skid $$Skid{'id'} has been deleted.<br/>";
 			} # end foreach
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Destroy' )  {
+		if ( $param{'skid_id'} ) {
+			$param{'skid_id'} =~ s/[^\d\-\,]//g;
+			my @skid_ids;
+			foreach my $range ( split ',', $param{'skid_id'} ) {
+				if ( $range =~ /(\d*)\-(\d*)/ ) {
+					push @skid_ids, ( $1 .. $2 );
+				} else {
+					push @skid_ids, $range;
+				} # end if
+			} # end foreach
+			foreach my $skid_id ( @skid_ids ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				if ( $_ = $Skid->destroy() ) {
+					$variable{'error'} .= $_;
+				} else {
+					$variable{'information'} .= "Skid $$Skid{'id'} has been destoryed.<br/>";
+				} # end if
+			} # end foreach
+		} elsif ( $param{'skids'} ) {
+			foreach my $skid_id ( ref $param{'skids'} eq 'ARRAY' ? @{$param{'skids'}} : $param{'skids'} ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				$Skid->delete();
+				$variable{'information'} .= "Skid $$Skid{'id'} has been deleted.<br/>";
+			} # end foreach
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
 		if ( $param{'skid_id'} ) {
 			$param{'skid_id'} =~ s/[^\d\-\,]//g;
@@ -463,6 +489,7 @@ sub save_skid {
 	$qty = $param{'Quantity'} if ! defined $qty;
 
 	$Skid->rfidtag_id( $param{'rfidtag_id'} ) if exists $param{'rfidtag_id'};
+$openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
 	$Skid->location_id( $param{'ddmLocation'} ) if $param{'ddmLocation'};
 	$Skid->location( $param{'txtLocation'} ) if $param{'txtLocation'};
@@ -521,7 +548,7 @@ sub skid_details {
 		} # end if
 	} # end foreach
 
-	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids ) ) {
+	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) ) {
 		$variable{'error'} .= "Skid $param{'skid_id'} not found!<br/>";
 		return;
 	} # end if
