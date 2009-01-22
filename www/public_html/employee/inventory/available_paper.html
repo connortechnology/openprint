@@ -33,6 +33,10 @@
 	} // end function bug_report
 
 	function check_inputs(form ) {
+		if ( (form.Docket && form.Docket.value == '') && (form.Project && form.Project.value == '') ) {
+			alert( 'Please enter the docket # or project # to allocate to.' );
+			return false;
+		} // end if
 		if ( form.skid_id && form.skid_id.value ) {
 			if ( form.type && (get_rdb_value( form.type ) == 'Roll') && form.Quantity.value > 10000 ) {
 				alert( 'Skids cannot contain more than 10000lbs' );

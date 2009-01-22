@@ -18,6 +18,7 @@ require openprint::Order;
 require openprint::OrderedProduct;
 require openprint::usergroup;
 require openprint::press_schedule;
+require openprint::PaperAllocation;
 
 sub delete_order {
 	my ( $log, $dbh, $order_id ) = @_;
@@ -1381,6 +1382,7 @@ sub cancel_order {
 
 		# Free up any stock allocated to this project
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, qq`De-allocated $$PA{'quantity'}$$PA{'units'} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{'paper_id'}">` . $PA->Paper()->to_string() . ($PA->skid_id()?qq`</a> on skid <a href="/employee/inventory/skids.html?skid_id=$$PA{skid_id}">$$PA{skid_id}</a>` : '') );
 			$PA->delete();
 		} # end foreach PA
 	} # end foreach
