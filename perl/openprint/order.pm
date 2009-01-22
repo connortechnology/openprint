@@ -1378,6 +1378,11 @@ sub cancel_order {
 		$Project->save();
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
 		openprint::press_schedule::remove( $Project->id() );
+
+		# Free up any stock allocated to this project
+		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
+			$PA->delete();
+		} # end foreach PA
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );
 } # end sub cancel_order
