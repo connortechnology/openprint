@@ -52,13 +52,34 @@
 		<fieldset>
 			<legend>Job Information</legend>
 			<hr class="legendUnderline" />
+<? eval (
+	my $Project;
+	if ( $param{'ProjectIndex'} ) {
+		$Project = new openprint::Project( $param{'ProjectIndex'} );
+	} elsif ( $session{'project_id'} ) {
+		$Project = new openprint::Project( $session{'project_id'} );
+	} # end if
+$openprint::log->debug("Project: $Project " . $Project->status() );
+	if ( $Project and ( $Project->status() eq 'Unordered' ) ) {
+		$$variable{'txtQuoteNumber'} = $session{'project_id'};
+		$$variable{'txtQuotedPrice'} = $Project->price1();
+		my $services = $Project->services();
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+		if ( $sig_specs ) {
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
+			$$variable{'Stock'} = $Paper->to_string();
+			$$variable{'Size'} = $$sig_specs{'txtFinalWidth'} . '&quot; x ' . $$sig_specs{'txtFinalHeight'}.'&quot; Finished';
+		} # end if
+		$$variable{'Quantity'} = $Project->quantity1();
+	} # end if
+) ?>
 			<p>
 				<label for="txtQuoteNumber">Quote #:</label>
-				<input type="text" id="txtQuoteNumber" name="txtQuoteNumber" />
+				<input type="text" id="txtQuoteNumber" name="txtQuoteNumber" value="<?txtQuoteNumber?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 			</p>
 			<p>
 				<label for="txtQuotedPrice">Quoted Price:</label>
-				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" />
+				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" value="<?txtQuotedPrice?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</p>
 			<p>
 				<label for="ddmDueDateMonth">Due Date:</label>
@@ -68,19 +89,26 @@
 			</p>
 			<p>
 				<label>Size:</label>
-				<input type="text" id="Size" name="Size" />
+				<input type="text" id="Size" name="Size" value="<?Size?>" />
 			</p>
 			<p>
 				<label>Qty:</label>
-				<input type="text" id="Quantity" name="Quantity" />
+				<input type="text" id="Quantity" name="Quantity" value="<?Quantity?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 			</p>
 			<p>
 				<label>Stock:</label>
-				<input type="text" id="Stock" name="Stock" />
+				<input type="text" id="Stock" name="Stock" value="<?Stock?>" />
 			</p>
+			<? if ( $$variable{'txtQuoteNumber'} ) ?>
+				<p><label>Summary:</label>
+				<? echo (
+					new openprint::Project( $$variable{'txtQuoteNumber'} )->summary();
+				) ?>
+				</p>
+			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
 			<p>
 				<label for="txtJobDescription">Description:</label>
-				<textarea name="txtJobDescription" rows="4"></textarea>
+				<textarea name="txtJobDescription" rows="4" onkeyup="textarea_resize(this);"></textarea>
 			</p>
 			<p class="proof_type">
 				<label>Proof Required:</label>
