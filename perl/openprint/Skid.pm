@@ -316,6 +316,8 @@ sub Location {
 
 sub Contents {
     my $self = shift;
+	return if ! $$self{'id'};
+
     my %params = @_;
     $params{'skid_id'} = $$self{'id'};
 
