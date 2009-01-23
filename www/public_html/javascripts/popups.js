@@ -61,6 +61,15 @@ function open_window(url,title,options) {
 
 function toggleContent( divID, page_to_display, inputs, page_to_hide ) {
 	var div = $( divID );
+
+	var params = new Array();
+	if ( inputs ) {
+	while ( inputs.length ) {
+		params[params.length] = inputs.shift() + '=' + inputs.shift();
+	}
+	} // end if
+
+
 	if ( div.style.display == 'none' ) {
 		div.show();
 		new Ajax.Updater(divID,page_to_display, {method:'get',parameters:inputs});

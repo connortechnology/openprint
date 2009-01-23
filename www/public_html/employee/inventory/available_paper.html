@@ -33,6 +33,10 @@
 	} // end function bug_report
 
 	function check_inputs(form ) {
+		if ( (form.Docket && form.Docket.value == '') && (form.Project && form.Project.value == '') ) {
+			alert( 'Please enter the docket # or project # to allocate to.' );
+			return false;
+		} // end if
 		if ( form.skid_id && form.skid_id.value ) {
 			if ( form.type && (get_rdb_value( form.type ) == 'Roll') && form.Quantity.value > 10000 ) {
 				alert( 'Skids cannot contain more than 10000lbs' );
@@ -285,10 +289,11 @@ Please select a Paper to view/edit.<br>
 		<tr>
 			<th align="left">Paper ID</th>
 			<th align="left" width="105">FSC</th>
-			<th align="left" width="60">GSM</th>
-			<th align="left" width="60">MWeight</th>
-			<th align="left" width="75">Available</th>
-			<th align="left" width="110">Age</th>
+			<th align="left" width="40">GSM</th>
+			<th align="left" width="40">MWeight</th>
+			<th align="right" width="75">Available</th>
+			<th align="left" width="115">Age</th>
+			<th align="left" width="115">Last Seen</th>
 			<th align="left" width="120">Location</th>
 			<th width="75" class="unprintable">&nbsp;</th>
 		</tr>
@@ -305,6 +310,7 @@ Please select a Paper to view/edit.<br>
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
 				next if $Paper->in_stock() - $Paper->allocated() <= 0;
 				my %skid_age;
+				my %last_seen;
 				my %skid_location;
 				my $skids = 0;
 				foreach my $Skid ( $Paper->skids() ) {
@@ -322,6 +328,9 @@ Please select a Paper to view/edit.<br>
 					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->created_on());
 					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
 					$skid_age{$days} += 1;
+					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->created_on());
+					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
+                    $last_seen{$days} += 1;
 					$skids += 1;
 
 					$skid_location{$Skid->Location()->Root()->id()} += 1;
@@ -343,7 +352,7 @@ $selected = 'style="background-color:yellow;"';
 $selected = '';
 }
 
-				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%s</td><td>%.0f</td><td>%.0f</td><td>%s</td><td>%s</td><td>%s</td>',
+				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%s</td><td>%.0f</td><td>%.0f</td><td align="right">%s&nbsp;</td><td align="right">%s&nbsp;</td><td>%s</td><td>%s</td>',
 					$rowclass,
 					$$Paper{'id'},
 					$selected,
@@ -354,6 +363,7 @@ $selected = '';
 					$Paper->mweight(),
 					($Paper->in_stock() - $Paper->allocated()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
 					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ' skid'.($skid_age{$_}>1?'s':'') } keys %skid_age),
+					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ' skid'.($last_seen{$_}>1?'s':'') } keys %last_seen),
 					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ' skid'.($skid_location{$_}>1?'s':'') } keys %skid_location),
 					);
 				$html .= '<td align="center" class="unprintable">';

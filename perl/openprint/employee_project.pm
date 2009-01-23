@@ -735,6 +735,64 @@ sub summary {
 	openprint::print_project::summary( @_ );
 } # end sub summary
 
+sub _stock_checkout {
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+
+	if ( $param{'action'} eq 'Add' ) {
+		$param{'skid_id'} =~ s/\D//g;
+		$param{'rfidtag_id'} =~ s/[^a-zA-Z0-9]//g;
+		my $Skid;
+		if ( $param{'skid_id'} ) {
+			$Skid = new openprint::Skid( $param{'skid_id'} );
+		} elsif ( $param{'rfidtag_id'} ) {
+			my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
+			if ( ! $RFIDTag->id() ) {
+				$variable{'error'} .= 'RFID Tag ' .  $param{'rfidtag_id'} . ' is not in the system.<br/>';
+			} else {
+				$Skid = $RFIDTag->Skid();
+			} # end if
+		} else {
+			$variable{'error'} .='Please scan the barcode on the skid label or rfid tag.<br/>';
+		} # end if
+		if ( ! $Skid->id() ) {
+			$variable{'error'} .= 'Unknown skid scanned.<br/>';
+			return;
+		} # end if
+		my @PI = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'comment_like'=>'Checked out%');
+		if ( @PI ) {
+			foreach my $PI ( @PI ) {
+				if ( ! $PI->docket() ) {
+					$PI->save({'docket'=>$param{'docket'}});
+				} # end if
+			} # end foreach PI
+
+			if ( $PI[0]->Paper()->type() eq 'Roll' ) {
+				$variable{'error'} .= 'Roll ' . $Skid->id() . ' has already been checked out.<br/>';
+			} else {
+				$variable{'error'} .= 'Skid ' . $Skid->id() . ' has already been checked out.<br/>';
+			} # end if
+		} # end if
+
+		foreach my $C ( $Skid->Contents() ) {
+			if ( ! @PI ) {
+				my $PI = new openprint::PaperInventory();
+				$PI->save({
+						'docket'	=>	$param{'docket'},
+						'paper_id'	=>	$C->paper_id(),
+						'user_id'	=>	$session{'user_id'},
+						'delta'		=>	-1*$C->quantity(),
+						'comment'	=>	'Checked out for docket ' . $param{'docket'},
+						'skid_id'	=>	$Skid->id(),
+						'units'		=>	$C->units(),
+						});
+				$C->quantity( 0 );
+				$C->save();
+			} # end if
+
+		} # end foreach C
+	} # end if
+} # end sub _stock_checkout
+
 1;
 
 __END__

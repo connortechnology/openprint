@@ -11,11 +11,12 @@ use vars qw( $log $dbh %fields %transforms %defaults $table $serial );
 my $debug = 1;
 
 %fields = (
-'skid_id'		=>	'skid_id',
-'paper_id'		=>	'paper_id',
-'quantity'		=>	'quantity',
-'purpose_id'	=>	'purpose_id',
-'units'			=>	'units',
+	'id'			=>	'id',
+	'skid_id'		=>	'skid_id',
+	'paper_id'		=>	'paper_id',
+	'quantity'		=>	'quantity',
+	'purpose_id'	=>	'purpose_id',
+	'units'			=>	'units',
 );
 %defaults = (
 );
@@ -49,7 +50,7 @@ sub find {
 		$log->debug("openprint::SkidContent::find( $sql)" . $dbh->errstr);
 		return;
 	} elsif ( $debug ) {
-		$log->debug("Loading openprint::SkidContent::find( $sql) : " . @$data );
+		$log->debug("Loading openprint::SkidContent::find($sql) : @values # of results: " . @$data );
 	} # end if
 	return map { new openprint::SkidContent( $_->{id}, $_ ); } @$data;
 } # end sub find

@@ -31,6 +31,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 my $debug = 0;
 
 my @fields = (
+		'id',
 		'group_id','owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
@@ -243,7 +244,7 @@ sub load {
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Papers WHERE id=?}, {}, $$self{'id'} );
 	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
+	@$self{@fields} = @$data{@fields};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
 } # end sub load
 
@@ -756,7 +757,7 @@ sub allocate {
 				'operator_id'	=>	$openprint::session{'user_id'},
 				} );
 	} # end if
-	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . ($skid_id?qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} : '') );
+	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity$units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . ($skid_id?qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} : '') );
 	delete $$self{allocated};
 	return $PA;
 } # end sub allocate

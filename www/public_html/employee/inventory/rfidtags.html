@@ -14,9 +14,9 @@ Please select a RFID Tag to view/edit.<br>
 	<fieldset class="filters"><legend>Choose RFID Tag</legend>
 		<p>You need to enter at least 3 digits:<br/>
 			<label for="rfidtag_id">RFID Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="this.form.rfidtag_hex.value='';if(event.keyCode == 13){load(f1);}"/>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.rfidtag_hex.value='';if(event.keyCode == 13){load(f1);}"/>
 			Hex:
-			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeydown="this.form.rfidtag_id.value='';if(event.keyCode == 13){load( document.forms.f1 );}" />
+			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.rfidtag_id.value='';if(event.keyCode == 13){load( document.forms.f1 );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', 'f1.submit();','','Load' ); ) ?>
 		</p>
 	</fieldset>
