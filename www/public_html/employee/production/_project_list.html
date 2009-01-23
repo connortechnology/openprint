@@ -1,47 +1,37 @@
 <? eval (
-	if ( %openprint::param ) {
-		foreach my $param ( 'DueDateStartYear','DueDateStartMonth','DueDateStartDay','DueDateEndYear','DueDateEndMonth','DueDateEndDay','ProjectStatus','ddmCustomer', 'ddmPress','ddmSalesRep' ) {
-			if ( ref $openprint::param{$param} eq 'ARRAY' ) {
-				$openprint::session{'/employee/production/projects.html?'.$param} = join(';', @{$openprint::param{$param}} );
-			} else {
-				$openprint::session{'/employee/production/projects.html?'.$param} = $openprint::param{$param};
-			} # end if
-		} # end foreach
-	} # end if
+	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
+		@{$$variable{'Projects'}} = openprint::Project::find( 'docket_start' => $param{'StartDocket'}, 'docket_end'=> $param{'EndDocket'},'order'=>'lngdocketnumber' );
 
-	if ( $openprint::param{'StartDocket'} and $openprint::param{'EndDocket'}) {
-		@{$$variable{'Projects'}} = openprint::Project::find( 'docket_start' => $openprint::param{'StartDocket'}, 'docket_end'=> $openprint::param{'EndDocket'},'order'=>'lngdocketnumber' );
-
-	} elsif ( $openprint::param{'StartDocket'} ) {
-		@{$$variable{'Projects'}} = openprint::Project::find( 'docket' => $openprint::param{'StartDocket'} );
+	} elsif ( $param{'StartDocket'} ) {
+		@{$$variable{'Projects'}} = openprint::Project::find( 'docket' => $param{'StartDocket'} );
 	} else {
 		$$variable{'DueDateStart'} = sprintf('%.4d-%.2d-%.2d', 
-			@openprint::session{
+			@session{
 			'/employee/production/projects.html?DueDateStartYear',
 			'/employee/production/projects.html?DueDateStartMonth',
 			'/employee/production/projects.html?DueDateStartDay'}
 			);
 		$$variable{'DueDateEnd'} = sprintf('%.4d-%.2d-%.2d',
-			@openprint::session{
+			@session{
 			'/employee/production/projects.html?DueDateEndYear',
 			'/employee/production/projects.html?DueDateEndMonth',
 			'/employee/production/projects.html?DueDateEndDay'}
 			);
 
 		my %filters = (
-				'used_press_name'	=> [ split ';', $openprint::session{'/employee/production/projects.html?ddmPress'} ],
-				'status'			=> [ split ';', $openprint::session{'/employee/production/projects.html?ProjectStatus'} ],
+				'used_press_name'	=> [ split ';', $session{'/employee/production/projects.html?ddmPress'} ],
+				'status'			=> [ split ';', $session{'/employee/production/projects.html?ProjectStatus'} ],
 				'due_date_start'	=> $$variable{'DueDateStart'},
 				'due_date_end'		=> $$variable{'DueDateEnd'},
 				'due_date'			=> undef,
 				'misc'				=> ' AND order_id IS NOT NULL',
 				'order'				=> 'due_date, lngDocketNumber',
 			);
-			if ( $openprint::session{'/employee/production/projects.html?ddmSalesRep'} ) {
-				$filters{'salesrep_id'} = $openprint::session{'/employee/production/projects.html?ddmSalesRep'};
+			if ( $session{'/employee/production/projects.html?ddmSalesRep'} ) {
+				$filters{'salesrep_id'} = $session{'/employee/production/projects.html?ddmSalesRep'};
 			} # end if
-			if ( $openprint::session{'/employee/production/projects.html?ddmCustomer'} ) {
-				$filters{'company_id'} = $openprint::session{'/employee/production/projects.html?ddmCustomer'};
+			if ( $session{'/employee/production/projects.html?ddmCustomer'} ) {
+				$filters{'company_id'} = $session{'/employee/production/projects.html?ddmCustomer'};
 			} # end if
 		@{$$variable{'Projects'}} = openprint::Project::find( %filters );
 	} # end if
@@ -53,28 +43,28 @@
 			<th width="60">Docket#</th>
 			<th align="left">Customer</th>
 			<th align="left">Project Name</th>
-	<? if ( ! $openprint::param{'ddmEmployee'} ) ?>
+	<? if ( ! $param{'ddmEmployee'} ) ?>
 			<th align="left">Operators</th>
-	<? endif ( ! $openprint::param{'ddmEmployee'} ) ?>
+	<? endif ( ! $param{'ddmEmployee'} ) ?>
 			<th width="75" align="center">Due Date</th>
 			<th width="85" align="right">Status</th>
 		</tr>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 		<? eval ( @{$$variable{'operators'}} = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $$variable{'Project'}->id() ); ) ?>
-		<? if ( (!$openprint::param{'ddmEmployee'}) or sets::isin( $openprint::param{'ddmEmployee'}, $$variable{'operators'} ) ) ?>
+		<? if ( (!$param{'ddmEmployee'}) or sets::isin( $param{'ddmEmployee'}, $$variable{'operators'} ) ) ?>
 		<tr<?rowclass?>> 
 			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a>&nbsp;</td>
 			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->docket(); ) ?></a>&nbsp;</td>
 			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->Company()->name(); ) ?></a>&nbsp;</td>
 			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference()); ) ?></a>&nbsp;</td>
-	<? if ( ! $openprint::param{'ddmEmployee'} ) ?>
+	<? if ( ! $param{'ddmEmployee'} ) ?>
 			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><?operator?></a>&nbsp;</td>
-	<? endif ( ! $openprint::param{'ddmEmployee'} ) ?>
+	<? endif ( ! $param{'ddmEmployee'} ) ?>
 			<td align="center"><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->due_date(); ) ?></a>&nbsp;</td>
 			<td align="right"><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->status(); ) ?></a>&nbsp;</td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq ' class="colRow"' ? '' : ' class="colRow"' ) ?>
-		<? endif ( (!$openprint::param{'ddmEmployee'}) or sets::isin( $openprint::param{'ddmEmployee'}, $$variable{'operators'} ) ) ?>
+		<? endif ( (!$param{'ddmEmployee'}) or sets::isin( $param{'ddmEmployee'}, $$variable{'operators'} ) ) ?>
 		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 	</table>
 <? else ( @{$$variable{'Projects'}} ) ?>
