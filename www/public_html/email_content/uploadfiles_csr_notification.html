@@ -26,40 +26,17 @@ OR:
 	<div id="contactInformation">
 		<div style="float: left; width: 50%;">
 			<div class="fieldContainer">
-				<p>
-					<label>Company Name:</label>
-					<?txtCompanyName?>
-				</p>
-				<p>
-					<label>Address:</label>
-					<?txtAddress1?>
-				</p>
-<? if ( $$variable{'txtAddress2'} ) ?>
-				<p>
-					<label>&nbsp;</label>
-					<?txtAddress2?>
-				</p>
-<? endif ( $$variable{'txtAddress2'} ) ?>
-				<p>
-					<label>Postal Code:</label>
-					<?txtPostalCode?>
-				</p>
+				<p><label>Company Name:</label><?txtCompanyName?></p>
+				<p><label>Address:</label><?txtAddress1?></p>
+				<? if ( $$variable{'txtAddress2'} ) ?><p><label>&nbsp;</label><?txtAddress2?></p><? endif ( $$variable{'txtAddress2'} ) ?>
+				<p><label>Postal Code:</label><?txtPostalCode?></p>
 			</div>
 		</div>
 		<div style="float: left; width: 50%;">
 			<div class="fieldContainer">
-				<p>
-					<label>Contact Name:</label>
-					<?txtContactName?>
-				</p>
-				<p>
-					<label>Email Address:</label>
-					<a href="mailto:<?txtEmailAddress?>"><?txtEmailAddress?></a>
-				</p>
-				<p>
-					<label>Phone Number:</label>
-					<?txtPhoneNumber?>
-				</p>
+				<p><label>Contact Name:</label><?txtContactName?></p>
+				<p><label>Email Address:</label><a href="mailto:<?txtEmailAddress?>"><?txtEmailAddress?></a></p>
+				<p><label>Phone Number:</label><?txtPhoneNumber?></p>
 			</div>
 		</div>
 	</div>
@@ -68,95 +45,51 @@ OR:
 	<legend>Job Information</legend>
 	<div class="fieldContainer">
 <? if ( $param{'docket'} ) ?>
-		<p>
-			<label>Docket #:</label>
-			<? echo ( $param{'docket'} ) ?>
+		<p><label>Docket #:</label><? echo ( $param{'docket'} ) ?></p>
+	<? eval ( @{$$variable{'Projects'}} = openprint::Project::find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'index'); ) ?>
+	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+		<p><label>Project ID:</label><? echo ( $$variable{'Project'}->id() ) ?></p>
+		<p><label>Reference:</label><? echo ( $$variable{'Project'}->reference(); ) ?></p>
+		<p><label>Description:</label><? echo ( $$variable{'Project'}->summary(); ) ?></p>
+		<p><label>Due Date:</label>
+			<? echo ( 
+				if ( $$variable{'Project'}->requested_date() ) {
+					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) );
+				} # end if
+				return 'None selected';
+			) ?>
 		</p>
-<? eval ( @{$$variable{'Projects'}} = openprint::Project::find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'index'); ) ?>
-<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
-		<p>
-			<label>Project ID:</label>
-			<? echo ( $$variable{'Project'}->id() ) ?>
-		</p>
-		<p>
-			<label>Reference:</label>
-			<? echo ( $$variable{'Project'}->reference(); ) ?>
-		</p>
-		<p>
-			<label>Description:</label>
-			<? echo ( $$variable{'Project'}->summary(); ) ?>
-		</p>
-		<p>
-			<label>Due Date:</label>
-			<? echo ( Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time( $$variable{Project}->requested_date() ) ); ) ?>
-		</p>
-<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 <? else ( $param{'docket'} ) ?>
 <? if ( $param{'project_id'} ) ?>
-		<p>
-			<label>Project ID:</label>
-			<? echo ( $param{'project_id'} ) ?>
-		</p>
-		<p>
-			<label>Reference:</label>
+		<? eval ( $$variable{'Project'} = new openprint::Project( $param{'project_id'} ); ) ?>
+		<p><label>Project ID:</label><? echo ( $param{'project_id'} ) ?></p>
+		<p><label>Reference:</label><? echo ( return $$variable{'Project'}->reference();) ?></p>
+		<p><label>Description:</label><? echo ( $$variable{'Project'}->summary(); ) ?></p>
+		<p><label>Due Date:</label>
 			<? echo ( 
-				$$variable{'Project'} = new openprint::Project( $param{'project_id'} );
-				return $$variable{'Project'}->reference();
-				) ?>
-		</p>
-		<p>
-			<label>Description:</label>
-			<? echo ( $$variable{'Project'}->summary(); ) ?>
-		</p>
-		<p>
-			<label>Due Date:</label>
-			<? echo ( Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time( $$variable{Project}->requested_date() ) ); ) ?>
+				if ( $$variable{Project}->requested_date() ) {
+					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) );
+				} # end if
+				return 'None selected';
+			) ?>
 		</p>
 <? else ( $param{'project_id'} ) ?>
 	<? if ( $param{'txtQuoteNumber'} ) ?>
-		<p>
-			<label>Quote Number:</label>
-			<? echo ( $param{'txtQuoteNumber'} ) ?>
-		</p>
+		<p><label>Quote Number:</label><? echo ( $param{'txtQuoteNumber'} ) ?></p>
+		<p><label>Summary:</label><? echo ( new openprint::Project( $param{'txtQuoteNumber'} )->summary(); ) ?></p>
 	<? endif ( $param{'txtQuoteNumber'} ) ?>
-	<? if ( $param{'txtQuotedPrice'} ) ?>
-		<p>
-			<label>Quoted Price:</label>
-			<? echo ( $param{'txtQuotedPrice'} ) ?>
+	<? if ( $param{'txtQuotedPrice'} ) ?><p><label>Quoted Price:</label><? echo ( $param{'txtQuotedPrice'} ) ?></p><? endif ( $param{'txtQuotedPrice'} ) ?>
+	<p><label>Description:</label><? echo ( $param{'txtJobDescription'} ) ?></p>
+	<? if ( $param{'ddmDueDateYear'} ) ?>
+		<p><label>Due Date:</label>
+			<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( join('-',@param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}) ) ); ) ?>
 		</p>
-	<? endif ( $param{'txtQuoteNumber'} ) ?>
-	<? if ( $param{'txtQuoteNumber'} ) ?>
-		<p>
-			<label>Summary:</label>
-			<? echo ( new openprint::Project( $param{'txtQuoteNumber'} )->summary(); ) ?>
-		</p>
-	<? endif ( $param{'txtQuoteNumber'} ) ?>
-		<p>
-			<label>Description:</label>
-			<? echo ( $param{'txtJobDescription'} ) ?>
-		</p>
-<? if ( $param{'ddmDueDateYear'} ) ?>
-		<p>
-			<label>Due Date:</label>
-			<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Calc::Date_to_Time( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, 0,0,0 ) ); ) ?>
-		</p>
-<? endif ( $param{'ddmDueDateYear'} ) ?>
-		<p>
-			<label>Size:</label>
-			<? echo ( $param{'Size'} ) ?>
-		</p>
-		<p>
-			<label>Quantity:</label>
-			<? echo ( $param{'Quantity'} ) ?>
-		</p>
-		<p>
-			<label>Stock:</label>
-			<? echo ( $param{'Stock'} ) ?>
-		</p>
-		<p>
-			<label>Proofs:</label>
-			<? echo ( $param{'proof_type'} ) ?>
-		</p>
+	<? endif ( $param{'ddmDueDateYear'} ) ?>
+		<p><label>Size:</label><? echo ( $param{'Size'} ) ?></p>
+		<p><label>Quantity:</label><? echo ( $param{'Quantity'} ) ?></p>
+		<p><label>Stock:</label><? echo ( $param{'Stock'} ) ?></p>
+		<p><label>Proofs:</label><? echo ( $param{'proof_type'} ) ?></p>
 <? endif ( $param{'project_id'} ) ?>
 <? endif ( $param{'docket'} ) ?>
 
