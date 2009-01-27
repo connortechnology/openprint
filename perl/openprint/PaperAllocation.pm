@@ -5,10 +5,11 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable $dbh $log %fields %transforms %defaults );
+use vars qw(%session %variable $dbh $log %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*session = \%openprint::session;
 
 
 require sql;
@@ -135,6 +136,9 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
+	if ( @_ ) {
+		$self->Project()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted. Reason: ' . $_[0] );
+	} # end if
     sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete

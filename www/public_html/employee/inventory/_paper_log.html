@@ -12,10 +12,29 @@
 	} else {
 		@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 	} # end if
+
+	my @PI = openprint::PaperInventory::find(
+		'paper_id'	=>	$param{'paper_id'},
+		'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
+		'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
+	);
+	if ( (! @PI) and ! $param{'ddmStartYear'} ) {
+		@PI = openprint::PaperInventory::find('paper_id'=>$param{'paper_id'}, 'limit'=>1, 'order'=>'updated_on DESC');
+		if ( @PI ) {
+			my ( $y, $m, $d ) = $PI[0]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
+			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $y, $m, $d );
+			my @PI = openprint::PaperInventory::find(
+				'paper_id'	=>	$param{'paper_id'},
+				'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
+				'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
+				);
+		} # end if
+	} # end if
+	$$variable{'PI'} = \@PI;
 ) ?>
 <form name="LogForm" id="LogForm">
 	<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>"/>
-	<p>
+	<p class="unprintable">
 		<label>Date:</label>
 		<span class="DateSelector">
 			<select name="ddmStartYear" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?StartYears?></select>
@@ -29,45 +48,40 @@
 			<select name="ddmEndDay" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?EndDays?></select>
 		</span>
 	</p>
-<hr/>
-<table class="List">
-	<tr>
-		<th align="left" width="120">Date</th>
-		<th align="left">Employee</th>
-		<th align="left" width="70">Skid</th>
-		<th align="left" width="120">RFID</th>
-		<th align="left" width="90">Amount</th>
-		<th align="left" width="90">In Stock</th>
-		<th align="left" width="50">Units</th>
-		<th align="left">Location</th>
-	</tr>
-	<? echo (
-		my $html;
-		my @data = sql::execute( $log, $dbh, q{SELECT updated_on, user_id, delta, instock, units, comment, poindex, skid_id FROM Paper_Inventory WHERE paper_id=? AND ( updated_on BETWEEN ? AND ? ) ORDER BY updated_on},
-		$param{'paper_id'},
-		$$variable{'Start'} . ' 00:00:00',
-		$$variable{'End'} . ' 23:59:59',
-		);
-		my $rowclass;
-		while ( my ( $time, $user_id, $delta, $instock, $units, $comment, $po_id, $skid_id ) = splice @data, 0, 8 ) {
-			$html .= sprintf( '<tr%1$s><td>%2$s</td><td>%3$s</td>
-<td><a href="skid_details.html?skid_id=%4$d">%4$d</a></td>
-<td>%5$s</td>
-<td>%6$d</td><td>%7$d</td><td>%8$s</td><td>%9$s</td>
-</tr>',
-				$rowclass,
-				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
-				new openprint::User($user_id)->name(),
-				$skid_id,
-				new openprint::Skid( $skid_id )->rfidtag_id(),
-				$delta,
-				$instock,
-				$units,
-				$comment,
-				);
-			$rowclass = $rowclass ? '' : ' class="colRow"';
-		} # end while
-		return $html;
-	) ?>
-</table>
+	<hr/>
+	<table class="List">
+		<tr>
+			<th align="left" width="120">Date</th>
+			<th align="left">Employee</th>
+			<th align="left" width="70">Skid</th>
+			<th align="left" width="170">RFID</th>
+			<th align="left" width="100">Amount</th>
+			<th align="left" width="100">In Stock</th>
+			<th align="left">Comment</th>
+		</tr>
+		<? echo (
+			my $html;
+		
+			my $rowclass;
+			foreach my $PI ( @{$$variable{'PI'}} ) {
+				$html .= sprintf( '<tr%1$s><td>%2$s</td><td>%3$s</td>
+	<td><a href="skid_details.html?skid_id=%4$d">%4$d</a></td>
+	<td><a href="rfidtag_details.html?rfidtag_id=%5$s">%5$s</a></td>
+	<td>%6$d%8$s</td><td>%7$d%8$s</td><td>%9$s</td>
+	</tr>',
+					$rowclass,
+					Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PI->updated_on()) ),
+					$PI->User()->name(),
+					$PI->skid_id(),
+					$PI->Skid()->rfidtag_id(),
+					$PI->delta(),
+					$PI->instock(),
+					$PI->units(),
+					$PI->comment(),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach
+			return $html;
+		) ?>
+	</table>
 </form>

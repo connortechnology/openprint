@@ -72,11 +72,11 @@ function AjaxToggleContent( divID, show_url, inputs, hide_url ) {
 
 	if ( div.style.display == 'none' ) {
 		div.show();
-		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&') } );
+		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
 	} else {
 		div.hide();
-		if ( page_to_hide )
-			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&') } );
+		if ( hide_url )
+			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
 	} // end if
 } // end function AjaxToggleContent
 

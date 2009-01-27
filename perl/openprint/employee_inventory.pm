@@ -342,7 +342,7 @@ sub paper_details {
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
 		allocate( undef, @param{'paper_id','Quantity','Project','Docket','specific'} );
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
-		check_out( undef, @param{'paper_id','Quantity','Project','Docket'} );
+		check_out( undef, @param{'paper_id','Quantity','Project','Docket','reason'} );
 	} elsif ( $param{'btnFunction'} eq 'Merge' ) {
 		my @Duplicates = openprint::Paper::find(
 				'manufacturer_id'	=> $Paper->manufacturer_id(),
@@ -652,12 +652,12 @@ sub skid_details {
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'CheckIn' ) {
 		foreach my $skid_id ( @skid_ids ) {
-			check_in( $skid_id, @param{'paper_id', 'Quantity','Project','Docket'} );
+			check_in( $skid_id, @param{'paper_id', 'Quantity','Project','Docket','reason'} );
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
 		my $qty = $param{'Quantity'};
 		foreach my $skid_id ( @skid_ids ) {
-			$qty -= check_out( $skid_id, $param{'paper_id'}, $qty, @param{'Project','Docket'} );
+			$qty -= check_out( $skid_id, $param{'paper_id'}, $qty, @param{'Project','Docket','reason'} );
 			last if ! $qty;
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'DeletePaper' ) {
@@ -675,7 +675,7 @@ sub skid_details {
 } # end sub skid_details
 
 sub check_out {
-	my ( $skid_id, $paper_id, $quantity, $project_id, $docket ) = @_;
+	my ( $skid_id, $paper_id, $quantity, $project_id, $docket, $reason ) = @_;
 
 	if ( ! ( $paper_id or $skid_id ) ) {
 		$variable{'error'} .= 'Skid or Paper not specified. No paper checked out.<br/>';
@@ -691,7 +691,7 @@ sub check_out {
 			$Paper = new openprint::Paper( shift @papers );
 			$paper_id = $Paper->id();
 		} else {
-			$variable{'error'} .= "Skid contains more than one type of paper.	You must specify.<br/>";
+			$variable{'error'} .= 'Skid contains more than one type of paper.	You must specify.<br/>';
 			return;
 		} # end if
 	} # end if
@@ -709,24 +709,34 @@ sub check_out {
 		@skids = sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? ORDER BY skid_id}, $paper_id );
 	} # end if
 	if ( ! @skids ) {
-		$variable{'error'} .= "There are no skids for this paper. Cannot check out.<br/>";
+		$variable{'error'} .= 'There are no skids for this paper. Cannot check out.<br/>';
 		return;
+	} # end if
+
+	my $description =  'Checked out';
+	if ( @Projects ) {
+		$description .= sprintf( ' for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a>', $Projects[0]->id(), $Projects[0]->docket() );
+	} # end if
+	if ( $reason ) {
+		$description .= ': ' . $reason;
 	} # end if
 
 	my $qty = $quantity;
 	foreach my $skid_id ( @skids ) {
 		my $Skid = new openprint::Skid( $skid_id );
-		if ( $$Skid{Paper}{$paper_id} < $qty ) {
+		if ( $$Skid{Paper}{$paper_id} <= 0 ) {
+			# No paper on skid
+		} elsif ( $$Skid{Paper}{$paper_id} < $qty ) {
 			my $amount = $$Skid{Paper}{$paper_id};
 			$qty -= $amount;
 			$amount *= -1;
 			$Skid->add( $Paper, $amount );
-			$Paper->add_inventory( $Skid, $amount, $units, 'Checked out' . ( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
+			$Paper->add_inventory( $Skid, $amount, $units, $description );
 			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if @Projects and $Paper->allocated( $Projects[0]->id() );
 		} else {
 			$$Skid{Paper}{$paper_id} -= $qty;
 			if ( @Projects ) {
-				$Paper->add_inventory( $Skid, -1*$qty, $units, 'Checked out' .( @Projects ? ' for docket ' . $Projects[0]->docket() : '' ) );
+				$Paper->add_inventory( $Skid, -1*$qty, $units, $description );
 				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
 			} else {
 				$Paper->add_inventory( $Skid, -1*$qty, $units, 'Checked out' );
@@ -738,17 +748,17 @@ sub check_out {
 	} # end foreach
 
 	if ( @Projects ) {
-		$variable{'information'} .= "Checked out $quantity $units to docket " . $Projects[0]->docket() . '<br/>';
+		$variable{'information'} .= sprintf('Checked out %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a><br/>', $quantity, $units, $docket, $Projects[0]->id(), $Projects[0]->docket() );
 	} else {
-		$variable{'information'} .= "Checked out $quantity $units to unknown docket.<br/>";
+		$variable{'information'} .= "Checked out $quantity$units to unknown docket.<br/>";
 	} # end if
 	return $quantity;
 } # end sub check_out
 
 sub check_in {
-	my ( $skid_id, $paper_id, $quantity, $project_id, $docket ) = @_;
+	my ( $skid_id, $paper_id, $quantity, $project_id, $docket, $reason ) = @_;
 	if ( ! ( $paper_id or $skid_id ) ) {
-		$variable{'error'} .= "Skid or Paper not specified. No paper allocated.<br/>";
+		$variable{'error'} .= 'Skid or Paper not specified. No paper checked in.<br/>';
 		return;
 	} # end if
 	my $Paper;
@@ -762,7 +772,7 @@ sub check_in {
 			$Paper = new openprint::Paper( shift @papers );
 			$paper_id = $Paper->id();
 		} else {
-			$variable{'error'} .= "Skid contains more than one type of paper.	You must specify.<br/>";
+			$variable{'error'} .= 'Skid contains more than one type of paper. You must specify.<br/>';
 			return;
 		} # end if
 	} # end if
@@ -771,7 +781,7 @@ sub check_in {
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
 	if ( ($Paper->type() eq 'Roll') and ($quantity > 0) and ( $$Skid{Paper}{$Paper->id()} + $quantity > 10000 ) ) {
-		$variable{'error'} .= "Skid cannot hold more than 10000lbs.<br/>";
+		$variable{'error'} .= 'Skid cannot hold more than 10000lbs.<br/>';
 		return;
 	} # end if
 
@@ -780,15 +790,23 @@ sub check_in {
 		$quantity = '+' . $quantity;
 	} # end if
 
+	my $description = 'Added';
+	if ( @Projects ) {
+		$description .= sprintf(' from docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a>', $Projects[0]->id(), $Projects[0]->docket() );
+	} # end if
+	if ( $reason ) {
+		$description .= ' : ' . $reason;
+	} # end if
+
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	my $delta = $Skid->add( $Paper, $quantity, $units );
 	if ( ! @Projects ) {
-		$Paper->add_inventory( $Skid, $delta, $units, 'Added' );
-		$variable{'information'} .= "Checked in $quantity $units to unknown docket.<br/>";
+		$Paper->add_inventory( $Skid, $delta, $units, $description );
+		$variable{'information'} .= "Checked in $quantity$units from unknown docket.<br/>";
 	} else {
 		my $Project = shift @Projects;
-		$Paper->add_inventory( $Skid, $delta, $units, 'Added for docket ' . $Project->docket() );
-		$variable{'information'} .= "Checked in $quantity $units from docket " . $Project->docket() . '<br/>';
+		$Paper->add_inventory( $Skid, $delta, $units, $description );
+		$variable{'information'} .= sprintf('Checked in %1$d%2$s from docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a><br/>', $quantity, $units, $Project->id(), $Project->docket() );
 	} # end if
 	$Skid->save();
 } # end sub check_in
@@ -796,7 +814,7 @@ sub check_in {
 # allocate
 # skid_ids is plural because it may be a comma delimited string of skid_ids
 sub allocate {
-	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket, $specific ) = @_;
+	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket, $specific, $reason ) = @_;
 	if ( ! $paper_id ) {
 		$variable{'error'} .= 'Paper not specified. No paper allocated.<br/>';
 		return;
@@ -806,7 +824,7 @@ sub allocate {
 	my $available_qty = $Paper->in_stock() - $Paper->allocated();
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	if ( $available_qty < $quantity ) {
-		$variable{'error'} .= "Only $available_qty $units are available to be allocated. Please try again.<br/>";
+		$variable{'error'} .= "Only $available_qty$units are available to be allocated. Please try again.<br/>";
 		return;
 	} # end if
 	$project_id =~ s/\D//g;
@@ -843,10 +861,10 @@ sub allocate {
 				next if ! $allocateable;
 
 				if ( $allocateable < -1*$qty ) {
-					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
+					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units, $reason );
 					$qty += $allocateable;
 				} else {
-					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units, $reason );
 					$qty = 0;
 				} # end if
 				last if ! $qty;
@@ -859,14 +877,14 @@ sub allocate {
 
 				my @a;
 				if ( $allocateable < $qty ) {
-					@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+					@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units, $reason );
 					$qty -= $allocateable;
 				} else {
 					if ( $Paper->type() eq 'Roll' ) {
 						# Must allocate whole rolls
-						@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
+						@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units, $reason );
 					} else {
-						@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+						@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units, $reason );
 					} # end if
 					$qty = 0;
 				} # end if
@@ -878,7 +896,7 @@ sub allocate {
 			} # end foreach
 		} # end if
 	} else {
-		foreach my $PA ($Paper->allocate( undef, $Projects[0]->id(), $qty, $units ) ) {
+		foreach my $PA ($Paper->allocate( undef, $Projects[0]->id(), $qty, $units, $reason ) ) {
 			push @allocations, $PA;
 			if ( $PA->skid_id() and (time-Date::Parse::str2time($PA->Skid()->updated_on())) > (30*24*60*60) ) {
 				push @old_skids, $PA;
@@ -1328,7 +1346,7 @@ sub _paper_allocations {
 	} elsif ( $param{'action'} eq 'Delete Allocation' ) {
 		if ( $param{'allocation_id'} ) {
 			my $PA = new openprint::PaperAllocation( $param{'allocation_id'} );
-			$variable{'error'} .= $PA->delete();
+			$variable{'error'} .= $PA->delete($param{'reason'});
 		} # end if
     } # end if
 } # end sub _paper_allocations
@@ -1363,7 +1381,7 @@ sub _skid_allocations {
 
 sub available_paper {
 	if ( $param{'btnFunction'} eq 'Allocate' ) {
-		allocate( @param{'skid_id','paper_id','Quantity','Project','Docket','specific'} );
+		allocate( @param{'skid_id','paper_id','Quantity','Project','Docket','specific','reason'} );
 	} # end if
 } # end sub available_paper
 
