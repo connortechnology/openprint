@@ -240,13 +240,17 @@ div.instant_price_section_shadow_tr {
 	height: 20px;
 }
 div.instant_price_section_content {
-background-image: url(/images/instant_pricing/shadow_border/main_background.gif);
+background-image: url(/images/instant_pricing/shadow_border/left.gif);
 background-repeat: repeat-y;
+background-position: left;
 padding-left: 7px;
-padding-right: 7px;
 }
 div.instant_price_section_inner {
 background-color: #e4d9f2;
+background-image: url(/images/instant_pricing/shadow_border/right.gif);
+background-repeat: repeat-y;
+background-position: right;
+padding-right: 7px;
 }
 div.instant_price_section_bottom_shadow
 {
