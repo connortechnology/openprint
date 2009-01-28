@@ -6,6 +6,7 @@ require sql;
 require logger;
 require openprint::Object;
 require openprint::Paper;
+require openprint::PaperInventory;
 
 use openprint ();
 use vars qw( $log $dbh );
