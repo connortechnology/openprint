@@ -1393,14 +1393,17 @@ sub cancel_order {
 sub fill_user_info {
 	my ( $r, $log, $dbh, $variable, $user_index ) = @_;
 
-	my %info;
-	$_ = 'SELECT strEmail,strTitle, strFirstName, strLastName, strSalutation, strPhone, strExt, strFax FROM Users WHERE Index=?';
-	@info{'txtEmail','txtTitle','txtFirstName','txtLastName','rdbSalutation','txtPhone','txtExt', 'txtFax'} = sql::execute( $log, $dbh, $_, $user_index );
-	my @results;
-	foreach my $key ( keys %info ) {
-		push @results, "$key~$info{$key}";
-	} # end foreach
-	return join( '|', @results );
+	if ( $user_index ) {
+		my %info;
+		my $User = new openprint::User( $user_index );
+		@info{'txtEmail','txtTitle','txtFirstName','txtLastName','rdbSalutation','txtPhone','txtExt', 'txtFax'} = $User->get('email','title','firstname','lastname','salutation','phone','extension','fax');
+		my @results;
+		foreach my $key ( keys %info ) {
+			push @results, "$key~$info{$key}";
+		} # end foreach
+		return join( '|', @results );
+	} # end if
+	return;
 
 } # end sub fill_user_info
 
