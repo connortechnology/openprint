@@ -148,14 +148,32 @@ function input_handler( element, e ) {
 		if ( element.form.Invoice ) {
 			element.form.Invoice.focus();
 			element.form.Invoice.value='';
-		} // end if
-		if ( element.form.invoice_id ) {
+		} else if ( element.form.invoice_id ) {
 			element.form.invoice_id.focus();
 			element.form.invoice_id.value='';
-		} // end if
-		if ( element.form.skid_id ) {
+		} else if ( element.form.skid_id ) {
 			element.form.skid_id.focus();
 			element.form.skid_id.value='';
+		} else {
+			for ( var i = 0; i < element.form.elements.length; i += 1 ) {
+				if ( element.form.elements[i].type != 'text' ) 
+					continue;
+				if ( element.form.elements[i].length ) {
+					for ( var j = 0; j< element.form.elements[i].length; j += 1 ) {
+						if ( element.form.elements[i][j].name.substr(0,7) == 'skid_id' ) {
+							element.form.elements[i][j].focus();
+							element.form.elements[i][j].value='';
+							return false;
+						} // end if it's a skid_id	
+                    } // end for j
+				} else {
+					if ( element.form.elements[i].name.substr(0,7) == 'skid_id' ) {
+						element.form.elements[i].focus();
+						element.form.elements[i].value='';
+						return false;
+					} // end if it's a skid_id	
+				} // end if
+			} // end for i
 		} // end if
 		return false;
 	} else if ( character == 76 || character == 108  ) { // M
@@ -204,10 +222,23 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 82 || character == 114 ) { // R
-		for ( var x = 0; x < document.forms.length; x+=1 ) {
-			if ( document.forms[x].rfidtag_id ) {
-				document.forms[x].rfidtag_id.focus();
-				document.forms[x].rfidtag_id.value='';
+		for ( var x = 0; x < document.forms.length; x += 1 ) {
+			var form = document.forms[x];
+
+			if ( form.rfidtag_id ) {
+				form.rfidtag_id.focus();
+				form.rfidtag_id.value='';
+				return false;
+			} else {
+				for ( var i = 0; i < form.elements.length; i += 1 ) {
+					if ( form.elements[i].type != 'text' ) 
+						continue;
+					if ( form.elements[i].name.substr(0,7) == 'rfidtag_id' ) {
+						form.elements[i].focus();
+						form.elements[i].value='';
+						return false;
+					} // end if
+				} // end for i
 			} // end if
 		} // end for
 		return false;

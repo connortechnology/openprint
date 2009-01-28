@@ -155,6 +155,9 @@ sub User {
 sub Project {
 	return new openprint::Project( $_[0]{'project_id'} );
 } # end sub Project
+sub docket {
+	return $_[0]->Project()->docket();
+} # end sub docket
 
 1;
 __END__

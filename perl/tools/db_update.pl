@@ -14,7 +14,9 @@ use vars qw( $log $dbh );
 
 $log = new logger( 'warn' );
 
-$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
+$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
+
+if ( 0 ) {
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 if ( $version < 1275 ) {
@@ -369,6 +371,29 @@ if ( $data ) {
 foreach my $PI ( openprint::PaperInventory::find('docket'=>undef) ) {
 	$PI->save() if $PI->docket();
 } # end foreach
+}
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifest_content_types LIMIT 1', {} );
+if ( ! $data ) {
+	require openprint::Manifest;
+	$dbh->do('alter table manifestcontents add type_id integer');
+	foreach my $Manifest ( openprint::Manifest::find() ) {
+		my @Contents = $Manifest->Contents();
+
+		if ( @Contents ) {
+			my $T = new openprint::Manifest_Content_Type();
+			$T->save({
+				'manifest_id'	=>	$Manifest->id(),
+				'docket'		=>	$Contents[0]->docket(),
+				'po_id'			=>	$Manifest->po_id(),
+			});
+			foreach my $C ( @Contents ) {
+				$C->save({'type_id'=>$T->id()});
+			} # end foreach
+		} # end if
+	} # end foreach Manifest
+	$dbh->do('alter table manifestcontents alter type_id set not null');
+	$dbh->do('alter table manifestcontents add foreign key (type_id) references manifest_content_types (id)');
+} 
 
 $dbh->disconnect();
 1;
