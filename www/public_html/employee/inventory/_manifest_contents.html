@@ -23,7 +23,7 @@ rfidtag_id: \$('rfidtag_id-$$variable{type_id}-').value,
 skid_id:	\$('skid_id-$$variable{type_id}-').value,
 docket:		\$('docket-$$variable{type_id}-').value,
 qty_lbs:	\$('qty_lbs-$$variable{type_id}-').value,
-}, onSuccess: function (transport) { new Insertion.Before('totals-$$variable{type_id}', transport.responseText); }, evalScripts: true} );`, '', 'Add' ); ) ?></td>
+}, onSuccess: function (transport) { new Insertion.Before('totals-$$variable{type_id}', transport.responseText);return true; }, evalScripts: true} );`, '', 'Add' ); ) ?></td>
 	</tr>
 	<? echo (
 		my $html = '';
@@ -34,7 +34,7 @@ qty_lbs:	\$('qty_lbs-$$variable{type_id}-').value,
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$total += $C->quantity();
 		} # end foreach tag_id
-		$html .= sprintf('<tr id="totals-%3$d" class="totals"><td colspan="3">Totals:</td><td>%1$dlbs</td><td>%2$.4fkg</td><td>&nbsp;</td></tr>', $total, $total/2.2046, $$variable{'type_id'} );
+		$html .= sprintf('<tr id="totals-%3$d" class="totals"><td colspan="3">Totals:</td><td id="totallbs-%3$d">%1$dlbs</td><td id="totalkgs-%3$d">%2$.4fkg</td><td>&nbsp;</td></tr>', $total, $total/2.2046, $$variable{'type_id'} );
 		return $html;
 	) ?>
 </table>

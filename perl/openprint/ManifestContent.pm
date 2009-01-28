@@ -86,6 +86,10 @@ sub Skid {
 	return new openprint::Skid( $_[0]{skid_id} );
 } # end sub Skid
 
+sub Manifest {
+	return new openprint::Manifest( $_[0]{manifest_id} );
+} # end sub Manifest
+
 
 1;
 __END__

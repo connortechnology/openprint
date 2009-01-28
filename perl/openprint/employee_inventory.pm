@@ -1276,8 +1276,10 @@ if ( 0 ) {
 
 sub _manifest_content {
 	if ( $param{'action'} eq 'Remove' ) {
-		$variable{'C'} = new openprint::ManifestContent( $param{'content_id'} );
-		$variable{'error'} .= $variable{'C'}->delete();
+		my $C = new openprint::ManifestContent( $param{'content_id'} );
+		$variable{'type_id'} = $C->type_id();
+		$variable{'Manifest'} = $C->Manifest();
+		$variable{'error'} .= $C->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
 		if ( ! $param{'manifest_id'} ) {
 			$variable{'error'} .= 'No manifest id.  Please enter the manifest id before adding items to it.<br/>';
@@ -1309,6 +1311,8 @@ sub _manifest_content {
 						'quantity'		=>	sprintf('%d', $param{"qty_lbs"}),
 						} );
 				$variable{'C'} = $MC;
+				$variable{'Manifest'} = $Manifest;
+				$variable{'type_id'} = $param{'type_id'};
 			} # end if
 		} # end if
 	} # end if

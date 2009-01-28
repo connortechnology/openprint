@@ -30,6 +30,19 @@ function gsm_to_mweight( form, type_id ) {
 	var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
 	form.elements['mweight-'+type_id].value = mweight;
 }
+
+function delete_content( c_id ) {
+	new Ajax.Request( '_manifest_content.html', {
+		method: 'get',
+		parameters: { content_id: c_id, action: 'Remove' },
+		onSuccess: function(transport){
+			var tr = $('tr-'+c_id);
+			new Insertion.After('tr-'+c_id, transport.responseText);
+			if(!tr){alert('tr not found');}else{tr.parentNode.removeChild(tr);}
+		},
+		evalScripts: true,
+	 } );
+}
 </script>
 <div class="Manifest">
 	<form name="f1" id="f1" method="post" action="manifest.html">
