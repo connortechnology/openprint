@@ -101,5 +101,8 @@ sub session_init {
 	} # end if
 
 } # end sub session_init
+
+sub index {
+} # end sub index
 1;
 __END__

@@ -344,7 +344,7 @@ sub user_profile {
 
 		# IF it's empty, then we are adding a new user! Otherwise editing one
 		if ( exists $param{'ddmUser'} ) {
-		$User = new openprint::User( $param{'ddmUser'} );
+			$User = new openprint::User( $param{'ddmUser'} );
 		} elsif ( $session{'company_id'} != $Me->company_id() ) {
 			my @Users = openprint::User::find('company_id'=>$session{'company_id'} );
 			if ( @Users == 1 ) {

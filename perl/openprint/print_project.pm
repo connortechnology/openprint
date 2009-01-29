@@ -1212,7 +1212,7 @@ sub calc {
 		# Force a reload
 		$services = $project->services();
 
-		$log->debug("Adding Required Services");
+		#$log->debug("Adding Required Services");
 		foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $project->type_id() ) ) {
 			if ( ! $$services{$servicetype_id} ) {
 				push @{$$services{$servicetype_id}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, $servicetype_id );
@@ -1244,9 +1244,9 @@ $openprint::log->debug("Proofs: $specs{'proof_type'}");
 					push @{$proof_indexes{$signature_index}}, 2;
 					openprint::Estimating::Proofs::insert_colour_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 2, 1, $proof_specs );
 				} # end if
-$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
+#$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
 				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
-$openprint::log->debug("Adding press proof");
+#$openprint::log->debug("Adding press proof");
 					push @{$proof_indexes{$signature_index}}, 3;
 					openprint::Estimating::Proofs::insert_press_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 3, 1, $proof_specs );
 				} # end if
@@ -1261,7 +1261,7 @@ $openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature
 					} # end foreach proof_index
 					if ( ! $proof_index ) {
 						$proof_index = sets::max( $proof_indexes{$signature_index} ) + 1;
-	$openprint::log->debug("Adding proof $proof_index");
+	#$openprint::log->debug("Adding proof $proof_index");
 						foreach my $qty_index ( $project->quantity_indexes() ) {
 							#$$proof_specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} = 1;
 							#$$proof_specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} = $specs{'proof_type'};
@@ -1289,7 +1289,7 @@ $openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature
 		} # end if
 
 		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
-			$openprint::log->error('Adding Folding');
+			#$openprint::log->debug('Adding Folding');
 			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {
 				$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';

@@ -75,11 +75,8 @@ sub calc {
 
 	my @signature_service_indices = $Project->signatures();
 
-	foreach my $qty_index ( 1 .. 3 ) {
-		if ( ! $Project->quantity($qty_index) ) {
-			$$specs{"txtPrice$qty_index"} = '';
-			next;
-		} # end if
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		$$specs{"txtPrice$qty_index"} = '';
 		my $totalPrice = 0;
 		my $totalQuantity = 0;
 

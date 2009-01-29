@@ -289,13 +289,11 @@ Please select a Paper to view/edit.<br>
 		<tr>
 			<th align="left">Paper ID</th>
 			<th align="left" width="105">FSC</th>
-			<th align="left" width="40">GSM</th>
-			<th align="left" width="40">MWeight</th>
 			<th align="right" width="75">Available</th>
-			<th align="left" width="115">Age</th>
-			<th align="left" width="115">Last Seen</th>
-			<th align="left" width="120">Location</th>
-			<th width="75" class="unprintable">&nbsp;</th>
+			<th align="left" width="120">&nbsp;&nbsp;Age</th>
+			<th align="left" width="120">Last Seen</th>
+			<th align="left" width="200">Inventory</th>
+			<th width="40" class="unprintable">&nbsp;</th>
 		</tr>
 		<? echo (
 			my $html;
@@ -312,6 +310,7 @@ Please select a Paper to view/edit.<br>
 				my %skid_age;
 				my %last_seen;
 				my %skid_location;
+				my %inventory;
 				my $skids = 0;
 				foreach my $Skid ( $Paper->skids() ) {
 					if ( $session{'/employee/inventory/available_paper.html?last_seen'} ) {
@@ -334,6 +333,7 @@ Please select a Paper to view/edit.<br>
 					$skids += 1;
 
 					$skid_location{$Skid->Location()->Root()->id()} += 1;
+					$inventory{$Skid->Location()->Root()->id()} += $Skid->contents($Paper);
 				} # end foreach
 				next if ! $skids;
 				
@@ -352,22 +352,20 @@ $selected = 'style="background-color:yellow;"';
 $selected = '';
 }
 
-				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%s</td><td>%.0f</td><td>%.0f</td><td align="right">%s&nbsp;</td><td align="right">%s&nbsp;</td><td>%s</td><td>%s</td>',
+				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%s</td><td align="right">%s&nbsp;</td><td align="right">%s&nbsp;</td><td>%s</td><td>%s</td>',
 					$rowclass,
 					$$Paper{'id'},
 					$selected,
 					$$Paper{'id'},
 					$Paper->to_string(),
 					$Paper->fsc_code(),
-					$Paper->gsm(),
-					$Paper->mweight(),
 					($Paper->in_stock() - $Paper->allocated()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
-					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ' skid'.($skid_age{$_}>1?'s':'') } keys %skid_age),
-					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ' skid'.($last_seen{$_}>1?'s':'') } keys %last_seen),
-					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ' skid'.($skid_location{$_}>1?'s':'') } keys %skid_location),
+					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ' skid'.($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
+					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ' skid'.($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
+					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ' skid'.($skid_location{$_}>1?'s':''). ' - ' . $inventory{$_}.'lbs' } keys %skid_location),
 					);
 				$html .= '<td align="center" class="unprintable">';
-				$html .= ssi::writeButton( $log, $dbh, 'Allocate'.$Paper->id(), 'allocate.gif', 'allocate_window('.$Paper->id().');', '', 'Allocate' );
+				$html .= ssi::writeButton( $log, $dbh, 'Allocate'.$Paper->id(), 'allocate.gif', 'allocate_window('.$Paper->id().');', '', 'A' );
 				$html .= '</td>';
 				$html .= '</tr>',
 				$rowclass = $rowclass ? '' : ' class="colRow"';

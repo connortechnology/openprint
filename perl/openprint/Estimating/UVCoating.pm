@@ -321,7 +321,7 @@ sub signature_calc {
 
 			my $complete = 1;
 			my $totalPrice = 0;
-			my $breakdown;
+			my $breakdown = '<b>'.$Equipment->name() . '</b><br/>';;
 
 			my %ImpositionPrice;
 			if ( @$impositions > 1 ) {

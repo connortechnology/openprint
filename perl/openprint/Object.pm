@@ -190,5 +190,21 @@ sub copy {
 	return $new;
 } # end sub copy
 
+sub delete {
+    my ( $self ) = @_;
+    my $type = ref $self;
+    my $table = eval '$'.$type.'::table';
+	my %fields = eval '%'.$type.'::fields';
+	if ( exists $fields{'deleted'} ) {
+		sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 1 );
+		$$self{'deleted'}=1;
+	} else {
+		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+		delete $openprint::Object::cache{$type}{$$self{id}};
+	} # end if
+	return;
+} # end sub delete
+
+
 1;
 __END__

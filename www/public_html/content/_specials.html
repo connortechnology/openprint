@@ -7,11 +7,11 @@
 ) ?>
 <div id="Specials" align="center">
 	<h2>
-<? if ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters'] ) ) ?>
+<? if ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters','Magazines'] ) ) ?>
 Individual
-<? else ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters'] ) ) ?>
+<? else ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters','Magazines'] ) ) ?>
 Group
-<? endif ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters'] ) ) ?>
+<? endif ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters','Magazines'] ) ) ?>
  Run Specials for
 <? echo (
 require Date::Calc;

@@ -2,16 +2,16 @@
 	<div id="uploadInstructions">
 		Uploading files to <?SiteTitle?> is easy and secure. Simply fill in the fields below and click <b>Upload Files</b>.<br />
 	</div>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 	<fieldset>
 		<legend>Uploaded Files</legend>
 		<hr class="legendUnderline" />
 		<div id="FileList"> <!--#include virtual="_files.html"--> </div>
 	</fieldset>
-<? endif ( $openprint::session{'user_id'} ) ?>
-		<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval('Upload_id_seq')} ); ) ?>
+<? endif ( $session{'user_id'} ) ?>
+	<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval('Upload_id_seq')} ); ) ?>
 	<form name="upload" method="post" action="upload.htm?serial=<?serial?>" enctype="multipart/form-data" target="UploadFrame">
-<? if ( ! $openprint::session{'user_id'} ) ?>
+<? if ( ! $session{'user_id'} ) ?>
 		<fieldset><legend>Your Information</legend>
 			<hr class="legendUnderline" />
 			<div style="width: 48%; float: left;">
@@ -47,40 +47,71 @@
 				</p>
 			</div>
 		</fieldset>
-<? endif ( ! $openprint::session{'user_id'} ) ?>
-<? if ( ! ( $openprint::param{'docket'} or $openprint::param{'project_id'} ) ) ?>
+<? endif ( ! $session{'user_id'} ) ?>
+<? if ( ! ( $param{'docket'} or $param{'project_id'} ) ) ?>
 		<fieldset>
 			<legend>Job Information</legend>
 			<hr class="legendUnderline" />
+<? eval (
+	my $Project;
+	if ( $param{'ProjectIndex'} ) {
+		$Project = new openprint::Project( $param{'ProjectIndex'} );
+	} elsif ( $session{'project_id'} ) {
+		$Project = new openprint::Project( $session{'project_id'} );
+	} # end if
+	if ( $Project and ( $Project->status() eq 'Unordered' ) ) {
+		$$variable{'txtQuoteNumber'} = $Project->id();
+		$$variable{'txtQuotedPrice'} = $Project->price1();
+		my $services = $Project->services();
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+		if ( $sig_specs ) {
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
+			$$variable{'Stock'} = $Paper->to_string();
+			$$variable{'Size'} = $$sig_specs{'txtFinalWidth'} . '&quot; x ' . $$sig_specs{'txtFinalHeight'}.'&quot; Finished';
+		} # end if
+		$$variable{'Quantity'} = $Project->quantity1();
+		if ( $$services{'Turnaround'} ) {
+			my $turnaround_specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
+			@$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
+		} # end if
+	} # end if
+) ?>
 			<p>
 				<label for="txtQuoteNumber">Quote #:</label>
-				<input type="text" id="txtQuoteNumber" name="txtQuoteNumber" />
+				<input type="text" id="txtQuoteNumber" name="txtQuoteNumber" value="<?txtQuoteNumber?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 			</p>
 			<p>
 				<label for="txtQuotedPrice">Quoted Price:</label>
-				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" />
+				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" value="<?txtQuotedPrice?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</p>
 			<p>
 				<label for="ddmDueDateMonth">Due Date:</label>
-				<select style="width: auto;" name="ddmDueDateMonth" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(document.upload.ddmDueDateYear.value,this.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::getmonths( undef ); ) ?></select>
-				<select style="width: auto;" name="ddmDueDateDay" onchange="off(this.options[this.selectedIndex]);"><? echo ( ssi::getdays( undef ); ) ?></select>
+				<select style="width: auto;" name="ddmDueDateMonth" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(document.upload.ddmDueDateYear.value,this.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::getmonths( $$variable{'ddmDueDateMonth'} ); ) ?></select>
+				<select style="width: auto;" name="ddmDueDateDay" onchange="off(this.options[this.selectedIndex]);"><? echo ( ssi::getdays( $$variable{'ddmDueDateDay'} ); ) ?></select>
 				<select style="width: auto;" name="ddmDueDateYear" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.value,document.upload.ddmDueDateMonth.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::return_years( (localtime(time))[5] + 1900, (localtime(time))[5] + 1901, (localtime(time))[5] + 1900 ); ) ?></select>
 			</p>
 			<p>
 				<label>Size:</label>
-				<input type="text" id="Size" name="Size" />
+				<input type="text" id="Size" name="Size" value="<?Size?>" />
 			</p>
 			<p>
 				<label>Qty:</label>
-				<input type="text" id="Quantity" name="Quantity" />
+				<input type="text" id="Quantity" name="Quantity" value="<?Quantity?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 			</p>
 			<p>
 				<label>Stock:</label>
-				<input type="text" id="Stock" name="Stock" />
+				<input type="text" id="Stock" name="Stock" value="<?Stock?>" />
 			</p>
+			<? if ( $$variable{'txtQuoteNumber'} ) ?>
+				<p><label>Summary:</label>
+				<? echo (
+					new openprint::Project( $$variable{'txtQuoteNumber'} )->summary();
+				) ?>
+				</p>
+			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
 			<p>
 				<label for="txtJobDescription">Description:</label>
-				<textarea name="txtJobDescription" rows="4"></textarea>
+				<textarea name="txtJobDescription" rows="4" onkeyup="textarea_resize(this);"></textarea>
 			</p>
 			<p class="proof_type">
 				<label>Proof Required:</label>
@@ -91,7 +122,7 @@
 				</select>
 			</p>
 		</fieldset>
-<? endif ( ! ( $openprint::param{'docket'} or $openprint::param{'project_id'} ) ) ?>
+<? endif ( ! ( $param{'docket'} or $param{'project_id'} ) ) ?>
 		<fieldset>
 			<legend>Choose Files</legend>
 			<hr class="legendUnderline" />
@@ -145,8 +176,8 @@
 			</span>
 			<br class="spacer"/>
 		</fieldset>
-		<input type="hidden" name="project_id" value="<? echo($openprint::param{'project_id'}) ?>"/>
-		<input type="hidden" name="docket" value="<? echo($openprint::param{'docket'}) ?>"/>
+		<input type="hidden" name="project_id" value="<? echo($param{'project_id'}) ?>"/>
+		<input type="hidden" name="docket" value="<? echo($param{'docket'}) ?>"/>
 		<input type="hidden" name="btnFunction"/>
 	</form>
 </div><!-- upload files -->

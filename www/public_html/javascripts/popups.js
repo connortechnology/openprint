@@ -59,7 +59,7 @@ function open_window(url,title,options) {
 	upload_window.focus();
 }
 
-function toggleContent( divID, page_to_display, inputs, page_to_hide ) {
+function toggleContent( divID, show_url, inputs, hide_url ) {
 	var div = $( divID );
 
 	var params = new Array();
@@ -72,17 +72,13 @@ function toggleContent( divID, page_to_display, inputs, page_to_hide ) {
 
 	if ( div.style.display == 'none' ) {
 		div.show();
-		new Ajax.Updater(divID,page_to_display, {method:'get',parameters:inputs});
-		//LoadContent( divID, page_to_display, inputs );
+		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
 	} else {
 		div.hide();
-		if ( page_to_hide )
-			new Ajax.Updater(divID,page_to_hide, {method:'get',parameters:inputs});
-			//LoadContent( divID, page_to_hide, inputs );
+		if ( hide_url )
+			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
 	} // end if
-
-} // end function toggleContent
-
+} // end function AjaxToggleContent
 
 function LoadContent( divID, page, inputs, message ) {
 	var div = $( divID );

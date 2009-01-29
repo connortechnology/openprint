@@ -201,3 +201,6 @@ div.Service span.TwoColumns {
 	float: left;
 }
 
+div#NewDimensions {
+	display: none;
+}

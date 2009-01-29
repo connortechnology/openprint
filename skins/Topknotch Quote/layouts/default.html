@@ -7,7 +7,8 @@
 		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
 		<link href="/css/main.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
@@ -18,14 +19,14 @@
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
-        <link href="/css/project.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? if ( $r->uri() =~ /\/main\/project\/prin/ ) ?>
 		<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
-        <? endif ( $r->uri() =~ /\/main\/project\/prin/ ) ?>
-        <? endif ( $r->uri() =~ /\/main\/project/ ) ?>
+		<? endif ( $r->uri() =~ /\/main\/project\/prin/ ) ?>
+		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
 		<? if ( $r->uri() =~ /\/content\/prin/ ) ?>
-        <link href="/css/estimating.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/estimating.css" rel="stylesheet" type="text/css"/>
 		<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
@@ -36,27 +37,27 @@
 
 <script type="text/javascript">
 <!--
-        var startList = function() {
-            if (document.all && document.getElementById) {
-                var navRoot = document.getElementById("menubar");
-                if ( navRoot ) {
-                    for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-                        var node = navRoot.childNodes[i];
-                        if (node.nodeName=="LI") {
-                            node.onmouseover=function() {
-                                this.className+=' over';
+		var startList = function() {
+			if (document.all && document.getElementById) {
+				var navRoot = document.getElementById("menubar");
+				if ( navRoot ) {
+					for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
+						var node = navRoot.childNodes[i];
+						if (node.nodeName=="LI") {
+							node.onmouseover=function() {
+								this.className+=' over';
 							}
-                            node.onmouseout=function() {
+							node.onmouseout=function() {
 								this.className=this.className.replace(' over', '');
 							}
-                        } // end if
-                    } // end for
-                } // end if
-            }
-        }
-        window.onload=startList;
+						} // end if
+					} // end for
+				} // end if
+			}
+		}
+		window.onload=startList;
 -->
-        </script>
+</script>
 
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
 	</head>
@@ -71,39 +72,34 @@
 						<p><label>Fax:</label>(905) 624-6800</p>
 					</div>
 					<div style="float: left; width: 100%;">
-<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 					<div id="CurrencySelection">
-						<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction'] } ); ) ?>" method="post">
+						<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param ); ) ?>" method="post">
 							<p>
-								<label>Currently selected currency:</label>
-								<select name="select_currency_id" onchange="this.form.submit();">
-									<? echo (
-										ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
-									) ?>
-								</select>
-							</p>
-							<p>
-								<label>Currently selected company:</label>
+								<label>Current company:</label>
 								<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
 								<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.submit();">
 									<option value="">Select a Company</option>
-					<? echo ( 
-					 openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} );
-					) ?>
+									<? echo ( openprint::Company::get_dropdown( $session{'company_id'} );) ?>
 								</select>
 								<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'SelectCurrency.submit();', '', 'Submit' ); ) ?>
 							</p>
 							<input type="hidden" name="btnFunction" value="SelectCompany" />
 						</form>
+						<? if ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
+						<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
+						<? endif ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
+						<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+						<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
+						<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					</div>
-<? else ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 					<img style="float: left; margin-left: 15px;" src="/images/main/header/us-ca.jpg" alt="Flags" width="139" height="48" border="1" usemap="#Map" class="unprintable"/>
 					<map name="Map" id="Flags">
-						<area shape="rect" coords="2,2,68,46" href="http://www.topknotchquote.com?Currency=USD" alt="US" />
-						<area shape="rect" coords="72,3,137,47" href="http://www.topknotchquote.ca?Currency=CDN" alt="CA" />
+						<area shape="rect" coords="2,2,68,46" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'USD'} } ); ) ?>" alt="US" />
+						<area shape="rect" coords="72,3,137,47" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'CDN'} } ); ) ?>" alt="CA" />
 					</map>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
-<? if ( ! $openprint::session{'user_id'} ) ?>
+<? if ( ! $session{'user_id'} ) ?>
 					<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
 						<fieldset><legend>Quick Login</legend>
 						<p><label>Email:</label><input type="text" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/>
@@ -115,25 +111,18 @@
 						</fieldset>
 						<input type="hidden" name="btnFunction" />
 					</form>
-<? endif ( ! $openprint::session{'user_id'} ) ?>
-						<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
-						<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
-						<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
-						<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-						<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
-						<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<? endif ( ! $session{'user_id'} ) ?>
 					</div>
 					<br class="spacer"/>
 				</div><!--Header-->
 				<br class="spacer"/>
 				<!--#include virtual="/skins/Topknotch Quote/includes/customer_menu.html"-->
 				<div id="MainBox">
-                    <!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
-                    <div style="float: right; p\osition: relative; margin:0px; width: 100%; padding: 0px;">
-                    <?PageContent?>
-                    </div>
-                </div>
-
+					<!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
+					<div style="float: right; p\osition: relative; margin:0px; width: 100%; padding: 0px;">
+					<?PageContent?>
+					</div>
+				</div>
 				<span class="unprintable">
 					<br class="spacer"/>
 					<br/>

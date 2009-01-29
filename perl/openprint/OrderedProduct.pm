@@ -29,9 +29,13 @@ sub find {
 		push @values, $params{id};
 	} # end if
 
-	if ( $params{'order_id'} ) {
-		$sql .= ' AND order_id=?';
-		push @values, $params{'order_id'};
+	if ( exists $params{'order_id'} ) {
+		if ( $params{'order_id'} ) {
+			$sql .= ' AND order_id=?';
+			push @values, $params{'order_id'};
+		} elsif ( ! defined $params{'order_id'} ) {
+			$sql .= ' AND order_id IS NULL';
+		} # end if
 	} # end if
 	if ( $params{product_id} ) {
 		$sql .= ' AND product_id=?';

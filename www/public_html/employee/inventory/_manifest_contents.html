@@ -1,6 +1,6 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <input type="hidden" name="remove" />
-<table class="List sortable">
+<table id="Contents-<?type_id?>" class="List sortable">
 	<tr>
 		<th align="left" width="120">RFID</th>
 		<th align="left" width="90">Skid</th>
@@ -9,28 +9,32 @@
 		<th>Quantity (kgs)</th>
 		<th width="40">&nbsp;</th>
 	</tr>
-	<tr>
-		<td><input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" /></td>
-		<td><input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" /></td>
-		<td><input type="text" id="docket-" name="docket-" size="8" value="<? echo ( $param{'Docket'} ? $param{'Docket'} : $$variable{'Manifest'}->docket() ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" /></td>
-		<td><input type="text" id="qty_lbs-" name="qty_lbs-" value="" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-') );" /></td>
-		<td><input type="text" id="qty_kgs-" name="qty_kgs-" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-') );" /></td>
-		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', qq`new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: \$('f1').serialize(), evalScripts: true} );`, '', 'Add' ); ) ?></td>
+	<tr id="new-<?type_id?>">
+		<td><input type="text" id="rfidtag_id-<?type_id?>-" name="rfidtag_id-<?type_id?>-" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" /></td>
+		<td><input type="text" id="skid_id-<?type_id?>-" name="skid_id-<?type_id?>-" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" /></td>
+		<td><input type="text" id="docket-<?type_id?>-" name="docket-<?type_id?>-" size="8" value="<? echo ( $param{'docket-'.$$variable{'type_id'}} ? $param{'docket-'.$$variable{'type_id'}} : $$variable{'Manifest'}->docket() ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" /></td>
+		<td><input type="text" id="qty_lbs-<?type_id?>-" name="qty_lbs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-<?type_id?>-') );" /></td>
+		<td><input type="text" id="qty_kgs-<?type_id?>-" name="qty_kgs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-<?type_id?>-') );" /></td>
+		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', qq`new Ajax.Request( '_manifest_content.html', {method: 'get', parameters: {
+action: 'Add',
+type_id:	'$$variable{type_id}',
+manifest_id: '$$variable{'Manifest'}{'id'}',
+rfidtag_id: \$('rfidtag_id-$$variable{type_id}-').value,
+skid_id:	\$('skid_id-$$variable{type_id}-').value,
+docket:		\$('docket-$$variable{type_id}-').value,
+qty_lbs:	\$('qty_lbs-$$variable{type_id}-').value,
+}, onSuccess: function (transport) { new Insertion.Before('totals-$$variable{type_id}', transport.responseText);return true; }, evalScripts: true} );`, '', 'Add' ); ) ?></td>
 	</tr>
 	<? echo (
 		my $html = '';
 		my $total = 0;
-		foreach my $C ( $$variable{'Manifest'}->Contents( 'order'=>'id') ) {
-			my $tag_id = $C->Skid()->rfidtag_id();
-			$html .= sprintf('<tr id="tr-%1$d"><td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $tag_id );
-			$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a></td>', $C->id(), $C->skid_id() );
-			$html .= sprintf( q{<td><input type="text" id="docket-%1$d" size="8" name="docket-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/\D/,'');" /></td>}, $C->id(), $C->docket() );
-			$html .= sprintf( q{<td><input type="text" id="qty_lbs-%1$s" name="qty_lbs-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$s') );" /></td><td><input type="text" id="qty_kgs-%1$s" name="qty_kgs-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$s') );" /></td>}, $C->id(), $C->quantity(), $C->quantity()*0.45 );
-			$html .= '<td>' . ssi::writeButton( $log, $dbh, 'X'.$$C{'id'}, 'x.gif', qq`f1.remove.value='$$C{id}';new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: \$('f1').serialize(), evalScripts: true} );`, '', 'X' ) . '</td>';
-			$html .= '</tr>';
+		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
+		foreach my $C ( $$variable{'Manifest'}->Contents( 'type_id'=>$$variable{'type_id'}, 'order'=>'id') ) {
+			$$variable{'C'} = $C;
+			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$total += $C->quantity();
 		} # end foreach tag_id
-		$html .= sprintf('<tr class="totals"><td colspan="3">Totals:</td><td>%1$dlbs</td><td>%2$.4fkg</td><td>&nbsp;</td></tr>', $total, $total*0.45 );
+		$html .= sprintf('<tr id="totals-%3$d" class="totals"><td colspan="3">Totals:</td><td id="totallbs-%3$d">%1$dlbs</td><td id="totalkgs-%3$d">%2$.4fkg</td><td>&nbsp;</td></tr>', $total, $total/2.2046, $$variable{'type_id'} );
 		return $html;
 	) ?>
 </table>

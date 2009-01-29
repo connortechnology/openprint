@@ -348,6 +348,8 @@ sub bindery_overview {
 } # end sub bindery_overview
 
 sub projects {
+
+	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer' );
 	my @projects;
 
 	my $startdocket = $param{'StartDocket'};
@@ -384,7 +386,11 @@ sub projects {
 
 	$variable{'txtDocket'} = $param{'txtDocket'};
 
-} # end sub list_current
+} # end sub projects
+
+sub _project_list {
+	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer' );
+}
 
 sub project_view {
 	return openprint::employee_project::view( @_ );

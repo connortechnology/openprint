@@ -2,13 +2,13 @@
 	<span class="input">W x H in inches</span><br class="spacer"/>
 	<span class="label">Finished:</span>
 	<span class="input">
-		<input name="txtFinalWidth" size="6" value="<?txtFinalWidth?>" onkeyup="remove_div('OrderButton');"/> x
-		<input name="txtFinalHeight" size="6" value="<?txtFinalHeight?>" onkeyup="remove_div('OrderButton');"/>
+		<input name="txtFinalWidth" size="6" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/> x
+		<input name="txtFinalHeight" size="6" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/>
 	</span>
 	<br class="spacer"/>
 	<span class="label">Flat:</span>
 	<span class="input">
-		<input name="txtWidth" size="6" value="<?txtWidth?>" onkeyup="remove_div('OrderButton');"/> x 
-		<input name="txtHeight" size="6" value="<?txtHeight?>" onkeyup="remove_div('OrderButton');"/>
+		<input name="txtWidth" size="6" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/> x 
+		<input name="txtHeight" size="6" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/>
 	</span>
 </div>

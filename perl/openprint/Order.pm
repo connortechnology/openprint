@@ -382,6 +382,7 @@ sub Projects {
 
 sub Products {
 	my $self = shift;
+	return if ! $$self{'id'};
 	return openprint::OrderedProduct::find( 'order_id'=>$$self{id} );
 } # end sub Products
 

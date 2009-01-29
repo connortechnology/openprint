@@ -419,6 +419,7 @@ sub summary {
 		} # end if
 	} # end if
 
+	return '';
 } # end sub summary
 
 1;

@@ -16,35 +16,48 @@ function convert_kg_to_lbs( from, to ) {
 	} // end for
 	to.value = qtys.join(',');
 } // end function convert_kg_to_lbs
-function mweight_to_gsm( form ) {
-	var mweight = parseFloat(1*form.elements['mweight'].value);
-	var width = parseFloat(1*form.elements['width'].value);
-	var height = parseFloat(1*form.elements['height'].value);
+function mweight_to_gsm( form, type_id ) {
+	var mweight = parseFloat(1*form.elements['mweight-'+type_id].value);
+	var width = parseFloat(1*form.elements['width-'+type_id].value);
+	var height = parseFloat(1*form.elements['height-'+type_id].value);
 	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
-	form.elements['gsm'].value = gsm;
+	form.elements['gsm-'+type_id].value = gsm;
 }
-function gsm_to_mweight( form ) {
-	var gsm = parseFloat(1*form.elements['gsm'].value);
-	var width = parseFloat(1*form.elements['width'].value);
-	var height = parseFloat(1*form.elements['height'].value);
+function gsm_to_mweight( form, type_id ) {
+	var gsm = parseFloat(1*form.elements['gsm-'+type_id].value);
+	var width = parseFloat(1*form.elements['width-'+type_id].value);
+	var height = parseFloat(1*form.elements['height-'+type_id].value);
 	var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
-	form.elements['mweight'].value = mweight;
+	form.elements['mweight-'+type_id].value = mweight;
+}
+
+function delete_content( c_id ) {
+	new Ajax.Request( '_manifest_content.html', {
+		method: 'get',
+		parameters: { content_id: c_id, action: 'Remove' },
+		onSuccess: function(transport){
+			var tr = $('tr-'+c_id);
+			new Insertion.After('tr-'+c_id, transport.responseText);
+			if(!tr){alert('tr not found');}else{tr.parentNode.removeChild(tr);}
+		},
+		evalScripts: true,
+	 } );
 }
 </script>
 <div class="Manifest">
 	<form name="f1" id="f1" method="post" action="manifest.html">
 		<fieldset>
-			<div class="error"><?error?></div>
 			<div class="leftColumn">
 				<p><label for="manifest_id">Manifest #:</label>
 					<input type="text" id="manifest_id" name="manifest_id" value="<? hecho ( $$variable{'Manifest'}->id() ) ?>" />
 				</p>
-			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-			<p>
-				<label>Cost (/CWT):</label>
-				<input type="text" id="cost" name="cost" value="<? echo ( $param{'cost'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-			</p>
-			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+				<p><label>Vendor:</label>
+					<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('Docket').value} } );">
+						<option value="">All</option>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'Manifest'}->supplier_id() ); ) ?>
+					</select>
+				</p>
 			</div>
 			<div class="rightColumn">
 				<p><label>Received On:</label>
@@ -62,184 +75,25 @@ function gsm_to_mweight( form ) {
 				</span>
 				</p>
 			</div>
-			<br class="spacer"/>
-			<hr/>
-			<? eval (
-				if ( ! $param{'Name'} ) {
-					my $Paper;
-					foreach my $C ( $$variable{'Manifest'}->Contents() ) {
-						my $Skid = $C->Skid();
-						foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-							$Paper = new openprint::Paper( $paper_id );
-							last;
-						} # end foreach paper_id
-						last if $Paper;
-					} # end foreach Content
-					if ( $Paper ) {
-						$param{'Owner'} = $Paper->owner_id();
-						$param{'Manufacturer'} = $Paper->manufacturer_id();
-						$param{'Name'} = $Paper->name_id();
-						$param{'Finish'} = $Paper->finish_id();
-						$param{'Colour'} = $Paper->colour_id();
-						$param{'weight'} = $Paper->weight();
-						$param{'Quality'} = $Paper->quality_id();
-						$param{'type'} = $Paper->type();
-						$param{'calliper'} = $Paper->calliper();
-						$param{'width'} = $Paper->width();
-						$param{'height'} = $Paper->height();
-						$param{'gsm'} = $Paper->gsm();
-						$param{'fsc_code'} = $Paper->fsc_code();
-					} # end if
-				} # end if
-			) ?>
-			<div class="leftColumn">
-				<p>
-					<label for="Owner">Owner:</label>
-					<input type="text" onkeyup="filterDDM(this, this.form.Owner);" class="filter" />
-					<select id="Owner" name="Owner"><? echo ( openprint::Company::get_dropdown( $param{'Owner'} ? $param{'Owner'} : $session{'company_id'} ); ) ?></select>
-				</p>
-				<p><label>Vendor:</label>
-					<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('Docket').value} } );">
-						<option value="">All</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $$variable{'Manifest'}->supplier_id() ); ) ?>
-					</select>
-				</p>
-				<p>
-					<label for="txtManufacturer" onclick="f1.txtManufacturer.value='';f1.Manufacturer.selectedIndex=0;f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
-					<select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
-						<option value="">select</option>
-						<? echo (
-							if ( ! $param{'Manufacturer'} ) {
-								my @Manufacturers = openprint::Manufacturer::find('name'=>'unknown');
-								if ( @Manufacturers ) {
-									$param{'Manufacturer'} = $Manufacturers[0]->id();
-								} # end if
-							} # end if
-							return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::Manufacturer::find('order'=>'lower(longname)') ], $param{'Manufacturer'} );
-						) ?>
-					</select>
-					<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
-				</p>
-				<p>
-					<label for="txtName" onclick="f1.txtName.value='';f1.Name.selectedIndex=0;f1.Name.toggle();f1.txtName.toggle();">Name:</label>
-					<select id="Name" name="Name" size="1" onchange="Name_onChange(this,'');">
-						<option value="">select</option>
-					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockName::find('order'=>'lower(longname)') ], $param{'Name'} );
-							) ?>
-					</select>
-					<input style="display: none;" type="text" id="txtName" name="txtName" />
-				</p><p>
-					<label for="txtFinish" onclick="f1.txtFinish.value='';f1.Finish.selectedIndex=0;f1.Finish.toggle();f1.txtFinish.toggle();">Finish:</label>
-					<select id="Finish" name="Finish" size="1" onchange="Finish_onChange(this,'');">
-						<option value="">select</option>
-						<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockFinish::find('order'=>'lower(longname)') ], $param{'Finish'} );
-						) ?>
-					</select>
-					<input style="display: none;" type="text" id="txtFinish" name="txtFinish" />
-				</p><p>
-					<label for="txtColour" onclick="f1.txtColour.value='';f1.Colour.selectedIndex=0;f1.Colour.toggle();f1.txtColour.toggle();">Colour:</label>
-					<select id="Colour" name="Colour" size="1" onchange="Colour_onChange(this,'');">
-						<option value="">select</option>
-					<? echo (
-						if ( ! $param{'Colour'} ) {
-							my @Colours = openprint::StockColour::find('shortname'=>'White');
-							if ( @Colours ) {
-								$param{'Colour'} = $Colours[0]->id();
-							} # end if
-						} # end if
-						my @Colours = openprint::StockColour::find('order'=>'lower(shortname)');
-						if ( @Colours == 1 ) {
-							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $Colours[0]->id() );
-						} else {
-							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $param{'Colour'} );
-						} # end if
-						) ?>
-					</select>
-					<input style="display: none;" type="text" id="txtColour" name="txtColour" />
-				</p>
-				<p>
-					<label for="weight">Weight:</label>
-					<input type="text" id="weight" name="weight" value="<? echo ( my $weight = $param{'weight'}; $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
-				</p>
-				<p>
-					<label for="txtQuality" onclick="toggleInput('Quality');">Quality:</label>
-					<select id="Quality" name="Quality" size="1">
-						<option value="">select</option>
-					<? echo (
-						if ( ! $param{'Quality'} ) {
-							my @Qualities = openprint::StockQuality::find('shortname'=>'new');
-							if ( @Qualities ) {
-								$param{'Quality'} = $Qualities[0]->id();
-							} # end if
-						} # end if
-						my @Qualities = openprint::StockQuality::find('order'=>'lower(shortname)');
-						if ( @Qualities == 1 ) {
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
-						} else {
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality'} );
-						} # end if
-					) ?>
-					</select>
-					<input style="display: none;" type="text" id="txtQuality" name="txtQuality" />
-				</p>
-			</div>
-			<div class="rightColumn">
-			<p><label>Type:</label>
-				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('MWeight').show();" <? echo ( 'checked="checked"' if $param{'type'} eq 'Sheet'; ) ?> />
-				<label class="radio" for="typeSheet">Sheet</label>
-				<input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('MWeight').hide();" <? echo ( 'checked="checked"' if $param{'type'} eq 'Roll'; ) ?> />
-				<label class="radio" for="typeRoll">Roll</label>
-			</p>
-			<p>
-				<label for="width">Size:</label>
-				<input type="text" id="width" name="width" value="<? echo ( $param{'width'} ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
-				<span id="PaperHeight"<? echo ( ' style="display: none;"' if $param{type} eq 'Roll' ) ?>>
-				&nbsp;x&nbsp;
-				<input type="text" id="height" name="height" value="<? echo ( $param{'height'} ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
-				</span>
-			</p>
-			<p>
-				<label>Calliper:</label>
-				<input type="text" id="calliper" name="calliper" value="<? echo ( $param{'calliper'} ) ?>" size="6" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );" style="width: auto;" />PT
-			</p>
-			<p>
-				<label>GSM:</label>
-				<input type="text" id="gsm" name="gsm" value="<? echo ( $param{'gsm'} ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);" style="width: auto;" />
-			</p>
-			<p id="MWeight" <? echo ( 'style="display:none;"' if $param{'type'} eq 'Roll' ) ?> >
-				<label>MWeight:</label>
-				<input type="text" name="mweight" value="<? echo ( $param{'mweight'} ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );mweight_to_gsm(this.form);" style="width: auto;" />M
-			</p>
-			<p>
-				<label>FSC Code:</label>
-				<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $param{'fsc_code'} ) ?>" size="13" style="width: auto;" />
-			</p>
-			<p>
-				<label>Docket:</label>
-				<input type="text" id="Docket" name="Docket" value="<? echo ( $$variable{'Manifest'}->docket() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('Docket').value} } );"/>
-			</p>
-			<p>
-				<label>Purchase Order:</label>
-				<input type="text" id="po_id" name="po_id" value="<? echo ( $$variable{'Manifest'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Manifest'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO', 'go.gif', '', '/employee/inventory/purchase_order_view.html?po_id='.$$variable{'Manifest'}->po_id(), 'Go' ) : '' ) ?>
-			</p>
-				<div id="PurchaseOrders">
-<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
-					<!--#include virtual="_manifest_purchase_orders.html"-->
-<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
-				</div>
-			</div>
 		</fieldset>
-		<br/>
-<div id="ManifestContents">
-<!--#include virtual="_manifest_contents.html"-->
-</div>
+		<div id="Types">
+		<? echo (
+			require openprint::Manifest_Content_Type;
+			my $html = '';
+			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_type.html' );
+			
+			foreach my $Type ( $$variable{'Manifest'}->Types() ) {
+				$$variable{'Type'} = $Type;
+				$$variable{'type_id'} = $Type->id();
+				$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+			} # end foreach
+			return $html;
+		) ?>
+		</div>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Submit' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif', "new Ajax.Updater('Types', '_manifest_type.html', { method: 'get', parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", '', 'Add Another Stock' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Save' ); ) ?>
 		</p>
 		<input type="hidden" name="btnFunction" />
 	</form>
 </div>
-<script type="text/javascript">$('rfidtag_id').focus();</script>

@@ -45,12 +45,13 @@
 					} # end if
 				} # end if
 				$html .= sprintf('<td>%1$s</td>', $Skid->Location()->name() );
-				$html .= sprintf('<td><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td><td>',
+				$html .= sprintf('<td><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td align="right">%d%s</td><td>',
 					$PA->project_id(),
 					$PA->Project()->docket() ? $PA->Project()->docket() : 'unknown',
 					$PA->quantity(), $PA->units(),
 					);
-				$html .= ssi::writeButton( $log, $dbh, 'Delete'.$$PA{id}, 'delete.gif', qq`new Ajax.Updater('Allocations','_paper_allocations.html', { method: 'get', parameters: { allocation_id: '$$PA{id}', action: 'Delete Allocation' } } );`, '', 'Delete' );
+				#$html .= ssi::writeButton( $log, $dbh, 'Delete'.$$PA{id}, 'delete.gif', qq`new Ajax.Updater('Allocations','_paper_allocations.html', { method: 'get', parameters: { allocation_id: '$$PA{id}', action: 'Delete Allocation' } } );`, '', 'Delete' );
+				$html .= ssi::writeButton( $log, $dbh, 'Delete'.$$PA{id}, 'delete.gif', qq`ajax_window('_deallocate_popup.html?allocation_id=`.$$PA{id}.q`', 400 );`, '', 'Delete' );
 				$html .= '</td></tr>',
 
 				$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -63,10 +64,14 @@
 			<td>&nbsp;</td>
 			<? endif ( $config{'RFID'} eq 'Y' ) ?>
 			<td colspan="4" align="right"><b>Totals:</b></td>
-			<td align="right"><?TotalAllocated?> <? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
+			<td align="right"><?TotalAllocated?><? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
 			<td>&nbsp;</td>
 		</tr>
 	</table>
 <? else ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
 There are no allocations.
 <? endif ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
+<script type="text/javascript">
+	$('Allocated').innerHTML = '<? echo ( int($$variable{'Paper'}->allocated()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+	$('Available').innerHTML = '<? echo ( int($$variable{'Paper'}->in_stock() - $$variable{'Paper'}->allocated()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+</script>

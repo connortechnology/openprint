@@ -65,10 +65,10 @@ sub handler {
 		my @values = $r->param($key);
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
-				$log->warn("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
+				$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = shift @values;
-				$log->warn("Parameter $key is (" . $param{$key} . ")" );
+				$log->debug("Parameter $key is (" . $param{$key} . ")" );
 		} # end if
 	} # end foreach
 
@@ -239,7 +239,8 @@ $openprint::log->debug("Getfile");
 
 			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
 
-		} else {
+		} elsif ( $first ) {
+$log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
 			$eval .= '_'.$second if $second;
 			eval	'require '.$eval;
@@ -248,6 +249,7 @@ $openprint::log->debug("Getfile");
 			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
 			eval $eval;
 			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
+$log->debug('2');
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
@@ -485,17 +487,17 @@ $openprint::log->debug("$1");
 		} # end if main:$second
 
 	} else {
-		
-		my $module = 'openprint::' . $first;
-		$module .= '_'.$second if $second;
-		eval( "require $module;" );
-		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-		my ( $proc ) = $filename =~ /(.*).html/;
-		if ( $proc ) {
-			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-			$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		if ( $first ) {
+			my $module = 'openprint::' . $first;
+			$module .= '_'.$second if $second;
+			eval( "require $module;" );
+			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*).html/;
+			if ( $proc ) {
+				eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+				$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+			} # end if
 		} # end if
-
 	} # end if $first
 
 	return $status;
