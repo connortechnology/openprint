@@ -479,9 +479,9 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				$$specs{'hdnBreakdown'.$qty_index} .= "No runspeed for $fold on " . $Equipment->name() ." : $runSpeed<br/>";
 				next;
 			} # end if
-			my $Adjustment = $Equipment->Specification('Runspeed Adjustment', $Paper->calliper() );
+			my $Adjustment = $Equipment->Specification('Runspeed Adjustment', $Paper->gsm() );
 			if ( $Adjustment and $$Adjustment{'value'} ) {
-				$runSpeed = int($runSpeed/($$Adjustment{'value'}/100));
+				$runSpeed -= int($runSpeed * ($$Adjustment{'value'}/100));
 			} # end if
 
 			# We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
@@ -514,7 +514,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 				if ( $Adjustment ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * ( $folds{$fold}*($$specs{"txtQuantity$qty_index"}/$imposition) / 1000 );
 					if ( $$Adjustment{'value'} ) {
-						$servicePrice{'Total'} /= ($$Adjustment{'value'}/100);
+						$servicePrice{'Total'} *= 1/( 1-($$Adjustment{'value'}/100));
 					} # end if
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%s %s: Setup: %.2f, Run: $%.2f%s * %d * %d%% speed adjustment = $%.2f', $folds{$fold}, $fold, $setupPrice{'Price'}, @servicePrice{'Price','units'}, $folds{$fold}*$$specs{"txtQuantity$qty_index"}, $$Adjustment{'value'}, $servicePrice{'Total'} ) . "<br/>";
 				} else {
