@@ -378,10 +378,10 @@ sub summary {
 	return if ! $project_index;
 
 	my $order_id = $r->param('Order_Id');
-
-	openprint::project::get_header( $log, $dbh, $variable, $project_index, $order_id );
+	
 	$$variable{'OrderId'} = $order_id;
 	my $Project = new openprint::Project( $project_index );
+	$$variable{'Project'} = $Project;
 	my %services = $Project->get_services();
 	$$variable{'Services'} = \%services;
 

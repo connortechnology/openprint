@@ -23,7 +23,7 @@
 		</p>
 	  	<p> 
 			<label>Creation Date:</label>
-	  		<span title="<? echo ( Date::Format::time2str( $openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></span>
+	  		<span title="<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></span>
 		</p>
 		<? if ( $$variable{'Project'}->docket() ) ?>
 		<? if ( $$variable{'Project'}->shippingtype() ) ?>
@@ -35,12 +35,12 @@
 	  		<? if ( $$variable{'Project'}->due_date() ) ?>
 		<p>
 				<label>Due Date:</label>
-				<? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->due_date() ) ); ) ?>
+				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->due_date() ) ); ) ?>
 		</p>
 	  		<? else ( $$variable{'Project'}->due_date() ) ?>
 				<p class="RequiredDate">
 				<label>Requested Date:</label>
-				<? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?>
+				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?>
 				</p>
 	  		<? endif ( $$variable{'Project'}->due_date() ) ?>
 		<? if ( $$variable{'PrepressOperator'} = openprint::project::get_prepress_operator( $log, $dbh, $$variable{'ProjectIndex'} ); ) ?>

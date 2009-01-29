@@ -469,10 +469,10 @@ sub find {
 	my @values;
 	if ( $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND Index IN ('.join(',', map {'?'} @{$params{'id'}} ) . ')';
+			$sql .= ' AND id IN ('.join(',', map {'?'} @{$params{'id'}} ) . ')';
 			push @values, @{$params{'id'}};
 		} else {
-			$sql .= ' AND Index=?';
+			$sql .= ' AND id=?';
 			push @values, $params{'id'};
 		} # end if
 	} # end if
@@ -645,8 +645,8 @@ sub save {
 	my @sql = (
 				'strProjectReference',	$$self{'reference'},
 				'strComments',			$$self{'comments'},
-				'CompanyIndex',		 	$$self{'company_id'},
-				'UserIndex',			$$self{'user_id'},
+				'company_id',		 	$$self{'company_id'},
+				'user_id',				$$self{'user_id'},
 				'intQuantity1',		 	( $$self{'quantity1'} ? $$self{'quantity1'} : undef ),
 				'intQuantity2',		 	( $$self{'quantity2'} ? $$self{'quantity2'} : undef ),
 				'intQuantity3',		 	( $$self{'quantity3'} ? $$self{'quantity3'} : undef ),
@@ -679,19 +679,19 @@ sub save {
 
 		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('lngProjectIndex_seq'::text)} );
 
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'Index',	@$self{'id'}, @sql ) ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'id',	@$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
 	} elsif ( $hash{'force_install'} ) {
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'Index',    @$self{'id'}, @sql ) ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'id',    @$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
 	} else {
-		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Projects', "Index=$$self{'id'}", @sql ) ) {
+		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Projects', ['id=?', $$self{'id'}], \@sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
@@ -833,14 +833,14 @@ sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref(
-				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
+				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=id WHERE id=?}
 				, {}, $$self{'id'} );
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
 	} # endif
 	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
-		@$data{qw/index summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
+		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
 	return;
 } # end sub load
 

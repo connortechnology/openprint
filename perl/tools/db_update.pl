@@ -1243,6 +1243,10 @@ if ( ! $data ) {
 	}
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
+if ( $data ) {
+    $dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
+}
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Projects LIMIT 1', {} );
 if ( $data ) {
 	if ( exists $$data{'index'} ) {
@@ -1256,6 +1260,12 @@ if ( $data ) {
 		$dbh->do('ALTER TABLE Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
 	} # end if
 	sql::end_transaction( $dbh, $ac );
+	if ( ! exists $$data{'rush'} ) {
+		my $ac = sql::start_transaction( $dbh );
+		print "Adding rush to projects";
+		$dbh->do(q`alter table Projects add rush boolean default false`);
+		sql::end_transaction( $dbh, $ac );
+	} # end if
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM sessions LIMIT 1', {} );
@@ -1286,16 +1296,6 @@ if ( ! $data ) {
 	} # end if
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
-if ( $data ) {
-    $dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
-}
-if ( ! exists $$data{'rush'} ) {
-    my $ac = sql::start_transaction( $dbh );
-    print "Adding rush to projects";
-    $dbh->do(q`alter table Projects add rush boolean default false`);
-    sql::end_transaction( $dbh, $ac );
-} # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Quote_Details LIMIT 1', {} );
 if ( $data ) {
