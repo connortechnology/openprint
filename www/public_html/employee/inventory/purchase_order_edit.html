@@ -1,8 +1,8 @@
 <script type="text/javascript">
 <!--
 function load_content_type( index, type ) {
-$('content-'+index).innerHTML = '';
-new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
+	$('content-'+index).innerHTML = '';
+	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
 } // end function load_content_type
 function set_sheet_description(index) {
 	$('description-'+index).value = $('mweight-'+index).value +'M ' + $('name-'+index).value;
@@ -14,7 +14,7 @@ function calc_price( element ) {
 		var index = matches[2];
 		var cost = parseFloat( $('price-'+index).value.replace(/[^\d\-\.]/g, '' ) );
 		var qty = parseFloat( $('qty-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-		var type = get_value( $('type_id-'+index) );
+		var type = get_value( $('type-'+index) );
 		if ( type == 'Roll Stock' ) {
 			qty /= 100;
 		} else if ( type == 'Sheet Stock' ) {
@@ -39,15 +39,15 @@ function update_totals( form ) {
 	//$('subtotal').innerHTML = subtotal;
 	$('subtotal').innerHTML = do_decimals( subtotal, 2 );
 	var federaltax = 0;
-	if ( form.federaltax_rate.value ) {
+	if ( form.federaltax_charge.checked ) {
 		federaltax = subtotal * form.federaltax_rate.value/100;
-		$('federaltax').innerHTML = do_decimals( federaltax, 2 );
 	} // end if
+	$('federaltax').innerHTML = do_decimals( federaltax, 2 );
 	var statetax = 0;
-	if ( form.statetax_rate.value ) {
+	if ( form.statetax_charge.checked ) {
 		statetax =  subtotal * form.statetax_rate.value/100;
-		$('statetax').innerHTML = do_decimals( statetax, 2 );
 	} // end if
+	$('statetax').innerHTML = do_decimals( statetax, 2 );
 	$('total').innerHTML = do_decimals( subtotal + federaltax + statetax, 2 );
 } // end function update_totals
 function getSelectionId(input, li) {
@@ -81,7 +81,7 @@ function getSelectionId(input, li) {
 	</p>
 	<div class="PO">
 		<div class="PageTitle">
-		<h1>PURCHASE ORDER</h1>
+		<h1>PURCHASE ORDER (<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>)</h1>
 		</div>
 		<div class="leftColumn">
 		<fieldset><legend>VENDOR:</legend>
@@ -125,13 +125,13 @@ function getSelectionId(input, li) {
 			<p><label for="shipto_country">Country:</label>
 				<select id="shipto_country" name="shipto_country" onchange="Country_onchange( this, this.form.shipto_state );">
 					<option value=""> select </option>
-					<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->shipto_country() ); ) ?>
+					<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->shipto_country()); ) ?>
 				</select>
 			</p>
 			<p><label for="shipto_state">State/Province:</label>
 				<select id="shipto_state" name="shipto_state">
-				<option value=""> Select </option>
-				<? echo ( ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->shipto_state()); ) ?>
+					<option value=""> select </option>
+					<? echo ( ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->shipto_state()); ) ?>
 				</select>
 			</p>
 			<p><label for="shipto_city">City:</label><input type="text" name="shipto_city" id="shipto_city" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_city() ) ?>" /></p>
@@ -155,55 +155,75 @@ function getSelectionId(input, li) {
 				<td><textarea name="shipping_method" id="shipping_method" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_method()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
 				<td><textarea name="shipping_terms" id="shipping_terms" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_terms()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></textarea></td>
 				<td valign="top">
-					<input type="hidden" id="delivered_on" name="delivered_on" value="<? echo ( $$variable{'PurchaseOrder'}->delivered_on(); ) ?>" />
-					<span id="delivered_on_display"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ); ) ?></span>
-<img src="/javascripts/jscalendar/img.gif" id="DateButton" style="cursor: pointer;width: 20px;" title="Date selector" alt="Calendar"/>
-					<script type="text/javascript">
-						Calendar.setup({
-							inputField	:	'delivered_on',	// id of the input field
-							displayArea	:	'delivered_on_display',	// id of the input field
-							ifFormat	:	'%Y-%m-%d',		// format of the input field
-							daFormat	:	'<? echo ( $config{'DateFormat'} ) ?>',
-							align		:	'Tl',
-							showsTime	:	false,			// will display a time selector
-							//displayArea :	'JumpToDate$$row{'serviceindex'}',
-							singleClick :	false,			// double-click mode
-							//onClose	 :	setduedate
-							button		:	'DateButton',
-						});
-					</script>
+					<input type="radio" id="delivered_on_switchASAP" name="delivered_on_switch" value="ASAP" <? echo ( ssi::checked( ! $$variable{'PurchaseOrder'}->delivered_on() ) ) ?> onclick="$('delivered_on_div').hide();" />
+					<label for="delivered_on_switchASAP">ASAP</label>
+					<input type="radio" id="delivered_on_switchDATE" name="delivered_on_switch" value="DATE" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on() ) ) ?> onclick="$('delivered_on_div').show();" />
+					<label for="delivered_on_switchDATE">DATE</label>
+					<div id="delivered_on_div" <? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? '' : 'style="display:none;"' ) ?>>
+						<input type="hidden" id="delivered_on" name="delivered_on" value="<? echo ( $$variable{'PurchaseOrder'}->delivered_on() ?  $$variable{'PurchaseOrder'}->delivered_on() : join('-', Date::Calc::Today() ); ) ?>" />
+						<span id="delivered_on_display"><? echo ( Date::Format::time2str( $config{'DateFormat'}, $$variable{'PurchaseOrder'}->delivered_on() ? Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) : time ); ) ?></span>
+	<img src="/javascripts/jscalendar/img.gif" id="DateButton" style="cursor: pointer;width: 20px;" title="Date selector" alt="Calendar"/>
+						<script type="text/javascript">
+							Calendar.setup({
+								inputField	:	'delivered_on',	// id of the input field
+								displayArea	:	'delivered_on_display',	// id of the input field
+								ifFormat	:	'%Y-%m-%d',		// format of the input field
+								daFormat	:	'<? echo ( $config{'DateFormat'} ) ?>',
+								align		:	'Tl',
+								showsTime	:	false,			// will display a time selector
+								//displayArea :	'JumpToDate$$row{'serviceindex'}',
+								singleClick :	false,			// double-click mode
+								//onClose	 :	setduedate
+								button		:	'DateButton',
+							});
+						</script>
+					</div>
 				</td>
 			</tr>
 		</table>
 		<br/>
+		<div id="similar_pos"></div>
 <table>
 	<tr>
 		<th width="55">&nbsp;</th>
 		<th width="110">TYPE</th>
 		<th width="110">QTY</th>
-		<th width="110">ITEM</th>
+		<th width="100">ITEM</th>
 		<th>DESCRIPTION</th>
 		<th width="80">DOCKET</th>
 		<th width="90">UNIT PRICE</th>
 		<th width="90">LINE TOTAL</th>
 	</tr>
-<? echo ( my $html = '';
+<? echo ( 
+	require openprint::PurchaseOrder_ContentType;
+	my $html = '';
 	my $line = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_po_content_line.html' );
 	foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
-		$param{'po_content_id'} = $C->id();
+		$$variable{'C'} = $C;
 		$html .= ssi::variable_substitution( $r, $log, $dbh, \$line, $variable );
 	} # end foreach C
 	return $html;
 ) ?>
 	<tr class="unprintable" id="line-new">
 		<td>
-	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"new Ajax.Request('/employee/inventory/_po_content_line.html?action=add' +
-	'&amp;type_id=' + encodeURIComponent(\$('type_id-new').options[\$('type_id-new').selectedIndex].value) +
-	'&amp;po_id=' + " . $$variable{'PurchaseOrder'}->id() ." + 
-	'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));} } );",'','Add' ); ) ?>
+	<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"
+		if ( \$('type_id-new').value ) {
+			new Ajax.Request('/employee/inventory/_po_content_line.html?action=add' +
+			'&amp;type_id=' + encodeURIComponent( \$('type_id-new').options[\$('type_id-new').selectedIndex].value ) +
+			'&amp;po_id=' + " . $$variable{'PurchaseOrder'}->id() ." + 
+			'', { 
+					method: 'get', 
+					evalScripts: true, 
+					onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));}
+				} );
+		} else {
+			alert('Please select a type for the new line.');
+		}",'','Add' );
+) ?>
 		</td>
 		<td>
 			<select name="type_id-new" id="type_id-new">
+				<option value=""> select one </option>
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ] ); ) ?>
 			</select>
 		</td>
@@ -213,12 +233,18 @@ function getSelectionId(input, li) {
 		<td colspan="7" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
-	<tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ? '' : ' style="display:none;"' ) ?>>
-		<td colspan="7" class="totals">FEDERAL TAX</td>
+	<tr>
+		<td colspan="7" class="totals">
+			<? echo ( $$variable{'PurchaseOrder'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?>
+			<input type="checkbox" id="federaltax_charge" name="federaltax_charge" value="1" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->federaltax_charge() ); ) ?> onclick="update_totals(this.form);" />
+		</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="federaltax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
 	</tr>
-	<tr<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ? '' : ' style="display:none;"' ) ?>>
-		<td colspan="7" class="totals">STATE TAX</td>
+	<tr>
+		<td colspan="7" class="totals">
+			<? echo ( $$variable{'PurchaseOrder'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?>
+			<input type="checkbox" id="statetax_charge" name="statetax_charge" value="1" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->statetax_charge() ); ) ?> onclick="update_totals(this.form);" />
+		</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="statetax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
 	</tr>
 	<tr>
@@ -243,16 +269,44 @@ function getSelectionId(input, li) {
 			<br/>
 			<br/>
 			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?></i><br/></div>
-		<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+		<? if ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 			<br/>
 			<br class="spacer"/>
 			<hr/>
 			<div class="leftColumn"><i>Authorized by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></i></div>
 			<div class="rightColumn"><i>Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())) ) ?></i></div>
-		<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+		<? endif ( $$variable{'PurchaseOrder'}->authorized() ) ?>
+		<? if ( $$variable{'PurchaseOrder'}->authorized() eq '0' ) ?>
+			<br/>
+			<br class="spacer"/>
+			<hr/>
+				<div class="leftColumn"><i>Declined by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></i></div>
+				<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
+		<? endif ( $$variable{'PurchaseOrder'}->authorized() eq '0' ) ?>
 			<br class="spacer"/>
 		</div>
 		<br class="spacer"/><br/>
+<? if ( $$variable{'PurchaseOrder'}->id() ) ?>
+		<fieldset><legend>Logs</legend>
+			<table class="List">
+				<tr>
+					<th align="left" width="120">When</th>
+					<th align="left">Description</th>
+				</tr>
+<tr>
+	<td>Reason for edit:</td>
+	<td><textarea id="reason" name="reason" rows="1" cols="" onkeyup="textarea_resize(this);"></textarea></td>
+</tr>
+<? echo (
+	my $html = '';
+	foreach my $L ( $$variable{'PurchaseOrder'}->Logs() ) {
+		$html .= sprintf('<tr><td>%s</td><td>%s</td></tr>',  Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
+	} # end foreach
+	return $html;
+) ?>
+			</table>
+		</fieldset>
+<? endif ( $$variable{'PurchaseOrder'}->id() ) ?>
 	</div><!--PO-->
 	<input type="hidden" name="btnFunction" />
 </form>

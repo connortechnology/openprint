@@ -1,38 +1,39 @@
 <? eval (
-	$$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} ) if ! $$variable{'Paper'};
+	$$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} ) if ! $$variable{'Paper'};
 
-	if ( $openprint::param{'Action'} eq 'Add' ) {
-		my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
-		my $Paper = new openprint::Paper( $openprint::param{'paper_id'} );
-		$Skid->location_id( $openprint::param{'Location'} );
-		$Skid->add( $Paper, $openprint::param{'quantity'} );
+	if ( $param{'Action'} eq 'Add' ) {
+		my $Skid = new openprint::Skid( $param{'skid_id'} );
+		my $Paper = new openprint::Paper( $param{'paper_id'} );
+		$Skid->location_id( $param{'Location'} );
+		$Skid->add( $Paper, $param{'quantity'} );
 		$Skid->save();
-		$Paper->add_inventory( $Skid->id(), $openprint::param{'quantity'} );
+		$Paper->add_inventory( $Skid->id(), $param{'quantity'} );
 	} # end if
 ) ?>
-<div class="error"><?error?></div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form id="f2" name="f2">
 		<table class="List">
 			<tr>
 				<th width="80" align="left">Skid</th>
-				<th width="160" align="left">RFIDTag</th>
+				<th width="170" align="left">RFIDTag</th>
 				<th align="left">Location</th>
-				<th width="75">Last Seen</th>
+				<th width="75" align="right">Last Seen</th>
 				<th width="100" align="right">Quantity</th>
 				<th width="65">&nbsp;</th>
 			</tr>
 			<? echo (
 				my $html;
-				my @data = sql::execute( $log, $dbh, q{SELECT skid_id, quantity, units FROM Skid_Contents, skids WHERE id=skid_id AND paper_id=? ORDER BY skid_id}, $openprint::param{'paper_id'} );
+				my @data = sql::execute( $log, $dbh, q{SELECT skid_id, quantity, units FROM Skid_Contents WHERE paper_id=? ORDER BY skid_id}, $param{'paper_id'} );
 				my $rowclass;
 				while ( my ( $skid_id, $quantity, $units ) = splice @data, 0, 3 ) {
 					next if ! $quantity;
 					my $Skid = new openprint::Skid( $skid_id );
+					my $last_seen_days = int ( (time - Date::Parse::str2time($Skid->updated_on())) / (24*24*60) );
 					$html .= sprintf('<tr%1$s><td><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
 <td><a href="skid_details.html?skid_id=%2$d">%4$s (%7$x)</a></td>
 <td><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
-<td><a href="skid_details.html?skid_id=%2$d">%8$d days</a></td>
-<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$d %6$s</a></td><td>', $rowclass, $skid_id, $Skid->Location()->name(), $Skid->rfidtag_id(), $quantity, $units, substr($Skid->RFIDTag()->id(),1,15),  (time - Date::Parse::str2time($Skid->updated_on())) / (24*24*60) );
+<td align="right"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>
+<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$d%6$s</a></td><td>', $rowclass, $skid_id, $Skid->Location()->name(), $Skid->rfidtag_id(), $quantity, $units, substr($Skid->RFIDTag()->id(),1,15), $last_seen_days ? $last_seen_days . ' days' : 'Today' );
 					$html .= ssi::writeButton( $log, $dbh, "label$skid_id", 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$skid_id', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Label' );
 					$html .= q`</td></tr>`;
 					$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -41,18 +42,16 @@
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td><b>Totals</b></td>
-				<td>&nbsp;</td>
-				<td>&nbsp;</td>
-				<td align="right"><?InventoryTotal?> <? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
+				<td colspan="4"><b>Totals:</b></td>
+				<td align="right"><?InventoryTotal?><? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
 				<td>&nbsp;</td>
 			</tr>
-			<tr class="totals">
+			<tr class="totals unprintable">
 				<td colspan="2">Enter new inventory:</td>
-				<td>
+				<td colspan="2">
 					<select id="Location" name="Location">
 						<? echo (
-							my @data = ( '', 'select', sql::execute( $log, $dbh, q{SELECT id, name FROM Locations ORDER BY lower(name)} ) );
+							my @data = ( '', 'select', map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') );
 							return ssi::make_drop_down( \@data );
 						) ?>
 					</select>

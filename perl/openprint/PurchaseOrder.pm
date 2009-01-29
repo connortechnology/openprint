@@ -20,6 +20,7 @@ require openprint::Currency;
 require openprint::User;
 require openprint::Tax;
 require openprint::PurchaseOrder_Content;
+require openprint::PurchaseOrder_Log;
 
 my $debug = 0;
 
@@ -33,15 +34,18 @@ $serial = 'Purchaseorders_id_seq';
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
 	'created_by'		=>	'created_by',
+	'authorized'		=>	'authorized',
 	'authorized_by'		=>	'authorized_by',
 	'authorized_on'		=>	'authorized_on',
 	'delivered_on'		=>	'delivered_on',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
 	'federaltax'		=>	'federaltax',
-	'statetax'			=>	'statetax',
 	'federaltax_rate'	=>	'federaltax_rate',
+	'federaltax_charge'	=>	'federaltax_charge',
+	'statetax'			=>	'statetax',
 	'statetax_rate'		=>	'statetax_rate',
+	'statetax_charge'	=>	'statetax_charge',
 	'deleted'			=>	'deleted',
 	'supplier_id'		=>	'supplier_id',
 	'shipping_method'	=>	'shipping_method',
@@ -68,6 +72,7 @@ $serial = 'Purchaseorders_id_seq';
 	'shipto_phone'		=>	'shipto_phone',
 	'shipto_fax'		=>	'shipto_fax',
 	'shipto_email'		=>	'shipto_email',
+	'manifest_id'		=>	'manifest_id',
 );
 
 %transforms = (
@@ -87,6 +92,7 @@ $serial = 'Purchaseorders_id_seq';
 	'federaltax_rate'	=>	undef,
 	'statetax'		=>	undef,
 	'statetax_rate'	=>	undef,
+	'manifest_id'	=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -118,9 +124,33 @@ sub find {
 		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
 			$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
 			push @values, @{$params{'supplier_id'}};
-		} elsif ( $params{'supplied_id'} ) {
+		} elsif ( $params{'supplier_id'} ) {
 			$sql .= ' AND supplier_id=?';
 			push @values, $params{'supplier_id'};
+		} # end if
+	} # end if
+	if ( exists $params{'created_by'} ) {
+		if ( ref $params{'created_by'} eq 'ARRAY' ) {
+			$sql .= ' AND created_by IN ('. join(',', map {'?'} @{$params{'created_by'}} ) . ')';
+			push @values, @{$params{'created_by'}};
+		} elsif ( $params{'created_by'} ) {
+			$sql .= ' AND created_by=?';
+			push @values, $params{'created_by'};
+		} # end if
+	} # end if
+	if ( exists $params{'manifest_id'} ) {
+		if ( ref $params{'manifest_id'} eq 'ARRAY' ) {
+			if ( @{$params{'manifest_id'}} ) {
+				$sql .= ' AND manifest_id IN ('. join(',', map {'?'} @{$params{'manifest_id'}} ) . ')';
+				push @values, @{$params{'manifest_id'}};
+			} else {
+				return ();
+			} # end if
+		} elsif ( $params{'manifest_id'} ) {
+			$sql .= ' AND manifest_id=?';
+			push @values, $params{'manifest_id'};
+		} else {
+			$sql .= ' AND manifest_id IS NULL';
 		} # end if
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
@@ -146,7 +176,7 @@ sub find {
 		push @values, 0;
 	} # end if
 	if ( $params{'docket'} ) {
-		$sql .= ' AND id IN ( SELECT po_id FROM PurchaseOrder_Contents WHERE docket=?)';
+		$sql .= ' AND id IN (SELECT po_id FROM PurchaseOrder_Contents WHERE docket=?)';
 		push @values, $params{'docket'};
 	} # end if
 
@@ -178,7 +208,6 @@ sub save {
 	delete $sql{'created_on'};
 	$sql{'subtotal'} = 0;
 	foreach my $C ( $self->Contents() ) {
-$log->debug("Adding " . $C->total() );
 		$sql{'subtotal'} += $C->total();
 	} # end foreach
 	$sql{'total'} = $sql{'subtotal'};
@@ -221,21 +250,9 @@ sub delete {
 sub destroy {
     my $self = shift;
     my $ac = sql::start_transaction( );
-    #sql::execute( undef, undef, q{DELETE FROM PurchaseOrder_data WHERE label_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM PurchaseOrders WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::PurchaseOrder();
-	@$new{keys %fields} = @$self{keys %fields};
-	delete $$new{'id'};
-	#foreach my $k ( keys %{$$self{'data'}} ) {
-		#$$new{'data'}{$k} = $$self{'data'}{$k};
-	#} # end foreach
-	return $new;
-} # end sub copy
 
 sub Currency {
 	my ( $self ) = @_;
@@ -254,18 +271,9 @@ sub Authorized_By {
 	return new openprint::User( $_[0]{authorized_by} );
 } # end sub Authorized_By
 
-
 sub Contents {
-	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'});
+	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Contents
-
-sub delivered_on {
-	my ( $self ) = @_;
-	if ( ! $$self{'delivered_on'} ) {
-	$$self{'delivered_on'} = join('-', Date::Calc::Today() ) .' 00:00:00';
-	} # end if
-	return $$self{'delivered_on'};
-} # end sub delivered_on
 
 sub send_to_vendor {
 	my ( $self ) = @_;
@@ -293,7 +301,7 @@ sub send_to_vendor {
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
 			);
 
-	my $results = 'PO ' . $$self{'id'} . ' email to the following recipients:<br/>';
+	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	if ( $self->vendor_email() ) {
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
@@ -315,6 +323,13 @@ sub send_to_vendor {
 		} # end foreach U
 	} # end if
 
+	my $L = new openprint::PurchaseOrder_Log();
+	$L->save({
+			'user_id'	=>	$session{'user_id'},
+			'po_id'		=>	$$self{'id'},
+			'reason'	=>	$results,
+			});
+
 	return $results;
 
 } # end sub send_to_vendor
@@ -325,7 +340,7 @@ sub federaltax {
 	if ( defined $new ) {
 		$$self{'federaltax'} = $new;
 	} # end if
-	if ( ! $$self{'federaltax'} ) {
+	if ( ( ! $$self{'federaltax'} ) and $self->federaltax_charge() ) {
 		$$self{'federaltax'} = $self->subtotal() * ( $self->federaltax_rate()/100 );
 	} # end if
 	return $$self{'federaltax'};
@@ -337,13 +352,6 @@ sub federaltax_rate {
 		$$self{'federaltax_rate'} = $new;
 	} # end if
 	if ( ! $$self{'federaltax_rate'} ) {
-		if ( $self->Company()->taxexempt1() eq 'Y' ) {
-			return '';
-		} # end if
-# This is true, but can't expect people to type it in
-#if ( ! $self->Vendor()->gst_number() ) {
-#   return '';
-#} # end if
 		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
 			$$self{'federaltax_rate'} = $Tax->federaltax_rate();
 		} # end if
@@ -351,13 +359,31 @@ sub federaltax_rate {
 	return $$self{'federaltax_rate'};
 } # end sub federaltax_rate
 
+sub federaltax_charge {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'federaltax_charge'} = $_[0];
+	} # end if
+	if ( ! defined $$self{'federaltax_charge'} ) {
+		if ( $self->Company()->taxexempt1() eq 'Y' ) {
+			$$self{'federaltax_charge'} = 0;
+		} # end if
+# This is true, but can't expect people to type it in
+#if ( ! $self->Vendor()->gst_number() ) {
+#   return 0;
+#} # end if
+		$$self{'federaltax_charge'} = 1;
+	} # end if
+	return $$self{'federaltax_charge'};
+} # end sub federaltax_charge
+
 sub statetax {
 	my ( $self, $new ) = @_;
 
 	if ( defined $new ) {
 		$$self{'statetax'} = $new;
 	} # end if
-	if ( ! $$self{'statetax'} ) {
+	if ( ( ! $$self{'statetax'} ) and $self->statetax_charge() ) {
 		$$self{'statetax'} = $self->subtotal() * ( $self->statetax_rate()/100 );
 	} # end if
 	return $$self{'statetax'};
@@ -369,19 +395,30 @@ sub statetax_rate {
 		$$self{'statetax_rate'} = $new;
 	} # end if
 	if ( ! $$self{'statetax_rate'} ) {
-		if ( $self->Company()->taxexempt2() eq 'Y' ) {
-			return '';
-		} # end if
-# This is true, but can't expect people to type it in
-#if ( ! $self->Vendor()->gst_number() ) {
-#   return '';
-#} # end if
 		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
 			$$self{'statetax_rate'} = $Tax->statetax_rate();
 		} # end if
 	} # end if
 	return $$self{'statetax_rate'};
 } # end sub statetax_rate
+
+sub statetax_charge {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'statetax_charge'} = $_[0];
+	} # end if
+	if ( ! defined $$self{'statetax_charge'} ) {
+		if ( $self->Company()->taxexempt2() eq 'Y' ) {
+			return 0;
+		} # end if
+# This is true, but can't expect people to type it in
+#if ( ! $self->Vendor()->pst_number() ) {
+#   return 0;
+#} # end if
+		$$self{'statetax_charge'} = 1;
+	} # end if
+	return $$self{'statetax_charge'};
+} # end sub statetax_charge
 
 sub total {
 	my ( $self ) = @_;
@@ -394,10 +431,31 @@ sub Company {
 
 sub authorize {
 	my ( $self ) = @_;
+	$$self{'authorized'} = 1;
 	$$self{'authorized_by'} = $session{'user_id'};
 	$$self{'authorized_on'} = 'NOW()';
+	my $L = new openprint::PurchaseOrder_Log();
+	$L->save({
+			'po_id'		=> $$self{'id'},
+			'user_id'	=> $session{'user_id'},
+			'reason'	=> 'Authorized by ' . new openprint::User( $session{'user_id'} )->name(),
+			});
 	return $self->save();
 } # end sub authorize
+
+sub decline {
+	my ( $self, $reason ) = @_;
+	$$self{'authorized'} = 0;
+	$$self{'authorized_by'} = $session{'user_id'};
+	$$self{'authorized_on'} = 'NOW()';
+	my $L = new openprint::PurchaseOrder_Log();
+	$L->save({
+			'po_id'		=> $$self{'id'},
+			'user_id'	=> $session{'user_id'},
+			'reason'	=> 'Declined by ' . new openprint::User( $session{'user_id'} )->name() . ': ' . $reason,
+			});
+	return $self->save();
+} # end sub decline
 
 sub notifications {
 	my ( $self, $new ) = @_;
@@ -408,8 +466,14 @@ sub notifications {
 	if ( $$self{'id'} and ! exists $$self{'notifications'} ) {
 		@{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
 	} # end if
-	return $$self{'notification'} ? @{$$self{'notifications'}} : ();
+	return $$self{'notifications'} ? @{$$self{'notifications'}} : ();
 } # end sub notifications
+
+sub Logs {
+	my ( $self ) = @_;
+
+	return openprint::PurchaseOrder_Log::find( 'po_id'=>$$self{'id'}, 'order'=>'created_on DESC' );
+} # end sub Logs
 
 1;
 #__END__

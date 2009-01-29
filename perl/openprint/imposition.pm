@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -701,6 +701,7 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 			9	=>	[ [3,3] ],
 			10	=>	[ [5,2], [2,5],[3,4],[4,3] ],
 			12	=>	[ [3,4], [4,3], [6,2],[2,6] ],
+			14	=>	[ [2,7], [7,2] ],
 			16	=>	[ [4,4] ],
 			24	=>	[ [4,6] ],
 			);

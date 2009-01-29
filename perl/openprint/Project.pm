@@ -1026,7 +1026,7 @@ sub signatures {
 		return @sigs;
 	} # end if
 	if ( $$self{'signatures'} ) {
-	return @{$$self{'signatures'}};
+		return @{$$self{'signatures'}};
 	} # end if
 	return ();
 } # end sub signatures
@@ -1042,6 +1042,9 @@ sub status_change {
 			openprint::service::status( $$self{'id'}, $_, 'Complete' );
 		} # end foreach signature
         sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $self->id() );
+		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+			$PA->delete();
+		} # end foreach AP
 
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
@@ -1050,6 +1053,9 @@ sub status_change {
 		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
+		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+			$PA->delete();
+		} # end foreach AP
 
 	} elsif ( sets::isin( $new_status, ['Shipped','Picked Up', 'Complete'] ) ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus != ''", $$self{id}], 'strStatus', 'Complete' );
@@ -1057,6 +1063,9 @@ sub status_change {
 		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
+		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+			$PA->delete();
+		} # end foreach AP
 	} # end if
 	$self->save();
 	$self->Order()->update_status();

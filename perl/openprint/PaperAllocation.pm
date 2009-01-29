@@ -5,10 +5,11 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable $dbh $log %fields %transforms %defaults );
+use vars qw(%session %variable $dbh $log %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*session = \%openprint::session;
 
 
 require sql;
@@ -67,15 +68,15 @@ sub find {
 		$sql .= ' AND project_id=?';
 		push @values, $params{'project_id'};
 	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'}
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND ( updated_on >= ?)';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on <= ?)';
-		push @values, $params{'updated_on_end'};
+	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
+		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
+		push @values, @params{'created_on_start','created_on_end'}
+	} elsif ( $params{'created_on_start'} ) {
+		$sql .= ' AND ( created_on >= ?)';
+		push @values, $params{'created_on_start'};
+	} elsif ( $params{'created_on_end'} ) {
+		$sql .= ' AND ( created_on <= ?)';
+		push @values, $params{'created_on_end'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
@@ -135,6 +136,9 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
+	if ( @_ ) {
+		$self->Project()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted. Reason: ' . $_[0] );
+	} # end if
     sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
@@ -151,6 +155,9 @@ sub User {
 sub Project {
 	return new openprint::Project( $_[0]{'project_id'} );
 } # end sub Project
+sub docket {
+	return $_[0]->Project()->docket();
+} # end sub docket
 
 1;
 __END__

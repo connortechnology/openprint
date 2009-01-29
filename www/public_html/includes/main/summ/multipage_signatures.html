@@ -6,7 +6,11 @@
 	<span class="value">
 <? echo ( 
 	if ( $$variable{'PageQuantity'.$$variable{'QTYIndex'}} ) {
-		return $$variable{'PageQuantity'.$$variable{'QTYIndex'}} . ' pages';
+		if ( $$variable{'hdnImageOrientation'.$$variable{'QTYIndex'}} eq 'Vertical' ) {
+			return ($$variable{'SpreadCols'.$$variable{'QTYIndex'}} * $$variable{'txtSpreadSize'}/2) . 'x' . $$variable{'SpreadRows'.$$variable{'QTYIndex'}} . ' = ' . $$variable{'PageQuantity'.$$variable{'QTYIndex'}} . ' pages';
+		} else {
+			return $$variable{'SpreadCols'.$$variable{'QTYIndex'}} . 'x' . ($$variable{'SpreadRows'.$$variable{'QTYIndex'}} * $$variable{'txtSpreadSize'}/2) . ' = ' . $$variable{'PageQuantity'.$$variable{'QTYIndex'}} . ' pages';
+		} # end if
 	} elsif ( $$variable{"txtSignatureSpreadQuantity$$variable{'QTYIndex'}"} ) {
 		
 		return $$variable{"txtSignatureSpreadQuantity$$variable{'QTYIndex'}"} * $$variable{'txtSpreadSize'} . ' pages';

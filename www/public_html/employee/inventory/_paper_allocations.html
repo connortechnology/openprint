@@ -1,17 +1,23 @@
-<? if ( $$variable{'error'} ) ?>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<form id="f3" name="f3">
+<!--#include virtual="/includes/error_reporting.html"-->
+<? eval (
+	return if ! ( $param{'skid_id'} or $param{'paper_id'} );
+	my %search;
+	$search{'skid_id'} = $param{'skid_id'} if $param{'skid_id'};
+	$search{'paper_id'} = $param{'paper_id'} if $param{'paper_id'};
+	@{$$variable{'Allocations'}} = openprint::PaperAllocation::find(%search);
+) ?>
+<? if ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
+
 	<table class="List">
 		<tr>
 			<th align="left" width="130">Date</th>
 			<th align="left"><? echo ( 
-				return 'Skid' if $openprint::param{'paper_id'};
-				return 'Paper' if $openprint::param{'skid_id'};
+				return 'Skid' if $param{'paper_id'};
+				return 'Paper' if $param{'skid_id'};
 			) ?></th>
-			<? if ( $openprint::config{'RFID'} eq 'Y' ) ?>
+			<? if ( $config{'RFID'} eq 'Y' ) ?>
 			<th align="left" width="120">RFID</th>
-			<? endif ( $openprint::config{'RFID'} eq 'Y' ) ?>
+			<? endif ( $config{'RFID'} eq 'Y' ) ?>
 			<th align="left" width="120">Location</th>
 			<th align="left" width="60">Docket</th>
 			<th align="right" width="120">Amount</th>
@@ -19,56 +25,53 @@
 		</tr>
 		<? echo (
 			my $html;
-			my @data;
-			@data = sql::execute( $log, $dbh, q{SELECT id, created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), skid_id, paper_id, quantity, units FROM Paper_Allocations WHERE paper_id=? ORDER BY created_on}, $openprint::param{'paper_id'} ) if $openprint::param{'paper_id'};
-			@data = sql::execute( $log, $dbh, q{SELECT id, created_on, project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), skid_id, paper_id, quantity, units FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $openprint::param{'skid_id'} ) if $openprint::param{'skid_id'};
-			my $rowclass;
-			while ( my ( $id, $time, $project_id, $docket, $skid_id, $paper_id, $quantity, $units ) = splice @data, 0, 8 ) {
 
-				$html .= sprintf( '<tr%1$s><td>%2$s</td>', $rowclass, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ) );
-				if ( $openprint::param{'skid_id'} ) {
-					$html .= sprintf('<td><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $paper_id, new openprint::Paper( $paper_id )->to_string() );
+			my $rowclass;
+			foreach my $PA ( @{$$variable{'Allocations'}} ) {
+				$html .= sprintf( '<tr%1$s><td>%2$s</td>', $rowclass, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time( $PA->created_on() ) ) );
+				if ( $param{'skid_id'} ) {
+					$html .= sprintf('<td><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $PA->paper_id(), $PA->Paper()->to_string() );
+				} elsif ( $PA->skid_id() ) {
+					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $PA->skid_id() );
 				} else {
-					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $skid_id );
+					$html .= '<td>&nbsp;</td>';
 				} # end if
-				my $Skid = new openprint::Skid( $skid_id );
-				if ( $openprint::config{'RFID'} eq 'Y' ) {
-					$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%1$d</a></td>', $Skid->rfidtag_id() );
+				my $Skid = $PA->Skid();
+				if ( $config{'RFID'} eq 'Y' ) {
+					if ( $Skid->rfidtag_id() ) {
+						$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%1$d</a></td>', $Skid->rfidtag_id() );
+					} else {
+						$html .= '<td>&nbsp;</td>';
+					} # end if
 				} # end if
 				$html .= sprintf('<td>%1$s</td>', $Skid->Location()->name() );
-				$html .= sprintf('<td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td><td>',
-					$project_id,
-					$docket,
-					$quantity, $units,
+				$html .= sprintf('<td><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td align="right">%d%s</td><td>',
+					$PA->project_id(),
+					$PA->Project()->docket() ? $PA->Project()->docket() : 'unknown',
+					$PA->quantity(), $PA->units(),
 					);
-				$html .= ssi::writeButton( $log, $dbh, 'Delete'.$id, 'delete.gif', "f3.btnFunction.value='Delete Allocation';f3.allocation_id.value=$id;f3.submit();", '', 'Delete' );
+				#$html .= ssi::writeButton( $log, $dbh, 'Delete'.$$PA{id}, 'delete.gif', qq`new Ajax.Updater('Allocations','_paper_allocations.html', { method: 'get', parameters: { allocation_id: '$$PA{id}', action: 'Delete Allocation' } } );`, '', 'Delete' );
+				$html .= ssi::writeButton( $log, $dbh, 'Delete'.$$PA{id}, 'delete.gif', qq`ajax_window('_deallocate_popup.html?allocation_id=`.$$PA{id}.q`', 400 );`, '', 'Delete' );
 				$html .= '</td></tr>',
 
 				$rowclass = $rowclass ? '' : ' class="colRow"';
-				$$variable{'TotalAllocated'} += $quantity;
+				$$variable{'TotalAllocated'} += $PA->quantity();
 			} # end while
 			return $html;
 		) ?>
 		<tr class="totals">
-			<? if ( $openprint::config{'RFID'} eq 'Y' ) ?>
+			<? if ( $config{'RFID'} eq 'Y' ) ?>
 			<td>&nbsp;</td>
-			<? endif ( $openprint::config{'RFID'} eq 'Y' ) ?>
+			<? endif ( $config{'RFID'} eq 'Y' ) ?>
 			<td colspan="4" align="right"><b>Totals:</b></td>
-			<td align="right"><?TotalAllocated?> <? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
+			<td align="right"><?TotalAllocated?><? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
 			<td>&nbsp;</td>
 		</tr>
-<? if ( 0 ) ?>
-		<tr class="totals">
-			<td>Allocate paper:</td>
-			<td><input type="text" id="skid_id" name="skid_id" /></td>
-			<td><input type="text" id="Docket" name="Docket" /></td>
-			<td><input type="text" id="AllocationQuantity" name="AllocationQuantity" /></td>
-			<td><? echo ( ssi::writeButton( $log, $dbh, 'AddAllocation', 'add.gif', "LoadContent( 'Allocations', '/employee/inventory/_paper_allocations.html', Serialize( document.forms['f3'] ) );", '', 'Add' ); ) ?></td>
-		</tr>
-<? endif ( 0 ) ?>
 	</table>
-	<input type="hidden" name="paper_id" value="<? echo ( $openprint::param{paper_id} ) ?>" />
-	<input type="hidden" name="action" value="Add" />
-	<input type="hidden" name="btnFunction" />
-	<input type="hidden" name="allocation_id" />
-</form>
+<? else ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
+There are no allocations.
+<? endif ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
+<script type="text/javascript">
+	$('Allocated').innerHTML = '<? echo ( int($$variable{'Paper'}->allocated()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+	$('Available').innerHTML = '<? echo ( int($$variable{'Paper'}->in_stock() - $$variable{'Paper'}->allocated()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+</script>

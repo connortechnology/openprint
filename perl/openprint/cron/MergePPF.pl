@@ -56,7 +56,8 @@ foreach my $file ( @filenames ) {
 				rename $source_path.'/'.$file_base.'B.'.$extension, $source_path.'/'.$file_base.'E.'.$extension;
 				next;
 			} # end if
-			if ( ! open( A, '< '.$source_path.'/'.$file_base.'A.'.$extension ) ) {
+			my $A;
+			if ( ! open( $A, '< '.$source_path.'/'.$file_base.'A.'.$extension ) ) {
 				print "Error opening " . $source_path.'/'.$file_base."A.$extension\n" ;
 				next;
 			} # end if
@@ -69,7 +70,8 @@ foreach my $file ( @filenames ) {
 
 			my ( $docket, $ppo, $name, $sig, $side ) = $file =~ /(\d\d\d\d\d)(\w\w)_?(\w*?)Sg(\d\d)Sd.(\w).PPF/i;
 #print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
-			while ( <A> ) {
+			$sig = 0 if ! $sig;
+			while ( <$A> ) {
 				my $line = $_;
 				next if $line =~ /^CIP3EndSheet/;
 				$line =~ s/$fileA/$fileM/g;
@@ -85,7 +87,7 @@ foreach my $file ( @filenames ) {
 				} # end if
 				print M $line;
 			} # end while
-			close A;
+			close $A;
 			close M;
 			unlink $source_path.'/'.$file_base.'A.'.$extension;
 			unlink $source_path.'/'.$file_base.'B.'.$extension;

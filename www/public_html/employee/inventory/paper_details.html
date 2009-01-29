@@ -224,20 +224,22 @@ The following errors occurred:<br/>
 		<div style="float: right; width: 48%;">
 			<p>
 				<label>Entered:</label>
-				<? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paper'}->created_on() ) ); ) ?>
+				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paper'}->created_on() ) ); ) ?>
 			</p>
 			<p>
 				<label>In Stock:</label>
 				<? echo ( $$variable{'Paper'}->in_stock() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' );  ) ?>
 			</p>
 			<p>
-				<label>Allocated:</label>
+				<label>Allocated:</label><span id="Allocated">
 				<? echo ( int $$variable{'Paper'}->allocated() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ); ) ?>
+				</span>
 			</p>
 			<p>
-				<label>Unallocated:</label>
+				<label>Available:</label><span id="Available">
 				<? echo ( int($$variable{'Paper'}->in_stock() - $$variable{'Paper'}->allocated()); ) ?>
 				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
+				</span>
 			</p>
 			<p>
 				<label>Ordered:</label>
@@ -247,21 +249,21 @@ The following errors occurred:<br/>
 		</div>
 		<div style="float: right;">
 			<? echo (
+					my $html = '';
 					if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
-						return join('',
-							ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' ),
-							ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' ),
-							ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-							ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
-							ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset()', '', 'Reset' ),
-							);
+							$html .= ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' );
+							$html .= ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' );
+							$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ) if ! $$variable{'Paper'}->in_stock();
+							$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset()', '', 'Reset' );
 					} # end if
-					return;
+					return $html;
 			) ?>
 		</div>
 	</fieldset>
  <? if ( $$variable{Paper}->id() ) ?>
  <? eval ( @{$$variable{Duplicates}} = openprint::Paper::find(
+		'owner_id'				=>$$variable{Paper}->owner_id(),
 		'manufacturer_id'		=>$$variable{Paper}->manufacturer_id(),
 		'name_id'				=>$$variable{Paper}->name_id(),
 		'finish_id'				=>$$variable{Paper}->finish_id(),
@@ -280,7 +282,7 @@ The following errors occurred:<br/>
 				my $rowclass;
 				while ( my $Duplicate = shift @{$$variable{'Duplicates'}} ) {
 						next if $Duplicate->id() == $$variable{Paper}->id();
-						$html .= sprintf('<tr%s><td>%d</td><td>%s</td></tr>', $rowclass, $Duplicate->id(), $Duplicate->to_string() );
+						$html .= sprintf('<tr%1$s><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%2$d</a></td><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%3$s</a></td></tr>', $rowclass, $Duplicate->id(), $Duplicate->to_string() );
 						$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end while
 				return $html;
@@ -290,23 +292,15 @@ The following errors occurred:<br/>
  </fieldset>
 		<? endif ( @{$$variable{Duplicates}} > 1 ) ?>
 		<? endif ( $$variable{Paper}->id() ) ?>
-
 </form>
 <? if ( $$variable{'paper_id'} ) ?>
-	<fieldset><legend onclick="toggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory - click to hide/show</legend>
-	<div id="CurrentInventory">
-	<!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
-	</div>
+	<fieldset><legend onclick="AjaxToggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory<span class="unprintable"> - click to hide/show</span></legend>
+		<div id="CurrentInventory"><!--#include virtual="/employee/inventory/_paper_inventory_entries.html" --></div>
 	</fieldset>
-<div>
-	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
-	<div id="Allocations">
-	<!--#include virtual="/employee/inventory/_paper_allocations.html" -->
-	</div>
+	<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations<span class="unprintable"> - click to hide/show</span></legend>
+		<div id="Allocations"><!--#include virtual="/employee/inventory/_paper_allocations.html" --></div>
 	</fieldset>
-</div>
-<br class="spacer"/>
-<fieldset class="filters"><legend onclick="toggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log - click to hide/show</legend>
-<div id="Log" style="display: none;"> </div>
-</fieldset>
+	<fieldset><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log<span class="unprintable"> - click to hide/show</span></legend>
+		<div id="Log"><!--#include virtual="/employee/inventory/_paper_log.html" --></div>
+	</fieldset>
 <? endif ( $$variable{'paper_id'} ) ?>

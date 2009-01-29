@@ -5,6 +5,7 @@ require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
 require openprint::Fold;
+require openprint::Location;
 require sql;
 
 my $debug = 1;
@@ -24,6 +25,7 @@ my %fields = (
 	'cost_center'		=>	'cost_center',
 	'jdf_id'			=> 	'jdf_id',
 	'jdf_name'			=> 	'jdf_name',
+	'location_id'		=>	'location_id',
 );
 
 sub init_cache {
@@ -44,11 +46,12 @@ sub find {
 	if ( exists $params{'id'} ) {
 		if ( ref $params{id} eq 'ARRAY' ) {
 			if ( @{$params{id}} > 1 ) {
-			$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}  ) . ')';
-			push @values, @{$params{id}};
+				$sql .= ' AND lngindex IN (' . join(',', map {'?'} @{$params{id}}  ) . ')';
+				push @values, @{$params{id}};
+			} elsif ( @{$params{id}} == 1 ) {
+				$sql .= ' AND lngindex=?';
+				push @values, $params{id};
 			} else {
-			$sql .= ' AND lngindex=?';
-			push @values, $params{id};
 			} # en dif
 		} else {
 			$sql .= ' AND lngindex=?';
@@ -527,6 +530,9 @@ sub Previous {
 	return new openprint::Equipment( $self->prev($params) );
 } # end sub Next
 
+sub Location {
+	return new openprint::Location( $_[0]{location_id} );
+} # end sub Location
 
 1;
 __END__

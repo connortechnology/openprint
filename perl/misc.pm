@@ -137,7 +137,7 @@ sub export {
 	$r->content_type( "application/octet-stream; name=\"$filename\"" );
 	#$r->content_encoding( "binary" );
 	$$variable{'Download'} = $filename;
-	return @{$$variable{'File_Data'}} = @{$data};
+	return $$variable{'File_Data'} = $data;
 } # end sub export
 
 sub get_destination {
@@ -243,6 +243,38 @@ sub interval_to_seconds {
     my ( $h, $m, $s ) = split ':', $interval;
     return ($h*3600) + ($m*60) + $s;
 } # end sub interval_to_seconds
+
+sub seconds_to_pretty_interval {
+    my ( $seconds ) = @_;
+    my $string;
+    my $years = int($seconds / ( 60 * 60 * 24 * 365 ));
+    my $remainder = $seconds % ( 60*60*24*365 );
+    $string .= sprintf('%dy', $years) if $years;
+    return $string if ! $remainder;
+
+    my $days = int ( $remainder / ( 60* 60 * 24 ) );
+    $remainder = $remainder % ( 60 * 60 * 24 );
+    if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
+        $string .= '1 month';
+    } elsif ( $days ) {
+        $string .= sprintf('%dd', $days );
+    } # end if
+    return $string if ! $remainder;
+
+    my $hours = int( $remainder / (60*60) );
+    $remainder = $remainder % ( 60*60 );
+    my $minutes = int ( $remainder / 60 );
+    $remainder = $remainder % 60;
+
+    if ( $remainder ) {
+        $string .= sprintf('%d:%.2d:%.2d', $hours, $minutes, $remainder );
+    } else {
+        $string .= sprintf('%d:%.2d', $hours, $minutes );
+    } # end if
+    return $string;
+
+} # end sub seconds_to_pretty_interval
+
 
 sub CommaFormatted {
     my $delimiter = ','; # replace comma if desired

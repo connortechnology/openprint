@@ -3,6 +3,22 @@
 	function load( div, form ) {
 		new Ajax.Updater( div, '_purchase_orders.html', { method: 'get', parameters: form.serialize() } );
 	} // end function load
+	function open_decline_window( form ) {
+		var po_ids;
+		if ( ! form.po_id.length ) {
+			if ( form.po_id && form.po_id.checked ) {
+				po_ids = new Array();
+				po_ids[po_ids.length] = form.po_id.value;
+			} // end if
+		} else {
+			po_ids = $A(form.po_id).filter(function(e){return e.checked}).map(function(e){return e.value});
+		} // end if
+		if ( ! po_ids.length ) {
+			alert('Please select a purchase order to decline.');
+		} else {
+			ajax_window('_po_decline_popup.html?po_id='+po_ids.join(','), 400 );
+		} // end if
+	} // end function open_decline_window()
 -->
 </script>
 	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
@@ -13,7 +29,18 @@
 			<input type="text" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $(f1) );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load('Results', f1);",'','Go' ); ) ?>
 		</p>
+		<p><label>Manifest:</label>
+			<input type="text" id="manifest_id" name="manifest_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $(f1) );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load('Results', f1);",'','Go' ); ) ?>
+		</p>
 		<hr/>
+		<p><label>Created By:</label>
+			<select name="created_by" onchange="load('Results',this.form);">
+				<option value="">All</option>
+				<? echo ( 
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)','type'=>['A','E'] ) ], $session{'/employee/inventory/purchase_orders.html?created_by'} ); ) ?>
+			</select>
+		</p>
 		<p><label>Vendor:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 			<select name="supplier_id" onchange="load('Results',this.form);">
@@ -35,13 +62,19 @@
             </span>
 		</p>
 		<p>
-			<label>Authorized:</label>
+			<label>Authorization:</label>
 			<input type="radio" name="authorized" id="authorizedY" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' ) ) ?> onclick="load('Results',this.form);" />
-			<label class="radio" for="authorizedY">Yes</label>
+			<label class="radio" for="authorizedY">Authorized</label>
 			<input type="radio" name="authorized" id="authorizedN" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' ) ) ?> onclick="load('Results',this.form);" />
-			<label class="radio" for="authorizedN">No</label>
-			<input type="radio" name="authorized" id="authorizedB" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq '' ) ) ?> onclick="load('Results',this.form);" />
-			<label class="radio" for="authorizedB">Both</label>
+			<label class="radio" for="authorizedN">Declined</label>
+			<input type="radio" name="authorized" id="authorizedU" value="U" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'U' ) ) ?> onclick="load('Results',this.form);" />
+			<label class="radio" for="authorizedU">Unauthorized</label>
+			<input type="radio" name="authorized" id="authorizedAll" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq '' ) ) ?> onclick="load('Results',this.form);" />
+			<label class="radio" for="authorizedAll">All</label>
+		</p>
+		<p>
+			<label>Contains</label>
+			<input type="text" id="contains" name="contains" onkeyup="load('Results',this.form);" />
 		</p>
 		<p class="buttons">
 				<? echo ( join( '',

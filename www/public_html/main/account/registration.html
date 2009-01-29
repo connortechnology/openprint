@@ -2,26 +2,26 @@
 <h1>ACCOUNT</h1>
 <h2>Registration</h2>
 </div>
-<? if ( ( ! $$variable{'error'} ) and $openprint::param{'btnFunction'} ) ?>
+<? if ( ( ! $$variable{'error'} ) and $param{'btnFunction'} ) ?>
 
-	<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+	<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	Registration was successful.<br/><br/>
-	You are now representing <? echo ( $openprint::param{'name'} ) ?><br/>
-	<? else ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+	You are now representing <? echo ( $param{'name'} ) ?><br/>
+	<? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	<p>Thank you for registering!</p>
-	<p><? echo ( $openprint::config{'RegistrationMessage'} ) ?></p>
-	<? if ( $openprint::session{'user_id'} ) ?>
+	<p><? echo ( $config{'RegistrationMessage'} ) ?></p>
+	<? if ( $session{'user_id'} ) ?>
 	<p>Your account has been activated and you have been automatically logged in.</p>
-	<? else ( $openprint::session{'user_id'} ) ?>
+	<? else ( $session{'user_id'} ) ?>
 		At this time your login remains inactive.<br/>
 		<br/>
 		You will be notified via email when your account is activated.<br/>
-	<? endif ( $openprint::session{'user_id'} ) ?>
-	<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+	<? endif ( $session{'user_id'} ) ?>
+	<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	<br/>
-	<b><? echo ( $openprint::session{'Destination'}; ) ?></b><br/>
+	<b><? echo ( $session{'Destination'}; ) ?></b><br/>
 
-<? else ( ( ! $$variable{'error'} ) and $openprint::param{'btnFunction'} ) ?>
+<? else ( ( ! $$variable{'error'} ) and $param{'btnFunction'} ) ?>
 	<? if ( $$variable{'error'} ) ?>
 	Please correct the following errors...<br/>
 	<div class="error"><?error?></div>
@@ -35,22 +35,22 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 		<fieldset><legend>Billing Information</legend>
 			<p> 
 				<label for="name">Company/Billing Name: <span class="requiredFieldIndicator">*</span></label>
-				<input type="text" name="name" value="<? echo ( ssi::htmlize($openprint::param{'name'}) ) ?>"  />
+				<input type="text" name="name" value="<? echo ( ssi::htmlize($param{'name'}) ) ?>"  />
 			</p>
 			<p>
 				<label for="address1">Address Line 1: <span class="requiredFieldIndicator">*</span></label>
-				<input type="text" id="address1" name="address1" value="<? echo ( ssi::htmlize($openprint::param{'address1'}) ) ?>"  />
+				<input type="text" id="address1" name="address1" value="<? echo ( ssi::htmlize($param{'address1'}) ) ?>"  />
 			</p>
 			<p>
 				<label for="address2">Address Line 2:&nbsp;&nbsp;&nbsp;</label>
-				<input type="text" id="address2" name="address2" value="<? echo ( ssi::htmlize($openprint::param{'address2'}); ) ?>"  />
+				<input type="text" id="address2" name="address2" value="<? echo ( ssi::htmlize($param{'address2'}); ) ?>"  />
 			</p>
 			<p> 
 				<label for="country">Country: <span class="requiredFieldIndicator">*</span></label>
 				<select name="country" onchange="Country_onchange(this, this.form.ddmStateProvince );">
 				<option value=""> Select </option>
 				<? echo (
-					$$variable{'country'} = $openprint::param{'country'} ? $openprint::param{'country'} : $openprint::session{'Country'};
+					$$variable{'country'} = $param{'country'} ? $param{'country'} : $session{'Country'};
 					return ssi::return_countries( $$variable{'country'});
 				) ?>					
 				</select>
@@ -71,13 +71,13 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 					<option value=""> Select </option>
 				<? echo (
 					
-					return ssi::return_states( $openprint::param{'state'} ).ssi::return_provinces( $openprint::param{'state'} );
+					return ssi::return_states( $param{'state'} ).ssi::return_provinces( $param{'state'} );
 				) ?>
 				</select>
 			</p>
 			<p> 
 				<label for="city">City: <span class="requiredFieldIndicator">*</span></label>
-				<input type="text" name="city" value="<? echo ( ssi::htmlize($openprint::param{'city'}); ) ?>"  />
+				<input type="text" name="city" value="<? echo ( ssi::htmlize($param{'city'}); ) ?>"  />
 			</p>
 			<p> 
 				<label for="postalcode">
@@ -91,19 +91,19 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
                        } # end if
                     ) ?>
 				<span class="requiredFieldIndicator">*</span></label>
-				<input type="text" name="postalcode" value="<? echo ( ssi::htmlize($openprint::param{'postalcode'}); ) ?>"  />
+				<input type="text" name="postalcode" value="<? echo ( ssi::htmlize($param{'postalcode'}); ) ?>"  />
 			</p>
 			<p> 
 				<label for="phone">Phone: <span class="requiredFieldIndicator">*</span></label>
-				<input type="text" id="phone" name="phone" value="<? echo ( ssi::htmlize($openprint::param{'phone'}); ) ?>" size="13" style="width:auto;"  /> ext <input type="text" value="<? echo ( ssi::htmlize($openprint::param{'extension'}); ) ?>" style="width: auto;" name="extension" size="6" />
+				<input type="text" id="phone" name="phone" value="<? echo ( ssi::htmlize($param{'phone'}); ) ?>" size="13" style="width:auto;"  /> ext <input type="text" value="<? echo ( ssi::htmlize($param{'extension'}); ) ?>" style="width: auto;" name="extension" size="6" />
 			</p>
 			<p> 
 				<label for="fax">Fax:&nbsp;&nbsp;&nbsp;</label>
-				<input type="text" name="fax" value="<? echo ( ssi::htmlize($openprint::param{'fax'}); ) ?>" size="13"  />
+				<input type="text" name="fax" value="<? echo ( ssi::htmlize($param{'fax'}); ) ?>" size="13"  />
 			</p>
 			<p> 
 				<label for="url">Web Site URL:&nbsp;&nbsp;&nbsp;</label>
-				<input type="text" name="url" value="<? echo ( ssi::htmlize($openprint::param{'url'}); ) ?>"  />
+				<input type="text" name="url" value="<? echo ( ssi::htmlize($param{'url'}); ) ?>"  />
 			</p>
 		</fieldset>
 
@@ -111,29 +111,29 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 			<legend>Miscellaneous Information</legend>
 			<p> 
 				<label for="businesstype">Business Type:&nbsp;&nbsp;&nbsp;</label>
-				<input type="text" name="businesstype" value="<? echo ( ssi::htmlize($openprint::param{'businesstype'}); ) ?>" />
+				<input type="text" name="businesstype" value="<? echo ( ssi::htmlize($param{'businesstype'}); ) ?>" />
 			</p>
 			<p> 
 				<label>Reason For Purchase:&nbsp;&nbsp;&nbsp;</label>
-				<input type="radio" name="reasonforpurchase" id="ReasonForPurchaseEndUser" value="EndUser" <? echo ( 'checked="checked"' if $openprint::param{'reasonforpurchase'} eq 'EndUser' or ! $openprint::param{'reasonforpurchase'} ) ?>  />
+				<input type="radio" name="reasonforpurchase" id="ReasonForPurchaseEndUser" value="EndUser" <? echo ( 'checked="checked"' if $param{'reasonforpurchase'} eq 'EndUser' or ! $param{'reasonforpurchase'} ) ?>  />
 				<label class="radio" for="ReasonForPurchaseEndUser">End User</label>
-				<input type="radio" name="reasonforpurchase" id="ReasonForPurchaseReseller" value="Reseller" <? echo ( 'checked="checked"' if $openprint::param{'reasonforpurchase'} eq 'Reseller' ) ?> />
+				<input type="radio" name="reasonforpurchase" id="ReasonForPurchaseReseller" value="Reseller" <? echo ( 'checked="checked"' if $param{'reasonforpurchase'} eq 'Reseller' ) ?> />
 				<label class="radio" for="ReasonForPurchaseReseller">Reseller</label> 
 			</p>
 			<p>
 				<label>How did you hear about us?: <span class="requiredFieldIndicator">*</span></label>
 				<select name="howdidyouhearaboutus" onchange="if(this.value=='Other' || this.value=='CSR'){show_div('Other');} else {hide_div('Other');}">
-<? echo ( ssi::make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please enter who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $openprint::param{'howdidyouhearaboutus'} ); ) ?>
+<? echo ( ssi::make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please enter who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{'howdidyouhearaboutus'} ); ) ?>
 				</select>
-				<input id="Other" style="<? echo ( 'visibility: hidden;' if !$openprint::param{howdidyouhearaboutus} or ! sets::isin( $openprint::param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($openprint::param{'howdidyouhearaboutusother'}); ) ?>" />
+				<input id="Other" style="<? echo ( 'visibility: hidden;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($param{'howdidyouhearaboutusother'}); ) ?>" />
 			</p>
 			<p> 
 				<label>Add to our mailing list?&nbsp;&nbsp;&nbsp;</label>
 				<input type="radio" id="MailingListY" name="mailinglist" value="Y" 
-				<? echo ( 'checked="checked"' if $openprint::param{'mailinglist'} eq 'Y' or ! $openprint::param{'mailinglist'} ) ?> />
+				<? echo ( 'checked="checked"' if $param{'mailinglist'} eq 'Y' or ! $param{'mailinglist'} ) ?> />
 				<label class="radio" for="MailingListY">Yes</label>
 				<input type="radio" id="MailingListN" name="mailinglist" value="N" 
-				<? echo ( 'checked="checked"' if $openprint::param{'mailinglist'} eq 'N' ) ?> />
+				<? echo ( 'checked="checked"' if $param{'mailinglist'} eq 'N' ) ?> />
 				<label class="radio" for="MailingListN">No</label>
 			</p>
 		 </fieldset>
@@ -143,45 +143,45 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 				<p>
 					<label>Salutation: <span class="requiredFieldIndicator">*</span></label>
 					<input type="radio" name="salutation" id="salutationMr" value="Mr."
-					<? echo ( 'checked="checked"' if $openprint::param{'salutation'} eq 'Mr.' or ! $openprint::param{'salutation'} ) ?> />
+					<? echo ( 'checked="checked"' if $param{'salutation'} eq 'Mr.' or ! $param{'salutation'} ) ?> />
 					<label class="radio" for="salutationMr">Mr.</label>
 					<input type="radio" name="salutation" id="salutationMrs" value="Mrs."
-					<? echo ( 'checked="checked"' if $openprint::param{'salutation'} eq 'Mrs.' ) ?> />
+					<? echo ( 'checked="checked"' if $param{'salutation'} eq 'Mrs.' ) ?> />
 					<label class="radio" for="salutationMrs">Mrs.</label>
 					<input type="radio" name="salutation" id="salutationMs" value="Ms."
-					<? echo ( 'checked="checked"' if $openprint::param{'salutation'} eq 'Ms.' ) ?> />
+					<? echo ( 'checked="checked"' if $param{'salutation'} eq 'Ms.' ) ?> />
 					<label class="radio" for="salutationMs">Ms.</label>
 					<input type="radio" name="salutation" id="salutationMiss" value="Miss"
-					<? echo ( 'checked="checked"' if $openprint::param{'salutation'} eq 'Miss' ) ?> />
+					<? echo ( 'checked="checked"' if $param{'salutation'} eq 'Miss' ) ?> />
 					<label class="radio" for="salutationMiss">Miss</label>
 				</p>
 				<p> 
 					<label>First Name: <span class="requiredFieldIndicator">*</span></label>
-					<input type="text" name="firstname" value="<? echo ( ssi::htmlize($openprint::param{'firstname'}); ) ?>" />
+					<input type="text" name="firstname" value="<? echo ( ssi::htmlize($param{'firstname'}); ) ?>" />
 				</p>
 				<p> 
 					<label>Last Name: <span class="requiredFieldIndicator">*</span></label>
-					<input type="text" name="lastname" value="<? echo ( ssi::htmlize($openprint::param{'lastname'}); ) ?>" />
+					<input type="text" name="lastname" value="<? echo ( ssi::htmlize($param{'lastname'}); ) ?>" />
 				</p>
 				<p> 
 					<label>Position: <span class="requiredFieldIndicator">*</span></label>
-					<input type="text" name="title" value="<? echo ( ssi::htmlize($openprint::param{'title'}); ) ?>" />
+					<input type="text" name="title" value="<? echo ( ssi::htmlize($param{'title'}); ) ?>" />
 				</p>
 				<p> 
 					<label>E-mail: <span class="requiredFieldIndicator">*</span></label>
-					<input type="text" name="email" value="<? echo ( ssi::htmlize($openprint::param{'email'}); ) ?>"  />
+					<input type="text" name="email" value="<? echo ( ssi::htmlize($param{'email'}); ) ?>"  />
 				</p>
 				<p> 
 					<label>Password: <span class="requiredFieldIndicator">*</span></label>
-					<input type="password" name="password" value="<? echo ( ssi::htmlize($openprint::param{'password'}); ) ?>"  />
+					<input type="password" name="password" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>"  />
 				</p>
 				<p> 
 					<label>Verify Password: <span class="requiredFieldIndicator">*</span></label>
-					<input type="password" name="verifypassword" value="<? echo ( ssi::htmlize($openprint::param{'verifypassword'}); ) ?>"  />
+					<input type="password" name="verifypassword" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>"  />
 				</p>
 <? echo (
     my $html;
-	if ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+	if ( (!$session{'user_id'}) and ($config{'UseCaptchaOnRegistration'} eq 'Y') ) {
 		use Authen::Captcha;
 		my $Captcha = new Authen::Captcha(
 			'data_folder'   =>  '/tmp',
@@ -202,4 +202,4 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 		<input type="hidden" name="btnFunction" value="Register" />
 	</form>
 </div>
-<? endif ( ( ! $$variable{'error'} ) and $openprint::param{'btnFunction'} ) ?>
+<? endif ( ( ! $$variable{'error'} ) and $param{'btnFunction'} ) ?>

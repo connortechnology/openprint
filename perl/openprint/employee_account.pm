@@ -21,19 +21,19 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 sub profile {
 
 	$param{'user_id'} = $session{'user_id'} if ! $param{'user_id'};
-	$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
+	$param{'company_id'} = new openprint::User($session{'user_id'})->company_id() if ! $param{'company_id'};
 
 	my $User = new openprint::User( $param{'user_id'} );
-	if ( $User->company_id() != $param{'company_id'} ) {
-		$log->error('User not in Company!');
-		$variable{'error'} = 'User not in company. This should not happen. Please file a bug report.<br/>';
-		return;
-	} # end if
 
     if ( $param{'btnFunction'} eq 'Save' ) {
 		if ( $param{'password'} ) {
-			$variable{'error'} .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'VerifyPassword'};
-			$variable{'error'} .= 'New Password is the same as your current password.<br/>' if $param{'password'} eq $User->Password();
+			if ( ! $param{'VerifyPassword'} ) {
+				$variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
+				delete $param{'password'};
+			} else {
+				$variable{'error'} .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'VerifyPassword'};
+			} # end if
+			$variable{'warning'} .= 'New Password is the same as your current password.<br/>' if $param{'password'} eq $User->Password();
 		} # end if
         $variable{'error'} .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
         $variable{'error'} .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
@@ -56,8 +56,14 @@ sub profile {
 				} else {
 					email::stop_vacation( $r, $log, $param{'email'} );
 				} # end if
-				if ( $param{'EmailPassword'} and $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
-					email::set_password( $r, $log, @param{'email','EmailPassword'} );
+				if ( $param{'EmailPassword'} ) {
+					if ( ! $param{'VerifyEmailPassword'} ) {
+						$variable{'warning'} .= 'Verify Email password left blank, password not changed.<br/>';
+					} elsif ( $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
+						email::set_password( $r, $log, @param{'email','EmailPassword'} );
+					} else {
+						$variable{'error'} .= 'Email Password fields do not match.<br/>';
+					} # end if
 				} # end if
 				my @aliases = ();
 				foreach my $alias ( split "\r\n", $param{'aliases'} ) {

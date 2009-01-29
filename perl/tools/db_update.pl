@@ -8,6 +8,7 @@ require openprint::Object;
 require openprint::Paper;
 require openprint::Equipment;
 require openprint::EquipmentSpecification;
+require openprint::PaperInventory;
 
 use openprint ();
 use vars qw( $log $dbh );
@@ -16,7 +17,9 @@ use vars qw( $log $dbh );
 
 $log = new logger( 'warn' );
 
-$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
+$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
+
+if ( 0 ) {
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 if ( $version < 1275 ) {
@@ -317,6 +320,39 @@ $dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+if ( ! $data ) {
+} else {
+	if ( ! exists $$data{'po_id'} ) {
+		$dbh->do('ALTER TABLE Manifests add po_id INTEGER');
+		$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id)');
+	} # end if
+	if ( ! exists $$data{'supplier_id'} ) {
+		$dbh->do('ALTER TABLE Manifests add supplier_id INTEGER');
+		$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (supplier_id) REFERENCES Company (index)');
+	} # end if
+	if ( ! exists $$data{'docket'} ) {
+		$dbh->do('ALTER TABLE Manifests add docket INTEGER');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+if ( ! $data ) {
+} else {
+	if ( ! exists $$data{'federaltax_charge'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add federaltax_charge BOOLEAN');
+	} # end if
+	if ( ! exists $$data{'statetax_charge'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add statetax_charge BOOLEAN');
+	} # end if
+	if ( ! exists $$data{'authorized'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add authorized BOOLEAN');
+		$dbh->do('UPDATE purchaseorder set authorized=true WHERE authorized_on IS NOT NULL');
+	} # end if
+	if ( ! exists $$data{'manifest_id'} ) {
+		$dbh->do('ALTER TABLE purchaseorders add manifest_id TEXT');
+		$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (manifest_id) REFERENCES Manifests (id)');
+	} # end if
+} # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );
 if ( ! $data ) {
 	$dbh->do('
@@ -354,6 +390,75 @@ if ( $data ) {
 		$dbh->do('ALTER TABLE projecttype_categories ADD sort integer');
 	} # end if
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'location_id'} ) {
+		$dbh->do('ALTER TABLE tbl_Equipment ADD location_id INTEGER');
+		$dbh->do('ALTER TABLE tbl_Equipment ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_contents LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('alter table skid_contents add id serial');
+		$dbh->do('alter table skid_contents drop constraint skid_contents_pkey');
+		$dbh->do('alter table skid_contents add primary key (id)');
+		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifestcontents LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'docket'} ) {
+		$dbh->do('alter table manifestcontents add docket integer');
+	} # end if
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM company LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'notes'} ) {
+		$dbh->do('alter table company add notes text');
+	} # end if
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM users LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'notes'} ) {
+		$dbh->do('alter table users add notes text');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Skids LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'type'} ) {
+		$dbh->do('alter table skids add type text');
+		$dbh->do('alter table skids add deleted boolean not null default false');
+	} # end if
+} # end if
+foreach my $PI ( openprint::PaperInventory::find('docket'=>undef) ) {
+	$PI->save() if $PI->docket();
+} # end foreach
+}
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifest_content_types LIMIT 1', {} );
+if ( ! $data ) {
+	require openprint::Manifest;
+	$dbh->do('alter table manifestcontents add type_id integer');
+	foreach my $Manifest ( openprint::Manifest::find() ) {
+		my @Contents = $Manifest->Contents();
+
+		if ( @Contents ) {
+			my $T = new openprint::Manifest_Content_Type();
+			$T->save({
+				'manifest_id'	=>	$Manifest->id(),
+				'docket'		=>	$Contents[0]->docket(),
+				'po_id'			=>	$Manifest->po_id(),
+			});
+			foreach my $C ( @Contents ) {
+				$C->save({'type_id'=>$T->id()});
+			} # end foreach
+		} # end if
+	} # end foreach Manifest
+	$dbh->do('alter table manifestcontents alter type_id set not null');
+	$dbh->do('alter table manifestcontents add foreign key (type_id) references manifest_content_types (id)');
+} 
 
 $dbh->disconnect();
 1;
