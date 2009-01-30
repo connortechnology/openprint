@@ -741,7 +741,7 @@ sub check_out {
 				$Paper->add_inventory( $Skid, -1*$qty, $units, $description );
 				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
 			} else {
-				$Paper->add_inventory( $Skid, -1*$qty, $units, 'Checked out' );
+				$Paper->add_inventory( $Skid, -1*$qty, $units, $description );
 			} # end if
 			$qty = 0;
 		} # end if
