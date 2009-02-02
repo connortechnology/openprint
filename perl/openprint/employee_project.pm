@@ -740,38 +740,55 @@ sub _stock_checkout {
 			$variable{'error'} .= 'Unknown skid scanned.<br/>';
 			return;
 		} # end if
-		my @PI = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'comment_like'=>'Checked out%');
-		if ( @PI ) {
+
+		my $add_entry = 1;
+
+		if ( $Skid->is_empty() ) {
+			my @PI = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'comment_like'=>'Checked out%','order'=>'updated_on desc');
+			if ( @PI ) {
+				$variable{'error'} .= sprintf( '%1$s %2$d has already been checked out', ($PI[0]->Paper()->type() eq 'Roll' ? 'Roll' : 'Skid'), $Skid->id() );
+				if ( $PI[0]->docket() ) {
+					$variable{'error'} .= sprintf(' to docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a>', $PI[0]->Project()->id(), $PI[0]->docket() );
+				} # end if
+				$variable{'error'} .= '.<br/>';
+			} # end if
+
 			foreach my $PI ( @PI ) {
 				if ( ! $PI->docket() ) {
 					$PI->save({'docket'=>$param{'docket'}});
+					# only update the most recent entry
+					last;
+				} else {
+					if ( $PI->docket() == $param{'docket'} ) {
+						$add_entry = 0;
+						last;
+					} # end if	
 				} # end if
 			} # end foreach PI
-
-			if ( $PI[0]->Paper()->type() eq 'Roll' ) {
-				$variable{'error'} .= 'Roll ' . $Skid->id() . ' has already been checked out.<br/>';
-			} else {
-				$variable{'error'} .= 'Skid ' . $Skid->id() . ' has already been checked out.<br/>';
-			} # end if
 		} # end if
 
-		foreach my $C ( $Skid->Contents() ) {
-			if ( ! @PI ) {
+		my @Projects = openprint::Project::find('docket'=>$param{'docket'});
+		if ( ! @Projects ) {
+			$variable{'error'} .= 'Invalid docket.<br/>';
+			return;
+		} # end if
+
+		if ( $add_entry ) {
+			foreach my $C ( $Skid->Contents() ) {
 				my $PI = new openprint::PaperInventory();
 				$PI->save({
 						'docket'	=>	$param{'docket'},
 						'paper_id'	=>	$C->paper_id(),
 						'user_id'	=>	$session{'user_id'},
 						'delta'		=>	-1*$C->quantity(),
-						'comment'	=>	'Checked out for docket ' . $param{'docket'},
+						'comment'	=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Projects[0]->id(), $Projects[0]->docket(), new openprint::User( $session{'user_id'} )->name() ),
 						'skid_id'	=>	$Skid->id(),
 						'units'		=>	$C->units(),
 						});
 				$C->quantity( 0 );
 				$C->save();
-			} # end if
-
-		} # end foreach C
+			} # end foreach C
+		} # end if add_entry
 	} # end if
 } # end sub _stock_checkout
 

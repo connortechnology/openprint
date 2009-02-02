@@ -324,12 +324,13 @@ function open_window( page ) {
 					$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
 					$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
 				} # end foreach
-				$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
+				$html .= '<tr class="totals"><td colspan="4" align="right">Total:</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
 			} # end foreach
 			return $html;
 		) ?>
 	</table>
 </fieldset>
+<br/>
 <? if ( $$variable{'Project'}->docket() ) ?>
 <div id="StockCheckout">
 <!--#include virtual="/employee/project/_stock_checkout.html"-->

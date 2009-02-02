@@ -180,5 +180,15 @@ sub docket {
 	return $$self{'docket'};
 } # end sub docket
 
+sub Project {
+	my $self = $_[0];
+	return new openprint::Project() if ! $$self{'docket'};
+	my @Projects = openprint::Project::find('docket'=>$$self{'docket'});
+	if ( @Projects ) {
+		return $Projects[0];
+	} # end if
+	return new openprint::Project();
+} # end sub Project
+
 1;
 __END__

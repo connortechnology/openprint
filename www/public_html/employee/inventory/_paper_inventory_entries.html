@@ -28,7 +28,7 @@
 				while ( my ( $skid_id, $quantity, $units ) = splice @data, 0, 3 ) {
 					next if ! $quantity;
 					my $Skid = new openprint::Skid( $skid_id );
-					my $last_seen_days = int ( (time - Date::Parse::str2time($Skid->updated_on())) / (24*24*60) );
+					my $last_seen_days = $Skid->last_seen_days();
 					$html .= sprintf('<tr%1$s><td><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
 <td><a href="skid_details.html?skid_id=%2$d">%4$s (%7$x)</a></td>
 <td><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>

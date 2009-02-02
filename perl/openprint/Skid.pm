@@ -466,5 +466,19 @@ sub type {
 	return $$self{'type'};
 } # end sub type
 
+sub is_empty {
+	my $self = $_[0];
+	foreach my $C ( $self->Contents() ) {
+		return 0 if $C->quantity() > 0;
+	} # end foreach
+	return 1;
+} # end sub is_empty
+
+sub last_seen_days {
+	my $self = $_[0];
+	return int( (time - Date::Parse::str2time($$self{'updated_on'})) / (24*60*60) );
+}
+
+
 1;
 __END__
