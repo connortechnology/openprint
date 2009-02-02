@@ -1,8 +1,8 @@
 <? eval (
 	$$variable{'Project'} = new openprint::Project( $openprint::param{'ProjectIndex'} );
 	$$variable{'Company'} = $$variable{'Project'}->Company();
-	my %services = $$variable{'Project'}->get_services();
-	$$variable{'Operator'} = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $openprint::param{'ProjectIndex'}, $services{''}[0] ) );
+	my $services = $$variable{'Project'}->services();
+	$$variable{'Operator'} = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $openprint::param{'ProjectIndex'}, $$services{''}[0] ) );
 ) ?>
 <style type="text/css">
 	body {
@@ -63,7 +63,7 @@ Submit<br/>
 		<? echo (
 			my @presses;
 			foreach my $signature_service_index ( $$variable{'Project'}->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $$variable{Project'}->id(), $signature_service_index );
+				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}->id(), $signature_service_index );
 				$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
 				push @presses, $$sig_specs{'UsePress'} if ! sets::isin( $$sig_specs{'UsePress'}, @presses );
 			} # end foreach

@@ -182,12 +182,13 @@ function getSelectionId(input, li) {
 			</tr>
 		</table>
 		<br/>
+		<div id="similar_pos"></div>
 <table>
 	<tr>
 		<th width="55">&nbsp;</th>
 		<th width="110">TYPE</th>
 		<th width="110">QTY</th>
-		<th width="110">ITEM</th>
+		<th width="100">ITEM</th>
 		<th>DESCRIPTION</th>
 		<th width="80">DOCKET</th>
 		<th width="90">UNIT PRICE</th>
@@ -268,16 +269,44 @@ function getSelectionId(input, li) {
 			<br/>
 			<br/>
 			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?></i><br/></div>
-		<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+		<? if ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 			<br/>
 			<br class="spacer"/>
 			<hr/>
 			<div class="leftColumn"><i>Authorized by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></i></div>
 			<div class="rightColumn"><i>Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())) ) ?></i></div>
-		<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+		<? endif ( $$variable{'PurchaseOrder'}->authorized() ) ?>
+		<? if ( $$variable{'PurchaseOrder'}->authorized() eq '0' ) ?>
+			<br/>
+			<br class="spacer"/>
+			<hr/>
+				<div class="leftColumn"><i>Declined by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></i></div>
+				<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
+		<? endif ( $$variable{'PurchaseOrder'}->authorized() eq '0' ) ?>
 			<br class="spacer"/>
 		</div>
 		<br class="spacer"/><br/>
+<? if ( $$variable{'PurchaseOrder'}->id() ) ?>
+		<fieldset><legend>Logs</legend>
+			<table class="List">
+				<tr>
+					<th align="left" width="120">When</th>
+					<th align="left">Description</th>
+				</tr>
+<tr>
+	<td>Reason for edit:</td>
+	<td><textarea id="reason" name="reason" rows="1" cols="" onkeyup="textarea_resize(this);"></textarea></td>
+</tr>
+<? echo (
+	my $html = '';
+	foreach my $L ( $$variable{'PurchaseOrder'}->Logs() ) {
+		$html .= sprintf('<tr><td>%s</td><td>%s</td></tr>',  Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
+	} # end foreach
+	return $html;
+) ?>
+			</table>
+		</fieldset>
+<? endif ( $$variable{'PurchaseOrder'}->id() ) ?>
 	</div><!--PO-->
 	<input type="hidden" name="btnFunction" />
 </form>

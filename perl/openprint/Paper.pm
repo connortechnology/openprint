@@ -628,7 +628,7 @@ sub allocate {
 			'project_id'	=>	$project_id,
 			'operator_id'	=>	$openprint::session{'user_id'},
 			} );
-	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} );
+	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity $units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . ($skid_id?qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} : '') );
 	delete $$self{allocated};
 	return $PA;
 } # end sub allocate
@@ -980,7 +980,7 @@ sub load_from_signature {
 		$Paper->basis_mweight( $$specs{'basis_mweight'} );
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		if ( $$specs{'StockType'} ne 'Roll' ) {
-		$Paper->mweight( $$specs{'txtCustomMWeight'} );
+			$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		} # end if
 	} else {
 
@@ -996,12 +996,13 @@ sub load_from_signature {
 				);
 		$Paper = shift @Papers;
 		$Paper = new openprint::Paper() if ! $Paper;
-		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
-			$Paper = $Paper->clone();
-			$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			$Paper->height( $$specs{'StockHeight'.$qty_index} );
-			$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
-		} # end if
+	} # end if
+
+	if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
+		$Paper = $Paper->clone();
+		$Paper->width( $$specs{'StockWidth'.$qty_index} );
+		$Paper->height( $$specs{'StockHeight'.$qty_index} );
+		$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
 	} # end if
 	return $Paper;
 	

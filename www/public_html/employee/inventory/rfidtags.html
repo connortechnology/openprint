@@ -1,4 +1,10 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript">
+
+function load(form) {
+	new Ajax.Updater( 'Results','/employee/inventory/_rfidtags_results.html', { method: 'get', parameters: form.serialize() } );
+} // end function load
+</script>
 <? if ( $$variable{'information'} ) ?>
 <p class="information"><?information?></p>
 <hr/>
@@ -6,12 +12,12 @@
 Please select a RFID Tag to view/edit.<br>
 <form name="f1" method="post" action="rfidtag_details.html">
 	<fieldset class="filters"><legend>Choose RFID Tag</legend>
-		<p>
+		<p>You need to enter at least 3 digits:<br/>
 			<label for="rfidtag_id">RFID Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
-			<input type="text" id="rfidtag_like" name="rfidtag_like" size="10" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', Serialize( document.forms.f1 ) );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', Serialize( document.forms.f1 ) );",'','Show' ); ) ?>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="this.form.rfidtag_hex.value='';if(event.keyCode == 13){load(f1);}"/>
+			Hex:
+			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeydown="this.form.rfidtag_id.value='';if(event.keyCode == 13){load( document.forms.f1 );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', 'f1.submit();','','Load' ); ) ?>
 		</p>
 	</fieldset>
 </form>

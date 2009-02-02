@@ -56,7 +56,7 @@ sub verify_login {
 	# attribute on the strEmail field.
 	$_ = q{SELECT Index, CompanyIndex, strSalutation, strFirstName, strLastName, chrType, ysnAccountActivation, ysnChangePassword } .
 		q{, (SELECT ysnAccountActivation FROM Company WHERE Index=CompanyIndex)}.
-		q{FROM Users WHERE strEmail = ? AND strPassword=?};
+		q{FROM Users WHERE strEmail = ? AND strPassword=? AND (deleted = false OR deleted IS NULL)};
 	my ( $user_id, $cust_id, $salutation, $first_name, $last_name, $user_type, $user_activated, $changepass, $company_activated ) = sql::execute( $log, $dbh, $_, $email, $password );
 
 	if ( ! $user_id ) {
@@ -153,7 +153,7 @@ sub verify_login {
 		if ( $site eq 'A' ) {
 		$$variable{'Redirect'} = '/administrator/account/change_password.html';
 		} elsif ( $site eq 'E' ) {
-		$$variable{'Redirect'} = '/employee/employee/change_password.html';
+		$$variable{'Redirect'} = '/employee/account/change_password.html';
 		} else {
 		$$variable{'Redirect'} = '/main/account/change_password.html';
 		} # end if

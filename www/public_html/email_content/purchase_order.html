@@ -10,15 +10,15 @@
 	</head>
 	<body>
 		<div class="PO">
-			<div id="Header">
-				<div id="Logo">
+			<div class="Header">
+				<div class="Logo">
 					<table><tr>
 					<td width="70"><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
 					<td align="left">
-						<a href="/index.html"><span id="PointOne">PointOne</span><br/><span id="GraphicsInc">GRAPHICS INC</span></a>
+						<a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
 					</td>
 					</tr></table>
-					<table>
+					<table class="HeaderText">
 						<tr>
 							<td colspan="2">
 					<? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?>
@@ -73,7 +73,7 @@
 		) ?>
 				</p>
 			</div>
-			<br class="spacer"/>
+			<br class="spacer"/><br/>
 			<table style="table-layout: fixed;">
 				<tr>
 					<th>Shipping Method</th>
@@ -83,7 +83,7 @@
 				<tr>
 					<td><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
 					<td><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
-					<td><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) ) ?></td>
+					<td><? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : 'ASAP' ) ?></td>
 				</tr>
 			</table>
 			<br class="spacer"/>
@@ -113,9 +113,13 @@
 			<td colspan="5" class="totals">SUBTOTAL</td>
 			<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 		</tr>
-		<tr>
-			<td colspan="5" class="totals">SALES TAX</td
-			<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->tax() ); ) ?></td>
+		<tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_charge() ? '' : ' style="display:none;"' ) ?>>
+			<td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?></td>
+			<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
+		</tr>
+		<tr<? echo ( $$variable{'PurchaseOrder'}->statetax_charge() ? '' : ' style="display:none;"' ) ?>>
+			<td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?></td>
+			<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
 		</tr>
 		<tr>
 			<td colspan="5" class="totals">TOTAL</td>
@@ -142,6 +146,21 @@
 		<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 			</div>
 			<br class="spacer"/>
+			<fieldset><legend>Logs</legend>
+				<table class="List">
+					<tr>
+						<th align="left" width="120">When</th>
+						<th align="left">Description</th>
+					</tr>
+					<? echo (
+						my $html = '';
+						foreach my $L ( $$variable{'PurchaseOrder'}->Logs() ) {
+							$html .= sprintf('<tr><td>%s</td><td>%s</td></tr>',  Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
+						} # end foreach
+						return $html;
+					) ?>
+				</table>
+			</fieldset>
 		</div><!--PO-->
 	</body>
 </html>

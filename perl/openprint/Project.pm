@@ -1026,7 +1026,7 @@ sub signatures {
 		return @sigs;
 	} # end if
 	if ( $$self{'signatures'} ) {
-	return @{$$self{'signatures'}};
+		return @{$$self{'signatures'}};
 	} # end if
 	return ();
 } # end sub signatures

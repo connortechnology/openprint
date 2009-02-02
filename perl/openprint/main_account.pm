@@ -16,13 +16,14 @@ require openprint::logs;
 require openprint::MarketingCategory;
 
 use openprint ();
-use vars qw( $r $log $dbh %variable %param %session);
+use vars qw( $r $log $dbh %variable %param %session %config);
 *r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *session = \%openprint::session;
+*config = \%openprint::config;
 
 # called when a salesperson selects a customer to be
 sub select_company {
@@ -126,7 +127,7 @@ sub registration {
 	$openprint::param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
 
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
-	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE lower(strName) = lower(?) AND upper(strPostalCode) = ?}, @openprint::param{'name','postalcode'} );
+	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE lower(strName) = lower(?) AND upper(strPostalCode) = ? AND (deleted=false OR deleted IS NULL)}, @openprint::param{'name','postalcode'} );
 	if ( ! $cust_id ) {
 
 		my $Company = new openprint::Company();
@@ -336,68 +337,65 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
 # We assume that we are authorized to be here now.
 
-	my $User = new openprint::User( $openprint::session{'user_id'} );
-	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	my $User = new openprint::User( $session{'user_id'} );
+	my $Me = new openprint::User( $session{'user_id'} );
 
-	if ( ( $Me->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $Me->id() ) ) {
-$openprint::log->debug('admin');
+	if ( ( $Me->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $Me->id(), $Me->csr_ids()]  ) ) {
 
 		# IF it's empty, then we are adding a new user! Otherwise editing one
-		if ( exists $openprint::param{'ddmUser'} ) {
-		$User = new openprint::User( $openprint::param{'ddmUser'} );
-		} elsif ( $openprint::session{'company_id'} != $Me->company_id() ) {
-			my @Users = openprint::User::find('company_id'=>$openprint::session{'company_id'} );
+		if ( exists $param{'ddmUser'} ) {
+		$User = new openprint::User( $param{'ddmUser'} );
+		} elsif ( $session{'company_id'} != $Me->company_id() ) {
+			my @Users = openprint::User::find('company_id'=>$session{'company_id'} );
 			if ( @Users == 1 ) {
 				$User = $Users[0];
 			} # end if
 		} # end if
-		if ( $openprint::param{'ddmUser'} ) {
+		if ( $param{'ddmUser'} ) {
 # Enforce that we can only edit users from our company
-			if ( $User->company_id() != $openprint::session{'company_id'} ) {
-				$User = new openprint::User( $openprint::session{'user_id'} );
+			if ( $User->company_id() != $session{'company_id'} ) {
+				$User = new openprint::User( $session{'user_id'} );
 			} # end if
 		} # end if
 
-		if ( $openprint::param{'btnFunction'} eq '<<' ) {
-			$User = $User->Prev( 'company_id'=>$openprint::session{'company_id'} );
-		} elsif ( $openprint::param{'btnFunction'} eq '>>' ) {
-			$User = $User->Next( 'company_id'=>$openprint::session{'company_id'} );
-		} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
+		if ( $param{'btnFunction'} eq '<<' ) {
+			$User = $User->Prev( 'company_id'=>$session{'company_id'} );
+		} elsif ( $param{'btnFunction'} eq '>>' ) {
+			$User = $User->Next( 'company_id'=>$session{'company_id'} );
+		} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 			$User->delete();
-			$User = $User->Next( 'company_id'=>$openprint::session{'company_id'} );
+			$User = $User->Next( 'company_id'=>$session{'company_id'} );
 		} # end if
 	} # end if Company Admin
 
 # options available to non-company administrators
-	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'btnFunction'} eq 'Save' ) {
 
 		my $error = "";
-		$error .= "Password fields do not match.<br/>" if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
-		$error .= "First Name cannot be blank.<br/>" if ! $openprint::param{'firstname'};
-		$error .= "Last Name cannot be blank.<br/>" if ! $openprint::param{'lastname'};
-		$error .= "Salutation cannot be blank.<br/>" if ! $openprint::param{'salutation'};
-		$error .= "Phone cannot be blank.<br/>" if ! $openprint::param{'phone'};
-		$error .= "Email Cannot be blank.<br/>" if ! $openprint::param{'email'};
+		$error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+		$error .= "First Name cannot be blank.<br/>" if ! $param{'firstname'};
+		$error .= "Last Name cannot be blank.<br/>" if ! $param{'lastname'};
+		$error .= "Salutation cannot be blank.<br/>" if ! $param{'salutation'};
+		$error .= "Phone cannot be blank.<br/>" if ! $param{'phone'};
+		$error .= "Email Cannot be blank.<br/>" if ! $param{'email'};
 		if ( $error ne '' ) {
-			return misc::error( $log, $dbh, $variable, 'Bad Field', $error );
+			return misc::error( $log, $dbh, \%variable, 'Bad Field', $error );
 		} # end if
 
-			foreach my $U ( openprint::User::find('email'=>lc $openprint::param{'email'}) ) {
-				if ( $U->id() != $User->id() ) {
-					return misc::error( $log, $dbh, $variable, 'User already exists.', $openprint::param{'email'} . " is already a user." );
-				} # end if
-			} # end foreach
-		if ( ! $openprint::param{'ddmUser'} ) { # add
-			$User->company_id( $openprint::session{company_id} ) if ! $User->company_id();
+		foreach my $U ( openprint::User::find('email'=>lc $param{'email'}) ) {
+			if ( $U->id() != $User->id() ) {
+				return misc::error( $log, $dbh, \%variable, 'User already exists.', $param{'email'} . " is already a user." );
+			} # end if
+		} # end foreach
+		if ( ! $param{'ddmUser'} ) { # add
+			$User->company_id( $session{company_id} ) if ! $User->company_id();
 		} # end if
 		my $oldpassword = $User->password();
-		$$variable{'error'} .= $User->save( \%openprint::param );
+		$variable{'error'} .= $User->save( \%param );
 
-		if ( $openprint::param{'ddmUser'} and ( $openprint::param{'ddmUser'} != $openprint::session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
+		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
 # Send password change email
 			if ( my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' ) ) {
 				my %info = (
@@ -410,8 +408,8 @@ $openprint::log->debug('admin');
 				my @body = ('', $_, 'text/html', 'quoted-printable');
 
 				my %mail = (
-						SMTP    => $openprint::config{'Mail Server'},
-						FROM    => $openprint::config{'AdministratorEmail'},
+						SMTP    => $config{'Mail Server'},
+						FROM    => $config{'AdministratorEmail'},
 						TO      => sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
 						SUBJECT => 'Password Changed',
 						);
@@ -424,11 +422,11 @@ $openprint::log->debug('admin');
 
 	} # end if
 
-	$$variable{'Me'} = $Me;
-	if ( $User->company_id() != $openprint::session{company_id} ) {
+	$variable{'Me'} = $Me;
+	if ( $User->company_id() != $session{'company_id'} ) {
 		$User = new openprint::User();
 	} # end if
-	$$variable{'User'} = $User;
+	$variable{'User'} = $User;
 } # end sub user_profile
 
 sub change_password {
