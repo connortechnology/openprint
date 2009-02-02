@@ -66,11 +66,11 @@ sub registration {
 	} # end if
 
 	# Need to strip out characters that don't work well in filesystems - this is for FTP/Fileserver integration
-	$openprint::param{'business_name'} = $openprint::param{'name'} if ! $openprint::param{'business_name'};
+	$openprint::param{'business_name'} = $openprint::param{'company_name'} if ! $openprint::param{'business_name'};
 
 	# perform input field validation
 	my $error = '';
-	$error .= 'Missing company name.<br/>' if ! $openprint::param{'name'};
+	$error .= 'Missing company name.<br/>' if ! $openprint::param{'company_name'};
 	$error .= 'Missing contact first name.<br/>' if ! $openprint::param{'firstname'};
 	$error .= 'Missing contact last name.<br/>' if ! $openprint::param{'lastname'};
 	$error .= 'Missing Salutation.<br/>' if ! $openprint::param{'salutation'};
@@ -127,7 +127,7 @@ sub registration {
 	$openprint::param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
 
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
-	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE lower(strName) = lower(?) AND upper(strPostalCode) = ? AND (deleted=false OR deleted IS NULL)}, @openprint::param{'name','postalcode'} );
+	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE lower(strName) = lower(?) AND upper(strPostalCode) = ? AND (deleted=false OR deleted IS NULL)}, @openprint::param{'company_name','postalcode'} );
 	if ( ! $cust_id ) {
 
 		my $Company = new openprint::Company();

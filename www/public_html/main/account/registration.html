@@ -31,11 +31,11 @@
 Please complete the form below. (<span class="requiredFieldIndicator">*</span> denotes required information).<br/>
 <br/>
 </p>
-	<form method="post" action="registration.html" name="f1">
+	<form method="post" action="registration.html" name="f1" id="f1">
 		<fieldset><legend>Billing Information</legend>
 			<p> 
-				<label for="name">Company/Billing Name: <span class="requiredFieldIndicator">*</span></label>
-				<input type="text" name="name" value="<? echo ( ssi::htmlize($param{'name'}) ) ?>"  />
+				<label for="company_name">Company/Billing Name: <span class="requiredFieldIndicator">*</span></label>
+				<input type="text" id="company_name" name="company_name" value="<? echo ( ssi::htmlize($param{'company_name'}) ) ?>"  />
 			</p>
 			<p>
 				<label for="address1">Address Line 1: <span class="requiredFieldIndicator">*</span></label>
@@ -47,10 +47,12 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 			</p>
 			<p> 
 				<label for="country">Country: <span class="requiredFieldIndicator">*</span></label>
-				<select name="country" onchange="Country_onchange(this, this.form.ddmStateProvince );">
+				<select id="country" name="country" onchange="Country_onchange(this, this.form.state );">
 				<option value=""> Select </option>
 				<? echo (
-					$$variable{'country'} = $param{'country'} ? $param{'country'} : $session{'Country'};
+					$$variable{'country'} = $param{'country'};
+					$$variable{'country'} = $session{'Country'} if ! $$variable{'country'};
+					$$variable{'country'} = $config{'Country'} if ! $$variable{'country'};
 					return ssi::return_countries( $$variable{'country'});
 				) ?>					
 				</select>
@@ -67,11 +69,16 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 					} # end if
                 ) ?>
 				<span class="requiredFieldIndicator">*</span></label>
-				<select name="state">
+				<select id="state" name="state">
 					<option value=""> Select </option>
 				<? echo (
-					
-					return ssi::return_states( $param{'state'} ).ssi::return_provinces( $param{'state'} );
+					if ( $$variable{'country'} eq 'US' ) {	
+						return ssi::return_states( $param{'state'} );
+					} elsif ( $$variable{'country'} eq 'CA' ) {
+						return ssi::return_provinces( $param{'state'} );
+					} else {
+						return ssi::return_states( $param{'state'} ).ssi::return_provinces( $param{'state'} );
+					} # end if
 				) ?>
 				</select>
 			</p>
