@@ -20,6 +20,7 @@
 }
 .PO table td {
 	border: 1px solid #aebdd2;
+	vertical-align: top;
 }
 .PO table th {
 	border: 1px solid #aebdd2;
@@ -149,7 +150,7 @@ p:after {
 /* Hides from IE-mac \*/
 * html p {height: 1%;}
 * p {display: block;}
-*/* End hide from IE-mac */
+/* End hide from IE-mac */
 
 label {
 outline: 0;
@@ -187,13 +188,3 @@ div.autocomplete ul li {
   cursor:pointer;
 }
 
-div.PO ul {
-	list-style-type:none;
-	margin:0px;
-	padding:0px;
-}
-div.PO ul li {
-	list-style-type:none;
-	margin:0px;
-	padding:0px;
-}

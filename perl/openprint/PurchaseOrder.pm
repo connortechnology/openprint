@@ -111,6 +111,16 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( $params{'id_start'} and $params{'id_end'} ) {
+		$sql .= ' AND ( id BETWEEN ? AND ? )';
+		push @values, @params{'id_start','id_end'}
+	} elsif ( $params{'id_start'} ) {
+		$sql .= ' AND ( id >= ?)';
+		push @values, $params{'id_start'};
+	} elsif ( $params{'id_end'} ) {
+		$sql .= ' AND ( id <= ?)';
+		push @values, $params{'id_end'};
+	} # end if
 	if ( exists $params{'company_id'} ) {
 		if ( ref $params{'company_id'} eq 'ARRAY' ) {
 			$sql .= ' AND company_id IN ('. join(',', map {'?'} @{$params{'company_id'}} ) . ')';

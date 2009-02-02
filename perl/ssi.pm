@@ -154,6 +154,15 @@ sub htmlize {
 	return @_;
 } # end sub htmlize
 
+sub encode_html {
+	my ( $html, $tags ) = @_;
+
+	$html =~ s/\r\n/<br\/>/mg;
+	$html =~ s/\n\r/<br\/>/mg;
+	$html =~ s/\n/<br\/>/mg;
+	return $html;
+} # end sub encode_html
+
 sub make_drop_down {
 	my ( $search_data, $checkval, $length ) = @_;
 	my ( $temp, $checked );

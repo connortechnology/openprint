@@ -573,3 +573,8 @@ form.inplaceeditor-form a { /* The cancel link */
 input.filter, fieldset p input.filter {
 	width: 40px;
 }
+
+td p {
+	margin: 0px;
+	padding: 0px;
+}
