@@ -1446,6 +1446,23 @@ sub purchase_order_view {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $PO->delete();
 		if ( ! $variable{'error'} ) {
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					'user_id'	=>	$session{'user_id'},
+					'po_id'		=>	$PO->id(),
+					'reason'	=>	'deleted.',
+					});
+			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
+		$variable{'error'} .= $PO->undelete();
+		if ( ! $variable{'error'} ) {
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					'user_id'	=>	$session{'user_id'},
+					'po_id'		=>	$PO->id(),
+					'reason'	=>	'undeleted.',
+					});
 			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
@@ -1580,9 +1597,29 @@ sub purchase_orders {
 			if ( $_ = $PO->delete() ) {
 				$variable{'error'} .= $_ . '<br/>';
 			} else {
+				my $L = new openprint::PurchaseOrder_Log();
+				$L->save({
+						'user_id'	=>	$session{'user_id'},
+						'po_id'		=>	$PO->id(),
+						'reason'	=>	'deleted.',
+						});
 				$variable{'information'} .= 'PO ' . $po_id . ' has been deleted.<br/>';
 			} # end if
 		} # end foreach po_id
+	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
+		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
+			my $PO = new openprint::PurchaseOrder( $po_id );
+			if ( $_ = $PO->undelete() ) {
+				$variable{'error'} .= $_ . '<br/>';
+			} else {
+				my $L = new openprint::PurchaseOrder_Log();
+				$L->save({
+						'user_id'	=>	$session{'user_id'},
+						'po_id'		=>	$PO->id(),
+						'reason'	=>	'undeleted.',
+						});
+			} # end if
+		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );

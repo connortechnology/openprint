@@ -178,9 +178,18 @@ sub find {
 	} elsif ( $params{'authorized'} eq 'N' ) {
 		$sql .= ' AND authorized_by IS NULL';
 	} # end if
-	if ( $params{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $params{'deleted'};
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			if ( @{$params{'deleted'}} ) {
+				$sql .= ' AND deleted IN ('. join(',', map {'?'} @{$params{'deleted'}} ) . ')';
+				push @values, @{$params{'deleted'}};
+			} else {
+				return ();
+			} # end if
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
 	} else {
 		$sql .= ' AND (deleted=? OR deleted IS NULL)';
 		push @values, 0;
@@ -251,11 +260,6 @@ sub save {
 	$self->load();
 	return;
 } # end sub save
-
-sub delete {
-	my $self = shift;
-	return sql::update( undef, undef, 'PurchaseOrders', ['id=?', $$self{id}], 'deleted',1 );
-} # end sub delete
 
 sub destroy {
     my $self = shift;
