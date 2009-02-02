@@ -83,6 +83,9 @@ sub view_services {
 		if ( defined $openprint::param{'btnFunction'} ) {
 			if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
 				misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf()->toString()] );
+			} elsif ( $openprint::param{'btnFunction'} eq 'Make Predefined' ) {
+				$Project->predefined( 1 );
+				$$variable{'error'} .= $Project->save();
 			} elsif ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
 				# Update the 'current project'
 				$openprint::session{'project_id'} = $project_index;

@@ -3,9 +3,12 @@ package openprint::administrator_products;
 use strict;
 
 use openprint ();
-use vars qw(%variable %param);
+use vars qw($r $log $dbh %variable %param);
+*r = \$openprint::r;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 
 require openprint::Product;
@@ -13,26 +16,17 @@ require openprint::ProductCategory;
 require openprint::logs;
 require sql;
 
-
 sub edit {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
 	my $Product = new openprint::Product( $param{'product_id'} );
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'btnFunction'} = '';
-		if ( (! $param{'product_id'}) and openprint::Product::find( 'name' => $param{'txtName'} ) ) {
-			$$variable{'error'} = "A product with name $param{'txtName'} already exists.  Please choose another name.";
+		if ( (! $param{'product_id'}) and openprint::Product::find( 'name' => $param{'name'} ) ) {
+			$variable{'error'} = "A product with name $param{'name'} already exists.  Please choose another name.";
 			return;
 		} # end if
 			
-		$Product->name( $param{'txtName'} );
-		$Product->description( $param{'txtDescription'} );
-		$Product->category_id( $param{'ddmCategory'} );
-		$Product->taxexempt1( $param{'rdbTaxExempt1'} );
-		$Product->taxexempt2( $param{'rdbTaxExempt2'} );
-		$Product->sort( $param{'sort'} );
-		$$variable{'error'} = $Product->save();
+		$variable{'error'} = $Product->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $NewProduct = $Product->copy();
 		$NewProduct->save();
@@ -56,10 +50,10 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Export Definitions' ) {
 	    my @header = ( 'Name', 'Description','Category', 'Tax Exempt 1','Tax Exempt2', 'Sort Order');
 	    my @data = sql::execute( $log, $dbh, 'SELECT name, description, (SELECT name from product_categories where id=category_id), taxexempt1, taxexempt2, sort FROM Products ORDER BY sort' );
-    	misc::export_csv( $r, $log, $variable, 'Products.csv', \@header, \@data );
+    	misc::export_csv( $r, $log, \%variable, 'Products.csv', \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Import Definitions' ) {
 		my $error = '';
-		if ( $openprint::param{'fileImport'} ) {
+		if ( $param{'fileImport'} ) {
 			my $upload = $r->upload( 'fileImport' );
 			my $io = $upload->io();
 			$_ = <$io>;
@@ -95,7 +89,7 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 			$log->warn( "No file given to upload." );
 		} # end if
 		if ( $error ne '' ) {
-			return misc::error( $log, $dbh, $variable, 'Import errors.', $error );
+			return misc::error( $log, $dbh, \%variable, 'Import errors.', $error );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export Specifications' ) {
 	    my @header = ( 'Product', 'Name','Value');
@@ -106,10 +100,10 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 				push @data, $Product->name(), $k, $specs{$k};
 			} # end foreach
 		} # end foreach
-    	misc::export_csv( $r, $log, $variable, 'ProductSpecifications.csv', \@header, \@data );
+    	misc::export_csv( $r, $log, \%variable, 'ProductSpecifications.csv', \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Import Specifications' ) {
 		my $error = '';
-		if ( $openprint::param{'fileImport'} ) {
+		if ( $param{'fileImport'} ) {
 			my $upload = $r->upload( 'fileImport' );
 			my $io = $upload->io();
 			$_ = <$io>;
@@ -135,7 +129,7 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 			sql::end_transaction( $dbh, $ac );
 		} # end if
 	} # end if
-	$$variable{'Product'} = $Product;
+	$variable{'Product'} = $Product;
 } # end sub edit
 
 sub categories {
@@ -145,41 +139,45 @@ sub categories {
 	} # end if
 } # end sub categories
 
-sub prices {
-	my $Product = new openprint::Product( $openprint::param{'product_id'} );
-	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
+sub _prices {
+	my $Product = new openprint::Product( $param{'product_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
 		foreach my $Pricelist ( openprint::Pricelist::find() ) {
-			foreach my $Price ( openprint::ProductPrice::find( 'product' => $Product, 'pricelist' => $Pricelist ) ) {
-				if ( $openprint::param{'chk-'.$Price->id()} ) {
-					$Price->min($openprint::param{'min-'.$Price->id()});
-					$Price->max($openprint::param{'max-'.$Price->id()});
-					$Price->units($openprint::param{'units-'.$Price->id()});
-					$Price->cost($openprint::param{'cost-'.$Price->id()});
-					$Price->markup($openprint::param{'markup-'.$Price->id()});
-					$Price->price($openprint::param{'price-'.$Price->id()});
-					$Price->discountable($openprint::param{'discount-'.$Price->id()});
-					$Price->save();
+			my $ac = sql::start_transaction( $dbh );
+			$dbh->do( 'LOCK TABLE Product_Prices IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+			foreach my $Price ( openprint::ProductPrice::find( 'Product' => $Product, 'Pricelist' => $Pricelist ) ) {
+				if ( $param{'chk-'.$Price->id()} ) {
+					$variable{'error'} .= $Price->save({
+							'min'			=>	$param{'min-'.$Price->id()},
+							'max'			=>	$param{'max-'.$Price->id()},
+							'units'			=>	$param{'units-'.$Price->id()},
+							'cost'			=>	$param{'cost-'.$Price->id()},
+							'markup'		=>	$param{'markup-'.$Price->id()},
+							'price'			=>	$param{'price-'.$Price->id()},
+							'discountable'	=>	$param{'discount-'.$Price->id()},
+							});
 				} else {
 					$Price->delete();
 				} # end if
 			} # end foreach Price
-			if ( $openprint::param{'chk-'.$Pricelist->id().'-New'} ) {
+			if ( $param{'chk-'.$Pricelist->id().'-New'} ) {
 				my $Price = new openprint::ProductPrice();
-				$Price->product( $Product );
-				$Price->pricelist( $Pricelist );
-				$Price->min($openprint::param{'min-'.$Pricelist->id().'-New'});
-				$Price->max($openprint::param{'max-'.$Pricelist->id().'-New'});
-				$Price->units($openprint::param{'units-'.$Pricelist->id().'-New'});
-				$Price->cost($openprint::param{'cost-'.$Pricelist->id().'-New'});
-				$Price->markup($openprint::param{'markup-'.$Pricelist->id().'-New'});
-				$Price->price($openprint::param{'price-'.$Pricelist->id().'-New'});
-				$Price->discountable($openprint::param{'discount-'.$Pricelist->id().'-New'});
-				$Price->save();
-
+				$variable{'error'} .= $Price->save({
+						'product_id'	=>	$Product->id(),
+						'pricelist_id'	=>	$Pricelist->id(),
+						'min'			=>	$param{'min-'.$Pricelist->id().'-New'},
+						'max'			=>	$param{'max-'.$Pricelist->id().'-New'},
+						'units'			=>	$param{'units-'.$Pricelist->id().'-New'},
+						'cost'			=>	$param{'cost-'.$Pricelist->id().'-New'},
+						'markup'		=>	$param{'markup-'.$Pricelist->id().'-New'},
+						'price'			=>	$param{'price-'.$Pricelist->id().'-New'},
+						'discountable'	=>	$param{'discount-'.$Pricelist->id().'-New'},
+						});
 			} # end if
+			sql::end_transaction( $dbh, $ac );
 		} # end foreach Pricelist
 	} # end if
-} # end sub prices
+} # end sub _prices
 
 1;
 

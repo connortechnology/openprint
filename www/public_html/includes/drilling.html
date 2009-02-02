@@ -7,9 +7,9 @@
 	<span class="label">Hole Drilling:</span>
 	<span class="input">
 		<input type="radio" id="HoleDrillingY" name="HoleDrilling" value="Y" onclick="add_div('HoleDrillingDiv');remove_div('OrderButton');calc('f1');" <? echo ( $$variable{'HoleDrilling'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label for="HoleDrillingY">Yes</label>
+		<label class="radio" for="HoleDrillingY">Yes</label>
 		<input type="radio" id="HoleDrillingN" name="HoleDrilling" value="N" onclick="remove_div('HoleDrillingDiv');remove_div('OrderButton');calc('f1');" <? echo ( $$variable{'HoleDrilling'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label for="HoleDrillingN">No</label>
+		<label class="radio" for="HoleDrillingN">No</label>
 	</span>
 </div>
 

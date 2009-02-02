@@ -236,3 +236,50 @@ ul#ProjectTypes {
  *     */
 }
 
+#QuickLogin {
+    float: left;
+    margin: 0px;
+    padding: 0px;
+    width: 400px;
+}
+
+#CurrencySelection {
+    float: left;
+    margin: 0px;
+    padding: 0px;
+    width: 470px;
+}
+
+#CurrencySelection p {
+    padding: 0px;
+    padding-left: 150px;
+    margin: 0px;
+    vertical-align: top;
+}
+#CurrencySelection p label {
+    width: 145px;
+    margin-left: -150px;
+    text-align: right;
+    float: left;
+    overflow: visible;
+    padding: 0px;
+    vertical-align: top;
+    color: black;
+    font-size: x-small;
+    font-weight: normal;
+}
+#QuickLogin p input, #CurrencySelection p input, #QuickLogin p select, #CurrencySelection p select {
+    margin: 0px;
+    width: 65%;
+    vertical-align: top;
+}
+#QuickLogin p select, #CurrencySelection p select {
+    margin: 0px;
+    width: 65%;
+    padding: 0px;
+    vertical-align: top;
+}
+#QuickLogin p a.buttonImageOn, #QuickLogin p a.buttonImageOff, #CurrencySelection p a.buttonImageOn, #CurrencySelection p a.buttonImageOff {
+    margin: 0px;
+}
+

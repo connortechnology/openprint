@@ -2,9 +2,9 @@
 	<span class="label">Shrink Wrapping:</span>
 	<span class="input">
 		<input type="radio" id="ShrinkWrappingY" name="ShrinkWrapping" value="Y" onclick="add_div('ShrinkWrappingDiv');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'ShrinkWrapping'} eq 'Y' ) ?> />
-		<label for="ShrinkWrappingY">Yes</label>
+		<label class="radio" for="ShrinkWrappingY">Yes</label>
 		<input type="radio" id="ShrinkWrappingN" name="ShrinkWrapping" value="N" onclick="remove_div('ShrinkWrappingDiv');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'ShrinkWrapping'} ne 'Y' ) ?> />
-		<label for="ShrinkWrappingN">No</label>
+		<label class="radio" for="ShrinkWrappingN">No</label>
 	</span>
 </div>
 <div id="ShrinkWrappingDiv" <? echo ( 'style="display:none;"' if $$variable{'ShrinkWrapping'} ne 'Y' ) ?> >

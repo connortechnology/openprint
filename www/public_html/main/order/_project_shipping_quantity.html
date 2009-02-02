@@ -1,9 +1,16 @@
 <? eval (
-     my $specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
-	 my $spec = 'txtQuantity'.$$variable{'Project'}->ordered_quantity_index();
-	 $$variable{"$spec-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} = $$specs{$spec};
+	$$variable{'ServiceIndex'} = $openprint::param{'service_id'} if $openprint::param{'service_id'} and ! $$variable{'ServiceIndex'};
+	$$variable{'ProjectIndex'} = $openprint::param{'project_id'} if $openprint::param{'project_id'} and ! $$variable{'ProjectIndex'};
+	$$variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} ) if $openprint::param{'project_id'} and ! $$variable{'Project'};
+	my $specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+	$$variable{'QuantityIndex'} = $$variable{'Project'}->ordered_quantity_index();
+	if ( $$variable{'Product'} and ! $$variable{'QuantityIndex'} ) {
+	$$variable{'QuantityIndex'} = 1;
+	} # end if
+	my $spec = 'txtQuantity'.$$variable{'QuantityIndex'};
+	$$variable{"$spec-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} = $$specs{$spec};
 ) ?>	
 <p>
-		<label>Amount:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="txtQuantity<? echo ( $$variable{'Project'}->ordered_quantity_index() ) ?>-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"txtQuantity".$$variable{'Project'}->ordered_quantity_index()."-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" style="width: 50%;" /> of <? echo ( $$variable{'Project'}->ordered_quantity() ) ?>
-    </p>
+	<label>Amount:<span class="requiredFieldIndicator">*</span></label>
+	<input type="text" name="txtQuantity<? echo ( $$variable{'QuantityIndex'} ) ?>-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QuantityIndex'}."-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" style="width: 50%;" /> of <? echo ( $$variable{'Project'}->quantity( $$variable{'QuantityIndex'} ); ) ?>
+</p>

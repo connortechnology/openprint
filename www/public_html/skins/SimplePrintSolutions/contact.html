@@ -1,0 +1,81 @@
+<script language="javascript">
+<!--//
+function Controlla(){
+if (document.mio_form.first.value==""){
+alert("Please insert your FULL NAME");
+return false;
+}
+if (document.mio_form.email.value==""){
+		alert("Please insert your EMAIL ADDRESS");
+		return false;
+	}else{
+		if (document.mio_form.email.value.indexOf("@")==-1){
+			alert("Attention! EMAIL ADDRESS is incorrect.");
+			return false;
+		}	
+	    if (document.mio_form.email.value.indexOf(".")==-1){
+			alert("Attention! EMAIL ADDRESS is incorrect.");
+			return false;
+		}	
+	}
+if (document.mio_form.message.value==""){
+alert("Please insert MESSAGE");
+return false;
+}
+return true;
+}
+//-->
+</script>
+<table border="0" cellpadding="10" cellspacing="0"  width="584" height="470">
+  <tr>
+    <td valign="top" class=text><table border="0" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td width="100%" valign="top" class=text><img border="0" src="images/mailing.jpg" width="375" height="40"><br>
+      <img border="0" src="/images/spaziatore.gif" width="7" height="146" align="left"><b><br>
+      Topnotch Print</b><br>
+Unit 5 - 855 Matheson Blvd E<br>
+Mississauga, ON L4W 4L6<br>
+      Telephone:<img border="0" src="/images/spaziatore.gif" width="10" height="5">905.624.5100<br>
+      Fax:<img border="0" src="/images/spaziatore.gif" width="50" height="5">905.624.6800</td>
+  </tr>
+  <tr>
+    <td width="100%" valign="top" class=text><img border="0" src="images/contacts.jpg" width="375" height="40">    <!--<br>
+  <img border="0" src="/images/spaziatore.gif" width="7" height="313" align="left"><br>
+      <b>Estimating / IT<br>
+      </b><i>Amin Suleman&nbsp;</i><br>
+      <a class=linkcc href="mailto:amin@topknotch.com">amin@topknotch.com</a><br>
+      <br>
+      <b>Digital Printing Specialist<br>
+      </b><i>Yasmin Suleman&nbsp;</i><br>
+      <a class=linkcc href="mailto:sales@topknotch.com">sales@topknotch.com</a><br>
+      &nbsp;<br>
+      <b>Customer Service / Production Scheduling<br>
+      </b><i>Karen Cott&nbsp;</i><br>
+      <a class=linkcc href="mailto:sales@topknotch.com">sales@topknotch.com</a><br>
+      <br>
+      <b>Prep-Press Specialist<br>
+      </b><i>Hong Truong </i><br>
+      <a class=linkcc href="mailto:art@topknotch.com">art@topknotch.com</a>
+      <P class=text align=justify>-->      <img border="0" src="/images/spaziatore.gif" width="7" height="206" align="left">
+<form action=send-email.asp name="mio_form" method="POST" language="javascript" onSubmit="return Controlla()">
+                  <br>
+                   Name<img border="0" src="/images/spaziatore.gif" width="46" height="2"><input type=text name=first size="29"><br>
+                  <br>
+                  Email<img border="0" src="/images/spaziatore.gif" width="50" height="2"><input type=text name=email size="29"><br>
+                  <br>
+                  Subject<img border="0" src="/images/spaziatore.gif" width="37" height="2">
+                  <select name=subject>
+                  <option value="Estimating / IT">Estimating / IT</option>
+                  <option value="Digital Printing Specialist">Digital Printing Specialist </option>
+                  <option value="Customer Service / Production Scheduling">Customer Service / Production Scheduling</option>
+                  <option value="Prep-Press Specialist">Prep-Press Specialist</option>
+  </select><br>
+                  <br>
+                  Message<img border="0" src="/images/spaziatore.gif" width="32" height="2"><textarea rows="3" cols="22" name="message"></textarea><br>
+                  <br>
+                  <img border="0" src="/images/spaziatore.gif" width="321" height="10"><input type=submit value=send name="Send"></form>
+    </td>
+  </tr>
+</table></td>
+  </tr>
+</table>

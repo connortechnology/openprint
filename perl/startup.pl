@@ -54,7 +54,7 @@ BEGIN {
 	use openprint::JDF;
 	use Number::Format;
 
-use MapImage;
+#use MapImage;
 
 }
 
