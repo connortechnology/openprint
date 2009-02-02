@@ -66,11 +66,11 @@ sub registration {
 	} # end if
 
 	# Need to strip out characters that don't work well in filesystems - this is for FTP/Fileserver integration
-	$openprint::param{'business_name'} = $openprint::param{'name'} if ! $openprint::param{'business_name'};
+	$openprint::param{'business_name'} = $openprint::param{'company_name'} if ! $openprint::param{'business_name'};
 
 	# perform input field validation
 	my $error = '';
-	$error .= 'Missing company name.<br/>' if ! $openprint::param{'name'};
+	$error .= 'Missing company name.<br/>' if ! $openprint::param{'company_name'};
 	$error .= 'Missing contact first name.<br/>' if ! $openprint::param{'firstname'};
 	$error .= 'Missing contact last name.<br/>' if ! $openprint::param{'lastname'};
 	$error .= 'Missing Salutation.<br/>' if ! $openprint::param{'salutation'};
@@ -90,7 +90,7 @@ sub registration {
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $openprint::param{'email'} );
 	$error .= 'Empty Password.<br/>' if $openprint::param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
-	if ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+	if ( ( ! $session{'user_id'} ) and ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		require Authen::Captcha;
         my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $ENV{'DOCUMENT_ROOT'}.'/skins/'.$openprint::config{'SiteTitle'}.'/images/captcha');
 		if ( 1 != $Captcha->check_code( $openprint::param{'Captcha'}, $openprint::param{'MD5SUM'} ) ) {
@@ -127,7 +127,7 @@ sub registration {
 	$openprint::param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
 
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
-	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE lower(strName) = lower(?) AND upper(strPostalCode) = ? AND (deleted=false OR deleted IS NULL)}, @openprint::param{'name','postalcode'} );
+	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE lower(strName) = lower(?) AND upper(strPostalCode) = ? AND (deleted=false OR deleted IS NULL)}, @openprint::param{'company_name','postalcode'} );
 	if ( ! $cust_id ) {
 
 		my $Company = new openprint::Company();
@@ -337,8 +337,6 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
-# We assume that we are authorized to be here now.
-
 	my $User = new openprint::User( $session{'user_id'} );
 	my $Me = new openprint::User( $session{'user_id'} );
 
@@ -346,7 +344,7 @@ sub user_profile {
 
 		# IF it's empty, then we are adding a new user! Otherwise editing one
 		if ( exists $param{'ddmUser'} ) {
-		$User = new openprint::User( $param{'ddmUser'} );
+			$User = new openprint::User( $param{'ddmUser'} );
 		} elsif ( $session{'company_id'} != $Me->company_id() ) {
 			my @Users = openprint::User::find('company_id'=>$session{'company_id'} );
 			if ( @Users == 1 ) {
@@ -393,6 +391,7 @@ sub user_profile {
 			$User->company_id( $session{company_id} ) if ! $User->company_id();
 		} # end if
 		my $oldpassword = $User->password();
+		$param{'change_password'} = 'N' if $param{'password'};
 		$variable{'error'} .= $User->save( \%param );
 
 		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
@@ -456,8 +455,8 @@ sub change_password_confirmation {
 		
 		if ( $User->password() eq $openprint::param{'txtOldPassword'} ) {
 			$User->password( $openprint::param{'txtNewPassword'} );
-			$User->changepassword( 'N' );
-			$User->save();
+			$User->change_password( 'N' );
+			$$variable{'error'} .= $User->save();
 		} else {
 			$$variable{'error'} = 'You entered the wrong old password.<br/>';
 			$$variable{'Redirect'} = '/main/account/change_password.html';

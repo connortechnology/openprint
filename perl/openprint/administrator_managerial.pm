@@ -290,6 +290,7 @@ sub company_profiles {
 			'rdbSupplier'           =>  'Supplier',
 			'txtCustomGreeting'     =>  'CustomGreeting',
 			'txtPricingLevel'		=>  'Discount',
+			'notes'					=>	'notes',
 	);
 	my %shipping_fields = (
 			'txtShippingCompanyName'    =>  'CompanyName',
@@ -510,6 +511,7 @@ if ( 0 ) {
 		$$variable{'CreditRemaining'} = '$ '.sprintf( '%.2f', ( $$variable{'txtCreditLimit'} - ($total - $payments) ) );
 	} # end if
 
+	$$variable{'Company'} = $Company;
 	$$variable{'CustomerIndex'} = $index;
 } # end sub company_profiles
 

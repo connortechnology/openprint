@@ -33,6 +33,10 @@
 	} // end function bug_report
 
 	function check_inputs(form ) {
+		if ( (form.Docket && form.Docket.value == '') && (form.Project && form.Project.value == '') ) {
+			alert( 'Please enter the docket # or project # to allocate to.' );
+			return false;
+		} // end if
 		if ( form.skid_id && form.skid_id.value ) {
 			if ( form.type && (get_rdb_value( form.type ) == 'Roll') && form.Quantity.value > 10000 ) {
 				alert( 'Skids cannot contain more than 10000lbs' );
@@ -254,9 +258,19 @@ Please select a Paper to view/edit.<br>
 		</p>
 		<p>
 			<label>Location:</label>
-			<select id="location_id" name="location_id" onchange="f1.submit();">
-				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ], $session{'/employee/inventory/available_paper.html?location_id'} ); ) ?>
+			<select id="location_id" name="location_id" multiple="multiple" onchange="f1.submit();">
+				<? echo ( 
+					my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') );
+					my @selected = split(';', $session{'/employee/inventory/available_paper.html?location_id'} );
+					if ( ! @selected ) {
+						foreach my $L ( openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ) {
+							next if $L->name() eq 'Missing';
+							push @selected, $L->id();
+						} # end foreach $L
+						 $session{'/employee/inventory/available_paper.html?location_id'} = join(';', @selected);
+					} # end if
+					return ssi::make_select( \@options, \@selected );
+				) ?>
 			</select>
 		</p>
 		</div>
@@ -274,36 +288,53 @@ Please select a Paper to view/edit.<br>
 	<table class="List">
 		<tr>
 			<th align="left">Paper ID</th>
-			<th align="left" width="60">GSM</th>
-			<th align="left" width="60">MWeight</th>
-			<th align="left" width="75">Available</th>
-			<th align="left" width="50">Skids</th>
-			<th align="left" width="110">Age</th>
-			<th align="left" width="120">Location</th>
-			<th width="75" class="unprintable">&nbsp;</th>
+			<th align="left" width="105">FSC</th>
+			<th align="right" width="75">Available</th>
+			<th align="left" width="120">&nbsp;&nbsp;Age</th>
+			<th align="left" width="120">Last Seen</th>
+			<th align="left" width="200">Inventory</th>
+			<th width="40" class="unprintable">&nbsp;</th>
 		</tr>
 		<? echo (
 			my $html;
 			my $rowclass;
 			my $selected;
+			my @location_ids;
+			foreach ( split(';', $session{'/employee/inventory/available_paper.html?location_id'} ) ) {
+				next if $_ eq 'All';
+				push @location_ids, $_;
+			} # end foreach
+
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
 				next if $Paper->in_stock() - $Paper->allocated() <= 0;
 				my %skid_age;
+				my %last_seen;
 				my %skid_location;
+				my %inventory;
 				my $skids = 0;
 				foreach my $Skid ( $Paper->skids() ) {
 					if ( $session{'/employee/inventory/available_paper.html?last_seen'} ) {
 						next if Date::Parse::str2time($Skid->updated_on()) < ( time - ( $session{'/employee/inventory/available_paper.html?last_seen'} * 24 * 60 * 60 ) );
 					} # end if
-					if ( $session{'/employee/inventory/available_paper.html?location_id'} ) {
-						next if $Skid->Location()->Root()->id() != $session{'/employee/inventory/available_paper.html?location_id'};
-					} # end if
+
+					if ( @location_ids ) {
+						if ( $Skid->Location()->Root()->id() ) {
+							next if ! sets::isin( $Skid->Location()->Root()->id(), \@location_ids );
+						} elsif( ! sets::isin( 'Unknown', \@location_ids ) ) {
+							next;
+						} # end if 
+					} # end if 
 					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->created_on());
 					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
 					$skid_age{$days} += 1;
+
+					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->updated_on());
+					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
+                    $last_seen{$days} += 1;
 					$skids += 1;
 
 					$skid_location{$Skid->Location()->Root()->id()} += 1;
+					$inventory{$Skid->Location()->Root()->id()} += $Skid->contents($Paper);
 				} # end foreach
 				next if ! $skids;
 				
@@ -322,21 +353,20 @@ $selected = 'style="background-color:yellow;"';
 $selected = '';
 }
 
-				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%.0f</td><td>%.0f</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td>',
+				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%s</td><td align="right">%s&nbsp;</td><td align="right">%s&nbsp;</td><td>%s</td><td>%s</td>',
 					$rowclass,
 					$$Paper{'id'},
 					$selected,
 					$$Paper{'id'},
 					$Paper->to_string(),
-					$Paper->gsm(),
-					$Paper->mweight(),
+					$Paper->fsc_code(),
 					($Paper->in_stock() - $Paper->allocated()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
-					$skids,
-					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ' skid'.($skid_age{$_}>1?'s':'') } keys %skid_age),
-					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ' skid'.($skid_location{$_}>1?'s':'') } keys %skid_location),
+					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ' skid'.($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
+					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ' skid'.($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
+					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ' skid'.($skid_location{$_}>1?'s':''). ' - ' . $inventory{$_}.'lbs' } keys %skid_location),
 					);
 				$html .= '<td align="center" class="unprintable">';
-				$html .= ssi::writeButton( $log, $dbh, 'Allocate'.$Paper->id(), 'allocate.gif', 'allocate_window('.$Paper->id().');', '', 'Allocate' );
+				$html .= ssi::writeButton( $log, $dbh, 'Allocate'.$Paper->id(), 'allocate.gif', 'allocate_window('.$Paper->id().');', '', 'A' );
 				$html .= '</td>';
 				$html .= '</tr>',
 				$rowclass = $rowclass ? '' : ' class="colRow"';

@@ -154,6 +154,15 @@ sub htmlize {
 	return @_;
 } # end sub htmlize
 
+sub encode_html {
+	my ( $html, $tags ) = @_;
+
+	$html =~ s/\r\n/<br\/>/mg;
+	$html =~ s/\n\r/<br\/>/mg;
+	$html =~ s/\n/<br\/>/mg;
+	return $html;
+} # end sub encode_html
+
 sub make_drop_down {
 	my ( $search_data, $checkval, $length ) = @_;
 	my ( $temp, $checked );
@@ -462,6 +471,20 @@ sub datetime_select {
 	 $html .= '</select></span>';
 	 return $html;
 } # end sub datetime_select
+
+sub save_params {
+	my ( $url, @keys ) = @_;
+	$session{$url.'?lastupdated'} = time;
+
+	foreach ( @keys ) {
+		if ( ref $param{$_} eq 'ARRAY' ) {
+			$session{"$url?$_"} = join(';', @{$param{$_}} );
+		} elsif ( exists $param{$_} ) {
+			$session{"$url?$_"} = $param{$_};
+		} # end if
+	} # end foreach
+} # end sub save_params
+
 
 1;
 

@@ -167,7 +167,7 @@ sub get_lis {
 		$html .= sprintf( '<li id="service_%d" class="%s">', $$row{'serviceindex'}, $colour );
 
 		$html .= '<div class="Company">';
-		$html .= sprintf( '<a class="handle" href="project_view.html?ProjectIndex=%1$d&Docket=%2$d">%2$d</a>', $Project->id(), $Project->docket() );
+		$html .= sprintf( '<a class="handle" href="/employee/project/view.html?ProjectIndex=%1$d&Docket=%2$d">%2$d</a>', $Project->id(), $Project->docket() );
 		$html .= ssi::htmlize(substr( $Project->Company()->name(), 0, 20 ));
 		$html .= '</div>';
 

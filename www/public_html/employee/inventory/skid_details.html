@@ -172,14 +172,13 @@ function gsm_to_mweight( form ) {
 		width: 70%;
 	}
 </style>
-<? if ( $$variable{'error'} ) ?>
-The following errors occurred:<br/>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<div class="information"><?information?></div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $openprint::param{'skid_quantity'} ) ?>
 <? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$openprint::param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
 <? endif ( $openprint::param{'skid_quantity'} ) ?>
+<? if ( $$variable{'Skid'}->deleted() ) ?>
+<div class="error">Warning: This skid has been deleted.</div>
+<? endif ( $$variable{'Skid'}->deleted() ) ?>
 
 <form name="jump" method="get" action="skid_details.html">
 	<fieldset class="filters"><legend>Choose Skid</legend>
@@ -266,6 +265,19 @@ The following errors occurred:<br/>
 				ssi::writeButton( $log, $dbh, 'showMap', 'show.gif', "open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{'skid_id'}','Location','width=400,height=400,scrollbars=yes');", '', 'Map' ),
 				); ) ?>
 			</p>
+<? if ( $$variable{'Skid'}->id() ) ?>
+			<p>
+				<label>Manifest:</label>
+				<? echo (
+					my $html = '';
+					my @ManifestContents = openprint::ManifestContent::find('skid_id'=>$$variable{'Skid'}->id() );
+					foreach my $MC ( @ManifestContents ) {
+					$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a><br/>', $MC->manifest_id() );
+					} # end foreach MC
+					return $html;
+				) ?>
+			</p>
+<? endif ( $$variable{'Skid'}->id() ) ?>
 			<p>
 				<label for="Docket">Docket:</label>
 				<input type="text" id="Docket" name="Docket" size="10" value="<? echo ( $openprint::param{'Docket'} ) ?>" />
@@ -279,12 +291,12 @@ The following errors occurred:<br/>
 			<!--#include virtual="/employee/inventory/_skid_contents.html"-->
 		</div><!-- column -->
 		<div class="column">
-			<fieldset><legend onclick="toggleContent( 'AddPaper', '/employee/inventory/_add_paper_show.html', null, '/employee/inventory/_add_paper_hide.html' );">Add Paper - click to hide/show</legend>
-				<? if ( $openprint::session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
+			<fieldset><legend onclick="AjaxToggleContent( 'AddPaper', '/employee/inventory/_add_paper_show.html', null, '/employee/inventory/_add_paper_hide.html' );">Add Paper - click to hide/show</legend>
+				<? if ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
 				<div id="AddPaper"><!--#include virtual="/employee/inventory/_add_paper_show.html"--></div>
-				<? else ( $openprint::session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
+				<? else ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
 				<div id="AddPaper" style="display: none;"></div>
-				<? endif ( $openprint::session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
+				<? endif ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{'Skid'}->id() ) ?>
 			</fieldset>
 		</div>
 		<div style="float: right;">
@@ -295,7 +307,13 @@ The following errors occurred:<br/>
 						$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
 					} # end if
 					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{'skid_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'Skid'}->id();
+					if ( $$variable{'Skid'}->id() ) {
+						if ( $$variable{'Skid'}->deleted() ) {
+							$html .= ssi::writeButton( $log, $dbh, 'destroy', 'destroy.gif', "f1.action='skids.html?skid_id=$$variable{'skid_id'}';f1.btnFunction.value='Destroy';f1.submit();", '', 'Destroy' );
+						} else {
+							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{'skid_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+						} # end if
+					} # end if
 					$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
 					#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
 					$html .= ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', 'skid_details.html', 'Add New Skid' ) if $$variable{'Skid'}->id();
@@ -306,12 +324,12 @@ The following errors occurred:<br/>
 </form>
 <? if ( $$variable{'skid_id'} ) ?>
 <fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<?skid_id?>) );">Allocations - click to hide/show</legend>
-<div id="Allocations" style="display: none;"></div>
+<div id="Allocations"><!--#include virtual="_skid_allocations.html"--></div>
 </fieldset>
-<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', new Array('skid_id',<?skid_id?>) );">Inventory Log - click to hide/show</legend>
+<fieldset><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_skid_log.html', new Array('skid_id',<?skid_id?>) );">Inventory Log - click to hide/show</legend>
 <div id="Log"><!--#include virtual="_skid_log.html"--></div>
 </fieldset>
-<fieldset><legend onclick="toggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', new Array('skid_id',<?skid_id?>) );">Verification Log - click to hide/show</legend>
+<fieldset><legend onclick="AjaxToggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', new Array('skid_id',<?skid_id?>) );">Verification Log - click to hide/show</legend>
 <div id="VerificationLog"><!--#include virtual="_verification_log.html"--></div>
 </fieldset>
 <? endif ( $$variable{'skid_id'} ) ?>

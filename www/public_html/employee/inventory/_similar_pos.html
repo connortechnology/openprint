@@ -1,4 +1,6 @@
 <? echo (
+	$param{'docket'} =~ s/\D//g;
+	return if ! $param{'docket'};
 	my $html = '';
 	my @Contents;
 	foreach my $PO_C ( openprint::PurchaseOrder_Content::find('docket'=>$param{'docket'}, 'order'=>'po_id DESC' ) ) {

@@ -29,6 +29,10 @@
 				<input type="text" name="Quantity" onkeypress="return input_handler( this, event);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckInQuantity', 'clear.gif', "checkinform.Quantity.value='';", '', 'Clear' ); ) ?>
 			</p>
+			<p>
+				<label>Reason:</label>
+				<textarea id="reason" name="reason" onkeyup="textarea_resize(this);" cols="" rows="1"></textarea>
+			</p>
 			<hr/>
 			<p style="float: right;">
 			<? echo ( ssi::writeButton( $log, $dbh, 'SaveCheckIn', 'save.gif', 'if(check_inputs(checkinform)){checkinform.submit();}', '', 'Save' ); ) ?>

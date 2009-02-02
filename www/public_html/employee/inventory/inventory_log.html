@@ -57,10 +57,13 @@
             <input type="checkbox" id="TypeUnknown" name="Type" value="Unknown" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Unknown', split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeUnknown">Unknown</label>
         </p>
-	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "LogForm.btnFunction.value='';new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );", '', 'Load' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "LogForm.btnFunction.value='Download';LogForm.submit();", '', 'Download' ); ) ?>
-	</p>
+		<p><label>Docket:</label>
+			<input type="text" id="docket" name="docket" onkeyup="this.value=this.value.replace(/\D/,'');" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );}" />
+		</p>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "LogForm.btnFunction.value='';new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );", '', 'Load' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "LogForm.btnFunction.value='Download';LogForm.submit();", '', 'Download' ); ) ?>
+		</p>
 	</fieldset>
 	<fieldset><legend>Results</legend>
 		<div id="Log"><!--#include virtual="_inventory_log.html"--></div>

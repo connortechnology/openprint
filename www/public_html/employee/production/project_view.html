@@ -18,7 +18,7 @@ function open_window( page ) {
 <? endif ( $$variable{'information'} ) ?>
 <!--#include virtual="/includes/project_header.html" -->
 <br/>
-<form name="f1" method="post" action="project_view.html?ProjectIndex=<?ProjectIndex?>">
+<form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
 		<tr> 
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
@@ -285,7 +285,7 @@ function open_window( page ) {
 	<form name="LabelForm" id="LabelForm" method="post" action="/employee/production/labels/label.html">
 		<input type="hidden" name="project_id" value="<? echo ( $$variable{'ProjectIndex'} ) ?>"/>
 		<fieldset><legend>Labels &amp; Packing Slips</legend>
-			<div id="Labels"><!--#include virtual="_labels.html"--></div>
+			<div id="Labels"><!--#include virtual="/employee/production/_labels.html"--></div>
 		</fieldset>
 	</form>
 </div>
@@ -313,7 +313,7 @@ function open_window( page ) {
 					my $Skid = $Allocation->Skid();
 					$total += $Allocation->quantity();
 					$html .= sprintf( '<tr><td>&nbsp;</td><td>%3$s</td><td>%4$s</td><td>%5$s</td>', $Allocation->paper_id(), $Allocation->Paper()->to_string(), $Skid->id(), $Skid->rfidtag_id(), $Skid->Location()->name() );
-				$html .= sprintf( '<td align="right">%1$d%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
+				$html .= sprintf( '<td align="right">%1$s%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
 				} # end foreach
 				$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
 			} # end foreach

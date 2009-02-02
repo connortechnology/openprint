@@ -18,6 +18,35 @@ require openprint::SkidContent;
 
 my $debug = 1;
 
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+$table = 'Skids';
+$serial = 'skid_id_seq';
+my %fields = (
+	'id'			=>	'id',
+	'location_id'	=>	'location_id',
+	'created_on'	=>	'created_on',
+	'created_by_id'	=>	'created_by_id',
+	'owner_id'		=>	'owner_id',
+	'updated_on'	=>	'updated_on',
+	'updated_by'	=>	'updated_by',
+	'used'			=>	'used',
+	'rfidtag_id'	=>	'rfidtag_id',
+	'type'			=>	'type',
+	'deleted'		=>	'deleted',
+);
+
+%transforms = (
+);
+%defaults = (
+	'location_id'	=>	undef,
+	'rfidtag_id'	=>	undef,
+	'updated_on'	=>	'NOW()',
+	'created_on'	=>	'NOW()',
+);
+
 sub find {
 	my %params = @_;
 	my @values;
@@ -76,6 +105,18 @@ sub find {
 	} # end if
 	if ( $params{'created_on'} ) {
 		$log->debug("Find: Created: $params{'created_on'}");
+	} # end if
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+			push @values, @{$params{'deleted'}};
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
 	} # end if
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -167,8 +208,14 @@ $log->warn("Saving skid");
 
 sub delete {
 	my $self = shift;
+	sql::update( undef, undef, 'Skids', ['id=?', $$self{'id'}], 'deleted', 1 );
+} # end sub delete
+
+sub destroy {
+	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
+	sql::execute( undef, undef, q{DELETE FROM manifestcontents WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_inventory WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skid_contents WHERE skid_id=?}, $$self{'id'} );
@@ -268,17 +315,10 @@ sub Location {
 	return new openprint::Location( $$self{'location_id'} );
 } # end sub Location
 
-sub created_on {
-	my $self = shift;
-	return $$self{'created_on'};
-} # end sub created_on
-sub created_by_id {
-	my $self = shift;
-	return $$self{'created_by_id'};
-} # end sub created_by_id
-
 sub Contents {
     my $self = shift;
+	return if ! $$self{'id'};
+
     my %params = @_;
     $params{'skid_id'} = $$self{'id'};
 
@@ -390,9 +430,10 @@ sub contents {
 } # end sub contents
 
 sub rfidtag_id {
-	my ( $self, $rfidtag_id ) = @_;
+	my $self = shift;
 
-	if ( $rfidtag_id ) {
+	if ( @_ ) {
+		my $rfidtag_id = shift;	
 		my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
 		my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
 		$log->error( $error ) if $error;
@@ -404,6 +445,26 @@ sub rfidtag_id {
 sub RFIDTag {
 	return new openprint::RFIDTag( $_[0]{rfidtag_id} );
 } # end sub RFIDTag
+
+sub type {
+	my $self = shift;
+	if ( ! $$self{'type'} ) {
+		my @Contents = $self->Contents();
+		foreach my $C ( @Contents ) {
+			if ( $C->Paper()->type() eq 'Roll' ) {
+				if ( @Contents > 1 ) {
+					$log->error('A Roll Skid cannot contain more than 1 paper.');
+				} # end if
+				$$self{'type'} = 'Roll';	
+				last;
+			} else {
+				$$self{'type'} = 'Skid';	
+				last;
+			} # end if
+		} # end foreach C
+	} # end if	
+	return $$self{'type'};
+} # end sub type
 
 1;
 __END__

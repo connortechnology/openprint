@@ -14,6 +14,7 @@ require sql;
 require ssi;
 require misc;
 
+require openprint::Manifest_Content_Type;
 require openprint::ManifestContent;
 require openprint::PurchaseOrder;
 require openprint::Company;
@@ -207,8 +208,21 @@ sub delete {
 	return '';
 } # end sub delete
 
+sub Types {
+	my ( $self, %params ) = @_;
+	if ( $$self{'id'} ) {
+		$params{'manifest_id'} = $$self{'id'};
+		return openprint::Manifest_Content_Type::find(%params);
+	} # end if
+	return;
+} # end sub Types
+
 sub Contents {
-	return openprint::ManifestContent::find('manifest_id'=>$_[0]{id});
+	my ( $self, %params ) = @_;
+	if ( $$self{'id'} ) {
+		return openprint::ManifestContent::find('manifest_id'=>$$self{id}, %params );
+	} # end if
+	return;
 } # end sub Contents
 
 sub Vendor {

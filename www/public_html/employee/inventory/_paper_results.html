@@ -48,7 +48,7 @@
 				next if $Paper->in_stock() and ! $openprint::session{'/employee/inventory/paper.html?instock'};
 				next if (!$Paper->in_stock()) and ! $openprint::session{'/employee/inventory/paper.html?outofstock'};
 
-				$html .= sprintf( '<tr%s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%.2f</td><td>%.2f</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td>',
+				$html .= sprintf( '<tr class="%1$s %11$s"><td><a href="paper_details.html?paper_id=%2$d">%3$s</a></td><td>%4$.2f</td><td>%5$.2f</td><td>%6$d</td><td>%7$d</td><td>%8$d</td><td>%9$s</td><td>%10$s</td>',
 					$rowclass,
 					$$Paper{'id'},
 					$Paper->to_string(),
@@ -59,10 +59,11 @@
 					$Paper->in_stock(), #  in stock
 					$Paper->in_stock() - $Paper->allocated(), #  in stock
 					$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',
+					$Paper->in_stock() - $Paper->allocated() < 0 ? 'warning' : '',
 					);
 				$html .= qq`<td align="center" class="unprintable"><input type="checkbox" name="papers" value="$$Paper{'id'}"/></td>`;
 				$html .= '</tr>',
-				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$rowclass = $rowclass ? '' : 'colRow';
 			} # end foreach Paper
 			return $html;
 		) ?>

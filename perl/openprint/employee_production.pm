@@ -347,6 +347,8 @@ sub bindery_overview {
 } # end sub bindery_overview
 
 sub projects {
+
+	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer' );
 	my @projects;
 
 	my $startdocket = $param{'StartDocket'};
@@ -374,7 +376,7 @@ sub projects {
 		} # end if
 		if ( @projects == 1 ) {
 			$order_id = $projects[0]->order_id();
-			$variable{'Redirect'} = '/employee/production/project_view.html';
+			$variable{'Redirect'} = '/employee/project/view.html';
 			$param{'OrderID'} = $order_id;
 			$param{'ProjectIndex'} = @projects[0]->id();
 			return;
@@ -383,7 +385,11 @@ sub projects {
 
 	$variable{'txtDocket'} = $param{'txtDocket'};
 
-} # end sub list_current
+} # end sub projects
+
+sub _project_list {
+	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer' );
+}
 
 sub project_view {
 	return openprint::employee_project::view( @_ );
@@ -894,7 +900,7 @@ sub barcode {
 	} # end if
 	if ( $param{'Action'} ) {
 		add_to_barcode_log( $log, $dbh, \%variable, $Project->id(), $docket_id, $param{'Operator'}, $message );
-#$variable{'Results'} = sprintf('<tr><td>%.4d-%.2d-%.2d %.2d:%.2d:%.2d</td><td>%s</td><td><a href="project_view.html?ProjectIndex=%d&OrderID=%d">%d</a></td><td>%s</td></tr>', Date::Calc::Today_and_Now(), $operators{$operator}, $project_index, $order_id, $docket_id, $message ) . $variable{'Results'};
+#$variable{'Results'} = sprintf('<tr><td>%.4d-%.2d-%.2d %.2d:%.2d:%.2d</td><td>%s</td><td><a href="/employee/project/view.html?ProjectIndex=%d&OrderID=%d">%d</a></td><td>%s</td></tr>', Date::Calc::Today_and_Now(), $operators{$operator}, $project_index, $order_id, $docket_id, $message ) . $variable{'Results'};
 		$Project->update_status();
 		openprint::order::update_order_status( $r, $log, $dbh, $param{'Order'} );
 	} # end if
@@ -1039,53 +1045,8 @@ sub _stock_details {
 } # end sub _stock_details
 
 sub _stock_checkout {
-	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
-
-	if ( $param{'action'} eq 'Add' ) {
-		$param{'skid_id'} =~ s/\D//g;
-		$param{'rfidtag_id'} =~ s/[^a-zA-Z0-9]//g;
-		my $Skid;
-		if ( $param{'skid_id'} ) {
-			$Skid = new openprint::Skid( $param{'skid_id'} );
-		} elsif ( $param{'rfidtag_id'} ) {
-			my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
-			if ( ! $RFIDTag->id() ) {
-				$variable{'error'} .= 'RFID Tag ' .  $param{'rfidtag_id'} . ' is not in the system.<br/>';
-			} else {
-				$Skid = $RFIDTag->Skid();
-			} # end if
-		} else {
-			$variable{'error'} .='Please scan the barcode on the skid label or rfid tag.<br/>';
-		} # end if
-		if ( ! $Skid->id() ) {
-			$variable{'error'} .= 'Unknown skid scanned.<br/>';
-		} # end if
-		foreach my $C ( $Skid->Contents() ) {
-			my @PI = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'comment_like'=>'Checked out%');
-
-			if ( ! @PI ) {
-				my $PI = new openprint::PaperInventory();
-				$PI->save({
-						'docket'	=>	$param{'docket'},
-						'paper_id'	=>	$C->paper_id(),
-						'user_id'	=>	$session{'user_id'},
-						'delta'		=>	-1*$C->quantity(),
-						'comment'	=>	'Checked out for docket ' . $param{'docket'},
-						'skid_id'	=>	$Skid->id(),
-						'units'		=>	$C->units(),
-						});
-				$C->quantity( 0 );
-				$C->save();
-			} else {
-				if ( $PI[0]->Paper()->type() eq 'Roll' ) {
-					$variable{'error'} .= 'Roll ' . $Skid->id() . ' has already been checked out.<br/>';
-				} else {
-					$variable{'error'} .= 'Skid ' . $Skid->id() . ' has already been checked out.<br/>';
-				} # end if
-			} # end if
-		} # end foreach C
-	} # end if
-}
+	openprint::employee_project::_stock_checkout();
+} # end sub _stock_checkout
 
 1;
 

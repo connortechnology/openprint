@@ -6,7 +6,7 @@
 <p class="information"><?information?></p>
 <? endif ( $$variable{'information'} ) ?>
 Please select a Manifest to view/edit.<br>
-<form name="f1" method="post" action="manifest_details.html">
+<form name="f1" method="post" action="manifest.html">
 	<fieldset class="filters"><legend>Choose Manifest</legend>
 		<p>
 			<label for="manifest_id">Manifest ID #</label>
@@ -61,7 +61,7 @@ Please select a Manifest to view/edit.<br>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_manifests.html', Serialize( document.forms.f2 ) );", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'manifest_details.html', 'Add New Manifest' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'manifest.html', 'Add New Manifest' ),
 				); ) ?>
 		</p>
 	</fieldset>

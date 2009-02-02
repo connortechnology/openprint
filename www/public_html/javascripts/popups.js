@@ -63,18 +63,20 @@ function AjaxToggleContent( divID, show_url, inputs, hide_url ) {
 	var div = $( divID );
 
 	var params = new Array();
+	if ( inputs ) {
 	while ( inputs.length ) {
 		params[params.length] = inputs.shift() + '=' + inputs.shift();
 	}
+	} // end if
 
 
 	if ( div.style.display == 'none' ) {
 		div.show();
-		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&') } );
+		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
 	} else {
 		div.hide();
-		if ( page_to_hide )
-			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&') } );
+		if ( hide_url )
+			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
 	} // end if
 } // end function AjaxToggleContent
 

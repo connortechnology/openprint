@@ -18,6 +18,7 @@ require openprint::Order;
 require openprint::OrderedProduct;
 require openprint::usergroup;
 require openprint::press_schedule;
+require openprint::PaperAllocation;
 
 sub delete_order {
 	my ( $log, $dbh, $order_id ) = @_;
@@ -1397,6 +1398,12 @@ sub cancel_order {
 		$Project->save();
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
 		openprint::press_schedule::remove( $Project->id() );
+
+		# Free up any stock allocated to this project
+		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, qq`De-allocated $$PA{'quantity'}$$PA{'units'} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{'paper_id'}">` . $PA->Paper()->to_string() . ($PA->skid_id()?qq`</a> on skid <a href="/employee/inventory/skids.html?skid_id=$$PA{skid_id}">$$PA{skid_id}</a>` : '') );
+			$PA->delete();
+		} # end foreach PA
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );
 } # end sub cancel_order
@@ -1405,14 +1412,17 @@ sub cancel_order {
 sub fill_user_info {
 	my ( $r, $log, $dbh, $variable, $user_index ) = @_;
 
-	my %info;
-	$_ = 'SELECT strEmail,strTitle, strFirstName, strLastName, strSalutation, strPhone, strExt, strFax FROM Users WHERE Index=?';
-	@info{'txtEmail','txtTitle','txtFirstName','txtLastName','rdbSalutation','txtPhone','txtExt', 'txtFax'} = sql::execute( $log, $dbh, $_, $user_index );
-	my @results;
-	foreach my $key ( keys %info ) {
-		push @results, "$key~$info{$key}";
-	} # end foreach
-	return join( '|', @results );
+	if ( $user_index ) {
+		my %info;
+		my $User = new openprint::User( $user_index );
+		@info{'txtEmail','txtTitle','txtFirstName','txtLastName','rdbSalutation','txtPhone','txtExt', 'txtFax'} = $User->get('email','title','firstname','lastname','salutation','phone','extension','fax');
+		my @results;
+		foreach my $key ( keys %info ) {
+			push @results, "$key~$info{$key}";
+		} # end foreach
+		return join( '|', @results );
+	} # end if
+	return;
 
 } # end sub fill_user_info
 
