@@ -341,6 +341,15 @@ sub display {
 	} # end foreach
 
 } # end sub display
+sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	if ( $qty_index ) {
+		return '';
+	} # end if
+	return '';
+} # end sub summary
+
 
 1;
 __END__

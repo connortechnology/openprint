@@ -161,12 +161,19 @@ sub get_url {
 	if ( $options and $$options{'exclude'} ) {
 		@keys = sets::exclude( $$options{'exclude'}, \@keys );
 	} # end if	
+	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany' ], \@keys );
 	my %encoded;
 	foreach my $k ( @keys ) {
 		$encoded{$k} = $$params{$k};
 		$encoded{$k} =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;	
 	} # end foreach
-	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } @keys ) );
+	if ( $options and $$options{'include'} ) {
+		foreach my $k ( keys %{$$options{'include'}} ) {
+			$encoded{$k} = $$options{'include'}{$k};
+		} # end foreach
+	} # end if	
+	
+	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } keys %encoded ) );
 } # end sub get_url
 
 sub sum {

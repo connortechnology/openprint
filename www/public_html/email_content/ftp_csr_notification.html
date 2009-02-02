@@ -1,0 +1,68 @@
+<fieldset>
+	<legend>Contact Information</legend>
+	<div id="contactInformation">
+		<div style="float: left; width: 50%;">
+			<div class="fieldContainer">
+				<p>
+					<label>Company Name:</label>
+					<? echo ( $$variable{'Company'}->name() ) ?>
+				</p>
+				<p>
+					<label>Address:</label>
+					<? echo ( $$variable{'Company'}->address1() ) ?><br/>
+<? if ( $$variable{'Company'}->address2() ) ?>
+					<? echo ( $$variable{'Company'}->address2() ) ?><br/>
+<? endif ( $$variable{'Company'}->address2() ) ?>
+				</p>
+				<p>
+					<label>Postal Code:</label>
+					<? echo ( $$variable{'Company'}->postal_code() ) ?>
+				</p>
+			</div>
+		</div>
+		<div style="float: left; width: 50%;">
+			<div class="fieldContainer">
+				<p>
+					<label>Contact Name:</label>
+					<? echo ( $$variable{'User'}->name() ) ?>
+				</p>
+				<p>
+					<label>Email Address:</label>
+					<a href="mailto:<? echo ( $$variable{'User'}->email() ) ?>"><? echo ( $$variable{'User'}->email() ) ?></a>
+				</p>
+				<p>
+					<label>Phone Number:</label>
+					<? echo ( $$variable{'User'}->phone() ) ?>
+					<? if ( $$variable{'User'}->extension() ) ?>x<? echo ( $$variable{'User'}->extension() ) ?><? endif ( $$variable{'User'}->extension() ) ?>
+				</p>
+			</div>
+		</div>
+	</div>
+</fieldset>
+
+<fieldset>
+	<legend>File</legend>
+	<table border="0" cellpadding="1" cellspacing="0" width="100%">
+		<thead>
+		 <tr>
+			<th align="left">Filename</th>
+			<th align="right">Size</th>
+		 </tr>
+		</thead>
+		<tbody>
+			<tr><td nowrap="nowrap"><? echo ( $$variable{'filename'} ) ?></td><td align="right">
+		<? echo (
+			my $size = $$variable{'size'};
+			if ( $size > 1048576 ) {
+				$size = sprintf( '%.3f MB', $size / 1048576 );
+			} elsif ( $size > 1024 ) {
+				$size = sprintf( '%.3f KB', $size / 1024 );
+			} else {
+				$size .= ' B';
+			} # end if
+			return $size;
+		) ?>
+			</td></tr>
+		</tbody>
+	</table>	
+</fieldset>

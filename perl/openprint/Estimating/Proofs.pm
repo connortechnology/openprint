@@ -73,11 +73,7 @@ sub calc {
 
 	my @signature_service_indices = $Project->signatures();
 
-	foreach my $qty_index ( 1 ..3 ) {
-		if ( ! $Project->quantity($qty_index) ) {
-			$$specs{"txtPrice$qty_index"} = '';
-			next;
-		} # end if
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $totalPrice = 0;
 		my $totalQuantity = 0;
 
@@ -90,10 +86,9 @@ sub calc {
 			} # end if
         } # end foreach
 
-
 		# First, build a hash containing the quantities of each proof.  The reason for this is to honour quantity discounts.
 		foreach my $signature_service_index ( @signature_service_indices ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -184,20 +179,22 @@ sub calc {
 				};
 				next if ! $type;
 
-				my $price;
+				my %price;
 				if ( $type eq 'PressProof' ) {
-					$price = openprint::service::get_price( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, $Equipment[0] );
+					%price = openprint::service::get_price_object( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, $Equipment[0] );
 				} else {
-					$price = openprint::service::get_price( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, undef );
+					%price = openprint::service::get_price_object( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, undef );
 				} # end if
-				if ( sets::isin( $type , ['CanonProof','EpsonProof','DigitalDylux'] ) ) {
-					$price *= $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144;	# Prices are in square feet, so 144=12x12inches
-				} elsif ( $type eq 'FujiFinalProof'  ) {
-				} elsif ( $type eq 'PDFProof' ) {
-				} # end if
-				$price = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
-				$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = sprintf( '%.2f', $price );
-				$totalPrice += $price * $quantity;
+
+				if ( lc $price{'units'} eq 'per square inch' ) {
+					$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"};
+				} elsif ( lc $price{'units'} eq 'per square foot' ) {
+					$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144;
+				} else {
+					$price{'Total'} = $price{'Price'};
+                } # end if
+				$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price{'Total'} );
+				$totalPrice += $price{'Total'} * $quantity;
 			} # end foreach my $proof_index
 		} # end foreach my $signature_service_index
 

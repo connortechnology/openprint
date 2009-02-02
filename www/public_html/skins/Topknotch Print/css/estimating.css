@@ -4,7 +4,7 @@
     font-style: normal;
     color: #000000;
 }
-.InstantPricing IMG {
+.InstantPricing img {
 	border: 1px solid black;
 	width: 150px;
 }
@@ -74,5 +74,5 @@ div.Prices
    text-align: center;
 }
 #Specials {
-	width: 260px;
+	width: 380px;
 }

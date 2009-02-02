@@ -1168,7 +1168,9 @@ sub send_sales_order {
 	if ( @admin_emails ) {
 		my %mail = (
 				SMTP	=> $openprint::config{'Mail Server'},
-				FROM	=> $openprint::config{'OrderingEmail'},
+# Only for Amin
+				FROM	=> $order{'txtEmail'},
+				#FROM	=> $openprint::config{'OrderingEmail'},
 				TO		=> join(',',@admin_emails),
 				SUBJECT => "Order $order_id",
 				);

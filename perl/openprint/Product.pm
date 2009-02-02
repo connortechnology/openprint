@@ -9,8 +9,14 @@ require sql;
 
 my $debug = 0;
 
-use vars qw( %fields %defaults %transforms );
+use vars qw( $log $dbh $table $serial %fields %defaults %transforms );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+$table = 'products';
+$serial = 'product_id_seq';
+
 %fields = (
+	'id'			=>	'id',
 	'name'			=>	'name',
 	'description'	=>	'description',
 	'weight'		=>	'weight',
@@ -64,12 +70,12 @@ sub find {
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error loading Products: ($sql) (@values)");
+		$log->error("Error loading Products: ($sql) (@values)");
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Products: ($sql) (@values) " . @$data );
+		$log->debug("Loading Products: ($sql) (@values) " . @$data );
 	} # end if
 	return map { new openprint::Product( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -81,14 +87,14 @@ sub delete {
 
 sub destroy {
 	my $self = shift;
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	foreach my $Price ( openprint::ProductPrice::find( 'Product' => $self ) ) {
 		$Price->delete();
 	} # end foreach
 
 	sql::execute( undef, undef, q{DELETE FROM Product_Specifications WHERE product_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM Products WHERE id=?}, $$self{'id'} );
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	
 	# Add record to audit log - action "Delete Product".
 	openprint::logs::insertLogRecord('17', "Product ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
@@ -101,6 +107,8 @@ sub copy {
 	my $Product = new openprint::Product( );
 	@$Product{keys %fields} = @$self{keys %fields};
 	$$Product{'name'} = 'Copy of '.$$Product{'name'};
+	delete $$Product{'id'};
+	%{$$Product{'Specifications'}} = %{$$self{'Specifications'}};
 	return $Product;
 } # end sub copy
 
@@ -119,83 +127,54 @@ sub Prices {
 sub save {
 	my ( $self, $param ) = @_;
 
-	$self->set( $param ) if $param;
+	# Super Save will load at the end, wiping out the specs hash
+	my %new_specs =  %{$$self{'Specifications'}} if $$self{'Specifications'};
 
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$k} = $$self{$k};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Product_Id_seq')} );
-		$sql{'id'} = $$self{'id'};
-		if ( my $error = sql::insert( undef, undef, 'Products', %sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-		
-		# Add record to audit log - action "New Product".
-		openprint::logs::insertLogRecord('58', "Product ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
+	if ( ( my $error = $self->SUPER::save( $param ) ) ) {
+		return $error;
 	} else {
-		if ( my $error = sql::update( undef, undef, 'Products', ['id=?', $$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-		
-		# Add record to audit log - action "Update Product".
-		openprint::logs::insertLogRecord('59', "Product ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
-	} # end if
-
-	$_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
-	my %specs = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{'id'});
-	foreach my $spec ( keys %{$$self{'Specifications'}} ) {
-		if ( exists $specs{$spec} ) {
-			if ( $specs{$spec} ne $$self{'Specifications'}{$spec} ) {
-				sql::update( undef, undef, 'Product_Specifications', ['product_id=? AND Name=?', $$self{'id'}, $spec ], 
-					'Value', $$self{'Specifications'}{$spec} );
+		my $ac = sql::start_transaction( $dbh );
+		$_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
+		my %specs = sql::execute( $log, $dbh, $_, $$self{'id'});
+		foreach my $spec ( keys %new_specs ) {
+			if ( exists $specs{$spec} ) {
+				if ( $specs{$spec} ne $new_specs{$spec} ) {
+					sql::update( undef, undef, 'Product_Specifications', ['product_id=? AND name=?', $$self{'id'}, $spec ], 
+							'value', $new_specs{$spec} );
+				#} else {
+					#$log->debug(" equal ( $specs{$spec} ) = ( $$self{'Specifications'}{$spec} )" );
+				} # end if
+				delete $specs{$spec};
 			} else {
-				$openprint::log->debug(" equal ( $specs{$spec} ) = ( $$self{'Specifications'}{$spec} )" );
+				sql::insert( undef, undef, 'Product_Specifications', [ 'product_id', $$self{'id'},
+						'Name', $spec, 'Value', $new_specs{$spec} ] );
 			} # end if
-			delete $specs{$spec};
-		} else {
-			sql::insert( undef, undef, 'Product_Specifications', 'product_id', $$self{'id'},
-					'Name', $spec, 'Value', $$self{'Specifications'}{$spec} );
-		} # end if
-	} # end foreach
-	foreach my $spec ( keys %specs ) {
-		sql::execute( undef, undef, q{DELETE FROM Product_Specifications WHERE product_id=? AND name=?}, $$self{'id'}, $spec );
-	} # end foreach
-	sql::end_transaction( $openprint::dbh, $ac );
-
-	$self->load();
-
-	#foreach my $Price ( $self->prices() ) {
-		#if ( $$Price{'ProductIndex'} != $$self{'id'} ) {
-			#$$Price{'ProductIndex'} = $$self{'id'};
-			#$$Price{'id'} = undef;
-		#} # end if
-		#$Price->save();
-	#} # end foreach
-
-	return '';
+		} # end foreach
+		foreach my $spec ( keys %specs ) {
+			sql::execute( undef, undef, q{DELETE FROM Product_Specifications WHERE product_id=? AND name=?}, $$self{'id'}, $spec );
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
+		$self->load();
+	} # end if
+	
+	return;
 } # end sub save
 
 sub load {
 	my ( $self, $data ) = @_;
 
 	if ( ! $$self{'id'} ) {
-		$openprint::log->warn("Called Product::load without id");
+		$log->warn("Called Product::load without id");
 		return;
 	} # end if
 	
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Products WHERE id=?', {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( 'SELECT * FROM Products WHERE id=?', {}, $$self{'id'} );
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 
 	$_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
-	%{$$self{'Specifications'}} = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{'id'});
+	%{$$self{'Specifications'}} = sql::execute( $log, $dbh, $_, $$self{'id'});
 } # end sub load
 
 sub category {
@@ -206,13 +185,13 @@ sub category {
 sub get_price {
 	my ( $self, $qty ) = @_;
 
-	my $list_id = openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh );
+	my $list_id = openprint::pricing::get_pricelist_id();
 
-	my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
+	my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
 	if ( ! %price ) {
-$openprint::log->debug("Looking for a price $qty");
+$log->debug("Looking for a price $qty");
 		foreach my $Price ( openprint::ProductPrice::find('product_id'=>$$self{'id'},'pricelist_id'=>$list_id,'order'=>'min desc') ) {
-$openprint::log->debug("Looking at $$Price{min}");
+$log->debug("Looking at $$Price{min}");
 			next if $$Price{'min'} > $qty;
 			next if ! $$Price{'min'};
 			if ( ! ( $qty % $$Price{'min'} ) ) {
