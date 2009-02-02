@@ -128,7 +128,7 @@ sub save {
 	my ( $self, $param ) = @_;
 
 	# Super Save will load at the end, wiping out the specs hash
-	my %new_specs =  %{$$self{'Specifications'}};
+	my %new_specs =  %{$$self{'Specifications'}} if $$self{'Specifications'};
 
 	if ( ( my $error = $self->SUPER::save( $param ) ) ) {
 		return $error;
