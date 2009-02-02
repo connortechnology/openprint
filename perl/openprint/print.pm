@@ -617,9 +617,10 @@ sub get_finished_calliper {
 	my $finished_calliper;
     foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		my $calliper = $$sig_specs{'txtSignatureSpreadQuantity1'} ? $$sig_specs{'txtSignatureSpreadQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
+		my $calliper = $$sig_specs{'PageQuantity1'} ? $$sig_specs{'PageQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
+$openprint::log->debug("Calliper for sig $$sig_specs{SignatureIndex} : $$sig_specs{'txtSpecificStockCalliper'} : $calliper, total=$finished_calliper");
 		if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
-			$finished_calliper += $calliper * 2;
+			$finished_calliper += $calliper / 2;
 		} elsif ( $$sig_specs{'ProjectType'} eq 'ScratchPads' ) {
 			$finished_calliper += $$sig_specs{'PageQuantity'} * $calliper;
 		} else {
