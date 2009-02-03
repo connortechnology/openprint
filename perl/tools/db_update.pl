@@ -481,6 +481,10 @@ if ( ! $data ) {
 	} # end foreach Manifest
 	$dbh->do('alter table manifestcontents alter type_id set not null');
 	$dbh->do('alter table manifestcontents add foreign key (type_id) references manifest_content_types (id)');
+} else {
+	if ( ! exists $$data{'supplier_invoice'} ) {
+		$dbh->do('alter table manifest_content_types add supplier_invoice text');
+	} # end if
 } 
 
 $dbh->disconnect();

@@ -89,15 +89,15 @@ sub skids {
 			my @Projects = openprint::Project::find( 'id'=>$param{Project}, 'docket'=>$param{Docket} ) if $param{Project} or $param{Docket};
 
 			if ( ! @Projects ) {
-				$variable{'error'} .= "An invalid Docket or Project # was given. No paper allocated.<br/>";
+				$variable{'error'} .= 'An invalid Docket or Project # was given. No paper allocated.<br/>';
 				return;
 			} # end if
 			foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
+				$skid_id =~ s/\D//g;
 				next if ! $skid_id;
 				my $Skid = new openprint::Skid( $skid_id );
-				foreach my $paper_id ( keys %{$$Skid{Paper}} ) {
-					my $Paper = new openprint::Paper( $paper_id );
-					$Paper->allocate( $skid_id, $Projects[0]->id(), $$Skid{Paper}{$paper_id}, $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				foreach my $C ( $Skid->Contents() ) {
+					$C->Paper()->allocate( $skid_id, $Projects[0]->id(), $C->quantity(), $C->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
 				} # end foreach Paper
 			} # end foreach Skid
 		} # end if
@@ -310,6 +310,9 @@ sub paper_details {
 			$Paper->height( $param{'height'} );
 		} # end if
 		$Paper->mweight( $param{'mweight'} );
+		$Paper->basis_weight( $param{'basis_weight'} ) if exists $param{'basis_weight'};
+		$Paper->basis_width( $param{'basis_width'} ) if exists $param{'basis_width'};
+		$Paper->basis_height( $param{'basis_height'} ) if exists $param{'basis_height'};
 		$Paper->gsm( $param{'gsm'} );
 		$Paper->calliper( $param{'txtCalliper'} );
 		$Paper->fsc_code( $param{'fsc_code'} );
@@ -520,7 +523,7 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 					} else {
 						$Paper->allocate( undef, $Project->id(), $qty, $param{'Units'} );
 					} # end if
-					$variable{'information'} .= "Allocated $qty $param{'Units'} to docket $param{'Docket'}.<br/>";
+					$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $qty, $param{'Units'}, $Project->id(), $Project->docket() );
 				} # end if
 			} # end if
 		} # end if Paper
@@ -531,7 +534,7 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 			$variable{'error'} .= "Docket $param{'Docket'} not found. No paper allocated.<br/>";
 		} else {
 			$Skid->allocate( undef, $Projects[0]->id(), $qty, $param{'Units'} );
-			$variable{'information'} .= "Allocated $qty $param{'Units'} to docket $param{'Docket'}.<br/>";
+			$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $qty, $param{'Units'}, $Projects[0]->id(), $Projects[0]->docket() );
 		} # end if
 	} # end if
 } # end sub save_skid
@@ -1147,7 +1150,7 @@ sub rfidscanner_details {
 } # end sub rfidscanner_details
 
 sub manifest {
-
+	$param{'manifest_id'} =~ s/\s//g;
 	my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
 	if ( $param{'btnFunction'} eq 'Submit' ) {
 		$Manifest->id( $param{'manifest_id'} ) if ! $Manifest->id();
@@ -1184,12 +1187,14 @@ sub manifest {
 					$variable{'error'} .= 'Unable to get Stock.<br/>';
 					next;
 				} # end if
-				$variable{'error'} .= $Type->save({
+				my %data = (
 					'docket'	=>	$param{'docket-'.$Type->id()},
 					'paper_id'	=>	$Paper->id(),
 					'po_id'		=>	$param{'po_id-'.$Type->id()},
-					'cost'		=>	$param{'cost-'.$Type->id()},
-				});
+				);
+				$data{'cost'} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
+				$data{'supplier_invoice'} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
+				$variable{'error'} .= $Type->save(\%data);
 
 				my $Project;
 				if ( $param{'docket-'.$Type->id()} ) {

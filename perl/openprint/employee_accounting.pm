@@ -180,6 +180,10 @@ sub credit {
 	} # end if customer_index
 } # end sub credit
 
+sub stock {
+	require openprint::ManifestContent;
+} # end sub stock
+
 1;
 
 __END__

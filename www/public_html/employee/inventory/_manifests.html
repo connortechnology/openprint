@@ -69,8 +69,8 @@
 				$html .= '<tr>';
 				$html .= qq`<td align="center"><input type="checkbox" name="manifests" value="$$Manifest{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%1$s</a></td>', $$Manifest{'id'} );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$d</a></td>', @$Manifest{'id','po_id'} );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$d</a></td>', @$Manifest{'id','docket'} );
+				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', @$Manifest{'id','po_id'} );
+				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', @$Manifest{'id','docket'} );
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', @$Manifest{'id'}, $Manifest->Vendor()->name() );
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%s">%s</a></td>', $$Manifest{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($Manifest->received_on()) ) );
 

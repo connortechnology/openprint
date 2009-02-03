@@ -294,11 +294,10 @@ sub view {
 				openprint::service::status( $project_index, $service_index, 'Complete' );
 				$Project->add_to_log( @session{'company_id','user_id'}, "Marked Printed from $status" );
 				foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
-					next if $PA->Paper()->type() ne 'Roll';
 					$PA->delete();
 					$Project->add_to_log( @session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
 				} # end foreach
-# shuffle jobs on the print schedule
+				# shuffle jobs on the print schedule
 
 			} else {
 				openprint::service::status( $project_index, $service_index, 'Ordered' );

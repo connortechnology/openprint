@@ -93,6 +93,14 @@ function toggleContent( divID, page_to_display, inputs, page_to_hide ) {
 
 } // end function toggleContent
 
+function AjaxLoadContent( divID, page, parameters, message ) {
+	var div = $( divID );
+	if ( div ) {
+		if ( message ) div.innerHTML = message;
+		else div.innerHTML = 'Please wait....';
+	} // end if
+	new Ajax.Updater( divID, page, { method: 'get', parameters: parameters, evalScripts: true } );
+}
 
 function LoadContent( divID, page, inputs, message ) {
 	var div = $( divID );

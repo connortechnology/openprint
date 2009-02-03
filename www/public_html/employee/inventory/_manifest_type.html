@@ -152,7 +152,11 @@
 		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Cost (/CWT):</label>
-			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $param{'cost-'.$$variable{'type_id'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+		</p>
+		<p>
+			<label>Supplier Invoice#:</label>
+			<input type="text" id="supplier_invoice-<?type_id?>" name="supplier_invoice-<?type_id?>" value="<? echo ( $$variable{'Type'}->supplier_invoice() ) ?>" />
 		</p>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<p>

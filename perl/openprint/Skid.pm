@@ -479,6 +479,14 @@ sub last_seen_days {
 	return int( (time - Date::Parse::str2time($$self{'updated_on'})) / (24*60*60) );
 }
 
+sub Manifest {
+	my $self = $_[0];
+	foreach my $MC ( openprint::ManifestContent::find('skid_id'=>$$self{id}) ) {
+		return $MC->Manifest();
+	} # end foreach MC
+	return new openprint::Manifest();
+} # end sub Manifest
+
 
 1;
 __END__

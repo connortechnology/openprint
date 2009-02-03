@@ -1,28 +1,23 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
-<? if ( $$variable{'error'} ) ?>
-<p class="error"><?error?></p>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<p class="information"><?information?></p>
-<? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 Please select a Manifest to view/edit.<br>
 <form name="f1" method="post" action="manifest.html">
 	<fieldset class="filters"><legend>Choose Manifest</legend>
 		<p>
 			<label for="manifest_id">Manifest ID #</label>
-			<input type="text" id="manifest_id" name="manifest_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
+			<input type="text" id="manifest_id" name="manifest_id" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
-			<input type="text" id="manifest_like" name="manifest_like" size="10" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_manifests.html', Serialize( document.forms.f1 ) );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_manifests.html', Serialize( document.forms.f1 ) );",'','Show' ); ) ?>
+			<input type="text" id="manifest_like" name="manifest_like" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "AjaxLoadContent( 'Results', '_manifests.html', document.forms.f1.serialize() );",'','Show' ); ) ?>
 		</p>
 		<p>
 			<label for="po_id">Purchase Order:</label>
-			<input type="text" id="po_id" name="po_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
+			<input type="text" id="po_id" name="po_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', 'f1.submit();','','Go' ); ) ?>
 		</p>
 		<p>
 			<label for="docket">Docket:</label>
-			<input type="text" id="docket" name="docket" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
+			<input type="text" id="docket" name="docket" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', 'f1.submit();','','Go' ); ) ?>
 		</p>
 	</fieldset>
@@ -31,7 +26,7 @@ Please select a Manifest to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p><label>Vendor:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-			<select name="supplier_id" onchange="load('Results',this.form);">
+			<select name="supplier_id" onchange="AjaxLoadContent('Results','_manifests.html', this.form.serialize() );">
 				<option value="">All</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
 			</select>
@@ -60,7 +55,7 @@ Please select a Manifest to view/edit.<br>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_manifests.html', Serialize( document.forms.f2 ) );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f2.serialize() );", '', 'Show Results' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'manifest.html', 'Add New Manifest' ),
 				); ) ?>
 		</p>

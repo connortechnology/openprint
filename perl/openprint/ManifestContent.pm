@@ -21,11 +21,11 @@ $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'manifest_id'	=>	'manifest_id',
-	'skid_id'		=>	'skid_id',
-	'quantity'		=>	'quantity',
-	'type_id'		=>	'type_id',
+	'id'				=>	'id',
+	'manifest_id'		=>	'manifest_id',
+	'skid_id'			=>	'skid_id',
+	'quantity'			=>	'quantity',
+	'type_id'			=>	'type_id',
 );
 
 %transforms = (
@@ -89,6 +89,10 @@ sub Skid {
 sub Manifest {
 	return new openprint::Manifest( $_[0]{manifest_id} );
 } # end sub Manifest
+
+sub Type {
+	return new openprint::Manifest_Content_Type( $_[0]{type_id} );
+} # end sub Type
 
 
 1;

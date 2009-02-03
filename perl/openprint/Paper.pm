@@ -28,7 +28,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 my $debug = 0;
 
 my @fields = (
-		'id',
+		'id', 'created_on',
 		'owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
