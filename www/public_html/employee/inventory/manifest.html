@@ -43,6 +43,18 @@ function delete_content( c_id ) {
 		evalScripts: true,
 	 } );
 }
+
+function add_content(form, type_id) {
+	new Ajax.Request( '_manifest_content.html', {method: 'get', parameters: {
+		action:		'Add',
+		type_id:    type_id,
+		manifest_id: form.manifest_id.value,
+		rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
+		skid_id:    $('skid_id-'+type_id+'-').value,
+		docket:     $('docket-'+type_id+'-').value,
+		qty_lbs:    $('qty_lbs-'+type_id+'-').value,
+		}, onSuccess: function (transport) { new Insertion.Before('totals-'+type_id, transport.responseText);return true; }, evalScripts: true} );
+}
 </script>
 <div class="Manifest">
 	<form name="f1" id="f1" method="post" action="manifest.html">
