@@ -51,7 +51,7 @@
 				<td colspan="2">
 					<select id="Location" name="Location">
 						<? echo (
-							my @data = ( '', 'select', sql::execute( $log, $dbh, q{SELECT id, name FROM Locations ORDER BY lower(name)} ) );
+							my @data = ( '', 'select', map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') );
 							return ssi::make_drop_down( \@data );
 						) ?>
 					</select>

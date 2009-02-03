@@ -18,8 +18,12 @@ require openprint::Order;
 require openprint::OrderedProduct;
 require openprint::usergroup;
 require openprint::press_schedule;
+<<<<<<< HEAD:perl/openprint/order.pm
 require openprint::Payment;
 require openprint::Tax;
+=======
+require openprint::PaperAllocation;
+>>>>>>> ab2ff4e4332d53c61ef8bf7f99f9d42a0e92bd05:perl/openprint/order.pm
 
 sub delete_order {
 	my ( $log, $dbh, $order_id ) = @_;
@@ -1400,6 +1404,12 @@ sub cancel_order {
 		$Project->save();
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
 		openprint::press_schedule::remove( $Project->id() );
+
+		# Free up any stock allocated to this project
+		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, qq`De-allocated $$PA{'quantity'}$$PA{'units'} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{'paper_id'}">` . $PA->Paper()->to_string() . ($PA->skid_id()?qq`</a> on skid <a href="/employee/inventory/skids.html?skid_id=$$PA{skid_id}">$$PA{skid_id}</a>` : '') );
+			$PA->delete();
+		} # end foreach PA
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );
 } # end sub cancel_order

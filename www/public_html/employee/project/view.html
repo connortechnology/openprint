@@ -18,7 +18,7 @@ function open_window( page ) {
 <? endif ( $$variable{'information'} ) ?>
 <!--#include virtual="/includes/project_header.html" -->
 <br/>
-<form name="f1" method="post" action="project_view.html?ProjectIndex=<?ProjectIndex?>">
+<form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
 		<tr> 
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
@@ -221,9 +221,6 @@ function open_window( page ) {
 			if ( $$variable{'ShippingType'} eq 'Delivery' and $$variable{'ProjectStatus'} ne 'Shipped' ) {
 
 				$html .= ssi::writeButton( $log, $dbh, 'Shipped', 'shipped.gif', "f1.btnFunction.value='Shipped';f1.submit();", '', 'Shipped' );
-			} else {
-				$html .= ssi::writeButton( $log, $dbh, 'Shipped', 'shipped.gif', "f1.btnFunction.value='Shipped';f1.submit();", '', 'Shipped' );
-				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
 			} # end if
 			if ( $$variable{'ShippingType'} eq 'Customer Pickup' and $$variable{'ProjectStatus'} ne 'Picked Up' ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
@@ -257,6 +254,7 @@ function open_window( page ) {
 	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 </form>
 <br/>
+<? if ( $$variable{'Project'}->docket() ) ?>
 <div class="leftColumn">
 <? eval (
 	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() );
@@ -289,6 +287,7 @@ function open_window( page ) {
 		</fieldset>
 	</form>
 </div>
+<? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend>Allocated</legend>
 	<table class="List">
@@ -331,9 +330,11 @@ function open_window( page ) {
 		) ?>
 	</table>
 </fieldset>
+<? if ( $$variable{'Project'}->docket() ) ?>
 <div id="StockCheckout">
 <!--#include virtual="/employee/project/_stock_checkout.html"-->
 </div>
+<? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend>Modification History</legend>
 	<table class="List">

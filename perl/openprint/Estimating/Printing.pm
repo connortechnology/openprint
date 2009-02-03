@@ -2037,8 +2037,9 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 				if ( $$sig_specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$sig_specs{'PreviousStockType'} ) ) {
 					next;
 				} # end if
-				if ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
-$imp->display('Dropping due to previous grain direction');
+				if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
+					next if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};	
+				} elsif ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
 					next;
 				} # end if
 

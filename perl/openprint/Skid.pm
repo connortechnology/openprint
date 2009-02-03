@@ -215,7 +215,7 @@ sub save {
 
 sub delete {
 	my $self = shift;
-	sql::update( undef, undef, 'Skids', ['index=?', $$self{'id'}], 'deleted', 1 );
+	sql::update( undef, undef, 'Skids', ['id=?', $$self{'id'}], 'deleted', 1 );
 } # end sub delete
 
 sub destroy {
@@ -344,6 +344,8 @@ sub Location {
 
 sub Contents {
     my $self = shift;
+	return if ! $$self{'id'};
+
     my %params = @_;
     $params{'skid_id'} = $$self{'id'};
 
@@ -450,9 +452,10 @@ sub empty {
 } # end sub empty
 
 sub rfidtag_id {
-	my ( $self, $rfidtag_id ) = @_;
+	my $self = shift;
 
-	if ( $rfidtag_id ) {
+	if ( @_ ) {
+		my $rfidtag_id = shift;	
 		my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
 		my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
 		$log->error( $error ) if $error;

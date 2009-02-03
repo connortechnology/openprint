@@ -20,7 +20,7 @@ The following errors occurred:<br/>
 		my $rowclass;
 		foreach my $Allocation ( @Allocations ) {
 			my $Paper = $Allocation->Paper();
-			$html .= sprintf( '<tr%s><td>%s</td><td><a href="/employee/inventory/paper_details.html?paper_id=%d">%s</a></td><td><a href="/employee/production/project_view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td>',
+			$html .= sprintf( '<tr%s><td>%s</td><td><a href="/employee/inventory/paper_details.html?paper_id=%d">%s</a></td><td><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td>',
 				$rowclass,
 				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Allocation->created_on() ) ),
 				$Paper->id(),
