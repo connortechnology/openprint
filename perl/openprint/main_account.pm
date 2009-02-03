@@ -129,6 +129,7 @@ sub registration {
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
 	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE lower(strName) = lower(?) AND upper(strPostalCode) = ? AND (deleted=false OR deleted IS NULL)}, @openprint::param{'company_name','postalcode'} );
 	if ( ! $cust_id ) {
+		$openprint::param{'name'} = $openprint::param{'company_name'};
 
 		my $Company = new openprint::Company();
 		$Company->set( \%openprint::param );
