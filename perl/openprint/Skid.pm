@@ -15,6 +15,8 @@ require openprint::Paper;
 require openprint::RFIDTag;
 require openprint::Skid_Verification;
 require openprint::SkidContent;
+require openprint::Manifest;
+require openprint::ManifestContent;
 
 my $debug = 1;
 
@@ -482,6 +484,10 @@ sub last_seen_days {
 	my $self = $_[0];
 	return int( (time - Date::Parse::str2time($$self{'updated_on'})) / (24*60*60) );
 }
+sub age_days {
+	my $self = $_[0];
+	return int( (time - Date::Parse::str2time($$self{'created_on'})) / (24*60*60) );
+}
 
 sub Manifest {
 	my $self = $_[0];
@@ -490,6 +496,11 @@ sub Manifest {
 	} # end foreach MC
 	return new openprint::Manifest();
 } # end sub Manifest
+
+sub ManifestContents {
+	my $self = $_[0];
+	return openprint::ManifestContent::find('skid_id'=>$$self{id});
+} # end sub ManifestContents
 
 1;
 __END__

@@ -4,8 +4,7 @@
 	if ( $$variable{'C'} ) {
 		my $C = $$variable{'C'};
 		my $tag_id = $C->Skid()->rfidtag_id();
-		my @SkidContents =  $$variable{'C'}->Skid()->Contents();
-		$html .= sprintf('<tr id="tr-%1$d" title="%3$d"><td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $tag_id,  $SkidContents[0]->paper_id() );
+		$html .= sprintf('<tr id="tr-%1$d"><td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $tag_id );
 		$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a></td>', $C->id(), $C->skid_id() );
 		$html .= sprintf( q{<td><input type="text" id="docket-%3$d-%1$d" size="8" name="docket-%3$d-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/\D/,'');" /></td>}, $C->id(), $C->docket(), $$variable{'type_id'} );
 		$html .= sprintf( q{<td><input type="text" id="qty_lbs-%4$d-%1$s" name="qty_lbs-%4$d-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%4$d-%1$s') );" /></td><td><input type="text" id="qty_kgs-%4$d-%1$s" name="qty_kgs-%4$d-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%4$d-%1$s') );" /></td>}, $C->id(), $C->quantity(), $C->quantity()/2.2046, $$variable{'type_id'} );

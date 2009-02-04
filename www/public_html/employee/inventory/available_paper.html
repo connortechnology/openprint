@@ -1,13 +1,5 @@
 <? eval ( 
-	if ( defined $param{'Owner'} ) {
-		foreach my $key ( 'Owner','Manufacturer','Name','Finish','Colour','Weight','Type','fsc_code','width','height','OrLarger', 'last_seen','location_id' ) {
-			if ( ref $param{$key} eq 'ARRAY' ) {
-				$session{'/employee/inventory/available_paper.html?'.$key} = join(';', @{$param{$key}} );
-			} else {
-				$session{'/employee/inventory/available_paper.html?'.$key} = $param{$key};
-			} # end if
-		} # end foreach
-	} # end if
+	ssi::save_params('/employee/inventory/available_Paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id' );
 ) ?>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
@@ -69,8 +61,7 @@
 		} // end for
 	} // end function highlight_paper
 </script>
-<? if ( $$variable{'error'} ) ?><p class="error"><?error?></p><? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?><p class="information"><?information?></p><? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 Please select a Paper to view/edit.<br>
 <form name="f1" method="post" action="available_paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
@@ -324,10 +315,7 @@ Please select a Paper to view/edit.<br>
 							next;
 						} # end if 
 					} # end if 
-					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->created_on());
-					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
-					$skid_age{$days} += 1;
-
+					$skid_age{$Skid->age_days()} += 1;
                     $last_seen{$Skid->last_seen_days()} += 1;
 					$skids += 1;
 

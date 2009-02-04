@@ -1291,6 +1291,7 @@ sub _manifest_content {
 			return;
 		} # end if
 		my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
+		$variable{'Manifest'} = $Manifest;
 		if ( $param{'manifest_id'} and ! $Manifest->id() ) {
 			$variable{'error'} .= $Manifest->save({'id'=>$param{'manifest_id'}});
 		} # end if
@@ -1316,7 +1317,6 @@ sub _manifest_content {
 						'quantity'		=>	sprintf('%d', $param{"qty_lbs"}),
 						} );
 				$variable{'C'} = $MC;
-				$variable{'Manifest'} = $Manifest;
 				$variable{'type_id'} = $param{'type_id'};
 			} # end if
 		} # end if

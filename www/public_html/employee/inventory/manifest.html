@@ -90,7 +90,6 @@ function add_content(form, type_id) {
 		</fieldset>
 		<div id="Types">
 		<? echo (
-			require openprint::Manifest_Content_Type;
 			my $html = '';
 			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_type.html' );
 			
