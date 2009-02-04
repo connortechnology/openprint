@@ -37,6 +37,8 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub view {
 
 	my $project_index = $param{'ProjectIndex'};
+	$project_index = $param{'project_id'} if ! $project_index;
+
 	my $Project = new openprint::Project( $project_index );
 	my $order_id = $param{'OrderID'};
 	if ( ! $order_id ) {

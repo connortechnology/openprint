@@ -1573,6 +1573,7 @@ sub purchase_order_edit {
 		my $U = new openprint::User( $session{'user_id'} );
 		my $C = $U->Company();
 		$PO->set( {
+			'currency_id'		=>	openprint::Currency::get_current()->id(),
 			'company_id'		=>	$C->id(),
 			'created_by'		=>	$U->id(),
 			'shipto_contact'	=>	$U->name(),
@@ -1587,7 +1588,7 @@ sub purchase_order_edit {
 			'shipto_fax'		=>	$C->fax(),
 			'shipto_email'		=>	$U->email(),
 		} );
-		$PO->save();
+		$variable{'error'} .= $PO->save();
 	} # end if
 	$variable{'PurchaseOrder'} = $PO;
 } # end sub purchase_order_edit

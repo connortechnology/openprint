@@ -10,12 +10,8 @@ function open_window( page ) {
 	window.open(page,'label','newWin,width=610,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 }
 </script>
-<? if ( $$variable{'error'} ) ?>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<div class="information"><?information?></div>
-<? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $$variable{'Project'}->id() ) ?>
 <!--#include virtual="/includes/project_header.html" -->
 <br/>
 <form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
@@ -358,4 +354,14 @@ function open_window( page ) {
 	<? endwhile ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{'ProjectLog'}},0,4; ) ?>
 	</table>
 </fieldset>
-
+<? else ( $$variable{'Project'}->id() ) ?>
+<div class="error">
+<? echo ( 
+	if ( $param{'project_id'} ) {
+		return 'Project ' . $param{'project_id'} . ' does not exist.<br/>';
+	} elsif ( $param{'ProjectIndex'} ) {
+		return 'Project ' . $param{'ProjectIndex'} . ' does not exist.<br/>';
+	} # end if
+) ?>
+</div>
+<? endif ( $$variable{'Project'}->id() ) ?>

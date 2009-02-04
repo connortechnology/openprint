@@ -160,7 +160,14 @@ sub signature_calc {
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-		@equipment = openprint::Equipment::find( 'strid'=> $$specs{"ddmEquipment$qty_index"} );
+		if ( ! $$specs{"ddmEquipment$qty_index"} ) {
+			$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
+		} else {
+			@equipment = openprint::Equipment::find( 'id'=> $$specs{"ddmEquipment$qty_index"} );
+			if ( ! @equipment ) {
+				$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
+			} # end if
+		} # end if
 	} else {
 		@equipment = @possible_equipment;
 	} # end if
@@ -186,7 +193,7 @@ sub signature_calc {
 	} # end foreach Equipment
 #$openprint::log->debug("Breakdown: $$specs{'hdnBreakdown'.$qty_index}");
 	$results{'alert'} .= $error;
-$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . ($bestEquipment ? $bestEquipment->strid() : '' ) . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets ';
+	$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . ($bestEquipment ? $bestEquipment->strid() : '' ) . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets ';
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
 #$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if $debug;
@@ -209,13 +216,11 @@ sub calc {
 	my $services = $Project->services();
 	if ( ! $$services{''} ) {
 		$$specs{'alert'} .= 'Unable to find project service.<br/>';
-		$$specs{'Status'} = 'uncalculated';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	if ( ! $Project->signatures() ) {
 		$$specs{'alert'} .= 'Unable to find any signatures to stitch.<br/>';
-		$$specs{'Status'} = 'uncalculated';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	# Figure out whether we need a cover
@@ -382,7 +387,14 @@ $openprint::log->debug("Overriding imposiion");
 
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-			@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
+			if ( ! $$specs{"ddmEquipment$qty_index"} ) {
+				$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
+			} else {
+				@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
+				if ( ! @equipment ) {
+					$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
+				} # end if
+			} # end if
 		} else {
 			@equipment = @possible_equipment;
 		} # end if
@@ -584,7 +596,7 @@ sub runtime {
 	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
 
 	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-	my @Equipment = openprint::Equipment::find('strid'=>$$specs{'ddmEquipment'.$qty_index});
+	my @Equipment = openprint::Equipment::find('id'=>$$specs{'ddmEquipment'.$qty_index});
 	return 0 if @Equipment != 1;
 
 	my $Equipment = $Equipment[0];
