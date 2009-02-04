@@ -440,9 +440,11 @@ sub rfidtag_id {
 
 	if ( @_ ) {
 		my $rfidtag_id = shift;	
-		my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
-		my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
-		$log->error( $error ) if $error;
+		if ( $rfidtag_id ) {
+			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+			my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
+			$log->error( $error ) if $error;
+		} # end if
 		$$self{'rfidtag_id'} = $rfidtag_id;
 	} # end if
 	return $$self{'rfidtag_id'};

@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable);
+use vars qw(%variable %fields %transforms %defaults );
 *variable = \%openprint::variable;
 
 
@@ -287,11 +287,15 @@ sub save {
 
 	return $error if $error;
 
+	my %sql = map { $_, $$self{$_} } @fields;
+	delete $sql{'created_on'};
+	
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_id_seq')} );
+		$sql{'id'} = $$self{'id'};
 
-		$error = sql::insert( undef, undef, 'Papers', ['id', $$self{'id'}, map { $_, $$self{$_} } @fields ] );
+		$error = sql::insert( undef, undef, 'Papers', \%sql );
 
        # Add record to audit log - action "New Paper".
        openprint::logs::insertLogRecord('63', "Paper ID: " . $$self{'id'},);
@@ -318,7 +322,7 @@ sub save {
 		} # end if
 
     } else {
-        if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], [ map { $_, $$self{$_} } @fields ] ) ) {
+        if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
