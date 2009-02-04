@@ -182,6 +182,18 @@ sub credit {
 
 sub stock {
 	require openprint::ManifestContent;
+
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		foreach my $Type ( openprint::Manifest_Content_Type::find('cost'=>undef) ) {
+			$param{'cost-'.$Type->id()} =~ s/[^\d\.]//g;
+			if ( $param{'units-'.$Type->id()} eq '/lb' ) {
+				$param{'cost-'.$Type->id()} *= 100;
+			} # end if
+			if ( ( $param{'supplier_invoice-'.$Type->id()} ne $Type->supplier_invoice() ) or ( $param{'cost-'.$Type->id()} != $Type->cost() ) ) {
+				$variable{'error'} .= $Type->save({'supplier_invoice'=>$param{'supplier_invoice-'.$Type->id()}, 'cost'=>$param{'cost-'.$Type->id()} });
+			} # end if
+		} # end foreach
+	} # end if
 } # end sub stock
 
 1;

@@ -15,7 +15,7 @@ require ssi;
 require misc;
 require openprint::Manifest;
 
-my $debug = 1;
+my $debug = 0;
 
 $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';

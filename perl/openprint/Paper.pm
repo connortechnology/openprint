@@ -483,7 +483,7 @@ sub quality {
 			$$self{'quality'} = $quality;
         } # end if
     } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
-        @$self{'quality'} = sql::execute( undef, undef, q{SELECT longname FROM PaperQualities WHERE id=?}, $$self{'quality_id'} );
+        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->longname();
     } # end if
     return $$self{'quality'};
 } # end sub quality

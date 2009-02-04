@@ -161,18 +161,18 @@ sub load {
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 
+	delete $$self{'Contents'};
+	@{$$self{'Contents'}} = $self->Contents();
 	%{$$self{'Paper'}} = ();
 	if ( $$self{'id'} ) {
-		my @data = sql::execute( undef, undef, q{SELECT paper_id, quantity, units FROM Skid_Contents WHERE skid_id=?}, $$self{'id'} );
-		while ( my ( $paper_id, $qty, $units ) = splice @data, 0, 3 ) {
-			$$self{'Paper'}{$paper_id} += $qty;
-		} # end while
+		foreach my $C ( $self->Contents() ) {
+			$$self{'Paper'}{$$C{'paper_id'}} += $$C{'quantity'};
+		} # end foreach
 	} # end if
 } # end sub load
 
 sub save {
 	my $self = shift;
-$log->warn("Saving skid");
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	my $ac = sql::start_transaction( $dbh );
 	my @sql = ( 
@@ -318,6 +318,10 @@ sub Location {
 sub Contents {
     my $self = shift;
 	return if ! $$self{'id'};
+
+	if ( $$self{'Contents'} ) {
+		return @{$$self{'Contents'}};
+	} # end if
 
     my %params = @_;
     $params{'skid_id'} = $$self{'id'};
@@ -486,7 +490,6 @@ sub Manifest {
 	} # end foreach MC
 	return new openprint::Manifest();
 } # end sub Manifest
-
 
 1;
 __END__

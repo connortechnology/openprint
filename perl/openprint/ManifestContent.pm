@@ -15,7 +15,7 @@ require ssi;
 require misc;
 require openprint::Manifest_Content_Type;
 
-my $debug = 1;
+my $debug = 0;
 
 $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
@@ -93,6 +93,13 @@ sub Manifest {
 sub Type {
 	return new openprint::Manifest_Content_Type( $_[0]{type_id} );
 } # end sub Type
+
+sub units {
+	my $Type = $_[0]->Type();
+	if ( $Type->paper_id() ) {
+		return $Type->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets';
+	} # end if
+} # end sub units
 
 
 1;
