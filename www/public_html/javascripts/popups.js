@@ -183,3 +183,10 @@ className:"alphacube", width:width, height:height
 	} // end if
 	contentWin.setAjaxContent(url, null , true);
 }
+
+function toggleInput( name ) {
+$('txt'+name).value='';
+$(name).selectedIndex=0;
+$(name).toggle();
+$('txt'+name).toggle();
+}
