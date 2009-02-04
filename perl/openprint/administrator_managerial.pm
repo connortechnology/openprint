@@ -413,7 +413,7 @@ if ( 0 ) {
 
 			sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
 # add them back in 
-			my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
+			my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (category_id,company_id) VALUES ( ?, ? )} );
 			foreach my $cat ( $openprint::param{'selectCustomerCategories'} ) {
 				if ( sets::isin( $cat, \@customercategories ) ) {
 					$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
@@ -439,6 +439,8 @@ if ( 0 ) {
 		$index = $Company->next();
 		$Company->delete();
 		$Company = new openprint::Company( $index );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Undelete' ) {
+		$Company->undelete();
 	} # end if btnFunction
 
 # we no longer default to displaying the first record.  The user must select one.,

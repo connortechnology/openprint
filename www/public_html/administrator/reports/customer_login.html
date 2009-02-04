@@ -1,5 +1,5 @@
-Choose report criteria and click show results. You may the download the the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
-<br>
+Choose report criteria and click show results. You may the download the the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
+<br/>
 <form name="f1" method="post" action="customer_login.html">
 	<fieldset class="filters">
 		<p>
@@ -7,8 +7,7 @@ Choose report criteria and click show results. You may the download the the resu
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
 <? echo (
-
-    ssi::make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)','usergroup'=>'Sales' ) ], $r->param('ddmEmployees') );
+    ssi::make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)','usergroup'=>'Sales' ) ], $param{'ddmEmployees'} );
 ) ?>
 			</select>
 		</p>
@@ -80,9 +79,9 @@ Choose report criteria and click show results. You may the download the the resu
 		</p>
 		<p>
 			<label>Active?</label>
-				<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( 'checked="checked"' if $$variable{'rdbActive'} eq 'Y' ) ?> />
+				<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( ssi::checked( $$variable{'rdbActive'} eq 'Y' ); ) ?> />
 				<label class="radio" for="rdbActiveY">Yes</label>
-				<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( 'checked="checked"' if $$variable{'rdbActive'} eq 'N' ) ?> />
+				<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( ssi::checked( $$variable{'rdbActive'} ne 'Y' ); ) ?> />
 				<label class="radio" for="rdbActiveN">No</label>
 		</p>
 		<p class="buttons">

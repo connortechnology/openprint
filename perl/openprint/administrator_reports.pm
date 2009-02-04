@@ -287,7 +287,7 @@ sub customer_login {
 		$query .=  "'\$' || (SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
         $query .= " (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) AS LastOrderDate ";
 		$query .=  "FROM Company, Users ";
-		$query .=  "WHERE date(Company.dtmdateentered) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
+		$query .=  "WHERE date(Company.dtmdateentered) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') AND Company.deleted != true ";
 		$query .=  "AND Users.CompanyIndex = Company.Index ";
 		$query .=  "AND Users.Index = (SELECT MIN(Index) FROM Users WHERE Users.CompanyIndex = Company.Index ) ";
       if ( $r->param('ddmEmployees') ) {
@@ -333,7 +333,7 @@ sub customer_login {
         $query .=  "(SELECT COUNT(Orders.Index) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
         $query .=  "(SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index )";
         $query .= ", (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) AS LastOrderDate ";
-        $query .=  "FROM Company WHERE date(Company.dtmdateentered) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
+        $query .=  "FROM Company WHERE date(Company.dtmdateentered) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') AND Company.deleted != true ";
 		#$query .=  " AND Users.Index = (SELECT MIN(Users.Index) FROM Users WHERE Users.CompanyIndex = Company.lndex )";
 
 		if ( $r->param('ddmEmployees') ) {

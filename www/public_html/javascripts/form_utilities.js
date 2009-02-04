@@ -548,17 +548,22 @@ function fmCheck( form ) {
 	if ( fmChange == 1 ) {
 		if ( ( ! changed(form) ) || confirm("Are you sure you want to leave this record without saving your changes?") ) {
 			fmChange == 0;
-						form.submit();
+			form.submit();
 		} 
 	} else if (fmChange == 2) {
 		fmChange = 0;
 		if ( confirm("Are you sure you want to delete this record?") ) {
-						form.submit();
+			form.submit();
 		} 
 	} else if (fmChange == 3) {
 		fmChange = 0;
 		if ( confirm("Are you sure you want to save your changes?") ) {
-						form.submit();
+			form.submit();
+		} 
+	} else if ( form.btnFunction && form.btnFunction.value == 'Undelete' ) {
+		fmChange = 0;
+		if ( confirm("Are you sure you want to undelete this company?") ) {
+			form.submit();
 		} 
 	} else {
 		form.submit();

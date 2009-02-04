@@ -50,7 +50,7 @@ my %fields = (
 	'CustomGreeting'	=>	'strCustomGreeting',
 	'Website'			=>	'strWebURL',	
 	'notes'				=>	'notes',
-
+	'deleted'			=>	'deleted',
 ); # end %fields
 
 my %transforms = (
