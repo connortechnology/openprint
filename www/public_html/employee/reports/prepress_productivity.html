@@ -42,10 +42,10 @@
 </fieldset>
 <? eval ( 
 		my %params = ( 'type'=>['E','A'], 'order'=>'lower(strlastname),lower(strfirstname)' );
-		if ( $openprint::param{'ddmEmployee'} eq 'Prepress' ) {
+		if ( $param{'ddmEmployee'} eq 'Prepress' or ! $param{'ddmEmployee'} ) {
 			$params{'usergroup'} = 'Prepress';
-		} elsif ( $openprint::param{'ddmEmployee'} ne 'All' ) {
-			$params{'id'} = $openprint::param{'ddmEmployee'};
+		} elsif ( $param{'ddmEmployee'} ne 'All' ) {
+			$params{'id'} = $param{'ddmEmployee'};
 		} # end if
 		@{$$variable{'Results'}} = openprint::User::find( %params );
 		@{$$variable{'Projects'}} = openprint::Project::find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
@@ -59,14 +59,14 @@
 		} # end foreach
 
 		foreach my $Project ( @{$$variable{'Projects'}} ) {
-			my %services = $Project->get_services();
-			my $proofs_service_index = $services{'Proofs'}[0] if $services{'Proofs'};
-			$proofs_service_index = $services{'FilmStripping'}[0] if $services{'FilmStripping'};
+			my $services = $Project->services();
+			my $proofs_service_index = $$services{'Proofs'}[0] if $$services{'Proofs'};
+			$proofs_service_index = $$services{'FilmStripping'}[0] if $$services{'FilmStripping'};
 			next if ! $proofs_service_index;
-			my %proofs_specs = openprint::service::get_specifications_pairs( $log, $dbh, $Project->id(), $proofs_service_index );
+			my $proofs_specs = openprint::service::get_specs_ref( $Project, $proofs_service_index );
 			my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), $proofs_service_index );
-			if ( ! $operator_id and $proofs_specs{'txtEmployeeName'} ) {
-				my $operator = $employees{$proofs_specs{'txtEmployeeName'}};
+			if ( ! $operator_id and $$proofs_specs{'txtEmployeeName'} ) {
+				my $operator = $employees{$$proofs_specs{'txtEmployeeName'}};
 				$operator_id = $operator->id();
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $proofs_service_index], 'operator_id', $operator->id() );
 			} # end if
@@ -78,16 +78,16 @@
 			my $qty_index = $Project->ordered_quantity_index();
 
 			foreach my $index ( $Project->signatures() ) {
-				my ( $signature_index, $plate_qty ) = openprint::service::get_specifications( $log, $dbh, $Project->id(), $index, 'SignatureIndex', 'txtPlateQuantity' );
+				my ( $signature_index, $plate_qty ) = openprint::service::get_specifications( $log, $dbh, $Project->id(), $index, 'SignatureIndex', 'txtPlateQuantity'.$qty_index );
 				$$variable{$operator_id}->{'PlateCount'} += $plate_qty;
 
 				my @proofs;
-				foreach my $key ( keys %proofs_specs ) {
-					push @proofs, $proofs_specs{$key} if $key =~ /^txtProofIndex-$signature_index-\d*-$qty_index$/;
+				foreach my $key ( keys %{$proofs_specs} ) {
+					push @proofs, $$proofs_specs{$key} if $key =~ /^txtProofIndex-$signature_index-\d*-$qty_index$/;
 				} # end foreach
 
 				foreach my $proof_index ( @proofs ) {
-					my ( $quantity, $width, $height, $type ) = @proofs_specs{
+					my ( $quantity, $width, $height, $type ) = @$proofs_specs{
 						"txtProofQuantity-$signature_index-$proof_index-$qty_index",
 						"txtProofWidth-$signature_index-$proof_index-$qty_index",
 						"txtProofHeight-$signature_index-$proof_index-$qty_index",
