@@ -279,10 +279,9 @@ Please select a Paper to view/edit.<br>
 	<table class="List">
 		<tr>
 			<th align="left">Paper ID</th>
-			<th align="left" width="105">FSC</th>
-			<th align="right" width="75">Available</th>
-			<th align="left" width="120">&nbsp;&nbsp;Age</th>
-			<th align="left" width="120">Last Seen</th>
+			<th align="left" width="75">Available</th>
+			<th align="left" width="125">Age</th>
+			<th align="left" width="125">Last Seen</th>
 			<th align="left" width="200">Inventory</th>
 			<th width="40" class="unprintable">&nbsp;</th>
 		</tr>
@@ -339,17 +338,16 @@ $selected = 'style="background-color:yellow;"';
 $selected = '';
 }
 
-				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%s</td><td align="right">%s&nbsp;</td><td align="right">%s&nbsp;</td><td>%s</td><td>%s</td>',
+				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td align="left">%s</td><td align="left">%s</td><td align="left">%s</td><td>%s</td>',
 					$rowclass,
 					$$Paper{'id'},
 					$selected,
 					$$Paper{'id'},
 					$Paper->to_string(),
-					$Paper->fsc_code(),
 					($Paper->in_stock() - $Paper->allocated()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
-					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ' skid'.($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
-					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ' skid'.($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
-					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ' skid'.($skid_location{$_}>1?'s':''). ' - ' . $inventory{$_}.'lbs' } keys %skid_location),
+					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
+					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
+					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_location{$_}>1?'s':''). ' - ' . $inventory{$_}.'lbs' } keys %skid_location),
 					);
 				$html .= '<td align="center" class="unprintable">';
 				$html .= ssi::writeButton( $log, $dbh, 'Allocate'.$Paper->id(), 'allocate.gif', 'allocate_window('.$Paper->id().');', '', 'A' );
