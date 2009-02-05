@@ -169,6 +169,9 @@ sub orders {
 		@products = ( $r->param('ddmProducts') );
 	} # end if
 
+	$$variable{'StartDate'} = sprintf('%.4d-%.2d-%.2d', @openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ); 
+	$$variable{'EndDate'} = sprintf('%.4d-%.2d-%.2d', @openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ); 
+
 	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
 		my @header = ('OrderID', 'Order Date', 'Company Name', 'Status', 'Total');
 		$_ = "SELECT Index, to_char(Orders.dtmOrderDate, 'MM/DD/YYYY'), ".

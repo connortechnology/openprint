@@ -1,15 +1,3 @@
-<script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f1.StartYear.value,document.f1.StartMonth.value,document.f1.StartDay,document.f1.StartDay.value);
-            setDaysDropDown(document.f1.EndYear.value,document.f1.EndMonth.value,document.f1.EndDay,document.f1.EndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-
-</script>
 <form name="f1" method="post" action="orders.html">
 	<fieldset class="filters"><legend>Select Report Criteria</legend>
 			<p>
@@ -102,7 +90,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 		<p class="buttons">
 		<? echo ( $log, $dbh, join('',
 			ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
-			ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='reports_orders.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
+			ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='orders.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
 			ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
 ); ) ?>
 		</p>
