@@ -38,9 +38,18 @@ sub view {
 
 	my $project_index = $param{'ProjectIndex'};
 	$project_index = $param{'project_id'} if ! $project_index;
+	if ( ! $project_index ) {
+		$param{'Docket'} =~ s/\D//g;
+		if ( $param{'Docket'} ) {
+			if ( my @Projects = openprint::Project::find('docket'=>$param{'Docket'}) ) {
+				$project_index = $Projects[0]->id();
+			} # end if
+		} # end if
+	} # end if
 
 	my $Project = new openprint::Project( $project_index );
 	my $order_id = $param{'OrderID'};
+	$order_id = $Project->order_id() if ! $order_id;
 	if ( ! $order_id ) {
 		if ( $param{'Docket'} ) {
 			( $order_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Orders WHERE Index IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND lngDocketNumber=?}, $project_index, $param{'Docket'} );

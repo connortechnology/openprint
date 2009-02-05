@@ -44,7 +44,7 @@
 				} # end foreach
 				return $html;
 			) ?>
-				<tr>
+				<tr class="unprintable">
 					<td>Checkout Stock:</td>
 					<td>
 						<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'StockCheckout', '/employee/project/_stock_checkout.html', {method: 'get', parameters: $('checkout_form').serialize()} );}" />

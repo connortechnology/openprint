@@ -340,9 +340,13 @@ sub paper_details {
 				return;
 			} # end if
 		} # end if
-		$variable{'error'} .= $Paper->save();
+		if ( ! ( $variable{'error'} .= $Paper->save() ) ) {
+			$variable{'information'} .= 'Paper successfully saved.<br/>';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		$Paper->delete();
+		if ( ! ( $variable{'error'} .= $Paper->delete() ) ) {
+			$variable{'information'} .= 'Paper successfully deleted.<br/>';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
 		allocate( undef, @param{'paper_id','Quantity','Project','Docket','specific'} );
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {

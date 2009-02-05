@@ -23,7 +23,7 @@
 		if ( @PI ) {
 			my ( $y, $m, $d ) = $PI[0]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
 			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $y, $m, $d );
-			my @PI = openprint::PaperInventory::find(
+			@PI = openprint::PaperInventory::find(
 				'paper_id'	=>	$param{'paper_id'},
 				'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
 				'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
@@ -37,15 +37,15 @@
 	<p class="unprintable">
 		<label>Date:</label>
 		<span class="DateSelector">
-			<select name="ddmStartYear" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?StartYears?></select>
-			<select name="ddmStartMonth" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?StartMonths?></select>
-			<select name="ddmStartDay" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?StartDays?></select>
+			<select name="ddmStartYear" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?StartYears?></select>
+			<select name="ddmStartMonth" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?StartMonths?></select>
+			<select name="ddmStartDay" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?StartDays?></select>
 			to
 		</span>
 		<span class="DateSelector">
-			<select name="ddmEndYear" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?EndYears?></select>
-			<select name="ddmEndMonth" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?EndMonths?></select>
-			<select name="ddmEndDay" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', Serialize(LogForm) );"><?EndDays?></select>
+			<select name="ddmEndYear" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?EndYears?></select>
+			<select name="ddmEndMonth" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?EndMonths?></select>
+			<select name="ddmEndDay" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?EndDays?></select>
 		</span>
 	</p>
 	<hr/>

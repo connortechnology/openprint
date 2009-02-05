@@ -62,8 +62,8 @@
 					$html .= '</span>';
 					$html .= 'Location:' . $Location->name().'<br/>';
 				} # end if
-				$html .= 'Skid: ' . $Skid->id().'<br/>';
-				$html .= 'RFID: ' . $Skid->rfidtag_id().'<br/>';
+				$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid: %1$d</a><br/>', $Skid->id() );
+				$html .= sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">RFID: %1$s</a><br/>', $Skid->rfidtag_id() );
 				$html .= '<br class="spacer"/>';
 			} # end foreach
 		} # end foreach Allocation
