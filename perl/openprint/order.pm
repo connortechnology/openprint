@@ -1390,6 +1390,7 @@ sub quantity_select_display {
 sub cancel_order {
 	my ( $log, $dbh, $order_id ) = @_;
 
+	my $Order = new openprint::Order( $order_id );
 	sql::update( $log, $dbh, 'Orders', ['Index=?',$order_id], 'strStatus', 'Cancelled' );
 	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
 	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
@@ -1408,6 +1409,7 @@ sub cancel_order {
 		} # end foreach PA
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );
+	$Order->send_cancellation_notice();
 } # end sub cancel_order
 
 

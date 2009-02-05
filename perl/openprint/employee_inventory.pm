@@ -894,7 +894,7 @@ sub allocate {
 					$qty = 0;
 				} # end if
 				push @allocations, @a;
-				if ( (time-Date::Parse::str2time($Skid->updated_on())) > (30*24*60*60) ) {
+				if ( $Skid->last_seen_days() > 30 ) {
 					push @old_skids, @a;
 				} # end if
 				last if ! $qty;
@@ -903,7 +903,8 @@ sub allocate {
 	} else {
 		foreach my $PA ($Paper->allocate( undef, $Projects[0]->id(), $qty, $units ) ) {
 			push @allocations, $PA;
-			if ( $PA->skid_id() and (time-Date::Parse::str2time($PA->Skid()->updated_on())) > (30*24*60*60) ) {
+			
+			if ( $PA->skid_id() and $PA->Skid()->last_seen_days() > 30 ) {
 				push @old_skids, $PA;
 			} # end if
 		} # end foreach PA
@@ -1711,6 +1712,9 @@ sub _manifest_type {
 		$variable{'error'} .= $variable{'Type'}->save({'manifest_id'=>$param{'manifest_id'}});
 		$variable{'type_id'} = $variable{'Type'}->id();
 	} # end if
+}
+
+sub _po_select_vendor {
 }
 
 1;
