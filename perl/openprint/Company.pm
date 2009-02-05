@@ -69,6 +69,7 @@ require openprint::Object;
 	'pricelist_id'	=>	undef,
 	'activation'	=>	'N',
 	'mailinglist'	=>	'N',
+	'deleted'		=>	0,
 );
 
 my $debug = 1;

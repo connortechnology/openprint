@@ -70,6 +70,7 @@ my %defaults = (
 	'AccountActivation'	=>	'N',
 	'Reseller'	=>	'N',
 	'Supplier'	=>	'N',
+	'deleted'		=>	0,
 );
 
 sub new {

@@ -220,7 +220,7 @@ function gsm_to_mweight( form ) {
 				<? echo ( 
 					my $html;
 					if ( $$variable{'Skid'}->created_on() ) {
-						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Skid'}->created_on()) );
+						$html .= Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->created_on()) );
 						$html .= ' by ' . new openprint::User( $$variable{'Skid'}->created_by_id() )->name();
 					} # end if
 					return $html;
