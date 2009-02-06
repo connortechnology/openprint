@@ -1,13 +1,5 @@
 <? eval ( 
-	if ( defined $param{'Owner'} ) {
-		foreach my $key ( 'Owner','Manufacturer','Name','Finish','Colour','Weight','Type','fsc_code','width','height','OrLarger', 'last_seen','location_id' ) {
-			if ( ref $param{$key} eq 'ARRAY' ) {
-				$session{'/employee/inventory/available_paper.html?'.$key} = join(';', @{$param{$key}} );
-			} else {
-				$session{'/employee/inventory/available_paper.html?'.$key} = $param{$key};
-			} # end if
-		} # end foreach
-	} # end if
+	ssi::save_params('/employee/inventory/available_Paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id' );
 ) ?>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
@@ -69,8 +61,7 @@
 		} // end for
 	} // end function highlight_paper
 </script>
-<? if ( $$variable{'error'} ) ?><p class="error"><?error?></p><? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?><p class="information"><?information?></p><? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 Please select a Paper to view/edit.<br>
 <form name="f1" method="post" action="available_paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
@@ -288,10 +279,9 @@ Please select a Paper to view/edit.<br>
 	<table class="List">
 		<tr>
 			<th align="left">Paper ID</th>
-			<th align="left" width="105">FSC</th>
-			<th align="right" width="75">Available</th>
-			<th align="left" width="120">&nbsp;&nbsp;Age</th>
-			<th align="left" width="120">Last Seen</th>
+			<th align="left" width="75">Available</th>
+			<th align="left" width="125">Age</th>
+			<th align="left" width="125">Last Seen</th>
 			<th align="left" width="200">Inventory</th>
 			<th width="40" class="unprintable">&nbsp;</th>
 		</tr>
@@ -314,7 +304,7 @@ Please select a Paper to view/edit.<br>
 				my $skids = 0;
 				foreach my $Skid ( $Paper->skids() ) {
 					if ( $session{'/employee/inventory/available_paper.html?last_seen'} ) {
-						next if Date::Parse::str2time($Skid->updated_on()) < ( time - ( $session{'/employee/inventory/available_paper.html?last_seen'} * 24 * 60 * 60 ) );
+						next if $Skid->last_seen_days() < $session{'/employee/inventory/available_paper.html?last_seen'};
 					} # end if
 
 					if ( @location_ids ) {
@@ -324,12 +314,8 @@ Please select a Paper to view/edit.<br>
 							next;
 						} # end if 
 					} # end if 
-					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->created_on());
-					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
-					$skid_age{$days} += 1;
-					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->created_on());
-					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
-                    $last_seen{$days} += 1;
+					$skid_age{$Skid->age_days()} += 1;
+                    $last_seen{$Skid->last_seen_days()} += 1;
 					$skids += 1;
 
 					$skid_location{$Skid->Location()->Root()->id()} += 1;
@@ -352,17 +338,16 @@ $selected = 'style="background-color:yellow;"';
 $selected = '';
 }
 
-				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%s</td><td align="right">%s&nbsp;</td><td align="right">%s&nbsp;</td><td>%s</td><td>%s</td>',
+				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td align="left">%s</td><td align="left">%s</td><td align="left">%s</td><td>%s</td>',
 					$rowclass,
 					$$Paper{'id'},
 					$selected,
 					$$Paper{'id'},
 					$Paper->to_string(),
-					$Paper->fsc_code(),
 					($Paper->in_stock() - $Paper->allocated()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
-					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ' skid'.($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
-					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ' skid'.($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
-					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ' skid'.($skid_location{$_}>1?'s':''). ' - ' . $inventory{$_}.'lbs' } keys %skid_location),
+					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
+					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
+					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_location{$_}>1?'s':''). ' - ' . $inventory{$_}.'lbs' } keys %skid_location),
 					);
 				$html .= '<td align="center" class="unprintable">';
 				$html .= ssi::writeButton( $log, $dbh, 'Allocate'.$Paper->id(), 'allocate.gif', 'allocate_window('.$Paper->id().');', '', 'A' );

@@ -155,6 +155,7 @@ function input_handler( element, e ) {
 			element.form.skid_id.focus();
 			element.form.skid_id.value='';
 		} else {
+			
 			for ( var i = 0; i < element.form.elements.length; i += 1 ) {
 				if ( element.form.elements[i].type != 'text' ) 
 					continue;
@@ -222,6 +223,18 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 82 || character == 114 ) { // R
+		if ( element.form ) {
+			var form = element.form;
+			for ( var i = 0; i < form.elements.length; i += 1 ) {
+				if ( form.elements[i].type != 'text' ) 
+					continue;
+				if ( form.elements[i].name.substr(0,10) == 'rfidtag_id' ) {
+					form.elements[i].focus();
+					form.elements[i].value='';
+					return false;
+				} // end if
+			} // end for i
+		} // end if
 		for ( var x = 0; x < document.forms.length; x += 1 ) {
 			var form = document.forms[x];
 
@@ -233,7 +246,7 @@ function input_handler( element, e ) {
 				for ( var i = 0; i < form.elements.length; i += 1 ) {
 					if ( form.elements[i].type != 'text' ) 
 						continue;
-					if ( form.elements[i].name.substr(0,7) == 'rfidtag_id' ) {
+					if ( form.elements[i].name.substr(0,10) == 'rfidtag_id' ) {
 						form.elements[i].focus();
 						form.elements[i].value='';
 						return false;

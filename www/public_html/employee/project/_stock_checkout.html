@@ -39,17 +39,17 @@
 						$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
 						$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number(-1*$PI->delta()), $PI->units() );
 					} # end foreach
-					$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
-					$rowclass = $rowclass ? '' : 'class="colRow"';
+					$html .= '<tr class="totals"><td colspan="4" align="right">Total:</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
+					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach
 				return $html;
 			) ?>
-				<tr>
+				<tr class="unprintable">
 					<td>Checkout Stock:</td>
 					<td>
-						<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
+						<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'StockCheckout', '/employee/project/_stock_checkout.html', {method: 'get', parameters: $('checkout_form').serialize()} );}" />
 					</td><td>
-						<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
+						<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'StockCheckout', '/employee/project/_stock_checkout.html', {method: 'get', parameters: $('checkout_form').serialize()} );}" />
 					</td><td>
 						<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', q`new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html', { method: 'get', parameters: checkout_form.serialize() } );`,'','Submit' ); ) ?>
 					</td>

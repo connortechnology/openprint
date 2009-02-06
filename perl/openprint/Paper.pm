@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable);
+use vars qw(%variable %fields %transforms %defaults );
 *variable = \%openprint::variable;
 
 
@@ -31,7 +31,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 my $debug = 0;
 
 my @fields = (
-		'id',
+		'id', 'created_on',
 		'group_id','owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
@@ -343,11 +343,15 @@ sub save {
 
 	return $error if $error;
 
+	my %sql = map { $_, $$self{$_} } @fields;
+	delete $sql{'created_on'};
+	
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_id_seq')} );
+		$sql{'id'} = $$self{'id'};
 
-		$error = sql::insert( undef, undef, 'Papers', ['id', $$self{'id'}, map { $_, $$self{$_} } @fields ] );
+		$error = sql::insert( undef, undef, 'Papers', \%sql );
 
        # Add record to audit log - action "New Paper".
        openprint::logs::insertLogRecord('63', "Paper ID: " . $$self{'id'},);
@@ -374,7 +378,7 @@ sub save {
 		} # end if
 
     } else {
-        if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], [ map { $_, $$self{$_} } @fields ] ) ) {
+        if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
@@ -448,7 +452,9 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	return join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), $self->mweight().'M', $self->quality() ) );
+	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ), $self->quality() ) );
+	$string .= ' FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
+	return $string;
 } # end sub to_string
 
 sub material {
@@ -597,7 +603,7 @@ sub quality {
 			$$self{'quality'} = $quality;
         } # end if
     } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
-        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->shortname();
+        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->longname();
     } # end if
     return $$self{'quality'};
 } # end sub quality

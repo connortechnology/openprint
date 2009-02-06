@@ -408,6 +408,8 @@ if ( 0 ) {
 		$index = $Company->next();
 		$Company->delete();
 		$Company = new openprint::Company( $index );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Undelete' ) {
+		$Company->undelete();
 	} # end if btnFunction
 
 # we no longer default to displaying the first record.	The user must select one.,

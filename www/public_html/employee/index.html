@@ -2,8 +2,11 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript">
 	function submit_handler( form ) {
-		if ( form.StartDocket.value || form.OrderID.value || form.Project.value ) {
+		if ( form.StartDocket.value || form.OrderID.value ) {
 			form.action = '/employee/production/projects.html';
+			form.submit();
+		} else if ( form.project_id.value ) {
+			form.action = '/employee/project/view.html';
 			form.submit();
 		} else if ( form.skid_id.value ) {
 			form.action = '/employee/inventory/skid_details.html';
@@ -40,7 +43,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 	<fieldset>
 		<p>
 			<label>Project #</label>
-			<input type="text" name="Project" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}"/>
+			<input type="text" name="project_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>

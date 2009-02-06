@@ -1,0 +1,62 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<form id="f1" name="f1" action="stock.html" method="post">
+	<input type="hidden" name="btnFunction" />
+<table class="List sortable">
+	<tr>
+		<th width="75" align="left">Skid ID</th>
+		<th width="120" align="left">RFID #</th>
+		<th width="60" align="left">Quantity</th>
+		<th align="left">Stock</th>
+		<th width="120" align="left">Supplier</th>
+		<th width="100" align="left">Manifest</th>
+		<th width="60" align="left">PO</th>
+		<th width="100">Supplier INV</th>
+		<th width="140">Cost</th>
+	</tr>
+<? echo (
+	require openprint::Manifest_Content_Type;
+	my $html = '';
+	foreach my $Type ( openprint::Manifest_Content_Type::find('cost'=>undef, 'order'=>'id') ) {
+		my $Paper = $Type->Paper();
+		my $skid_html = '';
+		my $rfid_html = '';
+		my $qty_html = '';
+		foreach my $MC ( openprint::ManifestContent::find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
+			$skid_html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a><br/>', $MC->skid_id() );
+			$rfid_html .= sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a><br/>', $MC->Skid()->rfidtag_id() );
+			$qty_html .= sprintf('%1$d%2$s<br/>', $MC->quantity(), $MC->units() );
+		} # end foreach
+		$html .= '<tr><td>'.$skid_html.'</td><td>'.$rfid_html.'</td><td>'.$qty_html.'</td>';
+		if ( $Paper->id() ) {
+			$html .= sprintf('<td><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+		} else {
+			my %Papers;
+			$html .= '<td>';
+			foreach my $MC ( openprint::ManifestContent::find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
+				foreach my $SC ( $MC->Skid()->Contents() ) {
+					$Papers{$SC->paper_id()} = $SC->Paper();
+				} # end foreach SC
+			} # end foreach
+			foreach my $paper_id ( keys %Papers ) {
+				my $Paper = $Papers{$paper_id};
+				$html .= sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></br>', $Paper->id(), $Paper->to_string() );
+			} # end foreach
+			$html .= '</td>';
+		} # end if
+		
+		$html .= sprintf('<td>%1$s</td>', $Type->Manifest()->Vendor()->name() );
+		$html .= sprintf('<td><a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a></td>', $Type->manifest_id() );
+		$html .= '<td>';
+		$html .= sprintf('<a href="/employee/inventory/purchase_order.html?po_id=%1$d">%1$d</a>', $Type->po_id() ) if $Type->po_id();
+		$html .= '</td>';
+		$html .= sprintf('<td><input type="text" id="supplier_invoice-%1$d" name="supplier_invoice-%1$d" value="%2$s"></td>', $Type->id(), $Type->supplier_invoice() );
+		$html .= sprintf(q{<td><input type="text" id="cost-%1$d" name="cost-%1$d" value="%2$s" size="6" style="width:auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"><select id="units-%1$d" name="units-%1$d"><option value="/lb">/lb</option><option value="/cwt">/cwt</option></select></td>}, $Type->id(), $Type->cost() );
+		$html .= '</tr>';
+	} # end foreach Skid
+	return $html;
+) ?>
+</table>
+<p class="buttons">
+	<? echo ( ssi::writeButton( $log, $dbh, 'save', 'save.gif',"f1.btnFunction.value='Save';f1.submit();", '', 'Save'); ) ?>
+</p>
+</form>

@@ -23,8 +23,6 @@ require openprint::print;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-my $debug = 1;
-
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -70,7 +68,7 @@ sub calc {
 
 	my $status = 'calculated';
 
-	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)") if $debug;
+	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)");
 	my $Project = new openprint::Project( $project_index );
 
 	my @signature_service_indices = $Project->signatures();
@@ -133,17 +131,10 @@ sub calc {
 						insert_colour_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 2, $qty_index, $specs );
 					} elsif ( $proof_index == 3 ) {
 						insert_press_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 3, $qty_index, $specs );
-					} else {
-						if ( sets::isin( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}, ['PolaProof','CanonProof','EpsonProof','FujiFinalProof'] ) ) {
-							if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ne 'Y' ) {
-								$$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} = $$sig_specs{'txtWidth'};
-								$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} = $$sig_specs{'txtHeight'};
-							} # end if
-						} # end if
 					} # end if
 				} else {
 
-					if ( ($proof_index == 1) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux' ) and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
+					if ( ($proof_index == 1 ) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux' ) and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
 						$$specs{'alert'} .= "We require Dylux Proofs<br/>";
 						insert_layout_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 1, $specs );
 						@output = sets::union( @output,
@@ -161,7 +152,9 @@ sub calc {
 								"txtProofQuantity-$signature_index-$proof_index-$qty_index",
 								"ddmProofType-$signature_index-$proof_index-$qty_index",
 								);
-					} # end if
+					} # edn if
+
+					
 				} # end if
 
 				my ( $quantity, $type ) = @$specs{

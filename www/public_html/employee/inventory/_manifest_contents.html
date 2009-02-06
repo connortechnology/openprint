@@ -1,5 +1,4 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<input type="hidden" name="remove" />
 <table id="Contents-<?type_id?>" class="List sortable">
 	<tr>
 		<th align="left" width="120">RFID</th>
@@ -10,26 +9,19 @@
 		<th width="40">&nbsp;</th>
 	</tr>
 	<tr id="new-<?type_id?>">
-		<td><input type="text" id="rfidtag_id-<?type_id?>-" name="rfidtag_id-<?type_id?>-" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" /></td>
-		<td><input type="text" id="skid_id-<?type_id?>-" name="skid_id-<?type_id?>-" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" /></td>
-		<td><input type="text" id="docket-<?type_id?>-" name="docket-<?type_id?>-" size="8" value="<? echo ( $param{'docket-'.$$variable{'type_id'}} ? $param{'docket-'.$$variable{'type_id'}} : $$variable{'Manifest'}->docket() ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'ManifestContents', '_manifest_contents.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" /></td>
+		<td><input type="text" id="rfidtag_id-<?type_id?>-" name="rfidtag_id-<?type_id?>-" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
+		<td><input type="text" id="skid_id-<?type_id?>-" name="skid_id-<?type_id?>-" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
+		<td><input type="text" id="docket-<?type_id?>-" name="docket-<?type_id?>-" size="8" value="<? echo ( $param{'docket-'.$$variable{'type_id'}} ? $param{'docket-'.$$variable{'type_id'}} : $$variable{'Manifest'}->docket() ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
 		<td><input type="text" id="qty_lbs-<?type_id?>-" name="qty_lbs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-<?type_id?>-') );" /></td>
 		<td><input type="text" id="qty_kgs-<?type_id?>-" name="qty_kgs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-<?type_id?>-') );" /></td>
-		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', qq`new Ajax.Request( '_manifest_content.html', {method: 'get', parameters: {
-action: 'Add',
-type_id:	'$$variable{type_id}',
-manifest_id: '$$variable{'Manifest'}{'id'}',
-rfidtag_id: \$('rfidtag_id-$$variable{type_id}-').value,
-skid_id:	\$('skid_id-$$variable{type_id}-').value,
-docket:		\$('docket-$$variable{type_id}-').value,
-qty_lbs:	\$('qty_lbs-$$variable{type_id}-').value,
-}, onSuccess: function (transport) { new Insertion.Before('totals-$$variable{type_id}', transport.responseText);return true; }, evalScripts: true} );`, '', 'Add' ); ) ?></td>
+		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( f1, $$variable{type_id} );", '', 'Add' ); ) ?></td>
 	</tr>
 	<? echo (
 		my $html = '';
 		my $total = 0;
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
 		foreach my $C ( $$variable{'Manifest'}->Contents( 'type_id'=>$$variable{'type_id'}, 'order'=>'id') ) {
+$openprint::log->debug( $C->skid_id() . ': ' . $C->Skid()->rfidtag() );
 			$$variable{'C'} = $C;
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$total += $C->quantity();

@@ -205,6 +205,18 @@ sub delete {
 	return;
 } # end sub delete
 
+sub undelete {
+    my ( $self ) = @_;
+    my $type = ref $self;
+    my $table = eval '$'.$type.'::table';
+	sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 0 );
+	$$self{'deleted'}=0;
+	return;
+} # end sub delete
+
+
+1;
+__END__
 
 1;
 __END__

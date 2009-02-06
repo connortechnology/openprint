@@ -38,7 +38,7 @@
 			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( openprint::Company::get_dropdown( $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
 		</p>
 		<p>
-			<label for="txtManufacturer-<?type_id?>" onclick="f1.txtManufacturer.value='';f1.Manufacturer.selectedIndex=0;f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
+			<label for="txtManufacturer-<?type_id?>" onclick="toggleInput('Manufacturer-<?type_id?>');">Manufacturer:</label>
 			<select id="Manufacturer-<?type_id?>" name="Manufacturer-<?type_id?>" size="1" onchange="Manufacturer_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 				<? echo (
@@ -54,7 +54,7 @@
 			<input style="display: none;" type="text" id="txtManufacturer-<?type_id?>" name="txtManufacturer-<?type_id?>" />
 		</p>
 		<p>
-			<label for="txtName-<?type_id?>" onclick="f1.txtName.value='';f1.Name.selectedIndex=0;f1.Name.toggle();f1.txtName.toggle();">Name:</label>
+			<label for="txtName-<?type_id?>" onclick="toggleInput('Name-<?type_id?>');">Name:</label>
 			<select id="Name-<?type_id?>" name="Name-<?type_id?>" size="1" onchange="Name_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
@@ -63,7 +63,7 @@
 			</select>
 			<input style="display: none;" type="text" id="txtName-<?type_id?>" name="txtName-<?type_id?>" />
 		</p><p>
-			<label for="txtFinish-<?type_id?>" onclick="f1.txtFinish.value='';f1.Finish.selectedIndex=0;f1.Finish.toggle();f1.txtFinish.toggle();">Finish:</label>
+			<label for="txtFinish-<?type_id?>" onclick="toggleInput('Finish-<?type_id?>');">Finish:</label>
 			<select id="Finish-<?type_id?>" name="Finish-<?type_id?>" size="1" onchange="Finish_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 				<? echo (
@@ -72,7 +72,7 @@
 			</select>
 			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" />
 		</p><p>
-			<label for="txtColour-<?type_id?>" onclick="f1.txtColour.value='';f1.Colour.selectedIndex=0;f1.Colour.toggle();f1.txtColour.toggle();">Colour:</label>
+			<label for="txtColour-<?type_id?>" onclick="toggleInput('Colour-<?type_id?>');">Colour:</label>
 			<select id="Colour-<?type_id?>" name="Colour-<?type_id?>" size="1" onchange="Colour_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
@@ -97,14 +97,14 @@
 			<input type="text" id="weight-<?type_id?>" name="weight-<?type_id?>" value="<? echo ( my $weight = $param{'weight-'.$$variable{'type_id'}}; $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
 		</p>
 		<p>
-			<label for="txtQuality-<?type_id?>" onclick="toggleInput('Quality');">Quality:</label>
+			<label for="txtQuality-<?type_id?>" onclick="toggleInput('Quality-<?type_id?>');">Quality:</label>
 			<select id="Quality-<?type_id?>" name="Quality-<?type_id?>" size="1">
 				<option value="">select</option>
 			<? echo (
 				if ( ! $param{'Quality-'.$$variable{'type_id'}} ) {
 					my @Qualities = openprint::StockQuality::find('shortname'=>'new');
 					if ( @Qualities ) {
-						$param{'Quality'} = $Qualities[0]->id();
+						$param{'Quality-'.$$variable{'type_id'}} = $Qualities[0]->id();
 					} # end if
 				} # end if
 				my @Qualities = openprint::StockQuality::find('order'=>'lower(shortname)');
@@ -152,7 +152,11 @@
 		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Cost (/CWT):</label>
-			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $param{'cost-'.$$variable{'type_id'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+		</p>
+		<p>
+			<label>Supplier Invoice#:</label>
+			<input type="text" id="supplier_invoice-<?type_id?>" name="supplier_invoice-<?type_id?>" value="<? echo ( $$variable{'Type'}->supplier_invoice() ) ?>" />
 		</p>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<p>

@@ -80,6 +80,16 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 	} // end if
 } // end function AjaxToggleContent
 
+
+function AjaxLoadContent( divID, page, parameters, message ) {
+	var div = $( divID );
+	if ( div ) {
+		if ( message ) div.innerHTML = message;
+		else div.innerHTML = 'Please wait....';
+	} // end if
+	new Ajax.Updater( divID, page, { method: 'get', parameters: parameters, evalScripts: true } );
+}
+
 function LoadContent( divID, page, inputs, message ) {
 	var div = $( divID );
 	if ( div ) {
@@ -160,4 +170,11 @@ className:"alphacube", width:width, height:height
 		Windows.addObserver(myObserver);
 	} // end if
 	contentWin.setAjaxContent(url, null , true);
+}
+
+function toggleInput( name ) {
+$('txt'+name).value='';
+$(name).selectedIndex=0;
+$(name).toggle();
+$('txt'+name).toggle();
 }

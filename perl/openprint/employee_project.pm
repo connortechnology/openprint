@@ -37,8 +37,19 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub view {
 
 	my $project_index = $param{'ProjectIndex'};
+	$project_index = $param{'project_id'} if ! $project_index;
+	if ( ! $project_index ) {
+		$param{'Docket'} =~ s/\D//g;
+		if ( $param{'Docket'} ) {
+			if ( my @Projects = openprint::Project::find('docket'=>$param{'Docket'}) ) {
+				$project_index = $Projects[0]->id();
+			} # end if
+		} # end if
+	} # end if
+
 	my $Project = new openprint::Project( $project_index );
 	my $order_id = $param{'OrderID'};
+	$order_id = $Project->order_id() if ! $order_id;
 	if ( ! $order_id ) {
 		if ( $param{'Docket'} ) {
 			( $order_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Orders WHERE Index IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND lngDocketNumber=?}, $project_index, $param{'Docket'} );
@@ -312,11 +323,10 @@ sub view {
 				openprint::service::status( $project_index, $service_index, 'Complete' );
 				$Project->add_to_log( @session{'company_id','user_id'}, "Marked Printed from $status" );
 				foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
-					next if $PA->Paper()->type() ne 'Roll';
 					$PA->delete();
 					$Project->add_to_log( @session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
 				} # end foreach
-# shuffle jobs on the print schedule
+				# shuffle jobs on the print schedule
 
 			} else {
 				openprint::service::status( $project_index, $service_index, 'Ordered' );
@@ -758,38 +768,55 @@ sub _stock_checkout {
 			$variable{'error'} .= 'Unknown skid scanned.<br/>';
 			return;
 		} # end if
-		my @PI = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'comment_like'=>'Checked out%');
-		if ( @PI ) {
+
+		my $add_entry = 1;
+
+		if ( $Skid->is_empty() ) {
+			my @PI = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'comment_like'=>'Checked out%','order'=>'updated_on desc');
+			if ( @PI ) {
+				$variable{'error'} .= sprintf( '%1$s %2$d has already been checked out', ($PI[0]->Paper()->type() eq 'Roll' ? 'Roll' : 'Skid'), $Skid->id() );
+				if ( $PI[0]->docket() ) {
+					$variable{'error'} .= sprintf(' to docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a>', $PI[0]->Project()->id(), $PI[0]->docket() );
+				} # end if
+				$variable{'error'} .= '.<br/>';
+			} # end if
+
 			foreach my $PI ( @PI ) {
 				if ( ! $PI->docket() ) {
 					$PI->save({'docket'=>$param{'docket'}});
+					# only update the most recent entry
+					last;
+				} else {
+					if ( $PI->docket() == $param{'docket'} ) {
+						$add_entry = 0;
+						last;
+					} # end if	
 				} # end if
 			} # end foreach PI
-
-			if ( $PI[0]->Paper()->type() eq 'Roll' ) {
-				$variable{'error'} .= 'Roll ' . $Skid->id() . ' has already been checked out.<br/>';
-			} else {
-				$variable{'error'} .= 'Skid ' . $Skid->id() . ' has already been checked out.<br/>';
-			} # end if
 		} # end if
 
-		foreach my $C ( $Skid->Contents() ) {
-			if ( ! @PI ) {
+		my @Projects = openprint::Project::find('docket'=>$param{'docket'});
+		if ( ! @Projects ) {
+			$variable{'error'} .= 'Invalid docket.<br/>';
+			return;
+		} # end if
+
+		if ( $add_entry ) {
+			foreach my $C ( $Skid->Contents() ) {
 				my $PI = new openprint::PaperInventory();
 				$PI->save({
 						'docket'	=>	$param{'docket'},
 						'paper_id'	=>	$C->paper_id(),
 						'user_id'	=>	$session{'user_id'},
 						'delta'		=>	-1*$C->quantity(),
-						'comment'	=>	'Checked out for docket ' . $param{'docket'},
+						'comment'	=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Projects[0]->id(), $Projects[0]->docket(), new openprint::User( $session{'user_id'} )->name() ),
 						'skid_id'	=>	$Skid->id(),
 						'units'		=>	$C->units(),
 						});
 				$C->quantity( 0 );
 				$C->save();
-			} # end if
-
-		} # end foreach C
+			} # end foreach C
+		} # end if add_entry
 	} # end if
 } # end sub _stock_checkout
 

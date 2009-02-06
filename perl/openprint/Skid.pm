@@ -18,6 +18,8 @@ require openprint::RFIDTag;
 require openprint::Skid_Verification;
 require openprint::Project;
 require openprint::SkidContent;
+require openprint::Manifest;
+require openprint::ManifestContent;
 
 my $debug = 1;
 
@@ -172,10 +174,17 @@ sub load {
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 
-	#%{$$self{'Paper'}} = ();
-	#if ( $$self{'id'} ) {
-		##$$self{'Paper'} = [ map ( $_->paper_id(), $_ ) openprint::SkidContent::find('skid_id'=>$$self{'id'}) ];
-	#} # end if
+if ( 0 ) {
+	# Was remarked out in new version....
+	delete $$self{'Contents'};
+	@{$$self{'Contents'}} = $self->Contents();
+	%{$$self{'Paper'}} = ();
+	if ( $$self{'id'} ) {
+		foreach my $C ( $self->Contents() ) {
+			$$self{'Paper'}{$$C{'paper_id'}} += $$C{'quantity'};
+		} # end foreach
+	} # end if
+}
 } # end sub load
 
 sub save {
@@ -347,6 +356,10 @@ sub Contents {
     my $self = shift;
 	return if ! $$self{'id'};
 
+	if ( $$self{'Contents'} ) {
+		return @{$$self{'Contents'}};
+	} # end if
+
     my %params = @_;
     $params{'skid_id'} = $$self{'id'};
 
@@ -457,9 +470,11 @@ sub rfidtag_id {
 
 	if ( @_ ) {
 		my $rfidtag_id = shift;	
-		my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
-		my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
-		$log->error( $error ) if $error;
+		if ( $rfidtag_id ) {
+			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+			my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
+			$log->error( $error ) if $error;
+		} # end if
 		$$self{'rfidtag_id'} = $rfidtag_id;
 	} # end if
 	return $$self{'rfidtag_id'};
@@ -488,6 +503,36 @@ sub type {
 	} # end if	
 	return $$self{'type'};
 } # end sub type
+
+sub is_empty {
+	my $self = $_[0];
+	foreach my $C ( $self->Contents() ) {
+		return 0 if $C->quantity() > 0;
+	} # end foreach
+	return 1;
+} # end sub is_empty
+
+sub last_seen_days {
+	my $self = $_[0];
+	return int( (time - Date::Parse::str2time($$self{'updated_on'})) / (24*60*60) );
+}
+sub age_days {
+	my $self = $_[0];
+	return int( (time - Date::Parse::str2time($$self{'created_on'})) / (24*60*60) );
+}
+
+sub Manifest {
+	my $self = $_[0];
+	foreach my $MC ( openprint::ManifestContent::find('skid_id'=>$$self{id}) ) {
+		return $MC->Manifest();
+	} # end foreach MC
+	return new openprint::Manifest();
+} # end sub Manifest
+
+sub ManifestContents {
+	my $self = $_[0];
+	return openprint::ManifestContent::find('skid_id'=>$$self{id});
+} # end sub ManifestContents
 
 1;
 __END__

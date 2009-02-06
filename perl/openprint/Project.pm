@@ -559,6 +559,10 @@ sub find {
 		$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
 		push @values, $params{'salesrep_id'};
 	} # end if
+	if ( $params{'csr_id'} ) {
+		$sql .= ' AND companyindex IN (SELECT index FROM Company WHERE lngsalesperson)=?';
+		push @values, $params{'csr_id'};
+	} # end if
 
 	if ( $params{'value_start'} and $params{'value_end'} ) {
 		$sql .= q{ AND ( (price1 BETWEEN ? AND ? ) OR (price2 BETWEEN ? AND ?) OR (price3 BETWEEN ? AND ? ) )};
@@ -914,6 +918,9 @@ sub summary {
 			my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
 			if ( $$printing_specs{'Versions'} ) {
 				$summary .= $$printing_specs{'Versions'} .= ' versions ';
+			} # end if
+			if ( $$printing_specs{'PageQuantity'} ) {
+				$summary .= $$printing_specs{'PageQuantity'} .= 'pg ';
 			} # end if
 
 			if ( $$printing_specs{'txtTotalPageQuantity'} ) {
