@@ -877,6 +877,9 @@ sub summary {
 		if ( $specs{'Versions'} ) {
 			$summary .= $specs{'Versions'} .= ' versions ';
 		} # end if
+		if ( $specs{'PageQuantity'} ) {
+			$summary .= $specs{'PageQuantity'} .= 'pg ';
+		} # end if
 
 		$specs{'txtFinalWidth'} *= 1;
 		$specs{'txtFinalHeight'} *= 1;
