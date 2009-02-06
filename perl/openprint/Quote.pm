@@ -78,15 +78,15 @@ sub find {
 			$sql .= q{ AND (dtmquotedate <= ?::timestamp with time zone)};
 			push @values, $params{'created_on_end'};
 		} # end if
-		if ( $params{'value_start'} and $params{'value_end'} ) {
-			$sql .= q{ AND (curtotalsale BETWEEN ? AND ? )};
-			push @values, $params{'value_start','value_end'};
-		} elsif ( $params{'value_start'} ) {
-			$sql .= q{ AND (curtotalsale >= ?)};
-			push @values, $params{'value_start'};
-		} elsif ( $params{'value_end'} ) {
-			$sql .= q{ AND (curtotalsale <= ?)};
-			push @values, $params{'value_end'};
+		if ( $params{'total_start'} and $params{'total_end'} ) {
+			$sql .= q{ AND ( (curtotalsale1 BETWEEN ? AND ? ) OR (curtotalsale2 BETWEEN ? AND ? ) OR (curtotalsale3 BETWEEN ? AND ? ) )};
+			push @values, @params{'total_start','total_end','total_start','total_end','total_start','total_end'};
+		} elsif ( $params{'total_start'} ) {
+			$sql .= q{ AND (curtotalsale1 >= ? OR curtotalsale2 >= ? OR curtotalsale3 >= ?)};
+			push @values, @params{'total_start','total_start','total_start'};
+		} elsif ( $params{'total_end'} ) {
+			$sql .= q{ AND (curtotalsale1 <= ? OR curtotalsale2 <= ? OR curtotalsale3 <= ?)};
+			push @values, @params{'total_end','total_end','total_end'};
 		} # end if
 		if ( $params{'status'} ) {
 			if ( ref $params{'status'} eq 'ARRAY' ) {
@@ -96,6 +96,14 @@ sub find {
 				$sql .= q{ AND (strStatus=?)};
 				push @values, $params{'status'};
 			} # end if
+		} # end if
+		if ( $params{'currency_id'} ) {
+			$sql .= ' AND ( currency_id = ? )';
+			push @values, $params{'currency_id'};
+		} # end if
+		if ( $params{'salesrep_id'} ) {
+			$sql .= ' AND ( companyindex IN ( SELECT index FROM company WHERE lngsalesperson=? ) )';
+			push @values, $params{'salesrep_id'};
 		} # end if
 		if ( $params{'for_name'} ) {
 			$sql .= q{ AND (SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quoteindex=index)=?};
@@ -115,7 +123,7 @@ sub find {
 		$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 		if ( ! $data ) {
-			$log->warn("Error loading Quotes: ($sql) (@values)");
+			$log->warn("Error loading Quotes: ($sql) (@values) reason: " . $dbh->errstr() );
 			return;
 		} elsif ( $debug ) {
 			$log->debug("Loading Quotes: ($sql) (@values)");
@@ -201,13 +209,6 @@ sub to_string {
 	return '';
 } # end sub
 
-sub created_on {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'created_on'} = shift;
-	} # end if
-	return $$self{'created_on'};
-} # end sub created_on
 sub created_by_id {
 	my $self = shift;
 	return $$self{'created_by_id'};
@@ -256,6 +257,10 @@ sub Currency {
 sub for_name {
 	my $self = shift;
 	return $$self{'for_firstname'} . ' ' . $$self{'for_lastname'};
+} # end sub
+sub by_name {
+	my $self = shift;
+	return $$self{'by_firstname'} . ' ' . $$self{'by_lastname'};
 } # end sub
 
 sub contents {

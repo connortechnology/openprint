@@ -7,7 +7,16 @@ require openprint::order;
 require misc;
 require sql;
 require ssi;
-use Text::Unaccent;
+
+use openprint ();
+use vars qw( $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
 
 sub projects {
 	my ($r, $log, $dbh, $variable) = @_;
@@ -70,130 +79,69 @@ sub projects {
 } # end sub project_report
 
 sub quotes {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
-	ssi::get_start_end_dates( $log, $dbh, $variable,
-			$r->param('ddmStartYear'),
-			$r->param('ddmStartMonth'),
-			$r->param('ddmStartDay'),
-			$r->param('ddmEndYear'),
-			$r->param('ddmEndMonth'),
-			$r->param('ddmEndDay') );
+	ssi::get_start_end_dates( $log, $dbh, \%variable,
+			@param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-    $$variable{'dblTotal1'} = $r->param('dblTotal1');
-    $$variable{'dblTotal2'} = $r->param('dblTotal2');
+	$variable{'ddmStatus'.$r->param('ddmStatus')} = 'SELECTED';
 
-	$$variable{'ddmStatus'.$r->param('ddmStatus')} = 'SELECTED';
+	my %filters = (
+			'order'=>'index',
+			);
+	$filters{'status'} = $param{'ddmStatus'} if $param{'ddmStatus'};
+	$filters{'company_id'} = $param{'ddmCustomers'} if $param{'ddmCustomers'};
+	$filters{'salesrep_id'} = $param{'salesrep_id'} if $param{'salesrep_id'};
+	$filters{'currency_id'} = $param{'currency_id'} if $param{'currency_id'};
+	$filters{'total_start'} = $param{'total_start'} if $param{'total_start'};
+	$filters{'total_end'} = $param{'total_end'} if $param{'total_end'};
+	$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my @header = ( 'lngQuoteID', 'dtmQuoteDate', 'strPrepared By', 'strPreparedFor','Total1','Total2','Total3' );
-		$_ = "SELECT DISTINCT tbl_Quotes.lngQuoteID, to_char(tbl_Quotes.dtmQuoteDate, 'MM/DD/YYYY'),\n".
-			"tbl_Quote_Users_By.strFirstName || ' ' || tbl_Quote_Users_By.strLastName,\n".
-			"tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName,\n".
-			"strStatus,\n".
-			"tbl_Quotes.curTotalSale1, curTotalSale2, curTotalSale3\n".
-			"FROM tbl_Quotes, tbl_Quote_Users_For, tbl_Quote_Users_By ".
-			"WHERE tbl_Quote_Users_By.lngQuoteID = tbl_Quotes.lngQuoteID ".
-			"AND tbl_Quote_Users_For.lngQuoteID = tbl_Quotes.lngQuoteID ".
-			"AND tbl_Quotes.lngQuoteID IN ( ".
-			"	SELECT DISTINCT tbl_Quotes.lngQuoteID FROM	tbl_Quotes, tbl_Quote_Details ".
-			"	WHERE date(tbl_Quotes.dtmQuoteDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		$_ .= "AND tbl_Quotes.strStatus = '".$r->param('ddmStatus')."'\n" if $r->param('ddmStatus');
-		$_ .= "	AND tbl_Quote_Details.lngQuoteID = tbl_Quotes.lngQuoteID ";
-		$_ .= "	AND tbl_Quotes.CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		if ( $r->param('dblTotal1') and $r->param('dblTotal2') ) {
-			$_ .= " AND ( ";
-			$_ .= "tbl_Quotes.curTotalSale1 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " OR ";
-			$_ .= "tbl_Quotes.curTotalSale2 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " OR ";
-			$_ .= "tbl_Quotes.curTotalSale3 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " )\n";
-		} # end if
+	@{$variable{'Quotes'}} = openprint::Quote::find( %filters );
 
-		$_ .= ") ORDER BY tbl_Quotes.lngQuoteID";
-
-		my @data = sql::execute( $log, $dbh, $_ );
-		misc::export_csv( $r, $log, $variable, 'quote_report.csv', \@header, \@data );
-	} else {
-		$_ = "SELECT DISTINCT tbl_Quotes.Index, to_char(tbl_Quotes.dtmQuoteDate, 'MM/DD/YYYY'),\n".
-			"tbl_Quote_Users_By.strFirstName || ' ' || tbl_Quote_Users_By.strLastName,\n".
-			"tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName,\n".
-			"strStatus,\n".
-			"tbl_Quotes.curTotalSale1, curTotalSale2, curTotalSale3\n".
-			"FROM tbl_Quotes, tbl_Quote_Users_For, tbl_Quote_Users_By ".
-			"WHERE tbl_Quote_Users_By.QuoteIndex = tbl_Quotes.Index ".
-			"AND tbl_Quote_Users_For.QuoteIndex = tbl_Quotes.Index ".
-			"AND tbl_Quotes.Index IN ( ".
-			"SELECT tbl_Quotes.Index FROM tbl_Quotes, tbl_Quote_Details ".
-			"WHERE date(tbl_Quotes.dtmQuoteDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		$_ .= "AND tbl_Quotes.strStatus = '".$r->param('ddmStatus')."'\n" if $r->param('ddmStatus');
-		$_ .= "	AND tbl_Quote_Details.QuoteIndex = tbl_Quotes.Index ";
-		$_ .= "	AND tbl_Quotes.CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		if ( $r->param('dblTotal1') and $r->param('dblTotal2') ) {
-			$_ .= " AND ( ";
-			$_ .= "tbl_Quotes.curTotalSale1 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " OR ";
-			$_ .= "tbl_Quotes.curTotalSale2 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " OR ";
-			$_ .= "tbl_Quotes.curTotalSale3 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " )\n";
-		} # end if
-
-		$_ .= ") ORDER BY tbl_Quotes.Index";
-		@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $_ );
-		$$variable{'ReportTotal1'} = 0;
-		$$variable{'ReportTotal2'} = 0;
-		$$variable{'ReportTotal3'} = 0;
-		for ( my $index = 0; $index < @{$$variable{'DATA'}}; $index += 8 ) {
-			$$variable{'ReportTotal1'} += $$variable{'DATA'}[$index+5];
-			$$variable{'ReportTotal2'} += $$variable{'DATA'}[$index+6];
-			$$variable{'ReportTotal3'} += $$variable{'DATA'}[$index+7];
-		} # end for
-		$$variable{'ReportTotal1'} = sprintf("%.2f", $$variable{'ReportTotal1'} );
-		$$variable{'ReportTotal2'} = sprintf("%.2f", $$variable{'ReportTotal2'} );
-		$$variable{'ReportTotal3'} = sprintf("%.2f", $$variable{'ReportTotal3'} );
+	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+		my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Total1', 'Total2', 'Total3', 'Currency' );
+		my @data;
+		my $total1;
+		my $total2;
+		my $total3;
+		foreach my $Quote ( @{$variable{'Quotes'}} ) {
+			push @data, $Quote->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Quote->created_on() ) ), $Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(), $Quote->total1(), $Quote->total2(), $Quote->total3(), $Quote->Currency()->name();
+			$total1 += $Quote->total1();
+			$total2 += $Quote->total2();
+			$total3 += $Quote->total3();
+		} # end foreach
+		push @data, '','','','','','Totals:', $total1, $total2, $total3, '';
+		misc::export_csv( $r, $log, \%variable, 'quote_report.csv', \@header, \@data );
 	} # end if
 
 } # end sub quotes
 
 sub orders {
-	my ( $r, $log, $dbh, $variable ) = @_;
 	
-	my @products;
+	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+		my @header = ('OrderID', 'Docket', 'Order Date', 'Company Name', 'Status', 'Total', 'Currency');
 
-	if ( $r->param('ddmCategories') ne '' ) {
-		$_ = "SELECT lngProductIndex FROM tbl_Products WHERE lngCategoryIndex = '" . $r->param('ddmCategories') ."'";
-		@products = sql::execute( $log, $dbh, $_ );
-	} elsif ( $r->param('ddmProducts') ne '' ) {
-		@products = ( $r->param('ddmProducts') );
-	} # end if
+		my @Orders = openprint::Order::find(
+				'company_id'        => $param{'ddmCustomer'},
+				'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
+				'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
+				'value_start'       => $param{'TotalStart'},
+				'value_end'         => $param{'TotalEnd'},
+				'salesrep_id'       => $param{'ddmEmployee'},
+				'status'            => $param{'ddmStatus'},
+				'currency_id'       => $param{'ddmCurrency'},
+				);
+		my @data;
+		my $total = 0;
+		foreach my $Order ( @Orders ) {
+			push @data, $Order->id(), $Order->docket(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Order->created_on())), $Order->Company()->name(), $Order->status(), $Order->total(), $Order->Currency()->name();
+			next if $Order->status() eq 'Cancelled';
+			$total += $Order->total();
+		} # end foreach Order
+		push @data, '', '', '', '', 'Total:', $total, '';
 
-	$$variable{'StartDate'} = sprintf('%.4d-%.2d-%.2d', @openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ); 
-	$$variable{'EndDate'} = sprintf('%.4d-%.2d-%.2d', @openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ); 
-
-	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my @header = ('OrderID', 'Order Date', 'Company Name', 'Status', 'Total');
-		$_ = "SELECT Index, to_char(Orders.dtmOrderDate, 'MM/DD/YYYY'), ".
-			"strCompanyName, strStatus, (SELECT SUM(curSalesPrice) FROM Order_Contents WHERE OrderIndex=Index)\n".
-			"FROM Orders, Order_Contents ".
-			"WHERE dtmOrderDate BETWEEN '$$variable{'StartDate'}' AND '$$variable{'EndDate'}' ";
-# whether to show finished, unfinished or both
-		$_ .= "AND strStatus = '".$r->param('ddmStatus')."'\n" if $r->param('ddmStatus');
-		$_ .= "AND OrderIndex = Index \n";
-# which products
-		$_ .= "AND Order_Contents.lngProductIndex IN ('" . join( ',', @products ) . "') \n" if @products != 0;
-# which customers
-		$_ .= "	AND Orders.CompanyIndex = '" . $r->param('ddmCustomers') ."' \n" if $r->param('ddmCustomers') ne '';
-		$_ .= " AND Orders.CompanyIndex IN ( SELECT DISTINCT CompanyIndex FROM Companys_In_Categories WHERE lngCategoryID='".$r->param('ddmMarketingCategory')."')\n" if $r->param('ddmMarketingCategory') ne '';
-		#$_ .= "	AND Orders.lngEmployeeID = '" . $r->param('ddmEmployees') . "' \n" if $r->param('ddmEmployees') ne '';
-		$_ .= " AND Orders.CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesPerson='".$r->param('ddmEmployees')."')" if $r->param('ddmEmployees') ne '';
-		$_ .= " AND Orders.curTotalSale BETWEEN " . $r->param('dblTotal1') . " AND " . $r->param('dblTotal2') . "\n" if $r->param('dblTotal1') and $r->param('dblTotal2');
-		$_ .= " AND Orders.strCurrencyName = '" . $r->param('ddmCurrency') . "'" if $r->param('ddmCurrency') ne '';
-		$_ .= "ORDER BY Index";
-
-		my @data = sql::execute( $log, $dbh, $_ );
-		misc::export_csv( $r, $log, $variable, 'order_report.csv', \@header, \@data );
+		misc::export_csv( $r, $log, \%variable, 'order_report.csv', \@header, \@data );
 	} # end if
 } # end sub orders
 
