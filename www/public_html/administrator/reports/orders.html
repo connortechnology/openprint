@@ -1,13 +1,17 @@
+<div class="PageTitle">
+<h1>ADMINISTRATOR REPORTS</h1>
+<h2>Orders</h2>
+</div>
 <form name="f1" method="post" action="orders.html">
 	<fieldset class="filters"><legend>Select Report Criteria</legend>
 		<p>
 			<label for="OrderID">Order ID:</label>
-			<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" />
+			<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
 			<label>Docket:</label>
-			<input type="text" size="10" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
+			<input type="text" size="10" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>

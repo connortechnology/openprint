@@ -1,3 +1,7 @@
+<div class="PageTitle">
+<h1>ADMINISTRATOR REPORTS</h1>
+<h2>Quotes</h2>
+</div>
 Choose report criteria and click show results. 
 You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
 <br>
@@ -5,7 +9,7 @@ You may the download the results in CSV (spreadsheet format) to view in a progra
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
 			<label>Quote ID:</label>
-			<input type="text" size="10" name="quote_id" />
+			<input type="text" size="10" name="quote_id" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='../quote/view.html';f1.submit();", '', 'Go' ); ) ?>	
 		</p>
 		<p>

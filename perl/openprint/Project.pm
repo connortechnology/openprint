@@ -539,6 +539,10 @@ sub find {
 		$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
 		push @values, $params{'salesrep_id'};
 	} # end if
+	if ( $params{'csr_id'} ) {
+		$sql .= ' AND companyindex IN (SELECT index FROM Company WHERE lngsalesperson)=?';
+		push @values, $params{'csr_id'};
+	} # end if
 
 	if ( $params{'value_start'} and $params{'value_end'} ) {
 		$sql .= q{ AND ( (price1 BETWEEN ? AND ? ) OR (price2 BETWEEN ? AND ?) OR (price3 BETWEEN ? AND ? ) )};

@@ -19,61 +19,35 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *config = \%openprint::config;
 
 sub projects {
-	my ($r, $log, $dbh, $variable) = @_;
 
-    my $start;
-    my $startYear = $r->param('ddmStartYear');
-    my $startMonth;
-    my $startDay;
-    ( $start ) = $openprint::config{'startYear'};
-    $start = 2003 if ! $start;
-    if ( ! $startYear ) {
-       $startYear = (localtime(time))[5]+1900;
-    } # end if
-    $startMonth = $r->param('ddmStartMonth') ? $r->param('ddmStartMonth') : (localtime(time))[4]+1;
-    $startDay = $r->param('ddmStartDay') ? $r->param('ddmStartDay') : (localtime(time))[3];
+    ssi::get_start_end_dates( $log, $dbh, \%variable, @param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-    ssi::get_start_end_dates( $log, $dbh, $variable,
-            $startYear,
-            $startMonth,
-            $startDay,
-            $r->param('ddmEndYear'),
-            $r->param('ddmEndMonth'),
-            $r->param('ddmEndDay') );
+	my %filters = (
+		'order'=>'index',
+			);
+	$filters{'company_id'}	= $param{'ddmCustomers'} if $param{'ddmCustomers'};
+	$filters{'user_id'}	= $param{'ddmEstimator'} if $param{'ddmEstimator'};
+	$filters{'status'}	= $param{'ddmStatus'} if $param{'ddmStatus'};
+	$filters{'csr_id'}	= $param{'ddmEmployees'} if $param{'ddmEmployees'};
+	$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-    $_ = "SELECT DISTINCT strStatus, strStatus FROM tbl_Projects ORDER BY strStatus";
-    $$variable{'ddmStatus'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmStatus') );
+	@{$variable{'Projects'}} = openprint::Project::find( %filters );
 
-	$_ = "SELECT lngIndex, strName FROM tbl_Equipment ORDER BY strName";
-	$$variable{'ddmEquipment'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmEquipment') );
-
-	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my @header = ('Docket #', 'Project Reference','Company Name', 'Creation Date','Status');
-		$_ = "SELECT Index, SUBSTR(strProjectReference,0,50),\n".
-				"(SELECT strName FROM Company WHERE Index = CompanyIndex),\n".
-				"to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus\n".
-				"FROM tbl_Projects ".
-				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		$_ .= "AND UserIndex = '".$r->param('ddmEstimator')."'\n" if $r->param('ddmEstimator');
-		$_ .= "AND strStatus = '".$r->param('ddmStatus')."' \n" if $r->param('ddmStatus');
-		$_ .= "AND CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		$_ .= "AND CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesperson='".$r->param('ddmEmployees')."')\n" if $r->param('ddmEmployees') ne '';
-		$_ .= "ORDER BY Index";
-
-		my @data = sql::execute( $log, $dbh, $_ );
-		misc::export_csv( $r, $log, $variable, 'project_report.csv', \@header, \@data );
-	} else {
-		$_ = "SELECT DISTINCT (SELECT Index FROM Company WHERE Index = CompanyIndex),\n".
-			"				(SELECT strName FROM Company WHERE Index = CompanyIndex),\n".
-			"				Index, SUBSTR(strProjectReference,0,50), to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus \n".
-				"FROM tbl_Projects	".
-				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		$_ .= "AND UserIndex = '".$r->param('ddmEstimator')."'\n" if $r->param('ddmEstimator');
-		$_ .= "AND strStatus = '".$r->param('ddmStatus')."' \n" if $r->param('ddmStatus');
-		$_ .= "AND CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		$_ .= "AND CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesperson='".$r->param('ddmEmployees')."')\n" if $r->param('ddmEmployees') ne '';
-		$_ .= "ORDER BY Index";
-		@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $_ );
+	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+		my @header = ('Project #', 'Docket #', 'Company', 'Reference', 'Summary', 'Creation Date', 'Status', 'Price 1', 'Price 2', 'Price 2', 'Currency');
+		my @data;
+		my ( $total1, $total2, $total3 );
+		foreach my $Project ( @{$variable{'Projects'}} ) {
+			push @data, $Project->id(), $Project->docket(), $Project->Company()->name(), $Project->reference(), $Project->summary(), 
+				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Project->created_on() ) ), $Project->status(),
+				$Project->price1(), $Project->price2(), $Project->price3(), $Project->Currency()->name();
+			$total1 += $Project->total1();
+			$total2 += $Project->total2();
+			$total3 += $Project->total3();
+		} # end foreach Project
+		push @data, '','','','','','','Totals:',$total1,$total2,$total3,'';
+		misc::export_csv( $r, $log, \%variable, 'project_report.csv', \@header, \@data );
 	} # end if
 
 } # end sub project_report
