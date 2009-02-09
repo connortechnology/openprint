@@ -463,7 +463,7 @@ img {
 	border: none;
 }
 td.Date, th.Date {
-	width: 100px;
+	width: 120px;
 	text-align: right;
 }
 td.Price, th.Price {

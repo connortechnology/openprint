@@ -247,6 +247,7 @@ sub getyears {
 sub getmonths {
 	my @months = map { $_, Date::Calc::Month_to_Text( $_ ) } ( 1 .. 12 );
 	my $selected = shift;
+	$selected = int($selected);
 	$selected = (localtime(time))[4]+1 if ! defined $selected;
 	return make_drop_down( \@months, $selected );
 } # edn sub getmonths
@@ -258,6 +259,7 @@ sub getdays {
 		$maxdays = Days_in_Month( $year, $month );
 	} # en dif
 	my @days = map { $_, $_ } ( 1 .. $maxdays );
+	$selected = int($selected);
 	$selected = (localtime(time))[3] if ! defined $selected;
 	return make_drop_down( \@days, $selected );
 } # end sub getdays

@@ -152,6 +152,22 @@ The following errors occurred:<br/>
 		<br class="spacer"/>
 	</fieldset>
 </form>
+			<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
+			<? eval ( 
+				$$variable{'Skid'} = $$variable{'RFIDTag'}->Skid();
+				$$variable{'skid_id'} = $$variable{'Skid'}->id();
+			) ?>
+			<!--#include virtual="/employee/inventory/_skid_contents.html"-->
+			<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<?skid_id?>) );">Allocations - click to hide/show</legend>
+			<div id="Allocations"><!--#include virtual="_skid_allocations.html"--></div>
+			</fieldset>
+			<fieldset><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_skid_log.html', new Array('skid_id',<?skid_id?>) );">Inventory Log - click to hide/show</legend>
+			<div id="Log"><!--#include virtual="_skid_log.html"--></div>
+			</fieldset>
+			<fieldset><legend onclick="AjaxToggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', new Array('skid_id',<?skid_id?>) );">Verification Log - click to hide/show</legend>
+			<div id="VerificationLog"><!--#include virtual="_verification_log.html"--></div>
+			</fieldset>
+			<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 <? if ( $$variable{'RFIDTag'}->id() ) ?>
 <? eval ( @$variable{'Year','Month','Day'} = Date::Calc::Today(); ) ?>
 <form name="f2" id="f2">

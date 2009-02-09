@@ -193,6 +193,9 @@ sub stock {
 				$variable{'error'} .= $Type->save({'supplier_invoice'=>$param{'supplier_invoice-'.$Type->id()}, 'cost'=>$param{'cost-'.$Type->id()} });
 			} # end if
 		} # end foreach
+	} else {
+		@param{'received_on_start_year','received_on_start_month','received_on_start_day'} = Date::Calc::Today();
+		@param{'received_on_end_year','received_on_end_month','received_on_end_day'} = Date::Calc::Today();
 	} # end if
 } # end sub stock
 
