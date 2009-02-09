@@ -173,9 +173,9 @@ function gsm_to_mweight( form ) {
 	}
 </style>
 <!--#include virtual="/includes/error_reporting.html"-->
-<? if ( $openprint::param{'skid_quantity'} ) ?>
-<? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$openprint::param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
-<? endif ( $openprint::param{'skid_quantity'} ) ?>
+<? if ( $param{'skid_quantity'} ) ?>
+<? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
+<? endif ( $param{'skid_quantity'} ) ?>
 <? if ( $$variable{'Skid'}->deleted() ) ?>
 <div class="error">Warning: This skid has been deleted.</div>
 <? endif ( $$variable{'Skid'}->deleted() ) ?>
@@ -184,7 +184,7 @@ function gsm_to_mweight( form ) {
 	<fieldset class="filters"><legend>Choose Skid</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
-			<input type="text" id="skid_id" name="skid_id" size="90" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
+			<input type="text" id="skid_id" name="skid_id" size="80" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}",'','Go' ),
 				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
@@ -231,7 +231,7 @@ function gsm_to_mweight( form ) {
 				<? echo (
 					my $html;
 					if ( $$variable{'Skid'}->updated_on() ) {
-						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Skid'}->updated_on()) );
+						$html .= Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->updated_on()) );
 						$html .= ' by ' . (new openprint::User( $$variable{'Skid'}->updated_by() )->name());
 					} # end if
 					return $html;
@@ -239,13 +239,14 @@ function gsm_to_mweight( form ) {
 			</p>
 		<? else ( $$variable{'Skid'}->id() ) ?>
 			<p><label># of skids to add:</label>
-				<input type="text" name="skid_quantity" value="<? echo ( $openprint::param{skid_quantity} ) ?>" />
+				<input type="text" name="skid_quantity" value="<? echo ( $param{skid_quantity} ) ?>" />
 			</p>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
 			<p><label>RFID Tag:</label>
-					<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>" />
+				<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>" />
 				<? if ( $$variable{'Skid'}->rfidtag_id() ) ?>
-					<a href="rfidtag_details.html?rfidtag_id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>">View Tag</a>
+					<a href="rfidtag_details.html?rfidtag_id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>">View Tag</a><br/>
+					Last seen: <? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->RFIDTag()->updated_on()) ); ) ?>
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
 			</p>
 			<p><label>Verification:</label>
@@ -280,7 +281,7 @@ function gsm_to_mweight( form ) {
 <? endif ( $$variable{'Skid'}->id() ) ?>
 			<p>
 				<label for="Docket">Docket:</label>
-				<input type="text" id="Docket" name="Docket" size="10" value="<? echo ( $openprint::param{'Docket'} ) ?>" />
+				<input type="text" id="Docket" name="Docket" size="10" value="<? echo ( $param{'Docket'} ) ?>" />
 			</p>
 			<? if ( ! $$variable{'Skid'}->id() ) ?>
 			<p class="buttons">

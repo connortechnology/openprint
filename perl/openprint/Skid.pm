@@ -136,7 +136,7 @@ sub find {
 	} elsif ( ! @$data ) {
 		$log->debug('No skidss loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$log->debug("Debug loaded skids ($sql) (@values) " );
+		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
 	} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
@@ -364,7 +364,6 @@ sub Contents {
     $params{'skid_id'} = $$self{'id'};
 
     return openprint::SkidContent::find( %params );
-
 } # end sub contents
 
 sub allocation {

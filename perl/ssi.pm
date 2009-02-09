@@ -277,6 +277,7 @@ sub getyears {
 sub getmonths {
 	my @months = map { $_, Date::Calc::Month_to_Text( $_ ) } ( 1 .. 12 );
 	my $selected = shift;
+	$selected = int($selected);
 	$selected = (localtime(time))[4]+1 if ! defined $selected;
 	return make_drop_down( \@months, $selected );
 } # edn sub getmonths
@@ -288,6 +289,7 @@ sub getdays {
 		$maxdays = Days_in_Month( $year, $month );
 	} # en dif
 	my @days = map { $_, $_ } ( 1 .. $maxdays );
+	$selected = int($selected);
 	$selected = (localtime(time))[3] if ! defined $selected;
 	return make_drop_down( \@days, $selected );
 } # end sub getdays
@@ -463,6 +465,7 @@ sub date_select {
 	my ( $prefix, $value, $onchange ) = @_;
 
 	my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
+#$openprint::log->debug(" date_select: $value : $year,$month,$day,");
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
@@ -475,13 +478,14 @@ sub date_select {
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>';
 	return $html;
+
 } # end sub date_select
 
 sub datetime_select {
 	my ( $prefix, $value, $onchange ) = @_;
 
 	my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
-$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
+#$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );

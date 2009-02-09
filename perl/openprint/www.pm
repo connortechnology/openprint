@@ -309,9 +309,9 @@ $log->debug('2');
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 			} # end if
-		} elsif ( ( $second eq 'accounting' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
-			$variable{'error'} = "Unauthorized";
-			$variable{'details'} = "You are not authorized to view this page.";
+		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
+			$variable{'error'} = 'Unauthorized';
+			$variable{'details'} = 'You are not authorized to view this page.';
 			$variable{'Redirect'} = $config{'errorpage'};
 			return;
 		} else {
