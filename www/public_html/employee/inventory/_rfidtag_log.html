@@ -1,36 +1,3 @@
-<? eval (
-	require openprint::RFIDTagHistory;
-
-	if ( $openprint::param{StartYear} ) {
-		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','limit' ) {
-			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-				$openprint::session{'/employee/inventory/rfidtag_details.html?'.$key} = join(';', @{$openprint::param{$key}} );
-			} else {
-				$openprint::session{'/employee/inventory/rfidtag_details.html?'.$key} = $openprint::param{$key};
-			}
-		} # end foreach
-	} # end if
-
-	@{$$variable{'Entries'}} = openprint::RFIDTagHistory::find( 
-		'rfidtag_id'=>$openprint::param{'rfidtag_id'},
-		'updated_on_start'	=>	Date::Calc::check_date( @openprint::session{
-			'/employee/inventory/rfidtag_details.html?StartYear',
-			'/employee/inventory/rfidtag_details.html?StartMonth',
-			'/employee/inventory/rfidtag_details.html?StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
-			'/employee/inventory/rfidtag_details.html?StartYear',
-			'/employee/inventory/rfidtag_details.html?StartMonth',
-			'/employee/inventory/rfidtag_details.html?StartDay'} ) : undef,
-		'updated_on_end'	=>	Date::Calc::check_date( @openprint::session{
-			'/employee/inventory/rfidtag_details.html?EndYear',
-			'/employee/inventory/rfidtag_details.html?EndMonth',
-			'/employee/inventory/rfidtag_details.html?EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
-			'/employee/inventory/rfidtag_details.html?EndYear',
-			'/employee/inventory/rfidtag_details.html?EndMonth',
-			'/employee/inventory/rfidtag_details.html?EndDay'} ) : undef,
-		'order'		=>	'updated_on DESC',
-		'limit'		=>	$openprint::session{'/employee/inventory/rfidtag_details.html?limit'},
-		);
-) ?>
 <? if ( @{$$variable{'Entries'}} ) ?>
 <table class="List">
 	<tr>
@@ -41,7 +8,7 @@
 	</tr>
 	<? while ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
 		<tr>
-			<td><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Entry'}->updated_on() ) ); ) ?></td>
+			<td><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Entry'}->updated_on() ) ); ) ?></td>
 			<td><? echo ( $$variable{'Entry'}->Scanner()->name() ) ?></td>
 			<td><? echo ( $$variable{'Entry'}->Location()->name() ) ?></td>
 			<td><? echo ( $$variable{'Entry'}->comment() ) ?></td>

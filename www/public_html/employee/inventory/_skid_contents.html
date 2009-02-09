@@ -21,7 +21,7 @@
 		$html .= '<tr>';
 		$html .= sprintf('<td><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
 		$html .= sprintf('<td align="right"><a href="paper_details.html?paper_id=%1$d">%2$d%3$s</a></td>', $Paper->id(), $C->quantity(), $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
-		$html .= sprintf('<td align="right"><a href="paper_details.html?paper_id=%1$d">%2$.1f</a></td>', $Paper->id(), ($Paper->type() eq 'Sheet' and $Paper->calliper()) ? sprintf('%.1f', $C->quantity()*$Paper->calliper()) : 'unknown' );
+		$html .= sprintf('<td align="right"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (($Paper->type() eq 'Sheet') and $Paper->calliper()) ? sprintf('%.1f', $C->quantity()*$Paper->calliper()) : 'unknown' );
 		$html .= '</tr><tr>';
 		$html .= '<td colspan="3">';
 		$html .= ssi::writeButton( $log, $dbh, "CheckIn$$C{id}", 'checkin.gif', "checkin_window( $paper_id, '$$variable{skid_id}' );", '', 'Check In' );

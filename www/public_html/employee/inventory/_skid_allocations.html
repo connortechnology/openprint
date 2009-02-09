@@ -10,7 +10,6 @@
 	<? echo (
 		require openprint::PaperAllocation;
 		my $html;
-		#$$variable{'skid_id'} = $param{'skid_id'} if ! $$variable{'skid_id'};
 		my @Allocations = openprint::PaperAllocation::find( 'skid_id'=>$$variable{'skid_id'}, 'order'=>'created_on' );
 
 		my $rowclass;
@@ -18,7 +17,7 @@
 			my $Paper = $Allocation->Paper();
 			$html .= sprintf( '<tr%s><td>%s</td><td><a href="/employee/inventory/paper_details.html?paper_id=%d">%s</a></td><td><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td>',
 				$rowclass,
-				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Allocation->created_on() ) ),
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Allocation->created_on() ) ),
 				$Paper->id(),
 				$Paper->to_string(),
 				$Allocation->project_id(),
