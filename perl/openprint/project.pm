@@ -27,35 +27,6 @@ sub get_quantities {
 	return ( $Project->quantity1(), $Project->quantity2(), $Project->quantity3() );
 } # end sub get_quantities
 
-sub get_header {
-	my ( $log, $dbh, $variable, $project_index ) = @_;
-
-	$$variable{'Project'} = new openprint::Project( $project_index );
-	$_ = q{SELECT order_id, lngDocketNumber, strProjectReference, strComments, to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus, intQuantity1, intQuantity2, intQuantity3,Currency_id, strDesign, CompanyIndex, UserIndex, to_char(due_date,'MM/DD/YYYY'), to_char(due_date, 'Day Mon DD/YYYY')  FROM Projects WHERE Index=?};
-	@$variable{'order_id','DocketNumber','ProjectReference', 'Comments', 'CreationDate','ProjectStatus','Quantity1','Quantity2','Quantity3','currency_id','ddmDesign','company_id','user_id','DueDate','RequiredDateAlternate'} = sql::execute( $log, $dbh, $_, $project_index );
-
-	my $Company = new openprint::Company( $$variable{'company_id'} );
-	$$variable{'Company'} = $Company;
-	$$variable{'CompanyName'} = $Company->name();
-
-	my $User = new openprint::User( $$variable{'user_id'} );
-
-	@$variable{'CreatedByName','CreatedByPhone','CreatedByEmail'} = ( $User->name(), $User->phone(), $User->email() );
-	my $CSR = new openprint::User( $Company->salesrep_id() );
-
-   @$variable{'CSRName','CSREmail','CustomerServiceRep'} = ( $CSR->name(), $CSR->email(), $CSR->name() );
-
-	if ( $$variable{'order_id'} ) {
-		$_ = q{SELECT intQuantity, intQuantityIndex, to_char(dateRequired, 'MM/DD/YYYY'), ShippingType FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?};
-		@$variable{'OrderedQuantity','OrderedQuantityIndex','RequiredDate','ShippingType'} = sql::execute( $log, $dbh, $_, $$variable{'order_id'}, $project_index );
-		$_ = q{SELECT strPONumber, to_char(dtmOrderDate, 'MM/DD/YYYY') FROM Orders WHERE Index=?};
-		@$variable{'PONum','OrderedDate'} = sql::execute( $log, $dbh, $_, $$variable{'order_id'} );
-	my $Order = new openprint::Order( $$variable{'order_id'} );
-	@$variable{'OrderSalutation','OrderFirstName','OrderLastName','OrderPhone','OrderExtension'} = ( $Order->salutation(), $Order->first_name(), $Order->last_name(), $Order->phone(), $Order->extension() );
-	} # end fi
-
-} # end sub get_header
-
 sub view {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 
@@ -63,7 +34,7 @@ sub view {
 		$openprint::session{'ShowAllSignatures'} = $openprint::param{'ShowAllSignatures'};
 	} # end if
 $openprint::log->debug("Viewing Project $project_index");
-	get_header( $log, $dbh, $variable, $project_index );
+	$$variable{'Project'} = new openprint::Project( $project_index );
 
 	my %project;
 	foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $project_index ) ) {

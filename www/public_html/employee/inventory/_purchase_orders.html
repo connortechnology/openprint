@@ -1,5 +1,11 @@
 <? eval (
-	if ( $param{'docket'} ) {
+	if ( $param{'po_id'} ) {
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+			'id'=>$param{'po_id'}, 
+			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
+			'deleted'=>[1,0],
+			'order' => 'id desc');
+	} elsif ( $param{'docket'} ) {
 		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
 			'docket'=>$param{'docket'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),

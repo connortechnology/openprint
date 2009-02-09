@@ -405,9 +405,11 @@ if ( 0 ) {
 			$customer_credit->set( \%params );
 		} # end if $index
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$index = $Company->next();
 		$Company->delete();
-		$Company = new openprint::Company( $Company->id() );
-		$index = $Company->id();
+		$Company = new openprint::Company( $index );
+	} elsif ( $openprint::param{'btnFunction'} eq 'Undelete' ) {
+		$Company->undelete();
 	} # end if btnFunction
 
 # we no longer default to displaying the first record.	The user must select one.,

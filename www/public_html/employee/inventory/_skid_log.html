@@ -1,35 +1,35 @@
 <? eval (
 	$$variable{'Skid'} = new openprint::Skid( $openprint::param{'skid_id'} );
 ) ?>
-	<? echo (
-		require openprint::PaperInventory;
-		my $html;
-		my %employees = map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'] );
-		foreach my $paper_id ( sql::execute( $log, $dbh, q{SELECT DISTINCT paper_id FROM Paper_Inventory WHERE skid_id=?}, $openprint::param{'skid_id'} ) ) {
-			my $Paper = new openprint::Paper( $paper_id );
-			$html .= '<b>'.$Paper->to_string().'</b>';
-			$html .= q{
-		<table class="List">
-			<tr>
-				<th align="left" width="120">Date</th>
-				<th align="left" width="150">Employee</th>
-				<th align="left" width="100">Amount</th>
-				<th align="left" width="100">In Stock</th>
-				<th align="left">Comment</th>
-			</tr>
-			};
-			my $rowclass;
-			foreach my $PI ( openprint::PaperInventory::find('skid_id'=>$openprint::param{'skid_id'}, 'paper_id'=>$paper_id, 'order'=>'updated_on' ) ) {
-				$html .= "<tr$rowclass>";
-				$html .= sprintf( '<td>%s</td>', Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($PI->updated_on) ) );
-				$html .= sprintf( '<td>%s</td>', $PI->User()->name() );
-				$html .= sprintf( '<td>%d</td>', $PI->delta(), );
-				$html .= sprintf( '<td>%d</td>', $PI->instock(), );
-				$html .= sprintf( '<td>%s</td>', $PI->comment(), );
-				$html .= '</tr>';
-				$rowclass = $rowclass ? '' : ' class="colRow"';
-			} # end while
-			$html .= '</table><br/>';
-		} # end foreach paper
-		return $html;
-	) ?>
+<? echo (
+	require openprint::PaperInventory;
+	my $html;
+	my %employees = map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'] );
+	foreach my $paper_id ( sql::execute( $log, $dbh, q{SELECT DISTINCT paper_id FROM Paper_Inventory WHERE skid_id=?}, $openprint::param{'skid_id'} ) ) {
+		my $Paper = new openprint::Paper( $paper_id );
+		$html .= '<b>'.$Paper->to_string().'</b>';
+		$html .= q{
+	<table class="List">
+		<tr>
+			<th align="left" width="120">Date</th>
+			<th align="left" width="150">Employee</th>
+			<th align="left" width="100">Amount</th>
+			<th align="left" width="100">In Stock</th>
+			<th align="left">Comment</th>
+		</tr>
+		};
+		my $rowclass;
+		foreach my $PI ( openprint::PaperInventory::find('skid_id'=>$openprint::param{'skid_id'}, 'paper_id'=>$paper_id, 'order'=>'updated_on' ) ) {
+			$html .= "<tr$rowclass>";
+			$html .= sprintf( '<td>%s</td>', Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($PI->updated_on) ) );
+			$html .= sprintf( '<td>%s</td>', $PI->User()->name() );
+			$html .= sprintf( '<td>%d</td>', $PI->delta(), );
+			$html .= sprintf( '<td>%d</td>', $PI->instock(), );
+			$html .= sprintf( '<td>%s</td>', $PI->comment(), );
+			$html .= '</tr>';
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end while
+		$html .= '</table><br/>';
+	} # end foreach paper
+	return $html;
+) ?>

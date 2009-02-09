@@ -1172,7 +1172,9 @@ sub send_sales_order {
 	if ( @admin_emails ) {
 		my %mail = (
 				SMTP	=> $openprint::config{'Mail Server'},
-				FROM	=> $openprint::config{'OrderingEmail'},
+# Only for Amin
+				FROM	=> $order{'txtEmail'},
+				#FROM	=> $openprint::config{'OrderingEmail'},
 				TO		=> join(',',@admin_emails),
 				SUBJECT => "Order $order_id",
 				);
@@ -1394,6 +1396,7 @@ sub quantity_select_display {
 sub cancel_order {
 	my ( $log, $dbh, $order_id ) = @_;
 
+	my $Order = new openprint::Order( $order_id );
 	sql::update( $log, $dbh, 'Orders', ['Index=?',$order_id], 'strStatus', 'Cancelled' );
 	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
 	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
@@ -1412,20 +1415,24 @@ sub cancel_order {
 		} # end foreach PA
 	} # end foreach
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, 'Cancelled' );
+	$Order->send_cancellation_notice();
 } # end sub cancel_order
 
 
 sub fill_user_info {
 	my ( $r, $log, $dbh, $variable, $user_index ) = @_;
 
-	my %info;
-	$_ = 'SELECT strEmail,strTitle, strFirstName, strLastName, strSalutation, strPhone, strExt, strFax FROM Users WHERE Index=?';
-	@info{'txtEmail','txtTitle','txtFirstName','txtLastName','rdbSalutation','txtPhone','txtExt', 'txtFax'} = sql::execute( $log, $dbh, $_, $user_index );
-	my @results;
-	foreach my $key ( keys %info ) {
-		push @results, "$key~$info{$key}";
-	} # end foreach
-	return join( '|', @results );
+	if ( $user_index ) {
+		my %info;
+		my $User = new openprint::User( $user_index );
+		@info{'txtEmail','txtTitle','txtFirstName','txtLastName','rdbSalutation','txtPhone','txtExt', 'txtFax'} = $User->get('email','title','firstname','lastname','salutation','phone','extension','fax');
+		my @results;
+		foreach my $key ( keys %info ) {
+			push @results, "$key~$info{$key}";
+		} # end foreach
+		return join( '|', @results );
+	} # end if
+	return;
 
 } # end sub fill_user_info
 

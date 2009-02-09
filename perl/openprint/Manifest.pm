@@ -14,6 +14,7 @@ require sql;
 require ssi;
 require misc;
 
+require openprint::Manifest_Content_Type;
 require openprint::ManifestContent;
 require openprint::PurchaseOrder;
 require openprint::Company;
@@ -206,6 +207,15 @@ sub delete {
 	delete $openprint::Object::cache{'openprint::Manifest'}{$$self{'id'}};
 	return '';
 } # end sub delete
+
+sub Types {
+	my ( $self, %params ) = @_;
+	if ( $$self{'id'} ) {
+		$params{'manifest_id'} = $$self{'id'};
+		return openprint::Manifest_Content_Type::find(%params);
+	} # end if
+	return;
+} # end sub Types
 
 sub Contents {
 	my ( $self, %params ) = @_;

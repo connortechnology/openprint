@@ -220,7 +220,7 @@ function gsm_to_mweight( form ) {
 				<? echo ( 
 					my $html;
 					if ( $$variable{'Skid'}->created_on() ) {
-						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Skid'}->created_on()) );
+						$html .= Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->created_on()) );
 						$html .= ' by ' . new openprint::User( $$variable{'Skid'}->created_by_id() )->name();
 					} # end if
 					return $html;
@@ -309,7 +309,7 @@ function gsm_to_mweight( form ) {
 					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
 					if ( $$variable{'Skid'}->id() ) {
 						if ( $$variable{'Skid'}->deleted() ) {
-							$html .= ssi::writeButton( $log, $dbh, 'destroy', 'destroy.gif', "f1.action='skids.html?skid_id=$$variable{'skid_id'}';f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+							$html .= ssi::writeButton( $log, $dbh, 'destroy', 'destroy.gif', "f1.action='skids.html?skid_id=$$variable{'skid_id'}';f1.btnFunction.value='Destroy';f1.submit();", '', 'Destroy' );
 						} else {
 							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{'skid_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
 						} # end if

@@ -1,0 +1,180 @@
+<fieldset>
+	<? eval (
+		if ( ! $param{'Name-'.$$variable{'type_id'}} ) {
+			my $Paper;
+			if ( $$variable{'Type'}->paper_id() ) {
+				$Paper = $$variable{'Type'}->Paper();
+			} else {
+				foreach my $C ( $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) {
+					my $Skid = $C->Skid();
+					foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
+						$Paper = new openprint::Paper( $paper_id );
+						last;
+					} # end foreach paper_id
+					last if $Paper;
+				} # end foreach Content
+			} # end if
+			if ( $Paper ) {
+				$param{'Owner-'.$$variable{'type_id'}} = $Paper->owner_id();
+				$param{'Manufacturer-'.$$variable{'type_id'}} = $Paper->manufacturer_id();
+				$param{'Name-'.$$variable{'type_id'}} = $Paper->name_id();
+				$param{'Finish-'.$$variable{'type_id'}} = $Paper->finish_id();
+				$param{'Colour-'.$$variable{'type_id'}} = $Paper->colour_id();
+				$param{'weight-'.$$variable{'type_id'}} = $Paper->weight();
+				$param{'Quality-'.$$variable{'type_id'}} = $Paper->quality_id();
+				$param{'type-'.$$variable{'type_id'}} = $Paper->type();
+				$param{'calliper-'.$$variable{'type_id'}} = $Paper->calliper();
+				$param{'width-'.$$variable{'type_id'}} = $Paper->width();
+				$param{'height-'.$$variable{'type_id'}} = $Paper->height();
+				$param{'gsm-'.$$variable{'type_id'}} = $Paper->gsm();
+				$param{'fsc_code-'.$$variable{'type_id'}} = $Paper->fsc_code();
+			} # end if
+		} # end if
+	) ?>
+	<div class="leftColumn">
+		<p>
+			<label for="Owner-<?type_id?>">Owner:</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.Owner);" class="filter" />
+			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( openprint::Company::get_dropdown( $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
+		</p>
+		<p>
+			<label for="txtManufacturer-<?type_id?>" onclick="toggleInput('Manufacturer-<?type_id?>');">Manufacturer:</label>
+			<select id="Manufacturer-<?type_id?>" name="Manufacturer-<?type_id?>" size="1" onchange="Manufacturer_onChange(this,'-<?type_id?>');">
+				<option value="">select</option>
+				<? echo (
+					if ( ! $param{'Manufacturer-'.$$variable{'type_id'}} ) {
+						my @Manufacturers = openprint::Manufacturer::find('name'=>'unknown');
+						if ( @Manufacturers ) {
+							$param{'Manufacturer-'.$$variable{'type_id'}} = $Manufacturers[0]->id();
+						} # end if
+					} # end if
+					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::Manufacturer::find('order'=>'lower(longname)') ], $param{'Manufacturer-'.$$variable{'type_id'}} );
+				) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtManufacturer-<?type_id?>" name="txtManufacturer-<?type_id?>" />
+		</p>
+		<p>
+			<label for="txtName-<?type_id?>" onclick="toggleInput('Name-<?type_id?>');">Name:</label>
+			<select id="Name-<?type_id?>" name="Name-<?type_id?>" size="1" onchange="Name_onChange(this,'-<?type_id?>');">
+				<option value="">select</option>
+			<? echo (
+					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockName::find('order'=>'lower(longname)') ], $param{'Name-'.$$variable{'type_id'}} );
+					) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtName-<?type_id?>" name="txtName-<?type_id?>" />
+		</p><p>
+			<label for="txtFinish-<?type_id?>" onclick="toggleInput('Finish-<?type_id?>');">Finish:</label>
+			<select id="Finish-<?type_id?>" name="Finish-<?type_id?>" size="1" onchange="Finish_onChange(this,'-<?type_id?>');">
+				<option value="">select</option>
+				<? echo (
+					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockFinish::find('order'=>'lower(longname)') ], $param{'Finish-'.$$variable{'type_id'}} );
+				) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" />
+		</p><p>
+			<label for="txtColour-<?type_id?>" onclick="toggleInput('Colour-<?type_id?>');">Colour:</label>
+			<select id="Colour-<?type_id?>" name="Colour-<?type_id?>" size="1" onchange="Colour_onChange(this,'-<?type_id?>');">
+				<option value="">select</option>
+			<? echo (
+				if ( ! $param{'Colour-'.$$variable{'type_id'}} ) {
+					my @Colours = openprint::StockColour::find('shortname'=>'White');
+					if ( @Colours ) {
+						$param{'Colour'} = $Colours[0]->id();
+					} # end if
+				} # end if
+				my @Colours = openprint::StockColour::find('order'=>'lower(shortname)');
+				if ( @Colours == 1 ) {
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $Colours[0]->id() );
+				} else {
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $param{'Colour-'.$$variable{'type_id'}} );
+				} # end if
+				) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtColour-<?type_id?>" name="txtColour-<?type_id?>" />
+		</p>
+		<p>
+			<label for="weight-<?type_id?>">Weight:</label>
+			<input type="text" id="weight-<?type_id?>" name="weight-<?type_id?>" value="<? echo ( my $weight = $param{'weight-'.$$variable{'type_id'}}; $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
+		</p>
+		<p>
+			<label for="txtQuality-<?type_id?>" onclick="toggleInput('Quality-<?type_id?>');">Quality:</label>
+			<select id="Quality-<?type_id?>" name="Quality-<?type_id?>" size="1">
+				<option value="">select</option>
+			<? echo (
+				if ( ! $param{'Quality-'.$$variable{'type_id'}} ) {
+					my @Qualities = openprint::StockQuality::find('shortname'=>'new');
+					if ( @Qualities ) {
+						$param{'Quality-'.$$variable{'type_id'}} = $Qualities[0]->id();
+					} # end if
+				} # end if
+				my @Qualities = openprint::StockQuality::find('order'=>'lower(shortname)');
+				if ( @Qualities == 1 ) {
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
+				} else {
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality-'.$$variable{'type_id'}} );
+				} # end if
+			) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtQuality-<?type_id?>" name="txtQuality-<?type_id?>" />
+		</p>
+		<p><label>Type:</label>
+			<input type="radio" id="type-<?type_id?>Sheet" name="type-<?type_id?>" value="Sheet" onclick="$('PaperHeight-<?type_id?>').show();$('MWeight-<?type_id?>').show();" <? echo ( 'checked="checked"' if $param{'type-'.$$variable{'type_id'}} eq 'Sheet'; ) ?> />
+			<label class="radio" for="type-<?type_id?>Sheet">Sheet</label>
+			<input type="radio" id="type-<?type_id?>Roll" name="type-<?type_id?>" value="Roll" onclick="$('PaperHeight-<?type_id?>').hide();$('MWeight-<?type_id?>').hide();" <? echo ( 'checked="checked"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll'; ) ?> />
+			<label class="radio" for="type-<?type_id?>Roll">Roll</label>
+		</p>
+		<p>
+			<label for="width-<?type_id?>">Size:</label>
+			<input type="text" id="width-<?type_id?>" name="width-<?type_id?>" value="<? echo ( $param{'width-'.$$variable{'type_id'}} ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form, '<?type_id?>' );"/>
+			<span id="PaperHeight-<?type_id?>"<? echo ( ' style="display: none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?>>
+			&nbsp;x&nbsp;
+			<input type="text" id="height-<?type_id?>" name="height-<?type_id?>" value="<? echo ( $param{'height-'.$$variable{'type_id'}} ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form, '<?type_id?>' );"/>
+			</span>
+		</p>
+	</div>
+	<div class="rightColumn">
+		<p>
+			<label>Calliper:</label>
+			<input type="text" id="calliper-<?type_id?>" name="calliper-<?type_id?>" value="<? echo ( $param{'calliper-'.$$variable{'type_id'}} ) ?>" size="6" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );" style="width: auto;" />PT
+		</p>
+		<p>
+			<label>GSM:</label>
+			<input type="text" id="gsm-<?type_id?>" name="gsm-<?type_id?>" value="<? echo ( $param{'gsm-'.$$variable{'type_id'}} ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);" style="width: auto;" />
+		</p>
+		<p id="MWeight-<?type_id?>" <? echo ( 'style="display:none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?> >
+			<label>MWeight:</label>
+			<input type="text" id="mweight-<?type_id?>" name="mweight-<?type_id?>" value="<? echo ( $param{'mweight-'.$$variable{'type_id'}} ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );mweight_to_gsm(this.form);" style="width: auto;" />M
+		</p>
+		<p>
+			<label>FSC Code:</label>
+			<input type="text" id="fsc_code-<?type_id?>" name="fsc_code-<?type_id?>" value="<? echo ( $param{'fsc_code-'.$$variable{'type_id'}} ) ?>" size="13" style="width: auto;" />
+		</p>
+		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+		<p>
+			<label>Cost (/CWT):</label>
+			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+		</p>
+		<p>
+			<label>Supplier Invoice#:</label>
+			<input type="text" id="supplier_invoice-<?type_id?>" name="supplier_invoice-<?type_id?>" value="<? echo ( $$variable{'Type'}->supplier_invoice() ) ?>" />
+		</p>
+		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+		<p>
+			<label>Docket:</label>
+			<input type="text" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('docket').value} } );"/>
+		</p>
+		<p>
+			<label>Purchase Order:</label>
+			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO', 'go.gif', '', '/employee/inventory/purchase_order_view.html?po_id='.$$variable{'Manifest'}->po_id(), 'Go' ) : '' ) ?>
+		</p>
+		<div id="PurchaseOrders">
+	<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
+			<!--#include virtual="_manifest_purchase_orders.html"-->
+	<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
+		</div>
+	</div>
+	<br class="spacer"/>
+	<br class="spacer"/>
+	<div id="ManifestContents"><!--#include virtual="_manifest_contents.html"--></div>
+	<br class="spacer"/>
+</fieldset>
