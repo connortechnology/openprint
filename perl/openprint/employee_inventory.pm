@@ -562,7 +562,7 @@ sub skid_details {
 	my $Skid = new openprint::Skid( $skid_ids[0] );
 	foreach ( @skid_ids ) {
 		my $S = new openprint::Skid( $_ );
-		if ( sets::intersection( map {$_->paper_id} ( $S->contents(),$Skid->contents() ) ) != map { $_->paper_id }$S->contents() ) {
+		if ( sets::intersection( map {$_->paper_id} ( $S->Contents(), $Skid->Contents() ) ) != scalar map { $_->paper_id } $S->Contents() ) {
 			$variable{'similar'} = 0;
 			last;
 		} # end if
