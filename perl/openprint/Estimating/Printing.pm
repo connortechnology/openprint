@@ -1610,9 +1610,6 @@ $i->display();
 					} # end if overriden or not or cached
 					push @{$imps{$str}}, $imp if $add > 0;
 				} # end foreach imp
-				} else {
-				push @impositions, @imps;
-				} # end if
 
 			}# end foreach Paper
 
