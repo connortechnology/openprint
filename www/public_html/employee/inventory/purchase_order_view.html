@@ -1,8 +1,7 @@
 <form id="f1" name="f1" action="purchase_orders.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" />
-	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
-	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+	<!--#include virtual="/includes/error_reporting.html"-->
 	<p class="buttons">
 <? echo ( 
 	my $html = '';

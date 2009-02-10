@@ -81,9 +81,7 @@ function add_content(form, type_id) {
 					} # end if
 				) ?>
 				<span class="DateSelector">
-				<select name="received_on_year" onchange="setDaysDropDown(this.value,this.form.received_on_month.value,this.form.received_on_day, this.form.received_on_day.value);"><? echo ( ssi::return_years( undef, undef, $param{'received_on_year'} ); ) ?></select>
-				<select name="received_on_month" onchange="setDaysDropDown(this.form.received_on_year.value,this.value,this.form.received_on_day,this.form.received_on_day.value);"><? echo ( ssi::getmonths( $param{'received_on_month'} ); ) ?></select>
-				<select name="received_on_day"><? echo ( ssi::getdays( $param{'received_on_day'} ); ) ?></select>
+<? echo ( ssi::date_select( 'received_on', sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'}) ); ) ?>
 				</span>
 				</p>
 			</div>
