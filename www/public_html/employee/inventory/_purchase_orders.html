@@ -51,7 +51,7 @@
 <table class="List sortable">
 	<tr>
 <? if ( $session{'user_type'} eq 'A' ) ?>
-		<th width="20"><input type="checkbox" onclick="select_all( this.form, 'po_id', this.checked );"/></th>
+		<th width="20"><input type="checkbox" onclick="select_all( $('f1'), 'po_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 		<th width="30">ID</th>
 		<th width="110" style="text-align: left;">Date</th>
@@ -64,7 +64,7 @@
 	<? echo ( 
 		my $html = '';
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
-			$html .= q`<tr onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`;
+			$html .= sprintf(q`<tr id="tr-%1$d" onmouseover="$('tr-%1$d').addClassName('highlightOn');" onmouseout="$('tr-%1$d').removeClassName('highlightOn');">`, $PO->id() );
 			if ( $session{'user_type'} eq 'A' ) {
 				$html .= '<td><input type="checkbox" id="po_id" name="po_id" value="'.$PO->id().'"/></td>';
 			} # end if

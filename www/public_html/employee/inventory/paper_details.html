@@ -1,5 +1,6 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript">
+<!--
 	function check_inputs(form ) {
 		if ( form.skid_id && form.skid_id.value ) {
 			if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
@@ -83,13 +84,14 @@ function calc_from_gsm( form ) {
 	form.elements['mweight'].value = parseInt((gsm/703064.5)*(width*height)*10000)/10;
 	form.elements['basis_weight'].value = parseInt((gsm/703064.5)*(basis_width*basis_height)*10000)/10;
 }
+-->
 </script>
 
 <!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" action="paper_details.html?paper_id=<?paper_id?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<fieldset>
-		<div style="float: left; width: 48%;">
+		<div class="leftColumn">
 			<p>
 				<label>ID #:</label>
 				<?paper_id?>
@@ -166,7 +168,7 @@ function calc_from_gsm( form ) {
 			<p>
 				<label for="width">Size:</label>
 				<input type="text" id="width" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
-				<span id="PaperHeight"<? echo ( ' style="display: none;"' if $$variable{'Paper'}->type() eq 'Roll' ) ?>>
+				<span id="PaperHeight"<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? ' style="display:none;"' : '' ) ?>>
 				&nbsp;x&nbsp;
 				<input type="text" id="height" name="height" value="<? echo ( $$variable{'Paper'}->height(); ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
 				</span>
@@ -234,7 +236,7 @@ function calc_from_gsm( form ) {
 			</p>
 <? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 		</div>
-		<div style="float: right; width: 48%;">
+		<div class="rightColumn">
 			<p>
 				<label>Entered:</label>
 				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paper'}->created_on() ) ); ) ?>
@@ -268,7 +270,7 @@ function calc_from_gsm( form ) {
 							$html .= ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' );
 							$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
 							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ) if ! $$variable{'Paper'}->in_stock();
-							$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset()', '', 'Reset' );
+							$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
 					} # end if
 					return $html;
 			) ?>

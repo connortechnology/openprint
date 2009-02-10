@@ -1,14 +1,14 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
 Please select a Manifest to view/edit.<br>
-<form name="f1" method="post" action="manifest.html">
+<form id="f1" name="f1" method="post" action="manifest.html">
 	<fieldset class="filters"><legend>Choose Manifest</legend>
 		<p>
 			<label for="manifest_id">Manifest ID #</label>
 			<input type="text" id="manifest_id" name="manifest_id" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
 			<input type="text" id="manifest_like" name="manifest_like" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "AjaxLoadContent( 'Results', '_manifests.html', document.forms.f1.serialize() );",'','Show' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'','Show' ); ) ?>
 		</p>
 		<p>
 			<label for="po_id">Purchase Order:</label>
@@ -22,7 +22,7 @@ Please select a Manifest to view/edit.<br>
 		</p>
 	</fieldset>
 </form>
-<form name="f2" method="post" action="manifests.html">
+<form id="f2" name="f2" method="post" action="manifests.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p><label>Vendor:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
@@ -55,7 +55,7 @@ Please select a Manifest to view/edit.<br>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f2.serialize() );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", '', 'Show Results' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'manifest.html', 'Add New Manifest' ),
 				); ) ?>
 		</p>

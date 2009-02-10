@@ -23,7 +23,7 @@ Please select a Paper to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Docket:</label>
-			<input type="text" name="Docket" value="<? echo ( $session{'/employee/inventory/paper.html?Docket'} ) ?>" style="width: auto;" size="6" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','/employee/inventory/_paper_results.html', f1.serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<input type="text" name="Docket" value="<? echo ( $session{'/employee/inventory/paper.html?Docket'} ) ?>" style="width: auto;" size="6" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','/employee/inventory/_paper_results.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 		</p>
 	</fieldset>
 	<fieldset class="filters"><legend>Or</legend>
