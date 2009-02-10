@@ -3,7 +3,7 @@ package openprint::Skid;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %variable %session  );
+use vars qw( $log $dbh %variable %session $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *log = \$openprint::log;
@@ -20,13 +20,9 @@ require openprint::ManifestContent;
 
 my $debug = 1;
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
 $table = 'Skids';
 $serial = 'skid_id_seq';
-my %fields = (
+%fields = (
 	'id'			=>	'id',
 	'location_id'	=>	'location_id',
 	'created_on'	=>	'created_on',
@@ -41,12 +37,14 @@ my %fields = (
 );
 
 %transforms = (
+	'deleted'	=>	[ 's/[^01]//g' ],
 );
 %defaults = (
 	'location_id'	=>	undef,
 	'rfidtag_id'	=>	undef,
 	'updated_on'	=>	'NOW()',
 	'created_on'	=>	'NOW()',
+	'deleted'		=>	0,
 );
 
 sub find {
@@ -174,44 +172,21 @@ sub load {
 } # end sub load
 
 sub save {
-	my $self = shift;
+	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	my $ac = sql::start_transaction( $dbh );
-	my @sql = ( 
-		'rfidtag_id',	$$self{'rfidtag_id'} ? $$self{'rfidtag_id'} : undef,
-		'location_id',	$$self{'location_id'} ? $$self{'location_id'} : undef,
-		'created_by_id',$$self{'created_by_id'},	
-		'updated_on',	'NOW()',
-		'updated_by',	$session{'user_id'},
-		);
-		
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Skid_id_seq')} );
-		if ( my $error = sql::insert( undef, undef, 'Skids', @sql, 'id', $$self{'id'} ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-	} else {
-		if ( my $error = sql::update( undef, undef, 'Skids', ['id=?',$$self{'id'}], \@sql )) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-	} # end if
+	$self->SUPER::save( $data );
+$log->debug("RFID: $$self{'rfidtag_id'} $$data{'rfidtag_id'}");
 
 	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE skid_id=?}, $$self{'id'} );
 	foreach my $paper_id ( keys %{$$self{'Paper'}} ) {
         my $Paper = new openprint::Paper( $paper_id );
 		sql::insert( undef, undef, 'skid_Contents', 'skid_id', $$self{'id'}, 'paper_id', $paper_id, 'quantity', int($$self{'Paper'}{$paper_id}), 'units', $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
 	} # end foreach paper_id
-	$self->load();
 	sql::end_transaction( $dbh, $ac );
+	$self->load();
 	return;
 } # end sub save
-
-sub delete {
-	my $self = shift;
-	sql::update( undef, undef, 'Skids', ['id=?', $$self{'id'}], 'deleted', 1 );
-} # end sub delete
 
 sub destroy {
 	my $self = shift;
@@ -260,7 +235,7 @@ sub remove {
 	$$self{'Paper'}{$$Paper{'id'}} = 0 if $$self{'Paper'}{$$Paper{'id'}} < 0;
 } # end sub add_inventory
 
-sub set {
+sub set_quantity {
 	my ( $self, $Paper, $quantity ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;

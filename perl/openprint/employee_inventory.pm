@@ -1347,7 +1347,9 @@ sub _manifest_content {
 			$variable{'error'} .= $Tag->save({'id'=>$param{'rfidtag_id'}}) if $param{'rfidtag_id'} and ! $Tag->id();
 			my $Skid = new openprint::Skid( $param{'skid_id'} );
 			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
-			$variable{'error'} .= $Skid->save() if ! $Skid->id();
+$log->debug("RFID: $param{'rfidtag_id'}");
+			$variable{'error'} .= $Skid->save({'rfidtag_id'=>$param{'rfidtag_id'}}) if ! $Skid->id();
+			return if $variable{'error'};
 
 			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
 				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been scanned.';
