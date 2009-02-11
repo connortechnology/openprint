@@ -14,7 +14,7 @@
 		<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
 		<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 		<td><? echo ( $$variable{'Project'}->status(); ) ?></td>
-		<td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></td>
+		<td><? echo ( $$variable{'Project'}->requested_date() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ) : ''; ) ?></td>
 		<td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->due_date() ) ) if $$variable{'Project'}->due_date(); ) ?></td>
 		<td align="left"><? echo ( $$variable{'Project'}->ordered_quantity(); ) ?></td>
 		<td align="right">
