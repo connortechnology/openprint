@@ -5,27 +5,23 @@ function load(form) {
 	new Ajax.Updater( 'Results','/employee/inventory/_rfidtags_results.html', { method: 'get', parameters: form.serialize() } );
 } // end function load
 </script>
-<? if ( $$variable{'information'} ) ?>
-<p class="information"><?information?></p>
-<hr/>
-<? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 Please select a RFID Tag to view/edit.<br>
-<form name="f1" method="post" action="rfidtag_details.html">
+<form id="f1" name="f1" method="post" action="rfidtag_details.html">
 	<fieldset class="filters"><legend>Choose RFID Tag</legend>
 		<p>You need to enter at least 3 digits:<br/>
 			<label for="rfidtag_id">RFID Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.rfidtag_hex.value='';if(event.keyCode == 13){load(f1);}"/>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.rfidtag_hex.value='';if(event.keyCode == 13){load($('f1'));}"/>
 			Hex:
-			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.rfidtag_id.value='';if(event.keyCode == 13){load( document.forms.f1 );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', 'f1.submit();','','Load' ); ) ?>
+			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.rfidtag_id.value='';if(event.keyCode == 13){load( $('f1') );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('f1').submit();",'','Load' ); ) ?>
 		</p>
 	</fieldset>
 </form>
-<form name="f2" method="post" action="rfidtags.html">
+<form id="f2" name="f2" method="post" action="rfidtags.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<? eval (
-			ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_start', 0 );
-			ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_end', 0 );
+			ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on', 0 );
 			if ( ! exists $session{'/employee/inventory/rfidtags.html?assigned'} ) {
 				$session{'/employee/inventory/rfidtags.html?assigned'} = 1;
 			} # end if
@@ -46,18 +42,18 @@ Please select a RFID Tag to view/edit.<br>
 		<p>
 			<label>Last Updated:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'updated_on_start', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?updated_on_start_year','/employee/inventory/rfidtags.html?updated_on_start_month','/employee/inventory/rfidtags.html?updated_on_start_day'} ) ); ) ?>
+<? echo ( ssi::date_select( 'updated_on_start', $session{'/employee/inventory/rfidtags.html?updated_on_start_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?updated_on_start_year','/employee/inventory/rfidtags.html?updated_on_start_month','/employee/inventory/rfidtags.html?updated_on_start_day'} ) : ' '); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'updated_on_end', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?updated_on_end_year','/employee/inventory/rfidtags.html?updated_on_end_month','/employee/inventory/rfidtags.html?updated_on_end_day'} ) ); ) ?>
+<? echo ( ssi::date_select( 'updated_on_end', $session{'/employee/inventory/rfidtags.html?updated_on_end_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?updated_on_end_year','/employee/inventory/rfidtags.html?updated_on_end_month','/employee/inventory/rfidtags.html?updated_on_end_day'} ) : ' ' ); ) ?>
 			</span>
 		</p>
 		<p>
             <label>Assigned/Unassigned?</label>
-            <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( $session{'/employee/inventory/rfidtags.html?assigned'} ? 'checked="checked"' : '' ) ?> />
+            <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?assigned'} ); ) ?> />
             <label class="radio" for="assigned">Assigned</label>
-            <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( $session{'/employee/inventory/rfidtags.html?notassigned'} ? 'checked="checked"' : '' ) ?> />
+            <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?notassigned'} ); ) ?> />
             <label class="radio" for="notassigned">Unassigned</label>
 		</p>
 		<p><label>Type:</label>
@@ -69,7 +65,7 @@ Please select a RFID Tag to view/edit.<br>
 
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', Serialize( document.forms.f2 ) );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', \$('f2').serialize() );", '', 'Show Results' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'rfidtag_details.html', 'Add New RFID Tag' ),
 				); ) ?>

@@ -3,7 +3,7 @@
 
 	ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned' );
 
-	 @{$$variable{'RFIDTags'}} = ();
+	@{$$variable{'RFIDTags'}} = ();
 	if ( $param{'rfidtag_id'} ) {
 		@{$$variable{'RFIDTags'}} = openprint::RFIDTag::find( 'id_like'	=> '%'.$param{'rfidtag_id'}.'%', 'order' =>	'id');
 	} elsif ( $param{'rfidtag_hex'} ) {
@@ -64,7 +64,7 @@
 <form id="RFIDTagResults" name="RFIDTagResults" action="rfidtags.html" method="post">
 	<table class="List">
 		<tr height="25">
-			<th width="10"><input type="checkbox" onclick="select_all( this.form, 'rfidtags', this.checked );"/></th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'rfidtags', this.checked );"/></th>
 			<th align="left" width="200">RFIDTag ID</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
@@ -77,7 +77,7 @@
 			foreach my $RFIDTag ( @{$$variable{'RFIDTags'}} ) {
 
 				$html .= "<tr$rowclass height=\"25\">";
-				$html .= qq`<td align="center"><input type="checkbox" name="rfidtags" value="$$RFIDTag{'id'}"/></td>`;
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="rfidtags" value="$$RFIDTag{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%1$s">%1$s (%2$x)</a></td>', $$RFIDTag{'id'}, substr($$RFIDTag{'id'},1,15) );
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->created_on()) ) );
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->updated_on()) ) );
