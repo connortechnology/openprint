@@ -223,6 +223,12 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 82 || character == 114 ) { // R
+		if ( element.name.substr(0,10) == 'rfidtag_id' ) {
+			element.focus();
+			element.value='';
+			return false;
+		} // end if
+
 		if ( element.form ) {
 			var form = element.form;
 			for ( var i = 0; i < form.elements.length; i += 1 ) {

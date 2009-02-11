@@ -388,7 +388,11 @@ sub save_Paper {
 		$weight = $param{'weight'.$id};
 		$weight .= 'lb' if ! ( $param{'weight'.$id} =~ /lb/ );
 	} elsif ( $param{'calliper'.$id} ) {
-		$weight = $param{'calliper'.$id} . 'PT';
+		if ( $param{'calliper'.$id} < 1 ) {
+			$weight = ($param{'calliper'.$id}*1000).'PT';
+		} else {
+			$weight =( 1*$param{'calliper'.$id}) . 'PT';
+		} # end if
 	} # end if
 
 	my @papers = openprint::Paper::find(

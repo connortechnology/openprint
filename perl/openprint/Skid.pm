@@ -175,13 +175,15 @@ sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	my $ac = sql::start_transaction( $dbh );
+
+	my %Paper = %{$$self{'Paper'}} if $$self{'Paper'};
+
 	$self->SUPER::save( $data );
-$log->debug("RFID: $$self{'rfidtag_id'} $$data{'rfidtag_id'}");
 
 	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE skid_id=?}, $$self{'id'} );
-	foreach my $paper_id ( keys %{$$self{'Paper'}} ) {
+	foreach my $paper_id ( keys %Paper ) {
         my $Paper = new openprint::Paper( $paper_id );
-		sql::insert( undef, undef, 'skid_Contents', 'skid_id', $$self{'id'}, 'paper_id', $paper_id, 'quantity', int($$self{'Paper'}{$paper_id}), 'units', $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
+		sql::insert( undef, undef, 'skid_Contents', 'skid_id', $$self{'id'}, 'paper_id', $paper_id, 'quantity', int($Paper{$paper_id}), 'units', $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
 	} # end foreach paper_id
 	sql::end_transaction( $dbh, $ac );
 	$self->load();

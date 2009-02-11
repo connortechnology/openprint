@@ -67,7 +67,7 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 
-	$self->set( $data ) if $data;
+	$self->set( $data ? $data: {} );
 
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
