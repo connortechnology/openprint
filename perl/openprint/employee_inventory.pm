@@ -508,6 +508,7 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
 	$Skid->location_id( $param{'ddmLocation'} ) if $param{'ddmLocation'};
 	$Skid->location( $param{'txtLocation'} ) if $param{'txtLocation'};
+	$Skid->id( $param{'skid_id'} ) if $param{'skid_id'} and ! $Skid->id();
 	if ( my $error = $Skid->save() ) {
 		$variable{'error'} .= $error;
 		return;
