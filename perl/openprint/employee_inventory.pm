@@ -1136,11 +1136,11 @@ sub rfidtag_details {
 		} else {
 			$variable{'error'} .= 'Skid already allocated<br/>';
 		} # end if
-	} else {
-		@param{'end_year','end_month','end_day'} = Date::Calc::Today();
-		$param{'limit'} = 10;
-		_rfidtag_log();
 	} # end if
+
+	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
+	$param{'limit'} = 10 if ! $param{'limit'};
+	_rfidtag_log();
 
 	$variable{'RFIDTag'} = $RFIDTag;
 } # end sub rfidtag_details
