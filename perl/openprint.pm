@@ -4,7 +4,6 @@ use strict;
 
 use vars qw( $r %variable %session %param %config $log $dbh );
 
-
 sub store_session {
 	my ( $uri, $params, @keys ) = @_;
 	foreach my $key ( @keys ) {

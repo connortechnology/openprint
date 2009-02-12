@@ -18,12 +18,9 @@ require openprint::Order;
 require openprint::OrderedProduct;
 require openprint::usergroup;
 require openprint::press_schedule;
-<<<<<<< HEAD:perl/openprint/order.pm
 require openprint::Payment;
 require openprint::Tax;
-=======
 require openprint::PaperAllocation;
->>>>>>> ab2ff4e4332d53c61ef8bf7f99f9d42a0e92bd05:perl/openprint/order.pm
 
 sub delete_order {
 	my ( $log, $dbh, $order_id ) = @_;
