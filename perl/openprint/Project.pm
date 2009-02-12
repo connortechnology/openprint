@@ -998,6 +998,12 @@ sub ordered_price {
 	return $$self{"price$$self{ordered_quantity_index}"};
 } # end sub ordered_price
 
+sub ordered_Price {
+	my ( $self ) = @_;
+	my $price = $self->ordered_price();
+	return { 'Cost'=>$price, 'currency_id'=>$$self{'currency_id'}, 'Price'=>$price };
+} # end sub ordered_Price
+
 sub prices {
 	my $self = shift;
 	return @$self{'price1','price2','price3'};
@@ -1006,6 +1012,11 @@ sub prices {
 sub price {
 	my ( $self, $index ) = @_;
 	return $$self{'price'.$index};
+} # end sub price
+
+sub Price {
+	my ( $self, $index ) = @_;
+	return { 'Cost'=>$$self{'price'.$index}, 'currency_id'=>$$self{'currency_id'}, 'Price'=>$$self{'price'.$index} };
 } # end sub price
 
 sub Order {

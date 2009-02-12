@@ -67,7 +67,7 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 
-	$self->set( $data ) if $data;
+	$self->set( $data ? $data: {} );
 
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
@@ -133,7 +133,7 @@ sub set {
 	my %fields = eval ('%'.$type.'::fields');
 
 	foreach my $field ( keys %fields ) {
-		
+#$openprint::log->debug("field: $field, param: $$params{$field}");		
 		if ( exists $$params{$field} ) {
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
@@ -142,8 +142,8 @@ sub set {
 			} # end if
 		} # end if
 
-#$openprint::log->debug("Transforms: @transforms");
 		my @transforms = eval('@{$'.$type.'::transforms{$field}}');
+#$openprint::log->debug("Transforms: @transforms");
 
 		foreach my $transform ( @transforms ) {
 			eval '$$self{$field} =~ ' . $transform;
@@ -151,7 +151,7 @@ sub set {
 
 		my %defaults = eval('%'.$type.'::defaults');
 
-		if ( ( $$self{$field} eq '' or ! defined $$self{$field} )  and exists $defaults{$field} ) {
+		if ( ( $$self{$field} eq '' or ! defined $$self{$field} ) and exists $defaults{$field} ) {
 #$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
 		} # end if

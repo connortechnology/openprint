@@ -14,7 +14,7 @@
 		<td><input type="text" id="docket-<?type_id?>-" name="docket-<?type_id?>-" size="8" value="<? echo ( $param{'docket-'.$$variable{'type_id'}} ? $param{'docket-'.$$variable{'type_id'}} : $$variable{'Manifest'}->docket() ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
 		<td><input type="text" id="qty_lbs-<?type_id?>-" name="qty_lbs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-<?type_id?>-') );" /></td>
 		<td><input type="text" id="qty_kgs-<?type_id?>-" name="qty_kgs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-<?type_id?>-') );" /></td>
-		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( f1, $$variable{type_id} );", '', 'Add' ); ) ?></td>
+		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1'), $$variable{type_id} );", '', 'Add' ); ) ?></td>
 	</tr>
 	<? echo (
 		my $html = '';

@@ -1,17 +1,9 @@
 <? eval (
 	require openprint::RFIDTag;
 
-	if ( $param{'StartYear'} ) {
-		foreach my $key ( 'Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','assigned','notassigned','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
-			if ( ref $param{$key} eq 'ARRAY' ) {
-				$session{'/employee/inventory/rfidtags.html?'.$key} = join(';', @{$param{$key}} );
-			} else {
-				$session{'/employee/inventory/rfidtags.html?'.$key} = $param{$key};
-			}
-		} # end foreach
-	} # end if
+	ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned' );
 
-	 @{$$variable{'RFIDTags'}} = ();
+	@{$$variable{'RFIDTags'}} = ();
 	if ( $param{'rfidtag_id'} ) {
 		@{$$variable{'RFIDTags'}} = openprint::RFIDTag::find( 'id_like'	=> '%'.$param{'rfidtag_id'}.'%', 'order' =>	'id');
 	} elsif ( $param{'rfidtag_hex'} ) {
@@ -20,33 +12,33 @@
 		foreach my $RFIDTag ( openprint::RFIDTag::find( 
 			'owner_id'	=>	( defined $session{'/employee/inventory/rfidtags.html?Owner'} ? $session{'/employee/inventory/rfidtags.html?Owner'} : undef ),
 			'created_on_start'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/rfidtags.html?StartYear',
-				'/employee/inventory/rfidtags.html?StartMonth',
-				'/employee/inventory/rfidtags.html?StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-				'/employee/inventory/rfidtags.html?StartYear',
-				'/employee/inventory/rfidtags.html?StartMonth',
-				'/employee/inventory/rfidtags.html?StartDay'} ) : undef,
+				'/employee/inventory/rfidtags.html?created_on_start_year',
+				'/employee/inventory/rfidtags.html?created_on_start_month',
+				'/employee/inventory/rfidtags.html?created_on_start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+				'/employee/inventory/rfidtags.html?created_on_start_year',
+				'/employee/inventory/rfidtags.html?created_on_start_month',
+				'/employee/inventory/rfidtags.html?created_on_start_day'} ) : undef,
 			'created_on_end'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/rfidtags.html?EndYear',
-				'/employee/inventory/rfidtags.html?EndMonth',
-				'/employee/inventory/rfidtags.html?EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-				'/employee/inventory/rfidtags.html?EndYear',
-				'/employee/inventory/rfidtags.html?EndMonth',
-				'/employee/inventory/rfidtags.html?EndDay'} ) : undef,
+				'/employee/inventory/rfidtags.html?created_on_end_year',
+				'/employee/inventory/rfidtags.html?created_on_end_month',
+				'/employee/inventory/rfidtags.html?created_on_end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+				'/employee/inventory/rfidtags.html?created_on_end_year',
+				'/employee/inventory/rfidtags.html?created_on_end_month',
+				'/employee/inventory/rfidtags.html?created_on_end_day'} ) : undef,
 			'updated_on_start'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/rfidtags.html?UpdatedStartYear',
-				'/employee/inventory/rfidtags.html?UpdatedStartMonth',
-				'/employee/inventory/rfidtags.html?UpdatedStartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-				'/employee/inventory/rfidtags.html?UpdatedStartYear',
-				'/employee/inventory/rfidtags.html?UpdatedStartMonth',
-				'/employee/inventory/rfidtags.html?UpdatedStartDay'} ) : undef,
+				'/employee/inventory/rfidtags.html?updated_on_start_year',
+				'/employee/inventory/rfidtags.html?updated_on_start_month',
+				'/employee/inventory/rfidtags.html?updated_on_start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+				'/employee/inventory/rfidtags.html?updated_on_start_year',
+				'/employee/inventory/rfidtags.html?updated_on_start_month',
+				'/employee/inventory/rfidtags.html?updated_on_start_day'} ) : undef,
 			'updated_on_end'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/rfidtags.html?UpdatedEndYear',
-				'/employee/inventory/rfidtags.html?UpdatedEndMonth',
-				'/employee/inventory/rfidtags.html?UpdatedEndDay'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-				'/employee/inventory/rfidtags.html?UpdatedEndYear',
-				'/employee/inventory/rfidtags.html?UpdatedEndMonth',
-				'/employee/inventory/rfidtags.html?UpdatedEndDay'} ) : undef,
+				'/employee/inventory/rfidtags.html?updated_on_end_year',
+				'/employee/inventory/rfidtags.html?updated_on_end_month',
+				'/employee/inventory/rfidtags.html?updated_on_end_day'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+				'/employee/inventory/rfidtags.html?updated_on_end_year',
+				'/employee/inventory/rfidtags.html?updated_on_end_month',
+				'/employee/inventory/rfidtags.html?updated_on_end_day'} ) : undef,
 			'type_id'			=> $session{'/employee/inventory/rfidtags.html?Type'} ? $session{'/employee/inventory/rfidtags.html?Type'} : undef,
 			'order'		=>	'id',
 			) ) {
@@ -72,7 +64,7 @@
 <form id="RFIDTagResults" name="RFIDTagResults" action="rfidtags.html" method="post">
 	<table class="List">
 		<tr height="25">
-			<th width="10"><input type="checkbox" onclick="select_all( this.form, 'rfidtags', this.checked );"/></th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'rfidtags', this.checked );"/></th>
 			<th align="left" width="200">RFIDTag ID</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
@@ -85,7 +77,7 @@
 			foreach my $RFIDTag ( @{$$variable{'RFIDTags'}} ) {
 
 				$html .= "<tr$rowclass height=\"25\">";
-				$html .= qq`<td align="center"><input type="checkbox" name="rfidtags" value="$$RFIDTag{'id'}"/></td>`;
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="rfidtags" value="$$RFIDTag{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%1$s">%1$s (%2$x)</a></td>', $$RFIDTag{'id'}, substr($$RFIDTag{'id'},1,15) );
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->created_on()) ) );
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->updated_on()) ) );

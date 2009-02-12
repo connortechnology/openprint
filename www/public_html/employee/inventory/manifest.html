@@ -40,20 +40,26 @@ function delete_content( c_id ) {
 			new Insertion.After('tr-'+c_id, transport.responseText);
 			if(!tr){alert('tr not found');}else{tr.parentNode.removeChild(tr);}
 		},
-		evalScripts: true,
+		evalScripts: true
 	 } );
-}
+} // end function delete_conetnt( c_id )
 
 function add_content(form, type_id) {
-	new Ajax.Request( '_manifest_content.html', {method: 'get', parameters: {
-		action:		'Add',
-		type_id:    type_id,
-		manifest_id: form.manifest_id.value,
-		rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
-		skid_id:    $('skid_id-'+type_id+'-').value,
-		docket:     $('docket-'+type_id+'-').value,
-		qty_lbs:    $('qty_lbs-'+type_id+'-').value,
-		}, onSuccess: function (transport) { new Insertion.Before('totals-'+type_id, transport.responseText);return true; }, evalScripts: true} );
+	new Ajax.Request( '_manifest_content.html', {
+			method: 'get', 
+			parameters: {
+				action:		'Add',
+				type_id:    type_id,
+				manifest_id: form.manifest_id.value,
+				rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
+				skid_id:    $('skid_id-'+type_id+'-').value,
+				docket:     $('docket-'+type_id+'-').value,
+				qty_lbs:    $('qty_lbs-'+type_id+'-').value
+			},
+			onSuccess: function (transport) { new Insertion.Before('totals-'+type_id, transport.responseText);return true; }, 
+			evalScripts: true
+		}
+	);
 }
 </script>
 <div class="Manifest">
@@ -64,8 +70,8 @@ function add_content(form, type_id) {
 					<input type="text" id="manifest_id" name="manifest_id" value="<? hecho ( $$variable{'Manifest'}->id() ) ?>" />
 				</p>
 				<p><label>Vendor:</label>
-					<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('Docket').value} } );">
+					<input id="supplier_id_filter" type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value} } );">
 						<option value="">All</option>
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'Manifest'}->supplier_id() ); ) ?>
 					</select>
@@ -81,9 +87,7 @@ function add_content(form, type_id) {
 					} # end if
 				) ?>
 				<span class="DateSelector">
-				<select name="received_on_year" onchange="setDaysDropDown(this.value,this.form.received_on_month.value,this.form.received_on_day, this.form.received_on_day.value);"><? echo ( ssi::return_years( undef, undef, $param{'received_on_year'} ); ) ?></select>
-				<select name="received_on_month" onchange="setDaysDropDown(this.form.received_on_year.value,this.value,this.form.received_on_day,this.form.received_on_day.value);"><? echo ( ssi::getmonths( $param{'received_on_month'} ); ) ?></select>
-				<select name="received_on_day"><? echo ( ssi::getdays( $param{'received_on_day'} ); ) ?></select>
+<? echo ( ssi::date_select( 'received_on', sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'}) ); ) ?>
 				</span>
 				</p>
 			</div>
