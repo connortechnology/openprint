@@ -476,10 +476,10 @@ sub datetime_select {
 $openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
 
 	my $html = '';
-	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="setDaysDropDown(this.value,document.f1.%1$s_month.value,document.f1.%1$s_day,document.f1.%1$s_day.value);%2$s">', $prefix, $onchange );
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<select name="%1$s_month" onchange="setDaysDropDown(document.f1.%1$s_year.value,this.value,document.f1.%1$s_day,document.f1.%1$s_day.value);%2$s">', $prefix, $onchange );
 	$html .= getmonths( $month );
 	$html .= '</select>';
 	$html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );

@@ -26,7 +26,7 @@ sub history {
 			$param{'invoice_id'} = $_;
 			$variable{'Redirect'} = '/invoice/edit.html';
 		} else {
-			$session{'/timetrack/edit.html?last_ending'} = $param{'ending'};
+			ssi::save_param( '/timetrack/edit.html', 'ending', 'company_id' );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );
@@ -43,6 +43,9 @@ sub edit {
 		$variable{'error'} .= $variable{'Timetrack'}->save(\%param);
 		$variable{'Redirect'} = '/timetrack/history.html';
 	} # end if
-	$variable{'Timetrack'}->ending( $session{'/timetrack/edit.html?last_ending'} ) if ! $variable{'Timetrack'}->ending();
-	$variable{'Timetrack'}->starting( $session{'/timetrack/edit.html?last_ending'} ) if ! $variable{'Timetrack'}->starting();
+	if ( time - $session{'/timetrack/edit.html?lastupdated'} < ( 12*60*60 ) ) {
+		$variable{'Timetrack'}->company_id( $session{'/timetrack/edit.html?company_id'} ) if ! $variable{'Timetrack'}->company_id();
+		$variable{'Timetrack'}->starting( $session{'/timetrack/edit.html?ending'} ) if ! $variable{'Timetrack'}->starting();
+		$variable{'Timetrack'}->ending( $session{'/timetrack/edit.html?ending'} ) if ! $variable{'Timetrack'}->ending();
+	} # end if
 } # end sub edit
