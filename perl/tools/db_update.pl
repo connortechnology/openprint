@@ -639,7 +639,7 @@ if ( $version < 1902 ) {
 			#} # end if
 		} # end foreach
 	} # end foreach
-	die if sql::insert( undef, undef, 'database_info', 'version', 1902, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1902, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1902;
 } # end if
