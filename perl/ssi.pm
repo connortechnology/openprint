@@ -464,21 +464,27 @@ sub setup_date_select {
 sub date_select {
 	my ( $prefix, $value, $onchange ) = @_;
 
-	my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
-#$openprint::log->debug(" date_select: $value : $year,$month,$day,");
+	my ( $year,$month,$day );
+	if ( ref $value eq 'ARRAY' ) {
+		( $year, $month, $day ) = @$value;
+	} elsif ( $value eq ' ' ) {
+		( $year, $month, $day ) = ( '', '', '' );
+	} else {
+		( $year, $month, $day ) = Date::Calc::Localtime( $value ne '' ? Date::Parse::str2time( $value ) : time );
+	} # end if
+$openprint::log->debug(" date_select: $value : ($year,$month,$day),");
 
 	my $html = '';
-	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s"><option value=""></option>', $prefix, $onchange );
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<select name="%1$s_month" onchange="%2$s"><option value=""></option>', $prefix, $onchange );
 	$html .= getmonths( $month );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<select name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $onchange );
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>';
 	return $html;
-
 } # end sub date_select
 
 sub datetime_select {

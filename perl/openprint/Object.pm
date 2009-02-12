@@ -71,7 +71,7 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 
-	$self->set( $data ) if $data;
+	$self->set( $data ? $data: {} );
 
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
@@ -141,7 +141,7 @@ $openprint::log->warn('Object::set called on an object with no fields');
 	} # end if
 
 	foreach my $field ( keys %fields ) {
-		
+#$openprint::log->debug("field: $field, param: $$params{$field}");		
 		if ( exists $$params{$field} ) {
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
@@ -150,8 +150,8 @@ $openprint::log->warn('Object::set called on an object with no fields');
 			} # end if
 		} # end if
 
-#$openprint::log->debug("Transforms: @transforms");
 		my @transforms = eval('@{$'.$type.'::transforms{$field}}');
+#$openprint::log->debug("Transforms: @transforms");
 
 		foreach my $transform ( @transforms ) {
 			eval '$$self{$field} =~ ' . $transform;
@@ -159,8 +159,8 @@ $openprint::log->warn('Object::set called on an object with no fields');
 
 		my %defaults = eval('%'.$type . '::defaults');
 
-		if ( ((! defined $$self{$field} ) or $$self{$field} eq '' )  and exists $defaults{$field} ) {
-$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+		if ( ( $$self{$field} eq '' or ! defined $$self{$field} ) and exists $defaults{$field} ) {
+#$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
 		} else {
 $openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");

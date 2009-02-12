@@ -86,8 +86,7 @@ function getSelectionId(input, li) {
 <form id="f1" name="f1" action="purchase_order_view.html?po_id=<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" method="post">
 	<input type="hidden" name="federaltax_rate" value="<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ) ?>" />
 	<input type="hidden" name="statetax_rate" value="<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ) ?>" />
-	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
-	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+	<!--#include virtual="/includes/error_reporting.html"-->
 	<p class="buttons">
 <? echo ( 
 	my $html = '';

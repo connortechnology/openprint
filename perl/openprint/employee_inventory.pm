@@ -389,7 +389,11 @@ sub save_Paper {
 		$weight = $param{'weight'.$id};
 		$weight .= 'lb' if ! ( $param{'weight'.$id} =~ /lb/ );
 	} elsif ( $param{'calliper'.$id} ) {
-		$weight = $param{'calliper'.$id} . 'PT';
+		if ( $param{'calliper'.$id} < 1 ) {
+			$weight = ($param{'calliper'.$id}*1000).'PT';
+		} else {
+			$weight =( 1*$param{'calliper'.$id}) . 'PT';
+		} # end if
 	} # end if
 
 	my @papers = openprint::Paper::find(
@@ -505,6 +509,7 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
 	$Skid->location_id( $param{'ddmLocation'} ) if $param{'ddmLocation'};
 	$Skid->location( $param{'txtLocation'} ) if $param{'txtLocation'};
+	$Skid->id( $param{'skid_id'} ) if $param{'skid_id'} and ! $Skid->id();
 	if ( my $error = $Skid->save() ) {
 		$variable{'error'} .= $error;
 		return;
@@ -1347,7 +1352,9 @@ sub _manifest_content {
 			$variable{'error'} .= $Tag->save({'id'=>$param{'rfidtag_id'}}) if $param{'rfidtag_id'} and ! $Tag->id();
 			my $Skid = new openprint::Skid( $param{'skid_id'} );
 			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
-			$variable{'error'} .= $Skid->save() if ! $Skid->id();
+$log->debug("RFID: $param{'rfidtag_id'}");
+			$variable{'error'} .= $Skid->save({'rfidtag_id'=>$param{'rfidtag_id'}}) if ! $Skid->id();
+			return if $variable{'error'};
 
 			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
 				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been scanned.';

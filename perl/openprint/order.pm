@@ -129,7 +129,6 @@ sub add_project_to_order {
 
 	if ( ! $project_index ) {
 		return ( undef, 'No project given.' );
-
 	} # end if
 
 	return if check_credit( $log, $dbh, $variable );
@@ -166,7 +165,7 @@ sub add_project_to_order {
 		} elsif ( Date::Calc::Day_of_Week( $year, $month, $day ) == 7 ) {
 			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
 		} # end if
-		$sql{'dateRequired'}=join('-', $year, $month, $day );
+		$sql{'dateRequired'} = join('-', $year, $month, $day );
 	} # end if
 	my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
 	if ( @ShippingServices ) {
@@ -439,8 +438,8 @@ sub information {
 			$error = 'No OrderID given to Re-Open.';
 		} # end if OrderID
 	} elsif ( $openprint::param{'btnFunction'} eq 'Process Order' ) {
-$openprint::log->debug("Making order from quote");
 		if ( $openprint::param{'quote_id'} ) {
+$openprint::log->debug("Making order from quote");
 			( $order_id, $error ) = make_order_from_quote( $r, $log, $dbh, $cookie, $openprint::param{'quote_id'}, $variable );
 		} else {
 			my $project_index = $openprint::param{'ProjectIndex'};
@@ -741,8 +740,8 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 		return;
 	} # end if
 	
-	@$variable{'ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments'} = 
-( $Order->first_name() .' '.$Order->last_name(), $Order->created_on(), $Order->status(), $Order->currency_id(), $Order->po(), $Order->administrator_comments() );
+	@$variable{'Order','ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments'} = 
+( $Order, $Order->first_name() .' '.$Order->last_name(), $Order->created_on(), $Order->status(), $Order->currency_id(), $Order->po(), $Order->administrator_comments() );
 	my $Currency = $Order->Currency();
 	@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'Currency'} = $Currency;
@@ -768,7 +767,7 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 		my $price = $Project->ordered_price();
 
 		if ( $Project->currency_id() != $$variable{'CurrencyIndex'} ) {
-			my $rate = $$variable{'Currency'}->conversions( $Project->currency_id() );
+			my $rate = $Project->Currency()->conversions( $Order->currency_id() );
 			$price *= $rate;
 		} # end if
 
@@ -781,7 +780,8 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 		$gst_total += $gst_amount if defined $gst_amount;
 		$hst_total += $hst_amount if defined $hst_amount;
 		$total += $price + $gst_amount + $pst_amount + $hst_amount;
-	} # end while projcet data
+	} # end while project data
+
 	foreach my $Product ( $Order->Products() ) {
 		my $pst_amount = $Product->price() * ($pst_rate/100) if ( $pst_rate and $pst_exempt ne 'Y' ); 
 		my $gst_amount = $Product->price() * ($gst_rate/100) if ( $gst_rate and $gst_exempt ne 'Y' );
@@ -849,6 +849,10 @@ sub finalise_order {
 
 			my $price = $Project->ordered_price();
 			my $qty = $Project->ordered_quantity();
+			if ( $Project->currency_id() != $Order->currency_id() ) {
+				my $rate = $Project->Currency()->conversions( $Order->currency_id() );
+				$price *= $rate;
+			} # end if
 
 # get product tax exemption
 
@@ -877,7 +881,7 @@ sub finalise_order {
 
 			sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $order_id, $Project->id()],
 					'strDescription',	$Project->reference(),
-					'curSalesPrice',	$price,
+					'curSalesPrice',	$Project->ordered_price(),
 					'intQuantity',		$qty,
 					'dblTax1', ( $gst_amount ne '' ? $gst_amount : undef ),
 					'dblTax2', ( $pst_amount ne '' ? $pst_amount : undef ),

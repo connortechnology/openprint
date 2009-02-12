@@ -6,7 +6,7 @@
 	my $html;
 	foreach my $paper_id ( sql::execute( $log, $dbh, q{SELECT DISTINCT paper_id FROM Paper_Inventory WHERE skid_id=?}, $$variable{'Skid'}->id() ) ) {
 		my $Paper = new openprint::Paper( $paper_id );
-		$html .= '<b>'.$Paper->to_string().'</b>';
+		$html .= sprintf('<b><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></b>', $Paper->id(), $Paper->to_string() );
 		$html .= q{
 	<table class="List">
 		<tr>
