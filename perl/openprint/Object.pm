@@ -2,10 +2,12 @@ package openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %variable $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
+use vars qw( $log $dbh %variable %session $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
 
 $no_cache = 0;
 
@@ -77,6 +79,8 @@ sub save {
 	my %sql;
 	@sql{@fields{keys %fields}} = @$self{keys %fields};
 	delete $sql{'created_on'};
+	$sql{'updated_by'} = $session{'user_id'} if exists $fields{'updated_by'};
+	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
 
 	if ( ! $$self{'id'} ) {
 		my $ac = sql::start_transaction( $dbh );
