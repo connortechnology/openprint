@@ -25,11 +25,7 @@
 		width: 70%;
 	}
 </style>
-<? if ( $$variable{'error'} ) ?>
-The following errors occurred:<br/>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<div class="information"><?information?></div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="jump" method="get" action="rfidscanner_details.html?rfidscanner_id=<? echo ( $$variable{'RFIDScanner'}->id() ) ?>">
 	<fieldset class="filters"><legend>Choose RFIDScanner</legend>
 		<p>
@@ -129,27 +125,26 @@ The following errors occurred:<br/>
 	</fieldset>
 </form>
 <? if ( $$variable{'RFIDScanner'}->id() ) ?>
-<? eval ( @$variable{'Year','Month','Day'} = Date::Calc::Today(); ) ?>
 <form name="f2" id="f2">
 	<input type="hidden" name="rfidscanner_id" value="<? echo ( $$variable{'RFIDScanner'}->id() ) ?>" />
 	<fieldset><legend>Location Log</legend>
 		<p>
 			<label>Date Filter:</label>
 			<span class="DateSelector">
-			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfidscanner_details.html?StartYear'} ? $openprint::session{'/employee/inventory/rfidscanner_details.html?StartYear'} : $$variable{'Year'} ); ) ?></select>
-			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidscanner_details.html?StartMonth'} ? $openprint::session{'/employee/inventory/rfidscanner_details.html?StartMonth'} : $$variable{'Month'} ); ) ?></select>
-			<select name="StartDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidscanner_details.html?StartDay'} ? $openprint::session{'/employee/inventory/rfidscanner_details.html?StartDay'} : $$variable{'Day'} ); ) ?></select>
+			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::return_years( undef, undef, $param{'StartYear'} ); ) ?></select>
+			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::getmonths( $param{'StartMonth'} ); ) ?></select>
+			<select name="StartDay"><? echo ( ssi::getdays( $param{'StartDay'} ); ) ?></select>
 			to 
 			</span>
 			<span class="DateSelector">
-			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfidscanner_details.html?EndYear'} ? $openprint::session{'/employee/inventory/rfidscanner_details.html?EndYear'} : $$variable{'Year'} ); ) ?></select>
-			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidscanner_details.html?EndMonth'} ? $openprint::session{'/employee/inventory/rfidscanner_details.html?EndMonth'} : $$variable{'Month'} ); ) ?></select>
-			<select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidscanner_details.html?EndDay'} ? $openprint::session{'/employee/inventory/rfidscanner_details.html?EndDay'} : $$variable{'Day'} ); ) ?></select>
+			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><? echo ( ssi::return_years( undef, undef, $param{'EndYear'} ); ) ?></select>
+			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><? echo ( ssi::getmonths( $param{'EndMonth'} ); ) ?></select>
+			<select name="EndDay"><? echo ( ssi::getdays( $param{'EndDay'} ); ) ?></select>
 			</span>
 			<select name="limit" style="width:auto;"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
-			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', "\$('Log').innerHTML='Loading...';new Ajax.Updater('Log','_rfidscanner_log.html', {method:'get', parameters: \$('f2').serialize()} );", '', 'Load' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', "AjaxLoadContent( 'Log','_rfidscanner_log.html', \$('f2').serialize() );", '', 'Load' ); ) ?>
 		</p>
-		<div id="Log"></div>
+		<div id="Log"><!--#include virtual="_rfidscanner_log.html"--></div>
 	</fieldset>
 </form>
 <? endif ( $$variable{'RFIDScanner'}->id() ) ?>

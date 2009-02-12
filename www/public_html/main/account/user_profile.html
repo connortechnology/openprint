@@ -2,13 +2,7 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
-<? if ( $$variable{'error'} ) ?>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<div class="information"><?information?></div>
-<? endif ( $$variable{'information'} ) ?>
-
+<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
 	<span class="requiredFieldIndicator">*</span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
@@ -19,7 +13,7 @@
 					<label for="ddmUser">User Name:&nbsp;</label>
 					<select name="ddmUser" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 						<option value="">Select a User</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'}, 'order'=>'lower(strfirstname),lower(strlastname)' ) ], $$variable{'User'}->id() ); ) ?>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $$variable{'User'}->id() ); ) ?>
 					</select>
 				</p>
 			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $$variable{'Me'}->id(), $$variable{'Me'}->csr_ids() ] ) ) ?>

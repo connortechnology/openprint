@@ -281,3 +281,30 @@ div.ProjectHeader legend {
 	font-size: 11pt;
 	margin-bottom: 5px;
 }
+#QuickLogin {
+    float: left;
+    margin: 0px;
+    padding: 0px;
+    width: 300px;
+}
+#QuickLogin fieldset {
+	margin: 0px;
+}
+#QuickLogin p {
+    padding: 0px;
+    padding-left: 60px;
+    margin: 0px;
+    vertical-align: top;
+}
+#QuickLogin p label {
+    width: 55px;
+    margin-left: -60px;
+    text-align: right;
+    float: left;
+    overflow: visible;
+    padding: 0px;
+    vertical-align: top;
+	color: black;
+	font-size: x-small;
+	font-weight: normal;
+}

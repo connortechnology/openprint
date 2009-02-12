@@ -4,7 +4,6 @@
 </div>
 <? eval (
 	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
-	$$variable{'OrderStatus'} = $$variable{'Project'}->Order()->status();
 	if ( $param{'quote_level'} and ( $param{'quote_level'} != $$variable{'Project'}->style_id() ) ) {
 		$$variable{'Project'}->style_id( $param{'quote_level'} );
 		$$variable{'Project'}->save();
@@ -58,70 +57,66 @@ There is no current project.
 	the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
 </p>
 <div style="float:left; p\osition: relative; height: 19px;">
-<? if ( new openprint::User( $session{'user_id'} )->name() eq 'Isaac Connor' ) ?>
-	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', '', '/main/project/summary.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Summary' ); ) ?>
-<? endif ( new openprint::User( $session{'user_id'} )->name() eq 'Isaac Connor' ) ?>
-	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();", '', 'Delete' ); ) ?>
-	<? endif ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
-	<? echo ( ssi::writeButton( $log, $dbh, 'CopyProject', 'copyProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Copy' ); ) ?>
-<? echo (
+<? echo ( 
+	my $html = '';
+	if ( new openprint::User( $session{'user_id'} )->name() eq 'Isaac Connor' ) {
+		$html .= ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', '', '/main/project/summary.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Summary' );
+	} # end if
+	if ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) {
+		$html .= ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' );
+		$html .= ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();", '', 'Delete' );
+	} # end if
+	$html .= ssi::writeButton( $log, $dbh, 'CopyProject', 'copyProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Copy' );
 	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 		my @QuoteLevels = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY lower(name)' );
 		if ( @QuoteLevels > 1 ) {
-			my $html = '<label>Quote Level:</label><select name="quote_level" onchange="this.form.submit();">';
+			$html .= '<label>Quote Level:</label><select name="quote_level" onchange="this.form.submit();">';
 			$html .= ssi::make_drop_down( \@QuoteLevels, $$variable{'Project'}->style_id() );
 			$html .= '</select>';
-			return $html;
 		} # end if
-	} # en dif
-	return;
+	} # end if
+	return $html;
 ) ?>
 </div>
 <div style="float: right; p\osition: relative; height: 19px;">
-	<? if ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' ); ) ?>
-	<? endif ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
-	<? if ( $$variable{'ProjectStatus'} eq 'Unordered' ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
-	<? endif ( $$variable{'ProjectStatus'} eq 'Unordered' ) ?>
-	<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>
-	<? endif ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
-	<? echo ( 
-		my $html = '';
-		if ( $$variable{'Project'}->order_id() and sets::isin( $$variable{'Project'}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'ContinueOrder', 'continueorder.gif', "f1.action='/main/order/information.html?OrderID=".$$variable{'Project'}->order_id()."';f1.btnFunction.value='';f1.submit();", '', 'Continue Order' );
-		} # end if
-		return $html;
-	 ) ?>
-		<? echo (
-			my $html;
-			if ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) and $$variable{'OrderStatus'} ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Docket', 'projectDocket.gif', 'open_project_docket();', '', 'Docket' );
-			} # end if
-			if ( sets::isin( $$variable{'ProjectStatus'}, 'Proofs Out','Approved','Printed','Complete' ) ) {
-			ssi::writeButton( $log, $dbh, 'ViewPDFs', 'view_pdf.gif', "f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", '', 'View PDFs' );
-			} # end if
-			if ( sets::isin( $$variable{'ProjectStatus'}, 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?project_id='.$$variable{'ProjectIndex'}, 'Upload Files' );
-			} # end if
-if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) {
-if ( $$variable{'HiddenSignatures'} ) {
+<? echo (
+	my $html = '';
+	if ( $$variable{'Project'}->status() eq 'uncalculated' ) {
+		$html .= ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' );
+	} elsif ( $$variable{'Project'}->status() eq 'Unordered' ) {
+		$html .= ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' );
+	} # end if
+	if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) {
+		$html .= ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' );
+		$html .= ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' );
+	} # end if
+	if ( $$variable{'Project'}->order_id() and sets::isin( $$variable{'Project'}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
+		$html .= ssi::writeButton( $log, $dbh, 'ContinueOrder', 'continueorder.gif', "f1.action='/main/order/information.html?OrderID=".$$variable{'Project'}->order_id()."';f1.btnFunction.value='';f1.submit();", '', 'Continue Order' );
+	} # end if
+
+	if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) and $$variable{'Project'}->Order()->status() ) {
+		$html .= ssi::writeButton( $log, $dbh, 'Docket', 'projectDocket.gif', 'open_project_docket();', '', 'Docket' );
+	} # end if
+	if ( sets::isin( $$variable{'Project'}->status(), 'Proofs Out','Approved','Printed','Complete' ) ) {
+		ssi::writeButton( $log, $dbh, 'ViewPDFs', 'view_pdf.gif', "f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", '', 'View PDFs' );
+	} # end if
+	if ( sets::isin( $$variable{'Project'}->status(), 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
+		$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?project_id='.$$variable{'ProjectIndex'}, 'Upload Files' );
+	} # end if
+	if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) {
+		if ( $$variable{'HiddenSignatures'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
-} elsif ( $openprint::session{'ShowAllSignatures'} and $$variable{'Project'}->signatures() > 1 ) {
+		} elsif ( $session{'ShowAllSignatures'} and $$variable{'Project'}->signatures() > 1 ) {
 			$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
-} # end if
-} # end if
-			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
-			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
-			$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?project_id=".$$variable{'ProjectIndex'}."', 800 );", '', 'View Log' );
-			} # end if
-			return $html;
-		) ?>
+		} # end if
+	} # end if
+	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
+	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+		$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
+		$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?project_id=".$$variable{'ProjectIndex'}."', 800 );", '', 'View Log' );
+	} # end if
+	return $html;
+) ?>
 </div>
 	<br class="spacer"/>
 <br class="spacer"/>
@@ -138,9 +133,9 @@ if ( $$variable{'HiddenSignatures'} ) {
 <? echo ( ssi::include( $config{'SkinPath'}.'/main/project/view_'.$$variable{'QuoteLevel'}.'.html', $variable ); ) ?>
 </div>
 <br/>
-<? if ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
 <span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
-<? endif ( $$variable{'Project'}->currency_id() != $openprint::session{'Currency_id'} ) ?>
+<? endif ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
 <span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
 </form>
 <br class="spacer"/>

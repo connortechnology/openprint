@@ -1,5 +1,6 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript">
+<!--
 	function check_inputs(form ) {
 		if ( form.skid_id && form.skid_id.value ) {
 			if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
@@ -59,33 +60,38 @@ onDestroy: function(eventName, win) {
 } // end function bug_report
 
 
-function mweight_to_gsm( form ) {
+function calc_from_basis_weight( form ) {
+	var basis_weight = parseFloat(1*form.elements['basis_weight'].value);
+	var width = parseFloat(1*form.elements['basis_width'].value);
+	var height = parseFloat(1*form.elements['basis_height'].value);
+	var gsm = parseInt((basis_weight/1000)/(width*height)*7030645.0)/10;
+	form.elements['gsm'].value = gsm;
+	form.elements['mweight'].value = '';
+}
+function calc_from_mweight( form ) {
 	var mweight = parseFloat(1*form.elements['mweight'].value);
 	var width = parseFloat(1*form.elements['width'].value);
 	var height = parseFloat(1*form.elements['height'].value);
 	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
 	form.elements['gsm'].value = gsm;
 }
-function gsm_to_mweight( form ) {
+function calc_from_gsm( form ) {
 	var gsm = parseFloat(1*form.elements['gsm'].value);
 	var width = parseFloat(1*form.elements['width'].value);
 	var height = parseFloat(1*form.elements['height'].value);
-	var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
-	form.elements['mweight'].value = mweight;
+	var basis_width = parseFloat(1*form.elements['basis_width'].value);
+	var basis_height = parseFloat(1*form.elements['basis_height'].value);
+	form.elements['mweight'].value = parseInt((gsm/703064.5)*(width*height)*10000)/10;
+	form.elements['basis_weight'].value = parseInt((gsm/703064.5)*(basis_width*basis_height)*10000)/10;
 }
+-->
 </script>
 
-<? if ( $$variable{'error'} ) ?>
-The following errors occurred:<br/>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<div class="information"><?information?></div>
-<? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" action="paper_details.html?paper_id=<?paper_id?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<fieldset>
-		<div style="float: left; width: 48%;">
+		<div class="leftColumn">
 			<p>
 				<label>ID #:</label>
 				<?paper_id?>
@@ -162,18 +168,27 @@ The following errors occurred:<br/>
 			<p>
 				<label for="width">Size:</label>
 				<input type="text" id="width" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
-				<span id="PaperHeight"<? echo ( ' style="display: none;"' if $$variable{'Paper'}->type() eq 'Roll' ) ?>>
+				<span id="PaperHeight"<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? ' style="display:none;"' : '' ) ?>>
 				&nbsp;x&nbsp;
 				<input type="text" id="height" name="height" value="<? echo ( $$variable{'Paper'}->height(); ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
 				</span>
 			</p>
 			<p id="MWeight" <? echo ( 'style="display:none;"' if $$variable{'Paper'}->type() eq 'Roll' ) ?>>
 				<label>MWeight:</label>
-				<input type="text" id="mweight" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>" size="6"	onkeyup="mweight_to_gsm(this.form);" style="width: auto;" />M
+				<input type="text" id="mweight" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>" size="6"	onkeyup="calc_from_mweight(this.form);" style="width: auto;" />M
+			</p>
+			<p>
+				<label>Basis Weight:</label>
+				<input type="text" id="basis_weight" name="basis_weight" value="<? echo ( $$variable{'Paper'}->basis_weight(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" />
+			</p>
+			<p>
+				<label>Basis Size:</label>
+				<input type="text" id="basis_width" name="basis_width" value="<? echo ( $$variable{'Paper'}->basis_width(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" /> x
+				<input type="text" id="basis_height" name="basis_height" value="<? echo ( $$variable{'Paper'}->basis_height(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" />
 			</p>
 			<p>
 				<label>GSM:</label>
-				<input type="text" id="gsm" name="gsm" value="<? echo ( $$variable{'Paper'}->gsm(); ) ?>" size="6"	onkeyup="gsm_to_mweight(this.form);" style="width: auto;" />
+				<input type="text" id="gsm" name="gsm" value="<? echo ( $$variable{'Paper'}->gsm(); ) ?>" size="6"	onkeyup="calc_from_gsm(this.form);" style="width: auto;" />
 			</p>
 			<p>
 				<label>Calliper:</label>
@@ -221,23 +236,25 @@ The following errors occurred:<br/>
 			</p>
 <? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 		</div>
-		<div style="float: right; width: 48%;">
+		<div class="rightColumn">
 			<p>
 				<label>Entered:</label>
-				<? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paper'}->created_on() ) ); ) ?>
+				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paper'}->created_on() ) ); ) ?>
 			</p>
 			<p>
 				<label>In Stock:</label>
 				<? echo ( $$variable{'Paper'}->in_stock() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' );  ) ?>
 			</p>
 			<p>
-				<label>Allocated:</label>
+				<label>Allocated:</label><span id="Allocated">
 				<? echo ( int $$variable{'Paper'}->allocated() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ); ) ?>
+				</span>
 			</p>
 			<p>
-				<label>Unallocated:</label>
+				<label>Available:</label><span id="Available">
 				<? echo ( int($$variable{'Paper'}->in_stock() - $$variable{'Paper'}->allocated()); ) ?>
 				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
+				</span>
 			</p>
 			<p>
 				<label>Ordered:</label>
@@ -253,7 +270,7 @@ The following errors occurred:<br/>
 							$html .= ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' );
 							$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
 							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ) if ! $$variable{'Paper'}->in_stock();
-							$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset()', '', 'Reset' );
+							$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
 					} # end if
 					return $html;
 			) ?>
@@ -290,22 +307,15 @@ The following errors occurred:<br/>
  </fieldset>
 		<? endif ( @{$$variable{Duplicates}} > 1 ) ?>
 		<? endif ( $$variable{Paper}->id() ) ?>
-
 </form>
 <? if ( $$variable{'paper_id'} ) ?>
-	<fieldset><legend onclick="AjaxToggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory - click to hide/show</legend>
-	<div id="CurrentInventory">
-	<!--#include virtual="/employee/inventory/_paper_inventory_entries.html" -->
-	</div>
+	<fieldset><legend onclick="AjaxToggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory<span class="unprintable"> - click to hide/show</span></legend>
+		<div id="CurrentInventory"><!--#include virtual="/employee/inventory/_paper_inventory_entries.html" --></div>
 	</fieldset>
-	<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations - click to hide/show</legend>
-	<div id="Allocations">
-	<!--#include virtual="/employee/inventory/_paper_allocations.html" -->
-	</div>
+	<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations<span class="unprintable"> - click to hide/show</span></legend>
+		<div id="Allocations"><!--#include virtual="/employee/inventory/_paper_allocations.html" --></div>
 	</fieldset>
-	<fieldset class="filters"><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log - click to hide/show</legend>
-	<div id="Log"> 
-		<!--#include virtual="/employee/inventory/_paper_log.html" -->
-	</div>
+	<fieldset><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log<span class="unprintable"> - click to hide/show</span></legend>
+		<div id="Log"><!--#include virtual="/employee/inventory/_paper_log.html" --></div>
 	</fieldset>
 <? endif ( $$variable{'paper_id'} ) ?>

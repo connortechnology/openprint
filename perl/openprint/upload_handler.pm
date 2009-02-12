@@ -280,6 +280,7 @@ sub upload_files {
 						SMTP    => $openprint::config{'Mail Server'},
 						FROM    => $from,
 						TO		=> $to,
+						#BCC		=>	'iconnor@penultima.org',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 				   );
 		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );

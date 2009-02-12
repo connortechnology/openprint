@@ -164,7 +164,7 @@ sub _prices {
 				my $Price = new openprint::ProductPrice();
 				$variable{'error'} .= $Price->save({
 						'product_id'	=>	$Product->id(),
-						'pricelist'		=>	$Pricelist->id(),
+						'pricelist_id'	=>	$Pricelist->id(),
 						'min'			=>	$param{'min-'.$Pricelist->id().'-New'},
 						'max'			=>	$param{'max-'.$Pricelist->id().'-New'},
 						'units'			=>	$param{'units-'.$Pricelist->id().'-New'},

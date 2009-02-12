@@ -18,7 +18,8 @@
 				$html .= '<tr>';
 				$html .= sprintf('<td><input type="radio" name="rdbQuantity%1$d" value="%2$d" %3$s /></td>', $$variable{'Project'}->id(), $qty_index, ssi::checked( $$variable{'Project'}->ordered_quantity_index() == $qty_index ) );
 				$html .= sprintf('<td align="right">%d</td>', $$variable{'Project'}->quantity( $qty_index ) );
-				$html .= sprintf('<td align="right">%1$s%2$.2f</td>', $$variable{'Project'}->Currency()->symbol(), $$variable{'Project'}->price( $qty_index ) );
+				my $Price = openprint::Currency::convert( $$variable{'Project'}->Price( $qty_index ) );
+				$html .= sprintf('<td align="right">%1$s%2$.2f</td>', $$variable{'Order'}->Currency()->symbol(), $$Price{'Price'} );
 				$html .= '</tr>';
 			} # end foreach qty_index
 			return $html;

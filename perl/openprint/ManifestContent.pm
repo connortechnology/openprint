@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -13,27 +13,28 @@ use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
 require sql;
 require ssi;
 require misc;
+require openprint::Manifest_Content_Type;
 
-my $debug = 1;
+my $debug = 0;
+
+$table = 'manifestcontents';
+$serial = 'manifestcontents_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'manifest_id'	=>	'manifest_id',
-	'skid_id'		=>	'skid_id',
-	'quantity'		=>	'quantity',
-	'docket'		=>	'docket',
+	'id'				=>	'id',
+	'manifest_id'		=>	'manifest_id',
+	'skid_id'			=>	'skid_id',
+	'quantity'			=>	'quantity',
+	'type_id'			=>	'type_id',
 );
 
 %transforms = (
 	'quantity'	=> [ 's/\D//g' ],
-	'docket'	=> [ 's/\D//g' ],
-	'cost'		=> [ 's/[^\d\.]//g' ],
+	'type_id'	=> [ 's/\D//g' ],
 );
 
 %defaults = (
 	'quantity'	=> 0,
-	'cost'		=> undef,
-	'docket'	=> undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -56,6 +57,10 @@ sub find {
 		$sql .= ' AND manifest_id=?';
 		push @values, $params{'manifest_id'};
 	} # end if
+	if ( $params{'type_id'} ) {
+		$sql .= ' AND type_id=?';
+		push @values, $params{'type_id'};
+	} # end if
 	if ( $params{'skid_id'} ) {
 		$sql .= ' AND skid_id=?';
 		push @values, $params{'skid_id'};
@@ -77,59 +82,24 @@ sub find {
 	return map { new openprint::ManifestContent( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM ManifestContents WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-	if ( ! $$data{'id'} ) {
-		delete $openprint::Object::cache{'openprint::ManifestContent'}{$$self{'id'}};
-		delete $$self{'id'};
-	} # end if
-#delete $$self{'id'};
-} # end sub load
-
-sub save {
-	my ( $self, $hash ) = @_;
-
-	if ( $hash ) {
-		$self->set( $hash );
-	} # end if
-
-	my $ac = sql::start_transaction( $dbh );
-
-	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('ManifestContents_id_seq')} );
-		if ( my $error = sql::insert( undef, undef, 'ManifestContents', map { $_, $$self{$_} } keys %fields ) ) {
-			$$self{'id'} = undef;
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-    } else {
-		if ( my $error = sql::update( undef, undef, 'ManifestContents', ['id=?', $$self{id}], map { $_, $$self{$_} } keys %fields ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-    } # end if
-
-	sql::end_transaction( $dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
-
-sub delete {
-    my $self = shift;
-    my $ac = sql::start_transaction( );
-    sql::execute( undef, undef, q{DELETE FROM ManifestContents WHERE id=?}, $$self{'id'} );
-    sql::end_transaction( undef, $ac );
-	delete $openprint::Object::cache{'openprint::ManifestContent'}{$$self{'id'}};
-	return '';
-} # end sub delete
-
 sub Skid {
 	return new openprint::Skid( $_[0]{skid_id} );
 } # end sub Skid
+
+sub Manifest {
+	return new openprint::Manifest( $_[0]{manifest_id} );
+} # end sub Manifest
+
+sub Type {
+	return new openprint::Manifest_Content_Type( $_[0]{type_id} );
+} # end sub Type
+
+sub units {
+	my $Type = $_[0]->Type();
+	if ( $Type->paper_id() ) {
+		return $Type->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets';
+	} # end if
+} # end sub units
 
 
 1;

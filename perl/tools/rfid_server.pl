@@ -143,12 +143,12 @@ if ( 1 ) {
 					if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 						#$self->log(1, sprintf('%s : %s : getting histyo', $date, $self->{server}->{peeraddr} ));
 						if ( ! $last_seen{$Scanner->id()} ) {
-						@{$last_seen{$Scanner->id()}} = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>4);
+						@{$last_seen{$Scanner->id()}} = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8);
 						} # end if
 						#$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
 						if ( ( ! $last_seen{$Scanner->id()} ) or ! sets::isin( $Tag->location_id(), $last_seen{$Scanner->id()} ) ) {
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
-							if ( @{$last_seen{$Scanner->id()}} > 3 ) {
+							if ( @{$last_seen{$Scanner->id()}} > 7 ) {
 								shift @{$last_seen{$Scanner->id()}};
 							} # end if
 							push @{$last_seen{$Scanner->id()}}, $Tag->location_id();
@@ -182,12 +182,12 @@ if ( 1 ) {
 					if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 #$self->log(1, sprintf('%s : %s : getting histyo', $date, $self->{server}->{peeraddr} ));
 						if ( ! $last_seen{$Scanner->id()} ) {
-							@{$last_seen{$Scanner->id()}} = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>4);
+							@{$last_seen{$Scanner->id()}} = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8);
 						} # end if
 						if ( ! sets::isin( $Tag->location_id(), $last_seen{$Scanner->id()} ) ) {
 							#$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $self->{server}->{peeraddr}, $Tag->id(), $Tag->Location()->name() ));
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
-							if ( @{$last_seen{$Scanner->id()}} > 3 ) {
+							if ( @{$last_seen{$Scanner->id()}} > 7 ) {
 								shift @{$last_seen{$Scanner->id()}};
 							} # end if
 							push @{$last_seen{$Scanner->id()}}, $Tag->location_id();

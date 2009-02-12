@@ -1,7 +1,7 @@
 <script type="text/javascript">
 	function load_projects( form ) {
 		$('ProjectList').innerHTML = 'Please wait...';
-		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', {method:'get',parameters:Form.serialize(form)});
+		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', { method: 'get', parameters: form.serialize() } );
 	} // end function
 </script>
 
@@ -39,15 +39,18 @@
 		<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
 			<option value="">All Employees</option>
 <? echo (
-$openprint::session{'/employee/production/projects.html?ddmSalesRep'} = $openprint::session{'user_id'} if ! $openprint::session{'/employee/production/projects.html?ddmSalesRep'};
-ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(firstname),lower(lastname)', 'type'=>['E','A'],'usergroups'=>['Sales']) ],
-$openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
+	$session{'/employee/production/projects.html?ddmSalesRep'} = $session{'user_id'} if ! $session{'/employee/production/projects.html?ddmSalesRep'};
+	my @Users = openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'type'=>['E','A'],'usergroups'=>['Sales']);
+	if ( ! sets::isin( $session{'/employee/production/projects.html?ddmSalesRep'}, [ map { $_->id() } @Users ] ) ) {
+		$session{'/employee/production/projects.html?ddmSalesRep'} = '';
+	} # end if
+	ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $session{'/employee/production/projects.html?ddmSalesRep'} );
 ) ?>
 		</select>
 	</p>
 	<p>
 	<label>Project Status:</label>
-	<select name="ProjectStatus" multiple size="6" onchange="load_projects(this.form);">
+	<select name="ProjectStatus" multiple="multiple" size="6" onchange="load_projects(this.form);">
 <? echo (
 		my @statuses = (
 			'Pending Deposit',
@@ -63,15 +66,7 @@ $openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
 			'Shipped',
 			);
 
-	if ( %param ) {
-		if ( ref $param{'ddmStatus'} eq 'ARRAY' ) {
-			$session{'/employee/production/projects.html?ddmStatus'} = join(';', @{$param{'ddmStatus'}} );
-		} else {
-			$session{'/employee/production/projects.html?ddmStatus'} = $param{'ddmStatus'};
-		} # end if
-	} # end if
-
-		my @status_filter = split(';', $session{'/employee/production/projects.html?ddmStatus'} );
+		my @status_filter = split(';', $session{'/employee/production/projects.html?ProjectStatus'} );
 
 		if ( ! @status_filter ) {
 			if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) {
@@ -83,9 +78,8 @@ $openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
 			} else {
 				@status_filter = @statuses;
 			} # end if
+			$session{'/employee/production/projects.html?ProjectStatus'} = join(';',@status_filter );
 		} # end if
-
-		$session{'/employee/production/projects.html?ProjectStatus'} = join(';',@status_filter );
 		return ssi::make_select( [ map { $_, $_ } @statuses ], \@status_filter );
 ) ?>
 			</select>
@@ -95,16 +89,11 @@ $openprint::session{'/employee/production/projects.html?ddmSalesRep'} );
 			<select name="ddmPress" onchange="load_projects(this.form);">
 				<option value="">All Presses</option>
 <? echo (
-		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $param{'ddmPress'} );
+		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $session{'/employee/production/projects.html?ddmPress'} );
 ) ?>
 			</select>
 	</p>
 <? eval (
-	if ( %param ) {
-		foreach my $param ( 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay' ) {
-			@session{"/employee/production/projects.html?$param"} = $param{$param};
-		} # end foreach
-	} 
 	if ( ! $session{'/employee/production/projects.html?DueDateStartYear'} )  {
 		@session{
 		'/employee/production/projects.html?DueDateStartYear',

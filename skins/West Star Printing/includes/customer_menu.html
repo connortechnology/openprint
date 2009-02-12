@@ -1,10 +1,10 @@
 <ul class="unprintable" id="menubar">
 	<li class="off" id="Currency">
-		<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
+		<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
 			<label>Currency:</label>
 			<select name="select_currency_id" onchange="this.form.submit();">
 				<? echo (
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $session{'Currency_id'} );
 				) ?>
 			</select>
 		</form>
@@ -12,14 +12,18 @@
 	<li class="off" id="Support"><a href="#">Support</a>
 		<ul>
 			<li><a href="/support/help_desk.html;NOSSL">Help Desk</a></li>
+<? if ( $session{'user_id'} ) ?>
 			<li><a href="/support/returns.html;NOSSL">Returns</a></li>
+<? endif ( $session{'user_id'} ) ?>
 			<li><a href="/support/FAQ.html;NOSSL">FAQ</a></li>
 		</ul>
 	</li>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 	<li class="off" id="Orders"><a href="#">Orders</a>
 		<ul>
+<? if ( $session{'OrderID'} ) ?>
 			<li><a href="/main/order/information.html;NOSSL">Resume Current</a></li>
+<? endif ( $session{'OrderID'} ) ?>
 			<li><a href="/main/order/history.html;NOSSL">History</a></li>
 		</ul>
 	</li>
@@ -32,27 +36,27 @@
 	<li class="off" id="Projects"><a href="#">Projects</a>
 		<ul>
 			<li><a href="/main/project/create_edit.html;NOSSL">Create New</a></li>
-<? if ( $openprint::session{'project_id'} ) ?>
+<? if ( $session{'project_id'} ) ?>
 			<li><a href="/main/project/view.html;NOSSL">Resume Current</a></li>
-<? endif ( $openprint::session{'project_id'} ) ?>
+<? endif ( $session{'project_id'} ) ?>
 			<li><a href="/main/project/history.html;NOSSL">History</a></li>
 		</ul>
 	</li>
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>
 	<li class="off" id="Account"><a href="#">Account</a>
 		<ul>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 			<li><a href="/main/account/company_profile.html">Company Profile</a></li>
 			<li><a href="/main/account/user_profile.html">User Information</a></li>
-<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			<li><a href="/main/account/select_company.html">Select Company</a></li>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			<li><a href="/main/account/credit_application.html">Credit App</a></li>
 			<li><a href="/main/account/logout.html">Logout</a></li>
-<? else ( $openprint::session{'user_id'} ) ?>
+<? else ( $session{'user_id'} ) ?>
 			<li><a href="/main/account/login.html">Login</a></li>
 			<li><a href="/main/account/registration.html">Registration</a></li>
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>
 		</ul>
 	</li>
 	<li class="off" id="AboutUs"><a href="/about.html">About Us</a>

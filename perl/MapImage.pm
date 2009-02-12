@@ -80,6 +80,7 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 
 		my $Root = $Location;
 		while ( $level <= $l_level ) {
+			last if ! $Root->Parent();
 			$Root = $Root->Parent();
 			$level += 1;
 		} # end while

@@ -184,6 +184,14 @@ sub unhtmlize {
 	return @_;
 } # end sub unhtmlize
 
+sub encode_html {
+	my ( $html, $tags ) = @_;
+
+	$html =~ s/\r\n/<br\/>/mg;
+	$html =~ s/\n\r/<br\/>/mg;
+	$html =~ s/\n/<br\/>/mg;
+	return $html;
+} # end sub encode_html
 
 sub make_drop_down {
 	my ( $search_data, $checkval, $length ) = @_;
@@ -269,6 +277,7 @@ sub getyears {
 sub getmonths {
 	my @months = map { $_, Date::Calc::Month_to_Text( $_ ) } ( 1 .. 12 );
 	my $selected = shift;
+	$selected = int($selected);
 	$selected = (localtime(time))[4]+1 if ! defined $selected;
 	return make_drop_down( \@months, $selected );
 } # edn sub getmonths
@@ -280,6 +289,7 @@ sub getdays {
 		$maxdays = Days_in_Month( $year, $month );
 	} # en dif
 	my @days = map { $_, $_ } ( 1 .. $maxdays );
+	$selected = int($selected);
 	$selected = (localtime(time))[3] if ! defined $selected;
 	return make_drop_down( \@days, $selected );
 } # end sub getdays
@@ -454,16 +464,24 @@ sub setup_date_select {
 sub date_select {
 	my ( $prefix, $value, $onchange ) = @_;
 
-	my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
+	my ( $year,$month,$day );
+	if ( ref $value eq 'ARRAY' ) {
+		( $year, $month, $day ) = @$value;
+	} elsif ( $value eq ' ' ) {
+		( $year, $month, $day ) = ( '', '', '' );
+	} else {
+		( $year, $month, $day ) = Date::Calc::Localtime( $value ne '' ? Date::Parse::str2time( $value ) : time );
+	} # end if
+$openprint::log->debug(" date_select: $value : ($year,$month,$day),");
 
 	my $html = '';
-	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s"><option value=""></option>', $prefix, $onchange );
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<select name="%1$s_month" onchange="%2$s"><option value=""></option>', $prefix, $onchange );
 	$html .= getmonths( $month );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<select name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $onchange );
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>';
 	return $html;
@@ -473,7 +491,7 @@ sub datetime_select {
 	my ( $prefix, $value, $onchange ) = @_;
 
 	my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
-$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
+#$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="setDaysDropDown(this.value,document.f1.%1$s_month.value,document.f1.%1$s_day,document.f1.%1$s_day.value);%2$s">', $prefix, $onchange );

@@ -404,3 +404,6 @@ div.Service span.TwoColumns {
 h1,h2,h3,h5 {
 	color:#194D98;
 }
+div#NewDimensions {
+	display: none;
+}

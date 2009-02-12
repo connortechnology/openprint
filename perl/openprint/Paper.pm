@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable);
+use vars qw(%variable %fields %transforms %defaults );
 *variable = \%openprint::variable;
 
 
@@ -31,7 +31,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 my $debug = 0;
 
 my @fields = (
-		'id',
+		'id', 'created_on',
 		'group_id','owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
@@ -343,11 +343,15 @@ sub save {
 
 	return $error if $error;
 
+	my %sql = map { $_, $$self{$_} } @fields;
+	delete $sql{'created_on'};
+	
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
 		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_id_seq')} );
+		$sql{'id'} = $$self{'id'};
 
-		$error = sql::insert( undef, undef, 'Papers', ['id', $$self{'id'}, map { $_, $$self{$_} } @fields ] );
+		$error = sql::insert( undef, undef, 'Papers', \%sql );
 
        # Add record to audit log - action "New Paper".
        openprint::logs::insertLogRecord('63', "Paper ID: " . $$self{'id'},);
@@ -374,7 +378,7 @@ sub save {
 		} # end if
 
     } else {
-        if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], [ map { $_, $$self{$_} } @fields ] ) ) {
+        if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
@@ -410,6 +414,7 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
+	sql::update( undef, undef, 'manifest_content_types', ['paper_id=?', $$self{'id'}], 'paper_id', undef );
     sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_prices WHERE lngpaperindex=?}, $$self{'id'} );
@@ -447,7 +452,9 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	return join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), $self->mweight().'M', $self->quality() ) );
+	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ), $self->quality() ) );
+	$string .= ' FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
+	return $string;
 } # end sub to_string
 
 sub material {
@@ -596,7 +603,7 @@ sub quality {
 			$$self{'quality'} = $quality;
         } # end if
     } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
-        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->shortname();
+        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->longname();
     } # end if
     return $$self{'quality'};
 } # end sub quality
@@ -738,15 +745,16 @@ sub add_inventory {
 } # end sub add_inventory
 
 sub allocate {
-    my ( $self, $skid_id, $project_id, $quantity, $units ) = @_;
+    my ( $self, $skid_id, $project_id, $quantity, $units, $reason ) = @_;
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
 
 	$skid_id = $skid_id->id() if ref $skid_id eq 'openprint::Skid';
 
 	my $PA;
-	if ( my @PA = openprint::PaperAllocation::find('project_id'=>$project_id, 'paper_id'=>$$self{'id'} ) ) {
-		$PA = $PA[0];
-	} else {
+	#if ( my @PA = openprint::PaperAllocation::find('project_id'=>$project_id, 'paper_id'=>$$self{'id'} ) ) {
+		#$PA = $PA[0];
+		
+	#} else {
 		$PA = new openprint::PaperAllocation();
 		$PA->save( {
 				'paper_id'		=>	$$self{'id'},
@@ -756,7 +764,7 @@ sub allocate {
 				'project_id'	=>	$project_id,
 				'operator_id'	=>	$openprint::session{'user_id'},
 				} );
-	} # end if
+	#} # end if
 	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity$units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . ($skid_id?qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} : '') );
 	delete $$self{allocated};
 	return $PA;
@@ -769,15 +777,16 @@ sub back_ordered {
     ( $_ ) = sql::execute( undef, undef, q{SELECT Quantity FROM Paper_Purchase_Order_Contents WHERE paper_id=? AND PaperPurchaseOrder_id IN ( SELECT id FROM Paper_Purchase_Orders WHERE Status='Sent')}, $$self{'id'} );
     return int $_;
 } # end sub back_ordered
+
 sub allocated {
     my ( $self, $project_id ) = @_;
 	return 0 if ! $$self{'id'};
 	if ( $project_id ) {
-    ( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
+		( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
 		return $_;
 	} # end if
 	if ( ! exists $$self{allocated} ) {
-    @$self{allocated} = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
+		@$self{allocated} = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
 	} # end if
     return $$self{allocated};
 } # end sub allocated

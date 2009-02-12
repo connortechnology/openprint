@@ -15,12 +15,8 @@ function keepCompany( form ){
 
 }
 </script>
-<? if ( $$variable{'error'} ) ?>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<div class="error"><?information?></div>
-<? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
+Please select a company or user to obtain login information.<br/>
 <br/>
 <div id="UserProfile">
 	<form name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
@@ -51,7 +47,7 @@ function keepCompany( form ){
 		</fieldset>
 		<fieldset>
 			<p> 
-				<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Company Info.</a><? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
+				<label><? if ( $$variable{'User'}->company_id() ) ?><a href="company_profiles.html?ddmCustomer=<? echo ( $$variable{'User'}->company_id() ) ?>">Link to Company Info.</a><? endif ( $$variable{'User'}->company_id() ) ?>&nbsp;</label>
 				
 				<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
 				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>

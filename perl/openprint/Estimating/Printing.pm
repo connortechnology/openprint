@@ -686,7 +686,7 @@ my $master_time = gettimeofday();
 		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'PocketSize'} ) ) {
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
-			$$specs{'alert'} .= 'Please select where you would like the pockets.';
+			$$specs{'alert'} .= 'Please select where you would the pockets.';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 	} # end if
@@ -1610,6 +1610,7 @@ $i->display();
 					} # end if overriden or not or cached
 					push @{$imps{$str}}, $imp if $add > 0;
 				} # end foreach imp
+
 			}# end foreach Paper
 
 			push @impositions, map {@{$_}} values %imps;
