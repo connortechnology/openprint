@@ -1792,6 +1792,10 @@ if ( ! $data ) {
 }
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifest_content_types LIMIT 1', {} );
 if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Manifest_Content_Types.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
 	require openprint::Manifest;
 	$dbh->do('alter table manifestcontents add type_id integer');
 	foreach my $Manifest ( openprint::Manifest::find() ) {
@@ -1799,11 +1803,12 @@ if ( ! $data ) {
 
 		if ( @Contents ) {
 			my $T = new openprint::Manifest_Content_Type();
-			$T->save({
+			$_ = $T->save({
 				'manifest_id'	=>	$Manifest->id(),
 				'docket'		=>	$Contents[0]->docket(),
 				'po_id'			=>	$Manifest->po_id(),
 			});
+			die $_ if $_;
 			foreach my $C ( @Contents ) {
 				$C->save({'type_id'=>$T->id()});
 			} # end foreach

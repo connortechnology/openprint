@@ -1,7 +1,7 @@
 <fieldset><legend>Current Contents</legend>
-<? if ( $$variable{'Skid'}->is_empty() ) ?>
+<? if ( ! $$variable{'Skid'}->Contents() ) ?>
 	Skid is empty
-<? else ( $$variable{'Skid'}->is_empty() ) ?>
+<? else ( ! $$variable{'Skid'}->Contents() ) ?>
 <table class="List">
 	<tr>
 		<th align="left">Paper</th><th width="75">Purpose</th><th width="75" align="right">Quantity</th><th align="right" width="60">Inches</th>
@@ -35,5 +35,5 @@
 	return $html;
 ) ?>
 	</table>
-<? endif ( $$variable{'Skid'}->is_empty() ) ?>
+<? endif ( ! $$variable{'Skid'}->Contents() ) ?>
 </fieldset>

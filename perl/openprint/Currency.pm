@@ -107,6 +107,7 @@ sub convert {
 			$$Price{'currency_id'} = $DST_Currency->id();
 		} # end if
 	} # end if
+	return $Price;
 } # end sub convert
 
 sub get_current {

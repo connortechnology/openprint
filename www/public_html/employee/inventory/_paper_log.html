@@ -32,20 +32,20 @@
 	} # end if
 	$$variable{'PI'} = \@PI;
 ) ?>
-<form name="LogForm" id="LogForm">
+<form name="LogForm" id="LogForm" action="_paper_log.html">
 	<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>"/>
 	<p class="unprintable">
 		<label>Date:</label>
 		<span class="DateSelector">
-			<select name="ddmStartYear" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?StartYears?></select>
-			<select name="ddmStartMonth" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?StartMonths?></select>
-			<select name="ddmStartDay" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?StartDays?></select>
+			<select name="ddmStartYear" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?StartYears?></select>
+			<select name="ddmStartMonth" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?StartMonths?></select>
+			<select name="ddmStartDay" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?StartDays?></select>
 			to
 		</span>
 		<span class="DateSelector">
-			<select name="ddmEndYear" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?EndYears?></select>
-			<select name="ddmEndMonth" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?EndMonths?></select>
-			<select name="ddmEndDay" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', LogForm.serialize() );"><?EndDays?></select>
+			<select name="ddmEndYear" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?EndYears?></select>
+			<select name="ddmEndMonth" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?EndMonths?></select>
+			<select name="ddmEndDay" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?EndDays?></select>
 		</span>
 	</p>
 	<hr/>

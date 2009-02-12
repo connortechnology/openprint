@@ -5,14 +5,16 @@
 		<p><label>Received On:</label>
 			<span class="DateSelector">
 			<? echo ( ssi::date_select('received_on_start', sprintf('%.4d-%.2d-%.2d', @param{'received_on_start_year','received_on_start_month','received_on_start_day'} ),
-						q`AjaxLoadContent('Results','_stock.html', this.form.serialize() );`
-						); ) ?> to </span>
-			<span class="DateSelector">
-			<? echo ( ssi::date_select('received_on_end', sprintf('%.4d-%.2d-%.2d', @param{'received_on_end_year','received_on_end_month','received_on_end_day'} ),
-						q`AjaxLoadContent('Results','_stock.html', this.form.serialize() );`
-						); ) ?>
+						q`AjaxLoadContent('Results','_stock.html', $('f1').serialize() );`
+						); ) ?> to </span><span class="DateSelector">
+			<? echo ( 
+				ssi::date_select('received_on_end', 
+					sprintf('%.4d-%.2d-%.2d', @param{'received_on_end_year','received_on_end_month','received_on_end_day'} ),
+					q`AjaxLoadContent('Results','_stock.html', $('f1').serialize() );`
+					);
+				) ?>
 			</span>
-			<? echo ( ssi::writeButton( $log, $dbh, 'load', 'load.gif',q`AjaxLoadContent('Results','_stock.html', f1.serialize() );`, '', 'Load'); ) ?></p>
+			<? echo ( ssi::writeButton( $log, $dbh, 'load', 'load.gif',q`AjaxLoadContent('Results','_stock.html', $('f1').serialize() );`, '', 'Load'); ) ?></p>
 		</p>
 	</fieldset>
 	<div id="Results"><!--#include virtual="_stock.html"--></div>

@@ -70,8 +70,8 @@
 			<td colspan="4" align="right">Totals:</td>
 			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
 			<td colspan="3">&nbsp;</td>
-			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'value_total'},2,2) ); ) ?></td>
 			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'wage_total'},2,2) ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'value_total'},2,2) ); ) ?></td>
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
