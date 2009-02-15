@@ -209,31 +209,29 @@ img#Butterfly, img#IDEAG7, img#IDEAG7Master {
 	margin-top: 10px;
 	width: 130px;
 }
+
 ul#ProjectTypes {
 	p\osition: relative;
 	float: left;
-	width: 182px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 12px;
-    font-style: normal;
-    font-weight: normal;
-    padding: 3px;
+	width: 156px;
+    padding-left: 20px;
+    padding-right: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
     margin: 0px;
-	margin-left: -190px;
-	list-style: none;
+	text-align: left;
+	font-size: 12px;
+	font-weight: bold;
 }
-.ProjectTypes li {
+#ProjectTypes li {
     margin-left: 0px;
 }
-.ProjectTypes a {
-    color: #000000;
+#ProjectTypes a {
+	color:#194D98;
     text-decoration: none;
 }
-.ProjectTypes a:hover {
-    color: #ff00ff;
-/*
- *     text-decoration: underline;
- *     */
+#ProjectTypes a:hover {
+	color:#FEE00F;
 }
 
 #QuickLogin {
@@ -282,4 +280,9 @@ ul#ProjectTypes {
 #QuickLogin p a.buttonImageOn, #QuickLogin p a.buttonImageOff, #CurrencySelection p a.buttonImageOn, #CurrencySelection p a.buttonImageOff {
     margin: 0px;
 }
-
+#Specials {
+	text-align: center;
+}
+#Specials h2 {
+	margin-top: 0px;
+}

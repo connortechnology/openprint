@@ -3,12 +3,12 @@
     $$variable{'Pricelist'} = new openprint::Pricelist( $list_id );
 	$$variable{'Currency'} = new openprint::Currency( $openprint::session{'Currency_id'} );
 ) ?>
-<style>
+<style type="text/css">
 	tr.colRow {
 		background-color: #cccccc;
 	}
 </style>
-<div align="center">
+<div id="Specials">
 	<h2>Topknotch Specials for 
 <? echo (
 require Date::Calc;

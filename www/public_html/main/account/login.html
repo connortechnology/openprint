@@ -2,32 +2,21 @@
 <h1>ACCOUNT</h1>
 <h2>Login</h2>
 </div>
-<? if ( $$variable{'error'} ) ?>
-<p class="error"><b><?error?></b><br/>
-  <br/>
-  <?details?><br/>
-</p>
-<? endif ( $$variable{'error'} ) ?>
-
-<? if ( $$variable{'information'} ) ?>
-<p class="information"><b><?information?></b></p>
-<? endif ( $$variable{'information'} ) ?>
-
-<? if ( $openprint::session{'user_type'} ) ?>	
-<p>
-<!--#include virtual="/includes/_greeting.html"-->
-	</p>
-		<? if ( $openprint::session{'Destination'} ) ?>
-		<b><? echo ( $openprint::session{'Destination'} ) ?></b><br/>
-		<? eval ( delete $openprint::session{'Destination'} ) ?>
-		<? endif ( $openprint::session{'Destination'} ) ?>
-		<? if ( $openprint::session{'user_type'} eq 'E' or $openprint::session{'user_type'} eq 'A' ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $session{'user_type'} ) ?>	
+<br/>
+	<p><!--#include virtual="/includes/_greeting.html"--></p>
+	<? if ( $session{'Destination'} ) ?>
+		<b><? echo ( $session{'Destination'} ) ?></b><br/>
+		<? eval ( delete $session{'Destination'} ) ?>
+	<? endif ( $session{'Destination'} ) ?>
+	<? if ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
 		<br/>
 		<!--#include virtual="/main/account/select_company.html"-->
-		<? endif ( $openprint::session{'user_type'} eq 'E' or $openprint::session{'user_type'} eq 'A' ) ?>
-<div id="lastLogins">
-<!--#include virtual="/includes/login_log.html"-->
-</div>
-<? else ( $openprint::session{'user_type'} ) ?>	
+	<? endif ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
+	<div id="lastLogins">
+	<!--#include virtual="/includes/login_log.html"-->
+	</div>
+<? else ( $session{'user_type'} ) ?>	
 <!--#include virtual="/includes/customer_login.html" -->
-<? endif ( $openprint::session{'user_type'} ) ?>	
+<? endif ( $session{'user_type'} ) ?>	

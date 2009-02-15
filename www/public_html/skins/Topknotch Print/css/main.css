@@ -213,3 +213,9 @@ margin-top: .6em;
 img#HomeCollage {
 	float: right;
 }
+#Specials {
+text-align: center;
+}
+#Specials h2 {
+margin-top: 0px;
+}
