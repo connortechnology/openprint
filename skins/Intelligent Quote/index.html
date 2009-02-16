@@ -1,0 +1,12 @@
+<h3>Welcome to the Intelligent Quote Demo</h3>
+<b>This software is always under intense development.  A any given time this site may have broken/unfinished features.  If you would like a demonstration, please contact us, and we will update it and go through the demo with you.</b>
+<br/>
+<br/>
+This site is intended as a demonstration of the capabilities of the Intelligent Quote software framework.  As such, although the prices generated here are reasonable, they will not be honoured by us or any other printer. Furthermore we would like to note that this is a framework only.  Your site will be designed to meet your needs, and will not look like everyone else's site.<br/>
+<br/>
+<? if ( ! $openprint::session{'user_id'} ) ?>
+In order to use this demo, you must identify yourself by logging in.  In order to login, you must register yourself as a user.  
+<!--#include virtual="/includes/customer_login.html"-->
+<? else ( ! $openprint::session{'user_id'} ) ?>
+Welcome <? echo ( new openprint::User( $openprint::session{'user_id'} )->FirstName(); ) ?>!
+<? endif ( ! $openprint::session{'user_id'} ) ?>
