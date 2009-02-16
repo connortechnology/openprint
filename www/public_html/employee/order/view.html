@@ -32,24 +32,4 @@
 		<input type="hidden" name="btnFunction"/>
 	</form>
 <hr/>
-<fieldset>
-	<legend>Modification History</legend>
-	<table class="List">
-		<tr>
-			<th align="left" width="200">Customer</th>
-			<th align="left" width="200">User</th>
-			<th align="left" width="150">When</th>
-			<th align="left">Description</th>
-		</tr>
-		<? eval ( @{$$variable{'OrderLog'}} = openprint::order::get_log( $log, $dbh, $$variable{'OrderID'} ); ) ?>
-		<? while ( @$variable{'CustomerIndex','CustomerName','UserIndex','UserName','When','Description'} = splice @{$$variable{'OrderLog'}},0,6; ) ?>
-		<tr<?rowclass?>>
-			<td><?CustomerName?></td>
-			<td><?UserName?></td>
-			<td><?When?></td>
-			<td><?Description?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-		<? endwhile ( @$variable{'CustomerIndex','CustomerName','UserIndex','UserName','When','Description'} = splice @{$$variable{'OrderLog'}},0,6; ) ?>
-	</table>
-</fieldset>
+<!--#include virtual="/main/order/_view_log.html"-->

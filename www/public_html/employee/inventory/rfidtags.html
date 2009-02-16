@@ -1,81 +1,71 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
-<? if ( $$variable{'information'} ) ?>
-<p class="information"><?information?></p>
-<hr/>
-<? endif ( $$variable{'information'} ) ?>
+<script type="text/javascript">
+
+function load(form) {
+	new Ajax.Updater( 'Results','/employee/inventory/_rfidtags_results.html', { method: 'get', parameters: form.serialize() } );
+} // end function load
+</script>
+<!--#include virtual="/includes/error_reporting.html"-->
 Please select a RFID Tag to view/edit.<br>
-<form name="f1" method="post" action="rfidtag_details.html">
+<form id="f1" name="f1" method="post" action="rfidtag_details.html">
 	<fieldset class="filters"><legend>Choose RFID Tag</legend>
-		<p>
+		<p>You need to enter at least 3 digits:<br/>
 			<label for="rfidtag_id">RFID Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
-			<input type="text" id="rfidtag_like" name="rfidtag_like" size="10" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', Serialize( document.forms.f1 ) );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', Serialize( document.forms.f1 ) );",'','Show' ); ) ?>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.rfidtag_hex.value='';if(event.keyCode == 13){load($('f1'));}"/>
+			Hex:
+			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.rfidtag_id.value='';if(event.keyCode == 13){load( $('f1') );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('f1').submit();",'','Load' ); ) ?>
 		</p>
 	</fieldset>
 </form>
-<form name="f2" method="post" action="rfidtags.html">
+<form id="f2" name="f2" method="post" action="rfidtags.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<? eval (
-			if ( ! $openprint::session{'/employee/inventory/rfidtags.html?StartYear'} ) {
-				@openprint::session{'/employee/inventory/rfidtags.html?StartYear','/employee/inventory/rfidtags.html?StartMonth','/employee/inventory/rfidtags.html?StartDay'} = Date::Calc::Today();
+			ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on', 0 );
+			if ( ! exists $session{'/employee/inventory/rfidtags.html?assigned'} ) {
+				$session{'/employee/inventory/rfidtags.html?assigned'} = 1;
 			} # end if
-			if ( ! $openprint::session{'/employee/inventory/rfidtags.html?EndYear'} ) {
-				@openprint::session{'/employee/inventory/rfidtags.html?EndYear','/employee/inventory/rfidtags.html?EndMonth','/employee/inventory/rfidtags.html?EndDay'} = Date::Calc::Today();
-			} # end if
-			if ( ! exists $openprint::session{'/employee/inventory/rfidtags.html?assigned'} ) {
-				$openprint::session{'/employee/inventory/rfidtags.html?assigned'} = 1;
-			} # end if
-			if ( ! exists $openprint::session{'/employee/inventory/rfidtags.html?notassigned'} ) {
-				$openprint::session{'/employee/inventory/rfidtags.html?notassigned'} = 1;
+			if ( ! exists $session{'/employee/inventory/rfidtags.html?notassigned'} ) {
+				$session{'/employee/inventory/rfidtags.html?notassigned'} = 1;
 			} # end if
 		) ?>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
-			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfidtags.html?StartYear'} ? $openprint::session{'/employee/inventory/rfidtags.html?StartYear'} : ''); ) ?></select>
-			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidtags.html?StartMonth'} ? $openprint::session{'/employee/inventory/rfidtags.html?StartMonth'} : ''); ) ?></select>
-			<select name="StartDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidtags.html?StartDay'} ? $openprint::session{'/employee/inventory/rfidtags.html?StartDay'} : ''); ) ?></select>
+<? echo ( ssi::date_select( 'created_on_start', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?created_on_start_year','/employee/inventory/rfidtags.html?created_on_start_month','/employee/inventory/rfidtags.html?created_on_start_day'} ) ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfidtags.html?EndYear'} ? $openprint::session{'/employee/inventory/rfidtags.html?EndYear'} : ''); ) ?></select>
-			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidtags.html?EndMonth'} ? $openprint::session{'/employee/inventory/rfidtags.html?EndMonth'} : ''); ) ?></select>
-			<select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidtags.html?EndDay'} ? $openprint::session{'/employee/inventory/rfidtags.html?EndDay'} : ''); ) ?></select>
+<? echo ( ssi::date_select( 'created_on_end', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?created_on_end_year','/employee/inventory/rfidtags.html?created_on_end_month','/employee/inventory/rfidtags.html?created_on_end_day'} ) ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Last Updated:</label>
 			<span class="DateSelector">
-			<select name="UpdatedStartYear" onchange="setDaysDropDown(this.value,this.form.UpdatedStartMonth.value,this.form.UpdatedStartDay, this.form.UpdatedStartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfidtags.html?UpdatedStartYear'} ? $openprint::session{'/employee/inventory/rfidtags.html?UpdatedStartYear'} : ''); ) ?></select>
-			<select name="UpdatedStartMonth" onchange="setDaysDropDown(this.form.UpdatedStartYear.value,this.value,this.form.UpdatedStartDay,this.form.UpdatedStartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidtags.html?UpdatedStartMonth'} ? $openprint::session{'/employee/inventory/rfidtags.html?UpdatedStartMonth'} : ''); ) ?></select>
-			<select name="UpdatedStartDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidtags.html?UpdatedStartDay'} ? $openprint::session{'/employee/inventory/rfidtags.html?UpdatedStartDay'} : ''); ) ?></select>
+<? echo ( ssi::date_select( 'updated_on_start', $session{'/employee/inventory/rfidtags.html?updated_on_start_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?updated_on_start_year','/employee/inventory/rfidtags.html?updated_on_start_month','/employee/inventory/rfidtags.html?updated_on_start_day'} ) : ' '); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-			<select name="UpdatedEndYear" onchange="setDaysDropDown(this.value,this.form.UpdatedEndMonth.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfidtags.html?UpdatedEndYear'} ? $openprint::session{'/employee/inventory/rfidtags.html?UpdatedEndYear'} : 1); ) ?></select>
-			<select name="UpdatedEndMonth" onchange="setDaysDropDown(this.form.UpdatedEndYear.value,this.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidtags.html?UpdatedEndMonth'} ? $openprint::session{'/employee/inventory/rfidtags.html?UpdatedEndMonth'} : ''); ) ?></select>
-			<select name="UpdatedEndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidtags.html?UpdatedEndDay'} ? $openprint::session{'/employee/inventory/rfidtags.html?UpdatedEndDay'} : ''); ) ?></select>
+<? echo ( ssi::date_select( 'updated_on_end', $session{'/employee/inventory/rfidtags.html?updated_on_end_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?updated_on_end_year','/employee/inventory/rfidtags.html?updated_on_end_month','/employee/inventory/rfidtags.html?updated_on_end_day'} ) : ' ' ); ) ?>
 			</span>
 		</p>
 		<p>
             <label>Assigned/Unassigned?</label>
-            <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( $openprint::session{'/employee/inventory/rfidtags.html?assigned'} ? 'checked="checked"' : '' ) ?> />
+            <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?assigned'} ); ) ?> />
             <label class="radio" for="assigned">Assigned</label>
-            <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( $openprint::session{'/employee/inventory/rfidtags.html?notassigned'} ? 'checked="checked"' : '' ) ?> />
+            <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?notassigned'} ); ) ?> />
             <label class="radio" for="notassigned">Unassigned</label>
 		</p>
 		<p><label>Type:</label>
 			<select name="Type">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDTagType::find('order'=>'lower(name)') ], $openprint::session{'/employee/inventory/rfidtags.html?Type'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDTagType::find('order'=>'lower(name)') ], $session{'/employee/inventory/rfidtags.html?Type'} ); ) ?>
 			</select>
         </p>
 
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', Serialize( document.forms.f2 ) );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', \$('f2').serialize() );", '', 'Show Results' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'rfidtag_details.html', 'Add New RFID Tag' ),
 				); ) ?>

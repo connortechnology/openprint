@@ -1,0 +1,71 @@
+<? eval (
+	require Date::Parse;
+	require Date::Format;
+
+	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
+	@{$$variable{'Expenditures'}} = ();
+	if ( $param{'expenditure_id'} ) {
+		foreach my $Expenditure ( openprint::Expenditure::find( 'id'=>$param{'expenditure_id'} ) ) {
+			push @{$$variable{'Expenditures'}}, $Expenditure;
+			$$variable{'subtotal'} += $Expenditure->subtotal();
+			$$variable{'federaltax_total'} += $Expenditure->federaltax();
+			$$variable{'total'} += $Expenditure->total();
+			$$variable{'interest_total'} += $Expenditure->interest();
+			$$variable{'owing_total'} += $Expenditure->owing();
+		} # end foreach
+	} else {
+		foreach my $Expenditure ( openprint::Expenditure::find( 
+			'occurred_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenditures.html?occurred_on_start_year','/employee/accounting/expenditures.html?occurred_on_start_month','/employee/accounting/expenditures.html?occurred_on_start_day'} ),
+			'occurred_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenditures.html?occurred_on_end_year','/employee/accounting/expenditures.html?occurred_on_end_month','/employee/accounting/expenditures.html?occurred_on_end_day'} ),
+			'owner_id'		=> $session{'company_id'},
+			'order'				=> 'id',
+			) ) {
+			push @{$$variable{'Expenditures'}}, $Expenditure;
+			$$variable{'subtotal'} += $Expenditure->subtotal();
+			$$variable{'federaltax_total'} += $Expenditure->federaltax();
+			$$variable{'total'} += $Expenditure->total();
+		} # end foreach Expenditure
+	} # end if
+
+	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+) ?>
+
+<? if ( @{$$variable{'Expenditures'}} == 0 ) ?>
+	There are no expenditures which match your search criteria. 
+<? else ( @{$$variable{'Expenditures'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Expenditure ID #</b> to view expenditure details.<br/>
+		To delete expenditures from history check the appropriate expenditure(s) and click delete.<br/>
+	</div>
+	<table class="List sortable">
+		<tr> 
+			<th width="50">ID</th>
+			<th width="110">When</th>
+			<th>Description</th>
+			<th width="75" style="text-align:right;">Amount</th>
+			<th width="75" style="text-align:right;">GST</th>
+			<th width="75" style="text-align:right;">GST Total</th>
+		</tr>
+		<? while ( $$variable{'Expenditure'} = shift @{$$variable{'Expenditures'}}; ) ?>
+		<? eval ( 
+			$$variable{'conversion_rate'} = $$variable{'Expenditure'}->Currency()->conversions( $session{'Currency_id'} );
+		) ?>
+		<tr title="<? echo ( $$variable{'Expenditure'}->description() ) ?>" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+			<td><a href="/employee/accounting/expenditure.html?expenditure_id=<? echo ( $$variable{'Expenditure'}->id(); ) ?>"><? echo ( $$variable{'Expenditure'}->id(); ) ?></a></td>
+			<td><a href="/employee/accounting/expenditure.html?expenditure_id=<? echo ( $$variable{'Expenditure'}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Expenditure'}->occurred_on() ) ); ) ?></a></td>
+			<td><a href="/employee/accounting/expenditure.html?expenditure_id=<? echo ( $$variable{'Expenditure'}->id(); ) ?>"><? hecho ( $$variable{'Expenditure'}->description(); ) ?></a></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Expenditure'}->amount() ); ) ?></td>
+			<td align="right"><? echo ( $$variable{'Expenditure'}->federaltaxrate(); ) ?>%</td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Expenditure'}->federaltax() ); ) ?></td>
+		</tr>
+		<? endwhile ( $$variable{'Expenditure'} = shift @{$$variable{'Expenditures'}}; ) ?>
+		<tr class="totals">
+			<td colspan="3">Totals:</td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
+			<td>&nbsp;</td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'federaltax_total'} ); ) ?></td>	
+		</tr>
+	</table>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
+	<br class="spacer"/>
+<? endif ( @{$$variable{'Expenditures'}} == 0 ) ?>

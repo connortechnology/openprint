@@ -1,17 +1,18 @@
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<p> 
 			<label>Category:</label>
 			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All Categories</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory::find('order'=>'lower(name)') ], $openprint::param{'ddmSearchCategory'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory::find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} ); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Service:</label>
 			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service::find('category_id'=>$openprint::param{'ddmSearchCategory'},'order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service::find('category_id'=>$param{'ddmSearchCategory'},'order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">
@@ -30,7 +31,8 @@
 			) ?>
 		</p>
 	</fieldset>
-	<fieldset class="leftColumn"><legend>Service Information</legend>
+	<div class="leftColumn">
+	<fieldset><legend>Service Information</legend>
 		<p> 
 			<label>Service Name:</label>
 			<input type="text" name="name" value="<? echo ( $$variable{'Service'}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
@@ -48,12 +50,14 @@
 			<input type="text" id="description" name="description" value="<? echo ( $$variable{'Service'}->description(); ) ?>" />
 		</p>
 	</fieldset>
-	<fieldset class="rightColumn"><legend>Purchasing Information</legend>
+	</div>
+	<div class="rightColumn">
+	<fieldset><legend>Purchasing Information</legend>
 		<p> 
 			<label>Supplier:</label>
 			<select name="supplier_id">
 				<option value="">Select a supplier</option>
-<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('supplier'=>'Y','order'=>'lower(strname)') ], $$variable{'Service'}->supplier_id() ); ) ?>
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('supplier'=>'Y','order'=>'lower(name)') ], $$variable{'Service'}->supplier_id() ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -71,6 +75,7 @@
 			<label class="radio" for="taxexempt2N">No</label>
 		</p>
 	</fieldset>
+	</div>
 	<br class="spacer"/>
 	<? if ( $$variable{'Service'}->id() ) ?>
 		<!--#include virtual="_prices.html"-->

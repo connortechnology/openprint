@@ -6,7 +6,7 @@ require openprint::pricelist;
 require openprint::priceset;
 require openprint::price;
 
-my $debug = 0;
+my $debug = 1;
 
 my %price_cache;
 
@@ -17,11 +17,8 @@ sub clear_cache {
 sub get_pricelist_id {
 
 	if ( $openprint::session{'Pricelist_id'} ) {
-		my $Pricelist = new openprint::Pricelist( $openprint::session{'Pricelist_id'} );
-		if ( $Pricelist->id() ) {
-$openprint::log->debug("openprint::pricing::get_pricelist_id returning cached Pricelist " . $Pricelist->id() . ' ' . $Pricelist->name() ) if $debug;
-			return $Pricelist->id();
-		} # end if
+		# Validity of session variables is the job of openprint.pm, so it is done once per hit
+		return $openprint::session{'Pricelist_id'};
 	} # end if
 
 	my $list_id;
@@ -143,7 +140,7 @@ sub split_by_equipment {
 sub get_best_prices {
 	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty ) = @_;
 
-	my $hash_index = "$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
+	my $hash_index = "$list_id-$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
 
 	if ( ! defined $price_cache{$hash_index} ) {
 

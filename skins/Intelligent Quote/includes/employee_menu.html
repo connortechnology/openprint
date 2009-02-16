@@ -2,15 +2,15 @@
 	<li class="off"><a href="/employee/index.html">HOME</a></li>
 	<li id="AccountMenu" class="off"><a href="#" onclick="toggleMenu($('AccountMenu'), 'off', 'on');return false;">ACCOUNT</a>
 		<ul>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 			<li><a href="/employee/account/logout.html">&raquo; Logout</a></li>
 			<li><a href="/employee/account/profile.html">&raquo; Profile</a></li>
-<? else ( $openprint::session{'user_id'} ) ?>
+<? else ( $session{'user_id'} ) ?>
 			<li><a href="/employee/account/login.html">&raquo; Login</a></li>
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>
 		</ul>
 	</li>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 	<li id="ProductionMenu" class="off"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
 		<ul>
 			<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
@@ -20,14 +20,14 @@
 <!--
 			<li><a href="/employee/production/press_schedule.html;NOSSL">&raquo; New Press Schedule</a></li>
 -->
-			<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 			<li><a href="/employee/production/duc_interface.html;NOSSL">&raquo; Set Schedule</a></li>
-			<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 			<li><a href="/employee/production/bindery_overview.html;NOSSL">&raquo; Bindery Overview</a></li>
 			<li><a href="/employee/production/bindery_schedule.html;NOSSL">&raquo; Bindery Schedule</a></li>
 		</ul>
 	</li>
-	<? if ( openprint::usergroup::is_user_in( ['Marketing'], $openprint::session{'user_id'} ) ) ?>
+	<? if ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
 	<li id="MarketingMenu" class="off"><a href="#" onclick="toggleMenu($('MarketingMenu'), 'off', 'on');return false;">MARKETING</a>
 		<ul>
 			<li><a href="/employee/marketing/categories.html;NOSSL">&raquo; Marketing Categories</a></li>
@@ -35,30 +35,30 @@
 			<li><a href="/employee/marketing/surveys.html;NOSSL">&raquo; Surveys</a></li>
 		</ul>
 	</li>
-	<? endif ( openprint::usergroup::is_user_in( ['Marketing'], $openprint::session{'user_id'} ) ) ?>
-	<? if ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $openprint::session{'user_id'} ) ) ?>
+	<? endif ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
+	<? if ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
 	<li id="ReportsMenu" class="off"><a href="#" onclick="toggleMenu($('ReportsMenu'), 'off', 'on');return false;">REPORTS</a>
 		<ul>
 			<li><a href="/employee/reports/project_history.html;NOSSL">&raquo; Project History</a></li>
 			<li><a href="/employee/reports/order_history.html;NOSSL">&raquo; Order History</a></li>
-			<? if ( openprint::usergroup::is_user_in( ['Reporting'], $openprint::session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
 			<li><a href="/employee/reports/efficiency.html;NOSSL">&raquo; Efficiency</a></li>
 			<li><a href="/employee/reports/delivery.html;NOSSL">&raquo; Delivery</a></li>
 			<li><a href="/employee/reports/turnaround.html;NOSSL">&raquo; Turnaround</a></li>
-			<? endif ( openprint::usergroup::is_user_in( ['Reporting'], $openprint::session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
 			<li><a href="/employee/reports/prepress_overview.html;NOSSL">&raquo; Prepress Overview</a></li>
 		</ul>
 	</li>
-	<? endif ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $openprint::session{'user_id'} ) ) ?>
-	<? if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
+	<? endif ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
+	<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	<li id="AccountingMenu" class="off"><a href="#" onclick="toggleMenu($('AccountingMenu'), 'off', 'on');return false;">ACCOUNTING</a>
 		<ul>
 			<li><a href="/employee/accounting/search.html;NOSSL">&raquo; Outstanding</a></li>
 			<li><a href="/employee/accounting/credit.html;NOSSL">&raquo; Customer Credit</a></li>
 		</ul>
 	</li>
-	<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
-	<? if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+	<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+	<? if ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
 	<li id="InventoryMenu" class="off"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 		<ul>
 			<li><a href="/employee/inventory/purchase_orders.html;NOSSL">&raquo; Purchase Orders</a></li>
@@ -67,12 +67,12 @@
 			<li><a href="/employee/inventory/skids.html;NOSSL">&raquo; Skids</a></li>
 		</ul>
 	</li>
-	<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+	<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
 	<li id="SupportMenu" class="off"><a href="#" onclick="toggleMenu($('SupportMenu'), 'off', 'on');return false;">SUPPORT</a>
 		<ul>
 			<li><a href="/employee/support/helpdesk_search.html;NOSSL">&raquo; Help Desk</a></li>
 			<li><a href="/employee/support/returns.html;NOSSL">&raquo; Returns</a></li>
 		</ul>
 	</li>
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>
 </ul>

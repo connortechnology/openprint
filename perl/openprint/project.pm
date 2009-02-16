@@ -27,35 +27,6 @@ sub get_quantities {
 	return ( $Project->quantity1(), $Project->quantity2(), $Project->quantity3() );
 } # end sub get_quantities
 
-sub get_header {
-	my ( $log, $dbh, $variable, $project_index ) = @_;
-
-	$$variable{'Project'} = new openprint::Project( $project_index );
-	$_ = q{SELECT order_id, lngDocketNumber, strProjectReference, strComments, to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus, intQuantity1, intQuantity2, intQuantity3,Currency_id, strDesign, CompanyIndex, UserIndex, to_char(due_date,'MM/DD/YYYY'), to_char(due_date, 'Day Mon DD/YYYY')  FROM tbl_Projects WHERE Index=?};
-	@$variable{'order_id','DocketNumber','ProjectReference', 'Comments', 'CreationDate','ProjectStatus','Quantity1','Quantity2','Quantity3','currency_id','ddmDesign','company_id','user_id','DueDate','RequiredDateAlternate'} = sql::execute( $log, $dbh, $_, $project_index );
-
-	my $Company = new openprint::Company( $$variable{'company_id'} );
-	$$variable{'Company'} = $Company;
-	$$variable{'CompanyName'} = $Company->name();
-
-	my $User = new openprint::User( $$variable{'user_id'} );
-
-	@$variable{'CreatedByName','CreatedByPhone','CreatedByEmail'} = ( $User->name(), $User->phone(), $User->email() );
-	my $CSR = new openprint::User( $Company->salesrep_id() );
-
-   @$variable{'CSRName','CSREmail','CustomerServiceRep'} = ( $CSR->name(), $CSR->email(), $CSR->name() );
-
-	if ( $$variable{'order_id'} ) {
-		$_ = q{SELECT intQuantity, intQuantityIndex, to_char(dateRequired, 'MM/DD/YYYY'), ShippingType FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?};
-		@$variable{'OrderedQuantity','OrderedQuantityIndex','RequiredDate','ShippingType'} = sql::execute( $log, $dbh, $_, $$variable{'order_id'}, $project_index );
-		$_ = q{SELECT strPONumber, to_char(dtmOrderDate, 'MM/DD/YYYY') FROM Orders WHERE Index=?};
-		@$variable{'PONum','OrderedDate'} = sql::execute( $log, $dbh, $_, $$variable{'order_id'} );
-	my $Order = new openprint::Order( $$variable{'order_id'} );
-	@$variable{'OrderSalutation','OrderFirstName','OrderLastName','OrderPhone','OrderExtension'} = ( $Order->salutation(), $Order->first_name(), $Order->last_name(), $Order->phone(), $Order->extension() );
-	} # end fi
-
-} # end sub get_header
-
 sub view {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 
@@ -63,7 +34,7 @@ sub view {
 		$openprint::session{'ShowAllSignatures'} = $openprint::param{'ShowAllSignatures'};
 	} # end if
 $openprint::log->debug("Viewing Project $project_index");
-	get_header( $log, $dbh, $variable, $project_index );
+	$$variable{'Project'} = new openprint::Project( $project_index );
 
 	my %project;
 	foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $project_index ) ) {
@@ -81,6 +52,7 @@ $openprint::log->debug("Viewing Project $project_index");
 
 # now do printing service
 	$$variable{'ProjectTypeName'} = $ProjectType->name();
+	@{$$variable{'SERVICES'}} = ();
 	my @services = ();
 
 	my %services = $$variable{'Project'}->get_services();
@@ -155,25 +127,28 @@ $openprint::log->debug("Viewing Project $project_index");
 		push @{$$variable{'SERVICES'}}, $statuses{$service_index};
 	} # end foreach
 
-	if ( 
-			( $$variable{'Project'}->price1() != $$variable{'Total1'} ) or 
-			( $$variable{'Project'}->price2() != $$variable{'Total2'} ) or 
-			( $$variable{'Project'}->price3() != $$variable{'Total3'} ) 
-	   ) {
+	my $save = 0;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 
-		$$variable{'Project'}->price1( $$variable{'Total1'} );
-		$$variable{'Project'}->price2( $$variable{'Total2'} );
-		$$variable{'Project'}->price3( $$variable{'Total3'} );
-		$$variable{'Project'}->save();
-	} # end if
-	foreach my $qty_index ( 1 .. 3 ) {
+		$$variable{"Total$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$variable{"Total$qty_index"} );
+		$$variable{"UnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$variable{"UnitPrice$qty_index"} );
+$openprint::log->debug("Prices $qty_index P" . $$variable{'Project'}->price($qty_index) . ' T' .  $$variable{'Total'.$qty_index} );
+		if ( $$variable{'Project'}->price($qty_index) != $$variable{'Total'.$qty_index} ) {
+			$$variable{'Project'}->price( $qty_index, $$variable{'Total'.$qty_index} );
+			$save = 1;
+		} # end if
 		$$variable{"Total$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$variable{"Total$qty_index"}*$conversion_rate );
 		$$variable{"UnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$variable{"UnitPrice$qty_index"}*$conversion_rate );
 	} # end foreach
+	if ( $save ) {
+		$$variable{'Project'}->summary(undef);
+		$$variable{'Project'}->save();
+	} # end if
 
 	@$variable{'CurrencyName', 'CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'ProjectIndex'} = $project_index;
 	$$variable{'OrderID'} = $$variable{'order_id'};
+	delete $$variable{'Project'}{'Services'};
 } # end sub view
 
 # This is sortof a state engine.	This function should update a project's status to whatever it should be.
@@ -183,15 +158,6 @@ sub update_status {
 	my $Project = new openprint::Project( $project_index );
 	return $Project->update_status( $variable );
 } # end sub update_project_status
-
-sub get_log {
-	my ( $log, $dbh, $project_id ) = @_;
-
-	$_ = q{SELECT Company_id, (SELECT strName FROM Company WHERE Index=Company_ID),
-		User_Id, (SELECT strFirstName || ' ' || strLastName FROM Users
-		WHERE Index=User_Id), to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), Description FROM Project_Log WHERE Project_Id=? ORDER BY dtmTimestamp};
-	return sql::execute( $log, $dbh, $_, $project_id );
-} # end sub get_log
 
 sub insert_into_log {
 	my ( $log, $dbh, $cust_id, $user_id, $project_id, $text ) = @_;

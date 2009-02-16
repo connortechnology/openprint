@@ -5,7 +5,9 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable %fields);
+use vars qw($log $dbh %variable %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
 
 
@@ -31,6 +33,23 @@ my $debug = 1;
 	'comment'		=>	'comment',
 	'skid_id'		=>	'skid_id',
 	'units'			=>	'units',
+	'docket'		=>	'docket',
+);
+%transforms = (
+	'paper_id'	=>	[ 's/\D//g' ],
+	'skid_id'	=>	[ 's/\D//g' ],
+	'user_id'	=>	[ 's/\D//g' ],
+	'instock'	=>	[ 's/\D//g' ],
+	'docket'	=>	[ 's/\D//g' ],
+	'delta'		=>	[ 's/[^\d\-]//g' ],
+);
+%defaults = (
+	'updated_on'	=>	'NOW()',
+	'docket'		=>	undef,
+);
+
+%defaults = (
+	'updated_on'	=>	'NOW()',
 );
 
 # Returns a paper object specified by the parameters
@@ -53,6 +72,22 @@ sub find {
 		$sql .= ' AND skid_id=?';
 		push @values, $params{'skid_id'};
 	} # end if
+	if ( exists $params{'paper_id'} ) {
+		if ( defined $params{'paper_id'} ) {
+		$sql .= ' AND paper_id=?';
+		push @values, $params{'paper_id'};
+		} else {
+		$sql .= ' AND paper_id IS NULL';
+		} # end if
+	} # end if
+	if ( exists $params{'docket'} ) {
+		if ( defined $params{'docket'} ) {
+			$sql .= ' AND docket=?';
+			push @values, $params{'docket'};
+		} else {
+			$sql .= ' AND docket IS NULL';
+		} # end if
+	} # end if
 	if ( exists $params{'comment_like'} ) {
 		$sql .= ' AND comment LIKE ?';
 		push @values, $params{'comment_like'};
@@ -69,6 +104,7 @@ sub find {
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
@@ -134,6 +170,30 @@ sub Skid {
 sub User {
 	return new openprint::User( $_[0]{'user_id'} );
 } # end sub User
+
+sub docket {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'docket'} = shift;
+		$$self{'docket'} =~ s/\D//g;
+	} # end if
+	if ( ! $$self{'docket'} ) {
+		if ( $$self{'comment'} =~ /docket (\d+)/ ) {
+			$$self{'docket'} = $1;
+		} # end if
+	} # end if
+	return $$self{'docket'};
+} # end sub docket
+
+sub Project {
+	my $self = $_[0];
+	return new openprint::Project() if ! $$self{'docket'};
+	my @Projects = openprint::Project::find('docket'=>$$self{'docket'});
+	if ( @Projects ) {
+		return $Projects[0];
+	} # end if
+	return new openprint::Project();
+} # end sub Project
 
 1;
 __END__

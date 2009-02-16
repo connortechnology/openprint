@@ -42,11 +42,9 @@
 			<fieldset><legend>Companies in this marketing Category:</legend>
 				<? echo (
 					my $html;
-					foreach my $Company ( $$variable{'Category'}->companies( 'order' => 'lower(strName)' ) ) {
-						$html .= '<p>';
+					foreach my $Company ( $$variable{'Category'}->companies( 'order' => 'lower(name)' ) ) {
 						$html .= sprintf( q{<input type="checkbox" id="chkDelete%d" name="chkDelete" value="%d" />}, $Company->id(), $Company->id() );
-						$html .= sprintf( q{<label class="radio" for="chkDelete%d">%s</label>}, $Company->id(), $Company->name() );
-						$html .= '</p>';
+						$html .= sprintf( q{<label class="radio" for="chkDelete%d">%s</label><br/>}, $Company->id(), $Company->name() );
 					} # end while
 					return $html;
 				) ?>
@@ -59,7 +57,7 @@
 					<select name="Company">
 						<option value=""> select one </option>
 					<? echo ( 
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } sets::exclude( [$$variable{'Category'}->companies()], [ openprint::Company::find( 'order' => 'lower(strname)' ) ] ) ] );
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } sets::exclude( [$$variable{'Category'}->companies()], [ openprint::Company::find( 'order' => 'lower(name)' ) ] ) ] );
 					) ?>
 					</select>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "f1.btnFunction.value='Add'; f1.submit();", '', 'Add' ); ) ?>

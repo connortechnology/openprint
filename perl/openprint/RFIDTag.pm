@@ -53,12 +53,22 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( $params{'type'} ) {
+		$sql .= ' AND type_id=(SELECT id FROM RFIDTagTypes WHERE name=?)';
+		push @values, $params{'type'};
+	} # end if
+	
 	if ( $params{'type_id'} ) {
 		$sql .= ' AND type_id=?';
 		push @values, $params{'type_id'};
 	} # end if
+	if ( $params{'location_id'} ) {
+		$sql .= ' AND location_id=?';
+		push @values, $params{'location_id'};
+	} # end if
 	if ( $params{'id_like'} ) {
-		$sql .= " AND id LIKE '%$params{id_like}%'";
+		$sql .= ' AND id LIKE ?';
+		push @values, $params{id_like};
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
@@ -146,6 +156,7 @@ sub save {
 			$$self{'type'} = $type;
 		} # end if
 	} # end if
+	$$self{'updated_on'} = 'NOW()';
 
 	delete $$self{'type'};
 	
@@ -180,11 +191,6 @@ sub delete {
 	return '';
 } # end sub delete
 
-sub Skid {
-	my ($self) = @_;
-	return openprint::Skid::find('rfidtag_id'=>$$self{'id'});
-} # end sub Skid
-
 sub Type {
 	return new openprint::RFIDTagType( $_[0]->type_id() );
 } # end sub Type
@@ -218,26 +224,32 @@ sub location_id {
 
 sub skid_id {
 	my ( $self ) = @_;
-	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
-	if ( @Skids ) {
-		return $Skids[0]->id();
+	if ( ! $$self{'id'} ) {
+		$openprint::log->error('Cant load skid on a tag without an id');
+		return;
 	} # end if
-	return;
+	if ( ! $$self{'skid_id'} ) {
+		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+		if ( @Skids ) {
+			$$self{'skid_id'} = $Skids[0]->id();
+		} # end if
+	} # end if
+	return $$self{'skid_id'};
 } # end sub skid_id
 
 sub Skid {
 	my ( $self ) = @_;
-if ( ! $$self{'id'} ) {
-	$openprint::log->error('Cant load ski on a tag without an id');
-	return;
-} # end if
-	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
-	if ( ! @Skids ) {
-		my $Skid = new openprint::Skid();
-		$Skid->rfidtag_id( $$self{'id'} );
-		return $Skid;
+	if ( ! $$self{'id'} ) {
+		$openprint::log->error('Cant load skid on a tag without an id');
+		return;
 	} # end if
-	return $Skids[0];
+	if ( ! $$self{'skid_id'} ) {
+		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+		if ( @Skids ) {
+			$$self{'skid_id'} = $Skids[0]->id();
+		} # end if
+	} # end if
+	return new openprint::Skid( $$self{'skid_id'} );
 } # end sub Skid
 
 1;

@@ -12,6 +12,14 @@ require openprint::Fold;
 require openprint::FoldSpecification;
 require openprint::logs;
 
+use openprint;
+use vars qw(%variable $log $dbh %config %param );
+*variable = \%openprint::variable;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+*param = \%openprint::param;
+
 sub import_specs {
 	my ( $r, $Equipment ) = @_;
 
@@ -105,39 +113,40 @@ sub edit {
 } # end sub equipment_edit
 
 sub _specification {
-	my $Specification = new openprint::EquipmentSpecification( $openprint::param{'id'} );
-	if ( $openprint::param{'action'} eq 'add' ) {
+	my $Specification = new openprint::EquipmentSpecification( $param{'id'} );
+	if ( $param{'action'} eq 'add' ) {
 		foreach my $k ( 'name','min','max','value','units','interpolate','equipment_id' ) {
-			$$Specification{$k} = $openprint::param{$k};
+			$param{$k} = ssi::unhtmlize($param{$k});
 		} # end foreach
-		$Specification->save();
-	} elsif ( $openprint::param{'action'} eq 'delete' ) {
+		$Specification->save(\%param);
+	} elsif ( $param{'action'} eq 'delete' ) {
 		$Specification->delete();
-		$openprint::variable{'PageContent'} = ' ';
-	} elsif ( $openprint::param{'action'} eq 'copy' ) {
+		$variable{'PageContent'} = ' ';
+	} elsif ( $param{'action'} eq 'copy' ) {
 		$Specification = $Specification->copy();
 		$Specification->save();
-	} elsif ( $openprint::param{'action'} eq 'update' ) {
-		if ( $openprint::param{'field'} ne 'interpolate' ) {
-			if ( $openprint::param{'field'} eq 'name' ) {
-			} elsif ( $openprint::param{'field'} eq 'min' ) {
-				$openprint::param{'value'} =~ s/[^\d\.]//g;
-			} elsif ( $openprint::param{'field'} eq 'max' ) {
-				$openprint::param{'value'} =~ s/[^\d\.]//g;
-			} elsif ( $openprint::param{'field'} eq 'value' ) {
-			} elsif ( $openprint::param{'field'} eq 'units' ) {
+	} elsif ( $param{'action'} eq 'update' ) {
+		if ( $param{'field'} ne 'interpolate' ) {
+			if ( $param{'field'} eq 'name' ) {
+			} elsif ( $param{'field'} eq 'min' ) {
+				$param{'value'} =~ s/[^\d\.]//g;
+			} elsif ( $param{'field'} eq 'max' ) {
+				$param{'value'} =~ s/[^\d\.]//g;
+			} elsif ( $param{'field'} eq 'value' ) {
+				$param{'value'} = ssi::unhtmlize( $param{'value'} );
+			} elsif ( $param{'field'} eq 'units' ) {
 			} # end if
-			$$Specification{$openprint::param{'field'}} = $openprint::param{'value'};
+			$$Specification{$param{'field'}} = $param{'value'};
 			$Specification->save();
-			$openprint::variable{'PageContent'} = $$Specification{$openprint::param{'field'}};
+			$variable{'PageContent'} = $$Specification{$param{'field'}};
 		} else {
 			$$Specification{'interpolate'} = ! $$Specification{'interpolate'};
 			$$Specification{'interpolate'} = 1 * $$Specification{'interpolate'};
 			$Specification->save();
-			$openprint::variable{'PageContent'} = $$Specification{'interpolate'} ? 'Yes' : 'No';
+			$variable{'PageContent'} = $$Specification{'interpolate'} ? 'Yes' : 'No';
 		} # end if
 	} # end if
-	$openprint::variable{'Specification'} = $Specification;
+	$variable{'Specification'} = $Specification;
 } # end sub _specification
 
 sub _fold {

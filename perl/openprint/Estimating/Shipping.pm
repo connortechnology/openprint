@@ -33,9 +33,11 @@ my %variables = (
     'txtPackageWeight1'=>['save','output'],
     'txtPackageWeight2'=>['save','output'],
     'txtPackageWeight3'=>['save','output'],
-	'FromCompany'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
-	'ToCompany'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
-	'alert'=>['save'],
+	'FromCompanyName'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
+	'ToCompanyName'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
+	'FromFirstName'=>['save'],'FromLastName'=>['save'],
+	'ToFirstName'=>['save'],'ToLastName'=>['save'],
+	'alert'=>['save','output'],
 
 );
 
@@ -101,7 +103,7 @@ sub calc {
 		} # end foreach
 	} # end foreach ServiceType
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\.\d]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -151,7 +153,7 @@ sub display {
 
 	if ( ! ( $$variable{'FromCity'} and $$variable{'FromPostalCode'} and $$variable{'FromStateProvince'} and $$variable{'FromCountry'} ) ) {
 		my %shipping_fields = (
-				'FromCompany'		=>	'CompanyName',
+				'FromCompanyName'	=>	'CompanyName',
 				'FromAddress1'		=>	'Address1',
 				'FromAddress2'		=>	'Address2',
 				'FromCity'			=>	'City',
@@ -166,13 +168,16 @@ sub display {
 
 		
 		my $company = new openprint::obj_customer( $log, $dbh, $openprint::config{'Owner'} );
-		@$variable{ keys %shipping_fields } = $company->load_shipping( @shipping_fields{ keys %shipping_fields } );
+		my $address = $company->get_shipping_address();
+		foreach my $k ( keys %shipping_fields ) {
+			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
+		} # end foreach
 	} # end if
 
 	if ( $openprint::session{'company_id'} and ( ! (
 		$$variable{'ToCity'} and $$variable{'ToPostalCode'} and $$variable{'ToStateProvince'} and $$variable{'ToCountry'} ) ) ) {
 		my %shipping_fields = (
-				'ToCompany'			=>	'CompanyName',
+				'ToCompanyName'		=>	'CompanyName',
 				'ToAddress1'		=>	'Address1',
 				'ToAddress2'		=>	'Address2',
 				'ToCity'			=>	'City',
@@ -186,7 +191,10 @@ sub display {
 				);
 
 		my $company = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
-		@$variable{ keys %shipping_fields } = $company->load_shipping( @shipping_fields{ keys %shipping_fields } );
+		my $address = $company->get_shipping_address();
+		foreach my $k ( keys %shipping_fields ) {
+			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
+		} # end foreach
 	} # end if
 
 } # end sub display
@@ -212,7 +220,7 @@ sub summary {
 
 		if ( $$specs{'FromAddress1'} or $$specs{'FromCity'} or $$specs{'FromStateProvince'} or $$specs{'FromCountry'} ) {
 			$html .= 'From: ' . join("\n", 
-					join(',', $$specs{'FromCompany'} ) ,
+					join(',', $$specs{'FromCompanyName'} ) ,
 					join(',', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
 						@$specs{'FromCity','FromStateProvince','FromCountry'},
 						@$specs{'FromPostalCode'} ),
@@ -220,7 +228,7 @@ sub summary {
 		} # end if
 		if ( $$specs{'ToAddress1'} or $$specs{'ToCity'} or $$specs{'ToStateProvince'} or $$specs{'ToCountry'} ) {
 			$html .= 'To: ' . join("\n", 
-					join(',', $$specs{'ToCompany'} ) ,
+					join(',', $$specs{'ToCompanyName'} ) ,
 					join(',', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
 						@$specs{'ToCity','ToStateProvince','ToCountry'},
 						@$specs{'ToPostalCode'} ),

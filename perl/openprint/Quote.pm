@@ -15,6 +15,7 @@ use vars qw($r %variable $log $dbh %config);
 
 require sql;
 require openprint::logs;
+require openprint::QuotedProject;
 
 my $debug = 1;
 
@@ -80,15 +81,15 @@ sub find {
 			$sql .= q{ AND (dtmquotedate <= ?::timestamp with time zone)};
 			push @values, $params{'created_on_end'};
 		} # end if
-		if ( $params{'value_start'} and $params{'value_end'} ) {
-			$sql .= q{ AND (curtotalsale BETWEEN ? AND ? )};
-			push @values, $params{'value_start','value_end'};
-		} elsif ( $params{'value_start'} ) {
-			$sql .= q{ AND (curtotalsale >= ?)};
-			push @values, $params{'value_start'};
-		} elsif ( $params{'value_end'} ) {
-			$sql .= q{ AND (curtotalsale <= ?)};
-			push @values, $params{'value_end'};
+		if ( $params{'total_start'} and $params{'total_end'} ) {
+			$sql .= q{ AND ( (curtotalsale1 BETWEEN ? AND ? ) OR (curtotalsale2 BETWEEN ? AND ? ) OR (curtotalsale3 BETWEEN ? AND ? ) )};
+			push @values, @params{'total_start','total_end','total_start','total_end','total_start','total_end'};
+		} elsif ( $params{'total_start'} ) {
+			$sql .= q{ AND (curtotalsale1 >= ? OR curtotalsale2 >= ? OR curtotalsale3 >= ?)};
+			push @values, @params{'total_start','total_start','total_start'};
+		} elsif ( $params{'total_end'} ) {
+			$sql .= q{ AND (curtotalsale1 <= ? OR curtotalsale2 <= ? OR curtotalsale3 <= ?)};
+			push @values, @params{'total_end','total_end','total_end'};
 		} # end if
 		if ( $params{'status'} ) {
 			if ( ref $params{'status'} eq 'ARRAY' ) {
@@ -98,6 +99,14 @@ sub find {
 				$sql .= q{ AND (strStatus=?)};
 				push @values, $params{'status'};
 			} # end if
+		} # end if
+		if ( $params{'currency_id'} ) {
+			$sql .= ' AND ( currency_id = ? )';
+			push @values, $params{'currency_id'};
+		} # end if
+		if ( $params{'salesrep_id'} ) {
+			$sql .= ' AND ( companyindex IN ( SELECT index FROM company WHERE lngsalesperson=? ) )';
+			push @values, $params{'salesrep_id'};
 		} # end if
 		if ( $params{'for_name'} ) {
 			$sql .= q{ AND (SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quoteindex=index)=?};
@@ -117,7 +126,7 @@ sub find {
 		$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 		if ( ! $data ) {
-			$log->error("Error loading Quotes: ($sql) (@values)");
+			$log->warn("Error loading Quotes: ($sql) (@values) reason: " . $dbh->errstr() );
 			return;
 		} elsif ( $debug ) {
 			$log->debug("Loading Quotes: ($sql) (@values)");
@@ -203,13 +212,6 @@ sub to_string {
 	return '';
 } # end sub
 
-sub created_on {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'created_on'} = shift;
-	} # end if
-	return $$self{'created_on'};
-} # end sub created_on
 sub created_by_id {
 	my $self = shift;
 	return $$self{'created_by_id'};
@@ -239,6 +241,12 @@ sub Company {
 	my $self = shift;
 	return new openprint::Company( $$self{'company_id'} );
 } # end sub company
+
+sub Quoted_Projects {
+	my $self = shift;
+	return map {new openprint::QuotedProject( $_ );} sql::execute( undef, undef, q{SELECT id FROM tbl_Quote_Details WHERE QuoteIndex=?}, $$self{'id'} );
+} # end sub Quoted_Projects
+
 sub Projects {
 	my $self = shift;
 	if ( ! exists $$self{'Projects'} ) {
@@ -258,6 +266,10 @@ sub Currency {
 sub for_name {
 	my $self = shift;
 	return $$self{'for_firstname'} . ' ' . $$self{'for_lastname'};
+} # end sub
+sub by_name {
+	my $self = shift;
+	return $$self{'by_firstname'} . ' ' . $$self{'by_lastname'};
 } # end sub
 
 sub contents {
@@ -347,40 +359,48 @@ sub send {
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 
 	my @project_summaries;
-	if ( $self->Company()->quote_project_breakdown() eq 'Y' ) {
-		# Add a project summary for each project in the quote
-		foreach my $Project ($self->Projects()) {
-			my %variable;
-			openprint::project::view( $log, $dbh, \%variable, $Project->id() );
-			if ( -f $config{'SkinPath'} . '/email_content/project_view.html' ) {
+# Add a project summary for each project in the quote
+	foreach my $Project ($self->Quoted_Projects()) {
+		next if ! $Project->include_detailed();
+		my %variable;
+		#openprint::project::view( $log, $dbh, \%variable, $Project->id() );
+		if ( $Project->template_id() ) {
+			$variable{'Quote'} = $self;
+			$variable{'Project'} = $Project->Project();
+			$variable{'QuotedProject'} = $Project;
+			$variable{'ReplacementText'} = '<style type="text/css">'.misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ).'</style>'.
+			misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template_view.html' );
+		} elsif ( -f $config{'SkinPath'} . '/email_content/project_view.html' ) {
 			$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/project_view.html' );
-			} else {
+		} else {
 			$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_view.html' );
-			} # end if
-			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
-			push @project_summaries, sprintf('Project%d.html',$Project->id()), encode_qp( ssi::variable_substitution( \$email_template, \%variable )), 'text/html', 'quoted-printable';
-		} # for each Project
-	} # end if
+		} # end if
+		$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+		push @project_summaries, sprintf('Project%d.html',$Project->project_id()), encode_qp( ssi::variable_substitution( \$email_template, \%variable )), 'text/html', 'quoted-printable';
+	} # for each Project
+
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
 
 	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, ['A', 'E']) ) {
 
-		my @attachments = ();
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
-		push @attachments, '', encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
+		if ( $Me->email_quotes_to_myself() ) {
+			my @attachments = ();
+			$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
+			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
+			push @attachments, '', encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
 
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_invoice.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
-		push @attachments, "Quote$$self{id}.html", encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
+			$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_invoice.html' );
+			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
+			push @attachments, "Quote$$self{id}.html", encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
 
-		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
-				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
-				TO      => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
-				SUBJECT => sprintf('Quote %d for %s', $$self{id}, $self->for_companyname() ),
-				);
-		misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
-#misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
+			my %mail = (
+					SMTP    => $openprint::config{'Mail Server'},
+					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					TO      => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					SUBJECT => sprintf('Quote %d for %s', $$self{id}, $self->for_companyname() ),
+					);
+			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
+		} # end if
 
 		if ( $quote{'ForEmail'} ne '' and (
 					( $quote{'ByFirstName'} ne $quote{'ForFirstName'} ) or
@@ -399,7 +419,6 @@ sub send {
 					( $quote{'ByFax'} ne $quote{'ForFax'} ) or
 					( $quote{'ByEmail'} ne $quote{'ForEmail'} )
 					) ) {
-$openprint::log->debug('Sending For');
 			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 
 			my @attachments = ();
@@ -416,8 +435,8 @@ $openprint::log->debug('Sending For');
 
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
-					FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
-					TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
+					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					TO      => sprintf('%s %s <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					SUBJECT => "Quote $$self{id}",
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
@@ -473,6 +492,14 @@ $openprint::log->debug('Sending For');
 	} # end if
 
 } # end sub send_quote
+
+sub total {
+	my ( $self, $qty_index, $new_value ) = @_;
+	if ( defined $new_value ) {
+		$$self{'total'.$qty_index} = $new_value;
+	} # end if
+	return $$self{'total'.$qty_index};
+} # end sub total
 
 1;
 __END__

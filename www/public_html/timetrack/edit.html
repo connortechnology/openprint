@@ -1,0 +1,154 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+
+<script type="text/javascript">
+	tinyMCE.init({
+
+		mode : "textareas",
+
+		theme : "simple"
+
+	});
+	function check_time_starting(form) {
+		var start;
+		var end;
+		if ( get_value( form.time_associated ) == 1 ) {
+			start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value, form.starting_hour.value, form.starting_minute.value );
+			end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value, form.ending_hour.value, form.ending_minute.value );
+		} else {
+			start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value );
+			end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value );
+		} // end if
+		if ( start > end ) {
+			ddm_select_by_value( form.ending_year, form.starting_year.value );
+			ddm_select_by_value( form.ending_month, form.starting_month.value );
+			ddm_select_by_value( form.ending_day, form.starting_day.value );
+			if ( get_value( form.time_associated ) == 1 ) {
+				ddm_select_by_value( form.ending_hour, form.starting_hour.value );
+				ddm_select_by_value( form.ending_minute, form.starting_minute.value );
+			} // end if
+		} // end if
+	} // end function check_time_starting
+	function check_time_ending(form) {
+		var start;
+		var end;
+		if ( get_value( form.time_associated ) == 1 ) {
+			start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value, form.starting_hour.value, form.starting_minute.value );
+			end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value, form.ending_hour.value, form.ending_minute.value );
+		} else {
+			start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value );
+			end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value );
+		} // end if
+		if ( start > end ) {
+			ddm_select_by_value( form.starting_year, form.ending_year.value );
+			ddm_select_by_value( form.starting_month, form.ending_month.value );
+			ddm_select_by_value( form.starting_day, form.ending_day.value );
+			if ( get_value( form.time_associated ) == 1 ) {
+				ddm_select_by_value( form.starting_hour, form.ending_hour.value );
+				ddm_select_by_value( form.starting_minute, form.ending_minute.value );
+			} // end if
+		} // end if
+	} // end function check_time_ending
+	function update_duration(form) {
+		if ( get_value( form.time_associated ) == 1 ) {
+			var start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value, form.starting_hour.value, form.starting_minute.value );
+			var end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value, form.ending_hour.value, form.ending_minute.value );
+			var difference = parseInt( ( end - start ) / 1000 );
+			var days = parseInt(difference/(60*60*24));
+			difference -= days * ( 60*60*24 );
+			var hours = parseInt( difference/(60*60) );
+			difference -= hours * (60*60);
+			var minutes = parseInt( difference/60 );
+			$('duration').innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
+		} else {
+			var start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value );
+			var end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value );
+			var difference = parseInt( ( end - start ) / 1000 );
+			var days = parseInt(difference/(60*60*24));
+			$('duration').innerHTML = days +'days';
+		} // end if
+	} // end function update_duration
+</script>
+<form name="f1" id="f1" action="history.html" method="post">
+	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" />
+	<fieldset><legend>Editing timetrack<? echo ( $$variable{'Timetrack'}->id() ? '('.$$variable{'Timetrack'}->id().')' : '' ) ?></legend>
+		<? if ( $$variable{'Timetrack'}->deleted() ) ?>
+		<span class="warning">This timetrack has been deleted</span>
+		<? endif ( $$variable{'Timetrack'}->deleted() ) ?>
+		
+		<input type="hidden" name="timetrack_id" value="<? echo ( $openprint::param{'timetrack_id'} ) ?>" />
+		<div class="leftColumn">
+			<p><label for="company_id">Company:</label>
+				<select id="company_id" name="company_id">
+					<option value=""> select </option>
+					<? echo ( openprint::Company::get_dropdown( $$variable{'Timetrack'}->company_id() ? $$variable{'Timetrack'}->company_id() : $session{'company_id'} ); ) ?>
+				</select>
+			</p>
+			<p><label for="user_id">Employee:</label>
+				<select id="user_id" name="user_id">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Timetrack'}->user_id() ? $$variable{'Timetrack'}->user_id() : $session{'user_id'} ); ) ?>
+				</select>
+			</p>
+			<p>
+				<label>Time Associated:</label>
+				<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }" />
+				<label class="radio" for="time_associated1">Yes</label>
+				<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Timetrack'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }" />
+				<label class="radio" for="time_associated0">No</label>
+			</p>
+			<p><label>Start:</label>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 'check_time_starting(this.form);update_duration(this.form);' ); ) ?></span>
+			</p>
+			<p><label>End:</label>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 'update_duration(this.form);' ); ) ?></span>
+			</p>
+			<p><label>Duration:</label>
+				<span id="duration">
+				</span>
+				<script type="text/javascript">update_duration(document.forms['f1']);</script>
+			</p>
+			<p><label>Service:</label>
+				<select id="service_id" name="service_id">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service::find('owner_id'=>$session{'company_id'},'order'=>'lower(name)') ], $$variable{'Timetrack'}->service_id() ); ) ?>
+				</select>
+			</p>
+			<p><label for="timetrack_rate">Override Rate:</label>
+				<input type="text" name="rate" id="rate" value="<? echo ( $$variable{'Timetrack'}->rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			</p>
+		</div>
+		<div class="rightColumn">
+			<p>
+				<label for="description">Description:</label>
+				<textarea cols="" id="description" name="description" rows="<? echo ( $$variable{'Timetrack'}->description() ? scalar split("\n", $$variable{'Timetrack'}->description()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);" style="width: 100%;"><? echo ( $$variable{'Timetrack'}->description() ) ?></textarea>
+			</p>
+			<? if ( $$variable{'Timetrack'}->invoice_id() ) ?>
+			<p>
+				<label>Invoice:</label>
+				<a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Timetrack'}->invoice_id() ) ?>"><? echo ( $$variable{'Timetrack'}->invoice_id() ) ?></a>
+			</p>
+			<? endif ( $$variable{'Timetrack'}->invoice_id() ) ?>
+			<? if ( $$variable{'Timetrack'}->paycheque_id() ) ?>
+			<p>
+				<label>Paycheque:</label>
+				<a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Timetrack'}->paycheque_id() ) ?>"><? echo ( $$variable{'Timetrack'}->paycheque_id() ) ?></a>
+			</p>
+			<? endif ( $$variable{'Timetrack'}->paycheque_id() ) ?>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+				
+				if ( $$variable{'Timetrack'}->id() ) {
+				$html = ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();check_time_starting(f1);', '', 'Reset' );
+				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>

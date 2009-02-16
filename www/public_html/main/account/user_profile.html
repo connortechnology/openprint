@@ -2,36 +2,60 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
-<? if ( $$variable{'error'} ) ?>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $openprint::session{'user_id'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $session{'user_id'} ) ?>
 	<span class="requiredFieldIndicator">*</span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
 		<div class="UserProfile">
 			<fieldset>
-			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
+			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $$variable{'Me'}->id(), $$variable{'Me'}->csr_ids() ] ) ) ?>
 				<p>
 					<label for="ddmUser">User Name:&nbsp;</label>
 					<select name="ddmUser" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 						<option value="">Select a User</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$openprint::session{'company_id'}, 'order'=>'lower(strfirstname),lower(strlastname)' ) ], $$variable{'User'}->id() ); ) ?>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $$variable{'User'}->id() ); ) ?>
 					</select>
 				</p>
-			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
+			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $$variable{'Me'}->id(), $$variable{'Me'}->csr_ids() ] ) ) ?>
 				<p class="buttons">
-			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
+			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $$variable{'Me'}->id(), $$variable{'Me'}->csr_ids() ] ) ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Previous','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);", '', '<<' ); ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Next','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);", '', '>>' ); ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'New','new.gif',"addCheck(f1);", '', 'New' ); ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", '', 'Delete' ); ) ?>
-			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $openprint::session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
+			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $$variable{'Me'}->id(), $$variable{'Me'}->csr_ids() ] ) ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", '', 'Save' ); ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
 				</p>
 			</fieldset>
+			<div class="leftColumn">
+   			<fieldset>
+   			   <legend>Login Information</legend>
+   				<p>
+   					<label for="Email">E-mail Address: <span class="requiredFieldIndicator">*</span></label>
+   					<input type="text" id="Email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+   				</p>
+   				<p>
+   					<label for="Password">Password: <span class="requiredFieldIndicator">*</span></label>
+   					<input type="Password" id="Password" name="password" />
+   				</p>
+   				<p>
+   					<label for="VerifyPassword">Verify Password: <span class="requiredFieldIndicator">*</span></label>
+   					<input type="Password" id="VerifyPassword" name="verifypassword" />
+   				</p>
+   			</fieldset>
    			<fieldset>
    			   <legend>User Information:</legend>
+<? if ( $$variable{'User'}->Company()->notes() ) ?>
+<p><label>Company Notes:</label>
+<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
+</p>
+<? endif ( $$variable{'User'}->Company()->notes() ) ?>
+<? if ( $$variable{'User'}->notes() ) ?>
+<p><label>User Notes:</label>
+<b><? echo ( $$variable{'User'}->notes() ) ?></b>
+</p>
+<? endif ( $$variable{'User'}->notes() ) ?>
    				<p> 
    					<label>Salutation: <span class="requiredFieldIndicator">*</span></label>
 					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
@@ -68,6 +92,10 @@
    					<label for="fax">Fax:&nbsp;&nbsp;&nbsp;</label>
    					<input type="text" id="fax" name="fax" value="<? echo ( $$variable{'User'}->fax() ) ?>" />
    				</p>
+   			</fieldset>
+			</div>
+			<div class="rightColumn">
+				<fieldset><legend>Settings</legend>
    				<p>
    					<label>Add to our Mailing List:&nbsp;&nbsp;&nbsp;</label>
 					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
@@ -75,7 +103,7 @@
 					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
 					<label class="radio" for="MailingListN">No</label>
    				</p>
-			<? if ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
+			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $$variable{'Me'}->id(), $$variable{'Me'}->csr_ids() ] ) ) ?>
    				<p>
    					<label>Can login to the web site?&nbsp;&nbsp;&nbsp;</label>
    					<input type="radio" id="web_activeY" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() eq 'Y' ) ?> value="Y" />
@@ -99,35 +127,33 @@
    				</p>
 <? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-   				<p>
-   					<label>Quote Level:&nbsp;&nbsp;&nbsp;</label>
+				<p>
+					<label>Quote Level:&nbsp;&nbsp;&nbsp;</label>
 					<select name="quote_level">
 						<option value="">select</option>
 						<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ) ) ?>
 					</select>
-   				</p>
+				</p>
 <? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-			<? endif ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
-   			</fieldset>
-   			<fieldset>
-   			   <legend>Login Information</legend>
+				<p>
+					<label>Notes:</label>
+					<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'User'}->notes() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->notes() ) ?></textarea>
+				</p>
+			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $$variable{'Me'}->id(), $$variable{'Me'}->csr_ids() ] ) ) ?>
    				<p>
-   					<label for="Email">E-mail Address: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="text" id="Email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+   					<label>Email my quotes to myself?&nbsp;&nbsp;&nbsp;</label>
+   					<input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( ssi::checked( $$variable{'User'}->email_quotes_to_mysql() ); ) ?> value="1" />
+   					<label class="radio" for="email_quotes_to_myself1">Yes</label>
+   					<input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( ssi::checked( ! $$variable{'User'}->email_quotes_to_mysql() ); ) ?> value="0" />
+   					<label class="radio" for="email_quotes_to_myself0">No</label>
    				</p>
-   				<p>
-   					<label for="Password">Password: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="Password" id="Password" name="password" />
-   				</p>
-   				<p>
-   					<label for="VerifyPassword">Verify Password: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="Password" id="VerifyPassword" name="verifypassword" />
-   				</p>
-   			</fieldset>
+				</fieldset>
+			</div>
+			<br class="spacer"/>
 		</div><!--UserProfile-->
 		<input type="hidden" name="btnFunction"/>
 	</form>
 	<!--#include virtual="/includes/login_log.html"-->
-<? else ( $openprint::session{'user_id'} ) ?>
+<? else ( $session{'user_id'} ) ?>
 You must be logged in to edit user profiles.<br/>
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>

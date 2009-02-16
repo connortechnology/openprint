@@ -1,50 +1,43 @@
-<script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f1.ddmStartYear.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);
-            setDaysDropDown(document.f1.ddmEndYear.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-
-</script>
-<br/>
-<form name="f1" method="post" action="projects.html">
+<div class="PageTitle">
+<h1>ADMINISTRATOR REPORTS</h1>
+<h2>Projects</h2>
+</div>
+<form id="f1" name="f1" method="post" action="projects.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
 			<label>Project ID:</label>
-			<input type="text" size="10" name="ProjectIndex" />
+			<input type="text" size="10" name="ProjectIndex" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='../project/view.html';f1.submit();", '', 'Go' ); ) ?>	
 		</p>
 		<p>
 			<label>Company:</label>
-			<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomers);" size="4" />
+			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4" />
 			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();" >
 				<option value=""> Select a Customer</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(strname)')], $openprint::param{'ddmCustomers'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(strname)')], $param{'ddmCustomers'} ); ) ?>
 			</select>
 		</p>
 		<p>
 			<label>Estimator:</label>
-			<select  name="ddmEstimator" size="1"> 
+			<select name="ddmEstimator" size="1"> 
 				<option value="">All Estimators</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'web_active'=>'Y', 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ], $$variable{'ddmEstimator'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmEstimator'} ); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Status:</label>
 			<select name="ddmStatus" size="1">
 				<option value="">All</option>
-				<?ddmStatus?>
+<? echo ( 
+    ssi::fill_drop_down( $log, $dbh, 'SELECT name,name FROM Project_statuses ORDER BY sort,name', $param{'ddmStatus'} );
+) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Sales Reps:</label>
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'web_active'=>'Y', 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ], $$variable{'ddmEmployees'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroups'=>['Sales'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmEmployees'} ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -62,45 +55,55 @@
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='reports_orders.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.action='projects.html';f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='projects.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
 ); ) ?>
 		</p>
 	</fieldset>
-	<? if ( @{$$variable{'DATA'}} ) ?>
+	<? if ( @{$$variable{'Projects'}} ) ?>
 	<table class="List">
 		<tr> 
 			<th align="left" width="75">Project #</th>
-			<th align="left">Company</th>
+			<th align="left" width="100">Company</th>
 			<th align="left">Reference</th>
-			<th align="center" width="75">Price 1</th>
-			<th align="center" width="75">Price 2</th>
-			<th align="center" width="75">Price 3</th>
-			<th align="center" width="75">Created</th>
+			<th class="Date">Created</th>
 			<th align="right" width="100">Status</th>
+			<th class="Price">Price 1</th>
+			<th class="Price">Price 2</th>
+			<th class="Price">Price 3</th>
 		</tr>
-		<? while ( @$variable{'cust_index','cust_name','proj_index','proj_ref','date','status'} = splice @{$$variable{'DATA'}},0,6; ) ?>
+		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 		<tr<?rowclass?>> 
-			<td><a href="../project/view.html?ProjectIndex=<?proj_index?>">&nbsp;<?proj_index?></a></td>
-			<td><a href="../project/view.html?ProjectIndex=<?proj_index?>">&nbsp;<?cust_name?></a></td>
-			<td><a href="../project/view.html?ProjectIndex=<?proj_index?>">&nbsp;<?proj_ref?>
-<? echo ( 
-	$$variable{'Project'} = new openprint::Project( $$variable{'proj_index'} );
-	return $$variable{'Project'}->summary();
-) ?>
-			</a></td>
-			<td align="center">&nbsp;<? echo ( $$variable{'Project'}->price1() ) ?></td>
-			<td align="center">&nbsp;<? echo ( $$variable{'Project'}->price2() ) ?></td>
-			<td align="center">&nbsp;<? echo ( $$variable{'Project'}->price3() ) ?></td>
-			<td align="center">&nbsp;<?date?></td>
-			<td align="right">&nbsp;<?status?></td>
+			<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+			<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->Company()->name() ) ?></a></td>
+			<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->summary() ) ?></a></td>
+			<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></td>
+			<td align="right"><? echo ( $$variable{'Project'}->status() ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price1() ) ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price2() ) ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price3() ) ) ?></td>
 		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-		<? endwhile ( @$variable{'cust_index','cust_name','proj_index','proj_ref','date','status'} = splice @{$$variable{'DATA'}},0,6; ) ?>
+		<tr<?rowclass?>> 
+			<td colspan="2">&nbsp;</td>
+			<td colspan="6"><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->reference() ) ?></a></td>
+		</tr>
+		<? eval ( 
+			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+			$$variable{'Total1'} += $$variable{'Project'}->price1();
+			$$variable{'Total2'} += $$variable{'Project'}->price2();
+			$$variable{'Total3'} += $$variable{'Project'}->price3();
+		 ) ?>
+		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+		<tr class="totals">
+			<td colspan="5" align="right">Totals:</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total1'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total2'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total3'} ); ) ?></td>
+		</tr>
 	</table>
-	<? else ( @{$$variable{'DATA'}} ) ?>
+	<? else ( @{$$variable{'Projects'}} ) ?>
 	There were no results matching your criteria.<br>
-	<? endif ( @{$$variable{'DATA'}} ) ?>
+	<? endif ( @{$$variable{'Projects'}} ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>

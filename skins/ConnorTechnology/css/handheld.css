@@ -1,0 +1,130 @@
+body {
+	padding: 0px;
+}
+#top, #top-left, #top-right, #bottom, #bottom-left, #bottom-right {
+	display: none;
+}
+
+#right, #left, #header, #content2, #content {
+	margin: 0px;
+	padding: 0px;
+	background-image: none;
+	height: auto;
+}
+
+#header {
+	width: 100%;
+}
+
+#header-logo {
+	float: none;
+	margin: 0px;
+}
+
+#middle {
+	margin: 0px;
+}
+#content2 {
+padding: 5px;
+}
+
+
+ul#menubar {
+    background-image: none;
+	background-color: #0046A2;
+    list-style: none;
+	list-style-type: none;
+    margin: 0px;
+    padding: 0px;
+    min-width: 0px;
+    display: block;
+	width: 100%;
+	float: left;
+}
+ul#menubar:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html ul#menubar {height: 1%;}
+* *     ul#menubar{display:block;}
+* */* End hide from IE-mac */
+
+
+
+ul#menubar li {
+    float: left;
+    list-style: none;
+	list-style-type: none;
+    margin: 0px;
+	padding: 0px;
+    display: block;
+    background: none;
+    width: 44px;
+	height: auto;
+    overflow: hidden;
+}
+
+
+ul#menubar li a {
+    color: white;
+    width: auto;
+    padding: 0px;
+    text-decoration: none;
+    background-image: none;
+	background-color: #0046A2;
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 1.3em;
+    margin: 0px;
+    overflow: hidden;
+    text-align: center;
+}
+
+#menubar li ul {
+	display: none;
+}
+
+#menubar li ul li {
+	display: none;
+    background-color: #ffffff;
+    border: 0;
+    float: none;
+    padding: 0px;
+    padding-top: 1px;
+    width: 40px;
+    margin:0px;
+    margin-left: -1px;
+    list-style: none;
+    text-align: center;
+}
+
+#menubar li.on ul a, #menubar li.off ul a {
+	display: none;
+    background-image: none;
+	background-color: #0046A2;
+    /*ie doesn't inherit the float*/
+    color: #ffffff;
+    padding: 0px;
+    margin: 0px;
+    text-decoration: none;
+    text-align: center;
+}
+
+#header-text {
+	display: none;
+}
+
+fieldset {
+}
+fieldset p {
+	text-align: right;
+}
+fieldset p label {
+	font-size: medium;
+width: auto;
+float: left;
+}

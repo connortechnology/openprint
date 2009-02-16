@@ -5,48 +5,44 @@
 	<fieldset id="ProjectInformation"><legend>Project Information</legend>
 		<p>
 			<label>Project #:</label>
-	  		<?ProjectIndex?>
+	  		<? echo ( $$variable{'Project'}->id() ) ?>
 		</p>
-	  	<? if ( $$variable{'DocketNumber'} ) ?>
+	  	<? if ( $$variable{'Project'}->docket() ) ?>
 		<p>
 	  		<label>Docket Number:</label>
-	  		<?DocketNumber?>
+	  		<? echo ( $$variable{'Project'}->docket() ) ?>
 		</p>
 		<p>
 	  		<label>Ordered Quantity:</label>
-	  		<?OrderedQuantity?>   			
+	  		<? echo ( $$variable{'Project'}->ordered_quantity() ) ?>   			
    		</p>
-	  	<? endif ( $$variable{'DocketNumber'} ) ?>
-   		<p>
+	  	<? endif ( $$variable{'Project'}->docket() ) ?>
+   		<p class="<? echo ( $_ = $$variable{'Project'}->status(); $_  =~ s/ //g; return $_; ) ?>">
 			<label>Status:</label>
-			<? if ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
-			<span style="color: red;"><?ProjectStatus?></span>
-			<? else ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
-			<?ProjectStatus?>
-			<? endif ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
+			<? echo ( $$variable{'Project'}->status() ) ?>
 		</p>
 	  	<p> 
 			<label>Creation Date:</label>
-	  		<?CreationDate?>
+	  		<span title="<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></span>
 		</p>
-		<? if ( $$variable{'DocketNumber'} ) ?>
+		<? if ( $$variable{'Project'}->docket() ) ?>
 		<? if ( $$variable{'Project'}->shippingtype() ) ?>
 	  	<p> 
 			<label>Shipping Type:</label>
 	  		<span name="shippingTypeValue"><? echo ( $$variable{'Project'}->shippingtype() ) ?></span>
 		</p>
 		<? endif ( $$variable{'Project'}->shippingtype() ) ?>
-	  		<? if ( $$variable{'DueDate'} ) ?>
+	  		<? if ( $$variable{'Project'}->due_date() ) ?>
 		<p>
 				<label>Due Date:</label>
-				<?DueDate?>
+				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->due_date() ) ); ) ?>
 		</p>
-	  		<? else ( $$variable{'DueDate'} ) ?>
+	  		<? else ( $$variable{'Project'}->due_date() ) ?>
 				<p class="RequiredDate">
 				<label>Requested Date:</label>
-				<?RequiredDate?>
+				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?>
 				</p>
-	  		<? endif ( $$variable{'DueDate'} ) ?>
+	  		<? endif ( $$variable{'Project'}->due_date() ) ?>
 		<? if ( $$variable{'PrepressOperator'} = openprint::project::get_prepress_operator( $log, $dbh, $$variable{'ProjectIndex'} ); ) ?>
 		<p>
 			<label>Prepress Operator:</label>
@@ -54,31 +50,31 @@
 		</p>
 		<? endif ( $$variable{'PrepressOperator'} = openprint::project::get_prepress_operator( $log, $dbh, $$variable{'ProjectIndex'} ); ) ?>
 
-	  	<? endif ( $$variable{'DocketNumber'} ) ?>
+		<? endif ( $$variable{'Project'}->docket() ) ?>
 	</fieldset>
 	<fieldset id="ContactInformation"><legend>Contact Information</legend>
 		<p>
 			<label>Company:</label>
-			<?CompanyName?>
+			<? echo ( $$variable{'Project'}->Company()->name() ) ?>
 		</p>
 		<p>
 			<label>Name:</label>
-			<?CreatedByName?>
+			<? echo ( $$variable{'Project'}->User()->name() ) ?>
 		</p>
 		<p>
 			<label>Phone:</label>
-			<?CreatedByPhone?>
+			<? echo ( $$variable{'Project'}->User()->phone() ) ?>
 		</p>
 		<p>
 			<label>Email:</label>
-			<a href="mailto:<?CreatedByEmail?>"><?CreatedByEmail?></a>
+			<a href="mailto:<? echo ( $$variable{'Project'}->User()->email() ) ?>"><? echo ( $$variable{'Project'}->User()->email() ) ?></a>
 		</p>
-		<? if ( $$variable{'CSRName'} ) ?>
+		<? if ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
 		<p>
 			<label>Customer Service Rep:</label>
-			<a href="mailto:<?CSREmail?>"><?CSRName?></a>
+			<a href="mailto:<? echo ( $$variable{'Project'}->Company()->CSR()->email() ) ?>"><? echo ( $$variable{'Project'}->Company()->CSR()->name() ) ?></a>
 		</p>
-		<? endif ( $$variable{'CSRName'} ) ?>
+		<? endif ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
 	</fieldset>
 	<br class="spacer"/>
 	<fieldset id="Reference">

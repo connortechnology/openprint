@@ -5,7 +5,9 @@ function change_handler( element ) {
 	for ( var i = 0; i < element.value.length; i += 1 ) {
 		var c = element.value.charCodeAt(i);
 		// 57 is '9'. Anything above is not a number
-		if ( c > 57 ) {
+		if ( c < 48 ) {
+			break;
+		} else if ( c > 57 ) {
 			// Start a command
 			var j;
 			for ( j = i+1; j < element.value.length; j+= 1 ) {
@@ -87,6 +89,8 @@ function change_handler( element ) {
 			return;
 		} else if ( first == 'T' ) {
 			newelement = element.form.Time;
+		} else if ( first == 'V' ) {
+			newelement = element.form.verification_code;
 		} else if ( first == 'W' ) {
 			newelement = element.form.Weekday;
 		} // end if
@@ -144,14 +148,33 @@ function input_handler( element, e ) {
 		if ( element.form.Invoice ) {
 			element.form.Invoice.focus();
 			element.form.Invoice.value='';
-		} // end if
-		if ( element.form.invoice_id ) {
+		} else if ( element.form.invoice_id ) {
 			element.form.invoice_id.focus();
 			element.form.invoice_id.value='';
-		} // end if
-		if ( element.form.skid_id ) {
+		} else if ( element.form.skid_id ) {
 			element.form.skid_id.focus();
 			element.form.skid_id.value='';
+		} else {
+			
+			for ( var i = 0; i < element.form.elements.length; i += 1 ) {
+				if ( element.form.elements[i].type != 'text' ) 
+					continue;
+				if ( element.form.elements[i].length ) {
+					for ( var j = 0; j< element.form.elements[i].length; j += 1 ) {
+						if ( element.form.elements[i][j].name.substr(0,7) == 'skid_id' ) {
+							element.form.elements[i][j].focus();
+							element.form.elements[i][j].value='';
+							return false;
+						} // end if it's a skid_id	
+                    } // end for j
+				} else {
+					if ( element.form.elements[i].name.substr(0,7) == 'skid_id' ) {
+						element.form.elements[i].focus();
+						element.form.elements[i].value='';
+						return false;
+					} // end if it's a skid_id	
+				} // end if
+			} // end for i
 		} // end if
 		return false;
 	} else if ( character == 76 || character == 108  ) { // M
@@ -200,16 +223,43 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 82 || character == 114 ) { // R
-		if ( element.form.rfidtag_id ) {
-			element.form.rfidtag_id.focus();
-			element.form.rfidtag_id.value='';
+		if ( element.name.substr(0,10) == 'rfidtag_id' ) {
+			element.focus();
+			element.value='';
+			return false;
 		} // end if
-		return false;
-	} else if ( character == 87 || character == 119 ) { // W
-		if ( element.form.Weekday ) {
-			element.form.Weekday.focus();
-			element.form.Weekday.value='';
+
+		if ( element.form ) {
+			var form = element.form;
+			for ( var i = 0; i < form.elements.length; i += 1 ) {
+				if ( form.elements[i].type != 'text' ) 
+					continue;
+				if ( form.elements[i].name.substr(0,10) == 'rfidtag_id' ) {
+					form.elements[i].focus();
+					form.elements[i].value='';
+					return false;
+				} // end if
+			} // end for i
 		} // end if
+		for ( var x = 0; x < document.forms.length; x += 1 ) {
+			var form = document.forms[x];
+
+			if ( form.rfidtag_id ) {
+				form.rfidtag_id.focus();
+				form.rfidtag_id.value='';
+				return false;
+			} else {
+				for ( var i = 0; i < form.elements.length; i += 1 ) {
+					if ( form.elements[i].type != 'text' ) 
+						continue;
+					if ( form.elements[i].name.substr(0,10) == 'rfidtag_id' ) {
+						form.elements[i].focus();
+						form.elements[i].value='';
+						return false;
+					} // end if
+				} // end for i
+			} // end if
+		} // end for
 		return false;
 	} else if ( character == 83 || character == 115 ) { // S
 		if ( typeof(submit_handler)==  'function' ) {
@@ -225,6 +275,21 @@ function input_handler( element, e ) {
 		} // end if
 		return false;
 	} else if ( character == 85 || character == 117 ) { // U
+	} else if ( character == 86 || character == 118 ) { // V
+		for ( var x = 0; x < document.forms.length; x+=1 ) {
+			if ( document.forms[x].verification_code ) {
+				document.forms[x].verification_code.focus();
+				document.forms[x].verification_code.value='';
+				break;
+			} // end if
+		} // end for
+		return false;
+	} else if ( character == 87 || character == 119 ) { // W
+		if ( element.form.Weekday ) {
+			element.form.Weekday.focus();
+			element.form.Weekday.value='';
+		} // end if
+		return false;
 	} else if ( character == 13 || character == 8 || character == 0 || character == 9 || character == 16 || character == 45 ) { // enter
 		return true;
 	} else if ( character == 43 ) {

@@ -15,6 +15,9 @@ use vars qw( $log $dbh );
 $log = new logger( 'warn' );
 
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
+$src_db = 'point-one' if ! $src_db;
+$dst_db = 'point-one' if ! $dst_db;
+$src_host = 'www2.point-one.com' if ! $src_host;
 `/etc/init.d/apache2 reload`;
 if ( $year ) {
 	( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) if ! $month;
@@ -51,7 +54,7 @@ if ( $year ) {
 
 `chmod +x /etc/apache2/lib/perl/tools/db_update.pl`;
 print "upgrading structures 2...";
-`/etc/apache2/lib/perl/tools/db_update.pl $dst_db point-one point-one` or $log->error($!);
+`/etc/apache2/lib/perl/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
 print "upgrading signatures...";
 `/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db point-one point-one` or $log->error($!);
 print "done\n";
@@ -60,3 +63,30 @@ $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert( undef, undef, 'database_info', 'version', $version, 'backup', 'false' );
 print "done\n";
+
+foreach my $Service ( openprint::Service::find('name'=>'Imposition') ) {
+	foreach my $Price ( $Service->prices() ) {
+		if ( $Price->units() eq 'Per Page' ) {
+			$Price->units('Per Imposition');
+			$Price->save();
+		} # end if
+	} # end foreach
+} # end foreach
+
+if ( 0 ) {
+sql::update( undef, undef, 'Configuration', ['name=?', 'Press Run Overs Rate'], 'name','MakeReady Overs Rate' );
+foreach my $E ( openprint::Equipment::find('strid'=>'Web1') ) {
+	foreach my $Spec ( $E->Specifications() ) {
+		next if $Spec->name() ne 'Press Run Overs';
+		if ( $Spec->value() != 0.05 ) {
+			$Spec->delete();
+			next;
+		} else {
+			$Spec->min(undef);
+			$Spec->max(undef);
+			$Spec->interpolate(0);
+			$Spec->save();
+		} # end if
+	} # end foreach
+} # end foreach
+}

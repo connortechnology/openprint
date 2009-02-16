@@ -5,7 +5,7 @@ use openprint ();
 use strict;
 
 require sql;
-require openprint::main_account;
+require openprint::account;
 require openprint::service;
 require openprint::ServiceType;
 require openprint::ProjectType;
@@ -20,14 +20,14 @@ require openprint::Estimating::Multipage;
 
 sub delete_project {
 	my ( $log, $dbh, $project_id ) = @_;
-	sql::update( $log, $dbh, 'tbl_Projects', ['Index=?', $project_id], ['strStatus', 'Deleted'] );
+	sql::update( $log, $dbh, 'Projects', ['Index=?', $project_id], ['strStatus', 'Deleted'] );
 	openprint::logs::insertLogRecord('20', "Project ID: " . $project_id,);
 } # end sub delete_project
 
 sub insert_project_type {
 	my ( $r, $log, $dbh, $project_index, $project_type_id ) = @_;
 
-	my ( $project_type_index ) = sql::execute( $log, $dbh, q{SELECT lngIndex FROM Project_Types WHERE strID=?}, $project_type_id );
+	my ( $project_type_index ) = sql::execute( $log, $dbh, q{SELECT Id FROM Project_Types WHERE name=?}, $project_type_id );
 	if ( $project_type_index ) {
 
 		# Make this all one transaction...
@@ -137,21 +137,19 @@ sub create_edit_display {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@{$$variable{'ProjectTypes'}} = map { $_->strid(), $_->name() } openprint::ProjectType::find( 'order'=>'lngsort, lower(strname)' );
+	@{$$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType::find( 'order'=>'sorting, lower(name)' );
 	# Check the appropriate button for project type
-	@$variable{'SelectedProjectType'} = $Project->Type()->strid();
+	@$variable{'SelectedProjectType'} = $Project->Type()->name();
 
 	@$variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
 	);
 
-	my %services = $Project->get_services();
-	@{$$variable{'SelectedServices'}} = keys %services;
+	my $services = $Project->services();
+	@{$$variable{'SelectedServices'}} = keys %{$services};
 
 	my $sql = q{SELECT name,description FROM Service_Types WHERE category=? AND create_visible=true ORDER BY Sorting, lower(name)};
 	@{$$variable{'PrepressServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Prepress' );
-	#push @{$$variable{'PrepressServiceTypes'}}, sql::execute( $log, $dbh, $sql, 'Proofs' );
-
 	@{$$variable{'BinderyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Bindery' );
 	@{$$variable{'SpecialtyServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Specialty' );
 	@{$$variable{'PackagingServiceTypes'}} = sql::execute( $log, $dbh, $sql, 'Packaging' );
@@ -301,19 +299,19 @@ sub try_to_delete_project {
 	my $proj_reference = $Project->reference();
 
 	if ( $Project->company_id() != $openprint::session{'company_id'} ) {
-		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br>";
+		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br/>";
 		$delete = 0;
 	} # end if
 	$_ = "SELECT Orders.Index FROM Orders,Order_Contents WHERE Orders.Index=Order_Contents.OrderIndex AND lngProjectIndex=? AND Orders.strStatus != 'Incomplete'";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
-		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br>";
+		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br/>";
 		$delete = 0;
 	} # end if
 	$_ = "SELECT tbl_Quotes.Index FROM tbl_Quotes,tbl_Quote_Details WHERE tbl_Quotes.Index=tbl_Quote_Details.QuoteIndex AND ProjectIndex=? AND tbl_Quotes.strStatus != 'Incomplete'";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
-		$error .= "Project $proj_reference is in quote <a href=\"/main/quote/history_details.html?quote_id=$_\">$_</a>.	You must delete the quote before you can delete the project.<br>";
+		$error .= "Project $proj_reference is in quote <a href=\"/main/quote/history_details.html?quote_id=$_\">$_</a>.	You must delete the quote before you can delete the project.<br/>";
 		$delete = 0;
 	} # end if
 	if ( $delete ) {
@@ -325,19 +323,13 @@ sub try_to_delete_project {
 sub history_list {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $error = '';
 	foreach my $key ( $r->param() ) {
 		if ( $key =~ /chkDelete(\d*)/ ) {
-			$error = try_to_delete_project( $log, $dbh, $variable, $1 );
+			$$variable{'error'} .= try_to_delete_project( $log, $dbh, $variable, $1 );
 		} elsif ( $key eq 'btnFunction' and $r->param($key) eq 'Delete Project' ) {
-			$error = try_to_delete_project( $log, $dbh, $variable, $r->param('ProjectIndex') );
+			$$variable{'error'} .= try_to_delete_project( $log, $dbh, $variable, $r->param('ProjectIndex') );
 		} # end if
 	} # end foreach
-
-	if ( $error ne '' ) {
-		return misc::error( $log, $dbh, $variable, 'Error',$error );
-	} # end if
-
 } # end sub history_list 
 
 sub view_pdfs {
@@ -358,7 +350,7 @@ sub get_services_in_category {
 	if ( $category eq 'Printing' ) {
 #The entire point of this is to sort the signature groups
 		if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
-			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','GateFolded Spreads','Cover Pages') ORDER BY lngServiceIndex";
+			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','Gate Folded Pages','Cover Pages') ORDER BY lngServiceIndex";
 			my @signatures = sql::execute( $log, $dbh, $_, $project_index );
 			
 			while ( @signatures ) {
@@ -386,10 +378,10 @@ sub summary {
 	return if ! $project_index;
 
 	my $order_id = $r->param('Order_Id');
-
-	openprint::project::get_header( $log, $dbh, $variable, $project_index, $order_id );
+	
 	$$variable{'OrderId'} = $order_id;
 	my $Project = new openprint::Project( $project_index );
+	$$variable{'Project'} = $Project;
 	my %services = $Project->get_services();
 	$$variable{'Services'} = \%services;
 
@@ -724,7 +716,7 @@ sub create_edit_process {
 	# Because we do some low-level crappy stuff, we need to clear the caches, cuz they are stale
 	openprint::service::init_cache();
 
-	my @project_types = openprint::ProjectType::find( 'strid' => $openprint::param{'rdbProjectType'} );
+	my @project_types = openprint::ProjectType::find( 'name' => $openprint::param{'rdbProjectType'} );
 	my $ProjectType = shift @project_types;
 	my $OldProjectType = $Project->Type();
 
@@ -737,7 +729,7 @@ sub create_edit_process {
 	$Project->currency_id( $openprint::session{'Currency_id'} ) if ! $Project->currency_id();
 
 # Handle ProjectType
-	if ( $OldProjectType->strid() ne $ProjectType->strid() ) {
+	if ( $OldProjectType->name() ne $ProjectType->name() ) {
 		$recalculate = 1;
 		if ( $services{''} ) {
 			foreach ( @{$services{''}} ) { delete_service( $log, $dbh, $Project->id(), $_ ); };
@@ -857,59 +849,23 @@ sub reuse_project {
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 
 	if ( $r->param('ddmCompany') and $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
-		openprint::main_account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
+		openprint::account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
 	} # end if
-
-
-	my @dont_copy = (
-			'ServiceIndex','ProjectIndex','TemplateType',
-			'txtEmployeeComments','rdbComplete','rdbApproved','ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
-			'ddmCompletionDate.*','txtRunHours','txtDowntimeHours',
-			'ddmPressCompletionDate.*',	'UsePress.*', 'rdbPressComplete.*',
-			'UsedPaper.*',
-			'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
-			);
 
 	# Make this all one transaction... Don't need locking because a reload would get a different projectindex
 	my $ac = sql::start_transaction( $dbh );
-
-	my @contents = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, servicetype_id, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
+	foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $NewProject->id() ) ) {
 			
-	while ( @contents ) {
-		my ( $service_index, $servicetype_id, $status ) = splice @contents, 0, 3;
-
-		# uncalc->uncalc,	*->calc
-		if ( $status ne '' and sets::isin( $status, [ 'Pending Deposit', 'Ordered', 'Proofs Out', 'Approved', 'Complete' ] ) ) {
-			$status = 'calculated';
-		} # end if
-
-		my ( $new_service_index ) = sql::execute( $log, $dbh, q{SELECT nextval('ContentsServiceIndex_seq')} );
-		sql::insert( $log, $dbh, 'tbl_Project_Contents',[
-				'lngProjectIndex',	$NewProject->id(),
-				'lngServiceIndex', $new_service_index,
-				'servicetype_id',   $servicetype_id,
-				'strStatus',	$status
-				] );
-		openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'ProjectIndex', $NewProject->id(), 1 );
-		openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'ServiceIndex', $new_service_index, 1 );
-
-		my $specs = openprint::service::get_specs_ref( $Project->id(), $service_index );
-		foreach my $key ( keys %$specs ) {
-			if ( ! sets::isin_regx( $key, @dont_copy ) ) {
-				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, $key, $$specs{$key}, 1 );
-			} # end if
-		} # end foreach
 		if ( $Project->quantity1() != $NewProject->quantity1() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'txtQuantity1', $NewProject->quantity1() );
+			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity1', $NewProject->quantity1() );
 		} # end if
 		if ( $Project->quantity2() != $NewProject->quantity2() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'txtQuantity2', $NewProject->quantity2() );
+			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity2', $NewProject->quantity2() );
 		} # end if
 		if ( $Project->quantity3() != $NewProject->quantity3() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $new_service_index, 'txtQuantity3', $NewProject->quantity3() );
+			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity3', $NewProject->quantity3() );
 		} # end if
-
-	} # end while
+	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()
@@ -949,7 +905,7 @@ sub calc {
 	$specs{'alert'} = '';
 	$specs{'txtQuantity1'} =~ s/\D//g;
 
-	my @project_types = openprint::ProjectType::find( 'strid' => $specs{'ProjectType'} );
+	my @project_types = openprint::ProjectType::find( 'name' => $specs{'ProjectType'} );
 	return if ! @project_types;
 	my $ProjectType = shift @project_types;
 
@@ -989,7 +945,7 @@ sub calc {
 			my @args = ( $specs{'ProjectType'}, $width, $height );
 
 			if ( $type eq 'Flat' ) {
-				$_ = q{SELECT dblfinishedwidth::float, dblfinishedheight::float FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?) AND dblFlatWidth=? AND dblFlatHeight=?};
+				$_ = q{SELECT dblfinishedwidth::float, dblfinishedheight::float FROM projecttemplate WHERE projecttype_id = (SELECT Id FROM project_types where name=?) AND dblFlatWidth=? AND dblFlatHeight=?};
 				if ( $specs{'FoldType'} ) {
 					$_ .= q{ AND type=?};
 					push @args, $specs{'FoldType'};
@@ -1008,7 +964,7 @@ sub calc {
 					} # end if
 				} # end if
 			} else {
-				$_ = q{SELECT dblFlatWidth::float, dblFlatHeight::float FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?) AND dblFinishedWidth=? AND dblFinishedHeight=?};
+				$_ = q{SELECT dblFlatWidth::float, dblFlatHeight::float FROM projecttemplate WHERE projecttype_id = (SELECT Id FROM project_types WHERE name=?) AND dblFinishedWidth=? AND dblFinishedHeight=?};
 				if ( $specs{'FoldType'} ) {
 					$_ .= q{ AND type=?};
 					push @args, $specs{'FoldType'};
@@ -1228,9 +1184,9 @@ sub calc {
 			} # end foreach
 			if ( $specs{'PrintingType'} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'PrintingType1', $specs{'PrintingType'} );
-				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'chkOverridePrintingType1', 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'OverridePrintingType1', 'Y' );
 			} else {
-				openprint::service::delete_service_spec( $$project{'id'}, $printing_service_index, 'chkOverridePrintingType1' );
+				openprint::service::delete_service_spec( $$project{'id'}, $printing_service_index, 'OverridePrintingType1' );
 			} # end if
 			if ( $specs{'ProjectType'} eq 'PresentationFolders' ) {
 				foreach my $spec ( 'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketRight','chkPocketCenter' ) {
@@ -1256,7 +1212,7 @@ sub calc {
 		# Force a reload
 		$services = $project->services();
 
-		$log->debug("Adding Required Services");
+		#$log->debug("Adding Required Services");
 		foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $project->type_id() ) ) {
 			if ( ! $$services{$servicetype_id} ) {
 				push @{$$services{$servicetype_id}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, $servicetype_id );
@@ -1267,9 +1223,73 @@ sub calc {
 		$services = $project->services();
 
 		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Proofs' ) if ! $$services{'Proofs'};
+$openprint::log->debug("Proofs: $specs{'proof_type'}");
+		if ( exists $specs{'proof_type'} ) {
+			my $proof_specs = openprint::service::get_specs_ref( $project, $$services{'Proofs'}[0] );
+			my %proof_indexes;
+			foreach my $signature_service_index ( $project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $project, $signature_service_index );
+				my $signature_index = $$sig_specs{'SignatureIndex'};
+				foreach my $key ( keys %{$proof_specs} ) {
+					if ( $key =~ /^txtProofIndex-$signature_index-(\d*)-1$/ ) {
+						push @{$proof_indexes{$signature_index}}, $1;
+					} # end if
+				} # end foreach keys
+
+				if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
+					push @{$proof_indexes{$signature_index}}, 1;
+					openprint::Estimating::Proofs::insert_layout_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 1, 1, $proof_specs );
+				} # end if
+				if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
+					push @{$proof_indexes{$signature_index}}, 2;
+					openprint::Estimating::Proofs::insert_colour_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 2, 1, $proof_specs );
+				} # end if
+#$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
+				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
+#$openprint::log->debug("Adding press proof");
+					push @{$proof_indexes{$signature_index}}, 3;
+					openprint::Estimating::Proofs::insert_press_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 3, 1, $proof_specs );
+				} # end if
+				my $proof_index = 0;
+				if ( $specs{'proof_type'} ) {
+					foreach ( @{$proof_indexes{$signature_index}} ) {
+$openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature_index-$_-1"} . ' for ' . $specs{'proof_type'} );
+						if ( $$proof_specs{"ddmProofType-$signature_index-$_-1"} eq $specs{'proof_type'} ) {
+							$proof_index = $_;
+							last;
+						} # end if
+					} # end foreach proof_index
+					if ( ! $proof_index ) {
+						$proof_index = sets::max( $proof_indexes{$signature_index} ) + 1;
+	#$openprint::log->debug("Adding proof $proof_index");
+						foreach my $qty_index ( $project->quantity_indexes() ) {
+							#$$proof_specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} = 1;
+							#$$proof_specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} = $specs{'proof_type'};
+							#$$proof_specs{"txtProofIndex-$signature_index-$proof_index-$qty_index"} = $proof_index;
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofQuantity-$signature_index-$proof_index-$qty_index", 1);
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofWidth-$signature_index-$proof_index-$qty_index", '' );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofHeight-$signature_index-$proof_index-$qty_index", '' );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "ddmProofType-$signature_index-$proof_index-$qty_index", $specs{'proof_type'} );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofIndex-$signature_index-$proof_index-$qty_index", $proof_index );
+						} # end foreach qty_index
+					} # end if ! $proof_index
+				} # end if $specs{'proof_type'}
+
+				foreach ( @{$proof_indexes{$signature_index}} ) {
+					if ( ( $_ > 3 ) and ( $_ != $proof_index ) ) {
+						foreach my $qty_index ( $project->quantity_indexes() ) {
+
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "ddmProofType-$signature_index-$_-$qty_index", '' );
+							openprint::service::insert_service_spec( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], "txtProofQuantity-$signature_index-$_-$qty_index", 0 );
+						} # end foreach qty_index
+					} # end if
+				} # end foreach proof_index
+			} # end foreach signature
+
+		} # end if
 
 		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
-$openprint::log->error('Adding Folding');
+			#$openprint::log->debug('Adding Folding');
 			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {
 				$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';
@@ -1515,9 +1535,9 @@ sub create_calc {
 		$Project->quantity3( $specs{'txtQuantity3'} );
 	} # end if
 
-	my @project_types = openprint::ProjectType::find( 'strid' => $specs{'rdbProjectType'} );
+	my @project_types = openprint::ProjectType::find( 'name' => $specs{'rdbProjectType'} );
 	my $ProjectType = shift @project_types;
-	if ( $Project->Type()->strid() ne $ProjectType->strid() ) {
+	if ( $Project->Type()->name() ne $ProjectType->name() ) {
 		my @oldRequiredServiceTypes = $Project->Type()->required_ServiceTypes();
 		my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();
 

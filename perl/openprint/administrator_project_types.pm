@@ -25,7 +25,7 @@ sub edit {
 	my $ProjectType = new openprint::ProjectType( $openprint::param{'ddmProjectType'} );
 
 	if ( $openprint::param{'btnFunction'} eq 'Go' ) {
-		if ( my @project_types = openprint::ProjectType::find( 'strid' => $openprint::param{'txtGoProjectTypeID'} ) ) {
+		if ( my @project_types = openprint::ProjectType::find( 'name' => $openprint::param{'txtGoProjectTypeID'} ) ) {
 			$ProjectType = shift @project_types;
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq '<<' ) {
@@ -36,13 +36,14 @@ sub edit {
 		$ProjectType->delete();
 		$ProjectType = $ProjectType->next();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
-		$ProjectType->strid( $openprint::param{'txtID'} );
-		$ProjectType->name( $openprint::param{'txtName'} );
-		$ProjectType->url( $openprint::param{'txtURL'} );
-		$ProjectType->sort( $openprint::param{'txtSort'} );
-		$ProjectType->required_services( $openprint::param{'RequiredServices'} );
-		$ProjectType->category_id( $openprint::param{'category_id'} );
-		$$variable{'error'} .= $ProjectType->save();
+		$$variable{'error'} .= $ProjectType->save( {
+		'name'				=> $openprint::param{'txtID'},
+		'description'		=> $openprint::param{'txtName'},
+		'url'				=> $openprint::param{'txtURL'},
+		'sorting'			=> $openprint::param{'txtSort'},
+		'required_services'	=> $openprint::param{'RequiredServices'},
+		'category_id'		=> $openprint::param{'category_id'},
+		});
 
 		sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
 		foreach my $key ( keys %openprint::param ) {
@@ -58,28 +59,23 @@ sub edit {
 			$_ = <$io>;
 
 			my $csv = Text::CSV_XS->new();
-			my $ac = sql::start_transaction( $dbh );
-			my %cache = sql::execute( $log, $dbh, 'SELECT strID, lngIndex FROM Project_Types' );
+			my %cache = map { $_->name(), $_->id() } openprint::ProjectType::find();
 			
-# Add record to audit log - action "Import Project Types".
-			openprint::logs::insertLogRecord('49', "(Single Import) Project Type ID: " . $ProjectType->id() . " Project Type: " . $ProjectType->name());
+			openprint::logs::insertLogRecord('49', 'Import Project Types: ' );
       	
+			my $ac = sql::start_transaction( $dbh );
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
 				my ( $id, $name, $url, $sort ) = misc::trim( $csv->fields() );
-				my @sql = (
-					'strName',			$name,
-					'strDetailedURL',	$url,
-					'lngSort',			$sort,
-				);
-				if ( $cache{$id} ) {
-					if ( $_ = sql::update( $log, $dbh, 'Project_Types', "lngIndex=$cache{$id}", \@sql ) ) {
-						$error .= "Error updatinging Project Type $id : $_<br>";
-					} # end if
-				} else {
-					if ( $_ = sql::insert( $log, $dbh, 'Project_Types', 'strID', $id, @sql ) ) {
-						$error .= "Error inserting Project Type $id : $_<br>";
-					} # end if
+				
+				my $PT = new openprint::ProjectType( $cache{$id} );
+				if ( $_ .= $PT->save({
+							'id'			=>	$id,
+							'description'	=>	$name,
+							'url'			=>	$url,
+							'sorting'		=>	$sort,
+							}) ) {
+					$error .= "Error saving Project Type $id : $_<br/>";
 				} # end if
 			} # end foreach
 			sql::end_transaction( $dbh, $ac );
@@ -91,13 +87,12 @@ sub edit {
 		} # end if
 
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export' ) {
-	    my @header = ( 'Project ID', 'Project Name', 'URL', 'Sort Order');
-	    my @data = sql::execute( $log, $dbh, 'SELECT strID, strName, strDetailedUrl, lngSort FROM Project_Types ORDER BY lngSort' );
+	    my @header = ( 'Project Type ID', 'Project Type Name', 'URL', 'Sort Order');
+	    my @data = map { $_->name(), $_->description() $_->url(), $_->sorting() } openprint::ProjectType::find('order'=>'sorting');
     	misc::export_csv( $r, $log, $variable, 'projectTypes.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
-   	openprint::logs::insertLogRecord('40',);
+		openprint::logs::insertLogRecord('40',);
 	} # end if
-	my @required_services;
 	$$variable{'ProjectType'} = $ProjectType;
 } # end sub types_edit
 
@@ -161,14 +156,14 @@ sub defaults_edit {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export' ) {
 		my @header = ( 'Project Type ID', 'Field Name', 'Field Value');
 
-		$_ = "SELECT (SELECT strID FROM Project_Types WHERE lngIndex=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
+		$_ = "SELECT (SELECT name FROM Project_Types WHERE Id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
 			"FROM tbl_ProjectType_Defaults\n".
 			"ORDER BY ID, strFieldName";
 		my @data = sql::execute( $log, $dbh, $_ );
 		misc::export_csv( $r, $log, $variable, 'projectTypes.csv', \@header, \@data );
 
 	} # end if
-	$_ = "SELECT (SELECT strID FROM Project_Types WHERE lngIndex=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
+	$_ = "SELECT (SELECT name FROM Project_Types WHERE Id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
 		"FROM tbl_ProjectType_Defaults\n".
 		"ORDER BY ID, strFieldName";
 	@{$$variable{'Defaults'}} = sql::execute( $log, $dbh, $_ );

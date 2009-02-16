@@ -123,7 +123,7 @@
 				<select name="ddmSalesRep" size="1" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)">
 					<option value="">All Employees</option>
 					 <? echo ( 
-							 ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['A','E'],'order'=>'lower(strfirstname),lower(strlastname)' ) ], $openprint::param{'ddmSalesRep'} );
+							 ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['A','E'],'order'=>'lower(firstname),lower(lastname)' ) ], $openprint::param{'ddmSalesRep'} );
 						) ?>
 				</select>
 		</p>
@@ -178,7 +178,7 @@
 <? if ( $$variable{'duedate'} lt $$variable{'Today'} ) ?> style="color: #ff0000;"<? endif ( $$variable{'duedate'} lt $$variable{'Today'} ) ?>
 >
 				<span class="Docket"><?docket?></span>
-				<span class="Company"><a href="project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?company?></a></span>
+				<span class="Company"><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?company?></a></span>
 				<span class="DueDate"><?duedate?></span>
 				<? eval ( @{$$variable{'temp_services'}} = @{$$variable{'Services'}} ) ?>
 				<? while ( $$variable{'service_type'} = shift @{$$variable{'temp_services'}}; ) ?>

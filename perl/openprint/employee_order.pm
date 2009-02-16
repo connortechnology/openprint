@@ -3,6 +3,7 @@ use strict;
 
 require openprint::Order;
 require openprint::order;
+require openprint::Payment;
 
 sub view {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -18,15 +19,16 @@ sub view {
 			return misc::error( $log, $dbh, $variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
 		} # end if
 
-		my $error = sql::insert( $log, $dbh, 'Payments',
-				'Order_Id',     $order_id,
-				'Company_Id',   $Order->company_id(),
-				'curAmount',    $openprint::param{'Amount'},
-				'dtmDate',      'NOW()',
-				'strMethod',    'Manual',
-				'currency_id',  $Order->currency_id(),
-				'strDescription',   $openprint::param{'Description'},
-				);
+		my $Payment = new openprint::Payment();
+		my $error = $Payment->save({
+				'order_id'		=> $order_id,
+				'company_id'	=> $Order->company_id(),
+				'amount'		=> $openprint::param{'Amount'},
+				'method'		=> 'Manual',
+				'currency_id'	=> $Order->currency_id(),
+				'description'	=> $openprint::param{'Description'},
+				'completed'		=> 1,
+				} );
 		if ( $error ) {
 			return misc::error( $log, $dbh, $variable, 'Error Saving Payment', $error );
 		} # end if
@@ -35,14 +37,14 @@ sub view {
 
 		if ( $$variable{'DepositDue'} > 0 ) {
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
 			} # end foreach
 		} else {
 			$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
 
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
 			} # end foreach

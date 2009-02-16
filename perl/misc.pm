@@ -103,8 +103,8 @@ sub build_city_prov_country {
 	return $cpc;
 } # end sub build_city_prov_country
 
-sub export_csv {
-	my ( $r, $log, $variable, $filename, $header, $data ) = @_;
+sub data_to_csv {
+	my ( $header, $data ) = @_;
 
 	my @data;
 	my $csv = Text::CSV_XS->new( {'binary'=>1});
@@ -121,6 +121,13 @@ sub export_csv {
 		my $status = $csv->combine( splice( @{$data}, 0, $columns ) );    # combine columns into a string
 		push @data, $csv->string() . "\n";
 	} # end while
+
+	return @data;
+} # end sub data_to_csv
+
+sub export_csv {
+	my ( $r, $log, $variable, $filename, $header, $data ) = @_;
+	my @data = data_to_csv( $header, $data );
 	return export( $r, $log, $variable, $filename, \@data );
 } # end sub
 
@@ -130,7 +137,7 @@ sub export {
 	$r->content_type( "application/octet-stream; name=\"$filename\"" );
 	#$r->content_encoding( "binary" );
 	$$variable{'Download'} = $filename;
-	@{$$variable{'File_Data'}} = @{$data};
+	return $$variable{'File_Data'} = $data;
 } # end sub export
 
 sub get_destination {
@@ -154,12 +161,19 @@ sub get_url {
 	if ( $options and $$options{'exclude'} ) {
 		@keys = sets::exclude( $$options{'exclude'}, \@keys );
 	} # end if	
+	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany' ], \@keys );
 	my %encoded;
 	foreach my $k ( @keys ) {
 		$encoded{$k} = $$params{$k};
 		$encoded{$k} =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;	
 	} # end foreach
-	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } @keys ) );
+	if ( $options and $$options{'include'} ) {
+		foreach my $k ( keys %{$$options{'include'}} ) {
+			$encoded{$k} = $$options{'include'}{$k};
+		} # end foreach
+	} # end if	
+	
+	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } keys %encoded ) );
 } # end sub get_url
 
 sub sum {
@@ -224,27 +238,42 @@ sub seconds_to_JDF_interval {
     return $return;
 }
 
+sub seconds_to_pretty_interval {
+	my ( $seconds ) = @_;
+	my $string;
+	my $years = int($seconds / ( 60 * 60 * 24 * 365 ));
+	my $remainder = $seconds % ( 60*60*24*365 );
+	$string .= sprintf('%dy', $years) if $years;
+	return $string if ! $remainder;
+
+	my $days = int ( $remainder / ( 60* 60 * 24 ) );
+	$remainder = $remainder % ( 60 * 60 * 24 );
+	if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
+		$string .= '1 month';
+	} elsif ( $days ) {
+		$string .= sprintf('%dd', $days );
+	} # end if
+	return $string if ! $remainder;
+
+	my $hours = int( $remainder / (60*60) );
+	$remainder = $remainder % ( 60*60 );
+	my $minutes = int ( $remainder / 60 );
+	$remainder = $remainder % 60;
+	
+	if ( $remainder ) {
+		$string .= sprintf('%d:%.2d:%.2d', $hours, $minutes, $remainder );
+	} else {
+		$string .= sprintf('%d:%.2d', $hours, $minutes );
+	} # end if
+	return $string;
+
+} # end sub seconds_to_pretty_interval
+
 sub interval_to_seconds {
     my $interval = shift;
     my ( $h, $m, $s ) = split ':', $interval;
     return ($h*3600) + ($m*60) + $s;
 } # end sub interval_to_seconds
-
-sub CommaFormatted{
-	my $delimiter = ','; # replace comma if desired
-	my($n,$d) = split /\./,shift,2;
-	my @a = ();
-	while($n =~ /\d\d\d\d/)
-	{
-		$n =~ s/(\d\d\d)$//;
-		unshift @a,$1;
-	}
-	unshift @a,$n;
-	$n = join $delimiter,@a;
-	$n = "$n\.$d" if $d =~ /\d/;
-	return $n;
-}
-# end of subroutine CommaFormatted
 
 1;
 

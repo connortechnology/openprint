@@ -82,7 +82,7 @@ sub neccessary {
 } # end sub neccessary
 
 sub signature_calc {
-	my ( $Project, $service_index, $I, $specs, $qty_index, $folding_specs ) = @_;
+	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_service_index, @Impositions ) = @_;
 
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -95,17 +95,21 @@ sub signature_calc {
 	} # end if
 
 	my $imposition = 2;
-	$$specs{"txtPockets$qty_index"} = 1;
-	$imposition = 1 if ($I->imposition()%2) or ( sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] ) and $I->imposition()%4);
-	$imposition = 1 if $imposition > 1 and ( ($I->image_orientation() eq 'Vertical' and $I->rows() % 2 ) or ($I->image_orientation() eq 'Horizontal' and $I->columns() % 2 ) );
+	$$specs{"txtPockets$qty_index"} = 0;
 
 	# Calculate the # of pockets, and the imposition to bind at
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		next if $service_index and ($signature_service_index >= $service_index);
+	foreach my $I ( @Impositions ) {
 		$$specs{"txtPockets$qty_index"} += 1;
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		$imposition = 1 if ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 );
+		if ( $imposition > 1 ) {
+			$imposition = 1 if (
+					($$I{'imposition'} % 2 ) or
+					($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) or
+					($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
+					(sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'}%4)
+					);
+		} # end if
 	} # end foreach signature
+	my $I = $Impositions[0];
 
 #$openprint::log->debug( "PerfectBind Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
@@ -223,8 +227,7 @@ sub calc {
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity($qty_index);
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			$$specs{'txtCalliper'} = 0;
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -251,7 +254,7 @@ sub calc {
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 
 			my $Paper;
-			foreach my $qty_index ( 1 .. 3 ) {
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				next if ! $Project->quantity( $qty_index );
 				$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 				last;
@@ -265,7 +268,7 @@ sub calc {
 		} # end foreach sig
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g; ;
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;

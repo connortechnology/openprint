@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<title><? echo ( ssi::htmlize( $$variable{'PageTitle'} ); ) ?></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+		<link rel="stylesheet" href="/css/common.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/employee.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/menu.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/button.css" type="text/css"/>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js"></script>
+		<script type="text/javascript" src="/javascripts/tips.js"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
+		<script type="text/javascript" src="/javascripts/popups.js"></script>
+		<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript">
+<!--
+		var startList = function() {
+			if (document.all && document.getElementById) {
+				var navRoot = document.getElementById("menubar");
+				if ( navRoot ) {
+					for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
+						var node = navRoot.childNodes[i];
+						if (node.nodeName=="LI") {
+							node.onmouseover=function() {
+								this.className+=' over';
+							}
+							node.onmouseout=function() {
+								this.className=this.className.replace(' over', '');
+							}
+						} // end if
+					} // end for
+				} // end if
+			}
+		}
+		window.onload=startList;
+-->
+		</script>
+
+		<!-- calendar stylesheet -->
+		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
+
+		<script type="text/javascript" src="/javascripts/jscalendar/calendar.js"></script>
+		<script type="text/javascript" src="/javascripts/jscalendar/lang/calendar-en.js"></script>
+		<script type="text/javascript" src="/javascripts/jscalendar/calendar-setup.js"></script>
+		<link rel="shortcut icon" href="/images/favicon.ico"/>
+	</head>
+	<body>
+		<div id="Header">
+			<!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
+		</div><!-- Header -->
+		<div id="Menu">
+			<!--#include virtual="/skins/<?SiteTitle?>/includes/employee_menu.html"-->
+		</div>
+		<div id="Content">
+			<div class="Content">
+			<?PageContent?>
+			</div>
+		</div>
+		<div id="Footer"></div>
+	</body>
+</html>

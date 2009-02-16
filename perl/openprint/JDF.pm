@@ -55,9 +55,9 @@ sub ProductType {
 		return 'Cover';
 	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Pages' ) {
 		return 'Body';
-	} elsif ( sets::isin( $Project->Type->strid(), [ 'Brochures','Flyers' ] ) ) {
+	} elsif ( sets::isin( $Project->Type->name(), [ 'Brochures','Flyers' ] ) ) {
 		return 'Brochure';
-	} elsif ( sets::isin( $Project->Type->strid(), [ 'Poster' ] ) ) {
+	} elsif ( sets::isin( $Project->Type->name(), [ 'Poster' ] ) ) {
 		'Poster';
 	} # end if
 	return 'Body';

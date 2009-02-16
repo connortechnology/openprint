@@ -1,0 +1,18 @@
+<? echo (
+	my $C = $$variable{'C'};
+	$C = new openprint::PurchaseOrder_Content( $param{'content_id'} ) if $param{'content_id'};
+	my $html .= sprintf(q{<td><input type="text" class="SheetQTY" name="qty-%1$d" id="qty-%1$d" value="%2$d" onkeyup="calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" />sheets</td>}, $C->id(), $C->qty() );
+	$html .= sprintf(q{<td><input type="text" name="item-%1$d" id="item-%1$d" value="%2$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}"/></td>}, $C->id(), $C->item() );
+	my ( $mweight, $name ) = $C->description() =~ /^([\d\.]+)M (.*)$/;
+	my $rows = scalar split($name, "\n" );
+	$rows = 1 if ! $rows;
+
+	$html .= sprintf(q{<td>
+		<input type="hidden" name="description-%1$d" id="description-%1$d" value="%2$s"/>
+		<input type="text" class="SheetMWeight" name="mweight-%1$d" id="mweight-%1$d" value="%4$s" onkeyup="calc_price(this);update_totals($('f1'));set_sheet_description('%1$d');;if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" />M
+		<input type="text" class="SheetName" name="name-%1$d" id="name-%1$d" rows="%3$d" onkeyup="set_sheet_description('%1$d');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" value="%5$s"/></td>}, $C->id(), $C->description(), $rows, $mweight, $name );
+	$html .= sprintf(q{<td><input type="text" name="docket-%1$d" id="docket-%1$d" value="%2$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { method: 'get', parameters: { docket: this.value, po_id: %3$d} });" onblur="$('similar_pos').innerHTML='';"/></td>}, $C->id(), $C->docket(), $C->po_id() );
+	$html .= sprintf(q{<td><input type="text" class="StockCost" name="price-%1$d" id="price-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" style="text-align: right;"/>/100lb</td>}, $C->id(), $C->price() );
+	$html .= sprintf(q{<td><input type="text" name="total-%1$d" id="total-%1$d" value="%2$.2f" style="text-align: right;"/></td>}, $C->id(), $C->total() );
+	return $html;
+) ?>

@@ -1,0 +1,16 @@
+<? eval (
+	$$variable{'ServiceIndex'} = $param{'service_id'} if $param{'service_id'} and ! $$variable{'ServiceIndex'};
+	$$variable{'ProjectIndex'} = $param{'project_id'} if $param{'project_id'} and ! $$variable{'ProjectIndex'};
+	$$variable{'Project'} = new openprint::Project( $param{'project_id'} ) if $param{'project_id'} and ! $$variable{'Project'};
+	my $specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+	$$variable{'QuantityIndex'} = $$variable{'Project'}->ordered_quantity_index();
+	if ( $$variable{'Project'} and ! $$variable{'QuantityIndex'} ) {
+		$$variable{'QuantityIndex'} = 1;
+	} # end if
+	my $spec = 'txtQuantity'.$$variable{'QuantityIndex'};
+	$$variable{"$spec-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} = $$specs{$spec};
+) ?>	
+<p>
+	<label>Amount:<span class="requiredFieldIndicator">*</span></label>
+	<input type="text" name="txtQuantity<? echo ( $$variable{'QuantityIndex'} ) ?>-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QuantityIndex'}."-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" style="width: 50%;" /> of <? echo ( $$variable{'Project'}->quantity( $$variable{'QuantityIndex'} ); ) ?>
+</p>

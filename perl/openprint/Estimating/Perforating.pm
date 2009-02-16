@@ -43,8 +43,7 @@ sub variables {
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity( $qty_index );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, (
 				 "txtVerticalQty-$$sig_specs{'SignatureIndex'}", "VerticalTeeth-$$sig_specs{SignatureIndex}",
 				 "txtHorizontalQty-$$sig_specs{'SignatureIndex'}", "HorizontalTeeth-$$sig_specs{SignatureIndex}",
@@ -68,9 +67,10 @@ sub no_outputs {
 
 # A function that is smart enough to return true if the project needs perfing, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $Project ) = @_;
+	my ( $Project ) = @_;
 
-    #$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+    $Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+	return 1 if ( $Project->signatures({'type'=>'PerfReplyCard'}) );
 #
     #my %services = $Project->get_services( );
     #if ( $services{'NoBindery'} ) {
@@ -92,7 +92,7 @@ sub calc {
 
 	$log->debug("BEGIN PERFING!!!!!!!!!!!!!!!!!!");
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -127,6 +127,12 @@ sub calc {
 				next;
 			} # end if
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
+			if ( ! ( $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) ) {
+				$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
+				$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
+				$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
+				next;
+			} # end if
 			if ( $Price{'Equipment'} ) {
 				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->id();
 				$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->imposition();
@@ -219,6 +225,10 @@ sub signature_calc {
 	$Results{'Breakdown'} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
 
 	#@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
+	if ( ( $$sig_specs{'txtSignatureType'} eq 'PerfReplyCard' ) and ! ( $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) ) {
+		$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 1;
+		@no_output = sets::exclude( [ "txtVerticalQty-$$sig_specs{'SignatureIndex'}" ], \@no_output );
+	} # end if
 
 	my $rule_qty = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
 	if ( ! $rule_qty ) {
@@ -234,7 +244,7 @@ sub signature_calc {
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
-			$$specs{'alert'} = "The specified imposition is not possible.";
+			$$specs{'alert'} = 'The specified imposition is not possible.';
 			$Results{'Status'} = 'uncalculated';
 			return %Results;
 		} # end if
@@ -351,7 +361,7 @@ sub signature_calc {
 				$horizontal_rule = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} * $imposition->columns();
 				$horizontal_length = $horizontal_rule * $$sig_specs{'txtHeight'};
 			} # end if
-		$openprint::log->debug("Horizontal: $horizontal_rule");	
+		#$openprint::log->debug("Horizontal: $horizontal_rule");	
 			if ( $horizontal_rule ) {
 				if ( my @Materials = openprint::Material::find('name'=>'PerforatingRule') ) {
 					%horizontal_price = $Materials[0]->get_price( $horizontal_rule, $Equipment );
@@ -382,11 +392,11 @@ sub signature_calc {
 				$vertical_length = $vertical_rule * $$sig_specs{'txtWidth'};
 			} # end if
 
-		$openprint::log->debug("Vertical: $vertical_rule");	
+		#$openprint::log->debug("Vertical: $vertical_rule");	
 			if ( $vertical_rule ) {
 				if ( my @Materials = openprint::Material::find('name'=>'ScoringWheel') ) {
 					%vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );
-					if ( sets::isin( lc $horizontal_price{'units'},['per rule','each'] ) ) {
+					if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_rule;
 						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f2$%s * %4$d wheels=%3$.2f', @vertical_price{'Price','units','Total'}, $vertical_rule );
 					} elsif ( lc $vertical_price{'units'} eq 'per inch' ) {

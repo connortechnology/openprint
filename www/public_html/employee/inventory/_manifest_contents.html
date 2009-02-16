@@ -1,0 +1,32 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<table id="Contents-<?type_id?>" class="List sortable">
+	<tr>
+		<th align="left" width="120">RFID</th>
+		<th align="left" width="90">Skid</th>
+		<th align="left" width="90">Docket</th>
+		<th>Quantity (lbs)</th>
+		<th>Quantity (kgs)</th>
+		<th width="40">&nbsp;</th>
+	</tr>
+	<tr id="new-<?type_id?>">
+		<td><input type="text" id="rfidtag_id-<?type_id?>-" name="rfidtag_id-<?type_id?>-" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
+		<td><input type="text" id="skid_id-<?type_id?>-" name="skid_id-<?type_id?>-" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
+		<td><input type="text" id="docket-<?type_id?>-" name="docket-<?type_id?>-" size="8" value="<? echo ( $param{'docket-'.$$variable{'type_id'}} ? $param{'docket-'.$$variable{'type_id'}} : $$variable{'Manifest'}->docket() ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
+		<td><input type="text" id="qty_lbs-<?type_id?>-" name="qty_lbs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-<?type_id?>-') );" /></td>
+		<td><input type="text" id="qty_kgs-<?type_id?>-" name="qty_kgs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-<?type_id?>-') );" /></td>
+		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1'), $$variable{type_id} );", '', 'Add' ); ) ?></td>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $total = 0;
+		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
+		foreach my $C ( $$variable{'Manifest'}->Contents( 'type_id'=>$$variable{'type_id'}, 'order'=>'id') ) {
+$openprint::log->debug( $C->skid_id() . ': ' . $C->Skid()->rfidtag() );
+			$$variable{'C'} = $C;
+			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+			$total += $C->quantity();
+		} # end foreach tag_id
+		$html .= sprintf('<tr id="totals-%3$d" class="totals"><td colspan="3">Totals:</td><td id="totallbs-%3$d">%1$dlbs</td><td id="totalkgs-%3$d">%2$.4fkg</td><td>&nbsp;</td></tr>', $total, $total/2.2046, $$variable{'type_id'} );
+		return $html;
+	) ?>
+</table>

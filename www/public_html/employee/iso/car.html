@@ -8,8 +8,21 @@
 			alert('Please select either Internal or Customer for Problem Identification');
 			return 0;
 		} // end if
+		if ( ! get_value( form.area_id ) ) {
+			alert('Please select the area');
+			return 0;
+		} // end if
+		if ( ! get_value( form.reason_id ) ) {
+			alert('Please select the reason');
+			return 0;
+		} // end if
 		return 1;
 	} // end function check_part1
+	function area_id_onchange( e ) {
+		if ( e.form.issued_to_id ) {
+			new Ajax.Request('_select_assignee_from_area.json', {method:'get', parameters: {area_id:e.value}} );
+		} // end if
+	} // end function area_id_onchange(e)
 </script>
 <style type="text/css">
 	#CAR {
@@ -43,11 +56,15 @@
 }
 </style>
 <div id="CAR">
+	<? if ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+	Invalid CAR # specified.
+	<? else ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+
 	<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>
 		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{'CAR'}->id() ) ?></span></h3>
 		<? echo (
 			my $html;
-			if ( ( ! $openprint::param{'car_id'} ) ) {
+			if ( ( ! $param{'car_id'} ) ) {
 				$html .= '<div id="Part1">';
 				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_edit_part1.html' );
 				$html .= '</div>';
@@ -73,6 +90,7 @@
 				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part4.html' );
 				$html .= '</div>';
 			} # end if
-			return ssi::variable_substitution( $r, $log, $dbh, \$html, $variable );
+			return ssi::variable_substitution( \$html, $variable );
 		) ?>
+	<? endif ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
 </div>

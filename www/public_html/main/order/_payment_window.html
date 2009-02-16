@@ -1,0 +1,16 @@
+<form id="f1" name="f1" action="history_details.html">
+	<fieldset class="Popup"><legend>Payment Options</legend>
+		Please select your payment type:<br/>
+		<!--#include virtual="_payment_options.html"-->
+
+		<p><label>Amount:</label>
+			<input type="text" name="amount" id="amount" value="<? echo ( $param{'amount'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');"/>
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'make','make.gif','f1.submit();', '', 'Submit Payment' ),
+				ssi::writeButton( $log, $dbh, 'cancel','cancel.gif','contentWin.destroy();', '', 'Cancel' ),
+			); ) ?>
+		</p>
+	</fieldset>
+</form>

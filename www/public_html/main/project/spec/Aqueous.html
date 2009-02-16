@@ -50,6 +50,7 @@
 				</div>
 				<br class="spacer"/>
 				<div id="Results-<?SignatureIndex?>" >
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					<p><label>Make Ready (<?CurrencySymbol?>):</label>
 					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -103,7 +104,7 @@
 					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 					</p>
-					<p><label>Signature Price (<?CurrencySymbol?>):</label>
+					<p><label>Signature Total (<?CurrencySymbol?>):</label>
 					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -117,6 +118,7 @@
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 
 					</p>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
 					<!--#include virtual="/includes/main/proj/signature_equipment.html"-->
 				</div>

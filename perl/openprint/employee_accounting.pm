@@ -3,8 +3,11 @@ package openprint::employee_accounting;
 use Text::CSV_XS;
 use strict;
 
+require openprint::Payment;
 require openprint::order;
 require openprint::Order;
+require openprint::Ledger;
+require openprint::Expenditure;
 require misc;
 require sql;
 
@@ -48,9 +51,7 @@ sub details {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $payment_index = $param{'PaymentIndex'};
 		$payment_index =~ s/\D//g;
-		if ( $payment_index ) {
-			sql::execute( $log, $dbh, "DELETE FROM Payments WHERE id=$payment_index" );
-		} # end if
+		new openprint::Payment( $payment_index )->delete();
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
 		$Order->pay();
 	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
@@ -63,15 +64,17 @@ sub details {
 			return misc::error( $log, $dbh, \%variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
 		} # end if
 
-		my $error = sql::insert( $log, $dbh, 'Payments',
-			'Order_Id',		$order_id,
-			'Company_Id',	$Order->company_id(),
-			'curAmount',	$param{'Amount'},
-			'dtmDate',		'NOW()',
-			'strMethod',	'Manual',
-			'currency_id',	$Order->currency_id(),
-			'strDescription',	$param{'Description'},
-		);
+		my $Payment = new openprint::Payment();
+		my $error = $Payment->save( {
+			'order_id'		=> $order_id,
+			'payor_id'		=> $Order->company_id(),
+			'recipient_id'	=>	new openprint::User( $session{'user_id'} )->company_id(),
+			'amount'		=> $param{'Amount'},
+			'method'		=> 'Manual',
+			'currency_id'	=> $Order->currency_id(),
+			'memo'			=> $param{'Description'},
+			'completed'		=> 1,
+		} );
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
 		} # end if
@@ -80,14 +83,14 @@ sub details {
 
 		if ( $variable{'DepositDue'} > 0 ) {
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
 			} # end foreach
 		} else {
 			$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
 			} # end foreach
 			if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {
@@ -109,9 +112,6 @@ sub details {
 	$variable{'OrderID'} = $order_id;
 	my $Currency = $Order->Currency();
 	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-
-	$_ = q{SELECT id, to_char(dtmDate,'MM/DD/YYYY'), strMethod, strDescription, curAmount, currency_id FROM Payments WHERE strSessionID IS NULL AND Order_Id=? ORDER BY dtmDate};
-	@{$variable{'PAYMENTS'}} = sql::execute( $log, $dbh, $_, $order_id );
 } # end sub details
 
 sub credit {
@@ -129,17 +129,21 @@ sub credit {
 
 	if ( $param{'btnFunction'} eq 'Go' ) {
 		 if ( $param{'txtSearchAccountNum'} ne '' ) {
-			( $company_index ) = sql::execute( $log, $dbh,'SELECT Index from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'} );
+			( $company_index ) = sql::execute( $log, $dbh,'SELECT id FROM Companies WHERE strAccountNum=?',$param{'txtSearchAccountNum'} );
 		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
-		my @errors;
-		foreach my $order_id ( ref $param{'PAID'} eq 'ARRAY' ? @{$param{'PAID'}} : $param{'PAID'} ) {
-			my $Order = new openprint::Order( $order_id );
-			push @errors, $Order->pay();
-		} # end foreach
-		if ( @errors ) {
-			$variable{'error'} = join('<br/>', @errors );
+		if ( ! $param{'PAID'} ) {
+			$variable{'error'} = 'Please select an order to pay.<br/>';
+		} else {
+			my @errors;
+			foreach my $order_id ( ref $param{'PAID'} eq 'ARRAY' ? @{$param{'PAID'}} : $param{'PAID'} ) {
+				my $Order = new openprint::Order( $order_id );
+				push @errors, $Order->pay();
+			} # end foreach
+			if ( @errors ) {
+				$variable{'error'} = join('<br/>', @errors );
+			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		my $customer_credit = new openprint::customer_credit( $company_index );
@@ -149,15 +153,15 @@ sub credit {
 	if ( $company_index ) {
 		$_ = "SELECT DISTINCT Orders.Index AS OrderIndex, to_char(dtmOrderDate, 'MM/DD/YYYY'), ".
 			"strCompanyName, strPONumber, curTotalSale, ".
-			"(SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index), lngDocketNumber, invoice_id ".
+			"(SELECT SUM(amount) FROM Payments WHERE (deleted=false OR deleted IS NULL) AND completed=true AND Payments.order_id=Orders.Index), lngDocketNumber, invoice_id ".
 			"FROM Orders, order_Contents ".
 			"WHERE Orders.Index = Order_Contents.OrderIndex ";
 		$_ .= "AND Orders.strStatus NOT IN ('Cancelled','Incomplete','Deleted')";
 # which customers
 		$_ .= "	AND Orders.CompanyIndex = $company_index";
 		$_ .= " AND (
-(SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) < curTotalSale OR	
-(SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) IS NULL ) ";
+(SELECT SUM(amount) FROM Payments WHERE (deleted=false OR deleted IS NULL) AND completed=true AND Payments.order_id=Orders.Index) < curTotalSale OR	
+(SELECT SUM(amount) FROM Payments WHERE (deleted=false OR deleted IS NULL) AND completed=true AND Payments.order_id=Orders.Index) IS NULL ) ";
 		$_ .= "ORDER BY OrderIndex";
 		@{$variable{'UnpaidOrders'}} = sql::execute( $log, $dbh, $_ );
 		for ( my $index = 0; $index < @{$variable{'UnpaidOrders'}}; $index += 8 ) {
@@ -175,6 +179,62 @@ sub credit {
 		$variable{'CompanyIndex'} = $company_index;
 	} # end if customer_index
 } # end sub credit
+
+sub ledger {
+	ssi::save_params( '/employee/accounting/ledger.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
+} # end sub ledger
+
+sub _ledger {
+	ssi::save_params( '/employee/accounting/ledger.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
+} # end sub _ledger
+
+sub expenditures {
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
+		my $Expenditure = new openprint::Expenditure( $param{'expenditure_id'} );
+		if ( $variable{'error'} .= $Expenditure->save( \%param ) ) {
+			$variable{'Redirect'} = '/employee/accounting/expenditure.html';
+			return;	
+		} # end if
+		delete $param{'expenditure_id'};
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		my $Expenditure = new openprint::Expenditure( $param{'expenditure_id'} );
+		if ( $variable{'error'} .= $Expenditure->delete() ) {
+			$variable{'Redirect'} = '/employee/accounting/expenditure.html';
+			return;	
+		} # end if
+		delete $param{'expenditure_id'};
+	} else {
+		ssi::save_params( '/employee/accounting/expenditures.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
+	} # end if
+
+} # end sub expenditures
+
+sub _expenditures {
+	ssi::save_params( '/employee/accounting/expenditures.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
+} # end sub _expenditures
+
+sub expenditure {
+	$variable{'Expenditure'} = new openprint::Expenditure( $param{'expenditure_id'} );
+} # end sub expenditure
+sub stock {
+	require openprint::ManifestContent;
+
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		foreach my $Type ( openprint::Manifest_Content_Type::find('cost'=>undef) ) {
+			$param{'cost-'.$Type->id()} =~ s/[^\d\.]//g;
+			if ( $param{'units-'.$Type->id()} eq '/lb' ) {
+				$param{'cost-'.$Type->id()} *= 100;
+			} # end if
+			if ( ( $param{'supplier_invoice-'.$Type->id()} ne $Type->supplier_invoice() ) or ( $param{'cost-'.$Type->id()} != $Type->cost() ) ) {
+				$variable{'error'} .= $Type->save({'supplier_invoice'=>$param{'supplier_invoice-'.$Type->id()}, 'cost'=>$param{'cost-'.$Type->id()} });
+			} # end if
+		} # end foreach
+	} else {
+		@param{'received_on_start_year','received_on_start_month','received_on_start_day'} = Date::Calc::Today();
+		@param{'received_on_end_year','received_on_end_month','received_on_end_day'} = Date::Calc::Today();
+	} # end if
+} # end sub stock
 
 1;
 

@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS Sessions;
+
+CREATE TABLE Sessions (
+	id	TEXT NOT NULL,
+	a_session	TEXT NOT NULL,
+	PRIMARY KEY (id)
+);

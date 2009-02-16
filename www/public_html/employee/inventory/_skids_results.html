@@ -1,51 +1,56 @@
 <? eval (
 	require openprint::StockPurpose;
-   if ( $openprint::param{StartYear} ) {
-		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','purpose_id','withrfid','withoutrfid','location_id' ) {
-			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-				$openprint::session{'/employee/inventory/skids.html?'.$key} = join(';', @{$openprint::param{$key}} );
+	if ( $param{created_on_start_year} ) {
+		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','notempty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code' ) {
+			if ( ref $param{$key} eq 'ARRAY' ) {
+				$session{'/employee/inventory/skids.html?'.$key} = join(';', @{$param{$key}} );
 			} else {
-				$openprint::session{'/employee/inventory/skids.html?'.$key} = $openprint::param{$key};
+				$session{'/employee/inventory/skids.html?'.$key} = $param{$key};
 			}
 		} # end foreach
 	} # end if
 
-	if ( ! $openprint::session{'/employee/inventory/skids.html?StartYear'} ) {
-		@openprint::session{'/employee/inventory/skids.html?EndYear','/employee/inventory/skids.html?EndMonth','/employee/inventory/skids.html?EndDay'} = Date::Calc::Today();
-		@openprint::session{'/employee/inventory/skids.html?StartYear','/employee/inventory/skids.html?StartMonth','/employee/inventory/skids.html?StartDay'} = Date::Calc::Today();
+	if ( ! $session{'/employee/inventory/skids.html?created_on_start_year'} ) {
+		@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} = Date::Calc::Today();
+		@session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'} = Date::Calc::Today();
 	} # end if
-	if ( $openprint::session{'/employee/inventory/skids.html?Docket'} ) {
-	@{$$variable{'Skids'}} = openprint::Skid::find( 
-		'allocated_to_docket'	=>	$openprint::session{'/employee/inventory/skids.html?Docket'},
-		'order'		=>	'id',
-		);
+	if ( $session{'/employee/inventory/skids.html?Docket'} ) {
+		@{$$variable{'Skids'}} = openprint::Skid::find( 
+			'allocated_to_docket'	=>	$session{'/employee/inventory/skids.html?Docket'},
+			'order'		=>	'id',
+			);
+	} elsif ( $session{'/employee/inventory/skids.html?verification_code'} ) {
+		@{$$variable{'Skids'}} = openprint::Skid::find( 
+			'verification_code'	=>	$session{'/employee/inventory/skids.html?verification_code'},
+			'order'		=>	'id',
+			);
 	} else {
 	@{$$variable{'Skids'}} = openprint::Skid::find( 
-		'owner_id'	=>	( defined $openprint::session{'/employee/inventory/skids.html?Owner'} ? $openprint::session{'/employee/inventory/skids.html?Owner'} : undef ),
-		'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
-			'/employee/inventory/skids.html?StartYear',
-			'/employee/inventory/skids.html?StartMonth',
-			'/employee/inventory/skids.html?StartDay'} ),
-		'created_on_end'	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
-			'/employee/inventory/skids.html?EndYear',
-			'/employee/inventory/skids.html?EndMonth',
-			'/employee/inventory/skids.html?EndDay'} ),
-		'updated_on_start'	=>	Date::Calc::check_date( @openprint::session{
-			'/employee/inventory/skids.html?UpdatedStartYear',
-			'/employee/inventory/skids.html?UpdatedStartMonth',
-			'/employee/inventory/skids.html?UpdatedStartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
-			'/employee/inventory/skids.html?UpdatedStartYear',
-			'/employee/inventory/skids.html?UpdatedStartMonth',
-			'/employee/inventory/skids.html?UpdatedStartDay'} ) : undef,
-		'updated_on_end'	=>	Date::Calc::check_date( @openprint::session{
-			'/employee/inventory/skids.html?UpdatedEndYear',
-			'/employee/inventory/skids.html?UpdatedEndMonth',
-			'/employee/inventory/skids.html?UpdatedEndDay'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
-			'/employee/inventory/skids.html?UpdatedEndYear',
-			'/employee/inventory/skids.html?UpdatedEndMonth',
-			'/employee/inventory/skids.html?UpdatedEndDay'} ) : undef,
-		'fsc_code'				=>	$openprint::session{'/employee/inventory/skids.html?fsc_code'},
-		'purpose_id'			=>	$openprint::session{'/employee/inventory/skids.html?purpose_id'},
+		'owner_id'	=>	( defined $session{'/employee/inventory/skids.html?Owner'} ? $session{'/employee/inventory/skids.html?Owner'} : undef ),
+		'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+			'/employee/inventory/skids.html?created_on_start_year',
+			'/employee/inventory/skids.html?created_on_start_month',
+			'/employee/inventory/skids.html?created_on_start_day'} ),
+		'created_on_end'	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+			'/employee/inventory/skids.html?created_on_end_year',
+			'/employee/inventory/skids.html?created_on_end_month',
+			'/employee/inventory/skids.html?created_on_end_day'} ),
+		'updated_on_start'	=>	Date::Calc::check_date( @session{
+			'/employee/inventory/skids.html?updated_on_start_year',
+			'/employee/inventory/skids.html?updated_on_start_month',
+			'/employee/inventory/skids.html?updated_on_start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+			'/employee/inventory/skids.html?updated_on_start_year',
+			'/employee/inventory/skids.html?updated_on_start_month',
+			'/employee/inventory/skids.html?updated_on_start_day'} ) : undef,
+		'updated_on_end'	=>	Date::Calc::check_date( @session{
+			'/employee/inventory/skids.html?updated_on_end_year',
+			'/employee/inventory/skids.html?updated_on_end_month',
+			'/employee/inventory/skids.html?updated_on_end_day'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+			'/employee/inventory/skids.html?updated_on_end_year',
+			'/employee/inventory/skids.html?updated_on_end_month',
+			'/employee/inventory/skids.html?updated_on_end_day'} ) : undef,
+		'fsc_code'				=>	$session{'/employee/inventory/skids.html?fsc_code'},
+		'purpose_id'			=>	$session{'/employee/inventory/skids.html?purpose_id'},
 		'order'		=>	'id',
 		);
 	} # end if
@@ -61,45 +66,45 @@
 			<th align="left" width="115">RFIDTag</th>
 			<th align="left" width="100">Location</th>
 			<th align="left" width="140">Dockets</th>
-			<th align="left">Contents</th>
 		</tr>
 		<? echo (
 			my $html;
 			my $rowclass;
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
-				my $empty = 1;
-				my $iftype = 0;
-				foreach my $c ( $Skid->contents() ) {
-					if ( $c->quantity() > 0 ) {
-						$empty = 0;
-					} # end if
-                    my $Paper = new openprint::Paper( $c->paper_id() );
-                    if ( sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/skids.html?Type'} ) ) ) {
-                        $iftype = 1;
-                    } # end if
-				} # end foreach
-				if ( $openprint::session{'/employee/inventory/skids.html?empty'} ne 'Y' ) {
+				my $empty = $Skid->empty();
+				if ( $session{'/employee/inventory/skids.html?empty'} ne 'Y' ) {
                     next if $empty;
                 } # end if
-                if ( $openprint::session{'/employee/inventory/skids.html?notempty'} ne 'Y' ) {
+                if ( $session{'/employee/inventory/skids.html?notempty'} ne 'Y' ) {
                     next if ! $empty;
                 } # end if
+				my $iftype = 1;
+                foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
+                    my $Paper = new openprint::Paper( $paper_id );
+                    if ( ! sets::isin( $Paper->type(), split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) {
+                        $iftype = 0;
+                        last;
+                    } # end if
+                } # end foreach
                 next if ! $iftype;
 
-				next if $Skid->rfidtag_id() and ! $openprint::session{'/employee/inventory/skids.html?withrfid'};
-				next if ( ! $Skid->rfidtag_id() ) and ! $openprint::session{'/employee/inventory/skids.html?withoutrfid'};
+				next if $Skid->rfidtag_id() and ! $session{'/employee/inventory/skids.html?withrfid'};
+				next if ( ! $Skid->rfidtag_id() ) and ! $session{'/employee/inventory/skids.html?withoutrfid'};
 
-				next if $openprint::session{'/employee/inventory/skids.html?location_id'} and ( $Skid->location_id() != $openprint::session{'/employee/inventory/skids.html?location_id'} );
+				if ( $session{'/employee/inventory/skids.html?location_id'} ) {
+					next if $session{'/employee/inventory/skids.html?location_id'} eq 'None' and $Skid->location_id();
+					next if $Skid->location_id() != $session{'/employee/inventory/skids.html?location_id'};
+				} # end if
 
 				$html .= "<tr$rowclass>";
 				$html .= qq`<td><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->created_on()) ), );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->updated_on()) ), );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'rfidtag_id'} );
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $$Skid{'rfidtag_id'} );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->Location()->name() );
 
-				$html .= '<td>';
+				$html .= '<td rowspan="2">';
 				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), paper_id, quantity FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $$Skid{'id'} );
 				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 4 ) {
 					my $Paper = new openprint::Paper( $paper_id );
@@ -111,7 +116,10 @@
 					);
 				} # end while
 				$html .= '</td>';	
-				$html .= '<td>';
+				$html .= '</tr>';
+				$html .= "<tr$rowclass>";
+				
+				$html .= '<td>&nbsp;</td><td colspan="5">';
 				foreach my $c ( $Skid->contents() ) {
 					my $Paper = new openprint::Paper( $c->paper_id() );
 					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s %s - %d %s</a><br/>',

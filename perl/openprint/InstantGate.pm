@@ -78,7 +78,7 @@ sub create_job_file {
 		print FH "\n";
 		print FH sprintf("[Job%3d]\n", $prod_id );
 		print FH sprintf("JobNo\n", $prod_id );
-		print FH sprintf("JobName\n", $Project->Type()->strid() );
+		print FH sprintf("JobName\n", $Project->Type()->name() );
 		my $sheets = $$sig_specs{'txtPressSheetQty'.$Project->ordered_quantity()};
 		$sheets =~ s/\D//g;
 		print FH sprintf("Volume\n", $sheets );

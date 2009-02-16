@@ -1,10 +1,10 @@
 <? if ( $openprint::session{'user_type'} ) ?>
 <!--#include virtual="/includes/_greeting.html"-->
-
-<? if ( $$variable{'Destination'} ) ?>
-<br>
-<b><?Destination?></b><br>
-<? endif ( $$variable{'Destination'} ) ?>
+<? if ( $openprint::session{'Destination'} ) ?>
+<br/>
+<b><? echo ( $openprint::session{'Destination'} ) ?></b><br/>
+<? eval ( delete $openprint::session{'Destination'} ) ?>
+<? endif ( $openprint::session{'Destination'} ) ?>
 <br/>
 <b>Has any of your account information changed?</b><br/>
 To change your password or modify your account, please click <a href="/employee/account/profile.html">here</a>. <br/>

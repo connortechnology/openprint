@@ -10,7 +10,8 @@ CREATE TABLE Paper_Inventory (
 	InStock		INTEGER,
 	UpdateTime	TIMESTAMP,
 	delta		INTEGER,
-	Comment		TEXT
+	Comment		TEXT,
+	docket		INTEGER,
 	PRIMARY KEY (id)
 );
 

@@ -28,22 +28,28 @@
 		width: 70%;
 	}
 </style>
-<? if ( $$variable{'error'} ) ?>
-The following errors occurred:<br/>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<div class="information"><?information?></div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="jump" method="get" action="rfidtag_details.html">
 	<fieldset class="filters"><legend>Choose RFIDTag</legend>
 		<p>
 			<label for="rfidtag_id">Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="90" value="<?rfidtag_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="30" value="<?rfidtag_id?>" onkeyup="this.value=this.value.replace(/\s/,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event);"  onkeydown="if(event.keyCode == 13){jump.btnFunction.value='Go';jump.submit();}" />
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}",'','Go' ),
 				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
 				ssi::writeButton( $log, $dbh, 'Next', 'next.gif', q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,'','&gt;&gt;' ),
 			); ) ?>
 		</p>
+		<? echo (
+		my $html = '';
+		if ( $$variable{'Tags'} and @{$$variable{'Tags'}} ) {
+			$html .= 'The following tags matched the given id:<br/>';
+			foreach my $Tag ( @{$$variable{'Tags'}} ) {
+				$html .= sprintf('<a href="rfidtag_details.html?rfidtag_id=%1$s">%1$s</a><br/>', $Tag->id() );
+			} # end foreach Tag
+		} # end if
+		return $html;
+		) ?>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
@@ -65,7 +71,7 @@ The following errors occurred:<br/>
 				<? echo ( 
 					my $html;
 					if ( $$variable{'RFIDTag'}->created_on() ) {
-						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'RFIDTag'}->created_on()) );
+						$html .= Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'RFIDTag'}->created_on()) );
 					} # end if
 					return $html;
 				) ?>
@@ -75,7 +81,7 @@ The following errors occurred:<br/>
 				<? echo (
 					my $html;
 					if ( $$variable{'RFIDTag'}->updated_on() ) {
-						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'RFIDTag'}->updated_on()) );
+						$html .= Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'RFIDTag'}->updated_on()) );
 					} # end if
 					return $html;
 				) ?>
@@ -98,10 +104,19 @@ The following errors occurred:<br/>
 				<label for="skid_id">Skid #:</label>
 				<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
 				<? echo ( 
-					if ( $$variable{'RFIDTag'}->skid_id() ) {
-					return ssi::writeButton( $log, $dbh, 'SkidGo', 'go.gif', '', 'skid_details.html?skid_id='.$$variable{'RFIDTag'}->skid_id(), 'Go' );
+					my @Skids = openprint::Skid::find('rfidtag_id'=>$$variable{'RFIDTag'}->id());
+					if ( ! @Skids ) {
+						return ssi::writeButton( $log, $dbh, 'SkidAllocate', 'allocate.gif', '', 'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q{&btnFunction=AllocateSkid}, 'Allocate' );
+					} elsif ( 1 == @Skids ) {
+						$$variable{'Skid'} = $Skids[0];
+						$$variable{'skid_id'} = $$variable{'Skid'}->id();
+						return ssi::writeButton( $log, $dbh, 'SkidGo', 'go.gif', '', 'skid_details.html?skid_id='.$$variable{'skid_id'}, 'Go' );
 					} else {
-					return ssi::writeButton( $log, $dbh, 'SkidAllocate', 'allocate.gif', '', 'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q{&btnFunction=AllocateSkid}, 'Allocate' );
+                        my $html = '<br/><span class="error">There are multiple skids with this RFIDTag.  Please correct.</span><br/>';
+                        foreach my $Skid ( @Skids ) {
+                            $html .= sprintf('<a href="skid_details.html?skid_id=%1$d">%1$d</a><br/>', $Skid->id() );
+                        } # end foreach Skid
+                        return $html;
 					} # end if
 				) ?>
 			</p>
@@ -136,27 +151,22 @@ The following errors occurred:<br/>
 	</fieldset>
 </form>
 <? if ( $$variable{'RFIDTag'}->id() ) ?>
-<? eval ( @$variable{'Year','Month','Day'} = Date::Calc::Today(); ) ?>
 <form name="f2" id="f2">
 	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
 	<fieldset><legend>Location Log</legend>
 		<p>
 			<label>Date Filter:</label>
 			<span class="DateSelector">
-			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfidtag_details.html?StartYear'} ? $openprint::session{'/employee/inventory/rfidtag_details.html?StartYear'} : $$variable{'Year'} ); ) ?></select>
-			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidtag_details.html?StartMonth'} ? $openprint::session{'/employee/inventory/rfidtag_details.html?StartMonth'} : $$variable{'Month'} ); ) ?></select>
-			<select name="StartDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidtag_details.html?StartDay'} ? $openprint::session{'/employee/inventory/rfidtag_details.html?StartDay'} : $$variable{'Day'} ); ) ?></select>
+<? echo ( ssi::date_select( 'start', sprintf('%.4d-%.2d-%.2d', @param{'start_year','start_month','start_day'} ),  q`AjaxLoadContent('Log','_rfidtag_log.html', $('f2').serialize() );` ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::return_years( undef, undef, $openprint::session{'/employee/inventory/rfidtag_details.html?EndYear'} ? $openprint::session{'/employee/inventory/rfidtag_details.html?EndYear'} : $$variable{'Year'} ); ) ?></select>
-			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value=""> </option><? echo ( ssi::getmonths( $openprint::session{'/employee/inventory/rfidtag_details.html?EndMonth'} ? $openprint::session{'/employee/inventory/rfidtag_details.html?EndMonth'} : $$variable{'Month'} ); ) ?></select>
-			<select name="EndDay"><option value=""> </option><? echo ( ssi::getdays( $openprint::session{'/employee/inventory/rfidtag_details.html?EndDay'} ? $openprint::session{'/employee/inventory/rfidtag_details.html?EndDay'} : $$variable{'Day'} ); ) ?></select>
+<? echo ( ssi::date_select( 'end', sprintf('%.4d-%.2d-%.2d', @param{'end_year','end_month','end_day'} ),  q`AjaxLoadContent('Log','_rfidtag_log.html', $('f2').serialize() );` ); ) ?>
 			</span>
 			<select name="limit" style="width:auto;"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
-			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', "\$('Log').innerHTML='Loading...';new Ajax.Updater('Log','_rfidtag_log.html', {method:'get', parameters: \$('f2').serialize()} );", '', 'Load' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', q`AjaxLoadContent('Log','_rfidtag_log.html', $('f2').serialize() );`, '', 'Load' ); ) ?>
 		</p>
-		<div id="Log"></div>
+		<div id="Log"><!--#include virtual="_rfidtag_log.html"--></div>
 	</fieldset>
 </form>
 <? endif ( $$variable{'RFIDTag'}->id() ) ?>

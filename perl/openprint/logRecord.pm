@@ -8,6 +8,19 @@ require openprint::logAction;
 my $debug = 1;
 
 use strict;
+use vars qw( %fields );
+
+%fields = (
+	'id'	=>	'id',
+	'action_type'	=>	'action_type',
+	'user_id'		=>	'user_id',
+	'date_time'		=>	'date_time',
+	'ip_address'	=>	'ip_address',
+	'hostname'		=>	'hostname',
+	'url'			=>	'url',
+	'note'			=>	'note',
+	'company_id'	=>	'company_id',
+);
 
 sub load {
 	my ( $self, $data ) = @_;
@@ -82,6 +95,11 @@ sub User {
 	my $self = shift;
 return new openprint::User( $$self{user_id} );	
 } # end sub User
+
+sub Company {
+	my $self = shift;
+	return new openprint::Company( $$self{company_id} );	
+} # end sub Company
 
 sub Action {
 	my $self = shift;

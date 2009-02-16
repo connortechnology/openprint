@@ -3,6 +3,7 @@ package openprint::MXML;
 require XML::DOM;
 require openprint::Paper;
 require openprint::Imposition;
+require openprint::Estimating::Printing;
 use strict;
 
 my %runstyles = (
@@ -86,9 +87,14 @@ sub new {
 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_id = $signatures[$i];
-		my $sig_specs = openprint::service::get_specs_ref( $P->id(), $sig_id );
+		my $sig_specs = openprint::service::get_specs_ref( $P, $sig_id );
 		my @equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$P->ordered_quantity_index()});
-		my $Equipment = shift @equipment;
+		my $Equipment;
+		if ( @equipment ) {
+			$Equipment = shift @equipment;
+		} else {
+			$Equipment = new openprint::Equipment();
+		} # end if
 
 		my $PressNode = openprint::JDF::getNode( $ResourcePool, 'Press', 'ID'=>'E'.$Equipment->id() );
 		if ( ! $PressNode ) {
@@ -96,7 +102,6 @@ sub new {
 			$PressNode->setAttribute('ID','E'.$Equipment->id());
 			$PressNode->setAttribute('DeviceID',$Equipment->strid());
 		} # end if
-		
 
 		my $Component = $ComponentPool->appendChild( $doc->createElement( 'Component' ) );
 		$Component->setAttribute('ID', 'Component'.$sig_id );
@@ -181,7 +186,7 @@ sub new {
 		my $Layout = $LayoutPool->appendChild( $doc->createElement( 'Layout' ) );
 		my %Colors;
 		foreach my $side ( 'SideOne','SideTwo' ) {
-			@{$Colors{$side}} = openprint::print_printing::get_colours( $sig_specs, $side );
+			@{$Colors{$side}} = openprint::Estimating::Printing::get_colours( $sig_specs, $side );
 		} # end foreach side
 		
 		if ( @{$Colors{'SideOne'}} and @{$Colors{'SideTwo'}} ) {

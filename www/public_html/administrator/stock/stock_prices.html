@@ -1,0 +1,57 @@
+<script type="text/javascript" >
+	function newPrice( pricelist_id ) {
+		new Ajax.Updater( 'Prices', '_prices.html', 
+			{ 
+				method: 'get', 
+				parameters: { 
+					stock_id: '<?stock_id?>',
+					pricelist_id: pricelist_id,
+					action: 'Add'
+				}
+			} 
+		);
+	} // end function newPrice
+	function copyPrice( id ) {
+		new Ajax.Updater( 'Prices', '_prices.html', 
+			{ 
+				method: 'get', 
+				parameters: { 
+					stock_id: '<?stock_id?>',
+					price_id: id,
+					action: 'Copy'
+				}
+			} 
+		);
+	}
+	function delPrice( id ) {
+		new Ajax.Updater( 'Prices', '_prices.html', 
+			{ 
+				method: 'get', 
+				parameters: { 
+					stock_id: '<?stock_id?>',
+					price_id: id,
+					action: 'Delete'
+				}
+			} 
+		);
+	}
+
+	function savePrices( form ) {
+		new Ajax.Updater('Prices','_prices.html', 
+			{ 
+				method: 'get', 
+				parameters : Form.serialize( form ), 
+				onSuccess: function(){$('Prices').removeClassName('changed');}
+			 }
+		);
+	
+	}
+</script>
+<fieldset><legend>Pricing</legend>
+	<div id="Prices"><!--#include virtual="_prices.html"--></div>
+	<p class="buttons">
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SavePrices', 'savePrices.gif', 'savePrices(document.Prices);', '', 'Save All Prices' ); ) ?>
+		</span>
+	</div>
+</fieldset>

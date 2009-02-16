@@ -33,7 +33,7 @@ my %variables = (
 		'hdnBreakdown1'=>['output'],'hdnBreakdown2'=>['output'],'hdnBreakdown3'=>['output'],
         'txtQuantity1'=>['save'], 'txtQuantity2'=>['save'], 'txtQuantity3'=>['save'],
         'ServiceType'=>[],
-		'alert'=>['output'],
+		'alert'=>['output'],'Status'=>['output'],
 		'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
 		'txtCalliper'=>['save','output'],
 		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
@@ -111,9 +111,24 @@ sub neccessary {
 	return 0;
 } # end sub neccessary
 
+sub get_imposition {
+	my $imposition = 2;
+	foreach my $I ( @_ ) {
+		last if $imposition <= 1;
+
+		$imposition = 1 if ( 
+		($$I{'imposition'} % 2 ) or 
+		($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) or 
+		($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
+		(sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'}%4) 
+		);
+	} # end foreach Imposition
+	return $imposition;
+} # end sub get_imposition
+
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 sub signature_calc {
-	my ( $Project, $service_index, $I, $specs, $qty_index, $folding_specs, $sig_service_index ) = @_;
+	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_service_index, @Impositions ) = @_;
 
 	my %results;
 	my $services = $Project->services();
@@ -132,35 +147,21 @@ sub signature_calc {
 
 	# Start with 2 and try to figure it out
 	my $imposition = 2;
-	$$specs{"txtPockets$qty_index"} = 1;
-	$imposition = 1 if ($I->imposition()%2) or ( sets::isin( $I->runstyle(), ['Work & Turn','Work & Tumble'] ) and $I->imposition()%4);
-#$openprint::log->debug(sprintf('%d %s %d %d', $imposition, $I->image_orientation(), $I->columns(), $I->rows() ) );
-	$imposition = 1 if $imposition > 1 and ( ($I->image_orientation() eq 'Vertical' and $I->rows()%2) or ($I->image_orientation() eq 'Horizontal' and $I->columns()%2) );
+	$$specs{"txtPockets$qty_index"} = 0;
 
-#$openprint::log->debug( 'Imp: ' . $I->imposition() . ' # of signatures: ' . scalar $Project->signatures()) if $debug;
-	if ( $I->StitchingImposition() ) {
-		# This is supposed to be the stitching imposition passed in from the previous signature
-		$imposition = $I->StitchingImposition() if $I->StitchingImposition() < $imposition;
-#$results{'alert'} .= 'Setting imposition to 1 from SittchingImposition' if $imposition==1;
-	} # end if
-
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		next if $service_index and ($signature_service_index >= $sig_service_index);
-
+	foreach my $I ( @Impositions ) {
 		$$specs{"txtPockets$qty_index"} += 1;
 
-		if ( $imposition > 1 and ! $I->StitchingImposition() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
-
+		if ( $imposition > 1 ) {
 			$imposition = 1 if ( 
-			($$sig_specs{'txtImposition'.$qty_index} % 2 ) or 
-			($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) or 
-			($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2 ) or
-			(sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index}%4) 
+			($$I{'imposition'} % 2 ) or 
+			($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) or 
+			($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
+			(sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'}%4) 
 			);
 		} # end if
-	} # end foreach signature
+	} # end foreach Imposition
+	my $I = $Impositions[0];
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
@@ -177,8 +178,14 @@ sub signature_calc {
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-#$openprint::log->debug("Override Stitcher to " . $$specs{"ddmEquipment$qty_index"} );
-		@equipment = openprint::Equipment::find( 'id' => $$specs{"ddmEquipment$qty_index"} );
+		if ( ! $$specs{"ddmEquipment$qty_index"} ) {
+			$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
+		} else {
+			@equipment = openprint::Equipment::find( 'id'=> $$specs{"ddmEquipment$qty_index"} );
+			if ( ! @equipment ) {
+				$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
+			} # end if
+		} # end if
 	} else {
 		@equipment = @possible_equipment;
 	} # end if
@@ -211,9 +218,8 @@ sub signature_calc {
 				#$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
 				next;
 			} # end if
-			my @sigs = $Project->signatures();
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-			if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
+			
+			if ( $Impositions[0]{'Folder'}->id() != $Equipment->id() ) {
 				#$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
 				next;
 			} # end if
@@ -249,13 +255,11 @@ sub calc {
 	my $services = $Project->services();
 	if ( ! $$services{''} ) {
 		$$specs{'alert'} .= 'Unable to find project service.<br/>';
-		$$specs{'Status'} = 'uncalculated';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	if ( ! $Project->signatures() ) {
 		$$specs{'alert'} .= 'Unable to find any signatures to stitch.<br/>';
-		$$specs{'Status'} = 'uncalculated';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	# Figure out whether we need a cover
@@ -303,11 +307,12 @@ sub calc {
 				$imposition = 1 
 			} # end if
 			last if $imposition == 1;
-			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
-				$imposition = 1 if $$sig_specs{'hdnImpositionRows'.$qty_index} % 2;
-			} elsif ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
-				$imposition = 1 if $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2;
-			} # end if
+			# Why is this here, does the above not take care of it?
+			#if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
+				#$imposition = 1 if $$sig_specs{'hdnImpositionRows'.$qty_index} % 2;
+			#} elsif ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
+				#$imposition = 1 if $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2;
+			#} # end if
 		} # end foreach
 
 		if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
@@ -337,7 +342,7 @@ sub calc {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
@@ -366,7 +371,13 @@ sub calc {
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
-						$pages{$pages} += 1;
+						if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $$sig_specs{'PageQuantity'.$qty_index} ) {
+							$pages{$pages} += $$sig_specs{'PageQuantity'.$qty_index} / $pages;
+						} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $$sig_specs{'PageQuantity'.$qty_index} ) {
+							$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						} else {
+							$pages{$pages} += 1;
+						} # end if
 #$$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 					} # end foreach index
 				} # end if
@@ -402,7 +413,7 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{"txtQuantity$qty_index"};
 
 		if ( $$specs{'txtInsertQuantity'} > 0 ) {
@@ -429,8 +440,15 @@ sub calc {
 
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-			@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
             $variables{"ddmEquipment$qty_index"} = [ sets::exclude( ['output'], $variables{"ddmEquipment$qty_index"} ) ];
+			if ( ! $$specs{"ddmEquipment$qty_index"} ) {
+				$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
+			} else {
+				@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
+				if ( ! @equipment ) {
+					$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
+				} # end if
+			} # end if
 		} else {
 			$variables{"ddmEquipment$qty_index"} = [ sets::union( 'output', @{$variables{"ddmEquipment$qty_index"}} ) ];
 			@equipment = @possible_equipment;
@@ -680,7 +698,7 @@ sub get_price {
 			} # end if Exact
 		} # end if requires exact or not
 	} # end if
-	if ( $Project->signatures({'type'=>'GateFoldedPages'}) ) {
+	if ( $Project->signatures({'type'=>'Gate Folded Pages'}) ) {
 		my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
 		if ( $$specs{'rdbGateFoldFit'} eq 'Exact' and $gateFolds > 0 ) {
 			$price{'Service'} += openprint::service::get_price( $$ServiceType{'name'}, $gateFolds, $Equipment );

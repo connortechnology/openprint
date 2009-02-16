@@ -1,14 +1,14 @@
 <? eval (
 	require openprint::press_schedule2;
 
-	if ( $openprint::param{'btnFunction'} eq 'AutoPilotOn' ) {
+	if ( $param{'btnFunction'} eq 'AutoPilotOn' ) {
 		configuration::save_entry( $log, $dbh, 'AutoPilot', 'On' );
 		# auto schedule any pending jobs
 		
-	} elsif ( $openprint::param{'btnFunction'} eq 'AutoPilotOff' ) {
+	} elsif ( $param{'btnFunction'} eq 'AutoPilotOff' ) {
 		configuration::save_entry( $log, $dbh, 'AutoPilot', 'Off' );
-	} elsif ( $openprint::param{'btnFunction'} eq 'Schedule' ) {
-		openprint::press_schedule2::sort_schedule( openprint::press_schedule2::find({'field'=>'id','operator'=>'=','value'=>$openprint::param{'id'}}));
+	} elsif ( $param{'btnFunction'} eq 'Schedule' ) {
+		openprint::press_schedule2::sort_schedule( openprint::press_schedule2::find({'field'=>'id','operator'=>'=','value'=>$param{'id'}}));
 	} # end if
 ) ?>
 <script type="text/javascript" src="/javascripts/popups.js"></script>
@@ -216,18 +216,16 @@ onDestroy: function(eventName, win) {
 			<label>Presses:</label>
 				<select name="Presses" multiple size="4">
 <? echo ( 
-	my @presses = map { $_->id(), $_->name() } openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
-	my %presses = @presses;
-	if ( ref $openprint::param{'Presses'} eq 'ARRAY' ) {
-		@{$$variable{'Presses'}} = map { $_, $presses{$_} } @{$openprint::param{'Presses'}};
-		return ssi::make_select( \@presses, $openprint::param{'Presses'} );
-	} elsif ( defined $openprint::param{'Presses'} ) {
-		@{$$variable{'Presses'}} = map { $_, $presses{$_} } $openprint::param{'Presses'};
-		return ssi::make_select( \@presses, [ $openprint::param{'Presses'} ] );
+	@{$$variable{'Presses'}} = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)', 'id'=>{$param{'Presses'} );
+	my @selected_presses;
+	if ( ref $param{'Presses'} eq 'ARRAY' ) {
+		@selected_presses = @{$param{'Presses'}};
+	} elsif ( defined $param{'Presses'} ) {
+		@selected_presses = ( $param{'Presses'} );
 	} else {
-		@{$$variable{'Presses'}} = @presses;
-		return ssi::make_select( \@presses, [ keys %presses ] );
+		@selected_presses = map { $_->id() } @{$$variable{'Presses'}};
 	} # end if
+	return ssi::make_select( map { $_->id(), $_->name() } @{$$variable{'Presses'}}, \@selected_presses  );
 ) ?>
 				</select>
 		</p>
@@ -237,44 +235,44 @@ onDestroy: function(eventName, win) {
 		</p>
 	</fieldset>
 <? eval (
-	if ( $openprint::param{'btnFunction'} eq 'Previous' ) {
-@openprint::session{
+	if ( $param{'btnFunction'} eq 'Previous' ) {
+@session{
             '/employee/production/press_schedule.html?StartYear',
             '/employee/production/press_schedule.html?StartMonth',
-            '/employee/production/press_schedule.html?StartDay'} = Date::Calc::Add_Delta_Days( @openprint::param{'StartYear','StartMonth','StartDay'}, -1 );
-	} elsif ( $openprint::param{'btnFunction'} eq 'Next' ) {
-@openprint::session{
+            '/employee/production/press_schedule.html?StartDay'} = Date::Calc::Add_Delta_Days( @param{'StartYear','StartMonth','StartDay'}, -1 );
+	} elsif ( $param{'btnFunction'} eq 'Next' ) {
+@session{
             '/employee/production/press_schedule.html?StartYear',
             '/employee/production/press_schedule.html?StartMonth',
-            '/employee/production/press_schedule.html?StartDay'} = Date::Calc::Add_Delta_Days( @openprint::param{'StartYear','StartMonth','StartDay'}, 1 );
+            '/employee/production/press_schedule.html?StartDay'} = Date::Calc::Add_Delta_Days( @param{'StartYear','StartMonth','StartDay'}, 1 );
 	
-	} elsif ( $openprint::param{'StartYear'} ) {
-			@openprint::session{
+	} elsif ( $param{'StartYear'} ) {
+			@session{
 			'/employee/production/press_schedule.html?StartYear',
 			'/employee/production/press_schedule.html?StartMonth',
-			'/employee/production/press_schedule.html?StartDay'} = @openprint::param{'StartYear','StartMonth','StartDay'};
+			'/employee/production/press_schedule.html?StartDay'} = @param{'StartYear','StartMonth','StartDay'};
 		} # end if
-		if ( ! Date::Calc::check_date( @openprint::session{'/employee/production/press_schedule.html?StartYear','/employee/production/press_schedule.html?StartMonth',
+		if ( ! Date::Calc::check_date( @session{'/employee/production/press_schedule.html?StartYear','/employee/production/press_schedule.html?StartMonth',
             '/employee/production/press_schedule.html?StartDay'} ) ) {
-			@openprint::session{
+			@session{
             '/employee/production/press_schedule.html?StartYear',
             '/employee/production/press_schedule.html?StartMonth',
             '/employee/production/press_schedule.html?StartDay'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),-2);
 		} # end if
-		@openprint::session{
+		@session{
 		'/employee/production/press_schedule.html?EndYear',
 		'/employee/production/press_schedule.html?EndMonth',
 		'/employee/production/press_schedule.html?EndDay'} = Date::Calc::Add_Delta_Days( 
-			@openprint::session{
+			@session{
 			'/employee/production/press_schedule.html?StartYear',
             '/employee/production/press_schedule.html?StartMonth',
             '/employee/production/press_schedule.html?StartDay'}
 			,1);
 		@$variable{'ScheduleEnd'} = sql::execute( undef, undef, q{SELECT date(Max(starttime+runtime)) from schedule} );
 ) ?>
-	<input type="hidden" name="StartYear" value="<? echo ( $openprint::session{'/employee/production/press_schedule.html?StartYear'} ) ?>" />
-	<input type="hidden" name="StartMonth" value="<? echo ( $openprint::session{'/employee/production/press_schedule.html?StartMonth'} ) ?>" />
-	<input type="hidden" name="StartDay" value="<? echo ( $openprint::session{'/employee/production/press_schedule.html?StartDay'} ) ?>" />
+	<input type="hidden" name="StartYear" value="<? echo ( $session{'/employee/production/press_schedule.html?StartYear'} ) ?>" />
+	<input type="hidden" name="StartMonth" value="<? echo ( $session{'/employee/production/press_schedule.html?StartMonth'} ) ?>" />
+	<input type="hidden" name="StartDay" value="<? echo ( $session{'/employee/production/press_schedule.html?StartDay'} ) ?>" />
 	<div id="schedule" style="overflow:auto;">
 	<table style="width: auto;">
 		<tr><th width="50" align="left">Press</th><th>Schedule</th></tr>
@@ -283,7 +281,7 @@ onDestroy: function(eventName, win) {
 				<? echo ( 
 					my $html;
 					foreach my $day ( 0 .. int ((Date::Parse::str2time( $$variable{'ScheduleEnd'} . ' 23:59:59' ) - Date::Parse::str2time( $$variable{'ScheduleStart'} . ' 00:00:00' ) )/86399) ) {
-						$html .= '<span style="float: left; width:1439px; border-left:1px solid black;">'.join('-', Date::Calc::Add_Delta_Days( @openprint::session{'/employee/production/press_schedule.html?StartYear','/employee/production/press_schedule.html?StartMonth','/employee/production/press_schedule.html?StartDay'}, $day )).'</span>';
+						$html .= '<span style="float: left; width:1439px; border-left:1px solid black;">'.join('-', Date::Calc::Add_Delta_Days( @session{'/employee/production/press_schedule.html?StartYear','/employee/production/press_schedule.html?StartMonth','/employee/production/press_schedule.html?StartDay'}, $day )).'</span>';
 					} # end foreach
 					return $html;
 				) ?>
@@ -291,19 +289,17 @@ onDestroy: function(eventName, win) {
 		</tr>
 	<? echo (
 		require openprint::press_schedule2;
-		$$variable{'ScheduleStart'} = join('-',@openprint::session{
+		$$variable{'ScheduleStart'} = join('-',@session{
         '/employee/production/press_schedule.html?StartYear',
         '/employee/production/press_schedule.html?StartMonth',
         '/employee/production/press_schedule.html?StartDay'} );
 
 		my $display_width = int ((Date::Parse::str2time( $$variable{'ScheduleEnd'} . ' 23:59:59' ) - Date::Parse::str2time( $$variable{'ScheduleStart'} . ' 00:00:00' ) )/60); # 1 pixel = 1 minute
 		my $html;
-		my %presses = @{$$variable{'Presses'}};
-		foreach my $id ( sort keys %presses ) {
-			push @{$$variable{'drops'}}, join( '-', $id, $$variable{'ScheduleStart'} );
-			my $Equipment = new openprint::Equipment( $id );
-			$html .= '<tr><td><a href="/employee/production/equipment_view.html?equipment_id='.$id.'">'.$Equipment->strid().'</a></td><td width="'.$display_width.'">';
-			$html .= openprint::press_schedule2::get_ul( @$variable{'ScheduleStart','ScheduleEnd'}, $id, undef );
+		foreach my $E ( @{$$variable{'Presses'}} ) {
+			push @{$$variable{'drops'}}, join( '-', $E->id(), $$variable{'ScheduleStart'} );
+			$html .= '<tr><td><a href="/employee/production/equipment_view.html?equipment_id='.$E->id().'">'.$E->strid().'</a></td><td width="'.$display_width.'">';
+			$html .= openprint::press_schedule2::get_ul( @$variable{'ScheduleStart','ScheduleEnd'}, $E->id(), undef );
 			$html .= "</td></tr>\n";
 		} # end foreach
 		return $html;
@@ -334,7 +330,7 @@ onDestroy: function(eventName, win) {
 	<br class="spacer"/>
 </form>
 <br class="spacer"/>
-<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
   // <![CDATA[
 	<? echo (
@@ -387,7 +383,7 @@ if ( 1 ) {
 	$html .= '<table class="List"><tr><th width="65" align="left">Docket</th><th width="80" align="left">Due Date</th><th width="150" align="left">Company</th><th width="60" align="left">Imps</th><th align="left">Summary</th></tr>';
 	foreach my $job ( @jobs ) {
 		my $Project = new openprint::Project( $$job{'projectindex'} );
-		my $specs = openprint::service::get_specs_ref( @$job{'projectindex','serviceindex'} );
+		my $specs = openprint::service::get_specs_ref( $Project, $$job{'serviceindex'} );
 		$html .= "<tr$colRow><td>".$Project->docket().'</td><td>'.$Project->due_date().'</td>';
 		$html .= '<td>'.$Project->Company()->name().'</td>';
 		$html .= '<td>'.$$specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()}.'</td>';
@@ -398,7 +394,7 @@ $html .= '</td>';
 		$html .= '</tr>';
 
 		#$html .= '<li'$colRow.'>';
-		#$html .= '<a href="/employee/production/project_view.html?ProjectIndex='.$Project->id().'">'.$Project->docket() . '</a> ';
+		#$html .= '<a href="/employee/project/view.html?ProjectIndex='.$Project->id().'">'.$Project->docket() . '</a> ';
 		#$html .= '</li>';
 		$colRow = $colRow ? '' : ' class="colRow"';
 	} # end foreach
@@ -417,7 +413,7 @@ $html .= '</td>';
 	foreach my $job ( @jobs ) {
 		my $Project = new openprint::Project( $$job{'projectindex'} );
 		$html .= '<li style="list-style: none;">';
-		$html .= '<a href="/employee/production/project_view.html?ProjectIndex='.$Project->id.'">'.$Project->docket().'</a> ' . $Project->Company->name() .  openprint::service::summary( @$job{'projectindex','serviceindex'}, $Project->ordered_quantity_index() );
+		$html .= '<a href="/employee/project/view.html?ProjectIndex='.$Project->id.'">'.$Project->docket().'</a> ' . $Project->Company->name() .  openprint::service::summary( @$job{'projectindex','serviceindex'}, $Project->ordered_quantity_index() );
 $html .= '<span style="float: right;">'.ssi::writeButton( $log, $dbh, 'Add'.$$job{'id'}, 'add.gif', "", '/employee/production/press_schedule.html?btnFunction=Schedule&id='.$$job{id}, 'Add' );
 		$html .= '</li>';
 	} # end foreach
@@ -437,4 +433,4 @@ $html .= '<span style="float: right;">'.ssi::writeButton( $log, $dbh, 'Add'.$$jo
 			return $html;
  ) ?>
 	</span>
-<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>

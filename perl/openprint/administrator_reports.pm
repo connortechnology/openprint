@@ -7,190 +7,114 @@ require openprint::order;
 require misc;
 require sql;
 require ssi;
-use Text::Unaccent;
+
+use openprint ();
+use vars qw( $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
 
 sub projects {
-	my ($r, $log, $dbh, $variable) = @_;
 
-    my $start;
-    my $startYear = $r->param('ddmStartYear');
-    my $startMonth;
-    my $startDay;
-    ( $start ) = $openprint::config{'startYear'};
-    $start = 2003 if ! $start;
-    if ( ! $startYear ) {
-       $startYear = (localtime(time))[5]+1900;
-    } # end if
-    $startMonth = $r->param('ddmStartMonth') ? $r->param('ddmStartMonth') : (localtime(time))[4]+1;
-    $startDay = $r->param('ddmStartDay') ? $r->param('ddmStartDay') : (localtime(time))[3];
+	ssi::get_start_end_dates( $log, $dbh, \%variable, @param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-    ssi::get_start_end_dates( $log, $dbh, $variable,
-            $startYear,
-            $startMonth,
-            $startDay,
-            $r->param('ddmEndYear'),
-            $r->param('ddmEndMonth'),
-            $r->param('ddmEndDay') );
+	my %filters = (
+		'order'=>'index',
+			);
+	$filters{'company_id'}	= $param{'ddmCustomers'} if $param{'ddmCustomers'};
+	$filters{'user_id'}	= $param{'ddmEstimator'} if $param{'ddmEstimator'};
+	$filters{'status'}	= $param{'ddmStatus'} if $param{'ddmStatus'};
+	$filters{'csr_id'}	= $param{'ddmEmployees'} if $param{'ddmEmployees'};
+	$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-    $_ = "SELECT DISTINCT strStatus, strStatus FROM tbl_Projects ORDER BY strStatus";
-    $$variable{'ddmStatus'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmStatus') );
+	@{$variable{'Projects'}} = openprint::Project::find( %filters );
 
-	$_ = "SELECT lngIndex, strName FROM tbl_Equipment ORDER BY strName";
-	$$variable{'ddmEquipment'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmEquipment') );
-
-	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my @header = ('Docket #', 'Project Reference','Company Name', 'Creation Date','Status');
-		$_ = "SELECT lngProjectIndex, SUBSTR(strProjectReference,0,50),\n".
-				"(SELECT strCompanyName FROM Company WHERE CompanyIndex = tbl_Projects.CompanyIndex),\n".
-				"to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus\n".
-				"FROM tbl_Projects ".
-				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		$_ .= "AND UserIndex = '".$r->param('ddmEstimator')."'\n" if $r->param('ddmEstimator');
-		$_ .= "AND strStatus = '".$r->param('ddmStatus')."' \n" if $r->param('ddmStatus');
-		$_ .= "AND CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		$_ .= "AND CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesperson='".$r->param('ddmEmployees')."')\n" if $r->param('ddmEmployees') ne '';
-		$_ .= "ORDER BY lngProjectIndex";
-
-		my @data = sql::execute( $log, $dbh, $_ );
-		misc::export_csv( $r, $log, $variable, 'project_report.csv', \@header, \@data );
-	} else {
-		$_ = "SELECT DISTINCT (SELECT Index FROM Company WHERE Index = CompanyIndex),\n".
-			"				(SELECT strName FROM Company WHERE Index = CompanyIndex),\n".
-			"				Index, SUBSTR(strProjectReference,0,50), to_char(dtmCreationDate, 'MM/DD/YYYY'), strStatus \n".
-				"FROM tbl_Projects	".
-				"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		$_ .= "AND UserIndex = '".$r->param('ddmEstimator')."'\n" if $r->param('ddmEstimator');
-		$_ .= "AND strStatus = '".$r->param('ddmStatus')."' \n" if $r->param('ddmStatus');
-		$_ .= "AND CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		$_ .= "AND CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesperson='".$r->param('ddmEmployees')."')\n" if $r->param('ddmEmployees') ne '';
-		$_ .= "ORDER BY Index";
-		@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $_ );
+	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+		my @header = ('Project #', 'Docket #', 'Company', 'Reference', 'Summary', 'Creation Date', 'Status', 'Price 1', 'Price 2', 'Price 2', 'Currency');
+		my @data;
+		my ( $total1, $total2, $total3 );
+		foreach my $Project ( @{$variable{'Projects'}} ) {
+			push @data, $Project->id(), $Project->docket(), $Project->Company()->name(), $Project->reference(), $Project->summary(), 
+				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Project->created_on() ) ), $Project->status(),
+				$Project->price1(), $Project->price2(), $Project->price3(), $Project->Currency()->name();
+			$total1 += $Project->total1();
+			$total2 += $Project->total2();
+			$total3 += $Project->total3();
+		} # end foreach Project
+		push @data, '','','','','','','Totals:',$total1,$total2,$total3,'';
+		misc::export_csv( $r, $log, \%variable, 'project_report.csv', \@header, \@data );
 	} # end if
 
 } # end sub project_report
 
 sub quotes {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
-	ssi::get_start_end_dates( $log, $dbh, $variable,
-			$r->param('ddmStartYear'),
-			$r->param('ddmStartMonth'),
-			$r->param('ddmStartDay'),
-			$r->param('ddmEndYear'),
-			$r->param('ddmEndMonth'),
-			$r->param('ddmEndDay') );
+	ssi::get_start_end_dates( $log, $dbh, \%variable,
+			@param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-    $$variable{'dblTotal1'} = $r->param('dblTotal1');
-    $$variable{'dblTotal2'} = $r->param('dblTotal2');
+	$variable{'ddmStatus'.$r->param('ddmStatus')} = 'SELECTED';
 
-	$$variable{'ddmStatus'.$r->param('ddmStatus')} = 'SELECTED';
+	my %filters = (
+			'order'=>'index',
+			);
+	$filters{'status'} = $param{'ddmStatus'} if $param{'ddmStatus'};
+	$filters{'company_id'} = $param{'ddmCustomers'} if $param{'ddmCustomers'};
+	$filters{'salesrep_id'} = $param{'salesrep_id'} if $param{'salesrep_id'};
+	$filters{'currency_id'} = $param{'currency_id'} if $param{'currency_id'};
+	$filters{'total_start'} = $param{'total_start'} if $param{'total_start'};
+	$filters{'total_end'} = $param{'total_end'} if $param{'total_end'};
+	$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my @header = ( 'lngQuoteID', 'dtmQuoteDate', 'strPrepared By', 'strPreparedFor','Total1','Total2','Total3' );
-		$_ = "SELECT DISTINCT tbl_Quotes.lngQuoteID, to_char(tbl_Quotes.dtmQuoteDate, 'MM/DD/YYYY'),\n".
-			"tbl_Quote_Users_By.strFirstName || ' ' || tbl_Quote_Users_By.strLastName,\n".
-			"tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName,\n".
-			"strStatus,\n".
-			"tbl_Quotes.curTotalSale1, curTotalSale2, curTotalSale3\n".
-			"FROM tbl_Quotes, tbl_Quote_Users_For, tbl_Quote_Users_By ".
-			"WHERE tbl_Quote_Users_By.lngQuoteID = tbl_Quotes.lngQuoteID ".
-			"AND tbl_Quote_Users_For.lngQuoteID = tbl_Quotes.lngQuoteID ".
-			"AND tbl_Quotes.lngQuoteID IN ( ".
-			"	SELECT DISTINCT tbl_Quotes.lngQuoteID FROM	tbl_Quotes, tbl_Quote_Details ".
-			"	WHERE date(tbl_Quotes.dtmQuoteDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		$_ .= "AND tbl_Quotes.strStatus = '".$r->param('ddmStatus')."'\n" if $r->param('ddmStatus');
-		$_ .= "	AND tbl_Quote_Details.lngQuoteID = tbl_Quotes.lngQuoteID ";
-		$_ .= "	AND tbl_Quotes.CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		if ( $r->param('dblTotal1') and $r->param('dblTotal2') ) {
-			$_ .= " AND ( ";
-			$_ .= "tbl_Quotes.curTotalSale1 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " OR ";
-			$_ .= "tbl_Quotes.curTotalSale2 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " OR ";
-			$_ .= "tbl_Quotes.curTotalSale3 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " )\n";
-		} # end if
+	@{$variable{'Quotes'}} = openprint::Quote::find( %filters );
 
-		$_ .= ") ORDER BY tbl_Quotes.lngQuoteID";
-
-		my @data = sql::execute( $log, $dbh, $_ );
-		misc::export_csv( $r, $log, $variable, 'quote_report.csv', \@header, \@data );
-	} else {
-		$_ = "SELECT DISTINCT tbl_Quotes.Index, to_char(tbl_Quotes.dtmQuoteDate, 'MM/DD/YYYY'),\n".
-			"tbl_Quote_Users_By.strFirstName || ' ' || tbl_Quote_Users_By.strLastName,\n".
-			"tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName,\n".
-			"strStatus,\n".
-			"tbl_Quotes.curTotalSale1, curTotalSale2, curTotalSale3\n".
-			"FROM tbl_Quotes, tbl_Quote_Users_For, tbl_Quote_Users_By ".
-			"WHERE tbl_Quote_Users_By.QuoteIndex = tbl_Quotes.Index ".
-			"AND tbl_Quote_Users_For.QuoteIndex = tbl_Quotes.Index ".
-			"AND tbl_Quotes.Index IN ( ".
-			"SELECT tbl_Quotes.Index FROM tbl_Quotes, tbl_Quote_Details ".
-			"WHERE date(tbl_Quotes.dtmQuoteDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		$_ .= "AND tbl_Quotes.strStatus = '".$r->param('ddmStatus')."'\n" if $r->param('ddmStatus');
-		$_ .= "	AND tbl_Quote_Details.QuoteIndex = tbl_Quotes.Index ";
-		$_ .= "	AND tbl_Quotes.CompanyIndex = '".$r->param('ddmCustomers')."' \n" if $r->param('ddmCustomers') ne '';
-		if ( $r->param('dblTotal1') and $r->param('dblTotal2') ) {
-			$_ .= " AND ( ";
-			$_ .= "tbl_Quotes.curTotalSale1 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " OR ";
-			$_ .= "tbl_Quotes.curTotalSale2 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " OR ";
-			$_ .= "tbl_Quotes.curTotalSale3 BETWEEN ".$r->param('dblTotal1')." AND ".$r->param('dblTotal2')."\n";
-			$_ .= " )\n";
-		} # end if
-
-		$_ .= ") ORDER BY tbl_Quotes.Index";
-		@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $_ );
-		$$variable{'ReportTotal1'} = 0;
-		$$variable{'ReportTotal2'} = 0;
-		$$variable{'ReportTotal3'} = 0;
-		for ( my $index = 0; $index < @{$$variable{'DATA'}}; $index += 8 ) {
-			$$variable{'ReportTotal1'} += $$variable{'DATA'}[$index+5];
-			$$variable{'ReportTotal2'} += $$variable{'DATA'}[$index+6];
-			$$variable{'ReportTotal3'} += $$variable{'DATA'}[$index+7];
-		} # end for
-		$$variable{'ReportTotal1'} = sprintf("%.2f", $$variable{'ReportTotal1'} );
-		$$variable{'ReportTotal2'} = sprintf("%.2f", $$variable{'ReportTotal2'} );
-		$$variable{'ReportTotal3'} = sprintf("%.2f", $$variable{'ReportTotal3'} );
+	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+		my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Total1', 'Total2', 'Total3', 'Currency' );
+		my @data;
+		my $total1;
+		my $total2;
+		my $total3;
+		foreach my $Quote ( @{$variable{'Quotes'}} ) {
+			push @data, $Quote->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Quote->created_on() ) ), $Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(), $Quote->total1(), $Quote->total2(), $Quote->total3(), $Quote->Currency()->name();
+			$total1 += $Quote->total1();
+			$total2 += $Quote->total2();
+			$total3 += $Quote->total3();
+		} # end foreach
+		push @data, '','','','','','Totals:', $total1, $total2, $total3, '';
+		misc::export_csv( $r, $log, \%variable, 'quote_report.csv', \@header, \@data );
 	} # end if
 
 } # end sub quotes
 
 sub orders {
-	my ( $r, $log, $dbh, $variable ) = @_;
-	
-	my @products;
+	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+		my @header = ('OrderID', 'Docket', 'Order Date', 'Company Name', 'Status', 'Total', 'Currency');
 
-	if ( $r->param('ddmCategories') ne '' ) {
-		$_ = "SELECT lngProductIndex FROM tbl_Products WHERE lngCategoryIndex = '" . $r->param('ddmCategories') ."'";
-		@products = sql::execute( $log, $dbh, $_ );
-	} elsif ( $r->param('ddmProducts') ne '' ) {
-		@products = ( $r->param('ddmProducts') );
-	} # end if
+		my @Orders = openprint::Order::find(
+				'company_id'		=> $param{'ddmCustomer'},
+				'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
+				'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
+				'value_start'	   => $param{'TotalStart'},
+				'value_end'		 => $param{'TotalEnd'},
+				'salesrep_id'	   => $param{'ddmEmployee'},
+				'status'			=> $param{'ddmStatus'},
+				'currency_id'	   => $param{'ddmCurrency'},
+				);
+		my @data;
+		my $total = 0;
+		foreach my $Order ( @Orders ) {
+			push @data, $Order->id(), $Order->docket(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Order->created_on())), $Order->Company()->name(), $Order->status(), $Order->total(), $Order->Currency()->name();
+			next if $Order->status() eq 'Cancelled';
+			$total += $Order->total();
+		} # end foreach Order
+		push @data, '', '', '', '', 'Total:', $total, '';
 
-	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my @header = ('OrderID', 'Order Date', 'Company Name', 'Status', 'Total');
-		$_ = "SELECT Index, to_char(Orders.dtmOrderDate, 'MM/DD/YYYY'), ".
-			"strCompanyName, strStatus, (SELECT SUM(curSalesPrice) FROM Order_Contents WHERE OrderIndex=Index)\n".
-			"FROM Orders, Order_Contents ".
-			"WHERE dtmOrderDate BETWEEN '$$variable{'StartDate'}' AND '$$variable{'EndDate'}' ";
-# whether to show finished, unfinished or both
-		$_ .= "AND strStatus = '".$r->param('ddmStatus')."'\n" if $r->param('ddmStatus');
-		$_ .= "AND OrderIndex = Index \n";
-# which products
-		$_ .= "AND Order_Contents.lngProductIndex IN ('" . join( ',', @products ) . "') \n" if @products != 0;
-# which customers
-		$_ .= "	AND Orders.CompanyIndex = '" . $r->param('ddmCustomers') ."' \n" if $r->param('ddmCustomers') ne '';
-		$_ .= " AND Orders.CompanyIndex IN ( SELECT DISTINCT CompanyIndex FROM Companys_In_Categories WHERE lngCategoryID='".$r->param('ddmMarketingCategory')."')\n" if $r->param('ddmMarketingCategory') ne '';
-		#$_ .= "	AND Orders.lngEmployeeID = '" . $r->param('ddmEmployees') . "' \n" if $r->param('ddmEmployees') ne '';
-		$_ .= " AND Orders.CompanyIndex IN ( SELECT Index FROM Company WHERE lngSalesPerson='".$r->param('ddmEmployees')."')" if $r->param('ddmEmployees') ne '';
-		$_ .= " AND Orders.curTotalSale BETWEEN " . $r->param('dblTotal1') . " AND " . $r->param('dblTotal2') . "\n" if $r->param('dblTotal1') and $r->param('dblTotal2');
-		$_ .= " AND Orders.strCurrencyName = '" . $r->param('ddmCurrency') . "'" if $r->param('ddmCurrency') ne '';
-		$_ .= "ORDER BY Index";
-
-		my @data = sql::execute( $log, $dbh, $_ );
-		misc::export_csv( $r, $log, $variable, 'order_report.csv', \@header, \@data );
+		misc::export_csv( $r, $log, \%variable, 'order_report.csv', \@header, \@data );
 	} # end if
 } # end sub orders
 
@@ -255,119 +179,76 @@ sub custom {
 } # end sub custom
 
 sub customer_login {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
-	$$variable{'rdbActive'} = $r->param('rdbActive');
-	
-	ssi::get_start_end_dates( $log, $dbh, $variable,
-			$r->param('ddmStartYear'),
-			$r->param('ddmStartMonth'),
-			$r->param('ddmStartDay'),
-			$r->param('ddmEndYear'),
-			$r->param('ddmEndMonth'),
-			$r->param('ddmEndDay') );
+	ssi::get_start_end_dates( $log, $dbh, $variable, @param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-	@$variable{'LastProjectStartYears','LastProjectStartMonths','LastProjectStartDays','LastProjectStart'} = ssi::get_dates( $log, $dbh,
-			@openprint::param{'ddmLastProjectStartYear','ddmLastProjectStartMonth','ddmLastProjectStartDay'} );
-	@$variable{'LastProjectEndYears','LastProjectEndMonths','LastProjectEndDays','LastProjectEnd'} = ssi::get_dates( $log, $dbh,
-			$r->param('ddmLastProjectEndYear'), $r->param('ddmLastProjectEndMonth'),$r->param('ddmLastProjectEndDay') );
+	@variable{'LastProjectStartYears','LastProjectStartMonths','LastProjectStartDays','LastProjectStart'} = ssi::get_dates( $log, $dbh,
+			@param{'ddmLastProjectStartYear','ddmLastProjectStartMonth','ddmLastProjectStartDay'} );
+	@variable{'LastProjectEndYears','LastProjectEndMonths','LastProjectEndDays','LastProjectEnd'} = ssi::get_dates( $log, $dbh,
+			@param{'ddmLastProjectEndYear','ddmLastProjectEndMonth','ddmLastProjectEndDay'} );
 
-	@$variable{'LastOrderStartYears','LastOrderStartMonths','LastOrderStartDays','LastOrderStart'} = ssi::get_dates( $log, $dbh,
-			$r->param('ddmLastOrderStartYear'), $r->param('ddmLastOrderStartMonth'),$r->param('ddmLastOrderStartDay') );
-	@$variable{'LastOrderEndYears','LastOrderEndMonths','LastOrderEndDays','LastOrderEnd'} = ssi::get_dates( $log, $dbh,
-			$r->param('ddmLastOrderEndYear'), $r->param('ddmLastOrderEndMonth'),$r->param('ddmLastOrderEndDay') );
+	@variable{'LastOrderStartYears','LastOrderStartMonths','LastOrderStartDays','LastOrderStart'} = ssi::get_dates( $log, $dbh,
+			@param{'ddmLastOrderStartYear','ddmLastOrderStartMonth','ddmLastOrderStartDay'} );
+	@variable{'LastOrderEndYears','LastOrderEndMonths','LastOrderEndDays','LastOrderEnd'} = ssi::get_dates( $log, $dbh,
+			@param{'ddmLastOrderEndYear','ddmLastOrderEndMonth','ddmLastOrderEndDay'} );
 
-	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my $query = "SELECT strName, strFirstName || ' ' || strLastName, Users.strPhone, strEmail,";
-		$query .=  "strCity, strProvState, date(Company.dtmdateentered),";
-		$query .=  "(SELECT strFirstName || ' ' || strLastName FROM Users WHERE Index = lngSalesPerson ),";
-		$query .=  "(SELECT COUNT(Index) FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
-        $query .= "(SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
-		$query .=  "(SELECT COUNT(Index) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
-		$query .=  "'\$' || (SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
-        $query .= " (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) AS LastOrderDate ";
-		$query .=  "FROM Company, Users ";
-		$query .=  "WHERE date(Company.dtmdateentered) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		$query .=  "AND Users.CompanyIndex = Company.Index ";
-		$query .=  "AND Users.Index = (SELECT MIN(Index) FROM Users WHERE Users.CompanyIndex = Company.Index ) ";
-      if ( $r->param('ddmEmployees') ) {
-            if ( $r->param('ddmEmployees') eq 'None' ) {
-                $query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
-            } else {
-                $query .= " AND lngsalesperson=" . $r->param('ddmEmployees');
-            } # end if
-        } # end if
+	my $query = 'SELECT Company.Index, (SELECT MIN(Index) FROM Users WHERE Users.CompanyIndex = Company.Index ), Company.lngSalesPerson, ';
+	$query .= '(SELECT COUNT(Index) FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ), ';
+	$query .= '(SELECT MAX(Index) as lastproject FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ), ';
+	$query .= '(SELECT COUNT(Index) FROM Orders WHERE Orders.CompanyIndex = Company.Index ), ';
+	$query .= '(SELECT MAX(index) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ), ';
+	$query .= '(SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index ) ';
+	$query .=  'FROM Company ';
+	$query .=  "WHERE (Company.dtmdateentered BETWEEN '$variable{'StartDate'} 00:00:00' AND '$variable{'EndDate'} 23:59:59') AND Company.deleted != true ";
+	if ( $param{'ddmEmployees'} ) {
+		if ( $param{'ddmEmployees'} eq 'None' ) {
+			$query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
+		} else {
+			$query .= " AND lngsalesperson=" . $param{'ddmEmployees'};
+		} # end if
+	} # end if
+	if ( $param{'ddmLastProjectStartYear'} and $param{'ddmLastProjectStartMonth'} and $param{'ddmLastProjectStartDay'} ) {
+		if ( $param{'ddmLastProjectEndYear'} and $param{'ddmLastProjectEndMonth'} and $param{'ddmLastProjectEndDay'} ) {
+			$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) BETWEEN date('$variable{'LastProjectStart'}') AND date('$variable{'LastProjectEnd'}')";
+		} else {
+			$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) > date('$variable{'LastProjectStart'}')";
+		} # end if
+	} elsif ( $param{'ddmLastProjectEndYear'} and $param{'ddmLastProjectEndMonth'} and $param{'ddmLastProjectEndDay'} ) {
+		$query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) < date('$variable{'LastProjectEnd'}')";
+	} # end if
 
-        if ( $r->param('ddmLastProjectStartYear') and $r->param('ddmLastProjectStartMonth') and $r->param('ddmLastProjectStartDay') ) {
-            if ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
-                $query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastProjectStart'}') AND date('$$variable{'LastProjectEnd'}')";
-            } else {
-                $query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) > date('$$variable{'LastProjectStart'}')";
-            } # end if
-        } elsif ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
-            $query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) < date('$$variable{'LastProjectEnd'}')";
-        } # end if
+	if ( $param{'ddmLastOrderStartYear'} and $param{'ddmLastOrderStartMonth'} and $param{'ddmLastOrderStartDay'} ) {
+		if ( $param{'ddmLastOrderEndYear'} and $param{'ddmLastOrderEndMonth'} and $param{'ddmLastOrderEndDay'} ) {
+			$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) BETWEEN date('$variable{'LastOrderStart'}') AND date('$variable{'LastOrderEnd'}')";
+		} else {
+			$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  > date('$variable{'LastOrderStart'}')";
+		} # end if
+	} elsif ( $param{'ddmLastOrderEndYear'} and $param{'ddmLastOrderEndMonth'} and $param{'ddmLastOrderEndDay'} ) {
+		$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  < date('$variable{'LastOrderEnd'}')";
+	} # end if
+	if ( $param{'rdbActive'} ) {
+		$query .= " AND Company.ysnAccountActivation = '$param{'rdbActive'}'\n";
+	} # end if
+	@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $query );
 
-        if ( $r->param('ddmLastOrderStartYear') and $r->param('ddmLastOrderStartMonth') and $r->param('ddmLastOrderStartDay') ) {
-            if ( $r->param('ddmLastOrderEndYear') and $r->param('ddmLastOrderEndMonth') and $r->param('ddmLastOrderEndDay') ) {
-                $query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastOrderStart'}') AND date('$$variable{'LastOrderEnd'}')";
-            } else {
-                $query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  > date('$$variable{'LastOrderStart'}')";
-            } # end if
-        } elsif ( $r->param('ddmLastOrderEndYear') and $r->param('ddmLastOrderEndMonth') and $r->param('ddmLastOrderEndDay') ) {
-            $query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  < date('$$variable{'LastOrderEnd'}')";
-        } # end if
-        if ( $$variable{'rdbActive'} ) {
-            $query .= " AND Company.ysnAccountActivation = '$$variable{'rdbActive'}'\n";
-        } # end if
-
-		my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project','# of Orders','Total', 'Last Order');
-		my @data = sql::execute( $log, $dbh, $query );
+	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+		my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project','# of Orders','Last Order', 'Last Order Value');
+		my @data;
+		while ( my ( $company_id, $user_id, $csr_id, $projects, $last_project, $orders, $last_order, $total ) = splice @{$$variable{'DATA'}}, 0, 8 ) {
+			my $Company = new openprint::Company( $company_id );
+			my $User = new openprint::User( $user_id );
+			my $CSR = new openprint::User( $csr_id );
+			my $Project = new openprint::Project( $last_project );
+			my $Order = new openprint::Order( $last_order );
+			push @data, $Company->name(), $User->name(), $Company->phone(), $User->email(), $Company->city(), $Company->state(),
+				Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $Company->created_on() ) ),
+				$CSR->name(), $projects, 
+				$projects ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $Project->created_on() ) ) : '',
+				$orders, 
+				$orders ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ) : '',
+				$total;
+		} # end while
 		misc::export_csv( $r, $log, $variable, 'customer_report.csv', \@header, \@data );
-	} else {
-       my $query = "SELECT Company.Index, strName, ";
-        $query .=  "strProvState, date(Company.dtmdateentered),";
-        $query .=  "(SELECT strFirstName || ' ' || strLastName FROM Users WHERE Index = lngSalesPerson ),";
-        $query .=  "(SELECT COUNT(Index) FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
-        $query .= "(SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ),";
-        $query .=  "(SELECT COUNT(Orders.Index) FROM Orders WHERE Orders.CompanyIndex = Company.Index ),";
-        $query .=  "(SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index )";
-        $query .= ", (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) AS LastOrderDate ";
-        $query .=  "FROM Company WHERE date(Company.dtmdateentered) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}') ";
-		#$query .=  " AND Users.Index = (SELECT MIN(Users.Index) FROM Users WHERE Users.CompanyIndex = Company.lndex )";
-
-		if ( $r->param('ddmEmployees') ) {
-			if ( $r->param('ddmEmployees') eq 'None' ) {
-				$query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
-			} else {
-				$query .= " AND lngsalesperson=" . $r->param('ddmEmployees');
-			} # end if
-		} # end if
-
-		if ( $r->param('ddmLastProjectStartYear') and $r->param('ddmLastProjectStartMonth') and $r->param('ddmLastProjectStartDay') ) {
-			if ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
-				$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastProjectStart'}') AND date('$$variable{'LastProjectEnd'}')";
-			} else {
-				$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) > date('$$variable{'LastProjectStart'}')";
-			} # end if
-		} elsif ( $r->param('ddmLastProjectEndYear') and $r->param('ddmLastProjectEndMonth') and $r->param('ddmLastProjectEndDay') ) {
-			$query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) < date('$$variable{'LastProjectEnd'}')";
-		} # end if
-
-        if ( $r->param('ddmLastOrderStartYear') and $r->param('ddmLastOrderStartMonth') and $r->param('ddmLastOrderStartDay') ) {
-            if ( $r->param('ddmLastOrderEndYear') and $r->param('ddmLastOrderEndMonth') and $r->param('ddmLastOrderEndDay') ) {
-				$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) BETWEEN date('$$variable{'LastOrderStart'}') AND date('$$variable{'LastOrderEnd'}')";
-			} else {
-				$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  > date('$$variable{'LastOrderStart'}')";
-			} # end if
-		} elsif ( $r->param('ddmLastOrderEndYear') and $r->param('ddmLastOrderEndMonth') and $r->param('ddmLastOrderEndDay') ) {
-			$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  < date('$$variable{'LastOrderEnd'}')";
-		} # end if
-		if ( $$variable{'rdbActive'} ) {
-			$query .= " AND Company.ysnAccountActivation = '$$variable{'rdbActive'}'\n";
-		} # end if
-
-		@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $query );
 	} # end if	
 
 } # end sub customer_login
@@ -385,21 +266,21 @@ sub CustomerServiceReps {
 
 
 	@{$$variable{'Employees'}} = map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)', 'usergroup'=>'Sales', 'id'=>$r->param('ddmEmployees'), 'web_active'=>1 );
-    $$variable{'ddmEmployees'} = ssi::make_drop_down( $$variable{'Employees'}, $r->param('ddmEmployees') );
+	$$variable{'ddmEmployees'} = ssi::make_drop_down( $$variable{'Employees'}, $r->param('ddmEmployees') );
 
-    my $estimator = $r->param('ddmEstimator');
-    $$variable{'ddmEstimatorOptions'} = ssi::make_drop_down( $$variable{'Employees'}, $r->param('ddmEstimator') );
+	my $estimator = $r->param('ddmEstimator');
+	$$variable{'ddmEstimatorOptions'} = ssi::make_drop_down( $$variable{'Employees'}, $r->param('ddmEstimator') );
 
 	@{$$variable{'Currencies'}} = sql::execute( $log, $dbh, "SELECT id, Name, Symbol FROM Currencies ORDER BY lower(name)" );
 
 	my %ordered_projects;
 
-	my $query = "SELECT Index, strStatus, (SELECT lngSalesPerson FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex),
+	my $query = "SELECT Index, strStatus, (SELECT salesrep_id FROM Companies WHERE id=Projects.CompanyIndex),
 	   ";
-	$query .= "(SELECT curSalesPrice FROM Order_Contents, Orders WHERE Orders.Index=Order_Contents.OrderIndex AND Order_Contents.lngProjectIndex=tbl_Projects.Index AND Orders.lngDocketNumber=tbl_Projects.lngDocketNumber),";
-	$query .= "(SELECT currency_id FROM Orders WHERE Orders.lngDocketNumber=tbl_Projects.lngDocketNumber)";
+	$query .= "(SELECT curSalesPrice FROM Order_Contents, Orders WHERE Orders.Index=Order_Contents.OrderIndex AND Order_Contents.lngProjectIndex=Projects.Index AND Orders.lngDocketNumber=Projects.lngDocketNumber),";
+	$query .= "(SELECT currency_id FROM Orders WHERE Orders.lngDocketNumber=Projects.lngDocketNumber)";
 
-	$query .= " FROM tbl_Projects ";
+	$query .= " FROM Projects ";
 	$query .= "WHERE dtmcreationdate BETWEEN '$$variable{'StartDate'} 00:00:00' AND '$$variable{'EndDate'} 23:59:59' ";
 	$query .= "AND UserIndex = $estimator\n" if $estimator;
 	my @data = sql::execute( $log, $dbh, $query );
@@ -432,7 +313,7 @@ sub order_details {
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $r->param('btnFunction') eq 'Delete' ) {
-		if ( sql::execute( undef, undef, q{SELECT * FROM Payments WHERE strSessionID IS NULL AND Order_Id=?}, $order_id ) ) {
+		if ( openprint::Payment::find('order_id'=>$order_id ) ) {
 			$$variable{'error'} .= "Order $order_id appears to have payments.  Please delete the payments before deleting the order.";
 		} else {
 		$Order->delete();
@@ -440,7 +321,7 @@ sub order_details {
 		return;
 		} # en dif
 	} elsif ( $r->param('btnFunction') eq 'Resend' ) {
-		sql::update( $log, $dbh, 'Orders',"Index=$order_id", 'strComments',$r->param('txtComments') );
+		sql::update( $log, $dbh, 'Orders',['Index=?', $order_id], 'strComments',$r->param('txtComments') );
 		openprint::order::order_send_email( $r, $log, $dbh, $order_id );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Pay' ) {
 		$Order->pay();
@@ -450,15 +331,17 @@ sub order_details {
 			return misc::error( $log, $dbh, $variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
 		} # end if
 
-		my $error = sql::insert( $log, $dbh, 'Payments',
-				'Order_Id',     $order_id,
-				'Company_Id',   $Order->company_id(),
-				'curAmount',    $openprint::param{'Amount'},
-				'dtmDate',      'NOW()',
-				'strMethod',    'Manual',
-				'currency_id',  $Order->currency_id(),
-				'strDescription',   $openprint::param{'Description'},
-				);
+		my $Payment = new openprint::Payment();
+		
+		my $error = $Payment->save({
+				'order_id'		=>	$order_id,
+				'recipient_id'	=>	new openprint::User( $openprint::session{'user_id'} )->company_id(), 
+				'payor_id'		=>	$Order->company_id(),
+				'amount'		=>	$openprint::param{'Amount'},
+				'method'		=>	'Manual',
+				'currency_id'	=>	$Order->currency_id(),
+				'memo'			=>	$openprint::param{'Description'},
+				} );
 		if ( $error ) {
 			return misc::error( $log, $dbh, $variable, 'Error Saving Payment', $error );
 		} # end if
@@ -467,14 +350,14 @@ sub order_details {
 
 		if ( $$variable{'DepositDue'} > 0 ) {
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
 			} # end foreach
 		} else {
 			$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'tbl_Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
 			} # end foreach
 			if ( $$variable{'AmountPaid'} >= $$variable{'TOTAL'} ) {
@@ -483,10 +366,10 @@ sub order_details {
 			$Order->save();
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete Payment' ) {
-		my $payment_index = $openprint::param{'payment_id'};
-		$payment_index =~ s/\D//g;
-		if ( $payment_index ) {
-			sql::execute( $log, $dbh, 'DELETE FROM Payments WHERE id=?', $payment_index );
+		$openprint::param{'payment_id'} =~ s/\D//g;
+		if ( $openprint::param{'payment_id'} ) {
+			my $Payment = new openprint::Payment( $openprint::param{'payment_id'} );
+			$Payment->delete();
 		} # end if
 		$Order->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Invoice' ) {
@@ -495,9 +378,12 @@ sub order_details {
 		$Order->save();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Cancel' ) {
 		openprint::order::cancel_order( $log, $dbh, $order_id );
-    } # end if
+	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
+		$Order->company_id( $openprint::param{'company_id'} );
+		$$variable{'error'} .= $Order->save();
+	} # end if
 	$$variable{'Order'} = $Order;
-    openprint::order::display_order( $log, $dbh, $variable, $order_id );
+	openprint::order::display_order( $log, $dbh, $variable, $order_id );
 } # end sub display_order
 
 sub uploads {

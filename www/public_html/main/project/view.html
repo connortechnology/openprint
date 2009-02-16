@@ -26,24 +26,27 @@ There is no current project.
 	Quote&quot; or &quot;Add to Order&quot;. If changes are required, please use 
 	the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
 </p>
-<div style="float:left; p\osition: relative; height: 19px;">
+<div style="float:left;">
 	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', '', '/main/project/summary.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Summary' ); ) ?>
-	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
+	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( sets::isin( $$variable{'Project'}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();", '', 'Delete' ); ) ?>
-	<? endif ( ( ! $$variable{'Project'}->order_id() ) or ( $$variable{'Project'}->Order->status() eq 'Re-Opened' ) ) ?>
+	<? endif ( ( ! $$variable{'Project'}->order_id() ) or ( sets::isin( $$variable{'Project'}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ?>
 	<? echo ( ssi::writeButton( $log, $dbh, 'CopyProject', 'copyProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Copy' ); ) ?>
 </div>
-<div style="float: right; p\osition: relative; height: 19px;">
+<div style="float: right;">
 	<? if ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' ); ) ?>
 	<? endif ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
-	<? if ( $$variable{'ProjectStatus'} eq 'Unordered' ) ?>
+	<? if ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated'] ) ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
-	<? endif ( $$variable{'ProjectStatus'} eq 'Unordered' ) ?>
+	<? endif ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated'] ) ) ?>
 	<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>
+		<? if ( ( $session{'user_type'} eq 'A' ) and ! $$variable{'Project'}->predefined() ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Predefined', 'predefined.gif', "f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", '', 'Make into a Product' ); ) ?>
+		<? endif ( ( $session{'user_type'} eq 'A' ) and ! $$variable{'Project'}->predefined() ) ?>
 	<? endif ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
 	<? echo ( 
 		my $html = '';

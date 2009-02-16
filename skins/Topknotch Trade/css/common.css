@@ -1,0 +1,409 @@
+
+html {
+	height: 100%;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+	font-size: x-small;
+	font-style: normal;
+    margin: 0px;
+	padding: 0px;
+    background-color: #ffffff;
+	min-width: 680px;
+}
+
+@media print {
+	body {
+		padding: 0px;
+	}
+}
+
+#Header {
+	padding: 5px 5px 0px 5px;
+}
+#Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html #Header {height: 1%;}
+* #Header {display:block;}
+/* End hide from IE-mac */
+
+#Header p {
+	color:#194D98;
+	font-size: 18px;
+	padding: 0px;
+	margin: 0px;
+}
+#Header p label {
+	color:#FEE00F;
+	text-align: right;
+	float: left;
+	width: 40px;
+}
+
+.Content {
+    background-color: #ffffff;
+    padding: 0px;
+    margin: 0px;
+}
+.ContentInner {
+    z-index: 0;
+	width: 100%;
+}
+A {
+	text-decoration: none;
+    color: #404171;
+	outline:0;
+}
+A:visited {
+    color: #404171;
+}
+A:hover {
+	color: #687796;
+}
+
+.formOn {
+	background-color: #f1eee5;
+}
+.formOff {
+	background-color: #ffffff;
+}
+
+select, textarea, option {
+    font-size: x-small;
+}
+input {
+    font-size: x-small;
+}
+input[type="text"], input[type="password"]  {
+}
+
+.tipDiv {
+    position:absolute;
+    z-index:2;
+    visibility: hidden;
+    background-color: #ffffff;
+    width: 350px;
+    border: 1px solid;
+	height: auto;
+}
+.tipHead {
+    background-color:#DED9C2;
+    padding: 5px;
+}
+.tipText {
+    padding: 5px;
+}
+
+.PopUp {
+	background-color: white;
+	border: 1px solid;
+	visibility: hidden;
+	position: absolute;
+}
+
+.spacer {
+	clear: both;
+}
+
+@media print {
+	.filters {
+		display: none;
+	}
+}
+
+form {
+	margin: 0px;
+	padding: 0px;
+}
+
+.error {
+	color: red;
+}
+table.List {
+	border-bottom: 1px solid #194D98;
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	table-layout: fixed;
+}
+table.List th {
+	font-weight: bold;
+	border-bottom: 1px solid #194D98;
+}
+table.List td {
+	padding-top: 1px;
+	vertical-align: top;
+}
+tr.totals {
+	border-top: 1px solid #194D98;
+}
+
+table.List td input {
+    width: expression(this.type=="text" || this.type=="password"?'100%':'auto');
+}
+table.List td input[type="text"], table.List td input[type="password"]  {
+	width: 100%;
+}
+table.List td textarea {
+	width: 100%;
+}
+
+.Docket {
+}
+
+.Application fieldset {
+	margin-bottom: 5px;
+}
+.Application legend {
+	color: #BCA205;
+	font-weight: bold;
+}
+
+.Currency {
+	font-weight: bold;
+}
+
+fieldset {
+	border-top: 1px solid #194D98;
+	border-right: none;
+	border-left: none;
+	border-bottom: none;
+}
+fieldset legend {
+	color: #194D98;
+	font-weight: bold;
+}
+
+
+fieldset p {
+    margin-top: .5em;
+	display: inline-block;
+	padding-left: 240px;
+	overflow: hidden;
+}
+fieldset p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset p {height: 1%;}
+* fieldset p {display:block;}
+/* End hide from IE-mac */
+
+
+fieldset p label {
+    width: 235px;
+    text-align: right;
+	margin-left: -240px;
+	vertical-align: top;
+	float: left;
+}
+label.radio {
+	width: auto;
+	display: inline;
+	float: none;
+	margin: 0px;
+}
+p.buttons {
+	float: right;
+}
+fieldset p.buttons {
+	margin: 0px;
+	padding: 0px;
+	margin-left: 240px;
+	float: left;
+}
+fieldset p .buttons {
+    margin-left: 26%;
+	display: -moz-inline-box;
+    display: inline-block;
+    float: none;
+}
+fieldset p input {
+    float: none;
+    width: expression(this.type=="text" || this.type=="password"?'70%':'auto');
+	vertical-align: top;
+}
+fieldset p input[type="text"], fieldset p input[type="password"]  {
+    width: 70%;
+}
+fieldset p input[type="radio"] {
+}
+fieldset p select {
+    width: 70%;
+}
+fieldset p textarea {
+    width: 70%;
+}
+fieldset p option {
+    width: 70%;
+}
+fieldset.filters {
+    margin-left: 0px;
+    margin-right: 0px;
+	padding: 0px;
+}
+fieldset.filters p {
+	padding-left: 105px;
+}
+fieldset.filters p label {
+	margin-left: -105px;
+	width: 100px;
+}
+fieldset.filters p select {
+    width: auto;
+}
+fieldset.filters p input[type="text"] {
+    width: auto;
+}
+fieldset.filters p.buttons {
+	margin: 0px;
+	padding: 0px;
+	margin-left: 105px;
+	float: left;
+}
+
+
+.CompanyProfile fieldset {
+	margin-bottom: 5px;
+}
+
+hr {
+	margin: 1px;
+	padding: 0px;
+	height: 1px;
+	border: 0px;
+	color: #194D98;
+	background-color: #194D98;
+}
+
+.column {
+	width: 48%;
+	float: left;
+}
+.leftColumn {
+	width: 48%;
+	float: left;
+}
+.rightColumn {
+	width: 48%;
+	float: right;
+}
+.PageTitle {
+	display: block;
+}
+
+.colRow {
+	background-color: #eeeeee;
+ }					/* alternating row color in generated tables */
+
+div.row {
+	p\osition: relative;
+	clear: both;
+	margin-bottom: 10px;
+	padding: 1px;
+	padding-left: 10px;
+}
+div.row .required {
+	width: 10px;
+	float:left;
+	margin-left: -10px;
+	right: 10px;
+	height: 100%;
+}
+
+div.row .label {
+	padding: 5px;
+	width: 180px;
+	text-align: left;
+	p\osition: relative;
+	float:left;
+}
+
+div.row .input {
+	padding: 5px;
+	text-align: left;
+	float:left;
+	p\osition: relative;
+	vertical-align: top;
+}
+div.row .buttons {
+	margin-left: 180px;
+	padding: 5px;
+	float: left;
+	p\osition: relative;
+}
+fieldset .row {
+	width: 100%;
+}
+fieldset .row .label {
+	width: 30%;
+	padding: 7px;
+}
+fieldset .row .input {
+	width: 60%;
+}
+fieldset .row .value {
+	padding: 7px;
+}
+div.row:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.row {height: 1%;}
+* div.row {display:block;}
+/* End hide from IE-mac */
+.PageTitle {
+	display: none;
+}
+.PageTitle h1 {
+	font-size: large;
+}
+.PageTitle h1 {
+}
+span.DateSelector {
+    float: left;
+	width: 200px;
+}
+
+div.Popup {
+    position:absolute;
+    visibility: hidden;
+    background-color: #ffffff;
+    border:1px solid black;
+    width: auto;
+    height: auto;
+    padding: 5px;
+    z-index: 100;
+    display: none;
+}
+img {
+border: none;
+}
+div.Service span.ThreeColumns {
+	width: 32%;
+	float: left;
+}
+div.Service span.TwoColumns {
+	width: 50%;
+	float: left;
+}
+h1,h2,h3,h5 {
+	color:#194D98;
+}
+div#NewDimensions {
+	display: none;
+}

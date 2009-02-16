@@ -22,12 +22,12 @@
 			<div class="Header">
 				<span style="float: left;"><img src="/images/IQ_logo.png" alt="Intelligent Quote Demo"/></span>
 				<span style="float: left;"><img src="/images/IQ_text.png" alt="Intelligent Quote Demo"/></span>
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
+				<? if ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
+				<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
 			</div>
 			<br/>

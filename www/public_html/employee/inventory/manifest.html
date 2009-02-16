@@ -1,91 +1,114 @@
-<? eval ( 
-	$$variable{'pages'} = POSIX::ceil(@{$$variable{'Skids'}}/3);
-	$$variable{'page'} = 1;
-	my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
-	$$variable{'total_quantity'} = $$Skid{'Paper'}{$$variable{'paper_id'}}*@{$$variable{'Skids'}};
-	$$variable{'FirstSkid'} = $$variable{'Skids'}[0];
-	$$variable{'LastSkid'} = $$variable{'Skids'}[@{$$variable{'Skids'}}-1];
-) ?>
-<? while ( @{$$variable{'Skids'}} ) ?>
-<p style="padding: 2px;">
-	<span style="float:right;"><b>Page <?page?> of <?pages?></b></span>
-	<span style="float:left;"><b>Manifest</b></span><br class="spacer"/>
-	<span style="float:left;">Received:
-	<? echo ( 
-		$$variable{'page'} += 1;
-		my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
-		Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time( $Skid->created_on() ) );
+<!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="/javascripts/paper.js"></script>
+<script type="text/javascript">
+function convert_lbs_to_kg( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = do_decimals( parseFloat(qtys[i] / 2.2046), 4 );
+	} // end for
+	to.value = qtys.join(',');
+} // end function convert_lbs_to_kg
+function convert_kg_to_lbs( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = do_decimals( parseFloat(qtys[i] * 2.2046), '0' );
+	} // end for
+	to.value = qtys.join(',');
+} // end function convert_kg_to_lbs
+function mweight_to_gsm( form, type_id ) {
+	var mweight = parseFloat(1*form.elements['mweight-'+type_id].value);
+	var width = parseFloat(1*form.elements['width-'+type_id].value);
+	var height = parseFloat(1*form.elements['height-'+type_id].value);
+	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
+	form.elements['gsm-'+type_id].value = gsm;
+}
+function gsm_to_mweight( form, type_id ) {
+	var gsm = parseFloat(1*form.elements['gsm-'+type_id].value);
+	var width = parseFloat(1*form.elements['width-'+type_id].value);
+	var height = parseFloat(1*form.elements['height-'+type_id].value);
+	var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
+	form.elements['mweight-'+type_id].value = mweight;
+}
 
+function delete_content( c_id ) {
+	new Ajax.Request( '_manifest_content.html', {
+		method: 'get',
+		parameters: { content_id: c_id, action: 'Remove' },
+		onSuccess: function(transport){
+			var tr = $('tr-'+c_id);
+			new Insertion.After('tr-'+c_id, transport.responseText);
+			if(!tr){alert('tr not found');}else{tr.parentNode.removeChild(tr);}
+		},
+		evalScripts: true
+	 } );
+} // end function delete_conetnt( c_id )
+
+function add_content(form, type_id) {
+	new Ajax.Request( '_manifest_content.html', {
+			method: 'get', 
+			parameters: {
+				action:		'Add',
+				type_id:    type_id,
+				manifest_id: form.manifest_id.value,
+				rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
+				skid_id:    $('skid_id-'+type_id+'-').value,
+				docket:     $('docket-'+type_id+'-').value,
+				qty_lbs:    $('qty_lbs-'+type_id+'-').value
+			},
+			onSuccess: function (transport) { new Insertion.Before('totals-'+type_id, transport.responseText);return true; }, 
+			evalScripts: true
+		}
+	);
+}
+</script>
+<div class="Manifest">
+	<form name="f1" id="f1" method="post" action="manifest.html">
+		<fieldset>
+			<div class="leftColumn">
+				<p><label for="manifest_id">Manifest #:</label>
+					<input type="text" id="manifest_id" name="manifest_id" value="<? hecho ( $$variable{'Manifest'}->id() ) ?>" />
+				</p>
+				<p><label>Vendor:</label>
+					<input id="supplier_id_filter" type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value} } );">
+						<option value="">All</option>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $$variable{'Manifest'}->supplier_id() ); ) ?>
+					</select>
+				</p>
+			</div>
+			<div class="rightColumn">
+				<p><label>Received On:</label>
+				<? eval ( 
+					if ( $$variable{'Manifest'}->received_on() ) {
+						@param{'received_on_year','received_on_month','received_on_day'} = split('-', $$variable{'Manifest'}->received_on() );
+					} else {
+						@param{'received_on_year','received_on_month','received_on_day'} = Date::Calc::Today(); 
+					} # end if
+				) ?>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'received_on', sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'}) ); ) ?>
+				</span>
+				</p>
+			</div>
+		</fieldset>
+		<div id="Types">
+		<? echo (
+			my $html = '';
+			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_type.html' );
+			
+			foreach my $Type ( $$variable{'Manifest'}->Types() ) {
+				$$variable{'Type'} = $Type;
+				$$variable{'type_id'} = $Type->id();
+				$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+			} # end foreach
+			return $html;
 		) ?>
-	</span><br class="spacer"/>
-</p>
-<div style="border: 1px solid black; margin-bottom: 2px;">
-<? echo ( 
-	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
-	my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
-	my $html;
-	$html .= '<table style="width:100%; height: 86px; table-layout:fixed;">';
-	$html .= '<tr><td width="40%" rowspan="2">';
-	if ( $Paper->id() ) {
-		my $paper_details = sprintf('%s %s %s ', $Paper->name(), $Paper->finish(), $Paper->colour() );
-		if ( $Paper->type() eq 'Roll' ) {
-		$paper_details .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
-		} else {
-		$paper_details .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
-		} # end if
-		if ( length $paper_details > 80 ) {
-			$html .= '<span style="font-size:x-small;">'.$paper_details.'</span>';
-		} else {
-			$html .= $paper_details;
-		} # end if
-		$html .= '</td>';
-		$html .= '<td width="23%">ID:</td><td width="37%">';
-		$html .= sprintf('<img src="/barcode.png?code=R%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/>', $Paper->id() );
-		$html .= '</td></tr>';
-	} else {
-		$html .= '</td><td width="23%">&nbsp;</td><td width="37%">&nbsp;</td></tr>';
-	} # end if
-	$html .= '<tr height="50%"><td>Total Qty:</td><td style="border: 1px solid black;">';
-	if ( $$Skid{'Paper'}{$$variable{'paper_id'}} ) {
-		$html .= $$variable{'total_quantity'};
-		$html .= 'lbs' if $Paper->type() eq 'Roll';
-		$html .= 'sheets' if $Paper->type() eq 'Sheet';
-	} # end if
-	$html .= '</td></tr></table>';
-	return $html;
-) ?>
+		</div>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif', "new Ajax.Updater('Types', '_manifest_type.html', { method: 'get', parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", '', 'Add Another Stock' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Save' ); ) ?>
+		</p>
+		<input type="hidden" name="btnFunction" />
+	</form>
 </div>
-<p>
-<? echo ( 
-	my $html;
-	$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$openprint::param{docket}+&amp;NoText=1&amp;Height=30">` if $openprint::param{'docket'};
-	$html .= '<b>Docket:</b>';
-	$html .= qq`<b>$openprint::param{docket}</b><br/>`;
-	return $html;
-) ?>
-</p>
-<? echo (
-	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
-	my $html = '';
-	my @skids = splice @{$$variable{'Skids'}}, 0, 3;
-	foreach my $skid_id ( @skids ) {
-		my $Skid = new openprint::Skid( $skid_id );
-		$html .= '<table style="width:100%;">';
-		$html .= qq`<tr><td width="17%"><b>Skid #:</b></td><td width="33%">$skid_id</td>`;
-		$html .= qq`<td width="50%" rowspan="2" align="right"><img src="/barcode.png?code=I$skid_id+&amp;NoText=1&amp;Height=50"/></td></tr>`;
-		$html .= '<tr><td style="border: 1px solid black;">Qty:</td><td style="border: 1px solid black;">';
-		if ( $$Skid{'Paper'}{$$variable{'paper_id'}} ) {
-			$html .= $$Skid{'Paper'}{$$variable{'paper_id'}};
-			$html .= 'lbs' if $Paper->type() eq 'Roll';
-			$html .= 'sheets' if $Paper->type() eq 'Sheet';
-		} # end if
-		$html .= '</td></tr></table>';
-	} # end foreach skid_id
-	return $html;
-	) ?>
-	<br/>
-<? if ( 3 > @{$$variable{'Skids'}} ) ?>
-	<img src="/barcode.png?code=I<? echo ( join('-', $$variable{'FirstSkid'}, $$variable{'LastSkid'}) ) ?>+&amp;NoText=1&amp;Height=50"/>
-<? endif ( 3 > @{$$variable{'Skids'}} ) ?>
-<br class="pagebreak"/>
-<? endwhile ( @{$$variable{'Skids'}} ) ?>

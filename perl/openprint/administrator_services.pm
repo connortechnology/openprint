@@ -97,11 +97,12 @@ sub edit {
         openprint::logs::insertLogRecord('27', "Service Index: " . $Service->id() . " - " . $Service->name(),);
 		$Service = $Service->copy();
         
-        if ( ! $Service->save() ) {
+        $$variable{'error'} = $Service->save();
+        if ( ! $$variable{'error'} ) {
 			foreach my $price ( @prices ) {
 				$$price{'service_id'} = $$Service{'id'};
 				delete $$price{'id'};
-				$price->save();
+				$$variable{'error'} .= $price->save();
 			} # end foreach
 		} # end if
 	} # end if

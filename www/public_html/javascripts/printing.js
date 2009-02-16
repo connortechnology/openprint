@@ -162,7 +162,6 @@ function calc_print( formName, force ) {
 
 	var form = getFormObj( formName );
 
-
 	if ( gettingNewPrice && ! force ) {
 		// This prevents concurrent price getting
 		if ( timeout ) clearTimeout( timeout );
@@ -172,6 +171,11 @@ function calc_print( formName, force ) {
 	//timeout = null;
 
 	clear_price_data(form);
+	var div = $('InformationDiv');
+	if ( div ) {
+		div.innerHTML = 'Calculating....';
+		div.show();
+	} // end if
 	jsrsExecute( '/jsrs.htm', cbFillPrintResults, 'openprint::service::external_calc', get_variables(formName,'Printing') );
 	return;
 } // end calc_print
@@ -237,7 +241,7 @@ function cbFillPrintResults( results ) {
 		if ( ddm.selectedIndex == -1 || ddm.selectedIndex == 0 ) {
 			var width = form.elements['StockWidth'+i].value;
 			var height = form.elements['StockHeight'+i].value;
-			var type = form.elements['StockType'+i].value;
+			var type = get_value( form.elements['StockType'+i] );
 		
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {
@@ -295,4 +299,64 @@ function cbFillPrintResults( results ) {
 var ScoringQuestionFlag = true;
 var FoldingQuestionFlag = true;
 var CuttingQuestionFlag = true;
+
+function selectProjectTemplate( formName ) {
+	var form = getFormObj( formName );
+	var ddm = form.ddmProjectSize;
+	if ( ddm ) {
+		var TemplateType = get_value( form.rdbTemplateType );
+		var selected_size = get_value( form.ddmProjectSize );
+		clear_ddm(ddm);
+		add_option( form.ddmProjectSize, 'Custom','Custom' );
+		if ( TemplateType ) {
+			if ( options[TemplateType] ) {
+				for ( var x = 0; x < options[TemplateType].length; x += 1 ) {
+					var value = options[TemplateType][x].value;
+					var text = options[TemplateType][x].text;
+					add_option( ddm, options[TemplateType][x].text, options[TemplateType][x].value );
+				} // end for
+			} else {
+				alert("We do not have dimensions for the selected project template at this time.\n\nPlease select custom in the size pull down and input your finished and flat dimensions in the supplied text boxes.");	
+			} // end if
+		} // end if TemplateType
+		ddm_select_by_value( form.ddmProjectSize, selected_size );
+		ddmProjectSize_onChange( form );
+	} else {
+		calc(formName);
+	} // end if ddm
+} // end function selectProjectTemplate( form );
+
+function ddmProjectSize_onChange( form ) {
+	var index = form.ddmProjectSize.selectedIndex;
+	if (form.ddmProjectSize.options[index] && form.ddmProjectSize.options[index].value != 'Custom' ) {
+		var dimensions = form.ddmProjectSize.options[form.ddmProjectSize.selectedIndex].value.split(',');
+		var finished = dimensions[0].split('x');
+		var flat = dimensions[1].split('x');
+		form.txtFinalWidth.value = finished[0];
+		form.txtFinalHeight.value = finished[1];
+		form.txtWidth.value = flat[0];
+		form.txtHeight.value = flat[1];
+	} // end if
+	calc( form.name );
+} // end function ddmProjectSize_onChange();
+
+function dimensions_onChange( form ) {
+    if ( ! form.ddmProjectSize )
+        return;
+    var index = form.ddmProjectSize.selectedIndex;
+    if (form.ddmProjectSize.options[index] && form.ddmProjectSize.options[index].value != 'Custom' ) {
+        var dimensions = form.ddmProjectSize.options[form.ddmProjectSize.selectedIndex].value.split(',');
+        var finished = dimensions[0].split('x');
+        var flat = dimensions[1].split('x');
+        if (
+                ( parseFloat(form.txtFinalWidth.value) != parseFloat(finished[0]) )
+                || ( parseFloat(form.txtFinalHeight.value) != parseFloat(finished[1]) )
+                || ( parseFloat(form.txtWidth.value) != parseFloat(flat[0]) )
+                || ( parseFloat(form.txtHeight.value) != parseFloat(flat[1]) )
+           ) {
+            ddm_select_by_value(form.ddmProjectSize, 'Custom');
+        } // end if
+    } // end if
+	calc(form.name);
+} // end function dimensions_onChange
 

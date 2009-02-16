@@ -1,15 +1,21 @@
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript">
 	function submit_handler( form ) {
-		if ( form.StartDocket.value || form.OrderID.value || form.Project.value ) {
+		if ( form.StartDocket.value || form.OrderID.value ) {
 			form.action = '/employee/production/projects.html';
+			form.submit();
+		} else if ( form.project_id.value ) {
+			form.action = '/employee/project/view.html';
 			form.submit();
 		} else if ( form.skid_id.value ) {
 			form.action = '/employee/inventory/skid_details.html';
 			form.submit();
 		} else if ( form.paper_id.value ) {
 			form.action = '/employee/inventory/paper_details.html';
+			form.submit();
+		} else if ( form.rfidtag_id.value ) {
+			form.action = '/employee/inventory/rfidtag_details.html';
 			form.submit();
 		} else {
 			alert( "Please enter or scan the a docket, order or project number!" );
@@ -37,7 +43,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 	<fieldset>
 		<p>
 			<label>Project #</label>
-			<input type="text" name="Project" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}"/>
+			<input type="text" name="project_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
@@ -54,8 +60,14 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go5', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
+	<fieldset>
+		<p><label>RFID #</label>
+			<input type="text" name="rfidtag_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go6', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
+		</p>
+	</fieldset>
 </form>
 <script type="text/javascript">document.f1.StartDocket.focus();</script>
-<? else ( $openprint::session{'user_id'} ) ?>
+<? else ( $session{'user_id'} ) ?>
 <!--#include virtual="/employee/account/login.html"-->
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>

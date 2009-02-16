@@ -27,6 +27,10 @@
 <br class="spacer"/>
 <span class="Currency">All prices listed in <?CurrencyName?>.</span>
 	<form name="f1" action="order_details.html?order_id=<?OrderID?>" method="post">
+<select name="company_id">
+<? echo ( openprint::Company::get_dropdown( $$variable{'Order'}->company_id() ); ) ?>
+</select>
+<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save'); ) ?>
 	<span style="float:right;">
 		<? echo ( my $html = '';
 			$html .= ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();",'','Delete');
@@ -42,24 +46,4 @@
 		<input type="hidden" name="btnFunction"/>
 	</form>
 <hr/>
-<fieldset>
-	<legend>Modification History</legend>
-	<table class="List">
-		<tr>
-			<th align="left" width="200">Customer</th>
-			<th align="left" width="200">User</th>
-			<th align="left" width="150">When</th>
-			<th align="left">Description</th>
-		</tr>
-		<? eval ( @{$$variable{'OrderLog'}} = openprint::order::get_log( $log, $dbh, $$variable{'OrderID'} ); ) ?>
-		<? while ( @$variable{'CustomerIndex','CustomerName','UserIndex','UserName','When','Description'} = splice @{$$variable{'OrderLog'}},0,6; ) ?>
-		<tr<?rowclass?>>
-			<td><?CustomerName?></td>
-			<td><?UserName?></td>
-			<td><?When?></td>
-			<td><?Description?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-		<? endwhile ( @$variable{'CustomerIndex','CustomerName','UserIndex','UserName','When','Description'} = splice @{$$variable{'OrderLog'}},0,6; ) ?>
-	</table>
-</fieldset>
+<!--#include virtual="/main/order/_view_log.html"-->

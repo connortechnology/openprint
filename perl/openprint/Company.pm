@@ -3,63 +3,72 @@ package openprint::Company;
 use strict;
 use Text::Unaccent;
 
-use vars qw( %fields %defaults %transforms );
+use vars qw( $log $dbh $table $serial %fields %defaults %transforms );
 use openprint ();
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 require sql;
 require openprint::Object;
 require openprint::User;
 
+$table = 'companies';
+$serial = 'companies_id_seq';
+
 %fields = (
-		'id'						=>	'index',
-		'name'						=>	'strname',
-		'address1'					=>	'straddress1',
-		'address2'					=>	'straddress2',
-		'city'						=>	'strcity',
-		'country'					=>	'strcountry',
-		'state'						=>	'strprovstate',
-		'postalcode'				=>	'strpostalcode',
-		'salesrep_id' 				=>	'lngsalesperson',
+		'id'						=>	'id',
+		'name'						=>	'name',
+		'address1'					=>	'address1',
+		'address2'					=>	'address2',
+		'city'						=>	'city',
+		'country'					=>	'country',
+		'state'						=>	'state',
+		'postalcode'				=>	'postalcode',
+		'salesrep_id' 				=>	'salesrep_id',
 		'pst_exempt'				=>	'ysnpstexempt',
 		'gst_exempt'				=>	'ysngstexempt',
-		'gst_number'				=>	'strgstnumber',
-		'pst_number'				=>	'strpstnumber',
+		'gst_number'				=>	'fedtaxnumber',
+		'pst_number'				=>	'statetaxnumber',
 		'supplier'					=>	'ysnsupplier',
 		'reseller'					=>	'ysnreseller',
 		'accountnumber'				=>	'straccountnum',
-		'phone'						=>	'strphone',
+		'phone'						=>	'phone',
 		'extension'					=>	'strext',
-		'fax'						=>	'strfax',
-		'pricelist_id'				=>	'lngpricelist',
+		'fax'						=>	'fax',
+		'pricelist_id'				=>	'pricelist_id',
 		'currency_id'				=>	'currency_id',
-		'url'						=>	'strweburl',
-		'discount'					=>	'dblpricingpercent',
+		'url'						=>	'url',
+		'discount'					=>	'discount',
 		'activation'				=>	'ysnaccountactivation',
-		'greeting'					=>	'strcustomgreeting',
-		'mailinglist'				=>	'ysnmailinglist',
-		'business_type'				=>	'strbusinesstype',
-		'business_name'				=>	'strlegalbusname',
-		'business_form'				=>	'legalform',
-		'established'				=>	'dtmbusinessstartdate',
-		'president_owner'			=>	'strpresidentowner',
-		'created_on'				=>	'dtmdateentered',
-		'updated_on'				=>	'dtmlastmodified',
-		'employees'					=>	'stremployees',
-		'annual_sales'				=>	'strannualsales',
-		'bank_name'					=>	'strbankname',
-		'bank_branch'				=>	'strbankbranch',
-		'bank_account'				=>	'strbankaccountno',
-		'bank_manager'				=>	'strbankaccountmanager',
-		'bank_phone'				=>	'strbankphone',
-		'bank_fax'					=>	'strbankfax',
-		'bank_email'				=>	'strbankemail',
+		'greeting'					=>	'greeting',
+		'mailinglist'				=>	'mailinglist',
+		'business_type'				=>	'business_type',
+		'business_name'				=>	'business_name',
+		'business_form'				=>	'business_form',
+		'established'				=>	'established',
+		'president_owner'			=>	'president_owner',
+		'created_on'				=>	'created_on',
+		'updated_on'				=>	'updated_on',
+		'employees'					=>	'employees',
+		'annual_sales'				=>	'annual_sales',
+		'bank_name'					=>	'bank_name',
+		'bank_branch'				=>	'bank_branch',
+		'bank_account'				=>	'bank_account',
+		'bank_manager'				=>	'bank_manager',
+		'bank_phone'				=>	'bank_phone',
+		'bank_fax'					=>	'bank_fax',
+		'bank_email'				=>	'bank_email',
 		'detail_level'				=>	'detail_level',
 		'quote_project_breakdown'	=>	'quote_project_breakdown',
+		'notes'						=>	'notes',
+		'deleted'					=>	'deleted',
 		);
 %transforms = (
 	'name' => [ 's/\.//g' ],
+	'established'	=> [ 's/[^\d\-]//g' ],
 );
 %defaults = (
+	'detail_level'	=>	undef,
 	'discount'	=>	0,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
@@ -67,6 +76,10 @@ require openprint::User;
 	'pricelist_id'	=>	undef,
 	'activation'	=>	'N',
 	'mailinglist'	=>	'N',
+	'annual_sales'	=>	undef,
+	'employees'		=>	undef,
+	'salesrep_id'	=>	undef,
+	'deleted'		=>	0,
 );
 
 my $debug = 1;
@@ -77,24 +90,24 @@ sub find {
 
 	my $sql;
 	my @values;
-	$sql = q{SELECT * FROM Company WHERE 1>0};
+	$sql = q{SELECT * FROM Companies WHERE 1>0};
 
 	if ( $params{'id'} ) {
-        if ( ref $params{'id'} eq 'ARRAY' ) {
-            $sql .= q{ AND index IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
-            push @values, @{$params{'id'}};
-        } else {
-            $sql .= q{ AND index=?};
-            push @values, $params{'id'};
-        } # end if
-    } # end if
+		if ( ref $params{'id'} eq 'ARRAY' ) {
+			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
+			push @values, @{$params{'id'}};
+		} else {
+			$sql .= q{ AND id=?};
+			push @values, $params{'id'};
+		} # end if
+	} # end if
 
 	if ( $params{'Name'} ) {
-		$sql .= q{ AND strName=?};
+		$sql .= q{ AND name=?};
 		push @values, $params{'Name'};
 	} # end if
 	if ( exists $params{'name'} ) {
-		$sql .= q{ AND strName=?};
+		$sql .= q{ AND name=?};
 		push @values, $params{'name'};
 	} # end if
 	if ( exists $params{'postalcode'} ) {
@@ -104,44 +117,65 @@ sub find {
 	if ( $params{'SalesPerson'} ) {
 		if ( ref $params{'SalesPerson'} eq 'ARRAY' ) {
 			if ( @{$params{'SalesPerson'}} == 1 ) {
-			$sql .= q{ AND lngSalesPerson=?};
+				$sql .= q{ AND lngSalesPerson=?};
 			} elsif ( @{$params{'SalesPerson'}} ) {
-            $sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'SalesPerson'}} ).')';
+				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'SalesPerson'}} ).')';
 			} # end if
-            push @values, @{$params{'SalesPerson'}};
+			push @values, @{$params{'SalesPerson'}};
 		} else {
 		$sql .= q{ AND lngSalesPerson=?};
 		push @values, $params{'SalesPerson'};
 		} # end if
 	} # end if
+	if ( $params{'salesrep_id'} ) {
+		if ( ref $params{'salesrep_id'} eq 'ARRAY' ) {
+			if ( @{$params{'salesrep_id'}} == 1 ) {
+				$sql .= q{ AND lngSalesPerson=?};
+			} elsif ( @{$params{'salesrep_id'}} ) {
+				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'salesrep_id'}} ).')';
+			} # end if
+			push @values, @{$params{'salesrep_id'}};
+		} else {
+			$sql .= q{ AND lngSalesPerson=?};
+			push @values, $params{'salesrep_id'};
+		} # end if
+	} # end if
 	if ( $params{'marketing_category_id'} ) {
-		$sql .= q{ AND Index IN (SELECT company_id FROM companies_in_marketing_categories WHERE category_id=?)};
+		$sql .= q{ AND id IN (SELECT company_id FROM companies_in_marketing_categories WHERE category_id=?)};
 		push @values, $params{'marketing_category_id'};
 	} # end if
 	if ( $params{'supplier'} ) {
 		$sql .= ' AND ysnSupplier=?';
 		push @values, $params{'supplier'};
 	} # end if
+	if ( $params{'reseller'} ) {
+		$sql .= ' AND ysnReseller=?';
+		push @values, $params{'reseller'};
+	} # end if
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+			push @values, @{$params{'deleted'}};
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
+	} # end if
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error Loading Companies: ($sql) (@values): " . $openprint::dbh->errstr );
+		$log->error("Error Loading Companies: ($sql) (@values): " . $dbh->errstr );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Companies: ($sql) (@values) :" . @$data );
+		$log->debug("Loading Companies: ($sql) (@values) :" . @$data );
 	} # end if
-	return map { new openprint::Company( $_->{index}, $_ ) } @$data;
+	return map { new openprint::Company( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Company WHERE Index=?', {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
 
 sub Currency {
 	my $self = shift;
@@ -150,16 +184,30 @@ sub Currency {
 
 sub delete {
 	my $self = shift;
+	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 1 );
+	$$self{'deleted'} = 1;
+	delete $openprint::Object::cache{'openprint::Company'}{$$self{id}};
+} # end sub delete
+
+sub undelete {
+	my $self = shift;
+	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 0 );
+	$$self{'deleted'} = 0;
+	delete $openprint::Object::cache{'openprint::Company'}{$$self{id}};
+} # end sub undelete
+
+sub destroy {
+	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
-# i'm not sure why we did this, for now we are going to delete the users
-#sql::update( undef, undef, 'Company_Users', "CompanyIndex = '$index'", 'lngCustomerID', 0 );
 	sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE Company_id =?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM HelpDesk WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM RMA WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Company_Credit WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM Payments WHERE Company_Id=?', $$self{'id'} );
+	foreach my $Payment ( openprint::Payment::find('recipient_id'=>$$self{id}) ) {
+		$Payment->delete();
+	} # end foreach Payment
 	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM log WHERE company_id=?', $$self{'id'} );
@@ -177,7 +225,7 @@ sub delete {
 	sql::execute( undef, undef, 'DELETE FROM Order_log WHERE Company_Id=?', $$self{'id'} );
 	foreach my $Project ( openprint::Project::find('company_id'=>$$self{'id'} ) ) {
 		$Project->delete();	
-		last if $openprint::dbh->errstr();
+		last if $dbh->errstr();
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{'id'} );
 	foreach my $User ( openprint::User::find('company_id'=>$$self{'id'} ) ) {
@@ -185,92 +233,62 @@ sub delete {
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Company WHERE Index=?',$$self{'id'} );
 
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 
    # Add record to audit log - action "Delete Company Profile".
    openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'}");
 } # end sub delete
+
 sub save {
-    my $self = shift;
+    my ($self, $param) = @_;
+	
+	$self->set( $param ) if $param;
 	my %sql;
 	foreach my $k ( keys %fields ) {
-		my @transforms = @{$transforms{$k}} if $transforms{$k};
-		foreach my $transform ( @transforms ) {
-			eval '$$self{$k} =~ ' . $transform;
-		} # end foreach
-
-		if ( ( ( ! defined $$self{$k} ) or ( $$self{$k} eq '' ) ) and exists $defaults{$k} ) {
-			$openprint::log->debug("Setting default for $k $defaults{$k}");
-			$sql{$fields{$k}} = $defaults{$k};
-		} else {
-			$sql{$fields{$k}} = $$self{$k};
-		} # end if
+		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
-	$sql{dtmlastmodified} = 'NOW()';
-	$sql{'strname'} = Text::Unaccent::unac_string('LATIN1', $sql{'strname'} );
+	$sql{'updated_on'} = 'NOW()';
+	delete $sql{'created_on'};
+	$sql{'name'} = Text::Unaccent::unac_string('LATIN1', $sql{'name'} );
 
-    my $ac = sql::start_transaction( $openprint::dbh );
+    my $ac = sql::start_transaction( $dbh );
     if ( ! $$self{'id'} ) {
-        @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('CompanyIndex_seq')} );
-		$sql{index} = $$self{'id'};
+        @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('companies_id_seq')} );
+		$sql{id} = $$self{'id'};
+        if ( my $e = sql::insert( undef, undef, 'Companies', \%sql ) ) {
+			$dbh->rollback();
+			return $e;
+		} # end if
+	} elsif ( $$param{'force_insert'} ) {
         if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
-			$openprint::dbh->rollback();
+			$dbh->rollback();
 			return $e;
 		} # end if
     } else {
-        if ( my $e = sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], \%sql ) ) {
-			$openprint::dbh->rollback();
+        if ( my $e = sql::update( undef, undef, 'Companies', ['id=?', $$self{'id'}], \%sql ) ) {
+			$dbh->rollback();
 			return $e;
 		} # end if
-    } # end if
+	} # end if
 
     $self->load();
-    sql::end_transaction( $openprint::dbh, $ac );
+    sql::end_transaction( $dbh, $ac );
 	return;
 
 } # end sub save
 
 sub next {
-    my $self = shift;
+	my $self = shift;
 
-    ( $_ ) = sql::execute( undef, undef, 'SELECT Index FROM Company WHERE strName = ( SELECT MIN(strName) FROM Company WHERE strName > (SELECT strName FROM Company WHERE Index=? ) )', $$self{id} );
+    ( $_ ) = sql::execute( undef, undef, 'SELECT id FROM Companies WHERE Name = ( SELECT MIN(Name) FROM Companies WHERE Name > (SELECT Name FROM Companies WHERE id=? ) )', $$self{id} );
     return $_;
 } # end sub next
 
 sub prev {
     my $self = shift;
-    ( $_ ) = sql::execute( undef, undef, 'SELECT Index FROM Company WHERE strName = ( SELECT MAX(strName) FROM Company WHERE strName < (SELECT strName FROM Company WHERE Index=? ) )', $$self{id} );
+    ( $_ ) = sql::execute( undef, undef, 'SELECT id FROM Companies WHERE name = ( SELECT MAX(name) FROM Companies WHERE name < (SELECT name FROM Companies WHERE id=? ) )', $$self{id} );
     return $_;
 } # end sub prev
-
-sub set {
-	my ( $self, $params ) = @_;
-	my @set_fields = ();
-
-	foreach my $field ( keys %{$params} ) {
-		
-		if ( defined $fields{$field} ) {
-			my @transforms = @{$transforms{$field}} if $transforms{$field};
-
-			foreach my $transform ( @transforms ) {
-				eval '$params->{$field} =~ ' . $transform;
-			} # end foreach
-
-			if ( ( ( ! defined $$params{$field} ) or ( $$params{$field} eq '' ) ) and exists $defaults{$field} ) {
-$openprint::log->debug("Setting default for $field $defaults{$field}");
-				$$params{$field} = $defaults{$field};
-			} # end if
-
-# if valid db field
-			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $$params{$field}) ) {
-# Only make changes to fields that have changed
-				$$self{$field} = $$params{$field};
-				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
-			} # end if
-		} # end if
-	} # end foreach
-	return @set_fields;
-} # end sub set
 
 sub load_tradereferences {
 	my ( $self, $index, $hash ) = @_;
@@ -284,13 +302,13 @@ sub load_tradereferences {
 			'tradereference'.$index.'_email',
 			'tradereference'.$index.'_creditlimit',
 			} = sql::execute( undef, undef, 
-        'SELECT CompanyName, Contact, Phone, Ext, Fax, Email, CreditLimit FROM Trade_References WHERE company_id = ? AND ID = ?', $$self{id}, $index );
+		'SELECT CompanyName, Contact, Phone, Ext, Fax, Email, CreditLimit FROM Trade_References WHERE company_id = ? AND ID = ?', $$self{id}, $index );
 } # end load_tradereferences
 
 sub save_tradereferences {
 	my ( $self, $param ) = @_;
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
     sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE company_id=?', $$self{id} );
 	foreach my $tr ( 1 .. 3 ) {
 		my %sql = (
@@ -307,7 +325,7 @@ sub save_tradereferences {
 
 		sql::insert( undef, undef, 'Trade_References', \%sql );
 	} # end foreach
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 	return;
 } # end sub save_tradereferences
 
@@ -325,19 +343,19 @@ sub Credit {
 sub get_dropdown {
 	my $selected = shift;
 
-	my $sql = 'SELECT Index, strName FROM Company';
+	my $sql = 'SELECT id, name FROM Companies WHERE (deleted=false or deleted IS NULL)';
 	my @values;
 
-	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping'], $openprint::session{'user_id'} ) ) {
-		$sql .= ' WHERE Index=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
+	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
+		$sql .= ' AND id=(SELECT company_id FROM users WHERE id=?) OR salesrep_id IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
-	$sql .= ' ORDER BY lower(strname)';
+	$sql .= ' ORDER BY lower(name)';
 
-    my @company = sql::execute( undef, undef, $sql, @values );
+	my @company = sql::execute( undef, undef, $sql, @values );
 
     return ssi::make_drop_down( \@company, $selected );
-} # sub get_customer_dropdown
+} # sub get_dropdown
 
 sub CSR {
 	my $self = shift;
@@ -348,6 +366,36 @@ sub Users {
 	my $self = shift;
 	return openprint::User::find('company_id'=>$$self{'id'} );
 } # end sub Users
+sub taxexempt1 {
+	return $_[0]{gst_exempt};
+}
+sub taxexempt2 {
+	return $_[0]{pst_exempt};
+}
+
+sub Pricelist {
+	my $self = shift;
+	if ( $$self{'pricelist_id'} ) {
+		return new openprint::Pricelist( $$self{'pricelist_id'} );
+	} else {
+		return new openprint::Pricelist( openprint::pricing::get_pricelist_id());
+	} # end if
+} # end sub Pricelist
+
+sub start_month {
+	$_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/;
+	return $2;
+} # end sub start_month
+sub start_year {
+	$_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/;
+	return $1;
+} # end sub start_year
+
+sub AccountingContacts {
+	my ( $self ) = @_;
+
+	return openprint::User::find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{'id'} )] );
+} # end sub AccountingContacts
 
 1;
 __END__

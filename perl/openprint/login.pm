@@ -13,19 +13,20 @@ require openprint::usergroup;
 require openprint::logs;
 
 use openprint ();
-use vars qw(%variable %param %session);
+use vars qw( $r %variable %param %session);
+*r = \$openprint::r;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *session = \%openprint::session;
 
 # displays the login page, and populates the destination variable
 sub save_destination {
-	my ( $r, $log, $dbh, $variable, $destination ) = @_;
+	my ( $destination ) = @_;
 
 	if ( ! $destination ) {
 		$destination = $r->uri();
-		if ( %openprint::param ) {
-			$destination .= '?' . join('&', map { $_ . '=' . $openprint::param{$_}} keys %openprint::param );
+		if ( %param ) {
+			$destination .= '?' . join('&', map { $_ . '=' . $param{$_}} keys %param );
 		} # end if
 	} # end if
 
@@ -53,68 +54,64 @@ sub verify_login {
 	# doing it this way allows for multiple accounts with the same email address, identified by their password.
 	# however, on user registration, we enforce the uniqueness of email addresses.	Also, the db should have a UNIQUE
 	# attribute on the strEmail field.
-	$_ = q{SELECT Index, CompanyIndex, strSalutation, strFirstName, strLastName, chrType, ysnAccountActivation, ysnChangePassword } .
-		q{, (SELECT ysnAccountActivation FROM Company WHERE Index=CompanyIndex)}.
-		q{FROM Users WHERE strEmail = ? AND strPassword=?};
-	my ( $user_id, $cust_id, $salutation, $first_name, $last_name, $user_type, $user_activated, $changepass, $company_activated ) = sql::execute( $log, $dbh, $_, $email, $password );
+	my @Users = openprint::User::find('email'=>$email, 'password'=>$password);
 
-	if ( ! $user_id ) {
+	if ( ! @Users ) {
 		# user not found.	Let's see if we got the password wrong, or the email wrong.
-		( $user_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Users WHERE strEmail=?}, $email );
-		if ( ! $user_id ) {
+		if ( ! ( @Users = openprint::User::find('email'=>$email) ) ) {
 			$$variable{'details'} = "\"$email\" is not a valid account.	Please try again.";
 		} else {
 			$$variable{'details'} = "The password you entered was not correct.	Please try again.";
-			openprint::logs::insertLogRecord(78,'Invalid Password', $user_id );
+			openprint::logs::insertLogRecord(78,'Invalid Password', $Users[0]->id() );
 		} # end if
 		$$variable{'error'} = 'Authentication Failed.';
 		return;
 	} # end if
+	my $User = @Users[0];
 
 	# Have a valid user now.
-	if ( $company_activated eq 'N' ) {
+	if ( $User->Company()->activation() eq 'N' ) {
 		$$variable{'error'} = 'Company not activated.';
-		$$variable{'details'} = 'Your customer account has not been looked over and activated by an administrator yet. You will be notified when your application has been approved.';
-		openprint::logs::insertLogRecord(78,'Company Account Not Activated', $user_id );
+		$$variable{'details'} = 'Your company account has not been looked over and activated by an administrator yet. You will be notified when your application has been approved.';
+		openprint::logs::insertLogRecord(78,'Company Account Not Activated', $User->id() );
 		return;
-	} elsif ( $company_activated ne 'Y' ) {
-		$$variable{'error'} = "Customer Account activation status is unknown.";
-		$$variable{'details'} = "Please report this error.";
+	} elsif ( $User->Company()->activation() ne 'Y' ) {
+		$$variable{'error'} = 'Company Account activation status is unknown.('.$User->Company()->activation().')';
+		$$variable{'details'} = 'Please report this error.';
 		return;
 	} # end if
 
 	# Have a valid user now.
-	if ( $user_activated eq 'N' ) {
+	if ( $User->web_active() eq 'N' ) {
 		$$variable{'error'} = "User not activated.";
 		$$variable{'details'} = "Applications for existing corporate accounts must be approved by and administrator. You will be notified when you application had been approved.";
-		openprint::logs::insertLogRecord(78,'User Account Not Activated', $user_id );
+		openprint::logs::insertLogRecord(78,'User Account Not Activated', $User->id() );
 		return;
-	} elsif ( $user_activated ne 'Y' ) {
+	} elsif ( $User->web_active() ne 'Y' ) {
 		$$variable{'error'} = "User Account activation status is unknown.";
 		$$variable{'details'} = "Please report this error.";
 		return;
 	} # end if
 
-	if ( $site eq 'E' and $user_type ne 'E' and $user_type ne 'A' ) {
+	if ( $site eq 'E' and ! sets::isin( $User->type, ['E','A'] ) ) {
 		$$variable{'error'} = "Not authorised.";
 		$$variable{'details'} = "You are not an employee.	You do not have access to the employee site.";
-		openprint::logs::insertLogRecord(78,'User not an employee', $user_id );
+		openprint::logs::insertLogRecord(78,'User not an employee', $User->id() );
 		return;
-	} elsif ( $site eq 'A' and $user_type ne 'A' ) {
+	} elsif ( $site eq 'A' and $User->type() ne 'A' ) {
 		$$variable{'error'} = "Not authorised.";
 		$$variable{'details'} = "You are not an administrator.	You do not have access to the administrator site.";
-		openprint::logs::insertLogRecord(78,'User not an administrator', $user_id );
+		openprint::logs::insertLogRecord(78,'User not an administrator', $User->id() );
 		return;
 	} # end if
 
-	if ( $user_type ne 'C' ) {
-		if ( $cust_id != $openprint::config{'Owner'} ) {
+	if ( $User->type() ne 'C' ) {
+		if ( $User->company_id() != $openprint::config{'Owner'} ) {
 # Send an email notification
 			my %info;
-			my $User = new openprint::User( $user_id );
 			@info{'UserFirstName','UserLastName','UserEmail'} = $User->get('firstname','lastname','email');
 			$info{'Site'} = $site;
-			$info{'UserType'} = $user_type;
+			$info{'UserType'} = $User->type();
 
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/login_notification.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
@@ -134,7 +131,7 @@ sub verify_login {
 
 	} # end if
 
-	@openprint::session{'company_id','user_id','email','user_type'} = ( $cust_id, $user_id, $email, $user_type );
+	@openprint::session{'company_id','user_id','email','user_type'} = $User->get('company_id','id','email','type');
 	delete $openprint::session{'Pricelist_id'};
 	openprint::logs::insertLogRecord('2','Success');
 
@@ -148,13 +145,13 @@ sub verify_login {
 		$Cookie->bake( $r );
 	} # end if	
 
-	if ( $changepass eq 'Y' ) {
+	if ( $User->changepassword() eq 'Y' ) {
 		if ( $site eq 'A' ) {
 		$$variable{'Redirect'} = '/administrator/account/change_password.html';
 		} elsif ( $site eq 'E' ) {
-		$$variable{'Redirect'} = '/employee/employee/change_password.html';
+		$$variable{'Redirect'} = '/employee/account/change_password.html';
 		} else {
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$$variable{'Redirect'} = '/account/change_password.html';
 		} # end if
 		return;
 	} # end if
@@ -175,8 +172,9 @@ sub email_password {
 	my $email = $openprint::param{'txtEmail2'};
 	$email =~ tr/[A-Z]/[a-z]/;
 
-	my ($user_id) = sql::execute( $log, $dbh, "SELECT Index FROM Users WHERE strEmail = '$email'" );
-	if ( ! $user_id ) {
+	my @Users = openprint::User::find('email'=>$email);
+
+	if ( ! @Users ) {
 		return misc::error( $log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.' );
 	} # end if
 
@@ -187,19 +185,21 @@ sub email_password {
 			'SiteTitle' => $r->dir_config('SiteTitle'),
 		);
 		
-		openprint::user::load( $log, $dbh, $user_id, \%info );
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
+		foreach my $User ( @Users ) {
+			openprint::user::load( $log, $dbh, $User->id(), \%info );
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+			my @body = ('', $_, 'text/html', 'quoted-printable');
 
-		my %mail = (
-				SMTP	=> $openprint::config{'Mail Server'},
-				FROM 	=> $openprint::config{'AdministratorEmail'},
-				TO		=> $openprint::param{'txtEmail2'},
-				SUBJECT	=> 'Forgotten Password',
-				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
+			my %mail = (
+					SMTP	=> $openprint::config{'Mail Server'},
+					FROM 	=> $openprint::config{'AdministratorEmail'},
+					TO		=> $openprint::param{'txtEmail2'},
+					SUBJECT	=> 'Forgotten Password',
+					);
+			misc::send_email_with_attachment( $log, \%mail, @body );
+		} # end foreach $User
 	} else {
 		return misc::error( $log, $dbh, $variable, 'System Error.', 'We were unable to email your password to you.	Please contact support.' );
 	} # end if

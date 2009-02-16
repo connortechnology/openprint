@@ -8,7 +8,7 @@
 <h1>Orders</h1>
 <h2>History</h2>
 </div>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 <form name="f1" action="history.html" method="post">
 	<div class="OrderHistory">
 		<fieldset class="filters unprintable" style="margin: 0px; width:42%; float: left;"><legend>Enter Order ID:</legend>
@@ -19,7 +19,7 @@
 			</p>
 			<p>
 				<label>Docket:</label>
-				<input type="text" size="10" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
+				<input type="text" size="10" id="Docket" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load_orders(f1);", '', 'Go' ); ) ?>
 			</p>
 		</fieldset>
@@ -29,21 +29,21 @@
 				<select name="ddmOrderedBy" size="1" onchange="load_orders( this.form );">
 					<option value="">Ordered By</option>
 					<? echo ( 
-						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id' => $openprint::session{'company_id'}, 'order'=>'lower(strLastName),lower(strfirstname)' ) ], $openprint::session{'/main/order/history.html?ddmOrderedBy'} );
+						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id' => $session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/main/order/history.html?ddmOrderedBy'} );
 					) ?>
 				</select>
 			</p>
 	<? eval (
 		if ( $openprint::param{'ddmStartYear'} ) {
 			openprint::store_session( '/main/order/history.html', \%openprint::param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
-		} elsif ( ( ! $openprint::session{'/main/order/history.html?ddmStartYear'} ) or $openprint::session{'/main/order/history.html?lastupdated'} < (time-3600) ) {
-			@openprint::session{'/main/order/history.html?ddmStartYear','/main/order/history.html?ddmStartMonth','/main/order/history.html?ddmStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
-			@openprint::session{'/main/order/history.html?ddmEndYear','/main/order/history.html?ddmEndMonth','/main/order/history.html?ddmEndDay'} = Date::Calc::Today();
-			$openprint::session{'/main/order/history.html?ddmOrderedBy'} = '';
+		} elsif ( ( ! $session{'/main/order/history.html?ddmStartYear'} ) or $session{'/main/order/history.html?lastupdated'} < (time-3600) ) {
+			@session{'/main/order/history.html?ddmStartYear','/main/order/history.html?ddmStartMonth','/main/order/history.html?ddmStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
+			@session{'/main/order/history.html?ddmEndYear','/main/order/history.html?ddmEndMonth','/main/order/history.html?ddmEndDay'} = Date::Calc::Today();
+			$session{'/main/order/history.html?ddmOrderedBy'} = '';
 		} # end if
 
-		@$variable{'StartYears','StartMonths','StartDays'} = get_dates( $log, $dbh, @openprint::session{'/main/order/history.html?ddmStartYear', '/main/order/history.html?ddmStartMonth', '/main/order/history.html?ddmStartDay'} );
-		@$variable{'EndYears','EndMonths','EndDays'} = get_dates( $log, $dbh, @openprint::session{'/main/order/history.html?ddmEndYear', '/main/order/history.html?ddmEndMonth', '/main/order/history.html?ddmEndDay'} );
+		@$variable{'StartYears','StartMonths','StartDays'} = get_dates( $log, $dbh, @session{'/main/order/history.html?ddmStartYear', '/main/order/history.html?ddmStartMonth', '/main/order/history.html?ddmStartDay'} );
+		@$variable{'EndYears','EndMonths','EndDays'} = get_dates( $log, $dbh, @session{'/main/order/history.html?ddmEndYear', '/main/order/history.html?ddmEndMonth', '/main/order/history.html?ddmEndDay'} );
 	) ?>
 			<p> 
 				<label>Created:</label>
@@ -58,7 +58,6 @@
 				<select name="ddmEndMonth" onchange="setDaysDropDown(this.form.ddmEndYear.value,this.value,this.form.ddmEndDay,this.form.ddmEndDay.value);load_orders( this.form );"><?EndMonths?></select>
 				<select name="ddmEndYear" onchange="setDaysDropDown(this.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);load_orders( this.form );"><?EndYears?></select>
 				</span>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
 			</p>
 		</fieldset>
 	</div>
@@ -66,6 +65,6 @@
 	<input type="hidden" name="btnFunction"/>
 </form>
 <div id="OrderList"><!--#include virtual="_order_list.html"--></div>
-<? else ( $openprint::session{'user_id'} ) ?>
+<? else ( $session{'user_id'} ) ?>
 Only logged in customers have an order history. 
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>

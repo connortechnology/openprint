@@ -7,8 +7,8 @@ DROP SEQUENCE IF EXISTS Fold_id_seq;
 CREATE SEQUENCE Fold_id_seq;
 
 CREATE TABLE Folds (
-	id INTEGER NOT NULL default nextval('Fold_id_seq'),
-	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (lngIndex),
+	id INTEGER NOT NULL default nextval('fold_id_seq'),
+	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (Id),
 	type	TEXT,
 	name	TEXT,
 	folds			INTEGER,

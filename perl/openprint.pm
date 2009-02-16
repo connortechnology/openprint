@@ -4,7 +4,6 @@ use strict;
 
 use vars qw( $r %variable %session %param %config $log $dbh );
 
-
 sub store_session {
 	my ( $uri, $params, @keys ) = @_;
 	foreach my $key ( @keys ) {
@@ -84,9 +83,9 @@ sub session_init {
 
 	if ( ! $session{'Country'} ) {
 		$session{'Country'} = $r->dir_config('Country');
-		$log->debug("Setting Country to " . $r->dir_config('Country') );
-	} else {
-		$log->debug("Country is " . $session{'Country'} );
+		#$log->debug("Setting Country to " . $r->dir_config('Country') );
+	#} else {
+		#$log->debug("Country is " . $session{'Country'} );
 	} # end if
 	if ( $config{'Pricelist'} ) {
 		if ( ! $session{'Pricelist_id'} ) {
@@ -101,5 +100,8 @@ sub session_init {
 	} # end if
 
 } # end sub session_init
+
+sub index {
+} # end sub index
 1;
 __END__

@@ -5,7 +5,8 @@ drop table log;
 CREATE TABLE Log (
 	id SERIAL,
 	action_type	INTEGER NOT NULL,
-	user_id		INTEGER NOT NULL,
+	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
+	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	date_time	timestamp with time zone NOT NULL,
 	ip_address	TEXT,
 	hostname	TEXT,

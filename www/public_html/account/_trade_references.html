@@ -1,0 +1,28 @@
+   <fieldset>
+	   <legend>Please provide three trade references:</legend>
+<? eval ( @{$$variable{'indices'}} = ( 1 .. 3 ); ) ?>
+<? while ( $$variable{'index'} = shift @{$$variable{'indices'}} ) ?>
+<? eval ( $$variable{'Company'}->load_tradereferences( $$variable{'index'}, $variable ); ) ?>
+      <p>
+      	<label for="tradereference<?index?>_companyname">Company Name: <span class="requiredFieldIndicator">*</span></label>
+         <input type="text" name="tradereference<?index?>_companyname" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_companyname'} ) ?>" />
+      </p>
+      <p> 
+      	<label for="tradereference<?index?>_contact">Contact: <span class="requiredFieldIndicator">*</span></label>
+         <input type="text" name="tradereference<?index?>_contact" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_contact'} ) ?>" />
+      </p>
+      <p> 
+      	<label for="tradereference<?index?>_phone">Phone: <span class="requiredFieldIndicator">*</span></label>
+      	<input type="text" name="tradereference<?index?>_phone" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_phone'} ) ?>" />
+      </p>
+      <p>
+      	<label for="tradereference<?index?>_fax">Fax:&nbsp;&nbsp;&nbsp;</label>
+         <input type="text" name="tradereference<?index?>_fax" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_fax'} ) ?>" />
+      </p>
+      <p>
+      	<label for="tradereference<?index?>_email">E-mail Address:&nbsp;&nbsp;&nbsp;</label>
+      	<input type="text" name="tradereference<?index?>_email" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_email'} ) ?>" />
+      </p>
+      <br class="spacer"/>
+<? endwhile ( $$variable{'index'} = shift @{$$variable{'indices'}} ) ?>
+   </fieldset>

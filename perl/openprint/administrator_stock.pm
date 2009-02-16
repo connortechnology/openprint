@@ -75,7 +75,7 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 						next if ! $param{"pricecwt-$pricelist_id-$id"};
 
 						my $Price = new openprint::PaperPrice( );
-						$Price->set( {
+						$variable{'error'} .= $Price->save( {
 								'pricelist_id'	=>	$pricelist_id,
 								'paper_id'	=> $Paper->id(),
 								'Min'	=>	$param{"min-$pricelist_id-$id"},
@@ -87,7 +87,6 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 								'Discountable'	=>	$param{"discount-$pricelist_id-$id"},
 								} );
 						
-						$variable{'error'} .= $Price->save();
 						# Force reload
 						delete $$Paper{'Prices'};
 					} # end if
@@ -181,15 +180,16 @@ sub stock {
 # Save prices
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /min-(\d*)/ ) {
-				sql::update( $log, $dbh, 'Paper_Prices', "id=$1",
-						'lngMin', $param{"min-$1"} ? int $param{"min-$1"} : undef,
-						'lngMax', $param{"max-$1"} ? int $param{"max-$1"} : undef,
-						'strunits', $param{"units-$1"},
-						'dblcost', 1*$param{"cost-$1"},
-						'dblmarkup', 1*$param{"markup-$1"},
-						'dblprice', 1*$param{"price-$1"},
-						'ysndiscountable', $param{"discount-$1"},
-						);
+				my $Price = new openprint::PaperPrice( $1 );
+				$variable{'error'} .= $Price->save({
+						'Min'			=> $param{"min-$1"},
+						'Max'			=> $param{"max-$1"},
+						'Units'			=> $param{"units-$1"},
+						'Cost'			=> $param{"cost-$1"},
+						'Markup'		=> $param{"markup-$1"},
+						'Price'			=> $param{"price-$1"},
+						'Discountable'	=> $param{"discount-$1"},
+						});
 			} # end if
 		} # end foreach
 
@@ -224,7 +224,7 @@ sub _prices {
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /min-(\d*)/ ) {
 				my $Price = new openprint::PaperPrice( $1 );
-				$Price->set( {
+				$variable{'error'} .= $Price->save( {
 					'Min'	=>	$param{"min-$1"},
 					'Max'	=>	$param{"max-$1"},
 					'Units'	=>	$param{"units-$1"},
@@ -233,7 +233,6 @@ sub _prices {
 					'Price'	=>	$param{"pricecwt-$1"},
 					'Discountable'	=>	$param{"discount-$1"},
 	} );
-				$variable{'error'} .= $Price->save();
 			} # end if
 		} # end foreach
 	} # end if
@@ -276,7 +275,7 @@ sub import_export {
 				$calliper =~ s/[^\d\.]//g;
 				$width =~ s/[^\d\.]//g;
 				$height =~ s/[^\d\.]//g;
-				$gsm =~ s/[^\d]//g;
+				$gsm =~ s/[^\d\.]//g;
 				$spp =~ s/[^\d]//g;
 
 				my $Paper = $papers{$paper_id} ? $papers{$paper_id} : new openprint::Paper();
@@ -382,12 +381,12 @@ sub usage {
 	} # end if
 
 
-	my $query = "SELECT tbl_Projects.lngProjectIndex,lngDocketNumber, intQuantityIndex, (SELECT strName FROM Company WHERE Index=CompanyIndex) FROM tbl_Projects, Order_Contents WHERE tbl_Projects.Index=lngProjectIndex AND strStatus IN ( 'Ordered','Complete','Printed','Proofs Out','Approved','In Prepress' )\n";
+	my $query = "SELECT Projects.lngProjectIndex,lngDocketNumber, intQuantityIndex, (SELECT strName FROM Company WHERE Index=CompanyIndex) FROM Projects, Order_Contents WHERE Projects.Index=lngProjectIndex AND strStatus IN ( 'Ordered','Complete','Printed','Proofs Out','Approved','In Prepress' )\n";
 	$query .= "AND due_date BETWEEN '$variable{'StartDate'}' AND '$variable{'EndDate'}' ";
 	if ( $param{'ddmCustomer'} ) {
-		$query .= "AND tbl_Projects.CompanyIndex = $param{'ddmCustomer'}\n";
+		$query .= "AND Projects.CompanyIndex = $param{'ddmCustomer'}\n";
 	} # end if
-	$query .= "ORDER BY due_date, tbl_Projects.Index";
+	$query .= "ORDER BY due_date, Projects.Index";
 	my @projects = sql::execute( $log, $dbh, $query );
 
 	if ( 1 ) {

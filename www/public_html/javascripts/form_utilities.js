@@ -26,7 +26,7 @@ function get_value( obj ) {
 				return obj[x].value;
 		}
 	} else {
-		alert("Unhandled Type in get_value! "+obj + ':' + obj.type);
+		return obj.innerHTML;
 	} // end if
 	return obj.value;
 }
@@ -563,17 +563,22 @@ function fmCheck( form ) {
 	if ( fmChange == 1 ) {
 		if ( ( ! changed(form) ) || confirm("Are you sure you want to leave this record without saving your changes?") ) {
 			fmChange == 0;
-						form.submit();
+			form.submit();
 		} 
 	} else if (fmChange == 2) {
 		fmChange = 0;
 		if ( confirm("Are you sure you want to delete this record?") ) {
-						form.submit();
+			form.submit();
 		} 
 	} else if (fmChange == 3) {
 		fmChange = 0;
 		if ( confirm("Are you sure you want to save your changes?") ) {
-						form.submit();
+			form.submit();
+		} 
+	} else if ( form.btnFunction && form.btnFunction.value == 'Undelete' ) {
+		fmChange = 0;
+		if ( confirm("Are you sure you want to undelete this company?") ) {
+			form.submit();
 		} 
 	} else {
 		form.submit();
@@ -614,20 +619,20 @@ function checkInputData( inputItem ) {
 function checkLoginData( usernameInput, passwordInput ) {
 	if( ! checkInputData(usernameInput) ) {
 		// Display login name error.
-		add_div( 'missingLoginMessage' );
+		$( 'missingLoginMessage' ).show();
 		usernameInput.focus();
 		return false;
 	} else {
-		remove_div( 'missingLoginMessage' );
+		$( 'missingLoginMessage' ).hide();
 	}
 
 	if( passwordInput && !checkInputData(passwordInput) ) {
 		// Display login password error.
-		add_div( 'missingPasswordMessage' );
+		$( 'missingPasswordMessage' ).show();
 		passwordInput.focus();
 		return false;
 	} else {
-		remove_div( 'missingPasswordMessage' );
+		$( 'missingPasswordMessage' ).hide();
 	}
 
 	usernameInput.form.submit();
@@ -744,8 +749,8 @@ function countLines(strtocount, cols) {
 	var last = 0;
 	while ( true ) {
 		last = strtocount.indexOf("\n", last+1);
-		hard_lines ++;
 		if ( last == -1 ) break;
+		hard_lines ++;
 	}
 	var soft_lines = Math.round(strtocount.length / (cols-1));
 	var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");
@@ -753,8 +758,12 @@ function countLines(strtocount, cols) {
 	return soft_lines;
 }
 
-function textarea_resize( element ) {
-	element.rows = countLines(element.value,element.cols);
+function textarea_resize( element, params ) {
+	var rows = countLines(element.value,element.cols);
+	if ( params && params.min_rows > rows ) {
+		rows = params.min_rows;
+	} // end if
+	element.rows = rows;
 } // end function textarea_resize
 
 function do_decimals( number, precision ) {
@@ -880,3 +889,10 @@ function disableDiv(elm) {
 
 	document.getElementsByTagName("body")[0].appendChild(overlay);
 }
+
+function set_today( e_y, e_m, e_d ) {
+	var d = new Date();
+	ddm_select_by_value( e_y, d.getYear() );
+	ddm_select_by_value( e_m, d.getMonth()+1 );
+	ddm_select_by_value( e_d, d.getDate() );
+} // end function set_today

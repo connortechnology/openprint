@@ -1,0 +1,79 @@
+<? eval (
+	require Date::Parse;
+	require Date::Format;
+
+	if ( ! $param{'btnFunction'} ) {
+	ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','employee_id','company_id') );
+	} # end if
+
+	@{$$variable{'Timetracks'}} = ();
+	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = 0;
+	foreach my $Timetrack ( openprint::Timetrack::find( 
+		'starting_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_start_day'} ),
+		'starting_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ),
+		'company_id'			=> $session{'/timetrack/history.html?company_id'},
+		'employee_id'			=> $session{'/timetrack/history.html?employee_id'},
+		'order'				=> 'starting',
+		) ) {
+		next if $Timetrack->paid() and ! sets::isin( 1, split(';', $session{'/timetrack/history.html?paid'} ) );
+		next if ( ! $Timetrack->paid() ) and ! sets::isin( 0, split(';', $session{'/timetrack/history.html?paid'} ) );
+		next if $Timetrack->invoiced() and ! sets::isin( 1, split(';', $session{'/timetrack/history.html?invoiced'} ) );
+		next if ( ! $Timetrack->invoiced() ) and ! sets::isin( 0, split(';', $session{'/timetrack/history.html?invoiced'} ) );
+		push @{$$variable{'Timetracks'}}, $Timetrack;
+		$$variable{'elapsed_total'} += $Timetrack->elapsed();
+		$$variable{'value_total'} += $Timetrack->value();
+		$$variable{'wage_total'} += $Timetrack->wage();
+	} # end foreach Timetrack
+
+	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+) ?>
+
+<? if ( @{$$variable{'Timetracks'}} == 0 ) ?>
+	There are no timetracks which match your search criteria. 
+<? else ( @{$$variable{'Timetracks'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Timetrack ID #</b> to view timetrack details.<br/>
+		To delete timetracks from history check the appropriate timetrack(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="EmployeeName">Employee</th>
+			<th align="left">Company</th>
+			<th width="110" align="left">Start</th>
+			<th width="110" align="left">End</th>
+			<th width="50" align="right" style="text-align: right;">Time</th>
+			<th width="50" align="right">Inv?</th>
+			<th width="50" align="right">Paid?</th>
+			<th align="left">Service</th>
+			<th width="60" align="right" style="text-align: right;">Wage</th>
+			<th width="60" align="right" style="text-align: right;">Billable</th>
+		</tr>
+		<? while ( $$variable{'Timetrack'} = shift @{$$variable{'Timetracks'}}; ) ?>
+		<? eval ( 
+			$$variable{'conversion_rate'} = $$variable{'Timetrack'}->Currency()->conversions( $session{'Currency_id'} );
+		) ?>
+		<tr title="<? echo ( $$variable{'Timetrack'}->description() ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->User()->name(); ) ?></a></td>
+			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->Company()->name(); ) ?></a></td>
+			<td align="left"><? echo ( Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $$variable{'Timetrack'}->starting() ) ); ) ?></td>
+			<td align="left"><? echo ( Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $$variable{'Timetrack'}->ending() ) ); ) ?></td>
+			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'Timetrack'}->elapsed() ); ) ?></td>
+			<td align="center"><? echo ( $$variable{'Timetrack'}->invoiced() ? 'Y' : 'N'; ) ?></td>
+			<td align="center"><? echo ( $$variable{'Timetrack'}->paid() ? 'Y' : 'N'; ) ?></td>
+			<td align="left"><? hecho ( $$variable{'Timetrack'}->Service()->name(); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Timetrack'}->wage() ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Timetrack'}->value() ); ) ?></td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
+		<? endwhile ( $$variable{'Timetrack'} = shift @{$$variable{'Timetracks'}}; ) ?>
+		<tr class="totals">
+			<td colspan="4" align="right">Totals:</td>
+			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
+			<td colspan="3">&nbsp;</td>
+			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'wage_total'},2,2) ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'value_total'},2,2) ); ) ?></td>
+		</tr>
+	</table>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
+	<br class="spacer"/>
+<? endif ( @{$$variable{'Timetracks'}} == 0 ) ?>

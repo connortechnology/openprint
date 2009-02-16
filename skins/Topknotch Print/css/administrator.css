@@ -1,0 +1,235 @@
+div#header {
+ 
+}
+div#header_banner {
+ background-image: url(/images/gradient_bg.gif);
+ background-repeat: repeat-x;
+ width: 100%;
+ height: 104px;
+ text-align: center;
+ margin: 0px auto 0px auto;
+}
+div#logo {
+ float: left;
+ width: 251px;
+ height: 104px;
+}
+div#nav_icons {
+ float: right;
+ padding-right: 20px;
+}
+div#menu {
+ text-align: right;
+ width: 761px;
+ margin: 0px auto 0px auto;
+ background-color: #ffffff;
+ color: #11ff11;
+}
+div#main_content
+{
+ width: 100%;
+ margin: 0px auto 0px auto;
+ background-color: #fff;
+}
+div#main_content_inner
+{
+ padding-left: 6px;
+ padding-right: 6px;
+ background-color: #fff;
+}
+div#main_page
+{
+ float: left;
+}
+div#content_container
+{
+ background-color: #fff;
+ width: 80%;
+ overflow: hidden;
+ margin: 0px auto 0px auto;
+}
+a:link,
+a:visited,
+a:hover,
+a:active
+{
+ text-decoration: none;
+ color: #6400b5;
+}
+div#menu_links
+{
+ padding-right: 10px;
+}
+div.top_shadow
+{
+ background-image: url(/images/shadow_border/top.gif);
+ background-repeat: repeat-x;
+ background-color: #fff;
+ height: 22px;
+}
+div.shadow_tl
+{
+ float: left;
+ background-image: url(/images/shadow_border/tl.gif);
+ background-repeat: no-repeat;
+ width: 26px;
+ height: 22px;
+}
+div.shadow_tr
+{
+ float: right;
+ background-image: url(/images/shadow_border/tr.gif);
+ background-repeat: no-repeat;
+ width: 17px;
+ height: 22px;
+}
+div.bottom_shadow
+{
+ clear: left;
+ background-image: url(/images/shadow_border/bottom.gif);
+ background-repeat: repeat-x;
+ background-color: #fff;
+ height: 22px;
+}
+div.shadow_bl
+{
+ float: left;
+ background-image: url(/images/shadow_border/bl.gif);
+ background-repeat: no-repeat;
+ width: 26px;
+ height: 22px;
+}
+div.shadow_br
+{
+ float: right;
+ background-image: url(/images/shadow_border/br.gif);
+ background-repeat: no-repeat;
+ width: 17px;
+ height: 22px;
+}
+div#left_sidebar_content
+{
+ background-image: url(/images/shadow_border/left_sidebar_bg.gif);
+ background-repeat: repeat-y;
+ padding-left: 20px;
+}
+div#main_page
+{
+ float: left;
+ width: 100%;
+}
+div#main_page_inner
+{
+ background-color: #fff;
+ padding-top: 5px;
+ padding-bottom: 5px;
+ overflow: hidden;
+}
+div#main_page_content
+{
+ background-image: url(/images/shadow_border/main_page_bg.gif);
+ background-repeat: repeat-y;
+ padding-left: 20px;
+ padding-right: 15px;
+}
+div#choose_currencies_top
+{
+ font-size: 12px;
+ text-decoration: none;
+ color: #7c6aba;
+}
+div#contact_information div {
+ line-height: 1.1em;
+}
+.headline_medium {
+ font-weight: bold;
+ color: #6400b5;
+}
+
+fieldset p {
+    padding-left: 115px;
+}
+fieldset p label {
+    margin-left: -115px;
+    width: 110px;
+}
+fieldset p.buttons {
+    margin: 0px;
+    padding: 0px;
+    margin-left: 115px;
+    float: left;
+}
+
+ul#menubar li#Account a {
+	width: 55px;
+}
+ul#menubar li#Pricing a {
+	width: 75px;
+}
+ul#menubar li#Paper a {
+	width: 65px;
+}
+ul#menubar li#Managerial a {
+	width: 95px;
+}
+ul#menubar li#Equipment a {
+	width: 65px;
+}
+ul#menubar li#Reports a {
+	width: 95px;
+}
+ul#menubar li#Setup a {
+	width: 120px;
+}
+
+/* Product styles */
+.Add {
+	width: 20px;
+	text-align: center;
+}
+.Range  {
+	width: auto;
+	text-align: center;
+}
+.Product table.List tr td.Cost input {
+	text-align: right;
+}
+.Product table.List tr td.Price input {
+	text-align: right;
+}
+.Product table.List tr td.Markup input {
+	text-align: right;
+}
+.Product table.List tr td.Range input, table.List tr td.Range input[type="text"] {
+	width: 48%;
+	text-align: left;
+
+}
+.Units {
+	width: 90px;
+	text-align: center;
+}
+.Cost {
+	width: 90px;
+	text-align: center;
+}
+.Markup {
+	width: 80px;
+	text-align: center;
+}
+.Price {
+	width: 90px;
+	text-align: center;
+}
+.Discount {
+	width: 100px;
+	text-align: center;
+}
+
+.Equipment {
+	width: 100%;
+	padding: 5px;
+	margin-bottom: 5px;
+	background-color: #f1eee5;
+	border: 1px solid;
+}

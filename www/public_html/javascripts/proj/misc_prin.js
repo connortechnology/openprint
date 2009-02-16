@@ -31,6 +31,9 @@ function show_breakdown( index ) {
 
 function submit_handler( formName ) {
 	var form = getFormObj( formName );
+	if ( ! form ) {
+		return false;
+	}
 
 	if ( gettingNewPrice && ! confirm('The system is still calculating a price.  Click OK to continue saving, or Cancel to wait for the system') ) {
 		return;

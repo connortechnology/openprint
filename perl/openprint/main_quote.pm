@@ -8,6 +8,14 @@ use Mail::Sendmail;
 use strict;
 
 use openprint ();
+use vars qw( $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
 
 require sql;
 require ssi;
@@ -108,12 +116,10 @@ sub get_project_info {
 
 
 sub add_project_to_quote {
-	my ( $r, $log, $dbh, $variable, $quote_id, $project_index ) = @_;
+	my ( $r, $log, $dbh, $variable, $quote_id, $project_id ) = @_;
 
-	$log->debug(" *** Adding Project to Quote ****" );
-
-	$project_index = $openprint::param{'ProjectIndex'} if ! $project_index;
-	$project_index = $openprint::session{'project_id'} if ! $project_index;
+	$project_id = $openprint::param{'ProjectIndex'} if ! $project_id;
+	$project_id = $openprint::session{'project_id'} if ! $project_id;
 
 	$quote_id = $openprint::session{'quote_id'} if ! $quote_id;
 	$quote_id = new openprint::Quote( $quote_id )->id() if $quote_id;
@@ -123,13 +129,29 @@ sub add_project_to_quote {
 	my $Quote = new openprint::Quote( $quote_id );
 
 	# check to make sure project isn't already in the quote.
-	$_ = q{SELECT ProjectIndex FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?};
-	if ( ! sql::execute( $log, $dbh, $_, $quote_id, $project_index ) ) {
-		if ( ! sql::insert( $log, $dbh, 'tbl_Quote_Details', [
-					'QuoteIndex',		$quote_id,
-					'ProjectIndex',		$project_index,
-					] ) ) {
-			$Quote->add_log( 'Added project ' . $project_index );
+	my @QuotedProjects = openprint::QuotedProject::find('quote_id'=>$Quote->id(), 'project_id'=>$project_id );
+	if ( @QuotedProjects > 1 ) {
+$openprint::log->error( "More than 1 occurrence of a project in a quote." );
+		foreach my $QP ( @QuotedProjects ) {
+			$QP->delete();
+		} # end foreach QP
+		@QuotedProjects = ();
+	} # end if
+	if ( ! @QuotedProjects ) {
+		my $QP = new openprint::QuotedProject();
+		my $Project = new openprint::Project( $project_id );
+		if ( ( my $error = $QP->save( {
+						'quote_id'			=>	$Quote->id(),
+						'project_id'		=>	$project_id,
+						'include_detailed'	=>	new openprint::Company( $openprint::session{'company_id'} )->quote_project_breakdown(),
+						'template_id'		=>	new openprint::User( $openprint::session{'user_id'} )->quote_level(),
+						'quantity1'			=>	$Project->quantity1(),
+						'quantity2'			=>	$Project->quantity2(),
+						'quantity3'			=>	$Project->quantity3(),
+						} ) ) ) {
+$openprint::log->error( $error );
+		} else {
+			$Quote->add_log( 'Added project ' . $project_id );
 		} # end if
 	} # end if
 	return $quote_id;
@@ -260,13 +282,13 @@ sub submit {
             return misc::error( $log, $dbh, $variable, 'Error', $_ );
         } # end if
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
-	foreach my $key ( keys %openprint::param ) {
-		if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $quote_id, $2],
-					'dblMarkup'.$1,         1*$r->param($key),
-					);
-		} # end if
-	} # end foreach
+		foreach my $key ( keys %openprint::param ) {
+			if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
+				sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $quote_id, $2],
+						'dblMarkup'.$1,         1*$r->param($key),
+						);
+			} # end if
+		} # end foreach
     } # end if
 
     if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) {
@@ -282,33 +304,26 @@ sub confirmation {
 
     my $quote_id = $openprint::param{'quote_id'};
 	$quote_id = $openprint::session{'quote_id'} if ! $quote_id;
+	my $Quote = new openprint::Quote( $quote_id );
+	$$variable{'Quote'} = $Quote;
 	return if ! $quote_id;
 
-	my $Quote = new openprint::Quote( $quote_id );
 	if ( $Quote->status() ne 'Complete' ) {
 
-		my $subtotal1 = 0;
-		my $subtotal2 = 0;
-		my $subtotal3 = 0;
+		my @subtotals;
 
-		$_ = 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE QuoteIndex=?';
-		my @projects = sql::execute( $log, $dbh, $_, $quote_id );
-		while ( my ( $project_index, $markup1, $markup2, $markup3 ) = splice @projects, 0, 4 ) {
-			my $Project = new openprint::Project( $project_index );
-			$subtotal1 += $Project->price1()*(1+($markup1/100));
-			$subtotal2 += $Project->price2()*(1+($markup2/100));
-			$subtotal3 += $Project->price3()*(1+($markup3/100));
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $quote_id, $project_index], [
-					'strDescription',   $Project->reference(),
-					'intQuantity1', $Project->quantity1(), 'dblPrice1', $Project->price1(),
-					'intQuantity2', $Project->quantity2(), 'dblPrice2', $Project->price2(),
-					'intQuantity3', $Project->quantity3(), 'dblPrice3', $Project->price3(),
-					] );
-
+		foreach my $Project ( $Quote->Quoted_Projects() ) {
+			foreach my $qty_index ( 1 .. 3 ) {
+				$Project->quantity( $Project->Project()->quantity() );
+				$Project->price( $qty_index, $Project->Project()->price($qty_index)*(1+($Project->markup( $qty_index )/100)) );	
+				$subtotals[$qty_index] += $Project->price( $qty_index );
+			} # end foreach
+			$Project->description( $Project->reference() );
+			$Project->save();
 		} # end while
-		$Quote->total1( $subtotal1 );
-		$Quote->total2( $subtotal2 );
-		$Quote->total3( $subtotal3 );
+		foreach my $qty_index ( 1 .. 3 ) {
+			$Quote->total( $qty_index, $subtotals[$qty_index] );
+		} # end foreach
 		$Quote->status( 'Complete' );
 		$Quote->administrator_name( $openprint::param{'AdministratorName'} ) if exists $openprint::param{'AdministratorName'};
 		$Quote->administrator_comments( $openprint::param{'AdministratorComments'} ) if exists $openprint::param{'AdministratorComments'};
@@ -319,6 +334,21 @@ sub confirmation {
 	delete $openprint::session{'quote_id'};
 } # end sub finalise_quote
 
+sub _project_template {
+	$variable{'Quote'} = new openprint::Quote( $param{'quote_id'} );
+	$variable{'QuotedProject'} = new openprint::QuotedProject( $param{'project_id'} );
+	$variable{'QuotedProject'}->include_detailed( $param{'include_detailed'} );
+	$variable{'QuotedProject'}->save();
+} # end sub _project_template
+
+sub _project_template_view {
+	$variable{'Quote'} = new openprint::Quote( $param{'quote_id'} );
+	$variable{'QuotedProject'} = new openprint::QuotedProject( $param{'project_id'} );
+	$variable{'QuotedProject'}->template_id( $param{'template_id'} );
+	$variable{'QuotedProject'}->save();
+	$variable{'Project'} = $variable{'QuotedProject'}->Project();
+	$variable{'ProjectIndex'} = $variable{'Project'}->id();
+} # end sub _project_template
 
 1;
 

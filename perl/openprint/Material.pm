@@ -7,8 +7,14 @@ require openprint::Object;
 
 require openprint::logs;
 require openprint::MaterialSpecification;
+require openprint::MaterialCategory;
 
-use vars qw{ %fields %transforms %defaults };
+use vars qw{ $log $dbh %session $table $serial %fields %transforms %defaults };
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*session = \$openprint::session;
+$table = 'Materials';
+$serial = 'MaterialIndex_seq';
 
 my $debug = 1;
 
@@ -33,71 +39,25 @@ my $debug = 1;
 		);
 
 my %cache;
+my $cache_init;
 
 sub init_cache {
-	%cache = map { $_->name(), $_->id() } find();
+	$cache_init = 0;
+	%cache = ();
+#map { $_->name(), $_->id() } find();
 } # end sub init_cache
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Materials WHERE id=?', {}, $$self{'id'} );
-		#if ( ! exists $cache{$$data{name}} ) {
-			#$cache{$$data{name}} = $$data{id};
-		#} # end if
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load_values
-
-# if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
-# If we have not previously loaded the info, we will just save it whether it has actually changed or not.
-# We do this for efficiency's sake.
-sub save {
-	my ( $self, $params ) = @_;
-
-	if ( $params ) {
-		$self->set( $params );
-		$openprint::log->debug("Set params");
-	} # end if
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$k} = $$self{$k};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('MaterialIndex_seq')} );
-		$sql{id} = $$self{id};
-		if ( my $error = sql::insert( undef, undef, 'Materials', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-		openprint::logs::insertLogRecord('41', "Material Index: " . $$self{id},); # Add record to audit log - action "New Material".
-	} else {
-		if ( my $error = sql::update( undef, undef, 'Materials', ['id=?', $$self{id} ], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-		openprint::logs::insertLogRecord('42', "Material Index: " . $$self{id},); # Add record to audit log - action "Update Material".
-	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
 
 sub delete {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Material'}{$$self{id}} if $openprint::Object::cache{'openprint::Material'};	
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, q{DELETE FROM Material_Specifications WHERE material_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngMaterialIndex=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM Materials WHERE id=?}, $$self{'id'} );
 	openprint::logs::insertLogRecord('8', "Material Id: $$self{'id'} Material Name: $$self{'name'}" );
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 
 	init_cache();
 } # end sub delete
@@ -156,7 +116,7 @@ sub specification {
 #$openprint::log->debug("Found spec " . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( ( ! $$x{interpolate} ) and (1*$$x{max}) and ( $$x{max} < $range ) );
 	} else {
-$openprint::log->debug("Couldn't find monimum") if $debug;
+$log->debug("Couldn't find monimum") if $debug;
 		return;	
 	} # end if
 	
@@ -171,9 +131,9 @@ $openprint::log->debug("Couldn't find monimum") if $debug;
 	if ( $i and $i < @{$$self{'Specifications'}{$name}} ) {
 		# back up
 		$y = $$self{'Specifications'}{$name}[$i];
-$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+$log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
-$openprint::log->debug("Couldn't find maximum") if $debug;
+$log->debug("Couldn't find maximum") if $debug;
 		return;
 	} # end if
 
@@ -183,7 +143,7 @@ $openprint::log->debug("Couldn't find maximum") if $debug;
 	} elsif ( $x->interpolate() ) {
 		$value = $x->value() + ($range - $x->min())*($y->value()-$x->value())/($y->min()-$x->min());
 	} # end if
-$openprint::log->debug("Returning " . $value);
+$log->debug("Returning " . $value);
 
 	return $value;
 } # end sub specification
@@ -202,16 +162,19 @@ sub find {
 		# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
 		if ( ( keys %params ) == 1 ) {
 			#if ( ( exists $cache{$params{name}} ) and $cache{$params{name}} ) {
-			if ( %cache ) {
-				if ( exists $cache{$params{'name'}} ) {
+			if ( ! $cache_init ) {
+				%cache = map { $_->name(), $_->id() } find();
+				$cache_init = 1;
+			}
+			if ( exists $cache{$params{'name'}} ) {
 				return ( new openprint::Material( $cache{$params{'name'}} ) );
-				} else {
-					return;
-				} # end if
+			} else {
+				return;
 			} # end if
+		} else {
+			$sql .= ' AND name=?';
+			push @values, $params{'name'};
 		} # end if
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
 	} # end if
 	if ( $params{'name_like'} ) {
 		$sql .= ' AND name LIKE ?';
@@ -230,25 +193,21 @@ sub find {
 	
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading Material ($sql) (@values) Reason: " . $openprint::dbh->errstr );
+		$log->debug("Error loading Material ($sql) (@values) Reason: " . $openprint::dbh->errstr );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Material ($sql) (@values) " . @$data );
+		$log->debug("Loading Material ($sql) (@values) " . @$data );
 	} # end if
 	return map { new openprint::Material( $_->{id}, $_ ) } @$data;
 } # end sub find
 
 sub get_price {
-	my ( $self, $quantity, $equipment ) = @_;
+	my ( $self, $quantity, $Equipment ) = @_;
 
 	return if ! $$self{'id'};
 
-	if ( ref $equipment eq 'openprint::Equipment' ) {
-		$equipment = $equipment->id();
-	} # end if
-
-	my $list_id = openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable );
-	my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{id}, $list_id, 'openprint::material_priceset', $quantity, $equipment );
+	my $list_id = openprint::pricing::get_pricelist_id();
+	my %price = openprint::pricing::get_best_price_object( $log, $dbh, $session{'company_id'}, $$self{id}, $list_id, 'openprint::material_priceset', $quantity, $$Equipment{'id'} );
 	return if ! %price;
 
 	my $Pricelist = new openprint::Pricelist( $list_id );
@@ -304,6 +263,10 @@ sub copy {
 
 	return $new;
 } # end sub copy
+
+sub Category {
+	return new openprint::MaterialCategory( $_[0]{'category_id'} );
+}
 
 1;
 __END__

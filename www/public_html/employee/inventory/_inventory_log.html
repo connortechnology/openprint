@@ -1,6 +1,6 @@
 <? eval (
 	if ( %openprint::param ) {
-		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','ins','outs', 'Type' ) {
+		foreach my $key ( 'StartYear','StartMonth','StartDay','StartHour','StartMinute','EndYear','EndMonth','EndDay','EndHour','EndMinute','ins','outs', 'Type' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 				$openprint::session{'/employee/inventory/inventory_log.html?'.$key} = join(';', @{$openprint::param{$key}} );
 			} else {
@@ -8,7 +8,13 @@
 			}
 		} # end foreach
 	} # end if
+	$openprint::session{'/employee/inventory/inventory_log.html?StartHour'} = 0 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartHour'};
+	$openprint::session{'/employee/inventory/inventory_log.html?StartMinute'} if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartMinute'};
+	$openprint::session{'/employee/inventory/inventory_log.html?EndHour'} = 23 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndHour'};
+	$openprint::session{'/employee/inventory/inventory_log.html?EndMinute'} = 59 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndMinute'};
+
 ) ?>
+<? if ( $openprint::param{'action'} ne 'Download' ) ?>
 <table class="List">
 	<tr>
 		<th align="left" width="120">When</th>
@@ -19,40 +25,61 @@
 		<th align="left" width="120">Allocated</th>
 		<th align="left" width="70">In Stock</th>
 		<th align="left" width="90">Location</th>
+		<th align="left" width="70">Docket</th>
 		<th align="left">Comment</th>
 	</tr>
 	<? echo (
 		my $html;
-		my @data = sql::execute( $log, $dbh, q{SELECT updated_on, user_id, delta, instock, units, comment, poindex, skid_id, paper_id FROM Paper_Inventory WHERE (updated_on BETWEEN ? AND ? ) ORDER BY updated_on},
-		sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/employee/inventory/inventory_log.html?StartYear','/employee/inventory/inventory_log.html?StartMonth','/employee/inventory/inventory_log.html?StartDay'} ),
-		sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} ),
-		);
+		my %params = (
+			'updated_on_start'	=>
+			sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @openprint::session{
+				'/employee/inventory/inventory_log.html?StartYear',
+				'/employee/inventory/inventory_log.html?StartMonth',
+				'/employee/inventory/inventory_log.html?StartDay',
+				'/employee/inventory/inventory_log.html?StartHour',
+				'/employee/inventory/inventory_log.html?StartMinute',
+				}),
+			'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @openprint::session{
+				'/employee/inventory/inventory_log.html?EndYear',
+				'/employee/inventory/inventory_log.html?EndMonth',
+				'/employee/inventory/inventory_log.html?EndDay',
+				'/employee/inventory/inventory_log.html?EndHour',
+				'/employee/inventory/inventory_log.html?EndMinute',
+				}),
+			'order'	=>	'updated_on',
+			);
+		if ( $param{'docket'} ) {
+			$params{'docket'} = $param{'docket'};
+		} # end if
 		my $rowclass;
 		my $total = 0;
-		while ( my ( $time, $user_id, $delta, $instock, $units, $comment, $po_id, $skid_id, $paper_id ) = splice @data, 0, 9 ) {
-			next if $delta <= 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?outs'};
-			next if $delta > 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?ins'};
-			my $Paper = new openprint::Paper( $paper_id );
-			my $Skid = new openprint::Skid( $skid_id );
+		foreach my $PI ( openprint::PaperInventory::find(%params) ) {
+			next if $PI->delta <= 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?outs'};
+			next if $PI->delta > 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?ins'};
+			my $Paper = $PI->Paper();
 			next if $Paper->type() and ! sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
 			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', split(';',  $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
+			my $Skid = $PI->Skid();
 			
-			$html .= sprintf( '<tr%s><td>%s</td><td><a href="skid_details.html?skid_id=%d">%d</a></td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td></tr>',
+			$html .= sprintf( '<tr%1$s><td>%2$s</td><td><a href="skid_details.html?skid_id=%3$d">%3$d</a></td><td><a href="rfidtag_details.html?rfidtag_id=%4$s">%4$s</a></td><td><a href="paper_details.html?paper_id=%5$d">%6$s</a></td><td>%7$d</td><td>%8$s</td><td>%9$d</td><td>%10$s</td><td>%11$s</td><td>%12$s</td></tr>',
 				$rowclass,
-				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
-				$skid_id, $skid_id,
+				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($PI->updated_on) ),
+				$PI->skid_id,
 				$Skid->rfidtag_id(),
+				$Paper->id(),
 				$Paper->to_string(),
-				$delta,
-				join('<br/>', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
-				$instock,
+				$PI->delta,
+				join('<br/>', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$PI->skid_id,'paper_id'=>$PI->paper_id)),
+				$PI->instock,
 				$Skid->Location()->name(),
-				$comment,
+				$PI->docket(),
+				$PI->comment,
 				);
-			$total += $delta;
+			$total += $PI->delta;
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
-			$html .= sprintf( '<tr class="totals"><td colspan="3">&nbsp;</td><td>Totals:</td><td>%d</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>', $total );
+			$html .= sprintf( '<tr class="totals"><td colspan="3">&nbsp;</td><td>Totals:</td><td>%d</td><td colspan="5">&nbsp;</td></tr>', $total );
 		return $html;
 	) ?>
 </table>
+<? endif ( $openprint::param{'action'} ne 'Download' ) ?>

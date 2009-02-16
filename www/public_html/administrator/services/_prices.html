@@ -8,6 +8,7 @@
 		<? while ( @{$$variable{'Equipment_ids'}} ) ?>
 			<? eval ( $$variable{Equipment} = new openprint::Equipment( shift @{$$variable{'Equipment_ids'}} ); ) ?>
 			<fieldset class="Equipment">
+<? if ( openprint::Equipment::find() ) ?>
 				<p>
 					<label>Equipment:</label>
 					<select name="ddmEquipment-<? echo ( $$variable{Pricelist}->id() ) ?>-<? echo ( $$variable{Equipment}->id() ) ?>">
@@ -15,6 +16,7 @@
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strID)') ], $$variable{Equipment}->id() ); ) ?>
 					</select>
 				</p>
+<? endif ( openprint::Equipment::find() ) ?>
 				<table class="List">
 					<tr> 
 						<th class="Add">&nbsp;</th>
@@ -27,7 +29,7 @@
 					</tr>
 					<? echo (
 						my $html = '';
-						my @Prices = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{Equipment}, 'order'=>'lngmin,lngmax' );
+						my @Prices = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{Equipment}, 'order'=>'min,max' );
 						foreach my $Price ( @Prices ) {
 							$html .= '<tr>';
 							$html .= sprintf('<td><input type="checkbox" name="chk-%d-%s-%d" checked="checked" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id() );
@@ -49,6 +51,7 @@
 		<? endwhile ( @{$$variable{'Equipment_ids'}} ) ?>
 		<? endif ( @{$$variable{'Prices'}} = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
 		<fieldset class="Equipment"><legend>Add New</legend>
+<? if ( openprint::Equipment::find() ) ?>
 			<p>
 				<label>Equipment</label>
 				<select multiple="multiple" size="4" name="ddmEquipment-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New">
@@ -56,6 +59,7 @@
 					<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strID)') ] ); ) ?>
 				</select>
 			</p>
+<? endif ( openprint::Equipment::find() ) ?>
 			<table class="List">
 			<tr> 
 				<th class="Add">&nbsp;</th>
@@ -78,8 +82,10 @@
 				<td><input type="text" name="markup-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
 				<td><input type="text" name="price-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
 				<td>
-					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" value='Y' checked="checked" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" /> Yes
-					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" value='N'  onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" /> No
+					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" id="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0Y" value='Y' checked="checked" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" />
+					<label class="radio" for="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0Y">Yes</label>
+					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" id="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0N" value='N'  onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" />
+					<label class="radio" for="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0N">No</label>
 				</td>
 			</tr>
 			</table>

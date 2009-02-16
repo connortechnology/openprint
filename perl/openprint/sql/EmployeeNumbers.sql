@@ -1,11 +1,9 @@
 DROP TABLE EmployeeNumbers;
-DROP SEQUENCE EmployeeNumbers_id_seq;
-CREATE SEQUENCE EmployeeNumbers_id_seq;
 
 CREATE TABLE EmployeeNumbers (
-		ID INT2 NOT NULL default nextval('EmployeeNumbers_id_seq'),
-		Min INT4,
-		Max INT4,
+		ID SERIAL NOT NULL,
+		Min INTEGER,
+		Max INTEGER,
 		PRIMARY KEY(id)
 );
 

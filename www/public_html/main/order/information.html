@@ -4,14 +4,6 @@
 </div>
 <script type="text/javascript">
 <!--
-	function radio_select_by_value( radio, value ) {
-		for ( var index = 0; index < radio.length; index += 1 ) {
-			if ( radio[index].value == value ) {
-				radio[index].checked = true;
-				return;
-			} // end if
-		} // end for
-	} // end function
 	function company_id_onchange( e ) {
 		if ( e.getValue() ) {
 		new Ajax.Updater('ContactInformation','_contact_information.html', { method:'get', parameters:e.form.serialize() });
@@ -85,6 +77,9 @@
 			<div id="ContactInformation">
 			<!--#include virtual="_contact_information.html"-->
 			</div>
+			<div id="PaymentOptions">
+			<!--#include virtual="_payment_options.html"-->
+			</div>
 		</div>
 		<div style="float: right; width: 49%; min-width: 320px;">
 			<? eval ( 
@@ -96,11 +91,7 @@
 				<? eval ( $$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ); ) ?>
 				<!--#include virtual="_project_information.html"-->
 				<? endwhile ( @$variable{'ProjectIndex','Reference','SelectedQuantityIndex','ShippingType','Quantity1','Quantity2','Quantity3'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
-				<? if ( @{$$variable{'PRODUCTS'}} ) ?>
-				<span id="Products">
-				<!--#include virtual="_product_information.html"-->
-				</span>
-				<? endif ( @{$$variable{'PRODUCTS'}} ) ?>
+				<div id="Products"><!--#include virtual="_product_information.html"--></div>
 			<? else ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
 				<p>This order appears to be empty.</p>
 			<? endif ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>

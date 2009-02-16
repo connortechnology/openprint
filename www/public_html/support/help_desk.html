@@ -3,16 +3,16 @@
 <h2>Help Desk</h2>
 </div>
 <? eval (
-	$$variable{'User'} = new openprint::User( $openprint::session{'user_id'} );
+	$$variable{'User'} = new openprint::User( $session{'user_id'} );
 ) ?>
 <form method="post" name="f1" action="confirmation_help_desk.html">
 <fieldset>
 	<p> 
-		<label>&nbsp;Company Name:</label>
+		<label>Company Name: <span class="requiredFieldIndicator">&nbsp;</span></label>
 		<input type="text" name="txtCompanyName" value="<? hecho ( $$variable{'User'}->Company()->name(); ) ?>" />
 	</p>
 	<p> 
-		<label>*Salutation:</label>
+		<label>Salutation: <span class="requiredFieldIndicator">*</span></label>
 		<input type="radio" name="rdbSalutation" id="rdbSalutationMr." value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
 		<label class="radio" for="rdbSalutationMr.">Mr.</label>
 		<input type="radio" name="rdbSalutation" id="rdbSalutationMrs." value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
@@ -23,19 +23,19 @@
 		<label class="radio" for="rdbSalutationMiss">Miss</label>
 	</p>
 	<p> 
-		<label>*First Name:</label>
+		<label>First Name: <span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="txtFirstName" value="<? hecho ( $$variable{'User'}->firstname(); ) ?>" />
 	</p>
 	<p> 
-		<label>*Last Name:</label>
+		<label>Last Name: <span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="txtLastName" value="<? hecho ( $$variable{'User'}->lastname(); ) ?>" />
 	</p>
 	<p> 
-		<label>&nbsp;Title:</label>
+		<label>Title: <span class="requiredFieldIndicator">&nbsp;</span></label>
 		<input type="text" name="txtTitle" value="<? hecho ( $$variable{'User'}->title(); ) ?>" />
 	</p>
 	<p> 
-		<label>*Address:</label>
+		<label>Address: <span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="txtAddress1" value="<? hecho ( $$variable{'User'}->Company()->address1(); ) ?>" />
 	</p>
 	<p> 
@@ -43,11 +43,11 @@
 		<input type="text" name="txtAddress2" value="<? hecho ( $$variable{'User'}->Company()->address2(); ) ?>" />
 	</p>
 	<p> 
-		<label>*City:</label>
+		<label>City: <span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="txtCity" value="<? hecho ( $$variable{'User'}->Company()->city(); ) ?>" />
 	</p>
 	<p> 
-		<label>*State/Province:</label>
+		<label>State/Province: <span class="requiredFieldIndicator">*</span></label>
 			<select name="ddmStateProvince">
 			<option value=""> Select </option>
 			<? echo ( join('',
@@ -58,11 +58,11 @@
 			</select>
 	</p>
 	<p> 
-		<label>*Zip/Postal Code:</label>
+		<label>Zip/Postal Code: <span class="requiredFieldIndicator">*</span></label>
 			<input type="text" name="txtPostalCode" value="<? hecho ( $$variable{'User'}->Company()->postalcode(); ) ?>" />
 	</p>
 	<p> 
-		<label>*Country:</label>
+		<label>Country: <span class="requiredFieldIndicator">*</span></label>
 			<select name="ddmCountry">
 			<option value=""> Select </option>
 			<? echo (
@@ -71,21 +71,37 @@
 			</select>
 	</p>
 	<p> 
-		<label>*Phone:</label>
+		<label>Phone: <span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="txtPhone" value="<? hecho ( $$variable{'User'}->phone(); ) ?>" />
 	</p>
 	<p> 
-		<label>&nbsp;Extension:</label>
-		<input type="text" name="txtExtension" value="<? hecho ( $$variable{'User'}->extension(); ) ?>" />
-	</p>
-	<p> 
-		<label>*E-mail Address:</label>
+		<label>E-mail Address: <span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="txtEmail" value="<? hecho ( $$variable{'User'}->email(); ) ?>" />
 	</p>
 	<p> 
-		<label>*Question or Comment:</label>
+		<label>Question or Comment: <span class="requiredFieldIndicator">*</span></label>
 		<textarea name="txtQuestion-Quote" rows="10" ></textarea>
 	</p>
+<? echo (
+		my $html;
+		if ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+			use Authen::Captcha;
+			my $Captcha = new Authen::Captcha(
+				'data_folder'	=>	'/tmp',
+				'output_folder' =>	$config{'SkinPath'}.'/images/captcha',
+			);
+			if ( my $md5sum = $Captcha->generate_code( $config{'RegistrationCaptchaLength'} ) ) {
+				$html .= '<p><label>Enter the code below: <span class="requiredFieldIndicator">*</span></label>';
+				$html .= '<input type="text" name="Captcha" /><br/>';
+				$html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};
+				$html .= qq{<img src="/images/captcha/$md5sum.png"/>};
+			} # end if
+		} # end if
+		return $html;
+) ?>
+	</p>
+<? endif ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ?>
+
 </fieldset>
 		<fieldset>
 		<p class="buttons">

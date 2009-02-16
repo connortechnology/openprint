@@ -13,7 +13,7 @@
 	<p><label>Address:</label>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_address1() ).'<br/>' if $$variable{'Quote'}->for_address1(); ) ?>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_address2() ).'<br/>' if $$variable{'Quote'}->for_address2(); ) ?>
-		<? echo ( misc::build_city_prov_country(@$variable{'Quote'}->for_city(),$$variable{'Quote'}->for_state(),$$variable{'Quote'}->for_country() ).'<br/>'; ) ?>
+		<? echo ( misc::build_city_prov_country($$variable{'Quote'}->for_city(),$$variable{'Quote'}->for_state(),$$variable{'Quote'}->for_country() ).'<br/>' if $$variable{'Quote'}->for_city() or $$variable{'Quote'}->for_state() or $$variable{'Quote'}->for_country(); ) ?>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_postalcode() ).'<br/>' if $$variable{'Quote'}->for_postalcode(); ) ?>
 	</p>
 	<p><label>Phone:</label>
