@@ -88,7 +88,7 @@ sub edit {
 
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export' ) {
 	    my @header = ( 'Project Type ID', 'Project Type Name', 'URL', 'Sort Order');
-	    my @data = map { $_->name(), $_->description() $_->url(), $_->sorting() } openprint::ProjectType::find('order'=>'sorting');
+	    my @data = map { $_->name(), $_->description(), $_->url(), $_->sorting() } openprint::ProjectType::find('order'=>'sorting');
     	misc::export_csv( $r, $log, $variable, 'projectTypes.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
 		openprint::logs::insertLogRecord('40',);
