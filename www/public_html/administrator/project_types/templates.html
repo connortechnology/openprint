@@ -5,7 +5,7 @@
 			<label>Project Type:</label>
 			<select name="ddmProjectType" size="1" onChange="f1.btnFunction.value='';f1.action='templates.html';f1.submit();">
 				<option value="">select one</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)') ], $openprint::param{'ddmProjectType'} ) ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(name)') ], $openprint::param{'ddmProjectType'} ) ) ?>
 			</select>
 		</p>
 		<p class="buttons">
