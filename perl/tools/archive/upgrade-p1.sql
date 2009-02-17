@@ -45,7 +45,7 @@ alter table currencies rename column strsymbol to symbol;
 alter table Currencies add short TEXT;
 alter table currencies add primary key (id);
 update currencies set short='USD' WHERE name='US Dollars';
-update currencies set short='CDN' WHERE name='Canadian Dollars';
+update currencies set short='CAD' WHERE name='Canadian Dollars';
 CREATE TABLE Currency_Conversions (
     from_id     INTEGER NOT NULL, FOREIGN KEY (from_id) REFERENCES Currencies (id),
     to_id           INTEGER NOT NULL, FOREIGN KEY (to_id) REFERENCES Currencies (id),

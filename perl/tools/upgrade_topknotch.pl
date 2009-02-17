@@ -5,11 +5,13 @@ use strict;
 require sql;
 require logger;
 require openprint::Object;
+require configuration;
 
 use openprint ();
-use vars qw( $log $dbh );
+use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
 $log = new logger( 'warn' );
 
@@ -55,4 +57,13 @@ if ( $year ) {
 print "upgrading db ...";
 `./db_update.pl $dst_db topknotch topknotch` or $log->error($!);
 print "done\n";
-#$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'topknotch', 'password'=>'topknotch') );
+
+$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'topknotch', 'password'=>'topknotch') );
+configuration::init_cache( $log, $dbh );
+
+if ( ! $config{'PaymentProcessor'} ) {
+	sql::insert( undef, undef, 'Configuration', 'name', 'PaymentProcessor','value','PayPal', 'category', 'Payment Processors' );
+	sql::insert( undef, undef, 'Configuration', 'name', 'PayPal API Username','value','iconno_1234555706_biz_api1.connortechnology.com', 'category', 'Payment Processors' );
+	sql::insert( undef, undef, 'Configuration', 'name', 'PayPal API Password','value','6656S2LEX7XVFAN3', 'category', 'Payment Processors' );
+	sql::insert( undef, undef, 'Configuration', 'name', 'PayPal API Signature','value','An5ns1Kso7MWUdW4ErQKJJJ4qi4-AKsGem4oQL.sgRjRW.6E5eQKKmlt', 'category', 'Payment Processors' );
+} # end if

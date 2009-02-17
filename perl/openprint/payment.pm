@@ -12,7 +12,6 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *r = \$openprint::r;
 
 require openprint::Payment;
-require openprint::Invoice;
 
 sub history {
 	ssi::save_params('/payment/history.html',  'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day', 'company_id' );
@@ -51,6 +50,7 @@ sub edit {
 sub _paid {
 	my $Payment = new openprint::Payment( $param{'payment_id'} );
 	if ( $param{'invoice_id'} ) {
+		require openprint::Invoice;
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		$Invoice->add_Payment( $Payment );
 	} # end if
@@ -60,11 +60,60 @@ sub _paid {
 sub _unpaid {
 	my $Payment = new openprint::Payment( $param{'payment_id'} );
 	if ( $param{'invoice_id'} ) {
+		require openprint::Invoice;
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		$Invoice->del_Payment( $Payment );
 	} # end if
 	$variable{'Payment'} = $Payment;
 } # end sub _paid
+
+sub make {
+
+	if ( $param{'btnFunction'} eq 'Submit' ) {
+		if ( $config{'PaymentProcessor'} eq 'PayPal' ) {
+			require PayPal;
+
+			my $Paypal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PASSWORD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+
+			my $result = $Paypal->Call_Service({
+					#METHOD=>'GetBalance',
+					METHOD=>'SetExpressCheckout',
+					PAYMENTACTION=>'Sale',
+					AMT=>$param{'amount'},
+					#CURRENCYCODE=>openprint::Currency::get_current()->short(),
+					#COUTNRYCODE=>'CA',
+
+					#creditcardtype=>$param{'cc_type'},
+					#acct=>$param{'cc_number'},
+					#expdate=>$param{'exp_month'}.$param{'exp_year'},
+					#cvv2=>$param{'cc_cvv2'},
+					#firstname=>$param{'firstname'},
+					#lastname=>$param{'lastname'},
+					#street=>$param{'address1'},
+					#city=>$param{'city'},
+					#state=>$param{'state'},
+					#zip=>$param{'postalcode'},
+					#country=>$param{'country'},
+					RETURNURL=>'http://testing.connortechnology.com/payment/make.html',
+					CANCELURL=>'http://testing.connortechnology.com/payment/make.html',
+#4739731052277472
+					});
+
+			if ($$result{ack} eq 'Success') {
+				$variable{'information'} = 'Api call successfull<br/>';
+			} else {
+				$variable{'error'} .= 'Api call failed:<br/>';
+				foreach my $error ( $Paypal->Parse_Errors($result) ) {
+					$variable{'error'} .= "$$error{errorcode} $$error{longmessage}<br/>";
+				} # end foreach error
+			} # end if
+		} else {
+			$log->error("Unknown Payment Processor in payment::make : $config{'PaymentProcessor'}");
+		} # end if PaymentProcessor == Paypal
+	} else {
+		$log->error("Unknown btnFunction in payment::make : $param{'btnFunction'}");
+	} # end if btnFunction
+} # end sub make
 
  1;
 __END__

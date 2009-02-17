@@ -320,7 +320,7 @@ sub getannual_sales {
 	my @results = sql::execute( $log, $dbh, "SELECT ID,Min,Max FROM AnnualSales ORDER BY Id" );
 	for ( my $index = 0; $index < @results; $index += 3 ) {
 		if ( $results[$index] eq $selected ) {
-			$employees .= "<option value=\"$results[$index]\" selected>";
+			$employees .= "<option value=\"$results[$index]\" selected=\"selected\">";
 		} else {
 			$employees .= "<option value=\"$results[$index]\">";
 		} # end if
