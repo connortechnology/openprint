@@ -50,7 +50,6 @@ sub session_init {
 
 	if ( $r->param('Currency') ) {
 		my @currencies = openprint::Currency::find( 'short' => $r->param('Currency') );
-#$session{'Currency'} = $Currency;
 		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
 	} elsif ( $openprint::param{'select_currency_id'} ) {
 		my $Currency = new openprint::Currency( $openprint::param{'select_currency_id'} );;

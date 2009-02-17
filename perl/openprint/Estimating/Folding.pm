@@ -172,6 +172,9 @@ sub signature_needs {
 	if ( $$services{'NoBindery'} ) {
 		return 0;
 	} # end if
+	if ( ($$specs{'pages_supplied'} eq 'Y') and ($$specs{'supplied_format'} eq 'Folded') ) {
+		return 0;
+	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
 		$openprint::log->warn("FOLDING NEEDED got templatetype!") if $debug;

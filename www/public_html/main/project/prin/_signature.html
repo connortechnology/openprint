@@ -23,7 +23,7 @@
 		</p>
 	</div>
 	<div class="rightColumn">
-		<div id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{'Group'}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+		<div id="PresentationFolderQuestions<?Group?>" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{'Group'}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
 	<? echo (
 		if ( $$variable{'Group'} == 1 ) {
 			my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
@@ -46,6 +46,20 @@
 		return ssi::make_drop_down( \@options, $$variable{'txtSignatureType'.$$variable{'Group'}} );
 ) ?>
 			</select>
+		</p>
+		<p>
+			<label>Customer Supplied?</label>
+			<input type="radio" name="pages_supplied<?Group?>" id="pages_supplied<?Group?>Y" value="Y" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Group'}} eq 'Y' ); ) ?> onclick="$('Inks<?Group?>').hide();$('SuppliedFormat<?Group?>').show();$('BleedsColourBars<?Group?>').hide();" />
+			<label class="radio" for="pages_supplied<?Group?>Y">Yes</label>
+			<input type="radio" name="pages_supplied<?Group?>" id="pages_supplied<?Group?>N" value="N" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Group'}} ne 'Y' ); ) ?> onclick="$('Inks<?Group?>').show();$('SuppliedFormat<?Group?>').hide();$('BleedsColourBars<?Group?>').show();" />
+			<label class="radio" for="pages_supplied<?Group?>N">No</label>
+		</p>
+		<p id="SuppliedFormat<?Group?>" <? echo ( $$variable{'pages_supplied'.$$variable{'Group'}} eq 'Y' ? '' : 'style="display:none;"' ) ?>>
+			<label>Supplied Format:</label>
+			<input type="radio" name="supplied_format<?Group?>" id="supplied_format<?Group?>Sheets" value="Sheets" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Group'}} ne 'Folded' ); ) ?> />
+			<label class="radio" for="supplied_format<?Group?>Sheets">Flat Sheets</label>
+			<input type="radio" name="supplied_format<?Group?>" id="supplied_format<?Group?>Folded" value="Folded" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Group'}} eq 'Folded' ); ) ?> />
+			<label class="radio" for="supplied_format<?Group?>Folded">Folded Pages</label>
 		</p>
 	</div>
 	<br class="spacer"/>

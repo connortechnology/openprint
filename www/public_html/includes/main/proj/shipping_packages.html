@@ -2,7 +2,7 @@
 	<label>Full Package Weight:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="<?Columns?>Columns">
 		<input name="txtPackageWeight<?QTYIndex?>" value="<? echo ( $$variable{'txtPackageWeight'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" /> lbs
 <? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
@@ -10,7 +10,7 @@
 		<label class="radio" for="chkOverridePackageWeight">Override</label>
 <? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 	</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
@@ -23,11 +23,11 @@
 <? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="<?Columns?>Columns">
 		<input name="txtPackageQuantity<?QTYIndex?>" value="<? echo ( $$variable{"txtPackageQuantity$$variable{'QTYIndex'}"} ) ?>" type="text" size="9" onkeyup="calc('f1');" />
 	</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
@@ -35,11 +35,11 @@
 	<label>Total Weight:</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="<?Columns?>Columns">
 		<input name="txtTotalWeight<?QTYIndex?>" value="<? echo ( $$variable{"txtTotalWeight$$variable{'QTYIndex'}"} ) ?>" type="text" size="9" readonly="readonly" /> lbs
 	 </span>
-	 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>

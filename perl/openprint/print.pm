@@ -434,7 +434,7 @@ $openprint::log->debug("Max group: $max_group");
 
 		# We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec ( 
-				'txtSignatureType',
+				'txtSignatureType','pages_supplied','supplied_format',
 				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
@@ -486,10 +486,10 @@ $openprint::log->debug("Max group: $max_group");
 			} # end foreach qty_index
 		} # end foreach spec
 		foreach my $spec ( 'PrintingType','StockType' ) {
-			next if ! exists $$param{$spec.$type};
+			next if ! exists $$param{$spec.'Override'.$type};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{$spec.$type} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.$type} );
+				if ( $$param{$spec.'Override'.$type} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'Override'.$type} );
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, 'Y' );
 				} else {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, '' );
@@ -628,7 +628,7 @@ sub publication_pages {
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
-				'txtSignatureType','rdbTemplateType',
+				'txtSignatureType','rdbTemplateType','pages_supplied','supplied_format',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {

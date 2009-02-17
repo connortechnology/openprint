@@ -1830,6 +1830,10 @@ if ( ! $data ) {
 	} # end if
 }
 
+foreach my $Currency ( openprint::Currency::find('short'=>'CDN') ) {
+$Currency->save({'short'=>'CAD'});
+}# end foreach Currency
+
 $dbh->disconnect();
 1;
 __END__

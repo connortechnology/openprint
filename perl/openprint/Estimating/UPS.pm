@@ -207,7 +207,7 @@ $log->debug("UPS!!!!!!!!!!");
 	$$specs{'ServiceTypeDiv'} .= '</select>';
 
 	$$specs{'PickupTypeDiv'} = qq{<select name="ddmPickupType" onchange="calc(this.form.name);"><option value=""> Select </option>};
-	$$specs{'PickupTypeDiv'} .= ssi::make_drop_down( [ map { ups::get_pickup_type( $pickup ), $_ } ups::get_pickup_types() ], $$specs{'ddmPickupType'} );
+	$$specs{'PickupTypeDiv'} .= ssi::make_drop_down( [ map { ups::get_pickup_type( $_ ), $_ } ups::get_pickup_types() ], $$specs{'ddmPickupType'} );
 	$$specs{'PickupTypeDiv'} .= '</select>';
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {

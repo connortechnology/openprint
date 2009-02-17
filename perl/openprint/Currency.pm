@@ -7,6 +7,20 @@ use openprint ();
 require openprint::Object;
 require sql;
 
+use vars qw( $table $serial %fields %transforms %defaults );
+$table = 'Currencies';
+$serial = 'CurrencyIndex_seq';
+%fields = (
+	'id'		=>	'id',
+	'short'		=>	'short',
+	'name'		=>	'name',
+	'symbol'	=>	'symbol',
+);
+%transforms = (
+);
+%defaults = (
+);
+
 # This treats a Currency as an object.  The database is only accessed on method access.
 my $debug = 0;
 
@@ -23,6 +37,7 @@ sub find {
 		push @values, $params{'short'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
+	$sql .= " LIMIT $params{'limit'}" if ( $params{'limit'} );
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
@@ -33,14 +48,6 @@ sub find {
 	} # end if
 	return map { new openprint::Currency( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CUrrencies WHERE id=?', {}, $$self{'id'} );
-	} # end if
-	@$self{qw/name short symbol/} = @$data{qw/name short symbol/};
-} # end sub load
 
 sub values {
 	my $self = shift;

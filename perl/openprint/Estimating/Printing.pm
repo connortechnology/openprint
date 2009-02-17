@@ -211,6 +211,10 @@ my %variables = (
 		'txtSpreadSize' => ['save'],
 		'Group' => ['save'], 'GroupPageQuantity' => ['save'],
 		'PaperMessage1'=>['output'], 'PaperMessage2'=>['output'], 'PaperMessage3'=>['output'],
+
+		# These two are for when the customer is supplying the pages. The first just says whether the pages are supplied, the second tells us whether they are supplying sheets or folded signatures.
+		'pages_supplied'=>['save'],
+		'supplied_format'=>['save'],
 		);
 
 sub variables {
@@ -295,6 +299,7 @@ sub setup_project {
 	foreach my $index ( $Project->signatures() ) {
 		next if $index >= $service_index;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+		next if $$sig_specs{'pages_supplied'} eq 'Y';
 		foreach my $colour ( get_colours( $sig_specs, 'SideOne' ), get_colours( $sig_specs, 'SideTwo' ) ) {
 			$mixed_colours{$colour} = 1;
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -588,7 +593,11 @@ $openprint::log->debug("Calc:From:Imposition:Paper " . $Paper->type() . ':' . $P
 		} else {
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+			if ( $$specs{'pages_supplied'} eq 'Y' ) {
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+			} else {
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+			} # end if
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
@@ -601,7 +610,7 @@ $openprint::log->debug("Calc:From:Imposition:Paper " . $Paper->type() . ':' . $P
 			$$specs{'PageQuantity'.$qty_index} = $Imposition->pages();
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $$specs{'PageQuantity'.$qty_index};
 			if ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0 ) {
-				$$specs{'alert'} .= "There are more pages specified than are required.  Please correct this situation.";
+				$$specs{'alert'} .= 'There are more pages specified than are required.  Please correct this situation.';
 			} # end if
 		} # end if
 	} # end foreach qty_index
@@ -1244,6 +1253,7 @@ my $master_time = gettimeofday();
 # Get plates in each previous signature, so we can get qty discounts
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			$PlateCounts{$$specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 		} # end foreach $index
@@ -1666,6 +1676,7 @@ $i->display();
 		foreach my $index ( $Project->signatures() ) {
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
@@ -1825,7 +1836,11 @@ $i->display();
 		} # end if
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+			if ( $$specs{'pages_supplied'} eq 'Y' ) {
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+			} else {
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+			} # end if
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
@@ -2862,7 +2877,7 @@ sub calc_price {
 		$price{'Comparison Cost'} += $folding_results{'Price'};
 #$price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison Cost'}.'<br/>';
 	} else {
-$price{'Folding Breakdown'} .= 'Folding not needed<br/>';
+		$price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 	} # end if
 	if ( $$services{'SpinePaste'} ) {
 		if ( $Imposition->pages() < $$specs{'txtUnspecifiedPageQuantity'.$qty_index} ) {
@@ -3578,6 +3593,7 @@ sub get_varnish_run_price {
 		foreach my $ss_id ( $Project->signatures() ) {
 			next if $service_index and ($ss_id >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			$previous_forms += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
 		} # end foreach
 		#$openprint::log->debug("Previous Forms $previous_forms");
@@ -3681,6 +3697,7 @@ sub get_aqueous_price {
 		foreach my $index ( $Project->signatures() ) {
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			if ( 
 					( $$sig_specs{'rdbAqueousSideOne'} eq $$specs{'rdbAqueousSideOne'} )
 					and ( $$sig_specs{'rdbAqueousSideTwo'} eq $$specs{'rdbAqueousSideTwo'} )
@@ -4195,10 +4212,11 @@ sub summary {
 			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtWidth','txtHeight'});
 		} # end if
 
+		my $string;
 		if ( $$services{'NoPrinting'} ) {
-			return sprintf( '%s %s', ($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions );
+			$string = sprintf( '%s %s', ($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions );
 		} else {
-			return sprintf( '%s %s %s%s%s%s/%s%s%s%s %s on %s %s',
+			$string = sprintf( '%s %s %s%s%s%s/%s%s%s%s %s on %s %s',
 					($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''),
 					$dimensions,
 					($front_colours ? $front_colours : ''),
@@ -4217,6 +4235,17 @@ sub summary {
 					,
 					);
 		} # end if
+$openprint::log->debug("Pages supplied: $$specs{'pages_supplied'}  $$specs{'supplied_format'} ");
+		if ( $$specs{'pages_supplied'} eq 'Y' ) {
+			$string .= ' pages supplied by customer as ';
+			if ( $$specs{'supplied_format'} eq 'Sheets' ) {
+				$string .= ' flat sheets.';
+			} elsif ( $$specs{'supplied_format'} eq 'Folded' ) {
+				$string .= ' folded pages.';
+			} # end if
+		} # end if
+		return $string;
+		
 	} # end if
 } # end sub summary
 
