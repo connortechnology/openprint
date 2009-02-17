@@ -67,13 +67,17 @@ div#left_sidebar {
 	display: inline-block;
 	float: left;
 	margin: 0px;
-	margin-right: 4px;
+	margin-right: 0px;
 	width: 180px;
-	margin-left: -90px;
+	margin-left: -93px;
 	text-align: center;
+	padding: 0px;
 }
 html>body #left_sidebar {
 	margin-left: -185px;
+}
+div#left_sidebar div.shadow_right {
+	margin-right: 0px;
 }
 div#content_container {
 	background-color: #fff;
@@ -138,8 +142,15 @@ div.shadow_right {
 }
 div#main_page {
 	float: left;
-	width: 100%;
+	width: 98%;
+margin: 0px;
+padding: 0px;
 }
+html>body #main_page {
+	width: 100%;
+border: none;
+}
+
 div#main_page:after {
 	content: ".";
 	display: block;
