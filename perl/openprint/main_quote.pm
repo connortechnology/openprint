@@ -251,10 +251,6 @@ $openprint::log->debug("No for info");
 		} # end if
 	} # end if
 
-	if ( $openprint::session{'user_id'} ) {
-		$$variable{'ddmUsersOptions'} = ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$openprint::session{'company_id'},'order'=>'lower(strlastname)' ) ] );
-	} # end if
-
 	if ( $quote_id ) {
 		openprint::quote::get_unfinished_quote_contents( $log, $dbh, $variable, $quote_id );
 	} # end if
