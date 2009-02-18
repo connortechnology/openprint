@@ -69,22 +69,21 @@ $log->debug("UPS!!!!!!!!!!");
 	@$specs{'txtPrice1','txtPrice2','txtPrice3'} = ('','','');
 
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
-	if ( ! $services{'PlainCartons'} ) {
+	if ( ! $$services{'PlainCartons'} ) {
 		$$specs{'alert'} = 'UPS Shipping requires that the project be packed in cartons.';
 		$$specs{'NeedPlainCartons'} = 1;
 		return 'uncalculated';
 	} else {
 		$$specs{'NeedPlainCartons'} = 0;
 	} # end if
-	my $carton_status = openprint::service::get_status( $log, $dbh, $services{'PlainCartons'}[0], $project_index );
+	my $carton_status = openprint::service::status( $Project->id(), $$services{'PlainCartons'}[0] );
 	my $carton_specs;
-$log->debug("Carton Status: $carton_status");
 	if ( sets::isin( $carton_status ,'', 'uncalculated' ) ) {
-		$carton_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $services{'PlainCartons'}[0], 'Skids' );
+		$carton_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'PlainCartons'}[0], 'Skids' );
 	} else {
-		$carton_specs = openprint::service::get_specs_ref( $project_index, $services{'PlainCartons'}[0] );
+		$carton_specs = openprint::service::get_specs_ref( $project_index, $$services{'PlainCartons'}[0] );
 	} # end if
 
 	if ( $$specs{'chkOverridePackageWeight'} ne 'Y' ) {
@@ -94,9 +93,8 @@ $log->debug("Carton Status: $carton_status");
 
 	my %packages;
 	my $qty_index;
-	foreach my $qty_i ( 1 .. 3 ) {
+	foreach my $qty_i ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_i"} = $Project->quantity($qty_i) if ! $$specs{"txtQuantity$qty_i"};
-$openprint::log->debug("QT: " . $$specs{"txtQuantity$qty_i"});
 		next if ! $$specs{'txtQuantity'.$qty_i};
 		$$specs{'hdnBreakdown'.$qty_i} = '';
 		if ( $$specs{'chkOverridePackageQuantity'} ne 'Y' ) {
@@ -133,7 +131,9 @@ $openprint::log->debug("QT: " . $$specs{"txtQuantity$qty_i"});
 			'ShipperCountry'        =>  'Country',
 			'ShipperPostalCode'     =>  'PostalCode',
 			);
-	my ( $supplier_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE ysnSupplier='Y' ORDER BY Index LIMIT 1} );
+
+	my @Suppliers = openprint::Company::find('supplier'=>'Y', 'order'=>'id', 'limit'=>1 );
+	my $supplier_id  = $Suppliers[0]->id() if @Suppliers;
 	my $supplier = new openprint::obj_customer( $log, $dbh, $supplier_id );
 	@ups{ keys %shipping_fields } = $supplier->load_shipping( @shipping_fields{ keys %shipping_fields } );
 	@ups{'ShipToPostalCode', 'ShipToCity', 'ShipToStateProvince', 'ShipToCountry','PickupType','ServiceType'} = 
@@ -176,6 +176,7 @@ $openprint::log->debug("QT: " . $$specs{"txtQuantity$qty_i"});
 		return 'uncalculated';
 	} # end if
 
+	my %rated_services;
 	my %bestService;
 	while ( my ( $service, $price ) = splice @{$upsResponse{'RatedShipments'}}, 0, 2 ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= ups::get_service_name($service).": $price\n";
@@ -190,7 +191,7 @@ $openprint::log->debug("QT: " . $$specs{"txtQuantity$qty_i"});
 				$bestService{'Service'} = $service;
 			} # end if
 		} # end if
-		$services{$service} = $price;
+		$rated_services{$service} = $price;
 	} # end while
 	if ( ! $$specs{'ddmServiceType'} ) {
 		$log->debug("Choosing  $$specs{'ddmServiceType'} as the ServiceType") if $debug;
@@ -202,18 +203,14 @@ $openprint::log->debug("QT: " . $$specs{"txtQuantity$qty_i"});
 	@ups{'PickupType','ServiceType'} = @$specs{'ddmPickupType','ddmServiceType'};
 
 	$$specs{'ServiceTypeDiv'} = qq{<select name="ddmServiceType" onchange="calc(this.form.name);"><option value=""> Select </option>};
-	foreach my $service ( keys %services ) {
-		$$specs{'ServiceTypeDiv'} .= qq{<option value="$service"} . ( $$specs{'ddmServiceType'} == $service ? ' selected' : '' ) .'>'.ups::get_service_name( $service ) . '</option>';
-	} # end foreach
+	$$specs{'ServiceTypeDiv'} .= ssi::make_drop_down( [ map { $_, ups::get_service_name( $_ ) } keys %rated_services ], $$specs{'ddmServiceType'} );
 	$$specs{'ServiceTypeDiv'} .= '</select>';
 
 	$$specs{'PickupTypeDiv'} = qq{<select name="ddmPickupType" onchange="calc(this.form.name);"><option value=""> Select </option>};
-	foreach my $pickup ( ups::get_pickup_types() ) {
-		$$specs{'PickupTypeDiv'} .= sprintf('<option value="%s"%s>%s</option>',ups::get_pickup_type( $pickup ), $$specs{'ddmPickupType'} == ups::get_pickup_type($pickup) ? ' selected' : '', $pickup );
-	} # end while
+	$$specs{'PickupTypeDiv'} .= ssi::make_drop_down( [ map { ups::get_pickup_type( $_ ), $_ } ups::get_pickup_types() ], $$specs{'ddmPickupType'} );
 	$$specs{'PickupTypeDiv'} .= '</select>';
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtPackageQuantity$qty_index"};
 		my %bestPrice;
@@ -240,7 +237,6 @@ $openprint::log->debug("QT: " . $$specs{"txtQuantity$qty_i"});
 				} # end foreach
 			} # end if
 
-
 			my $rssRequest = ups::createRatingServiceSelectionRequest(%ups);
 			my $response = ups::sendRequest( $log, 'https://www.ups.com/ups.app/xml/Rate', $accessRequest.$rssRequest );
 			if ( $response eq '' ) {
@@ -266,23 +262,27 @@ foreach ( @{$upsResponse{'RatedShipments'}} ) {
 			my $cost = $1;
 			my $currency = $2;
 			$log->debug("Currency returned: $currency") if $debug;
-			$currency = 'CDN' if $currency eq 'CAD';
 			my @currencies = openprint::Currency::find( 'short' => $currency );
-			my $UPS_Currency = shift @currencies;
-			my $Project = new openprint::Project( $project_index );
-			my $MY_Currency = $Project->Currency();
-			$log->debug("MY Currency: " . $MY_Currency->id() . ' ' . $MY_Currency->name() ) if $debug;
-			# Now... we need to do currency conversions
-			if ( $UPS_Currency->{'id'} != $MY_Currency->{'id'} ) {
-				my $rate = $UPS_Currency->conversions( $MY_Currency->{'id'} );
-				$cost *= $rate;
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Converting to ' . $MY_Currency->name() . ' using ' .$rate."\%\n";
-			} # end if
-			my %ServicePrice = openprint::service::get_price_object( 'UPS Shipping', $cost, undef );
-			if ( $ServicePrice{'Price'} > 0 ) {
-				$ServicePrice{'Total'} = $ServicePrice{'Price'};
+			my %ServicePrice;
+			if ( ! @currencies ) {
+				$log->error("No Currencies found for $currency");
 			} else {
-				$ServicePrice{'Total'} = $cost * (1 + $ServicePrice{'Markup'}/100);
+				my $UPS_Currency = shift @currencies;
+				my $Project = new openprint::Project( $project_index );
+				my $MY_Currency = $Project->Currency();
+				$log->debug("MY Currency: " . $MY_Currency->id() . ' ' . $MY_Currency->name() ) if $debug;
+				# Now... we need to do currency conversions
+				if ( $UPS_Currency->{'id'} != $MY_Currency->{'id'} ) {
+					my $rate = $UPS_Currency->conversions( $MY_Currency->{'id'} );
+					$cost *= $rate;
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Converting to ' . $MY_Currency->name() . ' using ' .$rate."\%\n";
+				} # end if
+				%ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'UPS Shipping', $cost, undef );
+				if ( $ServicePrice{'Price'} > 0 ) {
+					$ServicePrice{'Total'} = $ServicePrice{'Price'};
+				} else {
+					$ServicePrice{'Total'} = $cost * (1 + $ServicePrice{'Markup'}/100);
+				} # end if
 			} # end if
 
 			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', $ServicePrice{'Total'} );

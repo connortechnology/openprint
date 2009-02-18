@@ -279,5 +279,8 @@ sub summary {
 	} # end if
 } # end sub summary
 
+sub save {
+}
+
 1;
 __END__

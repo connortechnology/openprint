@@ -76,28 +76,29 @@ sub calc {
 		} # end foreach
 	} # end foreach ServiceType
 
-
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity( $qty_index );
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		# Ensure Cardinality of Quantity
 		$$specs{'txtQuantity'.$qty_index} =~ s/\D//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if $$specs{'txtQuantity'.$qty_index} > $Project->quantity($qty_index);
+
 		if ( ! $$carton_specs{"txtItemsPerPackage$qty_index"} ) {
 			$$specs{'alert'} .= 'Unable to determine how many items per package.';
-			return 'calculated';
+			return $$specs{'Status'} = 'calculated';
 		} # end if
-	if ( $$specs{"chkOverridePackageWeight$qty_index"} ne 'Y' ) {
+
+		if ( $$specs{"chkOverridePackageWeight$qty_index"} ne 'Y' ) {
 # Load from skids or cartons
-		$$specs{"txtPackageWeight$qty_index"} = $$carton_specs{"txtPackageWeight$qty_index"};
-	} # end if
+			$$specs{"txtPackageWeight$qty_index"} = $$carton_specs{"txtPackageWeight$qty_index"};
+		} # end if
 
 		my $other_shipped_quantity = 0;
 		foreach my $sid ( @shipping_services ) {
 			my $service_specs = openprint::service::get_specs_ref( $Project, $sid );
 			$other_shipped_quantity += $$service_specs{'txtQuantity'.$qty_index};
 		} # end foreach sid
+$openprint::log->debug($other_shipped_quantity);
 
-		if ( $$specs{'txtQuantity'.$qty_index} == $Project->quantity($qty_index) ) {
+		if ( $$specs{'txtQuantity'.$qty_index} == $Project->quantity($qty_index) or ! $$specs{'txtQuantity'.$qty_index} ) {
 			$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) - $other_shipped_quantity;
 		} # end if
 

@@ -1160,9 +1160,6 @@ if ( $version < $new_version ) {
     $version = $new_version;
 } # end if
 
-my $new_version = 1925;
-if ( $version < $new_version ) {
-    print "Updating to version $new_version\n";
     my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM User_Service_Defaults LIMIT 1', {} );
     if ( ! $data ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -1172,9 +1169,6 @@ if ( $version < $new_version ) {
 		}
 		sql::end_transaction( $dbh, $ac );
     } # end if
-    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
-    $version = $new_version;
-} # end if
 my $new_version = 1926;
 if ( $version < $new_version ) {
     print "Updating to version $new_version\n";
@@ -1829,6 +1823,10 @@ if ( ! $data ) {
 		$dbh->do('ALTER TABLE Ordered_Products add foreign key (project_id) references projects (id)');
 	} # end if
 }
+
+foreach my $Currency ( openprint::Currency::find('short'=>'CDN') ) {
+$Currency->save({'short'=>'CAD'});
+}# end foreach Currency
 
 $dbh->disconnect();
 1;

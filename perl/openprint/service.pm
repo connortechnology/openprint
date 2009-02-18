@@ -407,19 +407,6 @@ $openprint::log->debug("Apres Skdis");
 
 } # end sub auto_calculate
 
-sub get_status {
-	my ( $log, $dbh, $service_index, $project_index ) = @_;
-
-	my $sql = 'SELECT strStatus FROM tbl_Project_Contents WHERE lngServiceIndex=?';
-	my @values = ( $service_index );
-	if ( $project_index ) {
-		$sql .= ' AND lngProjectIndex=?';
-		push @values, $project_index;
-	} # end if
-	my ( $status ) = sql::execute( $log, $dbh, $sql, @values ) ;
-	return $status;
-} # end sub get_status
-
 # Gets or Sets
 sub status {
 	my ( $project_index, $service_index, $new_status ) = @_;

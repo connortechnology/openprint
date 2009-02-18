@@ -1,12 +1,12 @@
 <fieldset><legend>Overrides</legend>
 	<p>
 		<label>Stock Format:</label>
-		<input type="radio" id="StockType<?Signature?>Auto" name="StockType<?Signature?>" value="" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq '' ); ) ?> />
-		<label class="radio" for="StockType<?Signature?>Auto">Auto</label>
-		<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ); ) ?> />
-		<label class="radio" for="StockType<?Signature?>Sheet">Sheet</label>
-		<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ); ) ?> />
-		<label class="radio" for="StockType<?Signature?>Roll">Roll</label>
+		<input type="radio" id="StockTypeOverride<?Signature?>Auto" name="StockTypeOverride<?Signature?>" value="" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq '' ); ) ?> />
+		<label class="radio" for="StockTypeOverride<?Signature?>Auto">Auto</label>
+		<input type="radio" id="StockTypeOverride<?Signature?>Sheet" name="StockTypeOverride<?Signature?>" value="Sheet" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ); ) ?> />
+		<label class="radio" for="StockTypeOverride<?Signature?>Sheet">Sheet</label>
+		<input type="radio" id="StockTypeOverride<?Signature?>Roll" name="StockTypeOverride<?Signature?>" value="Roll" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ); ) ?> />
+		<label class="radio" for="StockTypeOverride<?Signature?>Roll">Roll</label>
 	</p>
 	<p>
 		<label>Runstyle:</label>
@@ -25,7 +25,7 @@
 <? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
 <p>
     <label>Printing type:</label>
-    <select name="PrintingType<?Signature?>" size="1">
+    <select name="PrintingTypeOverride<?Signature?>" size="1">
 			<option value="">Auto</option>
         <? echo (
             my $html;

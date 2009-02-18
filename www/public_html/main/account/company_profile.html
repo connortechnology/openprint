@@ -4,11 +4,9 @@
 <a name="top"></a>
 Your company profile can be modified using the fields below. Use the <b>Save</b> button when finished.<br/>
 <br/>
-<? if ( $$variable{'error'} ) ?>
-<p class="error"><?error?></p>
-<? endif ( $$variable{'error'} ) ?>
-
-<form name="f1" method="post" onSubmit="return fmCheck();">
+<!--#include virtual="/includes/error_reporting.html"-->
+<form name="f1" method="post" action="company_profile.html" onsubmit="return fmCheck();">
+	<input type="hidden" name="company_id" value="<? echo ( $session{'company_id'} ) ?>" />
 	<div class="CompanyProfile">
 		<fieldset>
 			<p class="buttons">
@@ -22,16 +20,16 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 <p><b><? echo ( $$variable{'Company'}->notes() ) ?></b></p>
 <? endif ( $$variable{'Company'}->notes() ) ?>
 			<p> 
-				<label for="name">Company Name:</label>
-				<input type="text" name="companyname" value="<? hecho ( $$variable{'Company'}->name() ) ?>"  />
+				<label for="companyname">Company Name:</label>
+				<input type="text" id="companyname" name="companyname" value="<? hecho ( $$variable{'Company'}->name() ) ?>"  />
 			</p>
 			<p> 
 				<label for="address1">Address:</label>
-				<input type="text" name="address1" value="<? hecho ( $$variable{'Company'}->address1() ) ?>"  />
+				<input type="text" id="address1" name="address1" value="<? hecho ( $$variable{'Company'}->address1() ) ?>"  />
 			</p>
 			<p> 
 				<label for="address2">&nbsp;</label>
-				<input type="text" name="address2" value="<? hecho ( $$variable{'Company'}->address2() ) ?>"  />
+				<input type="text" id="address2" name="address2" value="<? hecho ( $$variable{'Company'}->address2() ) ?>"  />
 			</p>
 			<p> 
 				<label>Country:</label>
@@ -54,20 +52,20 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 			</p>
 			<p> 
 				<label for="city">City:</label>
-				<input type="text" name="city" value="<? hecho ( $$variable{'Company'}->city() ) ?>"  />
+				<input type="text" id="city" name="city" value="<? hecho ( $$variable{'Company'}->city() ) ?>"  />
 			</p>
 			<p> 
 				<label for="postalcode">Zip/Postal Code:</label>
-				<input type="text" name="postalcode" value="<? hecho ( $$variable{'Company'}->postalcode() ) ?>"  />
+				<input type="text" id="postalcode" name="postalcode" value="<? hecho ( $$variable{'Company'}->postalcode() ) ?>"  />
 			</p>
 			<p> 
 				<label for="phone">Phone:</label>
-				<input type="text" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" style="width: auto;" size="15" /> ext: 
+				<input type="text" id="phone" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" style="width: auto;" size="15" /> ext: 
 				<input type="text" name="extension" value="<? hecho ( $$variable{'Company'}->extension() ) ?>" style="width: auto;" size="4" />
 			</p>
 			<p> 
 				<label for="fax">Fax:</label>
-				<input type="text" name="fax" value="<? hecho ( $$variable{'Company'}->fax() ) ?>"  />
+				<input type="text" id="fax" name="fax" value="<? hecho ( $$variable{'Company'}->fax() ) ?>"  />
 			</p>
 		</fieldset>
 <!--#include virtual="_business_information.html"-->
@@ -99,19 +97,20 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 		<fieldset><legend>Preferences</legend>
 			<p>
 				<label for="currency_id">Preferred Currency:</label>
-				<select name="currency_id">
+				<select id="currency_id" name="currency_id">
 					<option value=""> Please select a Currency </option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $$variable{'Company'}->currency_id() ); ) ?>
 				</select>
 			</p>
-<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<p>
 				<label>Include project breakdown with quote?:</label>
-				<input type="radio" name="quote_project_breakdown" value="Y" <? echo ( $$variable{'Company'}->quote_project_breakdown() eq 'Y' ? 'checked="checked"' : '' ) ?> />
+				<input type="radio" id="quote_project_breakdownY" name="quote_project_breakdown" value="Y" <? echo ( $$variable{'Company'}->quote_project_breakdown() eq 'Y' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="quote_project_breakdownY">Yes</label>
-				<input type="radio" name="quote_project_breakdown" value="N" <? echo ( $$variable{'Company'}->quote_project_breakdown() ne 'Y' ? 'checked="checked"' : '' ) ?> />
+				<input type="radio" id="quote_project_breakdownN" name="quote_project_breakdown" value="N" <? echo ( $$variable{'Company'}->quote_project_breakdown() ne 'Y' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="quote_project_breakdownN">No</label>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+			</p>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 		</fieldset>
 		<fieldset>
 			<p class="buttons">

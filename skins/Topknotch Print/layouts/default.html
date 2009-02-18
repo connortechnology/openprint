@@ -23,6 +23,10 @@
 		<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/content\/prin/ ) ?>
+		<? if ( $r->uri() =~ /\/payment/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/payment.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/payment/ ) ?>
 
 		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
