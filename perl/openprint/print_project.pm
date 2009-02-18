@@ -216,11 +216,11 @@ sub choose_service {
 	# if the printing service is unfinished, return it.
 	# the no url test will only occurr for the "no printing required" project type :)
 	if ( $status eq 'uncalculated' ) {
-		return ( $service_index, '/main/project/'.$Project->Type()->url() ) if $url ne '';
+		return ( $$services{''}[0], '/main/project/'.$Project->Type()->url() ) if $Project->Type()->url();
 	} # end if
 
 	$log->debug("****** GETTING INCOMPLETE PRINTING SERVICES ********");
-	foreach $service_index ( get_incomplete_services_in_category( $log, $dbh, $project_index, 'Printing' ) ) {
+	foreach my $service_index ( get_incomplete_services_in_category( $log, $dbh, $project_index, 'Printing' ) ) {
 		$log->debug("****** SERVICE: $service_index is incomplete ********");
 		my $url = get_redirect_for_service( $log, $dbh, $project_index, $service_index );
 		return ( $service_index, $url ) if $url ne '';
