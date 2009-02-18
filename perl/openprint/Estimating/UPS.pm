@@ -78,7 +78,7 @@ $log->debug("UPS!!!!!!!!!!");
 	} else {
 		$$specs{'NeedPlainCartons'} = 0;
 	} # end if
-	my $carton_status = openprint::service::get_status( $log, $dbh, $$services{'PlainCartons'}[0], $project_index );
+	my $carton_status = openprint::service::status( $Project->id(), $$services{'PlainCartons'}[0] );
 	my $carton_specs;
 	if ( sets::isin( $carton_status ,'', 'uncalculated' ) ) {
 		$carton_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'PlainCartons'}[0], 'Skids' );

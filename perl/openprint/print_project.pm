@@ -163,13 +163,15 @@ sub get_incomplete_services_in_category {
 
 	if ( $category eq 'Printing' ) {
 		my $Project = new openprint::Project( $project_index );
-		my %services = $Project->get_services();
+		my $services = $Project->services();
 
-		foreach my $index ( @{$services{'AdditionalSignature'}} ) {
-			if ( openprint::service::get_status( $log, $dbh, $index ) ne 'calculated' ) {
-				return $index;
-			} # end if
-		} # end foreach
+		if ( $$services{'AdditionalSignature'} ) {
+			foreach my $index ( @{$$services{'AdditionalSignature'}} ) {
+				if ( openprint::service::status( $Project->id(), $index ) ne 'calculated' ) {
+					return $index;
+				} # end if
+			} # end foreach
+		} # end if
 		return;
 	} else {
 
@@ -204,18 +206,17 @@ sub choose_service {
 		$log->debug("***************** NO IMCOMPLETE SERVICES FOUND ***********************");
 		return ( '', '' );
 	} # end if
-	# get the printing service
-	$_ = "SELECT strValue, lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='ProjectType'";
-	my ( $project_type_id, $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
 
-	my $status = openprint::service::get_status( $log, $dbh, $service_index );
+	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+
+	# get the printing service
+	my $status = openprint::service::status( $Project->id(), $$services{''}[0] ) if $$services{''};
 	
 	# if the printing service is unfinished, return it.
 	# the no url test will only occurr for the "no printing required" project type :)
 	if ( $status eq 'uncalculated' ) {
-		$_ = "SELECT strDetailedURL FROM Project_Types WHERE strID=?";
-		my ( $url ) = sql::execute( $log, $dbh, $_, $project_type_id );
-		return ( $service_index, '/main/project/'.$url ) if $url ne '';
+		return ( $service_index, '/main/project/'.$Project->Type()->url() ) if $url ne '';
 	} # end if
 
 	$log->debug("****** GETTING INCOMPLETE PRINTING SERVICES ********");
