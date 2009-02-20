@@ -1,5 +1,5 @@
 <? eval ( 
-	ssi::save_params('/employee/inventory/available_Paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id' );
+	ssi::save_params('/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id' );
 ) ?>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
@@ -295,6 +295,13 @@ Please select a Paper to view/edit.<br>
 				push @location_ids, $_;
 			} # end foreach
 
+			my $total_weight;
+			my $total_rolls;
+			my $total_sheets;
+			my $total_skids;
+			my $available_weight;
+			my $available_sheets;
+
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
 				next if $Paper->in_stock() - $Paper->allocated() <= 0;
 				my %skid_age;
@@ -320,8 +327,19 @@ Please select a Paper to view/edit.<br>
 
 					$skid_location{$Skid->Location()->Root()->id()} += 1;
 					$inventory{$Skid->Location()->Root()->id()} += $Skid->contents($Paper);
-				} # end foreach
+
+				} # end foreach Skid
 				next if ! $skids;
+
+				if ( $Paper->type() eq 'Roll' ) {
+					$total_weight += $Paper->in_stock();
+					$total_rolls += 1;
+					$available_weight += $Paper->in_stock() - $Paper->allocated();
+				} else {
+					$total_sheets += $Paper->in_stock();
+					$total_skids += 1;
+					$available_sheets += $Paper->in_stock() - $Paper->allocated();
+				} # end if
 				
 				if ( 
 					( (!$session{'/employee/inventory/available_paper.html?Manufacturer'}) or ( $Paper->manufacturer_id() == $session{'/employee/inventory/available_paper.html?Manufacturer'} ) ) and
@@ -344,10 +362,10 @@ $selected = '';
 					$selected,
 					$$Paper{'id'},
 					$Paper->to_string(),
-					($Paper->in_stock() - $Paper->allocated()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
+					Number::Format::format_number($Paper->in_stock() - $Paper->allocated()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
 					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
 					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
-					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_location{$_}>1?'s':''). ' - ' . $inventory{$_}.'lbs' } keys %skid_location),
+					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_location{$_}>1?'s':''). ' - ' . Number::Format::format_number($inventory{$_}).'lbs' } keys %skid_location),
 					);
 				$html .= '<td align="center" class="unprintable">';
 				$html .= ssi::writeButton( $log, $dbh, 'Allocate'.$Paper->id(), 'allocate.gif', 'allocate_window('.$Paper->id().');', '', 'A' );
@@ -355,8 +373,16 @@ $selected = '';
 				$html .= '</tr>',
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Paper
+			$html .= '<tr class="totals"><td>Totals:</td><td>';
+			$html .= Number::Format::format_number($available_weight).'lbs<br/>' if $available_weight;
+			$html .= Number::Format::format_number($available_sheets).'sheets<br/>' if $available_sheets;
+			$html .= '</td><td colspan="2">&nbsp;</td><td>';
+			$html .= Number::Format::format_number($total_rolls).'rolls ' . Number::Format::format_number($total_weight).'lbs<br/>' if $total_weight;
+			$html .= Number::Format::format_number($total_skids).'skids ' . Number::Format::format_number($total_sheets).'sheets<br/>' if $total_sheets;
+			$html .= '</td><td>&nbsp;</td></tr>';
 			return $html;
 		) ?>
+		
 	</table>
 <? endif ( @{$$variable{'Papers'}} ) ?>
 </div>

@@ -1805,7 +1805,7 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 
 							$new_specs{'PreviousStockType'} = $imp->Paper()->type();
 							$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
-							if ( $$imp{'Folder'} and (! $new_specs{'PreviousImposition'}) and ( $imp->Press()->id() == $$imp{'Folder'}->id() ) ) {
+							if ( $$imp{'Folder'} and ( $imp->Press()->id() == $$imp{'Folder'}->id() ) ) {
 #This is used in Folding to tell it not to mix impositions when inline folded
 								$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
 							} # end if  

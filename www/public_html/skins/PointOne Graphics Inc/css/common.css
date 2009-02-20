@@ -467,7 +467,7 @@ td.Date, th.Date {
 	text-align: right;
 }
 td.checkbox, th.checkbox {
-	width: 15px;
+	width: 20px;
 	text-align: center;
 }
 td.Price, th.Price {

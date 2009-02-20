@@ -1136,11 +1136,11 @@ sub rfidtag_details {
 		} else {
 			$variable{'error'} .= 'Skid already allocated<br/>';
 		} # end if
-	} else {
-		@param{'end_year','end_month','end_day'} = Date::Calc::Today();
-		$param{'limit'} = 10;
-		_rfidtag_log();
 	} # end if
+
+	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
+	$param{'limit'} = 10 if ! $param{'limit'};
+	_rfidtag_log();
 
 	$variable{'RFIDTag'} = $RFIDTag;
 } # end sub rfidtag_details
@@ -1384,7 +1384,12 @@ sub manifests {
 
 		} # end foreach manifest_id
 	} # end if
+	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
 } # end sub manifests
+
+sub _manifests {
+	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
+} # end sub _manifests
 
 sub inventory_log {
   if ( $param{'btnFunction'} eq 'Download' ) {
