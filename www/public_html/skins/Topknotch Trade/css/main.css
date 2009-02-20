@@ -14,9 +14,6 @@
 	color: white;
 }
 
-
-
-
 .SpecialColour {
 	float: left;
 	width: 100%;
@@ -250,21 +247,21 @@ ul#ProjectTypes {
 
 #CurrencySelection p {
     padding: 0px;
-    padding-left: 150px;
+    padding-left: 100px;
     margin: 0px;
     vertical-align: top;
 }
 #CurrencySelection p label {
-    width: 145px;
-    margin-left: -150px;
+    width: 95px;
+    margin-left: -100px;
     text-align: right;
     float: left;
     overflow: visible;
     padding: 0px;
     vertical-align: top;
     color: black;
-    font-size: x-small;
-    font-weight: normal;
+    font-size: small;
+    font-weight: bold;
 }
 #QuickLogin p input, #CurrencySelection p input, #QuickLogin p select, #CurrencySelection p select {
     margin: 0px;
@@ -285,4 +282,17 @@ ul#ProjectTypes {
 }
 #Specials h2 {
 	margin-top: 0px;
+}
+img#HomeCollage {
+	float: right;
+}
+
+#menubar li#MenuQuotes a, #menubar li#MenuOrders a, #menubar li#MenuProject a {
+	width: 95px;
+}
+#menubar li#MenuAboutUs a {
+	width: 60px;
+}
+#menubar li#MenuAccount a {
+	width: 120px;
 }

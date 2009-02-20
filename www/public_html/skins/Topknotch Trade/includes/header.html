@@ -27,7 +27,7 @@
 		<div id="CurrencySelection">
 			<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param ); ) ?>" method="post">
 				<p>
-					<label>Current company:</label>
+					<label>Company:</label>
 					<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
 					<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.submit();">
 					<option value="">Select a Company</option>
