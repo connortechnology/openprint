@@ -311,6 +311,9 @@ $log->debug('2');
 
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
+				if ( $filename eq '_production_feedback.html' ) {
+					openprint::employee_project::_production_feedback( );
+				} # end if
 			} # end if
 		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
 			$variable{'error'} = 'Unauthorized';

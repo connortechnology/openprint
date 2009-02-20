@@ -1,33 +1,47 @@
 <script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
 <script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 <script type="text/javascript" src="/includes/employee/feedback/paper.js"></script>
+<script type="text/javascript">
+	var clock;
+	function start_clock( form, prefix ) {
+		var time;
+		if ( ! form.elements[prefix].value ) {
+			time = new Date();
+		} else {
+			time = new Date( form.elements[prefix].value );
+		} // end if
+var weekday=new Array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
+var monthname=new Array("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+var hours = time.getHours();
+var minutes = time.getMinutes();
+minutes=((minutes < 10) ? "0" : "") + minutes;
+var seconds = time.getSeconds() +1;
+seconds=((seconds < 10) ? "0" : "") + seconds;
+		$(prefix).value = monthname[time.getMonth()] + " " + time.getDate() + ', ' + time.getFullYear() + ' ' + hours + ":" + minutes + ":" + seconds;
+		clock = setTimeout( "start_clock( $('"+form.id+"'), '"+prefix+"');", 1000 );
+	} // end function
+	function stop_clock( ) {
+		clearTimeout( clock );
+	} // end function stop_clock();
+</script>
 <div class="Service">
-    <!--#include virtual="/includes/employee/feedback/line.html"-->
-    <form method="post" name="f1" action="/employee/production/project_view.html">
-        <div class="row">
-            <b class="lgTxt">Production Feedback
-            <? if ( $$variable{'DocketNumber'} ) ?>
-            for docket #:&nbsp;<?DocketNumber?>
-            <? endif ( $$variable{'DocketNumber'} ) ?>
-            </b>
-        </div>
-		<? echo (
-			my $html = '';
-			foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
-				$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
-				$html .= '<fieldset class="Signature"><legend>Information for form '.$$sig_specs{'SignatureIndex'}.':</legend>';
-				$html .= '<p>';
-				$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id );
-				$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id, $$variable{'Project'}->ordered_quantity_index() );
-				$html .= '</p>';
-				my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/press_completion.html' );
-				$html .= ssi::variable_substitution( $r, $r->log, $dbh, \$content, $variable );
-				$html .= '</fieldset>';
-			} # end foreach
-			return $html;
-		) ?>
-        <!--#include virtual="/includes/employee/feedback/buttons.html"-->
-        <!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
-    </form>
+	<h3>Production Feedback <? if ( $$variable{'DocketNumber'} ) ?>for docket #:&nbsp;<?DocketNumber?><? endif ( $$variable{'DocketNumber'} ) ?></h3>
+	<? echo (
+		my $html = '';
+		foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
+			$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
+			$html .= '<fieldset class="Signature"><legend>Information for form '.$$sig_specs{'SignatureIndex'}.':</legend>';
+			$html .= '<p>';
+			$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id );
+			$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id, $$variable{'Project'}->ordered_quantity_index() );
+			$html .= '</p>';
+			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/press_completion.html' );
+			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/employee/proj/prin/_production_feedback.html' );
+			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+			$html .= '</fieldset>';
+		} # end foreach
+		return $html;
+	) ?>
 </div>
