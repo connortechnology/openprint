@@ -2,7 +2,7 @@
 	a.buttonOn {
 		text-decoration: none;
 		background-color: #ded9c2;
-		color: #FEE00F;
+		color: #404171;
 		border: 1px outset;
 		padding: 1px;
 		margin: 0px;
@@ -25,11 +25,10 @@
 
 	a.buttonImageOff {
 		text-decoration: none;
-		background-color:#194D98;
+		background-color: #ded9c2;
 		font-size: 11px;
-		font-weight:bold;
 		border: 1px outset;
-		color: #ffffff;
+		color: #404171;
 		padding-left: 10px;
 		padding-right: 10px;
 		padding-top: 2px;
@@ -44,11 +43,10 @@ outline:0;
 	}
 	a.buttonImageOn {
 		text-decoration: none;
-		background-color:#194D98;
+		background-color: #687796;
 		font-size: 11px;
-		font-weight:bold;
 		border: 1px outset;
-		color: #FEE00F;
+		color: #ffffff;
 		padding-left: 10px;
 		padding-right: 10px;
 		padding-top: 2px;
@@ -103,5 +101,6 @@ a.buttonImageOn .l {
 a.buttonImageOn .r {
 }
 a.buttonImageOn .c {
+	color: #ffffff;
 	cursor: default;
 }

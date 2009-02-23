@@ -743,12 +743,8 @@ function countLines(strtocount, cols) {
 	return soft_lines;
 }
 
-function textarea_resize( element, params ) {
-	var rows = countLines(element.value,element.cols);
-	if ( params && params.min_rows > rows ) {
-		rows = params.min_rows;
-	} // end if
-	element.rows = rows;
+function textarea_resize( element ) {
+	element.rows = countLines(element.value,element.cols);
 } // end function textarea_resize
 
 function set_today( e_y, e_m, e_d ) {

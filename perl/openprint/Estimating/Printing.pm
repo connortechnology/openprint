@@ -2529,7 +2529,7 @@ $openprint::log->debug("Perforating");
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if
 	if ( $$project{'HasUVCoating'} ) {
-		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
+		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 		if ( $uv_results{'Status'} eq 'uncalculated' ) {
 			$price{'UV Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
