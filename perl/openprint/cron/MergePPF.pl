@@ -101,7 +101,7 @@ foreach my $file ( @filenames ) {
 			my $fileA = $file_base.'A';
 			my $fileM = $file_base.'M';
 
-			my ( $docket, $ppo, $name, $sig, $side ) = $file =~ /(\d\d\d\d\d)(\w\w)_?(\w*?)Sg(\d\d)Sd.(\w).PPF/i;
+			my ( $docket, $ppo, $name, $sig, $side ) = $file =~ /(\d\d\d\d\d)(\w\w)_?(\w*?)Sg(\d+)Sd.(\w).PPF/i;
             my $data;
 #print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			$sig = 0 if ! $sig;
