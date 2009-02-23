@@ -19,9 +19,11 @@ require openprint::MaterialCategory;
 require openprint::PaperInventory;
 
 use openprint ();
-use vars qw( $log $dbh );
+use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
+
 $openprint::Object::no_cache = 1;
 
 $log = new logger( 'debug' );
@@ -1827,6 +1829,88 @@ if ( ! $data ) {
 foreach my $Currency ( openprint::Currency::find('short'=>'CDN') ) {
 $Currency->save({'short'=>'CAD'});
 }# end foreach Currency
+
+	configuration::init_cache( $log, $dbh );
+	if ( ! $config{'TechSupportEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'TechSupportEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send technical support requests to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'AdministratorEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'AdministratorEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address of the person in charge of the website.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'AccountingEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'AccountingEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address of the person in charge of accounting.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'QuotingEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'QuotingEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send quotes to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'UserRegistrationEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'UserRegistrationEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send new user registrations to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'CreditApplicationEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'CreditApplicationEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send new credit applications to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'ResellerApplicationEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'ResellerApplicationEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send new reseller applications to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'HelpdeskEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'HelpdeskEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send helpdesk requests to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'RMAEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'RMAEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send RMA requests to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'InventoryEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'InventoryEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send Inventory notifications to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
 
 $dbh->disconnect();
 1;
