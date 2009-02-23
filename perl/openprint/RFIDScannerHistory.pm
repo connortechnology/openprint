@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -17,6 +17,8 @@ require misc;
 
 my $debug = 1;
 
+$table = 'RFIDScannerHistory';
+$serial = 'RFIDScannerHistory_id_seq';
 %fields = (
 	'id'				=>	'id',
 	'rfidtag_id'		=>	'rfidtag_id',
@@ -89,60 +91,16 @@ sub find {
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading RFIDScannerHistory SQL($sql)" . DBI->errstr );
+		$log->debug("Error loading RFIDScannerHistory SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
-		$openprint::log->debug('No RFIDScannerHistory loaded (' . $sql . ") (@values)" );
+		$log->debug('No RFIDScannerHistory loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded RFIDScannerHistory ($sql) (@values) records:" . @$data );
+		$log->debug("Debug loaded RFIDScannerHistory ($sql) (@values) records:" . @$data );
 	} # end if
 	return map { new openprint::RFIDScannerHistory( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM RFIDScannerHistory WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
-sub save {
-	my ( $self, $hash ) = @_;
-
-	if ( $hash ) {
-		$self->set( $hash );
-	} # end if
-	
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('RFIDScannerHistory_id_seq')} );
-
-		if ( my $error = sql::insert( undef, undef, 'RFIDScannerHistory', [map { $_, $$self{$_} } keys %fields ] ) ) {
-			$$self{'id'} = undef;
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-
-    } else {
-		if ( my $error = sql::update( undef, undef, 'RFIDScannerHistory', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-    } # end if
-
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
-
-sub delete {
-    my $self = shift;
-    my $ac = sql::start_transaction( );
-    sql::execute( undef, undef, q{DELETE FROM RFIDScannerHistory WHERE id=?}, $$self{'id'} );
-    sql::end_transaction( undef, $ac );
-} # end sub delete
 
 sub Location {
 	my ( $self ) = @_;

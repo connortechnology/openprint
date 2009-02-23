@@ -1147,9 +1147,14 @@ sub rfidtag_details {
 
 sub rfidscanners {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		foreach my $id ( ref $param{'rfidscanners'} eq 'ARRAY' ? @{$param{'rfidscanners'}} : split(',',$param{'rfidscanners'}) ) {
-			$variable{'error'} .= new openprint::RFIDScanner( $id )->delete();
-		} # end foreach
+		if ( $param{'rfidscanners'} ) {
+			foreach my $id ( ref $param{'rfidscanners'} eq 'ARRAY' ? @{$param{'rfidscanners'}} : split(',',$param{'rfidscanners'}) ) {
+				$variable{'error'} .= new openprint::RFIDScanner( $id )->delete();
+			} # end foreach
+		} elsif ( $param{'rfidscanner_id'} ) {
+			my $RFIDScanner = new openprint::RFIDScanner( $param{'rfidscanner_id'} );
+			$variable{'error'} .= $RFIDScanner->delete();
+		} # end if
 	} # end if
 } # end sub rfidtags
 
@@ -1798,6 +1803,10 @@ sub _manifest_type {
 
 sub _po_select_vendor {
 }
+
+sub _verification_log {
+	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
+} # end sub _verification_log
 
 1;
 __END__

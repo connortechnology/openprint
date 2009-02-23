@@ -401,7 +401,7 @@ sub writeButton {
 		} # end if
 		$html .= "/>";
 	} else {
-		$html .= '<span class="l"></span><span class="c">' . $text .'</span><span class="r"></span>';
+		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $text .'</span><span class="r"></span>';
 	}
 	$html .= '</a>';
 	return $html;
@@ -479,6 +479,17 @@ sub datetime_select {
 	 $html .= sprintf('<select name="%1$s_minute" onchange="%2$s">', $prefix, $onchange );
 	 $html .= make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $min );
 	 $html .= '</select></span>';
+	 return $html;
+} # end sub datetime_select
+
+sub datetime_text {
+	 my ( $prefix, $value, $onchange ) = @_;
+
+	 my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
+#$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
+
+	 my $html = '';
+	 $html .= sprintf('<span id="%1$s_year">%2$.4d</span>-<span id="%1$s_month">%3$.2d</span>-<span id="%1$s_day">%4$.2d</span> <span id="%1$s_hour">%5$.2d</span>:<span id="%1$s_minute">%6$.2d</span>', $prefix, $year, $month, $day, $hour, $month );
 	 return $html;
 } # end sub datetime_select
 
