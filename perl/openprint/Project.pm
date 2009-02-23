@@ -477,17 +477,17 @@ sub find {
 		} # end if
 	} # end if
 	if ( $params{'id_start'} and $params{'id_end'} ) {
-			$sql .= ' AND (Index BETWEEN ? AND ?)';
+			$sql .= ' AND (id BETWEEN ? AND ?)';
 			push @values, @params{'id_start','id_end'};
 	} elsif ( $params{'id_start'} ) {
-			$sql .= ' AND Index >= ?';
+			$sql .= ' AND id >= ?';
 			push @values, $params{'id_start'};
 	} elsif ( $params{'id_end'} ) {
-			$sql .= ' AND Index <= ?';
+			$sql .= ' AND id <= ?';
 			push @values, $params{'id_end'};
 	} # end if
 	if ( $params{'id_like'} ) {
-		$sql .= " AND index::text LIKE '$params{'id_like'}%'";
+		$sql .= " AND id::text LIKE '$params{'id_like'}%'";
 	} # end if
 
 	if ( exists $params{'predefined'} ) {
