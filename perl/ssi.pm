@@ -401,7 +401,7 @@ sub writeButton {
 		} # end if
 		$html .= "/>";
 	} else {
-		$html .= '<span class="l"></span><span class="c">' . $text .'</span><span class="r"></span>';
+		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $text .'</span><span class="r"></span>';
 	}
 	$html .= '</a>';
 	return $html;

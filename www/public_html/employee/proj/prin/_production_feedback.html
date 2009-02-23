@@ -1,6 +1,5 @@
 <form id="pf_form-<?service_id?>" name="pf_form-<?service_id?>" method="post">
-	<input type="hidden" name="project_id" value="<? echo ( $$variable{'project_id'} ) ?>"/>
-	<input type="hidden" name="service_id" value="<? echo ( $$variable{'service_id'} ) ?>"/>
+	<input type="hidden" id="project_id-<?service_id?>" name="project_id-<?service_id?>" value="<? echo ( $$variable{'Project'}->id() ) ?>"/>
 	<table class="List">
 		<tr>
 			<th class="DateTime">Starting</th>
@@ -18,7 +17,7 @@
 				$rowclass,
 				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $PF->starting_on() ) ),
 				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $PF->ending_on() ) ),
-				seconds_to_pretty_interval( Date::Parse::str2time( $PF->ending_on() ) - Date::Parse::str2time( $PF->starting_on() ) ),
+				misc::seconds_to_pretty_interval( Date::Parse::str2time( $PF->ending_on() ) - Date::Parse::str2time( $PF->starting_on() ) ),
 				$PF->User()->name(),
 				$PF->comment(),
 	 );
@@ -26,15 +25,14 @@
 		} # end foreach PF
 		return $html;
 	) ?>
-		<tr>
-			<td class="DateTime"><input type="text" id="starting" name="starting" /></td>
-			<td class="DateTime"><input type="text" id="ending" name="ending" /></td>
-			<td class="Elapsed" id="duration"></td>
-			<td class="User" id="user"><? echo ( new openprint::User( $session{'user_id'} )->name(); ) ?></td>
-			<td><textarea id="comment" name="comment" onkeyup="textarea_resize(this,{min_rows: 1});" rows="1" cols=""></textarea></td>
+		<tr class="totals">
+			<td class="DateTime" id="starting-<?service_id?>" ></td>
+			<td class="DateTime" id="ending-<?service_id?>" ></td>
+			<td class="Elapsed" id="duration-<?service_id?>"></td>
+			<td class="User" id="user-<?service_id?>"><? echo ( new openprint::User( $session{'user_id'} )->name(); ) ?></td>
+			<td><textarea id="comment-<?service_id?>" name="comment-<?service_id?>" onkeyup="textarea_resize(this,{min_rows: 1});" rows="1" cols=""></textarea></td>
 			<td>
-				<? echo ( ssi::writeButton( $log, $dbh, 'start', 'start.gif', qq`start_clock(\$('pf_form-$$variable{service_id}'), 'ending');`, '', 'Start' ); ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'stop', 'stop.gif', qq`stop_clock();new Ajax.Updater( 'ProductionFeedback_$$variable{service_id}', '_production_feedback.html', { method: 'get', parameters: \$('pf_form-$$variable{service_id}').serialize() } );`, '', 'Stop' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'stop', 'stop.gif', qq`stop_onclick('$$variable{service_id}');`, '', 'Start' ); ) ?>
 			</td>
 		</tr>
 	</table>

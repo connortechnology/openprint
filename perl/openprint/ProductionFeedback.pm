@@ -56,6 +56,10 @@ sub find {
 	} # end if
 } # end sub find
 
+sub User {
+	return new openprint::User( $_[0]{'user_id'} );
+} # end sub User
+
 1;
 
 __END__
