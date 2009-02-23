@@ -105,6 +105,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 		} # end if
 	} # end foreach
 } # end if inotify
+$dbh->disconnect() if $dbh;
 1;
 __END__
 
