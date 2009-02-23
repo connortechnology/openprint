@@ -14,6 +14,8 @@ require sql;
 require ssi;
 require misc;
 require openprint::Location;
+require openprint::RFIDTagHistory;
+require openprint::RFIDScannerHistory;
 
 my $debug = 1;
 
@@ -139,6 +141,9 @@ sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
 	foreach ( openprint::RFIDScannerHistory::find('scanner_id'=>$$self{'id'}) ) {
+		$_->delete();
+	} # end foreach
+	foreach ( openprint::RFIDTagHistory::find('scanner_id'=>$$self{'id'}) ) {
 		$_->delete();
 	} # end foreach
     sql::execute( undef, undef, q{DELETE FROM RFIDScanners WHERE id=?}, $$self{'id'} );

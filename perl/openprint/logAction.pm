@@ -4,11 +4,23 @@ require openprint::Object;
 
 my $debug = 1;
 use strict;
-use Date::Handler;
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
 $table = 'log_Actions';
-$serial = 
+$serial = 'log_actions_id_seq';
+
+%fields = (
+	'id'	=>	'id',
+	'name'	=>	'name',
+	'description'	=>	'description',
+);
+%transforms = (
+);
+%defaults = (
+);
 
 sub find {
 	my %params = @_;
@@ -20,12 +32,13 @@ sub find {
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error loading logAction: ($sql) (@values)");
+		$log->error("Error loading logAction: ($sql) (@values) reason: " . $dbh->errstr() );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading logAction: ($sql) (@values) (".@$data.')');
+		$log->debug("Loading logAction: ($sql) (@values) (".@$data.')');
 	} # end if
 	return map { new openprint::logAction( $_->{id}, $_ ); } @$data;
 } # end sub find
