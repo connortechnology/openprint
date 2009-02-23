@@ -368,6 +368,14 @@ $openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if
 		my %folds;
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment '.$Equipment->name().': ';
 
+		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
+$openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty_index} );
+			if ( ! sets::isin( $$sig_specs{'PrintingType'.$qty_index}, split(',',$pt ) ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Wrong printing type.<br/>';
+				next;
+			} # end if
+		} # end if
+
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 			foreach ( keys %fold_types ) {
