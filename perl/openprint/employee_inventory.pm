@@ -1799,5 +1799,9 @@ sub _manifest_type {
 sub _po_select_vendor {
 }
 
+sub _verification_log {
+	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
+} # end sub _verification_log
+
 1;
 __END__

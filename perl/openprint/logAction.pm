@@ -6,16 +6,9 @@ my $debug = 1;
 use strict;
 use Date::Handler;
 
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM log_Actions WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) {
-			$openprint::log->error('Error loading LogAction: reason:'.$openprint::dbh->errstr());
-		} # end if
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
+use vars qw( $table $serial %fields %transforms %defaults );
+$table = 'log_Actions';
+$serial = 
 
 sub find {
 	my %params = @_;

@@ -498,6 +498,13 @@ if ( ! $data ) {
 		$dbh->do($st);
 	} # end foreach
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CIP3_PPF LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/CIP3_PPF.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
 
 $dbh->disconnect();
 1;
