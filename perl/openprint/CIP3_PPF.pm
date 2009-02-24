@@ -3,6 +3,7 @@ package openprint::CIP3_PPF;
 
 use strict;
 
+require misc;
 require sql;
 require openprint::Object;
 use openprint ();
@@ -63,17 +64,17 @@ sub previews {
 			my $image;
 			my $encoding;
 			my $compression;
-			while ( ($line < @data) and ! ( $data[$line] =~ /^CIP3BeginSheet/ ) ) {
+			while ( ($line < @data) ) {
+				last if $data[$line] =~ /^CIP3EndPreviewImage/;
 				if ( $data[$line] =~ /^\/CIP3PreviewImageWidth (\d+) def/ ) {
 					$width = $1;
 				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageHeight (\d+) def/ ) {
 					$height = $1;
-				} elsif ( $data[$line] =~ /^\/CIP3PreviewImage/ ) {
-					$line += 1;
-					$image = $data[$line];
+				} elsif ( $data[$line] =~ /^\/CIP3PreviewImage (.*)/ ) {
+					$image = $1;
 				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageEncoding \/(\w+) def/ ) {
 					$encoding = $1;
-				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageEncoding \/(\w+) def/ ) {
+				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageCompression \/(\w+) def/ ) {
 					$compression = $1;	
 				} # end if
 				$line += 1;

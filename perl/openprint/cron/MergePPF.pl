@@ -121,7 +121,7 @@ foreach my $file ( @filenames ) {
 					} # end foreach
 				} # end if
 				print M $line;
-				$data .= $_;
+				$data .= $line;
 			} # end while
 			close $A;
 			close M;

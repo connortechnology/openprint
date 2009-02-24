@@ -110,8 +110,8 @@
 			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/press_completion.html' );
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$html .= '<p class="buttons">';
-            $html .= ssi::writeButton( $log, $dbh, 'Save','save.gif', 'f'.$ss_id.'.submit();', '', 'Save' );
-            $html .= ssi::writeButton( $log, $dbh, 'Reset','reset.gif', 'f'.$ss_id.'.reset();', '', 'Reset' );
+            $html .= ssi::writeButton( $log, $dbh, 'Save'.$ss_id,'save.gif', 'f'.$ss_id.'.submit();', '', 'Save' );
+            $html .= ssi::writeButton( $log, $dbh, 'Reset'.$ss_id,'reset.gif', 'f'.$ss_id.'.reset();', '', 'Reset' );
 			$html .= '</p>';
 			$html .= '<input type="hidden" name="btnFunction" value="Save"/>';
 
