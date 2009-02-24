@@ -276,19 +276,15 @@ sub seconds_to_pretty_interval {
 } # end sub seconds_to_pretty_interval
 
 
-sub CommaFormatted {
-    my $delimiter = ','; # replace comma if desired
-    my($n,$d) = split /\./,shift,2;
-    my @a = ();
-    while($n =~ /\d\d\d\d/) {
-        $n =~ s/(\d\d\d)$//;
-        unshift @a,$1;
-    }
-    unshift @a,$n;
-    $n = join $delimiter,@a;
-    $n = "$n\.$d" if $d =~ /\d/;
-    return $n;
-} # end of subroutine CommaFormatted
+sub rle_decode {
+	my ( $source, $width, $height ) = @_;
+	my $result;
+	for ( my $i = 0; $i < length $_[0]; $i += 2 ) {
+		$result .= substr( $_[0], $i, 1 ) x substr( $_[0], $i+1, 1 );
+		last if length $result >= $width * $height;
+	} # end for
+	return $result;
+} # end sub rle_decode
 
 1;
 

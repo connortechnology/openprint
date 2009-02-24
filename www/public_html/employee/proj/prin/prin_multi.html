@@ -94,20 +94,31 @@
 	} // end function stop_onclick( service_id )
 </script>
 <div class="Service">
-	<h3>Production Feedback <? if ( $$variable{'DocketNumber'} ) ?>for docket #:&nbsp;<?DocketNumber?><? endif ( $$variable{'DocketNumber'} ) ?></h3>
+	<h3>Production Feedback <? if ( $$variable{'DocketNumber'} ) ?>for docket #:&nbsp;<a href="/employee/project/view.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>"><?DocketNumber?></a><? endif ( $$variable{'DocketNumber'} ) ?></h3>
 	<? echo (
 		my $html = '';
 		foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
 			$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
-			$$variable{'service_id'} = $ss_id;
+			$$variable{'ServiceIndex'} = $$variable{'service_id'} = $ss_id;
 			$html .= '<fieldset class="Signature"><legend>Information for form '.$$sig_specs{'SignatureIndex'}.':</legend>';
 			$html .= '<p>';
 			$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id );
 			$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id, $$variable{'Project'}->ordered_quantity_index() );
 			$html .= '</p>';
+			$html .= '<form id="f'.$ss_id.'" name="f'.$ss_id.'" method="post" action="/employee/production/project_view.html">';
 			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/press_completion.html' );
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+			$html .= '<p class="buttons">';
+            $html .= ssi::writeButton( $log, $dbh, 'Save','save.gif', 'f'.$ss_id.'.submit();', '', 'Save' );
+            $html .= ssi::writeButton( $log, $dbh, 'Reset','reset.gif', 'f'.$ss_id.'.reset();', '', 'Reset' );
+			$html .= '</p>';
+			$html .= '<input type="hidden" name="btnFunction" value="Save"/>';
+
+			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/hidden_fields.html' );
+			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+			$html .= '</form>';
+
 			
 			$html .= '<fieldset><legend>Production Feedback</legend><div id="ProductionFeedback-'.$$variable{'service_id'}.'">';
 			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/employee/proj/prin/_production_feedback.html' );

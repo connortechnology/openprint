@@ -48,6 +48,46 @@ sub find {
 	} # end if
 } # end sub find
 
+sub previews {
+	my ( $self ) = @_;
+	
+	my @data = split("\n", $$self{'data'} );
+	my @previews;
+
+	my $line;
+	for ( $line = 0; $line < @data; $line += 1 ) {	
+		if ( $data[$line] =~ /^CIP3BeginPreviewImage/ ) {
+			$line += 1;
+			my $width;
+			my $height;
+			my $image;
+			my $encoding;
+			my $compression;
+			while ( ($line < @data) and ! ( $data[$line] =~ /^CIP3BeginSheet/ ) ) {
+				if ( $data[$line] =~ /^\/CIP3PreviewImageWidth (\d+) def/ ) {
+					$width = $1;
+				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageHeight (\d+) def/ ) {
+					$height = $1;
+				} elsif ( $data[$line] =~ /^\/CIP3PreviewImage/ ) {
+					$line += 1;
+					$image = $data[$line];
+				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageEncoding \/(\w+) def/ ) {
+					$encoding = $1;
+				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageEncoding \/(\w+) def/ ) {
+					$compression = $1;	
+				} # end if
+				$line += 1;
+			} # end while
+			if ( $compression eq 'RunLengthDecode' ) {
+				$image = misc::rle_decode( $image, $width, $height );
+			} # end if
+			push @previews, $image;
+		} # end if found preview image				
+	} # end for each line
+	return @previews;
+
+} # end sub preview
+
 1;
 
 __END__
