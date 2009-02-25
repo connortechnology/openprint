@@ -275,6 +275,16 @@ sub interval_to_seconds {
     return ($h*3600) + ($m*60) + $s;
 } # end sub interval_to_seconds
 
+sub rle_decode {
+	my ( $source, $width, $height ) = @_;
+	my $result;
+	for ( my $i = 0; $i < length $_[0]; $i += 2 ) {
+		$result .= substr( $_[0], $i, 1 ) x substr( $_[0], $i+1, 1 );
+		last if length $result >= $width * $height;
+	} # end for
+	return $result;
+} # end sub rle_decode
+
 1;
 
 __END__

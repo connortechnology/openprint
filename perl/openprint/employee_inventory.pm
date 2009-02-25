@@ -1136,20 +1136,25 @@ sub rfidtag_details {
 		} else {
 			$variable{'error'} .= 'Skid already allocated<br/>';
 		} # end if
-	} else {
-		@param{'end_year','end_month','end_day'} = Date::Calc::Today();
-		$param{'limit'} = 10;
-		_rfidtag_log();
 	} # end if
+
+	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
+	$param{'limit'} = 10 if ! $param{'limit'};
+	_rfidtag_log();
 
 	$variable{'RFIDTag'} = $RFIDTag;
 } # end sub rfidtag_details
 
 sub rfidscanners {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		foreach my $id ( ref $param{'rfidscanners'} eq 'ARRAY' ? @{$param{'rfidscanners'}} : split(',',$param{'rfidscanners'}) ) {
-			$variable{'error'} .= new openprint::RFIDScanner( $id )->delete();
-		} # end foreach
+		if ( $param{'rfidscanners'} ) {
+			foreach my $id ( ref $param{'rfidscanners'} eq 'ARRAY' ? @{$param{'rfidscanners'}} : split(',',$param{'rfidscanners'}) ) {
+				$variable{'error'} .= new openprint::RFIDScanner( $id )->delete();
+			} # end foreach
+		} elsif ( $param{'rfidscanner_id'} ) {
+			my $RFIDScanner = new openprint::RFIDScanner( $param{'rfidscanner_id'} );
+			$variable{'error'} .= $RFIDScanner->delete();
+		} # end if
 	} # end if
 } # end sub rfidtags
 
@@ -1384,7 +1389,12 @@ sub manifests {
 
 		} # end foreach manifest_id
 	} # end if
+	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
 } # end sub manifests
+
+sub _manifests {
+	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
+} # end sub _manifests
 
 sub inventory_log {
   if ( $param{'btnFunction'} eq 'Download' ) {
@@ -1794,6 +1804,10 @@ sub _manifest_type {
 
 sub _po_select_vendor {
 }
+
+sub _verification_log {
+	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
+} # end sub _verification_log
 
 1;
 __END__

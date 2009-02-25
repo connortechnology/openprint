@@ -6,7 +6,9 @@ ul#menubar {
     left:0px;
 	background-color: #194D98;
 	list-style: none;
-    margin: 3px 0px 0px 0px;
+    margin: 0px;
+    margin-top: 3px;
+    margin-bottom: 12px;
     padding: 0px;
     z-index: 6000;
     min-width: 600px;
@@ -49,7 +51,6 @@ ul#menubar li a {
     text-decoration: none;
 	font-family: arial, helvetica, sans-serif;
 	font-size: 11px;
-	font-weight: bold;
     margin: 0px;
     overflow: hidden;
     text-align: left;

@@ -820,6 +820,24 @@ sub _stock_checkout {
 	} # end if
 } # end sub _stock_checkout
 
+sub _production_feedback {
+	if ( $param{'action'} eq 'add' ) {
+		my $PF= new openprint::ProductionFeedback();
+		$variable{'error'} .= $PF->save({
+				'project_id'	=>	$param{'project_id'},
+				'service_id'	=>	$param{'service_id'},
+				'user_id'		=>	$session{'user_id'},
+				'starting_on'	=>	$param{'starting_on'},
+				'ending_on'		=>	$param{'ending_on'},
+				'comment'		=>	$param{'comment'},
+			});
+	} # end if
+	$variable{'project_id'} = $param{'project_id'};
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$variable{'service_id'} = $param{'service_id'};
+} # end sub _production_feedback
+
+
 1;
 
 __END__

@@ -35,12 +35,12 @@ There is no current project.
 	<? echo ( ssi::writeButton( $log, $dbh, 'CopyProject', 'copyProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Copy' ); ) ?>
 </div>
 <div style="float: right;">
-	<? if ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
+	<? if ( $$variable{'Project'}->status() eq 'uncalculated' ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' ); ) ?>
-	<? endif ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
-	<? if ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated'] ) ) ?>
+	<? endif ( $$variable{'Project'}->status() eq 'uncalculated' ) ?>
+	<? if ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
-	<? endif ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated'] ) ) ?>
+	<? endif ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) ?>
 	<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>
@@ -60,10 +60,10 @@ There is no current project.
 			if ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) and $$variable{'OrderStatus'} ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Docket', 'projectDocket.gif', 'open_project_docket();', '', 'Docket' );
 			} # end if
-			if ( sets::isin( $$variable{'ProjectStatus'}, 'Proofs Out','Approved','Printed','Complete' ) ) {
+			if ( sets::isin( $$variable{'Project'}->status(), 'Proofs Out','Approved','Printed','Complete' ) ) {
 			ssi::writeButton( $log, $dbh, 'ViewPDFs', 'view_pdf.gif', "f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", '', 'View PDFs' );
 			} # end if
-			if ( sets::isin( $$variable{'ProjectStatus'}, 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
+			if ( sets::isin( $$variable{'Project'}->status(), 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?project_id='.$$variable{'ProjectIndex'}, 'Upload Files' );
 			} # end if
 $openprint::log->debug("($$variable{'HiddenSignatures'}) ($openprint::session{'ShowAllSignatures'}) (" . $$variable{'Project'}->signatures()  );

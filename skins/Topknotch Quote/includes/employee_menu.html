@@ -14,10 +14,6 @@
 	<li id="ProductionMenu" class="off"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
 		<ul>
 			<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
-			<li><a href="/employee/production/print_overview.html;NOSSL">&raquo; Press Schedule</a></li>
-			<li><a href="/employee/production/monthly_schedule.html;NOSSL">&raquo; Schedule Overview</a></li>
-			<li><a href="/employee/production/bindery_overview.html;NOSSL">&raquo; Bindery Overview</a></li>
-			<li><a href="/employee/production/bindery_schedule.html;NOSSL">&raquo; Bindery Schedule</a></li>
 		</ul>
 	</li>
 	<? if ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $openprint::session{'user_id'} ) ) ?>
@@ -37,12 +33,8 @@
 	<? if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
 	<li id="InventoryMenu" class="off"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 		<ul>
-			<li><a href="/employee/inventory/purchase_orders.html;NOSSL">&raquo; Purchase Orders</a></li>
-			<li><a href="/employee/inventory/available_paper.html;NOSSL">&raquo; Available Paper</a></li>
 			<li><a href="/employee/inventory/paper.html;NOSSL">&raquo; Paper</a></li>
 			<li><a href="/employee/inventory/skids.html;NOSSL">&raquo; Skids</a></li>
-			<li><a href="/employee/inventory/manifests.html;NOSSL">&raquo; Manifests</a></li>
-			<li><a href="/employee/inventory/inventory_log.html;NOSSL">&raquo; Inventory Log</a></li>
 		</ul>
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
@@ -51,7 +43,6 @@
 		<ul>
 			<li><a href="/employee/accounting/search.html;NOSSL">&raquo; Outstanding</a></li>
 			<li><a href="/employee/accounting/credit.html;NOSSL">&raquo; Customer Credit</a></li>
-			<li><a href="/employee/inventory/purchase_orders.html;NOSSL">&raquo; Purchase Orders</a></li>
 		</ul>
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ?>
