@@ -69,14 +69,14 @@ this.className=this.className.replace(' over', '');
 			</div>
 			<ul id="menubar" class="unprintable">
 <? if ( $session{user_id} ) ?>
-				<li class="off"><a href="#">Accounts</a>
+				<li id="Accounts" class="off"><a href="#">Accounts</a>
 					<ul>
 						<li><a href="/administrator/managerial/company_profiles.html">Companies</a></li>
 						<li><a href="/administrator/managerial/user_profiles.html">Users</a></li>
 						<li><a href="/account/logout.html">Logout</a></li>
 					</ul>
 				</li>
-				<li class="off"><a href="#">Accounting</a>
+				<li id="Accounting" class="off"><a href="#">Accounting</a>
 					<ul>
 						<li><a href="/timetrack/history.html">Timetracks</a></li>
 						<li><a href="/invoice/history.html">Invoices</a></li>
@@ -86,7 +86,7 @@ this.className=this.className.replace(' over', '');
 						<li><a href="/employee/accounting/ledger.html">Ledger</a></li>
 					</ul>
 				</li>
-				<li class="off"><a href="#">Marketing</a>
+				<li id="Marketing" class="off"><a href="#">Marketing</a>
 					<ul>
 						<li><a href="/employee/marketing/email_campaigns.html">Email Campaigns</a></li>
 						<li><a href="/employee/marketing/email_templates.html">Email Templates</a></li>
@@ -95,14 +95,14 @@ this.className=this.className.replace(' over', '');
 					</ul>
 				</li>
 <? if ( $session{'user_type'} eq 'A' ) ?>
-				<li class="off"><a href="#">Pricing</a>
+				<li id="Pricing" class="off"><a href="#">Pricing</a>
 					<ul>
 						<li><a href="/administrator/services/edit.html">Services</a></li>
 						<li><a href="/administrator/products/edit.html">Products</a></li>
 						<li><a href="/administrator/production/pricelists.html">Pricelists</a></li>
 					</ul>
 				</li>
-				<li class="off"><a href="#">Administrator</a>
+				<li id="Administrator" class="off"><a href="#">Administrator</a>
 					<ul>
 						<li><a href="/administrator/managerial/configuration.html">Configuration</a></li>
 						<li><a href="/administrator/managerial/currency.html">Currencies</a></li>
@@ -111,8 +111,9 @@ this.className=this.className.replace(' over', '');
 				</li>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 <? else ( $session{user_id} ) ?>
-<li class="off"><a href="/account/login.html">Login</a></li>
-				<li class="off"><a href="/home/services/show.html">Services</a>
+<li id="Login" class="off"><a href="/account/login.html">Login</a></li>
+<? endif ( $session{user_id} ) ?>
+				<li id="Services" class="off"><a href="/home/services/show.html">Services</a>
 					<ul>
 						<li><a href="/home/services/it_support.html">IT Support</a></li>
 						<li><a href="/home/services/offsite_backups.html">Offsite Backups</a></li>
@@ -120,15 +121,14 @@ this.className=this.className.replace(' over', '');
 						<li><a href="/home/services/webdesign.html">Website Design</a></li>
 					</ul>
 				</li>
-				<li class="off"><a href="/home/products/show.html">Products</a>
+				<li id="Products" class="off"><a href="/home/products/show.html">Products</a>
 					<ul>
 						<li><a href="/home/products/intelligentquote.html">IntelligentQuote</a></li>
 						<li><a href="/home/products/servers.html">Servers</a></li>
 					</ul>
 				</li>
-				<li class="off"><a href="/home/contact.html">Contact</a></li>
-				<li class="off"><a href="/home/sitemap.html">Sitemap</a></li>
-<? endif ( $session{user_id} ) ?>
+				<li id="Content" class="off"><a href="/home/contact.html">Contact</a>
+				</li>
 				<li style="width: auto;"><a style="width: auto;">&nbsp;</a></li>
 			</ul>
 			<div id="content2">

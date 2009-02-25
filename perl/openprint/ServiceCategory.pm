@@ -31,7 +31,7 @@ sub find {
 	} # end if
 	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ( ! $data ) and $dbh->errstr ) {
-		$log->error("Error loading Service Categories: ($sql) (@values) :" . $dbh->errstr );
+		$log->error("Error loading Service Categories: ($sql) (@values) :" . $dbh->errstr() );
 		return;
 	} # end if
 	return map { new openprint::ServiceCategory( $_->{id}, $_ ) } @$data;
