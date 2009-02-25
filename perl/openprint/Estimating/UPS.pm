@@ -177,6 +177,7 @@ $log->debug("UPS!!!!!!!!!!");
 	} # end if
 
 	my %bestService;
+	my %rated_services;
 	while ( my ( $service, $price ) = splice @{$upsResponse{'RatedShipments'}}, 0, 2 ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= ups::get_service_name($service).": $price\n";
 		if ( $$specs{'ddmServiceType'} ) {
@@ -190,7 +191,7 @@ $log->debug("UPS!!!!!!!!!!");
 				$bestService{'Service'} = $service;
 			} # end if
 		} # end if
-		$$services{$service} = $price;
+		$rated_services{$service} = $price;
 	} # end while
 	if ( ! $$specs{'ddmServiceType'} ) {
 		$log->debug("Choosing  $$specs{'ddmServiceType'} as the ServiceType") if $debug;
