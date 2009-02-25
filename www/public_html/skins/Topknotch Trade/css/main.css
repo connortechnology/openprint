@@ -14,6 +14,9 @@
 	color: white;
 }
 
+
+
+
 .SpecialColour {
 	float: left;
 	width: 100%;
@@ -202,33 +205,35 @@ div#MainBox:after {
 * html div#MainBox {height: 1%;}
 /* End hide from IE-mac */
 
-img#Butterfly, img#IDEAG7, img#IDEAG7Master {
-	margin-top: 10px;
-	width: 130px;
+img#Butterfly {
+	width: 160px;
+	float: left;
 }
-
 ul#ProjectTypes {
 	p\osition: relative;
 	float: left;
-	width: 156px;
-    padding-left: 20px;
-    padding-right: 3px;
-    padding-top: 3px;
-    padding-bottom: 3px;
+	width: 182px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: normal;
+    padding: 3px;
     margin: 0px;
-	text-align: left;
-	font-size: 12px;
-	font-weight: bold;
+	margin-left: -190px;
+	list-style: none;
 }
-#ProjectTypes li {
+.ProjectTypes li {
     margin-left: 0px;
 }
-#ProjectTypes a {
-	color:#194D98;
+.ProjectTypes a {
+    color: #000000;
     text-decoration: none;
 }
-#ProjectTypes a:hover {
-	color:#FEE00F;
+.ProjectTypes a:hover {
+    color: #ff00ff;
+/*
+ *     text-decoration: underline;
+ *     */
 }
 
 #QuickLogin {
@@ -247,21 +252,21 @@ ul#ProjectTypes {
 
 #CurrencySelection p {
     padding: 0px;
-    padding-left: 100px;
+    padding-left: 150px;
     margin: 0px;
     vertical-align: top;
 }
 #CurrencySelection p label {
-    width: 95px;
-    margin-left: -100px;
+    width: 145px;
+    margin-left: -150px;
     text-align: right;
     float: left;
     overflow: visible;
     padding: 0px;
     vertical-align: top;
     color: black;
-    font-size: small;
-    font-weight: bold;
+    font-size: x-small;
+    font-weight: normal;
 }
 #QuickLogin p input, #CurrencySelection p input, #QuickLogin p select, #CurrencySelection p select {
     margin: 0px;
@@ -277,22 +282,4 @@ ul#ProjectTypes {
 #QuickLogin p a.buttonImageOn, #QuickLogin p a.buttonImageOff, #CurrencySelection p a.buttonImageOn, #CurrencySelection p a.buttonImageOff {
     margin: 0px;
 }
-#Specials {
-	text-align: center;
-}
-#Specials h2 {
-	margin-top: 0px;
-}
-img#HomeCollage {
-	float: right;
-}
 
-#menubar li#MenuQuotes a, #menubar li#MenuOrders a, #menubar li#MenuProject a {
-	width: 95px;
-}
-#menubar li#MenuAboutUs a {
-	width: 60px;
-}
-#menubar li#MenuAccount a {
-	width: 120px;
-}

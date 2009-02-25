@@ -155,7 +155,7 @@ sub set {
 
 		my %defaults = eval('%'.$type.'::defaults');
 
-		if ( ( $$self{$field} eq '' or ! defined $$self{$field} ) and exists $defaults{$field} ) {
+		if ( ( (! defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 #$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
 		} # end if

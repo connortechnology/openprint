@@ -5,8 +5,40 @@ use Linux::Inotify2;
 use strict;
 
 require sets;
+require sql;
+require logger;
+require configuration;
+require openprint::CIP3_PPF;
+use openprint ();
+
+use vars qw( $log $dbh %config );
+
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+
+$log = logger->new();
+$log->{level} = "warn";
+
 my $source_path = $ARGV[0];
 my $dest_path = $ARGV[1];
+my $db_host = $ARGV[2];
+my $db_name = $ARGV[3];
+my $db_user = $ARGV[4];
+my $db_pass = $ARGV[5];
+$db_user = $db_name if ! $db_user;
+$db_pass = $db_name if ! $db_pass;
+
+$dbh = sql::open_sql( $log,
+		'host'      => $db_host,
+		'database'  => $db_name,
+		'driver'    => 'Pg',
+		'login'     => $db_user,
+		'password'  => $db_pass,
+		);
+die 'Error opening db' if ! $dbh;
+
+configuration::init_cache( $log, $dbh );
 
 my $inotify = new Linux::Inotify2;
 if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
@@ -18,9 +50,9 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 		printf "mask\t%d\n", $_->mask foreach @events;
 	} # end while
 } else {
-	# Command Line Params: 
-	# 1. Hot Folder to monitor
-	# 2.  Dest HotFolder
+# Command Line Params: 
+# 1. Hot Folder to monitor
+# 2.  Dest HotFolder
 	my @filenames;
 	if ( opendir DIRHANDLE, $source_path ) {
 		@filenames = readdir DIRHANDLE;
@@ -28,7 +60,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 	} # end if
 
 	foreach my $file ( @filenames ) {
-		# Will ignore ., .., any hidden file
+# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
 		if ( $file =~ /(.*)\.ppf$/i ) {
 			my $file_base = $1;
@@ -45,7 +77,8 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 				next;
 			} # end if
 
-			my ( $docket, $ppo, $name, $sig, $side ) = $file_base =~ /(\d\d\d\d\d)(\w\w)_?(.*?)Sg(\d\d)Sd\.(\w)/i;
+			my ( $docket, $ppo, $name, $sig, $side ) = $file_base =~ /(\d\d\d\d\d)(\w\w)_?(.*?)Sg(\d+)Sd\.(\w)/i;
+			my $data;
 #print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			$sig = 0 if ! $sig;
 			while ( <IN> ) {
@@ -53,15 +86,26 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d)\r\n", 1*$sig, $1 );
 				} # end if
+				$data .= $line;
 
 				print OUT $line;
 			} # end while
 			close IN;
 			close OUT;
 			unlink $source_path.'/'.$file;
+
+			my $PPF = new openprint::CIP3_PPF();
+			$_ = $PPF->save({
+				'docket'	=>	$docket,
+				'signature'	=>	$sig,
+				'side'		=>	$side,
+				'data'		=>	$data,
+			});
+			$log->error($_) if $_;
 		} # end if
 	} # end foreach
 } # end if inotify
+$dbh->disconnect() if $dbh;
 1;
 __END__
 

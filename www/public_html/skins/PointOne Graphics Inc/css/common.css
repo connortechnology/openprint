@@ -55,6 +55,10 @@ input, select, textarea {
 	padding: 1px;
 	color: black;
 }
+td textarea {
+	width: 98%;
+	margin: 0px;
+}
 input {
 }
 
@@ -465,6 +469,18 @@ img {
 td.Date, th.Date {
 	width: 120px;
 	text-align: right;
+}
+td.DateTime, th.DateTime {
+	width: 150px;
+	text-align: left;
+}
+td.Elapsed, th.Elapsed {
+	width: 120px;
+	text-align: left;
+}
+td.User, th.User {
+	width: 120px;
+	text-align: left;
 }
 td.checkbox, th.checkbox {
 	width: 20px;

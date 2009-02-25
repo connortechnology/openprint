@@ -341,9 +341,6 @@ span.DateSelector {
     float: left;
 	width: 220px;
 }
-span.DateSelector select {
-	width: auto;
-}
 .Currency {
 	font-weight: bold;
 	float: right;
