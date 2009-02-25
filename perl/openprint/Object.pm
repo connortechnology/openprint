@@ -50,6 +50,7 @@ sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
+	my %fields = eval '%'.$type.'::fields';
 
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
@@ -59,7 +60,6 @@ sub load {
 		} # end if
 	} # end if
 
-	my %fields = eval '%'.$type.'::fields';
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 
 } # end sub load
