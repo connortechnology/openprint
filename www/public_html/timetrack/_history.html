@@ -52,7 +52,7 @@
 		<? eval ( 
 			$$variable{'conversion_rate'} = $$variable{'Timetrack'}->Currency()->conversions( $session{'Currency_id'} );
 		) ?>
-		<tr title="<? echo ( $$variable{'Timetrack'}->description() ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+		<tr title="<? hecho ( $$variable{'Timetrack'}->description() ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
 			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->User()->name(); ) ?></a></td>
 			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->Company()->name(); ) ?></a></td>
 			<td align="left"><? echo ( Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $$variable{'Timetrack'}->starting() ) ); ) ?></td>

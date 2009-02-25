@@ -12,6 +12,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *r = \$openprint::r;
 
 require openprint::Payment;
+require openprint::Invoice;
 
 sub history {
 	ssi::save_params('/payment/history.html',  'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day', 'company_id' );
@@ -50,7 +51,6 @@ sub edit {
 sub _paid {
 	my $Payment = new openprint::Payment( $param{'payment_id'} );
 	if ( $param{'invoice_id'} ) {
-		require openprint::Invoice;
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		$Invoice->add_Payment( $Payment );
 	} # end if
@@ -60,7 +60,6 @@ sub _paid {
 sub _unpaid {
 	my $Payment = new openprint::Payment( $param{'payment_id'} );
 	if ( $param{'invoice_id'} ) {
-		require openprint::Invoice;
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		$Invoice->del_Payment( $Payment );
 	} # end if
