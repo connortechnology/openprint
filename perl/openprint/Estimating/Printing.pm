@@ -1437,8 +1437,9 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					my $P = $Paper->clone();
 					my @i;
 					my @cut_offs;
-					if ( $Press->specification('Cut Off') ) {
-						@cut_offs = sort split(',',$Press->specification('Cut Off'));
+					if ( my $co = $Press->specification('Cut Off') ) {
+						@cut_offs = reverse sort split( ',', $co );
+$openprint::log->debug('Cut offs: $co : ' . @cut_offs . " @cut_offs");
 					} elsif ( my $min = $Press->specification('Cut Off Minimum') ) {
 						my $increment = $Press->specification('Cut Off Increment');
 						my $cut_off = $Press->specification('Cut Off Maximum');

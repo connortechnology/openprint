@@ -134,6 +134,11 @@ div.ProjectSummary div.row span.value {
 div#ProjectView table tr td input {
 	width: 99%;
 }
+div#ProjectView table tr td.price, div#ProjectView table tr th.price {
+	width: 200px;
+	text-align: right;
+}
+
 .InksFront {
 	float: left;
 	width: 50%;

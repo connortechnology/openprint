@@ -38,32 +38,56 @@ print "Current Database Version: $version Backups: $backup, Last Updated: $updat
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
 if ( $data ) {
-	my $ac = sql::start_transaction( $dbh );
 	if ( ! exists $$data{'style_id'} ) {
+	my $ac = sql::start_transaction( $dbh );
 		$dbh->do('ALTER TABLE tbl_Projects ADD style_id INTEGER');
 		$dbh->do('ALTER TABLE tbl_Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
+	sql::end_transaction( $dbh, $ac );
 	} # end if
 	if ( ! exists $$data{'rush'} ) {
 		print "Adding rush to projects";
 		$dbh->do(q`alter table tbl_Projects add rush boolean default false`);
 	} # end if
 	if ( ! exists $$data{'predefined'} ) {
+		my $ac = sql::start_transaction( $dbh );
 		print "Adding predefined to tbl_Projects\n";
 		$dbh->do(q`alter table tbl_Projects add predefined boolean`);
 		$dbh->do(q`alter table tbl_Projects alter predefined set default false`);
 		$dbh->do(q`update tbl_Projects set predefined=false`);
 		$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+    $dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Projects LIMIT 1', {} );
+if ( $data ) {
+	if ( exists $$data{'index'} ) {
+		$dbh->do('ALTER TABLE Projects rename column index to id');
+		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');
+		$dbh->do('ALTER TABLE Projects rename column userindex to user_id');
+	} # end if
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'style_id'} ) {
+		$dbh->do('ALTER TABLE Projects ADD style_id INTEGER');
+		$dbh->do('ALTER TABLE Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
+	} # end if
+	sql::end_transaction( $dbh, $ac );
+	if ( ! exists $$data{'rush'} ) {
+		my $ac = sql::start_transaction( $dbh );
+		print "Adding rush to projects";
+		$dbh->do(q`alter table Projects add rush boolean default false`);
+		sql::end_transaction( $dbh, $ac );
 	} # end if
 	if ( ! exists $$data{'summary'} ) {
-		$dbh->do(q`alter table tbl_Projects add summary text`);
-if ( 0 ) {
+		$dbh->do(q`alter table Projects add summary text`) or $log->error($dbh->errstr());
+if ( 1 ) {
 		foreach my $P ( openprint::Project::find('created_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ) ) ) {
 			my $summary = $P->summary();
-			sql::update( undef, undef, 'tbl_Projects', ['index=?', $P->id()], 'summary', $summary );
+			
+			sql::update( undef, undef, 'Projects', ['id=?', $P->id()], 'summary', $summary );
 		} # end foreach
 }
 	} # end if
-	sql::end_transaction( $dbh, $ac );
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
@@ -1239,30 +1263,6 @@ if ( ! $data ) {
 	}
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
-if ( $data ) {
-    $dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
-}
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Projects LIMIT 1', {} );
-if ( $data ) {
-	if ( exists $$data{'index'} ) {
-		$dbh->do('ALTER TABLE Projects rename column index to id');
-		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');
-		$dbh->do('ALTER TABLE Projects rename column userindex to user_id');
-	} # end if
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! exists $$data{'style_id'} ) {
-		$dbh->do('ALTER TABLE Projects ADD style_id INTEGER');
-		$dbh->do('ALTER TABLE Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
-	} # end if
-	sql::end_transaction( $dbh, $ac );
-	if ( ! exists $$data{'rush'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		print "Adding rush to projects";
-		$dbh->do(q`alter table Projects add rush boolean default false`);
-		sql::end_transaction( $dbh, $ac );
-	} # end if
-} # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM sessions LIMIT 1', {} );
 if ( ! $data ) {

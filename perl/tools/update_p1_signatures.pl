@@ -26,9 +26,22 @@ $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 
-foreach my $Project ( openprint::Project::find('id_start'=>304000,'company_id'=>6) ) {
+foreach my $Project ( openprint::Project::find('id_start'=>312000,'company_id'=>6) ) {
+	my $services = $Project->services();
+
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+
 	foreach my $sig_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		#if ( ! $$sig_specs{'Group'} ) {
+			if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', 1 );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', 4 );
+			} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', 2 );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$printing_specs{'txtTotalPageQuantity'} - ( $$printing_specs{'rdbCover'} eq 'Self' ? 0 : 4 ) );
+			} # end if
+		#} # en dif
 		foreach my $side ( 'SideOne','SideTwo' ) {
 			my $index;
 			foreach $index ( 1 .. 8 ) {
@@ -72,13 +85,12 @@ foreach my $Project ( openprint::Project::find('id_start'=>304000,'company_id'=>
 			} # end if	
 		} # end foreach side
 	} # end foreach sig_id
-	my $services = $Project->services();
 	foreach my $service ( 'BulkSkids', 'PlainCartons' ) {
 		if ( $$services{$service} ) {
 			foreach ( @{$$services{$service}} ) {
 				my $specs = openprint::service::get_specs_ref( $Project, $_ );
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $_, 'ddmPackageType'.$qty_index, $$specs{'ddmPackageTYpe'} );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $_, 'ddmPackageType'.$qty_index, $$specs{'ddmPackageType'} );
 				} # end foreach
 			} # end foreach
 		} # end if

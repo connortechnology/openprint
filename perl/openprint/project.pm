@@ -45,6 +45,7 @@ $openprint::log->debug("Viewing Project $project_index");
 
 # THis is the currency that prices are displayed in
 	my $Currency = openprint::Currency::get_current();
+	$$variable{'Currency'} = $Currency;
 	my $ProjectCurrency = $$variable{'Project'}->Currency();
 	my $conversion_rate = $ProjectCurrency->conversions( $Currency->id() );
 
