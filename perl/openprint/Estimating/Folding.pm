@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -255,7 +255,8 @@ sub test_fold {
 		#} else {
 			#$openprint::log->debug("Fold good due to Maximum height " . ($I->image_orieintation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) . ' > ' . $Equipment->specification($foldtype.'MaximumHeight' ) ) if $debug;
 		} # end if
-		if ( $Equipment->specification($foldtype.'PrintingType') and ! sets::isin( $$sig_specs{'PrintingType'}, split(',', $Equipment->specification($foldtype.'PrintingType') ) ) ) {
+		if ( $Equipment->specification($foldtype.'PrintingType') and ! sets::isin( $$sig_specs{'PrintingType'.$qty_index}, split(',', $Equipment->specification($foldtype.'PrintingType') ) ) ) {
+			$openprint::log->debug("Fold no good due to PrintingType $$sig_specs{'PrintingType'.$qty_index} != " . $Equipment->specification($foldtype.'PrintingType') )  if $debug;
 			return 0;
 		} # end if
 	} # end if
@@ -401,9 +402,9 @@ $openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty
 				$_ = $Equipment->fits( $Imposition->image_width(), $Imposition->image_height(), $$sig_specs{'txtSpecificStockCalliper'} );
 				if ( $_ ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit: $_<br/>";
-				} else {
+				} elsif ( test_fold( $Equipment, $Imposition, $sig_specs, $$sig_specs{'rdbTemplateType'}, $qty_index ) ) {
 					$folds{$$sig_specs{'rdbTemplateType'}} = 1;
-				}
+				} # end if
 
 			} else {
 #if ( $$sig_specs{"txtSignatureSpreadQuantity$qty_index"} ) {
