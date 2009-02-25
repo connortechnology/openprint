@@ -8,65 +8,6 @@
 		theme : "simple"
 
 	});
-	function check_time_starting(form) {
-		var start;
-		var end;
-		if ( get_value( form.time_associated ) == 1 ) {
-			start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value, form.starting_hour.value, form.starting_minute.value );
-			end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value, form.ending_hour.value, form.ending_minute.value );
-		} else {
-			start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value );
-			end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value );
-		} // end if
-		if ( start > end ) {
-			ddm_select_by_value( form.ending_year, form.starting_year.value );
-			ddm_select_by_value( form.ending_month, form.starting_month.value );
-			ddm_select_by_value( form.ending_day, form.starting_day.value );
-			if ( get_value( form.time_associated ) == 1 ) {
-				ddm_select_by_value( form.ending_hour, form.starting_hour.value );
-				ddm_select_by_value( form.ending_minute, form.starting_minute.value );
-			} // end if
-		} // end if
-	} // end function check_time_starting
-	function check_time_ending(form) {
-		var start;
-		var end;
-		if ( get_value( form.time_associated ) == 1 ) {
-			start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value, form.starting_hour.value, form.starting_minute.value );
-			end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value, form.ending_hour.value, form.ending_minute.value );
-		} else {
-			start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value );
-			end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value );
-		} // end if
-		if ( start > end ) {
-			ddm_select_by_value( form.starting_year, form.ending_year.value );
-			ddm_select_by_value( form.starting_month, form.ending_month.value );
-			ddm_select_by_value( form.starting_day, form.ending_day.value );
-			if ( get_value( form.time_associated ) == 1 ) {
-				ddm_select_by_value( form.starting_hour, form.ending_hour.value );
-				ddm_select_by_value( form.starting_minute, form.ending_minute.value );
-			} // end if
-		} // end if
-	} // end function check_time_ending
-	function update_duration(form) {
-		if ( get_value( form.time_associated ) == 1 ) {
-			var start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value, form.starting_hour.value, form.starting_minute.value );
-			var end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value, form.ending_hour.value, form.ending_minute.value );
-			var difference = parseInt( ( end - start ) / 1000 );
-			var days = parseInt(difference/(60*60*24));
-			difference -= days * ( 60*60*24 );
-			var hours = parseInt( difference/(60*60) );
-			difference -= hours * (60*60);
-			var minutes = parseInt( difference/60 );
-			$('duration').innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
-		} else {
-			var start = new Date( form.starting_year.value, form.starting_month.value, form.starting_day.value );
-			var end = new Date( form.ending_year.value, form.ending_month.value, form.ending_day.value );
-			var difference = parseInt( ( end - start ) / 1000 );
-			var days = parseInt(difference/(60*60*24));
-			$('duration').innerHTML = days +'days';
-		} // end if
-	} // end function update_duration
 </script>
 <form name="f1" id="f1" action="history.html" method="post">
 	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" />
@@ -97,10 +38,10 @@
 				<label class="radio" for="time_associated0">No</label>
 			</p>
 			<p><label>Start:</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 'check_time_starting(this.form);update_duration(this.form);' ); ) ?></span>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), q`check_time_starting(this.form,'starting','ending');update_duration(this.form,'starting','ending');` ); ) ?></span>
 			</p>
 			<p><label>End:</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 'update_duration(this.form);' ); ) ?></span>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), q`update_duration(this.form,'starting','ending');` ); ) ?></span>
 			</p>
 			<p><label>Duration:</label>
 				<span id="duration">
