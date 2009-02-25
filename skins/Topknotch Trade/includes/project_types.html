@@ -1,11 +1,11 @@
 <ul id="ProjectTypes">
-<? echo (
-	my $html = '';
-	foreach my $Category ( openprint::ProjectTypeCategory::find('order'=>'sort,name') ) {
-		foreach my $PT ( openprint::ProjectType::find('category_id'=>$Category->id(), 'order'=>'lngsort,strname' ) ) {
-$html .= sprintf('<li><a href="/content/%1$s?ProjectType=%2$s&amp;ProjectTypeName=%3$s" title="%4$s">%4$s</a></li>', $PT->url(), URI::Escape::uri_escape($PT->strid()), URI::Escape::uri_escape($PT->name()), ssi::htmlize($PT->name()) );
-		} # end foreach PT
-	} # end foreach Category
-	return $html;
-) ?>
+	<? echo (
+		my $html = '';
+		foreach my $ProjectType ( openprint::ProjectType::find( 'order'=> 'lngSort, lower(strName)' ) ) {
+$html .= sprintf('<li><a href="/content/%1$s?ProjectType=%2$s&amp;ProjectTypeName=%3$s" title="%4$s">%4$s</a></li>',
+	$ProjectType->url(), URI::Escape::uri_escape($ProjectType->strid()), URI::Escape::uri_escape($ProjectType->name()), $ProjectType->name() );
+		} # end foreach
+		return $html;
+	) ?>
+	<img id="Butterfly" src="/images/logo_butterfly.jpg" alt="Butterfly" />
 </ul>

@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -587,6 +587,14 @@ sub signature_calc {
 					#$Imposition->display();
 				#} # end if
 
+		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
+$openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty_index} );
+			if ( ! sets::isin( $$sig_specs{'PrintingType'.$qty_index}, split(',',$pt ) ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Wrong printing type.<br/>';
+				next;
+			} # end if
+		} # end if
+
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 				if ( $$Equipment{id} == $$Press{id} ) {
 
@@ -1024,6 +1032,8 @@ sub calc {
 
 		my $price;
 		my $mprice;
+
+		my $previous_imposition;
 
 		foreach my $signature_service_index ( sort $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );

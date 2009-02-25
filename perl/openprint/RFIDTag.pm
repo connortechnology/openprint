@@ -120,9 +120,7 @@ sub load {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	if ( $hash ) {
-		$self->set( $hash );
-	} # end if
+	$self->set( $hash );
 
 	if ( ! $$self{'id'} ) {
 		return 'RFID Tag must have an id';
@@ -159,6 +157,7 @@ sub save {
 	$$self{'updated_on'} = 'NOW()';
 
 	delete $$self{'type'};
+	$$self{'updated_on'} = 'NOW()';
 	
 	my $ac = sql::start_transaction( $dbh );
 

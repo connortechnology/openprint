@@ -62,7 +62,7 @@ Please select a company or user to obtain login information.<br/>
 				); ) ?>
 			</p>
 		</fieldset>
-		<fieldset><legend>User Information:</legend>
+		<fieldset><legend>User Information: <? echo ( $$variable{'User'}->id() ) ?></legend>
 			<? if ( $$variable{'User'}->Company()->notes() ) ?>
 			<p>
 				<label>Company Notes:</label>
