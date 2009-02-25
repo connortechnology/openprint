@@ -1162,6 +1162,7 @@ $openprint::log->debug("No spread layout for you!");
 						foreach my $i ( @i ) {
 							next if $Press->specification('Maximum Roll Width') and ($i->Paper()->width() > $Press->specification('Maximum Roll Width'));
 							my $i2 = $i;
+							$i2->paper()->width( $i2->used_width() );
 							while ( $i2->columns() ) {
 								push @imps, $i2;
 								$i2 = $i2->copy();
