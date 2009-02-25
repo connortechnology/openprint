@@ -29,16 +29,6 @@ my $db_pass = $ARGV[5];
 $db_user = $db_name if ! $db_user;
 $db_pass = $db_name if ! $db_pass;
 
-$dbh = sql::open_sql( $log,
-		'host'      => $db_host,
-		'database'  => $db_name,
-		'driver'    => 'Pg',
-		'login'     => $db_user,
-		'password'  => $db_pass,
-		);
-die 'Error opening db' if ! $dbh;
-
-configuration::init_cache( $log, $dbh );
 
 my $inotify = new Linux::Inotify2;
 if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
@@ -84,7 +74,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 			while ( <IN> ) {
 				my $line = $_;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
-					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d)\r\n", 1*$sig, $1 );
+					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
 				} # end if
 				$data .= $line;
 
@@ -94,18 +84,30 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 			close OUT;
 			unlink $source_path.'/'.$file;
 
-			my $PPF = new openprint::CIP3_PPF();
-			$_ = $PPF->save({
-				'docket'	=>	$docket,
-				'signature'	=>	$sig,
-				'side'		=>	$side,
-				'data'		=>	$data,
-			});
-			$log->error($_) if $_;
+			if ( $docket ) {
+				$dbh = sql::open_sql( $log,
+						'host'      => $db_host,
+						'database'  => $db_name,
+						'driver'    => 'Pg',
+						'login'     => $db_user,
+						'password'  => $db_pass,
+						);
+				die 'Error opening db' if ! $dbh;
+
+				configuration::init_cache( $log, $dbh );
+				my $PPF = new openprint::CIP3_PPF();
+				$_ = $PPF->save({
+						'docket'	=>	$docket,
+						'signature'	=>	$sig,
+						'side'		=>	$side,
+						'data'		=>	$data,
+						});
+				$log->error($_) if $_;
+				$dbh->disconnect() if $dbh;
+			} # end if docket
 		} # end if
 	} # end foreach
 } # end if inotify
-$dbh->disconnect() if $dbh;
 1;
 __END__
 

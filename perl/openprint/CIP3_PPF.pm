@@ -10,6 +10,7 @@ use openprint ();
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 
+my $debug = 1;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'CIP3_PPF';
@@ -34,7 +35,7 @@ sub find {
 	my $sql = 'SELECT * FROM ' . $table . ' WHERE 1>0';
 	my @values;
 
-	if ( $params{'docket'} ) {
+	if ( exists $params{'docket'} ) {
 		$sql .= ' AND docket=?';
 		push @values, $params{'docket'};
 	} # end if
@@ -45,6 +46,9 @@ sub find {
 	if ( ! $data ) {
 		$log->debug("openprint::CIP3_PPF::find( $sql)" . $dbh->errstr);
 	} else {
+		if ( $debug ) {
+			$log->debug("openprint::CIP3_PPF::find( $sql) : #of records:" . @$data );
+		} # end if
 		return map { new openprint::CIP3_PPF( $_->{id}, $_ ); } @$data;
 	} # end if
 } # end sub find
@@ -71,7 +75,9 @@ sub previews {
 				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageHeight (\d+) def/ ) {
 					$height = $1;
 				} elsif ( $data[$line] =~ /^\/CIP3PreviewImage (.*)/ ) {
-					$image = $1;
+					$line += 1;
+					#$image = $1;
+					$image = $data[$line];
 				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageEncoding \/(\w+) def/ ) {
 					$encoding = $1;
 				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageCompression \/(\w+) def/ ) {

@@ -278,11 +278,13 @@ sub seconds_to_pretty_interval {
 
 sub rle_decode {
 	my ( $source, $width, $height ) = @_;
-	my $result;
-	for ( my $i = 0; $i < length $_[0]; $i += 2 ) {
-		$result .= substr( $_[0], $i, 1 ) x substr( $_[0], $i+1, 1 );
+	my $result = '';
+$openprint::log->warn("RLE::DECODE:: source: " . length $source );
+	for ( my $i = 0; $i < length $source; $i += 2 ) {
+		$result .= substr( $source, $i, 1 ) x substr( $source, $i+1, 1 );
 		last if length $result >= $width * $height;
 	} # end for
+$openprint::log->warn("RLE::DECODE:: results: " . length $result );
 	return $result;
 } # end sub rle_decode
 
