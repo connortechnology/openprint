@@ -110,7 +110,7 @@ body {
 		margin-bottom: -32767px;
 	}
 }
-img#Butterfly, img#IDEAG7, img#IDEAG7Master {
+img#Butterfly {
 	margin-top: 10px;
 	width: 130px;
 }
@@ -212,10 +212,4 @@ margin-top: .6em;
 }
 img#HomeCollage {
 	float: right;
-}
-#Specials {
-text-align: center;
-}
-#Specials h2 {
-margin-top: 0px;
 }

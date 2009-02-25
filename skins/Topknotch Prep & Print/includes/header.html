@@ -3,7 +3,7 @@
 	<img src="/images/us-ca.jpg" width="139" height="48" usemap="#Map" alt=""/>
 	<map name="Map" id="Flags">
 		<area shape="rect" coords="2,2,68,46" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'USD','Country'=>'US'} } ); ) ?>" alt="US" />
-		<area shape="rect" coords="72,3,137,47" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'CAD','Country'=>'CA'} } ); ) ?>" alt="CA" />
+		<area shape="rect" coords="72,3,137,47" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'CDN','Country'=>'CA'} } ); ) ?>" alt="CA" />
 	</map>
 </div>
 <? if ( ! $session{'user_id'} ) ?>

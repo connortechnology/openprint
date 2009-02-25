@@ -1817,6 +1817,7 @@ if ( ! $data ) {
 		$dbh->do('alter table manifest_content_types add supplier_invoice text');
 	} # end if
 } 
+<<<<<<< HEAD:perl/tools/db_update.pl
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Ordered_Products LIMIT 1', {} );
 if ( ! $data ) {
 } else {
@@ -1911,6 +1912,22 @@ $Currency->save({'short'=>'CAD'});
 				'description'=>'Email address to send Inventory notifications to.',
 				'category'=> 'Email Notifications'] );
 	} # end if
+=======
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ProductionFeedback LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/ProductionFeedback.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CIP3_PPF LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/CIP3_PPF.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+>>>>>>> 0863f990a3d32ce3b817d131c2528308dc9da62e:perl/tools/db_update.pl
 
 $dbh->disconnect();
 1;

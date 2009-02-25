@@ -1,6 +1,6 @@
 <script type="text/javascript">
     function confirm_delete( form, payment_id ) {
-        if ( confirm( 'Are you sure you want to delete this payment?' ) ) {
+        if ( confirm( "Are you sure you want to delete this payment?" ) ) {
             form.btnFunction.value = 'Delete Payment';
             form.payment_id.value = payment_id;
             form.submit();
@@ -95,11 +95,7 @@ Projects listed in red have changed price from the time this order was originall
 			} # end if
 			if ( $$variable{'AmountOutstanding'} ) {
 				if ( $config{'PaymentProcessor'} ) {
-					#if ( $config{'PaymentProcessor'} eq 'PayPal' ) {
-						#$html .= '<img src="https://fpdbs.paypal.com/dynamicimageweb?cmd=_dynamic-image" alt="Paypal" />';
-					#} else {	
-						$html .= ssi::writeButton( $log, $dbh, 'MakePayment','makePayment.gif',"f1.action='/payment/make.html';f1.submit();", '', 'Make Payment' ); 
-					#} # end if
+					$html .= ssi::writeButton( $log, $dbh, 'MakePayment','makePayment.gif',"f1.action='/main/payment/payment_make.html';f1.submit();", '', 'Make Payment' ); 
 				} # end if
 			} # end if
 			
