@@ -895,10 +895,10 @@ function check_time_starting( form, starting_prefix, ending_prefix ) {
 
 	if ( get_value( form.time_associated ) == 1 ) {
 		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
-		end = new Date( form.elements[ending_prefix+'_year'.value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
 	} else {
 		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
-		end = new Date( form.elements[ending_prefix+'_year'.value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
 	} // end if
 
 	if ( start > end ) {
