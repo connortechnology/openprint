@@ -1525,7 +1525,8 @@ $openprint::log->debug('Cut offs: $co : ' . @cut_offs . " @cut_offs");
 					} else {
 						foreach my $i ( @i ) {
 							next if $Press->specification('Maximum Roll Width') and ($i->Paper()->width() > $Press->specification('Maximum Roll Width'));
-							my $i2 = $i;
+							my $i2 = $i->copy();
+							$i2->paper()->width( $i2->used_width() );
 							while ( $i2->columns() ) {
 								push @imps, $i2;
 								$i2 = $i2->copy();
