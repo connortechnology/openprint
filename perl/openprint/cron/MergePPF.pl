@@ -90,7 +90,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 				my $fileA = $file_base.'A';
 				my $fileM = $file_base.'M';
 
-				my ( $docket, $ppo, $name, $sig, $side ) = $file =~ /(\d\d\d\d\d)(\w\w)_?(\w*?)Sg(\d+)Sd.(\w).PPF/i;
+				my ( $docket, $ppo, $name, $sig, $side ) = $file =~ /(\d\d\d\d\d)(\w\w)_?(.*?)Sg(\d+)Sd.(\w)\.PPF/i;
 				my $data;
 	#print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 				$sig = 0 if ! $sig;
@@ -132,11 +132,14 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 					$_ = $PPF->save({
 							'docket'    =>  $docket,
 							'signature' =>  $sig,
-							'side'      =>  $side,
+							'side'      =>  'M',
 							'data'      =>  $data,
+							'data_length'	=>	length $data,
 							});
 					$log->error($_) if $_;
 					$dbh->disconnect() if $dbh;
+				} else {
+					$log->error("$docket not found for $file_base");
 				} # end if docket
 
 			} # end if
