@@ -124,7 +124,7 @@ sub delete {
 	sql::end_transaction( $dbh, $ac );
 	
 	# Add record to audit log - action "Delete Project Type".
-	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'strName'},);
+	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'name'},);
 } # end sub delete
 
 sub Templates {

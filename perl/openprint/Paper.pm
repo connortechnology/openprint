@@ -392,7 +392,7 @@ sub save {
     sql::execute( undef, undef, q{DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM Papers)} );
     sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
 
-    my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
+    my %types = map { $_->name(), $_->id() } openprint::ProjectType::find();
 	my @recommendations = $self->recommendations();
     sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngPaperIndex=?}, $$self{'id'} );
 	foreach my $rec ( @recommendations ) {
@@ -452,7 +452,17 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ), $self->quality() ) );
+	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight() ) );
+	if ( $self->type() eq 'Roll' ) {
+		$string .= $self->width.'" Roll';
+	} else {
+		if ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) {
+			$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+		} else {
+			$string .= ' ' . $self->width().'x'.$self->height() . ' ';
+		} # end if
+	} # end if
+	$string .= join( ' ', ( $self->mweight() ? $self->mweight().'M' : () ), $self->quality() );
 	$string .= ' FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
 	return $string;
 } # end sub to_string
@@ -829,7 +839,7 @@ sub recommendations {
 	if ( @_ ) {
 		@{$$self{'recommendations'}} = @_;
 	} elsif ( ! exists $$self{'recommendations'} ) {
-		@{$$self{'recommendations'}} = sql::execute( undef, undef, q{SELECT strID FROM Project_Types WHERE lngIndex IN ( SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?)}, $$self{'id'} );
+		@{$$self{'recommendations'}} = sql::execute( undef, undef, q{SELECT name FROM Project_Types WHERE id IN ( SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?)}, $$self{'id'} );
 	} # end if
 	return @{$$self{'recommendations'}};
 } # end sub recommendations
@@ -1129,6 +1139,11 @@ sub load_from_signature {
 			delete $params{'height'};
 			@Papers = find( %params );
 		} # end if
+		foreach my $P ( @Papers ) {
+			next if $$specs{'StockQuantity'.$qty_index} < $P->minimum_order();
+			$Paper = $P;
+			last;
+		} # end foreach
 		$Paper = shift @Papers if @Papers;
 		$Paper = new openprint::Paper() if ! $Paper;
 		if ( $$specs{'rdbSuppliedStock'} eq 'Y' and ! $Paper->supplied() ) {

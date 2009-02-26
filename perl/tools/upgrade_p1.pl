@@ -90,3 +90,33 @@ foreach my $E ( openprint::Equipment::find('strid'=>'Web1') ) {
 	} # end foreach
 } # end foreach
 }
+if ( 0 ) {
+new openprint::ProjectType_Template()->save({
+	'projecttype_id'	=>	1,
+	'type'				=>	'Unbound',
+	'description'		=>	'5.375 x 8.375 Finished',
+	'finished_width'	=>	5.375,
+	'finished_height'	=>	8.375,
+	'flat_width'		=>	10.75,
+	'flat_height'		=>	8.375,
+});
+new openprint::ProjectType_Template()->save({
+	'projecttype_id'	=>	1,
+	'type'				=>	'Unbound',
+	'description'		=>	'5.5 x 8.5 Finished',
+	'finished_width'	=>	5.5,
+	'finished_height'	=>	8.5,
+	'flat_width'		=>	11,
+	'flat_height'		=>	8.5,
+});
+new openprint::ProjectType_Template()->save({
+	'projecttype_id'	=>	1,
+	'type'				=>	'Unbound',
+	'description'		=>	'8.5 x 11 Finished',
+	'finished_width'	=>	8.5,
+	'finished_height'	=>	11,
+	'flat_width'		=>	17,
+	'flat_height'		=>	11,
+});
+}
+$dbh->disconnect();

@@ -12,8 +12,10 @@ require openprint::logs;
 use openprint ();
 
 my $debug = 1;
-use vars qw( %fields );
+use vars qw( $table $serial %fields %transforms %defaults );
 
+$table = 'pricelists';
+$serial = 'pricelists_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'name'			=>	'name',
@@ -47,14 +49,6 @@ sub find {
 
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists WHERE id=?', {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
-
 sub delete {
 	my $self = shift;
 
@@ -67,26 +61,6 @@ sub delete {
 	sql::end_transaction( $openprint::dbh, $ac );
 	openprint::logs::insertLogRecord('9', "Price List Index: " . $$self{id},);
 } # end sub delete
-
-sub save {
-	my ( $self, $param ) = @_;
-	if ( $param ) {
-		$$self{'name'} = $$param{'Name'};
-		$$self{'description'} = $$param{'Description'};
-		$$self{'currency_id'} = $$param{'Currency'};
-	} # end if
-	my @sql = (
-		'name', $$self{'name'}, 'Description', $$self{'description'}, 'currency_id', $$self{'currency_id'},
-);
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('pricelists_id_seq'::text)} );
-		sql::insert( $openprint::log, $openprint::dbh, 'Pricelists', 'id', $$self{'id'}, @sql );
-		openprint::logs::insertLogRecord('30', "Price List Index: " . $$self{'id'} . " - " . $$self{'name'},);
-	} else { #save
-		sql::update( $openprint::log, $openprint::dbh, 'Pricelists', ['Id=?', $$self{'id'}],@sql );
-		openprint::logs::insertLogRecord('31', "Price List Index: " . $$self{'id'} . " - " . $$self{'name'},);
-	} # end if
-} # end sub save
 
 sub getPrices {
 	my ( $self, $type ) = @_;

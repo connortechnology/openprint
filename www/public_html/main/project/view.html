@@ -117,7 +117,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 		if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $$variable{'Project'}->quantity($qty_index) ) {
 			$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
 		} # end if
-		$html .= '<b>'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'price1'},2,2).'</b><br/>';
+		$html .= '<b>'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'price'.$qty_index},2,2).'</b><br/>';
 		my $summary = openprint::service::summary( @$variable{'ProjectIndex','index'}, $qty_index );
 		$summary =~ s/\n/<br\/>/g;
 		$html .= $summary;

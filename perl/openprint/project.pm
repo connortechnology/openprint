@@ -35,6 +35,7 @@ sub view {
 	} # end if
 $openprint::log->debug("Viewing Project $project_index");
 	$$variable{'Project'} = new openprint::Project( $project_index );
+	my $Project = $$variable{'Project'};
 
 	my %project;
 	foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $project_index ) ) {
@@ -117,11 +118,11 @@ $openprint::log->debug("Viewing Project $project_index");
 
 		foreach my $qty_index ( 1 .. 3 ) {
 			my $price = $project{$service_index}{"txtPrice$qty_index"};
-			if ( $price eq '' and $$variable{"Quantity$qty_index"} ) {
+			if ( $price eq '' ) {
 				$price = $project{$service_index}{'txtPrice1'};
 			} # end if
 			$$variable{"Total$qty_index"} += $price;
-			$$variable{"UnitPrice$qty_index"} += $price/$$variable{"Quantity$qty_index"} if $$variable{"Quantity$qty_index"};
+			$$variable{"UnitPrice$qty_index"} += $price/$Project->quantity($qty_index) if $Project->quantity($qty_index);
 			push @{$$variable{'SERVICES'}}, sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * $conversion_rate );
 		} # end foreach qty_index
 

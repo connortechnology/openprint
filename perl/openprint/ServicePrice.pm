@@ -24,6 +24,7 @@ $table = 'Service_Prices';
 $serial = 'serviceprices_id_seq';
 
 %fields = (
+	'id'			=>	'id',
 	'owner_id'		=>	'owner_id',
 	'pricelist_id'	=>	'pricelist_id',
 	'service_id'	=>	'service_id',

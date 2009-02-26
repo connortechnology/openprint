@@ -15,14 +15,6 @@ require openprint::Estimating::Padding;
 require openprint::Estimating::Proofs;
 require openprint::Estimating::Multipage;
 
-sub get_project_type {
-	my ( $log, $dbh, $project_index ) = @_;
-	return if ! $project_index;
-	if ( $_ = openprint::project::get_project_type( @_ ) ) {
-		return sql::execute( $log, $dbh, 'SELECT strID, strName FROM Project_Types WHERE strID=?', $_ );
-	} # end if
-} # end sub
-
 sub get_ServiceType {
 	my ( $project_index, $service_index ) = @_;
 	return if ! $service_index;
@@ -256,7 +248,7 @@ sub load_template_sizes {
                 var options = new Array();
                 `;
 
-	$_ = q{SELECT dblFinishedWidth, dblFinishedHeight,dblFlatWidth, dblFlatHeight, Description, Type FROM ProjectTemplate WHERE ProjectType_id=(SELECT lngIndex FROM Project_Types WHERE strID=?) ORDER BY lower(Description)};
+	$_ = q{SELECT dblFinishedWidth, dblFinishedHeight,dblFlatWidth, dblFlatHeight, Description, Type FROM ProjectTemplate WHERE ProjectType_id=(SELECT id FROM Project_Types WHERE name=?) ORDER BY lower(Description)};
 	my @templates = sql::execute( $log, $dbh, $_, $project_type );
 
 	while ( @templates ) {

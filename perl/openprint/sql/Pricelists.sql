@@ -1,11 +1,12 @@
-DROP TABLE Pricelists;
-DROP SEQUENCE PricelistIndex_seq;
+DROP TABLE IF EXISTS Pricelists;
+DROP SEQUENCE IF EXISTS Pricelists_id_seq;
 
-CREATE SEQUENCE PricelistIndex_seq;
+CREATE SEQUENCE Pricelist_id_seq;
 CREATE TABLE Pricelists (
-    Index		INT4	NOT NULL default nextval('PricelistIndex_seq'),
+    id		SERIAL,
+	owner_id	INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (id),
 	Name		TEXT,
 	Description	TEXT,
-	CurrencyIndex	INT2, FOREIGN KEY (CurrencyIndex) REFERENCES Currency (Index),
-	PRIMARY KEY ( Index )
+	currency_id	INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
+	PRIMARY KEY ( id )
 );

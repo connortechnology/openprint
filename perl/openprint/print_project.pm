@@ -27,7 +27,7 @@ sub delete_project {
 sub insert_project_type {
 	my ( $r, $log, $dbh, $project_index, $project_type_id ) = @_;
 
-	my ( $project_type_index ) = sql::execute( $log, $dbh, q{SELECT Id FROM Project_Types WHERE name=?}, $project_type_id );
+	my ( $project_type_index ) = sql::execute( $log, $dbh, q{SELECT id FROM Project_Types WHERE name=?}, $project_type_id );
 	if ( $project_type_index ) {
 
 		# Make this all one transaction...
@@ -492,7 +492,9 @@ sub get_service_specifications {
 
 		if ( ! $service_type_id ) {
 # Maybe it's a project type
-			@$variable{'ServiceTypeID','ServiceTypeName'} = openprint::print::get_project_type( $log, $dbh, $project_index );
+			my $Project = new openprint::Project( $project_index );
+			my $PT = $Project->Type();
+			$$variable{'ServiceTypeID'} = $PT->get('name');
 			$$variable{'ServiceTypeName'} = 'Printing';
 		} else {
 			$$variable{'ServiceType'} = openprint::print::get_ServiceType( $project_index, $service_index );	

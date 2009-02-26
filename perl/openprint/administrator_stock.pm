@@ -171,7 +171,7 @@ sub stock {
 		$Paper->full_packages( $param{'full_packages'} );
 		$Paper->message( $param{'message'} );
 
-		my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
+		my %types = map { $_->name(), $_->id() } openprint::ProjectType::find();
 		@{$$Paper{'recommendations'}} = ();
 		foreach my $type ( keys %types ) {
 			push @{$$Paper{'recommendations'}}, $type if $param{'chkPRF'.$type};
@@ -260,7 +260,7 @@ sub import_export {
 			$_ = <$io>;
 
 			my $ac = sql::start_transaction( $dbh );
-			my %project_types = sql::execute( undef, undef, 'SELECT strID, lngIndex FROM Project_Types' );
+			my %project_types = map { $_->name(), $_->id() } openprint::ProjectType::find();
 			my %owners = map { $_->name(), $_->id() } openprint::Company::find();
 			my %papers = map { $_->id(), $_ } openprint::Paper::find();
 

@@ -73,8 +73,7 @@ sub calc {
 	my %papers;
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity( $qty_index );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 #$openprint::log->warn("Paper Price Override: $$Paper{Price}");
@@ -103,8 +102,7 @@ sub calc {
 			} # end if
 		} # end foreach qty_index
 	} # end foreach signature
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity( $qty_index );
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		foreach my $paper_id ( keys %totals ) {
 			my $Paper = $papers{$paper_id};
 			if ( ! $Paper->supplied() ) {
@@ -130,7 +128,7 @@ sub display {
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 		next if $$sig_specs{'rdbSuppliedStock'} eq 'Y';
-		foreach my $qty_index ( 1 .. 3 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 			my $brand = $$sig_specs{'txtSpecificStockBrand'} ? $$sig_specs{'txtSpecificStockBrand'} : $$sig_specs{'ddmStockBrand'};
 			my $colour = $$sig_specs{'txtSpecificStockColour'} ? $$sig_specs{'txtSpecificStockColour'} : $$sig_specs{'ddmStockColour'};
@@ -151,7 +149,7 @@ sub display {
 		} # end foreach qty
 	} # end foreach signature
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		foreach my $id ( keys %totals ) {
 			my ( $price, $discount );
 

@@ -1052,10 +1052,40 @@ my $master_time = gettimeofday();
 			} # end foreach
 
 			if ( ! $found ) {
+				# Find ones that are an even cut
+				foreach my $P ( @Papers ) {
+					next if ! $P->cuttable();
+					if ( $P->type() eq 'Roll' ) {
+						next if $$specs{'OverrideStockHeight'.$qty_index};
+#next if $P->start_width() and ($P->start_width() != $$specs{'OverrideStockWidth'.$qty_index });
+					} elsif ( $P->type() eq 'Sheet' ) {
+# Don't cut sheets into rolls
+						next if ! $$specs{'OverrideStockHeight'.$qty_index};
+
+						if ( 
+								( ($P->start_width() % $$specs{'OverrideStockWidth'.$qty_index}) and ($P->start_height() % $$specs{'OverrideStockHeight'.$qty_index} ) ) and
+								( ($P->start_width() % $$specs{'OverrideStockHeight'.$qty_index}) and ($P->start_height() % $$specs{'OverrideStockWidth'.$qty_index} ) ) )  {
+							next;
+						} # en dif
+					} # end if
+					$found = 1;
+					my $P2 = $P->clone();
+# Make sure gsm has calculated
+					$P2->gsm();
+					$P2->width( $$specs{'OverrideStockWidth'.$qty_index} );
+					$P2->height( $$specs{'OverrideStockHeight'.$qty_index} );
+					if ( $P2->type() ne 'Roll' ) {
+						$P2->mweight( 0 );
+					} else {
+						$P2->start_width( $$specs{'OverrideStockWidth'.$qty_index} );
+					} # end if
+					push @Ps, $P2;
+				} # end foreach paper
+			} # end if found
+			if ( ! $found ) {
 				foreach my $P ( @Papers ) {
 # Don't cut rolls into sheets
 					next if ! $P->cuttable();
-					$openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.$P->start_height() );
 					if ( $P->type() eq 'Roll' ) {
 						next if $$specs{'OverrideStockHeight'.$qty_index};
 #next if $P->start_width() and ($P->start_width() != $$specs{'OverrideStockWidth'.$qty_index });
@@ -1065,7 +1095,6 @@ my $master_time = gettimeofday();
 # Must be big enough to cut
 						next if ( $P->start_width() < $$specs{'OverrideStockWidth'.$qty_index} or $P->start_height() < $$specs{'OverrideStockHeight'.$qty_index} ) and ( $P->start_width() < $$specs{'OverrideStockHeight'.$qty_index} or $P->start_height() < $$specs{'OverrideStockWidth'.$qty_index} );
 					} # end if
-					$openprint::log->debug('cloning');
 					my $P2 = $P->clone();
 
 # Make sure gsm has calculated
