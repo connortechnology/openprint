@@ -103,16 +103,25 @@
 			$$variable{'ServiceIndex'} = $$variable{'service_id'} = $ss_id;
 			$html .= '<fieldset class="Signature"><legend>Information for form '.$$sig_specs{'SignatureIndex'}.':</legend>';
 			$html .= '<p>';
-			$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id );
+			$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id ) . '<br/>';
 			$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id, $$variable{'Project'}->ordered_quantity_index() );
 			$html .= '</p>';
 			$html .= '<form id="f'.$ss_id.'" name="f'.$ss_id.'" method="post" action="/employee/production/project_view.html">';
+			$html .= '<div class="leftColumn">';
+			my $I = new openprint::Imposition();
+			$I->load_used( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
+			$html .= '<p><label>RunStyle:</label>'.$I->runstyle(). '</p>';
+			$html .= '<p><label>Imposition:</label>';
+			$html .= $I->to_string().'</p>';
+			
+			$html .= '</div><div class="rightColumn">';
 			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/press_completion.html' );
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$html .= '<p class="buttons">';
             $html .= ssi::writeButton( $log, $dbh, 'Save'.$ss_id,'save.gif', 'f'.$ss_id.'.submit();', '', 'Save' );
             $html .= ssi::writeButton( $log, $dbh, 'Reset'.$ss_id,'reset.gif', 'f'.$ss_id.'.reset();', '', 'Reset' );
 			$html .= '</p>';
+			$html .= '</div>';
 			$html .= '<input type="hidden" name="btnFunction" value="Save"/>';
 
 			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/hidden_fields.html' );

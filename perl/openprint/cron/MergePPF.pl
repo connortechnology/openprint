@@ -132,13 +132,14 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 					$_ = $PPF->save({
 							'docket'    =>  $docket,
 							'signature' =>  $sig,
-							'side'      =>  $side,
+							'side'      =>  'M',
 							'data'      =>  $data,
+							'data_length'	=>	length $data,
 							});
 					$log->error($_) if $_;
 					$dbh->disconnect() if $dbh;
-			} else {
-				$log->error("$docket not found for $file_base");
+				} else {
+					$log->error("$docket not found for $file_base");
 				} # end if docket
 
 			} # end if
