@@ -7,6 +7,7 @@ require misc;
 require sql;
 require openprint::Object;
 use openprint ();
+use MIME::Base64;
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 
@@ -57,7 +58,7 @@ sub find {
 sub previews {
 	my ( $self ) = @_;
 	
-	my @data = split("\n", $$self{'data'} );
+	my @data = split("\n", base64_decode($$self{'data'}) );
 	my @previews;
 
 	my $line;
@@ -77,8 +78,10 @@ sub previews {
 					$height = $1;
 				} elsif ( $data[$line] =~ /^\/CIP3PreviewImage (.*)/ ) {
 					$line += 1;
-					#$image = $1;
-					$image = $data[$line];
+					while ( ! $data[$line] =~ /^CIP3/ ) {
+						$image .= $data[$line];
+						$line += 1;
+					} # end while
 				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageEncoding \/(\w+) def/ ) {
 					$encoding = $1;
 				} elsif ( $data[$line] =~ /^\/CIP3PreviewImageCompression \/(\w+) def/ ) {

@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 use lib qw( /etc/apache2/lib/perl );
 use Linux::Inotify2;
+use MIME::Base64;
 
 use strict;
 
@@ -100,7 +101,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 						'docket'	=>	$docket,
 						'signature'	=>	$sig,
 						'side'		=>	$side,
-						'data'		=>	$data,
+						'data'		=>	base64_encode($data),
 						'data_length'	=>	length $data,
 						});
 				$log->error($_) if $_;
