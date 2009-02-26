@@ -10,6 +10,7 @@ require logger;
 require configuration;
 require openprint::CIP3_PPF;
 use openprint ();
+use MIME::Base64;
 
 use vars qw( $log $dbh %config );
 
@@ -133,7 +134,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 							'docket'    =>  $docket,
 							'signature' =>  $sig,
 							'side'      =>  'M',
-							'data'      =>  $data,
+							'data'      =>  base64_encode($data),
 							'data_length'	=>	length $data,
 							});
 					$log->error($_) if $_;
