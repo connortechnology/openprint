@@ -19,6 +19,7 @@ $serial = 'CIP3_PPF_id_seq';
 	'id'			=>	'id',
 	'created_on'	=>	'created_on',
 	'data'			=>	'data',
+	'data_length'	=>	'data_length',
 	'signature'		=>	'signature',
 	'side'			=>	'side',
 	'docket'		=>	'docket',

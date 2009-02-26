@@ -60,12 +60,12 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 			$out_base =~ s/\./_/g;
 
 			if ( sets::isin( $file_base.'A.'.$extension, @filenames ) ) {
-				my @Back;
 				if ( ! open ( FH, '< ' . $source_path.'/'.$file_base.'B.'.$extension ) ) {
 					print "Error opening " . $source_path.'/'.$file_base."B.$extension\n" ;
 					next;
 				} # end if
 
+				my @Back;
 				my $back_flag = 0;	
 				while ( <FH> ) {
 					$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
