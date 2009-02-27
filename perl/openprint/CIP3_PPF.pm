@@ -58,7 +58,7 @@ sub find {
 sub previews {
 	my ( $self ) = @_;
 	
-	my @data = split("\n", base64_decode($$self{'data'}) );
+	my @data = split("\n", decode_base64($$self{'data'}) );
 	my @previews;
 
 	my $line;
