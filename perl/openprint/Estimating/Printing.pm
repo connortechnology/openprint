@@ -1029,13 +1029,12 @@ my $master_time = gettimeofday();
 #} # end foreach
 # If Stock size is overridden, check the list of stocks to see if the specified on is in the list.  If it isn't, then add duplicates, cut to size
 
-	my @Ps;
-
 	if (
 			( $$specs{'chkOverrideSheetSize1'} eq 'Y' ) or
 			( $$specs{'chkOverrideSheetSize2'} eq 'Y' ) or
 			( $$specs{'chkOverrideSheetSize3'} eq 'Y' )
 	   ) {
+		my @Ps;
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
 				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
@@ -1047,7 +1046,8 @@ my $master_time = gettimeofday();
 				if ( $P->width() == $$specs{'OverrideStockWidth'.$qty_index} and $P->height() == $$specs{'OverrideStockHeight'.$qty_index} ) {
 #$openprint::log->debug('gound it'); 
 					$found = 1;
-					push @Ps, $P;
+					# Don't need to add it, because it's already in @Papers
+					#push @Ps, $P;
 				} # end if
 			} # end foreach
 
@@ -1057,7 +1057,7 @@ my $master_time = gettimeofday();
 					next if ! $P->cuttable();
 					if ( $P->type() eq 'Roll' ) {
 						next if $$specs{'OverrideStockHeight'.$qty_index};
-#next if $P->start_width() and ($P->start_width() != $$specs{'OverrideStockWidth'.$qty_index });
+						next if $P->start_width();
 					} elsif ( $P->type() eq 'Sheet' ) {
 # Don't cut sheets into rolls
 						next if ! $$specs{'OverrideStockHeight'.$qty_index};
@@ -1082,13 +1082,13 @@ my $master_time = gettimeofday();
 					push @Ps, $P2;
 				} # end foreach paper
 			} # end if found
+
 			if ( ! $found ) {
 				foreach my $P ( @Papers ) {
 # Don't cut rolls into sheets
 					next if ! $P->cuttable();
 					if ( $P->type() eq 'Roll' ) {
-						next if $$specs{'OverrideStockHeight'.$qty_index};
-#next if $P->start_width() and ($P->start_width() != $$specs{'OverrideStockWidth'.$qty_index });
+						next;
 					} elsif ( $P->type() eq 'Sheet' ) {
 # Don't cut sheets into rolls
 						next if ! $$specs{'OverrideStockHeight'.$qty_index};
@@ -1110,9 +1110,8 @@ my $master_time = gettimeofday();
 				} # end foreach paper
 			} # end if found
 		} # end foreach qty_index
+		push @Papers, @Ps;
 	} # end if override
-
-	push @Papers, @Ps;
 
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
@@ -1524,14 +1523,13 @@ $openprint::log->debug('Cut offs: $co : ' . @cut_offs . " @cut_offs");
 						push @imps, @i;
 					} else {
 						foreach my $i ( @i ) {
-							next if $Press->specification('Maximum Roll Width') and ($i->Paper()->width() > $Press->specification('Maximum Roll Width'));
 							my $i2 = $i->copy();
-							$i2->paper()->width( $i2->used_width() );
+							$i2->Paper()->width( $i2->used_width() ) if ! $i2->Paper()->width();
 							while ( $i2->columns() ) {
 								push @imps, $i2;
 								$i2 = $i2->copy();
 								$i2->columns( $i2->columns()-1 );
-								$i2->paper()->width( $i2->used_width() );
+								$i2->Paper()->width( $i2->used_width() );
 								openprint::imposition::check_setup( $i2, $project );
 								$i2->columns(0) if $Press->specification('Minimum Sheet Width') and ($i2->paper()->width() < $Press->specification('Minimum Sheet Width'));
 								$i2->columns(0) if $Press->specification('Minimum Roll Width') and ($i2->paper()->width() < $Press->specification('Minimum Roll Width'));
@@ -2076,7 +2074,7 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 				} elsif (($max_pages >= $imp->pages() ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
 					# Only do this if not sheet size overrides
 					next;
-				} elsif ($max_impositions{$imp->pages()}/2 >= $imp->imposition()) {
+				} elsif ($max_impositions{$imp->pages()}/2 > $imp->imposition()) {
 					# Only do this if not sheet size overrides
 					next;
 				} # end if
