@@ -348,6 +348,23 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 
+	} elsif ( $first eq 'content' ) { # main
+		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+		return $status if $variable{'Redirect'};	
+
+		if ( ! $session{'user_id'} ) {
+			# if not logged in, determine if they are allowed to see this page or not.
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+				$variable{'Redirect'} = '/error/error_login.html';
+				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				return Apache2::Const::OK;
+			} # end if
+		} # end if
+		eval( 'require openprint::'.join('_', @path ) );
+		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
