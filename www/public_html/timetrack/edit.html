@@ -27,7 +27,7 @@
 			<p><label for="user_id">Employee:</label>
 				<select id="user_id" name="user_id">
 					<option value=""> select </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Timetrack'}->user_id() ? $$variable{'Timetrack'}->user_id() : $session{'user_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Timetrack'}->id() ? $$variable{'Timetrack'}->user_id() : $session{'user_id'} ); ) ?>
 				</select>
 			</p>
 			<p>
@@ -38,15 +38,15 @@
 				<label class="radio" for="time_associated0">No</label>
 			</p>
 			<p><label>Start:</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), q`check_time_starting(this.form,'starting','ending');update_duration(this.form,'starting','ending');` ); ) ?></span>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), q`check_time_starting(this.form,'starting','ending');update_duration(this.form,'starting','ending');`, (! sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] )) ); ) ?></span>
 			</p>
 			<p><label>End:</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), q`update_duration(this.form,'starting','ending');` ); ) ?></span>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), q`update_duration(this.form,'starting','ending');`, ! sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ) ); ) ?></span>
 			</p>
 			<p><label>Duration:</label>
 				<span id="duration">
 				</span>
-				<script type="text/javascript">update_duration(document.forms['f1']);</script>
+				<script type="text/javascript">update_duration(document.forms['f1'],'starting','ending');</script>
 			</p>
 			<p><label>Service:</label>
 				<select id="service_id" name="service_id">

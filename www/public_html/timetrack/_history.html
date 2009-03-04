@@ -55,8 +55,8 @@
 		<tr title="<? hecho ( $$variable{'Timetrack'}->description() ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
 			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->User()->name(); ) ?></a></td>
 			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->Company()->name(); ) ?></a></td>
-			<td align="left"><? echo ( Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $$variable{'Timetrack'}->starting() ) ); ) ?></td>
-			<td align="left"><? echo ( Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $$variable{'Timetrack'}->ending() ) ); ) ?></td>
+			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Timetrack'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Timetrack'}->starting() ) ); ) ?></td>
+			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Timetrack'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Timetrack'}->ending() ) ); ) ?></td>
 			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'Timetrack'}->elapsed() ); ) ?></td>
 			<td align="center"><? echo ( $$variable{'Timetrack'}->invoiced() ? 'Y' : 'N'; ) ?></td>
 			<td align="center"><? echo ( $$variable{'Timetrack'}->paid() ? 'Y' : 'N'; ) ?></td>

@@ -488,26 +488,26 @@ $openprint::log->debug(" date_select: $value : ($year,$month,$day),");
 } # end sub date_select
 
 sub datetime_select {
-	my ( $prefix, $value, $onchange ) = @_;
+	my ( $prefix, $value, $onchange, $hide_time ) = @_;
 
 	my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
 #$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
 
 	my $html = '';
-	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="setDaysDropDown(this.value,document.f1.%1$s_month.value,document.f1.%1$s_day,document.f1.%1$s_day.value);%2$s">', $prefix, $onchange );
+	$html .= sprintf('<span id="%1$s_date"><select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,document.f1.%1$s_month.value,document.f1.%1$s_day,document.f1.%1$s_day.value);%2$s">', $prefix, $onchange );
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_month" onchange="setDaysDropDown(document.f1.%1$s_year.value,this.value,document.f1.%1$s_day,document.f1.%1$s_day.value);%2$s">', $prefix, $onchange );
+	$html .= sprintf('<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(document.f1.%1$s_year.value,this.value,document.f1.%1$s_day,document.f1.%1$s_day.value);%2$s">', $prefix, $onchange );
 	$html .= getmonths( $month );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s">', $prefix, $onchange );
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>';
-	$html .= sprintf('<span id="%1$s_time"><select name="%1$s_hour" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<span id="%1$s_time" %3$s><select id="%1$s_hour" name="%1$s_hour" onchange="%2$s">', $prefix, $onchange, $hide_time ? 'style="display:none;"' : '' );
 	$html .= make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour );
 	$html .= '</select>';
 	$html .= ':';
-	$html .= sprintf('<select name="%1$s_minute" onchange="%2$s">', $prefix, $onchange );
+	$html .= sprintf('<select id="%1$s_minute" name="%1$s_minute" onchange="%2$s">', $prefix, $onchange );
 	$html .= make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $min );
 	$html .= '</select></span>';
 	return $html;

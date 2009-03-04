@@ -26,7 +26,7 @@ sub history {
 			$param{'invoice_id'} = $_;
 			$variable{'Redirect'} = '/invoice/edit.html';
 		} else {
-			ssi::save_param( '/timetrack/edit.html', 'ending', 'company_id' );
+			ssi::save_params( '/timetrack/edit.html', 'ending', 'company_id' );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );

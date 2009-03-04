@@ -50,6 +50,9 @@ my %fields = (
 
 my %transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
+	'wage'			=>	[ 's/[^\d\.]//g' ],
+	'purchasing_limit'			=>	[ 's/[^\d\.]//g' ],
+	'purchasing_total_limit'	=>	[ 's/[^\d\.]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
 	'created_on'		=> [ 's/.*//g' ],
 	'updated_on'		=> [ 's/.*//g' ],
@@ -65,6 +68,9 @@ my %defaults = (
 	'administrator'		=>	'N',
 	'commission'		=>	undef,
 	'quote_level'		=> undef,
+	'purchasing_limit'	=>	undef,
+	'purchasing_total_limit'	=>	undef,
+	'wage'				=>	undef,
 );
 
 sub get {

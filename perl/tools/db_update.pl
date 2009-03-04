@@ -129,6 +129,12 @@ if ( $data ) {
 	$dbh->do(q`alter table users add email_quotes_to_myself boolean default false`) if ! exists $$data{'email_quotes_to_myself'};
 	$dbh->do('ALTER TABLE USERS RENAME COLUMN ysnaccountactivation TO web_active') if $$data{'ysnaccountactivation'};
 	$dbh->do('ALTER TABLE USERS RENAME COLUMN companyindex TO company_id') if $$data{'companyindex'};
+	if ( ! exists $$data{'purchasing_limit'} ) {
+		$dbh->do(q`alter table Users add purchasing_limit	float`);
+	} # end if
+	if ( ! exists $$data{'purchasing_total_limit'} ) {
+		$dbh->do(q`alter table Users add purchasing_total_limit	float`);
+	} # end if
 } # end if
 
 my $new_version = 1273;

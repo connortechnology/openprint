@@ -1,4 +1,5 @@
 <a name="top"></a>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="/administrator/managerial/company_profiles.html">
 	<fieldset class="filters"><legend>Search:</legend>
 		<p>
@@ -45,7 +46,7 @@
 						unshift @Companies, new openprint::Company( $param{'ddmCustomer'} );
 					} # end if
 
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( %params ) ], $param{'ddmCustomer'} ? $param{'ddmCustomer'} : $session{'company_id'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( %params ) ], $$variable{'CustomerIndex'} );
 				) ?>
 			</select>
 			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>

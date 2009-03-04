@@ -242,7 +242,7 @@ sub destroy {
 sub save {
     my ($self, $param) = @_;
 	
-	$self->set( $param ) if $param;
+	$self->set( $param );
 	my %sql;
 	foreach my $k ( keys %fields ) {
 		$sql{$fields{$k}} = $$self{$k};
@@ -257,22 +257,26 @@ sub save {
 		$sql{id} = $$self{'id'};
         if ( my $e = sql::insert( undef, undef, 'Companies', \%sql ) ) {
 			$dbh->rollback();
+    sql::end_transaction( $dbh, $ac );
+			delete $$self{'id'};
 			return $e;
 		} # end if
 	} elsif ( $$param{'force_insert'} ) {
         if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
 			$dbh->rollback();
+    sql::end_transaction( $dbh, $ac );
 			return $e;
 		} # end if
     } else {
         if ( my $e = sql::update( undef, undef, 'Companies', ['id=?', $$self{'id'}], \%sql ) ) {
 			$dbh->rollback();
+    sql::end_transaction( $dbh, $ac );
 			return $e;
 		} # end if
 	} # end if
 
-    $self->load();
     sql::end_transaction( $dbh, $ac );
+    $self->load();
 	return;
 
 } # end sub save

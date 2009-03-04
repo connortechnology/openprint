@@ -288,7 +288,7 @@ sub company_profiles {
 			'txtDownpayment'	=>	'Downpayment',
 			);
 
-	my $index = $param{'ddmCustomer'} ? $param{'ddmCustomer'} : $session{'company_id'};
+	my $index = $param{'ddmCustomer'};
 	my $Company = new openprint::Company( $index );
 
 	if ( $param{'btnFunction'} eq '<<' ) {
@@ -305,66 +305,68 @@ sub company_profiles {
 
 		my $customer = new openprint::obj_customer( $log, $dbh, $index );
 
-		if ( $Company->activation() ne $param{'activation'} ) {
-			my %info;
-			$info{'Company'} = $Company;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+		if ( $Company->id() ) {
+			if ( $Company->activation() ne $param{'activation'} ) {
+				my %info;
+				$info{'Company'} = $Company;
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
-			$_ = $param{'activation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+				$_ = $param{'activation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			$email_template = ssi::variable_substitution( \$email_template, \%info ); 
+				$email_template = ssi::variable_substitution( \$email_template, \%info ); 
 
-			my @to = map { sprintf('"%s %s" <%s>', $_->get('firstname','lastname','email')); } openprint::User::find('company_id'=>$index,'web_active'=>'Y');
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
-					FROM	=> $config{'AdministratorEmail'},
-					TO		=> join( ',', @to ),
-					SUBJECT => 'Customer account status has changed!',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-		} # end if
-		if ( $Company->reseller() and ( $Company->reseller() ne $param{'rdbReseller'} ) ) {
-			my %info;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-			$info{'Company'} = $Company;
+				my @to = map { sprintf('"%s %s" <%s>', $_->get('firstname','lastname','email')); } openprint::User::find('company_id'=>$index,'web_active'=>'Y');
+				my %mail = (
+						SMTP	=> $config{'Mail Server'},
+						FROM	=> $config{'AdministratorEmail'},
+						TO		=> join( ',', @to ),
+						SUBJECT => 'Customer account status has changed!',
+						);
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+			} # end if
+			if ( $Company->reseller() and ( $Company->reseller() ne $param{'rdbReseller'} ) ) {
+				my %info;
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+				$info{'Company'} = $Company;
 
-			my @to = openprint::User::find('company_id'=>$index);
+				my @to = openprint::User::find('company_id'=>$index);
 
-			$_ = $param{'rdbReseller'} eq 'Y' ? 'customer_account_reseller.html' : 'customer_account_non_reseller.html';
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+				$_ = $param{'rdbReseller'} eq 'Y' ? 'customer_account_reseller.html' : 'customer_account_non_reseller.html';
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			$email_template = ssi::variable_substitution( \$email_template, \%info ); 
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
-					FROM	=> $config{'AdministratorEmail'},
-					TO		=> join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
-					SUBJECT => "Customer account status has changed!",
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-		} # end if
-if ( 0 ) {
-		if ( $Company->supplier() ne $param{'rdbSupplier'} ) {
-			my %info;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-			$info{'Company'} = $Company;
-			my @to = openprint::User::find('company_id'=>$index);
+				$email_template = ssi::variable_substitution( \$email_template, \%info ); 
+				my %mail = (
+						SMTP	=> $config{'Mail Server'},
+						FROM	=> $config{'AdministratorEmail'},
+						TO		=> join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
+						SUBJECT => "Customer account status has changed!",
+						);
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+			} # end if
+	if ( 0 ) {
+			if ( $Company->supplier() ne $param{'rdbSupplier'} ) {
+				my %info;
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+				$info{'Company'} = $Company;
+				my @to = openprint::User::find('company_id'=>$index);
 
-			$_ = $param{'rdbSupplier'} eq 'Y' ? 'customer_account_supplier.html' : 'customer_account_non_supplier.html';
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-			$email_template = ssi::variable_substitution( \$email_template, \%info );
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
-					FROM	=> $config{'AdministratorEmail'},
-					TO		=> join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
-					SUBJECT => 'Customer account status has changed!',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-		} # end if
-} # end if
+				$_ = $param{'rdbSupplier'} eq 'Y' ? 'customer_account_supplier.html' : 'customer_account_non_supplier.html';
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+				$email_template = ssi::variable_substitution( \$email_template, \%info );
+				my %mail = (
+						SMTP	=> $config{'Mail Server'},
+						FROM	=> $config{'AdministratorEmail'},
+						TO		=> join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
+						SUBJECT => 'Customer account status has changed!',
+						);
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+			} # end if
+	} # end if
+		} # end if Company->id()
 
 		$param{'start_year'} =~ s/\D//g;
 		if ( $param{'start_year'} ) {
@@ -410,23 +412,26 @@ if ( 0 ) {
 		$Company = new openprint::Company( $index );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Undelete' ) {
 		$Company->undelete();
+	} else {
+# No action, so we can default to us
+		if ( ! $index ) {
+			$index = $session{'company_id'};
+			$Company = new openprint::Company( $index );
+		} # end if
 	} # end if btnFunction
 
-# we no longer default to displaying the first record.	The user must select one.,
-	if ( $index > 0 ) {
-		my $customer = new openprint::obj_customer( $log, $dbh, $index );
+	my $customer = new openprint::obj_customer( $log, $dbh, $index );
 
-		$variable{'txtPricingLevel'} = sprintf ( "%.0f", $variable{'txtPricingLevel'} ) . "%";
-		$variable{'txtDownpayment'} = sprintf ( "%.0f", $variable{'txtDownpayment'} ) . "%";
+	$variable{'txtPricingLevel'} = sprintf ( "%.0f", $variable{'txtPricingLevel'} ) . "%";
+	$variable{'txtDownpayment'} = sprintf ( "%.0f", $variable{'txtDownpayment'} ) . "%";
 
-		openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
-		my $shipping_address = $customer->get_shipping_address();
-		@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
-		$variable{'rdbShippingSalutation'.$variable{'rdbShippingSalutation'}} = 'CHECKED';
+	openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
+	my $shipping_address = $customer->get_shipping_address();
+	@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
+	$variable{'rdbShippingSalutation'.$variable{'rdbShippingSalutation'}} = 'CHECKED';
 
-		my $customer_credit = new openprint::customer_credit( $index );
-		@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
-	} # end if
+	my $customer_credit = new openprint::customer_credit( $index );
+	@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
 
 	# Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
 	my @available_categories = map { $_->id(), $_->name() } openprint::MarketingCategory::find();
