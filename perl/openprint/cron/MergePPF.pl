@@ -134,7 +134,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 							'docket'    =>  $docket,
 							'signature' =>  $sig,
 							'side'      =>  'M',
-							'data'      =>  base64_encode($data),
+							'data'      =>  encode_base64($data),
 							'data_length'	=>	length $data,
 							});
 					$log->error($_) if $_;
