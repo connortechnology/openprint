@@ -42,3 +42,53 @@ ul#menubar li#Setup a {
 width: auto;
 padding: 5px;
 }
+#Prices {
+}
+.Pricelist {
+}
+
+	#Prices .Price .Add {
+		float: left;
+	}
+	#Prices .Price .Min  {
+		float: left;
+		width: 10%;
+		text-align: center;
+	}
+	#Prices .Price .Min input.text {
+	}
+	#Prices .Price .Max  {
+		float: left;
+		width: 10%;
+		text-align: center;
+	}
+	#Prices .Price .Max input.text {
+	}
+	#Prices .Price .Units {
+		float: left;
+	}
+	#Prices .Price .Cost {
+		float: left;
+	}
+	#Prices .Price .Cost input.text {
+		width: 90%;
+	}
+	#Prices .Price .Markup {
+		float: left;
+	}
+	#Prices .Price .Markup input.text {
+		width: 90%;
+	}
+	#Prices .Price .Price {
+		float: left;
+		width: 10%;
+		text-align: center;
+	}
+	#Prices .Price .Price input.text {
+		width: 90%;
+	}
+	#Prices .Price .Discount {
+		float: left;
+		width: 15%;
+		text-align: center;
+	}
