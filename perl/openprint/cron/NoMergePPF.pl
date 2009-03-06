@@ -96,6 +96,9 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 				die 'Error opening db' if ! $dbh;
 
 				configuration::init_cache( $log, $dbh );
+				foreach my $PPF (openprint::CIP3_PPF('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
+					$PPF->delete();
+				} # end foreach
 				my $PPF = new openprint::CIP3_PPF();
 				$_ = $PPF->save({
 						'docket'	=>	$docket,
@@ -104,7 +107,9 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 						'data'		=>	encode_base64($data),
 						'data_length'	=>	length $data,
 						});
-				$log->error($_) if $_;
+				if ( $_ ) {
+					$log->error($_);
+				} # end if
 				$dbh->disconnect() if $dbh;
 			} else {
 				$log->error("$docket not found for $file_base");

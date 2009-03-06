@@ -107,6 +107,9 @@
 			$html .= openprint::service::summary( $$variable{'Project'}->id(), $ss_id, $$variable{'Project'}->ordered_quantity_index() );
 			$html .= '</p>';
 			$html .= '<form id="f'.$ss_id.'" name="f'.$ss_id.'" method="post" action="/employee/production/project_view.html">';
+			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/employee/proj/prin/_previews.html' );
+			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+
 			$html .= '<div class="leftColumn">';
 			my $I = new openprint::Imposition();
 			$I->load_used( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );

@@ -283,12 +283,13 @@ sub rle_decode {
 $openprint::log->warn("RLE::DECODE:: source: " . length $source );
     while ($source ne "") {
         my $l = unpack("C", $source);
-        if ($l == 128) {
-			if ( length $source > 1 ) {
-				$openprint::log->debug("End while still data at position $position " . unpack("H",$source) . ' ' . substr($source,0,1) . ' length of result: ' . length($result));
-			} # end if
-            return $result;
-        } elsif ($l > 128) {
+        #if ($l == 128) {
+			#if ( length $source > 1 ) {
+				#$openprint::log->debug("End while still data at position $position " . unpack("H",$source) . ' ' . substr($source,0,1) . ' length of result: ' . length($result));
+			#} # end if
+            #return $result;
+        #} elsif ($l > 128) {
+        if ($l >= 128) {
             if (length($source) < 2) {
                 $openprint::log->warn("Premature end to data in RunLengthEncoded data");
                 return $result;
