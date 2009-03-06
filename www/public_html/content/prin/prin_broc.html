@@ -1,5 +1,5 @@
 <? eval (
-	$$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+	$$variable{'ProjectTypeName'} = $param{'ProjectType'} if $param{'ProjectType'};
 	if ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) {
 		$$variable{'FoldType'} = '2PanelFold';
 		$$variable{'DimensionsDisplay'} = 'Finished';
@@ -9,6 +9,7 @@
 	<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
 	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
 	<input type="hidden" name="Status" value="<?Status?>" />
+<? if ( $param{'ProjectType'} ) ?>
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
@@ -111,6 +112,9 @@
 		</div>
 		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
 		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+<? else ( $param{'ProjectType'} ) ?>
+Please select the type of your project.
+<? endif ( $param{'ProjectType'} ) ?>
 <div style="margin-left: 0px; margin-top: 20px;width: 380px;">
 		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 		   <div class="shadow_left">
