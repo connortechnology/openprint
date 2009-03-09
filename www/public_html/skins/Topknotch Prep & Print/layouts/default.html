@@ -22,6 +22,9 @@
 		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
+		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
 		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
@@ -58,17 +61,20 @@
 				<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 			</div>
 
-			<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 			<div id="main_page">
+			<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 				<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 				<div class="shadow_left"><div class="shadow_right">
 					<div id="main_page_content"><?PageContent?></div>
-		<div id="Footer" class="unprintable">
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/footer.html"-->
-		</div><!-- Footer -->
+					<div id="Footer" class="unprintable">
+						<!--#include virtual="/skins/<?SiteTitle?>/includes/footer.html"-->
+					</div><!-- Footer -->
 				</div></div>
 				<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+			<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+			<? else ( $r->uri() =~ /\/main\/order/ ) ?>
 			</div><!-- main_page -->
+			<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 			<br class="spacer"/>
 		</div></div>
 	</body>
