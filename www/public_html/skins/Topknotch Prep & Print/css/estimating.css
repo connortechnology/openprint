@@ -16,15 +16,18 @@
 }
 
 .InstantPricing .Questions {
-	background-color: #ded9c2;
-	border: 1px solid #B1B4BC;
 	color: black;
 	font-weight: normal;
-	padding: 5px;
-	float: right;
-	width: 240px;
 	margin-left: 10px;
 	margin-bottom: 10px;
+	padding: 5px;
+}
+.InstantPricing .Questions p {
+    text-align: right;
+}
+.InstantPricing .Questions p label {
+	text-align: left;
+	float: left;
 }
 .InstantPricing .Questions span.label {
 	width: auto;
@@ -46,7 +49,6 @@
 }
 .InstantPricing .Prices {
 	font-weight: normal;
-	border: 1px inset #B1B4BC;
 	background-color: #ffffff;
 	padding: 2px;
 }
@@ -62,11 +64,8 @@
 
 div#instant_price_section {
 float: right;
-         width: 262px;
+         width: 289px;
 
-}
-div.instant_price_section_top_shadow {
-	display: none;
 }
 #Specials {
 	width: 420px;
