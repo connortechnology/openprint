@@ -3,6 +3,8 @@ html {
 body {
 	color: #000000;
 	padding: 10px;
+min-width: 980px;
+
 }
 
 #Header {
