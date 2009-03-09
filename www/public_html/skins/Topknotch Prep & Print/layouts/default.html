@@ -5,8 +5,10 @@
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 		<link rel="stylesheet" href="/css/common.css" type="text/css"/>
 		<link rel="stylesheet" href="/css/main.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/menu.css" type="text/css"/>
 		<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
 		<link rel="stylesheet" href="/css/button.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/shadow.css" type="text/css"/>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
@@ -31,30 +33,43 @@
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
 	<body>
-		<div id="Header">
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
-		</div>
-		<!--#include virtual="/skins/<?SiteTitle?>/includes/menu.html"-->
-		<div id="Content">
-				<div class="ProjectTypeBox">
-					<!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
-					<hr class="spacer"/>
-					<a href="/support/FAQ.html#FileUploadInstructions">File Upload Instructions</a>
-					<br/><br/>
-					<!--#include virtual="/skins/<?SiteTitle?>/includes/flags_left.html"-->
-				</div>
-				<div class="Content">
-				<?PageContent?>
-<div id="Logos">
-					<img id="Butterfly" src="/images/Butterfly.png" alt="Butterfly" /><br/>
-		<a href="http://www.idealliance.org"><img id="IDEAG7" src="/images/IDEA.G7.png" alt="IDEA.G7"/></a>
-		<a href="http://www.idealliance.org"><img id="IDEAG7Master" src="/images/IDEA.G7Master.png" alt="IDEA.G7Master"/></a>
-</div>
-				</div><!-- Content -->
-				<br class="spacer"/>
-		</div>
+		<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+        <div class="shadow_left"><div class="shadow_right">
+			<div id="Header"><!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"--></div>
+			<!--#include virtual="/skins/<?SiteTitle?>/includes/customer-menu.html"-->
+		</div></div>
+        <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+
+		<div id="main_content"><div id="main_content_inner">
+			<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+			<? else ( $r->uri() =~ /\/main\/order/ ) ?>
+			<div id="left_sidebar">
+				<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+				<div class="shadow_left"><div class="shadow_right">
+				<!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
+				<hr class="spacer"/>
+				<a href="/support/FAQ.html#FileUploadInstructions">File Upload Instructions</a>
+				<br/><br/>
+				<!--#include virtual="/skins/<?SiteTitle?>/includes/flags_left.html"-->
+						<img id="Butterfly" src="/images/Butterfly.png" alt="Butterfly" /><br/>
+						<a href="http://www.idealliance.org"><img id="IDEAG7" src="/images/IDEA.G7.png" alt="IDEA.G7"/></a><br/>
+						<a href="http://www.idealliance.org"><img id="IDEAG7Master" src="/images/IDEA.G7Master.png" alt="IDEA.G7Master"/></a>
+				</div></div>
+				<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+			</div>
+
+			<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+			<div id="main_page">
+				<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+				<div class="shadow_left"><div class="shadow_right">
+					<div id="main_page_content"><?PageContent?></div>
 		<div id="Footer" class="unprintable">
-		<!--#include virtual="/skins/<?SiteTitle?>/includes/footer.html"-->
+			<!--#include virtual="/skins/<?SiteTitle?>/includes/footer.html"-->
 		</div><!-- Footer -->
+				</div></div>
+				<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+			</div><!-- main_page -->
+			<br class="spacer"/>
+		</div></div>
 	</body>
 </html>

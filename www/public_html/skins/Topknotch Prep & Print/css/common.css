@@ -172,8 +172,9 @@ form {
 	padding: 0px;
 }
 
-A {
+a {
 	color: #800000;
+	outline: 0;
 }
 
 label.radio {

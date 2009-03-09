@@ -1,4 +1,70 @@
 <? eval (
 	$$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+	$$variable{'DimensionsDisplay'} = 'Finished';
 ) ?>
-<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+<form name="f1" method="post" action="/content/prin/prin_broc.html">
+	<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
+	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
+	<input type="hidden" name="Status" value="<?Status?>" />
+	<div class="InstantPricing">
+		<div id="instant_price_section">
+		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+		   <div class="shadow_left"><div class="shadow_right">
+                        
+				<div class="Questions">
+					<h3>Instant Pricing</h3>
+
+					<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
+					<!--#include virtual="/includes/sizes.html"-->
+					<p><label>Colours:</label>
+						<select name="Colours" onchange="calc(this.form.name);">
+							<option value="4/0">4 Colour One Side</option>
+							<option value="4/1">4 Colour/Black</option>
+							<option value="4/4">4 Colour Both Sides</option>
+						</select>
+					</p>
+					<br/>
+					<div class="row">
+						<label>Stock Information</label><br/>
+						<!--#include virtual="/includes/paper_dropdowns.html"-->
+					</div>
+					<!--#include virtual="_proofs.html"-->
+		<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
+					<!--#include virtual="/includes/shrinkwrapping.html"-->
+					<!--#include virtual="/includes/bundling.html"-->
+		<? endif ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
+
+					<!--#include virtual="/includes/turnaround.html"-->
+					<br class="spacer"/>
+					<!--#include virtual="/includes/quantity.html"-->
+					<br class="spacer"/>
+					<!--#include virtual="/includes/press_type.html"-->
+					<br class="spacer"/>
+					<!--#include virtual="/includes/prices.html"-->
+					<div class="Prices">
+						<!--#include virtual="/includes/buttons.html"-->
+						<br class="spacer"/>
+					</div>
+				</div><!--Questions-->
+				   <br class="spacer"/>
+			  </div>
+		   </div>
+		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+		</div>
+		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
+		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+<div style="margin-left: 0px; margin-top: 20px;width: 380px;">
+		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+		   <div class="shadow_left">
+			  <div class="shadow_right">
+<div style="text-align: center;">
+<h2 style="margin:0px 0px 10px 0px;">Now open Saturdays for digital printing!</h2>
+Please call Amin at 416-993-8820 to arrange a 
+spot on our production schedule.
+</div>
+			  </div>
+		   </div>
+		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+</div><!--instant_price_section-->
+	</div><!--InstantPricing-->
+</form>
