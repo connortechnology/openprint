@@ -12,6 +12,27 @@
 		\$('vendor_postalcode').value = '$$Vendor{postalcode}';
 		\$('vendor_phone').value = '$$Vendor{phone}';
 		\$('vendor_fax').value = '$$Vendor{fax}';
+		var contact_ddm = \$('contact_id');
+		clear_ddm( contact_ddm );
 	";
+	my @Users = openprint::User::find('company_id'=>$param{'supplier_id'},'order'=>'lower(strfirstname),lower(strlastname)' );
+	foreach my $User ( @Users ) {
+		my $name = $User->name();
+		$name =~ s/'/\\'/g;
+		$html .= "add_option( contact_ddm, '$$User{id}', '$name' );\n";
+	} # end foreach User
+	if ( @Users == 1 ) {
+		my $User= $Users[0];
+		$html .= "
+			\$('vendor_contact').value = '$$User{firstname} $$User{lastname}';
+			\$('vendor_phone').value = '$$User{phone}';
+			\$('vendor_fax').value = '$$User{fax}';
+			\$('vendor_email').value = '$$User{email}';
+		";
+	} # end if
+	$html .= "
+		\$('contacts').show();
+	";
+
 	return $html;
 ) ?>
