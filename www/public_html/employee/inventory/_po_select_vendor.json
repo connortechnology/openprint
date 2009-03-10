@@ -14,12 +14,14 @@
 		\$('vendor_fax').value = '$$Vendor{fax}';
 		var contact_ddm = \$('contact_id');
 		clear_ddm( contact_ddm );
+		add_option( contact_ddm, '', 'select' );
 	";
 	my @Users = openprint::User::find('company_id'=>$param{'supplier_id'},'order'=>'lower(strfirstname),lower(strlastname)' );
+	my $selected = $Users[0]->id() if @Users == 1;
 	foreach my $User ( @Users ) {
 		my $name = $User->name();
 		$name =~ s/'/\\'/g;
-		$html .= "add_option( contact_ddm, '$$User{id}', '$name' );\n";
+		$html .= "add_option( contact_ddm, '$$User{id}', '$name', $selected );\n";
 	} # end foreach User
 	if ( @Users == 1 ) {
 		my $User= $Users[0];

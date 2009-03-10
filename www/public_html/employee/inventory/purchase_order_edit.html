@@ -102,7 +102,7 @@ function getSelectionId(input, li) {
 		<div class="leftColumn">
 		<fieldset><legend>VENDOR:</legend>
 			<p><label>Select:</label>
-				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" onkeydown="if(event.keyCode == 13){this.form.supplier_id.onchange();}" class="filter" />
 				<select name="supplier_id" onchange="new Ajax.Request('_po_select_vendor.json', {method:'get', parameters: { supplier_id: this.value } } );">
 					<option value="">select</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
@@ -183,8 +183,8 @@ function getSelectionId(input, li) {
 				<td><textarea name="shipping_method" id="shipping_method" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_method()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
 				<td><textarea name="shipping_terms" id="shipping_terms" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_terms()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></textarea></td>
 				<td valign="top">
-					<input type="radio" id="delivered_on_switchOVERNIGHT" name="delivered_on_switch" value="OVERNIGHT" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'OVERNIGHT' ) ) ?> onclick="$('delivered_on_div').hide();" />
-					<label for="delivered_on_switchOVERNIGHT">OVERNIGHT</label>
+					<input type="radio" id="delivered_on_switchNIGHTTRUCK" name="delivered_on_switch" value="NIGHT TRUCK" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'NIGHT TRUCK' ) ) ?> onclick="$('delivered_on_div').hide();" />
+					<label for="delivered_on_switchNIGHTTRUCK">NIGHT TRUCK</label>
 					<input type="radio" id="delivered_on_switchASAP" name="delivered_on_switch" value="ASAP" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'ASAP' ) ) ?> onclick="$('delivered_on_div').hide();" />
 					<label for="delivered_on_switchASAP">ASAP</label>
 					<input type="radio" id="delivered_on_switchDATE" name="delivered_on_switch" value="DATE" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'DATE' ) ) ?> onclick="$('delivered_on_div').show();" />

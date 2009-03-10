@@ -231,6 +231,10 @@ sub save {
 		$sql{'subtotal'} += $C->total();
 	} # end foreach
 	$sql{'total'} = $sql{'subtotal'};
+	if ( ! $sql{'currency_id'} ) {
+		my $Currency = openprint::Currency::get_current();
+		$sql{'currency_id'} = $Currency->id();
+	} # end if
 
 	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
