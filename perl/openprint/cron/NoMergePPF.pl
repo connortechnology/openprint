@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 use lib qw( /etc/apache2/lib/perl );
 use Linux::Inotify2;
 use MIME::Base64;
@@ -21,7 +21,7 @@ use vars qw( $log $dbh %config );
 *config = \%openprint::config;
 
 $log = logger->new();
-$log->{level} = "warn";
+$log->{level} = "debug";
 
 my $source_path = $ARGV[0];
 my $dest_path = $ARGV[1];
