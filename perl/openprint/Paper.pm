@@ -1005,19 +1005,46 @@ sub load_from_signature {
 			$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		} # end if
 	} else {
-
-		my @Papers = openprint::Paper::find(
-				'name'      => $$specs{'ddmStockBrand'},
-				'finish'    => $$specs{'ddmStockFinish'},
-				'colour'    => $$specs{'ddmStockColour'},
-				'weight'    => $$specs{'ddmStockWeight'},
-				'width'     => $$specs{'StockType'.$qty_index} eq 'Roll' ? undef : $$specs{'hdnSuppliedStockWidth'.$qty_index},
-				'height'    => $$specs{'StockType'.$qty_index} eq 'Roll' ? undef : $$specs{'hdnSuppliedStockHeight'.$qty_index},
-				'type'		=>	$$specs{'StockType'.$qty_index},
-				'project_type_id'=> $Project ? $Project->Type()->id() : undef,
-				);
-		$Paper = shift @Papers;
-		$Paper = new openprint::Paper() if ! $Paper;
+		my %params = (
+			'supplied'	=> $$specs{'rdbSuppliedStock'},
+			'name'      => $$specs{'ddmStockBrand'},
+			'finish'    => $$specs{'ddmStockFinish'},
+			'colour'    => $$specs{'ddmStockColour'},
+			'weight'    => $$specs{'ddmStockWeight'},
+			'project_type_id'=> $Project ? $Project->Type()->id() : undef,
+		);
+		if ( $qty_index ) {
+			$params{'width'}	=	$$specs{'hdnSuppliedStockWidth'.$qty_index};
+			$params{'height'}	=	$$specs{'hdnSuppliedStockHeight'.$qty_index};
+			$params{'type'}		=	$$specs{'StockType'.$qty_index};
+		} # end if
+		my @Papers = openprint::Paper::find( %params );
+        if ( ! @Papers ) {
+$openprint::log->debug("No papers found, looking for paper with no width or height");
+            delete $params{'width'};
+            delete $params{'height'};
+            @Papers = find( %params );
+        } # end if
+        if ( ! @Papers ) {
+$openprint::log->debug("No papers found");
+        } # end if
+		
+		if ( $qty_index ) {
+			my $qty = $$specs{'txtPressSheetQty'.$qty_index};
+$openprint::log->debug("Looking for $qty");
+			$qty =~ s/\D//g;
+			foreach my $P ( @Papers ) {
+$openprint::log->debug("Looking for $qty < " . $P->minimum_order() );
+				next if $qty < $P->minimum_order();
+$openprint::log->debug("found for $qty < " . $P->minimum_order() );
+				$Paper = $P;
+				last;
+			} # end foreach
+		} # end if
+		if ( ! $Paper ) {
+			$Paper = shift @Papers;
+			$Paper = new openprint::Paper() if ! $Paper;
+		} # end if
 	} # end if
 
 	if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {

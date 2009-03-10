@@ -10,6 +10,8 @@ require sql;
 require logger;
 require configuration;
 require openprint::CIP3_PPF;
+require openprint::Project;
+require openprint::service;
 use openprint ();
 
 use vars qw( $log $dbh %config );
@@ -96,9 +98,36 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 				die 'Error opening db' if ! $dbh;
 
 				configuration::init_cache( $log, $dbh );
-				foreach my $PPF (openprint::CIP3_PPF('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
+				foreach my $PPF (openprint::CIP3_PPF::find('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
 					$PPF->delete();
 				} # end foreach
+				foreach my $Project ( openprint::Project::find('docket'=>$docket) ) {
+					my $services = $Project->services();
+
+					my $found = 0;
+					foreach my $ss_id ( $Project->signatures() ) {
+						my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+						if ( $$services{'AdditionalSignature'} ) {
+							if ( $sig == $$sig_specs{'SignatureIndex'} ) {
+								$found = 1;
+								last;
+							} # end if
+						} elsif ( $sig == $$sig_specs{'SignatureIndex'}+1 ) {
+							$found = 1;
+							last;
+						} # end if
+					} # end foreach sig
+					if ( ! $found ) {
+						my $ac = sql::start_transaction( $dbh );
+						$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( $dbh->errstr() );
+						my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Spreads' );
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Spreads' );
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $sig );
+						sql::end_transaction( $dbh, $ac );
+					} # end if
+				} # end foreach Project
+
 				my $PPF = new openprint::CIP3_PPF();
 				$_ = $PPF->save({
 						'docket'	=>	$docket,

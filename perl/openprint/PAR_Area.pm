@@ -1,23 +1,17 @@
-package openprint::CAR_Area;
+package openprint::PAR_Area;
 @ISA = qw(openprint::Object);
-
-use MIME::QuotedPrint;
-use MIME::Base64;
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 my $debug = 1;
 
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $table $serial %fields %defaults %transforms $log $dbh );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 require sql;
 
-$table = 'car_areas';
-$serial = 'car_areas_id_seq';
+$table = 'par_areas';
+$serial = 'par_areas_id_seq';
 
 %fields = (
 	'name'		=>	'name',
@@ -35,7 +29,7 @@ $serial = 'car_areas_id_seq';
 sub find {
 	my %params = @_;
 
-	my $sql = q{SELECT * FROM CAR_Areas WHERE 1>0};
+	my $sql = q{SELECT * FROM PAR_Areas WHERE 1>0};
 	my @values;
 
 	if ( exists $params{'deleted'} ) {
@@ -52,12 +46,12 @@ sub find {
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->warn("Error loading CAR_Areas: ($sql) (@values)" . $openprint::dbh->errstr );
+		$openprint::log->warn("Error loading PAR_Areas: ($sql) (@values)" . $openprint::dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$openprint::log->debug("openprint::CAR_Area::find($sql) (@values) :" . @$data );
+		$openprint::log->debug("openprint::PAR_Area::find($sql) (@values) :" . @$data );
 	} # end if
-	return map { new openprint::CAR_Area( $_->{id}, $_ ); } @$data;
+	return map { new openprint::PAR_Area( $_->{id}, $_ ); } @$data;
 } # end sub find
 
 1;

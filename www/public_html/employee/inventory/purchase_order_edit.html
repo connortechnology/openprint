@@ -171,9 +171,11 @@ function getSelectionId(input, li) {
 				<td><textarea name="shipping_method" id="shipping_method" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_method()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
 				<td><textarea name="shipping_terms" id="shipping_terms" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_terms()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></textarea></td>
 				<td valign="top">
-					<input type="radio" id="delivered_on_switchASAP" name="delivered_on_switch" value="ASAP" <? echo ( ssi::checked( ! $$variable{'PurchaseOrder'}->delivered_on() ) ) ?> onclick="$('delivered_on_div').hide();" />
+					<input type="radio" id="delivered_on_switchOVERNIGHT" name="delivered_on_switch" value="OVERNIGHT" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'OVERNIGHT' ) ) ?> onclick="$('delivered_on_div').hide();" />
+					<label for="delivered_on_switchOVERNIGHT">OVERNIGHT</label>
+					<input type="radio" id="delivered_on_switchASAP" name="delivered_on_switch" value="ASAP" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'ASAP' ) ) ?> onclick="$('delivered_on_div').hide();" />
 					<label for="delivered_on_switchASAP">ASAP</label>
-					<input type="radio" id="delivered_on_switchDATE" name="delivered_on_switch" value="DATE" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on() ) ) ?> onclick="$('delivered_on_div').show();" />
+					<input type="radio" id="delivered_on_switchDATE" name="delivered_on_switch" value="DATE" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'DATE' ) ) ?> onclick="$('delivered_on_div').show();" />
 					<label for="delivered_on_switchDATE">DATE</label>
 					<div id="delivered_on_div" <? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? '' : 'style="display:none;"' ) ?>>
 						<input type="hidden" id="delivered_on" name="delivered_on" value="<? echo ( $$variable{'PurchaseOrder'}->delivered_on() ?  $$variable{'PurchaseOrder'}->delivered_on() : join('-', Date::Calc::Today() ); ) ?>" />

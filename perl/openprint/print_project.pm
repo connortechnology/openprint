@@ -926,7 +926,7 @@ sub calc {
 					} elsif ( ( my ( $folds ) = $specs{'FoldType'} =~ /^(\d)Panel/ ) ) {
 						#$folds =~ s/\D//g;
 						#$folds += 1;
-						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'} *1000/ $folds)/1000 );
+						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'}*1000/$folds)/1000 );
 						$specs{'txtFinalHeight'} = $specs{'txtHeight'};
 					} # end if
 				} # end if

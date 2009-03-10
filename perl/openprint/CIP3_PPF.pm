@@ -11,6 +11,7 @@ use MIME::Base64;
 use Text::PDF;
 use Text::PDF::Filter;
 use Image::Magick;
+use Number::Format;
 
 use vars qw( $log $dbh %config $table $serial %fields %transforms %defaults );
 
@@ -151,6 +152,11 @@ sub parseSeparation {
 			$$image{'encoding'} = $1;
 		} elsif ( $line =~ /^\/CIP3PreviewImageCompression \/(\w+) def/ ) {
 			$$image{'compression'} = $1;	
+		} elsif ( $line =~ /^\/CIP3PreviewImageBitsPerComp/ ) {
+		} elsif ( $line =~ /^\/CIP3PreviewImageComponents/ ) {
+		} elsif ( $line =~ /^\/CIP3PreviewImageMatrix/ ) {
+		} elsif ( $line =~ /^\/CIP3PreviewImageResolution/ ) {
+
 		} elsif ( $line =~ /^CIP3PreviewImage$/ ) {
 			$line = shift;
 			my @image_data;
@@ -159,7 +165,7 @@ sub parseSeparation {
 				$line = shift;
 			} # end while
 			$$image{'image'} = join("\r\n", @image_data);
-			$log->debug("Got image data for $$image{ink} lines: " . @image_data . " length: " . length($$image{'image'}) );
+			$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
 			last;
 		} elsif ( $line =~ /^CIP3EndSeparation/ ) {
 			last;
@@ -168,7 +174,7 @@ sub parseSeparation {
 		} # end if
 	} # end while
 	return @_;
-} # end sub parsePreviewImage
+} # end sub parseSeparation
 
 sub parse {
 	my ( $self ) = @_;
@@ -238,24 +244,33 @@ sub generate_previews {
 
 			foreach my $image ( @{$$preview{'separations'}} ) {
 
+$log->debug("compression: $$image{'compression'}");
 				my $Image;
 				if ( $$image{'compression'} eq 'RunLengthDecode' ) {
 					my $data = misc::rle_decode($$image{'image'});
-					$data = $data x 9;
-	$log->debug("Compression was RunLengthDecode" . (length $$image{'image'} ) .','.$$image{'width'}.'x'.$$image{'height'} .$$image{'width'}*$$image{'height'}.'=>' . length ($data) );
+					#$data = $data x 9;
 
 					$Image = Image::Magick->new(magick=>'cmyk',depth=>1,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
 					#$Image = Image::Magick->new(magick=>'rle',depth=>1,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
 					$_ = $Image->BlobToImage($data);
 					$log->error( $_ ) if $_;
+	open F, sprintf('>%s%dsg%dsd%s-%s.rle', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
+	print F $$image{'image'};
+	close(F);
+	open F, sprintf('>%s%dsg%dsd%s-%s.raw', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
+	print F $data;
+	close(F);
 				} elsif ( $$image{'compression'} eq 'DCTDecode' ) {
 					$Image = Image::Magick->new(magick=>'jpg');
 					$_ = $Image->BlobToImage($$image{'image'});
 					$log->error( $_ ) if $_;
 				} elsif ( $$image{'compression'} eq 'None' ) {
-					$Image = Image::Magick->new(magick=>'cmyk',depth=>8,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
+					$Image = Image::Magick->new(magick=>'cmyk',depth=>1,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
 					$_ = $Image->BlobToImage($$image{'image'});
 					$log->error( $_ ) if $_;
+	open F, sprintf('>%s%dsg%dsd%s-%s.raw', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
+	print F $$image{'image'};
+	close(F);
 				} else {
 					$log->error("Unknown compression $$image{'compression'}");
 					$Image = Image::Magick->new(magick=>'cmyk',depth=>1,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','type'=>'ColorSeparation','debug'=>'Blob');
