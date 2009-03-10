@@ -38,6 +38,7 @@ $serial = 'Purchaseorders_id_seq';
 	'authorized_by'		=>	'authorized_by',
 	'authorized_on'		=>	'authorized_on',
 	'delivered_on'		=>	'delivered_on',
+	'delivered_on_switch'		=>	'delivered_on_switch',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
 	'federaltax'		=>	'federaltax',

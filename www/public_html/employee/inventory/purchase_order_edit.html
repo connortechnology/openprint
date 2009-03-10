@@ -163,9 +163,9 @@ function getSelectionId(input, li) {
 		<br class="spacer"/>
 		<table>
 			<tr>
-				<th>Shipping Method</th>
+				<th width="374">Shipping Method</th>
 				<th>Shipping Terms</th>
-				<th width="183">Delivery Date</th>
+				<th width="256">Delivery Date</th>
 			</tr>
 			<tr>
 				<td><textarea name="shipping_method" id="shipping_method" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_method()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
