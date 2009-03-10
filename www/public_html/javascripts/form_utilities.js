@@ -114,8 +114,6 @@ function create_option( value, text ) {
 
 function add_option( ddm, value, text, selectedValue ) {
 	if ( ddm ) {
-		//var optionIndex = get_option_index(ddm.options,value);
-		//if ( optionIndex == -1 ) {
 			var option = create_option( value, text );
 			var index = ddm.options.length;
 			ddm.options[index] = option;
@@ -125,10 +123,6 @@ function add_option( ddm, value, text, selectedValue ) {
 			} else {
 				option.selected = false;
 			} // end if
-		//} else {
-			//ddm.options[optionIndex].text = text;
-		//} // end if
-
 	} else {
 		alert('add_option: null ddm ' + ddm);
 	} // end if
