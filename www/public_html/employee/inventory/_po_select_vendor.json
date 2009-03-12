@@ -21,7 +21,7 @@
 	foreach my $User ( @Users ) {
 		my $name = $User->name();
 		$name =~ s/'/\\'/g;
-		$html .= "add_option( contact_ddm, '$$User{id}', '$name', $selected );\n";
+		$html .= "add_option( contact_ddm, '$$User{id}', '$name', '$selected' );\n";
 	} # end foreach User
 	if ( @Users == 1 ) {
 		my $User= $Users[0];
