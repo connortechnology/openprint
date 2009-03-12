@@ -268,15 +268,6 @@ sub get_ul {
 			'order'				=> 'starttime,serviceindex',
 			);
 
-# This is just for caching purposes
-	if ( @schedule ) {
-		my @projects = map { $$_{'projectindex'} } @schedule;
-		if ( @projects ) {
-			my @companies = map { $_->company_id() } openprint::Project::find( 'id'=>\@projects );
-			openprint::Company::find( 'id'=>\@companies );
-		} # end if
-	} # end if
-
 	my $html;
 
 	my $previous_row;
