@@ -21,7 +21,7 @@ use vars qw( $log $dbh %config );
 *config = \%openprint::config;
 
 $log = logger->new();
-$log->{level} = "debug";
+$log->{level} = "warn";
 
 my $source_path = $ARGV[0];
 my $dest_path = $ARGV[1];
