@@ -94,6 +94,7 @@ $openprint::log->debug("Page: $page");
 	while ( $page and $lastpage ne $page ) {
 		# This is for loop detection
 		$lastpage = $page;
+$variable{'uri'} = $page;
 		parse_page( $page );
 		if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
 			$page = $variable{'Redirect'};
@@ -375,6 +376,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+$log->debug("Dset: $variable{'Destination'}");
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
