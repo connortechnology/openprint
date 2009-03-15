@@ -1161,12 +1161,13 @@ $openprint::log->debug("No spread layout for you!");
 					} else {
 						foreach my $i ( @i ) {
 							next if $Press->specification('Maximum Roll Width') and ($i->Paper()->width() > $Press->specification('Maximum Roll Width'));
-							my $i2 = $i;
+							my $i2 = $i->copy();
+							$i2->Paper()->width( $i2->used_width() );
 							while ( $i2->columns() ) {
 								push @imps, $i2;
 								$i2 = $i2->copy();
 								$i2->columns( $i2->columns()-1 );
-								$i2->paper()->width( $i2->used_width() );
+								$i2->Paper()->width( $i2->used_width() );
 								openprint::imposition::check_setup( $i2, \%project );
 								$i2->columns(0) if $Press->specification('Minimum Sheet Width') and ($i2->paper()->width() < $Press->specification('Minimum Sheet Width'));
 								$i2->columns(0) if $Press->specification('Minimum Roll Width') and ($i2->paper()->width() < $Press->specification('Minimum Roll Width'));
@@ -1226,10 +1227,10 @@ $openprint::log->debug("No spread layout for you!");
 					} # end while cutting it
 				} # end if Web or Sheet
 
-#$openprint::log->debug("Sorting");	
-#foreach my $i ( @imps ) {
-#$i->display();
-#}
+$openprint::log->debug("Sorting");	
+foreach my $i ( @imps ) {
+$i->display();
+}
 				if ( 1 ) {
 				foreach my $imp ( @imps ) {
 					my $add = 1;
@@ -1285,7 +1286,7 @@ $openprint::log->debug("No spread layout for you!");
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
-if ( 0 ) {
+if ( 1 ) {
 $openprint::log->warn('Impositions');
 foreach my $I ( @impositions ) {
 $I->display();
@@ -1805,7 +1806,7 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 
 							$new_specs{'PreviousStockType'} = $imp->Paper()->type();
 							$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
-							if ( $$imp{'Folder'} and (! $new_specs{'PreviousImposition'}) and ( $imp->Press()->id() == $$imp{'Folder'}->id() ) ) {
+							if ( $$imp{'Folder'} and ( $imp->Press()->id() == $$imp{'Folder'}->id() ) ) {
 #This is used in Folding to tell it not to mix impositions when inline folded
 								$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
 							} # end if  
@@ -2529,7 +2530,7 @@ $openprint::log->debug("Perforating");
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if
 	if ( $$project{'HasUVCoating'} ) {
-		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
+		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 		if ( $uv_results{'Status'} eq 'uncalculated' ) {
 			$price{'UV Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 

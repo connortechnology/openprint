@@ -67,9 +67,9 @@
 			my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $qty );
 			$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $qty, $paper_price{'Paper Price'} );
 		} else {
-		my $weight = $qty * $Paper->width() * $Paper->height() * $Paper->wpsi();
-		my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $qty );
-		$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $weight, $paper_price{'Paper Price'} );
+			my $weight = $qty * $Paper->width() * $Paper->height() * $Paper->wpsi();
+			my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $qty );
+			$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $weight, $paper_price{'Paper Price'} );
 		} # end if
 	} # end foreach qty_index
 	return $html;

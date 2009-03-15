@@ -14,7 +14,7 @@
 <? if ( ! $session{'user_id'} ) ?>
 		<fieldset><legend>Your Information</legend>
 			<hr class="legendUnderline" />
-			<div class="leftColumn">
+			<div style="width: 48%; float: left;">
 				<p>
 					<label for="txtCompanyName">Company:</label>
 					<input type="text" id="txtCompanyName" name="txtCompanyName" />
@@ -32,7 +32,7 @@
 					<input type="text" id="txtPostalCode" name="txtPostalCode" />
 				</p>
 			</div>
-			<div class="rightColumn">
+			<div style="width: 48%; float: right;">
 				<p>
 					<label for="txtContactName">Name:</label>
 					<input type="text" id="txtContactName" name="txtContactName" />
@@ -72,11 +72,8 @@
 		$$variable{'Quantity'} = $Project->quantity1();
 		if ( $$services{'Turnaround'} ) {
 			my $turnaround_specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
-			@$variable{'duedate_year','duedate_month','duedate_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
+			@$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
 		} # end if
-	} # end if
-	if ( ! $$variable{'duedate_year'} ) {
-		@$variable{'duedate_year','duedate_month','duedate_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 5 );
 	} # end if
 ) ?>
 			<p>
@@ -88,10 +85,10 @@
 				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" value="<?txtQuotedPrice?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</p>
 			<p>
-				<label>Due Date:</label>
-				<span class="DateSelector">
-				<? echo ( ssi::date_select( 'duedate', [ @$variable{'duedate_year','duedate_month','duedate_day'} ] ) ) ?>
-				</span>
+				<label for="ddmDueDateMonth">Due Date:</label>
+				<select style="width: auto;" name="ddmDueDateMonth" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(document.upload.ddmDueDateYear.value,this.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::getmonths( $$variable{'ddmDueDateMonth'} ); ) ?></select>
+				<select style="width: auto;" name="ddmDueDateDay" onchange="off(this.options[this.selectedIndex]);"><? echo ( ssi::getdays( $$variable{'ddmDueDateDay'} ); ) ?></select>
+				<select style="width: auto;" name="ddmDueDateYear" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.value,document.upload.ddmDueDateMonth.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::return_years( (localtime(time))[5] + 1900, (localtime(time))[5] + 1901, (localtime(time))[5] + 1900 ); ) ?></select>
 			</p>
 			<p>
 				<label>Size:</label>

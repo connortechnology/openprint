@@ -1136,20 +1136,25 @@ sub rfidtag_details {
 		} else {
 			$variable{'error'} .= 'Skid already allocated<br/>';
 		} # end if
-	} else {
-		@param{'end_year','end_month','end_day'} = Date::Calc::Today();
-		$param{'limit'} = 10;
-		_rfidtag_log();
 	} # end if
+
+	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
+	$param{'limit'} = 10 if ! $param{'limit'};
+	_rfidtag_log();
 
 	$variable{'RFIDTag'} = $RFIDTag;
 } # end sub rfidtag_details
 
 sub rfidscanners {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		foreach my $id ( ref $param{'rfidscanners'} eq 'ARRAY' ? @{$param{'rfidscanners'}} : split(',',$param{'rfidscanners'}) ) {
-			$variable{'error'} .= new openprint::RFIDScanner( $id )->delete();
-		} # end foreach
+		if ( $param{'rfidscanners'} ) {
+			foreach my $id ( ref $param{'rfidscanners'} eq 'ARRAY' ? @{$param{'rfidscanners'}} : split(',',$param{'rfidscanners'}) ) {
+				$variable{'error'} .= new openprint::RFIDScanner( $id )->delete();
+			} # end foreach
+		} elsif ( $param{'rfidscanner_id'} ) {
+			my $RFIDScanner = new openprint::RFIDScanner( $param{'rfidscanner_id'} );
+			$variable{'error'} .= $RFIDScanner->delete();
+		} # end if
 	} # end if
 } # end sub rfidtags
 
@@ -1384,7 +1389,12 @@ sub manifests {
 
 		} # end foreach manifest_id
 	} # end if
+	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
 } # end sub manifests
+
+sub _manifests {
+	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
+} # end sub _manifests
 
 sub inventory_log {
   if ( $param{'btnFunction'} eq 'Download' ) {
@@ -1592,6 +1602,25 @@ sub purchase_order_view {
 				$param{'supplier_id'} = $Companies[0]->id();
 			} # end if
 		} # end if
+		if ( ! $param{'contact_id'} ) {
+			my @Users = openprint::User::find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
+			if ( ! @Users ) {
+				my $User = new openprint::User();
+				my ( $first, $last ) = $param{'vendor_contact'} =~ /(\S+)\s*(\S*)/;
+				$User->save( {
+						'company_id'=>	$param{'supplier_id'},
+						'email'		=>	$param{'vendor_email'},
+						'firstname'	=>	$first,
+						'lastname'	=>	$last,
+						'phone'		=>	$param{'vendor_phone'},
+						'fax'		=>	$param{'vendor_fax'},
+						'change_password'	=>	'N',
+						'administrator'	=>	'N',
+						'ftp_active'	=>	0,
+						'web_active'	=>	0,
+					} );
+			} # end if
+		} # end if
 		if ( $param{'delivered_on_switch'} eq 'DATE' ) {
 			$param{'delivered_on'} = sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'}) if ! $param{'delivered_on'};
 		} else {
@@ -1793,6 +1822,10 @@ sub _manifest_type {
 
 sub _po_select_vendor {
 }
+
+sub _verification_log {
+	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
+} # end sub _verification_log
 
 1;
 __END__

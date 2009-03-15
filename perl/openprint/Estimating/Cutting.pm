@@ -361,7 +361,6 @@ sub signature_calc {
 
 	my @my_equipment;
 
-	my $stitching_imposition = 0;
 
 	my $services = $Project->services();
 
@@ -411,7 +410,7 @@ sub signature_calc {
 		$$specs{'Status'} = 'calculated';
 		return;
 	} # end if
-	my $stitching_imposition;
+	my $stitching_imposition = 0;
 	if ( $I->StitchingImposition() ) {
 		$stitching_imposition = $I->StitchingImposition();
 	} elsif ( $$services{'SaddleStitching'} ) {

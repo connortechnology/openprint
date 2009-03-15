@@ -21,6 +21,7 @@ require openprint::Label;
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Content;
 require openprint::PaperInventory;
+require openprint::ProductionFeedback;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;

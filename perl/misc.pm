@@ -276,19 +276,40 @@ sub seconds_to_pretty_interval {
 } # end sub seconds_to_pretty_interval
 
 
-sub CommaFormatted {
-    my $delimiter = ','; # replace comma if desired
-    my($n,$d) = split /\./,shift,2;
-    my @a = ();
-    while($n =~ /\d\d\d\d/) {
-        $n =~ s/(\d\d\d)$//;
-        unshift @a,$1;
+sub rle_decode {
+	my ( $source, $width, $height ) = @_;
+	my $result = '';
+	my $position = 0;
+$openprint::log->warn("RLE::DECODE:: source: " . length $source );
+    while ($source ne "") {
+        my $l = unpack("C", $source);
+        if ($l == 128) {
+			if ( length $source > 1 ) {
+				$openprint::log->debug("End while still data at position $position " . unpack("H",$source) . ' ' . substr($source,0,1) . ' length of result: ' . length($result));
+			} # end if
+            return $result;
+        } elsif ($l > 128) {
+        #if ($l > 128) {
+            if (length($source) < 2) {
+                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
+                return $result;
+            } # end if
+            $result .= substr($source, 1, 1) x (257 - $l);
+            substr($source, 0, 2) = "";
+			$position += 2;
+        } else {
+            if (length($source) < $l + 1) {
+                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
+                return $result;
+            }
+            $result .= substr($source, 1, $l);
+            substr($source, 0, $l + 1) = "";
+			$position += $l+1;
+        }
     }
-    unshift @a,$n;
-    $n = join $delimiter,@a;
-    $n = "$n\.$d" if $d =~ /\d/;
-    return $n;
-} # end of subroutine CommaFormatted
+$openprint::log->warn("RLE::DECODE:: results: " . length $result );
+	return $result;
+} # end sub rle_decode
 
 1;
 

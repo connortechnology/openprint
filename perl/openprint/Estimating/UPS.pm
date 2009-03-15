@@ -175,7 +175,6 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 		return 'uncalculated';
 	} # end if
 
-	my %rated_services;
 	my %bestService;
 	while ( my ( $service, $price ) = splice @{$upsResponse{'RatedShipments'}}, 0, 2 ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= ups::get_service_name($service).": $price\n";
@@ -190,7 +189,7 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 				$bestService{'Service'} = $service;
 			} # end if
 		} # end if
-		$rated_services{$service} = $price;
+		$$services{$service} = $price;
 	} # end while
 	if ( ! $$specs{'ddmServiceType'} ) {
 		$log->debug("Choosing  $$specs{'ddmServiceType'} as the ServiceType") if $debug;
@@ -202,7 +201,7 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 	@ups{'PickupType','ServiceType'} = @$specs{'ddmPickupType','ddmServiceType'};
 
 	$$specs{'ServiceTypeDiv'} = qq{<select name="ddmServiceType" onchange="calc(this.form.name);"><option value=""> Select </option>};
-	foreach my $service ( keys %rated_services ) {
+	foreach my $service ( keys %$services ) {
 		$$specs{'ServiceTypeDiv'} .= qq{<option value="$service"} . ( $$specs{'ddmServiceType'} == $service ? ' selected' : '' ) .'>'.ups::get_service_name( $service ) . '</option>';
 	} # end foreach
 	$$specs{'ServiceTypeDiv'} .= '</select>';
@@ -266,27 +265,23 @@ foreach ( @{$upsResponse{'RatedShipments'}} ) {
 			my $cost = $1;
 			my $currency = $2;
 			$log->debug("Currency returned: $currency") if $debug;
+			$currency = 'CDN' if $currency eq 'CAD';
 			my @currencies = openprint::Currency::find( 'short' => $currency );
-			my %ServicePrice;
-			if ( ! @currencies ) {
-				$log->error("No Currencies found for $currency");
+			my $UPS_Currency = shift @currencies;
+			my $Project = new openprint::Project( $project_index );
+			my $MY_Currency = $Project->Currency();
+			$log->debug("MY Currency: " . $MY_Currency->id() . ' ' . $MY_Currency->name() ) if $debug;
+			# Now... we need to do currency conversions
+			if ( $UPS_Currency->{'id'} != $MY_Currency->{'id'} ) {
+				my $rate = $UPS_Currency->conversions( $MY_Currency->{'id'} );
+				$cost *= $rate;
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Converting to ' . $MY_Currency->name() . ' using ' .$rate."\%\n";
+			} # end if
+			my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'UPS Shipping', $cost, undef );
+			if ( $ServicePrice{'Price'} > 0 ) {
+				$ServicePrice{'Total'} = $ServicePrice{'Price'};
 			} else {
-				my $UPS_Currency = shift @currencies;
-				my $Project = new openprint::Project( $project_index );
-				my $MY_Currency = $Project->Currency();
-				$log->debug("MY Currency: " . $MY_Currency->id() . ' ' . $MY_Currency->name() ) if $debug;
-				# Now... we need to do currency conversions
-				if ( $UPS_Currency->{'id'} != $MY_Currency->{'id'} ) {
-					my $rate = $UPS_Currency->conversions( $MY_Currency->{'id'} );
-					$cost *= $rate;
-					$$specs{'hdnBreakdown'.$qty_index} .= 'Converting to ' . $MY_Currency->name() . ' using ' .$rate."\%\n";
-				} # end if
-				%ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'UPS Shipping', $cost, undef );
-				if ( $ServicePrice{'Price'} > 0 ) {
-					$ServicePrice{'Total'} = $ServicePrice{'Price'};
-				} else {
-					$ServicePrice{'Total'} = $cost * (1 + $ServicePrice{'Markup'}/100);
-				} # end if
+				$ServicePrice{'Total'} = $cost * (1 + $ServicePrice{'Markup'}/100);
 			} # end if
 
 			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', $ServicePrice{'Total'} );

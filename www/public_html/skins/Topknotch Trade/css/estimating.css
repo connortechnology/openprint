@@ -18,30 +18,24 @@
 .InstantPricing .Questions {
 	color: black;
 	font-weight: normal;
+	width: 267px;
 	margin-left: 10px;
 	margin-bottom: 10px;
+	float: right;
+	border: 1px solid #194D98;
 	padding: 5px;
 }
-.InstantPricing .Questions p {
-    text-align: right;
-}
-
-.InstantPricing .Questions span.label, .InstantPricing .Questions label  {
+.InstantPricing .Questions span.label {
 	width: auto;
 	float: left;
 	color: #000000;
 	font-weight: bold;
 }
-.InstantPricing .Questions label.radio {
-    float: none;
-    font-weight: normal;
-}
-
 .InstantPricing .Questions span.input {
 	width: auto;
 	float: right;
 }
-.InstantPricing h3, .InstantPricing h2 {
+.InstantPricing h3 {
 	margin: 0px;
 }
 .InstantPricing .Questions h3 {
@@ -81,18 +75,5 @@ div.Prices
 padding: 0px;
 }
 #Specials {
-	width: 480px;
-}
-div#instant_price_section {
-	float: right;
-	width: 267px;
-}
-div#CalculateBtn {
-	margin:0 auto; 
-	text-align:center; 
-	width: 95px;
-	outline: 0;
-}
-div#NewDimensions {
-	display: none;
+	width: 420px;
 }

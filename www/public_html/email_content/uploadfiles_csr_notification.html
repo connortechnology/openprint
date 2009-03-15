@@ -81,11 +81,11 @@ OR:
 	<? endif ( $param{'txtQuoteNumber'} ) ?>
 	<? if ( $param{'txtQuotedPrice'} ) ?><p><label>Quoted Price:</label><? echo ( $param{'txtQuotedPrice'} ) ?></p><? endif ( $param{'txtQuotedPrice'} ) ?>
 	<p><label>Description:</label><? echo ( $param{'txtJobDescription'} ) ?></p>
-	<? if ( $param{'duedate_year'} ) ?>
+	<? if ( $param{'ddmDueDateYear'} ) ?>
 		<p><label>Due Date:</label>
-			<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( join('-',@param{'duedate_year','duedate_month','duedate_day'}) ) ); ) ?>
+			<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( join('-',@param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}) ) ); ) ?>
 		</p>
-	<? endif ( $param{'duedate_year'} ) ?>
+	<? endif ( $param{'ddmDueDateYear'} ) ?>
 		<p><label>Size:</label><? echo ( $param{'Size'} ) ?></p>
 		<p><label>Quantity:</label><? echo ( $param{'Quantity'} ) ?></p>
 		<p><label>Stock:</label><? echo ( $param{'Stock'} ) ?></p>

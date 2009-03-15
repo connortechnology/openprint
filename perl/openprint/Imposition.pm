@@ -86,6 +86,15 @@ sub display {
 	$openprint::log->debug("Imp: $$self{'columns'}x$$self{'rows'}+$$self{'dutch_columns'}x$$self{'dutch_rows'}:$$self{imposition}out spreads:$$self{'spread_columns'}x$$self{'spread_rows'}=$$self{'spreads'} $$self{runstyle} on: $self->{paper}->{start_width}x$self->{paper}->{start_height} -> $self->{paper}->{width}x$self->{paper}->{height} $$self{Press}->{strid} I: $$self{image_width}x$$self{image_height} L:$$self{layout_width}x$$self{layout_height} $$self{image_orientation} pages: " . $self->page_columns() . 'x' . $self->page_rows() );
 } # end sub display
 
+sub to_string {
+	my $self = shift;
+	my $string = sprintf('%dout %dx%d', @$self{'imposition','columns','rows'} );
+	if ( $$self{'dutch_columns'} ) {
+		$string .= sprintf('+%dx%d', @$self{'dutch_columns','dutch_rows'} );
+	} # end if
+	return $string;
+} # end sub to_string
+
 sub set {
 	my $self = shift;
 	my %hash = @_;
@@ -143,6 +152,20 @@ sub Paper {
 	my $self = shift;
 	return $$self{'paper'};
 } # end sub Paper
+
+sub load_used {
+	my ( $self, $specs, $qty_index ) = @_;
+
+	$$self{'runstyle'} = $$specs{'ddmRunStyleUsed'} ? $$specs{'ddmRunStyleUsed'} : $$specs{'ddmRunStyle'.$qty_index};
+	$$self{'image_orientation'} = $$specs{'hdnImageOrientationUsed'} ? $$specs{'hdnImageOrientationUsed'} : $$specs{'hdnImageOrientation'.$qty_index};
+	$$self{'imposition'} = $$specs{'txtImpositionUsed'} ? $$specs{'txtImpositionUsed'} : $$specs{'txtImposition'.$qty_index};
+	$$self{'rows'} = $$specs{'hdnImpositionRowsUsed'} ? $$specs{'hdnImpositionRowsUsed'} : $$specs{'hdnImpositionRows'.$qty_index};
+	$$self{'columns'} = $$specs{'hdnImpositionColumnsUsed'} ? $$specs{'hdnImpositionColumnsUsed'} : $$specs{'hdnImpositionColumns'.$qty_index};
+	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRowsUsed'} ? $$specs{'hdnImpositionDutchRowsUsed'} : $$specs{'hdnImpositionDutchRows'.$qty_index};
+	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumnsUsed'} ? $$specs{'hdnImpositionDutchColumnsUsed'} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
+	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
+
+} # edn sub load_used
 
 sub load {
 	my ( $self, $specs, $qty_index ) = @_;
