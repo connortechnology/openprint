@@ -78,10 +78,12 @@ sub store_quote_info {
 		} # end if
 	} # end foreach
 
+	my @required_fields = split(',', $config{'QuoteRequiredFields'} );
+
 	my $error = "";
-	$error .= 'No prepared by first name entered.<br>' if $r->param('ByFirstName') eq '';
-	$error .= 'No prepared by last name entered.<br>' if $r->param('ByLastName') eq '';
-	$error .= 'No prepared by email address entered.<br>' if $r->param('ByEmail') eq '';
+	$error .= 'No prepared by first name entered.<br>' if $r->param('ByFirstName') eq '' and sets::isin('ByFirstName', \@required_fields ) );
+	$error .= 'No prepared by last name entered.<br>' if $r->param('ByLastName') eq '' and sets::isin('ByLastName', \@required_fields ) );
+	$error .= 'No prepared by email address entered.<br>' if $r->param('ByEmail') eq '' and sets::isin('ByEmail', \@required_fields ) );
 	if ( $error ne '' ) {
 		return $error;
 	} # end if
@@ -94,7 +96,7 @@ sub store_quote_info {
 #		$error .= 'No prepared for postal code entered.<br>' if $r->param('ForPostalCode') eq '';
 #		$error .= 'No prepared for country entered.<br>' if $r->param('ForCountry') eq ''; 
 #		$error .= 'No prepared for phone number entered.<br>' if $r->param('ForPhone') eq '';
-		$error .= 'No prepared for email address entered.<br>' if $r->param('ForEmail') eq '';
+		$error .= 'No prepared for email address entered.<br>' if $r->param('ForEmail') eq '' and sets::isin('ForEmail', \@required_fields ) );
 		if ( $error ne '' ) {
 			return $error;
 		} # end if

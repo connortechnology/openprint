@@ -716,15 +716,19 @@ function addLoadEvent(func) {
 
 function Country_onchange( country_ddm, state ) {
 	var country = get_ddm_value( country_ddm );
-	var state_label = $('state_label');
+	var state_label = $(country_ddm+'_state');
+	var postal_label = $(country_ddm+'_postal');
 	if ( country == 'US' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @states::states )", jsrs_cbFillDDM );
 		if ( state_label ) state_label.innerHTML='State:';
+		if ( postal_label ) postal_label.innerHTML='ZIP Code:';
 	} else if ( country == 'CA' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @provinces::provinces )", jsrs_cbFillDDM );
 		if ( state_label ) state_label.innerHTML='Province:';
+		if ( postal_label ) postal_label.innerHTML='Postal Code:';
 	} else {
 		if ( state_label ) state_label.innerHTML='State/Province:';
+		if ( postal_label ) postal_label.innerHTML='Postal Code:';
 	} // end if
 } // end function
 
