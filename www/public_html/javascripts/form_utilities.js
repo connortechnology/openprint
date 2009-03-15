@@ -716,10 +716,15 @@ function addLoadEvent(func) {
 
 function Country_onchange( country_ddm, state ) {
 	var country = get_ddm_value( country_ddm );
+	var state_label = $('state_label');
 	if ( country == 'US' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @states::states )", jsrs_cbFillDDM );
+		if ( state_label ) state_label.innerHTML='State:';
 	} else if ( country == 'CA' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @provinces::provinces )", jsrs_cbFillDDM );
+		if ( state_label ) state_label.innerHTML='Province:';
+	} else {
+		if ( state_label ) state_label.innerHTML='State/Province:';
 	} // end if
 } // end function
 

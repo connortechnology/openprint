@@ -59,6 +59,7 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 			</p>
 			<p> 
 				<label for="state">
+<span id="state_label">
 				<? echo (
 					if ( $$variable{'country'} eq 'US' ) {
 						return 'State:';
@@ -68,6 +69,7 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 						return 'State/Province:';
 					} # end if
                 ) ?>
+</span>
 				<span class="requiredFieldIndicator">*</span></label>
 				<select id="state" name="state">
 					<option value=""> Select </option>
