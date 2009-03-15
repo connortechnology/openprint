@@ -6,8 +6,9 @@ use vars qw( %config $log $dbh %session );
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
+
+require openprint::PAR_Area;
+require openprint::PAR_Reason;
 
 my $debug = 1;
 
@@ -26,7 +27,9 @@ require sql;
 	'action'		=> 'action',	
 	'effectiveness'	=> 'effectiveness',
 	'area'			=> 'area',
+	'area_id'		=> 'area_id',
 	'reason'		=> 'reason',
+	'reason_id'		=> 'reason_id',
 	'part1_user_id'	=> 'part1_user_id',
 	'part1_signed_on'	=> 'part1_signed_on',
 	'part2_user_id'		=> 'part1_user_id',
@@ -199,6 +202,12 @@ $openprint::log->debug( $body );
 	} # end if to
 
 } # end sub send_notification
+sub Area {
+	return new openprint::PAR_Area( $_[0]{area_id} );
+} # end sub Area
+sub Reason {
+	return new openprint::PAR_Reason( $_[0]{reason_id} );
+} # end sub Reason
 1;
 
 __END__

@@ -1,8 +1,6 @@
 package openprint::CAR;
 @ISA = qw(openprint::Object);
 
-use MIME::QuotedPrint;
-use MIME::Base64;
 use vars qw( %config $log $dbh %session );
 *session = \%openprint::session;
 *config = \%openprint::config;

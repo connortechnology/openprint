@@ -1602,6 +1602,25 @@ sub purchase_order_view {
 				$param{'supplier_id'} = $Companies[0]->id();
 			} # end if
 		} # end if
+		if ( ! $param{'contact_id'} ) {
+			my @Users = openprint::User::find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
+			if ( ! @Users ) {
+				my $User = new openprint::User();
+				my ( $first, $last ) = $param{'vendor_contact'} =~ /(\S+)\s*(\S*)/;
+				$User->save( {
+						'company_id'=>	$param{'supplier_id'},
+						'email'		=>	$param{'vendor_email'},
+						'firstname'	=>	$first,
+						'lastname'	=>	$last,
+						'phone'		=>	$param{'vendor_phone'},
+						'fax'		=>	$param{'vendor_fax'},
+						'change_password'	=>	'N',
+						'administrator'	=>	'N',
+						'ftp_active'	=>	0,
+						'web_active'	=>	0,
+					} );
+			} # end if
+		} # end if
 		if ( $param{'delivered_on_switch'} eq 'DATE' ) {
 			$param{'delivered_on'} = sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'}) if ! $param{'delivered_on'};
 		} else {
