@@ -5,6 +5,12 @@ use Date::Calc qw(Add_Delta_Days);
 use MIME::QuotedPrint;
 use MIME::Base64;
 use Mail::Sendmail;
+use openprint;
+use vars qw( $log $dbh %config );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+
 use strict;
 
 require sql;
@@ -81,9 +87,9 @@ sub store_quote_info {
 	my @required_fields = split(',', $config{'QuoteRequiredFields'} );
 
 	my $error = "";
-	$error .= 'No prepared by first name entered.<br>' if $r->param('ByFirstName') eq '' and sets::isin('ByFirstName', \@required_fields ) );
-	$error .= 'No prepared by last name entered.<br>' if $r->param('ByLastName') eq '' and sets::isin('ByLastName', \@required_fields ) );
-	$error .= 'No prepared by email address entered.<br>' if $r->param('ByEmail') eq '' and sets::isin('ByEmail', \@required_fields ) );
+	$error .= 'No prepared by first name entered.<br>' if $r->param('ByFirstName') eq '' and sets::isin('ByFirstName', \@required_fields );
+	$error .= 'No prepared by last name entered.<br>' if $r->param('ByLastName') eq '' and sets::isin('ByLastName', \@required_fields );
+	$error .= 'No prepared by email address entered.<br>' if $r->param('ByEmail') eq '' and sets::isin('ByEmail', \@required_fields );
 	if ( $error ne '' ) {
 		return $error;
 	} # end if
@@ -96,7 +102,7 @@ sub store_quote_info {
 #		$error .= 'No prepared for postal code entered.<br>' if $r->param('ForPostalCode') eq '';
 #		$error .= 'No prepared for country entered.<br>' if $r->param('ForCountry') eq ''; 
 #		$error .= 'No prepared for phone number entered.<br>' if $r->param('ForPhone') eq '';
-		$error .= 'No prepared for email address entered.<br>' if $r->param('ForEmail') eq '' and sets::isin('ForEmail', \@required_fields ) );
+		$error .= 'No prepared for email address entered.<br>' if $r->param('ForEmail') eq '' and sets::isin('ForEmail', \@required_fields );
 		if ( $error ne '' ) {
 			return $error;
 		} # end if

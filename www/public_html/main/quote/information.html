@@ -9,11 +9,15 @@ For&quot; fields blank.<br/>
 <form method="post" name="f1" action="submit.html"/>
 	<div class="QuoteInformation"/>
 <? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
-		<fieldset style="float: left; width: 49%;"/>
+		<fieldset class="leftColumn"/>
 <? else ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset>
 <? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 			<legend>Prepared By:</legend>
+			<p> 
+				<label><? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>E-mail Address:</label>
+				<input type="text" name="ByEmail" value="<?ByEmail?>" />
+			</p>
 			<p> 
 				<label>&nbsp;Company Name:</label>
 				<input type="text" name="ByCompanyName" value="<?ByCompanyName?>" />
@@ -30,11 +34,11 @@ For&quot; fields blank.<br/>
 				<label class="radio" for="BySalutationMiss"/>Miss</label>
 			</p>
 			<p> 
-				<label>*First Name:</label>
+				<label><? echo ( sets::isin( 'ByFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>First Name:</label>
 				<input type="text" name="ByFirstName" value="<?ByFirstName?>" />
 			</p>
 			<p> 
-				<label>*Last Name:</label>
+				<label><? echo ( sets::isin( 'ByLastName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>Last Name:</label>
 				<input type="text" name="ByLastName" value="<?ByLastName?>" />
 			</p>
 			<p> 
@@ -98,13 +102,13 @@ if ( $config{'Country'} eq 'US' ) {
 				<label>&nbsp;Fax:</label>
 				<input type="text" name="ByFax" value="<?ByFax?>" />
 			</p>
-			<p> 
-				<label>*E-mail Address:</label>
-				<input type="text" name="ByEmail" value="<?ByEmail?>" />
-			</p>
 		</fieldset>
 <? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
-		<fieldset style="float:right; width: 49%;"/><legend>Prepared For:</legend>
+		<fieldset class="rightColumn"/><legend>Prepared For:</legend>
+			<p> 
+				<label><? echo ( sets::isin( 'ForEmail', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>E-mail Address:</label>
+				<input type="text" name="ForEmail" value="<?ForEmail?>" />
+			</p>
 			<p> 
 				<label>&nbsp;Company Name:</label>
 				<input type="text" name="ForCompanyName" value="<?ForCompanyName?>" />
@@ -121,11 +125,11 @@ if ( $config{'Country'} eq 'US' ) {
 				<label class="radio" for="ForSalutationMiss"/>Miss</label>
 			</p>
 			<p> 
-				<label>*First Name:</label>
+				<label><? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>First Name:</label>
 				<input type="text" name="ForFirstName" value="<?ForFirstName?>" />
 			</p>
 			<p> 
-				<label>*Last Name:</label>
+				<label><? echo ( sets::isin( 'ForLastName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>Last Name:</label>
 				<input type="text" name="ForLastName" value="<?ForLastName?>" />
 			</p>
 			<p> 
@@ -188,10 +192,6 @@ if ( $config{'Country'} eq 'US' ) {
 			<p> 
 				<label>&nbsp;Fax:</label>
 				<input type="text" name="ForFax" value="<?ForFax?>" />
-			</p>
-			<p> 
-				<label>*E-mail Address:</label>
-				<input type="text" name="ForEmail" value="<?ForEmail?>" />
 			</p>
 		</fieldset>
 		<br class="spacer"/>

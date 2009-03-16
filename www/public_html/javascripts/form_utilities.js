@@ -716,8 +716,8 @@ function addLoadEvent(func) {
 
 function Country_onchange( country_ddm, state ) {
 	var country = get_ddm_value( country_ddm );
-	var state_label = $(country_ddm+'_state');
-	var postal_label = $(country_ddm+'_postal');
+	var state_label = $(country_ddm.name + '_state');
+	var postal_label = $(country_ddm.name + '_postal');
 	if ( country == 'US' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @states::states )", jsrs_cbFillDDM );
 		if ( state_label ) state_label.innerHTML='State:';
