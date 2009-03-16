@@ -172,8 +172,9 @@ form {
 	padding: 0px;
 }
 
-A {
+a {
 	color: #800000;
+	outline: 0;
 }
 
 label.radio {
@@ -184,6 +185,7 @@ label.radio {
 
 h1, h2, h3, h5 {
 	color: maroon;
+	margin-top: 0px;
 }
 .PageTitle {
 	display: none;

@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -221,7 +221,7 @@ sub impositions {
 } # end sub impositions
 
 sub test_fold {
-	my ( $Equipment, $I, $sig_specs, $foldtype ) = @_;
+	my ( $Equipment, $I, $sig_specs, $foldtype, $qty_index ) = @_;
 
 	if ( ! $Equipment->specification($foldtype .'RunSpeed', $$sig_specs{'txtStockGSM'} ) ) {
 		$openprint::log->debug("DId not Found $foldtype on " . $Equipment->name() ) if $debug;
@@ -254,6 +254,10 @@ sub test_fold {
 			return 0;
 		#} else {
 			#$openprint::log->debug("Fold good due to Maximum height " . ($I->image_orieintation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) . ' > ' . $Equipment->specification($foldtype.'MaximumHeight' ) ) if $debug;
+		} # end if
+		if ( $Equipment->specification($foldtype.'PrintingType') and ! sets::isin( $$sig_specs{'PrintingType'.$qty_index}, split(',', $Equipment->specification($foldtype.'PrintingType') ) ) ) {
+			$openprint::log->debug("Fold no good due to PrintingType $$sig_specs{'PrintingType'.$qty_index} != " . $Equipment->specification($foldtype.'PrintingType') )  if $debug;
+			return 0;
 		} # end if
 	} # end if
 	return 1;
@@ -362,6 +366,14 @@ $openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if
 		my %folds;
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment '.$Equipment->name().': ';
 
+		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
+$openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty_index} );
+			if ( ! sets::isin( $$sig_specs{'PrintingType'.$qty_index}, split(',',$pt ) ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Wrong printing type.<br/>';
+				next;
+			} # end if
+		} # end if
+
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 			foreach ( keys %fold_types ) {
@@ -373,7 +385,7 @@ $openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if
 
 			my $foldtype = $Imposition->spread_columns().'x'.$Imposition->spread_rows().'-'.$pages.'Page-'.$Imposition->image_orientation().'SignatureFold';
 
-			if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $imposition ) ) {
+			if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $imposition, $qty_index ) ) {
 				$folds{$pages.'PageSignatureFold'} += 1;
 			} # end if
 		} else {
@@ -384,9 +396,9 @@ $openprint::log->debug("Got impo from Stitching $qty_index: $imposition out") if
 				$_ = $Equipment->fits( $Imposition->image_width(), $Imposition->image_height(), $$sig_specs{'txtSpecificStockCalliper'} );
 				if ( $_ ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit: $_<br/>";
-				} else {
+				} elsif ( test_fold( $Equipment, $Imposition, $sig_specs, $$sig_specs{'rdbTemplateType'}, $qty_index ) ) {
 					$folds{$$sig_specs{'rdbTemplateType'}} = 1;
-				}
+				} # end if
 
 			} else {
 #if ( $$sig_specs{"txtSignatureSpreadQuantity$qty_index"} ) {
@@ -403,12 +415,12 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height()*$imposition ) : ( $I->image_width()*$imposition, $I->image_height() ), $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 						my $fold_type = $I->pages().'PageSignatureFold';
-						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type ) ) {
+						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type, $qty_index ) ) {
 							push @good_folds, $I;
 							next;
 						} # end if
 						$fold_type= $I->spread_columns().'x'.$I->spread_rows().'-'.$I->pages().'PageSignatureFold';
-						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type ) ) {
+						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type, $qty_index ) ) {
 							push @good_folds, $I;
 							next;
 						} # end if

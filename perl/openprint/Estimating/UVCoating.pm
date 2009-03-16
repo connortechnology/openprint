@@ -116,7 +116,10 @@ sub calc {
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
 			$MakeReadies{$results{'Equipment'}->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{'Equipment'};
 			$GrandTotal += $results{'Total'};
-			$status = 'uncalculated' if $results{'Status'} eq 'uncalculated';
+			if ( $results{'Status'} eq 'uncalculated' ) {
+				$status = 'uncalculated';
+				$$specs{'alert'} .= $results{'alert'};
+			} # end if
 
 		} # end foreach signature
 
@@ -207,6 +210,10 @@ sub signature_calc {
 		return %BestPrice;
 	} # end if
 	$BestPrice{'Status'} = 'uncalculated';
+	if ( sets::isin( $Imposition->Paper()->grade(), [4,5] ) ) {
+		$BestPrice{'alert'} .= 'Unable to UVCoat on uncoated stock.<br/>';
+		return %BestPrice;
+	} # end if
 
 	my @front_uv;
 	push @front_uv, $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} if $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} and ( $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} ne 'None' );

@@ -1,19 +1,23 @@
 <link href="/css/quote.css" rel="stylesheet" type="text/css">
-<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 If you would like to send a copy of this quotation to someone on your behalf 
 please fill in the necessary information below. This quote will be stored in 
 quote history. If it is for your own personal reference leave the &quot;Prepared 
 For&quot; fields blank.<br/>
-<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 <br/>
 <form method="post" name="f1" action="submit.html"/>
 	<div class="QuoteInformation"/>
-<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
-		<fieldset style="float: left; width: 49%;"/>
-<? else ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+		<fieldset class="leftColumn"/>
+<? else ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset>
-<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 			<legend>Prepared By:</legend>
+			<p> 
+				<label><? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>E-mail Address:</label>
+				<input type="text" name="ByEmail" value="<?ByEmail?>" />
+			</p>
 			<p> 
 				<label>&nbsp;Company Name:</label>
 				<input type="text" name="ByCompanyName" value="<?ByCompanyName?>" />
@@ -30,11 +34,11 @@ For&quot; fields blank.<br/>
 				<label class="radio" for="BySalutationMiss"/>Miss</label>
 			</p>
 			<p> 
-				<label>*First Name:</label>
+				<label><? echo ( sets::isin( 'ByFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>First Name:</label>
 				<input type="text" name="ByFirstName" value="<?ByFirstName?>" />
 			</p>
 			<p> 
-				<label>*Last Name:</label>
+				<label><? echo ( sets::isin( 'ByLastName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>Last Name:</label>
 				<input type="text" name="ByLastName" value="<?ByLastName?>" />
 			</p>
 			<p> 
@@ -57,16 +61,16 @@ For&quot; fields blank.<br/>
 				</select>
 			</p>
 			<p> 
-				<label>&nbsp;
+				<label>&nbsp;<span id="ByCountry_state">
 <? echo (
-if ( $openprint::config{'Country'} eq 'US' ) {
+if ( $config{'Country'} eq 'US' ) {
 	return 'State';
-} elsif ( $openprint::config{'Country'} eq 'CA' ) {
+} elsif ( $config{'Country'} eq 'CA' ) {
 	return 'Province';
 } else {
 	return 'State/Province';
 } # end if
-) ?>:</label>
+) ?>:</span></label>
 				<select name="ByStateProvince">
 					<option value=""> Select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'ByStateProvince'}); ) ?>
@@ -77,16 +81,16 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 				<input type="text" name="ByCity" value="<?ByCity?>" />
 			</p>
 			<p> 
-				<label>&nbsp;
+				<label>&nbsp;<span id="ByCountry_postal">
 <? echo (
-if ( $openprint::config{'Country'} eq 'US' ) {
+if ( $config{'Country'} eq 'US' ) {
 	return 'Zip Code';
-} elsif ( $openprint::config{'Country'} eq 'CA' ) {
+} elsif ( $config{'Country'} eq 'CA' ) {
 	return 'Postal Code';
 } else {
 	return 'Zip/Postal Code';
 } # end if
-) ?>:</label>
+) ?>:</span></label>
 				<input type="text" name="ByPostalCode" value="<?ByPostalCode?>" />
 			</p>
 			<p> 
@@ -98,13 +102,13 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 				<label>&nbsp;Fax:</label>
 				<input type="text" name="ByFax" value="<?ByFax?>" />
 			</p>
-			<p> 
-				<label>*E-mail Address:</label>
-				<input type="text" name="ByEmail" value="<?ByEmail?>" />
-			</p>
 		</fieldset>
-<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
-		<fieldset style="float:right; width: 49%;"/><legend>Prepared For:</legend>
+<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+		<fieldset class="rightColumn"/><legend>Prepared For:</legend>
+			<p> 
+				<label><? echo ( sets::isin( 'ForEmail', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>E-mail Address:</label>
+				<input type="text" name="ForEmail" value="<?ForEmail?>" />
+			</p>
 			<p> 
 				<label>&nbsp;Company Name:</label>
 				<input type="text" name="ForCompanyName" value="<?ForCompanyName?>" />
@@ -121,11 +125,11 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 				<label class="radio" for="ForSalutationMiss"/>Miss</label>
 			</p>
 			<p> 
-				<label>*First Name:</label>
+				<label><? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>First Name:</label>
 				<input type="text" name="ForFirstName" value="<?ForFirstName?>" />
 			</p>
 			<p> 
-				<label>*Last Name:</label>
+				<label><? echo ( sets::isin( 'ForLastName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>Last Name:</label>
 				<input type="text" name="ForLastName" value="<?ForLastName?>" />
 			</p>
 			<p> 
@@ -148,16 +152,16 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 				</select>
 			</p>
 			<p> 
-				<label>&nbsp;
+				<label>&nbsp;<span id="ForCountry_state">
 <? echo (
-if ( $openprint::config{'Country'} eq 'US' ) {
+if ( $config{'Country'} eq 'US' ) {
 	return 'State';
-} elsif ( $openprint::config{'Country'} eq 'CA' ) {
+} elsif ( $config{'Country'} eq 'CA' ) {
 	return 'Province';
 } else {
 	return 'State/Province';
 } # end if
-) ?>:</label>
+) ?>:</span></label>
 				<select name="ForStateProvince" >
 					<option value=""> Select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'ForStateProvince'}); ) ?>
@@ -168,16 +172,16 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 				<input type="text" name="ForCity" value="<?ForCity?>" />
 			</p>
 			<p> 
-				<label>&nbsp;
+				<label>&nbsp;<span id="ForCountry_postal">
 <? echo (
-if ( $openprint::config{'Country'} eq 'US' ) {
+if ( $config{'Country'} eq 'US' ) {
 	return 'Zip Code';
-} elsif ( $openprint::config{'Country'} eq 'CA' ) {
+} elsif ( $config{'Country'} eq 'CA' ) {
 	return 'Postal Code';
 } else {
 	return 'Zip/Postal Code';
 } # end if
-) ?>:</label>
+) ?>:</span></label>
 				<input type="text" name="ForPostalCode" value="<?ForPostalCode?>" />
 			</p>
 			<p> 
@@ -189,13 +193,9 @@ if ( $openprint::config{'Country'} eq 'US' ) {
 				<label>&nbsp;Fax:</label>
 				<input type="text" name="ForFax" value="<?ForFax?>" />
 			</p>
-			<p> 
-				<label>*E-mail Address:</label>
-				<input type="text" name="ForEmail" value="<?ForEmail?>" />
-			</p>
 		</fieldset>
 		<br class="spacer"/>
-<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($openprint::session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "f1.btnFunction.value='Continue';f1.submit();", '', 'Continue' ); ) ?>
 		</p>

@@ -104,12 +104,12 @@ sub do_include {
 		my $file = $middle;
 		if ( ! ( $file =~ /^\// ) ) {
 # Use a path relative to the current page
-			my $path = $r->uri();
+			my $path = $$variable{'uri'};
 			$path =~ s/(.*\/).*/$1/;
 			$file = $path . $file;
 		} # end if
-	my $blah = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $file);
-	return $before . variable_substitution( $r, $log, $dbh, \$blah, $variable ).variable_substitution( $r, $log, $dbh, \$after, $variable );
+		my $blah = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $file);
+		return $before . variable_substitution( $r, $log, $dbh, \$blah, $variable ).variable_substitution( $r, $log, $dbh, \$after, $variable );
 	} # end if
 	return $$text;
 } # end sub do_include

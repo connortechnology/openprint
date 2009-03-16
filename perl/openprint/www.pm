@@ -86,6 +86,7 @@ sub handler {
 	openprint::usergroup::init_cache();
 	openprint::Material::init_cache();
 	openprint::Service::init_cache();
+	openprint::Equipment::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -93,6 +94,7 @@ $openprint::log->debug("Page: $page");
 	while ( $page and $lastpage ne $page ) {
 		# This is for loop detection
 		$lastpage = $page;
+$variable{'uri'} = $page;
 		parse_page( $page );
 		if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
 			$page = $variable{'Redirect'};
@@ -351,6 +353,23 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 
+	} elsif ( $first eq 'content' ) { # main
+		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+		return $status if $variable{'Redirect'};	
+
+		if ( ! $session{'user_id'} ) {
+			# if not logged in, determine if they are allowed to see this page or not.
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+				$variable{'Redirect'} = '/error/error_login.html';
+				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				return Apache2::Const::OK;
+			} # end if
+		} # end if
+		eval( 'require openprint::'.join('_', @path ) );
+		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
@@ -360,6 +379,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+$log->debug("Dset: $variable{'Destination'}");
 				return Apache2::Const::OK;
 			} # end if
 		} # end if

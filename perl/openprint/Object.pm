@@ -56,7 +56,7 @@ sub load {
 	my %fields = eval '%'.$type.'::fields';
 
 	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . q{ WHERE id=?}, {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . ref $self . " $$self{'id'}: Reason: " . $dbh->errstr );
 			return;
@@ -84,7 +84,7 @@ sub save {
 
 	if ( ! $$self{'id'} ) {
 		my $ac = sql::start_transaction( $dbh );
-		($$self{'id'}) = ($sql{'id'}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+		($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
 		if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
 			$dbh->rollback();
 			sql::end_transaction( $dbh, $ac );
@@ -92,7 +92,7 @@ sub save {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} else {
-		if ( my $error = sql::update( undef, undef, $table, ['id=?', $$self{id}], \%sql ) ) {
+		if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
 			return $error;
 		} # end if
 	} # end if

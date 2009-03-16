@@ -1169,6 +1169,7 @@ sub calc {
 		} # end if printing
 
 		if ( $specs{'Status'} eq 'uncalculated' ) {
+			delete $specs{'txtPrice1'};
 			$specs{'alert'} .= 'Problem calculating printing';
 			return jsrs::encode_pairs(%specs);
 		} # end if
