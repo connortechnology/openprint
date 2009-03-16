@@ -137,5 +137,9 @@ sub delete {
 	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'strName'},);
 } # end sub delete
 
+sub Templates {
+    return openprint::ProjectType_Template::find('projecttype_id'=>$_[0]{'id'});
+} # end sub Templates
+
 1;
 __END__

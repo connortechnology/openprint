@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 use lib qw( /etc/apache2/lib/perl );
 use Linux::Inotify2;
 use MIME::Base64;

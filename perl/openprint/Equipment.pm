@@ -10,7 +10,10 @@ require sql;
 
 my $debug = 1;
 my %find_cache;
-my %fields = (
+use vars qw( $table $serial %fields %transforms %defaults );
+$table = 'tbl_equipment';
+$serial= 'Equipment_Index_seq';
+%fields = (
 	'id'	=>	'lngindex',
 	'strid'	=>	'strid',
 	'name'	=>	'strname',
@@ -26,6 +29,10 @@ my %fields = (
 	'jdf_id'			=> 	'jdf_id',
 	'jdf_name'			=> 	'jdf_name',
 	'location_id'		=>	'location_id',
+);
+
+%defaults = (
+	'location_id'		=>	undef,
 );
 
 sub init_cache {
@@ -113,14 +120,6 @@ sub find {
 	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{lngindex}, $_ ) } @$data;
 	return @{$find_cache{$hash_key}};
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM tbl_Equipment WHERE lngIndex=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
 
 sub fits {
    my ( $self, $width, $height, $calliper ) = @_;
@@ -425,54 +424,6 @@ sub delete {
 
 	openprint::logs::insertLogRecord('6', "Equipment Index: $$self{id} - " . $$self{name}, );
 } # end sub delete
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		if ( $param and exists $$param{$k} ) {
-			$sql{$fields{$k}} = $$param{$k};
-		} else {
-			$sql{$fields{$k}} = $$self{$k};
-		} # end if
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-
-	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('Equipment_Index_seq')} );
-		$sql{lngindex} = $$self{id};
-		sql::insert( undef, undef, 'tbl_Equipment', \%sql );
-		openprint::logs::insertLogRecord('34', "Equipment: " . $self->strid(). " - " . $self->name(),);
-	} else {
-		sql::update( undef, undef, 'tbl_Equipment', ['lngIndex=?',$$self{id}], \%sql );
-		openprint::logs::insertLogRecord('35', "Equipment: " . $self->strid(). ' - ' . $self->name(),);
-	} # end if
-
-if ( 0 ) {
-	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
-	foreach my $key ( keys %$param ) {
-		if ( $key =~ /SName(.*)/ and $$param{$key} ne '' ) {
-			my $i = $1;
-			$$param{'SMin'.$i} =~ s/[^\d\.]//g;
-			$$param{'SMax'.$i} =~ s/[^\d\.]//g;
-			sql::insert( undef, undef, 'tbl_Equipment_Specifications', [
-					'lngEquipmentIndex',    $$self{id},
-					'dblMin',               ( $$param{'SMin'.$1} ne '' ? $$param{'SMin'.$1} : undef ),
-					'dblMax',               ( $$param{'SMax'.$1} ne '' ? $$param{'SMax'.$1} : undef ),
-					'strUnits',             $$param{'SUnits'.$1},
-					'strName',              $$param{'SName'.$1},
-					'strValue',             $$param{'SValue'.$1},
-					'interpolate',          $$param{'i'.$1},
-					] );
-		} # end if
-	} # end foreach
-} # end if
-
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-} # end sub save
 
 sub update_schedule {
 	my $self = shift;

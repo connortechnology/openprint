@@ -70,3 +70,6 @@ div.OrderHeader fieldset p label {
 	text-align: left;
 	width: auto;
 }
+div#main_content_inner {
+	padding: 0px;
+}

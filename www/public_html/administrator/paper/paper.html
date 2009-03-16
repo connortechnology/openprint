@@ -55,7 +55,6 @@ function gsm_to_mweight( form ) {
 			<? echo ( my $html;
 			$html .= ssi::writeButton($log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='Prev';fmChange=1;fmCheck(f1);",'','<<');
 			$html .= ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';f1.submit();",'','>>');
-			$html .= #ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);",'','>>');
 			$html .= ssi::writeButton($log, $dbh, 'Add1','add.gif',"f1.action='paper.html';f1.btnFunction.value='';f1.submit();",'','Add New');
 			if ( ! $$variable{'Paper'}->in_stock() ) {
 				$html .= ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');

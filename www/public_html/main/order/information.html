@@ -55,15 +55,14 @@
 -->
 </script>
 <div class="Order">
-	<div class="error"><?error?><?Error?></div>
-
+<!--#include virtual="/includes/error_reporting.html"-->
 	<form method="post" id="f1" name="f1" action="submit.html">
 		If you have a purchase order number please enter it below.<br/>
 		<br/>
 		(Fields marked with an * are required.)
 		<br/>
 		<br/>
-		<div style="float: left; width: 49%; min-width: 320px;">
+		<div class="leftColumn" style="min-width: 320px;">
 			<fieldset>
 				<p> 
 					<label>Order ID:</label><? echo ( $$variable{'Order'}->id() ) ?>
@@ -72,7 +71,7 @@
 					<label>Purchase Order:</label>
 					<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
 				</p>
-<? if ( (! $openprint::session{'company_id'}) and sets::isin($openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 				<p>
 					<label>Company:</label>
 					<span id="CompanyDropDown">
@@ -80,13 +79,13 @@
 					</span>
 					<? echo ( ssi::writeButton( $log, $dbh, 'AddFromBelow', 'add_from_below.gif', 'save_company();', '', 'Save Company' ); ) ?>
 				</p>
-<? endif ( (! $openprint::session{'company_id'}) and sets::isin($openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 			</fieldset>
 			<div id="ContactInformation">
 			<!--#include virtual="_contact_information.html"-->
 			</div>
 		</div>
-		<div style="float: right; width: 49%; min-width: 320px;">
+		<div class="rightColumn" style="min-width: 320px;">
 			<? eval ( 
 				@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, strProjectReference, intQuantityIndex, shippingtype, intQuantity1, intQuantity2, intQUantity3 FROM Order_Contents, tbl_Projects WHERE lngProjectIndex=Index AND OrderIndex=?}, $$variable{'Order'}->id() );
 				@{$$variable{'PRODUCTS'}} = $$variable{'Order'}->Products();
