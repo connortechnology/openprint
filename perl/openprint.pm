@@ -73,7 +73,7 @@ sub session_init {
 			my @currencies = openprint::Currency::find('short'=>'USD');
 			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 		} elsif ( $Company->country() eq 'CA' ) {
-			my @currencies = openprint::Currency::find('short'=>'CDN');
+			my @currencies = openprint::Currency::find('short'=>'CAD');
 			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 		} # end if
 		delete $openprint::session{'OrderID'};
