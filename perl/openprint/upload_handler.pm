@@ -107,7 +107,6 @@ sub handler {
 	} else {
 		configuration::init_cache( $log, $dbh, $r->dir_config() );
 		my $serial = $r->param('serial');
-		#sql::execute( $log, $dbh, q{UPDATE Uploads SET finished=NOW() WHERE id=?}, $serial );
 		sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
 		upload_files( $r, $log, $dbh, \%variable );
 		my $page = '/upload/_upload_complete.html';
