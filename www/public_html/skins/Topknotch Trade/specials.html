@@ -8,7 +8,7 @@
 		background-color: #cccccc;
 	}
 </style>
-<div align="center">
+<div id="Specials">
 	<h2>Topknotch Specials for 
 <? echo (
 require Date::Calc;
@@ -22,7 +22,7 @@ return Date::Calc::Month_to_Text($m) . ' ' . $y;
 	@{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)' );
 ) ?>
 <? while ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
-<h4><? echo ( $$variable{'Category'}->name(); ) ?></h4>
+<h3><? echo ( $$variable{'Category'}->name(); ) ?></h3>
 <p><? echo ( $$variable{'Category'}->description(); ) ?></p>
 <table class="List">
 	<tr>

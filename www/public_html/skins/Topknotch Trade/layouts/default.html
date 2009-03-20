@@ -3,77 +3,73 @@
 	<head>
 		<title><?PageTitle?></title>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
-		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
-		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
-		<link href="/css/main.css" rel="stylesheet" type="text/css"/>
-		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
-		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="/css/common.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/main.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/menu.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/button.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/tempstylesheet.css" type="text/css"/>
+		<link rel="stylesheet" href="/css/common-print.css" type="text/css" media="print"/>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
-		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
-		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
+		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
 		<? if ( $r->uri() =~ /\/content\/prin/ ) ?>
-               <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
-               <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
-               <script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
-		<link href="/css/estimating.css" rel="stylesheet" type="text/css"/>
+				<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+				<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+				<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
+		<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
+		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/content\/prin/ ) ?>
-		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
+		<? if ( $r->uri() =~ /\/payment/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/payment.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/payment/ ) ?>
+
 		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
+
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
-<script type="text/javascript">
-<!--
-        var startList = function() {
-            if (document.all && document.getElementById) {
-                var navRoot = document.getElementById("menubar");
-                if ( navRoot ) {
-                    for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-                        var node = navRoot.childNodes[i];
-                        if (node.nodeName=="LI") {
-                            node.onmouseover=function() {
-                                this.className+=' over';
-                            }
-                            node.onmouseout=function() {
-                                this.className=this.className.replace(' over', '');
-                            }
-                        } // end if
-                    } // end for
-                } // end if
-            }
-        }
-        window.onload=startList;
--->
-</script>
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
-		<div class="Content">
+		<div id="content_container">
+
+		<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+		<div class="shadow_left"><div class="shadow_right">
 			<!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
-			<div class="ContentInner">
-				<br/>
-				<!--#include virtual="/skins/<?SiteTitle?>/includes/customer-menu.html"-->
-				<div id="MainBox">
-					<!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
-					<div style="float: right; p\osition: relative; margin:0px; width: 100%; padding: 0px;">
-					<?PageContent?>
-					</div>
+			<!--#include virtual="/skins/<?SiteTitle?>/includes/customer-menu.html"-->
+		</div></div>
+		<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+
+		 <div id="main_content">
+			<div id="main_content_inner">
+				<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+				<? else ( $r->uri() =~ /\/main\/order/ ) ?>
+				<!--#include virtual="/skins/<?SiteTitle?>/includes/left_sidebar.html"-->
+				<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+				<div id="main_page">
+					<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+					<div class="shadow_left"><div class="shadow_right">
+						<div id="main_page_content"><?PageContent?></div>
+					</div></div>
+					<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 				</div>
-				<span class="unprintable">
-					<br class="spacer"/>
-					<br/>
-				</span>
-<!--#include virtual="/skins/<?SiteTitle?>/includes/footer.html"-->
-			</div><!--ContentInner-->
-		</div><!--Content-->
+			</div>
+		 </div>
+		 &nbsp;
+		</div>
 	</body>
 </html>

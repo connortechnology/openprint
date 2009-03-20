@@ -4,7 +4,7 @@ html {
 }
 body {
     font-family: Arial, Helvetica, sans-serif;
-	font-size: x-small;
+	font-size: small;
 	font-style: normal;
     margin: 0px;
 	padding: 0px;
@@ -18,10 +18,10 @@ body {
 	}
 }
 
-#Header {
+div#Header {
 	padding: 5px 5px 0px 5px;
 }
-#Header:after {
+div#Header:after {
     content: ".";
     display: block;
     height: 0;
@@ -29,8 +29,8 @@ body {
     visibility: hidden;
 }
 /* Hides from IE-mac \*/
-* html #Header {height: 1%;}
-* #Header {display:block;}
+* html div#Header {height: 1%;}
+* div#Header {display:block;}
 /* End hide from IE-mac */
 
 #Header p {
@@ -55,23 +55,16 @@ body {
     z-index: 0;
 	width: 100%;
 }
-A {
+a {
 	text-decoration: none;
-    color: #404171;
+	color:#194D98;
 	outline:0;
 }
-A:visited {
-    color: #404171;
+a:visited {
+	color:#194D98;
 }
-A:hover {
-	color: #687796;
-}
-
-.formOn {
-	background-color: #f1eee5;
-}
-.formOff {
-	background-color: #ffffff;
+a:hover {
+	color:#FEE00F;
 }
 
 select, textarea, option {
@@ -376,7 +369,7 @@ div.row:after {
 }
 span.DateSelector {
     float: left;
-	width: 200px;
+	width: 220px;
 }
 
 div.Popup {
@@ -403,6 +396,7 @@ div.Service span.TwoColumns {
 }
 h1,h2,h3,h5 {
 	color:#194D98;
+	margin-top: 0px;
 }
 div#NewDimensions {
 	display: none;
