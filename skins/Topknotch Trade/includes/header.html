@@ -3,7 +3,7 @@
 	<img style="float: left; margin-left: 15px;" src="/images/main/header/us-ca.jpg" alt="Flags" width="139" height="48" border="0" usemap="#Map" class="unprintable"/>
 	<map name="Map" id="Flags">
 		<area shape="rect" coords="2,2,68,46" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'USD'} } ); ) ?>" alt="US" />
-		<area shape="rect" coords="72,3,137,47" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'CDN'} } ); ) ?>" alt="CA" />
+		<area shape="rect" coords="72,3,137,47" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'CAD'} } ); ) ?>" alt="CA" />
 	</map>
 <? if ( ! $session{'user_id'} ) ?>
 	<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
@@ -27,7 +27,7 @@
 		<div id="CurrencySelection">
 			<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param ); ) ?>" method="post">
 				<p>
-					<label>Current company:</label>
+					<label>Company:</label>
 					<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
 					<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.submit();">
 					<option value="">Select a Company</option>

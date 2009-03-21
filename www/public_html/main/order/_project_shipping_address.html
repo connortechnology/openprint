@@ -123,7 +123,7 @@
 			</select>
 	</p>
 	<p> 
-		<label>State/Province:<span class="requiredFieldIndicator">*</span></label>
+		<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_state">State/Province:</span><span class="requiredFieldIndicator">*</span></label>
 		<select name="ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>">
 			<option value=""> Select </option>
 			<? echo ( join('',
@@ -138,7 +138,7 @@
 		<input type="text" name="ToCity-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCity-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
 	</p>
 	<p> 
-		<label>Zip/Postal Code:<span class="requiredFieldIndicator">*</span></label>
+		<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_postal">Zip/Postal Code:</span><span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="ToPostalCode-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPostalCode-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
 	</p>
 	<p> 

@@ -1,7 +1,6 @@
-<style type="text/css">
-<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?>
-</style>
+<style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?></style>
 <div id="Quote">
+<br class="spacer"/>
 <!--#include virtual="/includes/quote_header.html"-->
 <!--#include virtual="/includes/quote_prepared_by.html"-->
 <!--#include virtual="/includes/quote_prepared_for.html"-->
@@ -18,20 +17,20 @@
 	</tr>
 	<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 	<tr<?rowclass?>> 
-		<td><a href="<? echo ( $openprint::config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><?project_index?></a></td>
-		<td><a href="<? echo ( $openprint::config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( 
+		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><?project_index?></a></td>
+		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( 
 my $html;
 my $Project = new openprint::Project( $$variable{'project_index'} );
 $html .= ssi::htmlize($Project->reference()) . ':<br/>' if $Project->reference();
-$html .= $Project->summary() if $openprint::config{'ShowProjectSummaryOnQuote'} ne 'N';
+$html .= $Project->summary() if $config{'ShowProjectSummaryOnQuote'} ne 'N';
 return $html;
 ) ?></a></td>
 		<td colspan="5">
 			<table>
 				<? while ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
 				<? if ( $$variable{'qty'} ) ?>
-					<tr>
-	   <td width="130" align="right">
+				<tr>
+					<td width="130" align="right">
 <? echo (
 my $Project = new openprint::Project( $$variable{'project_index'} );
 my %services = $Project->services();

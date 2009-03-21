@@ -1,0 +1,91 @@
+<div class="Previews">
+<? echo ( 
+	require openprint::CIP3_PPF;
+	my $front_html;
+	my $back_html;
+
+	my $services = $$variable{'Project'}->services();
+	my $signature = $$variable{'SignatureIndex'};
+	if ( $$services{'AdditionalSignature'} ) {
+	} else {
+		$signature += 1;
+	} # end if
+
+	my @PPFs = openprint::CIP3_PPF::find(
+				'docket'	=>	$$variable{'Project'}->docket(),
+				'signature'	=>	$signature,
+				'order'		=>	'created_on DESC',
+				'distinct'	=>	1,
+				);
+	foreach my $PPF ( @PPFs ) {
+		$PPF->generate_previews();
+
+		if ( $PPF->side() eq 'M' ) {
+			$front_html .= '<div class="leftColumn"><fieldset><legend>Front</legend>';
+			foreach my $preview ( $PPF->previews('Front') ) {
+				next if ! $$preview{'separations'};
+
+				foreach my $image ( @{$$preview{'separations'}} ) {
+					$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg" alt="%4$s" /></a>', 
+						$$variable{'Project'}->docket(),
+						$$variable{'SignatureIndex'}+1,
+						'Front',
+						$$image{'ink'},
+						);
+				} # end foreach image
+			} # end foreach preview
+			$front_html .= '</fieldset></div>';
+
+			$back_html .= '<div class="rightColumn"><fieldset><legend>Back</legend>';
+			foreach my $preview ( $PPF->previews('Back') ) {
+				next if ! $$preview{'separations'};
+
+				foreach my $image ( @{$$preview{'separations'}} ) {
+					$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg" alt="%4$s" /></a>', 
+						$$variable{'Project'}->docket(),
+						$$variable{'SignatureIndex'}+1,
+						'Back',
+						$$image{'ink'},
+						);
+				} # end foreach image
+			} # end foreach preview
+			$back_html .= '</fieldset></div>';
+			last;			
+		} elsif ( $PPF->side() eq 'A' ) {
+			$front_html .= '<div class="leftColumn"><fieldset><legend>Front</legend>';
+			foreach my $preview ( $PPF->previews() ) {
+				next if ! $$preview{'separations'};
+
+				foreach my $image ( @{$$preview{'separations'}} ) {
+					$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg" alt="%4$s" /></a>', 
+						$$variable{'Project'}->docket(),
+						$$variable{'SignatureIndex'}+1,
+						'Front',
+						$$image{'ink'},
+						);
+				} # end foreach image
+			} # end foreach preview
+			$front_html .= '</fieldset></div>';
+			last if $front_html and $back_html;
+		} elsif ( $PPF->side() eq 'B' ) {
+			$back_html .= '<div class="rightColumn"><fieldset><legend>Back</legend>';
+			foreach my $preview ( $PPF->previews() ) {
+				next if ! $$preview{'separations'};
+
+				foreach my $image ( @{$$preview{'separations'}} ) {
+					$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg" alt="%4$s" /></a>', 
+						$$variable{'Project'}->docket(),
+						$$variable{'SignatureIndex'}+1,
+						'Back',
+						$$image{'ink'},
+						);
+				} # end foreach image
+			} # end foreach preview
+			$back_html .= '</fieldset></div>';
+			last if $front_html and $back_html;
+		} # end if side
+	} # end foreach PPF
+	return $front_html . $back_html;
+) ?>
+</div>
+<br class="spacer"/>

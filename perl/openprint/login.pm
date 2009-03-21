@@ -147,13 +147,21 @@ sub verify_login {
 
 	if ( $User->changepassword() eq 'Y' ) {
 		if ( $site eq 'A' ) {
-		$$variable{'Redirect'} = '/administrator/account/change_password.html';
+			$$variable{'Redirect'} = '/administrator/account/change_password.html';
 		} elsif ( $site eq 'E' ) {
-		$$variable{'Redirect'} = '/employee/account/change_password.html';
+			$$variable{'Redirect'} = '/employee/account/change_password.html';
 		} else {
-		$$variable{'Redirect'} = '/account/change_password.html';
+			$$variable{'Redirect'} = '/account/change_password.html';
 		} # end if
 		return;
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue your order\./ ) {
+     
+		$$variable{'Redirect'} = $1.'.html';
+		foreach my $p ( split('&', $2 ) ) {
+			my ( $k, $v ) = split('=', $p );
+			$openprint::log->debug("Psrsmd: $p, $k = $v ");
+			$openprint::param{$k} = $v;
+		} # end foreach
 	} # end if
 
 } # sub verify_login

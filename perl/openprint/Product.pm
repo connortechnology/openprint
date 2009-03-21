@@ -61,9 +61,11 @@ sub find {
 
 	if ( exists $params{'deleted'} ) {
 		if ( $params{'deleted'} ) {
-			$sql .= ' AND (deleted=? OR deleted IS NULL)', $params{'deleted'};
+			$sql .= ' AND (deleted=? OR deleted IS NULL)';
+			push @values, $params{'deleted'};
 		} else {
-			$sql .= ' AND deleted=?', $params{'deleted'};
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
 		} # end if
 	} else {
 		$sql .= ' AND (deleted=false OR deleted IS NULL)';

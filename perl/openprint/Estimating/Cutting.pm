@@ -408,9 +408,6 @@ sub signature_calc {
 
 	my @my_equipment;
 
-# acts as flag to tell whether we can use the stitcher to do book cuts
-	my $stitching_imposition = 0;
-
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		@my_equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
 	} else {

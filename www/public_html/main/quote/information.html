@@ -64,11 +64,15 @@
 <form method="post" id="f1" name="f1" action="submit.html"/>
 	<div class="QuoteInformation"/>
 <? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
-		<fieldset style="float: left; width: 49%;"/>
+		<fieldset class="leftColumn"/>
 <? else ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset>
 <? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 			<legend>Prepared By:</legend>
+			<p> 
+				<label><? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>E-mail Address:</label>
+				<input type="text" name="ByEmail" value="<?ByEmail?>" />
+			</p>
 			<p> 
 				<label>&nbsp;Company Name:</label>
 				<input type="text" name="ByCompanyName" value="<?ByCompanyName?>" />
@@ -85,11 +89,11 @@
 				<label class="radio" for="BySalutationMiss"/>Miss</label>
 			</p>
 			<p> 
-				<label>*First Name:</label>
+				<label><? echo ( sets::isin( 'ByFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>First Name:</label>
 				<input type="text" name="ByFirstName" value="<?ByFirstName?>" />
 			</p>
 			<p> 
-				<label>*Last Name:</label>
+				<label><? echo ( sets::isin( 'ByLastName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>Last Name:</label>
 				<input type="text" name="ByLastName" value="<?ByLastName?>" />
 			</p>
 			<p> 
@@ -112,16 +116,16 @@
 				</select>
 			</p>
 			<p> 
-				<label>&nbsp;
-				<? echo (
-				if ( $config{'Country'} eq 'US' ) {
-					return 'State';
-				} elsif ( $config{'Country'} eq 'CA' ) {
-					return 'Province';
-				} else {
-					return 'State/Province';
-				} # end if
-				) ?>:</label>
+				<label>&nbsp;<span id="ByCountry_state">
+<? echo (
+if ( $config{'Country'} eq 'US' ) {
+	return 'State';
+} elsif ( $config{'Country'} eq 'CA' ) {
+	return 'Province';
+} else {
+	return 'State/Province';
+} # end if
+) ?>:</span></label>
 				<select name="ByStateProvince">
 					<option value=""> Select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'ByStateProvince'}); ) ?>
@@ -132,16 +136,16 @@
 				<input type="text" name="ByCity" value="<?ByCity?>" />
 			</p>
 			<p> 
-				<label>&nbsp;
-				<? echo (
-				if ( $config{'Country'} eq 'US' ) {
-					return 'Zip Code';
-				} elsif ( $config{'Country'} eq 'CA' ) {
-					return 'Postal Code';
-				} else {
-					return 'Zip/Postal Code';
-				} # end if
-				) ?>:</label>
+				<label>&nbsp;<span id="ByCountry_postal">
+<? echo (
+if ( $config{'Country'} eq 'US' ) {
+	return 'Zip Code';
+} elsif ( $config{'Country'} eq 'CA' ) {
+	return 'Postal Code';
+} else {
+	return 'Zip/Postal Code';
+} # end if
+) ?>:</span></label>
 				<input type="text" name="ByPostalCode" value="<?ByPostalCode?>" />
 			</p>
 			<p> 
@@ -153,13 +157,16 @@
 				<label>&nbsp;Fax:</label>
 				<input type="text" name="ByFax" value="<?ByFax?>" />
 			</p>
+		</fieldset>
+<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+		<fieldset class="rightColumn"/><legend>Prepared For:</legend>
 			<p> 
-				<label>*E-mail Address:</label>
-				<input type="text" name="ByEmail" value="<?ByEmail?>" />
+				<label><? echo ( sets::isin( 'ForEmail', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>E-mail Address:</label>
+				<input type="text" name="ForEmail" value="<?ForEmail?>" />
 			</p>
 		</fieldset>
 <? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
-		<fieldset style="float:right; width: 49%;"/><legend>Prepared For:</legend>
+		<fieldset class="rightColumn"/><legend>Prepared For:</legend>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<p> 
 				<label>&nbsp;Company:</label>
@@ -195,12 +202,12 @@
 				<label class="radio" for="ForSalutationMiss"/>Miss</label>
 			</p>
 			<p> 
-				<label>*First Name:</label>
-				<input type="text" id="ForFirstName" name="ForFirstName" value="<?ForFirstName?>" />
+				<label><? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>First Name:</label>
+				<input type="text" name="ForFirstName" value="<?ForFirstName?>" />
 			</p>
 			<p> 
-				<label>*Last Name:</label>
-				<input type="text" id="ForLastName" name="ForLastName" value="<?ForLastName?>" />
+				<label><? echo ( sets::isin( 'ForLastName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>Last Name:</label>
+				<input type="text" name="ForLastName" value="<?ForLastName?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Title:</label>
@@ -222,17 +229,17 @@
 				</select>
 			</p>
 			<p> 
-				<label>&nbsp;
-				<? echo (
-				if ( $session{'Country'} eq 'US' ) {
-					return 'State';
-				} elsif ( $session{'Country'} eq 'CA' ) {
-					return 'Province';
-				} else {
-					return 'State/Province';
-				} # end if
-				) ?>:</label>
-				<select id="ForStateProvince" name="ForStateProvince" >
+				<label>&nbsp;<span id="ForCountry_state">
+<? echo (
+if ( $config{'Country'} eq 'US' ) {
+	return 'State';
+} elsif ( $config{'Country'} eq 'CA' ) {
+	return 'Province';
+} else {
+	return 'State/Province';
+} # end if
+) ?>:</span></label>
+				<select name="ForStateProvince" >
 					<option value=""> Select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'ForStateProvince'}); ) ?>
 				</select>
@@ -242,17 +249,17 @@
 				<input type="text" id="ForCity" name="ForCity" value="<?ForCity?>" />
 			</p>
 			<p> 
-				<label>&nbsp;
-				<? echo (
-				if ( $session{'Country'} eq 'US' ) {
-					return 'Zip Code';
-				} elsif ( $session{'Country'} eq 'CA' ) {
-					return 'Postal Code';
-				} else {
-					return 'Zip/Postal Code';
-				} # end if
-				) ?>:</label>
-				<input type="text" id="ForPostalCode" name="ForPostalCode" value="<?ForPostalCode?>" />
+				<label>&nbsp;<span id="ForCountry_postal">
+<? echo (
+if ( $config{'Country'} eq 'US' ) {
+	return 'Zip Code';
+} elsif ( $config{'Country'} eq 'CA' ) {
+	return 'Postal Code';
+} else {
+	return 'Zip/Postal Code';
+} # end if
+) ?>:</span></label>
+				<input type="text" name="ForPostalCode" value="<?ForPostalCode?>" />
 			</p>
 			<p> 
 				<label>&nbsp;Phone:</label>

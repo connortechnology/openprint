@@ -6,7 +6,7 @@ require Exporter;
 # Provides some utility functions for doing SQL queries
 
 use DBI;
-use Time::HiRes qw{ time gettimeofday tv_interval }; 
+use Time::HiRes qw{ gettimeofday tv_interval }; 
 use strict;
 
 use vars qw( $log $dbh $debug $timing );
@@ -40,7 +40,7 @@ sub execute {
 		$print_sql = $sql;
 		$print_sql =~ s/\?/\%s/g;
 		$print_sql = sprintf($print_sql, @values);
-		$starttime = gettimeofday() if $timing;
+		$starttime = [gettimeofday] if $timing;
 	} # end if
 	my $sth;
 	if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
@@ -61,7 +61,7 @@ sub execute {
 	$sth->finish(); # unneccessary
 	if ( $l and $debug ) {
 		if ( $timing ) {
-		$l->debug("SQL (".sprintf('%.4f', tv_interval( [$starttime])*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+		$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
 		} elsif ( @return_array ) {
 		$l->debug("SQL ($print_sql) Results:".join(',',@return_array));
 		} else {
@@ -93,7 +93,7 @@ sub run_query {
 		} # end for
 	} # end while
 	#$sth->finish(); # unneccessary
-	$log->debug("SQL (".(sprintf('%.4f', tv_interval( $starttime, [gettimeofday])*1000) )." useconds). ($sql_statement) Results:".join(',',@return_array));
+	$log->debug("SQL (".(sprintf('%.4f', tv_interval($starttime)*1000) )." useconds). ($sql_statement) Results:".join(',',@return_array));
 	
 	return ( $num_of_fields, @return_array );
 } # end sub run_query
@@ -136,7 +136,7 @@ sub insert {
 		$l->error("SQL statement execution failed: ($print_command):" . $d->errstr) if $l;
 		return $d->errstr;
 	} # end if
-	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime, [gettimeofday])*1000, $print_command ) ) if $l;
+	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime)*1000, $print_command ) ) if $l;
 	return;
 } # end sub insert
 

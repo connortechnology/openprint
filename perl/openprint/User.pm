@@ -346,6 +346,16 @@ sub find {
 			push @values, $param{'id'};
 		} # end if
 	} # end if
+	if ( $param{'name'} ) {
+		my ( $first, $last ) = $param{'name'} =~ /(\S+)\s*(\S*)/;
+		if ( $first and $last ) {
+			$sql .= ' AND strfirstname=? AND strlastname=?';
+			push @values, $first, $last;
+		} elsif ( $first ) {
+			$sql .= ' AND strfirstname=?';
+			push @values, $first;
+		} # end if
+	} # end if
 
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {

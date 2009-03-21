@@ -37,6 +37,7 @@ $serial = 'Purchaseorders_id_seq';
 	'authorized_by'		=>	'authorized_by',
 	'authorized_on'		=>	'authorized_on',
 	'delivered_on'		=>	'delivered_on',
+	'delivered_on_switch'		=>	'delivered_on_switch',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
 	'federaltax'		=>	'federaltax',
@@ -227,6 +228,10 @@ sub save {
 		$sql{'subtotal'} += $C->total();
 	} # end foreach
 	$sql{'total'} = $sql{'subtotal'};
+	if ( ! $sql{'currency_id'} ) {
+		my $Currency = openprint::Currency::get_current();
+		$sql{'currency_id'} = $Currency->id();
+	} # end if
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
