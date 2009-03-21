@@ -1116,7 +1116,6 @@ sub load_from_signature {
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
 		my %params = (
-<<<<<<< HEAD:perl/openprint/Paper.pm
 				'supplied'	=> $$specs{'rdbSuppliedStock'},
 				'name'      => $$specs{'ddmStockBrand'},
 				'finish'    => $$specs{'ddmStockFinish'},

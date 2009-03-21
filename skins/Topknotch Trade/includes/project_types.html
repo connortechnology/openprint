@@ -2,8 +2,8 @@
 <? echo (
 	my $html = '';
 	foreach my $Category ( openprint::ProjectTypeCategory::find('order'=>'sort,name') ) {
-		foreach my $PT ( openprint::ProjectType::find('category_id'=>$Category->id(), 'order'=>'lngsort,strname' ) ) {
-$html .= sprintf('<li><a href="/content/%1$s?ProjectType=%2$s&amp;ProjectTypeName=%3$s" title="%4$s">%4$s</a></li>', $PT->url(), URI::Escape::uri_escape($PT->strid()), URI::Escape::uri_escape($PT->name()), ssi::htmlize($PT->name()) );
+		foreach my $PT ( openprint::ProjectType::find('category_id'=>$Category->id(), 'order'=>'sorting,name' ) ) {
+$html .= sprintf('<li><a href="/content/%1$s?ProjectType=%2$s&amp;ProjectTypeName=%3$s" title="%4$s">%4$s</a></li>', $PT->url(), URI::Escape::uri_escape($PT->name()), URI::Escape::uri_escape($PT->description()), ssi::htmlize($PT->description()) );
 		} # end foreach PT
 	} # end foreach Category
 	return $html;
