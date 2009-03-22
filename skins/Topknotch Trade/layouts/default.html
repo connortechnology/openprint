@@ -49,8 +49,10 @@
 
 		<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 		<div class="shadow_left"><div class="shadow_right">
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/customer-menu.html"-->
+			<? echo ( join('',
+			ssi::include( $config{'SkinPath'}.'/includes/header.html' ),
+			ssi::include( $config{'SkinPath'}.'/includes/customer-menu.html' ),
+			); ) ?>
 		</div></div>
 		<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 
@@ -58,12 +60,12 @@
 			<div id="main_content_inner">
 				<? if ( $r->uri() =~ /\/main\/order/ ) ?>
 				<? else ( $r->uri() =~ /\/main\/order/ ) ?>
-				<!--#include virtual="/skins/<?SiteTitle?>/includes/left_sidebar.html"-->
+				<? echo ( ssi::include( $config{'SkinPath'}.'/includes/left_sidebar.html' ); ) ?>
 				<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 				<div id="main_page">
 					<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 					<div class="shadow_left"><div class="shadow_right">
-						<div id="main_page_content"><?PageContent?></div>
+						<div id="main_page_content"><? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?></div>
 					</div></div>
 					<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 				</div>

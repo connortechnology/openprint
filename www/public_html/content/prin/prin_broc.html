@@ -1,5 +1,5 @@
 <? eval (
-	$$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+	$$variable{'ProjectTypeName'} = $param{'ProjectType'} if $param{'ProjectType'};
 	if ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) {
 		$$variable{'FoldType'} = '2PanelFold';
 		$$variable{'DimensionsDisplay'} = 'Finished';
