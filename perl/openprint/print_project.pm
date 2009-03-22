@@ -818,7 +818,12 @@ sub display_reuse_project {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	$$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'};
-	$$variable{'Project'} = new openprint::Project( $openprint::param{'ProjectIndex'} );
+	$$variable{'Project'} = new openprint::Project( $openprint::param{'ProjectIndex'} )->copy();
+	if ( $$variable{'Project'}->reference() ) {
+		$$variable{'Project'}->reference( 'Copy of ' . $$variable{'Project'}->reference() );
+	} else {
+		$$variable{'Project'}->reference( 'Copy of project # ' . $openprint::param{'ProjectIndex'} );
+	} # end if
 	
 } # end sub
 

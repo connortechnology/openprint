@@ -503,6 +503,12 @@ sql::insert(undef,undef,'configuration', [
     'type'=>'text',
     'description'=>'Number of characters in the CAPTCHA on the registration page.',
     'category'=> 'Captcha Settings'] ) if ! $config{'RegistrationCaptchaLength'};
+sql::insert(undef,undef,'configuration', [
+    'name'=>'UnitPriceFormat',
+    'value'=>'%.2f',
+    'type'=>'text',
+    'description'=>'Format String for unit prices.',
+    'category'=> 'Miscellaneous Settings'] ) if ! $config{'UnitPriceFormat'};
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
@@ -1314,7 +1320,7 @@ if ( ! openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
     print "Adding PlainCartons Category\n";
 } # end if
 
-foreach my $M ( openprint::Material::find('name'=>'Plain Carton') ) {
+foreach my $M ( openprint::Material::find('name_like'=>'Plain Carton%') ) {
 	if ( ! $M->specification('Maximum Weight') ) {
 		my $S = new openprint::MaterialSpecification();
 		$S->save({

@@ -45,6 +45,17 @@ sub do_new_substitution {
 		if ( $$text =~ /(.*?)<\?\s*endif\s*\(\s*\Q$dataname\E\s*\)\s*\?>(.*)/si ) {
 			my $middle = $1;
 			my $end = $2;
+			if ( $end =~ /^\n\r?$/ ) {
+$log->debug('trimming \n\r');
+				$end = '';
+			} elsif ( $end =~ /^\r?\n$/ ) {
+$log->debug('trimming \r\n');
+				$end = '';
+			} elsif ( $end =~ /^\n$/ ) {
+$log->debug('trimming \n');
+				$end = '';
+			} # end if
+			$middle =~ s/^\s*(.*)\s*$//;
 			my $replacement_text = '';
 			my $elsetext = '';
 
@@ -60,7 +71,8 @@ sub do_new_substitution {
 			} elsif ( $elsetext ne '' ) {
 				$replacement_text .= variable_substitution( \$elsetext, $variable );
 			} # end if
-			return $replacement_text . variable_substitution( \$end, $variable );
+			$replacement_text .= variable_substitution( \$end, $variable ) if $end;
+			return $replacement_text;
 		} else {
 			$log->debug("Unable to find terminating if ( $$command )");
 			return variable_substitution( $text, $variable );
