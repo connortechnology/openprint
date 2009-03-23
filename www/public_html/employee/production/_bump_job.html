@@ -1,0 +1,25 @@
+<? eval (
+	my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $param{'service_id'} );
+	$$variable{'Form'} = $$sig_specs{'SignatureIndex'};
+) ?>
+<form id="bump_form" name="bump_form" action="print_overview.html" method="post">
+	<input type="hidden" name="project_id" value="<? echo ( $param{'project_id'} ) ?>" />
+	<input type="hidden" name="service_id" value="<? echo ( $param{'service_id'} ) ?>" />
+	<input type="hidden" name="btnFunction" value="BumpJob" />
+	<h3>Bump DOcket <? echo ( $$variable{'Project'}->docket() ) ?> Form <?Form?></h3>
+	<p>
+		<label>Press:</label>
+		<select name="equipment_id">
+			<? echo ( 
+				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)') ], $param{'equipment_id'} );
+			) ?>
+		</select>
+	</p>
+	<p class="buttons">
+	<? echo ( 
+		my $html = '';
+		$html .= ssi::writeButton( $log, $dbh, 'Ok', 'ok.gif', 'bump_form.submit();', '', 'Ok' );
+		return $html;
+	) ?>
+	</p>
+</form>
