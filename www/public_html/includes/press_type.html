@@ -2,7 +2,7 @@
 <div class="row">
 	<span class="label">Press type:</span>
 	<span class="input"> 
-		<select name="PrintingType" onchange="remove_div('OrderButton');">
+		<select name="PrintingType" onchange="remove_div('OrderButton');calc(this.form.name);">
 			<? echo (
 				my $html;
 				
