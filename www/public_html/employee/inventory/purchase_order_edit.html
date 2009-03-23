@@ -1,4 +1,3 @@
-<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
 <script type="text/javascript">
 <!--
 function load_content_type( index, type ) {
@@ -67,16 +66,16 @@ function getSelectionId(input, li) {
 } // end function getSelectionId
 
   tinyMCE.init({
-    theme : "advanced",
-    mode: "specific_textareas",
+	theme : "advanced",
+	mode: "specific_textareas",
 	editor_selector : "mce",
-    theme_advanced_toolbar_location : "top",
-    theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,"
-    + "justifyleft,justifycenter,justifyright,justifyfull,formatselect,"
-    + "bullist,numlist,outdent,indent",
-    theme_advanced_buttons2 : "link,unlink,anchor,image,separator,"
-    +"undo,redo,cleanup,code,separator,sub,sup,charmap",
-    theme_advanced_buttons3 : "",
+	theme_advanced_toolbar_location : "top",
+	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,"
+	+ "justifyleft,justifycenter,justifyright,justifyfull,formatselect,"
+	+ "bullist,numlist,outdent,indent",
+	theme_advanced_buttons2 : "link,unlink,anchor,image,separator,"
+	+"undo,redo,cleanup,code,separator,sub,sup,charmap",
+	theme_advanced_buttons3 : "",
 	auto_resize : true,
 
   });
@@ -131,14 +130,30 @@ function getSelectionId(input, li) {
 					<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->vendor_country() ); ) ?>
 				</select>
 			</p>
-			<p><label for="vendor_state">State/Province:</label>
+			<p><label for="vendor_state"><span id="vendor_country_state"><? echo (
+					if ( $$variable{'country'} eq 'US' ) {
+						return 'State:';
+					} elsif ( $$variable{'country'} eq 'CA' ) {
+						return 'Province:';
+					} else {
+						return 'State/Province:';
+					} # end if
+				) ?></span></label>
 				<select id="vendor_state" name="vendor_state">
 				<option value=""> Select </option>
 				<? echo ( ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->vendor_state()); ) ?>
 				</select>
 			</p>
 			<p><label for="vendor_city">City:</label><input type="text" name="vendor_city" id="vendor_city" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_city() ) ?>" /></p>
-			<p><label for="vendor_postalcode">Postal Code:</label><input type="text" name="vendor_postalcode" id="vendor_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_postalcode() ) ?>" /></p>
+			<p><label for="vendor_postalcode"><span id="vendor_country_postal"><? echo (
+					   if ( $$variable{'country'} eq 'US' ) {
+						   return 'Zip Code:';
+					   } elsif ( $$variable{'country'} eq 'CA' ) {
+						   return 'Postal Code:';
+					   } else {
+						   return 'Zip/Postal Code:';
+					   } # end if
+					) ?></span></label><input type="text" name="vendor_postalcode" id="vendor_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_postalcode() ) ?>" /></p>
 			<p><label for="vendor_phone">Phone:</label><input type="text" name="vendor_phone" id="vendor_phone" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_phone() ) ?>" /></p>
 			<p><label for="vendor_fax">Fax:</label><input type="text" name="vendor_fax" id="vendor_fax" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_fax() ) ?>" /></p>
 			<p><label for="vendor_email">Email:</label><input type="text" name="vendor_email" id="vendor_email" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_email() ) ?>" /></p>
@@ -156,14 +171,31 @@ function getSelectionId(input, li) {
 					<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->shipto_country()); ) ?>
 				</select>
 			</p>
-			<p><label for="shipto_state">State/Province:</label>
+			<p><label for="shipto_state"><span id="shipto_country_state"><? echo (
+					if ( $$variable{'country'} eq 'US' ) {
+						return 'State:';
+					} elsif ( $$variable{'country'} eq 'CA' ) {
+						return 'Province:';
+					} else {
+						return 'State/Province:';
+					} # end if
+				) ?></span></label>
 				<select id="shipto_state" name="shipto_state">
 					<option value=""> select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->shipto_state()); ) ?>
 				</select>
 			</p>
 			<p><label for="shipto_city">City:</label><input type="text" name="shipto_city" id="shipto_city" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_city() ) ?>" /></p>
-			<p><label for="shipto_postalcode">Postal Code:</label><input type="text" name="shipto_postalcode" id="shipto_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_postalcode() ) ?>" /></p>
+			<p><label for="shipto_postalcode"><span id="shipto_country_postal"><? echo (
+					   if ( $$variable{'country'} eq 'US' ) {
+						   return 'Zip Code:';
+					   } elsif ( $$variable{'country'} eq 'CA' ) {
+						   return 'Postal Code:';
+					   } else {
+						   return 'Zip/Postal Code:';
+					   } # end if
+					) ?></span>
+				</label><input type="text" name="shipto_postalcode" id="shipto_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_postalcode() ) ?>" /></p>
 			<p><label for="shipto_phone">Phone:</label><input type="text" name="shipto_phone" id="shipto_phone" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_phone() ) ?>" /></p>
 			<p><label for="shipto_fax">Fax:</label><input type="text" name="shipto_fax" id="shipto_fax" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_fax() ) ?>" /></p>
 			<p><label for="shipto_email">Email:</label><input type="text" name="shipto_email" id="shipto_email" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_email() ) ?>" /></p>
