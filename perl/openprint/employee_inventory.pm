@@ -1729,6 +1729,7 @@ sub purchase_orders {
 	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
 		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 		$variable{'error'} .= $PO->send_to_vendor();
+		delete $param{'po_id'};
 	} # end if
 } # end sub purchase_orders
 
