@@ -155,7 +155,7 @@ sub get_best_prices {
 			my $Company = new openprint::Company( $cust_id );
 
 			my $pricingpercent = $Company->discount();
-			if ( $pricingpercent ) {
+			if ( 1*$pricingpercent ) {
 				$pricingpercent = $pricingpercent/100;
 				for ( my $index = 0; $index < @pricing; $index += 1 ) {
 					if ( $pricing[$index]->{Discountable} ne 'N' ) {

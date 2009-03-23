@@ -1227,9 +1227,11 @@ $openprint::log->debug("No spread layout for you!");
 					} # end while cutting it
 				} # end if Web or Sheet
 
+if ( 0 ) {
 $openprint::log->debug("Sorting");	
 foreach my $i ( @imps ) {
 $i->display();
+}
 }
 				if ( 1 ) {
 				foreach my $imp ( @imps ) {
