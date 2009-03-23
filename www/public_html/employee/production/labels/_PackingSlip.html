@@ -151,18 +151,18 @@ new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}-
 		</tr>
 	</table>
 	<br/>
-	<table style="height: 5in;">
+	<table style="height: 4in;">
 		<tr>
 			<td style="border: 1px solid black;">
 				DESCRIPTION:<br/>
-				<div id="description" style="height:4.75in;"><? hecho ( $$variable{'Label'}->get_data('description'); ) ?></div>
+				<div id="description" style="height:3.75in;"><? hecho ( $$variable{'Label'}->get_data('description'); ) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=description'}, tinymce_options );
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				QUANTITY:<br/>
-				<div id="quantity" style="height: 4.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
+				<div id="quantity" style="height: 3.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
 <script type="text/javascript">
 new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=getnohtml&field=quantity'}, tinymce_options );
 </script>
