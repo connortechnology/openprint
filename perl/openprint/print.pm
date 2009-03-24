@@ -170,9 +170,10 @@ sub view_services {
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
-				foreach my $signature_service_index ( sort $Project->signatures() ) {
-					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
-				} # end foreach
+				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+				#foreach my $signature_service_index ( sort $Project->signatures() ) {
+					#openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
+				#} # end foreach
 				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
 				$Project->save();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
