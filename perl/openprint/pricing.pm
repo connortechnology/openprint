@@ -169,7 +169,7 @@ sub get_best_prices {
 			} # end if
 		} # end if
 		if ( $openprint::config{'ApplyMarkup'} ) {
-			
+		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
 			$pricingpercent =~ s/[^\d\.\-]//g;
 			$pricingpercent /= 100;
