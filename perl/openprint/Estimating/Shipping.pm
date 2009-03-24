@@ -198,16 +198,16 @@ sub summary {
 
 		if ( $$specs{'FromAddress1'} or $$specs{'FromCity'} or $$specs{'FromStateProvince'} or $$specs{'FromCountry'} ) {
 			$html .= 'From: ' . join("\n", 
-					join(',', $$specs{'FromCompanyName'} ) ,
-					join(',', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
+					join(', ', $$specs{'FromCompanyName'} ) ,
+					join(', ', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
 						@$specs{'FromCity','FromStateProvince','FromCountry'},
 						@$specs{'FromPostalCode'} ),
 					) . '<br/>';
 		} # end if
 		if ( $$specs{'ToAddress1'} or $$specs{'ToCity'} or $$specs{'ToStateProvince'} or $$specs{'ToCountry'} ) {
 			$html .= 'To: ' . join("\n", 
-					join(',', $$specs{'ToCompanyName'} ) ,
-					join(',', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
+					join(', ', $$specs{'ToCompanyName'} ) ,
+					join(', ', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
 						@$specs{'ToCity','ToStateProvince','ToCountry'},
 						@$specs{'ToPostalCode'} ),
 					);
