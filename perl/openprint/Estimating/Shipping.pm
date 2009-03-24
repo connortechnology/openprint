@@ -96,7 +96,7 @@ sub calc {
 	} # end foreach ServiceType
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"txtPrice$qty_index"} =~ s/[^\-\.\D]//g;
+		$$specs{"txtPrice$qty_index"} =~ s/[^\-\.\d]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
