@@ -31,8 +31,8 @@ my %fields = (
 	'greeting'			=>	'greeting',
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
-	'type'				=>	'usertype',
-	'changepassword'	=>	'ysnchangepassword',
+	'type'				=>	'type',
+	'change_password'	=>	'ysnchangepassword',
 	'commission'		=>	'dblcommission',
 	'wage'				=>	'wage',
 	'administrator'		=>	'ysnadministrator',
@@ -265,7 +265,7 @@ sub next {
 		push @values, $params{'company_id'};
 	} # end if
 	if ( $params{'type'} ) {
-		$sql .= ' AND usertype=?';
+		$sql .= ' AND type=?';
 		push @values, $params{'type'};
 	} # end if
 
@@ -289,7 +289,7 @@ sub prev {
 		push @values, $params{'company_id'};
 	} # end if
 	if ( $params{'type'} ) {
-		$sql .= ' AND usertype=?';
+		$sql .= ' AND type=?';
 		push @values, $params{'type'};
 	} # end if
 
@@ -350,10 +350,10 @@ sub find {
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {
 			if ( @{$param{'type'}} ) {
-				$sql .= q{ AND usertype IN ('} . join("','", @{$param{'type'}}) . q{')};
+				$sql .= q{ AND type IN ('} . join("','", @{$param{'type'}}) . q{')};
 			} # end if
 		} else {
-			$sql .= q{ AND usertype = ?};
+			$sql .= q{ AND type = ?};
 			push @values, $param{'type'};
 		} # end if
 	} # end if
