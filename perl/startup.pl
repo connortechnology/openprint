@@ -20,6 +20,7 @@ BEGIN {
 	use HTML::Entities;
 #
 	use MIME::QuotedPrint;
+	use MIME::Base64;
 	use Mail::Sendmail;
 	use Text::CSV_XS;
 	use	Authen::Captcha;
