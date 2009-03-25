@@ -25,19 +25,18 @@ require sql;
 require sets;
 
 my %variables = (
-	'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],
-	'txtQuantity1'=>['save','output'], 'txtQuantity2'=>['save','output'], 'txtQuantity3'=>['save','output'],
-	'txtPackageQuantity1'=>['save','output'], 'txtPackageQuantity2'=>['save','output'], 'txtPackageQuantity3'=>['save','output'],
+	'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],'txtPriceUsed'=>['save'],
+	'txtQuantity1'=>['save','output'], 'txtQuantity2'=>['save','output'], 'txtQuantity3'=>['save','output'],'txtQuantityUsed'=>['save'],
+	'txtPackageQuantity1'=>['save','output'], 'txtPackageQuantity2'=>['save','output'], 'txtPackageQuantity3'=>['save','output'],'txtPackageQuantityUsed'=>['save'],
 	'chkOverridePackageQuantity' => ['save'],
-	'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],
-	'txtPackageWeight'=>['save','output'],
+	'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],'txtTotalWeightUsed'=>['save'],
+	'txtPackageWeight'=>['save','output'],'txtPackageWeightUsed'=>['save'],
 
 	'FromCompanyName'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
 	'FromFirstName'=>['save'],'FromLastName'=>['save'],
 	'ToCompanyName'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
 	'ToFirstName'=>['save'],'ToLastName'=>['save'],
 	'alert'=>['save'],
-
 );
 
 sub variables {
@@ -99,7 +98,9 @@ sub calc {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\-\.\d]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		next if ! $$specs{"txtQuantity$qty_index"};
+		if ( ! $$specs{"txtQuantity$qty_index"} ) {
+			$log->debug("No qty");
+		} # end if
 
         my $other_shipped_quantity = 0;
         foreach my $sid ( @shipping_services ) {
@@ -137,7 +138,7 @@ sub display {
 
 	if ( ! ( $$variable{'FromCity'} and $$variable{'FromPostalCode'} and $$variable{'FromStateProvince'} and $$variable{'FromCountry'} ) ) {
 		my %shipping_fields = (
-				'FromCompanyName'		=>	'CompanyName',
+				'FromCompanyName'	=>	'CompanyName',
 				'FromAddress1'		=>	'Address1',
 				'FromAddress2'		=>	'Address2',
 				'FromCity'			=>	'City',
@@ -158,7 +159,7 @@ sub display {
 	if ( $openprint::session{'company_id'} and ( ! (
 		$$variable{'ToCity'} and $$variable{'ToPostalCode'} and $$variable{'ToStateProvince'} and $$variable{'ToCountry'} ) ) ) {
 		my %shipping_fields = (
-				'ToCompanyName'			=>	'CompanyName',
+				'ToCompanyName'		=>	'CompanyName',
 				'ToAddress1'		=>	'Address1',
 				'ToAddress2'		=>	'Address2',
 				'ToCity'			=>	'City',
@@ -181,10 +182,23 @@ sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	my $services = $Project->services();
 
-	if ( $qty_index ) {
+	if ( $qty_index eq 'Used' ) {
+		my $packages = $$specs{'txtPackageQuantityUsed'} ? $$specs{'txtPackageQuantityUsed'} : $$specs{'txtPackageQuantity'.$Project->ordered_quantity_index()};
+		if ( $$services{'PlainCartons'} ) {
+			return sprintf( qq{%d items in %d carton%s\nWeighing %.2flbs}, 
+				( $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantityUsed'} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
+				$packages, ( $packages==1?'' : 's'), 
+				( $$specs{'txtTotalWeightUsed'} ? $$specs{'txtTotalWeightUsed'} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
+				);
+		} else {
+			return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, 
+				( $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantityUsed'} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
+				$packages, ( $packages==1?'' : 's'), 
+				( $$specs{'txtTotalWeightUsed'} ? $$specs{'txtTotalWeightUsed'} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
+				);
+		} # end if
+	}elsif ( $qty_index ) {
 		if ( $$specs{'txtPackageQuantity'.$qty_index} ) {
-			#if ( $$services{'BulkSkids'} ) {
-				#return sprintf( qq{%d items on %d skid%s\nWeighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 			if ( $$services{'PlainCartons'} ) {
 				return sprintf( qq{%d items in %d carton%s\nWeighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 			} else {

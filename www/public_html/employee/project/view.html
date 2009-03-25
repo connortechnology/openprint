@@ -55,7 +55,13 @@ function open_window( page ) {
 <?name?>
 <? endif ( $$variable{'url'} ne '' ) ?><br/>
 <? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
-<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, $$variable{'Project'}->ordered_quantity_index() ); ) ?>
+<? echo ( 
+	if ( $$variable{'name'} eq 'Shipping' ) {
+		openprint::service::summary( @$variable{'ProjectIndex','index'}, 'Used' );
+	} else {
+		openprint::service::summary( @$variable{'ProjectIndex','index'}, $$variable{'Project'}->ordered_quantity_index() );
+	} # end if
+ ) ?>
 &nbsp;</td>
 			<td align="right">
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>

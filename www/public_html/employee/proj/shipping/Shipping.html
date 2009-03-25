@@ -1,0 +1,73 @@
+<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<script type="text/javascript">
+function calc( formName ) {
+	if ( gettingNewPrice ) {
+		setTimeout( "calc('" + formName + "');", 1000 );
+	} else {
+		remove_div('AlertDiv');
+		gettingNewPrice = true;
+		var form = getFormObj( formName );
+		jsrsExecute( '/jsrs.htm', cbFillUPSResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+	} // end if
+} // end calc()
+function cbFillUPSResults( results ) {
+	cbFillResults( results );
+	var form = getFormObj( 'f1' );
+	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
+		addService( 'f1', 'PlainCartons' );
+	} // end if
+}
+function validate_data(formName) {
+	var form = getFormObj( formName );
+	var text = '';
+	return true;
+} // end function
+</script>
+<div class="Service">
+	<form name="f1" method="post" action="/employee/project/view.html">
+		<fieldset><legend>Shipping Services</legend>
+			<div class="leftColumn">
+				<!--#include virtual="/includes/main/proj/shipping_from_address.html"-->
+			</div>
+			<div class="rightColumn">
+				<!--#include virtual="/includes/main/proj/shipping_to_address.html"-->
+			</div>
+			<br class="spacer"/>
+			<fieldset>
+				<p>
+					<span class="TwoColumns">Quoted</span>
+					<span class="TwoColumns">Actual</span>
+				</p>
+				<p>
+					<label># of items to ship:</label>
+					<span class="TwoColumns"><? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?></span>
+					<span class="TwoColumns">
+					<input type="text" name="txtQuantityUsed" value="<? echo ( $$variable{'txtQuantityUsed'} ) ?>" size="9" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
+					</span>
+				</p>
+				<!--#include virtual="_shipping_packages.html"-->
+				<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+				<p>
+					<label><b>Price (<? echo ( $$variable{'Project'}->Currency()->symbol() ) ?>):</b></label>
+					<span class="TwoColumns"><? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?></span>
+					<span class="TwoColumns">
+					<input type="text" name="txtPriceUsed" size="9" value="<? echo ( $$variable{'txtPriceUsed'} ) ?>" />
+					</span>
+				</p>
+				<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+				<hr/>
+				<!--#include virtual="/includes/employee/feedback/complete.html"-->
+				<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
+			</fieldset>
+			
+		</fieldset>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<input type="hidden" name="qty_index" value="Used" />
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="btnFunction" value="Save"/>
+		<input type="hidden" name="NeedPlainCartons" />
+		<input type="hidden" name="Status" />
+	</form>
+</div><!-- Service -->
