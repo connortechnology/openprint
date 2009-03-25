@@ -1,37 +1,31 @@
 <? eval (
-	$$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+	$$variable{'ProjectTypeName'} = $param{'ProjectType'} if $param{'ProjectType'};
 	if ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) {
 		$$variable{'FoldType'} = '2PanelFold';
 		$$variable{'DimensionsDisplay'} = 'Finished';
 	} # end if
 ) ?>
-<form name="f1" method="post" action="/content/prin/prin_broc.html">
+<form name="f1" method="post" action="">
 	<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
 	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
 	<input type="hidden" name="Status" value="<?Status?>" />
 	<div class="InstantPricing">
 		<div id="instant_price_section">
-		   <div class="instant_price_section_top_shadow">
-			  <div class="instant_price_section_shadow_tl"></div>
-			  <div class="instant_price_section_shadow_tr"></div>
-		   </div>
-		   <div class="instant_price_section_content">
-			  <div class="instant_price_section_inner">
+		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+		   <div class="shadow_left"><div class="shadow_right">
                         
 				<div class="Questions">
 					<h3>Instant Pricing</h3>
 
 					<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
 					<!--#include virtual="/includes/sizes.html"-->
-					<div class="row"><label>Colours:</label>
-						<span class="input">
+					<p><label>Colours:</label>
 						<select name="Colours" onchange="calc(this.form.name);">
 							<option value="4/0">4 Colour One Side</option>
 							<option value="4/1">4 Colour/Black</option>
 							<option value="4/4">4 Colour Both Sides</option>
 						</select>
-						</span>
-					</div>
+					</p>
 					<br/>
 					<!--#include virtual="/includes/aqueous.html"-->
 					<!--#include virtual="/includes/uvcoating.html"-->
@@ -113,20 +107,14 @@
 				   <br class="spacer"/>
 			  </div>
 		   </div>
-		   <div class="instant_price_section_bottom_shadow">
-			  <div class="instant_price_section_shadow_bl"></div>
-			  <div class="instant_price_section_shadow_br"></div>
-		   </div>
+		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
 		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
 		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
 <div style="margin-left: 0px; margin-top: 20px;width: 380px;">
-		   <div class="instant_price_section_top_shadow">
-			  <div class="instant_price_section_shadow_tl"></div>
-			  <div class="instant_price_section_shadow_tr"></div>
-		   </div>
-		   <div class="instant_price_section_content">
-			  <div class="instant_price_section_inner">
+		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+		   <div class="shadow_left">
+			  <div class="shadow_right">
 <div style="text-align: center;">
 <h2 style="margin:0px 0px 10px 0px;">Now open Saturdays for digital printing!</h2>
 Please call Amin at 416-993-8820 to arrange a 
@@ -134,10 +122,7 @@ spot on our production schedule.
 </div>
 			  </div>
 		   </div>
-		   <div class="instant_price_section_bottom_shadow">
-			  <div class="instant_price_section_shadow_bl"></div>
-			  <div class="instant_price_section_shadow_br"></div>
-		   </div>
-</div>
+		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+</div><!--instant_price_section-->
 	</div><!--InstantPricing-->
 </form>

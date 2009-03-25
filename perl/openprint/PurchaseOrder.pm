@@ -37,6 +37,7 @@ $serial = 'Purchaseorders_id_seq';
 	'authorized_by'		=>	'authorized_by',
 	'authorized_on'		=>	'authorized_on',
 	'delivered_on'		=>	'delivered_on',
+	'delivered_on_switch'		=>	'delivered_on_switch',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
 	'federaltax'		=>	'federaltax',
@@ -227,6 +228,10 @@ sub save {
 		$sql{'subtotal'} += $C->total();
 	} # end foreach
 	$sql{'total'} = $sql{'subtotal'};
+	if ( ! $sql{'currency_id'} ) {
+		my $Currency = openprint::Currency::get_current();
+		$sql{'currency_id'} = $Currency->id();
+	} # end if
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
@@ -308,26 +313,29 @@ sub send_to_vendor {
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
 			FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-			TO      => sprintf( '"%s" <%s>', $self->vendor_contact(), $self->vendor_email() ),
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
 			);
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
-	if ( $self->vendor_email() ) {
+	foreach my $email ( split(',', $self->vendor_email() ) ) {
+		$mail{'TO'}	= $email;
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
-	} # end if
+	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
-		$mail{'TO'} = sprintf( '"%s" <%s>', $self->shipto_contact(), $self->shipto_email() );
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
-		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
+		foreach my $email ( split(',', $self->shipto_email() ) ) {
+			$mail{'TO'} = $email;
+			misc::send_email_with_attachment( $log, \%mail, @attachments );
+			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
+		} # end foreach
 	} # end if
 	if ( $self->notifications() ) {
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 		@attachments = ('', $_, 'text/html', 'quoted-printable');
 		$results .= 'Notification sent to: ';
-		foreach my $U ( $self->notifications() ) {
+		foreach my $user_id ( $self->notifications() ) {
+			my $U = new openprint::User( $user_id );
 			$mail{'TO'} = sprintf( '"%s" <%s>', $U->name(), $U->email() );
 			misc::send_email_with_attachment( $log, \%mail, @attachments );
 			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';

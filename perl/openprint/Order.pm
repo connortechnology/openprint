@@ -170,29 +170,30 @@ $openprint::log->debug("Loaded order: " . $$self{'id'} . ', company_id: ' . $$se
 
 sub save {
 	my ( $self, $params ) = @_;
+
 	my $ac = sql::start_transaction( $dbh );
-	
-	my @sql;
+
+	my %sql;
 	foreach my $key ( keys %fields ) {
 		next if $key eq 'paid';
 		$$self{$key} = undef if $$self{$key} eq '';
-		push @sql, $fields{$key}, $$self{$key};
+		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
 		
 	if ( ! $$self{'id'} ) {
 		#@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
-		$$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
-		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
+		$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if	
 	} elsif ( $$params{'force_insert'} ) {
-		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
+		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if	
 	} else {
-		if ( ( my $error = sql::update( $log, $dbh, 'Orders', ['Index=?', $$self{'id'}], @sql ) ) ) {
+		if ( ( my $error = sql::update( $log, $dbh, 'Orders', ['index=?', $$self{'id'}], \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if	

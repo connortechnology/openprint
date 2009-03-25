@@ -262,7 +262,6 @@ foreach ( @{$upsResponse{'RatedShipments'}} ) {
 			my $cost = $1;
 			my $currency = $2;
 			$log->debug("Currency returned: $currency") if $debug;
-			$currency = 'CDN' if $currency eq 'CAD';
 			my @currencies = openprint::Currency::find( 'short' => $currency );
 			my $UPS_Currency = shift @currencies;
 			my $Project = new openprint::Project( $project_index );

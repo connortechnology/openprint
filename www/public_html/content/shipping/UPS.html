@@ -35,7 +35,7 @@ function validate_data(formName) {
 			<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 			<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 			<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-			<input name="txtPrice<?QTYIndex?>" size="9" class="smbox" readonly onFocus="this.blur();" />
+			<input name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
 			<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 			<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>

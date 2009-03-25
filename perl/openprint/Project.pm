@@ -738,7 +738,9 @@ sub quantities {
 
 sub quantity {
 	my ( $self, $index, $qty ) = @_;
-	if ( defined $qty ) {
+	if ( $index eq 'Used' ) {
+		return $self->ordered_quantity();
+	} elsif ( defined $qty ) {
 		$$self{"quantity$index"} = $qty;
 	} # end if
 	return $$self{'quantity'.$index};
@@ -797,6 +799,7 @@ sub copy {
 			'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
 			'UsedPaper.*',
 			'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
+			'.*Used',
 			);
 
 # Make this all one transaction... Don't need locking because a reload would get a different projectindex
@@ -1071,12 +1074,19 @@ sub ordered_quantity {
 	if ( (! exists $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
 	} # end if
-	return $$self{"quantity$$self{ordered_quantity_index}"};
+	return $$self{'quantity'.$self->ordered_quantity_index()};
 } # end sub ordered_quantity
 sub ordered_quantity_index {
 	my $self = shift;
 	if ( (! $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
+	} # end if
+	if ( ! $$self{ordered_quantity_index} ) {
+		my @qtys = $self->quantity_indexes();
+$openprint::log->debug("Project ordered_qty_index @qtys ");
+		if ( 1 == @qtys ) {
+			return $qtys[0];
+		} # end if
 	} # end if
 	return $$self{ordered_quantity_index};
 } # end sub ordered_quantity_index
@@ -1086,7 +1096,7 @@ sub ordered_price {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
 	} # end if
 	return $$self{'ordered_price'} if $$self{'ordered_price'};
-	return $$self{"price$$self{ordered_quantity_index}"};
+	return $$self{'price'.$self->ordered_quantity_index()};
 } # end sub ordered_price
 
 sub ordered_Price {

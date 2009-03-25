@@ -3382,7 +3382,7 @@ sub calc_price {
 			%ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press );
 		} # end if
 		if ( ! %ImpositionMakeReady ) {
-			$openprint::log->debug("$service no price found");
+			#$openprint::log->debug("$service no price found");
 		} # end if
 		if ( $ImpositionMakeReady{units} eq 'Per Form' ) {
 #$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );

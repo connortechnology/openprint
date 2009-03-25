@@ -20,14 +20,14 @@
 		</select>
 	</p>
 	<p> 
-		<label>State/Province:</label>
+		<label><span id="FromCountry_state">State/Province:</span></label>
 		<select name="FromStateProvince" onchange="calc(this.form.name);">
 		<option value=""> Select </option>
 		<? echo ( ssi::return_states_and_provinces( $$variable{'FromStateProvince'} ); ) ?>
 		</select>
 	</p>
 	<p> 
-		<label>Zip/Postal Code:</label>
+		<label><span id="FromCountry_postal">Zip/Postal Code:</span></label>
 		<input type="text" name="FromPostalCode" value="<?FromPostalCode?>" onkeyup="calc(this.form.name);"/>
 	</p>
 	<p> 

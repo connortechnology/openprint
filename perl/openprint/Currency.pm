@@ -4,6 +4,8 @@ package openprint::Currency;
 use strict;
 use Number::Format;
 use openprint ();
+use vars qw( $log );
+*log = \$openprint::log;
 require openprint::Object;
 require sql;
 
@@ -111,6 +113,7 @@ sub convert {
 			my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
 			my $rate = $SRC_Currency->conversions( $DST_Currency->id() );
 			$$Price{'Price'} *= $rate if $rate;
+#$log->debug("Converting $$Price{'Price'} in $$SRC_Currency{'name'} to $$DST_Currency{'name'}") if $debug;
 			$$Price{'currency_id'} = $DST_Currency->id();
 		} # end if
 	} # end if
@@ -129,7 +132,18 @@ sub get_current {
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$openprint::session{'Currency_id'} = $Pricelist->currency_id();
 	} # end if
-	return new openprint::Currency( $openprint::session{'Currency_id'} );
+	if ( ! $openprint::session{'Currency_id'} ) {
+		if ( $openprint::config{'Currency'} ) {
+			my @Currencies = openprint::Currency::find('short'=>$openprint::config{'Currency'});
+			if ( @Currencies ) {
+				$openprint::session{'Currency_id'} = $Currencies[0]->id();
+			} # end if
+		} # end if
+	} # end if
+
+	if ( $openprint::session{'Currency_id'} ) {
+		return new openprint::Currency( $openprint::session{'Currency_id'} );
+	} # end if
 } # end sub get_currenct
 
 sub format {

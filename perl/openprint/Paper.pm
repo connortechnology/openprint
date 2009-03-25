@@ -333,9 +333,7 @@ sub save {
 	foreach my $key ( @fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
 	} # end foreach
-	if ( $$self{'type'} eq 'Roll' ) {
-		$$self{'height'} = undef;
-	} # end if
+	$$self{'height'} = undef if $$self{'type'} eq 'Roll';
 	
 	my $error;
 	$error .= 'An owner must be selected.<br/>' if ! $$self{'owner_id'};

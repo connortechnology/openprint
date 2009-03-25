@@ -20,13 +20,14 @@
 		my $html = '';
 		my $total = 0;
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
-		foreach my $C ( $$variable{'Manifest'}->Contents( 'type_id'=>$$variable{'type_id'}, 'order'=>'id') ) {
+		my @Contents = $$variable{'Manifest'}->Contents( 'type_id'=>$$variable{'type_id'}, 'order'=>'id');
+		foreach my $C ( @Contents ) {
 $openprint::log->debug( $C->skid_id() . ': ' . $C->Skid()->rfidtag() );
 			$$variable{'C'} = $C;
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$total += $C->quantity();
 		} # end foreach tag_id
-		$html .= sprintf('<tr id="totals-%3$d" class="totals"><td colspan="3">Totals:</td><td id="totallbs-%3$d">%1$dlbs</td><td id="totalkgs-%3$d">%2$.4fkg</td><td>&nbsp;</td></tr>', $total, $total/2.2046, $$variable{'type_id'} );
+		$html .= sprintf('<tr id="totals-%3$d" class="totals"><td>Totals:</td><td colspan="2" id="skidcount-%3$d">%4$d skids/rolls</td><td id="totallbs-%3$d">%1$dlbs</td><td id="totalkgs-%3$d">%2$.4fkg</td><td>&nbsp;</td></tr>', $total, $total/2.2046, $$variable{'type_id'}, scalar @Contents );
 		return $html;
 	) ?>
 </table>

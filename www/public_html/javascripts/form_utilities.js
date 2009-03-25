@@ -131,8 +131,6 @@ function sort_ddm(ddm) {
 
 function add_option( ddm, value, text, selectedValue ) {
 	if ( ddm ) {
-		//var optionIndex = get_option_index(ddm.options,value);
-		//if ( optionIndex == -1 ) {
 			var option = create_option( value, text );
 			var index = ddm.options.length;
 			ddm.options[index] = option;
@@ -142,10 +140,6 @@ function add_option( ddm, value, text, selectedValue ) {
 			} else {
 				option.selected = false;
 			} // end if
-		//} else {
-			//ddm.options[optionIndex].text = text;
-		//} // end if
-
 	} else {
 		alert('add_option: null ddm ' + ddm);
 	} // end if
@@ -737,10 +731,19 @@ function addLoadEvent(func) {
 
 function Country_onchange( country_ddm, state ) {
 	var country = get_ddm_value( country_ddm );
+	var state_label = $(country_ddm.name + '_state');
+	var postal_label = $(country_ddm.name + '_postal');
 	if ( country == 'US' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @states::states )", jsrs_cbFillDDM );
+		if ( state_label ) state_label.innerHTML='State:';
+		if ( postal_label ) postal_label.innerHTML='ZIP Code:';
 	} else if ( country == 'CA' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @provinces::provinces )", jsrs_cbFillDDM );
+		if ( state_label ) state_label.innerHTML='Province:';
+		if ( postal_label ) postal_label.innerHTML='Postal Code:';
+	} else {
+		if ( state_label ) state_label.innerHTML='State/Province:';
+		if ( postal_label ) postal_label.innerHTML='Postal Code:';
 	} // end if
 } // end function
 

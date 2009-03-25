@@ -162,5 +162,23 @@ sub location_id {
     return $$self{'location_id'};
 } # end sub location_id
 
+sub Next {
+	my $self = $_[0];
+	my ( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MIN(name) FROM RFIDScanners WHERE lower(name) > lower(?))', $$self{'name'} );
+	if ( ! $new_id ) {
+		( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MIN(name) FROM RFIDScanners)' );
+	} # end if
+	return new openprint::RFIDScanner( $new_id );
+} # end sub Next
+
+sub Previous {
+	my $self = $_[0];
+	my ( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MAX(name) FROM RFIDScanners WHERE lower(name) < lower(?))', $$self{'name'} );
+	if ( ! $new_id ) {
+		( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MAX(name) FROM RFIDScanners)' );
+	} # end if
+	return new openprint::RFIDScanner( $new_id );
+} # end sub Previous
+
 1;
 __END__

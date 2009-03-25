@@ -59,6 +59,7 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 			</p>
 			<p> 
 				<label for="state">
+<span id="country_state">
 				<? echo (
 					if ( $$variable{'country'} eq 'US' ) {
 						return 'State:';
@@ -68,6 +69,7 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 						return 'State/Province:';
 					} # end if
                 ) ?>
+</span>
 				<span class="requiredFieldIndicator">*</span></label>
 				<select id="state" name="state">
 					<option value=""> Select </option>
@@ -87,7 +89,7 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 				<input type="text" name="city" value="<? echo ( ssi::htmlize($param{'city'}); ) ?>"  />
 			</p>
 			<p> 
-				<label for="postalcode">
+				<label for="postalcode"><span id="country_postal">
 					<? echo (
                        if ( $$variable{'country'} eq 'US' ) {
                                return 'Zip Code:';
@@ -96,7 +98,7 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
                        } else {
                                return 'Zip/Postal Code:';
                        } # end if
-                    ) ?>
+                    ) ?></span>
 				<span class="requiredFieldIndicator">*</span></label>
 				<input type="text" name="postalcode" value="<? echo ( ssi::htmlize($param{'postalcode'}); ) ?>"  />
 			</p>
@@ -132,7 +134,7 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 				<select name="howdidyouhearaboutus" onchange="if(this.value=='Other' || this.value=='CSR'){show_div('Other');} else {hide_div('Other');}">
 <? echo ( ssi::make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please enter who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{'howdidyouhearaboutus'} ); ) ?>
 				</select>
-				<input id="Other" style="<? echo ( 'visibility: hidden;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($param{'howdidyouhearaboutusother'}); ) ?>" />
+				<input id="Other" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($param{'howdidyouhearaboutusother'}); ) ?>" />
 			</p>
 			<p> 
 				<label>Add to our mailing list?&nbsp;&nbsp;&nbsp;</label>

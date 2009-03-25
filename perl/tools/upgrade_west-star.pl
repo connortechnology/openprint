@@ -17,7 +17,7 @@ $log = new logger( 'warn' );
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
 $src_db = 'west-star' if ! $src_db;
 $dst_db = 'west-star' if ! $dst_db;
-$src_host = 'ws.connortechnology.com' if ! $src_host;
+$src_host = 'weststarprinting.com' if ! $src_host;
 
 `/etc/init.d/apache2 reload`;
 if ( $year ) {

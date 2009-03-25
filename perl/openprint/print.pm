@@ -731,7 +731,7 @@ sub get_finished_calliper {
 				$finished_calliper += $pages * $calliper;
 		} # end if
 	} # end foreach
-	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER $finished_calliper *********************************");
+	$openprint::log->debug("******************************* FINSIHED CALLIPER is $finished_calliper/1000 *********************************");
 	return sprintf('%.3f', $finished_calliper/1000);
 } # end sub get_finished_calliper
 

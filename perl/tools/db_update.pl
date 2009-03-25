@@ -504,6 +504,12 @@ sql::insert(undef,undef,'configuration', [
     'description'=>'Number of characters in the CAPTCHA on the registration page.',
     'category'=> 'Captcha Settings'] ) if ! $config{'RegistrationCaptchaLength'};
 sql::insert(undef,undef,'configuration', [
+    'name'=>'UnitPriceFormat',
+    'value'=>'%.2f',
+    'type'=>'text',
+    'description'=>'Format String for unit prices.',
+    'category'=> 'Miscellaneous Settings'] ) if ! $config{'UnitPriceFormat'};
+sql::insert(undef,undef,'configuration', [
     'name'=>'DefaultPricelist',
     'value'=>undef,
     'type'=>'pricelist',
@@ -990,8 +996,11 @@ if ( ! $data ) {
 	if ( ! exists $$data{'docket'} ) {
 		$dbh->do('ALTER TABLE Manifests add docket INTEGER');
 	} # end if
+	if ( ! exists $$data{'delivered_on_switch'} ) {
+		$dbh->do('ALTER TABLE Manifests add delivered_on_switch TEXT');
+	} # end if
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
 if ( ! $data ) {
 		$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql});
 		foreach my $st ( split(';', $_ ) ) {
@@ -1318,7 +1327,7 @@ if ( ! openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
     print "Adding PlainCartons Category\n";
 } # end if
 
-foreach my $M ( openprint::Material::find('name'=>'Plain Carton') ) {
+foreach my $M ( openprint::Material::find('name_like'=>'Plain Carton%') ) {
 	if ( ! $M->specification('Maximum Weight') ) {
 		my $S = new openprint::MaterialSpecification();
 		$S->save({

@@ -5,7 +5,7 @@ use strict;
 
 require sets;
 
-my $debug = 0;
+my $debug = 1;
 
 sub Dispatch {
 	my ( $r, $log, $dbh, $variable, $database ) = @_;

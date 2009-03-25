@@ -83,7 +83,10 @@
 				<tr>
 					<td><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
 					<td><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
-					<td><? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : 'ASAP' ) ?></td>
+					<td>
+						<? echo ( $$variable{'PurchaseOrder'}->delivered_on_switch() ne 'DATE' ? $$variable{'PurchaseOrder'}->delivered_on_switch().'<br/>' : '' ) ?>
+						<? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : '' ) ?>
+					</td>
 				</tr>
 			</table>
 			<br class="spacer"/>

@@ -8,12 +8,11 @@
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<!--#include virtual="/includes/main/proj/package_size_weight.html"-->
-
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-	$$variable{'Columns'} = 'Three';
+		$$variable{'Columns'} = 'Three';
 	} else {
-	$$variable{'Columns'} = 'Two';
+		$$variable{'Columns'} = 'Two';
 	} # end if
 ) ?>
 	<p>
@@ -53,12 +52,11 @@
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="ContinueProject" value="Y" />
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<div id="hdnBreakdown<?QTYIndex?>" style="display:none;"></div>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? echo ( my $html;
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				$html .= qq`<div id="hdnBreakdown$qty_index" style="display:none;"></div>`;
+			} # end foreach
+			return $html;
+		) ?>
 	</form>
 </div>
