@@ -255,9 +255,6 @@ fieldset p select {
 fieldset p textarea {
     width: 70%;
 }
-fieldset p option {
-    width: 70%;
-}
 fieldset.filters {
     margin-left: 0px;
     margin-right: 0px;
