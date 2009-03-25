@@ -509,6 +509,13 @@ sql::insert(undef,undef,'configuration', [
     'type'=>'text',
     'description'=>'Format String for unit prices.',
     'category'=> 'Miscellaneous Settings'] ) if ! $config{'UnitPriceFormat'};
+sql::insert(undef,undef,'configuration', [
+    'name'=>'DefaultPricelist',
+    'value'=>undef,
+    'type'=>'pricelist',
+    'description'=>'Default Pricelist.',
+    'category'=> 'Miscellaneous Settings'] ) if ! $config{'DefaultPricelist'};
+
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );

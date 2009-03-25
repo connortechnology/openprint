@@ -210,9 +210,10 @@ $openprint::log->debug("Getfile");
 		} # end if
 
 		if ( $session{'user_type'} ne 'A' ) {
+$log->debug("User Type: $session{'user_type'}");
 			# If the page requires you to be logged in, check that we are logged in.
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
-				if ( sql::execute( $log, $dbh, q{SELECT type FROM Users WHERE type='A'} ) ) {
+				if ( sql::execute( $log, $dbh, 'SELECT type FROM Users WHERE type=?', 'A' ) ) {
 					$variable{'Redirect'} = '/administrator/error/login.html';
 					$variable{'Destination'} = misc::get_destination( $r, $log );
 					return $status;

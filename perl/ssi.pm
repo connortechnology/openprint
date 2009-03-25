@@ -55,7 +55,7 @@ $log->debug('trimming \r\n');
 $log->debug('trimming \n');
 				$end = '';
 			} # end if
-			$middle =~ s/^\s*(.*)\s*$//;
+			#$middle =~ s/^\s*(.*)\s*$//;
 			my $replacement_text = '';
 			my $elsetext = '';
 
