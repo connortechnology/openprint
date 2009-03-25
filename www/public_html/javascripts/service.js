@@ -48,10 +48,6 @@ function get_variables( formName, service_type ) {
            if (
                 ( form.elements[index].name == 'hdnBreakdown' )
                 || ( form.elements[index].name == 'ContinueProject' )
-                || ( form.elements[index].name == 'txtPrice' )
-                || ( form.elements[index].name == 'txtPrice1' )
-                || ( form.elements[index].name == 'txtPrice2' )
-                || ( form.elements[index].name == 'txtPrice3' )
                 || ( form.elements[index].name == 'btnFunction' )
 ) {
             } else if ( form.elements[index].name && form.elements[index].value != '' ) {

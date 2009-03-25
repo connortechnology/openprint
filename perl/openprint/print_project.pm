@@ -809,7 +809,7 @@ sub reuse_project {
 	$NewProject->user_id( $openprint::session{'user_id'} );
 	$NewProject->order_id( '' );
 	# This allows uncalc->uncalc, everything else to UnOrdered
-	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete' ] ) ) {
+	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped' ] ) ) {
 		$NewProject->status('Unordered');
 	} # end if
 	$NewProject->company_id( $r->param('ddmCompany') ) if $r->param('ddmCompany');
@@ -840,9 +840,7 @@ sub reuse_project {
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()
 			or $Project->quantity3() != $NewProject->quantity3() ) {
-		foreach my $signature_service_id ( $NewProject->signatures() ) {
-			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $NewProject->id(), $signature_service_id,'Printing' );
-		} # end foreach
+		openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $NewProject->id() );
 		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $NewProject->id(), undef );
 	} # endif
 	return $NewProject->id();

@@ -708,6 +708,9 @@ sub quantities {
 
 sub quantity {
 	my ( $self, $index ) = @_;
+	if ( $index eq 'Used' ) {
+		return $self->ordered_quantity();
+	} # end if
 	return $$self{'quantity'.$index};
 } # end sub quanitty
 
@@ -764,6 +767,7 @@ sub copy {
 			'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
 			'UsedPaper.*',
 			'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
+			'.*Used',
 			);
 
 # Make this all one transaction... Don't need locking because a reload would get a different projectindex
