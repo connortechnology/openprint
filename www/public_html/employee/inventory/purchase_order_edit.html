@@ -86,11 +86,11 @@ function getSelectionId(input, li) {
 	<input type="hidden" name="federaltax_rate" value="<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ) ?>" />
 	<input type="hidden" name="statetax_rate" value="<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ) ?>" />
 	<!--#include virtual="/includes/error_reporting.html"-->
-	<p class="buttons">
+	<p class="buttons" id="buttons">
 <? echo ( 
 	my $html = '';
-	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
-	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
 	return $html;
 ) ?>
 	</p>
