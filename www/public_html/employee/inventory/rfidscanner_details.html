@@ -84,7 +84,13 @@
 			</p>
 			<p>
 				<label>Other Data:</label>
+				<? if ( $$variable{'RFIDScanner'}->type() eq 'Truck Location' ) ?>
+				<select name="other">
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDScanner::find('order'=>'name') ], $$variable{'RFIDScanner'}->other() ); ) ?>
+				</select>
+				<? else ( $$variable{'RFIDScanner'}->type() eq 'Truck Location' ) ?>
 				<input type="text" name="other" value="<? echo ( $$variable{'RFIDScanner'}->other() ) ?>" />
+				<? endif ( $$variable{'RFIDScanner'}->type() eq 'Truck Location' ) ?>
 			</p>
 			<p><label>Type:</label>
 				<select name="type" id="type">

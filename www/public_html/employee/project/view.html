@@ -55,11 +55,17 @@ function open_window( page ) {
 <?name?>
 <? endif ( $$variable{'url'} ne '' ) ?><br/>
 <? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
-<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, $$variable{'Project'}->ordered_quantity_index() ); ) ?>
+<? echo ( 
+	if ( $$variable{'name'} eq 'Shipping' ) {
+		openprint::service::summary( @$variable{'ProjectIndex','index'}, 'Used' );
+	} else {
+		openprint::service::summary( @$variable{'ProjectIndex','index'}, $$variable{'Project'}->ordered_quantity_index() );
+	} # end if
+ ) ?>
 &nbsp;</td>
 			<td align="right">
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-			<? echo ( sprintf('$%.2f', $$variable{'price'.$$variable{'OrderedQuantityIndex'}} ); ) ?>
+			<? echo ( sprintf('$%.2f', $$variable{'price'.$$variable{'Project'}->ordered_quantity_index()} ); ) ?>
 			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			</td>
 			<td align="right">&nbsp;<?status?></td>
@@ -179,7 +185,7 @@ function open_window( page ) {
 			<td class="unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<td align="right"><b>Total:</b></td>
-			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Total'.$$variable{'OrderedQuantityIndex'}} ); ) ?></td>
+			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Project'}->ordered_price() ); ) ?></td>
 			<td></td>
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>

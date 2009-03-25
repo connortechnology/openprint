@@ -1161,6 +1161,14 @@ sub rfidscanners {
 sub rfidscanner_details {
 	my $RFIDScanner = new openprint::RFIDScanner( $param{'rfidscanner_id'} );
 	
+	if ( $param{'btnFunction'} eq 'Previous' ) {
+		$RFIDScanner = $RFIDScanner->Previous();
+		$param{'rfidscanner_id'} = $RFIDScanner->id();
+	} elsif ( $param{'btnFunction'} eq 'Next' ) {
+		$RFIDScanner = $RFIDScanner->Next();
+		$param{'rfidscanner_id'} = $RFIDScanner->id();
+	} # end if
+
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $RFIDScanner->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
@@ -1520,6 +1528,7 @@ sub purchase_order_view {
 					'po_id'		=>	$PO->id(),
 					'reason'	=>	'deleted.',
 					});
+			delete $param{'po_id'};
 			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
@@ -1531,6 +1540,7 @@ sub purchase_order_view {
 					'po_id'		=>	$PO->id(),
 					'reason'	=>	'undeleted.',
 					});
+			delete $param{'po_id'};
 			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
@@ -1695,6 +1705,7 @@ sub purchase_orders {
 				$variable{'information'} .= 'PO ' . $po_id . ' has been deleted.<br/>';
 			} # end if
 		} # end foreach po_id
+		delete $param{'po_id'};
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -1709,6 +1720,7 @@ sub purchase_orders {
 						});
 			} # end if
 		} # end foreach
+		delete $param{'po_id'};
 	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -1718,6 +1730,7 @@ sub purchase_orders {
 				$variable{'information'} .= 'PO ' . $po_id . ' has been authorized.<br/>';
 			} # end if
 		} # end foreach po_id
+		delete $param{'po_id'};
 	} elsif ( $param{'btnFunction'} eq 'Decline' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : split(',',$param{'po_id'}) ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -1727,9 +1740,11 @@ sub purchase_orders {
 				$variable{'information'} .= 'PO ' . $po_id . ' has been declined.<br/>';
 			} # end if
 		} # end foreach po_id
+		delete $param{'po_id'};
 	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
 		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 		$variable{'error'} .= $PO->send_to_vendor();
+		delete $param{'po_id'};
 	} # end if
 } # end sub purchase_orders
 

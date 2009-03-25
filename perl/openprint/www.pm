@@ -276,6 +276,7 @@ $log->debug('2');
 
 			$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 			@variable{'ddmDueDate','OrderedQuantityIndex'} = ( $variable{'Project'}->due_date(), $variable{'Project'}->ordered_quantity_index() );
+			$variable{'QTYIndex'} = $variable{'OrderedQuantityIndex'};
 			$variable{'DocketNumber'} = $variable{'Project'}->docket();
 
 			$variable{'Employee'} = new openprint::User( $openprint::session{'user_id'} )->name();
