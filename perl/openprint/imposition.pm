@@ -858,20 +858,19 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 				$newimp->columns($cols);
 				$newimp->imposition($rows * $cols);
 				if ( $newimp->image_orientation() eq 'Vertical' ) {
-				$newimp->image_width( $newimp->image_width() * $col );
-				$newimp->image_height( $newimp->image_height() * $row );
+					$newimp->image_width( $newimp->image_width() * $col );
+					$newimp->image_height( $newimp->image_height() * $row );
 				} else {
-				$newimp->image_width( $newimp->image_width() * $row );
-				$newimp->image_height( $newimp->image_height() * $col );
+					$newimp->image_width( $newimp->image_width() * $row );
+					$newimp->image_height( $newimp->image_height() * $col );
 				} # end if
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				#$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
 				push @imps, $newimp;
 			} # end foreach block
-			#last if @imps;
- #and (@imps[@imps-1]->imposition() >= 2);
-			last if @imps and ($imps[@imps-1]->imposition() >= 2);
+			#last if @imps and (@imps[@imps-1]->imposition() >= 4);
+			#last if @imps and ($signature_size < $start/2);
 		} # end foreach signature_size
 		push @good_impositions, @imps;
 	} # end foreach

@@ -285,7 +285,7 @@ sub Fold {
 			$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
 			my $RunSpeed = $Fold->Specification( $$params{'gsm'} );
 			if ( ! $RunSpeed ) {
-$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
+#$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if $debug;
 				next;
 			} else {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;

@@ -1467,7 +1467,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					my @cut_offs;
 					if ( my $co = $Press->specification('Cut Off') ) {
 						@cut_offs = reverse sort split( ',', $co );
-$openprint::log->debug('Cut offs: $co : ' . @cut_offs . " @cut_offs");
+#$openprint::log->debug("Cut offs: $co : " . @cut_offs . " @cut_offs");
 					} elsif ( my $min = $Press->specification('Cut Off Minimum') ) {
 						my $increment = $Press->specification('Cut Off Increment');
 						my $cut_off = $Press->specification('Cut Off Maximum');
@@ -1632,7 +1632,7 @@ $i->display();
 								splice @{$imps{$str}}, $j, 1;
 								$j -= 1;
 							} elsif (
-									( $I->Paper()->area() < $imp->Paper()->area() )
+									( $I->Paper()->area() <= $imp->Paper()->area() )
 									and
 									( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 									and
@@ -1655,7 +1655,7 @@ $i->display();
 			push @impositions, map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-			if ( $debug or 1) {
+			if ( $debug ) {
 				$openprint::log->warn('Impositions');
 				foreach my $I ( @impositions ) {
 					$I->display();
@@ -2043,8 +2043,8 @@ $openprint::log->debug("get_project_price");
 			foreach my $imp ( @impositions ) {
 				$imp->display();
 			} # end foreach
+			$openprint::log->debug("SPread Layout: $SpreadLayout");
 		} # end if
-$openprint::log->debug("SPread Layout: $SpreadLayout");
 		if ( $SpreadLayout > 0 ) {
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, \@impositions );
@@ -2059,6 +2059,12 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 				$max_impositions{$imp->pages()} = $imp->imposition() if $imp->imposition() > $max_impositions{$imp->pages()};
 			} # end foreach
 			$max_pages /= 2;
+if ( $debug ) {
+$openprint::log->debug("Max pages: $max_pages, ");
+foreach my $p ( keys %max_impositions ) {
+$openprint::log->debug("Max Impo $p => $max_impositions{$p}");
+}# end foreach
+} # end if
 			my @dont_do_pages = split(',', $Press->specification('DontDoPages'));
 			foreach my $imp ( @impositions ) {
 				next if ( sets::isin( $imp->pages(), \@dont_do_pages ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') );
@@ -2088,6 +2094,17 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 					next;
 				} # end if
 
+				# Check for minimum order requirments
+				my $stock_qty;
+				if ( $imp->Paper()->type() eq 'Roll' ) {
+					$stock_qty = ($qty/$imp->imposition()) * $imp->Paper()->area() * $imp->Paper()->wpsi();
+				} else {
+					$stock_qty = $qty/$imp->imposition();
+				} # end if
+				if ( $imp->Paper()->minimum_order() > $stock_qty ) {
+					next;
+				} # end if
+
 				my $add = 1;
 				if ( $imp->runstyle() eq 'Work & Tumble' ) {
 					my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
@@ -2097,7 +2114,6 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 							if ( ( $I->Paper()->area() <= $imp->Paper()->area() )
-									and ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 									and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 									and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 									) {
@@ -2113,7 +2129,6 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 							if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
-									and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 									and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 									and ( $I->Paper()->is_cut() or ! $imp->Paper()->is_cut() )
 							   ) {
@@ -2137,14 +2152,12 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 						my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 						my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 						if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
-								and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 								and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 								and ( $I->Paper()->is_cut() or ! $imp->Paper()->is_cut() )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
 						} elsif ( ( $I->Paper()->area() < $imp->Paper()->area() )
-								and ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 								and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 								and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 								) {
@@ -2177,7 +2190,6 @@ $imp->display();
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 							if ( ( $I->Paper()->area() <= $imp->Paper()->area() )
-									and ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 									and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 									and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 									) {
@@ -2198,7 +2210,6 @@ $imp->display();
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 							if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
-									and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 									and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 									and ( ! ( ( ! $I->Paper()->is_cut() ) and $imp->Paper()->is_cut() ) )
 							   ) {
@@ -2221,14 +2232,12 @@ $imp->display();
 						my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 						my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 						if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
-								and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 								and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 								and ( ! ( ( ! $I->Paper()->is_cut() ) and $imp->Paper()->is_cut() ) )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
 						} elsif ( ( $I->Paper()->area() < $imp->Paper()->area() )
-								and ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 								and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 								and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 								) {
@@ -2330,7 +2339,7 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 			# Imp still gets modified in calc_price, Folding adds Folder member
 			$imp = $imp->copy();
 #my $time = gettimeofday();
-$imp->display($recursion_depth . ' Starting');
+#$imp->display($recursion_depth . ' Starting');
 			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
