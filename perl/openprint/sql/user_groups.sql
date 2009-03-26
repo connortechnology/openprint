@@ -1,8 +1,6 @@
-
-CREATE SEQUENCE UserGroup_id_seq;
-
-CREATE TABLE UserGroup (
-	id	INTEGER NOT NULL default nextval('User_Group_id_seq'),
+DROP TABLE IF EXISTS usergroups;
+CREATE TABLE usergroups (
+	id	SERIAL,
 	name	TEXT,
 	PRIMARY KEY (id)
 );

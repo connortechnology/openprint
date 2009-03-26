@@ -1,0 +1,8 @@
+<? echo ( 
+	require openprint::Article;
+	my $html;
+	foreach my $A ( openprint::Article::find('published'=>1, 'order'=>'published_at DESC','limit'=>5) ) {
+		$html .= '<p>'.$A->body().'</p>';
+	} # end foreach A
+	return $html;
+) ?>

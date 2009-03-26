@@ -32,6 +32,13 @@ $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV
 
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM database_info LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/database_info.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} 
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
 if ( $data ) {
@@ -114,7 +121,7 @@ if ( $version < $new_version ) {
 			$dbh->do($st);
 		}
 	} 
-    die if sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
     sql::end_transaction( $dbh, $ac );
     $version = $new_version;
 } # end if
@@ -210,7 +217,7 @@ if ( $version < 1275 ) {
 		$dbh->do('alter table papers add bladecleaning boolean');
 		sql::update( undef, undef, 'papers', 'bladecleaning IS NULL', 'bladecleaning', 'false' );
     } # end if
-	die if sql::insert( undef, undef, 'database_info', 'version', 1275, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1275, 'backup', $backup );
 	$version = 1275;
 	sql::end_transaction( $dbh, $ac );
 } # end if
@@ -246,7 +253,7 @@ if ( $version < 1291 ) {
 	} else {
 	$dbh->do('alter table material_specifications add interpolate boolean');
 	} # end if
-	die if sql::insert( undef, undef, 'database_info', 'version', 1291, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1291, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1291;
 } # end if
@@ -304,7 +311,7 @@ if ( $version < 1381 ) {
         }
 
 	} # end if
-	die if sql::insert( undef, undef, 'database_info', 'version', 1381, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1381, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1381;
 	
@@ -326,7 +333,7 @@ if ( $version < 1456 ) {
 	$dbh->do(q{alter table skids alter updated_by SET NOT NULL});
 	$dbh->do(q{alter table skids ADD FOREIGN KEY (updated_by) REFERENCES Users (id)});
 	} # end if
-	die if sql::insert( undef, undef, 'database_info', 'version', 1456, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1456, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1456;
 } # end if 1456
@@ -358,7 +365,7 @@ if ( $version < 1540 ) {
 			$dbh->do($st);
 		}
 	} # end if
-	die if sql::insert( undef, undef, 'database_info', 'version', 1540, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1540, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1540;
 } # end if
@@ -380,7 +387,7 @@ $dbh->do(q{alter table tbl_Materials rename column ysntaxexempt1 to taxexempt1})
 $dbh->do(q{alter table tbl_Materials rename column ysntaxexempt2 to taxexempt2}) if exists $$data{ysntaxexempt2};
 $dbh->do(q{alter table tbl_Materials rename to Materials});
 } # endif
-	die if sql::insert( undef, undef, 'database_info', 'version', 1586, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1586, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1586;
 } # end if
@@ -396,27 +403,35 @@ $dbh->do(q{alter table tbl_Material_Categories drop column strname});
 $dbh->do(q{alter table tbl_Material_Categories rename to Material_Categories});
 $dbh->do(q{ALTER TABLE Materials ADD foreign key (category_id) REFERENCES Material_Categories (id)});
 } # end if
-	die if sql::insert( undef, undef, 'database_info', 'version', 1587, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1587, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1587;
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Services LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Services.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} 
+
 if ( $version < 1600 ) {
 	print "Updating to version 1600\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Services LIMIT 1', {} );
 	my $ac = sql::start_transaction( $dbh );
-if ( $data ) {
-$dbh->do(q{alter table tbl_Services rename column lngindex to id});
-$dbh->do(q{alter table tbl_Services rename column strid to name});
-$dbh->do(q{alter table tbl_Services rename column strname to description});
-$dbh->do(q{alter table tbl_Services drop column strdetails});
-$dbh->do(q{alter table tbl_Services drop column strdescription});
-$dbh->do(q{alter table tbl_Services rename column lngsupplierindex to supplier_id});
-$dbh->do(q{alter table tbl_Services rename column lngcategoryindex to category_id});
-$dbh->do(q{alter table tbl_Services rename column ysntaxexempt1 to taxexempt1});
-$dbh->do(q{alter table tbl_Services rename column ysntaxexempt2 to taxexempt2});
-$dbh->do(q{alter table tbl_Services rename to Services});
-}
-	die if sql::insert( undef, undef, 'database_info', 'version', 1600, 'backup', $backup );
+	if ( $data ) {
+		$dbh->do(q{alter table tbl_Services rename column lngindex to id});
+		$dbh->do(q{alter table tbl_Services rename column strid to name});
+		$dbh->do(q{alter table tbl_Services rename column strname to description});
+		$dbh->do(q{alter table tbl_Services drop column strdetails});
+		$dbh->do(q{alter table tbl_Services drop column strdescription});
+		$dbh->do(q{alter table tbl_Services rename column lngsupplierindex to supplier_id});
+		$dbh->do(q{alter table tbl_Services rename column lngcategoryindex to category_id});
+		$dbh->do(q{alter table tbl_Services rename column ysntaxexempt1 to taxexempt1});
+		$dbh->do(q{alter table tbl_Services rename column ysntaxexempt2 to taxexempt2});
+		$dbh->do(q{alter table tbl_Services rename to Services});
+	}
+	sql::insert( undef, undef, 'database_info', 'version', 1600, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1600;
 } # end if
@@ -456,7 +471,7 @@ sql::insert(undef,undef,'configuration', [
     'description'=>'Number of characters in the CAPTCHA on the registration page.',
     'category'=> 'Captcha Settings'] );
 $dbh->do(q{alter table users add howdidyouhearaboutusother text});
-	die if sql::insert( undef, undef, 'database_info', 'version', 1895, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1895, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1895;
 } # end if
@@ -519,7 +534,7 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockPurposes LIMI
 		$dbh->do(q{insert into stockpurposes (name) values ('Job Stock')});
 		$dbh->do(q{insert into stockpurposes (name) values ('Sample')});
 	}
-	die if sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1898;
 } # end if
@@ -588,7 +603,7 @@ if ( $version < 1901 ) {
 			} # end foreach
 		} # end foreach
 	} # en dif
-	die if sql::insert( undef, undef, 'database_info', 'version', 1901, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1901, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1901;
 } # end if
@@ -638,7 +653,7 @@ if ( $version < 1902 ) {
 			#} # end if
 		} # end foreach
 	} # end foreach
-	die if sql::insert( undef, undef, 'database_info', 'version', 1902, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1902, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1902;
 } # end if
@@ -832,7 +847,7 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Type'=>'Press'}) 
 		$Spec->save();
 	} # end if
 } # end foreach
-	die if sql::insert( undef, undef, 'database_info', 'version', 1907, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1907, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1907;
 } # end if
@@ -864,7 +879,7 @@ if ( $version < 1910 ) {
 	print "Updating to version 1910\n";
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do('alter table service_types add unique(name);');
-	die if sql::insert( undef, undef, 'database_info', 'version', 1910, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1910, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1910;
 } # end if
@@ -875,7 +890,7 @@ if ( $version < 1911 ) {
 	$dbh->do('alter table folds add min_calliper float') if ! exists $$data{'min_calliper'};
 	$dbh->do('alter table folds add max_calliper float') if ! exists $$data{'max_calliper'};
 	$dbh->do('alter table folds add cutting boolean') if ! exists $$data{'cutting'};
-	die if sql::insert( undef, undef, 'database_info', 'version', 1912, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1912, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1912;
 } # end if
@@ -886,7 +901,7 @@ if ( $version < 1913 ) {
 	$dbh->do(q`alter table service_categories alter id set default nextval('service_categories_id_seq')`);
 	$dbh->do(q`select setval('service_categories_id_seq', (select max(id) from service_categories) )`);
 	$dbh->do(q`drop sequence if exists servicecategoriesindex_seq`);
-	die if sql::insert( undef, undef, 'database_info', 'version', 1913, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1913, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1913;
 } # end if
@@ -894,7 +909,7 @@ if ( $version < 1914 ) {
 	print "Updating to version 1914\n";
 	my $ac = sql::start_transaction( $dbh );
 	sql::update( undef, undef, 'service_types',['strdetailedurl=?','bind/padding.html'], 'strdetailedurl', 'bind/Padding.html' );
-	die if sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1914, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1914;
 } # end if
@@ -933,7 +948,7 @@ if ( $version < 1916 ) {
 	if ( ! exists $$data{'message'} ) {
 	$dbh->do(q`alter table papers add message text`);
 	} # end if
-	die if sql::insert( undef, undef, 'database_info', 'version', 1916, 'backup', $backup );
+	sql::insert( undef, undef, 'database_info', 'version', 1916, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1916;
 } # end if
@@ -1151,7 +1166,7 @@ if ( $version < $new_version ) {
 		$dbh->do(q`alter table skids add rfidtag_id TEXT`);
 		$dbh->do(q`alter table papers add FOREIGN KEY (rfidtag_id) REFERENCES RFIDTags (id)`);
 	} # end if
-    die if sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
+    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
     $version = $new_version;
 } # end if
 
@@ -1261,6 +1276,14 @@ if ( ! $data ) {
 		$dbh->do($st);
 	}
 	sql::end_transaction( $dbh, $ac );
+} else {
+	if ( ! exists $$data{'a_session'} ) {
+		$dbh->do('ALTER TABLE sessions add a_session TEXT');
+	}
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE sessions add id TEXT');
+		$dbh->do('ALTER TABLE sessions add PRIMARY KEY (id)');
+	}
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
@@ -1530,8 +1553,15 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Aqueous Coating'=
 } # end foreach E
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM currencies LIMIT 1', {} );
-if ( ! exists $$data{'short'} ) {
-	$dbh->do('ALTER TABLE Currencies ADD short TEXT');
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Currencies.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} else {
+	if ( ! exists $$data{'short'} ) {
+		$dbh->do('ALTER TABLE Currencies ADD short TEXT');
+	} # end if
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1', {} );
@@ -1747,6 +1777,21 @@ if ( ! $data ) {
 		$dbh->do('ALTER TABLE Invoiced_Products add description text');
 	} # end if
 }
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Configuration LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Configuration.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM usergroups LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/user_groups.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} 
 $dbh->disconnect();
 1;
 __END__
