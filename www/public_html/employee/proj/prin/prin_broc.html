@@ -1,19 +1,19 @@
 <script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 <script type="text/javascript" src="/includes/employee/feedback/paper.js"></script>
 <div class="Service">
-	<form method="post" name="f1" action="/employee/production/project_view.html">
+	<form method="post" name="f1" action="/employee/project/view.html">
 		<fieldset><legend>
 			Production Feedback
-			<? if ( $$variable{'DocketNumber'} ) ?>
-			for docket #:&nbsp;<?DocketNumber?>
-			<? endif ( $$variable{'DocketNumber'} ) ?>
+			<? if ( $$variable{'DocketNumber'} ) ?>for docket #:&nbsp;<?DocketNumber?><? endif ( $$variable{'DocketNumber'} ) ?>
 		</legend>
 		<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
 			<div class="Signature">
-				<? if ( $$variable{'Reference'} ) ?>
-					<p>Information for: <?Reference?></p>
-				<? endif ( $$variable{'Reference'} ) ?>
+				<? if ( $$variable{'Reference'} ) ?><p>Information for: <?Reference?></p><? endif ( $$variable{'Reference'} ) ?>
+				<!--#include virtual="_previews.html"-->
 				<!--#include virtual="/includes/employee/feedback/press_completion.html"-->
+			<div id="ActivitiesDiv">
+			<!--#include virtual="/includes/employee/feedback/press_activities.html"-->
+			</div>
 			</div>
 		<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
 		<!--#include virtual="/includes/employee/feedback/buttons.html"-->

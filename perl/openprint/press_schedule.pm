@@ -231,7 +231,8 @@ sub get_li {
 
 		$html .= '<span class="Buttons">';
 		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Approve'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Bump'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='BumpJob';f1.submit();}", '', 'B' );
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Bump'.$$row{'serviceindex'}, '', "popup_window('_bump_job.html','project_id=$$row{projectindex}&service_id=$$row{serviceindex}&equipment_id=$$row{equipment_id}');", '', 'B' );
+		#$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Bump'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='BumpJob';f1.submit();}", '', 'B' );
 		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Complete'.$$row{'serviceindex'}, '', "ajax_window('_signature_completion_popup.html?project_id='+$$row{'projectindex'}+'&amp;service_id='+$$row{serviceindex} );", '', 'C' );
 		#$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Complete'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='CompleteJob';f1.submit();}", '', 'C' );
 		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Remove'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$row{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
@@ -240,7 +241,7 @@ sub get_li {
 		$html .= '</span>';
 		$html .= sprintf( q{<span id="%1$dRuntime" class="Runtime" onclick="openPopup( 'Runtime', %1$d );">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
 	} else {
-		$html .= sprintf( '<div class="Comment">%s</div>', ssi::htmlize($specs{'txtEmployeeComments'}) );
+		$html .= sprintf( '<div class="Comment"><a href="/employee/proj/prin/prin_multi.html?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">%3$s</a></div>', @$row{'projectindex','serviceindex'}, ssi::htmlize($specs{'txtEmployeeComments'}) );
 		$html .= sprintf( '<span class="Forms">%d %s</span>', $specs{'SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
 		$html .= sprintf( '<span class="Impressions">%d imps</span>', $specs{'ImpressionQuantity'} );
 		$html .= '<span class="Buttons">';
@@ -267,15 +268,6 @@ sub get_ul {
 			'equipment_id'		=> $equipment_id,
 			'order'				=> 'starttime,serviceindex',
 			);
-
-# This is just for caching purposes
-	if ( @schedule ) {
-		my @projects = map { $$_{'projectindex'} } @schedule;
-		if ( @projects ) {
-			my @companies = map { $_->company_id() } openprint::Project::find( 'id'=>\@projects );
-			openprint::Company::find( 'id'=>\@companies );
-		} # end if
-	} # end if
 
 	my $html;
 

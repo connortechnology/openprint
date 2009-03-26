@@ -24,7 +24,7 @@
 			$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
 			$html .= sprintf('<input type="radio" id="StockType%1$dSheet" name="StockType%1$d" value="Sheet" %2$s onclick="calc(this.form.name);" />', $qty_index, ssi::checked( $$variable{'StockType'.$qty_index} eq 'Sheet' ) );
 			$html .= sprintf(' <label class="radio" for="StockType%1$dSheet">Sheet</label> ',$qty_index );
-			$html .= sprintf('<input type="radio" id="StockType%1$dRoll" name="StockType%1$d" value="Roll" %2$s onclick="calc(this.form.name);" />', $qty_index,	ssi::checked( $$variable{'StockType'.$qty_index} eq 'Roll' ) );
+			$html .= sprintf('<input type="radio" id="StockType%1$dRoll" name="StockType%1$d" value="Roll" %2$s onclick="calc(this.form.name);" />', $qty_index, ssi::checked( $$variable{'StockType'.$qty_index} eq 'Roll' ) );
 			$html .= sprintf(' <label class="radio" for="StockType%1$dRoll">Roll</label> ', $qty_index );
 			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 				$html .= sprintf('<input type="checkbox" id="OverrideStockType%1$d" name="OverrideStockType%1$d" value="Y" onclick="if(!this.checked){calc(this.form.name);};" %2$s /> <label class="radio" for="OverrideStockType%1$d">Override</label>', $qty_index, ssi::checked( $$variable{'OverrideStockType'.$qty_index} eq 'Y' ) );
@@ -143,7 +143,7 @@
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-<input type="hidden" name="ddmRunStyle<?QTYIndex?>" />
+<input type="hidden" id="ddmRunStyle<?QTYIndex?>" name="ddmRunStyle<?QTYIndex?>" value="<? echo ( $$variable{'ddmRunStyle'.$$variable{'QTYIndex'}} ) ?>"/>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -170,7 +170,13 @@
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
 
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
-<input type="hidden" name="ddmPress<?QTYIndex?>" />
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<input type="hidden" id="ddmPress<?QTYIndex?>" name="ddmPress<?QTYIndex?>" value="<? echo ( $$variable{'ddmPress'.$$variable{'QTYIndex'}} ) ?>" />
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
 <p>
 	<label>Press:</label>
@@ -215,6 +221,16 @@
 
 
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+
+            <input type="hidden" name="rdbPlateType<?QTYIndex?>" value="<? echo ( $$variable{'rdbPlates'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" name="PlateID<?QTYIndex" value="<? echo ( $$variable{'PlateID'.$$variable{'QTYIndex'}} ) ?>" />
+<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
 <div id="Plates" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 <? if ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>

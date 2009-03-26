@@ -44,7 +44,7 @@ sub select_company {
 			my @currencies = openprint::Currency::find('short'=>'USD');
 			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 		} elsif ( $Company->country() eq 'CA' ) {
-			my @currencies = openprint::Currency::find('short'=>'CDN');
+			my @currencies = openprint::Currency::find('short'=>'CAD');
 			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 		} # end if
 		foreach my $k ( keys %openprint::session ) {
@@ -66,11 +66,11 @@ sub registration {
 	} # end if
 
 	# Need to strip out characters that don't work well in filesystems - this is for FTP/Fileserver integration
-	$param{'business_name'} = $param{'name'} if ! $param{'business_name'};
+	$param{'business_name'} = $param{'company_name'} if ! $param{'business_name'};
 
 	# perform input field validation
 	my $error = '';
-	$error .= 'Missing company name.<br/>' if ! $param{'name'};
+	$error .= 'Missing company name.<br/>' if ! $param{'company_name'};
 	$error .= 'Missing contact first name.<br/>' if ! $param{'firstname'};
 	$error .= 'Missing contact last name.<br/>' if ! $param{'lastname'};
 	$error .= 'Missing Salutation.<br/>' if ! $param{'salutation'};
@@ -83,8 +83,8 @@ sub registration {
 	$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
 	$error .= 'Missing Phone Number.<br/>' if ! $param{'phone'};
 	if ( exists $param{'howdidyouhearaboutus'} ) {
-	$error .= 'Please tell us how you heard about us.<br/>' if ! $param{'howdidyouhearaboutus'};
-	$error .= 'Please tell us how you heard about us.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $param{'howdidyouhearaboutusother'} );
+		$error .= 'Please tell us how you heard about us.<br/>' if ! $param{'howdidyouhearaboutus'};
+		$error .= 'Please tell us how you heard about us.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $param{'howdidyouhearaboutusother'} );
 	} # end if
 	$error .= 'Missing E-mail Address.<br/>' if ! $param{'email'};
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
@@ -127,8 +127,9 @@ sub registration {
 	$param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
 
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
-	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Companies WHERE lower(name) = lower(?) AND upper(strPostalCode) = ? AND (deleted=false OR deleted IS NULL)}, @param{'name','postalcode'} );
+	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Companies WHERE lower(name) = lower(?) AND upper(strPostalCode) = ? AND (deleted=false OR deleted IS NULL)}, @param{'company_name','postalcode'} );
 	if ( ! $cust_id ) {
+		$param{'name'} = $param{'company_name'};
 
 		my $Company = new openprint::Company();
 		$Company->set( \%param );
@@ -344,7 +345,7 @@ sub user_profile {
 
 		# IF it's empty, then we are adding a new user! Otherwise editing one
 		if ( exists $param{'ddmUser'} ) {
-		$User = new openprint::User( $param{'ddmUser'} );
+			$User = new openprint::User( $param{'ddmUser'} );
 		} elsif ( $session{'company_id'} != $Me->company_id() ) {
 			my @Users = openprint::User::find('company_id'=>$session{'company_id'} );
 			if ( @Users == 1 ) {

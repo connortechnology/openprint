@@ -39,6 +39,10 @@ my %find_cache;
 	'location_id'	=>	undef,
 );
 
+%defaults = (
+	'location_id'		=>	undef,
+);
+
 sub init_cache {
 	%find_cache = ();
 } # end sub init_cache
@@ -342,7 +346,7 @@ if ( ! defined $range ) {
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
 	#$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
-		return $Spec if ( 1*($$Spec{min}) == $range ) or (1*($$Spec{max}) == $range );
+		return $Spec if ( (1*$$Spec{min}) == $range ) or ((1*$$Spec{max}) == $range );
 
 		return $Spec if ( 
 			(! $$Spec{interpolate})
@@ -365,20 +369,20 @@ if ( ! defined $range ) {
 $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
 		return;	
 	}
-	
+
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
-		return $Spec if ( $$Spec{max} == $range ) or ( !(1*$$Spec{max}) and ! (1*$$Spec{interpolate}) );
+		return $Spec if ( (1*$$Spec{min}) <= $range ) and ( ( (1*$$Spec{max}) >= $range ) or ! (1*$$Spec{max}) );
 
+	#$openprint::log->debug("Examining: ($range) (" . $Spec->min() . 	') (' . 1*$Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
 		# first step, find one less than the min
-		last if $$Spec{max} > $range;
+		last if ( ( (1*$$Spec{max}) > $range) or ( ! (1*$$Spec{max}) ) );
 	} # end foreach
 	if ( $i and $i < @{$$self{'Specifications'}{$name}} ) {
-		# back up
 		$y = $$self{'Specifications'}{$name}[$i];
 #$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
-#$openprint::log->debug("Couldn't find maximum") if $debug;
+$openprint::log->debug("Couldn't find maximum") if $debug;
 		return;
 	} # end if
 
@@ -388,9 +392,10 @@ $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'
 		my $S = $x->copy();
 		$$S{min} = $$S{max} = $range;
 		$$S{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
+#$openprint::log->debug("Returning " . $$S{value}) if $debug;
 		return $S;
 	} # end if
-#$openprint::log->debug("Returning " . $value) if $debug;
+#$openprint::log->debug("Returning nothing") if $debug;
 	return;
 } # end sub specification
 

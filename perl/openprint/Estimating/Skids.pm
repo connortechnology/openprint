@@ -127,6 +127,8 @@ sub calc {
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
         if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
+			$log->error("EMpty txtQuantity for QTY $qty_index");
+			$$specs{'alert'} .= "Please enter the # of items to pack for quantity $qty_index.<br/>";
             next;
         } # end if
 		$$specs{'hdnBreakdown'.$qty_index} = '';
@@ -278,6 +280,9 @@ sub summary {
 	} else {
 	} # end if
 } # end sub summary
+
+sub save {
+}
 
 1;
 __END__

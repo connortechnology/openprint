@@ -178,8 +178,14 @@ sub signature_calc {
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-#$openprint::log->debug("Override Stitcher to " . $$specs{"ddmEquipment$qty_index"} );
-		@equipment = openprint::Equipment::find( 'id' => $$specs{"ddmEquipment$qty_index"} );
+		if ( ! $$specs{"ddmEquipment$qty_index"} ) {
+			$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
+		} else {
+			@equipment = openprint::Equipment::find( 'id'=> $$specs{"ddmEquipment$qty_index"} );
+			if ( ! @equipment ) {
+				$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
+			} # end if
+		} # end if
 	} else {
 		@equipment = @possible_equipment;
 	} # end if
@@ -249,13 +255,11 @@ sub calc {
 	my $services = $Project->services();
 	if ( ! $$services{''} ) {
 		$$specs{'alert'} .= 'Unable to find project service.<br/>';
-		$$specs{'Status'} = 'uncalculated';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	if ( ! $Project->signatures() ) {
 		$$specs{'alert'} .= 'Unable to find any signatures to stitch.<br/>';
-		$$specs{'Status'} = 'uncalculated';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	# Figure out whether we need a cover
@@ -436,8 +440,15 @@ sub calc {
 
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-			@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
             $variables{"ddmEquipment$qty_index"} = [ sets::exclude( ['output'], $variables{"ddmEquipment$qty_index"} ) ];
+			if ( ! $$specs{"ddmEquipment$qty_index"} ) {
+				$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
+			} else {
+				@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
+				if ( ! @equipment ) {
+					$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
+				} # end if
+			} # end if
 		} else {
 			$variables{"ddmEquipment$qty_index"} = [ sets::union( 'output', @{$variables{"ddmEquipment$qty_index"}} ) ];
 			@equipment = @possible_equipment;

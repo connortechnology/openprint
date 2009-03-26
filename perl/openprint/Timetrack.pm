@@ -16,10 +16,12 @@ require openprint::Service;
 my $debug = 1;
 
 use strict;
-use vars qw( %fields %defaults %transforms );
+use vars qw( $table $serial %fields %defaults %transforms );
 
 require sql;
 
+$table = 'timetracks';
+$serial = 'timetracks_id_seq';
 %fields = (
 	'id'				=> 'id',
 	'starting'			=>	'starting',
@@ -53,6 +55,7 @@ require sql;
 	'invoice_id'	=>	undef,
 	'service_id'	=>	undef,
 	'project_id'	=>	undef,
+	'user_id'		=>	undef,
 );
 
 sub find {
@@ -180,63 +183,6 @@ sub find {
 	return map { new openprint::Timetrack( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Timetracks WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
-sub delete {
-	my $self = shift;
-	return sql::update( undef, undef, 'Timetracks', ['id=?', $$self{'id'} ], 'deleted', 1 );
-} # end sub delete
-
-sub destroy {
-	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM Timetracks WHERE id=?}, $$self{'id'} );
-} # end sub destroy
-
-sub save {
-	my ( $self, $param ) = @_;
-	
-	$self->set( $param ) if $param;
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$k} = $$self{$k};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('timetracks_id_seq')});
-		$sql{'id'} = $$self{id};
-		if ( my $error = sql::insert( undef, undef, 'Timetracks', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} else {
-		if ( my $error = sql::update( undef, undef, 'Timetracks', ['id=?', $$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-	return '';
-} # end sub save
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Timetrack();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
-
 sub Currency {
 	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
@@ -252,7 +198,13 @@ sub Service {
 sub elapsed {
 	my ( $self ) = @_;
 
-	return Date::Parse::str2time( $$self{'ending'} ) - Date::Parse::str2time( $$self{'starting'} );
+	if ( $$self{'time_associated'} ) {
+		return Date::Parse::str2time( $$self{'ending'} ) - Date::Parse::str2time( $$self{'starting'} );
+	} else {
+		my ($start) = $$self{'starting'} =~ /(\d\d\d\d-\d\d-\d\d)/;
+		my ($end) = $$self{'ending'} =~ /(\d\d\d\d-\d\d-\d\d)/;
+		return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
+	} # end if
 } # end sub elapsed
 
 sub Price {

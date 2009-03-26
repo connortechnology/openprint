@@ -16,11 +16,14 @@ require openprint::Project;
 require openprint::service;
 require openprint::Material;
 require openprint::MaterialCategory;
+require openprint::PaperInventory;
 
 use openprint ();
-use vars qw( $log $dbh );
+use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
+
 $openprint::Object::no_cache = 1;
 
 $log = new logger( 'debug' );
@@ -28,7 +31,8 @@ $log = new logger( 'debug' );
 $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[0] if ! $ARGV[2];
 
-$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
+$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
+configuration::init_cache( $log, $dbh );
 
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
@@ -40,34 +44,58 @@ if ( ! $data ) {
 	}
 } 
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM QuoteLevels LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
 if ( $data ) {
-	my $ac = sql::start_transaction( $dbh );
 	if ( ! exists $$data{'style_id'} ) {
+	my $ac = sql::start_transaction( $dbh );
 		$dbh->do('ALTER TABLE tbl_Projects ADD style_id INTEGER');
 		$dbh->do('ALTER TABLE tbl_Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
+	sql::end_transaction( $dbh, $ac );
 	} # end if
 	if ( ! exists $$data{'rush'} ) {
 		print "Adding rush to projects";
 		$dbh->do(q`alter table tbl_Projects add rush boolean default false`);
 	} # end if
 	if ( ! exists $$data{'predefined'} ) {
+		my $ac = sql::start_transaction( $dbh );
 		print "Adding predefined to tbl_Projects\n";
 		$dbh->do(q`alter table tbl_Projects add predefined boolean`);
 		$dbh->do(q`alter table tbl_Projects alter predefined set default false`);
 		$dbh->do(q`update tbl_Projects set predefined=false`);
 		$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
+		sql::end_transaction( $dbh, $ac );
 	} # end if
-	if ( ! exists $$data{'summary'} ) {
-		$dbh->do(q`alter table tbl_Projects add summary text`);
-if ( 0 ) {
-		foreach my $P ( openprint::Project::find('created_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ) ) ) {
-			my $summary = $P->summary();
-			sql::update( undef, undef, 'tbl_Projects', ['index=?', $P->id()], 'summary', $summary );
-		} # end foreach
-}
+    $dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Projects LIMIT 1', {} );
+if ( $data ) {
+	if ( exists $$data{'index'} ) {
+		$dbh->do('ALTER TABLE Projects rename column index to id');
+		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');
+		$dbh->do('ALTER TABLE Projects rename column userindex to user_id');
+	} # end if
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! exists $$data{'style_id'} ) {
+		$dbh->do('ALTER TABLE Projects ADD style_id INTEGER');
+		$dbh->do('ALTER TABLE Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
 	} # end if
 	sql::end_transaction( $dbh, $ac );
+	if ( ! exists $$data{'rush'} ) {
+		my $ac = sql::start_transaction( $dbh );
+		print "Adding rush to projects";
+		$dbh->do(q`alter table Projects add rush boolean default false`);
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+	if ( ! exists $$data{'summary'} ) {
+		$dbh->do(q`alter table Projects add summary text`) or $log->error($dbh->errstr());
+	} # end if
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
@@ -108,6 +136,12 @@ if ( $data ) {
 	$dbh->do(q`alter table users add email_quotes_to_myself boolean default false`) if ! exists $$data{'email_quotes_to_myself'};
 	$dbh->do('ALTER TABLE USERS RENAME COLUMN ysnaccountactivation TO web_active') if $$data{'ysnaccountactivation'};
 	$dbh->do('ALTER TABLE USERS RENAME COLUMN companyindex TO company_id') if $$data{'companyindex'};
+	if ( ! exists $$data{'purchasing_limit'} ) {
+		$dbh->do(q`alter table Users add purchasing_limit	float`);
+	} # end if
+	if ( ! exists $$data{'purchasing_total_limit'} ) {
+		$dbh->do(q`alter table Users add purchasing_total_limit	float`);
+	} # end if
 } # end if
 
 my $new_version = 1273;
@@ -139,16 +173,16 @@ if ( ! $data ) {
 
 print "Updating Companies\n";
 my $data1 = $openprint::dbh->selectrow_hashref( 'SELECT * FROM companies LIMIT 1', {} );
-my $data2 = $openprint::dbh->selectrow_hashref( 'SELECT * FROM company LIMIT 1', {} );
 my $ac = sql::start_transaction( $dbh );
 if ( ! $data1 ) {
+	my $data2 = $openprint::dbh->selectrow_hashref( 'SELECT * FROM company LIMIT 1', {} );
 	if ( ! $data2 ) {
 		$_ = misc::load_file( $log, q{../openprint/sql/Companies.sql});
 		foreach my $st ( split(';', $_ ) ) {
 			$dbh->do($st);
 		}
 	} else {
-	print "Renaming company to companies\n";
+		print "Renaming company to companies\n";
 		$dbh->do('ALTER TABLE Company RENAME TO Companies');
 		$dbh->do('ALTER TABLE Companies RENAME COLUMN strName TO name');
 		$dbh->do('ALTER TABLE Companies RENAME COLUMN strAddress1 TO address1');
@@ -199,6 +233,23 @@ if ( $data1 ) {
 if ( ! exists $$data1{'deleted'} ) {
 		$dbh->do(q`ALTER TABLE companies add deleted BOOLEAN default false`);
 } # end if
+} # end if
+my $data = $dbh->selectrow_hashref( 'SELECT * FROM companies LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'notes'} ) {
+		$dbh->do('alter table companies add notes text');
+	} # end if
+	if ( ! exists $$data{'deleted'} ) {
+		$log->debug( 'Adding deleted to Companies.' );
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do(q`alter table companies add deleted boolean`);
+		$dbh->do(q`alter table companies alter deleted set default false`);
+		$dbh->do(q`update companies set deleted=false`);
+		$dbh->do(q`alter table companies alter deleted set not null`);
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+} else {
+	$log->debug( 'No Companies found.' );
 } # end if
 
 if ( $version < 1275 ) {
@@ -455,26 +506,31 @@ if ( ! $data ) {
 	}
 } # end if
 
-if ( $version < 1895 ) {
-	print "Updating to version 1895\n";
-	my $ac = sql::start_transaction( $dbh );
 sql::insert(undef,undef,'configuration', [
     'name'=>'UseCaptchaOnRegistration',
     'value'=>'N',
     'type'=>'yes/no',
     'description'=>'Use a CAPTCHA on the registration to protect against automated bots.',
-    'category'=> 'Captcha Settings'] );
+    'category'=> 'Captcha Settings'] ) if ! $config{'UseCaptchaOnRegistration'};
 sql::insert(undef,undef,'configuration', [
     'name'=>'RegistrationCaptchaLength',
     'value'=>'3',
     'type'=>'text',
     'description'=>'Number of characters in the CAPTCHA on the registration page.',
-    'category'=> 'Captcha Settings'] );
-$dbh->do(q{alter table users add howdidyouhearaboutusother text});
-	sql::insert( undef, undef, 'database_info', 'version', 1895, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1895;
-} # end if
+    'category'=> 'Captcha Settings'] ) if ! $config{'RegistrationCaptchaLength'};
+sql::insert(undef,undef,'configuration', [
+    'name'=>'UnitPriceFormat',
+    'value'=>'%.2f',
+    'type'=>'text',
+    'description'=>'Format String for unit prices.',
+    'category'=> 'Miscellaneous Settings'] ) if ! $config{'UnitPriceFormat'};
+sql::insert(undef,undef,'configuration', [
+    'name'=>'DefaultPricelist',
+    'value'=>undef,
+    'type'=>'pricelist',
+    'description'=>'Default Pricelist.',
+    'category'=> 'Miscellaneous Settings'] ) if ! $config{'DefaultPricelist'};
+
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
@@ -607,6 +663,7 @@ if ( $version < 1901 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1901;
 } # end if
+
 if ( $version < 1902 ) {
 	print "Updating to version 1902\n";
 	my $ac = sql::start_transaction( $dbh );
@@ -803,15 +860,19 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 	} # end foreach Spec
 	if ( ! openprint::ServicePrice::find('service_id'=>$FoldingService->id(), 'equipment_id'=>$E->id() ) ) {
 		foreach my $Pricelist ( openprint::Pricelist::find() ) {
-		my $ServicePrice = new openprint::ServicePrice();
-		$ServicePrice->save({
-			'service_id'=>$FoldingService->id(),
-			'pricelist_id'=>$Pricelist->id(),
-			'equipment_id'	=>	$E->id(),
-			'units'			=>	'Per M',
-			'cost'			=>	0,
-			'price'			=>	0,
-			});
+if ( ! $Pricelist->id() ) {
+print "ERror pricelits: " . $Pricelist->name() . "\n";
+} else {
+			my $ServicePrice = new openprint::ServicePrice();
+			$ServicePrice->save({
+				'service_id'	=>	$FoldingService->id(),
+				'pricelist_id'	=>	$Pricelist->id(),
+				'equipment_id'	=>	$E->id(),
+				'units'			=>	'Per M',
+				'cost'			=>	0,
+				'price'			=>	0,
+				});
+}
 		} # end foreach Pricelist
 	} # end if
 } # end foreach Web Press
@@ -835,17 +896,21 @@ if ( $version < 1907 ) {
 	print "Updating to version 1907\n";
 	my $ac = sql::start_transaction( $dbh );
 foreach my $E ( openprint::Equipment::find('Specifications'=>{'Type'=>'Press'}) ) {
+	print "Looking for Feed on " . $E->strid();
 	my $Spec = $E->Specification('Feed');
 	if ( ! $Spec ) {
+		print "No Feed found, adding it.\n";
 		$Spec = new openprint::EquipmentSpecification();
 		$Spec->equipment_id( $E->id() );
 		$Spec->name( 'Feed' );
 		$Spec->value('Sheet');
-		$Spec->save();
+		print $Spec->save();
 	} elsif ( $Spec->value() eq 'Web' ) {
+		print "Web found, converting to Roll.\n";
 		$Spec->value('Roll');
-		$Spec->save();
+		print $Spec->save();
 	} # end if
+	print "no change.\n";
 } # end foreach
 	sql::insert( undef, undef, 'database_info', 'version', 1907, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
@@ -919,15 +984,15 @@ if ( ! $data ) {
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do('DROP TABLE IF EXISTS skid_verifications');
 	$dbh->do('
-CREATE TABLE skid_verifications (
-    id SERIAL NOT NULL,
-    skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
-    code    TEXT,
-    created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
-    PRIMARY KEY (id)
-);' );
-$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
-$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
+			CREATE TABLE skid_verifications (
+				id SERIAL NOT NULL,
+				skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
+				code    TEXT,
+				created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+				PRIMARY KEY (id)
+				);' );
+	$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
+	$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
@@ -980,9 +1045,9 @@ foreach my $E ( openprint::Equipment::find() ) {
 	} # end foreach
 } # end foreach
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manifests LIMIT 1', {} );
 if ( ! $data ) {
-		$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql});
+		$_ = misc::load_file( $log, q{../openprint/sql/Manifests.sql});
 		foreach my $st ( split(';', $_ ) ) {
 			$dbh->do($st);
 		}
@@ -998,9 +1063,16 @@ if ( ! $data ) {
 	if ( ! exists $$data{'docket'} ) {
 		$dbh->do('ALTER TABLE Manifests add docket INTEGER');
 	} # end if
+	if ( ! exists $$data{'delivered_on_switch'} ) {
+		$dbh->do('ALTER TABLE Manifests add delivered_on_switch TEXT');
+	} # end if
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
 if ( ! $data ) {
+		$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql});
+		foreach my $st ( split(';', $_ ) ) {
+			$dbh->do($st);
+		}
 } else {
 	if ( ! exists $$data{'federaltax_charge'} ) {
 		$dbh->do('ALTER TABLE purchaseorders add federaltax_charge BOOLEAN');
@@ -1020,27 +1092,23 @@ if ( ! $data ) {
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );
 if ( ! $data ) {
 	$dbh->do('
-CREATE TABLE PurchaseOrder_COntents (
-    id SERIAL NOT NULL,
-    po_id   INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
-    qty     float,
-    price   float,
-    total   float,
-    item    text,
-    docket  text,
-    description text,
-    PRIMARY KEY (id)
-);');
+			CREATE TABLE PurchaseOrder_COntents (
+				id SERIAL NOT NULL,
+				po_id   INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
+				qty     float,
+				price   float,
+				total   float,
+				item    text,
+				docket  text,
+				description text,
+				PRIMARY KEY (id)
+				);');
 } # en dif
 
 if ( $version < 1919 ) {
 	print "Updating to version 1919\n";
 	my $ac = sql::start_transaction( $dbh );
 
-	$_ = misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	}
 #sql::insert( undef, undef, 'QuoteLevels', 'name', 'Simple' );
 #sql::insert( undef, undef, 'QuoteLevels', 'name', 'Advanced' );
 	$dbh->do(q`alter table Users add quote_level integer`);
@@ -1170,9 +1238,6 @@ if ( $version < $new_version ) {
     $version = $new_version;
 } # end if
 
-my $new_version = 1925;
-if ( $version < $new_version ) {
-    print "Updating to version $new_version\n";
     my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM User_Service_Defaults LIMIT 1', {} );
     if ( ! $data ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -1182,9 +1247,6 @@ if ( $version < $new_version ) {
 		}
 		sql::end_transaction( $dbh, $ac );
     } # end if
-    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
-    $version = $new_version;
-} # end if
 my $new_version = 1926;
 if ( $version < $new_version ) {
     print "Updating to version $new_version\n";
@@ -1253,20 +1315,6 @@ if ( ! $data ) {
 	}
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Projects LIMIT 1', {} );
-if ( $data ) {
-	if ( exists $$data{'index'} ) {
-		$dbh->do('ALTER TABLE Projects rename column index to id');
-		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');
-		$dbh->do('ALTER TABLE Projects rename column userindex to user_id');
-	} # end if
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! exists $$data{'style_id'} ) {
-		$dbh->do('ALTER TABLE Projects ADD style_id INTEGER');
-		$dbh->do('ALTER TABLE Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
-	} # end if
-	sql::end_transaction( $dbh, $ac );
-} # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM sessions LIMIT 1', {} );
 if ( ! $data ) {
@@ -1304,16 +1352,6 @@ if ( ! $data ) {
 	} # end if
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
-if ( $data ) {
-    $dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
-}
-if ( ! exists $$data{'rush'} ) {
-    my $ac = sql::start_transaction( $dbh );
-    print "Adding rush to projects";
-    $dbh->do(q`alter table Projects add rush boolean default false`);
-    sql::end_transaction( $dbh, $ac );
-} # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Quote_Details LIMIT 1', {} );
 if ( $data ) {
@@ -1364,7 +1402,7 @@ if ( ! openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
     print "Adding PlainCartons Category\n";
 } # end if
 
-foreach my $M ( openprint::Material::find('name'=>'Plain Carton') ) {
+foreach my $M ( openprint::Material::find('name_like'=>'Plain Carton%') ) {
 	if ( ! $M->specification('Maximum Weight') ) {
 		my $S = new openprint::MaterialSpecification();
 		$S->save({
@@ -1568,6 +1606,12 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1
 my $ac = sql::start_transaction( $dbh );
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if $$data{'currencyindex'};
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
+$dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER');
+$dbh->do('ALTER TABLE Pricelists ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
+$dbh->do('DROP SEQUENCE IF EXISTS price_lists_id_seq');
+$dbh->do('CREATE SEQUENCE pricelists_id_seq');
+$dbh->do(q`SELECT setval('pricelists_id_seq', (SELECT MAX(id) FROM Pricelists))`);
+$dbh->do(q`ALTER TABLE pricelists alter id set default nextval('pricelists_id_seq')`);
 sql::end_transaction( $dbh, $ac );
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ordered_products LIMIT 1', {} );
@@ -1592,6 +1636,14 @@ print "Adding predefined to Projects\n";
 	$dbh->do(q`alter table Projects alter predefined set not null`);
 	sql::end_transaction( $dbh, $ac );
 } # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM RFIDScanners LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'monitor'} ) {
+		$dbh->do('ALTER TABLE RFIDScanners ADD monitor boolean not null default false');
+	} # end if
+} # end if
+
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
 if ( $data ) {
 	if ( ! exists $$data{'deleted'} ) {
@@ -1619,10 +1671,17 @@ if ( $data ) {
 		$dbh->do(q`alter table Users rename column chrtype to usertype`);
 		sql::end_transaction( $dbh, $ac );
 	}
+	$dbh->do(q{alter table users add howdidyouhearaboutusother text}) if ! exists $$data{'howdidyouhearaboutusother'};
 } # end if
 
 sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment,Paper', 'type','text');
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'sort'} ) {
+		$dbh->do('ALTER TABLE projecttype_categories ADD sort integer');
+	} # end if
+} # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
 if ( $data ) {
 	if ( ! exists $$data{'location_id'} ) {
@@ -1690,7 +1749,7 @@ if ( $data ) {
 		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
 	} # end if
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifestcontents LIMIT 1', {} );
+my $data = $dbh->selectrow_hashref( 'SELECT * FROM manifestcontents LIMIT 1', {} );
 if ( $data ) {
 	if ( ! exists $$data{'docket'} ) {
 		$dbh->do('alter table manifestcontents add docket integer');
@@ -1736,12 +1795,6 @@ if ( ! $data ) {
 	}
 } 
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM company LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{'notes'} ) {
-		$dbh->do('alter table company add notes text');
-	} # end if
-} # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM users LIMIT 1', {} );
 if ( $data ) {
@@ -1754,6 +1807,17 @@ if ( $data ) {
 	if ( ! exists $$data{'type'} ) {
 		$dbh->do('alter table skids add type text');
 		$dbh->do('alter table skids add deleted boolean not null default false');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Paper_Inventory LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Paper_Inventory.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} else {
+	if ( ! exists $$data{'docket'} ) {
+		$dbh->do('alter table paper_inventory add docket integer');
 	} # end if
 } # end if
 foreach my $PI ( openprint::PaperInventory::find('docket'=>undef) ) {
@@ -1792,6 +1856,145 @@ if ( ! $data ) {
 		$dbh->do($st);
 	}
 } 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifest_content_types LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Manifest_Content_Types.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+	require openprint::Manifest;
+	$dbh->do('alter table manifestcontents add type_id integer');
+	foreach my $Manifest ( openprint::Manifest::find() ) {
+		my @Contents = $Manifest->Contents();
+
+		if ( @Contents ) {
+			my $T = new openprint::Manifest_Content_Type();
+			$_ = $T->save({
+				'manifest_id'	=>	$Manifest->id(),
+				'docket'		=>	$Contents[0]->docket(),
+				'po_id'			=>	$Manifest->po_id(),
+			});
+			die $_ if $_;
+			foreach my $C ( @Contents ) {
+				$C->save({'type_id'=>$T->id()});
+			} # end foreach
+		} # end if
+	} # end foreach Manifest
+	$dbh->do('alter table manifestcontents alter type_id set not null');
+	$dbh->do('alter table manifestcontents add foreign key (type_id) references manifest_content_types (id)');
+} else {
+	if ( ! exists $$data{'supplier_invoice'} ) {
+		$dbh->do('alter table manifest_content_types add supplier_invoice text');
+	} # end if
+} 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Ordered_Products LIMIT 1', {} );
+if ( ! $data ) {
+} else {
+	if ( ! exists $$data{'project_id'} ) {
+		$dbh->do('ALTER TABLE Ordered_Products add project_id integer');
+		$dbh->do('ALTER TABLE Ordered_Products add foreign key (project_id) references projects (id)');
+	} # end if
+}
+
+foreach my $Currency ( openprint::Currency::find('short'=>'CDN') ) {
+$Currency->save({'short'=>'CAD'});
+}# end foreach Currency
+
+	if ( ! $config{'TechSupportEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'TechSupportEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send technical support requests to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'AdministratorEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'AdministratorEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address of the person in charge of the website.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'AccountingEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'AccountingEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address of the person in charge of accounting.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'QuotingEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'QuotingEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send quotes to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'UserRegistrationEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'UserRegistrationEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send new user registrations to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'CreditApplicationEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'CreditApplicationEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send new credit applications to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'ResellerApplicationEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'ResellerApplicationEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send new reseller applications to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'HelpdeskEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'HelpdeskEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send helpdesk requests to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'RMAEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'RMAEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send RMA requests to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+	if ( ! $config{'InventoryEmail'} ) {
+		sql::insert(undef,undef,'configuration', [
+				'name'=>'InventoryEmail',
+				'value'=>'"Isaac Connor" <iconnor@connortechnology.com>',
+				'type'=>'text',
+				'description'=>'Email address to send Inventory notifications to.',
+				'category'=> 'Email Notifications'] );
+	} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ProductionFeedback LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/ProductionFeedback.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CIP3_PPF LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/CIP3_PPF.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

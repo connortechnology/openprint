@@ -1,21 +1,19 @@
 <? eval (
-    $$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+	$$variable{'ProjectTypeName'} = $param{'ProjectType'} if $param{'ProjectType'};
 ) ?>
-		<form name="f1" method="post" action="/main/order/information.html">
-			<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
-			<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
-			<input type="hidden" name="Status" value="<?Status?>" />
+<form name="f1" method="post" action="/main/order/information.html">
+	<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
+	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
+	<input type="hidden" name="Status" value="<?Status?>" />
+<? if ( $param{'ProjectType'} ) ?>
+	<div class="InstantPricing">
+		<div id="instant_price_section">
+			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+			<div class="shadow_left">
+				<div class="shadow_right">
 
-<div class="InstantPricing">
-            <div id="instant_price_section">
-               <div class="instant_price_section_top_shadow">
-                  <div class="instant_price_section_shadow_tl"></div>
-                  <div class="instant_price_section_shadow_tr"></div>
-               </div>
-               <div id="instant_price_section_content">
-                  <div id="instant_price_section_inner">
-	<div class="Questions">
-		<h3>Instant Pricing</h3>
+		<div class="Questions">
+			<h3>Instant Pricing</h3>
 			<? eval ( $$variable{'TemplateType'} = $$variable{'TemplateType'} ? $$variable{'TemplateType'} : 'SaddleStitching' ) ?>
 			<? eval ( $$variable{'DimensionsDisplay'} = 'Finished' ) ?>
 			<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
@@ -109,19 +107,32 @@
 			<br class="spacer"/>
 			<!--#include virtual="/includes/prices.html"-->
 			<div class="Prices">
-			   <!--#include virtual="/includes/buttons.html"-->
-			   <br class="spacer"/>
+				<!--#include virtual="/includes/buttons.html"-->
+				<br class="spacer"/>
 			</div>
-	</div><!--Questions-->
-	               <br class="spacer"/>
-                  </div>
-               </div>
-               <div class="instant_price_section_bottom_shadow">
-                  <div class="instant_price_section_shadow_bl"></div>
-                  <div class="instant_price_section_shadow_br"></div>
-               </div>
-            </div>
-
-	<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
-</div><!--InstantPricing-->
+		</div><!--Questions-->
+				<br class="spacer"/>
+				</div>
+			</div>
+			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+		</div>
+		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
+		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+<? else ( $param{'ProjectType'} ) ?>
+Please select the type of your project.
+<? endif ( $param{'ProjectType'} ) ?>
+		<div style="margin-left: 0px; margin-top: 20px;width: 380px;">
+			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+			<div class="shadow_left">
+				<div class="shadow_right">
+				<div style="text-align: center;">
+				<h2 style="margin:0px 0px 10px 0px;">Now open Saturdays for digital printing!</h2>
+				Please call Amin at 416-993-8820 to arrange a 
+				spot on our production schedule.
+				</div>
+				</div>
+			</div>
+			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+		</div>
+	</div><!--InstantPricing-->
 </form>

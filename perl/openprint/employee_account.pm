@@ -21,7 +21,7 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 sub profile {
 
 	$param{'user_id'} = $session{'user_id'} if ! $param{'user_id'};
-	$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
+	$param{'company_id'} = new openprint::User($session{'user_id'})->company_id() if ! $param{'company_id'};
 
 	my $User = new openprint::User( $param{'user_id'} );
 

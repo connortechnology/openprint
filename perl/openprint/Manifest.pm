@@ -14,6 +14,7 @@ require sql;
 require ssi;
 require misc;
 
+require openprint::Manifest_Content_Type;
 require openprint::ManifestContent;
 require openprint::PurchaseOrder;
 require openprint::Company;
@@ -207,17 +208,50 @@ sub delete {
 	return '';
 } # end sub delete
 
+sub Types {
+	my ( $self, %params ) = @_;
+	if ( %params ) {
+		if ( $$self{'id'} ) {
+			$params{'manifest_id'} = $$self{'id'};
+			return openprint::Manifest_Content_Type::find(%params);
+		} # end if
+	} # end if
+	if ( ! $$self{'Types'} ) {
+		if ( $$self{'id'} ) {
+			$params{'manifest_id'} = $$self{'id'};
+			@{$$self{'Types'}} = openprint::Manifest_Content_Type::find(%params);
+		} # end if
+	} # end if
+	return @{$$self{'Types'}} if $$self{'Types'};
+	return;
+} # end sub Types
+
 sub Contents {
 	my ( $self, %params ) = @_;
-	if ( $$self{'id'} ) {
-		return openprint::ManifestContent::find('manifest_id'=>$$self{id}, %params );
+	if ( %params ) {
+		if ( $$self{'id'} ) {
+			return openprint::ManifestContent::find('manifest_id'=>$$self{id}, %params );
+		} # end if
 	} # end if
+	if ( ! $$self{'Contents'} ) {
+		if ( $$self{'id'} ) {
+			@{$$self{'Contents'}} = openprint::ManifestContent::find('manifest_id'=>$$self{id} );
+		} # end if
+	} # end if
+	return @{$$self{'Contents'}} if $$self{'Contents'};
 	return;
 } # end sub Contents
 
 sub Vendor {
 	return new openprint::Company( $_[0]{'supplier_id'} );
 } # end sub Vendor
+
+sub po_ids {
+	return sets::union( map { $_->po_id() } $_[0]->Types() );
+} # end sub po_ids
+sub dockets {
+	return sets::union( map { $_->docket() } $_[0]->Types() );
+} # end sub dockets
 
 1;
 __END__

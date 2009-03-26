@@ -88,7 +88,7 @@ sub edit {
 
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export' ) {
 	    my @header = ( 'Project Type ID', 'Project Type Name', 'URL', 'Sort Order');
-	    my @data = map { $_->name(), $_->description() $_->url(), $_->sorting() } openprint::ProjectType::find('order'=>'sorting');
+	    my @data = map { $_->name(), $_->description(), $_->url(), $_->sorting() } openprint::ProjectType::find('order'=>'sorting');
     	misc::export_csv( $r, $log, $variable, 'projectTypes.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
 		openprint::logs::insertLogRecord('40',);
@@ -156,14 +156,14 @@ sub defaults_edit {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export' ) {
 		my @header = ( 'Project Type ID', 'Field Name', 'Field Value');
 
-		$_ = "SELECT (SELECT name FROM Project_Types WHERE Id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
+		$_ = "SELECT (SELECT name FROM Project_Types WHERE id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
 			"FROM tbl_ProjectType_Defaults\n".
 			"ORDER BY ID, strFieldName";
 		my @data = sql::execute( $log, $dbh, $_ );
 		misc::export_csv( $r, $log, $variable, 'projectTypes.csv', \@header, \@data );
 
 	} # end if
-	$_ = "SELECT (SELECT name FROM Project_Types WHERE Id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
+	$_ = "SELECT (SELECT name FROM Project_Types WHERE id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
 		"FROM tbl_ProjectType_Defaults\n".
 		"ORDER BY ID, strFieldName";
 	@{$$variable{'Defaults'}} = sql::execute( $log, $dbh, $_ );
@@ -273,7 +273,7 @@ sub templates {
 			misc::export_csv( $r, $log, \%variable, "Project Templates - $name.csv", \@header, \@data );
 		} else {
 			my @header = ( 'Project Type', 'Template Type', 'Description', 'Finished Width', 'Finished Height', 'Flat Width','Flat Height' );
-			$_ = q{SELECT (SELECT strID FROM Project_Types WHERE lngIndex=ProjectType_id) AS ProjectType, Type, Description, dblFinishedWidth, dblFinishedHeight, dblFlatWidth, dblFlatHeight FROM ProjectTemplate ORDER BY ProjectType,Type};
+			$_ = q{SELECT (SELECT name FROM Project_Types WHERE id=ProjectType_id) AS ProjectType, Type, Description, dblFinishedWidth, dblFinishedHeight, dblFlatWidth, dblFlatHeight FROM ProjectTemplate ORDER BY ProjectType,Type};
 			my @data = sql::execute( $log, $dbh, $_ );
 			misc::export_csv( $r, $log, \%variable, 'Project Templates - All.csv', \@header, \@data );
 		} # end if

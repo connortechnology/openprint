@@ -57,8 +57,8 @@ sub ProductType {
 		return 'Body';
 	} elsif ( sets::isin( $Project->Type->name(), [ 'Brochures','Flyers' ] ) ) {
 		return 'Brochure';
-	} elsif ( sets::isin( $Project->Type->name(), [ 'Poster' ] ) ) {
-		'Poster';
+	} elsif ( sets::isin( $Project->Type->strid(), [ 'Poster' ] ) ) {
+		return 'Poster';
 	} # end if
 	return 'Body';
 } # end sub ProductType
@@ -359,7 +359,7 @@ $openprint::log->debug("Starting JDF StrippingParams");
 
 	my $MediaPlate = $SPSheetName->appendChild( $doc->createElement('MediaRef') );
 	$MediaPlate->setAttribute('rRef', 'PLM'.$Project->id() );
-	my $Part = $MediaPlate->appendChild( $doc->createElement('Part') );
+	$Part = $MediaPlate->appendChild( $doc->createElement('Part') );
 	$Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
 	$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 
@@ -1002,7 +1002,7 @@ sub JDF_Component {
 	my $GoodPartAmount = $AmountPool->appendChild( $doc->createElement('PartAmount'));
 	$GoodPartAmount->setAttribute('Amount',$$sig_specs{'hdnNetSheetCount'.$Project->ordered_quantity_index()} );
 
-	my $GoodPart = $GoodPartAmount->appendChild( $doc->createElement('Part'));
+	$GoodPart = $GoodPartAmount->appendChild( $doc->createElement('Part'));
 	$GoodPart->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$GoodPart->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	$GoodPart->setAttribute('Condition','Good');
@@ -1013,7 +1013,7 @@ sub JDF_Component {
 		$$sig_specs{'hdnNetSheetCount'.$Project->ordered_quantity_index()}
 	 );
 
-	my $WastePart = $WastePartAmount->appendChild( $doc->createElement('Part'));
+	$WastePart = $WastePartAmount->appendChild( $doc->createElement('Part'));
 	$WastePart->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 	$WastePart->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 	$WastePart->setAttribute('Condition','Waste');
@@ -1277,7 +1277,7 @@ sub JDF_PrintingProcess {
 	my $NodeInfo = JDF_NodeInfo( $doc, $Project, $sig_id, $sig_specs, $version, $project, $ResourcePool, $ResourceLinkPool );
 	my $JMF = $NodeInfo->appendChild( JMF::JMFNode($doc));
 	my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Status', {'ID'=>$sig_id} ) );
-	my $QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Notification', {'ID'=>$sig_id} ) );
+	$QueryStatusChannel = $JMF->appendChild( JMF::QuerySetupPersistentChannel($doc, 'Notification', {'ID'=>$sig_id} ) );
 
 #my $NodeInfo = $ProductResourcePool->appendChild( $doc->createElement('NodeInfo') );
 #my $JMF = $NodeInfo->appendChild( JMF::QuerySetupPersistentChannel( $doc ) );

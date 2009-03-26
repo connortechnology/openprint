@@ -31,8 +31,8 @@ my %fields = (
 	'greeting'			=>	'greeting',
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
-	'type'				=>	'usertype',
-	'changepassword'	=>	'ysnchangepassword',
+	'type'				=>	'type',
+	'change_password'	=>	'ysnchangepassword',
 	'commission'		=>	'dblcommission',
 	'wage'				=>	'wage',
 	'administrator'		=>	'ysnadministrator',
@@ -50,6 +50,9 @@ my %fields = (
 
 my %transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
+	'wage'			=>	[ 's/[^\d\.]//g' ],
+	'purchasing_limit'			=>	[ 's/[^\d\.]//g' ],
+	'purchasing_total_limit'	=>	[ 's/[^\d\.]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
 	'created_on'		=> [ 's/.*//g' ],
 	'updated_on'		=> [ 's/.*//g' ],
@@ -65,6 +68,9 @@ my %defaults = (
 	'administrator'		=>	'N',
 	'commission'		=>	undef,
 	'quote_level'		=> undef,
+	'purchasing_limit'	=>	undef,
+	'purchasing_total_limit'	=>	undef,
+	'wage'				=>	undef,
 );
 
 sub get {
@@ -259,7 +265,7 @@ sub next {
 		push @values, $params{'company_id'};
 	} # end if
 	if ( $params{'type'} ) {
-		$sql .= ' AND usertype=?';
+		$sql .= ' AND type=?';
 		push @values, $params{'type'};
 	} # end if
 
@@ -283,7 +289,7 @@ sub prev {
 		push @values, $params{'company_id'};
 	} # end if
 	if ( $params{'type'} ) {
-		$sql .= ' AND usertype=?';
+		$sql .= ' AND type=?';
 		push @values, $params{'type'};
 	} # end if
 
@@ -340,14 +346,24 @@ sub find {
 			push @values, $param{'id'};
 		} # end if
 	} # end if
+	if ( $param{'name'} ) {
+		my ( $first, $last ) = $param{'name'} =~ /(\S+)\s*(\S*)/;
+		if ( $first and $last ) {
+			$sql .= ' AND strfirstname=? AND strlastname=?';
+			push @values, $first, $last;
+		} elsif ( $first ) {
+			$sql .= ' AND strfirstname=?';
+			push @values, $first;
+		} # end if
+	} # end if
 
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {
 			if ( @{$param{'type'}} ) {
-				$sql .= q{ AND usertype IN ('} . join("','", @{$param{'type'}}) . q{')};
+				$sql .= q{ AND type IN ('} . join("','", @{$param{'type'}}) . q{')};
 			} # end if
 		} else {
-			$sql .= q{ AND usertype = ?};
+			$sql .= q{ AND type = ?};
 			push @values, $param{'type'};
 		} # end if
 	} # end if

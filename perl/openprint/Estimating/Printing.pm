@@ -211,6 +211,10 @@ my %variables = (
 		'txtSpreadSize' => ['save'],
 		'Group' => ['save'], 'GroupPageQuantity' => ['save'],
 		'PaperMessage1'=>['output'], 'PaperMessage2'=>['output'], 'PaperMessage3'=>['output'],
+
+		# These two are for when the customer is supplying the pages. The first just says whether the pages are supplied, the second tells us whether they are supplying sheets or folded signatures.
+		'pages_supplied'=>['save'],
+		'supplied_format'=>['save'],
 		);
 
 sub variables {
@@ -295,6 +299,7 @@ sub setup_project {
 	foreach my $index ( $Project->signatures() ) {
 		next if $index >= $service_index;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+		next if $$sig_specs{'pages_supplied'} eq 'Y';
 		foreach my $colour ( get_colours( $sig_specs, 'SideOne' ), get_colours( $sig_specs, 'SideTwo' ) ) {
 			$mixed_colours{$colour} = 1;
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -588,7 +593,11 @@ $openprint::log->debug("Calc:From:Imposition:Paper " . $Paper->type() . ':' . $P
 		} else {
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+			if ( $$specs{'pages_supplied'} eq 'Y' ) {
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+			} else {
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+			} # end if
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
@@ -601,7 +610,7 @@ $openprint::log->debug("Calc:From:Imposition:Paper " . $Paper->type() . ':' . $P
 			$$specs{'PageQuantity'.$qty_index} = $Imposition->pages();
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $$specs{'PageQuantity'.$qty_index};
 			if ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0 ) {
-				$$specs{'alert'} .= "There are more pages specified than are required.  Please correct this situation.";
+				$$specs{'alert'} .= 'There are more pages specified than are required.  Please correct this situation.';
 			} # end if
 		} # end if
 	} # end foreach qty_index
@@ -686,7 +695,7 @@ my $master_time = gettimeofday();
 		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'PocketSize'} ) ) {
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
-			$$specs{'alert'} .= 'Please select where you would like the pockets.';
+			$$specs{'alert'} .= 'Please select where you would the pockets.';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 	} # end if
@@ -1020,13 +1029,12 @@ my $master_time = gettimeofday();
 #} # end foreach
 # If Stock size is overridden, check the list of stocks to see if the specified on is in the list.  If it isn't, then add duplicates, cut to size
 
-	my @Ps;
-
 	if (
 			( $$specs{'chkOverrideSheetSize1'} eq 'Y' ) or
 			( $$specs{'chkOverrideSheetSize2'} eq 'Y' ) or
 			( $$specs{'chkOverrideSheetSize3'} eq 'Y' )
 	   ) {
+		my @Ps;
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
 				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
@@ -1038,25 +1046,55 @@ my $master_time = gettimeofday();
 				if ( $P->width() == $$specs{'OverrideStockWidth'.$qty_index} and $P->height() == $$specs{'OverrideStockHeight'.$qty_index} ) {
 #$openprint::log->debug('gound it'); 
 					$found = 1;
-					push @Ps, $P;
+					# Don't need to add it, because it's already in @Papers
+					#push @Ps, $P;
 				} # end if
 			} # end foreach
+
+			if ( ! $found ) {
+				# Find ones that are an even cut
+				foreach my $P ( @Papers ) {
+					next if ! $P->cuttable();
+					if ( $P->type() eq 'Roll' ) {
+						next if $$specs{'OverrideStockHeight'.$qty_index};
+						next if $P->start_width();
+					} elsif ( $P->type() eq 'Sheet' ) {
+# Don't cut sheets into rolls
+						next if ! $$specs{'OverrideStockHeight'.$qty_index};
+
+						if ( 
+								( ($P->start_width() % $$specs{'OverrideStockWidth'.$qty_index}) and ($P->start_height() % $$specs{'OverrideStockHeight'.$qty_index} ) ) and
+								( ($P->start_width() % $$specs{'OverrideStockHeight'.$qty_index}) and ($P->start_height() % $$specs{'OverrideStockWidth'.$qty_index} ) ) )  {
+							next;
+						} # en dif
+					} # end if
+					$found = 1;
+					my $P2 = $P->clone();
+# Make sure gsm has calculated
+					$P2->gsm();
+					$P2->width( $$specs{'OverrideStockWidth'.$qty_index} );
+					$P2->height( $$specs{'OverrideStockHeight'.$qty_index} );
+					if ( $P2->type() ne 'Roll' ) {
+						$P2->mweight( 0 );
+					} else {
+						$P2->start_width( $$specs{'OverrideStockWidth'.$qty_index} );
+					} # end if
+					push @Ps, $P2;
+				} # end foreach paper
+			} # end if found
 
 			if ( ! $found ) {
 				foreach my $P ( @Papers ) {
 # Don't cut rolls into sheets
 					next if ! $P->cuttable();
-					$openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.$P->start_height() );
 					if ( $P->type() eq 'Roll' ) {
-						next if $$specs{'OverrideStockHeight'.$qty_index};
-#next if $P->start_width() and ($P->start_width() != $$specs{'OverrideStockWidth'.$qty_index });
+						next;
 					} elsif ( $P->type() eq 'Sheet' ) {
 # Don't cut sheets into rolls
 						next if ! $$specs{'OverrideStockHeight'.$qty_index};
 # Must be big enough to cut
 						next if ( $P->start_width() < $$specs{'OverrideStockWidth'.$qty_index} or $P->start_height() < $$specs{'OverrideStockHeight'.$qty_index} ) and ( $P->start_width() < $$specs{'OverrideStockHeight'.$qty_index} or $P->start_height() < $$specs{'OverrideStockWidth'.$qty_index} );
 					} # end if
-					$openprint::log->debug('cloning');
 					my $P2 = $P->clone();
 
 # Make sure gsm has calculated
@@ -1072,9 +1110,8 @@ my $master_time = gettimeofday();
 				} # end foreach paper
 			} # end if found
 		} # end foreach qty_index
+		push @Papers, @Ps;
 	} # end if override
-
-	push @Papers, @Ps;
 
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
@@ -1244,6 +1281,7 @@ my $master_time = gettimeofday();
 # Get plates in each previous signature, so we can get qty discounts
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			$PlateCounts{$$specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 		} # end foreach $index
@@ -1427,8 +1465,9 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					my $P = $Paper->clone();
 					my @i;
 					my @cut_offs;
-					if ( $Press->specification('Cut Off') ) {
-						@cut_offs = sort split(',',$Press->specification('Cut Off'));
+					if ( my $co = $Press->specification('Cut Off') ) {
+						@cut_offs = reverse sort split( ',', $co );
+$openprint::log->debug('Cut offs: $co : ' . @cut_offs . " @cut_offs");
 					} elsif ( my $min = $Press->specification('Cut Off Minimum') ) {
 						my $increment = $Press->specification('Cut Off Increment');
 						my $cut_off = $Press->specification('Cut Off Maximum');
@@ -1484,13 +1523,13 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 						push @imps, @i;
 					} else {
 						foreach my $i ( @i ) {
-							next if $Press->specification('Maximum Roll Width') and ($i->Paper()->width() > $Press->specification('Maximum Roll Width'));
-							my $i2 = $i;
+							my $i2 = $i->copy();
+							$i2->Paper()->width( $i2->used_width() ) if ! $i2->Paper()->width();
 							while ( $i2->columns() ) {
 								push @imps, $i2;
 								$i2 = $i2->copy();
 								$i2->columns( $i2->columns()-1 );
-								$i2->paper()->width( $i2->used_width() );
+								$i2->Paper()->width( $i2->used_width() );
 								openprint::imposition::check_setup( $i2, $project );
 								$i2->columns(0) if $Press->specification('Minimum Sheet Width') and ($i2->paper()->width() < $Press->specification('Minimum Sheet Width'));
 								$i2->columns(0) if $Press->specification('Minimum Roll Width') and ($i2->paper()->width() < $Press->specification('Minimum Roll Width'));
@@ -1610,6 +1649,7 @@ $i->display();
 					} # end if overriden or not or cached
 					push @{$imps{$str}}, $imp if $add > 0;
 				} # end foreach imp
+
 			}# end foreach Paper
 
 			push @impositions, map {@{$_}} values %imps;
@@ -1665,6 +1705,7 @@ $i->display();
 		foreach my $index ( $Project->signatures() ) {
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
@@ -1824,7 +1865,11 @@ $i->display();
 		} # end if
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+			if ( $$specs{'pages_supplied'} eq 'Y' ) {
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+			} else {
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+			} # end if
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
@@ -2029,7 +2074,7 @@ $openprint::log->debug("SPread Layout: $SpreadLayout");
 				} elsif (($max_pages >= $imp->pages() ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
 					# Only do this if not sheet size overrides
 					next;
-				} elsif ($max_impositions{$imp->pages()}/2 >= $imp->imposition()) {
+				} elsif ($max_impositions{$imp->pages()}/2 > $imp->imposition()) {
 					# Only do this if not sheet size overrides
 					next;
 				} # end if
@@ -2861,7 +2906,7 @@ sub calc_price {
 		$price{'Comparison Cost'} += $folding_results{'Price'};
 #$price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison Cost'}.'<br/>';
 	} else {
-$price{'Folding Breakdown'} .= 'Folding not needed<br/>';
+		$price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 	} # end if
 	if ( $$services{'SpinePaste'} ) {
 		if ( $Imposition->pages() < $$specs{'txtUnspecifiedPageQuantity'.$qty_index} ) {
@@ -3337,7 +3382,7 @@ $price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 			%ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press );
 		} # end if
 		if ( ! %ImpositionMakeReady ) {
-			$openprint::log->debug("$service no price found");
+			#$openprint::log->debug("$service no price found");
 		} # end if
 		if ( $ImpositionMakeReady{units} eq 'Per Form' ) {
 #$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
@@ -3577,6 +3622,7 @@ sub get_varnish_run_price {
 		foreach my $ss_id ( $Project->signatures() ) {
 			next if $service_index and ($ss_id >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			$previous_forms += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
 		} # end foreach
 		#$openprint::log->debug("Previous Forms $previous_forms");
@@ -3680,6 +3726,7 @@ sub get_aqueous_price {
 		foreach my $index ( $Project->signatures() ) {
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			if ( 
 					( $$sig_specs{'rdbAqueousSideOne'} eq $$specs{'rdbAqueousSideOne'} )
 					and ( $$sig_specs{'rdbAqueousSideTwo'} eq $$specs{'rdbAqueousSideTwo'} )
@@ -4194,10 +4241,11 @@ sub summary {
 			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtWidth','txtHeight'});
 		} # end if
 
+		my $string;
 		if ( $$services{'NoPrinting'} ) {
-			return sprintf( '%s %s', ($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions );
+			$string = sprintf( '%s %s', ($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions );
 		} else {
-			return sprintf( '%s %s %s%s%s%s/%s%s%s%s %s on %s %s',
+			$string = sprintf( '%s %s %s%s%s%s/%s%s%s%s %s on %s %s',
 					($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''),
 					$dimensions,
 					($front_colours ? $front_colours : ''),
@@ -4216,6 +4264,17 @@ sub summary {
 					,
 					);
 		} # end if
+$openprint::log->debug("Pages supplied: $$specs{'pages_supplied'}  $$specs{'supplied_format'} ");
+		if ( $$specs{'pages_supplied'} eq 'Y' ) {
+			$string .= ' pages supplied by customer as ';
+			if ( $$specs{'supplied_format'} eq 'Sheets' ) {
+				$string .= ' flat sheets.';
+			} elsif ( $$specs{'supplied_format'} eq 'Folded' ) {
+				$string .= ' folded pages.';
+			} # end if
+		} # end if
+		return $string;
+		
 	} # end if
 } # end sub summary
 

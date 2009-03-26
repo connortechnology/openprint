@@ -131,8 +131,6 @@ function sort_ddm(ddm) {
 
 function add_option( ddm, value, text, selectedValue ) {
 	if ( ddm ) {
-		//var optionIndex = get_option_index(ddm.options,value);
-		//if ( optionIndex == -1 ) {
 			var option = create_option( value, text );
 			var index = ddm.options.length;
 			ddm.options[index] = option;
@@ -142,10 +140,6 @@ function add_option( ddm, value, text, selectedValue ) {
 			} else {
 				option.selected = false;
 			} // end if
-		//} else {
-			//ddm.options[optionIndex].text = text;
-		//} // end if
-
 	} else {
 		alert('add_option: null ddm ' + ddm);
 	} // end if
@@ -563,17 +557,22 @@ function fmCheck( form ) {
 	if ( fmChange == 1 ) {
 		if ( ( ! changed(form) ) || confirm("Are you sure you want to leave this record without saving your changes?") ) {
 			fmChange == 0;
-						form.submit();
+			form.submit();
 		} 
 	} else if (fmChange == 2) {
 		fmChange = 0;
 		if ( confirm("Are you sure you want to delete this record?") ) {
-						form.submit();
+			form.submit();
 		} 
 	} else if (fmChange == 3) {
 		fmChange = 0;
 		if ( confirm("Are you sure you want to save your changes?") ) {
-						form.submit();
+			form.submit();
+		} 
+	} else if ( form.btnFunction && form.btnFunction.value == 'Undelete' ) {
+		fmChange = 0;
+		if ( confirm("Are you sure you want to undelete this company?") ) {
+			form.submit();
 		} 
 	} else {
 		form.submit();
@@ -732,10 +731,19 @@ function addLoadEvent(func) {
 
 function Country_onchange( country_ddm, state ) {
 	var country = get_ddm_value( country_ddm );
+	var state_label = $(country_ddm.name + '_state');
+	var postal_label = $(country_ddm.name + '_postal');
 	if ( country == 'US' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @states::states )", jsrs_cbFillDDM );
+		if ( state_label ) state_label.innerHTML='State:';
+		if ( postal_label ) postal_label.innerHTML='ZIP Code:';
 	} else if ( country == 'CA' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @provinces::provinces )", jsrs_cbFillDDM );
+		if ( state_label ) state_label.innerHTML='Province:';
+		if ( postal_label ) postal_label.innerHTML='Postal Code:';
+	} else {
+		if ( state_label ) state_label.innerHTML='State/Province:';
+		if ( postal_label ) postal_label.innerHTML='Postal Code:';
 	} // end if
 } // end function
 
@@ -883,3 +891,67 @@ function set_today( e_y, e_m, e_d ) {
 	ddm_select_by_value( e_m, d.getMonth()+1 );
 	ddm_select_by_value( e_d, d.getDate() );
 } // end function set_today
+
+function check_time_starting( form, starting_prefix, ending_prefix ) {
+	var start;
+	var end;
+
+	if ( get_value( form.time_associated ) == 1 ) {
+		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+	} else {
+		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+	} // end if
+
+	if ( start > end ) {
+		ddm_select_by_value( form.elements[ending_prefix+'_year'], form.elements[starting_prefix+'_year'].value );
+		ddm_select_by_value( form.elements[ending_prefix+'_month'], form.elements[starting_prefix+'_month'].value );
+		ddm_select_by_value( form.elements[ending_prefix+'_day'], form.elements[starting_prefix+'_day'].value );
+		if ( get_value( form.time_associated ) == 1 ) {
+			ddm_select_by_value( form.elements[ending_prefix+'_hour'], form.elements[starting_prefix+'_hour'].value );
+			ddm_select_by_value( form.elements[ending_prefix+'_minute'], form.elements[starting_prefix+'_minute'].value );
+		} // end if
+	} // end if
+} // end function check_time_starting
+
+function check_time_ending( form, starting_prefix, ending_prefix ) {
+	var start;
+	var end;
+	if ( get_value( form.time_associated ) == 1 ) {
+		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+	} else {
+		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+	} // end if
+	if ( start > end ) {
+		ddm_select_by_value( form.elements[starting_prefix+'_year'], form.elements[ending_prefix+'_year'].value );
+		ddm_select_by_value( form.elements[starting_prefix+'_month'], form.elements[ending_prefix+'_month'].value );
+		ddm_select_by_value( form.elements[starting_prefix+'_day'], form.elements[ending_prefix+'_day'].value );
+		if ( get_value( form.time_associated ) == 1 ) {
+			ddm_select_by_value( form.elements[starting_prefix+'_hour'], form.elements[ending_prefix+'_hour'].value );
+			ddm_select_by_value( form.elements[starting_prefix+'_minute'], form.elements[ending_prefix+'_minute'].value );
+		} // end if
+	} // end if
+} // end function check_time_ending
+
+function update_duration(form, starting_prefix, ending_prefix ) {
+	if ( get_value( form.time_associated ) == 1 ) {
+		var start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
+		var end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+		var difference = parseInt( ( end - start ) / 1000 );
+		var days = parseInt(difference/(60*60*24));
+		difference -= days * ( 60*60*24 );
+		var hours = parseInt( difference/(60*60) );
+		difference -= hours * (60*60);
+		var minutes = parseInt( difference/60 );
+		$('duration').innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
+	} else {
+		var start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
+		var end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+		var difference = parseInt( ( end - start ) / 1000 );
+		var days = parseInt(difference/(60*60*24));
+		$('duration').innerHTML = days +'days';
+	} // end if
+} // end function update_duration

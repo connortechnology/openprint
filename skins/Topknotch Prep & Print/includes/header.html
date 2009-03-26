@@ -1,11 +1,24 @@
 <a style="float: left;" href="<?siteURL?>"><img class="Logo" src="/images/logo.gif" alt="<? echo ( ssi::htmlize($$variable{'SiteTitle'}); ) ?>" /></a>
 <div class="unprintable" style="float: left;">
 	<img src="/images/us-ca.jpg" width="139" height="48" usemap="#Map" alt=""/>
-	<map name="Map" id="Map">
-	  <area shape="rect" coords="2,2,68,46" href="http://www.topknotch.com" alt="US"/>
-	  <area shape="rect" coords="72,3,137,47" href="http://www.topknotch.ca" alt="CA"/>
+	<map name="Map" id="Flags">
+		<area shape="rect" coords="2,2,68,46" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'USD','Country'=>'US'} } ); ) ?>" alt="US" />
+		<area shape="rect" coords="72,3,137,47" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'CAD','Country'=>'CA'} } ); ) ?>" alt="CA" />
 	</map>
 </div>
+<? if ( ! $session{'user_id'} ) ?>
+	<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
+		<fieldset><legend>Quick Login</legend>
+		<p><label>Email:</label><input type="text" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ) ) ?>
+		</p>
+		<p><label>Password:</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register' );) ?>
+		</p>
+		</fieldset>
+		<input type="hidden" name="btnFunction" />
+	</form>
+<? endif ( ! $session{'user_id'} ) ?>
 <div style="float: right; margin-left: 10px; color: #666666;">
 	<table style="width:auto; border: none; font-size:20px; font-weight: bold; margin: 0px; border-collapse: collapse;">
 	<tr><td style="color: #cfbb4b;">Tel:</td><td>(905) 624-5100</td></tr>
@@ -18,6 +31,6 @@
 <? endif ( sets::isin( $openprint::session{'user_type'}, ['A'] ) ) ?>
 <? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 <span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 <span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
+<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
 <br class="spacer"/>

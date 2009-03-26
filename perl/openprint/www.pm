@@ -65,10 +65,10 @@ sub handler {
 		my @values = $r->param($key);
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
-				$log->warn("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
+				$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = shift @values;
-				$log->warn("Parameter $key is (" . $param{$key} . ")" );
+				$log->debug("Parameter $key is (" . $param{$key} . ")" );
 		} # end if
 	} # end foreach
 
@@ -88,12 +88,6 @@ sub handler {
 		eval sprintf('openprint::%s::init_cache();', $o );
 		$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
 	} # end foreach
-	#openprint::usergroup::init_cache();
-	#openprint::Material::init_cache();
-	#openprint::Service::init_cache();
-	#openprint::ServiceType::init_cache();
-	#openprint::Equipment::init_cache();
-	#openprint::Paper::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -101,6 +95,7 @@ $openprint::log->debug("Page: $page");
 	while ( $page and $lastpage ne $page ) {
 		# This is for loop detection
 		$lastpage = $page;
+$variable{'uri'} = $page;
 		parse_page( $page );
 		if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
 			$page = $variable{'Redirect'};
@@ -215,9 +210,10 @@ $openprint::log->debug("Getfile");
 		} # end if
 
 		if ( $session{'user_type'} ne 'A' ) {
+$log->debug("User Type: $session{'user_type'}");
 			# If the page requires you to be logged in, check that we are logged in.
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
-				if ( sql::execute( $log, $dbh, q{SELECT type FROM Users WHERE type='A'} ) ) {
+				if ( sql::execute( $log, $dbh, 'SELECT type FROM Users WHERE type=?', 'A' ) ) {
 					$variable{'Redirect'} = '/administrator/error/login.html';
 					$variable{'Destination'} = misc::get_destination( $r, $log );
 					return $status;
@@ -239,7 +235,8 @@ $openprint::log->debug("Getfile");
 
 			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
 
-		} else {
+		} elsif ( $first ) {
+$log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
 			$eval .= '_'.$second if $second;
 			eval	'require '.$eval;
@@ -248,6 +245,7 @@ $openprint::log->debug("Getfile");
 			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
 			eval $eval;
 			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
+$log->debug('2');
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
@@ -278,6 +276,7 @@ $openprint::log->debug("Getfile");
 
 			$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 			@variable{'ddmDueDate','OrderedQuantityIndex'} = ( $variable{'Project'}->due_date(), $variable{'Project'}->ordered_quantity_index() );
+			$variable{'QTYIndex'} = $variable{'OrderedQuantityIndex'};
 			$variable{'DocketNumber'} = $variable{'Project'}->docket();
 
 			$variable{'Employee'} = new openprint::User( $openprint::session{'user_id'} )->name();
@@ -306,20 +305,15 @@ $openprint::log->debug("Getfile");
 
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
+				if ( $filename eq '_production_feedback.html' ) {
+					openprint::employee_project::_production_feedback( );
+				} # end if
 			} # end if
-		} elsif ( $second eq 'accounting' ) {
-			if ( ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
-				$variable{'error'} = 'Unauthorized';
-				$variable{'details'} = 'You are not authorized to view this page.';
-				$variable{'Redirect'} = $config{'errorpage'};
-				return;
-			} else {
-			eval( 'require openprint::'.join('_', @path ) );
-$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
-			} # end if
+		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
+			$variable{'error'} = 'Unauthorized';
+			$variable{'details'} = 'You are not authorized to view this page.';
+			$variable{'Redirect'} = $config{'errorpage'};
+			return;
 		} else {
 			eval( 'require openprint::'.join('_', @path ) );
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
@@ -328,6 +322,23 @@ $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		} # end if
 
+	} elsif ( $first eq 'content' ) { # main
+		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+		return $status if $variable{'Redirect'};	
+
+		if ( ! $session{'user_id'} ) {
+			# if not logged in, determine if they are allowed to see this page or not.
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+				$variable{'Redirect'} = '/error/error_login.html';
+				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				return Apache2::Const::OK;
+			} # end if
+		} # end if
+		eval( 'require openprint::'.join('_', @path ) );
+		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
@@ -337,6 +348,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+$log->debug("Dset: $variable{'Destination'}");
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
@@ -485,17 +497,17 @@ $openprint::log->debug("$1");
 		} # end if main:$second
 
 	} else {
-		
-		my $module = 'openprint::' . $first;
-		$module .= '_'.$second if $second;
-		eval( "require $module;" );
-		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-		my ( $proc ) = $filename =~ /(.*).html/;
-		if ( $proc ) {
-			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-			$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		if ( $first ) {
+			my $module = 'openprint::' . $first;
+			$module .= '_'.$second if $second;
+			eval( "require $module;" );
+			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*).html/;
+			if ( $proc ) {
+				eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+				$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+			} # end if
 		} # end if
-
 	} # end if $first
 
 	return $status;

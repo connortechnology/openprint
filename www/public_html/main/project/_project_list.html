@@ -15,7 +15,7 @@
 		@{$$variable{'Projects'}} = openprint::Project::find( 
 		'company_id'		=> $session{'company_id'},
 		'id'				=> $param{'ProjectID'},
-		'order'				=> 'index DESC',
+		'order'				=> 'id DESC',
 		);
 	} else {
 	@{$$variable{'Projects'}} = openprint::Project::find( 
@@ -26,8 +26,8 @@
 		'company_id'		=> $session{'company_id'},
 		'status'			=> $session{'/main/project/history.html?ddmStatus'},
 		'reference'				=> $param{'Reference'},
-		'and'				=> ($param{'ProjectID'} ? " AND Index LIKE '$param{'ProjectID'}\%'" : undef ),
-		'order'				=> 'index DESC',
+		'and'				=> ($param{'ProjectID'} ? " AND id LIKE '$param{'ProjectID'}\%'" : undef ),
+		'order'				=> 'id DESC',
 		);
 	} # end if
 

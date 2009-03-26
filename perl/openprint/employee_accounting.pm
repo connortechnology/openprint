@@ -217,6 +217,25 @@ sub _expenditures {
 sub expenditure {
 	$variable{'Expenditure'} = new openprint::Expenditure( $param{'expenditure_id'} );
 } # end sub expenditure
+sub stock {
+	require openprint::ManifestContent;
+
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		foreach my $Type ( openprint::Manifest_Content_Type::find('cost'=>undef) ) {
+			$param{'cost-'.$Type->id()} =~ s/[^\d\.]//g;
+			if ( $param{'units-'.$Type->id()} eq '/lb' ) {
+				$param{'cost-'.$Type->id()} *= 100;
+			} # end if
+			if ( ( $param{'supplier_invoice-'.$Type->id()} ne $Type->supplier_invoice() ) or ( $param{'cost-'.$Type->id()} != $Type->cost() ) ) {
+				$variable{'error'} .= $Type->save({'supplier_invoice'=>$param{'supplier_invoice-'.$Type->id()}, 'cost'=>$param{'cost-'.$Type->id()} });
+			} # end if
+		} # end foreach
+	} else {
+		@param{'received_on_start_year','received_on_start_month','received_on_start_day'} = Date::Calc::Today();
+		@param{'received_on_end_year','received_on_end_month','received_on_end_day'} = Date::Calc::Today();
+	} # end if
+} # end sub stock
+
 1;
 
 __END__

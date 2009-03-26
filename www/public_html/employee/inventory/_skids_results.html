@@ -1,18 +1,10 @@
 <? eval (
 	require openprint::StockPurpose;
-   if ( $param{StartYear} ) {
-		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','empty','notempty','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','purpose_id','withrfid','withoutrfid','location_id','verification_code' ) {
-			if ( ref $param{$key} eq 'ARRAY' ) {
-				$session{'/employee/inventory/skids.html?'.$key} = join(';', @{$param{$key}} );
-			} else {
-				$session{'/employee/inventory/skids.html?'.$key} = $param{$key};
-			}
-		} # end foreach
-	} # end if
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','notempty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code' ) );
 
-	if ( ! $session{'/employee/inventory/skids.html?StartYear'} ) {
-		@session{'/employee/inventory/skids.html?EndYear','/employee/inventory/skids.html?EndMonth','/employee/inventory/skids.html?EndDay'} = Date::Calc::Today();
-		@session{'/employee/inventory/skids.html?StartYear','/employee/inventory/skids.html?StartMonth','/employee/inventory/skids.html?StartDay'} = Date::Calc::Today();
+	if ( ! $session{'/employee/inventory/skids.html?created_on_start_year'} ) {
+		@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} = Date::Calc::Today();
+		@session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'} = Date::Calc::Today();
 	} # end if
 	if ( $session{'/employee/inventory/skids.html?Docket'} ) {
 		@{$$variable{'Skids'}} = openprint::Skid::find( 
@@ -28,27 +20,27 @@
 	@{$$variable{'Skids'}} = openprint::Skid::find( 
 		'owner_id'	=>	( defined $session{'/employee/inventory/skids.html?Owner'} ? $session{'/employee/inventory/skids.html?Owner'} : undef ),
 		'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-			'/employee/inventory/skids.html?StartYear',
-			'/employee/inventory/skids.html?StartMonth',
-			'/employee/inventory/skids.html?StartDay'} ),
+			'/employee/inventory/skids.html?created_on_start_year',
+			'/employee/inventory/skids.html?created_on_start_month',
+			'/employee/inventory/skids.html?created_on_start_day'} ),
 		'created_on_end'	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-			'/employee/inventory/skids.html?EndYear',
-			'/employee/inventory/skids.html?EndMonth',
-			'/employee/inventory/skids.html?EndDay'} ),
+			'/employee/inventory/skids.html?created_on_end_year',
+			'/employee/inventory/skids.html?created_on_end_month',
+			'/employee/inventory/skids.html?created_on_end_day'} ),
 		'updated_on_start'	=>	Date::Calc::check_date( @session{
-			'/employee/inventory/skids.html?UpdatedStartYear',
-			'/employee/inventory/skids.html?UpdatedStartMonth',
-			'/employee/inventory/skids.html?UpdatedStartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-			'/employee/inventory/skids.html?UpdatedStartYear',
-			'/employee/inventory/skids.html?UpdatedStartMonth',
-			'/employee/inventory/skids.html?UpdatedStartDay'} ) : undef,
+			'/employee/inventory/skids.html?updated_on_start_year',
+			'/employee/inventory/skids.html?updated_on_start_month',
+			'/employee/inventory/skids.html?updated_on_start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+			'/employee/inventory/skids.html?updated_on_start_year',
+			'/employee/inventory/skids.html?updated_on_start_month',
+			'/employee/inventory/skids.html?updated_on_start_day'} ) : undef,
 		'updated_on_end'	=>	Date::Calc::check_date( @session{
-			'/employee/inventory/skids.html?UpdatedEndYear',
-			'/employee/inventory/skids.html?UpdatedEndMonth',
-			'/employee/inventory/skids.html?UpdatedEndDay'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-			'/employee/inventory/skids.html?UpdatedEndYear',
-			'/employee/inventory/skids.html?UpdatedEndMonth',
-			'/employee/inventory/skids.html?UpdatedEndDay'} ) : undef,
+			'/employee/inventory/skids.html?updated_on_end_year',
+			'/employee/inventory/skids.html?updated_on_end_month',
+			'/employee/inventory/skids.html?updated_on_end_day'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+			'/employee/inventory/skids.html?updated_on_end_year',
+			'/employee/inventory/skids.html?updated_on_end_month',
+			'/employee/inventory/skids.html?updated_on_end_day'} ) : undef,
 		'fsc_code'				=>	$session{'/employee/inventory/skids.html?fsc_code'},
 		'purpose_id'			=>	$session{'/employee/inventory/skids.html?purpose_id'},
 		'order'		=>	'id',
@@ -59,7 +51,7 @@
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">
 	<table class="List">
 		<tr>
-			<th width="20"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
 			<th align="left" width="75">Skid ID</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
@@ -70,6 +62,10 @@
 		<? echo (
 			my $html;
 			my $rowclass;
+			my $total_rolls;
+			my $total_skids;
+			my $total_weight;
+			my $total_sheets;
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
 				my $empty = $Skid->empty();
 				if ( $session{'/employee/inventory/skids.html?empty'} ne 'Y' ) {
@@ -97,11 +93,11 @@
 				} # end if
 
 				$html .= "<tr$rowclass>";
-				$html .= qq`<td><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->created_on()) ), );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->updated_on()) ), );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'rfidtag_id'} );
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $$Skid{'rfidtag_id'} );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->Location()->name() );
 
 				$html .= '<td rowspan="2">';
@@ -119,21 +115,32 @@
 				$html .= '</tr>';
 				$html .= "<tr$rowclass>";
 				
-				$html .= '<td>&nbsp;</td><td colspan="5">';
-				foreach my $c ( $Skid->contents() ) {
-					my $Paper = new openprint::Paper( $c->paper_id() );
-					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s %s - %d %s</a><br/>',
+				$html .= '<td class="checkbox">&nbsp;</td><td colspan="5">';
+			
+				foreach my $C ( $Skid->Contents() ) {
+					my $Paper = $C->Paper();
+					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s - %d %s</a><br/>',
 					$$Skid{'id'},
 					$Paper->to_string(),
-					new openprint::StockPurpose( $c->purpose_id() )->name(),
-					$c->quantity(),
+					new openprint::StockPurpose( $C->purpose_id() )->name(),
+					$C->quantity(),
 					$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
 					);
+					if ( $Paper->type() eq 'Roll' ) {
+						$total_rolls += 1;
+						$total_weight += $Skid->content($Paper);
+					} else {
+						$total_skids += 1;
+						$total_sheets += $Skid->content($Paper);
+					} # end if	
 				} # end foreach
 				$html .= '</td>';	
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid
+			$html .= '<tr class="totals"><td colspan="3">Totals:</td><td>';
+			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
+			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
 			return $html;
 		) ?>
 	</table>

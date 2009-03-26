@@ -2,14 +2,10 @@ package openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw( %variable $AUTOLOAD %cache %fields %defaults %transforms $no_cache $r $log $dbh %variable %param %session %config );
-*r = \$openprint::r;
+use vars qw( $log $dbh $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
+
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*variable = \%openprint::variable;
-*session = \%openprint::session;
-*param = \%openprint::param;
-*config = \%openprint::config;
 
 my $debug;
 $no_cache = 0;
@@ -54,16 +50,16 @@ sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
+	my %fields = eval '%'.$type.'::fields';
 
 	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . q{ WHERE id=?}, {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
 			return;
 		} # end if
 	} # end if
 
-	my %fields = eval '%'.$type.'::fields';
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 
 } # end sub load
@@ -71,7 +67,7 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 
-	$self->set( $data ) if $data;
+	$self->set( $data ? $data: {} );
 
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
@@ -81,10 +77,12 @@ sub save {
 	my %sql;
 	@sql{@fields{keys %fields}} = @$self{keys %fields};
 	delete $sql{'created_on'};
+	$sql{'updated_by'} = $openprint::session{'user_id'} if exists $fields{'updated_by'};
+	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
 
 	if ( ! $$self{'id'} ) {
 		my $ac = sql::start_transaction( $dbh );
-		($$self{'id'}) = ($sql{'id'}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+		($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
 		if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
 			$dbh->rollback();
 			sql::end_transaction( $dbh, $ac );
@@ -92,7 +90,7 @@ sub save {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} else {
-		if ( my $error = sql::update( undef, undef, $table, ['id=?', $$self{id}], \%sql ) ) {
+		if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
 			return $error;
 		} # end if
 	} # end if
@@ -141,7 +139,7 @@ $openprint::log->warn('Object::set called on an object with no fields');
 	} # end if
 
 	foreach my $field ( keys %fields ) {
-		
+#$openprint::log->debug("field: $field, param: $$params{$field}");		
 		if ( exists $$params{$field} ) {
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
@@ -150,8 +148,8 @@ $openprint::log->warn('Object::set called on an object with no fields');
 			} # end if
 		} # end if
 
-#$openprint::log->debug("Transforms: @transforms");
 		my @transforms = eval('@{$'.$type.'::transforms{$field}}');
+#$openprint::log->debug("Transforms: @transforms");
 
 		foreach my $transform ( @transforms ) {
 			eval '$$self{$field} =~ ' . $transform;
@@ -159,8 +157,8 @@ $openprint::log->warn('Object::set called on an object with no fields');
 
 		my %defaults = eval('%'.$type . '::defaults');
 
-		if ( ((! defined $$self{$field} ) or $$self{$field} eq '' )  and exists $defaults{$field} ) {
-$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+		if ( ( (! defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
+#$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
 		} else {
 $openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
@@ -189,6 +187,34 @@ sub copy {
 
 	return $new;
 } # end sub copy
+
+sub delete {
+    my ( $self ) = @_;
+    my $type = ref $self;
+    my $table = eval '$'.$type.'::table';
+	my %fields = eval '%'.$type.'::fields';
+	if ( exists $fields{'deleted'} ) {
+		sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 1 );
+		$$self{'deleted'}=1;
+	} else {
+		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+		delete $openprint::Object::cache{$type}{$$self{id}};
+	} # end if
+	return;
+} # end sub delete
+
+sub undelete {
+    my ( $self ) = @_;
+    my $type = ref $self;
+    my $table = eval '$'.$type.'::table';
+	sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 0 );
+	$$self{'deleted'}=0;
+	return;
+} # end sub delete
+
+
+1;
+__END__
 
 1;
 __END__

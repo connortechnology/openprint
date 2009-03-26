@@ -15,7 +15,7 @@
 	$html .= join('', map { sprintf( q{$('%s').value = '%s';}, $_, $data{$_} ) } keys %data);
 	
 	$html .= q{clear_ddm($('user_id'));};
-	my @Users = openprint::User::find('company_id'=>$Company->id(), 'order'=>'lower(strfirstname),lower(strlastname)' );
+	my @Users = openprint::User::find('company_id'=>$Company->id(), 'order'=>'lower(firstname),lower(lastname)' );
 	foreach my $User ( @Users ) {
 		$html .= sprintf( q`add_option($('user_id'), %d, '%s' );`, $User->id(), $User->name() );
 	} # end foreach

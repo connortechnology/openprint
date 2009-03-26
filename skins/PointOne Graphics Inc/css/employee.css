@@ -18,16 +18,16 @@ div.PopupWindow fieldset p label {
 	text-align: left;
 }
 
-#Allocate fieldset p {
+#Allocate fieldset p, #CheckOut fieldset p {
 	padding-left: 100px;
 	
 }
-#Allocate fieldset p label {
+#Allocate fieldset p label, #CheckOut fieldset p label {
 	width: 100px;
 	margin-left: -95px;
 }
 
-fieldset p label.radio, #Allocate fieldset p label.radio {
+fieldset p label.radio, #Allocate fieldset p label.radio, #CheckOut fieldset p label.radio {
 	width: auto;
 	margin-left: 0px;
 }
@@ -36,4 +36,7 @@ fieldset p label.radio, #Allocate fieldset p label.radio {
 	list-style: none;
 	padding: 0px;
 	margin: 0px;
+}
+.Signature .Previews img {
+	width: 200px;
 }

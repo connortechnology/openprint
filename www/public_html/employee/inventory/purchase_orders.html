@@ -21,21 +21,24 @@
 	} // end function open_decline_window()
 -->
 </script>
-	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
-	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+	<!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" action="purchase_orders.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
+		<p><label>PO #:</label>
+			<input type="text" id="po_id" name="po_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "load('Results', \$('f1'));",'','Go' ); ) ?>
+		</p>
 		<p><label>Docket:</label>
-			<input type="text" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $(f1) );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load('Results', f1);",'','Go' ); ) ?>
+			<input type="text" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load('Results', \$('f1'));",'','Go' ); ) ?>
 		</p>
 		<p><label>Manifest:</label>
-			<input type="text" id="manifest_id" name="manifest_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $(f1) );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load('Results', f1);",'','Go' ); ) ?>
+			<input type="text" id="manifest_id" name="manifest_id" size="10" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\s/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load('Results', \$('f1'));",'','Go' ); ) ?>
 		</p>
 		<hr/>
 		<p><label>Created By:</label>
-			<select name="created_by" onchange="load('Results',this.form);">
+			<select name="created_by" onchange="load('Results',$('f1'));">
 				<option value="">All</option>
 				<? echo ( 
 					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(firstname),lower(lastname)','type'=>['A','E'] ) ], $session{'/employee/inventory/purchase_orders.html?created_by'} ); ) ?>
@@ -43,7 +46,7 @@
 		</p>
 		<p><label>Vendor:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-			<select name="supplier_id" onchange="load('Results',this.form);">
+			<select name="supplier_id" onchange="load('Results',$('f1'));">
 				<option value="">All</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/purchase_orders.html?supplier_id'} ); ) ?>
 			</select>
@@ -51,27 +54,27 @@
 		<p>
 			<label>Date:</label>
 			<span class="DateSelector">
-			<? echo ( ssi::date_select( 'starting_start', join('-', @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ), "load('Results',this.form);" ); ) ?>
+<? echo ( ssi::date_select( 'starting_start', join('-', @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ), "load('Results',\$('f1'));" ); ) ?>
             to
             </span>
             <span class="DateSelector">
-			<? echo ( ssi::date_select( 'starting_end', join('-', @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ), "load('Results',this.form);" ); ) ?>
+<? echo ( ssi::date_select( 'starting_end', join('-', @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ), "load('Results',\$('f1'));" ); ) ?>
             </span>
 		</p>
 		<p>
 			<label>Authorization:</label>
-			<input type="radio" name="authorized" id="authorizedY" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' ) ) ?> onclick="load('Results',this.form);" />
+			<input type="radio" name="authorized" id="authorizedY" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' ) ) ?> onclick="load('Results',$('f1'));" />
 			<label class="radio" for="authorizedY">Authorized</label>
-			<input type="radio" name="authorized" id="authorizedN" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' ) ) ?> onclick="load('Results',this.form);" />
+			<input type="radio" name="authorized" id="authorizedN" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' ) ) ?> onclick="load('Results',$('f1'));" />
 			<label class="radio" for="authorizedN">Declined</label>
-			<input type="radio" name="authorized" id="authorizedU" value="U" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'U' ) ) ?> onclick="load('Results',this.form);" />
+			<input type="radio" name="authorized" id="authorizedU" value="U" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'U' ) ) ?> onclick="load('Results',$('f1'));" />
 			<label class="radio" for="authorizedU">Unauthorized</label>
-			<input type="radio" name="authorized" id="authorizedAll" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq '' ) ) ?> onclick="load('Results',this.form);" />
+			<input type="radio" name="authorized" id="authorizedAll" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq '' ) ) ?> onclick="load('Results',$('f1'));" />
 			<label class="radio" for="authorizedAll">All</label>
 		</p>
 		<p>
 			<label>Contains</label>
-			<input type="text" id="contains" name="contains" onkeyup="load('Results',this.form);" />
+			<input type="text" id="contains" name="contains" onkeyup="load('Results',$('f1'));" />
 		</p>
 		<p class="buttons">
 				<? echo ( join( '',

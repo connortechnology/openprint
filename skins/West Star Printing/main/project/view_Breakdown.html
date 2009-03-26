@@ -181,33 +181,33 @@
 	return $html;
 ) ?>
 	<table class="Services">
-	<? if ( sets::isin( $openprint::session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{'Quote'} ) ?>
+	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{'Quote'} ) ?>
 		<tr class="totals unprintable">
 			<td><input name="txtServiceName"/></td>
-	<? if ( $$variable{'Quantity1'} ) ?>
+	<? if ( $$variable{'Project'}->quantity1() ) ?>
 			<td class="price">
 				C<input type="text" name="Cost1" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_cost(this,1);"/>
 				M<input type="text" name="Markup1" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(this,1);"/>
 				P<input type="text" name="txtPrice1" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_price(this,1);"/>
 			</td>
-	<? endif ( $$variable{'Quantity1'} ) ?>
-	<? if ( $$variable{'Quantity2'} ) ?>
+	<? endif ( $$variable{'Project'}->quantity1() ) ?>
+	<? if ( $$variable{'Project'}->quantity2() ) ?>
 			<td class="price">
 				C<input type="text" name="Cost2" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_cost(this,2);"/>
 				M<input type="text" name="Markup2" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(this,2);"/>
 				P<input type="text" name="txtPrice2" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_price(this,2);"/>
 			</td>
-	<? endif ( $$variable{'Quantity2'} ) ?>
-	<? if ( $$variable{'Quantity3'} ) ?>
+	<? endif ( $$variable{'Project'}->quantity2() ) ?>
+	<? if ( $$variable{'Project'}->quantity3() ) ?>
 			<td class="price">
 				C<input type="text" name="Cost3" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_cost(this,3);"/>
 				M<input type="text" name="Markup3" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(this,3);"/>
 				P<input type="text" name="txtPrice3" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_price(this,3);"/>
 			</td>
-	<? endif ( $$variable{'Quantity3'} ) ?>
+	<? endif ( $$variable{'Project'}->quantity3() ) ?>
 			<td class="actions"><span style="float:right;"><? echo ( ssi::writeButton($log, $dbh, 'AddToProject', 'addToProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Modify Project';f1.submit();", '', 'Add' ); ) ?></span></td>
 		</tr>
-	<? endif ( sets::isin( $openprint::session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{'Quote'} ) ?>
+	<? endif ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{'Quote'} ) ?>
 		<tr class="totals"> 
 			<td align="right" style="font-size: large;">Unit Price:</td>
 <? echo ( my $html = '';

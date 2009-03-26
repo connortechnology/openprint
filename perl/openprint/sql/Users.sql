@@ -1,12 +1,10 @@
-DROP SEQUENCE Users_Index_seq;
-DROP TABLE Users;
-
-CREATE SEQUENCE Users_Index_seq;
+DROP SEQUENCE iF EXISTS Users_Id_seq;
+DROP TABLE iF EXISTS Users;
 
 CREATE TABLE Users (
 /* tablename, etc too long.	So we had to truncate it in here... it all works automatically elsewhere */
-	Index		INT4 DEFAULT nextval('Users_Index_seq') ,
-	CompanyIndex	INT4 NOT NULL,
+	Index		SERIAL,
+	company_id	INTEGER NOT NULL,
 	strEmail		TEXT NOT NULL, UNIQUE(strEmail), 
 	strPassword		TEXT NOT NULL,
 	strTitle		TEXT,
@@ -31,7 +29,9 @@ CREATE TABLE Users (
 	strMailServerPassword	TEXT,
 	LastLogin				timestamp with time zone,
 	notes					TEXT,
+	purchasing_limit		float,
+	purchasing_total_limit	float,
 	PRIMARY KEY (Index)
 );
 CREATE INDEX UserEmail_Index ON Users (strEmail);
-alter table Users add foreign key (CompanyIndex) REFERENCES Company (Index);
+alter table Users add foreign key (Company_Id) REFERENCES Companies (Id);

@@ -11,6 +11,7 @@ $table = 'Service_Types';
 $serial = 'ServiceTypeIndex';
 
 %fields = (
+	'id'				=>	'id',
 	'name'				=> 'name',
 	'description'		=> 'description',
 	'url'				=> 'strdetailedurl',

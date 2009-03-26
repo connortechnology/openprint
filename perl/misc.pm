@@ -161,12 +161,19 @@ sub get_url {
 	if ( $options and $$options{'exclude'} ) {
 		@keys = sets::exclude( $$options{'exclude'}, \@keys );
 	} # end if	
+	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany' ], \@keys );
 	my %encoded;
 	foreach my $k ( @keys ) {
 		$encoded{$k} = $$params{$k};
 		$encoded{$k} =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;	
 	} # end foreach
-	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } @keys ) );
+	if ( $options and $$options{'include'} ) {
+		foreach my $k ( keys %{$$options{'include'}} ) {
+			$encoded{$k} = $$options{'include'}{$k};
+		} # end foreach
+	} # end if	
+	
+	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } keys %encoded ) );
 } # end sub get_url
 
 sub sum {
@@ -267,6 +274,41 @@ sub interval_to_seconds {
     my ( $h, $m, $s ) = split ':', $interval;
     return ($h*3600) + ($m*60) + $s;
 } # end sub interval_to_seconds
+
+sub rle_decode {
+	my ( $source, $width, $height ) = @_;
+	my $result = '';
+	my $position = 0;
+$openprint::log->warn("RLE::DECODE:: source: " . length $source );
+    while ($source ne "") {
+        my $l = unpack("C", $source);
+        if ($l == 128) {
+			if ( length $source > 1 ) {
+				$openprint::log->debug("End while still data at position $position " . unpack("H",$source) . ' ' . substr($source,0,1) . ' length of result: ' . length($result));
+			} # end if
+            return $result;
+        } elsif ($l > 128) {
+        #if ($l > 128) {
+            if (length($source) < 2) {
+                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
+                return $result;
+            } # end if
+            $result .= substr($source, 1, 1) x (257 - $l);
+            substr($source, 0, 2) = "";
+			$position += 2;
+        } else {
+            if (length($source) < $l + 1) {
+                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
+                return $result;
+            }
+            $result .= substr($source, 1, $l);
+            substr($source, 0, $l + 1) = "";
+			$position += $l+1;
+        }
+    }
+$openprint::log->warn("RLE::DECODE:: results: " . length $result );
+	return $result;
+} # end sub rle_decode
 
 1;
 

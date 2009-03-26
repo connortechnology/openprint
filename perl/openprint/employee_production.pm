@@ -22,6 +22,7 @@ require openprint::Label;
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Content;
 require openprint::PaperInventory;
+require openprint::ProductionFeedback;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -104,10 +105,11 @@ sub press_schedule {
 		$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from print overview' );
 		$Project->update_status();
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		my $service_index = $param{'ServiceIndex'};
-		my $project_index = $param{'ProjectIndex'};
+		my $service_index = $param{'service_id'};
+		my $project_index = $param{'project_id'};
 		my $Project = new openprint::Project( $project_index );
 		my ( $starttime, $equipment_id ) = sql::execute( $log, $dbh, q{SELECT starttime, equipment_id FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
+		$equipment_id = $param{'equipment_id'} if $param{'equipment_id'};
 		if ( ! $starttime ) {
 			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=?}, $equipment_id );
 		} # end if
@@ -127,8 +129,8 @@ sub press_schedule {
 		} # end if
 		if ( $year ) {
 			$starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $hours, $minutes, $seconds );
-			sql::update( $log, $dbh, 'Schedule', ['ProjectIndex=? AND ServiceIndex=?', $project_index, $service_index], 'starttime', $starttime );
-			$Project->add_to_log( @session{'company_id','user_id'}, "Job bumped to next shift: $starttime " );
+			sql::update( $log, $dbh, 'Schedule', ['ProjectIndex=? AND ServiceIndex=?', $project_index, $service_index], 'starttime', $starttime, 'equipment_id', $equipment_id );
+			$Project->add_to_log( @session{'company_id','user_id'}, "Job bumped to next shift: $starttime on " . ( new openprint::Equipment( $equipment_id )->name() ) );
 		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'CompleteJob' ) {
@@ -348,6 +350,8 @@ sub bindery_overview {
 } # end sub bindery_overview
 
 sub projects {
+
+	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer' );
 	my @projects;
 
 	my $startdocket = $param{'StartDocket'};
@@ -384,7 +388,11 @@ sub projects {
 
 	$variable{'txtDocket'} = $param{'txtDocket'};
 
-} # end sub list_current
+} # end sub projects
+
+sub _project_list {
+	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer' );
+}
 
 sub project_view {
 	return openprint::employee_project::view( @_ );
@@ -1042,6 +1050,10 @@ sub _stock_details {
 sub _stock_checkout {
 	openprint::employee_project::_stock_checkout();
 } # end sub _stock_checkout
+
+sub _bump_job {
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+} # end sub _bump_job
 
 1;
 

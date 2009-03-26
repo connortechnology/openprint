@@ -14,6 +14,8 @@ require sql;
 require ssi;
 require misc;
 require openprint::Location;
+require openprint::RFIDTagHistory;
+require openprint::RFIDScannerHistory;
 
 my $debug = 1;
 
@@ -135,6 +137,12 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
+	foreach ( openprint::RFIDScannerHistory::find('scanner_id'=>$$self{'id'}) ) {
+		$_->delete();
+	} # end foreach
+	foreach ( openprint::RFIDTagHistory::find('scanner_id'=>$$self{'id'}) ) {
+		$_->delete();
+	} # end foreach
     sql::execute( undef, undef, q{DELETE FROM RFIDScanners WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
@@ -153,6 +161,24 @@ sub location_id {
     } # end if
     return $$self{'location_id'};
 } # end sub location_id
+
+sub Next {
+	my $self = $_[0];
+	my ( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MIN(name) FROM RFIDScanners WHERE lower(name) > lower(?))', $$self{'name'} );
+	if ( ! $new_id ) {
+		( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MIN(name) FROM RFIDScanners)' );
+	} # end if
+	return new openprint::RFIDScanner( $new_id );
+} # end sub Next
+
+sub Previous {
+	my $self = $_[0];
+	my ( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MAX(name) FROM RFIDScanners WHERE lower(name) < lower(?))', $$self{'name'} );
+	if ( ! $new_id ) {
+		( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MAX(name) FROM RFIDScanners)' );
+	} # end if
+	return new openprint::RFIDScanner( $new_id );
+} # end sub Previous
 
 1;
 __END__

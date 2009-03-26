@@ -61,6 +61,7 @@ $serial = 'companies_id_seq';
 		'detail_level'				=>	'detail_level',
 		'quote_project_breakdown'	=>	'quote_project_breakdown',
 		'notes'						=>	'notes',
+		'deleted'					=>	'deleted',
 		);
 %transforms = (
 	'name' => [ 's/\.//g' ],
@@ -78,6 +79,7 @@ $serial = 'companies_id_seq';
 	'annual_sales'	=>	undef,
 	'employees'		=>	undef,
 	'salesrep_id'	=>	undef,
+	'deleted'		=>	0,
 );
 
 my $debug = 1;
@@ -182,9 +184,21 @@ sub Currency {
 
 sub delete {
 	my $self = shift;
-	my $ac = sql::start_transaction( $dbh );
-# i'm not sure why we did this, for now we are going to delete the users
-#sql::update( undef, undef, 'Company_Users', "CompanyIndex = '$id'", 'lngCustomerID', 0 );
+	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 1 );
+	$$self{'deleted'} = 1;
+	delete $openprint::Object::cache{'openprint::Company'}{$$self{id}};
+} # end sub delete
+
+sub undelete {
+	my $self = shift;
+	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 0 );
+	$$self{'deleted'} = 0;
+	delete $openprint::Object::cache{'openprint::Company'}{$$self{id}};
+} # end sub undelete
+
+sub destroy {
+	my $self = shift;
+	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE Company_id =?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM HelpDesk WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM RMA WHERE Company_Id=?', $$self{'id'} );
@@ -217,18 +231,18 @@ sub delete {
 	foreach my $User ( openprint::User::find('company_id'=>$$self{'id'} ) ) {
 		$User->delete();
 	} # end foreach
-	sql::update( undef, undef, 'Company', ['id=?', $$self{'id'}], 'deleted', 1 );
-	#sql::execute( undef, undef, 'DELETE FROM Company WHERE id=?',$$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Company WHERE Index=?',$$self{'id'} );
 
 	sql::end_transaction( $dbh, $ac );
 
    # Add record to audit log - action "Delete Company Profile".
    openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'}");
 } # end sub delete
+
 sub save {
     my ($self, $param) = @_;
 	
-	$self->set( $param ) if $param;
+	$self->set( $param );
 	my %sql;
 	foreach my $k ( keys %fields ) {
 		$sql{$fields{$k}} = $$self{$k};
@@ -243,22 +257,26 @@ sub save {
 		$sql{id} = $$self{'id'};
         if ( my $e = sql::insert( undef, undef, 'Companies', \%sql ) ) {
 			$dbh->rollback();
+    sql::end_transaction( $dbh, $ac );
+			delete $$self{'id'};
 			return $e;
 		} # end if
 	} elsif ( $$param{'force_insert'} ) {
         if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
 			$dbh->rollback();
+    sql::end_transaction( $dbh, $ac );
 			return $e;
 		} # end if
     } else {
         if ( my $e = sql::update( undef, undef, 'Companies', ['id=?', $$self{'id'}], \%sql ) ) {
 			$dbh->rollback();
+    sql::end_transaction( $dbh, $ac );
 			return $e;
 		} # end if
 	} # end if
 
-    $self->load();
     sql::end_transaction( $dbh, $ac );
+    $self->load();
 	return;
 
 } # end sub save

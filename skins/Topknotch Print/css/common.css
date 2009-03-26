@@ -55,7 +55,7 @@ div.row:after {
 }
 /* Hides from IE-mac \*/
 * html div.row {height: 1%;}
-*/* End hide from IE-mac */
+/* End hide from IE-mac */
 
 .row .label {
 	float: left;
@@ -142,6 +142,7 @@ select {
 	margin: 0px;
 	background-color: white;
 	color: black;
+	vertical-align: top;
 }
 input {
 	margin: 0px;
@@ -163,6 +164,10 @@ form {
 fieldset {
 	border: none;
     border-top: 1px solid #6A00BE;
+    padding: 2px;
+    margin: 0px;
+    padding-bottom: 10px;
+
 }
 fieldset legend {
 	color: #6A00BE;
@@ -237,7 +242,6 @@ fieldset p textarea {
     width: 70%;
 }
 fieldset p option {
-    width: 70%;
 }
 fieldset.filters {
 	width: auto;

@@ -17,6 +17,9 @@ function click_quote( form ) {
 	form.btnFunction.value='Process Quote';
 	form.submit();
 }
+function click_upload( form ) {
+	window.location = '/upload/upload_center.html?ProjectIndex=' + form.ProjectIndex.value;
+}
 </script>
 <div id="Help"></div>
 <div id="AlertDiv" class="row" style="display:none;">
@@ -31,6 +34,7 @@ function click_quote( form ) {
 <? echo ( ssi::writeButton( $log, $dbh, 'Breakdown', 'price_breakdown.gif', "breakdown_window(document.f1.ProjectIndex.value);", '', 'Detailed Pricing' ); ) ?>
 	<div id="OrderButton" <? echo ( 'style="display:none;"' if $$variable{'Status'} ne 'Unordered' ) ?> >
 	<? echo ( ssi::writeButton( $log, $dbh, 'UPS', '', "open_window('/main/project/shipping/UPS.html','popup');", '', 'Get UPS Shipping Estimate'); ) ?><br class="spacer" />
+	<? echo ( ssi::writeButton( $log, $dbh, 'Upload', '', "click_upload( document.f1 );", '', 'Upload Files'); ) ?>
 	<? echo ( ssi::writeButton( $log, $dbh, 'Quote', '', "click_quote( document.f1 );", '', 'Email Quote'); ) ?>
 	<? echo ( ssi::writeButton( $log, $dbh, 'Order', '', "click_order( document.f1 );", '', 'Place Order') if $openprint::config{AllowOrdering} ne 'false'; ) ?>
 	</div>

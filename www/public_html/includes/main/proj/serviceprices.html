@@ -15,7 +15,7 @@
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <b><?CurrencyName?></b>
-<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 <p><label>&nbsp;</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -27,4 +27,4 @@
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>

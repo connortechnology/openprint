@@ -172,6 +172,9 @@ sub signature_needs {
 	if ( $$services{'NoBindery'} ) {
 		return 0;
 	} # end if
+	if ( ($$specs{'pages_supplied'} eq 'Y') and ($$specs{'supplied_format'} eq 'Folded') ) {
+		return 0;
+	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
 		$openprint::log->warn("FOLDING NEEDED got templatetype!") if $debug;
@@ -583,6 +586,14 @@ sub signature_calc {
 					#$openprint::log->debug("trying: ");
 					#$Imposition->display();
 				#} # end if
+
+		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
+$openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty_index} );
+			if ( ! sets::isin( $$sig_specs{'PrintingType'.$qty_index}, split(',',$pt ) ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Wrong printing type.<br/>';
+				next;
+			} # end if
+		} # end if
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 				if ( $$Equipment{id} == $$Press{id} ) {
@@ -1021,6 +1032,8 @@ sub calc {
 
 		my $price;
 		my $mprice;
+
+		my $previous_imposition;
 
 		foreach my $signature_service_index ( sort $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );

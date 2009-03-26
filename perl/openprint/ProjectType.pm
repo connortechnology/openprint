@@ -47,7 +47,7 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error loading ProjectTypes: ($sql) (@values)");
+		$openprint::log->error("Error loading ProjectTypes: ($sql) (@values) Reason: " . $openprint::dbh->errstr() );
 		return;
 	} # end if
 	return map { new openprint::ProjectType( $_->{id}, $_ ); } @$data;
@@ -124,7 +124,7 @@ sub delete {
 	sql::end_transaction( $dbh, $ac );
 	
 	# Add record to audit log - action "Delete Project Type".
-	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'strName'},);
+	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'name'},);
 } # end sub delete
 
 sub Templates {

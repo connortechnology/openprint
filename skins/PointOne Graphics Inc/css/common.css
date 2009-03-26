@@ -463,6 +463,21 @@ tr.highlightOn {
 img {
 	border: none;
 }
+
+td.checkbox, th.checkbox {
+	width: 15px;
+	text-align: center;
+}
+
+td.Date, th.Date {
+	width: 120px;
+	text-align: right;
+}
+td.Price, th.Price {
+	width: 100px;
+	text-align: right;
+}
+
 span.DateSelector {
 	float: left;
 	width: 275px;
@@ -567,5 +582,18 @@ form.inplaceeditor-form input[type="submit"] { /* The submit button */
 form.inplaceeditor-form a { /* The cancel link */
 }
 #Versions {
-display: none;
+	display: none;
 }
+.changed {
+    background-color: yellow;
+}
+
+input.filter, fieldset p input.filter {
+	width: 40px;
+}
+
+td p {
+	margin: 0px;
+	padding: 0px;
+}
+

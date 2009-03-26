@@ -19,10 +19,6 @@ div#Invoice div.PageTitle {
 	top:0px;
 	right: 10px;
 }
-td.Date, th.Date {
-	width: 110px;
-	text-align: right;
-}
 td.Price, th.Price {
 	width: 75px;
 	text-align: right;

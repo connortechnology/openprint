@@ -64,18 +64,33 @@ function getSelectionId(input, li) {
 		} // end if
 	} // end if
 } // end function getSelectionId
+
+  tinyMCE.init({
+	theme : "advanced",
+	mode: "specific_textareas",
+	editor_selector : "mce",
+	theme_advanced_toolbar_location : "top",
+	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,"
+	+ "justifyleft,justifycenter,justifyright,justifyfull,formatselect,"
+	+ "bullist,numlist,outdent,indent",
+	theme_advanced_buttons2 : "link,unlink,anchor,image,separator,"
+	+"undo,redo,cleanup,code,separator,sub,sup,charmap",
+	theme_advanced_buttons3 : "",
+	auto_resize : true,
+
+  });
+
 -->
 </script>
 <form id="f1" name="f1" action="purchase_order_view.html?po_id=<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" method="post">
 	<input type="hidden" name="federaltax_rate" value="<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ) ?>" />
 	<input type="hidden" name="statetax_rate" value="<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ) ?>" />
-	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
-	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
-	<p class="buttons">
+	<!--#include virtual="/includes/error_reporting.html"-->
+	<p class="buttons" id="buttons">
 <? echo ( 
 	my $html = '';
-	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
-	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
 	return $html;
 ) ?>
 	</p>
@@ -86,11 +101,23 @@ function getSelectionId(input, li) {
 		<div class="leftColumn">
 		<fieldset><legend>VENDOR:</legend>
 			<p><label>Select:</label>
-				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" onkeydown="if(event.keyCode == 13){this.form.supplier_id.onchange();}" class="filter" />
 				<select name="supplier_id" onchange="new Ajax.Request('_po_select_vendor.json', {method:'get', parameters: { supplier_id: this.value } } );">
-				
 					<option value="">select</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
+				</select>
+			</p>
+			<p id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts:</label>
+				<select id="contact_id" name="contact_id" onchange="new Ajax.Request('_po_select_contact.json', {method:'get', parameters: { contact_id: this.value } } );">
+					<option value="">select</option>
+					<? echo ( 
+						if ( $$variable{'PurchaseOrder'}->supplier_id() ) {
+							my @Users = openprint::User::find('company_id'=>$$variable{'PurchaseOrder'}->supplier_id(), 'name'=>$$variable{'PurchaseOrder'}->vendor_contact() );
+				
+							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'company_id'=>$$variable{'PurchaseOrder'}->supplier_id() ) ], @Users ? $Users[0]->id() : undef );
+						} # end if
+						return;
+					) ?>
 				</select>
 			</p>
 			<p><label for="vendor_contact">Contact:</label><input type="text" name="vendor_contact" id="vendor_contact" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_contact() ) ?>" /></p>
@@ -103,14 +130,30 @@ function getSelectionId(input, li) {
 					<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->vendor_country() ); ) ?>
 				</select>
 			</p>
-			<p><label for="vendor_state">State/Province:</label>
+			<p><label for="vendor_state"><span id="vendor_country_state"><? echo (
+					if ( $$variable{'country'} eq 'US' ) {
+						return 'State:';
+					} elsif ( $$variable{'country'} eq 'CA' ) {
+						return 'Province:';
+					} else {
+						return 'State/Province:';
+					} # end if
+				) ?></span></label>
 				<select id="vendor_state" name="vendor_state">
 				<option value=""> Select </option>
 				<? echo ( ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->vendor_state()); ) ?>
 				</select>
 			</p>
 			<p><label for="vendor_city">City:</label><input type="text" name="vendor_city" id="vendor_city" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_city() ) ?>" /></p>
-			<p><label for="vendor_postalcode">Postal Code:</label><input type="text" name="vendor_postalcode" id="vendor_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_postalcode() ) ?>" /></p>
+			<p><label for="vendor_postalcode"><span id="vendor_country_postal"><? echo (
+					   if ( $$variable{'country'} eq 'US' ) {
+						   return 'Zip Code:';
+					   } elsif ( $$variable{'country'} eq 'CA' ) {
+						   return 'Postal Code:';
+					   } else {
+						   return 'Zip/Postal Code:';
+					   } # end if
+					) ?></span></label><input type="text" name="vendor_postalcode" id="vendor_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_postalcode() ) ?>" /></p>
 			<p><label for="vendor_phone">Phone:</label><input type="text" name="vendor_phone" id="vendor_phone" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_phone() ) ?>" /></p>
 			<p><label for="vendor_fax">Fax:</label><input type="text" name="vendor_fax" id="vendor_fax" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_fax() ) ?>" /></p>
 			<p><label for="vendor_email">Email:</label><input type="text" name="vendor_email" id="vendor_email" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_email() ) ?>" /></p>
@@ -128,14 +171,31 @@ function getSelectionId(input, li) {
 					<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->shipto_country()); ) ?>
 				</select>
 			</p>
-			<p><label for="shipto_state">State/Province:</label>
+			<p><label for="shipto_state"><span id="shipto_country_state"><? echo (
+					if ( $$variable{'country'} eq 'US' ) {
+						return 'State:';
+					} elsif ( $$variable{'country'} eq 'CA' ) {
+						return 'Province:';
+					} else {
+						return 'State/Province:';
+					} # end if
+				) ?></span></label>
 				<select id="shipto_state" name="shipto_state">
 					<option value=""> select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->shipto_state()); ) ?>
 				</select>
 			</p>
 			<p><label for="shipto_city">City:</label><input type="text" name="shipto_city" id="shipto_city" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_city() ) ?>" /></p>
-			<p><label for="shipto_postalcode">Postal Code:</label><input type="text" name="shipto_postalcode" id="shipto_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_postalcode() ) ?>" /></p>
+			<p><label for="shipto_postalcode"><span id="shipto_country_postal"><? echo (
+					   if ( $$variable{'country'} eq 'US' ) {
+						   return 'Zip Code:';
+					   } elsif ( $$variable{'country'} eq 'CA' ) {
+						   return 'Postal Code:';
+					   } else {
+						   return 'Zip/Postal Code:';
+					   } # end if
+					) ?></span>
+				</label><input type="text" name="shipto_postalcode" id="shipto_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_postalcode() ) ?>" /></p>
 			<p><label for="shipto_phone">Phone:</label><input type="text" name="shipto_phone" id="shipto_phone" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_phone() ) ?>" /></p>
 			<p><label for="shipto_fax">Fax:</label><input type="text" name="shipto_fax" id="shipto_fax" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_fax() ) ?>" /></p>
 			<p><label for="shipto_email">Email:</label><input type="text" name="shipto_email" id="shipto_email" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_email() ) ?>" /></p>
@@ -147,17 +207,19 @@ function getSelectionId(input, li) {
 		<br class="spacer"/>
 		<table>
 			<tr>
-				<th>Shipping Method</th>
+				<th width="374">Shipping Method</th>
 				<th>Shipping Terms</th>
-				<th width="183">Delivery Date</th>
+				<th width="256">Delivery Date</th>
 			</tr>
 			<tr>
 				<td><textarea name="shipping_method" id="shipping_method" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_method()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
 				<td><textarea name="shipping_terms" id="shipping_terms" cols="" rows="<? echo ( my $rows = scalar split("\n", $$variable{'PurchaseOrder'}->shipping_terms()); $rows = 2 if ! $rows; return $rows; ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></textarea></td>
 				<td valign="top">
-					<input type="radio" id="delivered_on_switchASAP" name="delivered_on_switch" value="ASAP" <? echo ( ssi::checked( ! $$variable{'PurchaseOrder'}->delivered_on() ) ) ?> onclick="$('delivered_on_div').hide();" />
+					<input type="radio" id="delivered_on_switchNIGHTTRUCK" name="delivered_on_switch" value="NIGHT TRUCK" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'NIGHT TRUCK' ) ) ?> onclick="$('delivered_on_div').hide();" />
+					<label for="delivered_on_switchNIGHTTRUCK">NIGHT TRUCK</label>
+					<input type="radio" id="delivered_on_switchASAP" name="delivered_on_switch" value="ASAP" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'ASAP' ) ) ?> onclick="$('delivered_on_div').hide();" />
 					<label for="delivered_on_switchASAP">ASAP</label>
-					<input type="radio" id="delivered_on_switchDATE" name="delivered_on_switch" value="DATE" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on() ) ) ?> onclick="$('delivered_on_div').show();" />
+					<input type="radio" id="delivered_on_switchDATE" name="delivered_on_switch" value="DATE" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->delivered_on_switch() eq 'DATE' ) ) ?> onclick="$('delivered_on_div').show();" />
 					<label for="delivered_on_switchDATE">DATE</label>
 					<div id="delivered_on_div" <? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? '' : 'style="display:none;"' ) ?>>
 						<input type="hidden" id="delivered_on" name="delivered_on" value="<? echo ( $$variable{'PurchaseOrder'}->delivered_on() ?  $$variable{'PurchaseOrder'}->delivered_on() : join('-', Date::Calc::Today() ); ) ?>" />
@@ -187,10 +249,10 @@ function getSelectionId(input, li) {
 	<tr>
 		<th width="55">&nbsp;</th>
 		<th width="110">TYPE</th>
-		<th width="110">QTY</th>
+		<th width="100">QTY</th>
 		<th width="100">ITEM</th>
 		<th>DESCRIPTION</th>
-		<th width="80">DOCKET</th>
+		<th width="70">DOCKET</th>
 		<th width="90">UNIT PRICE</th>
 		<th width="90">LINE TOTAL</th>
 	</tr>

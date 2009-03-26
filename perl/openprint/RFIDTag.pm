@@ -120,9 +120,7 @@ sub load {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	if ( $hash ) {
-		$self->set( $hash );
-	} # end if
+	$self->set( $hash );
 
 	if ( ! $$self{'id'} ) {
 		return 'RFID Tag must have an id';
@@ -159,6 +157,7 @@ sub save {
 	$$self{'updated_on'} = 'NOW()';
 
 	delete $$self{'type'};
+	$$self{'updated_on'} = 'NOW()';
 	
 	my $ac = sql::start_transaction( $dbh );
 
@@ -224,26 +223,32 @@ sub location_id {
 
 sub skid_id {
 	my ( $self ) = @_;
-	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
-	if ( @Skids ) {
-		return $Skids[0]->id();
+	if ( ! $$self{'id'} ) {
+		$openprint::log->error('Cant load skid on a tag without an id');
+		return;
 	} # end if
-	return;
+	if ( ! $$self{'skid_id'} ) {
+		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+		if ( @Skids ) {
+			$$self{'skid_id'} = $Skids[0]->id();
+		} # end if
+	} # end if
+	return $$self{'skid_id'};
 } # end sub skid_id
 
 sub Skid {
 	my ( $self ) = @_;
-if ( ! $$self{'id'} ) {
-	$openprint::log->error('Cant load ski on a tag without an id');
-	return;
-} # end if
-	my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
-	if ( ! @Skids ) {
-		my $Skid = new openprint::Skid();
-		$Skid->rfidtag_id( $$self{'id'} );
-		return $Skid;
+	if ( ! $$self{'id'} ) {
+		$openprint::log->error('Cant load skid on a tag without an id');
+		return;
 	} # end if
-	return $Skids[0];
+	if ( ! $$self{'skid_id'} ) {
+		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+		if ( @Skids ) {
+			$$self{'skid_id'} = $Skids[0]->id();
+		} # end if
+	} # end if
+	return new openprint::Skid( $$self{'skid_id'} );
 } # end sub Skid
 
 1;

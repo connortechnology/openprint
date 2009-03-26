@@ -469,25 +469,25 @@ sub find {
 	my @values;
 	if ( $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND Index IN ('.join(',', map {'?'} @{$params{'id'}} ) . ')';
+			$sql .= ' AND id IN ('.join(',', map {'?'} @{$params{'id'}} ) . ')';
 			push @values, @{$params{'id'}};
 		} else {
-			$sql .= ' AND Index=?';
+			$sql .= ' AND id=?';
 			push @values, $params{'id'};
 		} # end if
 	} # end if
 	if ( $params{'id_start'} and $params{'id_end'} ) {
-			$sql .= ' AND (Index BETWEEN ? AND ?)';
+			$sql .= ' AND (id BETWEEN ? AND ?)';
 			push @values, @params{'id_start','id_end'};
 	} elsif ( $params{'id_start'} ) {
-			$sql .= ' AND Index >= ?';
+			$sql .= ' AND id >= ?';
 			push @values, $params{'id_start'};
 	} elsif ( $params{'id_end'} ) {
-			$sql .= ' AND Index <= ?';
+			$sql .= ' AND id <= ?';
 			push @values, $params{'id_end'};
 	} # end if
 	if ( $params{'id_like'} ) {
-		$sql .= " AND index::text LIKE '$params{'id_like'}%'";
+		$sql .= " AND id::text LIKE '$params{'id_like'}%'";
 	} # end if
 
 	if ( exists $params{'predefined'} ) {
@@ -558,6 +558,10 @@ sub find {
 	if ( $params{'salesrep_id'} ) {
 		$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
 		push @values, $params{'salesrep_id'};
+	} # end if
+	if ( $params{'csr_id'} ) {
+		$sql .= ' AND companyindex IN (SELECT index FROM Company WHERE lngsalesperson)=?';
+		push @values, $params{'csr_id'};
 	} # end if
 
 	if ( $params{'value_start'} and $params{'value_end'} ) {
@@ -645,8 +649,8 @@ sub save {
 	my @sql = (
 				'strProjectReference',	$$self{'reference'},
 				'strComments',			$$self{'comments'},
-				'CompanyIndex',		 	$$self{'company_id'},
-				'UserIndex',			$$self{'user_id'},
+				'company_id',		 	$$self{'company_id'},
+				'user_id',				$$self{'user_id'},
 				'intQuantity1',		 	( $$self{'quantity1'} ? $$self{'quantity1'} : undef ),
 				'intQuantity2',		 	( $$self{'quantity2'} ? $$self{'quantity2'} : undef ),
 				'intQuantity3',		 	( $$self{'quantity3'} ? $$self{'quantity3'} : undef ),
@@ -679,19 +683,19 @@ sub save {
 
 		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('lngProjectIndex_seq'::text)} );
 
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'Index',	@$self{'id'}, @sql ) ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'id',	@$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
 	} elsif ( $hash{'force_install'} ) {
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'Index',    @$self{'id'}, @sql ) ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'id',    @$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
 	} else {
-		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Projects', "Index=$$self{'id'}", @sql ) ) {
+		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Projects', ['id=?', $$self{'id'}], \@sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
@@ -734,7 +738,9 @@ sub quantities {
 
 sub quantity {
 	my ( $self, $index, $qty ) = @_;
-	if ( defined $qty ) {
+	if ( $index eq 'Used' ) {
+		return $self->ordered_quantity();
+	} elsif ( defined $qty ) {
 		$$self{"quantity$index"} = $qty;
 	} # end if
 	return $$self{'quantity'.$index};
@@ -793,6 +799,7 @@ sub copy {
 			'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
 			'UsedPaper.*',
 			'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
+			'.*Used',
 			);
 
 # Make this all one transaction... Don't need locking because a reload would get a different projectindex
@@ -833,14 +840,14 @@ sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref(
-				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
+				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=id WHERE id=?}
 				, {}, $$self{'id'} );
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
 	} # endif
 	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
-		@$data{qw/index summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
+		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
 	return;
 } # end sub load
 
@@ -914,6 +921,9 @@ sub summary {
 			my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
 			if ( $$printing_specs{'Versions'} ) {
 				$summary .= $$printing_specs{'Versions'} .= ' versions ';
+			} # end if
+			if ( $$printing_specs{'PageQuantity'} ) {
+				$summary .= $$printing_specs{'PageQuantity'} .= 'pg ';
 			} # end if
 
 			if ( $$printing_specs{'txtTotalPageQuantity'} ) {
@@ -1064,12 +1074,19 @@ sub ordered_quantity {
 	if ( (! exists $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
 	} # end if
-	return $$self{"quantity$$self{ordered_quantity_index}"};
+	return $$self{'quantity'.$self->ordered_quantity_index()};
 } # end sub ordered_quantity
 sub ordered_quantity_index {
 	my $self = shift;
 	if ( (! $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
+	} # end if
+	if ( ! $$self{ordered_quantity_index} ) {
+		my @qtys = $self->quantity_indexes();
+$openprint::log->debug("Project ordered_qty_index @qtys ");
+		if ( 1 == @qtys ) {
+			return $qtys[0];
+		} # end if
 	} # end if
 	return $$self{ordered_quantity_index};
 } # end sub ordered_quantity_index
@@ -1079,8 +1096,14 @@ sub ordered_price {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
 	} # end if
 	return $$self{'ordered_price'} if $$self{'ordered_price'};
-	return $$self{"price$$self{ordered_quantity_index}"};
+	return $$self{'price'.$self->ordered_quantity_index()};
 } # end sub ordered_price
+
+sub ordered_Price {
+	my ( $self ) = @_;
+	my $price = $self->ordered_price();
+	return { 'Cost'=>$price, 'currency_id'=>$$self{'currency_id'}, 'Price'=>$price };
+} # end sub ordered_Price
 
 sub prices {
 	my $self = shift;
@@ -1101,6 +1124,11 @@ sub m_price {
 	my ( $self, $qty_index ) = @_;
 	return sprintf( $config{'UnitPriceFormat'}, 1000*$$self{'price'.$qty_index}/$$self{'quantity'.$qty_index} );
 } # end sub m_price
+
+sub Price {
+	my ( $self, $index ) = @_;
+	return { 'Cost'=>$$self{'price'.$index}, 'currency_id'=>$$self{'currency_id'}, 'Price'=>$$self{'price'.$index} };
+} # end sub price
 
 sub Order {
 	my $self = shift;

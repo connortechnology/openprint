@@ -566,22 +566,20 @@
 	</tr>
 	<tr> 
 		<td rowspan="2" class="docketText">&nbsp;
-			<? if ( $$variable{'ShippingServiceIndex'} ) ?>
-			<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'ShippingServiceIndex'} ); ) ?>
-						<?rdbShippingType?>
-						- 
-						<?txtPackageQty?>
-						<?ServiceTypeName?>
-						- 
-						<?txtItemsPerPackage?>
-						- 
-						<?txtPackageWeight?>
-						lbs.
-			<? else ( $$variable{'ShippingServiceIndex'} ) ?>
-				To be picked up by customer.
-			<? endif ( $$variable{'ShippingServiceIndex'} ) ?>
-
-			</td>
+			<? echo ( 
+				my $html;
+				my $services = $$variable{'Project'}->services();
+				foreach my $service_type ( 'UPS','Shipping','CustomerPickUp' ) {
+					if ( $$services{$service_type} ) {
+						foreach my $service_id ( @{$$services{$service_type}} ) {
+							$html .= openprint::service::summary( $$variable{'Project'}, $service_id ) . '<br/>';
+							$html .= openprint::service::summary( $$variable{'Project'}, $service_id, $$variable{'Project'}->ordered_quantity_index() );
+						} # end foreach service_id
+					} # end if service exists
+				} # end foreach service_type
+				return $html;
+			) ?>
+		</td>
 		<td class="headerText"><br/><br/><br/></td>
 	</tr>
 	<tr> 

@@ -159,7 +159,19 @@
 	img#Logo {
 		border: 0px;
 	}
+	textarea {
+		width: 99%;
+	}
 </style>
+<script type="text/javascript">
+// <![CDATA[
+	var tinymce_options = {
+		mode : "textareas",
+		theme : "advanced"
+	};
+	tinyMCE.init( tinymce_options );
+// ]]>
+</script>
 <div id="Header" style="height: 1in; text-align: center;">
 	<div style="position:absolute; top: .5in; right: 0px; text-align:right; font-size: 8pt;">
 		Tel: (416) 233 0200<br/>
@@ -325,13 +337,13 @@ Received subject to the classifications and tarrifs in effect on the date of iss
 		<td>
 		<div id="quantity" style="height:1.75in;"><? echo ( $$variable{'Label'}->get_data('quantity'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:14,cols:8,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=quantity'});
+		new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{editOnBlank:0,okButton:true,cancelLink:true,rows:14,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=quantity'}, tinymce_options );
 		</script>
 		</td>
-		<td colspan="4" style="1.75in;">
+		<td colspan="4" style="height:1.75in;">
 		<div id="description" style="height:1.75in;"><? echo ( $$variable{'Label'}->get_data('description'); ) ?></div>
 		<script type="text/javascript">
-		new Ajax.InPlaceEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=description'});
+		new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{editOnBlank:0,okButton:true,cancelLink:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=description'}, tinymce_options );
 		</script>
 		</td><td>
 		<div id="weight" style="height:1.75in;"><? hecho ( $$variable{'Label'}->get_data('weight'); ) ?></div>
@@ -476,7 +488,7 @@ new Ajax.InPlaceEditor( 'type', '_label.html?id=<? echo ( $$variable{Label}->id(
 		<td colspan="8"><label>SPECIAL AGREEMENT BETWEEN<br/>SHIPPER AND CARRIER, ADVISE HERE</label>
 <div id="special_agreement" style="height: .5in;"><? hecho ( $$variable{'Label'}->get_data('special_agreement'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceEditor( 'special_agreement', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=special_agreement',{okButton:true,cancelLink:true,submitOnBlur:true,rows:5,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=special_agreement'});
+new Ajax.InPlaceRichEditor( 'special_agreement', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=special_agreement',{editOnBlank:0,okButton:true,cancelLink:true,rows:5,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=special_agreement'}, tinymce_options );
 </script>
 		</td>
 	</tr>

@@ -10,7 +10,7 @@
 	<table class="List">
 		<tr>
 			<td>
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) ) ?>
+				<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 				<table>
 					<tr>
 						<td valign="top"><b>Representative:</b></td>
@@ -21,7 +21,7 @@
 						<td><textarea name="AdministratorComments" cols="30" rows="5" ><?AdministratorComments?></textarea></td>
 					</tr>
 				</table>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 			</td>
 			<td align="right" valign="top">
 				<!--#include virtual="/includes/order_totals.html" -->

@@ -152,6 +152,20 @@ sub Paper {
 	return $$self{'paper'};
 } # end sub Paper
 
+sub load_used {
+	my ( $self, $specs, $qty_index ) = @_;
+
+	$$self{'runstyle'} = $$specs{'ddmRunStyleUsed'} ? $$specs{'ddmRunStyleUsed'} : $$specs{'ddmRunStyle'.$qty_index};
+	$$self{'image_orientation'} = $$specs{'hdnImageOrientationUsed'} ? $$specs{'hdnImageOrientationUsed'} : $$specs{'hdnImageOrientation'.$qty_index};
+	$$self{'imposition'} = $$specs{'txtImpositionUsed'} ? $$specs{'txtImpositionUsed'} : $$specs{'txtImposition'.$qty_index};
+	$$self{'rows'} = $$specs{'hdnImpositionRowsUsed'} ? $$specs{'hdnImpositionRowsUsed'} : $$specs{'hdnImpositionRows'.$qty_index};
+	$$self{'columns'} = $$specs{'hdnImpositionColumnsUsed'} ? $$specs{'hdnImpositionColumnsUsed'} : $$specs{'hdnImpositionColumns'.$qty_index};
+	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRowsUsed'} ? $$specs{'hdnImpositionDutchRowsUsed'} : $$specs{'hdnImpositionDutchRows'.$qty_index};
+	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumnsUsed'} ? $$specs{'hdnImpositionDutchColumnsUsed'} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
+	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
+
+} # edn sub load_used
+
 sub load {
 	my ( $self, $specs, $qty_index ) = @_;
 

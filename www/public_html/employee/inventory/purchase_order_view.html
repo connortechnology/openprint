@@ -1,8 +1,7 @@
 <form id="f1" name="f1" action="purchase_orders.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" />
-	<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
-	<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+	<!--#include virtual="/includes/error_reporting.html"-->
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
@@ -17,7 +16,11 @@
 		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Email Vendor';f1.submit();", '', 'Send Email' );
 		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'purchase_order_edit.html?po_id='.$$variable{'PurchaseOrder'}->id(), 'Edit' );
 		$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.action='purchase_order_view.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
-		$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+		if ( $$variable{'PurchaseOrder'}->deleted() ) {
+			$html .= ssi::writeButton( $log, $dbh, 'UnDelete', 'undelete.gif', "f1.btnFunction.value='Undelete';f1.submit();", '', 'Undelete' );
+		} else {
+			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+		} # end if
 	} # end if
 	return $html;
 ) ?>
@@ -103,12 +106,14 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 			<tr>
 				<th>Shipping Method</th>
 				<th>Shipping Terms</th>
-				<th width="183" style="text-align: center;">Delivery Date</th>
+				<th width="203" style="text-align: center;">Delivery Date</th>
 			</tr>
 			<tr>
 				<td><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
 				<td><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
-				<td style="text-align: center;"><? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : 'ASAP' ) ?></td>
+				<td style="text-align: center;"><? echo ( $$variable{'PurchaseOrder'}->delivered_on_switch() ne 'DATE' ? $$variable{'PurchaseOrder'}->delivered_on_switch().'<br/>' : '' ) ?>
+					<? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : '' ) ?>
+				</td>
 			</tr>
 		</table>
 		<br class="spacer"/>
@@ -134,7 +139,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
 				<td style="text-align: right;">%5$s/100lb</td>
 				<td style="text-align: right;">%6$s</td>
-			</tr>', $C->qty(), $C->item(), ssi::htmlize($C->description()), $C->docket(), openprint::Currency::format($C->price(),2), openprint::Currency::format($C->total()) );
+			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),2), openprint::Currency::format($C->total()) );
 			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
 			$html .= sprintf('<tr>
 				<td style="text-align: center;">%1$dsheets</td>
@@ -143,7 +148,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
 				<td style="text-align: right;">%5$s/100lb</td>
 				<td style="text-align: right;">%6$s</td>
-			</tr>', $C->qty(), $C->item(), ssi::htmlize($C->description()), $C->docket(), openprint::Currency::format($C->price(),2), openprint::Currency::format($C->total()) );
+			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),2), openprint::Currency::format($C->total()) );
 			} else {
 			$html .= sprintf('<tr>
 				<td style="text-align: center;">%1$d</td>
@@ -152,7 +157,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
 				<td style="text-align: right;">%5$s</td>
 				<td style="text-align: right;">%6$s</td>
-			</tr>', $C->qty(), $C->item(), ssi::htmlize($C->description()), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
 			} # end if
 		} else {
 			if ( $C->Type()->name() eq 'Roll Stock' ) {
@@ -161,21 +166,21 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 				<td>%2$s</td>
 				<td>%3$s</td>
 				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			</tr>', $C->qty(), $C->item(), ssi::htmlize($C->description()), $C->docket() );
+			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
 			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
 			$html .= sprintf('<tr>
 				<td style="text-align: center;">%1$dsheets</td>
 				<td>%2$s</td>
 				<td>%3$s</td>
 				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			</tr>', $C->qty(), $C->item(), ssi::htmlize($C->description()), $C->docket() );
+			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
 			} else {
 			$html .= sprintf('<tr>
 				<td style="text-align: center;">%1$d</td>
 				<td>%2$s</td>
 				<td>%3$s</td>
 				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			</tr>', $C->qty(), $C->item(), ssi::htmlize($C->description()), $C->docket() );
+			</tr>', $C->qty(), $C->item(),$C->description(), $C->docket() );
 			} # end if
 		} # end if
 	} # end foreach C
@@ -234,13 +239,14 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		<fieldset><legend>Logs</legend>
 			<table class="List">
 				<tr>
+					<th align="left" width="120">Who</th>
 					<th align="left" width="120">When</th>
 					<th align="left">Description</th>
 				</tr>
 				<? echo (
 					my $html = '';
 					foreach my $L ( $$variable{'PurchaseOrder'}->Logs() ) {
-						$html .= sprintf('<tr><td>%s</td><td>%s</td></tr>',  Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
+						$html .= sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>', $L->User()->name(), Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
 					} # end foreach
 					return $html;
 				) ?>
