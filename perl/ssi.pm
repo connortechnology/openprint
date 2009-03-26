@@ -484,7 +484,7 @@ sub date_select {
 	} else {
 		( $year, $month, $day ) = Date::Calc::Localtime( $value ne '' ? Date::Parse::str2time( $value ) : time );
 	} # end if
-$openprint::log->debug(" date_select: $value : ($year,$month,$day),");
+#$openprint::log->debug(" date_select: $value : ($year,$month,$day),");
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s"><option value=""></option>', $prefix, $onchange );

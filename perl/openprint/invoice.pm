@@ -108,8 +108,8 @@ sub history {
 		$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
 		push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 
-my @recipients = ('iconnor@connortechnology.com');
-		#my @recipients = map { sprintf('"%s" <%s>', $_->name(), $_->email() ) } new openprint::Company($param{'company_id'})->AccountingContacts();
+#my @recipients = ('iconnor@connortechnology.com');
+		my @recipients = map { sprintf('"%s" <%s>', $_->name(), $_->email() ) } new openprint::Company($param{'company_id'})->AccountingContacts();
 		my %mail = (
 				SMTP    => $config{'Mail Server'},
 				FROM    => $config{'AccountingEmail'},
