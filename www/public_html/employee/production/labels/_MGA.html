@@ -167,7 +167,7 @@
 // <![CDATA[
 	var tinymce_options = {
 		mode : "textareas",
-		theme : "advanced"
+		theme : "simple"
 	};
 	tinyMCE.init( tinymce_options );
 // ]]>
@@ -330,7 +330,7 @@ Received subject to the classifications and tarrifs in effect on the date of iss
 			<input type="radio" id="weightLBS" name="weight" value="LBS" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=weight&value=LBS');" <? echo ( $$variable{Label}->get_data('weight') eq 'LBS' ? 'checked="checked"' : '' ) ?> />
 			<label class="radio" for="weightLBS">LBS</label><br/>
 			<input type="radio" id="weightKILOS" name="weight" value="KILOS" onclick="new Ajax.Request('_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=weight&value=KILOS');" <? echo ( $$variable{Label}->get_data('weight') eq 'KILOS' ? 'checked="checked"' : '' ) ?> />
-			<label class="radio" for="weightKILO">KILOS</label>
+			<label class="radio" for="weightKILOS">KILOS</label>
 		</td>
 	</tr>
 	<tr>
