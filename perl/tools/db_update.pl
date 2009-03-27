@@ -116,7 +116,7 @@ if ( $data ) {
 		$dbh->do(q`alter table Users rename column strsalutation to salutation`);
 		$dbh->do(q`alter table Users rename column dtmdateentered to created_on`);
 		$dbh->do(q`alter table Users rename column dtmlastmodified to updated_on`);
-		$dbh->do(q`alter table Users rename column chrtype to usertype`);
+		$dbh->do(q`alter table Users rename column chrtype to type`);
 		sql::end_transaction( $dbh, $ac );
 	}
 	$dbh->do(q{alter table Users drop column ysnHTMLEmails}) if exists $$data{'ysnhtmlemails'};
@@ -1586,7 +1586,7 @@ if ( $data ) {
 		$dbh->do(q`alter table Users rename column strsalutation to salutation`);
 		$dbh->do(q`alter table Users rename column dtmdateentered to created_on`);
 		$dbh->do(q`alter table Users rename column dtmlastmodified to updated_on`);
-		$dbh->do(q`alter table Users rename column chrtype to usertype`);
+		$dbh->do(q`alter table Users rename column chrtype to type`);
 		sql::end_transaction( $dbh, $ac );
 	}
 	$dbh->do(q{alter table users add howdidyouhearaboutusother text}) if ! exists $$data{'howdidyouhearaboutusother'};
