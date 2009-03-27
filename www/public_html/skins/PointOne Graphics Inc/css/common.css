@@ -110,6 +110,7 @@ div#Header .Logo hr {
 
 a {
   text-decoration : none;
+outline: 0;
 } 
 a:link { color: #000066;  }                             /* normal text links */
 a:active { color: #000066;   }
