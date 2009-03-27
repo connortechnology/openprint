@@ -176,7 +176,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', "f1.action='/main/project/summary.html';f1.btnFunction.value='Project Summary';f1.submit();", '', 'Summary' ); ) ?>
 	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( sets::isin( $$variable{'Project'}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();", '', 'Delete' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "if(confirm('Are you sure?')){f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();}", '', 'Delete' ); ) ?>
 	<? endif ( ( ! $$variable{'Project'}->order_id() ) or ( sets::isin( $$variable{'Project'}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ?>
 	<? echo ( ssi::writeButton( $log, $dbh, 'ReuseProject', 'reUseProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Reuse Project' ); ) ?>
 </div>
