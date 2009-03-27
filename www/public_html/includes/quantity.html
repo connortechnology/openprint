@@ -5,5 +5,5 @@
 <? endif ( $$variable{ProjectTypeName} eq 'ScratchPads' ) ?>
 :
 </span>
-<span class="input"><input type="text" name="txtQuantity1" value="<?txtQuantity1?>" size="9" onkeyup="remove_div('OrderButton');" style="text-align: right;" /></span>
+<span class="input"><input type="text" name="txtQuantity1" value="<?txtQuantity1?>" size="9" onkeyup="this.value=this.value.replace(/\D/g,'');remove_div('OrderButton');" style="text-align: right;" /></span>
 </div>

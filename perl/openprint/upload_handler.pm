@@ -107,7 +107,14 @@ sub handler {
 	} else {
 		configuration::init_cache( $log, $dbh, $r->dir_config() );
 		my $serial = $r->param('serial');
+		if ( $serial ) {
 		sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
+		} else {
+			$log->error("No serial in upload, dumping session");
+			foreach my $k ( keys %session ) {
+				$log->error( "$k -> $session{$k}" );
+			} # end foreach
+		} # end if
 		upload_files( $r, $log, $dbh, \%variable );
 		my $page = '/upload/_upload_complete.html';
 		if (-e $config{'SkinPath'} . $page) {

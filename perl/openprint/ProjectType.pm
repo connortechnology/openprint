@@ -32,13 +32,18 @@ sub find {
 	my %params = @_;
 	my @values;
 	my $sql = q{SELECT * FROM Project_Types WHERE 1>0};
-	if ( $params{'name'} ) {
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
-	} # end if
 	if ( exists $params{'description'} ) {
 		$sql .= ' AND description=?';
 		push @values, $params{'description'};
+	} # end if
+	if ( exists $params{'name'} ) {
+		if ( ref $params{'name'} eq 'ARRAY' ) {
+			$sql .= q{ AND name IN (}.join(',', map {'?'} @{$params{'name'}} ).')';
+			push @values, @{$params{'name'}};
+		} else {
+			$sql .= ' AND name=?';
+			push @values, $params{'name'};
+		} # end if
 	} # end if
 	if ( $params{'category_id'} ) {
 		$sql .= ' AND category_id=?';
