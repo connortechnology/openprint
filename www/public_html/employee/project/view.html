@@ -1,12 +1,12 @@
 <div class="leftColumn">
 <form id="f2" name="f2" action="/employee/project/view.html" method="post">
 <fieldset class="filters">
-<p><label>Docket #</label><input type="text" name="Docket" id="Docket"
+<p><label>Docket #</label><input type="text" name="Docket" id="Docket" size="10"
  onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){f2.submit(f1);}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
  <? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "f2.submit();", '', 'Go' ); ) ?>
 </p>
 
-<p><label>Project #</label><input type="text" name="project_id" id="project_id"
+<p><label>Project #</label><input type="text" name="project_id" id="project_id" size="10"
  onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){f2.submit(f1);}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
  <? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f2.submit();", '', 'Go' ); ) ?>
 </p>
