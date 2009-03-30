@@ -186,18 +186,21 @@ sub calculate_signatures {
 
 	my $unspecified_spreads = 0;
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
-	return if ! $$printing_specs{'txtTotalPageQuantity'};
-
-	my @signatures = sort $Project->signatures('Interior Spreads');
-	push @signatures, sort $Project->signatures('Cover Spreads');
-	push @signatures, sort $Project->signatures('GateFolded Spreads');
+	my @signatures;
+	if ( ! $$printing_specs{'txtTotalPageQuantity'} ) {
+		@signatures = $Project->signatures();
+	} else {
+		@signatures = sort $Project->signatures('Interior Spreads');
+		push @signatures, sort $Project->signatures('Cover Spreads');
+		push @signatures, sort $Project->signatures('GateFolded Spreads');
+	} # end if
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signatures[$i] );
 
 # Clear these so that when we start recalculating, we get large signatures first.
-		foreach my $qty_index ( 1 .. 3 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( ( $$sig_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} ne 'Y' ) and ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) ) {
 				openprint::service::insert_service_specs( $log, $dbh, $project_index, $signatures[$i], 'txtSignatureSpreadQuantity'.$qty_index, '' );
 				openprint::service::insert_service_specs( $log, $dbh, $project_index, $signatures[$i], 'PageQuantity'.$qty_index, '' );
@@ -278,8 +281,7 @@ $openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs
 # Chekc for unspecified spreads
 	foreach my $ss_id ( @signatures ) {
 		my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $$sig_specs{'txtQuantity'.$qty_index};
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			$unspecified_spreads = openprint::Estimating::Printing::get_unspecified_spreads( $Project, undef, $printing_specs, $sig_specs, $qty_index );
 			last if $unspecified_spreads;
 		} # end foreach
@@ -306,8 +308,7 @@ $openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $new_service_index );
 
 					# Need to dro poverrides on the last sig so that we don't get more spreads than we need
-					foreach my $qty_index ( 1 .. 3 ) {
-						next if ! $Project->quantity($qty_index);
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
 						if ( $$new_sig_specs{'txtSignatureSpreadQuantity'.$qty_index} > $unspecified_spreads ) {
 							openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverrideSignatureSpreadQuantity'.$qty_index, '' );
 							openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'chkOverridePageQuantity'.$qty_index, '' );
@@ -317,8 +318,7 @@ $openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs
 					$new_sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $new_service_index, 'Printing' );
 					last if $$new_sig_specs{'Status'} eq 'uncalculated';
 
-					foreach my $qty_index ( 1 .. 3 ) {
-						next if ! $Project->quantity($qty_index);
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
 						$unspecified_spreads = $$new_sig_specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 						last if $unspecified_spreads;
 					} # end foreach
@@ -330,7 +330,7 @@ $openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs
 				while ( @signatures ) {
 					my $ss_id = pop @signatures;
 					my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
-					foreach my $qty_index ( 1 .. 3 ) {
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
 						$unspecified_spreads = openprint::Estimating::Printing::get_unspecified_spreads( $Project, undef, $printing_specs, $sig_specs, $qty_index );
 						last if $unspecified_spreads < 0;
 					} # end foreach

@@ -14,8 +14,13 @@ sub find {
 		push @values, $params{'name'};
 	} # end if
 	if ( exists $params{'strid'} ) {
-		$sql .= ' AND strID=?';
-		push @values, $params{'strid'};
+		if ( ref $params{'strid'} eq 'ARRAY' ) {
+			$sql .= q{ AND strid IN (}.join(',', map {'?'} @{$params{'strid'}} ).')';
+			push @values, @{$params{'strid'}};
+		} else {
+			$sql .= ' AND strID=?';
+			push @values, $params{'strid'};
+		} # end if
 	} # end if
 	if ( $params{'category_id'} ) {
 		$sql .= ' AND category_id=?';

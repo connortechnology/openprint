@@ -14,6 +14,28 @@
          <a href="/index.html?Country=CA&amp;Currency=CAD"><img src="/images/canada_top.gif" alt="Canadian Dollars" /></a>
          <div id="choose_currencies_top">choose currency</div>
       </div>
+	<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+		<div id="CurrencySelection">
+			<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param ); ) ?>" method="post">
+				<p>
+					<label>Company:</label>
+					<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
+					<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.submit();">
+					<option value="">Select a Company</option>
+					<? echo ( openprint::Company::get_dropdown( $session{'company_id'} );) ?>
+					</select>
+					<? echo ( ssi::writeButton( $log, $dbh, 'SelectGo', 'submit.gif', 'SelectCurrency.submit();', '', 'Go' ); ) ?>
+				</p>
+				<input type="hidden" name="btnFunction" value="SelectCompany" />
+			</form>
+			<? if ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
+			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
+			<? endif ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
+			<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
+			<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+		</div>
+	<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
       <div id="nav_icons">
          <a href="/index.html"><img src="/images/home_icon.gif" alt="Home" /></a>
          <? if ( $session{'user_id'} ) ?>
