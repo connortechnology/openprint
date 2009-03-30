@@ -15,14 +15,14 @@
 			</p>
 			<p>
 				<label>Hole size:</label>
-<? if ( $openprint::config{DrillingSizes} ) ?>
+<? if ( $config{DrillingSizes} ) ?>
 <select name="txtHoleSize" onchange="calc(this.form.name);">
-<? echo ( ssi::make_drop_down( [ map { split '~', $_ } split ',', $openprint::config{DrillingSizes} ], $$variable{'txtHoleSize'} ); ) ?>
+<? echo ( ssi::make_drop_down( [ map { split '~', $_ } split ',', $config{DrillingSizes} ], $$variable{'txtHoleSize'} ); ) ?>
 </select>
-<? else ( $openprint::config{DrillingSizes} ) ?>
+<? else ( $config{DrillingSizes} ) ?>
 					<input name="txtHoleSize" value="<?txtHoleSize?>" type="text" size="9"  onkeyup="calc(this.form.name);" />
 					in inches (ex: 0.125, 0.25)
-<? endif ( $openprint::config{DrillingSizes} ) ?>
+<? endif ( $config{DrillingSizes} ) ?>
 			</p>
 		</fieldset>
 		<fieldset><legend>Results</legend>
