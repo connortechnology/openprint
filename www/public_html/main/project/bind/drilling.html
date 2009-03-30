@@ -24,6 +24,16 @@
 					in inches (ex: 0.125, 0.25)
 <? endif ( $config{DrillingSizes} ) ?>
 			</p>
+			<p>
+				<label>Items per lift:</label>
+				<input type="text" id="ItemsPerLift" name="ItemsPerLift" value="<?ItemsPerLift?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" size="4" />
+				<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+				<input type="checkbox" id="OverrideItemsPerLift" name="OverrideItemsPerLift" value="Y" <? echo ( ssi::checked( $$variable{'OverrideItemsPerLift'} eq 'Y' ); ) ?> />
+				<label class="radio" for="OverrideItemsPerLift">Override</label>
+				<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+				<input type="hidden" name="OverrideItemsPerLift" value="<?OverrideItemsPerLift" />
+				<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+			<p>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->

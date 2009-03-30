@@ -30,6 +30,7 @@ my @variables = (
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtHoleQty',
 		'txtHoleSize',
+		'ItemsPerLift','OverrideItemsPerLift',
 		'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 		'chkOverrideEquipment1', 'chkOverrideEquipment2', 'chkOverrideEquipment3',
 		'chkOverrideFinishedCalliper','txtFinishedCalliper',
@@ -45,7 +46,8 @@ my @outputs = (
 		'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 		'txtFinishedCalliper',
 		'hdnBreakdown1', 'hdnBreakdown2', 'hdnBreakdown3',
-		'alert',
+		'alert','Status',
+		'ItemsPerLift',
 );
 sub outputs {
 	return @outputs;
@@ -83,12 +85,10 @@ sub calc {
 
 	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Drilling Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
-		next if ! $qty;
-		my $bestPrice = 0;
-		my $bestEquipment = '';
+		my %BestPrice;
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty):<br/>";
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtFinishedCalliper'}.'<br/>';
 		if ( $$specs{'txtPressSheetComboItems'} > 1 ) {
@@ -130,6 +130,16 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum Charge: $%.2f<br/>', $minPrice );
 
 			my $price = 0;
+			my $items_per_lift;
+			if ( $$specs{'OverrideItemsPerLift'} ne 'Y' ) {
+				if ( $services{'Scoring'} or $services{'Perforating'} ) {
+					$items_per_lift = 10;
+				} elsif ( $Equipment->specification('Maximum Lift Depth') ) {
+					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{'txtFinishedCalliper'});
+				} # end if
+			} else {
+				$items_per_lift = $$specs{'ItemsPerLift'};
+			} # end if
 
 			my $makeReady = openprint::service::get_price( $log, $dbh, $variable, 'DrillingMakeReady', $$specs{'txtHoleQty'}, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= "MakeReadyPrice: $makeReady<br/>";
@@ -148,10 +158,9 @@ sub calc {
 			} elsif ( sets::isin( lc $servicePrice{'units'}, [ 'per lift', 'per drill' ] ) ) {
 				my $runs = ceil( $$specs{'txtHoleQty'} / $Equipment->specification('Number of Drills'));
 
-				if ( $Equipment->specification('Maximum Lift Depth') ) {
-					my $items_per_run = int($Equipment->specification('Maximum Lift Depth')/$$specs{'txtFinishedCalliper'});
-					$runs *= ceil($qty/$items_per_run);
-					$$specs{'hdnBreakdown'.$qty_index} .= "$items_per_run Items per run = $runs runs.<br/>";
+				if ( $items_per_lift ) {
+					$runs *= ceil($qty/$items_per_lift);
+					$$specs{'hdnBreakdown'.$qty_index} .= "$items_per_lift Items per lift = $runs lifts.<br/>";
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= "$runs runs.<br/>";
 				} # end if
@@ -166,23 +175,26 @@ sub calc {
 			if ( $minPrice > 0 and $price < $minPrice ) {
 				$price = $minPrice;
 			} # end if
-			if ( $price < $bestPrice or ! $bestPrice ) {
-				$bestPrice = $price;
-				$bestEquipment = $Equipment;
+			if ( $price < $BestPrice{'Total'} or ! %BestPrice ) {
+				$BestPrice{'Total'} = $price;
+				$BestPrice{'Equipment'} = $Equipment;
+				$BestPrice{'ItemsPerLift'} = $items_per_lift;
 			} # end if
 		} # end foreach equipment_id
 
-		if ( ! $bestEquipment ) {
+		if ( ! %BestPrice ) {
 			$$specs{'Status'} = 'uncalculated';
 			next;
 		} # end if
 
 		my $unitPrice = 0;
-		$unitPrice = $bestPrice / $qty;
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice );
+		$unitPrice = $BestPrice{'Total'} / $qty;
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
-		$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
-
+		$$specs{"ddmEquipment$qty_index"} = $BestPrice{'Equipment'}->id();
+		if ( $$specs{'OverrideItemsPerLift'} ne 'Y' ) {
+			$$specs{'ItemsPerLift'} = $BestPrice{'ItemsPerLift'};
+		} # end if
 	} # end foreach qty_index
 
 	return $$specs{'Status'};
