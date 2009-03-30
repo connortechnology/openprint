@@ -12,7 +12,7 @@
 		<label for="txtScoreQty"># of Scores:</label>
 	</span>
 	<span class="input">
-		<input type="text" id="txtScoreQty" name="txtScoreQty" value="<?txtScoreQty?>" size="2" onkeyup="remove_div('OrderButton');"/>
+		<input type="text" id="txtScoreQty" name="txtScoreQty" value="<?txtScoreQty?>" size="2" onkeyup="this.value=this.value.replace(/\D/g,'');remove_div('OrderButton');"/>
 		<input type="checkbox" id="chkOverrideScoreQty" name="chkOverrideScoreQty" value="Y" <? echo ( 'checked="checked"' if $$variable{'chkOverrideScoreQty'} eq 'Y' ) ?> onclick="remove_div('OrderButton');" />
 		<label class="radio" for="chkOverrideScoreQty">Override</label>
 	</span>

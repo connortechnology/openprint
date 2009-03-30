@@ -41,7 +41,7 @@ sub variables {
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $p_id, $s_s_id );
-		foreach my $qty_index ( 1 .. 3 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 			push @v, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index";
@@ -256,7 +256,7 @@ sub test_fold {
 			#$openprint::log->debug("Fold good due to Maximum height " . ($I->image_orieintation() eq 'Vertical' ? $I->image_height() : $I->image_width() ) . ' > ' . $Equipment->specification($foldtype.'MaximumHeight' ) ) if $debug;
 		} # end if
 		if ( $Equipment->specification($foldtype.'PrintingType') and ! sets::isin( $$sig_specs{'PrintingType'.$qty_index}, split(',', $Equipment->specification($foldtype.'PrintingType') ) ) ) {
-			$openprint::log->debug("Fold no good due to PrintingType $$sig_specs{'PrintingType'.$qty_index} != " . $Equipment->specification($foldtype.'PrintingType') )  if $debug;
+			$openprint::log->debug("Fold no good due to PrintingType ($$sig_specs{'PrintingType'.$qty_index}) != " . $Equipment->specification($foldtype.'PrintingType') )  if $debug;
 			return 0;
 		} # end if
 	} # end if
@@ -302,6 +302,7 @@ sub signature_calc {
 		push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 	} else {
 		@my_equipment = @equipment;
+$openprint::log->debug("Previous Imposition: ($$sig_specs{'PreviousImposition'})");
 		if ( $$sig_specs{'PreviousImposition'} and $$sig_specs{'PreviousImposition'} != $Imposition->imposition() ) {
 		} else {
 			if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
@@ -392,13 +393,15 @@ $openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty
 
 			# FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 			if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
-#$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}");
 				$_ = $Equipment->fits( $Imposition->image_width(), $Imposition->image_height(), $$sig_specs{'txtSpecificStockCalliper'} );
 				if ( $_ ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit: $_<br/>";
 				} elsif ( test_fold( $Equipment, $Imposition, $sig_specs, $$sig_specs{'rdbTemplateType'}, $qty_index ) ) {
 					$folds{$$sig_specs{'rdbTemplateType'}} = 1;
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Fold not possible.<br/>";
 				} # end if
+$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'} " . $folds{$$sig_specs{'rdbTemplateType'}});
 
 			} else {
 #if ( $$sig_specs{"txtSignatureSpreadQuantity$qty_index"} ) {
@@ -593,9 +596,6 @@ sub calc {
 			$$sig_specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'} if ! $$sig_specs{'txtSpreadSize'};
 			$$sig_specs{'txtSpreadSize'} = 2 if ! $$sig_specs{'txtSpreadSize'};
 
-			if ( (!$previous_imposition) and ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} )->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) ) {
-				$previous_imposition = $$sig_specs{'txtImposition'.$qty_index};
-			} # end if
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 
 			if ( ( ! exists $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) or $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
@@ -617,6 +617,9 @@ sub calc {
 					foreach ( keys %fold_types ) {
 						$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'BestFolds'}{$_};
 					} # end foreach
+				} # end if
+				if ( (!$previous_imposition) and ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} )->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) ) {
+					$previous_imposition = $$sig_specs{'txtImposition'.$qty_index};
 				} # end if
 			}# # end if
 		} # end foreach signature

@@ -219,57 +219,54 @@ color: #6400b5;
 }
 
 /* Instant pricing shadow border styles */
-div.instant_price_section_top_shadow {
+div.InstantPricing .top_shadow {
 	background-image: url(/images/instant_pricing/shadow_border/top.gif);
 	background-repeat: repeat-x;
 	background-color: #fff;
 	height: 20px;
 }
-div.instant_price_section_shadow_tl {
+div.InstantPricing .shadow_tl {
 	float: left;
 	background-image: url(/images/instant_pricing/shadow_border/tl.gif);
 	background-repeat: no-repeat;
 	width: 21px;
 	height: 20px;
 }
-div.instant_price_section_shadow_tr {
+div.InstantPricing .shadow_tr {
 	float: right;
 	background-image: url(/images/instant_pricing/shadow_border/tr.gif);
 	background-repeat: no-repeat;
 	width: 21px;
 	height: 20px;
 }
-div.instant_price_section_content {
+div.InstantPricing .shadow_left {
 background-image: url(/images/instant_pricing/shadow_border/left.gif);
 background-repeat: repeat-y;
 background-position: left;
 padding-left: 7px;
 }
-div.instant_price_section_inner {
+div.InstantPricing .shadow_right {
 background-color: #e4d9f2;
 background-image: url(/images/instant_pricing/shadow_border/right.gif);
 background-repeat: repeat-y;
 background-position: right;
 padding-right: 7px;
 }
-div.instant_price_section_bottom_shadow
-{
+div.InstantPricing .bottom_shadow {
 clear: left;
 background-image: url(/images/instant_pricing/shadow_border/bottom.gif);
 background-repeat: repeat-x;
 background-color: #fff;
 height: 20px;
 }
-div.instant_price_section_shadow_bl
-{
+div.InstantPricing .shadow_bl {
 float: left;
 background-image: url(/images/instant_pricing/shadow_border/bl.gif);
 background-repeat: no-repeat;
 width: 21px;
 height: 20px;
 }
-div.instant_price_section_shadow_br
-{
+div.InstantPricing .shadow_br {
 float: right;
 background-image: url(/images/instant_pricing/shadow_border/br.gif);
 background-repeat: no-repeat;

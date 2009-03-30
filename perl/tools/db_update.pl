@@ -333,11 +333,11 @@ if ( ! $data ) {
 	if ( ! exists $$data{'docket'} ) {
 		$dbh->do('ALTER TABLE Manifests add docket INTEGER');
 	} # end if
-	if ( ! exists $$data{'delivered_on_switch' ) {
+	if ( ! exists $$data{'delivered_on_switch'} ) {
 		$dbh->do('ALTER TABLE Manifests add delivered_on_switch TEXT');
 	} # end if
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
 if ( ! $data ) {
 } else {
 	if ( ! exists $$data{'federaltax_charge'} ) {
