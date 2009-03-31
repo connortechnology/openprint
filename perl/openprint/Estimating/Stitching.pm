@@ -167,6 +167,7 @@ sub signature_calc {
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 			$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
+			$$specs{'Status'} = 'uncalculated';
 		} # end if
 	} else {
 		$$specs{'Imposition'.$qty_index} = $imposition;
@@ -282,7 +283,6 @@ sub calc {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
-		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
 			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
@@ -319,6 +319,7 @@ sub calc {
 #$openprint::log->debug("Overriding imposiion");
 			if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 				$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
+				$$specs{'Status'} = 'uncalculated';
 			} # end if
 		} else {
 			$$specs{'Imposition'.$qty_index} = $imposition;
