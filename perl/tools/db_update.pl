@@ -1586,7 +1586,7 @@ if ( $data ) {
 		$dbh->do(q`alter table Users rename column strsalutation to salutation`);
 		$dbh->do(q`alter table Users rename column dtmdateentered to created_on`);
 		$dbh->do(q`alter table Users rename column dtmlastmodified to updated_on`);
-		$dbh->do(q`alter table Users rename column chrtype to usertype`);
+		$dbh->do(q`alter table Users rename column chrtype to type`);
 		sql::end_transaction( $dbh, $ac );
 	}
 	$dbh->do(q{alter table users add howdidyouhearaboutusother text}) if ! exists $$data{'howdidyouhearaboutusother'};
@@ -1898,6 +1898,19 @@ if ( ! $data ) {
 	} # end foreach
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM EmployeeNumbers LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/EmployeeNumbers.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} else {
+	if ( exists $$data{'lngemployeeid'} ) {
+		$dbh->do('alter table employeenumbers rename column lngemployeeid to id');
+		$dbh->do('alter table employeenumbers rename column lngmin to min');
+		$dbh->do('alter table employeenumbers rename column lngmax to max');
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__

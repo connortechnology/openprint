@@ -15,15 +15,25 @@
 			</p>
 			<p>
 				<label>Hole size:</label>
-<? if ( $openprint::config{DrillingSizes} ) ?>
+<? if ( $config{DrillingSizes} ) ?>
 <select name="txtHoleSize" onchange="calc(this.form.name);">
-<? echo ( ssi::make_drop_down( [ map { split '~', $_ } split ',', $openprint::config{DrillingSizes} ], $$variable{'txtHoleSize'} ); ) ?>
+<? echo ( ssi::make_drop_down( [ map { split '~', $_ } split ',', $config{DrillingSizes} ], $$variable{'txtHoleSize'} ); ) ?>
 </select>
-<? else ( $openprint::config{DrillingSizes} ) ?>
+<? else ( $config{DrillingSizes} ) ?>
 					<input name="txtHoleSize" value="<?txtHoleSize?>" type="text" size="9"  onkeyup="calc(this.form.name);" />
 					in inches (ex: 0.125, 0.25)
-<? endif ( $openprint::config{DrillingSizes} ) ?>
+<? endif ( $config{DrillingSizes} ) ?>
 			</p>
+			<p>
+				<label>Items per lift:</label>
+				<input type="text" id="ItemsPerLift" name="ItemsPerLift" value="<?ItemsPerLift?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" size="4" />
+				<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+				<input type="checkbox" id="OverrideItemsPerLift" name="OverrideItemsPerLift" value="Y" <? echo ( ssi::checked( $$variable{'OverrideItemsPerLift'} eq 'Y' ); ) ?> />
+				<label class="radio" for="OverrideItemsPerLift">Override</label>
+				<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+				<input type="hidden" name="OverrideItemsPerLift" value="<?OverrideItemsPerLift" />
+				<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+			<p>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->

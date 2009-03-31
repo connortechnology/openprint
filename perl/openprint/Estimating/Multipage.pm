@@ -209,7 +209,6 @@ $openprint::log->debug("Starting Multipage::calculate_signatures");
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	#return if ! $$printing_specs{'txtTotalPageQuantity'};
 
 	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});

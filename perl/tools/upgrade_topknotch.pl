@@ -55,4 +55,6 @@ if ( $year ) {
 print "upgrading db ...";
 `./db_update.pl $dst_db topknotch topknotch` or $log->error($!);
 print "done\n";
-#$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'topknotch', 'password'=>'topknotch') );
+print "upgrading signatures...";
+`/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db >> /tmp/db_update.log` or $log->error($!);
+print "done\n";
