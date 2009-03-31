@@ -67,3 +67,23 @@ td#banner {
 	height: 0px;
 	clear: both;
 }
+div.PageTitle {
+	float: right;
+	margin-top: -80px;
+	right: 10px;
+}
+.PageTitle h1 {
+    text-align: right;
+	color: #ff7f00;
+    margin: 0px;
+    font-size: 16px;
+}
+.PageTitle h2 {
+    text-align: right;
+    color: #000088;
+    margin-top: 0px;
+    font-size: 12px;
+}
+.colRow {
+    background-color: #e3e4f0;
+}

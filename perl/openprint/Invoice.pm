@@ -167,16 +167,6 @@ sub load {
 	@$self{keys %$data} = @$data{keys %$data};
 } # end sub load
 
-sub delete {
-	my $self = shift;
-	return sql::update( undef, undef, 'Invoices', ['id=?', $$self{'id'} ], 'deleted', 1 );
-} # end sub delete
-
-sub destroy {
-	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM Invoices WHERE id=?}, $$self{'id'} );
-} # end sub destroy
-
 sub save {
 	my ( $self, $param ) = @_;
 	
@@ -186,7 +176,7 @@ sub save {
 	$$self{'federaltax'} = $self->federaltax();
 	$$self{'statetax'} = $self->statetax();
 	
-	$self->set( $param ) if $param;
+	$self->set( $param );
 
 	my %sql;
 	foreach my $k ( keys %fields ) {
@@ -214,14 +204,6 @@ sub save {
 	return '';
 } # end sub save
 
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Invoice();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
-
 sub Currency {
 	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
@@ -235,7 +217,7 @@ sub is_paid {
 	if ( ! $$self{'posted'} ) {
 		return 0;
 	} # end if
-	return ( $self->total() - $self->paid() > 0 ) ? 0 : 1;
+	return ( $self->owing() > 0 ) ? 0 : 1;
 } # end sub is_paid
 
 sub owing {

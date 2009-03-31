@@ -15,6 +15,8 @@ require openprint::Invoice;
 require openprint::Invoice_Interest;
 
 sub history {
+	ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id','bad_debt') );
+
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 
@@ -97,10 +99,31 @@ sub history {
 		push @Data, 'Totals:', '', '', $subtotal, '', $federaltax_total, $total, $interest_total, $owing_total;
 
 		misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
+	} elsif ( $param{'btnFunction'} eq 'Account Statement' ) {
+		my %data;
+
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+		my @attachments;
+		$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/account_statement.html' );
+		$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+		push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
+
+#my @recipients = ('iconnor@connortechnology.com');
+		my @recipients = map { sprintf('"%s" <%s>', $_->name(), $_->email() ) } new openprint::Company($param{'company_id'})->AccountingContacts();
+		my %mail = (
+				SMTP    => $config{'Mail Server'},
+				FROM    => $config{'AccountingEmail'},
+				TO      => join(',', @recipients ),
+				BCC     => sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
+				SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
+				);
+		misc::send_email_with_attachment( $log, \%mail, @attachments );
+		$variable{'information'} .= 'Sent to '.join(',', @recipients ). '<br/>';
 	} # end if
 } # end sub history
 
 sub _history {
+	ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id','bad_debt') );
 } # end sub _history
 
 sub edit {

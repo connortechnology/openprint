@@ -412,48 +412,32 @@ sub company_profiles {
 		$Company = new openprint::Company( $index );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Undelete' ) {
 		$Company->undelete();
-	} else {
-# No action, so we can default to us
-		if ( ! $index ) {
-			$index = $session{'company_id'};
-			$Company = new openprint::Company( $index );
-		} # end if
 	} # end if btnFunction
 
-	my $customer = new openprint::obj_customer( $log, $dbh, $index );
-
-	$variable{'txtPricingLevel'} = sprintf ( "%.0f", $variable{'txtPricingLevel'} ) . "%";
-	$variable{'txtDownpayment'} = sprintf ( "%.0f", $variable{'txtDownpayment'} ) . "%";
-
-	openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
-	my $shipping_address = $customer->get_shipping_address();
-	@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
-	$variable{'rdbShippingSalutation'.$variable{'rdbShippingSalutation'}} = 'CHECKED';
-
-	my $customer_credit = new openprint::customer_credit( $index );
-	@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
-
-	# Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
-	my @available_categories = map { $_->id(), $_->name() } openprint::MarketingCategory::find();
-	
 	# get categories this customer is in we do it this way to limit databse transaction to 2.
 	my @customers_categories;
-	if ( $index ) {
-		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
-		@customers_categories = sql::execute( $log, $dbh, $_, $index );
-	} # end if
-	$variable{'selectCustomerCategories'} = ssi::make_select( \@available_categories, \@customers_categories );
-
-	$variable{'ddmShippingStateProvince'} = ssi::return_states_and_provinces($variable{'ddmShippingStateProvince'});
-	$variable{'ddmShippingCountry'} = ssi::return_countries($variable{'ddmShippingCountry'});
-
 	my $total;
 	my $payments;
 	if ( $index ) {
+		my $customer = new openprint::obj_customer( $log, $dbh, $index );
+		openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
+		my $shipping_address = $customer->get_shipping_address();
+		@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
+		my $customer_credit = new openprint::customer_credit( $index );
+		@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
+		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
+		@customers_categories = sql::execute( $log, $dbh, $_, $index );
 		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Paid')";
 		( $total ) = sql::execute( $log, $dbh, $_, $index );
 		( $payments ) = misc::sum( map { $_->amount() } openprint::Payment::find('completed'=>1, 'payor_id'=>$index, 'recipient_id'=>$session{'company_id'} ) );
 	} # end if
+
+	$variable{'txtPricingLevel'} = sprintf ( "%.0f", $variable{'txtPricingLevel'} ) . "%";
+	$variable{'txtDownpayment'} = sprintf ( "%.0f", $variable{'txtDownpayment'} ) . "%";
+
+	# Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
+	my @available_categories = map { $_->id(), $_->name() } openprint::MarketingCategory::find();
+	$variable{'selectCustomerCategories'} = ssi::make_select( \@available_categories, \@customers_categories );
 
 	$variable{'CreditBalance'} = '$ '.sprintf( '%.2f', ( $total - $payments ) );
 	if ( $variable{'txtCreditLimit'} < ($total - $payments) ) {
