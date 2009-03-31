@@ -1576,7 +1576,7 @@ if ( 1 ) {
             foreach my $imp ( @impositions ) {
                 $max_pages = $imp->pages() if $imp->pages() > $max_pages;
             } # end foreach
-            $max_pages /= 2;
+            $max_pages /= 3;
             foreach my $imp ( @impositions ) {
 				next if ( $$specs{'PreviousImposition'} and ( $$specs{'PreviousImposition'} > $imp->imposition() ) );
 				if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') {
