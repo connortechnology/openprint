@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -1053,6 +1053,8 @@ sub calc {
 				} # end for
 			} # end if
 
+			$$sig_specs{'PreviousImposition'} = $previous_imposition;
+
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.<br/>';
 				next;
@@ -1112,6 +1114,9 @@ sub calc {
 				} # end if
 				if ( $results{'Status'} eq 'uncalculated' ) {
 					$status = 'uncalculated';
+				} # end if
+				if ( (!$previous_imposition) and ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} )->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) ) {
+					$previous_imposition = $$sig_specs{'txtImposition'.$qty_index};
 				} # end if
 			} # end if has pages
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';

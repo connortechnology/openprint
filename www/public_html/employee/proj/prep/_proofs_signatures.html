@@ -103,10 +103,7 @@
 		
 	} # end if
 ) ?>
-<div class="error"><?ErrorMessage?></div>
-<? if ( $$variable{'information'} ) ?>
-<div class="error"><?information?></div>
-<? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 
 <form id="f2" name="f2">
 	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
@@ -114,7 +111,7 @@
 	<input type="hidden" name="order_id" value="<?OrderID?>"/>
 	<input type="hidden" name="btnFunction" value=""/>
 	<? eval ( 
-		@{$$variable{'Presses'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strCategory='Printing' ORDER BY lower(strName)} );
+		@{$$variable{'Presses'}} = map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 		openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); 
 
 		@{$$variable{'SignatureIndices'}} = $$variable{'Project'}->signatures();

@@ -1,0 +1,16 @@
+<? if ( $$variable{'error'} ) ?>
+<div class="error"><?error?></div>
+<? else ( $$variable{'error'} ) ?>
+Thank you for registering on our website. If you need help with any of our products, please feel free to call us anytime @ 905-624-5100.<br/>
+<? if ( $openprint::session{'user_id'} ) ?>
+<br><br>
+
+	Your account has been activated and you have been automatically logged in.<br>
+<? else ( $openprint::session{'user_id'} ) ?>
+	At this time your login remains inactive.<br>
+	<br>
+	You will be notified via email when your account is activated.<br>
+<? endif ( $openprint::session{'user_id'} ) ?>
+<br>
+<b><? echo ( $openprint::session{'Destination'}; ) ?></b><br/>
+<? endif ( $$variable{'error'} ) ?>

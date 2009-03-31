@@ -427,7 +427,7 @@ sub calc {
 
 		if ( 1 > $$specs{"txtPockets$qty_index"} ) {
 			$$specs{'Status'} = 'uncalculated';
-			$$specs{'alert'} = 'We are unable to determine how many pockets your project requires.  Please contact us.';
+			$$specs{'alert'} .= 'We are unable to determine how many pockets your project requires.  Please contact us.';
 			if ( $$specs{'OverrideImposition'.$qty_index} ne 'Y' ) {
 				$$specs{'Imposition'.$qty_index} = '';
 			} # end if
