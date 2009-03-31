@@ -2094,26 +2094,23 @@ $openprint::log->debug("Max Impo $p => $max_impositions{$p}");
 					next;
 				} # end if
 
-				# Check for minimum order requirments
-				my $stock_qty;
+				my $add = 1;
+
+				my $stock_qty = ($qty/$imp->imposition());
 				if ( $imp->Paper()->type() eq 'Roll' ) {
-					$stock_qty = ($qty/$imp->imposition()) * $imp->Paper()->area() * $imp->Paper()->wpsi();
-				} else {
-					$stock_qty = $qty/$imp->imposition();
-				} # end if
-				if ( $imp->Paper()->minimum_order() > $stock_qty ) {
-					next;
+					# Convert to weight
+					$stock_qty *= $imp->Paper()->area() * $imp->Paper()->wpsi();
 				} # end if
 
-				my $add = 1;
 				if ( $imp->runstyle() eq 'Work & Tumble' ) {
 					my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
 					if ( $imps{$str} ) {
 						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 							my $I = $imps{$str}[$j];
-							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+							my %BiggerPrice = $I->Paper()->get_price($stock_qty);
+							my %SmallerPrice = $imp->Paper()->get_price($stock_qty);
 							if ( ( $I->Paper()->area() <= $imp->Paper()->area() )
+									and ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 									and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 									and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 									) {
@@ -2126,9 +2123,10 @@ $openprint::log->debug("Max Impo $p => $max_impositions{$p}");
 					if ( $imps{$str} ) {
 						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 							my $I = $imps{$str}[$j];
-							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+							my %BiggerPrice = $I->Paper()->get_price($stock_qty);
+							my %SmallerPrice = $imp->Paper()->get_price($stock_qty);
 							if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
+									and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 									and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 									and ( $I->Paper()->is_cut() or ! $imp->Paper()->is_cut() )
 							   ) {
@@ -2149,15 +2147,17 @@ $openprint::log->debug("Max Impo $p => $max_impositions{$p}");
 						} elsif ( ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$sig_specs{"CutOff$qty_index"} ) ) {
 							next;
 						} # end if
-						my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-						my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+						my %BiggerPrice = $I->Paper()->get_price($stock_qty);
+						my %SmallerPrice = $imp->Paper()->get_price($stock_qty);
 						if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
+								and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 								and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 								and ( $I->Paper()->is_cut() or ! $imp->Paper()->is_cut() )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
 						} elsif ( ( $I->Paper()->area() < $imp->Paper()->area() )
+								and ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 								and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 								and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 								) {
@@ -2190,6 +2190,7 @@ $imp->display();
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 							if ( ( $I->Paper()->area() <= $imp->Paper()->area() )
+									and ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 									and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 									and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 									) {
@@ -2210,6 +2211,7 @@ $imp->display();
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 							if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
+									and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 									and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 									and ( ! ( ( ! $I->Paper()->is_cut() ) and $imp->Paper()->is_cut() ) )
 							   ) {
@@ -2232,12 +2234,14 @@ $imp->display();
 						my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 						my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
 						if ( ( $I->Paper()->area() >= $imp->Paper()->area() )
+								and ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 								and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 								and ( ! ( ( ! $I->Paper()->is_cut() ) and $imp->Paper()->is_cut() ) )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
 						} elsif ( ( $I->Paper()->area() < $imp->Paper()->area() )
+								and ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 								and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 								and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 								) {
@@ -2497,6 +2501,8 @@ $openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $
 							#$openprint::log->warn('Couldnt calculate full price');
 						} else {
 							@{$$price{'Impositions'}} = @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
+
+							# Don't add stock weight because we likely have a different stock anyways.
 							$StockWeight += $$sig_price{'Stock Weight'};
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
@@ -2515,7 +2521,6 @@ $openprint::log->debug("Unable to calculate additional signatures Complete: $$si
 						last;
 					} # end if
 
-					$additional_price -= $$sig_price{'Paper Total'};
 					$additional_price -= $$sig_price{'Plate Comparison Cost'};
 					$$sig_price{'Stitching Breakdown'} = '';
 					plate_cost( $sig_price, \%PlateCounts, $$sig_price{'Imposition'} );
