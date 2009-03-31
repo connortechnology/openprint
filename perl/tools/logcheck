@@ -1,0 +1,59 @@
+#!/usr/bin/perl -w
+use lib '/etc/apache2/lib/perl';
+
+use sql;
+
+use strict;
+use Socket;
+
+my @log_files = (
+	'/var/log/auth.log',
+);
+
+my @re = (
+'^\w{3} [ :0-9]{11} [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_unix\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s*$',
+'^\w{3} [ :0-9]{11} [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_unix\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
+
+);
+
+my %host_counts;
+
+foreach my $log_file ( @log_files ) {
+	if ( open( FH, "<$log_file" ) ) {
+		foreach my $line (<FH>) {
+			foreach my $re ( @re ) {
+#print "Trying \n$re against\n $line\n" if $line =~ /authen/;
+				if ( $line =~ /$re/ ) {
+					my $source = $1;
+					#print "match for $source\n";
+					my $ip;
+					if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
+						# Is an IP
+						$ip = $source;
+					} else {
+						# is a hostname
+						$ip = gethostbyname($source);
+						if ( defined $ip ) {
+							$ip = inet_ntoa($ip);
+							#print "Got $ip for $source\n";
+						} # end if
+					} # end if
+					if ( ! $ip ) {
+						print "No ip for $source\n";
+					} else {
+						$host_counts{$ip} += 1;
+					} # end if
+					last;
+				} # end if line matches re
+			} # end foreach re
+		} # end if
+		close( FH );
+	} # end if
+} # end foreach
+
+foreach my $ip ( keys %host_counts ) {
+print "$ip $host_counts{$ip}\n";
+} # end foreach ip
+
+1;
+__END__

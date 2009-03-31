@@ -126,6 +126,7 @@
 		</p>
 </div>
 <div class="rightColumn">
+<? if ( $$variable{'Company'}->id() ) ?>
 <p>
 	<label>Created On:</label>
 	<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Company'}->created_on()) ); ) ?>
@@ -134,6 +135,7 @@
 	<label>Last Update:</label>
 	<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Company'}->updated_on()) ); ) ?>
 </p>
+<? endif ( $$variable{'Company'}->id() ) ?>
 <p>
 	<label>Notes:</label>
 	<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'notes'} ); ) ?>" onkeyup="textarea_resize(this);"><?notes?></textarea>
@@ -170,26 +172,26 @@
 			<input type="text" name="address2" value="<? echo ( $$variable{'Company'}->address2() ) ?>" />
 		</p>
 		<p> 
-			<label>City:</label>
-			<input type="text" name="city" value="<? echo ( $$variable{'Company'}->city() ) ?>" />
+			<label>Country:</label>
+			<select name="country" onchange="Country_onchange(this, this.form.state );">
+				<option value=""> select </option>
+				<? echo ( ssi::return_countries($$variable{'Company'}->country() ); ) ?>
+			</select>
 		</p>
 		<p> 
-			<label>State/Province:</label>
+			<label><span id="country_state">State/Province:</span></label>
 			<select name="state">
 				<option value=""> select </option>
 				<? echo ( ssi::return_states_and_provinces($$variable{'Company'}->state() ); ) ?> 
 			</select>
 		</p>
 		<p> 
-			<label>Zip/Postal Code:</label>
-			<input type="text" name="postalcode" value="<? echo ( $$variable{'Company'}->postalcode() ) ?>" />
+			<label>City:</label>
+			<input type="text" name="city" value="<? echo ( $$variable{'Company'}->city() ) ?>" />
 		</p>
 		<p> 
-			<label>Country:</label>
-			<select name="country">
-				<option value=""> select </option>
-				<? echo ( ssi::return_countries($$variable{'Company'}->country() ); ) ?>
-			</select>
+			<label><span id="country_postal">Zip/Postal Code:</span></label>
+			<input type="text" name="postalcode" value="<? echo ( $$variable{'Company'}->postalcode() ) ?>" />
 		</p>
 		<p> 
 			<label>Phone:</label>
@@ -285,48 +287,48 @@
 		</p>
 		<p>
 			<label>Salutation:</label>
-			<input type="radio" name="rdbShippingSalutation" value="Mr." <?rdbShippingSalutationMr.?> /> Mr.
-			<input type="radio" name="rdbShippingSalutation" value="Mrs." <?rdbShippingSalutationMrs.?> /> Mrs.
-			<input type="radio" name="rdbShippingSalutation" value="Ms." <?rdbShippingSalutationMs.?> /> Ms.
-			<input type="radio" name="rdbShippingSalutation" value="Miss" <?rdbShippingSalutationMiss?> /> Miss
+			<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMr." value="Mr." <? echo ( ssi::checked( $$variable{'rdbShippingSalutation'} eq 'Mr.' ); ) ?> /><label for="rdbShippingSalutationMr.">Mr.</label>
+			<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMrs." value="Mrs." <? echo ( ssi::checked( $$variable{'rdbShippingSalutation'} eq 'Mrs.' ); ) ?> /><label for="rdbShippingSalutationMrs.">Mrs.</label>
+			<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMs." value="Ms." <? echo ( ssi::checked( $$variable{'rdbShippingSalutation'} eq 'Ms.' ); ) ?> /><label for="rdbShippingSalutationMs.">Ms.</label>
+			<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMiss" value="Miss" <? echo ( ssi::checked( $$variable{'rdbShippingSalutation'} eq 'Miss' ); ) ?> /><label for="rdbShippingSalutationMiss">Miss</label>
 		</p>
 		<p> 
 			<label>First Name:</label>
-			<input type="text" name="txtShippingFirstName" value="<?txtShippingFirstName?>" >
+			<input type="text" name="txtShippingFirstName" value="<?txtShippingFirstName?>" />
 		</p>
 		<p> 
 			<label>Last Name:</label>
-			<input type="text" name="txtShippingLastName" value="<?txtShippingLastName?>" >
+			<input type="text" name="txtShippingLastName" value="<?txtShippingLastName?>" />
 		</p>
 		<p> 
 			<label>Address:</label>
-			<input type="text" name="txtShippingAddress1" value="<?txtShippingAddress1?>" >
+			<input type="text" name="txtShippingAddress1" value="<?txtShippingAddress1?>" />
 		</p>
 		<p> 
 			<label>&nbsp;</label>
-			<input type="text" name="txtShippingAddress2" value="<?txtShippingAddress2?>" >
-		</p>
-		<p> 
-			<label>City:</label>
-			<input type="text" name="txtShippingCity" value="<?txtShippingCity?>" >
-		</p>
-		<p> 
-			<label>Province/State:</label>
-			<select name="ddmShippingStateProvince">
-				<option value=""> Select </option>
-<?ddmShippingStateProvince?> 
-			</select>
-		</p>
-		<p> 
-			<label>Postal/ZipCode:</label>
-			<input type="text" name="txtShippingPostalCode" value="<?txtShippingPostalCode?>" >
+			<input type="text" name="txtShippingAddress2" value="<?txtShippingAddress2?>" />
 		</p>
 		<p> 
 			<label>Country:</label>
-			<select name="ddmShippingCountry">
+			<select name="ddmShippingCountry" onchange="Country_onchange(this, this.form.ddmShippingStateProvince );">
 				<option value=""> Select </option>
-				<?ddmShippingCountry?>
+				<? echo ( ssi::return_countries($variable{'ddmShippingCountry'}); ) ?>
 			</select>
+		</p>
+		<p> 
+			<label><span id="ddmShippingCountry_state">Province/State:</span></label>
+			<select name="ddmShippingStateProvince">
+				<option value=""> Select </option>
+				<? echo ( ssi::return_states_and_provinces($variable{'ddmShippingStateProvince'}); ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>City:</label>
+			<input type="text" name="txtShippingCity" value="<?txtShippingCity?>" />
+		</p>
+		<p> 
+			<label><span id="ddmShippingCountry_postal">Postal/ZipCode:</span></label>
+			<input type="text" name="txtShippingPostalCode" value="<?txtShippingPostalCode?>" >
 		</p>
 		<p> 
 			<label>Phone:</label>
@@ -360,14 +362,14 @@
 		</p>
 		<p> 
 			<label>Credit Hold:</label>
-			 
-				<input type="radio" name="rdbCreditHold" value="Y" <?rdbCreditHoldY?> /> Yes
-				<input type="radio" name="rdbCreditHold" value="N" <?rdbCreditHoldN?> /> No
+			<input type="radio" name="rdbCreditHold" id="rdbCreditHoldY" value="Y" <?rdbCreditHoldY?> />
+			<label class="radio" for="rdbCreditHoldY">Yes</label>
+			<input type="radio" name="rdbCreditHold" id="rdbCreditHoldN" value="N" <?rdbCreditHoldN?> />
+			<label class="radio" for="rdbCreditHoldN">No</label>
 		</p>
 		<p> 
 			<label>Required Downpayment Amount:</label>
-			 
-				<input type="text" name="txtDownpayment" value="<?txtDownpayment?>" >
+			<input type="text" name="txtDownpayment" value="<?txtDownpayment?>" >
 		</p>
 	</fieldset>
 	<fieldset><legend>Bank Information</legend>
