@@ -55,10 +55,10 @@
 				<div id="Menu">
 					<ul id="menubar">
 <? if ( $session{'user_type'} eq 'A' ) ?>
-						<li id="MenuAdministrator" class="off"><a href="/administrator/index.html">Admin Side</a></li>
+						<li id="MenuAdministrator" class="off"><a href="/administrator/index.html">ADMIN SIDE</a></li>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-						<li id="MenuEmployee" class="off"><a href="/employee/index.html">Employee Side</a></li>
+						<li id="MenuEmployee" class="off"><a href="/employee/index.html">EMPLOYEE SIDE</a></li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 						<li id="MenuAbout" class="<? echo ( ($r->uri() =~ /main\/company/ or $r->uri() eq '/index.html' or $r->uri() eq '') ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuAbout'), 'off', 'on');return false;">ABOUT POINTONE</a>
 							<ul>
