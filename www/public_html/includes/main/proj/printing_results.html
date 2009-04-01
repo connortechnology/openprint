@@ -17,6 +17,7 @@
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
+<? if ( $$variable{'Project'}->Type()->name() ne 'Envelopes' ) ?>
 <p>
 	<label>Stock Format:</label>
 	<? echo ( my $html = '';
@@ -36,6 +37,7 @@
 		return $html;
 	) ?>
 </p>
+<? endif ( $$variable{'Project'}->Type()->name() ne 'Envelopes' ) ?>
 <p>
 	<label><? echo ( ssi::writeTip( 'Stock size' ); ) ?>:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
