@@ -15,8 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $threading = 1;
-my $debug = 0;
+my $threading = 0;
+my $debug = 1;
 my $master_time;
 
 my %folding_cache;
@@ -1606,6 +1606,9 @@ $i->display();
 							and ( $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )
 					   ) {
 						#$add = 1;
+					} elsif ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->type() eq 'Roll' )
+							and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
+					   ) {
 					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 						#$add = 1;
 					} elsif ( ! $imps{$str} ) {
@@ -1615,9 +1618,9 @@ $i->display();
 							my $I = $imps{$str}[$j];
 
 							if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
-								next;
+								last;
 							} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
-								next;
+								last;
 							} # end if
 
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
@@ -2044,7 +2047,7 @@ $openprint::log->debug("get_project_price");
 			foreach my $imp ( @impositions ) {
 				$imp->display();
 			} # end foreach
-			$openprint::log->debug("SPread Layout: $SpreadLayout");
+			#$openprint::log->debug("SPread Layout: $SpreadLayout");
 		} # end if
 		if ( $SpreadLayout > 0 ) {
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
@@ -2068,10 +2071,18 @@ $openprint::log->debug("Max Impo $p => $max_impositions{$p}");
 } # end if
 			my @dont_do_pages = split(',', $Press->specification('DontDoPages'));
 			foreach my $imp ( @impositions ) {
-				next if ( sets::isin( $imp->pages(), \@dont_do_pages ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') );
-				next if ( $$sig_specs{'PreviousImposition'} and ( $$sig_specs{'PreviousImposition'} > $imp->imposition() ) );
+				if ( sets::isin( $imp->pages(), \@dont_do_pages ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
+$imp->dispay('In dont do pages');
+				next;
+				} # end if
+				if ( $$sig_specs{'PreviousImposition'} and ( $$sig_specs{'PreviousImposition'} > $imp->imposition() ) ) {
+	$imp->display("Previous Imposition");
+				next;
+				} # end if
+
 				if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') {
 					if ( ( $imp->Paper()->width() != $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$sig_specs{"OverrideStockHeight$qty_index"} )) {
+$imp->dispay('Not overriden sheet size!');
 						next;
 					} # end if
 				} elsif ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
@@ -2083,6 +2094,7 @@ $openprint::log->debug("Max Impo $p => $max_impositions{$p}");
 					next;
 				} elsif ($max_impositions{$imp->pages()}/2 > $imp->imposition()) {
 					# Only do this if not sheet size overrides
+$imp->dispay('Ma imposition!');
 					next;
 				} # end if
 
@@ -3605,7 +3617,7 @@ sub select_presses {
 		} # end if
 
 		if ( ( @$side_one_colours > $Press->specification('Number of Colours') or @$side_two_colours > $Press->specification('Number of Colours') ) and $Press->specification('Multipass', $Paper->gsm()) eq 'N' ) {
-			$openprint::log->debug("Too many colours and no multipass") if $debug;
+			$openprint::log->debug("Too many colours and no multipass for " . $Press->strid() ) if $debug;
 			next;
 		} elsif ( $Press->specification('Web Press') eq 'Y' ) {
 			if ( @$side_one_colours > $Press->specification('Number of Colours') ) {
