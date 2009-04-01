@@ -1624,6 +1624,7 @@ sub purchase_order_view {
 						'lastname'	=>	$last,
 						'phone'		=>	$param{'vendor_phone'},
 						'fax'		=>	$param{'vendor_fax'},
+						'sms'		=>	$param{'vendor_sms'},
 						'change_password'	=>	'N',
 						'administrator'	=>	'N',
 						'ftp_active'	=>	0,
@@ -1679,6 +1680,7 @@ sub purchase_order_edit {
 			'shipto_phone'		=>	$C->phone(),
 			'shipto_fax'		=>	$C->fax(),
 			'shipto_email'		=>	$U->email(),
+			'shipto_sms'		=>	$U->sms(),
 		} );
 		$variable{'error'} .= $PO->save();
 	} # end if
