@@ -9,10 +9,6 @@
 			</select>
 		</p>
 		<p class="buttons">
-<? if ( $param{'ddmProjectType'} ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.action='templates.html';f1.btnFunction.value='Save';f1.submit();", '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ); ) ?>
-<? endif ( $param{'ddmProjectType'} ) ?>
 			<input type="file" name="fileImport">
 			<? echo ( ssi::writeButton( $log, $dbh, 'Import','import.gif', "f1.action='templates.html';f1.btnFunction.value='Import Templates';f1.submit();", '', 'Import' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Export','export.gif', "f1.action='templates.html?Download';f1.btnFunction.value='Export Templates';f1.submit();", '', 'Export' ); ) ?>
