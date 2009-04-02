@@ -11,7 +11,7 @@ require misc;
 require openprint::logs;
 
 use openprint ();
-use vars qw( $r $log $dbh %variable %param %session);
+use vars qw( $r $log $dbh %variable %param %session );
 *r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -282,6 +282,21 @@ sub templates {
 		openprint::logs::insertLogRecord('54',);
 	} # end if
 } # end sub templates
+
+sub _templates {
+} # end sub _templates
+
+sub _template_line {
+	$variable{'Template'} = new openprint::ProjectType_Template( $param{'template_id'} );
+	if ( $param{'action'} eq 'X' ) {
+		if ( ! ( $variable{'error'} .= $variable{'Template'}->delete() ) ) {
+			delete $variable{'Template'};
+		} # end if
+	} elsif ( $param{'action'} eq 'C' ) {
+		$variable{'Template'} = $variable{'Template'}->copy();
+		$variable{'error'} .= $variable{'Template'}->save();
+	} # end if
+} # end sub _template_line
 
 1;
 __END__

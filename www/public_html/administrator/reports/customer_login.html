@@ -7,7 +7,7 @@ Choose report criteria and click show results. You may the download the the resu
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
 <? echo (
-    ssi::make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)','usergroup'=>'Sales' ) ], $param{'ddmEmployees'} );
+    ssi::make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)','usergroup'=>'Sales' ) ], $param{'ddmEmployees'} );
 ) ?>
 			</select>
 		</p>
@@ -81,7 +81,7 @@ Choose report criteria and click show results. You may the download the the resu
 			<label>Active?</label>
 				<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( ssi::checked( $param{'rdbActive'} eq 'Y' ); ) ?> />
 				<label class="radio" for="rdbActiveY">Yes</label>
-				<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( ssi::checked( $param{'rdbActive'} ne 'Y' ); ) ?> />
+				<input type="radio" id="rdbActiveN" name="rdbActive" value="N" <? echo ( ssi::checked( $param{'rdbActive'} ne 'Y' ); ) ?> />
 				<label class="radio" for="rdbActiveN">No</label>
 		</p>
 		<p class="buttons">
@@ -94,7 +94,7 @@ Choose report criteria and click show results. You may the download the the resu
 	</fieldset>
 	<br class="spacer" />
 	<? if ( @{$$variable{'DATA'}} ) ?>
-<table class="List" style="table-layout: auto;">
+<table class="List sortable" style="table-layout: auto;">
 		<tr> 
 			<th align="left">Company Name</th>
 			<th align="right">State<br />Province</th>

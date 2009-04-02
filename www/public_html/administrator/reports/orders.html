@@ -56,7 +56,7 @@ ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory
 			<select name="ddmEmployee" size="1">
 				<option value="">All Employees</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','usergroups'=>['Sales'] ) ] , $param{'ddmEmployee'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)','usergroups'=>['Sales'] ) ] , $param{'ddmEmployee'} );
 ) ?>
 			</select>
 		</p>
@@ -132,7 +132,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 		<tr<?rowclass?>> 
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
-			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on())); ) ?></a></td>
+			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on())); ) ?></a></td>
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->Company()->name(); ) ?></a></td>
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
 			<td align="right"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->total() ); ) ?></a></td>

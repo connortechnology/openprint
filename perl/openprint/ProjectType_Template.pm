@@ -16,10 +16,10 @@ require sql;
 require ssi;
 require misc;
 
-my $debug = 0;
+my $debug = 1;
 
 $table = 'ProjectTemplate';
-$serial = 'taxes_id_seq';
+$serial = 'projecttemplate_id_seq';
 
 %fields = (
 	'id'				=>	'id',
@@ -33,7 +33,11 @@ $serial = 'taxes_id_seq';
 );
 
 %transforms = (
-	'id'			=>	[ 's/\D//g' ],
+	'id'				=>	[ 's/\D//g' ],
+	'finished_width'	=>	[ 's/[^\.\d]//g' ],
+	'finished_height'	=>	[ 's/[^\.\d]//g' ],
+	'flat_width'		=>	[ 's/[^\.\d]//g' ],
+	'flat_height'		=>	[ 's/[^\.\d]//g' ],
 );
 
 %defaults = (

@@ -111,7 +111,8 @@ $log->debug('trimming \n');
 
 sub include {
 	my ( $file, $variable ) = @_;
-	my $blah = misc::load_file( $log, $file);
+	$variable = \%variable if ! $variable;
+	my $blah = misc::load_file( $log, $file );
 	return variable_substitution( \$blah, $variable );
 }
 

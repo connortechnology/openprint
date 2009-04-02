@@ -349,10 +349,10 @@ sub find {
 	if ( $param{'name'} ) {
 		my ( $first, $last ) = $param{'name'} =~ /(\S+)\s*(\S*)/;
 		if ( $first and $last ) {
-			$sql .= ' AND strfirstname=? AND strlastname=?';
+			$sql .= ' AND firstname=? AND lastname=?';
 			push @values, $first, $last;
 		} elsif ( $first ) {
-			$sql .= ' AND strfirstname=?';
+			$sql .= ' AND firstname=?';
 			push @values, $first;
 		} # end if
 	} # end if
