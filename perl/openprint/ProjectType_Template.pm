@@ -18,7 +18,7 @@ require misc;
 
 my $debug = 1;
 
-$table = 'ProjectTemplate';
+$table = 'projecttemplate';
 $serial = 'projecttemplate_id_seq';
 
 %fields = (
@@ -49,7 +49,7 @@ sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
-	return @{$find_cache{$hash_key}} if $find_cache{$hash_key};
+	return map { new openprint::ProjectType_Template( $_->{id}, $_ ) } @find_cache{$hash_key} if $find_cache{$hash_key};
 
 #$openprint::log->debug("Hash key: $hash_key");
 	my @values;
@@ -83,8 +83,8 @@ sub find {
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded ProjectType_Templates ($sql) (@values) records:" . @$data );
 	} # end if
-	@{$find_cache{$hash_key}} = map { new openprint::ProjectType_Template( $_->{id}, $_ ) } @$data;
-	return @{$find_cache{$hash_key}};
+	@{$find_cache{$hash_key}} = map { $_->{id} } @$data;
+	return map { new openprint::ProjectType_Template( $_->{id}, $_ ) } @$data;
 } # end sub find
 
 sub delete {
