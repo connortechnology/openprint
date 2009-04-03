@@ -290,108 +290,76 @@ sub rle_decode {
 	my ( $source, $width, $height ) = @_;
 	my $result = '';
 	my $position = 0;
-$openprint::log->warn("RLE::DECODE:: source: " . length $source );
-    while ($source ne "") {
-        my $l = unpack("C", $source);
-        if ($l == 128) {
-			if ( length $source > 1 ) {
-				$openprint::log->debug("End while still data at position $position " . unpack("H",$source) . ' ' . substr($source,0,1) . ' length of result: ' . length($result));
-			} # end if
-            return $result;
+    while ( $source ) {
+        my $l = unpack( 'C', $source );
+        if ( $l == 128 ) {
+			# Could be end of scan line
+            substr($source, 0, 1) = '';
+#$openprint::log->warn("scanline length: $position");
+#$position = 0;
         } elsif ($l > 128) {
-        #if ($l > 128) {
             if (length($source) < 2) {
                 $openprint::log->warn("Premature end to data in RunLengthEncoded data");
                 return $result;
             } # end if
             $result .= substr($source, 1, 1) x (257 - $l);
-            substr($source, 0, 2) = "";
+            substr($source, 0, 2) = '';
 			$position += 2;
         } else {
             if (length($source) < $l + 1) {
                 $openprint::log->warn("Premature end to data in RunLengthEncoded data");
                 return $result;
             }
-            $result .= substr($source, 1, $l);
-            substr($source, 0, $l + 1) = "";
-			$position += $l+1;
+            $result .= substr($source, 1, $l+1);
+            substr($source, 0, $l + 2) = '';
+			$position += $l+2;
         }
-    }
-$openprint::log->warn("RLE::DECODE:: results: " . length $result );
+    } # end while source
 	return $result;
 } # end sub rle_decode
 
+# We do not encode single chars, must be more than 2.
 sub rle_encode {    
 	my $input = $_[0];
 	my $output;
 
 	my $last = '';
-	my $diff = '';
 	my $count = 0;
 
-	while ( length $input ) {
+	while ( $input ) {
 		my $next = substr($input, 0, 1);
 		substr($input, 0, 1) = '';
 
-		if ( ! $last ) {
-			$last = $next;
-			$diff .= $next;
-			$count = 1;
-		} elsif ( $next eq $last ) {
-			if ( $count == 127 ) {
-				$output .= pack('C', 127 );
+		if ( $next ne $last ) {
+			if ( $count == 1 ) {
+				$output .= pack( 'C', 2 );
+				$output .= $last.$next;;
+				$count = 0;
+				$last = '';
+			} elsif ( $count > 1 ) {
+				$output .= pack( 'C', 257-$count );
 				$output .= $last;
-				$diff = '';
+				$last = $next;
+				$count = 1;
+			} else {
+				$last = $next;
+				$count = 1;
+			} # end if
+		} else {
+			if ( $count == 127 ) {
+				$output .= pack( 'C', 257-$count );
+				$output .= $last;
 				$count = 0;
 			} # end if
 			$count += 1;
-			$diff .= $next;
-		} else {
-			if ( ($count > 2 ) and ( $count <= length $diff ) ) {
-				$output .= pack('C', 257-$count );
-				$output .= $last;
-				$count = 1;
-				$last = $next;
-				$diff = $next;
-			} elsif ( length $diff == 127 ) {
-				$output .= pack('C', 127 );
-				$output .= $diff;
-				$diff = '';
-
-				$diff .= ($last x $count).$next;
-				$last = undef;
-				$count = 0;
-			} else {
-				$diff .= $next;
-				$count = 0;
-				$last = '';
-			} # end if
 		} # end if
 	} # end while
 	if ( $count ) {
 		$output .= pack('C', 257-$count );
 		$output .= $last;
-	} elsif ( length $diff ) {
-		$output .= pack('C', length $diff );
-		$output .= $diff;
 	} # end if
 	return $output. (pack('C', 128));
 } # end sub rle_encode
-
-sub rle_encode2 {    
-	my $this = shift;
-
-	if ( defined $this && ref($this) ) {
-		return rle_encode([[1, $this]], @_);
-	} elsif ( ! @_ ) {
-		return $this;
-	} # end if
-	my ($count, $prev) = @{$this->[-1]};
-	my $next = shift;
-	$prev eq $next ? $this->[-1]->[0]++ : push @$this, [1, $next];
-	return rle_encode($this, @_);
-} # end sub rle_encode
-
 
 1;
 
