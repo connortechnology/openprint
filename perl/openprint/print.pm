@@ -92,13 +92,20 @@ sub view_services {
 				$log->debug("** Save Service in View Services Function **");
 
 				my $service_index = $r->param('ServiceIndex');
+				my $Currency = openprint::Currency::get_current();
+				my $recalc = 0;	
 				save_service( $r, $log, $dbh, $variable, $Project, $service_index );
+				if ( $Project->currency_id() != $Currency->id() ) {
+					$Project->Currency( $Currency );
+					# Change of currency calls for complete recalc
+					$recalc = 1;
+				} # end if
 
 				if ( $r->param('NewBook') eq 'Y' ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
-				} elsif ( $r->param('PrintingService') eq 'Y' ) {
+				} elsif ( $r->param('PrintingService') eq 'Y' or $recalc ) {
 
 					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					# Now run code to modify all other services
@@ -106,7 +113,6 @@ sub view_services {
 					$log->info("********* Auto Calculate  ( PrintingService eq 'Y' ) *************");
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
 				} # end if
-				$Project->Currency( openprint::Currency::get_current() );
 				$Project->save();
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
 				my $service_name = $openprint::param{'txtServiceName'};
