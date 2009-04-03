@@ -87,6 +87,16 @@ sub load_file {
 	return undef;
 } # end sub load_file
 
+sub save_file {
+	my ( $log, $file, $contents ) = @_;
+	if ( open( F, "> $file" ) ) {
+		print F $contents;
+	} else {
+		$log->warn( "Error opening $file, Reason: $!" );
+	} # end if
+	return;
+} # end sub save_file
+
 sub build_city_prov_country {
 	my ( $city, $prov, $country ) = @_;
 	my $cpc = $city;
@@ -310,6 +320,78 @@ $openprint::log->warn("RLE::DECODE:: source: " . length $source );
 $openprint::log->warn("RLE::DECODE:: results: " . length $result );
 	return $result;
 } # end sub rle_decode
+
+sub rle_encode {    
+	my $input = $_[0];
+	my $output;
+
+	my $last = '';
+	my $diff = '';
+	my $count = 0;
+
+	while ( length $input ) {
+		my $next = substr($input, 0, 1);
+		substr($input, 0, 1) = '';
+
+		if ( ! $last ) {
+			$last = $next;
+			$diff .= $next;
+			$count = 1;
+		} elsif ( $next eq $last ) {
+			if ( $count == 127 ) {
+				$output .= pack('C', 127 );
+				$output .= $last;
+				$diff = '';
+				$count = 0;
+			} # end if
+			$count += 1;
+			$diff .= $next;
+		} else {
+			if ( ($count > 2 ) and ( $count <= length $diff ) ) {
+				$output .= pack('C', 257-$count );
+				$output .= $last;
+				$count = 1;
+				$last = $next;
+				$diff = $next;
+			} elsif ( length $diff == 127 ) {
+				$output .= pack('C', 127 );
+				$output .= $diff;
+				$diff = '';
+
+				$diff .= ($last x $count).$next;
+				$last = undef;
+				$count = 0;
+			} else {
+				$diff .= $next;
+				$count = 0;
+				$last = '';
+			} # end if
+		} # end if
+	} # end while
+	if ( $count ) {
+		$output .= pack('C', 257-$count );
+		$output .= $last;
+	} elsif ( length $diff ) {
+		$output .= pack('C', length $diff );
+		$output .= $diff;
+	} # end if
+	return $output. (pack('C', 128));
+} # end sub rle_encode
+
+sub rle_encode2 {    
+	my $this = shift;
+
+	if ( defined $this && ref($this) ) {
+		return rle_encode([[1, $this]], @_);
+	} elsif ( ! @_ ) {
+		return $this;
+	} # end if
+	my ($count, $prev) = @{$this->[-1]};
+	my $next = shift;
+	$prev eq $next ? $this->[-1]->[0]++ : push @$this, [1, $next];
+	return rle_encode($this, @_);
+} # end sub rle_encode
+
 
 1;
 
