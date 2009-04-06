@@ -152,7 +152,8 @@ sub parseSeparation {
 			$$image{'encoding'} = $1;
 		} elsif ( $line =~ /^\/CIP3PreviewImageCompression \/(\w+) def/ ) {
 			$$image{'compression'} = $1;	
-		} elsif ( $line =~ /^\/CIP3PreviewImageBitsPerComp/ ) {
+		} elsif ( $line =~ /^\/CIP3PreviewImageBitsPerComp (\d+) def/ ) {
+			$$image{'depth'} = $1;
 		} elsif ( $line =~ /^\/CIP3PreviewImageComponents/ ) {
 		} elsif ( $line =~ /^\/CIP3PreviewImageMatrix/ ) {
 		} elsif ( $line =~ /^\/CIP3PreviewImageResolution/ ) {
@@ -165,7 +166,7 @@ sub parseSeparation {
 				$line = shift;
 			} # end while
 			$$image{'image'} = join("\r\n", @image_data);
-			$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
+			$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
 			last;
 		} elsif ( $line =~ /^CIP3EndSeparation/ ) {
 			last;
@@ -248,18 +249,21 @@ $log->debug("compression: $$image{'compression'}");
 				my $Image;
 				if ( $$image{'compression'} eq 'RunLengthDecode' ) {
 					my $data = misc::rle_decode($$image{'image'});
-					#$data = $data x 9;
-
-					$Image = Image::Magick->new(magick=>'cmyk',depth=>1,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
-					#$Image = Image::Magick->new(magick=>'rle',depth=>1,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
+					$log->warn("Decoded length should be " . ($$image{'width'}*$$image{'height'}).", is " . length $data ) if ( length $data != ($$image{width}*$$image{height}) );
+					$Image = Image::Magick->new(magick=>'cmyk',depth=>$$image{'depth'},size=>$$image{'width'}.'x'.$$image{'height'},'debug'=>'Blob');
+					#$Image = Image::Magick->new(magick=>'cmyk',depth=>$$image{'depth'},size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
 					$_ = $Image->BlobToImage($data);
 					$log->error( $_ ) if $_;
-	open F, sprintf('>%s%dsg%dsd%s-%s.rle', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
-	print F $$image{'image'};
-	close(F);
-	open F, sprintf('>%s%dsg%dsd%s-%s.raw', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
-	print F $data;
-	close(F);
+					open F, sprintf('>%s%dsg%dsd%s-%s.rle', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
+					print F $$image{'image'};
+					close(F);
+					open F, sprintf('>%s%dsg%dsd%s-%s.raw', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
+					print F $data;
+					close(F);
+
+					#$Image = Image::Magick->new(magick=>'rle',depth=>$$image{'depth'},size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
+					#$_ = $Image->BlobToImage($$image{'image'});
+					#$log->error( $_ ) if $_;
 				} elsif ( $$image{'compression'} eq 'DCTDecode' ) {
 					$Image = Image::Magick->new(magick=>'jpg');
 					$_ = $Image->BlobToImage($$image{'image'});

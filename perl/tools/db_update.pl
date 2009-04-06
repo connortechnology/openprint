@@ -999,6 +999,12 @@ if ( ! $data ) {
 	if ( ! exists $$data{'delivered_on_switch'} ) {
 		$dbh->do('ALTER TABLE Manifests add delivered_on_switch TEXT');
 	} # end if
+	if ( ! exists $$data{'vendor_sms'} ) {
+		$dbh->do('ALTER TABLE Manifests add vendor_sms TEXT');
+	} # end if
+	if ( ! exists $$data{'shipto_sms'} ) {
+		$dbh->do('ALTER TABLE Manifests add shipto_sms TEXT');
+	} # end if
 } # end if
 my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
 if ( ! $data ) {

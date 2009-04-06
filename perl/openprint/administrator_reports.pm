@@ -305,20 +305,21 @@ sub CustomerServiceReps {
 sub order_details {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $order_id = $openprint::param{'order_id'};
+	my $order_id = $param{'order_id'};
+	$order_id =~ s/\D//g;
 	my $Order = new openprint::Order( $order_id );
 
-	if ( $r->param('btnFunction') eq 'Delete' ) {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
 		if ( openprint::Payment::find('order_id'=>$order_id ) ) {
 			$$variable{'error'} .= "Order $order_id appears to have payments.  Please delete the payments before deleting the order.";
 		} else {
-		$Order->delete();
-		$$variable{'Redirect'} = '/administrator/reports/orders.html';
-		return;
+			$Order->delete();
+			$$variable{'Redirect'} = '/administrator/reports/orders.html';
+			return;
 		} # en dif
 	} elsif ( $r->param('btnFunction') eq 'Resend' ) {
-		sql::update( $log, $dbh, 'Orders',['Index=?', $order_id], 'strComments',$r->param('txtComments') );
-		openprint::order::order_send_email( $r, $log, $dbh, $order_id );
+		$Order->add_log( 'Resent' );
+		openprint::order::send_sales_order( $r, $log, $dbh, $order_id );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Pay' ) {
 		$Order->pay();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save Payment' ) {
