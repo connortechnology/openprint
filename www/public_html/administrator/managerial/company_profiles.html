@@ -25,7 +25,7 @@
 		<p> 
 			<label>Company:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" size="4" />
-			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('Buttons1').hide();$('Buttons2').hide();f1.submit();}">
+			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f1.submit();}">
 				<option value=""> select </option>
 				<? echo ( 
 					my %params = (
@@ -51,7 +51,7 @@
 			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
 		</p>
 	</fieldset>
-	<fieldset id="Buttons1">
+	<fieldset id="ButtonsTop">
 		<p> 
 			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Users<? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
 		
@@ -518,9 +518,9 @@
 		<input type="text" name="txtTradeReferenceEmail3" value="<?txtTradeReferenceEmail3?>" >
 	</p>
 </fieldset>
-<fieldset id="Buttons2">
+<fieldset id="ButtonsBottom">
 	<p> 
-		<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Users<? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
+		<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Users</a><? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
 		
 			<? echo ( join( '',
 				ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<'),
