@@ -1627,7 +1627,7 @@ if ( 1 ) {
                                 and
                                 ( ! ( ! $I->Paper()->is_cut() and $imp->Paper()->is_cut() ) )
                            ) {
-$openprint::log->debug('splice');
+#$openprint::log->debug('splice');
                             splice @{$imps{$str}}, $j, 1;
                             $j -= 1;
                         } elsif (
@@ -1641,10 +1641,10 @@ $openprint::log->debug('splice');
                                 ) {
 # Already have a much better sheet
 							$add = 0;
-$openprint::log->debug('no add');
+#$openprint::log->debug('no add');
 #last;
-						} else {
-$openprint::log->debug('add');
+						#} else {
+#$openprint::log->debug('add');
 
 						} # end if
                    } # end for
