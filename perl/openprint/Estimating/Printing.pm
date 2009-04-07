@@ -1562,13 +1562,13 @@ sub get_project_price {
 			} # end if
 		} # end if
 		if ( $SpreadLayout > 0 ) {
-			#$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
 #$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
 #foreach my $imp ( @impositions ) {
 #$imp->display();
 #}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
-#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 1;
 if ( 1 ) {
             my %imps;
 
@@ -1606,13 +1606,18 @@ if ( 1 ) {
                     for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
                         my $I = $imps{$str}[$j];
 
-                        if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+						# We want the overide to only have an effect for sheets.  Due to roll2sheet, there can be to many options if we are only overriding the width
+                        if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} ) ) {
                             next;
                         } elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
                             next;
                         } # end if
                         my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
                         my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+#$openprint::log->debug("Comparing: ");
+#$openprint::log->debug(sprintf('%sx%s->%sx%s $s %d $%s', $I->Paper()->get('start_width','start_height','width','height','minimum_order','is_cut'), $BiggerPrice{'100lb'} ) );
+#$openprint::log->debug(sprintf('%sx%s->%sx%s $s %d $%s', $imp->Paper()->get('start_width','start_height','width','height','minimum_order','is_cut'), $SmallerPrice{'100lb'} ) );
+
                         if (
                                 ( $I->Paper()->area() >= $imp->Paper()->area() )
                                 and
@@ -1622,6 +1627,7 @@ if ( 1 ) {
                                 and
                                 ( ! ( ! $I->Paper()->is_cut() and $imp->Paper()->is_cut() ) )
                            ) {
+$openprint::log->debug('splice');
                             splice @{$imps{$str}}, $j, 1;
                             $j -= 1;
                         } elsif (
@@ -1635,20 +1641,25 @@ if ( 1 ) {
                                 ) {
 # Already have a much better sheet
 							$add = 0;
+$openprint::log->debug('no add');
 #last;
+						} else {
+$openprint::log->debug('add');
+
 						} # end if
                    } # end for
                 } # end if overriden or not or cached
                 push @{$imps{$str}}, $imp if $add;
             } # end foreach imp
             @impositions = map {@{$_}} values %imps;
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after filter:' . @impositions) if $debug or 1;
 } # end if turn filters on/off
 
 		} # end if SpreadLayout
 # Gives us both inline and offline folding options
 		if ( $$project{'HasFolding'} ) {
 			@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $$project{'FoldingSpecs'}, $specs, $qty_index ) } @impositions;
-#$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug or 1;
 		} # end if Folding
 
 		if ( 0 ) {

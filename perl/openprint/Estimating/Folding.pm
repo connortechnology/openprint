@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -302,7 +302,7 @@ sub signature_calc {
 		push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 	} else {
 		@my_equipment = @equipment;
-$openprint::log->debug("Previous Imposition: ($$sig_specs{'PreviousImposition'})");
+#$openprint::log->debug("Previous Imposition: ($$sig_specs{'PreviousImposition'})");
 		if ( $$sig_specs{'PreviousImposition'} and $$sig_specs{'PreviousImposition'} != $Imposition->imposition() ) {
 		} else {
 			if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
