@@ -401,13 +401,14 @@ sub balance {
 sub sub_total {
 	my $self = shift;
 	my $subtotal = 0;
-	foreach my $P ($self->projects() ) {
+	foreach my $Project ($self->projects() ) {
 		# This is really neat actually.	When the project is ordered, this gives the price stored in order_contents, but if the order isn't finalized, then it gives the price stored in the project...
-		if ( $P->currency_id() != $$self{'currency_id'} ) {
-			my $rate = $P->Currency()->conversions( $$self{'currency_id'} );
-			$subtotal += $rate * $P->ordered_price();
+		if ( $Project->currency_id() != $$self{'currency_id'} ) {
+$openprint::log->debug("sub_total: $$Project{'currency_id'} != $$self{'currency_id'}");
+			my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
+			$subtotal += ( $rate * $Project->ordered_price() );
 		} else {
-			$subtotal += $P->ordered_price();
+			$subtotal += $Project->ordered_price();
 		} # end if
 	} # end foreach
 	foreach my $P ($self->Products() ) {
