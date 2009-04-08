@@ -49,6 +49,7 @@ require openprint::OrderedProduct;
 	'salesrep_id'				=>	'employeeindex',
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
+	'created_on'				=>	'dtmorderdate',
 	);
 sub find {
 	my %params = @_;
@@ -181,6 +182,7 @@ sub save {
 	if ( ! $$self{'id'} ) {
 		#@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
 		$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		$sql{$fields{'created_on'}} = 'NOW()';
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
