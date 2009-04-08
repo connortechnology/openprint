@@ -49,7 +49,7 @@ sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
-	return map { new openprint::ProjectType_Template( $_->{id}, $_ ) } @find_cache{$hash_key} if $find_cache{$hash_key};
+	return map { new openprint::ProjectType_Template( $_ ) } @{$find_cache{$hash_key}} if $find_cache{$hash_key};
 
 #$openprint::log->debug("Hash key: $hash_key");
 	my @values;
