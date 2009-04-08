@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 my %folding_cache;
@@ -828,7 +828,7 @@ my $master_time = gettimeofday();
 					} # end foreach group
 
 					$openprint::log->debug("Cover size calc: $finished_calliper");
-					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper + 1/8)*1000)/1000);
+					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper + 1/4)*1000)/1000);
 				} else {
 					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$specs{'txtWidth'}*1000)/1000);
 				} # end if
@@ -1345,7 +1345,7 @@ my $master_time = gettimeofday();
 		} # end if
 
 # add all the impositions for each press
-		foreach my $Press ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : @possible_presses ) {
+		foreach my $Press ( @possible_presses ) {
 # These should be cached by the underlying layer anyways
 
 			$openprint::log->debug("Trying press " . $Press->strid()) if $debug or 1;
@@ -2003,6 +2003,9 @@ $openprint::log->debug("get_project_price");
 	my %best_price;
 	$best_price{'Comparison Cost'} = $best_price if $best_price;
 
+$openprint::log->debug("Press Override: " . $$sig_specs{'chkOverridePress'.$qty_index} );
+$openprint::log->debug("Possible Presses: " . join(',',@$possible_presses) );
+
 	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
 
 		my @impositions;
@@ -2050,9 +2053,9 @@ $openprint::log->debug("get_project_price");
 			#$openprint::log->debug("SPread Layout: $SpreadLayout");
 		} # end if
 		if ( $SpreadLayout > 0 ) {
-			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, \@impositions );
-			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
+			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 1;
 
 			my %imps;
 
@@ -2422,6 +2425,10 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 									$s_id = $signatures[$j];
 									@signatures = splice @signatures, $j, 1;
 									%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
+# These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press.
+							$new_specs{'chkOverrideImposition'.$qty_index} = '';
+							$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
+							$new_specs{'chkOverridePress'.$qty_index} = '';
 									last;
 								} # end if
 							} # end foreach
@@ -2431,6 +2438,10 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 					if ( $s_id == $service_index ) {
 						$s_id = 0 ;
 						%new_specs = %$service_specs;
+# These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press.
+							$new_specs{'chkOverrideImposition'.$qty_index} = '';
+							$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
+							$new_specs{'chkOverridePress'.$qty_index} = '';
 					} # end if
 
 # Need to update these too.  
@@ -2490,22 +2501,15 @@ $openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $
 						} # end if	
 						$new_specs{'Impositions'} = $$price{'Impositions'};
 
-						my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 						if ( $recursion_depth >= 3 ) {
 							if ( $debug or 1 ) {
 								$imp->display('Recursion Depth :' . $recursion_depth );
 							} # en dif
 							$$sig_price{'complete'} = 0;
 						} else {
+$openprint::log->debug("Equipment override: ".$new_specs{'chkOverridePress'.$qty_index} );
+$openprint::log->debug("Page QUantity override: ".$new_specs{'chkOverridePageQuantity'.$qty_index} );
 							$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), $recursion_depth + 1 );
-						} # end if
-
-						if ( ( ! $$sig_price{'complete'} ) and ( $new_specs{'chkOverridePageQuantity'.$qty_index} or $new_specs{'chkOverridePress'.$qty_index} or $new_specs{'chkOverrideImposition'.$qty_index} ) ) {
-							$new_specs{'chkOverrideImposition'.$qty_index} = '';
-							$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
-							$new_specs{'chkOverridePress'.$qty_index} = '';
-#$openprint::log->warn("Doing full calc without Overrides" );
-							#$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $versions, \%PlateCounts, \%previous_forms_cache, \@signatures );
 						} # end if
 
 # get_project_price is recursive so we are done
@@ -2540,6 +2544,7 @@ $openprint::log->debug("Unable to calculate additional signatures Complete: $$si
 
 					$additional_price -= $$sig_price{'Plate Comparison Cost'};
 					$$sig_price{'Stitching Breakdown'} = '';
+					$$sig_price{'PerfectBound Breakdown'} = '';
 					plate_cost( $sig_price, \%PlateCounts, $$sig_price{'Imposition'} );
 
 					$$price{'Comparison Cost'} += $additional_price;
