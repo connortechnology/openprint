@@ -828,7 +828,7 @@ my $master_time = gettimeofday();
 					} # end foreach group
 
 					$openprint::log->debug("Cover size calc: $finished_calliper");
-					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper)*1000)/1000);
+					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper + 1/8)*1000)/1000);
 				} else {
 					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$specs{'txtWidth'}*1000)/1000);
 				} # end if
@@ -2156,7 +2156,7 @@ $imp->dispay('Ma imposition!');
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
 
-						if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
+						if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( $I->Paper()->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
 							next;
 						} elsif ( ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$sig_specs{"CutOff$qty_index"} ) ) {
 							next;
