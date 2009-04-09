@@ -266,5 +266,9 @@ sub _par_edit_part4 {
 	$variable{'PAR'} = new openprint::PAR( $param{'par_id'} );
 }
 
+sub _select_customer_from_docket{
+	$param{'docket'} =~ s/\D//g;
+} # end sub _select_customer_from_docket
+
 1;
 __END__

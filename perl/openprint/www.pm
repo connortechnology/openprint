@@ -156,7 +156,7 @@ $variable{'uri'} = $page;
 			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
 		} else {
-			$log->warn("No template!");
+			#$log->warn("No template!");
 			$log->warn($variable{'PageContent'});
 			$r->print( $variable{'PageContent'} );
 		} # end if

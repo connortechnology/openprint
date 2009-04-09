@@ -1,5 +1,5 @@
 <? echo (
-	my @Orders = openprint::Order::find('docket'=>$openprint::param{'docket'});
+	my @Orders = openprint::Order::find('docket'=>$param{'docket'}) if $param{'docket'};
 	if ( @Orders == 1 ) {
 		$r->content_type('text/javascript');
 		my $html = sprintf(q{ddm_select_by_value( $('company_id'), %d );}, $Orders[0]->company_id() );
