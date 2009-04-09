@@ -30,7 +30,7 @@
 		</tr>
 	</table>
 	<br class="spacer"/>
-	<!--#include virtual="/skins/<? echo ( $openprint::config{SiteTitle} ) ?>/includes/order_disclaimer.html"-->
+	<!--#include virtual="/skins/<? echo ( $config{SiteTitle} ) ?>/includes/order_disclaimer.html"-->
 	<br/>
 	<span style="float: right;">
 	<? echo ( ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', 'f1.submit();', '', 'Complete Order' ); ) ?>

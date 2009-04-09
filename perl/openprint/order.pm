@@ -736,11 +736,11 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 	} # end if
 	
 	my $Currency = openprint::Currency::get_current();
+	@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+	$$variable{'Currency'} = $Currency;
 	if ( $Order->currency_id() != $Currency->id() ) {
 		$Order->currency_id( $Currency->id() );
 		$Order->save();
-		@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-		$$variable{'Currency'} = $Currency;
 	} # end if
 	@$variable{'Order','ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments'} = 
 ( $Order, $Order->first_name() .' '.$Order->last_name(), $Order->created_on(), $Order->status(), $Order->currency_id(), $Order->po(), $Order->administrator_comments() );
