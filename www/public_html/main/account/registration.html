@@ -131,7 +131,7 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 			</p>
 			<p>
 				<label>How did you hear about us?: <span class="requiredFieldIndicator">*</span></label>
-				<select name="howdidyouhearaboutus" onchange="if(this.value=='Other' || this.value=='CSR'){show_div('Other');} else {hide_div('Other');}">
+				<select name="howdidyouhearaboutus" onchange="if(this.value=='Other' || this.value=='CSR'){$('Other').show();} else {$('Other').hide();}">
 <? echo ( ssi::make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please enter who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{'howdidyouhearaboutus'} ); ) ?>
 				</select>
 				<input id="Other" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($param{'howdidyouhearaboutusother'}); ) ?>" />
