@@ -452,7 +452,7 @@ sub to_string {
 	my $self = shift;
 	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight() ) );
 	if ( $self->type() eq 'Roll' ) {
-		$string .= $self->width.'"' if $self->width();
+		$string .= ' ' . $self->width.'"' if $self->width();
 		$string .= ' Roll ';
 	} else {
 		if ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) {

@@ -182,6 +182,7 @@ sub calc_setup_object {
 	$setup1->runstyle( $run_style );
 	$setup1->image_orientation('Vertical');
 	$setup1->spread_size( $$specs{'txtSpreadSize'} );
+	$setup1->bleed_size( $$specs{'BleedSize'} );
 	if ( 1 ) {
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
@@ -199,6 +200,7 @@ sub calc_setup_object {
 	$setup2->runstyle( $run_style );
 	$setup2->image_orientation('Horizontal');
 	$setup2->spread_size( $$specs{'txtSpreadSize'} );
+	$setup2->bleed_size( $$specs{'BleedSize'} );
 	if ( 1 ) {
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);

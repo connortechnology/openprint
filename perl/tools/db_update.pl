@@ -723,6 +723,18 @@ if ( ! @FoldingServices ) {
 	$FoldingService = $FoldingServices[0];
 } # en dif
 	
+foreach my $E ( openprint::Equipment::find('category'=>'Printing') ) {
+	foreach my $Spec ( $E->Specifications('name'=>'Default Bleed Size') ) {
+		if ( $Spec->max() == 1 ) {
+			$Spec->max('');
+		} elsif ( $Spec->min() == 2 ) {
+			$Spec->name('Default Bleed SizeMultiPagePublication');
+			$Spec->min('');
+		} # end if
+		$_ = $Spec->save();
+		$log->error($_) if $_;
+	} # end foreach
+} # end foreach
 foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'When Printing'}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		if ( $Spec->name() =~ /^(\d)x(\d)-(\d*)Page-(\w*)SignatureFoldDescription$/ ) {
@@ -1530,7 +1542,7 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1
 my $ac = sql::start_transaction( $dbh );
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if $$data{'currencyindex'};
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
-$dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER');
+$dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER') if ! exists $$data{'owner_id'};
 $dbh->do('ALTER TABLE Pricelists ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
 $dbh->do('DROP SEQUENCE IF EXISTS price_lists_id_seq');
 $dbh->do('CREATE SEQUENCE pricelists_id_seq');

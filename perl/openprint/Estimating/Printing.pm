@@ -105,11 +105,10 @@ my %variables = (
 		'ColourCoatingSideTwo8' => ['save'], 'ColourCoatingTypeSideTwo8' => ['save'], 'ColourCoatingColourSideTwo8' => ['save'],'ColourCoatingCoverageSideTwo8' => ['save'],
 		'ColourCoatingSideTwo9' => ['save'], 'ColourCoatingTypeSideTwo9' => ['save'], 'ColourCoatingColourSideTwo9' => ['save'],'ColourCoatingCoverageSideTwo9' => ['save'],
 		'sides_the_same'	=> ['save'],
-		'chkBleedLeft' => ['save'],'chkBleedRight' => ['save'],'chkBleedTop' => ['save'],'chkBleedBottom' => ['save'],
 		'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
 		'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
 
-		'BleedSize' => ['save','output'], 'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
+		'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
 		'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
 		'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
 
@@ -281,7 +280,7 @@ sub setup_project {
 			'image_height',		$$specs{'txtHeight'},
 			'final_width',		$$specs{'txtFinalWidth'} ? $$specs{'txtFinalWidth'} : $$specs{'txtWidth'},
 			'final_height',		$$specs{'txtFinalHeight'} ? $$specs{'txtFinalHeight'} : $$specs{'txtHeight'},
-			'BleedLocations',	join(',', @$specs{'chkBleedBottom','chkBleedTop','chkBleedLeft','chkBleedRight'}),
+			'BleedLocations',	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
 			'Calliper',			$$specs{'txtSpecificStockCalliper'},
 			'CropMarkSpace',	$$specs{'txtCropMarkSpace'},
 			);
@@ -553,7 +552,7 @@ $openprint::log->debug("Calc:From:Imposition:Paper " . $Paper->type() . ':' . $P
 
 # Neccessary since specs do not neccessarily match the Impo
 		$Imposition->save( $specs, $qty_index );
-		$$specs{'ddmBleedSize'.$qty_index} = $$price{'ddmBleedSize'};
+		$$specs{'ddmBleedSize'.$qty_index} = $$Imposition{'bleed_size'};
 		$$specs{'ddmPress'.$qty_index} = $Press->strid();
 		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
 		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000;
@@ -1409,9 +1408,11 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					$$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
 					$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
 				} else {
-					$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size', 1*$$printing_specs{'txtTotalPageQuantity'} );
+					$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size'.$Project->Type()->name() );
+					$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size' ) if ! $$project{'BleedSize'};
 					$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 				} # end if
+$openprint::log->debug("BLeed for press: $$Press{strid}: $$project{'BleedSize'}");
 
 				my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @side_one_colours, @side_two_colours ] );
 
@@ -1463,13 +1464,13 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 					next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
+$openprint::log->debug($Paper->to_string());
 
 					my $P = $Paper->clone();
 					my @i;
 					my @cut_offs;
 					if ( my $co = $Press->specification('Cut Off') ) {
 						@cut_offs = reverse sort split( ',', $co );
-#$openprint::log->debug("Cut offs: $co : " . @cut_offs . " @cut_offs");
 					} elsif ( my $min = $Press->specification('Cut Off Minimum') ) {
 						my $increment = $Press->specification('Cut Off Increment');
 						my $cut_off = $Press->specification('Cut Off Maximum');
@@ -1500,6 +1501,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 							next if ! $new_height;
 							$I->Paper()->height( $new_height );
 							push @i, $I->copy();
+#$I->display('starting');
 							while ( $I->rows() > 1 ) {
 								# Don't cut them down because they just become the sheetwork version
 								last if $I->runstyle() eq 'Work & Tumble';
@@ -1513,6 +1515,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 								last if ! $new_height;
 								$I->Paper()->height( $new_height );
 								push @i, $I->copy();
+#$I->display('after cutdown');
 							} # end while
 						} # end foreach $I
 					} else {
@@ -1605,7 +1608,6 @@ $i->display();
 							and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
 							and ( $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )
 					   ) {
-						#$add = 1;
 					} elsif ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->type() eq 'Roll' )
 							and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
 					   ) {
@@ -1652,10 +1654,10 @@ $i->display();
 
 						} # end for
 					} # end if overriden or not or cached
-					push @{$imps{$str}}, $imp if $add > 0;
+					push @{$imps{$str}}, $imp if $add;
 				} # end foreach imp
 
-			}# end foreach Paper
+			} # end foreach Paper
 
 			push @impositions, map {@{$_}} values %imps;
 
@@ -1669,11 +1671,10 @@ $i->display();
 
 			if ( ! @impositions ) {
 #$openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
-				if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
+				if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $Press->strid() eq $$specs{'ddmPress'.$qty_index} ) ) {
 					$$specs{'alert'} .= 'There were no possible impositions.  Your project may be too large for us.<br/>';
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
-				next;
 			} # end if
 
 			$imposition_count += scalar @impositions;
@@ -1774,7 +1775,7 @@ $i->display();
 		# Pop off the first one
 		shift @{$$specs{'Additional Impositions'.$qty_index}};
 
-		$$specs{'ddmBleedSize'.$qty_index} = $best_price{'ddmBleedSize'};
+		$$specs{'ddmBleedSize'.$qty_index} = $$Imposition{'bleed_size'};
 		$$specs{'ddmPress'.$qty_index} = $Press->strid();
 		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
 		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000;
@@ -1916,7 +1917,7 @@ sub breakdown {
 	my $stock_qty = $$price{'Stock Quantity'};
 
 	my $breakdown = '';
-	$breakdown .= sprintf('Colour Bar %s %s, Bleed: %s<br/>', $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation(), $$price{'ddmBleedSize'} );
+	$breakdown .= sprintf('Colour Bar %s %s, Bleed: %s<br/>', $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation(), $$Imposition{'bleed_size'} );
 	$breakdown .= '<b>Setups</b><br/>';
 	$breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f<br/>', $$price{'Roll2SheetCharge'} ) if $$price{'Roll2SheetCharge'};
@@ -1998,13 +1999,13 @@ sub get_imposition_price {
 
 sub get_project_price {
 	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $versions, $PlateCounts, $PaperCounts, $previous_forms_cache, $signatures, $best_price, $recursion_depth ) = @_;
-$openprint::log->debug("get_project_price");
+$openprint::log->debug("******** get_project_price");
 	my %previous_forms_cache;
 	my %best_price;
 	$best_price{'Comparison Cost'} = $best_price if $best_price;
 
 $openprint::log->debug("Press Override: " . $$sig_specs{'chkOverridePress'.$qty_index} );
-$openprint::log->debug("Possible Presses: " . join(',',@$possible_presses) );
+$openprint::log->debug("Possible Presses: " . join(',', map { $_->strid() } @$possible_presses) );
 
 	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
 
@@ -2796,11 +2797,6 @@ sub calc_price {
 	my $Press = $Imposition->Press();
 
 # It's ok to do this, because $$specs is either a copy, or will be reset before being returned
-#$$specs{"hdnImpositionRows$qty_index"} = $$Imposition{rows};
-#$$specs{"hdnImpositionColumns$qty_index"} = $$Imposition{columns};
-#$$specs{"hdnImpositionDutchRows$qty_index"} = $$Imposition{dutch_rows};
-#$$specs{"hdnImpositionDutchColumns$qty_index"} = $$Imposition{dutch_columns};
-#$$specs{"txtImposition$qty_index"} = $$Imposition{imposition};
 	$$specs{'SpreadRows'.$qty_index} = $$Imposition{spread_rows};
 	$$specs{'SpreadCols'.$qty_index} = $$Imposition{spread_columns};
 	$$specs{'hdnImageOrientation'.$qty_index} = $$Imposition{image_orientation};
@@ -2810,7 +2806,6 @@ sub calc_price {
 
 	my %price;
 	$price{'Imposition'} = $Imposition;
-	$price{'ddmBleedSize'} = $$project{'BleedSize'};
 
 	my @colours = ();
 	$price{'WorkTurn Dry Charge'} = 0;
@@ -4023,7 +4018,7 @@ sub filter_colours {
 sub compare_signatures_runstyle {
 	my ( $sig1, $sig2, $qty_index ) = @_;
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
-		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity','txtImposition' ) {
+		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity','txtImposition','ddmBleedSize' ) {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
 				return 0;
@@ -4052,7 +4047,7 @@ sub compare_signatures_runstyle {
 			'ColourCoatingTypeSideTwo6', 'ColourCoatingColourSideTwo6', 'ColourCoatingCoverageSideTwo6',
 			'ColourCoatingTypeSideTwo7', 'ColourCoatingColourSideTwo7', 'ColourCoatingCoverageSideTwo7',
 			'ColourCoatingTypeSideTwo8', 'ColourCoatingColourSideTwo8', 'ColourCoatingCoverageSideTwo8',
-			'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','ddmBleedSize',
+			'BleedLeft','BleedRight','BleedTop','BleedBottom',
 			) {
 				if ( $$sig1{$key} ne $$sig2{$key} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
