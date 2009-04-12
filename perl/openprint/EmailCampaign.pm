@@ -299,7 +299,7 @@ sub send {
 	foreach my $user_index ( @mail_user_ids ) {
 		# de we need to send this email?
 
-		my ( $interval_expired, $num_email_sent, $marked_for_deletion );
+		my ( $interval_expired, $num_email_sent );
 		get_user_detail( $user_index, \%replacements );
 		$replacements{'User'} = new openprint::User( $user_index );
 
@@ -310,42 +310,35 @@ sub send {
 		} # end if
 
 		# First check if a sent row exists
-		$query = q{SELECT (NOW() - EmailSentOn) > ?, NumEmailSent, MarkedForDeletion FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?};
-		if ( $$self{'interval'} and ( $interval_expired, $num_email_sent, $marked_for_deletion ) =  sql::execute( undef, undef, $query, @$self{'interval','id'}, $user_index ) ) {
+		$query = q{SELECT (NOW() - EmailSentOn) > ?, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?};
+		if ( $$self{'interval'} and ( $interval_expired, $num_email_sent ) =  sql::execute( undef, undef, $query, @$self{'interval','id'}, $user_index ) ) {
 
 			# Check if the duration has elapsed	
 			if ($interval_expired == 1) {
 				$self->{log}->debug('interval expired');
 
-				# if the account has already been marked for deletion, then
-				# there is nothing to do
-				if ($marked_for_deletion eq 'N') {
-					$self->{log}->debug('not marked for deletion');
-					# Check if we have sent this too many times
-					if ( ($self->{'timestosend'} ne '') and $num_email_sent >= $self->{'timestosend'}) {
-						# Email the admin
-						$replacements{ReplacementText} = $self->{'emailtext'};
-						#send_admin_email($openprint::log, $openprint::dbh, \%replacements);
-						sql::update( undef, undef, 'EmailCampaign_Sent', ['campaign_id=? AND user_id=?', $$self{id}, $user_index],
-								'MarkedForDeletion',	'Y',
-								);
-						$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because this email address has been sent to %d times already.</span><br/>', $replacements{'User'}->get('firstname','lastname','email'), $num_email_sent );
-					} else {
-						# Send the email to the user
-						if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
-							$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
-						} else {
-							$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
-							$self->send_email( \%replacements );
-							sql::update( undef, undef, 'EmailCampaign_Sent', ['campaign_id=? AND user_id=?', $self->{'id'}, $user_index],
-									'NumEmailSent',	$num_email_sent+1,
-									'EmailSentOn',	'NOW()',
-									);
-						} # end if email is valid
-					} # if $num_email_sent > num_times to send
+				# Check if we have sent this too many times
+				if ( ($self->{'timestosend'} ne '') and $num_email_sent >= $self->{'timestosend'}) {
+					# Email the admin
+					$replacements{ReplacementText} = $self->{'emailtext'};
+					#send_admin_email($openprint::log, $openprint::dbh, \%replacements);
+					sql::update( undef, undef, 'EmailCampaign_Sent', ['campaign_id=? AND user_id=?', $$self{id}, $user_index],
+							'MarkedForDeletion',	'Y',
+							);
+					$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because this email address has been sent to %d times already.</span><br/>', $replacements{'User'}->get('firstname','lastname','email'), $num_email_sent );
 				} else {
-					$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because this account is marked for deletion.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
-				} # if marked for deletion
+					# Send the email to the user
+					if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
+						$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
+					} else {
+						$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
+						$self->send_email( \%replacements );
+						sql::update( undef, undef, 'EmailCampaign_Sent', ['campaign_id=? AND user_id=?', $self->{'id'}, $user_index],
+								'NumEmailSent',	$num_email_sent+1,
+								'EmailSentOn',	'NOW()',
+								);
+					} # end if email is valid
+				} # if $num_email_sent > num_times to send
 			} # if interval expired
 		} else {
 			# No record of sent email, we need to send the first one
@@ -393,24 +386,20 @@ sub trial {
 			next;
 		} # end if
 
-		my ( $interval_expired, $num_email_sent, $marked_for_deletion );
+		my ( $interval_expired, $num_email_sent );
 
 # First check if a sent row exists
-		$_ = 'SELECT (NOW() - EmailSentOn) > ?, NumEmailSent, MarkedForDeletion FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
-		if ( ( $interval_expired, $num_email_sent, $marked_for_deletion ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_index ) ) {
+		$_ = 'SELECT (NOW() - EmailSentOn) > ?, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
+		if ( ( $interval_expired, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_index ) ) {
 
 # Check if the duration has elapsed	
-			if ($interval_expired == 1) {
+			if ( ($interval_expired == 1) ) {
 
-# if the account has already been marked for deletion, then
-# there is nothing to do
-				if ($marked_for_deletion eq 'Y') {
 # Check if we have sent this too many times
-					if ($num_email_sent < $self->{'timestosend'}) {
-						get_user_detail( $user_index, \%replacements);
-						$results .= sprintf('Sending Email to: %s %s at %s<br/>', $replacements{'User'}->get('firstname','lastname','email') );
-					} # if $num_email_sent > num_times to send
-				} # if marked for deletion
+				if ($num_email_sent < $self->{'timestosend'}) {
+					get_user_detail( $user_index, \%replacements);
+					$results .= sprintf('Sending Email to: %s %s at %s<br/>', $replacements{'User'}->get('firstname','lastname','email') );
+				} # if $num_email_sent > num_times to send
 			} # if interval expired
 		} else {
 # No record of sent email, we need to send the first one

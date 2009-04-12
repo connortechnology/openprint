@@ -33,6 +33,8 @@ sub save_destination {
 # if someone sets the Destination flag, keep it through the login process.
 	if ( $destination =~ /main\/order/ ) {
 		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue your order.};
+	} elsif ( $destination =~ /survey\.html/ ) {
+		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue the survey.};
 	} else {
 		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue to the page you requested.};
 	} # end if
@@ -159,6 +161,14 @@ $openprint::log->debug("Dest: $session{'Destination'}");
 		} # end if
 		return;
 	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue your order\./ ) {
+     
+		$$variable{'Redirect'} = $1.'.html';
+		foreach my $p ( split('&', $2 ) ) {
+			my ( $k, $v ) = split('=', $p );
+			$openprint::log->debug("Psrsmd: $p, $k = $v ");
+			$openprint::param{$k} = $v;
+		} # end foreach
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue the survey\./ ) {
      
 		$$variable{'Redirect'} = $1.'.html';
 		foreach my $p ( split('&', $2 ) ) {
