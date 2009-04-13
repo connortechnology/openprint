@@ -86,6 +86,8 @@ foreach my $log_file ( @log_files ) {
 							#print "Got $ip for $source\n";
 						} # end if
 					} # end if
+					next if $ip =~ /209.250.156/;
+					next if $ip =~ /173.34.14.197/;
 					if ( ! $ip ) {
 						print "No ip for $source\n";
 					} else {
@@ -94,8 +96,10 @@ foreach my $log_file ( @log_files ) {
 						} # end if
 						my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip};
 						my $occurrence = Date::Parse::str2time( $when );
+#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
 						if ( (!$last_seen) or ($last_seen < $occurrence) ) {
 							$host_counts{$ip}{'count'} += 1;
+							$host_counts{$ip}{'update'} = 1;
 						} # end if
 					} # end if
 					last;
@@ -107,6 +111,7 @@ foreach my $log_file ( @log_files ) {
 } # end foreach
 
 foreach my $ip ( sort keys %host_counts ) {
+	next if ! $host_counts{$ip}{'update'};
 	if ( $host_counts{$ip}{'ip'} ) {
 		if ( my $e = sql::update( undef, undef, 'blacklist',['ip=?',$ip], ['updated_on', 'NOW()', 'count', $host_counts{$ip}{'count'}] ) ) {
 			print $e . "\n";
@@ -123,7 +128,7 @@ if ( $opts->{'blacklist'} ) {
 	if ( ! open( FH, '>'.$opts->{'blacklist'} ) ) {
 		die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
 	} else {
-		foreach my $ip ( sql::execute( undef, undef, q`SELECT ip FROM blacklist WHERE updated_on > NOW()-'1 month'::interval ORDER BY ip` ) ) {
+		foreach my $ip ( sql::execute( undef, undef, q`SELECT ip FROM blacklist WHERE updated_on > NOW()-'1 month'::interval AND count > 10 ORDER BY ip` ) ) {
 			print FH "$ip\n";
 		} # end foreach ip
 		close(FH);
