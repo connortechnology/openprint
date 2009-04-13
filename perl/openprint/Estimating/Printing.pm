@@ -833,7 +833,7 @@ my $master_time = gettimeofday();
 					} # end foreach group
 
 					$openprint::log->debug("Cover size calc: $finished_calliper");
-					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper + $config{'PerfectBindGlueSpace'})*1000)/1000);
+					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper + 2*$config{'PerfectBindGlueSpace'})*1000)/1000);
 				} else {
 					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$specs{'txtWidth'}*1000)/1000);
 				} # end if
