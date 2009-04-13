@@ -24,6 +24,11 @@ my %folding_cache;
 use strict;
 #use warnings;
 use POSIX qw(ceil);
+use openprint ();
+use vars qw( %config $log $dbh );
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 require sql;
 require misc;
@@ -369,6 +374,7 @@ sub setup_project {
 	if ( $$services{'PerfectBound'} ) {
 		$project{'HasPerfectBound'} = $$services{'PerfectBound'}[0];
 		%{$project{'PerfectBoundSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] )};
+		$project{'PerfectBindCoverGutter'} = $config{'PerfectBindCoverGutter'} if $$specs{'Group'} == 1;
 	} # end if
 
 	%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )} if $$services{'UVCoating'};
@@ -827,7 +833,7 @@ my $master_time = gettimeofday();
 					} # end foreach group
 
 					$openprint::log->debug("Cover size calc: $finished_calliper");
-					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper + 1/4)*1000)/1000);
+					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper + $config{'PerfectBindGlueSpace'})*1000)/1000);
 				} else {
 					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$specs{'txtWidth'}*1000)/1000);
 				} # end if
@@ -1004,20 +1010,20 @@ my $master_time = gettimeofday();
 				);
 # Load this here, so that later cloning will copy the prices as well.
 #if ( $debug ) {
-	foreach my $P ( @Papers ) {
-		$P->prices();
-	} # end foreach
-	if ( ! @Papers ) {
-		$openprint::log->warn('no papers');
-		$$specs{'alert'} .= 'Unable to find any stocks matching your specifications.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
-	@$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade'} = $Papers[0]->get('name','finish','colour','weight','grade');
-#} # end if
-	$$specs{'txtSpecificStockCalliper'} = $Papers[0]->calliper() if @Papers;
-	foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade' ) {
-		$variables{$k} = [ sets::union( 'output', @{$variables{$k}} ) ];
-	} # end foreach
+		foreach my $P ( @Papers ) {
+			$P->prices();
+		} # end foreach
+		if ( ! @Papers ) {
+			$openprint::log->warn('no papers');
+			$$specs{'alert'} .= 'Unable to find any stocks matching your specifications.<br/>';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		@$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade'} = $Papers[0]->get('name','finish','colour','weight','grade');
+	#} # end if
+		$$specs{'txtSpecificStockCalliper'} = $Papers[0]->calliper() if @Papers;
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade' ) {
+			$variables{$k} = [ sets::union( 'output', @{$variables{$k}} ) ];
+		} # end foreach
 	} # end if
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';

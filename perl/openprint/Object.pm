@@ -114,18 +114,12 @@ sub AUTOLOAD {
 
 sub get {
     my $self = shift;
-	if ( $debug ) {
-		my $type = ref $self;
-		my %fields = eval ('%'.$type.'::fields');
+	my @results;
+	foreach ( @_ ) {
+		push @results, $self->$_();
+	} # end foreach
 
-		foreach my $field ( @_ ) {
-			if ( ! defined $fields{$field} ) {
-				$openprint::log->warn( $type . ": Invalid field requested: ($field)." );
-			} # end if
-		} # end foreach
-	} # end if
-
-    return @$self{@_};
+    return @results;
 } # end sub get
 
 sub set {

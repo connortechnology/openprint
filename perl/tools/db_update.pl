@@ -516,6 +516,19 @@ sql::insert(undef,undef,'configuration', [
     'description'=>'Default Pricelist.',
     'category'=> 'Miscellaneous Settings'] ) if ! $config{'DefaultPricelist'};
 
+sql::insert(undef,undef,'configuration', [
+    'name'=>'PerfectBindCoverGutter',
+    'value'=>0.125,
+    'type'=>'text',
+    'description'=>'Perfect Binding Settings','text','The amount of space to add to each edge on the height of the cover.',
+    'category'=> 'PerfectBind Settings'] ) if ! $config{'PerfectBindCoverGutter'};
+sql::insert(undef,undef,'configuration', [
+    'name'=>'PerfectBindGlueSpace',
+    'value'=>0.03125,
+    'type'=>'text',
+    'description'=>'Perfect Binding Settings','text','The amount of space to add to the width of the cover to account for the glue.',
+    'category'=> 'PerfectBind Settings'] ) if ! $config{'PerfectBindGlueSpace'};
+
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );

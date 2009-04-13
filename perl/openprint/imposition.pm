@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -253,6 +253,7 @@ sub calc_setup_object {
 
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;
+
 	if ( sets::isin( $$specs{'Binding'}, ['SaddleStitching','LoopStitching'] ) ) {
 		$bindery_gutters = $Press->specification('StitchingGutter');
 		$bindery_bleed = $Press->specification('StitchingBleed');
@@ -283,6 +284,9 @@ sub calc_setup_object {
 	$bleed_height = 0 if $bleed_height < 0;
 #$openprint::log->debug("BleedSize: $$specs{'BleedSize'} bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
+	if ( $$specs{'Binding'} eq 'PerfectBound' ) {
+		$image_height += 2*$$specs{'PerfectBindCoverGutter'};
+	} # end if
 	$setup1->image_width( $image_width + $bleed_width );
 	$setup1->image_height( $image_height );
 
@@ -308,7 +312,7 @@ sub calc_setup_object {
 
 	$gutters = 0 if $gutters < 0;
 
-	$$specs{'Grip Size'} = $$specs{'Grip'};
+	$$specs{'Grip Size'} = $$specs{'Grip'} - $$specs{'PerfectBindCoverGutter'};
 # doube grip for a perfecting or Work & Tumble.
 	$$specs{'Grip Size'} *= 2 if sets::isin( $run_style, [ 'Work & Tumble', 'Perfecting' ] ); 
 	if ( ( $run_style eq 'Work & Tumble' ) and ( $$specs{'Colour Bar Orientation'} ne 'Length' ) ) {
@@ -350,7 +354,6 @@ sub calc_setup_object {
 		} else {
 			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
 		} # end if
-		$setup1->grip( $$specs{'Grip Size'} );
 
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
@@ -504,7 +507,6 @@ $openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if $debug;
 		} else {
 			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
 		} # end if
-		$setup2->grip( $$specs{'Grip Size'} );
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
 		} # end if
