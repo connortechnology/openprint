@@ -13,11 +13,11 @@
 		$html .= 'POs for docket ' . $param{'docket'} . ':<br/><table class="List"><tr><th width="75">PO #</th><th width="100">Quantity</th><th>Description</th></tr>';
 		foreach my $PO_C ( @Contents ) {
 			if ( $PO_C->Type()->name() eq 'Roll Stock' ) {
-			$html .= sprintf('<tr><td>%1$d</td><td>%2$dlbs</td><td>%3$s</td></tr>',$PO_C->po_id(), $PO_C->qty(), $PO_C->description() );
+				$html .= sprintf('<tr><td>%1$d</td><td>%2$dlbs</td><td>%3$s</td></tr>',$PO_C->po_id(), $PO_C->qty(), $PO_C->description() );
 			} elsif ( $PO_C->Type()->name() eq 'Sheet Stock' ) {
-			$html .= sprintf('<tr><td>%1$d</td><td>%2$dsheets</td><td>%3$s</td></tr>',$PO_C->po_id(), $PO_C->qty(), $PO_C->description() );
+				$html .= sprintf('<tr><td>%1$d</td><td>%2$dsheets</td><td>%3$s</td></tr>',$PO_C->po_id(), $PO_C->qty(), $PO_C->description() );
 			} else {
-			$html .= sprintf('<tr><td>%1$d</td><td>%2$d</td><td>%3$s</td></tr>',$PO_C->po_id(), $PO_C->qty(), $PO_C->description() );
+				$html .= sprintf('<tr><td>%1$d</td><td>%2$d</td><td>%3$s</td></tr>',$PO_C->po_id(), $PO_C->qty(), $PO_C->description() );
 			} # end if
 		} # end foreach
 		$html .= '</table>';

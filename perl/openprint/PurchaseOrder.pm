@@ -323,12 +323,16 @@ sub send_to_vendor {
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	foreach my $email ( split(',', $self->vendor_email() ) ) {
+		$email =~ s/^\s*(.*)\s*$/$1/;
+		next if ! $email;
 		$mail{'TO'}	= $email;
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
 	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
 		foreach my $email ( split(',', $self->shipto_email() ) ) {
+			$email =~ s/^\s*(.*)\s*$/$1/;
+			next if ! $email;
 			$mail{'TO'} = $email;
 			misc::send_email_with_attachment( $log, \%mail, @attachments );
 			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
