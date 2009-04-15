@@ -52,10 +52,12 @@ sub find {
 sub delete {
 	my $self = shift;
 
+	my @PaperPrices = $self->getPrices('Paper');
 	my $ac = sql::start_transaction( $openprint::dbh );
+	sql::update( undef, undef, 'companies', ['pricelist_id=?', $$self{'id'}], 'pricelist_id', undef );
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Service_Prices WHERE pricelist_id=?}, $$self{id} );
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Material_Prices WHERE lngListIndex=?}, $$self{id} );
-    sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Paper_Prices WHERE lngListIndex=?}, $$self{id} );
+    sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Paper_Prices WHERE lngListIndex=?}, $$self{id} ) if @PaperPrices;
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Product_Prices WHERE pricelist_id=?}, $$self{id} );
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Pricelists WHERE id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );

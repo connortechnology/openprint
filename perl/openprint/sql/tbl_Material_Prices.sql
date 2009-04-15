@@ -1,9 +1,9 @@
 DROP TABLE tbl_Material_Prices;
 
 CREATE TABLE tbl_Material_Prices (
-	lngListIndex		INT4 NOT NULL, FOREIGN KEY (lngListIndex) REFERENCES PriceLists (Index),/* priceslit ID or cust_id */
-	lngMaterialIndex	INT4 NOT NULL, FOREIGN KEY (lngMaterialIndex) REFERENCES tbl_Materials (lngIndex),
-	lngEquipmentIndex	INT4, FOREIGN KEY (lngEquipmentIndex) REFERENCES tbl_Equipment (Id),
+	lngListIndex		INTEGER NOT NULL, FOREIGN KEY (lngListIndex) REFERENCES PriceLists (id),/* priceslit ID or cust_id */
+	lngMaterialIndex	INTEGER NOT NULL, FOREIGN KEY (lngMaterialIndex) REFERENCES Materials (id),
+	lngEquipmentIndex	INTEGER, FOREIGN KEY (lngEquipmentIndex) REFERENCES tbl_Equipment (lngindex),
 	dtmStart			TIMESTAMP with time zone,
 	dtmEnd				TIMESTAMP with time zone,
 	lngMin				NUMERIC(10,4),

@@ -29,7 +29,7 @@ sub find {
 	my @values;
 
 	if ( $params{'pricelist_id'} ) {
-		$sql .= ' AND lngpricelistindex=?';
+		$sql .= ' AND lnglistindex=?';
 		push @values, $params{'pricelist_id'};
 	} # end if
 	if ( $params{'Pricelist'} ) {
