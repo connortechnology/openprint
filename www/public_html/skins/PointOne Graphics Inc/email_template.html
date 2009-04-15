@@ -1,11 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 	<head>
-		<title><?SiteTitle?></title>
+		<title><? echo ( $config{'SiteTitle'} ) ?></title>
 		<style type="text/css">
-		<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/email.css' ); ) ?>
+		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/email.css' ); ) ?>
 		</style>
-		<base href="<? echo ( $openprint::config{'ExternalSiteURL'} ) ?>"/>
+		<base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
 	</head>
 	<body>
 		<table width="98%" border="0">

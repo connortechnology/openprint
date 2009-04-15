@@ -1,7 +1,8 @@
 package openprint::CAR;
 @ISA = qw(openprint::Object);
 
-use vars qw( %config $log $dbh %session );
+use vars qw( $r %config $log $dbh %session );
+*r = \$openprint::r;
 *session = \%openprint::session;
 *config = \%openprint::config;
 *log = \$openprint::log;
@@ -205,15 +206,16 @@ sub send_notifications {
 
 	if ( @Users ) {
 		my $From = new openprint::User( $session{'user_id'} );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 
 		my %info = (
 			'CAR'	=>	$self,
 		);
 		foreach my $User ( @Users ) {
-			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/iso_car_notification.html\"-->";
-			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
+			$info{'ReplacementText'} = '<!--#include virtual="/email_content/iso_car_notification.html"-->';
+$log->debug('Before');
+			my @body = ('', encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) ), 'text/html', 'quoted-printable');
+$log->debug('After');
 			my %mail = (
 					SMTP    => $config{'Mail Server'},
 					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),

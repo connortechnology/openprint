@@ -2,6 +2,13 @@
 	$param{'docket'} =~ s/\D//g;
 	return if ! $param{'docket'};
 	my $html = '';
+
+	foreach my $Project ( openprint::Project::find('docket'=>$param{'docket'}, 'order'=>'index' ) ) {
+		if ( sets::isin( $Project->status(), [ 'Complete', 'Picked Up', 'Shipped', 'Printed','Waiting For Pickup' ] ) ) {
+			$html .= "Docket $param{docket} appears to be " . $Project->status() . '<br/>';
+		} # end if
+	} # end foreach Project
+
 	my @Contents;
 	foreach my $PO_C ( openprint::PurchaseOrder_Content::find('docket'=>$param{'docket'}, 'order'=>'po_id DESC' ) ) {
 		next if $PO_C->PurchaseOrder()->deleted();
