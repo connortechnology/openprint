@@ -86,8 +86,8 @@ foreach my $log_file ( @log_files ) {
 							#print "Got $ip for $source\n";
 						} # end if
 					} # end if
-					next if $ip =~ /209.250.156/;
-					next if $ip =~ /173.34.14.197/;
+					next if $ip =~ /^209\.250\.156/;
+					next if $ip =~ /^173\.34\.14\.197/;
 					if ( ! $ip ) {
 						print "No ip for $source\n";
 					} else {
@@ -96,7 +96,7 @@ foreach my $log_file ( @log_files ) {
 						} # end if
 						my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip};
 						my $occurrence = Date::Parse::str2time( $when );
-#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
+$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
 						if ( (!$last_seen) or ($last_seen < $occurrence) ) {
 							$host_counts{$ip}{'count'} += 1;
 							$host_counts{$ip}{'update'} = 1;

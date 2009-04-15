@@ -284,7 +284,7 @@ sub view {
 			my $complete = 1;
 
 			foreach my $signature_service_index ( $Project->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 				foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockBrand UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
 					next if $$sig_specs{$param} eq $param{"$param-$$sig_specs{'SignatureIndex'}"};
@@ -300,14 +300,7 @@ sub view {
 
 # There is now a set of press completion buttons for each signature
 			if ( $complete ) {
-				openprint::service::status( $project_index, $service_index, 'Complete' );
-				$Project->add_to_log( @session{'company_id','user_id'}, "Marked Printed from $status" );
-				foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$project_index) ) {
-					$PA->delete();
-					$Project->add_to_log( @session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
-				} # end foreach
-				# shuffle jobs on the print schedule
-
+				$Project->status_change( @session{'company_id','user_id'}, 'Printed' );
 			} else {
 				openprint::service::status( $project_index, $service_index, 'Ordered' );
 				$Project->add_to_log( @session{'company_id','user_id'}, "Marked Ordered from $status" );
@@ -339,6 +332,8 @@ sub view {
 		$Project->status_change( undef, undef, 'Shipped' );
 	} elsif ( $param{'btnFunction'} eq 'Picked Up' ) {
 		$Project->status_change( undef, undef, 'Picked Up' );
+	} elsif ( $param{'btnFunction'} eq 'Complete Printing' ) {
+		$Project->status_change( undef, undef, 'Printed' );
 	} elsif ( $param{'btnFunction'} eq 'BinderyComplete' ) {
 		$Project->status_change( undef, undef, 'BinderyComplete' );
 	} elsif ( $param{'btnFunction'} eq 'Complete' ) {
