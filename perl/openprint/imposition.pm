@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -182,6 +182,7 @@ sub calc_setup_object {
 	$setup1->runstyle( $run_style );
 	$setup1->image_orientation('Vertical');
 	$setup1->spread_size( $$specs{'txtSpreadSize'} );
+	$setup1->bleed_size( $$specs{'BleedSize'} );
 	if ( 1 ) {
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
@@ -199,6 +200,7 @@ sub calc_setup_object {
 	$setup2->runstyle( $run_style );
 	$setup2->image_orientation('Horizontal');
 	$setup2->spread_size( $$specs{'txtSpreadSize'} );
+	$setup2->bleed_size( $$specs{'BleedSize'} );
 	if ( 1 ) {
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);
@@ -251,6 +253,7 @@ sub calc_setup_object {
 
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;
+
 	if ( sets::isin( $$specs{'Binding'}, ['SaddleStitching','LoopStitching'] ) ) {
 		$bindery_gutters = $Press->specification('StitchingGutter');
 		$bindery_bleed = $Press->specification('StitchingBleed');
@@ -281,6 +284,9 @@ sub calc_setup_object {
 	$bleed_height = 0 if $bleed_height < 0;
 #$openprint::log->debug("BleedSize: $$specs{'BleedSize'} bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
+	if ( $$specs{'Binding'} eq 'PerfectBound' ) {
+		$image_height += 2*$$specs{'PerfectBindCoverGutter'};
+	} # end if
 	$setup1->image_width( $image_width + $bleed_width );
 	$setup1->image_height( $image_height );
 
@@ -306,7 +312,7 @@ sub calc_setup_object {
 
 	$gutters = 0 if $gutters < 0;
 
-	$$specs{'Grip Size'} = $$specs{'Grip'};
+	$$specs{'Grip Size'} = $$specs{'Grip'} - $$specs{'PerfectBindCoverGutter'};
 # doube grip for a perfecting or Work & Tumble.
 	$$specs{'Grip Size'} *= 2 if sets::isin( $run_style, [ 'Work & Tumble', 'Perfecting' ] ); 
 	if ( ( $run_style eq 'Work & Tumble' ) and ( $$specs{'Colour Bar Orientation'} ne 'Length' ) ) {
@@ -348,7 +354,6 @@ sub calc_setup_object {
 		} else {
 			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
 		} # end if
-		$setup1->grip( $$specs{'Grip Size'} );
 
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
@@ -502,7 +507,6 @@ $openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if $debug;
 		} else {
 			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
 		} # end if
-		$setup2->grip( $$specs{'Grip Size'} );
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
 		} # end if
@@ -858,20 +862,19 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 				$newimp->columns($cols);
 				$newimp->imposition($rows * $cols);
 				if ( $newimp->image_orientation() eq 'Vertical' ) {
-				$newimp->image_width( $newimp->image_width() * $col );
-				$newimp->image_height( $newimp->image_height() * $row );
+					$newimp->image_width( $newimp->image_width() * $col );
+					$newimp->image_height( $newimp->image_height() * $row );
 				} else {
-				$newimp->image_width( $newimp->image_width() * $row );
-				$newimp->image_height( $newimp->image_height() * $col );
+					$newimp->image_width( $newimp->image_width() * $row );
+					$newimp->image_height( $newimp->image_height() * $col );
 				} # end if
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				#$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
 				push @imps, $newimp;
 			} # end foreach block
-			#last if @imps;
- #and (@imps[@imps-1]->imposition() >= 2);
-			last if @imps and ($imps[@imps-1]->imposition() >= 2);
+			#last if @imps and (@imps[@imps-1]->imposition() >= 4);
+			#last if @imps and ($signature_size < $start/2);
 		} # end foreach signature_size
 		push @good_impositions, @imps;
 	} # end foreach

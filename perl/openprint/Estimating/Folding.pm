@@ -58,8 +58,8 @@ sub variables {
 				push @v, "FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
 				push @v, "FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
 			} # end foreach
-			foreach my $fold_type ( keys %fold_types ) {
-			} # end foreach
+			#foreach my $fold_type ( keys %fold_types ) {
+			#} # end foreach
 		} # end foreach
 	} # end foreach
 
@@ -328,6 +328,7 @@ sub signature_calc {
 		return %results;
 	} # end if
 
+	my $bestM;
 	my $bestPrice;
 	my $bestRunPrice = 0;
 	my $bestRunTime = 0;
@@ -763,6 +764,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 			my $totalTime = $Equipment->specification('Station Make Ready') * 60;
 
 			my $totalPrice;
+			my $mprice = 0;
 if ( $debug ) {
 			foreach my $key ( keys %folds ) {
 				my $impo_qty = 0;
@@ -925,7 +927,9 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 					$servicePrice{'Total'} += 1000000;
 				} # end if
 
+				$mprice += $servicePrice{'Total'};
 				$totalPrice += $servicePrice{'Total'};
+				
 				$totalTime += $runTime * 3600;
 				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
 					last;
@@ -936,6 +940,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 
 			if ( ( $totalPrice < $bestPrice ) or ( ! defined $bestPrice ) ) {
 #$openprint::log->debug("Got better prrice $totalPrice < $bestPrice " . $Equipment->name() ) if $debug;
+				$bestM = $mprice;
 				$bestPrice = $totalPrice;
 				$bestEquipment = $Equipment;
 				$bestRunTime = int($totalTime);
@@ -949,7 +954,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 
 	my %results = (
 		'Price'			=> $bestPrice,
-		'MPrice'		=> $$specs{'txtQuantity'.$qty_index} ? ($bestPrice/$$specs{'txtQuantity'.$qty_index})*1000 : 0,
+		'MPrice'		=> $$specs{'txtQuantity'.$qty_index} ? ($bestM/$$specs{'txtQuantity'.$qty_index})*1000 : 0,
 		'Equipment'		=> $bestEquipment,
 		'Status'		=> $bestEquipment ? 'calculated' : 'uncalculated',
 		'Folds'			=> $bestFolds,
@@ -1053,6 +1058,8 @@ sub calc {
 				} # end for
 			} # end if
 
+			$$sig_specs{'PreviousImposition'} = $previous_imposition;
+
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.<br/>';
 				next;
@@ -1112,6 +1119,9 @@ sub calc {
 				} # end if
 				if ( $results{'Status'} eq 'uncalculated' ) {
 					$status = 'uncalculated';
+				} # end if
+				if ( (!$previous_imposition) and ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} )->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) ) {
+					$previous_imposition = $$sig_specs{'txtImposition'.$qty_index};
 				} # end if
 			} # end if has pages
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';

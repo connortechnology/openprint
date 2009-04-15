@@ -78,15 +78,15 @@ sub signature_calc {
 				next;
 			} # end if
 			if ( $Equipment->specification('SpinePaste Maximum Imposition') and $I->imposition() > $Equipment->specification('SpinePaste Maximum Imposition') ) {
-				$openprint::log->debug("Imposition too large " . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid() .'<br/>' );
+				$openprint::log->debug('Imposition too large ' . $I->imposition() . '>' . $Equipment->specification('SpinePaste Maximum Imposition') . " for " . $Equipment->strid() .'<br/>' );
 				next;
 			} # end if
 			if ( $Equipment->specification('SpinePaste Maximum Pages') and $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
-				$openprint::log->debug("Too many Pages " . $I->pages() . '>' . $Equipment->specification('SpinePaste Maximum Pages') . " for " . $Equipment->strid() . '<br/>' );
+				$openprint::log->debug('Too many Pages ' . $I->pages() . '>' . $Equipment->specification('SpinePaste Maximum Pages') . " for " . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
 			if ( ! $service_index ) {
-				$openprint::log->debug("Can only spine paste 1 signature for " . $Equipment->strid() . '<br/>' );
+				$openprint::log->debug('Can only spine paste 1 signature for ' . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
 			my $sigs = 1;
@@ -127,7 +127,6 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my $services = $Project->services();
 
 
 	if ( $Project->signatures() > 1 ) {
@@ -139,7 +138,7 @@ sub calc {
 	if ( ! @Equipment ) {
 		$$specs{'alert'} .= 'We are unable to automatically provide a price for Spine Pasting.  You may enter your own price in the price fields, or contact your CSR for a quote.';
 
-		foreach my $qty_index ( 1 ..3 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 			my $qty = $$specs{'txtQuantity'.$qty_index};
 			if ( $qty and ! $$specs{'txtPrice'.$qty_index} ) {
@@ -154,6 +153,7 @@ sub calc {
 		$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	} # end if
 
+	my $services = $Project->services();
 	my $folding_specs;
 	if ( $$services{'Folding'} ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
@@ -164,16 +164,16 @@ sub calc {
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		$pages = $$printing_specs{'txtTotalPageQuantity'};
 	} # end if
+	my @sigs = $Project->signatures();
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{'txtQuantity'.$qty_index};
-		next if ! $qty;
 
 		my $imposition = 0;
-		foreach my $ss_id ( $Project->signatures() ) {
+		foreach my $ss_id ( @sigs ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 			my $I = new openprint::Imposition;
 			$I->load( $sig_specs, $qty_index );	
@@ -181,7 +181,6 @@ sub calc {
 		} # end foreach
 
 		my %best;
-		my $folding_results;
 		my @sigs = $Project->signatures();
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
 		my $I = new openprint::Imposition;
@@ -193,7 +192,7 @@ sub calc {
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 # Inline pasting
 				if ( @sigs > 1 ) {
-					$openprint::log->debug("Can only spine paste 1 signature for " . $Equipment->strid() );
+					$openprint::log->debug('Can only spine paste 1 signature for ' . $Equipment->strid() );
 					next;
 				} # end if
 				if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
@@ -208,9 +207,11 @@ sub calc {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Too many pages for " . $Equipment->strid() . '<br/>';
 					next;
 				} # end if
-				if ( $folding_results ) {
-					if ( $$folding_results{'Equipment'}->id() != $Equipment->id() ) {
-						$$specs{'hdnBreakdown'.$qty_index} .="Must also be folded on " . $Equipment->strid() . '<br/>';
+				my %folding_results;
+				if ( $folding_specs ) {
+					$folding_results{'Equipment'} = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+					if ( $folding_results{'Equipment'}->id() != $Equipment->id() ) {
+						$$specs{'hdnBreakdown'.$qty_index} .= 'Must also be folded on ' . $Equipment->strid() . '<br/>';
 						next;
 					} # end if
 				} # end if
@@ -358,8 +359,9 @@ sub summary {
 sub display {
     my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
+	my $Project = new openprint::Project( $project_index );
     my @equipment = openprint::Equipment::find( 'Specifications' => {'SpinePaste Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
-    foreach my $qty_index ( 1 .. 3 ) {
+    foreach my $qty_index ( $Project->quantity_indexes() ) {
         $$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
     } # end foreach qty_index
 

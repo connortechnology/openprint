@@ -87,7 +87,11 @@ function AjaxLoadContent( divID, page, parameters, message ) {
 		if ( message ) div.innerHTML = message;
 		else div.innerHTML = 'Please wait....';
 	} // end if
-	new Ajax.Updater( divID, page, { method: 'get', parameters: parameters, evalScripts: true } );
+	var method = 'get';
+	if ( parameters.length > 8190 ) 
+		method = 'post';
+	
+	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
 }
 
 function LoadContent( divID, page, inputs, message ) {

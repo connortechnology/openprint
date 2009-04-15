@@ -444,8 +444,7 @@ sub update_status {
 			$new_status = 'uncalculated';
 		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
 			$new_status = 'Unordered';
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$self{'quantity'.$qty_index};
+			foreach my $qty_index ( $self->quantity_indexes() ) {
 				if ( openprint::Estimating::Multipage::status( $$self{'id'}, undef, $qty_index ) ) {
 					$new_status = 'uncalculated';
 					last;
@@ -560,7 +559,7 @@ sub find {
 		push @values, $params{'salesrep_id'};
 	} # end if
 	if ( $params{'csr_id'} ) {
-		$sql .= ' AND companyindex IN (SELECT index FROM Company WHERE lngsalesperson)=?';
+		$sql .= ' AND company_id IN (SELECT id FROM Companies WHERE salesrep_id)=?';
 		push @values, $params{'csr_id'};
 	} # end if
 
@@ -713,14 +712,6 @@ sub Currency {
 	} # end if
 	return new openprint::Currency( $$self{'currency_id'} );
 } # end sub Currency
-sub quantity_indexes {
-	my ( $self ) = @_;
-	my @indexes;
-	foreach my $qty_index ( 1 .. 3 ) {
-		push @indexes, $qty_index if $$self{"quantity$qty_index"};
-	} # end foreach qty_index
-	return @indexes;
-} # end sub quantity_indexes
 
 sub quantity_indexes {
 	my ( $self ) = @_;

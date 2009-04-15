@@ -3,16 +3,14 @@
 <h2>User Profiles</h2>
 </div>
 <script type="text/javascript">
-function keepCompany( form ){
+function keepCompany( form ) {
 	var Company = form.ddmCustomer.selectedIndex;
 	var Role = form.ddmUserRole.selectedIndex;
 
 	clearForm(form);
 	form.ddmCustomer.selectedIndex = Company;
 	form.ddmUserRole.selectedIndex= Role;
-	
 	form.company_id.selectedIndex = Company;
-
 }
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
@@ -46,7 +44,7 @@ Please select a company or user to obtain login information.<br/>
 			</p>
 		</fieldset>
 		<fieldset>
-			<p> 
+			<p id="ButtonsTop"> 
 				<label><? if ( $$variable{'User'}->company_id() ) ?><a href="company_profiles.html?ddmCustomer=<? echo ( $$variable{'User'}->company_id() ) ?>">Link to Company Info.</a><? endif ( $$variable{'User'}->company_id() ) ?>&nbsp;</label>
 				
 				<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
@@ -55,7 +53,7 @@ Please select a company or user to obtain login information.<br/>
 				<? echo ( join ('',
 					ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;'),
 					ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;'),
-					ssi::writeButton( $log, $dbh, 'New1','new.gif',"keepCompany(f1);",'','New'),
+					ssi::writeButton( $log, $dbh, 'New1','new.gif',"\$('Log').hide();keepCompany(f1);",'','New'),
 					ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 					ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
 					ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
@@ -302,8 +300,8 @@ Please select a company or user to obtain login information.<br/>
 			<!--#include virtual="_service_defaults.html"-->
 		</fieldset>
 		<fieldset>
-		<p>
-			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Company Info.<? endif ( $$variable{'CustomerIndex'} )?>&nbsp;</label>
+		<p id="ButtonsBottom">
+			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Company Info.</a><? endif ( $$variable{'CustomerIndex'} )?>&nbsp;</label>
 			
 	<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
 			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
@@ -311,7 +309,7 @@ Please select a company or user to obtain login information.<br/>
 				<? echo ( join ( '', 
 					ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;'),
 					ssi::writeButton( $log, $dbh, 'Next2','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;'),
-					ssi::writeButton( $log, $dbh, 'New2','new.gif',"keepCompany(f1);",'','New'),
+					ssi::writeButton( $log, $dbh, 'New2','new.gif',"\$('Log').hide();keepCompany(f1);",'','New'),
 					ssi::writeButton( $log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 					ssi::writeButton( $log, $dbh, 'Save2','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
 					ssi::writeButton( $log, $dbh, 'Reset2','reset.gif','f1.reset();','','Reset'),
@@ -319,7 +317,7 @@ Please select a company or user to obtain login information.<br/>
 		</p>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>
-<fieldset><legend>Last 10 Login Attempts</legend>
+<fieldset id="Log"><legend>Last 10 Login Attempts</legend>
     <table class="List">
         <tr>
             <th align="left" width="145">When</th>

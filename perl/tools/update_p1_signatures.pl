@@ -18,21 +18,29 @@ my %sql_server;
 $sql_server{'database'} = $ARGV[0];
 $sql_server{'database'} = 'point-one' if ! $sql_server{'database'};
 $sql_server{'driver'}   = 'Pg';
-$sql_server{'login'}    = 'point-one';
-$sql_server{'password'} = 'point-one';
+$sql_server{'login'}    = $ARGV[1];
+$sql_server{'login'} = $sql_server{'database'} if ! $sql_server{'login'};
+$sql_server{'password'} = $ARGV[2];
+$sql_server{'password'} = $sql_server{'database'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 
-foreach my $Project ( openprint::Project::find('id_start'=>318000,'company_id'=>6) ) {
+foreach my $Project ( openprint::Project::find('updated_on_start'=> sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), - 30 ) ) ) ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
 	foreach my $sig_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		foreach my $bleed ( 'Left','Right','Top','Bottom' ) {
+			if ( $$sig_specs{'chkBleed'.$bleed} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Bleed'.$bleed, $$sig_specs{'chkBleed'.$bleed} );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkBleed'.$bleed, '' );
+			} # end if
+		} # end foreach
 		#if ( ! exists $$sig_specs{'Group'} ) {
 		if ( $$sig_specs{'txtSignatureType'} ) {
 			if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' or $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {

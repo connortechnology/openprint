@@ -17,6 +17,7 @@
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
+<? if ( $$variable{'Project'}->Type()->name() ne 'Envelopes' ) ?>
 <p>
 	<label>Stock Format:</label>
 	<? echo ( my $html = '';
@@ -36,6 +37,7 @@
 		return $html;
 	) ?>
 </p>
+<? endif ( $$variable{'Project'}->Type()->name() ne 'Envelopes' ) ?>
 <p>
 	<label><? echo ( ssi::writeTip( 'Stock size' ); ) ?>:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -221,16 +223,16 @@
 
 
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-
-            <input type="hidden" name="rdbPlateType<?QTYIndex?>" value="<? echo ( $$variable{'rdbPlates'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" name="PlateID<?QTYIndex" value="<? echo ( $$variable{'PlateID'.$$variable{'QTYIndex'}} ) ?>" />
-<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<input type="hidden" name="rdbPlateType<?QTYIndex?>" value="<? echo ( $$variable{'rdbPlates'.$$variable{'QTYIndex'}} ) ?>" />
+	<input type="hidden" name="PlateID<?QTYIndex" value="<? echo ( $$variable{'PlateID'.$$variable{'QTYIndex'}} ) ?>" />
+	<input type="hidden" name="PrintingType<?QTYIndex?>" value="<? echo ( $$variable{'PrintingType'.$$variable{'QTYIndex'}} ) ?>" />
+	<input type="hidden" name="chkOverridePrintingType<?QTYIndex?>" value="<? echo ( $$variable{"chkOverridePrintingType$$variable{'QTYIndex'}"} ) ?>" />
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
 <div id="Plates" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 <? if ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
@@ -486,6 +488,7 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <!--#include virtual="/includes/main/proj/_unit_price.html"-->
+<!--#include virtual="/includes/main/proj/_1000_price.html"-->
 <!--#include virtual="/includes/main/proj/_service_price.html"-->
 <? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 <p>

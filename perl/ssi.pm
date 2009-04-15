@@ -46,13 +46,8 @@ sub do_new_substitution {
 			my $middle = $1;
 			my $end = $2;
 			if ( $end =~ /^\n\r?$/ ) {
-$log->debug('trimming \n\r');
 				$end = '';
 			} elsif ( $end =~ /^\r?\n$/ ) {
-$log->debug('trimming \r\n');
-				$end = '';
-			} elsif ( $end =~ /^\n$/ ) {
-$log->debug('trimming \n');
 				$end = '';
 			} # end if
 			#$middle =~ s/^\s*(.*)\s*$//;
@@ -111,7 +106,8 @@ $log->debug('trimming \n');
 
 sub include {
 	my ( $file, $variable ) = @_;
-	my $blah = misc::load_file( $log, $file);
+	$variable = \%variable if ! $variable;
+	my $blah = misc::load_file( $log, $file );
 	return variable_substitution( \$blah, $variable );
 }
 

@@ -23,6 +23,7 @@ my @fields = (
 	'cropmark_top','cropmark_bottom','cropmark_left','cropmark_right',
 	'stock_width','stock_height',
 	'quantity',
+	'bleed_size',
 );
 
 use strict;
@@ -163,6 +164,7 @@ sub load_used {
 	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRowsUsed'} ? $$specs{'hdnImpositionDutchRowsUsed'} : $$specs{'hdnImpositionDutchRows'.$qty_index};
 	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumnsUsed'} ? $$specs{'hdnImpositionDutchColumnsUsed'} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
 	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
+	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
 
 } # edn sub load_used
 
@@ -197,6 +199,7 @@ sub load {
 	$$self{'runstyle'} = 'Sheet Work' if ! $$self{'runstyle'};
 	$$self{'image_orientation'} = $$specs{'hdnImageOrientation'.$qty_index};
 	$$self{'grain_direction'} = $$specs{'rdbGrainDirection'.$qty_index};
+	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
 
 	if ( ! $$self{'image_orientation'} ) {
 		# Guess the image orientation

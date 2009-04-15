@@ -48,16 +48,15 @@ sub variables {
 
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $p_id, $s_s_id );
+		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		push @v, "txtStockCalliper-$$specs{'SignatureIndex'}";
 		push @v, "chkOverrideCalliper-$$specs{'SignatureIndex'}";
 		push @v, "txtAdditionalCuts$$specs{'SignatureIndex'}";
-		foreach my $qty_index ( 1 .. 3 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "txtCalculatedCuts-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "ddmEquipment-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "ddmStockCutEquipment-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkOverrideStockCutEquipment-$$specs{'SignatureIndex'}-$qty_index";
-#
 			push @v, "chkOverrideCalculatedCuts-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkboxVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "txtboxVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
@@ -67,12 +66,11 @@ sub variables {
 			push @v, "txtboxDVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkboxDHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "txtboxDHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
-#
 		} # end foreach
 	} # end foreach
 
     return @v;
-}
+} # end sub variables
 
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
@@ -89,11 +87,6 @@ sub signature_needs {
         return 0;
     } # end if
 
-	if ( $Project->Type()->name() eq 'Envelopes' ) {
-        $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
-		return 0;
-	} # end if 
-
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 #$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
 #$openprint::log->debug("Cutting sig needs: stock: " . join('x', @$specs{'hdnSuppliedStockWidth'.$qty_index,'hdnSuppliedStockHeight'.$qty_index} ) );
@@ -102,14 +95,14 @@ sub signature_needs {
 			return 1;
 		} # end if
 		if ( ! (
-			(
-			 $$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtWidth'} 
-			and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtHeight'}
-			) or (
-			$$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtHeight'}
-			and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtWidth'}
-			)
-			) ) {
+					(
+					 $$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtWidth'} 
+					 and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtHeight'}
+					) or (
+						$$sig_specs{'hdnSuppliedStockWidth'.$qty_index} == $$sig_specs{'txtHeight'}
+						and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{'txtWidth'}
+						)
+			   ) ) {
 			return 1;
 		} # end if
 	} # end foreach
@@ -142,7 +135,6 @@ sub neccessary {
 	} # end foreach
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
-
 		my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		if ( signature_needs( $Project, $specs ) ) {
 			return 1;
@@ -229,6 +221,7 @@ if ( ($Paper->start_width() >= $Paper->width()) and ($Paper->start_height() >= $
         "txtSheetSizeWidth-$signature_index-$qty_index", "txtSheetSizeHeight-$signature_index-$qty_index"} );
 
 	my $bestPrice = undef;
+	my $mprice = 0;
 	my $bestEquipment;
 # Has to happen on normal cutters
 	foreach my $Equipment ( @my_equipment ) {
@@ -270,12 +263,14 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 		} # end foreach
 		my $setupCost = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
 		my $totalPrice = $setupCost + $price;
+		my %cleaning;
 		if ( $Paper->bladecleaning() ) {
-			my %cleaning = openprint::service::get_price_object( 'Blade Cleaning', undef, $Equipment );
+			%cleaning = openprint::service::get_price_object( 'Blade Cleaning', undef, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Blade Cleaning: %.2f<br/>', $cleaning{'Price'} );
 			$totalPrice += $cleaning{'Price'};
 		} # end if
 		if ( ( ! defined $bestPrice ) or ( $bestPrice > $totalPrice ) ) {
+			$mprice = $price + $cleaning{'Price'};
 			$bestPrice = $totalPrice;
 			$bestEquipment = $Equipment;
 		} # end if
@@ -283,7 +278,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 	$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};	
 	my %results = (
 			'Price' 	=> sprintf($openprint::config{'ProjectMoneyFormat'}, $bestPrice ),
-			'MPrice'	=> ($bestPrice/$$specs{'txtQuantity'.$qty_index})*1000,
+			'MPrice'	=> ($mprice/$$specs{'txtQuantity'.$qty_index})*1000,
 			'Equipment'	=> $bestEquipment,
 			);
 	if ( ! $bestEquipment ) {
@@ -588,29 +583,25 @@ sub signature_calc {
 		$$specs{"txtboxHorizontalCuts-$signature_index-$qty_index"} = $horizontal_cuts;
 	}
 
-#following lines add on 16-july-2008
 	if ( $$specs{'chkboxDVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
 		$dutch_vertical_cuts = $$specs{"txtboxDVerticalCuts-$signature_index-$qty_index"};
 	} else {
 		$$specs{"txtboxDVerticalCuts-$signature_index-$qty_index"} = $dutch_vertical_cuts;
 	}
 
-#following lines add on 16-july-2008
 	if ( $$specs{'chkboxDHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
 		$dutch_horizontal_cuts = $$specs{"txtboxDHorizontalCuts-$signature_index-$qty_index"};
 	} else {
 		$$specs{"txtboxDHorizontalCuts-$signature_index-$qty_index"} = $dutch_horizontal_cuts;
 	}
 
-
-#following lines add on 16-july-2008
-#		$$specs{"txtCalculatedCuts-$signature_index-$qty_index"} = $vertical_cuts + $horizontal_cuts + $dutch_vertical_cuts + $dutch_horizontal_cuts;
 	if ( $$specs{'chkOverrideCalculatedCuts-'.$signature_index.'-'.$qty_index} ne 'Y' ) {
 		$$specs{"txtCalculatedCuts-$signature_index-$qty_index"} = $vertical_cuts + $horizontal_cuts + $dutch_vertical_cuts + $dutch_horizontal_cuts;
 	}
 	my $cuts = $$specs{"txtCalculatedCuts-$signature_index-$qty_index"};
 
 	my $bestPrice = undef;
+	my $bestM = 0;
 	my $bestEquipment;
 	foreach my $Equipment ( @my_equipment ) {
 		next if ! $Equipment->id();
@@ -643,6 +634,7 @@ sub signature_calc {
 		$liftDepth = $Equipment->specification( 'Maximum Lift Depth' ) if ! $liftDepth;
 		$$specs{'hdnBreakdown'.$qty_index} .= "(Lift: $liftDepth)<br/>";
 		my $totalPrice = 0;
+		my $mprice = 0;
 
 		if ( my $reason = $Equipment->fits( $sheet_width, $sheet_height ) ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= $reason . '<br/>';
@@ -730,6 +722,9 @@ sub signature_calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d cuts on %d sheets: $%.2f<br/>', $$specs{"txtAdditionalCuts$signature_index"}, $sheets, $price );
 			$totalPrice += $price;
 		} # end if
+
+		$mprice = $totalPrice;
+
 		if ( $cuts ) {
 			my $setup = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Make Ready: $%.2f<br/>', $setup );
@@ -738,10 +733,12 @@ sub signature_calc {
 				my %cleaning = openprint::service::get_price_object( 'Blade Cleaning', undef, $Equipment );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Blade Cleaning: $%.2f<br/>', $cleaning{'Price'} );
 				$totalPrice += $cleaning{'Price'};
+				$mprice += $cleaning{'Price'};
 			} # end if
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 		if ( ( ! $bestEquipment ) or ( $bestPrice > $totalPrice ) ) {
+			$bestM = $mprice;
 			$bestPrice = $totalPrice;
 			$bestEquipment = $Equipment;
 		} # end if
@@ -750,7 +747,7 @@ sub signature_calc {
 	my %results = (
 			'Status'	=> $bestEquipment ? 'calculated' : 'uncalculated',
 			'Price'		=> $bestPrice,
-			'MPrice'	=> ($bestPrice/$$specs{'txtQuantity'.$qty_index})*1000,
+			'MPrice'	=> ($bestM/$$specs{'txtQuantity'.$qty_index})*1000,
 			'Equipment'	=> $bestEquipment,
 			);
 	return %results;
@@ -859,7 +856,7 @@ $openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
 		} # end if
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $mprice );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
 
 	} # end foreach quantity

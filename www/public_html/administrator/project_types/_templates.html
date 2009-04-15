@@ -1,0 +1,33 @@
+<? if ( $param{'ddmProjectType'} ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.action='templates.html';f1.btnFunction.value='Save';f1.submit();", '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ); ) ?>
+<? endif ( $param{'ddmProjectType'} ) ?>
+<? eval (
+	@{$$variable{'Templates'}} = openprint::ProjectType_Template::find('order'=>'lower(type),lower(description)','projecttype_id'=>$param{'ddmProjectType'} );
+) ?>
+<table class="List">
+	<tr>
+		<th width="150">Type</th>
+		<th>Description</th>
+		<th width="80">Finished Width</th>
+		<th width="80">Finished Height</th>
+		<th width="80">Flat Width</th>
+		<th width="80">Flat Height</th>
+		<th width="60">&nbsp;</th>
+	</tr>
+	<? echo (
+		my $html;
+		while ( $$variable{'Template'} = shift @{$$variable{'Templates'}} ) {
+			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/project_types/_template_line.html' );
+		} # end while
+		return $html;
+	) ?>
+	<tr>
+		<td><input type="text" name="typeNew"/></td>
+		<td><input type="text" name="descriptionNew"/></td>
+		<td><input type="text" name="finishedwidthNew"/></td>
+		<td><input type="text" name="finishedheightNew"/></td>
+		<td><input type="text" name="flatwidthNew"/></td>
+		<td><input type="text" name="flatheightNew"/></td>
+	</tr>
+</table>

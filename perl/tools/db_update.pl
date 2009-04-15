@@ -516,6 +516,19 @@ sql::insert(undef,undef,'configuration', [
     'description'=>'Default Pricelist.',
     'category'=> 'Miscellaneous Settings'] ) if ! $config{'DefaultPricelist'};
 
+sql::insert(undef,undef,'configuration', [
+    'name'=>'PerfectBindCoverGutter',
+    'value'=>0.125,
+    'type'=>'text',
+    'description'=>'Perfect Binding Settings','text','The amount of space to add to each edge on the height of the cover.',
+    'category'=> 'PerfectBind Settings'] ) if ! $config{'PerfectBindCoverGutter'};
+sql::insert(undef,undef,'configuration', [
+    'name'=>'PerfectBindGlueSpace',
+    'value'=>0.03125,
+    'type'=>'text',
+    'description'=>'Perfect Binding Settings','text','The amount of space to add to the width of the cover to account for the glue.',
+    'category'=> 'PerfectBind Settings'] ) if ! $config{'PerfectBindGlueSpace'};
+
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
@@ -723,6 +736,18 @@ if ( ! @FoldingServices ) {
 	$FoldingService = $FoldingServices[0];
 } # en dif
 	
+foreach my $E ( openprint::Equipment::find('category'=>'Printing') ) {
+	foreach my $Spec ( $E->Specifications('name'=>'Default Bleed Size') ) {
+		if ( $Spec->max() == 1 ) {
+			$Spec->max('');
+		} elsif ( $Spec->min() == 2 ) {
+			$Spec->name('Default Bleed SizeMultiPagePublication');
+			$Spec->min('');
+		} # end if
+		$_ = $Spec->save();
+		$log->error($_) if $_;
+	} # end foreach
+} # end foreach
 foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'When Printing'}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		if ( $Spec->name() =~ /^(\d)x(\d)-(\d*)Page-(\w*)SignatureFoldDescription$/ ) {
@@ -998,6 +1023,12 @@ if ( ! $data ) {
 	} # end if
 	if ( ! exists $$data{'delivered_on_switch'} ) {
 		$dbh->do('ALTER TABLE Manifests add delivered_on_switch TEXT');
+	} # end if
+	if ( ! exists $$data{'vendor_sms'} ) {
+		$dbh->do('ALTER TABLE Manifests add vendor_sms TEXT');
+	} # end if
+	if ( ! exists $$data{'shipto_sms'} ) {
+		$dbh->do('ALTER TABLE Manifests add shipto_sms TEXT');
 	} # end if
 } # end if
 my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
@@ -1524,7 +1555,7 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1
 my $ac = sql::start_transaction( $dbh );
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if $$data{'currencyindex'};
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
-$dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER');
+$dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER') if ! exists $$data{'owner_id'};
 $dbh->do('ALTER TABLE Pricelists ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
 $dbh->do('DROP SEQUENCE IF EXISTS price_lists_id_seq');
 $dbh->do('CREATE SEQUENCE pricelists_id_seq');
@@ -1586,7 +1617,7 @@ if ( $data ) {
 		$dbh->do(q`alter table Users rename column strsalutation to salutation`);
 		$dbh->do(q`alter table Users rename column dtmdateentered to created_on`);
 		$dbh->do(q`alter table Users rename column dtmlastmodified to updated_on`);
-		$dbh->do(q`alter table Users rename column chrtype to usertype`);
+		$dbh->do(q`alter table Users rename column chrtype to type`);
 		sql::end_transaction( $dbh, $ac );
 	}
 	$dbh->do(q{alter table users add howdidyouhearaboutusother text}) if ! exists $$data{'howdidyouhearaboutusother'};
@@ -1898,6 +1929,19 @@ if ( ! $data ) {
 	} # end foreach
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM EmployeeNumbers LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/EmployeeNumbers.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} else {
+	if ( exists $$data{'lngemployeeid'} ) {
+		$dbh->do('alter table employeenumbers rename column lngemployeeid to id');
+		$dbh->do('alter table employeenumbers rename column lngmin to min');
+		$dbh->do('alter table employeenumbers rename column lngmax to max');
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__

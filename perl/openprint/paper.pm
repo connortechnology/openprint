@@ -376,6 +376,7 @@ sub get_sheetsizes {
 
 				last if $results{$width.'x'.$height};
 				$results{$width.'x'.$height} = sprintf('%s" x %s"', $width, $height );
+				last if ! $Paper->cuttable();
 
 				$openprint::log->debug("Cut: $width x $height") if $debug;
 				if ( $height > $width ) {

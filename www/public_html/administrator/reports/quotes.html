@@ -17,16 +17,17 @@ You may the download the results in CSV (spreadsheet format) to view in a progra
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4" />
 			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value=""> Select a Customer</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(strname)')], $param{'ddmCustomers'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(name)')], $param{'ddmCustomers'} ); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Status:</label>
 			<select name="ddmStatus" size="1">
 				<option value="">All</option>
-				<option value="Incomplete" <?ddmStatusIncomplete?> >Incomplete</option>
-				<option value="Complete" <?ddmStatusComplete?> >Complete</option>
-				<option value="Re-Opened" <?ddmStatusRe-Opened?> >Re-Opened</option>
+<? echo ( 
+	my @options = ( 'Incomplete','Complete','Re-Opened' );
+	return ssi::make_drop_down( [ map { $_, $_ } \@options ], $param{'ddmStatus'} );
+) ?>
 			</select>
 		</p>
 		<p>
@@ -42,7 +43,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::
 			<label>Sales Reps:</label>
 			<select name="salesrep_id" size="1">
 				<option value="">All Employees</option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroups'=>['Sales'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $param{'salesrep_id'} ); ) ?>
+			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroups'=>['Sales'], 'order'=>'lower(firstname),lower(lastname)') ], $param{'salesrep_id'} ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -76,7 +77,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::
 		</p>
 	</fieldset>
 	<? if ( @{$$variable{'Quotes'}} ) ?>
-	<table class="List">
+	<table class="List sortable">
 		<tr> 
 			<th align="left" width="65">Quote ID</th>
 			<th align="center" width="105">Date</th>
