@@ -248,7 +248,6 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 	$sql{'updated_on'} = 'NOW()';
-	delete $sql{'created_on'};
 	$sql{'name'} = Text::Unaccent::unac_string('LATIN1', $sql{'name'} );
 
     my $ac = sql::start_transaction( $dbh );
@@ -268,6 +267,7 @@ sub save {
 			return $e;
 		} # end if
     } else {
+		delete $sql{'created_on'};
         if ( my $e = sql::update( undef, undef, 'Companies', ['id=?', $$self{'id'}], \%sql ) ) {
 			$dbh->rollback();
     sql::end_transaction( $dbh, $ac );

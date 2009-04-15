@@ -148,9 +148,7 @@
 	<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( openprint::Project::find('company_id'=>$$variable{'CustomerIndex'}) ) ?></a>
 </p>
 <p><label>Accounting Contacts:</label>
-<? echo (
-	return join('<br/>', map { sprintf('&quot;%s&quot; &lt;%s&gt;', $_->name(), $_->email() ) } openprint::User::find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{'Company'}->id() )],'order'=>'lower(firstname),lower(lastname)' ) );
-) ?>
+<span id="AccountingContacts"><!--#include virtual="_company_accounting_contacts.html"--></span>
 </p>
 <? endif ( $$variable{'CustomerIndex'} ) ?>
 

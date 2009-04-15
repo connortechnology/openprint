@@ -591,5 +591,12 @@ sub credit_application {
 	} # end if
 } # end sub admin_credit_app
 
+sub _company_accounting_contacts {
+	$variable{'Company'} = new openprint::Company( $param{'company_id'} );
+	if ( $param{'new_accounting_contact_id'} ) {
+		$variable{'error'} .= sql::insert( undef, undef, 'companies_accountingcontacts', 'company_id', $variable{'Company'}->id(), 'user_id', $param{'new_accounting_contact_id'} );
+	} # end if
+} # end sub
+
 1;
 __END__
