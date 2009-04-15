@@ -306,7 +306,7 @@ sub company_profiles {
 		my $customer = new openprint::obj_customer( $log, $dbh, $index );
 
 		if ( $Company->id() ) {
-			if ( $Company->activation() ne $param{'activation'} ) {
+			if ( $Company->activation() and ( $Company->activation() ne $param{'activation'} ) ) {
 				my %info;
 				$info{'Company'} = $Company;
 				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
