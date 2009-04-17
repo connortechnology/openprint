@@ -16,6 +16,7 @@
 				'signature'	=>	$signature,
 				'order'		=>	'created_on DESC',
 				'distinct'	=>	1,
+				'limit'		=>	1,
 				);
 	foreach my $PPF ( @PPFs ) {
 		$PPF->generate_previews();
@@ -25,14 +26,11 @@
 			foreach my $preview ( $PPF->previews('Front') ) {
 				next if ! $$preview{'separations'};
 
-				foreach my $image ( @{$$preview{'separations'}} ) {
-					$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg" alt="%4$s" /></a>', 
-						$$variable{'Project'}->docket(),
-						$$variable{'SignatureIndex'}+1,
-						'Front',
-						$$image{'ink'},
-						);
-				} # end foreach image
+				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
+					$$variable{'Project'}->docket(),
+					$$variable{'SignatureIndex'}+1,
+					'Front',
+					);
 			} # end foreach preview
 			$front_html .= '</fieldset></div>';
 
@@ -40,14 +38,11 @@
 			foreach my $preview ( $PPF->previews('Back') ) {
 				next if ! $$preview{'separations'};
 
-				foreach my $image ( @{$$preview{'separations'}} ) {
-					$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg" alt="%4$s" /></a>', 
+					$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
 						$$variable{'Project'}->docket(),
 						$$variable{'SignatureIndex'}+1,
 						'Back',
-						$$image{'ink'},
 						);
-				} # end foreach image
 			} # end foreach preview
 			$back_html .= '</fieldset></div>';
 			last;			
@@ -56,14 +51,11 @@
 			foreach my $preview ( $PPF->previews() ) {
 				next if ! $$preview{'separations'};
 
-				foreach my $image ( @{$$preview{'separations'}} ) {
-					$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg" alt="%4$s" /></a>', 
+					$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
 						$$variable{'Project'}->docket(),
 						$$variable{'SignatureIndex'}+1,
 						'Front',
-						$$image{'ink'},
 						);
-				} # end foreach image
 			} # end foreach preview
 			$front_html .= '</fieldset></div>';
 			last if $front_html and $back_html;
@@ -72,14 +64,11 @@
 			foreach my $preview ( $PPF->previews() ) {
 				next if ! $$preview{'separations'};
 
-				foreach my $image ( @{$$preview{'separations'}} ) {
-					$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s-%4$s.jpg" alt="%4$s" /></a>', 
+					$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
 						$$variable{'Project'}->docket(),
 						$$variable{'SignatureIndex'}+1,
 						'Back',
-						$$image{'ink'},
 						);
-				} # end foreach image
 			} # end foreach preview
 			$back_html .= '</fieldset></div>';
 			last if $front_html and $back_html;

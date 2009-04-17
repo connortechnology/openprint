@@ -29,6 +29,9 @@ $serial= 'Equipment_Index_seq';
 	'jdf_id'			=> 	'jdf_id',
 	'jdf_name'			=> 	'jdf_name',
 	'location_id'		=>	'location_id',
+	'cip3_in'			=>	'cip3_in',
+	'cip3_out'			=>	'cip3_out',
+	'cip3_hold'			=>	'cip3_hold',
 );
 
 %defaults = (

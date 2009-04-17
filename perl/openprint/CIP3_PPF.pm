@@ -155,7 +155,9 @@ sub parseSeparation {
 		} elsif ( $line =~ /^\/CIP3PreviewImageBitsPerComp (\d+) def/ ) {
 			$$image{'depth'} = $1;
 		} elsif ( $line =~ /^\/CIP3PreviewImageComponents/ ) {
-		} elsif ( $line =~ /^\/CIP3PreviewImageMatrix/ ) {
+		} elsif ( $line =~ /^\/CIP3PreviewImageMatrix \[(.*)\] def/ ) {
+			$$image{'matrix'} = $1;
+$log->debug("Matrix: $line ");
 		} elsif ( $line =~ /^\/CIP3PreviewImageResolution/ ) {
 
 		} elsif ( $line =~ /^CIP3PreviewImage$/ ) {
@@ -243,38 +245,24 @@ sub generate_previews {
 		foreach my $preview ( $self->previews($side) ) {
 			next if ! $$preview{'separations'};
 
+			my $image_data;
+			my $depth = $$preview{'separations'}[0]{'depth'};
+			my $width = $$preview{'separations'}[0]{'width'};
+			my $height = $$preview{'separations'}[0]{'height'};
+
+
+
 			foreach my $image ( @{$$preview{'separations'}} ) {
 
-$log->debug("compression: $$image{'compression'}");
 				my $Image;
 				if ( $$image{'compression'} eq 'RunLengthDecode' ) {
-					my $data = misc::rle_decode($$image{'image'});
-					$log->warn("Decoded length should be " . ($$image{'width'}*$$image{'height'}).", is " . length $data ) if ( length $data != ($$image{width}*$$image{height}) );
-					$Image = Image::Magick->new(magick=>'cmyk',depth=>$$image{'depth'},size=>$$image{'width'}.'x'.$$image{'height'},'debug'=>'Blob');
-					#$Image = Image::Magick->new(magick=>'cmyk',depth=>$$image{'depth'},size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
-					$_ = $Image->BlobToImage($data);
-					$log->error( $_ ) if $_;
-					open F, sprintf('>%s%dsg%dsd%s-%s.rle', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
-					print F $$image{'image'};
-					close(F);
-					open F, sprintf('>%s%dsg%dsd%s-%s.raw', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
-					print F $data;
-					close(F);
-
-					#$Image = Image::Magick->new(magick=>'rle',depth=>$$image{'depth'},size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
-					#$_ = $Image->BlobToImage($$image{'image'});
-					#$log->error( $_ ) if $_;
+					$$image{'image'} = misc::rle_decode($$image{'image'});
+					$$image{'compression'} = 'None';
 				} elsif ( $$image{'compression'} eq 'DCTDecode' ) {
 					$Image = Image::Magick->new(magick=>'jpg');
 					$_ = $Image->BlobToImage($$image{'image'});
 					$log->error( $_ ) if $_;
 				} elsif ( $$image{'compression'} eq 'None' ) {
-					$Image = Image::Magick->new(magick=>'cmyk',depth=>1,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','debug'=>'Blob');
-					$_ = $Image->BlobToImage($$image{'image'});
-					$log->error( $_ ) if $_;
-	open F, sprintf('>%s%dsg%dsd%s-%s.raw', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
-	print F $$image{'image'};
-	close(F);
 				} else {
 					$log->error("Unknown compression $$image{'compression'}");
 					$Image = Image::Magick->new(magick=>'cmyk',depth=>1,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','type'=>'ColorSeparation','debug'=>'Blob');
@@ -282,9 +270,43 @@ $log->debug("compression: $$image{'compression'}");
 					$log->error( $_ ) if $_;
 				} # end if
 
-				$_ = $Image->Write( sprintf('%s%dsg%dsd%s-%s.jpg', $path, $self->get('docket','signature'), $side, $$image{'ink'} ) );
-				$log->error( $_ ) if $_;
 			} # end foreach separation
+my %separations;
+foreach my $s ( @{$$preview{'separations'}} ) {
+	$separations{$$s{'ink'}} = $s;
+} # end foreach
+
+			#my @rows =  ( 1 .. $height );
+			#my @cols =  ( 1 .. $width );
+			my @cols =  ( 1 .. $height );
+			my @rows =  reverse ( 1 .. $width );
+			foreach my $w ( @cols ) {
+				foreach my $h ( @rows ) {
+					#$image_data .= substr( $$preview{'separations'}[0]{'image'}, ($h-1)*$width+($w-1), 1 );
+					foreach my $ink ( 'Cyan','Magenta','Yellow','Black' ) {
+						if ( $separations{$ink} ) {
+							$image_data .= substr( $separations{$ink}{'image'}, ($h-1)*$height+($w-1), 1 );
+							#$image_data .= substr( $separations{$ink}{'image'}, ($h-1)*$height+($w-1), 1 );
+						} else { 
+							$image_data .= pack('C', 0 );
+						} #end if;
+					} # end foreach ink
+				} # end foreach w
+			} # end foreach h
+			$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
+			
+			my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK');
+			$_ = $Image->BlobToImage($image_data);
+			$log->error( $_ ) if $_;
+			$_ = $Image->Write( sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side ) );
+			$log->error( $_ ) if $_;
+			#$log->error( $_ ) if $_;
+			#open F, sprintf('>%s%dsg%dsd%s.rle', $path, $self->get('docket','signature'), $side );
+			#print F $image_data;
+			#close(F);
+					#open F, sprintf('>%s%dsg%dsd%s-%s.raw', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
+					#print F $data;
+					#close(F);
 		} # end foreach preview
 	} # end foreach side
 } # end sub generate_previews

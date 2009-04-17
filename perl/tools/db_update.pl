@@ -528,6 +528,13 @@ if ( ! $data ) {
 		$dbh->do('alter table employeenumbers rename column lngmax to max');
 	} # end if
 } # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+if ( $data ) {
+	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_in TEXT') if ! exists $$data{'cip3_in'};
+	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_out TEXT') if ! exists $$data{'cip3_out'};
+	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_hold TEXT') if ! exists $$data{'cip3_hold'};
+} # end if
 $dbh->disconnect();
 1;
 __END__

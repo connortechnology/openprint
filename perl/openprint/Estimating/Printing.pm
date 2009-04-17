@@ -360,9 +360,7 @@ my $master_time = gettimeofday();
 	my $services = $Project->services();
 
 	# First, clean up all inputs
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity($qty_index);
-		
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		foreach my $k ( 'txtPlateChangeQuantity' ) {
 			if ( $$specs{$k.$qty_index} =~ /\D/ ) {
 				$variables{$k.$qty_index} = [ sets::union( 'output', @{$variables{$k.$qty_index}} ) ];
@@ -2944,8 +2942,9 @@ sub press_setup_cost {
 			$setup_count += 1;
 		} # end if
 	} # end foreach colour
+	
 	my %Price;
-	$Price{'Setup Count'} = $setup_count;
+	$Price{'Setup Count'} = $setup_count + $plate_change_qty;
 	if ( ! ( %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady'.$Imposition->runstyle(), undef, $Press) ) ) {
 		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', undef, $Press);
 	} # end if
@@ -2974,23 +2973,20 @@ sub press_setup_cost {
 	} # end if
 	if ( $Price{'units'} =~ /Per Run/i ) {
 		$Price{'Total'} *= $plate_runs if $plate_runs;
-		$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
+		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{'Total'};
 	my %PlateSetupPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'PlateMakeReady', undef, $Press );
 	if ( %PlateSetupPrice ) {
+		my $plates = $setup_count;
+		$plates *= $plate_runs if $plate_runs;
+		$plates += $plate_change_qty;
+
 		if ( lc $PlateSetupPrice{'units'} eq 'per hour') {
-			my $time = $Press->specification('Plate Setup Time');
-			$time *= ($setup_count + $plate_change_qty);
-			$time *= $plate_runs if $plate_runs;
-			$time /= 60;
-			#$time /= 2;
+			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
 			$Price{'Total'} += $PlateSetupPrice{'Price'} * $time;
 		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
-			my $plates = $setup_count;
-			$plates *= $plate_runs if $plate_runs;
-			$plates += $plate_change_qty;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
 			$Price{'Total'} += $PlateSetupPrice{'Price'} * $plates;
 		} else {
@@ -3018,7 +3014,6 @@ sub plate_setup_cost {
 	} # end foreach colour
 
 	my $plate_count_before_changes = $plate_count;
-	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index} > 0;
 
 	my ($plate_type,$plate_size,$max_impressions) = (
 			$Press->specification('Plate Type'),
@@ -3031,7 +3026,7 @@ sub plate_setup_cost {
 
 #$log->debug("** GETTTING PLATE SIZE FOR: $press : SIZE ($plate_size) TYPE ($plate_type) COUNT ($plate_count) RUNS($plate_runs)*$impressions*$max_impressions") if $debug or 1;
 	$plate_count *= $plate_runs;
-	$plate_count += $$specs{'AdditionalPlates'.$qty_index};
+	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index};
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
 
 	my %setup_cost = (
