@@ -856,7 +856,7 @@ $openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
 		} # end if
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $mprice );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $mprice *(1+$$specs{'Markup'.$qty_index}/100) );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
 
 	} # end foreach quantity

@@ -61,9 +61,7 @@ my %variables = (
 		'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 		'StockPrice1'=>['save','output'], 'StockPrice2'=>['save','output'], 'StockPrice3'=>['save','output'],
 		'OverrideStockPrice1'=>['save'], 'OverrideStockPrice2'=>['save'], 'OverrideStockPrice3'=>['save'],
-		'MPrice1' => ['save','output'],
-		'MPrice2' => ['save','output'],
-		'MPrice3' => ['save','output'],
+		'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
 		'chkCyanSideOne' => ['save'],
 		'chkMagentaSideOne' => ['save'],
 		'chkYellowSideOne'	=> ['save'],
@@ -833,7 +831,7 @@ my $master_time = gettimeofday();
 					} # end foreach group
 
 					$openprint::log->debug("Cover size calc: $finished_calliper");
-					$$specs{'txtWidth'} = sprintf('%.3f', ceil(($$specs{'txtWidth'} + $finished_calliper + 2*$config{'PerfectBindGlueSpace'})*1000)/1000);
+					$$specs{'txtWidth'} = sprintf('%.4f', ceil(($$specs{'txtWidth'} + $finished_calliper + 2*$config{'PerfectBindGlueSpace'})*10000)/10000);
 				} else {
 					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$specs{'txtWidth'}*1000)/1000);
 				} # end if

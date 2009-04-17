@@ -267,6 +267,18 @@
 			<td align="right" style="font-size: large;">1000 Price:</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<td class="price" style="font-size: large;">'.$$variable{'Currency'}->symbol().Number::Format::format_number(($$variable{'Project'}->price( $qty_index )/$$variable{'Project'}->quantity($qty_index))*1000, 4, 4).'</td>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+	<? if ( ! $$variable{'Quote'} ) ?>
+			<td class="actions"></td>
+	<? endif ( ! $$variable{'Quote'} ) ?>
+		</tr>
+		<tr class="totals"> 
+			<td align="right" style="font-size: large;">Additional 1000 Price:</td>
+<? echo ( my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= '<td class="price" style="font-size: large;">'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'Project'}->m_price( $qty_index ),4,4).'</td>';
 	} # end foreach qty_index
 	return $html;

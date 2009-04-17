@@ -492,42 +492,46 @@ if ( ! $data ) {
 } # end if
 
 sql::insert(undef,undef,'configuration', [
-    'name'=>'UseCaptchaOnRegistration',
-    'value'=>'N',
-    'type'=>'yes/no',
-    'description'=>'Use a CAPTCHA on the registration to protect against automated bots.',
-    'category'=> 'Captcha Settings'] ) if ! $config{'UseCaptchaOnRegistration'};
+    'name','UseCaptchaOnRegistration',
+    'value','N',
+    'type','yes/no',
+    'description','Use a CAPTCHA on the registration to protect against automated bots.',
+    'category','Captcha Settings'] ) if ! $config{'UseCaptchaOnRegistration'};
 sql::insert(undef,undef,'configuration', [
-    'name'=>'RegistrationCaptchaLength',
-    'value'=>'3',
-    'type'=>'text',
-    'description'=>'Number of characters in the CAPTCHA on the registration page.',
-    'category'=> 'Captcha Settings'] ) if ! $config{'RegistrationCaptchaLength'};
+    'name','RegistrationCaptchaLength',
+    'value','3',
+    'type','text',
+    'description','Number of characters in the CAPTCHA on the registration page.',
+    'category', 'Captcha Settings'] ) if ! $config{'RegistrationCaptchaLength'};
 sql::insert(undef,undef,'configuration', [
-    'name'=>'UnitPriceFormat',
-    'value'=>'%.2f',
-    'type'=>'text',
-    'description'=>'Format String for unit prices.',
-    'category'=> 'Miscellaneous Settings'] ) if ! $config{'UnitPriceFormat'};
+    'name','UnitPriceFormat',
+    'value','%.2f',
+    'type','text',
+    'description','Format String for unit prices.',
+    'category', 'Miscellaneous Settings'] ) if ! $config{'UnitPriceFormat'};
 sql::insert(undef,undef,'configuration', [
-    'name'=>'DefaultPricelist',
-    'value'=>undef,
-    'type'=>'pricelist',
-    'description'=>'Default Pricelist.',
-    'category'=> 'Miscellaneous Settings'] ) if ! $config{'DefaultPricelist'};
+    'name','DefaultPricelist',
+    'type','pricelist',
+    'description','Default Pricelist.',
+    'category', 'Miscellaneous Settings',
+    'value',undef,
+] ) if ! exists $config{'DefaultPricelist'};
 
 sql::insert(undef,undef,'configuration', [
-    'name'=>'PerfectBindCoverGutter',
-    'value'=>0.125,
-    'type'=>'text',
-    'description'=>'Perfect Binding Settings','text','The amount of space to add to each edge on the height of the cover.',
-    'category'=> 'PerfectBind Settings'] ) if ! $config{'PerfectBindCoverGutter'};
+    'name','PerfectBindCoverGutter',
+    'value',0.125,
+    'type','text',
+    'description', 'The amount of space to add to each edge on the height of the cover.',
+    'category', 'Perfect Binding Settings',
+] ) if ! $config{'PerfectBindCoverGutter'};
+
 sql::insert(undef,undef,'configuration', [
-    'name'=>'PerfectBindGlueSpace',
-    'value'=>0.03125,
-    'type'=>'text',
-    'description'=>'Perfect Binding Settings','text','The amount of space to add to the width of the cover to account for the glue.',
-    'category'=> 'PerfectBind Settings'] ) if ! $config{'PerfectBindGlueSpace'};
+    'name','PerfectBindGlueSpace',
+    'value',0.03125,
+    'type','text',
+    'description','The amount of space to add to the width of the cover to account for the glue.',
+    'category', 'Perfect Binding Settings',
+    ] ) if ! $config{'PerfectBindGlueSpace'};
 
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
@@ -877,9 +881,9 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Type'=>'Press'}) 
 if ( $version < 1908 ) {
 	print "Updating to version 1908\n";
 	my $ac = sql::start_transaction( $dbh );
-	sql::insert( undef, undef, 'configuration', { 'name'=>'ProjectViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the project view page', 'category'=>'Disclaimers'} );
-	sql::insert( undef, undef, 'configuration', { 'name'=>'OrderViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the order view page', 'category'=>'Disclaimers'});
-	sql::insert( undef, undef, 'configuration', { 'name'=>'QuoteViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the quote view page', 'category'=>'Disclaimers'});
+	sql::insert( undef, undef, 'configuration', { 'name'=>'ProjectViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the project view page', 'category'=>'Disclaimers'} ) if ! $config{'ProjectViewDisclaimer'};
+	sql::insert( undef, undef, 'configuration', { 'name'=>'OrderViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the order view page', 'category'=>'Disclaimers'}) if ! $config{'OrderViewDisclaimer'};
+	sql::insert( undef, undef, 'configuration', { 'name'=>'QuoteViewDisclaimer','value'=>'','type'=>'text','description'=>'Text to display at the bottom of the quote view page', 'category'=>'Disclaimers'}) if ! $config{'QuoteViewDisclaimer'};
 
 	sql::insert( undef, undef, 'database_info', 'version', 1908, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
@@ -1215,7 +1219,7 @@ my $new_version = 1926;
 if ( $version < $new_version ) {
     print "Updating to version $new_version\n";
     my $ac = sql::start_transaction( $dbh );
-	sql::insert( undef, undef, 'configuration', 'name', 'MinimumPagesWithoutCounting','value','25','description', 'Minimum number of pages per pad before counting is required.', 'category','Miscellaneous Settings' );
+	sql::insert( undef, undef, 'configuration', 'name', 'MinimumPagesWithoutCounting','value','25','description', 'Minimum number of pages per pad before counting is required.', 'category','Miscellaneous Settings' ) if ! $config{'MinimumPagesWithoutCounting'};
     sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
     sql::end_transaction( $dbh, $ac );
     $version = $new_version;
@@ -1623,7 +1627,7 @@ if ( $data ) {
 	$dbh->do(q{alter table users add howdidyouhearaboutusother text}) if ! exists $$data{'howdidyouhearaboutusother'};
 } # end if
 
-sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment,Paper', 'type','text');
+sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment,Paper', 'type','text') if ! $config{'Cached Objects'};
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
 if ( $data ) {

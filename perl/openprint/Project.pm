@@ -1113,8 +1113,17 @@ sub unit_price {
 } # end sub unit_price
 sub m_price {
 	my ( $self, $qty_index ) = @_;
-	return sprintf( $config{'UnitPriceFormat'}, 1000*$$self{'price'.$qty_index}/$$self{'quantity'.$qty_index} );
+	my $m_price = 0;
+	my $services = $self->services();
+	foreach my $type ( keys %$services ) {
+		foreach my $service_id ( @{$$services{$type}} ) {
+			my $specs = openprint::service::get_specs_ref( $self, $service_id );
+			$m_price += $$specs{'MPrice'.$qty_index};	
+		} # end foreach service_id
+	} # end foreach type
+	return sprintf( $config{'UnitPriceFormat'}, $m_price );
 } # end sub m_price
+
 
 sub Price {
 	my ( $self, $index ) = @_;
