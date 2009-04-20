@@ -298,6 +298,8 @@ foreach my $s ( @{$$preview{'separations'}} ) {
 			my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK');
 			$_ = $Image->BlobToImage($image_data);
 			$log->error( $_ ) if $_;
+			$Image->Negate('channel'=>'CMYK');
+			$log->error( $_ ) if $_;
 			$_ = $Image->Write( sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side ) );
 			$log->error( $_ ) if $_;
 			#$log->error( $_ ) if $_;
