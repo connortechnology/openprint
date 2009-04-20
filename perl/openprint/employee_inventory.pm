@@ -1844,5 +1844,8 @@ sub _verification_log {
 	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub _verification_log
 
+sub paper_label_window {
+} # end sub paper_label_window
+
 1;
 __END__
