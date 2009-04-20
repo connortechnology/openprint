@@ -75,6 +75,8 @@ unless ($opts->{'smtp-server'}) {
 }
 my $smtp_server = $opts->{'smtp-server'};
 
+print "file path: " .  $opts->{file_path} . "\n";
+
 my $delay = 0.5;
 if ($opts->{sleep}) {
 	$delay = $opts->{sleep};
@@ -113,8 +115,6 @@ $config{'SkinPath'} = $opts->{'skin_path'};
 
 my $fifoh;
 if (open($fifoh, "< $fifo")) {
-
-
 	while (1) {
 		my $line = <$fifoh>;
 		if ($line) {
@@ -304,6 +304,11 @@ EOT
 		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user}) ) {
 			$User = $Users[0];
 		} # end if
+	} else {
+		if ( my @Users = openprint::User::find('email'=>lc $upload_info->{user}) ) {
+			$User = $Users[0];
+			$Company = $User->Company();
+		} # end if
 	} # end if
 
 	if ( $Company and $User ) {
@@ -311,7 +316,7 @@ EOT
 		if ( ! Email::Valid->address( $User->email() ) ) {
 			$from = $config{'OrderingEmail'};
 		} else {
-			$from = sprintf('"%s" <%s>"', $User->name(), $User->email() );
+			$from = sprintf('"%s" <%s>', $User->name(), $User->email() );
 		} # end if
 
 		my $to;
@@ -342,7 +347,7 @@ EOT
                    );
         misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
 	
-	} elsif ( 0 ) {
+	} elsif ( 1 ) {
 		my $email_info = {
 			smtp => $smtp_server,
 			From => $from,
