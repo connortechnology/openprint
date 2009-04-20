@@ -7,30 +7,30 @@
 	<? echo ( Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time($$variable{'Skid'}->created_on()) );) ?>
 </div>
 <div style="border: 1px solid black; padding: 0px 7px 0px 5px; height: 90px; margin-bottom: 2px;">
-<? if ( $$variable{'paper_id'} ) ?>
 <? echo ( 
 	my $html;
-	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
-	$html .= '<table style="float: right; width:50%;">';
-	$html .= sprintf('<tr><td>ID:</td><td align="right"><img style="margin-bottom: 7px;" src="/barcode.png?code=p%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'paper_id'} );
-	$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} );
-	$html .= '</table>';
-	my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
-	$paper_detail .= '<br/>';
-	if ( $Paper->type() eq 'Roll' ) {
-	$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
-	} else {
-	$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
+	if ( $$variable{'paper_id'} ) {
+		my $Paper = new openprint::Paper( $$variable{'paper_id'} );
+		$html .= '<table style="float: right; width:50%;">';
+		$html .= sprintf('<tr><td>ID:</td><td align="right"><img style="margin-bottom: 7px;" src="/barcode.png?code=p%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'paper_id'} );
+		$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} );
+		$html .= '</table>';
+		my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
+		$paper_detail .= '<br/>';
+		if ( $Paper->type() eq 'Roll' ) {
+			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
+		} else {
+			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
+		} # end if
+		if ( length $paper_detail > 80 ) {
+			$html .= '<span style="font-size: x-small;">'.$paper_detail.'</span>';
+		} else {
+			$html .= $paper_detail;
+		} # end if
+		$html .= '<br/><b>'. $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
 	} # end if
-	if ( length $paper_detail > 80 ) {
-		$html .= '<span style="font-size: x-small;">'.$paper_detail.'</span>';
-	} else {
-		$html .= $paper_detail;
-	} # end if
-	$html .= '<br/><b>'. $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
-return $html;
+	return $html;
 ) ?>
-<? endif ( $$variable{'paper_id'} ) ?>
 </div>
 <? echo (
 	if ( $$variable{'paper_id'} ) {
