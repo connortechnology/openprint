@@ -37,6 +37,7 @@ my %variables = (
         'rdbGateFoldFit'=>['save'],
         'txtUnitPrice1'=>['output'], 'txtUnitPrice2'=>['output'], 'txtUnitPrice3'=>['output'],
         'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],
+        'MPrice1'=>['save','output'], 'MPrice2'=>['save','output'], 'MPrice3'=>['save','output'],
         'txtRunTime1'=>['save'], 'txtRunTime2'=>['save'], 'txtRunTime3'=>['save'],
 		'glue_id' => ['save'], 'override_glue_id' => ['save'],
 		'Markup1'=>['save'], 'Markup2'=>['save'], 'Markup3'=>['save'],
@@ -45,6 +46,7 @@ my %variables = (
 
 sub variables {
 	my ( $p_id, $s_id, $specs ) = @_;
+	my $Project = new openprint::Project( $p_id );
     my @v;
     foreach my $k ( keys %variables ) {
         push @v, $k, if sets::isin( 'save', $variables{$k} );
@@ -54,7 +56,7 @@ sub variables {
             push @v, 'txtInsertPage1-'.$insert_id, 'txtInsertPage2-'.$insert_id;
         } # end foreach
     } # end if
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes()  ) {
 		foreach my $k ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40 ) {
 			push @v, 'txtSignatureQty'.$k.'Page-'.$qty_index;
 		} # end foreach
@@ -349,7 +351,7 @@ sub calc {
 	my @Equipment = get_equipment( $specs, \$error );
 	if ( ! @Equipment ) {
 		$$specs{'alert'} .= 'We are unable to automatically provide a price for Perfect Binding.  You may enter your own price in the price fields, or contact your CSR for a quote.';
-		foreach my $qty_index ( 1 ..3 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= $error;
 			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 			my $qty = $$specs{'txtQuantity'.$qty_index};
@@ -363,10 +365,9 @@ sub calc {
 		return $$specs{'Status'} = 'calculated';
 	} # end if
 	
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{'txtQuantity'.$qty_index};
-		next if ! $qty;
 
 		my $bestPrice;
 
@@ -389,8 +390,7 @@ sub calc {
 			my $servicePrice = $$Price{'LastPassServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: last pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
 			if ( my $GluePrice = $$Price{'GluePrice'} ) {
-$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $$Price{'Glue'}->description(), @$GluePrice{'Price','units','Total'}, @$specs{'Width','txtCalliper'} );
-
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $$Price{'Glue'}->description(), @$GluePrice{'Price','units','Total'}, @$specs{'Width','txtCalliper'} );
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'Price'})).'<br/><br/>';
 		} # end foreach Equipment
@@ -405,6 +405,7 @@ $$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f 
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'MPrice'} *(1+$$specs{"Markup$qty_index"}/100) );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'Price'} / $qty );
     } # end foreach
 
@@ -423,6 +424,7 @@ sub get_price {
 		'Price'		=> 0,
 		'RunTime'	=> 0,
 		'Passes'	=> 0,
+		'MPrice'	=> 0,
 		'Imposition' => $$specs{'Imposition'.$qty_index},
 	);
 
@@ -470,6 +472,7 @@ sub get_price {
 			} else {
 				$openprint::log->debug("Unknown Unit Type: ($servicePrice{'units'}) on $$specs{'ServiceType'}");
 			} # end if
+			$price{'MPrice'} += ( $servicePrice{'Total'} / $qty ) * 1000;
 
 			# The minus 1 is because the result of the first pass, takes up one pocket
 			$neededPockets -= ( $maxPockets - 1 );
@@ -496,6 +499,7 @@ sub get_price {
 	} else {
 		$openprint::log->debug("Unknown Unit Type: $servicePrice{'units'} for $$specs{'ServiceType'} range($neededPockets) equipment(".$Equipment->strid().")");
 	} # end if
+	$price{'MPrice'} += ( $servicePrice{'Total'} / $qty ) * 1000;
 	$price{'Passes'} += 1;
 
 	if ( $$specs{'glue_id'} ) {
@@ -508,6 +512,7 @@ sub get_price {
 			$GluePrice{'Total'} = $GluePrice{Price} * $$specs{'Width'} * $$specs{'txtCalliper'} * $$specs{"txtQuantity$qty_index"} / 144;
 			$price{'GluePrice'} = \%GluePrice;
 		} # end if
+		$price{'MPrice'} += ( $GluePrice{'Total'} / $qty ) * 1000;
 
 		$price{'Glue'} = $Material;
 	} # end if Glues
