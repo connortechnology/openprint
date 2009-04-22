@@ -16,7 +16,6 @@
 				'signature'	=>	$signature,
 				'order'		=>	'created_on DESC',
 				'distinct'	=>	1,
-				'limit'		=>	1,
 				);
 	foreach my $PPF ( @PPFs ) {
 		$PPF->generate_previews();
@@ -38,11 +37,11 @@
 			foreach my $preview ( $PPF->previews('Back') ) {
 				next if ! $$preview{'separations'};
 
-					$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-						$$variable{'Project'}->docket(),
-						$$variable{'SignatureIndex'}+1,
-						'Back',
-						);
+				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
+					$$variable{'Project'}->docket(),
+					$PPF->signature(),
+					'Back',
+					);
 			} # end foreach preview
 			$back_html .= '</fieldset></div>';
 			last;			
@@ -51,11 +50,11 @@
 			foreach my $preview ( $PPF->previews() ) {
 				next if ! $$preview{'separations'};
 
-					$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-						$$variable{'Project'}->docket(),
-						$$variable{'SignatureIndex'}+1,
-						'Front',
-						);
+				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
+					$$variable{'Project'}->docket(),
+					$PPF->signature(),
+					'Front',
+					);
 			} # end foreach preview
 			$front_html .= '</fieldset></div>';
 			last if $front_html and $back_html;
@@ -64,11 +63,11 @@
 			foreach my $preview ( $PPF->previews() ) {
 				next if ! $$preview{'separations'};
 
-					$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-						$$variable{'Project'}->docket(),
-						$$variable{'SignatureIndex'}+1,
-						'Back',
-						);
+				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
+					$$variable{'Project'}->docket(),
+					$PPF->signature(),,
+					'Back',
+					);
 			} # end foreach preview
 			$back_html .= '</fieldset></div>';
 			last if $front_html and $back_html;
