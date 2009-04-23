@@ -608,7 +608,7 @@ $openprint::log->debug("Calc:From:Imposition:Paper " . $Paper->type() . ':' . $P
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$price{'Total Cost'} / $qty );
 		my $mprice = $$price{'Impression Price'};
 
-		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', ((($mprice + $$price{'Ink Price'} )/ $qty)*1000 ) + $$price{'Paper 1000 Price'} );
+		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', (1+$$specs{'Markup'.$qty_index}/100)*(((($mprice + $$price{'Ink Price'} )/ $qty)*1000 ) + $$price{'Paper 1000 Price'} ) );
 
 		if ( $$specs{'txtSignatureType'} ) {
 			$$specs{'PageQuantity'.$qty_index} = $Imposition->pages();
@@ -1886,7 +1886,7 @@ $i->display();
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $best_price{'Total Cost'} / $qty );
 		my $mprice = $best_price{'Impression Price'};
 
-		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', ((($mprice + $best_price{'Ink Price'} )/ $qty)*1000 ) + $best_price{'Paper 1000 Price'} );
+		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', (1+$$specs{'Markup'.$qty_index}/100)*(((($mprice + $best_price{'Ink Price'} )/ $qty)*1000 ) + $best_price{'Paper 1000 Price'} ) );
 
 		if ( $$specs{'txtSignatureType'} ) {
 			if ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {

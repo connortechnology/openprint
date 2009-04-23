@@ -188,6 +188,7 @@ function clear_price_data( form ) {
 			if ( form.elements['StockType'+qtyNum] ) form.elements["StockType"+qtyNum].value = '';
 			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! form.elements['OverridePrice'+qtyNum].checked ) form.elements["txtPrice"+qtyNum].value = '';
 			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
+			if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
 			if ( form.elements["txtPressSheetQty"+qtyNum] ) form.elements["txtPressSheetQty"+qtyNum].value = '';
 			if ( form.elements["txtPlateQuantity"+qtyNum] ) form.elements["txtPlateQuantity"+qtyNum].value = '';
 			
