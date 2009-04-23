@@ -157,7 +157,7 @@ sub parseSeparation {
 		} elsif ( $line =~ /^\/CIP3PreviewImageComponents/ ) {
 		} elsif ( $line =~ /^\/CIP3PreviewImageMatrix \[(.*)\] def/ ) {
 			$$image{'matrix'} = $1;
-$log->debug("Matrix: $line ");
+#$log->debug("Matrix: $line ");
 		} elsif ( $line =~ /^\/CIP3PreviewImageResolution/ ) {
 
 		} elsif ( $line =~ /^CIP3PreviewImage$/ ) {
@@ -168,7 +168,7 @@ $log->debug("Matrix: $line ");
 				$line = shift;
 			} # end while
 			$$image{'image'} = join("\r\n", @image_data);
-			$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
+			#$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
 			last;
 		} elsif ( $line =~ /^CIP3EndSeparation/ ) {
 			last;
@@ -207,28 +207,18 @@ sub previews {
 	if ( $$self{'sheets'} ) {
 		foreach my $sheet ( @{$$self{'sheets'}} ) {
 			if ( $$sheet{'Front'} and ( (!$side) or ($side eq 'Front') ) ) {
-#$openprint::log->debug("Adding front previews");
 				push @previews, @{$$sheet{'Front'}{'previews'}} if $$sheet{'Front'}{'previews'};
 			} # end if
 			if ( $$sheet{'Back'} and ( (!$side) or ($side eq 'Back') ) ) {
-#$openprint::log->debug("Adding back previews");
 				push @previews, @{$$sheet{'Back'}{'previews'}} if $$sheet{'Back'}{'previews'};
 			} # end if
-
-			#if ( $$image{'compression'} eq 'RunLengthDecode' ) {
-#$openprint::log->debug("Compression was RunLengthDecode" . (length $$image{'image'} ) .','.$$image{'width'}.'x'.$$image{'height'} );
-				#my $f = Text::PDF::RunLengthDecode->new();
-				#$$image{'image'} = $f->outfilt($$image{'image'}, 1);
-#$openprint::log->debug("Compression was RunLengthDecode" . (length $$image{'image'} ) .','.$$image{'width'}.'x'.$$image{'height'} );
-			#} # end if
 		} # end foreach sheet
 	} # end if sheets
-#$openprint::log->debug("Previews: " . @previews );
 	return @previews;
 } # end sub previews
 
 sub generate_previews {
-	my ( $self, $path ) = @_;
+	my ( $self, $path, $force ) = @_;
 
 	$path = $config{'SkinPath'} . '/images/previews/' if ! $path;
 	my $part_path = '';
@@ -242,6 +232,11 @@ sub generate_previews {
 	} # end if
 
 	foreach my $side ( 'Front', 'Back' ) {
+		my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
+		if ( (!$force) and -f $filename ) {
+			$log->debug("$filename exists, not generating the preview.");	
+			next;
+		} # end if
 		foreach my $preview ( $self->previews($side) ) {
 			next if ! $$preview{'separations'};
 
@@ -250,31 +245,24 @@ sub generate_previews {
 			my $width = $$preview{'separations'}[0]{'width'};
 			my $height = $$preview{'separations'}[0]{'height'};
 
-
-
 			foreach my $image ( @{$$preview{'separations'}} ) {
-
-				my $Image;
 				if ( $$image{'compression'} eq 'RunLengthDecode' ) {
 					$$image{'image'} = misc::rle_decode($$image{'image'});
 					$$image{'compression'} = 'None';
 				} elsif ( $$image{'compression'} eq 'DCTDecode' ) {
-					$Image = Image::Magick->new(magick=>'jpg');
+					my $Image = Image::Magick->new(magick=>'jpg');
 					$_ = $Image->BlobToImage($$image{'image'});
 					$log->error( $_ ) if $_;
 				} elsif ( $$image{'compression'} eq 'None' ) {
 				} else {
 					$log->error("Unknown compression $$image{'compression'}");
-					$Image = Image::Magick->new(magick=>'cmyk',depth=>1,size=>$$image{'width'}.'x'.$$image{'height'},'colorspace'=>'CMYK','type'=>'ColorSeparation','debug'=>'Blob');
-					$_ = $Image->BlobToImage($$image{'image'});
-					$log->error( $_ ) if $_;
 				} # end if
-
 			} # end foreach separation
-my %separations;
-foreach my $s ( @{$$preview{'separations'}} ) {
-	$separations{$$s{'ink'}} = $s;
-} # end foreach
+
+			my %separations;
+			foreach my $s ( @{$$preview{'separations'}} ) {
+				$separations{$$s{'ink'}} = $s;
+			} # end foreach
 
 			#my @rows =  ( 1 .. $height );
 			#my @cols =  ( 1 .. $width );
@@ -293,22 +281,15 @@ foreach my $s ( @{$$preview{'separations'}} ) {
 					} # end foreach ink
 				} # end foreach w
 			} # end foreach h
-			$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
+			#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
 			
 			my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK');
 			$_ = $Image->BlobToImage($image_data);
 			$log->error( $_ ) if $_;
-			$Image->Negate('channel'=>'CMYK');
+			$_ = $Image->Negate('channel'=>'CMYK');
 			$log->error( $_ ) if $_;
 			$_ = $Image->Write( sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side ) );
 			$log->error( $_ ) if $_;
-			#$log->error( $_ ) if $_;
-			#open F, sprintf('>%s%dsg%dsd%s.rle', $path, $self->get('docket','signature'), $side );
-			#print F $image_data;
-			#close(F);
-					#open F, sprintf('>%s%dsg%dsd%s-%s.raw', $path, $self->get('docket','signature'), $side, $$image{'ink'} );
-					#print F $data;
-					#close(F);
 		} # end foreach preview
 	} # end foreach side
 } # end sub generate_previews

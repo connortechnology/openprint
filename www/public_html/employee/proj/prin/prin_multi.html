@@ -130,7 +130,7 @@
 			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/hidden_fields.html' );
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$html .= '</form>';
-
+			$html .= '<br class="spacer"/>';
 			
 			$html .= '<fieldset><legend>Production Feedback</legend><div id="ProductionFeedback-'.$$variable{'service_id'}.'">';
 			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/employee/proj/prin/_production_feedback.html' );
