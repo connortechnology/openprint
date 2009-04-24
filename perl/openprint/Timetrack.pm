@@ -13,7 +13,7 @@ require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
 
-my $debug = 1;
+my $debug = 0;
 
 use strict;
 use vars qw( $table $serial %fields %defaults %transforms );
@@ -58,8 +58,13 @@ $serial = 'timetracks_id_seq';
 	'user_id'		=>	undef,
 );
 
+my %find_cache;
+
 sub find {
 	my %params = @_;
+
+	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
+	return map { new openprint::Timetrack( $_ ) } @{$find_cache{$hash_key}} if $find_cache{$hash_key};
 
 	my $sql = q{SELECT * FROM Timetracks WHERE 1>0};
 	my @values;
@@ -180,6 +185,7 @@ sub find {
 	} elsif ($debug ) {
 		$openprint::log->debug("openprint::Timetrack::find($sql) (@values)");
 	} # end if
+	@{$find_cache{$hash_key}} = map { $_->{id} } @$data;
 	return map { new openprint::Timetrack( $_->{id}, $_ ); } @$data;
 } # end sub find
 

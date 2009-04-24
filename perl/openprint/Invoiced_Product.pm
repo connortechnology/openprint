@@ -9,7 +9,7 @@ use vars qw( %config $log $dbh %session );
 use MIME::QuotedPrint;
 use MIME::Base64;
 
-my $debug = 1;
+my $debug = 0;
 
 use strict;
 use vars qw( $table $serial %fields %defaults %transforms );
@@ -37,8 +37,11 @@ require sql;
 	'quantity'		=>	undef,
 );
 
+my %find_cache;
 sub find {
 	my %params = @_;
+	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
+	return map { new openprint::Invoiced_Product( $_ ) } @{$find_cache{$hash_key}} if $find_cache{$hash_key};
 
 	my $sql = 'SELECT * FROM ' . $table . ' WHERE 1>0';
 	my @values;
@@ -72,6 +75,7 @@ sub find {
 	} elsif ($debug ) {
 		$log->debug("openprint::Invoiced_Product::find($sql) (@values)");
 	} # end if
+	@{$find_cache{$hash_key}} = map { $_->{id} } @$data;
 	return map { new openprint::Invoiced_Product( $_->{id}, $_ ); } @$data;
 } # end sub find
 

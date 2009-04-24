@@ -38,6 +38,7 @@ sub history {
 		if ( ! ( $variable{'error'} .= $Invoice->save({'posted'=>1,'posted_on'=>'NOW()'}) ) ) {
 			$Invoice->add_to_log( 'Invoice posted.' );
 			$variable{'information'} .= 'Invoice posted.<br/>';
+			delete $param{'invoice_id'};
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'UnPost' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );

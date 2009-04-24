@@ -217,11 +217,12 @@ sub is_paid {
 	if ( ! $$self{'posted'} ) {
 		return 0;
 	} # end if
-	return ( $self->owing() > 0 ) ? 0 : 1;
+	return $self->owing() > 0 ? 0 : 1;
 } # end sub is_paid
 
 sub owing {
-	return $_[0]->total() + $_[0]->interest() - $_[0]->paid();
+$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
+	return sprintf('%.2f', $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
 } # end sub owing
 
 sub Invoicee {
@@ -240,8 +241,9 @@ sub subtotal {
 		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack::find('invoice_id'=>$$self{id});
 		map { $$self{'subtotal'} += $_->total() } openprint::Invoiced_Product::find('invoice_id'=>$$self{id});
 	} # end if
-	return $$self{'subtotal'};
+	return sprintf('%.2f', $$self{'subtotal'} );
 } # end sub subtotal
+
 sub total {
 	my ( $self ) = @_;
 
@@ -250,7 +252,8 @@ sub total {
 		$$self{'total'} += $self->federaltax();
 		$$self{'total'} += $self->statetax();
 	} # end if
-	return $$self{'total'};
+$log->debug("Invoice_total: sub: " . $self->subtotal() . ' fed: ' . $self->federaltax() . ' prov: ' . $self->statetax() );
+	return sprintf('%.2f', $$self{'total'} );
 } # end sub total
 
 sub interest {
@@ -287,7 +290,7 @@ sub federaltax {
 		} # end if
 			return $self->subtotal() * ( $self->federaltaxrate()/100 );
 	} # end if
-	return $$self{'federaltax'};
+	return sprintf('%.2f', $$self{'federaltax'} );
 } # end sub federaltax
 sub statetax {
 	my ( $self ) = @_;
@@ -301,7 +304,7 @@ sub statetax {
 		} # end if
 		return $self->subtotal() * ($self->statetaxrate()/100 );
 	} # end if
-	return $$self{'statetax'};
+	return sprintf('%.2f', $$self{'statetax'} );
 } # end sub statetax
 
 sub add_Payment {

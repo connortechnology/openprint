@@ -2,7 +2,7 @@
 	<h1>Account Statement</h1>
 	<h2>For <? echo ( new openprint::Company( $session{'/invoice/history.html?company_id'} )->name(); ) ?></h2>
 </div>
-Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Company()->name() ) ?>.  The following invoices are now past due.<br/><br/>
+Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Company()->name() ) ?>.  The following invoices are now due.<br/><br/>
 <? eval (
 	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Invoices'}} = ();
