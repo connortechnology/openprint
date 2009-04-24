@@ -433,6 +433,25 @@ sub purchasing_total {
 	} # end foreach $PO
 } # end sub purchasing_total
 
+sub po_limit {
+	my ( $self, $type_id, $new_value ) = @_;
+
+	if ( ! exists $$self{'po_limits'} ) {
+		%{$$self{'po_limits'}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+	} # end if
+
+	if ( defined $new_value ) {
+		if ( exists $$self{'po_limits'}{$type_id} ) {
+			sql::update( undef, undef, 'user_purchaseorder_limits', ['user_id=? AND type_id=?', $$self{'id'},$type_id], 'po_limit', $new_value );
+		} else {
+			sql::insert( undef, undef, 'user_purchaseorder_limits', ['user_id',$$self{'id'},'type_id', $type_id, 'po_limit', $new_value ] );
+		} # end if
+		$$self{'po_limits'}{$type_id} = $new_value;
+	} # end if
+
+	return $$self{'po_limits'}{$type_id};
+} # end sub po_limit
+
 1;
 
 __END__
