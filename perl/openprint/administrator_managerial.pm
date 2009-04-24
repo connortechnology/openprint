@@ -149,6 +149,12 @@ sub user_profiles {
 		delete $openprint::param{'password'} if ! $openprint::param{'password'};
 		my $error = $User->save( \%openprint::param );
 
+		if ( ! $error ) {
+			foreach my $Type ( openprint::PurchaseOrder_ContentType::find() ) {
+				$User->po_limit( $Type->id(), $openprint::param{'po_limit-'.$Type->id()} );
+			} # end foreach Type
+		} # end if
+
 		if ( $error ) {
 			return misc::error( $log, $dbh, $variable, 'Error Saving.', "There was an error saving the user's information. $error");
 		} # end if

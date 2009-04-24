@@ -236,6 +236,13 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 			<div class="leftColumn"><i>Declined by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></i></div>
 			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
 <? endif ( $$variable{'PurchaseOrder'}->authorized() eq '0' ) ?>
+<? if ( $$variable{'PurchaseOrder'}->authorized() eq '' ) ?>
+		<br/>
+		<br class="spacer"/>
+		<hr/>
+			<div class="leftColumn"><i>This PO has NOT been approved.</i></div>
+			<div class="rightColumn">&nbsp;</div>
+<? endif ( $$variable{'PurchaseOrder'}->authorized() eq '' ) ?>
 		</div>
 		<br class="spacer"/>
 		<fieldset><legend>Logs</legend>
