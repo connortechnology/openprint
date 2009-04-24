@@ -503,5 +503,18 @@ sub Logs {
 	return openprint::PurchaseOrder_Log::find( 'po_id'=>$$self{'id'}, 'order'=>'created_on DESC' );
 } # end sub Logs
 
+sub is_FSC {
+	my ( $self ) = @_;
+	foreach my $C ( $self->Contents() ) {
+		return 1 if $C->description() =~ /FSC/i;
+	} # end foreach C
+} # end sub is_FSC
+
+sub is_PEFC {
+	my ( $self ) = @_;
+	foreach my $C ( $self->Contents() ) {
+		return 1 if $C->description() =~ /PEFC/i;
+	} # end foreach C
+} # end sub is_PEFC
 1;
 #__END__

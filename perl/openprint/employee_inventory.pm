@@ -1648,6 +1648,24 @@ sub purchase_order_view {
 				'reason'	=>	$param{'reason'},
 				});
 		} # end if
+		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
+			my @notifications;
+			foreach my $user_id ( openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) ) {
+				my $found = 0;
+				foreach my $notification_id ( $PO->notifications() ) {
+					if ( $notification_id == $user_id ) {
+						$found = 1;
+						last;
+					} # end if	
+				} # end foreach
+				if ( ! $found ) {
+					push @notifications, $user_id;
+				} # end if
+			} # end foreach
+			if ( @notifications ) {
+				$PO->notifications([$PO->notifications(),@notifications]);
+			} # end if
+		} # end if
 	} # end if btnFunction
 
 	$variable{'PurchaseOrder'} = $PO;
