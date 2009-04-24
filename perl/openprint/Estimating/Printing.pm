@@ -606,9 +606,9 @@ $openprint::log->debug("Calc:From:Imposition:Paper " . $Paper->type() . ':' . $P
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$price{'Total Cost'} / $qty );
-		my $mprice = $$price{'Impression Price'};
+		my $mprice = $$price{'Impression MPrice'};
 
-		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', (1+$$specs{'Markup'.$qty_index}/100)*(((($mprice + $$price{'Ink Price'} )/ $qty)*1000 ) + $$price{'Paper 1000 Price'} ) );
+		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', (1+$$specs{'Markup'.$qty_index}/100)*($mprice + (($$price{'Ink Price'}/$qty)*1000 ) + $$price{'Paper 1000 Price'} ) );
 
 		if ( $$specs{'txtSignatureType'} ) {
 			$$specs{'PageQuantity'.$qty_index} = $Imposition->pages();
@@ -1884,9 +1884,8 @@ $i->display();
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $best_price{'Total Cost'} / $qty );
-		my $mprice = $best_price{'Impression Price'};
-
-		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', (1+$$specs{'Markup'.$qty_index}/100)*(((($mprice + $best_price{'Ink Price'} )/ $qty)*1000 ) + $best_price{'Paper 1000 Price'} ) );
+		my $mprice = $best_price{'Impression MPrice'};
+		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', (1+$$specs{'Markup'.$qty_index}/100)*($mprice + (($best_price{'Ink Price'}/$qty)*1000 ) + $best_price{'Paper 1000 Price'} ) );
 
 		if ( $$specs{'txtSignatureType'} ) {
 			if ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
@@ -3501,6 +3500,7 @@ sub calc_price {
 	$price{'Impression Cost'} = $run_price{'Cost'};
 	$price{'Impression Units'} = $run_price{'units'};
 	$price{'Impression Price'} = $run_price{'Price'};
+	$price{'Impression MPrice'} = $run_price{'MPrice'};
 
 	$price{'Minimum Run Charge'} = openprint::service::get_price( 'PressRunChargeMinimum',undef,$Press );
 
@@ -3900,6 +3900,7 @@ sub get_run_price {
 #$log->warn(" ** FINAL  RUNNING PRICE $running_price **") if $debug or 1;
 		$run_price{'Cost'} = $running_price;
 		$run_price{'Price'} = ($run_price{'Cost'} * $impressions)/1000;
+		$run_price{'MPrice'} = $run_price{'Cost'};
 
 	} elsif ( lc $run_price{'units'} eq 'per hour' ) {
 		if ( $run_speed ) {
@@ -3909,6 +3910,7 @@ sub get_run_price {
 		} # end if
 		$run_price{'Cost'} = $running_price;
 		$run_price{'Price'} = $running_price * $run_price{'RunHours'};
+		$run_price{'MPrice'} = ( $run_price{'Price'} / $impressions ) * 1000;
 	} else {
 		$openprint::log->warn("Unknown Units for $impression_service: ($run_price{'units'}) on " . $Press->strid() );
 	} # end if

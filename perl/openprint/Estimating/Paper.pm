@@ -29,7 +29,9 @@ my $debug = 1;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'MPrice1','MPrice2','MPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+		'hdnBreakdown1','hdnBreakdown2','hdnBreakdown3',
 );
 
 sub variables {
@@ -63,24 +65,22 @@ sub neccessary {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	delete $$specs{'txtPrice1'};
-	delete $$specs{'txtPrice2'};
-	delete $$specs{'txtPrice3'};
-
 	my $Project = new openprint::Project( $project_index );
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		delete $$specs{'txtPrice'.$qty_index};
+		delete $$specs{'MPrice'.$qty_index};
+	} # end foreach qty_index
 
 	my %totals;
+	my %ms;
 	my %papers;
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-#$openprint::log->warn("Paper Price Override: $$Paper{Price}");
 			$papers{$Paper->to_string()} = $Paper;
-			#my $string = sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
 			if ( $Paper->type() eq 'Roll' ) {
-				#$string .= sprintf(' %s&quot; Roll', $Paper->width() );
 				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
 				if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 					$impressions /= 2;
@@ -91,14 +91,14 @@ sub calc {
 						$impressions /= 2;
 					} # end if
 				} # end if
-				$totals{$Paper->to_string()}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
+				$totals{$Paper->to_string()}[$qty_index] += ceil( $impressions * $Paper->area() * $Paper->wpsi());
+				$ms{$Paper->to_string()}[$qty_index] += ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $Paper->area() * $Paper->wpsi() );
 			} elsif ( $Paper->type() eq 'Sheet' ) {
-				#$string .= sprintf(' %s&quot;x%s&quot;', $Paper->width(), $Paper->height() );
 				my $sheets = $$sig_specs{'SheetQuantity'.$qty_index};
 				$sheets /= ( $Paper->start_area() /$Paper->area() );
 				$sheets = ceil( $sheets );
-				#$totals{$Paper->to_string()}[$qty_index] += $sheets;
 				$totals{$Paper->to_string()}[$qty_index] += ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
+				$ms{$Paper->to_string()}[$qty_index] += ceil( ((1000/$$sig_specs{'txtImposition'.$qty_index})/( $Paper->start_area() /$Paper->area() )) * $Paper->start_area() * $Paper->wpsi() );
 			} # end if
 		} # end foreach qty_index
 	} # end foreach signature
@@ -107,13 +107,15 @@ sub calc {
 			my $Paper = $papers{$paper_id};
 			if ( ! $Paper->supplied() ) {
 				my %price = $Paper->get_price( $totals{$paper_id}[$qty_index] );
-			#my %price = sheet_calc( $Paper, $totals{$paper_id}[$qty_index] );
 				$price{'Total'} = $price{'100lb Price'} * $totals{$paper_id}[$qty_index] / 100;
 
-$openprint::log->warn("Paper price for " . $totals{$paper_id}[$qty_index] . ' of ' . $Paper->to_string() . ' : ' . $price{'Total'} ) if $debug;
-			$$specs{"txtPrice$qty_index"} += $price{'Total'};
+#$openprint::log->warn("Paper price for " . $totals{$paper_id}[$qty_index] . ' of ' . $Paper->to_string() . ' : ' . $price{'Total'} ) if $debug;
+				$$specs{"txtPrice$qty_index"} += $price{'Total'};
+				$$specs{"MPrice$qty_index"} += $price{'100lb Price'} * $ms{$paper_id}[$qty_index] / 100;
 			} # endif
 		} # end foreach Stock
+		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} );
+		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 	} # end foreach qty_index
 
 	return $$specs{'Status'} = 'calculated';
@@ -180,8 +182,7 @@ sub summary {
     my %sheets;
 	foreach my $ss_id ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		foreach my $qty_index ( 1 .. 3 ) {
-            next if ! $Project->quantity( $qty_index );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			my $string = '';

@@ -31,6 +31,7 @@ my %variables = (
 	'txtFinalWidth'=>['output'],'txtFinalHeight'=>['output'],
 	'txtPackageQuantity1' => ['save','output'], 'txtPackageQuantity2' => ['save','output'], 'txtPackageQuantity3' => ['save','output'],
 	'txtUnitPrice1' => ['output'], 'txtUnitPrice2' => ['output'], 'txtUnitPrice3' => ['output'],
+	'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 	'Markup1'=>['save'], 'Markup2'=>['save'], 'Markup3'=>['save'],
 	'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
@@ -207,13 +208,22 @@ sub calc {
 		if ( $$specs{'txtItemsPerPackage'.$qty_index} ) {
 			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{"txtPackageWeight$qty_index"}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
 		} # end if
-		$qty = ceil( $$specs{'txtItemsPerPackage'.$qty_index} ? $qty/$$specs{'txtItemsPerPackage'.$qty_index} : 0 );
+
+
+		my $m_qty = 0;
+		if ( $$specs{'txtItemsPerPackage'.$qty_index} ) {
+			$qty = ceil( $qty/$$specs{'txtItemsPerPackage'.$qty_index} );
+			$m_qty = ceil( 1000/$$specs{'txtItemsPerPackage'.$qty_index} );
+		} else {
+			$qty = 0;
+		} # end if
 
 		my $unitPrice = $material_charge + $serviceCharge + $packingCharge;
 		my $price = $makeReady + $qty * $unitPrice;
 
 		$$specs{"txtPackageQuantity$qty_index"} = $qty;
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * $m_qty );
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
