@@ -2170,6 +2170,10 @@ sub calc_price {
 	#$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
+	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
+$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
+	$run_speed = $speed_mod if $speed_mod;
+
 	my %folding_results;
 
 	# Has to be NEED because they always leave folding out, and it chooses dumb impositions
@@ -2601,6 +2605,11 @@ sub select_presses {
 			$openprint::log->debug(" ** Press $press_id Failed Calliper Check **");
 			next;
 		} # end if
+		if ( $Press->specification('Minimum Basis Weight') and $Paper->basis_weight() < $Press->specification('Minimum Basis Weight') ) {
+
+			$openprint::log->debug(" ** Press $press_id Failed Minimum Basis Weight Check **" . $Paper->basis_weight() . ' < ' . $Press->specification('Minimum Basis Weight') );
+			next;
+		} # end if
 
 		if ( 
 				(
@@ -2900,11 +2909,11 @@ sub get_run_price {
 	$run_speed = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() ) if ! $run_speed;
 	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
 #$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." ($running_price) ($run_price{'units'}) STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
-	$run_speed = $run_speed / $speed_mod if $speed_mod;
+	$speed_mod = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() ) / $speed_mod if $speed_mod;
 
 	if ( sets::isin( lc $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
-		if ( $run_speed and $speed_mod ) {
-			$running_price *= $run_speed;
+		if ( $speed_mod ) {
+			$running_price *= $speed_mod;
 		} # end if
 #$log->warn(" ** FINAL  RUNNING PRICE $running_price **") if $debug or 1;
 		$run_price{'Cost'} = $running_price;
