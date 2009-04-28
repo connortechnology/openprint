@@ -2605,9 +2605,9 @@ sub select_presses {
 			$openprint::log->debug(" ** Press $press_id Failed Calliper Check **");
 			next;
 		} # end if
-		if ( $Press->specification('Minimum Basis Weight') and $Paper->basis_weight() < $Press->specification('Minimum Basis Weight') ) {
+		if ( ( $Paper->type() eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
 
-			$openprint::log->debug(" ** Press $press_id Failed Minimum Basis Weight Check **" . $Paper->basis_weight() . ' < ' . $Press->specification('Minimum Basis Weight') );
+			$openprint::log->debug(" ** Press $press_id Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight') );
 			next;
 		} # end if
 
