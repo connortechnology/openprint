@@ -295,7 +295,7 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-#$openprint::log->debug(sprintf('%d %s %s %d %dx%d', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index} ) );
+$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) );
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			if ( 
 				($$sig_specs{'txtImposition'.$qty_index}%2) or 
