@@ -525,11 +525,11 @@ sub signature_calc {
 	} # end if
 	# Now we have a base set of Maximal Impositions.  Now some of the I's in this set may have an imposition > 1.  
 	# Problem is that we apparently also need to price the situation of doing them 1 out, and everything in between.  
-		if ( $debug and 1 ) {
-			foreach my $I ( @Set_Of_Impositions ) {
-				$I->display('Results after initial cuts');
-			} # end foreach
-		} # end if
+	if ( $debug and 1 ) {
+		foreach my $I ( @Set_Of_Impositions ) {
+			$I->display('Results after initial cuts');
+		} # end foreach
+	} # end if
 
 	@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
 	if ( $debug and 1 ) {
@@ -1217,7 +1217,12 @@ sub reduce_impositions {
 sub cut_imposition {
 	my ( $I ) = @_;
 	my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
-	if ( $$I{columns} > $$I{rows} ) {
+	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Horizontal' ) and ( $$I{rows} > 1 ) ) {
+		# For folding purposes, can only fold where spines are aligned
+		return map { $_ = $I->copy(); $_->rows(1); $_; } ( 1 .. $$I{rows} );
+	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Vertical' ) and ( $$I{columns} > 1 ) ) {
+		return map { $_ = $I->copy(); $_->columns(1); $_; } ( 1 .. $$I{columns} );
+	} elsif ( $$I{columns} > $$I{rows} ) {
 		$i1->columns(int $$I{columns}/2);
 		$i2->columns( $$I{columns} - $$i1{columns} );
 	} else {
