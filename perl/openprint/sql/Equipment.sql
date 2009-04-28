@@ -17,6 +17,11 @@ CREATE TABLE tbl_Equipment (
 	instantgate_enabled	boolean,
 	cost_center			TEXT, 
 	jdf_name			TEXT,
+    cip3_in             TEXT,
+    cip3_out            TEXT,
+    cip3_hold           boolean,
+    cip3_merge          boolean,
+    cip3_monitor        boolean,
 	PRIMARY KEY (lngIndex)
 );
 
