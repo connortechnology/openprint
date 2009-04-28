@@ -108,6 +108,37 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $$variable{'Equipment'}->location_id() ); ) ?>
 			</select>
 		</p>
+		<p>
+			<label>CIP3 Integration:</label>
+			<input type="radio" id="cip3_monitor1" name="cip3_monitor" value="1"  <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').show();" />
+			<label class="radio" for="cip3_monitor1">Yes</label>
+			<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_monitor(); ) ?> onclick="$('CIP3').hide();" />
+			<label class="radio" for="cip3_monitor0">No</label>
+		</p>
+		<div id="CIP3" <? echo ( $$variable{'Equipment'}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>	
+		<p>
+			<label>Input Hotfolder:</label>
+			<input type="text" name="cip3_in" value="<? hecho ( $$variable{'Equipment'}->cip3_in(); ) ?>" />
+		</p>
+		<p>
+			<label>Output Hotfolder:</label>
+			<input type="text" name="cip3_out" value="<? hecho ( $$variable{'Equipment'}->cip3_out(); ) ?>" />
+		</p>
+		<p>
+			<label>Hold PPFs?:</label>
+			<input type="radio" id="cip3_hold1" name="cip3_hold" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_hold() ); ) ?> />
+			<label class="radio" for="cip3_hold1">Yes</label>
+			<input type="radio" id="cip3_hold0" name="cip3_hold" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_hold() ); ) ?> />
+			<label class="radio" for="cip3_hold0">No</label>
+		</p>
+		<p>
+			<label>Merge PPFs?:</label>
+			<input type="radio" id="cip3_merge1" name="cip3_merge" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_merge() ); ) ?> />
+			<label class="radio" for="cip3_merge1">Yes</label>
+			<input type="radio" id="cip3_merge0" name="cip3_merge" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_merge() ); ) ?> />
+			<label class="radio" for="cip3_merge0">No</label>
+		</p>
+		</div>
 	</fieldset>
 <? if ( $$variable{'Equipment'}->id() ) ?>
 	<fieldset><legend>Specifications</legend>
