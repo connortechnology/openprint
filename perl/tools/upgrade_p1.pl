@@ -48,7 +48,7 @@ if ( $year ) {
 	`su postgres -c "createdb -E SQL_ASCII $dst_db"`;
 	print "done\n";
 	print "Loading db...";
-	`su postgres -c "ssh $src_host pg_dump point-one | psql $dst_db"`;
+	`su postgres -c "ssh $src_host pg_dump -h www4 point-one | psql $dst_db"`;
 	print "done\n";
 
 } # end if

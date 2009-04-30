@@ -115,8 +115,8 @@ $variable{'uri'} = $page;
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
 		if ( ! $variable{'PageContent'} ) {
 			my $content;
-			if ( -e join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) ) {
-				$content = misc::load_file( $log, join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) );
+			if ( -e join('/', $config{'SkinPath'}, $page ) ) {
+				$content = misc::load_file( $log, join('/', $config{'SkinPath'}, $page ) );
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 			} # end if
@@ -128,23 +128,14 @@ $variable{'uri'} = $page;
 		# _ signifies a page fragment, so don't load layout
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
-				my $file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, $filename );
+				my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
+				$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, 'default.html' );
-				#$log->debug("Looking for $file");
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, $filename );
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
+				$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
+				$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
