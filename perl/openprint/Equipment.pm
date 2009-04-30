@@ -32,6 +32,8 @@ $serial= 'Equipment_Index_seq';
 	'cip3_in'			=>	'cip3_in',
 	'cip3_out'			=>	'cip3_out',
 	'cip3_hold'			=>	'cip3_hold',
+	'cip3_merge'		=>	'cip3_merge',
+	'cip3_monitor'		=>	'cip3_monitor',
 );
 
 %defaults = (
@@ -103,6 +105,10 @@ sub find {
 	if ( $params{'jmf_enabled'} ) {
 		$sql .= ' AND jmf_enabled=?';
 		push @values, 1;
+	} # end if
+	if ( $params{'cip3_monitor'} ) {
+		$sql .= ' AND cip3_monitor=?';
+		push @values, $params{'cip3_monitor'};
 	} # end if
 	if ( $params{'category'} ) {
 		$sql .= q{ AND strCategory=?};

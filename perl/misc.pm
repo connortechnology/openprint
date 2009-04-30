@@ -93,6 +93,7 @@ sub save_file {
 		print F $contents;
 	} else {
 		$log->warn( "Error opening $file, Reason: $!" );
+		return "Error opening $file, Reason: $!";
 	} # end if
 	return;
 } # end sub save_file
