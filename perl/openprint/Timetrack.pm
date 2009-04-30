@@ -79,6 +79,16 @@ sub find {
 		} # end if
 	} # end if
 
+	if ( $params{'service_id'} ) {
+		if ( ref $params{'service_id'} eq 'ARRAY' ) {
+			$sql .= q{ AND service_id IN (}.join(',', map {'?'} @{$params{'service_id'}} ).')';
+			push @values, @{$params{'service_id'}};
+		} else {
+			$sql .= q{ AND service_id=?};
+			push @values, $params{'service_id'};
+		} # end if
+	} # end if
+
 	if ( $params{'employee_id'} ) {
 		if ( ref $params{'employee_id'} eq 'ARRAY' ) {
 			$sql .= q{ AND user_id IN (}.join(',', map {'?'} @{$params{'employee_id'}} ).')';

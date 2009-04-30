@@ -7,6 +7,7 @@ body {
 	height: 100%;
 	font-family: verdana, arial, helvetica, sans-serif;
 	font-size: x-small;
+	min-width: 1070px;
 }
 
 #content3 { 
