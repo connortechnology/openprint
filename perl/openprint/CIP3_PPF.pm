@@ -232,10 +232,13 @@ sub generate_previews {
 	} # end if
 
 	foreach my $side ( 'Front', 'Back' ) {
-		my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
+		my $filename = sprintf('%s%dsg%dsd%s.png', $path, $self->get('docket','signature'), $side );
 		if ( (!$force) and -f $filename ) {
 			$log->debug("$filename exists, not generating the preview.");	
 			next;
+		} else {
+			$log->debug("generating preview for $$self{'docket'} $$self{'signature'} $side.");	
+		
 		} # end if
 		foreach my $preview ( $self->previews($side) ) {
 			next if ! $$preview{'separations'};
@@ -288,7 +291,9 @@ sub generate_previews {
 			$log->error( $_ ) if $_;
 			$_ = $Image->Negate('channel'=>'CMYK');
 			$log->error( $_ ) if $_;
-			$_ = $Image->Write( sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side ) );
+			$_ = $Image->Quantize('colorspace'=>'RGB');
+			$log->error( $_ ) if $_;
+			$_ = $Image->Write( sprintf('%s%dsg%dsd%s.png', $path, $self->get('docket','signature'), $side ) );
 			$log->error( $_ ) if $_;
 		} # end foreach preview
 	} # end foreach side
