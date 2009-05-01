@@ -62,7 +62,7 @@ fieldset p label {
 
 td#banner {
 }
-.spacer {
+br.spacer {
 	height: 0px;
 	clear: both;
 }
@@ -71,18 +71,18 @@ div.PageTitle {
 	margin-top: -80px;
 	right: 10px;
 }
-.PageTitle h1 {
+div.PageTitle h1 {
     text-align: right;
 	color: #ff7f00;
     margin: 0px;
     font-size: 16px;
 }
-.PageTitle h2 {
+div.PageTitle h2 {
     text-align: right;
     color: #000088;
     margin-top: 0px;
     font-size: 12px;
 }
-.colRow {
+tr.colRow {
     background-color: #e3e4f0;
 }

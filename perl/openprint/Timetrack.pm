@@ -16,7 +16,7 @@ require openprint::Service;
 my $debug = 0;
 
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $table $serial %fields %defaults %transforms %find_cache );
 
 require sql;
 
@@ -57,8 +57,6 @@ $serial = 'timetracks_id_seq';
 	'project_id'	=>	undef,
 	'user_id'		=>	undef,
 );
-
-my %find_cache;
 
 sub find {
 	my %params = @_;
@@ -270,6 +268,12 @@ sub paid {
 sub invoiced {
 	return $_[0]->invoice_id() ? 1 : 0;
 } # end sub invoiced
+
+sub save {
+	%find_cache = ();
+	my $self = shift;
+	return $self->SUPER::save(@_);
+}
 
 1;
 

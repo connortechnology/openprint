@@ -95,6 +95,7 @@ sub save {
 		} # end if
 	} # end if
 	$self->load();
+	delete $openprint::Object::cache{$type}{$$self{id}};
 	return;
 } # end sub save
 
