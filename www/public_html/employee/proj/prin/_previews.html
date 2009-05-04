@@ -18,6 +18,7 @@
 				'distinct'	=>	1,
 				);
 	foreach my $PPF ( @PPFs ) {
+$log->debug("Got $$PPF{'docket'} $$PPF{'signature'} $$PPF{'side'} ");
 		$PPF->generate_previews();
 
 		if ( $PPF->side() eq 'M' ) {
@@ -25,7 +26,7 @@
 			foreach my $preview ( $PPF->previews('Front') ) {
 				next if ! $$preview{'separations'};
 
-				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.png"><img src="/images/previews/%1$dsg%2$dsd%3$s.png" alt="" /></a>', 
+				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
 					$$variable{'Project'}->docket(),
 					$$variable{'SignatureIndex'}+1,
 					'Front',
@@ -37,7 +38,7 @@
 			foreach my $preview ( $PPF->previews('Back') ) {
 				next if ! $$preview{'separations'};
 
-				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.png"><img src="/images/previews/%1$dsg%2$dsd%3$s.png" alt="" /></a>', 
+				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
 					$$variable{'Project'}->docket(),
 					$PPF->signature(),
 					'Back',
@@ -45,12 +46,15 @@
 			} # end foreach preview
 			$back_html .= '</fieldset></div>';
 			last;			
-		} elsif ( $PPF->side() eq 'A' ) {
+		} elsif ( $PPF->side() eq 'A' or $PPF->side() eq 'Front' ) {
 			$front_html .= '<div class="leftColumn"><fieldset><legend>Front</legend>';
 			foreach my $preview ( $PPF->previews() ) {
-				next if ! $$preview{'separations'};
+				if ( ! $$preview{'separations'} ) {
+					$log->debug("No separations");
+					next;
+				} # end if
 
-				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.png"><img src="/images/previews/%1$dsg%2$dsd%3$s.png" alt="" /></a>', 
+				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
 					$$variable{'Project'}->docket(),
 					$PPF->signature(),
 					'Front',
@@ -58,12 +62,12 @@
 			} # end foreach preview
 			$front_html .= '</fieldset></div>';
 			last if $front_html and $back_html;
-		} elsif ( $PPF->side() eq 'B' ) {
+		} elsif ( $PPF->side() eq 'B' or $PPF->side() eq 'Back' ) {
 			$back_html .= '<div class="rightColumn"><fieldset><legend>Back</legend>';
 			foreach my $preview ( $PPF->previews() ) {
 				next if ! $$preview{'separations'};
 
-				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.png"><img src="/images/previews/%1$dsg%2$dsd%3$s.png" alt="" /></a>', 
+				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
 					$$variable{'Project'}->docket(),
 					$PPF->signature(),,
 					'Back',

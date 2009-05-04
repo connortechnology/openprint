@@ -3,9 +3,11 @@ package openprint::CIP3_PPF;
 
 use strict;
 
+require sets;
 require misc;
 require sql;
 require openprint::Object;
+require Compress::Zlib;
 use openprint ();
 use MIME::Base64;
 use Text::PDF;
@@ -31,6 +33,7 @@ $serial = 'CIP3_PPF_id_seq';
 	'side'			=>	'side',
 	'docket'		=>	'docket',
 	'deleted'		=>	'deleted',
+	'compressed'	=>	'compressed',
 );
 %defaults = (
 	'created_on'	=>	'NOW()',
@@ -122,16 +125,27 @@ sub parseSide {
 
 sub parsePreviewImage {
 	my $image = shift;
+	my @inks = ( 'Cyan','Magenta','Yellow','Black' );
 	while ( @_ ) {
 		my $line = shift;
 		if ( $line =~ /^\( Separation preview for ink: "(\w+)" \) CIP3Comment/ ) {
 			my $separation = {};
 			$$separation{'ink'} = $1;
+			@inks = sets::exclude( [$1], \@inks );
 			$line = shift;
 			if ( $line =~ /^CIP3BeginSeparation$/ ) {
 				@_ = parseSeparation( $separation, @_ );
 				push @{$$image{'separations'}}, $separation;
 			} # end if
+		} elsif ( $line =~ /^CIP3BeginSeparation$/ ) {
+			my $separation = {};
+			$$separation{'ink'} = shift @inks;
+			@_ = parseSeparation( $separation, @_ );
+			push @{$$image{'separations'}}, $separation;
+		} elsif ( $line =~ /^\/CIP3AdmSeparationNames \[ (.*) \] def$/ ) {
+			my $separations = $1;
+			$separations =~ s/[\(\)]//g;
+			@inks = split(' ', $separations);
 		} elsif ( $line =~ /^CIP3EndPreviewImage/ ) {
 			last;
 		} # end if
@@ -155,8 +169,8 @@ sub parseSeparation {
 		} elsif ( $line =~ /^\/CIP3PreviewImageBitsPerComp (\d+) def/ ) {
 			$$image{'depth'} = $1;
 		} elsif ( $line =~ /^\/CIP3PreviewImageComponents/ ) {
-		} elsif ( $line =~ /^\/CIP3PreviewImageMatrix \[(.*)\] def/ ) {
-			$$image{'matrix'} = $1;
+		} elsif ( $line =~ /^\/CIP3PreviewImageMatrix \[\s*([\d\.\-]*)\s+([\d\.\-]*)\s+([\d\.\-]*)\s+([\d\.\-]*)\s+([\d\.\-]*)\s+([\d\.\-]*)\s*\] +def/ ) {
+			$$image{'matrix'} = sprintf('%d %d %d %d %d %d', $1, $2, $3, $4, $5, $6 );
 #$log->debug("Matrix: $line ");
 		} elsif ( $line =~ /^\/CIP3PreviewImageResolution/ ) {
 
@@ -184,7 +198,9 @@ sub parse {
 
 	$$self{'parsed'} = 1;
 	
-	my @data = split("\r\n", decode_base64($$self{'data'}) );
+	$_ = decode_base64($$self{'data'});
+	$_ = Compress::Zlib::uncompress($_) if $$self{'compressed'};
+	my @data = split("\r\n", $_ );
 	while ( @data ) {
 		my $line = shift @data;
 		if ( $line =~ /^CIP3BeginSheet$/ ) {
@@ -207,12 +223,18 @@ sub previews {
 	if ( $$self{'sheets'} ) {
 		foreach my $sheet ( @{$$self{'sheets'}} ) {
 			if ( $$sheet{'Front'} and ( (!$side) or ($side eq 'Front') ) ) {
-				push @previews, @{$$sheet{'Front'}{'previews'}} if $$sheet{'Front'}{'previews'};
+				if ($$sheet{'Front'}{'previews'} ) {
+				push @previews, @{$$sheet{'Front'}{'previews'}} 
+				} else {
+					$log->debug("No previews for Front");
+				} # end if
 			} # end if
 			if ( $$sheet{'Back'} and ( (!$side) or ($side eq 'Back') ) ) {
 				push @previews, @{$$sheet{'Back'}{'previews'}} if $$sheet{'Back'}{'previews'};
 			} # end if
 		} # end foreach sheet
+	} else {
+		$log->debug("No sheets in CIP3_PPF::previews");
 	} # end if sheets
 	return @previews;
 } # end sub previews
@@ -232,7 +254,7 @@ sub generate_previews {
 	} # end if
 
 	foreach my $side ( 'Front', 'Back' ) {
-		my $filename = sprintf('%s%dsg%dsd%s.png', $path, $self->get('docket','signature'), $side );
+		my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
 		if ( (!$force) and -f $filename ) {
 			$log->debug("$filename exists, not generating the preview.");	
 			next;
@@ -249,6 +271,11 @@ sub generate_previews {
 			my $height = $$preview{'separations'}[0]{'height'};
 
 			foreach my $image ( @{$$preview{'separations'}} ) {
+				if ( $$image{'encoding'} eq 'ASCIIHexDecode' ) {
+$log->debug("ASCIIHexDecode");
+					my $f = Text::PDF::ASCIIHexDecode->new;
+					$$image{'image'} = $f->infilt($$image{'image'}, 1 );
+				} # end if
 				if ( $$image{'compression'} eq 'RunLengthDecode' ) {
 					$$image{'image'} = misc::rle_decode($$image{'image'});
 					$$image{'compression'} = 'None';
@@ -262,38 +289,73 @@ sub generate_previews {
 				} # end if
 			} # end foreach separation
 
+			my $orientation;
+			my $s = $$preview{'separations'}[0];
+$log->debug("Matrix: $$s{'matrix'}");
+			if ( $$s{'matrix'} eq "$$s{'width'} 0 0 $$s{'height'} 0 0" ) {
+				$orientation = 'left-bottom';
+			} elsif ( $$s{'matrix'} eq "$$s{'width'} 0 0 -$$s{'height'} 0 $$s{'height'}" ) {
+				$orientation = 'left-top';
+			} elsif ( $$s{'matrix'} eq "-$$s{'width'} 0 0 $$s{'height'} $$s{'width'} 0" ) {
+				$orientation = 'right-bottom';
+			} elsif ( $$s{'matrix'} eq "-$$s{'width'} 0 0 -$$s{'height'} $$s{'width'} $$s{'height'}" ) {
+				$orientation = 'right-top';
+			} elsif ( $$s{'matrix'} eq "0 $$s{'height'} $$s{'width'} 0 0 0" ) {
+				$orientation = 'bottom-left';
+			} elsif ( $$s{'matrix'} eq "0 $$s{'height'} -$$s{'width'} 0 $$s{'height'} 0" ) {
+				$orientation = 'top-left';
+			} elsif ( $$s{'matrix'} eq "0 -$$s{'height'} $$s{'width'} 0 0 $$s{'width'}" ) {
+				$orientation = 'bottom-right';
+			} elsif ( $$s{'matrix'} eq "0 -$$s{'height'} -$$s{'width'} 0 $$s{'height'} $$s{'width'}" ) {
+				$orientation = 'top-right';
+			} # end if
+$log->debug("Orientation: $orientation");
+			
 			my %separations;
 			foreach my $s ( @{$$preview{'separations'}} ) {
 				$separations{$$s{'ink'}} = $s;
 			} # end foreach
 
-			#my @rows =  ( 1 .. $height );
-			#my @cols =  ( 1 .. $width );
-			my @cols =  ( 1 .. $height );
-			my @rows =  reverse ( 1 .. $width );
-			foreach my $w ( @cols ) {
-				foreach my $h ( @rows ) {
-					#$image_data .= substr( $$preview{'separations'}[0]{'image'}, ($h-1)*$width+($w-1), 1 );
-					foreach my $ink ( 'Cyan','Magenta','Yellow','Black' ) {
-						if ( $separations{$ink} ) {
-							$image_data .= substr( $separations{$ink}{'image'}, ($h-1)*$height+($w-1), 1 );
-							#$image_data .= substr( $separations{$ink}{'image'}, ($h-1)*$height+($w-1), 1 );
-						} else { 
-							$image_data .= pack('C', 0 );
-						} #end if;
-					} # end foreach ink
-				} # end foreach w
-			} # end foreach h
-			#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
+if ( $orientation eq 'bottom-left' ) {
+#my @rows =  ( 1 .. $height );
+#my @cols =  ( 1 .. $width );
+				my @cols =  ( 1 .. $height );
+				my @rows =  reverse ( 1 .. $width);
+				foreach my $w ( @cols ) {
+					foreach my $h ( @rows ) {
+#$image_data .= substr( $$preview{'separations'}[0]{'image'}, ($h-1)*$width+($w-1), 1 );
+						foreach my $ink ( 'Cyan','Magenta','Yellow','Black' ) {
+							if ( $separations{$ink} ) {
+								$image_data .= substr( $separations{$ink}{'image'}, ($h-1)*$height+($w-1), 1 );
+#$image_data .= substr( $separations{$ink}{'image'}, ($h-1)*$height+($w-1), 1 );
+							} else { 
+								$image_data .= pack('C', 0 );
+							} #end if;
+						} # end foreach ink
+					} # end foreach w
+				} # end foreach h
+} else {
+# Just interleave
+	foreach my $pos ( 1 .. ($width*$height) ) {
+		foreach my $ink ( 'Cyan','Magenta','Yellow','Black' ) {
+			$image_data .= substr( $separations{$ink}{'image'}, $pos-1, 1 );
+		} # end foreach ink
+	} # end foreach
+}
+#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
 			
-			my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK');
+			my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK','orientation'=>$orientation);
+$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
 			$_ = $Image->BlobToImage($image_data);
 			$log->error( $_ ) if $_;
 			$_ = $Image->Negate('channel'=>'CMYK');
 			$log->error( $_ ) if $_;
 			$_ = $Image->Quantize('colorspace'=>'RGB');
 			$log->error( $_ ) if $_;
-			$_ = $Image->Write( sprintf('%s%dsg%dsd%s.png', $path, $self->get('docket','signature'), $side ) );
+			$_ = $Image->Set('colorspace'=>'RGB','orientation'=>$orientation);
+$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
+			$log->error( $_ ) if $_;
+			$_ = $Image->Write( sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side ) );
 			$log->error( $_ ) if $_;
 		} # end foreach preview
 	} # end foreach side
