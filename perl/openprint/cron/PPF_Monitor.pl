@@ -24,7 +24,7 @@ use vars qw( $log $dbh %config $use_compression );
 $use_compression = 1;
 
 $log = logger->new();
-$log->{level} = 'debug';
+$log->{level} = 'warn';
 
 my $program = 'PPF_Monitor.pl';
 my $opts = {};
@@ -186,8 +186,9 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 		} # end if docket
 	} # end foreach file in input hotfolder
 
-	$dbh->disconnect() if $dbh;
 } # end foreach Equipment
+
+$dbh->disconnect() if $dbh;
 
 sub store_PPF {
 	my ( $docket, $sig, $side, $data ) = @_;

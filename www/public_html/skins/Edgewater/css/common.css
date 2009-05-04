@@ -40,8 +40,11 @@ body #Menu {
 	width: 100%;
 	padding: 0px;
 	margin: 0px;
+	margin-left: auto;
+	margin-right: auto;
 	height: 256px;
 	background: #0183FF url(/images/WatersEdge.jpg) repeat-x 0px 0px;
+	background-position: center;
 }
 body #Footer {
 	bottom: 0px;
