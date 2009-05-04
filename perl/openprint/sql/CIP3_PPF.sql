@@ -5,6 +5,7 @@ CREATE TABLE CIP3_PPF (
 	signature	INTEGER,
 	side		text,
 	data		text,
+	compressed	boolean default false,
 	PRIMARY KEY (id)
 );
 

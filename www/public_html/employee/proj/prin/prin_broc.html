@@ -11,9 +11,6 @@
 				<? if ( $$variable{'Reference'} ) ?><p>Information for: <?Reference?></p><? endif ( $$variable{'Reference'} ) ?>
 				<!--#include virtual="_previews.html"-->
 				<!--#include virtual="/includes/employee/feedback/press_completion.html"-->
-			<div id="ActivitiesDiv">
-			<!--#include virtual="/includes/employee/feedback/press_activities.html"-->
-			</div>
 			</div>
 		<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
 		<!--#include virtual="/includes/employee/feedback/buttons.html"-->

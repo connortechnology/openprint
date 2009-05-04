@@ -14,19 +14,21 @@ require openprint::service;
 use openprint ();
 use MIME::Base64;
 use Getopt::Long;
+use Compress::Zlib;
 
-use vars qw( $log $dbh %config );
+use vars qw( $log $dbh %config $use_compression );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+$use_compression = 1;
 
 $log = logger->new();
-$log->{level} = 'warn';
+$log->{level} = 'debug';
 
 my $program = 'PPF_Monitor.pl';
 my $opts = {};
-GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',);
+GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','equipment_name=s',);
 
 if ($opts->{help}) {
 	usage();
@@ -55,7 +57,11 @@ die 'Error opening db' if ! $dbh;
 
 configuration::init_cache( $log, $dbh );
 
-foreach my $Equipment ( openprint::Equipment::find('cip3_monitor'=>1) ) {
+my @Equipment = openprint::Equipment::find('cip3_monitor'=>1,'strid'=>$opts->{equipment_name});
+if ( ! @Equipment ) {
+	die "No equipment found.\n";
+} # end if
+foreach my $Equipment ( @Equipment ) {
 	my @filenames;
 	if ( opendir DIRHANDLE, $Equipment->cip3_in() ) {
 		@filenames = readdir DIRHANDLE;
@@ -71,6 +77,7 @@ foreach my $Equipment ( openprint::Equipment::find('cip3_monitor'=>1) ) {
 			# Will ignore ., .., any hidden file
 			next if $file =~ /^\./; 
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
+$log->debug("Parsed to $file_base, $side, $extension from $file");
 			next if $side ne 'B';
 
 			my $out_base = $file_base;
@@ -139,7 +146,7 @@ foreach my $Equipment ( openprint::Equipment::find('cip3_monitor'=>1) ) {
 			if ( $docket ) {
 				store_PPF( $docket, $sig, $side, $data );
 			} else {
-				$log->error("$docket not found for $file_base");
+				$log->error("Docket $docket not found for $file_base");
 			} # end if docket
 		} # end foreach file in input hotfolder
 	} # end if cip3_merge
@@ -148,6 +155,7 @@ foreach my $Equipment ( openprint::Equipment::find('cip3_monitor'=>1) ) {
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
 		my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
+$log->debug("Parsed to $file_base, $side, $extension from $file");
 		my $out_base = $file_base;
 		$out_base =~ s/\./_/g;
 		my $data;
@@ -155,7 +163,7 @@ foreach my $Equipment ( openprint::Equipment::find('cip3_monitor'=>1) ) {
 		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.*?)S?g?(\d+)/i;
 
 		if ( ! open ( IN, '< ' . $$Equipment{'cip3_in'}.'/'.$file ) ) {
-			print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file."\n" ;
+			print "Error opening for read:" . $$Equipment{'cip3_in'}.'/'.$file."\n" ;
 			next;
 		} # end if
 		while ( <IN> ) {
@@ -180,7 +188,6 @@ foreach my $Equipment ( openprint::Equipment::find('cip3_monitor'=>1) ) {
 
 	$dbh->disconnect() if $dbh;
 } # end foreach Equipment
-
 
 sub store_PPF {
 	my ( $docket, $sig, $side, $data ) = @_;
@@ -215,13 +222,19 @@ sub store_PPF {
 			sql::end_transaction( $dbh, $ac );
 		} # end if
 	} # end foreach Project
+
+	my $compressed_data;
+	if ( $use_compression ) {
+		$compressed_data = Compress::Zlib::compress($data);
+		$log->debug("Compressed PPF from " . length $data . " to " . length $compressed_data );
+	} # end if
 	my $PPF = new openprint::CIP3_PPF();
 	$_ = $PPF->save({
 			'docket'    	=>  $docket,
 			'signature' 	=>  $sig,
 			'side'      	=>  $side,
-			'data'      	=>  encode_base64($data),
-			'data_length'	=>	length $data,
+			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
+			'compress'		=>	$compressed_data ? 1 : 0,
 			});
 	$log->error($_) if $_;
 } # end sub store_PPF
