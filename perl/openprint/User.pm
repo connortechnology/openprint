@@ -139,14 +139,13 @@ sub save {
 		misc::send_email_with_attachment( $openprint::log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
-	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
+	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{'web_active'} ne $$params{'web_active'} ) ) {
 		my %info;
 		$info{'User'} = $self;
-		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/'.( $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html' ) );
 		$info{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		#$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
+		my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+		$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
 
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},
