@@ -138,7 +138,7 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 			} # end while
 			close $A;
 
-			my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.$extension, $data ) if ! $$Equipment{'cip3_hold'};
+			my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.'.'.$extension, $data ) if ! $$Equipment{'cip3_hold'};
 			if ( ! $error ) {
 				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
 				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
@@ -178,7 +178,7 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 		close IN;
 		if ( ! $$Equipment{'cip3_hold'} ) {
 			$log->warn("Writing PPF to $$Equipment{'cip3_out'}/".$out_base.$side.$extension);
-			my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.$extension, $data );
+			my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.'.'.$extension, $data );
 			$log->error($error) if $error;
 		} # end if
 
