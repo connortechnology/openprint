@@ -213,6 +213,7 @@ sub store_PPF {
 			} # end if
 		} # end foreach sig
 		if ( ! $found ) {
+			print "Adding new signature for $docket $signature $side\n";
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
 			my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );
@@ -236,8 +237,8 @@ sub store_PPF {
 			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
 			'compress'		=>	$compressed_data ? 1 : 0,
 			});
-	$PPF->generate_previews(undef,1);
 	$log->error($_) if $_;
+	$PPF->generate_previews(undef,1);
 } # end sub store_PPF
 
 sub usage {
