@@ -142,6 +142,8 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 			if ( ! $error ) {
 				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
 				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
+			} else {
+				$log->error($error);
 			} # end if
 			if ( $docket ) {
 				store_PPF( $docket, $sig, $side, $data );
@@ -174,9 +176,10 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 			$data .= $line;
 		} # end while
 		close IN;
-		my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.$extension, $data ) if ! $$Equipment{'cip3_hold'};
-		if ( ! $error ) {
-			unlink $$Equipment{'cip3_in'}.'/'.$file;
+		if ( ! $$Equipment{'cip3_hold'} ) {
+			$log->warn("Writing PPF to $$Equipment{'cip3_out'}/".$out_base.$side.$extension);
+			my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.$extension, $data );
+			$log->error($error) if $error;
 		} # end if
 
 		if ( $docket ) {
@@ -184,6 +187,7 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 		} else {
 			$log->error("$docket not found for $file_base");
 		} # end if docket
+		unlink $$Equipment{'cip3_in'}.'/'.$file;
 	} # end foreach file in input hotfolder
 
 } # end foreach Equipment
