@@ -235,7 +235,7 @@ sub store_PPF {
 			'signature' 	=>  $sig,
 			'side'      	=>  $side,
 			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
-			'compress'		=>	$compressed_data ? 1 : 0,
+			'compressed'		=>	$compressed_data ? 1 : 0,
 			});
 	$log->error($_) if $_;
 	$PPF->generate_previews(undef,1);
