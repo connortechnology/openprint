@@ -189,8 +189,6 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 } # end foreach Equipment
 $dbh->disconnect() if $dbh;
 
-$dbh->disconnect() if $dbh;
-
 sub store_PPF {
 	my ( $docket, $sig, $side, $data ) = @_;
 
