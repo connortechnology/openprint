@@ -112,7 +112,7 @@
 			<label>CIP3 Integration:</label>
 			<input type="radio" id="cip3_monitor1" name="cip3_monitor" value="1"  <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').show();" />
 			<label class="radio" for="cip3_monitor1">Yes</label>
-			<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_monitor(); ) ?> onclick="$('CIP3').hide();" />
+			<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').hide();" />
 			<label class="radio" for="cip3_monitor0">No</label>
 		</p>
 		<div id="CIP3" <? echo ( $$variable{'Equipment'}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>	
