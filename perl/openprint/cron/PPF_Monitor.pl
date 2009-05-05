@@ -24,11 +24,11 @@ use vars qw( $log $dbh %config $use_compression );
 $use_compression = 1;
 
 $log = logger->new();
-$log->{level} = 'debug';
+$log->{level} = 'warn';
 
 my $program = 'PPF_Monitor.pl';
 my $opts = {};
-GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','equipment_name=s',);
+GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','equipment_name=s','skin_path=s');
 
 if ($opts->{help}) {
 	usage();
@@ -55,7 +55,7 @@ $dbh = sql::open_sql( $log,
 		);
 die 'Error opening db' if ! $dbh;
 
-configuration::init_cache( $log, $dbh );
+configuration::init_cache( $log, $dbh, {'SkinPath'=> $opts->{skin_path}});
 
 my @Equipment = openprint::Equipment::find('cip3_monitor'=>1,'strid'=>$opts->{equipment_name});
 if ( ! @Equipment ) {
@@ -236,6 +236,7 @@ sub store_PPF {
 			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
 			'compress'		=>	$compressed_data ? 1 : 0,
 			});
+	$PPF->generate_previews(undef,1);
 	$log->error($_) if $_;
 } # end sub store_PPF
 
