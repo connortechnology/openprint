@@ -187,6 +187,7 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 	} # end foreach file in input hotfolder
 
 } # end foreach Equipment
+$dbh->disconnect() if $dbh;
 
 $dbh->disconnect() if $dbh;
 
