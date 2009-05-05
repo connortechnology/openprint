@@ -1,0 +1,64 @@
+<ul id="menubar">
+	<li id="MenuAbout" class="off"><a href="#" onclick="toggleMenu($('MenuAbout'), 'off', 'on');return false;">ABOUT</a>
+		<ul>
+			<li><a href="/main/company/online_project_management.html">Online Job Management</a></li>
+			<li><a href="/main/company/policies.html">Policies</a></li>
+			<li><a href="/main/company/contact.html">Contact</a></li>
+		</ul>
+	</li>
+	<li id="MenuServices" class="<? echo ( $r->uri() =~ /main\/services/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuServices'), 'off', 'on');return false;">SERVICES</a>
+		<ul>
+			<li><a href="/main/services/prepress.html;NOSSL">Prepress</a></li>
+			<li><a href="/main/services/production.html;NOSSL">Production</a></li>
+			<li><a href="/main/services/finishing.html;NOSSL">Finishing</a></li>
+			<li><a href="/main/services/delivery.html;NOSSL">Delivery</a></li>
+		</ul>
+	</li>
+	<li id="MenuAccount" class="<? echo ( $r->uri() =~ /main\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">ACCOUNT</a>
+		<ul>
+<? if ( $session{'user_id'} ) ?>
+			<li><a href="/main/account/company_profile.html">Company Profile</a></li>
+			<li><a href="/main/account/user_profile.html">User Profile</a></li>
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			<li><a href="/main/account/select_company.html">Select Company</a></li>
+			<li><a href="/main/account/registration.html">Registration</a></li>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			<li><a href="/main/account/logout.html">Logout</a></li>
+<? else ( $session{'user_id'} ) ?>
+			<li><a href="/main/account/login.html">Login</a></li>
+			<li><a href="/main/account/registration.html">Registration</a></li>
+<? endif ( $session{'user_id'} ) ?>
+			<li><a href="/main/account/credit_application.html">Credit Application</a></li>
+			<li><a href="/main/account/reseller_application.html">Reseller Application</a></li>
+		</ul>
+	</li>
+	<li id="MenuProjects" class="<? echo ( $r->uri() =~ /main\/project/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuProjects'), 'off', 'on');return false;">PROJECTS</a>
+		<ul>
+			<li><a href="/main/project/create_edit.html;NOSSL">Create Project</a></li>
+			<li><a href="/main/project/view.html;NOSSL">Current Project</a></li>
+			<li><a href="/main/project/history.html;NOSSL">History</a></li>
+		</ul>
+	</li>
+	<li id="MenuQuotes" class="<? echo ( $r->uri() =~ /main\/quote/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuQuotes'), 'off', 'on');return false;">QUOTES</a>
+		<ul>
+			<li><a href="/main/quote/details.html;NOSSL">Current Quote</a></li>
+			<li><a href="/main/quote/history.html;NOSSL">History</a></li>
+		</ul>
+	</li>
+	<li id="MenuOrders" class="<? echo ( $r->uri() =~ /main\/order/ ? 'on' : 'off' ) ?>"><a href="#"  onclick="toggleMenu($('MenuOrders'), 'off', 'on');return false;">ORDERS</a>
+		<ul>
+			<li><a href="/main/order/information.html;NOSSL">Current Order</a></li>
+			<li><a href="/main/order/history.html;NOSSL">History</a></li>
+		</ul>
+	</li>
+	<li id="MenuSupport" class="<? echo ( ( $r->uri() =~ /site_map/  or  $r->uri() =~ /support/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuSupport'), 'off', 'on');return false;">SUPPORT</a>
+		<ul>
+			<li><a href="/site_map.html;NOSSL">Site Map</a></li>
+			<li><a href="/support/help_desk.html;NOSSL">Help Desk</a></li>
+			<li><a href="/support/returns.html;NOSSL">Returns</a></li>
+		</ul>
+	</li>
+<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+	<li class="off"><a href="#" onclick="bug_report_window();return false;">SEND BUG REPORT</a></li>
+<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+</ul>

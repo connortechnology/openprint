@@ -213,7 +213,7 @@ sub store_PPF {
 			} # end if
 		} # end foreach sig
 		if ( ! $found ) {
-			print "Adding new signature for $docket $signature $side\n";
+			print "Adding new signature for $docket $sig $side\n";
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
 			my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );

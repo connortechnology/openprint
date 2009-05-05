@@ -1,0 +1,90 @@
+div.Quote {
+	text-align: center;
+}
+
+div.QuoteHeader {
+    float: left;
+    width: 50%;
+	margin-bottom: 5px;
+}
+div.QuoteHeader fieldset {
+    margin-right: .5em;
+	border-top: none;
+}
+div.QuoteHeader fieldset legend {
+	width: 100%;
+	display: block;
+	margin-right: auto;
+	text-align: left;
+}
+div.QuoteHeader fieldset p {
+    text-align: left;
+	width: auto;
+	padding: 0px;
+	margin: 0px;
+}
+div.QuoteHeader fieldset p label {
+display: none;
+/*
+    font-weight: bold;
+    margin-right: 10px;
+	margin-left: 0px;
+    float: left;
+    width: auto;
+    text-align: left;
+*/
+}
+div#Information {
+	width: 100%;
+	padding: 0px;
+}
+div#Information fieldset {
+	margin-top: 0px;
+	margin-bottom: 0px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+div#Information fieldset legend {
+display: none;
+}
+div#Information fieldset p label {
+display: inline;
+    font-weight: bold;
+    margin-right: 10px;
+	margin-left: 0px;
+    width: auto;
+    text-align: right;
+float: none;
+}
+div#Information fieldset p#Status {
+display: none;
+}
+
+div.QuoteInformation fieldset p {
+	padding-left: 105px;
+}
+div.QuoteInformation fieldset p label {
+	width: 105px;
+	margin-left: -105px;
+}
+div.QuoteInformation fieldset p input {
+    width: expression( (this.type=="text" || this.type=="password") ?'94%':'auto');
+}
+div.QuoteInformation fieldset p input[type="text"] {
+    width: 94%;
+}
+div.QuoteInformation fieldset p label.radio {
+    width: auto;
+    margin: 0px;
+    padding: 0px;
+    float: none;
+}
+
+
+fieldset#SalesRepComments {
+	width: 49%;
+	float: left;
+}
+fieldset#SalesRepComments p textarea {
+	width: 100%;
+}
