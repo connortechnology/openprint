@@ -186,8 +186,8 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 		} # end if docket
 	} # end foreach file in input hotfolder
 
-	$dbh->disconnect() if $dbh;
 } # end foreach Equipment
+$dbh->disconnect() if $dbh;
 
 sub store_PPF {
 	my ( $docket, $sig, $side, $data ) = @_;
