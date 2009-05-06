@@ -261,6 +261,7 @@ sub generate_previews {
 		$self->parse();
 	} # end if
 
+	my $changed = 0;
 	foreach my $side ( 'Front', 'Back' ) {
 		my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
 		if ( (!$force) and -f $filename ) {
@@ -269,7 +270,7 @@ sub generate_previews {
 		} else {
 			$log->debug("generating preview for ".$self->to_string() );
 		} # end if
-		if ( $force or ! $$self{lc($side).'_preview'} ) {
+		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
 			foreach my $preview ( $self->previews($side) ) {
 				next if ! $$preview{'separations'};
 
@@ -353,7 +354,7 @@ sub generate_previews {
 	#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
 				
 				my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK','orientation'=>$orientation);
-	$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
+	#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
 				$_ = $Image->BlobToImage($image_data);
 				$log->error( $_ ) if $_;
 				$_ = $Image->Negate('channel'=>'CMYK');
@@ -362,17 +363,35 @@ sub generate_previews {
 				#$log->error( $_ ) if $_;
 				$_ = $Image->Set('magick'=>'jpg','colorspace'=>'RGB','orientation'=>$orientation);
 				$log->error( $_ ) if $_;
-	$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
-				$$self{lc($side).'_preview'} = $Image->ImageToBlob();
+				#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
+				my @blobs = $Image->ImageToBlob();
+#$log->debug("# of blobs: " . @blobs );
+				if ( ! @blobs ) {
+						$log->debug("No blobs");
+				} else {
+					$$self{lc($side).'_preview'} = $blobs[0];
+					if ( ! $$self{lc($side).'_preview'} ) {
+						$log->debug("No good ImageToBlob");
+					}
+				}
+				$changed = 1;
 			} # end foreach preview
 		} # end if force or ! side_preivew
 		if ( $path ) {
-			$_ = misc::save_file( $log, sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side ), $$self{lc($side).'_preview'} );
-			$log->error( $_ ) if $_;
+			my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
+			#$log->debug("Writing to $filename");
+			if ( $$self{lc($side).'_preview'} ) {
+				$_ = misc::save_file( $log, $filename, $$self{lc($side).'_preview'} );
+				$log->error( $_ ) if $_;
+			} else {
+				$log->error( "No data in the preview for $filename" );
+			} # end if
 		} # end if
 	} # end foreach side
-	$_ = $self->save();
-	$log->error( $_ ) if $_;
+	if ( $changed ) {
+		$_ = $self->save();
+		$log->error( $_ ) if $_;
+	} # end if
 } # end sub generate_previews
 
 sub send_ppf {
