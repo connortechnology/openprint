@@ -173,6 +173,10 @@ foreach my $Equipment ( @Equipment ) {
 		my $data;
 
 		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.*?)S?g?(\d+)/i;
+		if ( ! $docket ) {
+			$log->error("Docket $docket not found for $file_base");
+			next;
+		} # end if docket
 
 		if ( ! open ( IN, '< ' . $$Equipment{'cip3_in'}.'/'.$file ) ) {
 			print "Error opening for read:" . $$Equipment{'cip3_in'}.'/'.$file."\n" ;
@@ -191,12 +195,7 @@ foreach my $Equipment ( @Equipment ) {
 			my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.'.'.$extension, $data );
 			$log->error($error) if $error;
 		} # end if
-
-		if ( $docket ) {
-			store_PPF( $docket, $sig, $side, $data );
-		} else {
-			$log->error("$docket not found for $file_base");
-		} # end if docket
+		store_PPF( $docket, $sig, $side, $data );
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
 	} # end foreach file in input hotfolder
 	close S;
