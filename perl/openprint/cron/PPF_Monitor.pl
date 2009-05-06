@@ -65,7 +65,7 @@ if ( ! @Equipment ) {
 } # end if
 foreach my $Equipment ( @Equipment ) {
 	my @filenames;
-	if ( ! open (S "> $$Equipment{cip3_in}/lock.lck") ) {
+	if ( ! open(S, "> $$Equipment{cip3_in}/lock.lck") ) {
 		$log->error("Unable to open semaphore\n");
 		next;
 	} # end if
@@ -187,7 +187,7 @@ foreach my $Equipment ( @Equipment ) {
 		} # end while
 		close IN;
 		if ( ! $$Equipment{'cip3_hold'} ) {
-			$log->warn("Writing PPF to $$Equipment{'cip3_out'}/".$out_base.$side.$extension);
+			$log->warn("Writing PPF to $$Equipment{'cip3_out'}/".$out_base.$side.'.'.$extension);
 			my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.'.'.$extension, $data );
 			$log->error($error) if $error;
 		} # end if
