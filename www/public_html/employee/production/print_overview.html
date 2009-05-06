@@ -451,7 +451,7 @@
 			} # end foreach delta day
 			$html .= '</div>';
 		} # end foreach press
-		$html .= '<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxToggleContent( 'PendingApproved', '_pending_approved.html', );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxToggleContent( 'PendingApproved', '_pending_approved.html', );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
 		# Now do unassigned jobs
 		foreach my $E ( @{$$variable{'Presses'}} ) {
 			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'Approved' );
