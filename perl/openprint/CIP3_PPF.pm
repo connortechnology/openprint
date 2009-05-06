@@ -28,7 +28,8 @@ $serial = 'CIP3_PPF_id_seq';
 	'id'			=>	'id',
 	'created_on'	=>	'created_on',
 	'data'			=>	'data',
-	'data_length'	=>	'data_length',
+	'front_preview'	=>	'front_preview',
+	'back_preview'	=>	'back_preview',
 	'signature'		=>	'signature',
 	'side'			=>	'side',
 	'docket'		=>	'docket',
@@ -61,6 +62,13 @@ sub find {
 	if ( exists $params{'side'} ) {
 		$sql .= ' AND side=?';
 		push @values, $params{'side'};
+	} # end if
+	if ( exists $params{'compressed'} ) {
+		$sql .= ' AND compressed=?';
+		push @values, $params{'compressed'};
+		if ( ! $params{'compressed'} ) {
+			$sql .= ' OR compressed IS NULL';	
+		} # end if
 	} # end if
 	if ( $params{'deleted'} ) {
 		$sql .= ' AND deleted=?';
@@ -242,7 +250,7 @@ sub previews {
 sub generate_previews {
 	my ( $self, $path, $force ) = @_;
 
-	$path = $config{'SkinPath'} . '/images/previews/' if ! $path;
+	$path = $config{'SkinPath'} . '/images/previews/' if $config{'SkinPath'} and ! $path;
 	my $part_path = '';
 	foreach my $e ( split ('/', $path ) ) {
 		$part_path .= $e . '/';
@@ -259,107 +267,125 @@ sub generate_previews {
 			$log->debug("$filename exists, not generating the preview.");	
 			next;
 		} else {
-			$log->debug("generating preview for $$self{'docket'} $$self{'signature'} $side.");	
-		
+			$log->debug("generating preview for ".$self->to_string() );
 		} # end if
-		foreach my $preview ( $self->previews($side) ) {
-			next if ! $$preview{'separations'};
+		if ( $force or ! $$self{lc($side).'_preview'} ) {
+			foreach my $preview ( $self->previews($side) ) {
+				next if ! $$preview{'separations'};
 
-			my $image_data;
-			my $depth = $$preview{'separations'}[0]{'depth'};
-			my $width = $$preview{'separations'}[0]{'width'};
-			my $height = $$preview{'separations'}[0]{'height'};
+				my $image_data;
+				my $depth = $$preview{'separations'}[0]{'depth'};
+				my $width = $$preview{'separations'}[0]{'width'};
+				my $height = $$preview{'separations'}[0]{'height'};
 
-			foreach my $image ( @{$$preview{'separations'}} ) {
-				if ( $$image{'encoding'} eq 'ASCIIHexDecode' ) {
-$log->debug("ASCIIHexDecode");
-					my $f = Text::PDF::ASCIIHexDecode->new;
-					$$image{'image'} = $f->infilt($$image{'image'}, 1 );
+				foreach my $image ( @{$$preview{'separations'}} ) {
+					if ( $$image{'encoding'} eq 'ASCIIHexDecode' ) {
+	#$log->debug("ASCIIHexDecode");
+						my $f = Text::PDF::ASCIIHexDecode->new;
+						$$image{'image'} = $f->infilt($$image{'image'}, 1 );
+					} # end if
+					if ( $$image{'compression'} eq 'RunLengthDecode' ) {
+						$$image{'image'} = misc::rle_decode($$image{'image'});
+						$$image{'compression'} = 'None';
+					} elsif ( $$image{'compression'} eq 'DCTDecode' ) {
+						my $Image = Image::Magick->new(magick=>'jpg');
+						$_ = $Image->BlobToImage($$image{'image'});
+						$log->error( $_ ) if $_;
+					} elsif ( $$image{'compression'} eq 'None' ) {
+					} else {
+						$log->error("Unknown compression $$image{'compression'}");
+					} # end if
+				} # end foreach separation
+
+				my $orientation;
+				my $s = $$preview{'separations'}[0];
+	$log->debug("Matrix: $$s{'matrix'}");
+				if ( $$s{'matrix'} eq "$$s{'width'} 0 0 $$s{'height'} 0 0" ) {
+					$orientation = 'left-bottom';
+				} elsif ( $$s{'matrix'} eq "$$s{'width'} 0 0 -$$s{'height'} 0 $$s{'height'}" ) {
+					$orientation = 'left-top';
+				} elsif ( $$s{'matrix'} eq "-$$s{'width'} 0 0 $$s{'height'} $$s{'width'} 0" ) {
+					$orientation = 'right-bottom';
+				} elsif ( $$s{'matrix'} eq "-$$s{'width'} 0 0 -$$s{'height'} $$s{'width'} $$s{'height'}" ) {
+					$orientation = 'right-top';
+				} elsif ( $$s{'matrix'} eq "0 $$s{'height'} $$s{'width'} 0 0 0" ) {
+					$orientation = 'bottom-left';
+				} elsif ( $$s{'matrix'} eq "0 $$s{'height'} -$$s{'width'} 0 $$s{'height'} 0" ) {
+					$orientation = 'top-left';
+				} elsif ( $$s{'matrix'} eq "0 -$$s{'height'} $$s{'width'} 0 0 $$s{'width'}" ) {
+					$orientation = 'bottom-right';
+				} elsif ( $$s{'matrix'} eq "0 -$$s{'height'} -$$s{'width'} 0 $$s{'height'} $$s{'width'}" ) {
+					$orientation = 'top-right';
 				} # end if
-				if ( $$image{'compression'} eq 'RunLengthDecode' ) {
-					$$image{'image'} = misc::rle_decode($$image{'image'});
-					$$image{'compression'} = 'None';
-				} elsif ( $$image{'compression'} eq 'DCTDecode' ) {
-					my $Image = Image::Magick->new(magick=>'jpg');
-					$_ = $Image->BlobToImage($$image{'image'});
-					$log->error( $_ ) if $_;
-				} elsif ( $$image{'compression'} eq 'None' ) {
+	$log->debug("Orientation: $orientation");
+				
+				my %separations;
+				foreach my $s ( @{$$preview{'separations'}} ) {
+					$separations{$$s{'ink'}} = $s;
+				} # end foreach
+
+				if ( $orientation eq 'bottom-left' ) {
+					my @cols =  ( 1 .. $height );
+					my @rows =  reverse ( 1 .. $width);
+					foreach my $w ( @cols ) {
+						foreach my $h ( @rows ) {
+							foreach my $ink ( 'Cyan','Magenta','Yellow','Black' ) {
+								if ( $separations{$ink} ) {
+									$image_data .= substr( $separations{$ink}{'image'}, ($h-1)*$height+($w-1), 1 );
+								} else { 
+									$image_data .= pack('C', 255 );
+								} #end if;
+							} # end foreach ink
+						} # end foreach w
+					} # end foreach h
 				} else {
-					$log->error("Unknown compression $$image{'compression'}");
-				} # end if
-			} # end foreach separation
-
-			my $orientation;
-			my $s = $$preview{'separations'}[0];
-$log->debug("Matrix: $$s{'matrix'}");
-			if ( $$s{'matrix'} eq "$$s{'width'} 0 0 $$s{'height'} 0 0" ) {
-				$orientation = 'left-bottom';
-			} elsif ( $$s{'matrix'} eq "$$s{'width'} 0 0 -$$s{'height'} 0 $$s{'height'}" ) {
-				$orientation = 'left-top';
-			} elsif ( $$s{'matrix'} eq "-$$s{'width'} 0 0 $$s{'height'} $$s{'width'} 0" ) {
-				$orientation = 'right-bottom';
-			} elsif ( $$s{'matrix'} eq "-$$s{'width'} 0 0 -$$s{'height'} $$s{'width'} $$s{'height'}" ) {
-				$orientation = 'right-top';
-			} elsif ( $$s{'matrix'} eq "0 $$s{'height'} $$s{'width'} 0 0 0" ) {
-				$orientation = 'bottom-left';
-			} elsif ( $$s{'matrix'} eq "0 $$s{'height'} -$$s{'width'} 0 $$s{'height'} 0" ) {
-				$orientation = 'top-left';
-			} elsif ( $$s{'matrix'} eq "0 -$$s{'height'} $$s{'width'} 0 0 $$s{'width'}" ) {
-				$orientation = 'bottom-right';
-			} elsif ( $$s{'matrix'} eq "0 -$$s{'height'} -$$s{'width'} 0 $$s{'height'} $$s{'width'}" ) {
-				$orientation = 'top-right';
-			} # end if
-$log->debug("Orientation: $orientation");
-			
-			my %separations;
-			foreach my $s ( @{$$preview{'separations'}} ) {
-				$separations{$$s{'ink'}} = $s;
-			} # end foreach
-
-if ( $orientation eq 'bottom-left' ) {
-#my @rows =  ( 1 .. $height );
-#my @cols =  ( 1 .. $width );
-				my @cols =  ( 1 .. $height );
-				my @rows =  reverse ( 1 .. $width);
-				foreach my $w ( @cols ) {
-					foreach my $h ( @rows ) {
-#$image_data .= substr( $$preview{'separations'}[0]{'image'}, ($h-1)*$width+($w-1), 1 );
+				# Just interleave
+					foreach my $pos ( 1 .. ($width*$height) ) {
 						foreach my $ink ( 'Cyan','Magenta','Yellow','Black' ) {
 							if ( $separations{$ink} ) {
-								$image_data .= substr( $separations{$ink}{'image'}, ($h-1)*$height+($w-1), 1 );
-#$image_data .= substr( $separations{$ink}{'image'}, ($h-1)*$height+($w-1), 1 );
+								$image_data .= substr( $separations{$ink}{'image'}, $pos-1, 1 );
 							} else { 
-								$image_data .= pack('C', 0 );
+								$image_data .= pack('C', 255 );
 							} #end if;
 						} # end foreach ink
-					} # end foreach w
-				} # end foreach h
-} else {
-# Just interleave
-	foreach my $pos ( 1 .. ($width*$height) ) {
-		foreach my $ink ( 'Cyan','Magenta','Yellow','Black' ) {
-			$image_data .= substr( $separations{$ink}{'image'}, $pos-1, 1 );
-		} # end foreach ink
-	} # end foreach
-}
-#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
-			
-			my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK','orientation'=>$orientation);
-$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
-			$_ = $Image->BlobToImage($image_data);
+					} # end foreach
+				} # end if
+	#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
+				
+				my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK','orientation'=>$orientation);
+	$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
+				$_ = $Image->BlobToImage($image_data);
+				$log->error( $_ ) if $_;
+				$_ = $Image->Negate('channel'=>'CMYK');
+				$log->error( $_ ) if $_;
+				#$_ = $Image->Quantize('colorspace'=>'RGB');
+				#$log->error( $_ ) if $_;
+				$_ = $Image->Set('magick'=>'jpg','colorspace'=>'RGB','orientation'=>$orientation);
+				$log->error( $_ ) if $_;
+	$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
+				$$self{lc($side).'_preview'} = $Image->ImageToBlob();
+			} # end foreach preview
+		} # end if force or ! side_preivew
+		if ( $path ) {
+			$_ = misc::save_file( $log, sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side ), $$self{lc($side).'_preview'} );
 			$log->error( $_ ) if $_;
-			$_ = $Image->Negate('channel'=>'CMYK');
-			$log->error( $_ ) if $_;
-			$_ = $Image->Quantize('colorspace'=>'RGB');
-			$log->error( $_ ) if $_;
-			$_ = $Image->Set('colorspace'=>'RGB','orientation'=>$orientation);
-$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
-			$log->error( $_ ) if $_;
-			$_ = $Image->Write( sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side ) );
-			$log->error( $_ ) if $_;
-		} # end foreach preview
+		} # end if
 	} # end foreach side
+	$_ = $self->save();
+	$log->error( $_ ) if $_;
 } # end sub generate_previews
+
+sub send_ppf {
+	my ( $self, $Equipment ) = @_;
+	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'signature','side'}, ), 
+			$self->compressed()?decode_base64(Compress::Zlib::uncompress($$self{'data'})) : decode_base64($$self{'data'})  );
+	$log->error($error) if $error;
+} # end sub send_ppf
+
+sub to_string {
+	return sprintf('%d Sig: %d Side: %s', $_[0]{docket}, $_[0]{signature}, $_[0]{side} );
+} # end sub to_string
+
 1;
 
 __END__

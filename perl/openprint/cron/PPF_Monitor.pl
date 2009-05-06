@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 use lib qw( /etc/apache2/lib/perl );
 use Linux::Inotify2;
+use Fcntl qw(:flock);
+
 
 use strict;
 
@@ -63,6 +65,14 @@ if ( ! @Equipment ) {
 } # end if
 foreach my $Equipment ( @Equipment ) {
 	my @filenames;
+	if ( ! open (S "> $$Equipment{cip3_in}/lock.lck") ) {
+		$log->error("Unable to open semaphore\n");
+		next;
+	} # end if
+	if ( ! flock(S, LOCK_EX) ) {
+		$log->error("Unable to lock semaphore\n");
+		next;
+	} # end if
 	if ( opendir DIRHANDLE, $Equipment->cip3_in() ) {
 		@filenames = readdir DIRHANDLE;
 		closedir DIRHANDLE;
@@ -77,14 +87,14 @@ foreach my $Equipment ( @Equipment ) {
 			# Will ignore ., .., any hidden file
 			next if $file =~ /^\./; 
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-$log->debug("Parsed to $file_base, $side, $extension from $file");
+#$log->debug("Parsed to $file_base, $side, $extension from $file");
 			next if $side ne 'B';
 
 			my $out_base = $file_base;
 			$out_base =~ s/\./_/g;
 
 			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.*?)S?g?(\d+)/i;
-	print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
+	#print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			$sig = 0 if ! $sig;
 			my $data;
 			$side = 'M';
@@ -157,7 +167,7 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
 		my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-$log->debug("Parsed to $file_base, $side, $extension from $file");
+#$log->debug("Parsed to $file_base, $side, $extension from $file");
 		my $out_base = $file_base;
 		$out_base =~ s/\./_/g;
 		my $data;
@@ -189,6 +199,7 @@ $log->debug("Parsed to $file_base, $side, $extension from $file");
 		} # end if docket
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
 	} # end foreach file in input hotfolder
+	close S;
 
 } # end foreach Equipment
 $dbh->disconnect() if $dbh;

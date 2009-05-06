@@ -129,13 +129,13 @@ $variable{'uri'} = $page;
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
 				my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
-				$log->debug("Looking for $file");
+				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
 				$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
-				$log->debug("Looking for $file");
+				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
@@ -307,6 +307,22 @@ $log->debug('2');
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 				if ( $filename eq '_production_feedback.html' ) {
 					openprint::employee_project::_production_feedback( );
+				} elsif ( $filename eq 'prin_multi.html' ) {
+					if ( $param{'action'} eq 'SendPPF' ) {
+						my $Project = new openprint::Project( $param{'ProjectIndex'} );
+						require openprint::CIP3_PPF;
+						my $PPF = new openprint::CIP3_PPF( $param{'ppf_id'} );
+
+						my $Equipment;
+						foreach my $sig_id ( $Project->signatures() ) {
+							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+							if ( $$sig_specs{'SignatureIndex'} == $$PPF{'signature'} ) {
+								$Equipment = new openprint::Equipment( $$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+								last;
+							} # end if
+						} # end foreach
+						$PPF->send_ppf( $Equipment ) if $Equipment;
+					} # end if
 				} # end if
 			} # end if
 		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {

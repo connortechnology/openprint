@@ -114,8 +114,7 @@
 			my $I = new openprint::Imposition();
 			$I->load_used( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
 			$html .= '<p><label>RunStyle:</label>'.$I->runstyle(). '</p>';
-			$html .= '<p><label>Imposition:</label>';
-			$html .= $I->to_string().'</p>';
+			$html .= '<p><label>Imposition:</label>'.$I->to_string().'</p>';
 			
 			$html .= '</div><div class="rightColumn">';
 			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}. '/includes/employee/feedback/press_completion.html' );

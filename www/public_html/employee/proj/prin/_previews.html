@@ -18,7 +18,7 @@
 				'distinct'	=>	1,
 				);
 	foreach my $PPF ( @PPFs ) {
-$log->debug("Got $$PPF{'docket'} $$PPF{'signature'} $$PPF{'side'} ");
+#$log->debug("Got $$PPF{'docket'} $$PPF{'signature'} $$PPF{'side'} ");
 		$PPF->generate_previews();
 
 		if ( $PPF->side() eq 'M' ) {
@@ -32,6 +32,7 @@ $log->debug("Got $$PPF{'docket'} $$PPF{'signature'} $$PPF{'side'} ");
 					'Front',
 					);
 			} # end foreach preview
+			$front_html .= ssi::writeButton($log, $dbh, 'SendPPF'.$PPF->id(), 'send.gif', '', '/employee/proj/prin/prin_multi.html?ProjectIndex='.$$variable{'Project'}->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id(), 'Send CIP' );
 			$front_html .= '</fieldset></div>';
 
 			$back_html .= '<div class="rightColumn"><fieldset><legend>Back</legend>';
@@ -60,6 +61,7 @@ $log->debug("Got $$PPF{'docket'} $$PPF{'signature'} $$PPF{'side'} ");
 					'Front',
 					);
 			} # end foreach preview
+			$front_html .= ssi::writeButton($log, $dbh, 'SendPPF'.$PPF->id(), 'send.gif', '', '/employee/proj/prin/prin_multi.html?ProjectIndex='.$$variable{'Project'}->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id(), 'Send CIP' );
 			$front_html .= '</fieldset></div>';
 			last if $front_html and $back_html;
 		} elsif ( $PPF->side() eq 'B' or $PPF->side() eq 'Back' ) {
@@ -73,6 +75,7 @@ $log->debug("Got $$PPF{'docket'} $$PPF{'signature'} $$PPF{'side'} ");
 					'Back',
 					);
 			} # end foreach preview
+			$back_html .= ssi::writeButton($log, $dbh, 'SendPPF'.$PPF->id(), 'send.gif', '', '/employee/proj/prin/prin_multi.html?ProjectIndex='.$$variable{'Project'}->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id(), 'Send CIP' );
 			$back_html .= '</fieldset></div>';
 			last if $front_html and $back_html;
 		} # end if side
