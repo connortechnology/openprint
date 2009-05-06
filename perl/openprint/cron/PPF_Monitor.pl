@@ -174,7 +174,7 @@ foreach my $Equipment ( @Equipment ) {
 
 		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.*?)S?g?(\d+)/i;
 		if ( ! $docket ) {
-			$log->error("Docket $docket not found for $file_base");
+			$log->error("Docket $docket not found for ($file_base) ($file)");
 			next;
 		} # end if docket
 
