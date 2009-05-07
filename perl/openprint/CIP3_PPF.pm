@@ -417,8 +417,9 @@ sub generate_previews {
 
 sub send_ppf {
 	my ( $self, $Equipment ) = @_;
-	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'signature','side'}, ), 
-			$self->compressed()?decode_base64(Compress::Zlib::uncompress($$self{'data'})) : decode_base64($$self{'data'})  );
+	my $data = $self->compressed()?decode_base64(Compress::Zlib::uncompress($$self{'data'})) : decode_base64($$self{'data'});
+	$log->debug('PPF: ' . $data);
+	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ), $data );
 	if ( $error ) {
 		$log->error($error);
 		foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {

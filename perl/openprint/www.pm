@@ -317,8 +317,12 @@ $log->debug('2');
 						foreach my $sig_id ( $Project->signatures() ) {
 							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 							if ( $$sig_specs{'SignatureIndex'} == $$PPF{'signature'} ) {
-								$Equipment = new openprint::Equipment( $$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
-								last;
+
+								my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+								if ( @Equipment ) {
+									$Equipment = $Equipment[0];
+									last;
+								} 	
 							} # end if
 						} # end foreach
 						$PPF->send_ppf( $Equipment ) if $Equipment;
