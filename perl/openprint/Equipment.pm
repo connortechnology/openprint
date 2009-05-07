@@ -437,7 +437,7 @@ sub delete {
 sub update_schedule {
 	my $self = shift;
 
-	if ( $openprint::config{'Smart Schedule'} ne 'Y' ) {
+	if ( ( $openprint::config{'Smart Schedule'} ne 'Y' ) and ( $$self{'id'} == 28 ) ) {
 		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
 		return;
 	} # end if
@@ -447,10 +447,10 @@ sub update_schedule {
     $_ = q{SELECT DISTINCT ProjectIndex, ServiceIndex, StartTime FROM tbl_Projects, Schedule WHERE Equipment_id=? AND Index=ProjectIndex AND tbl_Projects.strStatus='Approved' ORDER BY StartTime};
     my @data = sql::execute( undef, undef, $_, $$self{id} );
     while ( my ( $project_index, $service_index, undef ) = splice @data, 0, 3 ) {
-        sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ServiceIndex=?', $$self{id}, $service_index],
+        sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ProjectIndex=? AND `ServiceIndex=?', $$self{id}, $project_index, $service_index],
                 'StartTime', $start_time
                 );
-        ( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ServiceIndex=?}, $service_index );
+        ( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
     } # end while
 
 } # end sub update_schedule

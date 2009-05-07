@@ -1,23 +1,17 @@
-<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-<script type="text/javascript" src="/javascripts/popups.js"></script>
 <script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
+<script type="text/javascript" src="/javascripts/production_feedback.js"></script>
 <script type="text/javascript" src="/includes/employee/feedback/paper.js"></script>
 <div class="Service">
-    <form method="post" id="f1" name="f1" action="/employee/project/view.html">
-		<fieldset><legend>
-            Production Feedback
-            <? if ( $$variable{'DocketNumber'} ) ?> for docket #:&nbsp;<?DocketNumber?><? endif ( $$variable{'DocketNumber'} ) ?>
-            </legend>
+	<fieldset><legend>
+	Production Feedback
+	<? if ( $$variable{'DocketNumber'} ) ?> for docket #:&nbsp;<?DocketNumber?><? endif ( $$variable{'DocketNumber'} ) ?>
+	</legend>
 		<div class="Signature">
 			<? if ( $$variable{'Reference'} ) ?>
 			<p>Information for form <?SignatureIndex?>: <?Reference?></p>
 			<? endif ( $$variable{'Reference'} ) ?>
-			<!--#include virtual="_previews.html"-->
-			<!--#include virtual="/includes/employee/feedback/press_completion.html"-->
+			<!--#include virtual="_signature.html"-->
 		</div>
-        <!--#include virtual="/includes/employee/feedback/buttons.html"-->
-        <!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
-		</fieldset>
-    </form>
+	</fieldset>
 </div>
 

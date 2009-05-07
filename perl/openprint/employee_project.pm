@@ -341,7 +341,7 @@ sub view {
 	} elsif ( $param{'btnFunction'} eq 'AddToBinderySchedule' ) {
 		openprint::bindery_schedule::add_project( $Project );
 	} elsif ( $param{'btnFunction'} eq 'AddToPressSchedule' ) {
-		$variable{'error'} = openprint::press_schedule::add_project_to_press_schedule( $Project );
+		$variable{'error'} = openprint::press_schedule::add_project_to_press_schedule( $Project, $param{'ServiceIndex'} );
 	} elsif ( $param{'btnFunction'} eq 'Add Service' ) {
 
 		if ( $param{'NewServiceType'} ) {

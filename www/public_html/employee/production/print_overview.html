@@ -410,7 +410,7 @@
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="font-size:16px; font-weight:bold;"><a href="/employee/production/equipment_view.html?equipment_id='.$E->id().'">'.$E->name().'</a></div>';
+			$html .= '<div class="PressColumn" style="font-size:16px; font-weight:bold;"><a href="/employee/production/print_overview.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
 		} # end foreach
 		return $html;
 		) ?>

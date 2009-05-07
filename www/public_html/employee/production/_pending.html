@@ -1,0 +1,11 @@
+<? echo (
+	# Now do unassigned jobs
+	my $html = '';
+	foreach my $E ( @{$$variable{'Presses'}} ) {
+		push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'NotApproved' );
+		$html .= '<div class="PressColumn">';
+		$html .= openprint::press_schedule::get_ul( undef, undef, $E->id(), {'name'=>'NotApproved'}, {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval'] } );
+		$html .= '</div>';
+	} # end foreach press
+	return $html;
+) ?>
