@@ -218,7 +218,7 @@ function clear_price_data( form ) {
 			} // end if
 			if ( form.elements['ddmRunStyle'+qtyNum] ) {
 				if ( 
-					! ( form.elements['chkOverrideRunStyle'+qtyNum] && form.elements['chkOverrideRunStyle'+qtyNum].checked ) 
+					! ( form.elements['chkOverrideRunStyle'+qtyNum] && get_value(form.elements['chkOverrideRunStyle'+qtyNum]) ) 
 					&& form.elements['ddmRunStyle'+qtyNum].type == 'select-one' 
 					) {
 					ddm_select_by_index( form.elements['ddmRunStyle'+qtyNum], 0 );

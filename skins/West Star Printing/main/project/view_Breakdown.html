@@ -133,25 +133,13 @@
 					foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
 						my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
 
-						if ( $ServiceType->name() eq 'Paper' ) {
-							if ( ! $$variable{'Quote'} ) {
-							$line_html .= sprintf('<tr%s><td colspan="2"><br/>%s</td>', $rowclass,
-								openprint::service::summary( $$variable{'Project'}, $s_id )
-								);
-							} else {
-							$line_html .= sprintf('<tr%s><td><br/>%s</td>', $rowclass,
-								openprint::service::summary( $$variable{'Project'}, $s_id )
-								);
-							} # end if
+						if ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() and ! $$variable{'Quote'} ) {
+							$line_html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d">%s</a><br/>%s</td>', $rowclass, $ServiceType->url(), $$variable{'Project'}->id(), $s_id, ($$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description()),
+									openprint::service::summary( $$variable{'Project'}, $s_id ));
 						} else {
-							if ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() and ! $$variable{'Quote'} ) {
-								$line_html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d">%s</a><br/>%s</td>', $rowclass, $ServiceType->url(), $$variable{'Project'}->id(), $s_id, ($$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description()),
-										openprint::service::summary( $$variable{'Project'}, $s_id ));
-							} else {
-								$line_html .= sprintf('<tr%s><td>%s<br/>%s</td>', $rowclass, ($$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description()), openprint::service::summary( $$variable{'Project'}, $s_id ) );
-							} # end if
-							$line_html .= sprintf('<td class="status">%s</td>', $statuses{$s_id} ) if ! $$variable{'Quote'};
+							$line_html .= sprintf('<tr%s><td>%s<br/>%s</td>', $rowclass, ($$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description()), openprint::service::summary( $$variable{'Project'}, $s_id ) );
 						} # end if
+						$line_html .= sprintf('<td class="status">%s</td>', $statuses{$s_id} ) if ! $$variable{'Quote'};
 						
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$line_html .= sprintf('<td class="price">%s</td>', openprint::service::summary( $$variable{'Project'}, $s_id, $qty_index ) );

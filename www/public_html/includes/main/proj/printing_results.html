@@ -28,7 +28,7 @@
 			$html .= sprintf('<input type="radio" id="StockType%1$dRoll" name="StockType%1$d" value="Roll" %2$s onclick="calc(this.form.name);" />', $qty_index, ssi::checked( $$variable{'StockType'.$qty_index} eq 'Roll' ) );
 			$html .= sprintf(' <label class="radio" for="StockType%1$dRoll">Roll</label> ', $qty_index );
 			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= sprintf('<input type="checkbox" id="OverrideStockType%1$d" name="OverrideStockType%1$d" value="Y" onclick="if(!this.checked){calc(this.form.name);};" %2$s /> <label class="radio" for="OverrideStockType%1$d">Override</label>', $qty_index, ssi::checked( $$variable{'OverrideStockType'.$qty_index} eq 'Y' ) );
+				$html .= ssi::write_override( 'OverrideStockType'.$qty_index, $$variable{'OverrideStockType'.$qty_index} );
 			} else {
 				$html .= sprintf('<input type="hidden" name="OverrideStockType%1$d" value="%2$s" />', $qty_index, $$variable{'OverrideStockType'.$qty_index} );
 			} # end if
@@ -160,13 +160,10 @@
 			<option value="">No runstyle selected</option>
 			<? echo ( ssi::make_drop_down( $$variable{'RunStyleOptions'}, $$variable{'ddmRunStyle'.$$variable{'QTYIndex'}} ); ) ?>
 		</select>
-		<input type="checkbox" id="chkOverrideRunStyle<?QTYIndex?>" name="chkOverrideRunStyle<?QTYIndex?>"
-		<? echo ( 'checked="checked"' if $$variable{'chkOverrideRunStyle'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
-		value="Y" onclick="if (this.checked == false) calc(this.form.name);" />
-		 <label for="chkOverrideRunStyle<?QTYIndex?>" class="radio">Override</label>
+		<? echo ( return ssi::write_override( 'chkOverrideRunStyle'.$$variable{'QTYIndex'}, $$variable{'chkOverrideRunStyle'.$$variable{'QTYIndex'}}, '', q`calc('f1');` ); ) ?>
 	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
