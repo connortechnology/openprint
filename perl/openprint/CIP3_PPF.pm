@@ -265,14 +265,16 @@ sub generate_previews {
 	foreach my $side ( 'Front', 'Back' ) {
 		my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
 		if ( (!$force) and -f $filename ) {
-			$log->debug("$filename exists, not generating the preview.");	
+			$log->warn("$filename exists, not generating the preview.");	
 			next;
 		} else {
 			$log->debug("generating preview for ".$self->to_string() );
 		} # end if
 		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
 			foreach my $preview ( $self->previews($side) ) {
-				next if ! $$preview{'separations'};
+				if ( ! $$preview{'separations'} ) {
+					$log->warn('No separations in preview.');
+				} # end if
 
 				my $image_data;
 				my $depth = $$preview{'separations'}[0]{'depth'};

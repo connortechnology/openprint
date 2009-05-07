@@ -231,10 +231,13 @@ sub store_PPF {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
 			my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );
+			openprint::service::status( $Project->id(), $print_service_index, 'Ordered' );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtPrice'.$Project->ordered_quantity_index(), 0 );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Spreads' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Spreads' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $sig );
 			sql::end_transaction( $dbh, $ac );
+			$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );
 		} # end if
 	} # end foreach Project
 
