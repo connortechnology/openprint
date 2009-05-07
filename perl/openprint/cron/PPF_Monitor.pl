@@ -148,18 +148,14 @@ foreach my $Equipment ( @Equipment ) {
 			} # end while
 			close $A;
 
-			my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.'.'.$extension, $data ) if ! $$Equipment{'cip3_hold'};
-			if ( ! $error ) {
-				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
-				unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
-			} else {
-				$log->error($error);
-			} # end if
 			if ( $docket ) {
 				store_PPF( $docket, $sig, $side, $data );
 			} else {
 				$log->error("Docket $docket not found for $file_base");
 			} # end if docket
+			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
+			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
+			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
 		} # end foreach file in input hotfolder
 	} # end if cip3_merge
 
@@ -190,12 +186,8 @@ foreach my $Equipment ( @Equipment ) {
 			$data .= $line;
 		} # end while
 		close IN;
-		if ( ! $$Equipment{'cip3_hold'} ) {
-			$log->warn("Writing PPF to $$Equipment{'cip3_out'}/".$out_base.$side.'.'.$extension);
-			my $error = misc::save_file( $log, $$Equipment{'cip3_out'}.'/'.$out_base.$side.'.'.$extension, $data );
-			$log->error($error) if $error;
-		} # end if
 		store_PPF( $docket, $sig, $side, $data );
+		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
 	} # end foreach file in input hotfolder
 	close S;
@@ -209,6 +201,22 @@ sub store_PPF {
 	foreach my $PPF (openprint::CIP3_PPF::find('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
 		$PPF->delete();
 	} # end foreach
+
+	my $compressed_data;
+	if ( $use_compression ) {
+		$compressed_data = Compress::Zlib::compress($data);
+		$log->debug("Compressed PPF from " . length $data . " to " . length $compressed_data );
+	} # end if
+	my $PPF = new openprint::CIP3_PPF();
+	$_ = $PPF->save({
+			'docket'    	=>  $docket,
+			'signature' 	=>  $sig,
+			'side'      	=>  $side,
+			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
+			'compressed'		=>	$compressed_data ? 1 : 0,
+			});
+	$log->error($_) if $_;
+	$PPF->generate_previews(undef,1);
 
 	foreach my $Project ( openprint::Project::find('docket'=>$docket) ) {
 		my $services = $Project->services();
@@ -236,26 +244,12 @@ sub store_PPF {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Spreads' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Spreads' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $sig );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'ddmRunStyleUsed', $PPF->runstyle() );
 			sql::end_transaction( $dbh, $ac );
 			$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );
 		} # end if
 	} # end foreach Project
 
-	my $compressed_data;
-	if ( $use_compression ) {
-		$compressed_data = Compress::Zlib::compress($data);
-		$log->debug("Compressed PPF from " . length $data . " to " . length $compressed_data );
-	} # end if
-	my $PPF = new openprint::CIP3_PPF();
-	$_ = $PPF->save({
-			'docket'    	=>  $docket,
-			'signature' 	=>  $sig,
-			'side'      	=>  $side,
-			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
-			'compressed'		=>	$compressed_data ? 1 : 0,
-			});
-	$log->error($_) if $_;
-	$PPF->generate_previews(undef,1);
 } # end sub store_PPF
 
 sub usage {

@@ -43,6 +43,24 @@ $serial = 'CIP3_PPF_id_seq';
 %transforms = (
 	'signature'		=> [ 's/\D//g' ],
 );
+
+my %WorkStyles = (
+	'Perfecting'	=>	'Perfecting',
+	'WorkAndTurn'	=>	'Work & Turn',
+	'WorkAndBack'	=>	'Work & Tumble',
+
+);
+
+sub runstyle {
+	my ( $self ) = @_;
+	if ( ! $$self{'parsed'} ) {
+		$self->parse();
+	} # end if
+	if ( ! $WorkStyles{$$self{'WorkStyle'}} ) {
+		$log->error("Unknown Workstyle: $$self{'WorkStyle'}");
+	} 
+	return $WorkStyles{$$self{'WorkStyle'}};
+}
 sub find {
 	my %params = @_;
 
@@ -257,9 +275,6 @@ sub generate_previews {
 		mkdir $part_path unless -d $path;
 	} # end foreach
 
-	if ( ! $$self{'parsed'} ) {
-		$self->parse();
-	} # end if
 
 	my $changed = 0;
 	foreach my $side ( 'Front', 'Back' ) {
@@ -268,15 +283,18 @@ sub generate_previews {
 			$log->warn("$filename exists, not generating the preview.");	
 			next;
 		} else {
-			$log->debug("generating preview for ".$self->to_string() );
+			$log->debug("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
 		} # end if
 
-		foreach my $preview ( $self->previews($side) ) {
-			if ( ! $$preview{'separations'} ) {
-				$log->warn('No separations in preview.');
+		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
+			if ( ! $$self{'parsed'} ) {
+				$self->parse();
 			} # end if
 
-			if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
+			foreach my $preview ( $self->previews($side) ) {
+				if ( ! $$preview{'separations'} ) {
+					$log->warn('No separations in preview.');
+				} # end if
 
 				my $image_data;
 				my $depth = $$preview{'separations'}[0]{'depth'};
@@ -285,7 +303,6 @@ sub generate_previews {
 
 				foreach my $image ( @{$$preview{'separations'}} ) {
 					if ( $$image{'encoding'} eq 'ASCIIHexDecode' ) {
-	#$log->debug("ASCIIHexDecode");
 						my $f = Text::PDF::ASCIIHexDecode->new;
 						$$image{'image'} = $f->infilt($$image{'image'}, 1 );
 					} # end if
@@ -304,7 +321,7 @@ sub generate_previews {
 
 				my $orientation;
 				my $s = $$preview{'separations'}[0];
-	$log->debug("Matrix: $$s{'matrix'}");
+	#$log->debug("Matrix: $$s{'matrix'}");
 				if ( $$s{'matrix'} eq "$$s{'width'} 0 0 $$s{'height'} 0 0" ) {
 					$orientation = 'left-bottom';
 				} elsif ( $$s{'matrix'} eq "$$s{'width'} 0 0 -$$s{'height'} 0 $$s{'height'}" ) {
@@ -322,7 +339,7 @@ sub generate_previews {
 				} elsif ( $$s{'matrix'} eq "0 -$$s{'height'} -$$s{'width'} 0 $$s{'height'} $$s{'width'}" ) {
 					$orientation = 'top-right';
 				} # end if
-	$log->debug("Orientation: $orientation");
+	#$log->debug("Orientation: $orientation");
 				
 				my %separations;
 				foreach my $s ( @{$$preview{'separations'}} ) {
@@ -373,24 +390,24 @@ sub generate_previews {
 				if ( ! @blobs ) {
 						$log->debug("No blobs");
 				} else {
-					$$self{lc($side).'_preview'} = $blobs[0];
+					$$self{lc($side).'_preview'} = encode_base64($blobs[0]);
 					if ( ! $$self{lc($side).'_preview'} ) {
 						$log->debug("No good ImageToBlob");
 					}
 				}
 				$changed = 1;
-			} # end if force or ! side_preivew
-			if ( $path ) {
-				my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
-				#$log->debug("Writing to $filename");
-				if ( $$self{lc($side).'_preview'} ) {
-					$_ = misc::save_file( $log, $filename, $$self{lc($side).'_preview'} );
-					$log->error( $_ ) if $_;
-				} else {
-					$log->error( "No data in the preview for $filename" );
-				} # end if
+			} # end foreach preview
+		} # end if force or ! side_preivew
+		if ( $path ) {
+			my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
+			$log->debug("Writing to $filename");
+			if ( $$self{lc($side).'_preview'} ) {
+				$_ = misc::save_file( $log, $filename, decode_base64($$self{lc($side).'_preview'}) );
+				$log->error( $_ ) if $_;
+			} elsif ( $self->previews($side) ) {
+				$log->error( "No data in the preview for $filename" );
 			} # end if
-		} # end foreach preview
+		} # end if
 	} # end foreach side
 	if ( $changed ) {
 		$_ = $self->save();
@@ -402,7 +419,18 @@ sub send_ppf {
 	my ( $self, $Equipment ) = @_;
 	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'signature','side'}, ), 
 			$self->compressed()?decode_base64(Compress::Zlib::uncompress($$self{'data'})) : decode_base64($$self{'data'})  );
-	$log->error($error) if $error;
+	if ( $error ) {
+		$log->error($error);
+		foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Failed to send CIP Files for form $$self{signature} side $$self{side}. Reason: $error" );
+		} # end foreach $Project
+		
+		return $error;
+	} 
+	foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "CIP Files released for form $$self{signature} side $$self{side}" );
+	} # end foreach $Project
+	return;
 } # end sub send_ppf
 
 sub to_string {
