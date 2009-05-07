@@ -148,11 +148,8 @@ foreach my $Equipment ( @Equipment ) {
 			} # end while
 			close $A;
 
-			if ( $docket ) {
-				store_PPF( $docket, $sig, $side, $data );
-			} else {
-				$log->error("Docket $docket not found for $file_base");
-			} # end if docket
+			
+			my $PPF = store_PPF( $docket, $sig, $side, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
@@ -186,7 +183,7 @@ foreach my $Equipment ( @Equipment ) {
 			$data .= $line;
 		} # end while
 		close IN;
-		store_PPF( $docket, $sig, $side, $data );
+		my $PPF = store_PPF( $docket, $sig, $side, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
 	} # end foreach file in input hotfolder
@@ -249,7 +246,7 @@ sub store_PPF {
 			$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );
 		} # end if
 	} # end foreach Project
-
+	return $PPF;
 } # end sub store_PPF
 
 sub usage {
