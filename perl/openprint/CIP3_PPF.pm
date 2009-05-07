@@ -270,11 +270,13 @@ sub generate_previews {
 		} else {
 			$log->debug("generating preview for ".$self->to_string() );
 		} # end if
-		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
-			foreach my $preview ( $self->previews($side) ) {
-				if ( ! $$preview{'separations'} ) {
-					$log->warn('No separations in preview.');
-				} # end if
+
+		foreach my $preview ( $self->previews($side) ) {
+			if ( ! $$preview{'separations'} ) {
+				$log->warn('No separations in preview.');
+			} # end if
+
+			if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
 
 				my $image_data;
 				my $depth = $$preview{'separations'}[0]{'depth'};
@@ -377,18 +379,18 @@ sub generate_previews {
 					}
 				}
 				$changed = 1;
-			} # end foreach preview
-		} # end if force or ! side_preivew
-		if ( $path ) {
-			my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
-			#$log->debug("Writing to $filename");
-			if ( $$self{lc($side).'_preview'} ) {
-				$_ = misc::save_file( $log, $filename, $$self{lc($side).'_preview'} );
-				$log->error( $_ ) if $_;
-			} else {
-				$log->error( "No data in the preview for $filename" );
+			} # end if force or ! side_preivew
+			if ( $path ) {
+				my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
+				#$log->debug("Writing to $filename");
+				if ( $$self{lc($side).'_preview'} ) {
+					$_ = misc::save_file( $log, $filename, $$self{lc($side).'_preview'} );
+					$log->error( $_ ) if $_;
+				} else {
+					$log->error( "No data in the preview for $filename" );
+				} # end if
 			} # end if
-		} # end if
+		} # end foreach preview
 	} # end foreach side
 	if ( $changed ) {
 		$_ = $self->save();
