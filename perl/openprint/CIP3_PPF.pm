@@ -280,10 +280,10 @@ sub generate_previews {
 	foreach my $side ( 'Front', 'Back' ) {
 		my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
 		if ( (!$force) and -f $filename ) {
-			$log->warn("$filename exists, not generating the preview.");	
+			#$log->warn("$filename exists, not generating the preview.");	
 			next;
 		} else {
-			$log->debug("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
+			#$log->debug("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
 		} # end if
 
 		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
@@ -417,8 +417,26 @@ sub generate_previews {
 
 sub send_ppf {
 	my ( $self, $Equipment ) = @_;
-	my $data = $self->compressed()?decode_base64(Compress::Zlib::uncompress($$self{'data'})) : decode_base64($$self{'data'});
-	$log->debug('PPF: ' . $data);
+	
+	my $data = decode_base64($$self{'data'});
+	$data = Compress::Zlib::uncompress($data) if $self->compressed();
+
+if ( 0 ){
+	$log->debug('PPF DATA: ' . $data . "uncomressed: " . decode_base64($$self{'data'}) );
+			if ( ! ( $data =~ /^%!PS\-Adobe/ ) ) {
+				$log->error( "Didn't find signature\n");
+# Must be already compressed.
+				while ( $_ = Compress::Zlib::uncompress($data) ) {
+					$log->debug( "Uncompressing\n");
+					$data = $_;
+				} 
+			print substr($data, 0, 10 ) . "\n";
+			if ( ! ( $data =~ /^%!PS\-Adobe/ ) ) {
+				$log->error( "Still didn't find signature");
+				return;
+			} 
+			} 
+			} 
 	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ), $data );
 	if ( $error ) {
 		$log->error($error);
