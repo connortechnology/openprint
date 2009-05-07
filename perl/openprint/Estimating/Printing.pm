@@ -566,6 +566,7 @@ $openprint::log->debug("Calc:From:Imposition:Paper " . $Paper->type() . ':' . $P
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . '" Roll';
 			$$specs{'txtPressSheetQty'.$qty_index} = sprintf('%.0f lbs', $$price{'Stock Weight'} );
 			$$specs{'StockQuantity'.$qty_index} = $$price{'Stock Weight'};
+$openprint::log->debug("calc_from_impos: Stock Weight: $$price{'Stock Weight'}");
 		} elsif ( $Paper->type() eq 'Sheet' ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . 'x' . $Paper->height();
 			$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Gross Sheet Count'} .'sheets';

@@ -33,7 +33,7 @@
 			$sig_html{$key}[$qty_index] .= '<span class="'.$$variable{'Columns'}.'Columns">';
 			if ( $Paper->type() eq 'Roll' ) {
 				$totals{$key}[$qty_index] += $$sig_specs{'StockQuantity'.$qty_index};
-				$sig_html{$key}[$qty_index] .= sprintf('<input size="6" type="text" id="qty-%1$d" name="qty-%1$d" value="%2$s" onkeyup="calc(this.form.name);" />%3$s', $Paper->id(), $totals{$key}[$qty_index], $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				$sig_html{$key}[$qty_index] .= sprintf('<input size="6" type="text" id="qty-%1$d" name="qty-%1$d" value="%2$s" onkeyup="calc(this.form.name);" />', $Paper->id(), $$sig_specs{'StockQuantity'.$qty_index} );
 			} elsif ( $Paper->type() eq 'Sheet' ) {
 				my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
 				my $factor = $Paper->start_area() /$Paper->area();
@@ -42,9 +42,11 @@
 				my $weight = POSIX::ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
 				$totals{$key}[$qty_index] += $weight;
 				$sheets{$key}[$qty_index] += $sheets;
-				$sig_html{$key}[$qty_index] .= sprintf('<input size="6" type="hidden" id="qty-%1$d" name="qty-%1$d" value="%2$s" />', $Paper->id(), $totals{$key}[$qty_index] );
-				$sig_html{$key}[$qty_index] .= sprintf('<input size="6" type="text" id="sheets-%1$d" name="sheets-%1$d" value="%2$s" onkeyup="calc(this.form.name);" />%3$s', $Paper->id(), $sheets{$key}[$qty_index], $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				$sig_html{$key}[$qty_index] .= sprintf('<input size="6" type="hidden" id="qty-%1$d" name="qty-%1$d" value="%2$s" />', $Paper->id(), $weight );
+				$sig_html{$key}[$qty_index] .= sprintf('<input size="6" type="text" id="sheets-%1$d" name="sheets-%1$d" value="%2$s" onkeyup="calc(this.form.name);" />', $Paper->id(), $sheets );
 			} # end if
+			$sig_html{$key}[$qty_index] .= ssi::write_override( 'overrideqty-'.$Paper->id(), $$variable{'override-'.$Paper->id()}, '', "calc('f1')" );
+			$sig_html{$key}[$qty_index] .= $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 
 			$sig_html{$key}[$qty_index] .= '</span>';
 		} # end foreach qty_index
