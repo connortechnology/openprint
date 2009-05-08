@@ -208,10 +208,12 @@ sub upload_files {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	if ( $param{'project_id'} ) {
+		$param{'project_id'} =~ s/\D//g;
 		$param{'docket'} = new openprint::Project( $param{'project_id'} )->docket();
 	} elsif ( $param{'docket'} and ! $param{'project_id'} ) {
+		$param{'docket'} =~ s/\D//g;
 		my @Projects = openprint::Project::find('docket'=>$param{'docket'});
-		$param{'project_id'} = $Projects[0]->id();
+		$param{'project_id'} = $Projects[0]->id() if @Projects;
 	} # end if
 
 	my $destdir = get_destdir();
