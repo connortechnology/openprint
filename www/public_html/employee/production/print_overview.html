@@ -464,19 +464,14 @@
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
   // <![CDATA[
-	<? echo (
-		my $html;
-		foreach my $id ( @{$$variable{'drops'}} ) {
-			$html .= qq/
-			Sortable.create("$id", {dropOnEmpty:true,containment:["/.join('","', @{$$variable{'drops'}} ) . qq/"],constraint:false,
-			 onUpdate:function(){
-			 jsrsExecute( '\/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( '$id', Sortable.serialize("$id") ) );
-			 }
-			});
-			/;
-		} # end foreach
-		return $html;
-	) ?>
+	var drops = ["<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>"];
+	for ( var id in drops ) {
+		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false,
+             onUpdate:function(drop){
+             jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( drop.id, Sortable.serialize(drop) ) );
+             }
+            });
+	} // end foreach id in drops
 // ]]>
 </script>
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>

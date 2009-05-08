@@ -10,23 +10,17 @@
 	} # end if
 	return $html;
 ) ?>
-<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+<? if ( @{$$variable{'pending_drops'}} ) ?>
 <script type="text/javascript">
   // <![CDATA[
-	<? echo (
-		my $html;
-		foreach my $id ( @{$$variable{'pending_drops'}} ) {
-			$html .= qq/
-			Sortable.create("$id", {dropOnEmpty:true,containment:["/.join('","', @{$$variable{'pending_drops'}} ) . qq/"],constraint:false,
-				onUpdate:function(){
-					jsrsExecute( '\/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( '$id', Sortable.serialize("$id") ) );
-				}
-			});
-			/;
-		} # end foreach
-		return $html;
-	) ?>
+	drops.push("<? echo ( join('","', @{$$variable{'pending_drops'}} ) ) ?>");
+	for ( var id in drops ) {
+		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false,
+             onUpdate:function(drop){
+             jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( drop.id, Sortable.serialize(drop) ) );
+             }
+            });
+	} // end foreach id in drops
 // ]]>
 </script>
-<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
-
+<? endif ( @{$$variable{'pending_drops'}} ) ?>
