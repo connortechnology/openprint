@@ -595,7 +595,8 @@ $openprint::log->debug("calc_from_impos: Stock Weight: $$price{'Stock Weight'}")
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $$price{'Impressions'};
 
 		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
-			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $$price{'100lb Price'} );
+$openprint::log->debug("Paper Cost: $$price{'Paper Price'}");
+			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $$price{'Paper Price'} );
 		} else {
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
@@ -608,9 +609,11 @@ $openprint::log->debug("calc_from_impos: Stock Weight: $$price{'Stock Weight'}")
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$price{'Total Cost'} / $qty );
-		my $mprice = $$price{'Impression MPrice'};
+		my $mprice = $$price{'Impression MPrice'} / $Imposition->imposition();;
+		my $rate = 1+($$price{'Overs Rate'}/100);
 
-		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', (1+$$specs{'Markup'.$qty_index}/100)*($mprice + (($$price{'Ink Price'}/$qty)*1000 ) + $$price{'Paper 1000 Price'} ) );
+
+		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + (($$price{'Ink Price'}/$qty)*1000 ) + $$price{'Paper 1000 Price'} ) );
 
 		if ( $$specs{'txtSignatureType'} ) {
 			$$specs{'PageQuantity'.$qty_index} = $Imposition->pages();
@@ -1873,8 +1876,8 @@ $i->display();
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $best_price{'Impressions'};
 #$$specs{'RunTime'.$qty_index} = $best_price{'RunTime'};
 		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
-			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $best_price{'100lb Price'} );
-		} else {
+$openprint::log->debug("Paper Cost: $best_price{'Paper Price'}");
+			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $best_price{'Paper Price'} );
 		} # end if
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
@@ -1887,8 +1890,11 @@ $i->display();
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $best_price{'Total Cost'} / $qty );
-		my $mprice = $best_price{'Impression MPrice'};
-		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', (1+$$specs{'Markup'.$qty_index}/100)*($mprice + (($best_price{'Ink Price'}/$qty)*1000 ) + $best_price{'Paper 1000 Price'} ) );
+		my $mprice = $best_price{'Impression MPrice'} / $Imposition->imposition();
+		my $rate = 1+($best_price{'Overs Rate'}/100);
+		my $ink = (($best_price{'Ink Price'}/$qty)*1000 );
+		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + $ink + ($best_price{'Paper 1000 Price'}*$rate) ) );
+$openprint::log->debug("MPrice: Rate: $rate Impression: $best_price{'Impression MPrice'}/$$Imposition{imposition}=$mprice, Ink: (($best_price{'Ink Price'}/$qty)*1000 )=$ink, PaperM: $best_price{'Paper 1000 Price'}");
 
 		if ( $$specs{'txtSignatureType'} ) {
 			if ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
@@ -3062,6 +3068,7 @@ sub calc_price {
 		} # end if
 		$run_overs = $base_impressions * $over_rate;
 	} # end if
+	$price{'Overs Rate'} = $over_rate;
 
 	my $impressions;
 	if ( $Press->specification('Charge for setup overs') ne 'N' ) {
