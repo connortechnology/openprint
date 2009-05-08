@@ -56,7 +56,7 @@ sub runstyle {
 	if ( ! $$self{'parsed'} ) {
 		$self->parse();
 	} # end if
-	if ( ! $WorkStyles{$$self{'WorkStyle'}} ) {
+	if ( $$self{'WorkStyle'} and ! $WorkStyles{$$self{'WorkStyle'}} ) {
 		$log->error("Unknown Workstyle: $$self{'WorkStyle'}");
 	} 
 	return $WorkStyles{$$self{'WorkStyle'}};

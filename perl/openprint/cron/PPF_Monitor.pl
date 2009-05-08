@@ -241,7 +241,7 @@ sub store_PPF {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Spreads' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Spreads' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $sig );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'ddmRunStyleUsed', $PPF->runstyle() );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'ddmRunStyleUsed', $PPF->runstyle() ) if $PPF->runstyle();
 			sql::end_transaction( $dbh, $ac );
 			$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );
 		} # end if

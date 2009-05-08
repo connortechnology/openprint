@@ -1054,6 +1054,24 @@ sub _bump_job {
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 } # end sub _bump_job
 
+sub _pending_approved {
+	$session{'/employee/production/print_overview.html?pending_approved'} = $session{'/employee/production/print_overview.html?pending_approved'} ? 0 : 1;
+    @{$variable{'Presses'}} = ();
+    my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+    foreach (@presses) {
+        push @{$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
+    } # end foreach press
+} # end sub _pending_approved
+
+sub _pending {
+	$session{'/employee/production/print_overview.html?pending'} = $session{'/employee/production/print_overview.html?pending'} ? 0 : 1;
+    @{$variable{'Presses'}} = ();
+    my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+    foreach (@presses) {
+        push @{$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
+    } # end foreach press
+} # end sub _pending
+
 1;
 
 __END__

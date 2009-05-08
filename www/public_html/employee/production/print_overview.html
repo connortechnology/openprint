@@ -1,7 +1,7 @@
 <? eval (
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) {
+			foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay','pending','pending_approved' ) {
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
@@ -15,7 +15,7 @@
 		} # end if
 		$session{'/employee/production/print_overview.html?lastupdated'} = time;
 	} elsif ( time - $session{'/employee/production/print_overview.html?lastupdated'} > 60*60 ) { 
-		foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) {
+		foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay','pending','pending_approved' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
@@ -451,24 +451,12 @@
 			} # end foreach delta day
 			$html .= '</div>';
 		} # end foreach press
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxToggleContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
-		# Now do unassigned jobs
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'Approved' );
-			$html .= '<div class="PressColumn">';
-			$html .= openprint::press_schedule::get_ul( undef, undef, $E->id(), {'name'=>'Approved'}, { 'Status'=>'Approved' } );
-			$html .= '</div>';
-		} # end foreach press
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
 		$html .= '</div></div>';
-		$html .= '<div class="unprintable"><hr class="spacer"/><h3>Pending:</h3>';
-		# Now do unassigned jobs
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'NotApproved' );
-			$html .= '<div class="PressColumn">';
-			$html .= openprint::press_schedule::get_ul( undef, undef, $E->id(), {'name'=>'NotApproved'}, {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval'] } );
-			$html .= '</div>';
-		} # end foreach press
-		$html .= '</div>';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
+		$html .= '</div></div>';
 		return $html;
 	) ?>
 </form>
