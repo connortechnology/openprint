@@ -241,6 +241,7 @@
 		popupWin.showCenter();
 		popupWin.setAjaxContent(url+'?'+parameters, null , true);
 	} // end function popup_window
+var drops = new Array();
 -->
 </script>
 <link rel="stylesheet" type="text/css" href="/css/press_schedule.css">
@@ -464,7 +465,7 @@
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
   // <![CDATA[
-	var drops = ["<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>"];
+	drops.push("<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>");
 	for ( var id in drops ) {
 		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false,
              onUpdate:function(drop){
