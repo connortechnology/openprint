@@ -66,6 +66,11 @@ sub signature_calc {
 		$Results{'alert'} .= 'No equipment for Spine Pasting';
 		return \%Results;
 	} # end if
+	if ( ! $$services{'Folding'} ) {
+		$Results{'Status'} = 'uncalculated';
+		$Results{'alert'} .= 'Project does not have a folding service.  Folding is required.';
+		return \%Results;
+	} # end if
 
 	my %best;
 	foreach my $Equipment ( @Equipment ) {

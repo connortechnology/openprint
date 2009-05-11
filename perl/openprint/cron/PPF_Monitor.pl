@@ -113,6 +113,11 @@ foreach my $Equipment ( @Equipment ) {
 			my $back_flag = 0;	
 			while ( <FH> ) {
 				$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
+				if ( $_ =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/
+					if ( ! $1 ) {
+						$_ = "/CIP3AdmJobCode ($docket) def";
+					} # end if
+				} # end if
 				push @Back, $_ if ( $back_flag );
 				last if $_ =~ /CIPEndBack/;
 			} # end while
@@ -137,6 +142,10 @@ foreach my $Equipment ( @Equipment ) {
 				$line =~ s/$fileA/$fileM/g;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
+				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/
+					if ( ! $1 ) {
+						$line = "/CIP3AdmJobCode ($docket) def";
+					} # end if
 				} # end if
 
 				if ( $line =~ /CIP3EndOfFile/ ) {
@@ -179,7 +188,11 @@ foreach my $Equipment ( @Equipment ) {
 			my $line = $_;
 			if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 				$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
-			} # end if
+			} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/
+				if ( ! $1 ) {
+					$line = "/CIP3AdmJobCode ($docket) def";
+				} # end if
+			} # end if_
 			$data .= $line;
 		} # end while
 		close IN;
