@@ -1,5 +1,6 @@
 <? echo ( 
 	my $html;
+	@{$$variable{'pending_approved_drops'}} = ();
 	if ( $session{'/employee/production/print_overview.html?pending_approved'} ) {
 		foreach my $E ( @{$$variable{'Presses'}} ) {
 			push @{$$variable{'pending_approved_drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'Approved' );

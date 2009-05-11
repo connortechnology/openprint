@@ -441,11 +441,11 @@ sub po_limit {
 
 	if ( defined $new_value ) {
 		if ( exists $$self{'po_limits'}{$type_id} ) {
-			sql::update( undef, undef, 'user_purchaseorder_limits', ['user_id=? AND type_id=?', $$self{'id'},$type_id], 'po_limit', $new_value );
+			sql::update( undef, undef, 'user_purchaseorder_limits', ['user_id=? AND type_id=?', $$self{'id'},$type_id], 'po_limit', 1*$new_value );
 		} else {
-			sql::insert( undef, undef, 'user_purchaseorder_limits', ['user_id',$$self{'id'},'type_id', $type_id, 'po_limit', $new_value ] );
+			sql::insert( undef, undef, 'user_purchaseorder_limits', ['user_id',$$self{'id'},'type_id', $type_id, 'po_limit', 1*$new_value ] );
 		} # end if
-		$$self{'po_limits'}{$type_id} = $new_value;
+		$$self{'po_limits'}{$type_id} = 1*$new_value;
 	} # end if
 
 	return $$self{'po_limits'}{$type_id};
