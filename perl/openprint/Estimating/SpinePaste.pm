@@ -66,11 +66,6 @@ sub signature_calc {
 		$Results{'alert'} .= 'No equipment for Spine Pasting';
 		return \%Results;
 	} # end if
-	if ( ! $$services{'Folding'} ) {
-		$Results{'Status'} = 'uncalculated';
-		$Results{'alert'} .= 'Project does not have a folding service.  Folding is required.';
-		return \%Results;
-	} # end if
 
 	my %best;
 	foreach my $Equipment ( @Equipment ) {
@@ -101,7 +96,7 @@ sub signature_calc {
 				next;
 			} # end if
 			if ( ( ! $$folding_results{'Equipment'} ) or ( $$folding_results{'Equipment'}->id() != $Equipment->id() ) ) {
-				$openprint::log->debug("Must also be folded on " . $Equipment->strid() );
+				$openprint::log->debug( "Must also be folded on $$Equipment{strid}.");
 				next;
 			} # end if
 		} # end if
@@ -112,9 +107,11 @@ sub signature_calc {
 		} # end if
 	} # end foreach Equipment
 	if ( ! %best ) {
+$openprint::log->debug("Nopt best");
 		$Results{'Status'} = 'uncalculated';
-		$Results{'alert'} .= 'Unable to calculate';
+		$Results{'alert'} .= 'Unable to calculate.<br/>';
 	} else {
+$openprint::log->debug("best %best");
 		$Results{'Status'} = 'calculated';
 		$Results{'Equipment'} = $best{'Equipment'};
 		$Results{'Price'} = $best{'Price'}{'Total'};
@@ -151,6 +148,10 @@ sub calc {
 	} # end if
 
 	my $services = $Project->services();
+	if ( ! ($$services{'Folding'} and @{$$services{'Folding'}} ) ) {
+		$$specs{'alert'} .= 'Project does not have a folding service.  Folding is required.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 	my $pages = 0;
 	if ( $$services{''} ) {
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -198,13 +199,11 @@ sub calc {
 					next;
 				} # end if
 				my %folding_results;
-				if ( $$services{'Folding'} ) {
-					my $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
-					$folding_results{'Equipment'} = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-					if ( $folding_results{'Equipment'}->id() != $Equipment->id() ) {
-						$$specs{'hdnBreakdown'.$qty_index} .='Must also be folded on ' . $Equipment->strid();
-						next;
-					} # end if
+				my $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+				$folding_results{'Equipment'} = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+				if ( $folding_results{'Equipment'}->id() != $Equipment->id() ) {
+					$$specs{'hdnBreakdown'.$qty_index} .='Must also be folded on ' . $Equipment->strid();
+					next;
 				} # end if
 				$imposition = $I->imposition();
 			} # end if
@@ -230,6 +229,7 @@ sub calc {
 			$$specs{"txtPrice$qty_index"} = '';
 			$$specs{"txtUnitPrice$qty_index"} = '';
 			$$specs{'Status'} = 'uncalculated';
+			$$specs{'alert'} = 'Unable to calculate.<br/>';
 		} else {
 			$$specs{'ddmEquipment'.$qty_index} = $best{'Equipment'}->id();
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $best{'Price'}{'Total'} );
