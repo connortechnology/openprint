@@ -516,5 +516,15 @@ sub is_PEFC {
 		return 1 if $C->description() =~ /PEFC/i;
 	} # end foreach C
 } # end sub is_PEFC
+sub copy {
+	my $self = shift;
+	my $New = new openprint::PurchaseOrder();
+	@$New{keys %fields} = @$self{keys %fields};
+	foreach ( 'id', 'authorized', 'authorized_by'	, 'authorized_on', 'delivered_on' ) {
+		delete $$New{$_};
+	} # end foreach
+	$$New{'created_by'} = $session{'user_id'};
+	return $New;
+} # end sub copy
 1;
 #__END__
