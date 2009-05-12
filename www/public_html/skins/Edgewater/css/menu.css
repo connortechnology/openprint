@@ -84,6 +84,8 @@ ul#menubar li ul li a {
     padding: 0px;
     margin: 0px;
     list-style: none;
+	position: absolute;
+	top: 98px;
 }
 
 #menubar li.off {
@@ -94,12 +96,13 @@ ul#menubar li ul li a {
 #menubar li.off:hover {
 	background-color: #8C8A8B;
 }
-#menubar li.off:hover ul,#menubar li.over ul {
+#menubar li.off:hover ul,#menubar li.on:hover ul, #menubar li.over ul {
     /*display the current topic*/
     display: block;
     list-style: none;
     padding: 0px;
     margin:0px;
+    z-index: 6000;
 }
 
 

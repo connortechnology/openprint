@@ -42,8 +42,16 @@ body #Menu {
 	margin: 0px;
 	margin-left: auto;
 	margin-right: auto;
+    background-color: #0183FF;
+}
+body #HomeMenu {
+	width: 100%;
+	padding: 0px;
+	margin: 0px;
+	margin-left: auto;
+	margin-right: auto;
 	height: 256px;
-	background: #0183FF url(/images/WatersEdge.jpg) repeat-x 0px 0px;
+    background: #0183FF url(/images/WatersEdge.jpg) repeat-x 0px 0px;
 	background-position: center;
 }
 body #Footer {
@@ -142,14 +150,14 @@ table {
 	border-spacing: 0px;
 }
 table.List {
-	border-bottom: 1px solid #000088;
+	border-bottom: 1px solid #0183FF;
 	table-layout: fixed;
 }
 table.List th {
 	border: none;
 	border-right: none;
 	border-left: none;
-	border-bottom: 1px solid #000088;
+	border-bottom: 1px solid #0183FF;
 	background: transparent;
 	padding: 0px;
 	padding-top: 0px;
@@ -165,7 +173,7 @@ table.List td {
 table.List tr.totals {
 }
 table.List tr.totals td {
-	border-top: 1px solid #000088;
+	border-top: 1px solid #0183FF;
 }
 
 table.List input {
@@ -180,7 +188,7 @@ fieldset {
 	border-right: none;
 	border-left: none;
 	border-bottom: none;
-	border-top: 1px solid #000088;
+	border-top: 1px solid #0183FF;
 	padding: 2px;
 	margin: 0px;
 	padding-bottom: 10px;
@@ -201,7 +209,7 @@ fieldset:after {
 
 fieldset legend {
 	font-weight: bold;
-	color: #000088;
+	color: #0183FF;
 }
 
 
@@ -341,7 +349,7 @@ fieldset.filters {
 	*/
 	border-right: none;
 	border-left: none;
-	border-top: 1px solid #000088;
+	border-top: 1px solid #0183FF;
 	border-bottom: none;
 }
 @media print {
@@ -389,8 +397,8 @@ hr {
         padding: 0px;
         height: 1px;
         border: 0px;
-        color: #000088;
-        background-color: #000088;
+        color: #0183FF;
+        background-color: #0183FF;
 }
 
 .error, .warning {
@@ -398,7 +406,7 @@ hr {
 }
 
 .colRow,.roweven {
-	background-color: #CAB880;
+	background-color: #ECEAEB;
 }/* alternating row color in generated tables */
 .colRowRed {
     color: red;
@@ -482,20 +490,27 @@ span.DateSelector select option {
 	font-size: 16px;
 }
 .PageTitle {
-	width: 100%;
+	position: absolute;
 	text-align: right;
+	top: 30px;
+	right: 10px;
+	z-index: 1;
+	float: right;
+	clear: none;
 }
 .PageTitle h1 {
 	text-align: right;
-    color: #EE3E33;
+    color: #0183FF;
 	margin: 0px;
 	font-size: 20px;
+	clear: none;
 }
 .PageTitle h2 {
 	text-align: right;
-	color: #000088;
+	color: #8C8A8B;
 	margin-top: 0px;
 	font-size: 16px;
+	clear: none;
 }
 h3 {
     color: #EE3E33;

@@ -35,7 +35,7 @@
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div id="Header">	
-			<img id="Logo" src="/images/EdgewaterLogo.png" alt="Edgewater Print Management"/>
+			<a href="/index.html"><img id="Logo" src="/images/EdgewaterLogo.png" alt="Edgewater Print Management"/></a>
 <? if ( ! $session{'user_id'} ) ?>
 			<div id="QuickLogin">
 				<form name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
@@ -96,7 +96,11 @@
 				</form>
 			</div><!--Currency-->
 		</div><!--Header-->
+		<? if ( $r->uri() eq '/index.html' ) ?>
+		<div id="HomeMenu">
+		<? else ( $r->uri() eq '/index.html' ) ?>
 		<div id="Menu">
+		<? endif ( $r->uri() eq '/index.html' ) ?>
 		<? echo ( ssi::include( $config{'SkinPath'}.'/includes/customer-menu.html' ); ) ?>
 		</div>
 		<div id="Content">
