@@ -35,8 +35,12 @@ a:link {
 table {
 	border-collapse: collapse;
 	border-spacing: 0px;
-	margin: 0px;
 	border: none;
+	margin: 0px;
+	padding: 0px;
+}
+table tbody {
+	margin: 0px;
 	padding: 0px;
 }
 table tr {
@@ -48,6 +52,7 @@ table tr td {
 	padding: 0px;
 	margin: 0px;
 	border: none;
+	vertical-align: top;
 }
 #Table_02 .rule {
 	color: #B9CED2;
