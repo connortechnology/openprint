@@ -5,6 +5,8 @@ use openprint::Object;
 use Email::Valid;
 use MIME::QuotedPrint;
 use openprint ();
+use vars qw( %config );
+*config = \%openprint::config;
 
 use strict;
 
@@ -149,7 +151,7 @@ sub send_admin_email {
 	my ($log, $dbh, $replacements) = @_;
 
 	# Load the email template
-	#my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	#my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	my $email_template = <<__ADMIN_EMAIL__;
 Dear Sales Rep.
 You need to delete this account because they have not responded to many
@@ -163,7 +165,6 @@ Users Rep: <?REPNAME?>
 __ADMIN_EMAIL__
 
 	# Do the appropriate variable substitutions
-	#$email_template = il($email_template);
 	$email_template = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, $replacements ) );
 
 	# Formulate the body of the message
@@ -204,7 +205,7 @@ sub send_email {
 		my $EmailTemplate = $self->Template();
 		$email_template = $EmailTemplate->body();
 	} else {
-		$email_template = misc::load_file( $self->{log}, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		$email_template = misc::load_file( $self->{log}, $config{'SkinPath'} . '/email_template.html' );
 	} # end if
 
 	# Do the appropriate variable substitutions
@@ -212,11 +213,7 @@ sub send_email {
 	# - The seconds substitution replaces the any tags that were
 	#   inserted by the first replacement
 	# NB. Only encode_qp ONCE
-	#$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements );
 	$email_template = encode_qp( ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements ) );
-foreach my $k ( keys %$replacements ) {
-$openprint::log->debug("$k => $$replacements{$k}");
-}
 
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');

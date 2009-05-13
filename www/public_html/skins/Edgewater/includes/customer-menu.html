@@ -1,17 +1,8 @@
 <ul id="menubar">
 	<li id="MenuAbout" class="off"><a href="#" onclick="toggleMenu($('MenuAbout'), 'off', 'on');return false;">ABOUT</a>
 		<ul>
-			<li><a href="/main/company/online_project_management.html">Online Job Management</a></li>
-			<li><a href="/main/company/policies.html">Policies</a></li>
-			<li><a href="/main/company/contact.html">Contact</a></li>
-		</ul>
-	</li>
-	<li id="MenuServices" class="<? echo ( $r->uri() =~ /main\/services/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuServices'), 'off', 'on');return false;">SERVICES</a>
-		<ul>
-			<li><a href="/main/services/prepress.html;NOSSL">Prepress</a></li>
-			<li><a href="/main/services/production.html;NOSSL">Production</a></li>
-			<li><a href="/main/services/finishing.html;NOSSL">Finishing</a></li>
-			<li><a href="/main/services/delivery.html;NOSSL">Delivery</a></li>
+			<li><a href="/policies.html">Policies</a></li>
+			<li><a href="/contact.html">Contact</a></li>
 		</ul>
 	</li>
 	<li id="MenuAccount" class="<? echo ( $r->uri() =~ /main\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">ACCOUNT</a>
@@ -53,7 +44,6 @@
 	</li>
 	<li id="MenuSupport" class="<? echo ( ( $r->uri() =~ /site_map/  or  $r->uri() =~ /support/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuSupport'), 'off', 'on');return false;">SUPPORT</a>
 		<ul>
-			<li><a href="/site_map.html;NOSSL">Site Map</a></li>
 			<li><a href="/support/help_desk.html;NOSSL">Help Desk</a></li>
 			<li><a href="/support/returns.html;NOSSL">Returns</a></li>
 		</ul>

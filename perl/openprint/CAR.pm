@@ -234,7 +234,7 @@ sub send_assignee_notification {
 	if ( $To->id() == $session{'user_id'} ) {
 		$log->debug("Not Sending CAR Notifications becuase I am ME to " . $To->email());
 	} else {
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		my %info = (
 				'CAR'	=>	$self,
 				'To'    =>  $To,
@@ -260,7 +260,7 @@ sub send_reprint_request_notification {
 		if ( $To->id() == $session{'user_id'} ) {
 			next;
 		} # end if
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		my %info = (
 				'CAR'   =>  $self,
 				'To'    =>  $To,
@@ -288,7 +288,7 @@ sub send_reprint_approval_notification {
 		$log->debug("Not Sending Reprint Approval because I am ME to " . $To->email());
 	} else {
 		$log->debug("Sending Reprint Approval because I am ME to " . $To->email());
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		my %info = (
 				'CAR'   =>  $self,
 				'To'    =>  $To,
@@ -317,7 +317,7 @@ sub send_changed_notification {
 			$log->debug("Not Sending PART2 because I am ME to " . $To->email());
 			next;
 		} # end if
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		my %info = (
 				'CAR'   =>  $self,
 				'To'    =>  $To,

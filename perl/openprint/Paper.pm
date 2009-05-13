@@ -5,8 +5,9 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable %fields %transforms %defaults );
+use vars qw( %variable %fields %transforms %defaults %config );
 *variable = \%openprint::variable;
+*config = \%openprint::config;
 
 
 require sql;
@@ -304,7 +305,7 @@ sub save {
 		if ( ! $error ) {
 
 			$variable{'Paper'} = $self;
-			if ( my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' ) ) {
+			if ( my $email_template = misc::load_file( $openprint::log, $config{'SkinPath'} . '/email_template.html' ) ) {
 				$variable{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/new_paper_notification.html' );
 				$variable{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$variable{'ReplacementText'}, \%variable );
 				my $body = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%variable );

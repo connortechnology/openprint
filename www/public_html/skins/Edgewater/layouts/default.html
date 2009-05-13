@@ -75,14 +75,6 @@
 				</form>
 			</div>
 <? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
-
-<? else ( ! $session{'user_id'} ) ?>
-                <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
-                <? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?>
-                <? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
-                <? if ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
-                <? echo ( ssi::writeButton( $log, $dbh, 'GoAdministrator', 'administrator.gif', '', '/administrator/', 'Administrators' ); ) ?>
-                <? endif ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
 <? endif ( ! $session{'user_id'} ) ?>
 			<div id="SelectCurrency">
 				<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">

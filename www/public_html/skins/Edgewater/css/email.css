@@ -6,6 +6,9 @@ body {
 	margin: 0px;
 	max-width: 1024px;
 }
+td#Header {
+	background: transparent url(/images/gradient-top.gif) repeat-x 0 0;
+}
 
 table {
     width: 100%;
@@ -15,10 +18,10 @@ table {
 	border: none;
 }
 table.List {
-    border-bottom: 1px solid #000088;
+    border-bottom: 1px solid #0183FF;
 }
 table.List th {
-    border-bottom: 1px solid #000088;
+    border-bottom: 1px solid #0183FF;
     background: transparent;
     padding-top: 2px;
     padding-bottom: 2px;
@@ -29,7 +32,7 @@ table.List td {
     vertical-align: top;
 }
 table.List tr.totals {
-    border-top: 1px solid #000088;
+    border-top: 1px solid #0183FF;
 }
 
 table.List input.text {
@@ -75,7 +78,7 @@ hr {
 	height: 0px;
 }
 
-.colRow { background-color: #E3E4F0 }
+.colRow { background-color: #ECEAEB }
 .colRowRed {
     color: red;
 }/* alternating row color in generated tables */
@@ -91,13 +94,13 @@ td.Content {
 fieldset {
 	border-right: none;
 	border-left: none;
-	border-top: 1px solid #000088;
+	border-top: 1px solid #0183FF;
 	border-bottom: none;
 	padding-bottom: 30px;
 }
 fieldset legend {
 	font-weight: bold;
-	color: #000088;
+	color: #0183FF;
 }
 fieldset label {
 }

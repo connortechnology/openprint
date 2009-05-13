@@ -1,5 +1,5 @@
 <style type="text/css">
-<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/order.css' ); ) ?>
+<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/order.css' ); ) ?>
 </style>
 <!--#include virtual="/includes/order_header.html" -->
 <br class="spacer"/>
@@ -7,5 +7,5 @@
 <!--#include virtual="/email_content/_order_contents.html" -->
 <br class="spacer"/>
 <p>
-<!--#include virtual="/skins/<?SiteTitle?>/includes/order_disclaimer.html"-->
+<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/includes/order_disclaimer.html' ); ) ?>
 </p>
