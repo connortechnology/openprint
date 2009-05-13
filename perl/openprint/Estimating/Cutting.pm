@@ -468,6 +468,12 @@ sub signature_calc {
 		$folding_imposition->columns( 1 );
 		$folding_imposition->rows( 1 );
 	} # end if
+
+	if ( $I->image_orientation() eq 'Horizontal' ) {
+		$stitching_imposition = $$I{'columns'} if $stitching_imposition > $$I{'columns'};
+	} else {
+		$stitching_imposition = $$I{'rows'} if $stitching_imposition > $$I{'rows'};
+	} # end if
 	
 	my ( $sheet_width, $sheet_height ) = ($Paper->width(), $Paper->height() );
 

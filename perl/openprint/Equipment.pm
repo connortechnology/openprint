@@ -44,10 +44,6 @@ my %find_cache;
 	'location_id'	=>	undef,
 );
 
-%defaults = (
-	'location_id'		=>	undef,
-);
-
 sub init_cache {
 	%find_cache = ();
 } # end sub init_cache
@@ -391,7 +387,7 @@ $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'
 		$y = $$self{'Specifications'}{$name}[$i];
 #$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
-$openprint::log->debug("Couldn't find maximum") if $debug;
+$openprint::log->debug("Equipment::specification Couldn't find maximum for $name") if $debug;
 		return;
 	} # end if
 

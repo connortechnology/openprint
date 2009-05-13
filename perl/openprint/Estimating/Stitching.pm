@@ -155,6 +155,7 @@ sub signature_calc {
 
 		if ( $imposition > 1 ) {
 			$imposition = 1 if ( 
+			($$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) or 
 			($$I{'imposition'} % 2 ) or 
 			($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) or 
 			($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
