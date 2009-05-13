@@ -8,7 +8,7 @@ use Date::Calc qw(Add_Delta_Days check_date);
 use strict;
 use openprint ();
 use vars qw( %config );
-*config = \%config;
+*config = \%openprint::config;
 
 
 require sql;

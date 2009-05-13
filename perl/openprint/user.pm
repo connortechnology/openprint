@@ -4,7 +4,7 @@ use MIME::QuotedPrint;
 use strict;
 use openprint ();
 use vars qw( %config );
-*config = \%config;
+*config = \%openprint::config;
 
 require sql;
 require misc;

@@ -17,8 +17,8 @@ use vars qw( $r %variable %param %session %config);
 *r = \$openprint::r;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
-*session = \%session;
-*config = \%config;
+*session = \%openprint::session;
+*config = \%openprint::config;
 
 # displays the login page, and populates the destination variable
 sub save_destination {

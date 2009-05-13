@@ -23,7 +23,7 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *session = \%openprint::session;
-*config = \%config;
+*config = \%openprint::config;
 
 # called when a salesperson selects a customer to be
 sub select_company {

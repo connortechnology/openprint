@@ -7,7 +7,7 @@ use strict;
 use openprint ();
 use vars qw( %variable %fields %transforms %defaults %config );
 *variable = \%openprint::variable;
-*config = \%config;
+*config = \%openprint::config;
 
 
 require sql;

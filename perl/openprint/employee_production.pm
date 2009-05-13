@@ -31,7 +31,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
-*config = \%config;
+*config = \%openprint::config;
 
 sub print_overview {
 	press_schedule( @_ );
