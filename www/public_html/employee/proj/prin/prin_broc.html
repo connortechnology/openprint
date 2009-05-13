@@ -2,16 +2,15 @@
 <script type="text/javascript" src="/javascripts/production_feedback.js"></script>
 <script type="text/javascript" src="/includes/employee/feedback/paper.js"></script>
 <div class="Service">
-	<fieldset><legend>
-		Production Feedback
-		<? if ( $$variable{'DocketNumber'} ) ?>for docket #:&nbsp;<?DocketNumber?><? endif ( $$variable{'DocketNumber'} ) ?>
-	</legend>
-	<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
-		<div class="Signature">
-			<? if ( $$variable{'Reference'} ) ?><p>Information for: <?Reference?></p><? endif ( $$variable{'Reference'} ) ?>
-			<!--#include virtual="_signature.html"-->
-		</div>
-	<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
-	<!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
-	</fieldset>
+	<h3>Production Feedback <? if ( $$variable{'DocketNumber'} ) ?>for docket #:&nbsp;<a href="/employee/project/view.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>"><?DocketNumber?></a><? endif ( $$variable{'DocketNumber'} ) ?></h3>
+	<? echo (
+		my $html = '';
+		foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
+			$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
+			$$variable{'ServiceIndex'} = $$variable{'service_id'} = $ss_id;
+			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}. '/employee/proj/prin/_signature.html' );
+		} # end foreach
+		return $html;
+	) ?>
 </div>
