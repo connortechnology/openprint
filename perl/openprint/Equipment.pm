@@ -8,7 +8,7 @@ require openprint::Fold;
 require openprint::Location;
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 my %find_cache;
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'tbl_equipment';
@@ -341,7 +341,7 @@ $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'
 		$y = $$self{'Specifications'}{$name}[$i];
 #$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
-$openprint::log->debug("Couldn't find maximum") if $debug;
+$openprint::log->debug("Equipment::specification Couldn't find maximum for $name") if $debug;
 		return;
 	} # end if
 

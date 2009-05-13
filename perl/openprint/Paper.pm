@@ -1032,12 +1032,12 @@ $openprint::log->debug("No papers found");
 		
 		if ( $qty_index ) {
 			my $qty = $$specs{'txtPressSheetQty'.$qty_index};
-$openprint::log->debug("Looking for $qty");
+#$openprint::log->debug("Looking for $qty");
 			$qty =~ s/\D//g;
 			foreach my $P ( @Papers ) {
-$openprint::log->debug("Looking for $qty < " . $P->minimum_order() );
+#$openprint::log->debug("Looking for $qty < " . $P->minimum_order() );
 				next if $qty < $P->minimum_order();
-$openprint::log->debug("found for $qty < " . $P->minimum_order() );
+#$openprint::log->debug("found for $qty < " . $P->minimum_order() );
 				$Paper = $P;
 				last;
 			} # end foreach
