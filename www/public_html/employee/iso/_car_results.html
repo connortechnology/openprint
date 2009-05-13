@@ -35,6 +35,7 @@
 			<th width="30" class="unprintable"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f1);" /></th>
 -->
 			<th align="left" width="75">CAR ID</th>
+			<th align="left" width="75">Issued To</th>
 			<th align="left" width="75">Issued On</th>
 			<th align="left" width="60">Docket</th>
 			<th align="left" width="60">Status</th>
@@ -48,7 +49,8 @@
 				next if (!$CAR->part4_signed_on()) and $session{'/employee/iso/cars.html?status'} and ! sets::isin( 'Open', split(';', $session{'/employee/iso/cars.html?status'} ) );
 				$html .= "<tr$rowclass>";
 				#$html .= sprintf( '<td class="unprintable"><input type="checkbox" name="cars" value="%d"/></td>', $$CAR{'id'} );
-				$html .= sprintf( '<td><a href="car.html?car_id=%d">%d</a></td>', $$CAR{'id'}, $$CAR{'id'}, );
+				$html .= sprintf( '<td><a href="car.html?car_id=%d">%d</a></td>', $$CAR{'id'}, $$CAR{'id'} );
+				$html .= sprintf( '<td><a href="car.html?car_id=%d">%s</a></td>', $$CAR{'id'}, $CAR->issued_to()->name() );
 				$html .= sprintf( '<td><a href="car.html?car_id=%d">%s</a></td>', $$CAR{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($CAR->issued_on()) ), );
 				$html .= '<td>'. $CAR->docket(). '</td>';	
 				$html .= '<td>'. ( $CAR->part4_signed_on() ? 'Closed' : 'Open' ). '</td>';	

@@ -13,11 +13,12 @@ require openprint::usergroup;
 require openprint::logs;
 
 use openprint ();
-use vars qw( $r %variable %param %session);
+use vars qw( $r %variable %param %session %config);
 *r = \$openprint::r;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
-*session = \%openprint::session;
+*session = \%session;
+*config = \%config;
 
 # displays the login page, and populates the destination variable
 sub save_destination {
@@ -33,6 +34,8 @@ sub save_destination {
 # if someone sets the Destination flag, keep it through the login process.
 	if ( $destination =~ /main\/order/ ) {
 		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue your order.};
+	} elsif ( $destination =~ /survey\.html/ ) {
+		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue the survey.};
 	} else {
 		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue to the page you requested.};
 	} # end if
@@ -106,7 +109,7 @@ sub verify_login {
 	} # end if
 
 	if ( $User->type() ne 'C' ) {
-		if ( $User->company_id() != $openprint::config{'Owner'} ) {
+		if ( $User->company_id() != $config{'Owner'} ) {
 # Send an email notification
 			my %info;
 			@info{'UserFirstName','UserLastName','UserEmail'} = $User->get('firstname','lastname','email');
@@ -116,13 +119,13 @@ sub verify_login {
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/login_notification.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my %mail = (
-					SMTP	=> $openprint::config{'Mail Server'},
-					FROM	=> $openprint::config{'LoginEmail'},
-					TO		=> $openprint::config{'LoginEmail'},
+					SMTP	=> $config{'Mail Server'},
+					FROM	=> $config{'LoginEmail'},
+					TO		=> $config{'LoginEmail'},
 					SUBJECT => "Login notification",
 					);
 			misc::send_email_with_attachment( $log, \%mail, @body );
@@ -131,14 +134,14 @@ sub verify_login {
 
 	} # end if
 
-	@openprint::session{'company_id','user_id','email','user_type'} = $User->get('company_id','id','email','type');
-	delete $openprint::session{'Pricelist_id'};
+	@session{'company_id','user_id','email','user_type'} = $User->get('company_id','id','email','type');
+	delete $session{'Pricelist_id'};
 	openprint::logs::insertLogRecord('2','Success');
 
 	if ( $openprint::param{'rdbRememberMe'} eq 'Y' ) {
 		my $Cookie = Apache2::Cookie->new($r,
 			-name  => 'SessionID',
-			-value => $openprint::session{_session_id},
+			-value => $session{_session_id},
 			-path		=>	'/',
 			);
 		$Cookie->expires('+3M');
@@ -162,15 +165,23 @@ sub verify_login {
 			$openprint::log->debug("Psrsmd: $p, $k = $v ");
 			$openprint::param{$k} = $v;
 		} # end foreach
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue the survey\./ ) {
+     
+		$$variable{'Redirect'} = $1.'.html';
+		foreach my $p ( split('&', $2 ) ) {
+			my ( $k, $v ) = split('=', $p );
+			$openprint::log->debug("Psrsmd: $p, $k = $v ");
+			$openprint::param{$k} = $v;
+		} # end foreach
 	} # end if
 
 } # sub verify_login
 
 sub logout {
 	openprint::logs::insertLogRecord('3',);
-	foreach my $k ( keys %openprint::session ) {
+	foreach my $k ( keys %session ) {
 		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country' ] );
-		delete $openprint::session{$k};
+		delete $session{$k};
 	} # end foreach
 } # sub logout
 
@@ -186,7 +197,7 @@ sub email_password {
 		return misc::error( $log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.' );
 	} # end if
 
-	if ( my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' ) ) {
+	if ( my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' ) ) {
 		my %info = (
 			'siteURL' => $r->dir_config('siteURL'),
 			'SecureSiteURL' => $r->dir_config('SecureSiteURL'),
@@ -201,8 +212,8 @@ sub email_password {
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 
 			my %mail = (
-					SMTP	=> $openprint::config{'Mail Server'},
-					FROM 	=> $openprint::config{'AdministratorEmail'},
+					SMTP	=> $config{'Mail Server'},
+					FROM 	=> $config{'AdministratorEmail'},
 					TO		=> $openprint::param{'txtEmail2'},
 					SUBJECT	=> 'Forgotten Password',
 					);
@@ -216,7 +227,7 @@ sub email_password {
 sub login_password {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	$_ = $openprint::config{'customerlogin'};
+	$_ = $config{'customerlogin'};
 	if ($ENV{'HTTP_REFERER'} =~ /$_/) {
 		$$variable{'message'} = "Your account has been activated.	While it is not required, it is recommended you change your password now.";
 	} else {
@@ -239,7 +250,7 @@ sub change_password {
 		return;
 	} # end if
 
-	my $User = new openprint::User( $openprint::session{'user_id'} );
+	my $User = new openprint::User( $session{'user_id'} );
 
 	if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
 		$$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
@@ -264,9 +275,9 @@ sub verify_user {
 
 	return if ! $cookie;
 
-	my $idletime = $openprint::config{'idletime'};
+	my $idletime = $config{'idletime'};
 
-	if ( $openprint::session{'lastupdated'} and $openprint::session{'user_id'} and $idletime and ( time - $openprint::session{'lastupdated'} > $idletime ) ) {
+	if ( $session{'lastupdated'} and $session{'user_id'} and $idletime and ( time - $session{'lastupdated'} > $idletime ) ) {
 		logout( $log, $dbh, $variable, $cookie, $site );
 		$$variable{'idletime'} = $idletime;
 		$$variable{'Destination'} = misc::get_destination( $r, $log );

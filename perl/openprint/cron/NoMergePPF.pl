@@ -50,6 +50,8 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 	if ( opendir DIRHANDLE, $source_path ) {
 		@filenames = readdir DIRHANDLE;
 		closedir DIRHANDLE;
+	} else {
+		die "Unable to open $source_path\n";
 	} # end if
 
 	foreach my $file ( @filenames ) {

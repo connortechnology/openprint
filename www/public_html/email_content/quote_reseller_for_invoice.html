@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title><? echo ( $openprint::config{'SiteTitle'} ) ?> - Quote</title>
+		<title><? echo ( $config{'SiteTitle'} ) ?> - Quote</title>
 		<style type="text/css">
 		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/email.css' ); ) ?>
 		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?>
@@ -38,7 +38,7 @@
 my $html;
 my $Project = new openprint::Project( $$variable{'project_index'} );
 $html .= ssi::htmlize($Project->reference()) . ':<br/>' if $Project->reference();
-$html .= $Project->summary() if $openprint::config{'ShowProjectSummaryOnQuote'} ne 'N';
+$html .= $Project->summary() if $config{'ShowProjectSummaryOnQuote'} ne 'N';
 return $html;
  ) ?></td>
 				<td colspan="3">

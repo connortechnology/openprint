@@ -1,0 +1,27 @@
+<? echo ( 
+	my $html;
+	@{$$variable{'pending_drops'}} = ();
+	if ( $session{'/employee/production/print_overview.html?pending'} ) {
+		foreach my $E ( @{$$variable{'Presses'}} ) {
+			push @{$$variable{'pending_drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'NotApproved' );
+			$html .= '<div class="PressColumn">';
+			$html .= openprint::press_schedule::get_ul( undef, undef, $E->id(), {'name'=>'NotApproved'}, {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval'] } );
+			$html .= '</div>';
+		} # end foreach press
+	} # end if
+	return $html;
+) ?>
+<? if ( @{$$variable{'pending_drops'}} ) ?>
+<script type="text/javascript">
+  // <![CDATA[
+	drops.push("<? echo ( join('","', @{$$variable{'pending_drops'}} ) ) ?>");
+	for ( var id in drops ) {
+		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false,
+             onUpdate:function(drop){
+             jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( drop.id, Sortable.serialize(drop) ) );
+             }
+            });
+	} // end foreach id in drops
+// ]]>
+</script>
+<? endif ( @{$$variable{'pending_drops'}} ) ?>

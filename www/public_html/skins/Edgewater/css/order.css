@@ -1,0 +1,71 @@
+
+div.Order fieldset p {
+	padding-left: 110px;
+}
+div.Order fieldset p label {
+	margin-left: -110px;
+	width: 105px;
+	float: left;
+}
+div.Order fieldset p label.radio {
+	margin: auto;
+	border: none;
+	width: auto;
+	float: none;
+}
+div.Order fieldset p input[type="text"] {
+	width: 95%;
+}
+div.Order fieldset p select {
+	width: 95%;
+}
+div.Order fieldset p textarea {
+	width: 95%;
+}
+div.OrderHeader {
+	width: 100%;
+    border-bottom: 1px solid #0183FF;
+    margin-bottom: 5px;
+}
+div.OrderHeader:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.OrderHeader {height: 1%;}
+* */* End hide from IE-mac */
+
+div.OrderHeader fieldset {
+	border-left: none;
+    border-right: none;
+    border-bottom: none;
+    margin-bottom: 0px;
+    padding: 6px;
+    width: 48%;
+    text-align: left;
+	float: left;
+}
+div.OrderHeader fieldset#OrderedBy {
+float: right;
+}
+
+div.OrderHeader fieldset p {
+	text-align: right;
+	padding: 0px;
+	margin: 0px;
+}
+div.OrderHeader fieldset p label {
+	padding: 0px;
+	margin: 0px;
+	float: left;
+	font-weight: bold;
+	text-align: left;
+	width: auto;
+}
+.Currency {
+	float: right;
+	font-weight: bold;
+}

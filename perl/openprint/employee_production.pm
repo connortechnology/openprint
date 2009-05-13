@@ -31,7 +31,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
-*config = \%openprint::config;
+*config = \%config;
 
 sub print_overview {
 	press_schedule( @_ );
@@ -419,7 +419,7 @@ sub send_additional_charges_notifications {
 	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
 	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
 
-	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 #$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_csr_notification.html\"-->";
 #$_ = encode_qp( ssi::variable_substitution( $email_template, \%info ) );
@@ -552,7 +552,7 @@ sub send_proofs_complete_email {
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_complete.html' );
 	$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-	$_ = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
+	$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
@@ -609,7 +609,7 @@ sub send_proofs_approved_email {
 	if ( $sales_person_email ne '  <>' ) {
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_approved-sales_rep.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+		$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
@@ -639,7 +639,7 @@ sub send_duedate_change_notification {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() ) {
-		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
@@ -1054,6 +1054,24 @@ sub _stock_checkout {
 sub _bump_job {
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 } # end sub _bump_job
+
+sub _pending_approved {
+	$session{'/employee/production/print_overview.html?pending_approved'} = $session{'/employee/production/print_overview.html?pending_approved'} ? 0 : 1;
+    @{$variable{'Presses'}} = ();
+    my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+    foreach (@presses) {
+        push @{$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
+    } # end foreach press
+} # end sub _pending_approved
+
+sub _pending {
+	$session{'/employee/production/print_overview.html?pending'} = $session{'/employee/production/print_overview.html?pending'} ? 0 : 1;
+    @{$variable{'Presses'}} = ();
+    my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+    foreach (@presses) {
+        push @{$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
+    } # end foreach press
+} # end sub _pending
 
 1;
 

@@ -2,6 +2,9 @@ package openprint::administrator_managerial;
 use MIME::QuotedPrint;
 
 use strict;
+use openprint ();
+use vars qw( %config );
+*config = \%openprint::config;
 
 require sql;
 require ssi;
@@ -143,6 +146,12 @@ sub user_profiles {
 		#$param{'csr_ids'} = '' if ! exists $param{'csr_ids'};
 		delete $param{'password'} if ! $param{'password'};
 		my $error = $User->save( \%param );
+
+		if ( ! $error ) {
+			foreach my $Type ( openprint::PurchaseOrder_ContentType::find() ) {
+				$User->po_limit( $Type->id(), $openprint::param{'po_limit-'.$Type->id()} );
+			} # end foreach Type
+		} # end if
 
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving.', "There was an error saving the user's information. $error");

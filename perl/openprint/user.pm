@@ -2,6 +2,9 @@ package openprint::user;
 use MIME::QuotedPrint;
 
 use strict;
+use openprint ();
+use vars qw( %config );
+*config = \%config;
 
 require sql;
 require misc;
@@ -64,12 +67,12 @@ sub save {
 			$info{'User'} = $User;
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 			$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
-					FROM    => $openprint::config{'AdministratorEmail'},
+					SMTP    => $config{'Mail Server'},
+					FROM    => $config{'AdministratorEmail'},
 					TO      => $r->param('txtEmail'),
 					SUBJECT => "User type has changed!"
 					);
@@ -85,13 +88,13 @@ sub save {
 				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/usertype_system_notification.html' );
 				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-				my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 				$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 				my %mail = (
-						SMTP    => $openprint::config{'Mail Server'},
-						FROM    => $openprint::config{'LoginEmail'},
-						TO      => $openprint::config{'LoginEmail'},
+						SMTP    => $config{'Mail Server'},
+						FROM    => $config{'LoginEmail'},
+						TO      => $config{'LoginEmail'},
 						SUBJECT => "Someone's UserType has changed!"
 						);
 				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
@@ -106,16 +109,16 @@ sub save {
 			$info{'User'} = $User;
 			$info{'SecureSiteURL'} = $r->dir_config('SecureSiteURL');
 			$info{'siteURL'} = $r->dir_config('siteURL');
-			$info{'CustomerServiceEmail'} = $openprint::config{'CustomerServiceEmail'};
+			$info{'CustomerServiceEmail'} = $config{'CustomerServiceEmail'};
 			$_ = $r->param('rdbAccountActivation') eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-			my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 			$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
-					FROM    => $openprint::config{'AdministratorEmail'},
+					SMTP    => $config{'Mail Server'},
+					FROM    => $config{'AdministratorEmail'},
 					TO      => $r->param('txtEmail'),
 					SUBJECT => "User account status has changed!"
 					);

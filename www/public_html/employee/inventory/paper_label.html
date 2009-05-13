@@ -7,7 +7,6 @@
 	<? echo ( Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time($$variable{'Skid'}->created_on()) );) ?>
 </div>
 <div style="border: 1px solid black; padding: 0px 7px 0px 5px; height: 90px; margin-bottom: 2px;">
-<? if ( $$variable{'paper_id'} ) ?>
 <? echo ( 
 	my $html;
 	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
@@ -30,9 +29,8 @@
 		} # end if
 		$html .= '<br/><b>'. $c->quantity() . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
 	} # end foreach
-return $html;
+	return $html;
 ) ?>
-<? endif ( $$variable{'paper_id'} ) ?>
 </div>
 <? echo (
 	if ( $$variable{'paper_id'} ) {

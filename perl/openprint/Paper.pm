@@ -5,8 +5,9 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable %fields %transforms %defaults );
+use vars qw( %variable %fields %transforms %defaults %config );
 *variable = \%openprint::variable;
+*config = \%config;
 
 
 require sql;
@@ -357,14 +358,14 @@ sub save {
 		if ( ! $error ) {
 
 			$variable{'Paper'} = $self;
-			if ( my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}. '/email_template.html' ) ) {
+			if ( my $email_template = misc::load_file( $openprint::log, $config{'SkinPath'} . '/email_template.html' ) ) {
 				$variable{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/new_paper_notification.html' );
 				$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
 				my $body = ssi::variable_substitution( \$email_template, \%variable );
 				my %mail = (
-						SMTP    => $openprint::config{'Mail Server'},
-						FROM    => $openprint::config{'InventoryEmail'},
-						TO      => $openprint::config{'InventoryEmail'},
+						SMTP    => $config{'Mail Server'},
+						FROM    => $config{'InventoryEmail'},
+						TO      => $config{'InventoryEmail'},
 						SUBJECT => 'A new paper has been added to inventory',
 						);
 				#misc::send_email_with_attachment( $openprint::log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );

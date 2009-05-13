@@ -86,8 +86,8 @@ foreach my $log_file ( @log_files ) {
 							#print "Got $ip for $source\n";
 						} # end if
 					} # end if
-					next if $ip =~ /209.250.156/;
-					next if $ip =~ /173.34.14.197/;
+					next if $ip =~ /^209\.250\.156/;
+					next if $ip =~ /^173\.34\.14\.197/;
 					if ( ! $ip ) {
 						print "No ip for $source\n";
 					} else {

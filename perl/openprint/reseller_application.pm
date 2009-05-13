@@ -9,17 +9,26 @@ require misc;
 require openprint::customer;
 require openprint::obj_customer;
 
-	my %fields = (
-			'rdbLegalForm'			=>	'LegalForm',
-			'txtLegalBusinessName'	=>	'LegalBusinessName',
-			'txtBusinessType'		=>	'BusinessType',
-			'BusinessStartDate'		=>	'BusinessStartDate',
-			'txtPresidentOwner'		=>	'PresidentOwner',
-			'ddmEmployees'			=>	'Employees',
-			'ddmAnnualSales'		=>	'AnnualSales',
-			'txtGSTNumber'			=>	'TaxNumber1',
-			'txtPSTNumber'			=>	'TaxNumber2',
-	);
+use vars qw( $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+
+my %fields = (
+		'rdbLegalForm'			=>	'LegalForm',
+		'txtLegalBusinessName'	=>	'LegalBusinessName',
+		'txtBusinessType'		=>	'BusinessType',
+		'BusinessStartDate'		=>	'BusinessStartDate',
+		'txtPresidentOwner'		=>	'PresidentOwner',
+		'ddmEmployees'			=>	'Employees',
+		'ddmAnnualSales'		=>	'AnnualSales',
+		'txtGSTNumber'			=>	'TaxNumber1',
+		'txtPSTNumber'			=>	'TaxNumber2',
+);
 
 sub reseller_application_display {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -95,7 +104,7 @@ sub reseller_application_process {
     $info{'SecureSiteURL'} = $r->dir_config('SecureSiteURL');
     $info{'siteURL'} = $r->dir_config('siteURL');
 
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 
 	my @fields = keys %fields;
 	@info{ @fields } = $customer->get( @fields{@fields} );

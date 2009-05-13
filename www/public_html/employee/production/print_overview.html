@@ -1,7 +1,7 @@
 <? eval (
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) {
+			foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay','pending','pending_approved' ) {
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
@@ -15,7 +15,7 @@
 		} # end if
 		$session{'/employee/production/print_overview.html?lastupdated'} = time;
 	} elsif ( time - $session{'/employee/production/print_overview.html?lastupdated'} > 60*60 ) { 
-		foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) {
+		foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay','pending','pending_approved' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
@@ -241,6 +241,7 @@
 		popupWin.showCenter();
 		popupWin.setAjaxContent(url+'?'+parameters, null , true);
 	} // end function popup_window
+var drops = new Array();
 -->
 </script>
 <link rel="stylesheet" type="text/css" href="/css/press_schedule.css">
@@ -410,7 +411,7 @@
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="font-size:16px; font-weight:bold;"><a href="/employee/production/equipment_view.html?equipment_id='.$E->id().'">'.$E->name().'</a></div>';
+			$html .= '<div class="PressColumn" style="font-size:16px; font-weight:bold;"><a href="/employee/production/print_overview.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
 		} # end foreach
 		return $html;
 		) ?>
@@ -451,24 +452,12 @@
 			} # end foreach delta day
 			$html .= '</div>';
 		} # end foreach press
-		$html .= '<div class="unprintable"><hr class="spacer"/><h3>Pending Approved:</h3>';
-		# Now do unassigned jobs
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'Approved' );
-			$html .= '<div class="PressColumn">';
-			$html .= openprint::press_schedule::get_ul( undef, undef, $E->id(), {'name'=>'Approved'}, { 'Status'=>'Approved' } );
-			$html .= '</div>';
-		} # end foreach press
-		$html .= '</div>';
-		$html .= '<div class="unprintable"><hr class="spacer"/><h3>Pending:</h3>';
-		# Now do unassigned jobs
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'NotApproved' );
-			$html .= '<div class="PressColumn">';
-			$html .= openprint::press_schedule::get_ul( undef, undef, $E->id(), {'name'=>'NotApproved'}, {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval'] } );
-			$html .= '</div>';
-		} # end foreach press
-		$html .= '</div>';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
+		$html .= '</div></div>';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
+		$html .= '</div></div>';
 		return $html;
 	) ?>
 </form>
@@ -476,19 +465,14 @@
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
   // <![CDATA[
-	<? echo (
-		my $html;
-		foreach my $id ( @{$$variable{'drops'}} ) {
-			$html .= qq/
-			Sortable.create("$id", {dropOnEmpty:true,containment:["/.join('","', @{$$variable{'drops'}} ) . qq/"],constraint:false,
-			 onUpdate:function(){
-			 jsrsExecute( '\/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( '$id', Sortable.serialize("$id") ) );
-			 }
-			});
-			/;
-		} # end foreach
-		return $html;
-	) ?>
+	drops.push("<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>");
+	for ( var id in drops ) {
+		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false,
+             onUpdate:function(drop){
+             jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( drop.id, Sortable.serialize(drop) ) );
+             }
+            });
+	} // end foreach id in drops
 // ]]>
 </script>
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>

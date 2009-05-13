@@ -32,6 +32,11 @@ my %find_cache;
 	'jdf_id'			=> 	'jdf_id',
 	'jdf_name'			=> 	'jdf_name',
 	'location_id'		=>	'location_id',
+	'cip3_in'			=>	'cip3_in',
+	'cip3_out'			=>	'cip3_out',
+	'cip3_hold'			=>	'cip3_hold',
+	'cip3_merge'		=>	'cip3_merge',
+	'cip3_monitor'		=>	'cip3_monitor',
 );
 %transforms = (
 );
@@ -114,6 +119,10 @@ $openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $
 	if ( $params{'jmf_enabled'} ) {
 		$sql .= ' AND jmf_enabled=?';
 		push @values, 1;
+	} # end if
+	if ( $params{'cip3_monitor'} ) {
+		$sql .= ' AND cip3_monitor=?';
+		push @values, $params{'cip3_monitor'};
 	} # end if
 	if ( $params{'category'} ) {
 		$sql .= q{ AND strCategory=?};
@@ -488,10 +497,10 @@ sub update_schedule {
 	$_ = q{SELECT DISTINCT ProjectIndex, ServiceIndex, StartTime FROM Projects, Schedule WHERE Equipment_id=? AND Index=ProjectIndex AND Projects.strStatus='Approved' ORDER BY StartTime};
 	my @data = sql::execute( undef, undef, $_, $$self{id} );
 	while ( my ( $project_index, $service_index, undef ) = splice @data, 0, 3 ) {
-		sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ServiceIndex=?', $$self{id}, $service_index],
+		sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ProjectIndex=? AND ServiceIndex=?', $$self{id}, $project_index, $service_index],
 				'StartTime', $start_time
 				);
-		( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ServiceIndex=?}, $service_index );
+		( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE projectindex=? AND ServiceIndex=?}, $project_index, $service_index );
 	} # end while
 
 } # end sub update_schedule

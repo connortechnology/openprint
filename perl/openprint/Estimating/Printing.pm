@@ -3598,6 +3598,11 @@ sub select_presses {
 			$openprint::log->debug(" ** Press $press_id Failed Calliper Check **");
 			next;
 		} # end if
+		if ( ( $Paper->type() eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
+
+			$openprint::log->debug(" ** Press $press_id Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight') );
+			next;
+		} # end if
 
 		if ( $Press->specification('Printing Type') eq 'Digital' ) {
 # Digital only support Process, no PMS, etc...
@@ -3901,11 +3906,11 @@ sub get_run_price {
 	$run_speed = $Press->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() ) if ! $run_speed;
 	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->Paper()->calliper());
 #$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." ($running_price) ($run_price{'units'}) STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
-	$run_speed = $run_speed / $speed_mod if $speed_mod;
+	$speed_mod = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() ) / $speed_mod if $speed_mod;
 
 	if ( sets::isin( lc $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
-		if ( $run_speed and $speed_mod ) {
-			$running_price *= $run_speed;
+		if ( $speed_mod ) {
+			$running_price *= $speed_mod;
 		} # end if
 #$log->warn(" ** FINAL  RUNNING PRICE $running_price **") if $debug or 1;
 		$run_price{'Cost'} = $running_price;
@@ -3948,8 +3953,9 @@ sub press_setup_cost {
 			$setup_count += 1;
 		} # end if
 	} # end foreach colour
+	
 	my %Price;
-	$Price{'Setup Count'} = $setup_count;
+	$Price{'Setup Count'} = $setup_count + $plate_change_qty;
 	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), undef, $Press ) ) ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
 	} # end if
@@ -3967,18 +3973,16 @@ sub press_setup_cost {
 	} # end if
 	if ( $Price{'units'} =~ /Per Run/i ) {
 		$Price{'Total'} *= $plate_runs if $plate_runs;
-		$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
+		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{'Total'};
 	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press );
 	if ( %PlateSetupPrice ) {
-			my $plates = $setup_count;
-			$plates *= $plate_runs if $plate_runs;
-			$plates += $plate_change_qty;
+		my $plates = $setup_count;
+		$plates *= $plate_runs if $plate_runs;
+		$plates += $plate_change_qty;
 		if ( lc $PlateSetupPrice{'units'} eq 'per hour' ) {
-			my $time = $Press->specification('Plate Setup Time');
-			$time *= $plates;
-			$time /= 60;
+			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
 		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
