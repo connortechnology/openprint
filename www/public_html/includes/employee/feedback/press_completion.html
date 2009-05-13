@@ -55,6 +55,15 @@
 		<select name="ddmPressCompletionDateDay-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, document.f1.elements['ddmPressCompletionDateMonth-<?SignatureIndex?>'],this, this.value);"><?days?></select>
 		<select name="ddmPressCompletionDateYear-<?SignatureIndex?>" size="1"><?years?></select>
 	</p>
+<? eval (
+	if ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq '' ) {
+		if ( openprint::service::status( @$variable{'ProjectIndex','ServiceIndex'} ) eq 'Complete' ) {
+			$$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} = 'Yes';
+		} else {
+			$$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} = 'No';
+		} # end if
+	} # end if
+) ?>
 	<p>
 		<label>Complete:</label>
 		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>Y" name="rdbPressComplete-<?SignatureIndex?>" value="Yes" <? echo ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq 'Yes' ? 'checked="checked"' : '' ) ?> />

@@ -293,8 +293,11 @@ sub view {
 
 				if ( ! is_sig_complete( $project_index, $signature_service_index ) ) {
 					$complete = 0;
-				} elsif ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
-					$Equipment[0]->update_schedule();
+				} else {
+					sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND serviceindex=?}, $project_index, $signature_service_index );
+					if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
+						$Equipment[0]->update_schedule();
+					} # end if
 				} # end if
 			} # end foreach signature_service_index
 
