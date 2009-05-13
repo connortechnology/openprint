@@ -1861,6 +1861,9 @@ $PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs
 $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 						$additional_price = $$sig_price{'Comparison Cost'};
 						$additional_price -= $$sig_price{'Plate Comparison Cost'};
+						$additional_price -= $$sig_price{'Stitching Cost'};
+						$additional_price -= $$sig_price{'PerfectBound Cost'};
+
 
 						if ( ! $$sig_price{'Imposition'} ) {
 #$openprint::log->debug("No Imposition found.");
@@ -2171,7 +2174,7 @@ sub calc_price {
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
 	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
-$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
+#$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
 	$run_speed = $speed_mod if $speed_mod;
 
 	my %folding_results;
@@ -2188,6 +2191,7 @@ $openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper(
 			$openprint::log->debug("Unable to fold spreads:" . $Imposition->spreads() . ' alert:'. $$project{'FoldingSpecs'}{'alert'} ) if $debug;
 		} else {
 			$$Imposition{'Folder'} = $folding_results{'Equipment'};
+			$$Imposition{'FoldingImposition'} = $folding_results{'Imposition'};
 		} # end if
 		$price{'FoldingImposition'} = $folding_results{'Imposition'};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
