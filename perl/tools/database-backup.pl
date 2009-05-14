@@ -25,9 +25,12 @@ if ( ! @dbs ) {
 
 foreach my $db ( @dbs ) {
 	$db =~ s/^\s*([\w\-]*)\s*$/$1/;
-	print "Connecting to $db\n";
+	next if $db =~ /template\d/;
 	my $dbh = DBI->connect("dbi:Pg:dbname=$db;", 'postgres', undef, {AutoCommit=>1} );
-	next if ! $dbh;
+	if ( ! $dbh ) {
+		print "Unable to connect to $db\n";
+		next;
+	} # end if
 	my $row = $dbh->selectrow_hashref( q{SELECT backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 	if ( $$row{'backup'} ) {
 		print "Backing up $db\n";
