@@ -236,7 +236,6 @@ $log->debug("User Type: $session{'user_type'}");
 			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
 
 		} elsif ( $first ) {
-$log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
 			$eval .= '_'.$second if $second;
 			eval	'require '.$eval;
@@ -245,7 +244,6 @@ $log->debug("1 $first _ $second $filename");
 			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
 			eval $eval;
 			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
-$log->debug('2');
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {

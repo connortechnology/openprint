@@ -14,7 +14,7 @@ use vars qw(%variable $log $dbh %config);
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 
-my $debug = 1;
+my $debug = 0;
 
 my %fields = (
 	'company_id'		=>	'company_id',
@@ -411,7 +411,7 @@ sub find {
 	} # end if
 	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->error( "Error loading Users: ($sql) (@values)" );
+		$log->error( "Error loading Users: ($sql) (@values)" . $dbh->errstr() );
 		return;
 	} elsif ( $debug ) {
 		$log->debug( "loading Users: ($sql) (@values) " . $data );

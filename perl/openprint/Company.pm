@@ -82,7 +82,7 @@ $serial = 'companies_id_seq';
 	'deleted'		=>	0,
 );
 
-my $debug = 1;
+my $debug = 0;
 
 # Returns a paper object specified by the parameters
 sub find {
