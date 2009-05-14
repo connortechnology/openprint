@@ -616,3 +616,6 @@ div.GrayGradient:after {
 .alert {
 	background-color: yellow;
 }
+img.Override {
+	height: 16px;
+}

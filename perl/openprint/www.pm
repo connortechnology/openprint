@@ -361,7 +361,7 @@ $log->debug("Dset: $variable{'Destination'}");
 			openprint::order::history_details( $r, $log, $dbh, \%variable )						if $filename eq 'history_details.html';
 		
 		} elsif ( $second eq 'project' ) {
-			if ( defined $third ) {
+			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
 				if ( ! $variable{'ServiceIndex'} ) {
 					$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
 				} # end if

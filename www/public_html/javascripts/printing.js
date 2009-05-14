@@ -186,14 +186,14 @@ function clear_price_data( form ) {
 	for ( var qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
 		if ( quantities[qtyNum-1] > 0 ) {
 			if ( form.elements['StockType'+qtyNum] ) form.elements["StockType"+qtyNum].value = '';
-			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! form.elements['OverridePrice'+qtyNum].checked ) form.elements["txtPrice"+qtyNum].value = '';
+			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! get_value(form.elements['OverridePrice'+qtyNum]) ) form.elements["txtPrice"+qtyNum].value = '';
 			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
 			if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
 			if ( form.elements["txtPressSheetQty"+qtyNum] ) form.elements["txtPressSheetQty"+qtyNum].value = '';
 			if ( form.elements["txtPlateQuantity"+qtyNum] ) form.elements["txtPlateQuantity"+qtyNum].value = '';
 			
 			if ( form.elements["txtImposition"+qtyNum] ) {
-				if ( ( ! form.elements['chkOverrideImposition'+qtyNum] ) || ( ! form.elements['chkOverrideImposition'+qtyNum].checked ) ) {
+				if ( ( ! form.elements['chkOverrideImposition'+qtyNum] ) || ( ! get_value(form.elements['chkOverrideImposition'+qtyNum]) ) ) {
 					//form.elements["txtImposition"+qtyNum].value = '';
 				} // end if
 			} // end if
@@ -204,7 +204,7 @@ function clear_price_data( form ) {
 			if ( form.elements['hdnImpositionDutchColumns'+qtyNum]) form.elements['hdnImpositionDutchColumns'+qtyNum].value = '';
 			if ( form.elements['hdnImpositionDutchRows'+qtyNum]) form.elements['hdnImpositionDutchRows'+qtyNum].value = '';
 			//form.elements["txtAdditionalPrice"+qtyNum].value = '0.00';
-			if ( ! ( form.elements['chkOverridePress'+qtyNum] && form.elements['chkOverridePress'+qtyNum].checked ) ) {
+			if ( ! ( form.elements['chkOverridePress'+qtyNum] && get_value(form.elements['chkOverridePress'+qtyNum]) ) ) {
 				if ( form.elements['ddmPress'+qtyNum] ) {
 					if ( form.elements['ddmPress'+qtyNum].type == 'select-one' ) {
 						ddm_select_by_index( form.elements['ddmPress'+qtyNum], 0 );
@@ -213,12 +213,12 @@ function clear_price_data( form ) {
 					} // end if
 				} // end if
 			} // end if
-			if ( form.elements['chkOverridePageQuantity'+qtyNum] && ! form.elements['chkOverridePageQuantity'+qtyNum].checked ) {
+			if ( form.elements['chkOverridePageQuantity'+qtyNum] && ! get_value(form.elements['chkOverridePageQuantity'+qtyNum]) ) {
 				form.elements['PageQuantity'+qtyNum].value='';
 			} // end if
 			if ( form.elements['ddmRunStyle'+qtyNum] ) {
 				if ( 
-					! ( form.elements['chkOverrideRunStyle'+qtyNum] && form.elements['chkOverrideRunStyle'+qtyNum].checked ) 
+					! ( form.elements['chkOverrideRunStyle'+qtyNum] && get_value(form.elements['chkOverrideRunStyle'+qtyNum]) ) 
 					&& form.elements['ddmRunStyle'+qtyNum].type == 'select-one' 
 					) {
 					ddm_select_by_index( form.elements['ddmRunStyle'+qtyNum], 0 );
