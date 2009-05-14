@@ -59,8 +59,6 @@ my %variables = (
 		'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 		'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
 		'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
-		'StockPrice1'=>['save','output'], 'StockPrice2'=>['save','output'], 'StockPrice3'=>['save','output'],
-		'OverrideStockPrice1'=>['save'], 'OverrideStockPrice2'=>['save'], 'OverrideStockPrice3'=>['save'],
 		'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
 		'chkCyanSideOne' => ['save'],
 		'chkMagentaSideOne' => ['save'],
@@ -592,11 +590,6 @@ $openprint::log->debug("calc_from_impos: Stock Weight: $$price{'Stock Weight'}")
 
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $$price{'Impressions'};
 
-		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
-$openprint::log->debug("Paper Cost: $$price{'Paper Price'}");
-			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $$price{'Paper Price'} );
-		} else {
-		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			if ( $$specs{'pages_supplied'} eq 'Y' ) {
 				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
@@ -1871,10 +1864,6 @@ $i->display();
 
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $best_price{'Impressions'};
 #$$specs{'RunTime'.$qty_index} = $best_price{'RunTime'};
-		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
-$openprint::log->debug("Paper Cost: $best_price{'Paper Price'}");
-			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $best_price{'Paper Price'} );
-		} # end if
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			if ( $$specs{'pages_supplied'} eq 'Y' ) {
@@ -2393,10 +2382,6 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 			@{$$price{'Impositions'}} = @{$$sig_specs{'Impositions'}} if $$sig_specs{'Impositions'};
 			push @{$$price{'Impositions'}}, $imp;
 			my $Paper = $imp->Paper();
-			if ( $$sig_specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) {
-				$Paper = $Paper->copy();
-				$$Paper{'Price'} = $$sig_specs{'StockPrice'.$qty_index};
-			} # end if
 
 			my $upq = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} - $imp->pages();
 			if ( $upq and $imp->pages() ) {

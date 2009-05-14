@@ -6,60 +6,42 @@
 	$$variable{'Columns'} = 'Two';
 	} # end if
 ) ?>
-<div class="Service">
+<div class="Service <?ServiceTypeID?>">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 <? echo (
 	my $html = '';
+	$$variable{'Currency'} = openprint::Currency::get_current();
 	my %totals;
 	my %sheets;
 	my %papers;
 	my $Project = $$variable{'Project'};
 	foreach my $ss_id ( $Project->signatures() ) {
+		$$variable{'ss_id'} = $ss_id;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		$html .= '<fieldset><legend>Stock for Signature ' . $$sig_specs{'SignatureIndex'} . '</legend>';
-		my %sig_html;
-		my %sig_papers;
 
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			next if ! $$sig_specs{'txtImposition'.$qty_index};
+		foreach my $stock_index ( 1 .. 4 ) {
+			last if ( $stock_index > 1 ) and ( ! $$variable{"id-$ss_id-$stock_index"} );
+			$$variable{'stock_index'} = $stock_index;
 
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			my $key = $Paper->to_string();
-
-			$sig_papers{$key} = $Paper;
-			$papers{$key} = $Paper;
-
-			$sig_html{$key}[$qty_index] .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			if ( $Paper->type() eq 'Roll' ) {
-				$totals{$key}[$qty_index] += $$sig_specs{'StockQuantity'.$qty_index};
-				$sig_html{$key}[$qty_index] .= sprintf('<input size="6" type="text" id="qty-%1$d" name="qty-%1$d" value="%2$s" onkeyup="calc(this.form.name);" />', $Paper->id(), $$sig_specs{'StockQuantity'.$qty_index} );
-			} elsif ( $Paper->type() eq 'Sheet' ) {
-				my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
-				my $factor = $Paper->start_area() /$Paper->area();
-				$sheets /= $factor if $factor != 1;
-				$sheets = POSIX::ceil( $sheets );
-				my $weight = POSIX::ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
-				$totals{$key}[$qty_index] += $weight;
-				$sheets{$key}[$qty_index] += $sheets;
-				$sig_html{$key}[$qty_index] .= sprintf('<input size="6" type="hidden" id="qty-%1$d" name="qty-%1$d" value="%2$s" />', $Paper->id(), $weight );
-				$sig_html{$key}[$qty_index] .= sprintf('<input size="6" type="text" id="sheets-%1$d" name="sheets-%1$d" value="%2$s" onkeyup="calc(this.form.name);" />', $Paper->id(), $sheets );
+			my $Paper;
+			if ( $$variable{"id-$ss_id-$stock_index"} ) {
+				$Paper = new openprint::Paper( $$variable{"id-$ss_id-$stock_index"} );
+			} else {
+				$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
 			} # end if
-			$sig_html{$key}[$qty_index] .= ssi::write_override( 'overrideqty-'.$Paper->id(), $$variable{'override-'.$Paper->id()}, '', "calc('f1')" );
-			$sig_html{$key}[$qty_index] .= $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-
-			$sig_html{$key}[$qty_index] .= '</span>';
-		} # end foreach qty_index
-
-		foreach my $key ( sort keys %sig_papers ) {
-			$html .= '<p><label>'.$key.'</label>';
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				$html .= $sig_html{$key}[$qty_index];
-			} # end foreach qty_index
-			$html .= '</p>';
-		} # end foreach
+			$$variable{'Stock'} = $Paper;
+			$papers{$Paper->to_string()} = $Paper;
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				$totals{$Paper->to_string()}[$qty_index] += $$variable{"qty-$ss_id-$stock_index-$qty_index"};
+				$sheets{$Paper->to_string()}[$qty_index] += $$variable{"sheets-$ss_id-$stock_index-$qty_index"};
+			} # end foreach
+			$html .= ssi::include($ENV{'DOCUMENT_ROOT'}.'/main/project/_stock_line.html');
+		} # end foreach stock_index
 		$html .= '</fieldset>';
 	} # end foreach signature
+
 	$html .= '<fieldset><legend>Totals:</legend>';
 	foreach my $stock ( sort keys %totals ) {
 		$html .= '<p><label>'.$stock.'</label>';
@@ -67,16 +49,15 @@
 
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			if ( $Paper->type() eq 'Roll' ) {
-				$html .= sprintf('<input size="6" type="text" id="qty-%1$d" name="qty-%1$d" value="%2$s" onkeyup="calc(this.form.name);" />%3$s', $Paper->id(), $totals{$stock}[$qty_index], $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
-			} else {
-				$html .= sprintf('<input size="6" type="hidden" id="qty-%1$d" name="qty-%1$d" value="%2$s" />', $Paper->id(), $totals{$stock}[$qty_index] );
-				$html .= sprintf('<input size="6" type="text" id="sheets-%1$d" name="sheets-%1$d" value="%2$s" onkeyup="calc(this.form.name);" />%3$s', $Paper->id(), $sheets{$stock}[$qty_index], $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
+			$html .= sprintf(q`<input size="6" type="text" id="qty-%1$d-%2$d" name="qty-%1$d-%2$d" value="%3$s" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />lbs`, $Paper->id(), $qty_index, $totals{$stock}[$qty_index] );
+			if ( $Paper->type() ne 'Roll' ) {
+				$html .= sprintf(q`<br/><input size="6" type="text" id="sheets-%1$d-%2$d" name="sheets-%1$d-%2$d" value="%3$s" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />sheets`, $Paper->id(), $qty_index, $sheets{$stock}[$qty_index] );
 			} # end if
 			$html .= '</span>';
 		} # end foreach qty_index
 		$html .= '</p>';
 	} # end foreach stock
+	$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_service_price.html' );
 	$html .= '</fieldset>';
 	return $html;
 ) ?>

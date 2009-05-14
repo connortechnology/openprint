@@ -35,8 +35,29 @@ my @variables = (
 );
 
 sub variables {
-	return @variables;
-}
+	my ( $p_id, $s_id, $specs ) = @_;
+	my @v = @variables;
+
+	my $Project = new openprint::Project( $p_id );
+	foreach my $ss_id ( $Project->signatures() ) {
+		foreach my $stock_index ( 1 .. 4 ) {
+			last if ! $$specs{"id-$ss_id-$stock_index"};
+			push @v, "id-$ss_id-$stock_index";
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				push @v, "qty-$ss_id-$stock_index-$qty_index";
+				push @v, "sheets-$ss_id-$stock_index-$qty_index";
+				push @v, "overrideqty-$ss_id-$stock_index-$qty_index";
+				push @v, "cost-$ss_id-$stock_index-$qty_index";
+				push @v, "overridecost-$ss_id-$stock_index-$qty_index";
+				push @v, "price-$ss_id-$stock_index-$qty_index";
+			} # end foreach qty_index
+		} # end foreach stock_index
+	} # end foreach ss_id
+	foreach my $stock_index ( 1 .. 4 ) {
+		push @v, "totalqty-$stock_index";
+	} # end foreach stock_index
+	return @v;
+} # end sub variables
 
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
@@ -72,37 +93,64 @@ sub calc {
 	} # end foreach qty_index
 
 	my %totals;
-	my %ms;
 	my %papers;
+
+	# FIrst pass: figure out the quantities involved, so that in the second pass, we can lookup prices based on quantity discounts.
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			next if ! $$sig_specs{'txtImposition'.$qty_index};
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			$papers{$Paper->to_string()} = $Paper;
-			if ( $Paper->type() eq 'Roll' ) {
-				$totals{$Paper->to_string()}[$qty_index] += $$sig_specs{'StockQuantity'.$qty_index};
-				$ms{$Paper->to_string()}[$qty_index] += ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $Paper->area() * $Paper->wpsi() );
-			} elsif ( $Paper->type() eq 'Sheet' ) {
-				my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
-				$sheets /= ( $Paper->start_area() /$Paper->area() );
-				$sheets = ceil( $sheets );
-				$totals{$Paper->to_string()}[$qty_index] += ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
-				$ms{$Paper->to_string()}[$qty_index] += ceil( ((1000/$$sig_specs{'txtImposition'.$qty_index})/( $Paper->start_area() /$Paper->area() )) * $Paper->start_area() * $Paper->wpsi() );
-			} # end if
-		} # end foreach qty_index
+		foreach my $stock_index ( 1 .. 4 ) {
+			last if ( $stock_index > 1 ) and ( ! $$specs{"id-$ss_id-$stock_index"} );
+
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				next if ! $$sig_specs{'txtImposition'.$qty_index};
+				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				$papers{$Paper->to_string()} = $Paper;
+
+				if ( $$specs{"overrideqty-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
+					if ( $Paper->type() eq 'Sheet' ) {
+						my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
+						$sheets /= ( $Paper->start_area() /$Paper->area() );
+						$sheets = ceil( $sheets );
+	
+						$$specs{"qty-$ss_id-$stock_index-$qty_index"} = ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
+						$$specs{"sheets-$ss_id-$stock_index-$qty_index"} = $sheets;
+					} else {
+						$$specs{"qty-$ss_id-$stock_index-$qty_index"} = $$sig_specs{'StockQuantity'.$qty_index};
+						delete $$specs{"sheets-$ss_id-$stock_index-$qty_index"};
+					} # end if
+				} # end if
+			
+				$totals{$Paper->to_string()}[$qty_index] += $$specs{"qty-$ss_id-$stock_index-$qty_index"};
+			} # end foreach qty_index
+		} # end foreach stock_index
 	} # end foreach signature
+
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		foreach my $stock_index ( 1 .. 4 ) {
+			last if ( $stock_index > 1 ) and ( ! $$specs{"id-$ss_id-$stock_index"} );
+
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				next if ! $$sig_specs{'txtImposition'.$qty_index};
+				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				my $paper_id = $Paper->to_string();
+				next if $Paper->supplied();
+
+				if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
+					my %price = $Paper->get_price( $totals{$paper_id}[$qty_index] );
+					$$specs{"cost-$ss_id-$stock_index-$qty_index"} = $price{'100lb Price'};
+				} # end if
+				$$specs{"price-$ss_id-$stock_index-$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},$$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
+				$$specs{"txtPrice$qty_index"} += $$specs{"price-$ss_id-$stock_index-$qty_index"};
+				$$specs{"MPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * ceil( ((1000/$$sig_specs{'txtImposition'.$qty_index})/( $Paper->start_area() /$Paper->area() )) * $Paper->start_area() * $Paper->wpsi() )/ 100;
+			} # end foreach qty_index
+		} # end foreach stock_index
+	} # end foreach signature
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		foreach my $paper_id ( keys %totals ) {
 			my $Paper = $papers{$paper_id};
-			if ( ! $Paper->supplied() ) {
-				my %price = $Paper->get_price( $totals{$paper_id}[$qty_index] );
-				$price{'Total'} = $price{'100lb Price'} * $totals{$paper_id}[$qty_index] / 100;
-
-#$openprint::log->warn("Paper price for " . $totals{$paper_id}[$qty_index] . ' of ' . $Paper->to_string() . ' : ' . $price{'Total'} ) if $debug;
-				$$specs{"txtPrice$qty_index"} += $price{'Total'};
-				$$specs{"MPrice$qty_index"} += $price{'100lb Price'} * $ms{$paper_id}[$qty_index] / 100;
-			} # endif
+			$$specs{"qty-$$Paper{id}-$qty_index"} = $totals{$paper_id}[$qty_index];
 		} # end foreach Stock
 		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} );
 		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
@@ -214,6 +262,9 @@ sub summary {
 		return join('<br/>', sort keys %totals );
 	} # end if
 } # end sub summary
+
+sub save {
+} # end sub save
 
 1;
 __END__
