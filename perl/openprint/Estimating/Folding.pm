@@ -40,7 +40,7 @@ sub variables {
 
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $p_id, $s_s_id );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 			push @v, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
@@ -429,7 +429,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 					my $I = shift @folds;
 					last if ! $I->spreads();
 					
-					$_ = $Equipment->fits( $I->image_orientation() eq 'Vertical' ? ( $I->image_width(), $I->image_height()*$imposition ) : ( $I->image_width()*$imposition, $I->image_height() ), $$sig_specs{'txtSpecificStockCalliper'} );
+					$_ = $Equipment->fits( $I->image_width(), $I->image_height()*$imposition, $$sig_specs{'txtSpecificStockCalliper'} );
 					if ( ! $_ )  {
 						my $fold_type = $I->pages().'PageSignatureFold';
 						if ( test_fold( $Equipment, $I, $sig_specs, $fold_type, $qty_index ) ) {
@@ -442,7 +442,7 @@ $openprint::log->debug("Starting spreads:" . $Imposition->spreads() . ' on ' . $
 							next;
 						} # end if
 					} else {
-						$$specs{'hdnBreakdown'.$qty_index} .= 'Spreads ' . $I->spreads() . ' : ' . $_ . '<br/>';
+						$$specs{'hdnBreakdown'.$qty_index} .= 'Spreads ' . $I->spreads() . ' : Imposition: ' . $imposition. ' : ' . $_ . '<br/>';
 						#$openprint::log->debug($_);
 						next;
 					} # end if
