@@ -256,18 +256,6 @@ sub send {
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");
 
-	# At this point, we have a list of users that fit the criteria for the
-	# campaign. We will remove any entries from the emailcampaignsent
-	# table for users who are not in this list (since they have done
-	# something since the last email was sent to nullify their candidacy
-	# for the campaign... which is good).
-	if (@mail_user_ids) {
-		$query = q{DELETE FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id NOT IN (}.join(',', @mail_user_ids) . ')';
-	} else {
-		$query = q{DELETE FROM EmailCampaign_Sent WHERE campaign_id=?}; 
-	} # end if
-	sql::execute( undef, undef, $query, $$self{'id'} );
-
 	# for each userid, prepare an email to send if the following
 	# conditions are met
 	#
