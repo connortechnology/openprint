@@ -593,6 +593,7 @@ sub store_order_info {
 	$Order->email( $openprint::param{'txtEmail'} );
 	$Order->alsonotify( $openprint::param{'txtAlsoNotify'} );
 	$Order->po( $openprint::param{'txtPurchaseOrder'} );
+	$Order->currency_id( openprint::Currency::get_current()->id() );
 	return $Order->save();
 } # end sub store_order_info
 
